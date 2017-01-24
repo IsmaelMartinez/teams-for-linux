@@ -1,0 +1,14 @@
+{
+  "name": "teams-for-linux",
+  "version": "0.0.1",
+  "description": "Microsoft Teams for Linux",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron index.js"
+  },
+  "author": "Ivelin Velkov",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^1.4.1"
+  }
+}
