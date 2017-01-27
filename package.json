@@ -1,15 +1,23 @@
 {
   "name": "teams-for-linux",
   "version": "0.0.1",
-  "description": "Microsoft Teams for Linux",
-  "main": "index.js",
+  "description": "Unfocial client for Microsoft Teams for Linux",
+  "homepage": "https://github.com/stanfieldr/ghetto-skype#readme",
+  "keywords": [
+    "Teams",
+    "Microsoft Teams"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/request/request-promise-native.git"
+  },
+  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
+  "license": "ISC",
   "scripts": {
     "start": "electron ./app",
     "pack": "build --dir",
     "dist": "build"
   },
-  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
-  "license": "ISC",
   "devDependencies": {
     "electron": "^1.4.15",
     "electron-builder": "^11.7.0",
@@ -18,9 +26,13 @@
   "build": {
     "appId": "teams-for-linux",
     "linux": {
-      "target": "deb rpm tar.gz",
       "category": "Network",
-      "executableName": "teams"
+      "executableName": "teams",
+      "target": [
+        "tar.gz",
+        "deb",
+        "rpm"
+      ]
     }
   }
 }
