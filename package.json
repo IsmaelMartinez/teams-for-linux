@@ -4,11 +4,23 @@
   "description": "Microsoft Teams for Linux",
   "main": "index.js",
   "scripts": {
-    "start": "electron index.js"
+    "start": "electron ./app",
+    "pack": "build --dir",
+    "dist": "build"
   },
-  "author": "Ivelin Velkov",
+  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^1.4.1"
+    "electron": "^1.4.15",
+    "electron-builder": "^11.7.0",
+    "electron-prebuilt": "^1.4.13"
+  },
+  "build": {
+    "appId": "teams-for-linux",
+    "linux": {
+      "target": "deb rpm tar.gz",
+      "category": "Network",
+      "executableName": "teams"
+    }
   }
 }

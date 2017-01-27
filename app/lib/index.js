@@ -1,12 +1,13 @@
 
 const electron = require('electron');
+const path = require('path');
 
 const app = electron.app;
-
 app.on('ready', () => {
   const window = new electron.BrowserWindow({
     width: 800,
     height: 600,
+    icon: path.join(app.getAppPath(), 'lib/assets/icons/favicon-96x96.png'),
 
     webPreferences: {
       partition: 'persist:teams',

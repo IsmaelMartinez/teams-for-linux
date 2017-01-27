@@ -1,0 +1,8 @@
+{
+  "name": "teams-for-linux",
+  "version": "0.0.1",
+  "description": "Microsoft Teams for Linux",
+  "main": "lib/index.js",
+  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
+  "license": "ISC"
+}
