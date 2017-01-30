@@ -13,3 +13,7 @@ You can download the tar.gz, rpm or deb from the [releases page](https://github.
 $ npm install
 $ npm start
 ```
+
+## License
+
+GPLv3
