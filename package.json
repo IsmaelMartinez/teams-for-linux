@@ -31,7 +31,8 @@
       "target": [
         "tar.gz",
         "deb",
-        "rpm"
+        "rpm",
+        "pacman"
       ]
     }
   },
