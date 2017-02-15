@@ -3,5 +3,8 @@
   "version": "0.0.2",
   "description": "Microsoft Teams for Linux",
   "main": "lib/index.js",
-  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>"
+  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
+  "dependencies": {
+    "open": "0.0.5"
+  }
 }

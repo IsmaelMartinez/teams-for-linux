@@ -24,6 +24,7 @@
   },
   "build": {
     "appId": "teams-for-linux",
+    "asar": false,
     "linux": {
       "category": "Network",
       "executableName": "teams",
@@ -34,7 +35,5 @@
       ]
     }
   },
-  "dependencies": {
-    "open": "0.0.5"
-  }
+  "dependencies": {}
 }
