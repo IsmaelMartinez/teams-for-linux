@@ -8,6 +8,7 @@ const open = require('open');
 const Tray = electron.Tray;
 const Menu = electron.Menu;
 let shouldQuit = false;
+let tray;
 
 const app = electron.app;
 app.on('ready', () => {
@@ -23,7 +24,7 @@ app.on('ready', () => {
     }
   });
 
-  const tray = new Tray(icon);
+  tray = new Tray(icon);
   tray.setToolTip('Teams');
   tray.on('click', () => {
     if (window.isFocused()) {
