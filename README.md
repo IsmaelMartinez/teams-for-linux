@@ -5,12 +5,12 @@ It uses the Web App and wrapps it as a standalone application using Electron.
 
 ## Install
 
-You can download the tar.gz, rpm or deb from the [releases page](https://github.com/ivelkov/teams-for-linux/releases).
+You can download the tarball, rpm, deb or pacman from the [releases page](https://github.com/ivelkov/teams-for-linux/releases).
 
 ## Run from source
 
 ```bash
-$ npm install
+$ (cd app;npm install)
 $ npm start
 ```
 
