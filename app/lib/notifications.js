@@ -1,7 +1,11 @@
 (function () {
   const electron = require('electron');
+  const notifier = require('node-notifier');
+  const path = require('path');
   const remote = electron.remote;
   const NativeImage = electron.nativeImage;
+
+  const app_icon = path.join(__dirname, 'assets/icons/icon-96x96.png');
 
   function setOverlay(count) {
     const canvas = document.createElement('canvas');
@@ -60,4 +64,31 @@
     poll(0);
   });
 
+  /**
+   * Browser Notification API compatible wrapper for node-notifier
+   */
+  let _Notification = Notification;
+  Notification = function(title, options) {
+    // Support the Notifications API
+    if (!(this instanceof Notification)) {
+        return new Notification(title, options);
+    }
+
+    this.title = title;
+    options = options || {};
+    Object.assign(this, options);
+
+    // Pass to native lib
+    notifier.notify({
+      title: title,
+      message: options.body || ' ',
+      icon: app_icon,
+      hint: 'int:transient:1'
+    });
+  };
+  Notification.permission = 'granted';
+
+  Notification.requestPermission = function() {
+    return Promise.resolve('granted');
+  };
 })();
