@@ -1,7 +1,7 @@
 {
   "name": "teams-for-linux",
-  "version": "0.0.3",
-  "description": "Unfocial client for Microsoft Teams for Linux",
+  "version": "0.0.4",
+  "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/ivelkov/teams-for-linux",
   "keywords": [
     "Teams",
@@ -26,8 +26,16 @@
     "appId": "teams-for-linux",
     "asar": false,
     "linux": {
-      "category": "Network",
+      "category": "Network;Chat",
+      "packageCategory": "net",
       "executableName": "teams",
+      "synopsis": "Microsoft Teams for Linux",
+      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "desktop": {
+        "Name": "Microsoft Teams for Linux",
+        "Comment": "Unofficial client for Microsoft Teams for Linux",
+        "StartupWMClass": "teams"
+      },
       "target": [
         "tar.gz",
         "deb",
