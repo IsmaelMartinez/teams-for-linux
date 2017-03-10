@@ -65,6 +65,7 @@ app.on('ready', () => {
     }
   });
 
+  window.on('page-title-updated', (event, title) => window.webContents.send('page-title', title));
   electron.ipcMain.on('notifications', (event, {count, icon}) => {
     try {
       const image = nativeImage.createFromDataURL(icon);
