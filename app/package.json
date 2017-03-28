@@ -5,7 +5,6 @@
   "main": "lib/index.js",
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "dependencies": {
-    "node-notifier": "^5.0.2",
     "open": "0.0.5"
   }
 }

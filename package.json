@@ -15,6 +15,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "start": "electron ./app",
+    "start-debug": "WEB_DEBUG=1 electron --disable-http-cache ./app",
     "pack": "build --dir",
     "dist": "build"
   },
