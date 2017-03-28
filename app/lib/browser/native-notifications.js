@@ -1,7 +1,10 @@
 'use strict';
 
-exports = module.exports = ({ ipc, icon }) => {
+const { nativeImage } = require('electron');
+
+exports = module.exports = ({ ipc, iconPath }) => {
   return () => {
+    const icon = nativeImage.createFromPath(iconPath);
     if (typeof Notify !== 'undefined') {
       Notify.prototype.show = function () {
         const notification = new Notification(this.title, {
