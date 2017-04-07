@@ -1,12 +1,12 @@
 'use strict';
 
+const open = require('open');
 const {
   app,
   nativeImage,
   ipcMain,
   Tray,
-  Menu,
-  shell
+  Menu
 } = require('electron');
 
 let shouldQuit = false;
@@ -25,10 +25,6 @@ class Menus {
   static reload(window) {
     window.show();
     window.reload();
-  }
-
-  static open(url) {
-    shell.openExternal(url);
   }
 
   register(window) {
@@ -57,11 +53,11 @@ class Menus {
         submenu: [
           {
             label: 'Online Documentation',
-            click: () => Menus.open('https://support.office.com/en-us/teams?omkt=en-001')
+            click: () => open('https://support.office.com/en-us/teams?omkt=en-001')
           },
           {
             label: 'Github Project',
-            click: () => Menus.open('https://github.com/ivelkov/teams-for-linux')
+            click: () => open('https://github.com/ivelkov/teams-for-linux')
           },
           { type: 'separator' },
           {
