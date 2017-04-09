@@ -1,5 +1,6 @@
 'use strict';
 
+const open = require('open');
 const {
   app,
   nativeImage,
