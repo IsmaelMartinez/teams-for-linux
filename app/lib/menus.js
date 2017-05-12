@@ -27,9 +27,18 @@ class Menus {
     window.reload();
   }
 
+  static open(window) {
+    window.show();
+  }
+
   register(window) {
     const appMenu = new Menu.buildFromTemplate(
       [
+        {
+          label: 'Open',
+          accelerator: 'ctrl+O',
+          click: () => Menus.open(window)
+        },
         {
           label: 'Refresh',
           accelerator: 'ctrl+R',
