@@ -2,7 +2,7 @@
 
 (function () {
   const path = require('path');
-  const { ipcRenderer, BrowserWindow } = require('electron');
+  const { ipcRenderer } = require('electron');
   const trayNotifications = require('./tray-notifications');
   const nativeNotifications = require('./native-notifications');
 

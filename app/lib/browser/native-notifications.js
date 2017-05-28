@@ -6,7 +6,7 @@ exports = module.exports = ({ ipc, iconPath }) => {
   return () => {
     const icon = nativeImage.createFromPath(iconPath);
     if (typeof Notify !== 'undefined') {
-      Notify.prototype.show = function () {
+      Notify.prototype.show = function show() {
         const notification = new Notification(this.title, {
           body: this.options.body,
           icon: icon.toDataURL()
@@ -14,7 +14,7 @@ exports = module.exports = ({ ipc, iconPath }) => {
         notification.onclick = () => {
           ipc.send('nativeNotificationClick');
         };
-      }
+      };
     }
-  }
+  };
 };

@@ -70,7 +70,7 @@ class Menus {
           },
           { type: 'separator' },
           {
-            label: 'Version ' + app.getVersion(),
+            label: `Version ${app.getVersion()}`,
             enabled: false
           }
         ]
@@ -104,7 +104,7 @@ class Menus {
         this.tray.setImage(this.image);
         window.flashFrame(count > 0);
       } catch (err) {
-        console.error(`Could not update tray icon: ${err.message}`, err)
+        console.error(`Could not update tray icon: ${err.message}`, err);
       }
     });
   }
