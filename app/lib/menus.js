@@ -45,6 +45,10 @@ class Menus {
 
     window.setMenu(new Menu.buildFromTemplate([
       {
+        // workaround for alt+shift showing the hidden menu and blocking input
+        label: ''
+      },
+      {
         label: 'File',
         submenu: appMenu
       },
