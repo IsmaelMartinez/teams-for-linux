@@ -12,6 +12,8 @@ function buildIcon({ count, icon }) {
     canvas.width = 140;
     const image = new Image();
     image.src = icon.toDataURL('image/png');
+
+    // Create the red circle for notifications
     image.onload = () => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0, 140, 140);
