@@ -13,10 +13,9 @@ package:
   stage: build
   script:
    - npm i && (cd app && npm i)
-   - npm i electron-packager
-   - npx electron-packager app
+   - npx electron-builder -l deb
   artifacts:
     expire_in: 1 week
     when: always
     paths:
-     - teams-for-linux-linux-x64/
+     - dist/*.deb

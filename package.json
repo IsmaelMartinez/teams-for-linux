@@ -39,7 +39,10 @@
         "StartupWMClass": "teams"
       },
       "target": [
-        "tar.gz"
+        "tar.gz",
+        "deb",
+        "rpm",
+        "pacman"
       ]
     }
   },
