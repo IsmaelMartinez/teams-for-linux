@@ -1,6 +1,6 @@
-
 'use strict';
 
+const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const open = require('open');
 const {
@@ -8,16 +8,29 @@ const {
   ipcMain,
   BrowserWindow
 } = require('electron');
+
+const DEFAULT_WINDOW_WIDTH = 800;
+const DEFAULT_WINDOW_HEIGHT = 800;
+
 const Menus = require('./menus.js');
 
 let menus;
 
+function createWindow(iconPath) {
+  // Load the previous state with fallback to defaults
+  let windowState = windowStateKeeper({
+    defaultWidth: DEFAULT_WINDOW_WIDTH,
+    defaultHeight: DEFAULT_WINDOW_HEIGHT
+  });
 
-app.on('ready', () => {
-  const iconPath = path.join(app.getAppPath(), 'lib/assets/icons/icon-96x96.png');
+  // Create the window
   const window = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: windowState.x,
+    y: windowState.y,
+
+    width: windowState.width,
+    height: windowState.height,
+    
     iconPath,
     autoHideMenuBar: true,
 
@@ -27,6 +40,16 @@ app.on('ready', () => {
       nodeIntegration: false
     }
   });
+
+  windowState.manage(window);
+
+  return window;
+}
+
+app.on('ready', () => {
+  const iconPath = path.join(app.getAppPath(), 'lib/assets/icons/icon-96x96.png');
+  const window = createWindow(iconPath);
+
   menus = new Menus(iconPath);
   menus.register(window);
 
