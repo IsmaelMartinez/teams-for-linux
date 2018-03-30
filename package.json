@@ -35,7 +35,7 @@
       "desktop": {
         "Name": "Microsoft Teams for Linux",
         "Comment": "Unofficial client for Microsoft Teams for Linux",
-        "StartupWMClass": "teams"
+        "StartupWMClass": "teams-for-linux"
       },
       "target": [
         "tar.gz",
