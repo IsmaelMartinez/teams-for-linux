@@ -13,7 +13,7 @@ package:
   stage: build
   script:
    - npm i && (cd app && npm i)
-   - npx electron-builder -l deb
+   - npm run dist
   artifacts:
     expire_in: 1 week
     when: always

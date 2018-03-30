@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "dependencies": {
-    "open": "0.0.5"
+    "open": "0.0.5",
+    "electron-window-state": "~4.1.1"
   }
 }
