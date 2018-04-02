@@ -19,3 +19,6 @@ package:
     when: always
     paths:
      - dist/*.deb
+     - dist/*.rpm
+     - dist/*.pacman
+     - dist/*.tar.gz
