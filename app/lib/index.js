@@ -9,7 +9,6 @@ const {
   BrowserWindow
 } = require('electron');
 const configBuilder = require('./config');
-const prompt = require('electron-prompt');
 
 const DEFAULT_WINDOW_WIDTH = 800;
 const DEFAULT_WINDOW_HEIGHT = 800;
