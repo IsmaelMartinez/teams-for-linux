@@ -8,6 +8,8 @@ const {
   ipcMain,
   BrowserWindow
 } = require('electron');
+const configBuilder = require('./config');
+const prompt = require('electron-prompt');
 
 const DEFAULT_WINDOW_WIDTH = 800;
 const DEFAULT_WINDOW_HEIGHT = 800;
@@ -30,7 +32,7 @@ function createWindow(iconPath) {
 
     width: windowState.width,
     height: windowState.height,
-    
+
     iconPath,
     autoHideMenuBar: true,
 
@@ -69,10 +71,18 @@ app.on('ready', () => {
     });
   });
 
-  window.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'); 
-  window.loadURL('https://teams.microsoft.com/');
+  const config = configBuilder(app.getPath('userData'));
+  window.webContents.setUserAgent(config.userAgent);
+  window.loadURL(config.url);
 
-  if (process.env.WEB_DEBUG) {
+  if (config.webDebug) {
     window.openDevTools();
+  }
+});
+
+app.on('login', function (event, webContents, request, authInfo, callback) {
+  event.preventDefault();
+  if (typeof config.firewallUsername !== 'undefined') {
+    callback(config.firewallUsername, config.firewallPassword);
   }
 });
