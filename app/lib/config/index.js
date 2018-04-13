@@ -33,10 +33,23 @@ function argv(configPath) {
         type: 'string'
       },
       'userAgent': {
-        demandOption: true,
+        demandOption: false,
         describe: 'HTTP User Agent',
         type: 'string',
+        default: 'edge'
+      },
+      'edgeUserAgent': {
+        demandOption: false,
+        describe: 'Microsoft Edge User Agent',
+        type: 'string',
         default: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
+      },
+      'chromeUserAgent': {
+        demandOption: false,
+        describe: 'Google Chrome User Agent',
+        type: 'string',
+        default: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+
       }
     })
     .implies('firewallUsername', 'firewallPassword')

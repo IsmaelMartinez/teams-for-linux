@@ -1,6 +1,5 @@
 'use strict';
 
-const open = require('open');
 const {
   app,
   nativeImage,
@@ -8,13 +7,16 @@ const {
   Tray,
   Menu
 } = require('electron');
+const preferences = require('./preferences');
+const help = require('./help');
 
 let shouldQuit = false;
 
 class Menus {
 
-  constructor(iconPath) {
+  constructor(config, iconPath) {
     this.iconPath = iconPath;
+    this.config = config;
   }
 
   static quit() {
@@ -61,24 +63,8 @@ class Menus {
         label: 'File',
         submenu: appMenu
       },
-      {
-        label: 'Help',
-        submenu: [
-          {
-            label: 'Online Documentation',
-            click: () => open('https://support.office.com/en-us/teams?omkt=en-001')
-          },
-          {
-            label: 'Github Project',
-            click: () => open('https://github.com/ivelkov/teams-for-linux')
-          },
-          { type: 'separator' },
-          {
-            label: `Version ${app.getVersion()}`,
-            enabled: false
-          }
-        ]
-      }
+      preferences(this.config, window),
+      help(app)
     ]));
 
     this.tray = new Tray(this.iconPath);

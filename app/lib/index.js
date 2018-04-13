@@ -13,7 +13,7 @@ const configBuilder = require('./config');
 const DEFAULT_WINDOW_WIDTH = 800;
 const DEFAULT_WINDOW_HEIGHT = 800;
 
-const Menus = require('./menus.js');
+const Menus = require('./menus');
 
 let menus;
 
@@ -50,8 +50,9 @@ function createWindow(iconPath) {
 app.on('ready', () => {
   const iconPath = path.join(app.getAppPath(), 'lib/assets/icons/icon-96x96.png');
   const window = createWindow(iconPath);
+  const config = configBuilder(app.getPath('userData'));
 
-  menus = new Menus(iconPath);
+  menus = new Menus(config, iconPath);
   menus.register(window);
 
   window.on('page-title-updated', (event, title) => window.webContents.send('page-title', title));
@@ -70,8 +71,12 @@ app.on('ready', () => {
     });
   });
 
-  const config = configBuilder(app.getPath('userData'));
-  window.webContents.setUserAgent(config.userAgent);
+  if (config.userAgent === 'edge') {
+    window.webContents.setUserAgent(config.edgeUserAgent);
+  } else {
+    window.webContents.setUserAgent(config.chromeUserAgent);
+  }
+  
   window.loadURL(config.url);
 
   if (config.webDebug) {

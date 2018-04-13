@@ -38,10 +38,10 @@
         "StartupWMClass": "teams-for-linux"
       },
       "target": [
-        "tar.gz",
-        "deb",
         "rpm",
-        "pacman"
+        "deb",
+        "pacman",
+        "tar.gz"
       ]
     }
   },
