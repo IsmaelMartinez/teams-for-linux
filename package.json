@@ -14,8 +14,8 @@
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
-    "start": "yarn install && yarn compile && electron ./app",
-    "start-debug": "WEB_DEBUG=1 electron --disable-http-cache ./app",
+    "postinstall": "electron-builder install-app-deps",
+    "start": "yarn install && electron ./app",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder"

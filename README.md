@@ -12,8 +12,7 @@ You can download the tarball, rpm, deb or pacman from the [releases page](https:
 ## Run from source
 
 ```bash
-$ npm i && (cd app && npm i)
-$ npm start
+yarn start
 ```
 
 ## License
