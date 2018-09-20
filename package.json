@@ -2,26 +2,27 @@
   "name": "teams-for-linux",
   "version": "0.0.8",
   "description": "Unofficial client for Microsoft Teams for Linux",
-  "homepage": "https://github.com/ivelkov/teams-for-linux",
+  "homepage": "https://github.com/JamieMagee/teams-for-linux",
   "keywords": [
     "Teams",
     "Microsoft Teams"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://github.com/ivelkov/teams-for-linux"
+    "url": "git+ssh://github.com/JamieMagee/teams-for-linux"
   },
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
-    "start": "electron ./app",
+    "start": "yarn install && yarn compile && electron ./app",
     "start-debug": "WEB_DEBUG=1 electron --disable-http-cache ./app",
-    "pack": "build --dir",
-    "dist": "build"
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "release": "electron-builder"
   },
   "devDependencies": {
     "electron": "^1.8.4",
-    "electron-builder": "^20.8.2"
+    "electron-builder": "^20.28.4"
   },
   "build": {
     "appId": "teams-for-linux",
@@ -42,7 +43,11 @@
         "deb",
         "pacman",
         "tar.gz"
-      ]
+      ],
+      "publish": {
+        "provider": "github",
+        "releaseType": "draft"
+      }
     }
   },
   "dependencies": {}
