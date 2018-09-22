@@ -6,7 +6,7 @@ const { nativeImage } = require('electron');
  * Build an app icon with a notifications count overlay.
  */
 function buildIcon({ count, icon }) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const canvas = document.createElement('canvas');
     canvas.height = 140;
     canvas.width = 140;
@@ -25,7 +25,8 @@ function buildIcon({ count, icon }) {
         ctx.textAlign = 'center';
         ctx.fillStyle = 'white';
 
-        ctx.font = 'bold 70px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif';
+        ctx.font =
+          'bold 70px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif';
         if (count > 9) {
           ctx.fillText('9+', 105, 60);
         } else {
@@ -38,25 +39,30 @@ function buildIcon({ count, icon }) {
 }
 
 exports = module.exports = ({ ipc, iconPath }) => {
-  let lastCount = 0;
+  var lastCount = 0;
 
   ipc.on('page-title', () => {
     if (typeof angular === 'undefined') {
       return;
     }
+    var element = angular.element(document.documentElement).controller();
 
-    const count = angular.element(document.documentElement)
-      .controller()
+    if (!element) {
+      return;
+    }
+    const count = angular.element(document.documentElement).controller()
       .pageTitleNotificationCount;
+
     if (lastCount !== count) {
-      buildIcon({ count, icon: nativeImage.createFromPath(iconPath) })
-        .then((icon) => {
+      lastCount = count;
+      buildIcon({ count, icon: nativeImage.createFromPath(iconPath) }).then(
+        icon => {
           ipc.send('notifications', {
             count,
             icon
           });
-        });
-      lastCount = count;
+        }
+      );
     }
   });
 };

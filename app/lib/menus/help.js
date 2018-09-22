@@ -1,8 +1,8 @@
 'use strict';
 
-const open = require('open');
+const open = require('opn');
 
-exports = module.exports = (app) => {
+exports = module.exports = app => {
   return {
     label: 'Help',
     submenu: [
@@ -18,7 +18,8 @@ exports = module.exports = (app) => {
       {
         label: `Version ${app.getVersion()}`,
         enabled: false
-      }
+      },
+      { role: 'toggledevtools' }
     ]
   };
 };

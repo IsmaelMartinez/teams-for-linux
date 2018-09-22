@@ -2,12 +2,8 @@
 
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
-const open = require('open');
-const {
-  app,
-  ipcMain,
-  BrowserWindow
-} = require('electron');
+const open = require('opn');
+const { app, ipcMain, BrowserWindow } = require('electron');
 const configBuilder = require('./config');
 
 const DEFAULT_WINDOW_WIDTH = 800;
@@ -48,23 +44,28 @@ function createWindow(iconPath) {
 }
 
 app.on('ready', () => {
-  const iconPath = path.join(app.getAppPath(), 'lib/assets/icons/icon-96x96.png');
+  const iconPath = path.join(
+    app.getAppPath(),
+    'lib/assets/icons/icon-96x96.png'
+  );
   const window = createWindow(iconPath);
   const config = configBuilder(app.getPath('userData'));
 
   menus = new Menus(config, iconPath);
   menus.register(window);
 
-  window.on('page-title-updated', (event, title) => window.webContents.send('page-title', title));
+  window.on('page-title-updated', (event, title) =>
+    window.webContents.send('page-title', title)
+  );
 
-  ipcMain.on('nativeNotificationClick', (event) => {
+  ipcMain.on('nativeNotificationClick', event => {
     window.show();
     window.focus();
   });
 
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
-    open(url, (err) => {
+    open(url, err => {
       if (err) {
         console.error(`exec error: ${err.message}`);
       }
@@ -76,7 +77,7 @@ app.on('ready', () => {
   } else {
     window.webContents.setUserAgent(config.chromeUserAgent);
   }
-  
+
   window.loadURL(config.url);
 
   if (config.webDebug) {
@@ -84,7 +85,7 @@ app.on('ready', () => {
   }
 });
 
-app.on('login', function (event, webContents, request, authInfo, callback) {
+app.on('login', function(event, webContents, request, authInfo, callback) {
   event.preventDefault();
   if (typeof config.firewallUsername !== 'undefined') {
     callback(config.firewallUsername, config.firewallPassword);
