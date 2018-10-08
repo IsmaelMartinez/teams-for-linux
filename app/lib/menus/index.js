@@ -33,6 +33,10 @@ class Menus {
     window.show();
   }
 
+  static debug(window) {
+    window.openDevTools();
+  }
+
   register(window) {
     const appMenu = new Menu.buildFromTemplate(
       [
@@ -45,6 +49,11 @@ class Menus {
           label: 'Refresh',
           accelerator: 'ctrl+R',
           click: () => Menus.reload(window)
+        },
+        {
+          label: 'Debug',
+          accelerator: 'F12',
+          click: () => Menus.debug(window)
         },
         {
           label: 'Quit',
