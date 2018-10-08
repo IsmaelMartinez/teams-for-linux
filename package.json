@@ -49,5 +49,8 @@
         "releaseType": "draft"
       }
     }
+  },
+  "dependencies": {
+    "electron-native-notification": "^1.2.1"
   }
 }

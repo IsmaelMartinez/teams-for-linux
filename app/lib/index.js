@@ -6,6 +6,7 @@ const path = require('path');
 const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const configBuilder = require('./config');
 // const querystring = require('querystring');
+const Notification = require('electron-native-notification');
 
 const DEFAULT_WINDOW_WIDTH = 1024;
 const DEFAULT_WINDOW_HEIGHT = 800;
@@ -32,7 +33,7 @@ function createWindow(iconPath) {
     show: false,
     iconPath,
     autoHideMenuBar: false,
-
+    icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
       partition: 'persist:teams',
@@ -49,11 +50,11 @@ function createWindow(iconPath) {
   windowState.manage(window);
 
   return window;
+  
 }
 
 app.commandLine.appendSwitch('auth-server-whitelist','*');
-app.commandLine.appendSwitch('auth-negotiate-delegate-whitelist','*');
-app.commandLine.appendSwitch('enable-ntlm-v2','*');
+app.commandLine.appendSwitch('enable-ntlm-v2','true');
 
 app.on('ready', () => {
 
@@ -82,36 +83,8 @@ app.on('ready', () => {
   });
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
-    // event.preventDefault();
-    // let child = new BrowserWindow(
-    //   {
-    //     modal: true,
-    //     width: 400,
-    //     heigth: 100,
-    //     useContentSize: true,
-    //     center: true,
-    //     alwaysOnTop: true,
-    //     parent: window.webContents.BrowserWindow,
-    //     resizable: false,
-    //     frame: false
-    //   });
-
-    // const qs = querystring.stringify({
-    //   port: authInfo.port,
-    //   realm: authInfo.realm
-    // });
-
-    // child.loadURL(request.url);
-    // child.show();
-    console.log(request.url)
-  });
-
-  window.webContents.on('will-navigate', (event, url) => {
-    console.log(url);
-  });
-
-  window.webContents.on('did-get-redirect-request', (event, oldUrl, newUrl) => {
-    console.log(newUrl);
+    new Notification('Title', { body: 'thi sis a test'});
+    console.log(request.url);
   });
 
   if (config.userAgent === 'edge') {
@@ -123,34 +96,9 @@ app.on('ready', () => {
   window.once('ready-to-show', () => window.show());
 
   window.loadURL(config.url);
-
-  //if (config.webDebug) {
-  //  window.openDevTools();
-  //}
 });
 
 app.on('login', function (event, webContents, request, authInfo, callback) {
-  //event.preventDefault();
-  // let child = new BrowserWindow(
-  //   {
-  //     modal: true,
-  //     width: 400,
-  //     heigth: 100,
-  //     useContentSize: true,
-  //     center: true,
-  //     alwaysOnTop: true,
-  //     parent: webContents.BrowserWindow,
-  //     resizable: false,
-  //     frame: false
-  //   });
-
-  // const qs = querystring.stringify({
-  //   port: authInfo.port,
-  //   realm: authInfo.realm
-  // });
-
-  // child.loadURL(`file://${__dirname}/login.html?${qs}`)
-  // child.show()
   if (typeof config !== 'undefined' && typeof config.firewallUsername !== 'undefined') {
     callback(config.firewallUsername, config.firewallPassword);
   }
