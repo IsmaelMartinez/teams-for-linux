@@ -70,8 +70,13 @@ app.on('ready', () => {
   );
 
   ipcMain.on('nativeNotificationClick', event => {
+    console.log('nativeNotificationClick called');
     window.show();
     window.focus();
+  });
+
+  ipcMain.on('notify', (event) => { 
+    console.log('notify');
   });
 
   window.webContents.on('new-window', (event, url) => {
