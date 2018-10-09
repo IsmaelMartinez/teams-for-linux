@@ -2,10 +2,8 @@
 
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
-//const open = require('opn');
 const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const configBuilder = require('./config');
-// const querystring = require('querystring');
 const Notification = require('electron-native-notification');
 
 const DEFAULT_WINDOW_WIDTH = 1024;
@@ -50,7 +48,6 @@ function createWindow(iconPath) {
   windowState.manage(window);
 
   return window;
-  
 }
 
 app.commandLine.appendSwitch('auth-server-whitelist','*');
