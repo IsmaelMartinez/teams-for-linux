@@ -77,7 +77,7 @@ app.on('ready', () => {
   });
 
   ipcMain.on('notifications', async (e, msg) => {
-      const body = "You got " + msg.count + " notification(s)" + (msg.text) ? "<br><i>" + msg.text + "</i>" : "";    
+      const body = "You got " + msg.count + " notification(s)" + ((msg.text) ? "<i>" + msg.text + "</i>" : "");    
       const notification = new NativeNotification(
         "Microsoft Teams", 
         {
