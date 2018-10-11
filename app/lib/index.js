@@ -77,7 +77,8 @@ app.on('ready', () => {
   });
 
   ipcMain.on('notifications', async (e, msg) => {
-      const body = "You got " + msg.count + " notification(s)" + ((msg.text) ? "<i>" + msg.text + "</i>" : "");    
+    if (msg.count>0){  
+      const body = "You got " + msg.count + " notification(s). " + ((msg.text) ? "Last notification is '<i>" + msg.text + "</i>'" : "");    
       const notification = new NativeNotification(
         "Microsoft Teams", 
         {
@@ -87,6 +88,7 @@ app.on('ready', () => {
       if (notification.show !== undefined) {
         notification.show();
       } 
+    }
   });
 
   window.webContents.on('new-window', (event, url) => {
