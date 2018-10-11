@@ -4,7 +4,7 @@ const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const configBuilder = require('./config');
-// const NativeNotification = require('electron-native-notification');
+const NativeNotification = require('electron-native-notification');
 
 const DEFAULT_WINDOW_WIDTH = 0;
 const DEFAULT_WINDOW_HEIGHT = 0;
@@ -12,6 +12,7 @@ const DEFAULT_WINDOW_HEIGHT = 0;
 const Menus = require('./menus');
 
 let menus;
+
 
 function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
@@ -32,12 +33,8 @@ function createWindow(iconPath) {
     iconPath,
     autoHideMenuBar: false,
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
-    // register: path.join(__dirname, 'browser', 'service-worker.js'),
-
-    // type: 'desktop',
 
     webPreferences: {
-      // partition: 'teams',
       partition: 'persist:teams',
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
@@ -46,10 +43,8 @@ function createWindow(iconPath) {
       safeDialogs: true,
       plugins: true,
       nodeIntegration: false,
-      sandbox: true,
     }
   });
-  // require('./browser');
 
   windowState.manage(window);
 
@@ -81,6 +76,18 @@ app.on('ready', () => {
     window.focus();
   });
 
+  ipcMain.on('notifications', async (e, msg) => {    
+      const notification = new NativeNotification(
+        "Microsoft Teams", 
+        {
+          "body": "You got " + msg.count + " notifications",
+          "icon": iconPath,
+         });
+      if (notification.show !== undefined) {
+        notification.show();
+      } 
+  });
+
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
@@ -100,10 +107,6 @@ app.on('ready', () => {
   window.once('ready-to-show', () => window.show());
 
   window.loadURL(config.url);
-
- 
-  // new NativeNotification("hasServiceWorker", { "body" : window.webContents.hasServiceWorker('service-worker.js')});
-  
 });
 
 app.on('login', function (event, webContents, request, authInfo, callback) {

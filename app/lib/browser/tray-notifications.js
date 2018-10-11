@@ -46,7 +46,7 @@ exports = module.exports = ({ ipc, iconPath }) => {
       return;
     }
     var element = angular.element(document.documentElement).controller();
-
+    console.log("document.documentElement", document.documentElement);
     if (!element) {
       return;
     }

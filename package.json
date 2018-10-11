@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://github.com/JamieMagee/teams-for-linux"
+    "url": "git+ssh://github.com/ISMAELMARTINEZ/teams-for-linux"
   },
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
@@ -51,6 +51,6 @@
     }
   },
   "dependencies": {
-    "electron-native-notification": "^1.2.1"
+    "electron-notification-shim": "^1.1.0"
   }
 }
