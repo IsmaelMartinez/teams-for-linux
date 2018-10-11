@@ -76,11 +76,12 @@ app.on('ready', () => {
     window.focus();
   });
 
-  ipcMain.on('notifications', async (e, msg) => {    
+  ipcMain.on('notifications', async (e, msg) => {
+      const body = "You got " + msg.count + " notification(s)" (msg.text) ? "<p><i>" + msg.text + "</i>" : "";    
       const notification = new NativeNotification(
         "Microsoft Teams", 
         {
-          "body": "You got " + msg.count + " notification(s) \n" + msg.text,
+          "body": "You got " + msg.count + " notification(s) <p>" + msg.text,
           "icon": iconPath,
          });
       if (notification.show !== undefined) {
