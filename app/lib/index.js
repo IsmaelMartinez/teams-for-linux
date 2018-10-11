@@ -80,7 +80,7 @@ app.on('ready', () => {
       const notification = new NativeNotification(
         "Microsoft Teams", 
         {
-          "body": "You got " + msg.count + " notifications " + msg.text,
+          "body": "You got " + msg.count + " notification(s) \n" + msg.text,
           "icon": iconPath,
          });
       if (notification.show !== undefined) {
