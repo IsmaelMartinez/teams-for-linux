@@ -58,8 +58,8 @@ exports = module.exports = ({ ipc, iconPath }) => {
 
     if (lastCount !== count) {
       lastCount = count;
-      toast = $.find('#toast-container > div > div > div.toast-message > p.title.app-max-2-lines-base')[0];
-      innerText = (toast) ? toast.innerText : ""
+      let toast = $.find('#toast-container > div > div > div.toast-message > p.title.app-max-2-lines-base')[0];
+      let innerText = (toast) ? toast.innerText : ""
 
       buildIcon({ count, icon: nativeImage.createFromPath(iconPath) }).then(
         icon => {
