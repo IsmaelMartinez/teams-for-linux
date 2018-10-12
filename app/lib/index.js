@@ -38,8 +38,6 @@ function createWindow(iconPath) {
       partition: 'persist:teams',
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
-      allowRunningInsecureContent: true,
-      experimentalFeatures: true,
       safeDialogs: true,
       plugins: true,
       nodeIntegration: false,
@@ -47,11 +45,14 @@ function createWindow(iconPath) {
   });
 
   windowState.manage(window);
+  window.eval = global.eval = function () {
+    throw new Error(`Sorry, this app does not support window.eval().`)
+  }
 
   return window;
 }
 
-app.commandLine.appendSwitch('auth-server-whitelist','*');
+app.commandLine.appendSwitch('auth-server-whitelist','*eeghlan.net');
 app.commandLine.appendSwitch('enable-ntlm-v2','true');
 
 app.on('ready', () => {
