@@ -25,8 +25,18 @@ exports = module.exports = (config, window) => {
               window.webContents.setUserAgent(config.chromeUserAgent);
             }
           }
+          
+        ]
+        
+      },{
+        label: 'Zoom',
+        submenu: [
+          { role: 'resetZoom' },
+          { role: 'zoomIn' },
+          { role: 'zoomOut' }
         ]
       }
+      
     ]
   };
 }

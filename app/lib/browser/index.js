@@ -16,24 +16,6 @@ require('electron-notification-shim');
   });
 
   document.addEventListener(
-    'keydown', (event) => {
-      const keyName = event.key;
-    
-      if (keyName === 'Control') {
-        // do not alert when only Control key is pressed.
-        return;
-      }
-    
-      if (event.ctrlKey) {
-        if (keyName === '+') {
-          webFrame.setZoomLevel(webFrame.getZoomLevel()+1);
-        } else if (keyName === '-') {
-          webFrame.setZoomLevel(webFrame.getZoomLevel()-1);
-        }
-      }
-    }, false);
-
-  document.addEventListener(
     'DOMContentLoaded',
     nativeNotifications({
       ipc: ipcRenderer,
