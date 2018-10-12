@@ -52,7 +52,7 @@ function createWindow(iconPath) {
   return window;
 }
 
-app.commandLine.appendSwitch('auth-server-whitelist','*eeghlan.net');
+app.commandLine.appendSwitch('auth-server-whitelist','*');
 app.commandLine.appendSwitch('enable-ntlm-v2','true');
 
 app.on('ready', () => {
