@@ -1,3 +1,5 @@
+'use strict';
+
 const { webFrame } = require('electron');
 
 exports = module.exports = () => {
