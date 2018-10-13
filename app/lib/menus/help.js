@@ -12,7 +12,7 @@ exports = module.exports = app => {
       },
       {
         label: 'Github Project',
-        click: () => open('https://github.com/ismaelmartinez/teams-for-linux')
+        click: () => open('https://github.com/IsmaelMartinez/teams-for-linux')
       },
       { type: 'separator' },
       {
