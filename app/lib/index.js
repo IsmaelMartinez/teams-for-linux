@@ -110,6 +110,11 @@ app.on('ready', () => {
   
   window.once('ready-to-show', () => window.show());
 
+  window.webContents.on('did-finish-load', function() {
+    window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
+    window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
+  });
+
   window.loadURL(config.url);
 });
 
