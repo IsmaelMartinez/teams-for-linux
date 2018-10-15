@@ -98,6 +98,7 @@ app.on('ready', () => {
   });
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
+    loginService(event.sender, callback);
     console.log(request.url);
   });
 
@@ -115,6 +116,8 @@ app.on('ready', () => {
     window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
   });
 
+  window.on('closed', () => window = null);
+
   window.loadURL(config.url);
 });
 
@@ -122,4 +125,30 @@ app.on('login', function (event, webContents, request, authInfo, callback) {
   if (typeof config !== 'undefined' && typeof config.firewallUsername !== 'undefined') {
     callback(config.firewallUsername, config.firewallPassword);
   }
+  
 });
+
+
+function loginService(event, callback) {
+  const win = new BrowserWindow({
+    width: 400,
+    height: 200,
+    preload: path.join(__dirname, 'login', 'index.js'),
+
+    show: false,
+    autoHideMenuBar: true,
+  });
+
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
+  win.on('closed', () => win = null);
+
+  ipcMain.on('submitForm', function(event, data) {
+    console.log('submitForm called');
+  });
+
+  win.webContents.openDevTools(); 
+  win.loadURL(`file://${__dirname}/login/login.html`);
+}
