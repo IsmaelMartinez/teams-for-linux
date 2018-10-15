@@ -88,7 +88,6 @@ app.on('ready', () => {
          });
       if (notification.show !== undefined) {
         notification.show();
-        notification.on('click', () => alert('this'));
       } 
     }
   });

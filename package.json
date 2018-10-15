@@ -41,7 +41,6 @@
       "target": [
         "rpm",
         "deb",
-        "pacman",
         "tar.gz"
       ],
       "publish": {
