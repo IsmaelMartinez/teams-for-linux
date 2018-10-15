@@ -1,16 +1,11 @@
-'use strict';
+const ipcRenderer = require('electron').ipcRenderer;
 
-(function () {
-  const { ipcRenderer } = require('electron');
-  
-  document.getElementById('loginForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      console.log('summit');
-      ipcRenderer.send('submitForm', "formData");
-  })
-
-//   function login() {
-//       //document.getElementById("loginForm").submit(); 
-//       ipcRenderer.send('submitForm', "formData");
-//   }
-})();
+function sendForm(event) {
+    event.preventDefault();
+    ipcRenderer.send('submitForm', 
+      {
+        'username': document.getElementById("username").value,
+        'password': document.getElementById("password").value
+      }
+    );
+}

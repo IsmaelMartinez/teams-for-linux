@@ -1,16 +1,25 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <title>Electron App</title>
     </head>
+
     <body>
-        <form id="loginForm">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password">
-            <div id="lower">
-                <input type="checkbox"><label class="check" for="checkbox">Keep me logged in</label>
-                <input type="submit" value="Login">
-            </div>
-        </form> 
+
+        <form name="ipcForm" onSubmit="JavaScript:sendForm(event)">
+            <input type="text" name="username" id="username" value="" placeholder="email of/or domain\username" type="email" style="width: 342px;">
+            <br><br>
+            <input type="password" name="password" id="password" value="" placeholder="Password" style="width: 342px;">
+            <br><br>
+            <input type="submit" value="Submit" style="
+                background-color: rgb(38, 114, 236);     
+                border: none;
+                min-width: 80px;
+                padding: 4px 20px 6px 20px;
+                color: rgb(255, 255, 255);">
+        </form>
+
+        <script src='index.js'></script>
     </body>
 </html>

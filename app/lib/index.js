@@ -2,7 +2,7 @@
 
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
-const { shell, app, ipcMain, BrowserWindow } = require('electron');
+const { shell, app, ipcMain, remote, BrowserWindow } = require('electron');
 const configBuilder = require('./config');
 const NativeNotification = require('electron-native-notification');
 
@@ -98,8 +98,8 @@ app.on('ready', () => {
   });
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
-    loginService(event.sender, callback);
-    console.log(request.url);
+    event.preventDefault();
+    loginService(callback);
   });
 
   if (config.userAgent === 'edge') {
@@ -107,7 +107,6 @@ app.on('ready', () => {
   } else {
     window.webContents.setUserAgent(config.chromeUserAgent);
   }
-
   
   window.once('ready-to-show', () => window.show());
 
@@ -118,7 +117,10 @@ app.on('ready', () => {
 
   window.on('closed', () => window = null);
 
-  window.loadURL(config.url);
+  window.loadURL(config.url)
+  // loginService((username, password) => {
+  //   window.loadURL(config.url)
+  // });
 });
 
 app.on('login', function (event, webContents, request, authInfo, callback) {
@@ -129,10 +131,11 @@ app.on('login', function (event, webContents, request, authInfo, callback) {
 });
 
 
-function loginService(event, callback) {
+function loginService(callback) {
   const win = new BrowserWindow({
-    width: 400,
-    height: 200,
+    width: 363,
+    height: 124,
+    frame: false,
     preload: path.join(__dirname, 'login', 'index.js'),
 
     show: false,
@@ -143,12 +146,11 @@ function loginService(event, callback) {
     win.show();
   });
 
-  win.on('closed', () => win = null);
-
   ipcMain.on('submitForm', function(event, data) {
-    console.log('submitForm called');
+    console.log('submitForm called', data);
+    callback(data.username, data.password);
+    win.close();
   });
 
-  win.webContents.openDevTools(); 
   win.loadURL(`file://${__dirname}/login/login.html`);
 }
