@@ -11,13 +11,6 @@ exports = module.exports = ({ ipc, iconPath }) => {
           body: this.options.body,
           icon: icon.toDataURL()
         });
-        // ipc.send('notification-shown',{ 
-        //   title: this.title,
-        //   options: {
-        //     body: this.options.body,
-        //     icon: icon.toDataURL()
-        //   }
-        // });
         notification.onclick = () => {
           ipc.send('nativeNotificationClick');
         };
