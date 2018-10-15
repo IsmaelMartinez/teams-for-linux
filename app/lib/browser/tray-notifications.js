@@ -1,5 +1,4 @@
 'use strict';
-
 const { nativeImage } = require('electron');
 
 /**
@@ -40,9 +39,6 @@ function buildIcon({ count, icon }) {
 
 exports = module.exports = ({ ipc, iconPath }) => {
   var lastCount = 0;
-  ipc.on('notifications', () => {
-    console.log('notifications');
-  });
   ipc.on('page-title', () => {
     if (typeof angular === 'undefined') {
       return;
@@ -57,8 +53,7 @@ exports = module.exports = ({ ipc, iconPath }) => {
     if (lastCount !== count) {
       lastCount = count;
       let toast = document.getElementById('toast-container');
-      console.log('showing toast message');
-      let innerText = (toast) ? toast.innerText.replace(/(\r\n|\n|\r)/gm," ") : ""
+      let innerText = (toast) ? toast.innerText.replace(/(\r\n|\n|\r)/gm, " ") : ""
 
       buildIcon({ count, icon: nativeImage.createFromPath(iconPath) }).then(
         icon => {

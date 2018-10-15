@@ -1,5 +1,4 @@
 'use strict';
-
 const webFrame = require('electron').webFrame;
 
 exports = module.exports = (config, window) => {
@@ -25,10 +24,10 @@ exports = module.exports = (config, window) => {
               window.webContents.setUserAgent(config.chromeUserAgent);
             }
           }
-          
+
         ]
-        
-      },{
+
+      }, {
         label: 'Zoom',
         submenu: [
           { role: 'resetZoom' },
@@ -36,7 +35,7 @@ exports = module.exports = (config, window) => {
           { role: 'zoomOut' }
         ]
       }
-      
+
     ]
   };
 }

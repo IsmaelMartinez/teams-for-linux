@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Electron App</title>
-    </head>
 
-    <body>
+<head>
+    <meta charset="UTF-8">
+    <title>Login Dialog</title>
+</head>
 
-        <form name="ipcForm" onSubmit="JavaScript:sendForm(event)">
-            <input type="text" name="username" id="username" value="" placeholder="email of/or domain\username" type="email" style="width: 342px;">
-            <br><br>
-            <input type="password" name="password" id="password" value="" placeholder="Password" style="width: 342px;">
-            <br><br>
-            <input type="submit" value="Submit" style="
+<body>
+
+    <form name="form" onSubmit="JavaScript:sendForm(event)">
+        <input type="text" name="username" id="username" value="" placeholder="email of/or domain\username" type="email"
+            style="width: 342px;">
+        <br><br>
+        <input type="password" name="password" id="password" value="" placeholder="Password" style="width: 342px;">
+        <br><br>
+        <input type="submit" value="Submit" style="
                 background-color: rgb(38, 114, 236);     
                 border: none;
                 min-width: 80px;
                 padding: 4px 20px 6px 20px;
                 color: rgb(255, 255, 255);">
-        </form>
+    </form>
 
-        <script src='index.js'></script>
-    </body>
+    <script src='formSender.js'></script>
+</body>
+
 </html>

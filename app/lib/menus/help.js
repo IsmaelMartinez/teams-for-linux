@@ -1,5 +1,4 @@
 'use strict';
-
 const open = require('opn');
 
 exports = module.exports = app => {

@@ -1,5 +1,4 @@
 'use strict';
-
 const yargs = require('yargs');
 const path = require('path');
 
