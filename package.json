@@ -50,6 +50,5 @@
     }
   },
   "dependencies": {
-    "electron-notification-shim": "^1.1.0"
   }
 }
