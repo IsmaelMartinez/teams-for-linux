@@ -31,7 +31,6 @@ function createWindow(iconPath) {
       partition: 'persist:teams',
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
-      safeDialogs: true,
       plugins: true,
       nodeIntegration: false,
     }
@@ -55,6 +54,7 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   var window = createWindow(iconPath);
+  let isFirstLoginTry = true;
   const config = configBuilder(app.getPath('userData'));
   let menus = new Menus(config, iconPath);
   menus.register(window);
@@ -84,6 +84,11 @@ app.on('ready', () => {
     }
   });
 
+  window.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId) => {
+    console.error('did-fail-load', event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId);
+    setTimeout(() => window.reload(), 1000);
+  });
+
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
@@ -91,7 +96,13 @@ app.on('ready', () => {
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
     event.preventDefault();
-    login.loginService(window, callback);
+    if (isFirstLoginTry) {
+      isFirstLoginTry = false;
+      login.loginService(window, callback);
+    } else {
+      app.relaunch();
+      app.exit(0);
+    }
   });
 
   if (config.userAgent === 'edge') {
@@ -113,6 +124,7 @@ app.on('ready', () => {
 });
 
 app.on('login', function (event, webContents, request, authInfo, callback) {
+  event.preventDefault();
   if (typeof config !== 'undefined' && typeof config.firewallUsername !== 'undefined') {
     callback(config.firewallUsername, config.firewallPassword);
   }

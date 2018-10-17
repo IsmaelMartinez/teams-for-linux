@@ -24,6 +24,5 @@ exports.loginService = function loginService(parentWindow, callback) {
 
   win.on('closed', () => win = null);
 
-  win.openDevTools();
   win.loadURL(`file://${__dirname}/login.html`);
 }
