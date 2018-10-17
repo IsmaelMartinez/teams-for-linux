@@ -1,11 +1,13 @@
 'use strict';
 const { ipcMain, BrowserWindow } = require('electron');
 
-exports.loginService = function loginService(callback) {
+exports.loginService = function loginService(parentWindow, callback) {
   var win = new BrowserWindow({
     width: 363,
     height: 124,
+    modal: true,
     frame: false,
+    parent: parentWindow,
 
     show: false,
     autoHideMenuBar: true,
@@ -16,7 +18,6 @@ exports.loginService = function loginService(callback) {
   });
 
   ipcMain.on('submitForm', function (event, data) {
-    console.log('submitForm called', data);
     callback(data.username, data.password);
     win.close();
   });

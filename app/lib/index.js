@@ -91,7 +91,7 @@ app.on('ready', () => {
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
     event.preventDefault();
-    login.loginService(callback);
+    login.loginService(window, callback);
   });
 
   if (config.userAgent === 'edge') {
