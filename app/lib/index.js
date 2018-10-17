@@ -37,9 +37,9 @@ function createWindow(iconPath) {
   });
 
   windowState.manage(window);
-  window.eval = global.eval = function () {
-    throw new Error(`Sorry, this app does not support window.eval().`)
-  }
+  // window.eval = global.eval = function () {
+  //   throw new Error(`Sorry, this app does not support window.eval().`)
+  // }
 
   return window;
 }
@@ -53,10 +53,10 @@ app.on('ready', () => {
     app.getAppPath(),
     'lib/assets/icons/icon-96x96.png'
   );
-  var window = createWindow(iconPath);
   let isFirstLoginTry = true;
+  var window = createWindow(iconPath);
   const config = configBuilder(app.getPath('userData'));
-  let menus = new Menus(config, iconPath);
+  const menus = new Menus(config, iconPath);
   menus.register(window);
 
   window.on('page-title-updated', (event, title) =>
