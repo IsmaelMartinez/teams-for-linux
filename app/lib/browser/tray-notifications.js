@@ -6,7 +6,6 @@ const { nativeImage } = require('electron');
  */
 function buildIcon({ count, icon }) {
   return new Promise(resolve => {
-    console.log('calling buildIcon !!!!!!!!!!!!!!!!!!');
     const canvas = document.createElement('canvas');
     canvas.height = 140;
     canvas.width = 140;
@@ -15,11 +14,9 @@ function buildIcon({ count, icon }) {
 
     // Create the red circle for notifications
     image.onload = () => {
-      console.log('onload buildIcon !!!!!!!!!!!!!!!!!!');
       const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0, 140, 140);
       if (count > 0) {
-        console.log('more than one! buildIcon !!!!!!!!!!!!!!!!!!');
         ctx.fillStyle = 'red';
         ctx.beginPath();
         ctx.ellipse(105, 35, 35, 35, 35, 0, 2 * Math.PI);

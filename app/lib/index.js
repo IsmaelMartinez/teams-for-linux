@@ -37,9 +37,9 @@ function createWindow(iconPath) {
   });
 
   windowState.manage(window);
-  // window.eval = global.eval = function () {
-  //   throw new Error(`Sorry, this app does not support window.eval().`)
-  // }
+  window.eval = global.eval = function () {
+    throw new Error(`Sorry, this app does not support window.eval().`)
+  }
 
   return window;
 }
@@ -63,11 +63,11 @@ app.on('ready', () => {
     window.webContents.send('page-title', title)
   );
 
-  ipcMain.on('nativeNotificationClick', event => {
-    console.log('nativeNotificationClick called');
-    window.show();
-    window.focus();
-  });
+  // ipcMain.on('nativeNotificationClick', event => {
+  //   console.log('nativeNotificationClick called');
+  //   window.show();
+  //   window.focus();
+  // });
 
   ipcMain.on('notifications', async (e, msg) => {
     if (msg.count > 0) {
