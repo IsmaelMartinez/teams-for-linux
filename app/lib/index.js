@@ -110,9 +110,6 @@ app.on('ready', () => {
   window.on('closed', () => window = null);
 
   window.loadURL(config.url);
-  // login.loginService((username, password) => {
-  //   window.loadURL(config.url);
-  // });
 });
 
 app.on('login', function (event, webContents, request, authInfo, callback) {
