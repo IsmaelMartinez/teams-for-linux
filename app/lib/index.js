@@ -32,7 +32,7 @@ function createWindow(iconPath) {
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
       plugins: true,
-      nodeIntegration: false,
+      nodeIntegration: false
     }
   });
 
@@ -48,7 +48,6 @@ app.commandLine.appendSwitch('auth-server-whitelist', '*');
 app.commandLine.appendSwitch('enable-ntlm-v2', 'true');
 
 app.on('ready', () => {
-
   const iconPath = path.join(
     app.getAppPath(),
     'lib/assets/icons/icon-96x96.png'
@@ -85,8 +84,8 @@ app.on('ready', () => {
   });
 
   window.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId) => {
-    console.error('did-fail-load', event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId);
-    setTimeout(() => window.reload(), 1000);
+    console.error('did-fail-load. Trying to reload.');
+    window.reload();
   });
 
   window.webContents.on('new-window', (event, url) => {
@@ -121,11 +120,4 @@ app.on('ready', () => {
   window.on('closed', () => window = null);
 
   window.loadURL(config.url);
-});
-
-app.on('login', function (event, webContents, request, authInfo, callback) {
-  event.preventDefault();
-  if (typeof config !== 'undefined' && typeof config.firewallUsername !== 'undefined') {
-    callback(config.firewallUsername, config.firewallPassword);
-  }
 });

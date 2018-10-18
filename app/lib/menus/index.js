@@ -33,7 +33,7 @@ class Menus {
   }
 
   register(window) {
-    const appMenu = new Menu.buildFromTemplate(
+    const appMenu = Menu.buildFromTemplate(
       [
         {
           label: 'Open',
@@ -53,7 +53,7 @@ class Menus {
       ]
     );
 
-    window.setMenu(new Menu.buildFromTemplate([
+    window.setMenu(Menu.buildFromTemplate([
       {
         // workaround for alt+shift showing the hidden menu and blocking input
         label: ''
