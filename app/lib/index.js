@@ -2,10 +2,12 @@
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const { shell, app, ipcMain, BrowserWindow } = require('electron');
-const configBuilder = require('./config');
 const login = require('./login');
 const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
+
+const teamsUrl = 'https://teams.microsoft.com/'
+const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36';
 
 function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
@@ -24,7 +26,7 @@ function createWindow(iconPath) {
 
     show: false,
     iconPath,
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
@@ -53,14 +55,12 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
-  var window = createWindow(iconPath);
-  const config = configBuilder(app.getPath('userData'));
-  const menus = new Menus(config, iconPath);
+  let menus = new Menus(iconPath);
   menus.register(window);
 
-  window.on('page-title-updated', (event, title) =>
+  window.on('page-title-updated', (event, title) => {
     window.webContents.send('page-title', title)
-  );
+  });
 
   // ipcMain.on('nativeNotificationClick', event => {
   //   console.log('nativeNotificationClick called');
@@ -104,11 +104,7 @@ app.on('ready', () => {
     }
   });
 
-  if (config.userAgent === 'edge') {
-    window.webContents.setUserAgent(config.edgeUserAgent);
-  } else {
-    window.webContents.setUserAgent(config.chromeUserAgent);
-  }
+  window.webContents.setUserAgent(userAgent);
 
   window.once('ready-to-show', () => window.show());
 
@@ -119,5 +115,5 @@ app.on('ready', () => {
 
   window.on('closed', () => window = null);
 
-  window.loadURL(config.url);
+  window.loadURL(teamsUrl);
 });

@@ -557,11 +557,6 @@ electron-download@^4.1.0:
     semver "^5.4.1"
     sumchecker "^2.0.2"
 
-electron-notification-shim@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/electron-notification-shim/-/electron-notification-shim-1.1.0.tgz#5a33ae43a8750ea52c701ea7144d5fd7b6c9793a"
-  integrity sha1-WjOuQ6h1DqUscB6nFE1f17bJeTo=
-
 electron-osx-sign@0.4.10:
   version "0.4.10"
   resolved "https://registry.yarnpkg.com/electron-osx-sign/-/electron-osx-sign-0.4.10.tgz#be4f3b89b2a75a1dc5f1e7249081ab2929ca3a26"
@@ -588,9 +583,9 @@ electron-publish@20.28.3:
     mime "^2.3.1"
 
 electron@^3.0.0:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-3.0.3.tgz#2857ed8d37c1b46e0a75a72684800252255f3243"
-  integrity sha512-5ypkMO368UbWd1e0ZwKaflYLXSHSw2wAvC5/yApv03pX/KV3uD/2/qF7rW841H9I3QPmS03YZ6UZmlQV/fNczw==
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-3.0.4.tgz#9b45a0171ac424d4c134721c9cf2a891b99e80f2"
+  integrity sha512-GuZ4xCmV8wNNfkUAOdmOmgkYYaTQj5LATzc2i/b3MGhoXghnjECCgxo5yW+G2BeKM+R30cg69KA03tRzmIFxxQ==
   dependencies:
     "@types/node" "^8.0.24"
     electron-download "^4.1.0"
@@ -1613,10 +1608,15 @@ semver-diff@^2.0.0:
   dependencies:
     semver "^5.0.3"
 
-"semver@2 || 3 || 4 || 5", semver@^5.0.3, semver@^5.1.0, semver@^5.4.1, semver@^5.5.0, semver@^5.5.1:
+"semver@2 || 3 || 4 || 5", semver@^5.0.3, semver@^5.1.0, semver@^5.5.0, semver@^5.5.1:
   version "5.5.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.1.tgz#7dfdd8814bdb7cabc7be0fb1d734cfb66c940477"
   integrity sha512-PqpAxfrEhlSUWge8dwIp4tZnQ25DIOthpiaHNIthsjEFQD6EvqUKUDM7L8O2rShkFccYo1VjJR0coWfNkCubRw==
+
+semver@^5.4.1:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
+  integrity sha512-RS9R6R35NYgQn++fkDWaOmqGoj4Ek9gGs+DPxNUZKuwE183xjJroKvyo1IzVFeXvUrvmALy6FWD5xrdJT25gMg==
 
 set-blocking@^2.0.0:
   version "2.0.0"

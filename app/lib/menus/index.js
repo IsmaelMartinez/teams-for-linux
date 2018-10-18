@@ -13,9 +13,8 @@ let shouldQuit = false;
 
 class Menus {
 
-  constructor(config, iconPath) {
+  constructor(iconPath) {
     this.iconPath = iconPath;
-    this.config = config;
   }
 
   static quit() {
@@ -62,7 +61,7 @@ class Menus {
         label: 'File',
         submenu: appMenu
       },
-      preferences(this.config, window),
+      preferences(window),
       help(app)
     ]));
 
