@@ -7,7 +7,7 @@ const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
 
 const teamsUrl = 'https://teams.microsoft.com/'
-const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36';
+const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36';
 
 function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
@@ -30,7 +30,7 @@ function createWindow(iconPath) {
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
-      partition: 'persist:teams',
+      partition: 'persist:teams-linux',
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
       plugins: true,
@@ -46,8 +46,8 @@ function createWindow(iconPath) {
   return window;
 }
 
-app.commandLine.appendSwitch('auth-server-whitelist', '*');
-app.commandLine.appendSwitch('enable-ntlm-v2', 'true');
+// app.commandLine.appendSwitch('auth-server-whitelist', '*');
+// app.commandLine.appendSwitch('enable-ntlm-v2', 'true');
 
 app.on('ready', () => {
   const iconPath = path.join(
@@ -100,6 +100,7 @@ app.on('ready', () => {
       isFirstLoginTry = false;
       login.loginService(window, callback);
     } else {
+      isFirstLoginTry = true;
       app.relaunch();
       app.exit(0);
     }
