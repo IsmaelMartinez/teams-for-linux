@@ -55,6 +55,7 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
+  var window = createWindow(iconPath);
   let menus = new Menus(iconPath);
   menus.register(window);
 
