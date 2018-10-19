@@ -85,8 +85,8 @@ app.on('ready', () => {
   });
 
   window.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId) => {
-    console.error('did-fail-load. Please try to reload.');
-    // window.reload();
+    console.error('did-fail-load. Trying to reload.');
+    window.reload();
   });
 
   window.webContents.on('new-window', (event, url) => {
