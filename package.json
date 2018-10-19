@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/JamieMagee/teams-for-linux",
   "keywords": [
@@ -26,7 +26,6 @@
   },
   "build": {
     "appId": "teams-for-linux",
-    "asar": false,
     "linux": {
       "category": "Network;Chat",
       "packageCategory": "net",

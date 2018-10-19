@@ -5,11 +5,9 @@ const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const login = require('./login');
 const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
+const configBuilder = require('./config');
 
-const teamsUrl = 'https://teams.microsoft.com/'
-const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36';
-
-function createWindow(iconPath) {
+function createWindow(config, iconPath) {
   // Load the previous state with fallback to defaults
   let windowState = windowStateKeeper({
     defaultWidth: 0,
@@ -30,7 +28,7 @@ function createWindow(iconPath) {
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
-      partition: 'persist:teams-linux',
+      partition: config.partition,
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
       plugins: true,
@@ -55,19 +53,14 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
-  var window = createWindow(iconPath);
-  let menus = new Menus(iconPath);
+  const config = configBuilder(app.getPath('userData'));
+  var window = createWindow(config, iconPath);
+  let menus = new Menus(config, iconPath);
   menus.register(window);
 
   window.on('page-title-updated', (event, title) => {
     window.webContents.send('page-title', title)
   });
-
-  // ipcMain.on('nativeNotificationClick', event => {
-  //   console.log('nativeNotificationClick called');
-  //   window.show();
-  //   window.focus();
-  // });
 
   ipcMain.on('notifications', async (e, msg) => {
     if (msg.count > 0) {
@@ -106,7 +99,11 @@ app.on('ready', () => {
     }
   });
 
-  window.webContents.setUserAgent(userAgent);
+  if (config.userAgent === 'edge') {
+    window.webContents.setUserAgent(config.edgeUserAgent);
+  } else {
+    window.webContents.setUserAgent(config.chromeUserAgent);
+  }
 
   window.once('ready-to-show', () => window.show());
 
@@ -117,5 +114,9 @@ app.on('ready', () => {
 
   window.on('closed', () => window = null);
 
-  window.loadURL(teamsUrl);
+  window.loadURL(config.url);
+
+  if (config.webDebug) {
+    window.openDevTools();
+  }
 });
