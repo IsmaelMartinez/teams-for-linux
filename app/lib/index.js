@@ -77,11 +77,6 @@ app.on('ready', () => {
     }
   });
 
-  window.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame, frameProcessId, frameRoutingId) => {
-    console.error('did-fail-load. Trying to reload.');
-    window.reload();
-  });
-
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
