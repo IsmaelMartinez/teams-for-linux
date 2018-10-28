@@ -7,7 +7,7 @@ const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
 const configBuilder = require('./config');
 
-function createWindow(config, iconPath) {
+function createWindow(part, iconPath) {
   // Load the previous state with fallback to defaults
   let windowState = windowStateKeeper({
     defaultWidth: 0,
@@ -28,7 +28,7 @@ function createWindow(config, iconPath) {
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
-      partition: config.partition,
+      partition: part,
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
       plugins: true,
@@ -54,7 +54,7 @@ app.on('ready', () => {
   );
   let isFirstLoginTry = true;
   const config = configBuilder(app.getPath('userData'));
-  var window = createWindow(config, iconPath);
+  var window = createWindow(config.partition, iconPath);
   let menus = new Menus(config, iconPath);
   menus.register(window);
 
