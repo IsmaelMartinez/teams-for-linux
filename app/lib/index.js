@@ -64,7 +64,7 @@ app.on('ready', () => {
 
   ipcMain.on('notifications', async (e, msg) => {
     if (msg.count > 0) {
-      const body = "(" + msg.count + ")" + ((msg.text) ? ": " + msg.text : "");
+      const body = ((msg.text) ? "(" + msg.count + "): " + msg.text : "You got " + msg.count + " notification(s)");
       const notification = new NativeNotification(
         "Microsoft Teams",
         {
@@ -93,13 +93,13 @@ app.on('ready', () => {
       app.exit(0);
     }
   });
-
+  
   if (config.userAgent === 'edge') {
     window.webContents.setUserAgent(config.edgeUserAgent);
   } else {
     window.webContents.setUserAgent(config.chromeUserAgent);
-  }
-
+  }  
+  
   window.once('ready-to-show', () => window.show());
 
   window.webContents.on('did-finish-load', function () {
