@@ -1,8 +1,8 @@
 {
   "name": "teams-for-linux",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Unofficial client for Microsoft Teams for Linux",
-  "homepage": "https://github.com/JamieMagee/teams-for-linux",
+  "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
   "keywords": [
     "Teams",
     "Microsoft Teams"
