@@ -39,15 +39,10 @@ As an example:
 yarn start --partition persist:teams-linux
 ```
 
-## Using video vs mentions
+## Known issues
 
-To be able to use video, the application needs to be started with the edgeUserAgent. 
-
-Unfortunately, this introduces a bug in the mentions that render them unusable.
-
-For that reason, the default userAgent used is chrome at this moment in time.
-
-> Note: Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
+### No history
+Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
 
 ## License
 
