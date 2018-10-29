@@ -25,7 +25,7 @@ function argv(configPath) {
       userAgent: {
         describe: 'HTTP User Agent',
         type: 'string',
-        default: 'edge'
+        default: 'chrome'
       },
       edgeUserAgent: {
         describe: 'Microsoft Edge User Agent',
