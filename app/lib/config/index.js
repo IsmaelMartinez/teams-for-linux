@@ -40,7 +40,7 @@ function argv(configPath) {
           'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
       }
     })
-    .argv;
+    .parse(process.argv.slice(1));
 }
 
 exports = module.exports = argv;
