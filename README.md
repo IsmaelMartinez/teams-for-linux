@@ -29,14 +29,14 @@ Here is the list of available arguments and its usage:
 | webDebug  | start with the browser developer tools open  |  false |
 | url  | url to open |  https://teams.microsoft.com/ |
 | config | config file location | ~/.config/teams.json |
-| userAgent  | select the user agent to use | chrome  |
+| userAgent  | select the user agent to use | edge  |
 | edgeUserAgent  |  user agent string for edge | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134  |
 | chromeUserAgent  |  user agent string for chrome |  Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 |
 
 
 As an example:
 ```bash
-yarn start --help
+yarn start --partition persist:teams-linux
 ```
 
 ## Using video vs mentions
@@ -47,7 +47,7 @@ Unfortunately, this introduces a bug in the mentions that render them unusable.
 
 For that reason, the default userAgent used is chrome at this moment in time.
 
-> Note: Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history.
+> Note: Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
 
 ## License
 
