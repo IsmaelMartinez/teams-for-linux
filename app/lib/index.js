@@ -94,11 +94,7 @@ app.on('ready', () => {
     }
   });
   
-  if (config.userAgent === 'edge') {
-    window.webContents.setUserAgent(config.edgeUserAgent);
-  } else {
-    window.webContents.setUserAgent(config.chromeUserAgent);
-  }  
+  window.webContents.setUserAgent(config.chromeUserAgent);
   
   window.once('ready-to-show', () => window.show());
 
