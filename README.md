@@ -32,6 +32,8 @@ Here is the list of available arguments and its usage:
 | userAgent  | select the user agent to use | chrome  |
 | edgeUserAgent  |  user agent string for edge | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134  |
 | chromeUserAgent  |  user agent string for chrome |  Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 |
+| ntlmV2enabled | enable-ntlm-v2 value | true |
+| authServerWhitelist | auth-server-whitelist value | * |
 
 
 As an example:

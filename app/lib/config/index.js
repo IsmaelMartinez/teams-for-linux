@@ -38,6 +38,16 @@ function argv(configPath) {
         type: 'string',
         default: 
           'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+      },
+      ntlmV2enabled: {
+        default: 'true',
+        describe: 'enable-ntlm-v2 value',
+        type: 'string'
+      },
+      authServerWhitelist: {
+        default: '*',
+        describe: 'auth-server-whitelist value',
+        type: 'string'
       }
     })
     .argv;
