@@ -50,7 +50,7 @@ function argv(configPath) {
         type: 'string'
       }
     })
-    .argv;
+    .parse(process.argv.slice(1));
 }
 
 exports = module.exports = argv;
