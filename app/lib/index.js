@@ -6,6 +6,7 @@ const login = require('./login');
 const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
 const config = require('./config')(app.getPath('userData'));
+global.edgeUserAgent = config.edgeUserAgent;
 
 function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
@@ -53,7 +54,6 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
-  // const config = configBuilder(app.getPath('userData'));
   var window = createWindow(iconPath);
   let menus = new Menus(config, iconPath);
   menus.register(window);
