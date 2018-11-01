@@ -6,6 +6,7 @@ const login = require('./login');
 const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
 const config = require('./config')(app.getPath('userData'));
+global.edgeUserAgent = config.edgeUserAgent;
 
 function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
@@ -53,7 +54,6 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
-  // const config = configBuilder(app.getPath('userData'));
   var window = createWindow(iconPath);
   let menus = new Menus(config, iconPath);
   menus.register(window);
@@ -62,21 +62,27 @@ app.on('ready', () => {
     window.webContents.send('page-title', title)
   });
 
-  ipcMain.on('notifications', async (e, msg) => {
-    if (msg.count > 0) {
-      const body = ((msg.text) ? "(" + msg.count + "): " + msg.text : "You got " + msg.count + " notification(s)");
-      const notification = new NativeNotification(
-        "Microsoft Teams",
-        {
-          "body": body,
-          "icon": iconPath,
-        });
-      if (notification.show !== undefined) {
-        notification.show();
+  if (!config.disableDesktopNotifications) {
+    ipcMain.on('notifications', async (e, msg) => {
+      if (msg.count > 0) {
+        const body = ((msg.text) ? "(" + msg.count + "): " + msg.text : "You got " + msg.count + " notification(s)");
+        const notification = new NativeNotification(
+          "Microsoft Teams",
+          {
+            "body": body,
+            "icon": iconPath,
+          });
+        notification.onclick = () => {
+          window.show();
+          window.focus();
+        };
+        if (notification.show !== undefined) {
+          notification.show();
+        }
       }
-    }
-  });
-
+    });
+  }
+  
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
@@ -93,9 +99,9 @@ app.on('ready', () => {
       app.exit(0);
     }
   });
-  
+
   window.webContents.setUserAgent(config.chromeUserAgent);
-  
+
   window.once('ready-to-show', () => window.show());
 
   window.webContents.on('did-finish-load', function () {

@@ -7,6 +7,11 @@ function argv(configPath) {
     .env(true)
     .config(path.join(configPath, 'teams.json'))
     .options({
+      disableDesktopNotifications: {
+        default: false,
+        describe: 'disable electron-native-notifications',
+        type: 'boolean'
+      },
       url: {
         default: 'https://teams.microsoft.com/',
         describe: 'Microsoft Teams URL',
@@ -18,7 +23,7 @@ function argv(configPath) {
         type: 'boolean'
       },
       partition: {
-        default: 'nopersist',
+        default: 'persist:teams-4-linux',
         describe: 'BrowserWindow webpreferences partition',
         type: 'string'
       },
@@ -26,7 +31,7 @@ function argv(configPath) {
         describe: 'Microsoft Edge User Agent',
         type: 'string',
         default:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/12.246'
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 Edge/42.17134'
       },
       chromeUserAgent: {
         describe: 'Google Chrome User Agent',
