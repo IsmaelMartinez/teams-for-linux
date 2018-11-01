@@ -17,7 +17,7 @@
   document.addEventListener(
     'DOMContentLoaded',
     () => {
-      setTimeout(navigator.__defineGetter__('userAgent', () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/12.246'), 5000);
+      setTimeout(navigator.__defineGetter__('userAgent', () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/42.17134'), 5000);
     }
   );
 })();
