@@ -36,7 +36,7 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist | auth-server-whitelist value | * |
 
 
-As an example:
+As an example, to disable the persitence, you can run the following command:
 ```bash
 yarn start --partition nopersist
 ```
