@@ -18,7 +18,7 @@ function argv(configPath) {
         type: 'boolean'
       },
       partition: {
-        default: 'nopersist',
+        default: 'persist:teams-4-linux',
         describe: 'BrowserWindow webpreferences partition',
         type: 'string'
       },
