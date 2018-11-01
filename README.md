@@ -25,7 +25,7 @@ Here is the list of available arguments and its usage:
 |:-:|:-:|:-:|
 | help  | show the available commands  |  false |
 | version  | show the version number  |  false |
-| partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition  | nopersist |
+| partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition  | persist:teams-4-linux |
 | webDebug  | start with the browser developer tools open  |  false |
 | url  | url to open |  https://teams.microsoft.com/ |
 | config | config file location | ~/.config/teams.json |
@@ -37,7 +37,7 @@ Here is the list of available arguments and its usage:
 
 As an example:
 ```bash
-yarn start --partition persist:teams-linux
+yarn start --partition nopersist
 ```
 
 ## Known issues
