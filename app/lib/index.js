@@ -5,9 +5,9 @@ const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const login = require('./login');
 const NativeNotification = require('electron-native-notification');
 const Menus = require('./menus');
-const configBuilder = require('./config');
+const config = require('./config')(app.getPath('userData'));
 
-function createWindow(part, iconPath) {
+function createWindow(iconPath) {
   // Load the previous state with fallback to defaults
   let windowState = windowStateKeeper({
     defaultWidth: 0,
@@ -28,7 +28,7 @@ function createWindow(part, iconPath) {
     icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
 
     webPreferences: {
-      partition: part,
+      partition: config.partition,
       preload: path.join(__dirname, 'browser', 'index.js'),
       nativeWindowOpen: true,
       plugins: true,
@@ -44,8 +44,8 @@ function createWindow(part, iconPath) {
   return window;
 }
 
-app.commandLine.appendSwitch('auth-server-whitelist', '*');
-app.commandLine.appendSwitch('enable-ntlm-v2', 'true');
+app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
+app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
 app.on('ready', () => {
   const iconPath = path.join(
@@ -53,8 +53,8 @@ app.on('ready', () => {
     'lib/assets/icons/icon-96x96.png'
   );
   let isFirstLoginTry = true;
-  const config = configBuilder(app.getPath('userData'));
-  var window = createWindow(config.partition, iconPath);
+  // const config = configBuilder(app.getPath('userData'));
+  var window = createWindow(iconPath);
   let menus = new Menus(config, iconPath);
   menus.register(window);
 
@@ -94,11 +94,7 @@ app.on('ready', () => {
     }
   });
   
-  if (config.userAgent === 'edge') {
-    window.webContents.setUserAgent(config.edgeUserAgent);
-  } else {
-    window.webContents.setUserAgent(config.chromeUserAgent);
-  }  
+  window.webContents.setUserAgent(config.chromeUserAgent);
   
   window.once('ready-to-show', () => window.show());
 
