@@ -62,21 +62,27 @@ app.on('ready', () => {
     window.webContents.send('page-title', title)
   });
 
-  ipcMain.on('notifications', async (e, msg) => {
-    if (msg.count > 0) {
-      const body = ((msg.text) ? "(" + msg.count + "): " + msg.text : "You got " + msg.count + " notification(s)");
-      const notification = new NativeNotification(
-        "Microsoft Teams",
-        {
-          "body": body,
-          "icon": iconPath,
-        });
-      if (notification.show !== undefined) {
-        notification.show();
+  if (!config.disableDesktopNotifications) {
+    ipcMain.on('notifications', async (e, msg) => {
+      if (msg.count > 0) {
+        const body = ((msg.text) ? "(" + msg.count + "): " + msg.text : "You got " + msg.count + " notification(s)");
+        const notification = new NativeNotification(
+          "Microsoft Teams",
+          {
+            "body": body,
+            "icon": iconPath,
+          });
+        notification.onclick = () => {
+          window.show();
+          window.focus();
+        };
+        if (notification.show !== undefined) {
+          notification.show();
+        }
       }
-    }
-  });
-
+    });
+  }
+  
   window.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
@@ -93,9 +99,9 @@ app.on('ready', () => {
       app.exit(0);
     }
   });
-  
+
   window.webContents.setUserAgent(config.chromeUserAgent);
-  
+
   window.once('ready-to-show', () => window.show());
 
   window.webContents.on('did-finish-load', function () {

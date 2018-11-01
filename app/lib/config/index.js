@@ -7,6 +7,11 @@ function argv(configPath) {
     .env(true)
     .config(path.join(configPath, 'teams.json'))
     .options({
+      disableDesktopNotifications: {
+        default: false,
+        describe: 'disable electron-native-notifications',
+        type: 'boolean'
+      },
       url: {
         default: 'https://teams.microsoft.com/',
         describe: 'Microsoft Teams URL',

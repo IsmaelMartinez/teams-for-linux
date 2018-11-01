@@ -25,6 +25,7 @@ Here is the list of available arguments and its usage:
 |:-:|:-:|:-:|
 | help  | show the available commands  |  false |
 | version  | show the version number  |  false |
+| disableDesktopNotifications | disable electron-desktop-notifications extension | false |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition  | persist:teams-4-linux |
 | webDebug  | start with the browser developer tools open  |  false |
 | url  | url to open |  https://teams.microsoft.com/ |
@@ -44,6 +45,9 @@ yarn start --partition nopersist
 
 ### No history
 Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
+
+### Double notifications
+Some notifications daemons in linux can end up generating double notifications (like in the cast of Dunst). If this happen you can run the application with `teams --disableDesktopNotifications` that will disable the notifications implemented in this client.
 
 ## License
 
