@@ -83,10 +83,12 @@ app.on('ready', () => {
     });
   }
   
-  window.webContents.on('new-window', (event, url) => {
-    event.preventDefault();
-    shell.openExternal(url);
-  });
+  if (config.openLinksInExternalBrowser) {
+    window.webContents.on('new-window', (event, url) => {
+      event.preventDefault();
+      shell.openExternal(url);
+    });
+  }
 
   window.webContents.on('login', (event, request, authInfo, callback) => {
     event.preventDefault();
