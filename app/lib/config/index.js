@@ -12,6 +12,11 @@ function argv(configPath) {
         describe: 'disable electron-native-notifications',
         type: 'boolean'
       },
+      openLinksInExternalBrowser: {
+        default: true,
+        describe: 'open links in external browser',
+        type: 'boolean'
+      },
       url: {
         default: 'https://teams.microsoft.com/',
         describe: 'Microsoft Teams URL',
