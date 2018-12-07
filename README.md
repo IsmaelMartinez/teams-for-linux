@@ -26,7 +26,6 @@ Here is the list of available arguments and its usage:
 | help  | show the available commands  |  false |
 | version  | show the version number  |  false |
 | disableDesktopNotifications | disable electron-desktop-notifications extension | false |
-| openLinksInExternalBrowserIfCtrlClick | open links in external browser if the ctrl key is being press when clicking the link | true |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition  | persist:teams-4-linux |
 | webDebug  | start with the browser developer tools open  |  false |
 | url  | url to open |  https://teams.microsoft.com/ |

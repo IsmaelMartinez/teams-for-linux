@@ -83,15 +83,13 @@ app.on('ready', () => {
     });
   }
   
-  if (config.openLinksInExternalBrowserIfCtrlClick) {
-    window.webContents.on('new-window', (event, url, frame, disposition) => {
-      if (disposition === 'background-tab') {
-        event.preventDefault();
-        shell.openExternal(url);
-      }
-    });
-  }
-
+  window.webContents.on('new-window', (event, url, frame, disposition) => {
+    if (disposition === 'background-tab') {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+  
   window.webContents.on('login', (event, request, authInfo, callback) => {
     event.preventDefault();
     if (isFirstLoginTry) {
