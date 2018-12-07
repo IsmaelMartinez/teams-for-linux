@@ -13,7 +13,7 @@
     iconPath
   });
 
-  //change userAgent to chrome to fix the issue of notifications disapearing.
+  //HACK: changing the userAgent to chrome after 5 seconds to fix the issue of notifications disapearing.
   document.addEventListener(
     'DOMContentLoaded',
     () => {

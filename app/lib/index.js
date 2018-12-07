@@ -83,10 +83,12 @@ app.on('ready', () => {
     });
   }
   
-  if (config.openLinksInExternalBrowser) {
-    window.webContents.on('new-window', (event, url) => {
-      event.preventDefault();
-      shell.openExternal(url);
+  if (config.openLinksInExternalBrowserIfCtrlClick) {
+    window.webContents.on('new-window', (event, url, frame, disposition) => {
+      if (disposition === 'background-tab') {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
     });
   }
 
