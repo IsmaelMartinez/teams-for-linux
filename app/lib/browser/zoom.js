@@ -6,7 +6,7 @@ exports = module.exports = () => {
         let keyName = event.key;
 
         if (keyName === 'Control') {
-            // do not alert when only Control key is pressed.
+            // do not alert when only the Control key is being pressed.
             return;
         }
 

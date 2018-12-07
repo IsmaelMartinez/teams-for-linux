@@ -12,9 +12,9 @@ function argv(configPath) {
         describe: 'disable electron-native-notifications',
         type: 'boolean'
       },
-      openLinksInExternalBrowser: {
+      openLinksInExternalBrowserIfCtrlClick: {
         default: true,
-        describe: 'open links in external browser',
+        describe: 'open links in external browser if the ctrl key is been press when clicking the link ',
         type: 'boolean'
       },
       url: {
