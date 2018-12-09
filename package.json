@@ -1,6 +1,7 @@
 {
   "name": "teams-for-linux",
-  "version": "0.1.10",
+  "version": "0.1.11",
+  "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
   "keywords": [
@@ -15,10 +16,16 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "start": "yarn install && electron ./app",
+    "start": "npm install && electron ./app",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder"
+  },
+  "dependencies": {
+    "electron-window-state": "^4.1.1",
+    "electron-native-notification": "^1.2.1",
+    "opn": "^5.3.0",
+    "yargs": "^12.0.1"
   },
   "devDependencies": {
     "electron": "^3.0.0",

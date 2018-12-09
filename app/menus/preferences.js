@@ -1,7 +1,5 @@
 'use strict';
-const webFrame = require('electron').webFrame;
-
-exports = module.exports = (config, window) => {
+exports = module.exports = () => {
   return {
     label: 'Preferences',
     submenu: [

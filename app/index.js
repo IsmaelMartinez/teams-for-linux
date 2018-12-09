@@ -4,11 +4,13 @@ const path = require('path');
 const { shell, app, ipcMain, BrowserWindow } = require('electron');
 const login = require('./login');
 const NativeNotification = require('electron-native-notification');
+const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
+
 const Menus = require('./menus');
 const config = require('./config')(app.getPath('userData'));
 global.edgeUserAgent = config.edgeUserAgent;
 
-function createWindow(iconPath) {
+function createWindow() {
   // Load the previous state with fallback to defaults
   let windowState = windowStateKeeper({
     defaultWidth: 0,
@@ -24,9 +26,8 @@ function createWindow(iconPath) {
     height: windowState.height,
 
     show: false,
-    iconPath,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'assets', 'icons', 'icon-96x96.png'),
+    icon: iconPath,
 
     webPreferences: {
       partition: config.partition,
@@ -49,14 +50,10 @@ app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
 app.on('ready', () => {
-  const iconPath = path.join(
-    app.getAppPath(),
-    'lib/assets/icons/icon-96x96.png'
-  );
   let isFirstLoginTry = true;
-  var window = createWindow(iconPath);
-  let menus = new Menus(config, iconPath);
-  menus.register(window);
+  let window = createWindow();
+  new Menus(window, config, iconPath);
+  
 
   window.on('page-title-updated', (event, title) => {
     window.webContents.send('page-title', title)
