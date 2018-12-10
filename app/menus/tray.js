@@ -11,20 +11,20 @@ class ApplicationTray {
 	addTray() {
 		this.tray = new Tray(this.iconPath);
 		this.tray.setToolTip('Microsoft Teams');
-		this.tray.on('click', () => {
-			if (this.window.isFocused()) {
-				this.window.hide();
-			} else {
-				this.window.show();
-				this.window.focus();
-			}
-		});
+		this.tray.on('click', () => this.showAndFocusWindow());
 		this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
-		ipcMain.on('notifications', (event, {count, icon}) => {
-			this.tray.setImage(nativeImage.createFromDataURL(icon));
-			this.window.flashFrame(count > 0);
-		});
+		ipcMain.on('notifications', (event, {count, icon}) => this.updateTrayImage(count, icon));
+	}
+
+	showAndFocusWindow (){
+		this.window.show();
+		this.window.focus();
+	}
+
+	updateTrayImage (count, icon) {
+		this.tray.setImage(nativeImage.createFromDataURL(icon));
+		this.window.flashFrame(count > 0);
 	}
 }
 exports = module.exports = ApplicationTray;

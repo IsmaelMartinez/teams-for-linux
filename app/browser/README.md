@@ -1,9 +1,9 @@
 The files in here handle the code that talks with the browser  page.
 
-The [index.js](index.js) is the entry point.
+The [index.js](index.js) is the entry point it load the [zoom.js](zoom.js) and the [pageTitleNotifications.js](pageTitleNotifications.js) files.
 
-The main 2 things that this handles is injecting the zoom events [zoom.js](zoom.js).
+The [zoom.js](zoom.js) inject the keyboard shortcuts for zoom in the browser.
 
-The [tray-notifications.js](tray-notifications.js) file handles the emitting of an event when the page-title changes and indicates that there is an unread message.
+The [pageTitleNotifications.js](pageTitleNotifications.js) file handles the emitting of an event when the page-title changes and indicates that there is an unread message.
 
-This file also handles the generation of the tray messages, I assume the reason of its name, but probably will benefit from moving some of the functionality to another file.
+It also generates a new icon with the notifications count. This can be use later by the tray or app to modify the app icon.

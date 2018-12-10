@@ -1,12 +1,12 @@
 (function () {
 	const path = require('path');
 	const { ipcRenderer, remote } = require('electron');
-	const trayNotifications = require('./tray-notifications');
+	const pageTitleNotifications = require('./pageTitleNotifications');
 	require('./zoom')();
 
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-	trayNotifications({
+	pageTitleNotifications({
 		ipc: ipcRenderer,
 		iconPath,
 	});
