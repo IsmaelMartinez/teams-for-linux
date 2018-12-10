@@ -16,7 +16,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "start": "npm install && electron ./app",
+    "start": "yarn install && electron ./app",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder"
@@ -29,7 +29,8 @@
   },
   "devDependencies": {
     "electron": "^3.0.0",
-    "electron-builder": "^20.28.4"
+    "electron-builder": "^20.28.4",
+    "yarn": "^1.12.3"
   },
   "build": {
     "appId": "teams-for-linux",
