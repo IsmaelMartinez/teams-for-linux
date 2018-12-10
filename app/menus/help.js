@@ -1,24 +1,21 @@
-'use strict';
 const open = require('opn');
 
-exports = module.exports = app => {
-  return {
-    label: 'Help',
-    submenu: [
-      {
-        label: 'Online Documentation',
-        click: () => open('https://support.office.com/en-us/teams?omkt=en-001')
-      },
-      {
-        label: 'Github Project',
-        click: () => open('https://github.com/IsmaelMartinez/teams-for-linux')
-      },
-      { type: 'separator' },
-      {
-        label: `Version ${app.getVersion()}`,
-        enabled: false
-      },
-      { role: 'toggledevtools' }
-    ]
-  };
-};
+exports = module.exports = (app) => ({
+	label: 'Help',
+	submenu: [
+		{
+			label: 'Online Documentation',
+			click: () => open('https://support.office.com/en-us/teams?omkt=en-001'),
+		},
+		{
+			label: 'Github Project',
+			click: () => open('https://github.com/IsmaelMartinez/teams-for-linux'),
+		},
+		{type: 'separator'},
+		{
+			label: `Version ${app.getVersion()}`,
+			enabled: false,
+		},
+		{role: 'toggledevtools'},
+	],
+});
