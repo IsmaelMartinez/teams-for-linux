@@ -20,6 +20,10 @@
     "start": "yarn install && electron ./app",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux",
+    "dist:linux:appimage": "electron-builder --linux AppImage",
+    "dist:linux:snap": "electron-builder --linux snap",
+    "dist:macOS": "electron-builder --mac",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -56,6 +60,19 @@
         "provider": "github",
         "releaseType": "draft"
       }
+    },
+    "snap": {
+      "synopsis": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "confinement": "strict",
+      "grade": "devel",
+      "buildPackages": [
+      ],
+      "stagePackages": [
+        "default"
+      ],
+      "plugs": [
+        "default"
+      ]
     }
   }
 }
