@@ -6,9 +6,9 @@ function argv(configPath) {
 		.env(true)
 		.config(path.join(configPath, 'teams.json'))
 		.options({
-			disableDesktopNotificationsHack: {
+			enableDesktopNotificationsHack: {
 				default: false,
-				describe: 'Disable electron-native-notifications hack',
+				describe: 'Enable electron-native-notifications hack',
 				type: 'boolean',
 			},
 			url: {
