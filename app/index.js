@@ -6,6 +6,7 @@ const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
+require('./spellchecker');
 	
 global.edgeUserAgent = config.edgeUserAgent;
 
@@ -31,7 +32,7 @@ app.on('ready', () => {
 		}
 	});
 
-	login.handleLoginDialogTries(window.webContents);
+	login.handleLoginDialogTry(window.webContents);
 	
 	window.webContents.setUserAgent(config.chromeUserAgent);
 

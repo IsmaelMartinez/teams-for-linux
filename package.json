@@ -25,6 +25,7 @@
   "dependencies": {
     "electron-native-notification": "^1.2.1",
     "electron-window-state": "^4.1.1",
+    "electron-spellchecker": "^1.1.2",
     "yargs": "^12.0.1"
   },
   "devDependencies": {

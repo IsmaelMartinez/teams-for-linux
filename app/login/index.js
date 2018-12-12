@@ -1,7 +1,7 @@
 const {app, ipcMain, BrowserWindow} = require('electron');
 let isFirstLoginTry = true;
 
-exports.handleLoginDialogTries = function handleLoginDialogTries(webContents) {
+exports.handleLoginDialogTry= function handleLoginDialogTry(webContents) {
 	webContents.on('login', (event, request, authInfo, callback) => {
 		event.preventDefault();
 		if (isFirstLoginTry) {
