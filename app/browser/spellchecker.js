@@ -1,4 +1,4 @@
-const {SpellCheckHandler, ContextMenuListener, ContextMenuBuilder} = require('electron-spellchecker');
+const {SpellCheckHandler, ContextMenuListener, ContextMenuBuilder} = require('@ccnokes/electron-spellchecker');
 
 const spellCheckHandler = new SpellCheckHandler();
 

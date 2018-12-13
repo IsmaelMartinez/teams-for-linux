@@ -2,6 +2,7 @@
 	const path = require('path');
 	const { ipcRenderer, remote } = require('electron');
 	const pageTitleNotifications = require('./pageTitleNotifications');
+	require('./spellchecker');
 	require('./zoom')();
 
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');

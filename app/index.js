@@ -6,7 +6,6 @@ const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
-// require('./spellchecker');
 	
 global.edgeUserAgent = config.edgeUserAgent;
 
