@@ -23,7 +23,6 @@
     "dist:linux": "electron-builder --linux",
     "dist:linux:appimage": "electron-builder --linux AppImage",
     "dist:linux:snap": "electron-builder --linux snap",
-    "dist:macOS": "electron-builder --mac",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -54,7 +53,9 @@
       "target": [
         "rpm",
         "deb",
-        "tar.gz"
+        "tar.gz",
+        "snap",
+        "AppImage"
       ],
       "publish": {
         "provider": "github",
