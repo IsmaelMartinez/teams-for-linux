@@ -6,36 +6,64 @@ Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.
 It uses the Web App and wraps it as a standalone application using Electron.
 
 ## Install
+
 You can download the tarball, rpm or deb from the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
 ## Run from source
+
 ```bash
 yarn start
 ```
 
+## Build for linux
+
+```bash
+yarn run dist:linux
+```
+
+This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular linux distributions.
+
+Is possible to specify the snap or AppImage build type using running this:
+
+```bash
+yarn run dist:linux:snap
+```
+
+### Install using snap file
+
+To install the snap file using the generated file use this command.
+
+```bash
+sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
+```
+
 ## Available starting arguments
+
 Check in the config [README.md](app/config/README.md) in the config folder.
 
 ## Development
+
 This is a fairly small project. IMO, the ideal size for getting started with electron.
 
-Just fork the repo and dive in. The app/index.js is the starting of all the application. 
+Just fork the repo and dive in. The app/index.js is the starting of all the application.
 
 Once changes are made, just do a pull request to master.
 
 Each subfolder has a README.md file that explains the reason of existence and any extra required information.
 
 ### Version number
-Just increase the lower (last) number in the package.json version string number. 
 
-We are not following SemVer at the moment. 
+Just increase the lower (last) number in the package.json version string number.
+
+We are not following SemVer at the moment.
 
 This is because of this fork history. Jamie expressed his desire to refactor the project (0.2.0 branch) in Typescript and to support it.
 
 ## History
-This branch is a child fork of [JamieMagee teams-for-linux](https://github.com/JamieMagee/teams-for-linux) repo, that is itself a fork of (Ivelkov teams-for-linux)[https://github.com/ivelkov/teams-for-linux]. 
 
-Jamie has express his desire to refactor this project in Typescript and to support it, but he doesn't have the time to support it at the moment. I have tried to contact Ivelkov for a few months but haven't receive any answers. 
+This branch is a child fork of [JamieMagee teams-for-linux](https://github.com/JamieMagee/teams-for-linux) repo, that is itself a fork of [Ivelkov teams-for-linux](https://github.com/ivelkov/teams-for-linux).
+
+Jamie has express his desire to refactor this project in Typescript and to support it, but he doesn't have the time to support it at the moment. I have tried to contact Ivelkov for a few months but haven't receive any answers.
 
 For that reason, decided to refork it and fix a few things that where not working. Mainly the notification and the gif animations, but the list is fairly big.
 
@@ -44,14 +72,17 @@ Ideally this project will die when Microsoft implements a desktop client for lin
 ## Known issues
 
 ### Oauth services
-Some services requires the app to open the windows in electron. An example is github that requires authentication using oauth. 
+
+Some services requires the app to open the windows in electron. An example is github that requires authentication using oauth.
 
 We are defaulting in opening the links in a external browser, but links can be open ina electron windows by using the 'Crl+Click' combination.
 
 ### No history
+
 Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
 
 ### Double notifications
+
 Some notifications daemons in linux can end up generating double notifications (like in the cast of Dunst). If this happen you can run the application with `teams --disableDesktopNotificationsHack` that will disable the notifications implemented in this client.
 
 ## License
