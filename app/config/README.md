@@ -1,6 +1,7 @@
 This folder contains the configuration options available for the app.
 
 ## Available starting arguments
+
 The application uses [yargs](https://www.npmjs.com/package/yargs) to allow command line arguments.
 
 Here is the list of available arguments and its usage:
@@ -20,6 +21,7 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist | set auth-server-whitelist value | * |
 
 As an example, to disable the persitence, you can run the following command:
+
 ```bash
 teams --partition nopersist
 ```
