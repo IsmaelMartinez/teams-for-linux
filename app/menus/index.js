@@ -33,7 +33,7 @@ class Menus {
 		this.window.setMenu(Menu.buildFromTemplate([
 			appMenu,
 			preferences(),
-			help(app),
+			help(app, this.window),
 		]));
 
 		this.window.on('close', (event) => {

@@ -81,9 +81,19 @@ We are defaulting in opening the links in a external browser, but links can be o
 
 Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
 
+<<<<<<< HEAD
+### No desktop notifications
+
+Some notifications daemons in linux don't support the implementation that Microsoft implemented in the browser.
+
+This project includes a desktop notification hack that can be enable by running the application with `teams --enableDesktopNotificationsHack`.
+
+Read more about this and another config arguments in the [config README.md](config/README.md) file.
+=======
 ### Double notifications
 
 Some notifications daemons in linux can end up generating double notifications (like in the cast of Dunst). If this happen you can run the application with `teams --disableDesktopNotificationsHack` that will disable the notifications implemented in this client.
+>>>>>>> master
 
 ## License
 
