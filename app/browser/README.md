@@ -6,7 +6,7 @@ The [index.js](index.js) is the entry point it load the [zoom.js](zoom.js) and t
 
 The [zoom.js](zoom.js) inject the keyboard shortcuts for zoom in the browser.
 
-The [spellchecker.js](spellchecker.js) handles the spellchecker and right menu click funcionality. We are leveraging the spellchecker capabilitites to [electron-spell-check-provider](https://www.npmjs.com/package/electron-spell-check-provider) and the right click menu to the  [electron-editor-context-menu](https://github.com/mixmaxhq/electron-editor-context-menu) modules.
+The [rightClickMenuWithSpellcheck.js](rightClickMenuWithSpellcheck.js) handles the spellchecker and right menu click funcionality. We are leveraging the spellchecker capabilitites to [electron-spell-check-provider](https://www.npmjs.com/package/electron-spell-check-provider) and the right click menu to the  [electron-editor-context-menu](https://github.com/mixmaxhq/electron-editor-context-menu) modules.
 
 The [pageTitleNotifications.js](pageTitleNotifications.js) file handles the emitting of an event when the page-title changes and indicates that there is an unread message.
 

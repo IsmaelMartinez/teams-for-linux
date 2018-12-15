@@ -6,6 +6,11 @@ function argv(configPath) {
 		.env(true)
 		.config(path.join(configPath, 'teams.json'))
 		.options({
+			closeAppOnCross: {
+				default: false,
+				describe: 'Close the app when clicking the close (X) cross',
+				type: 'boolean',
+			},
 			enableDesktopNotificationsHack: {
 				default: false,
 				describe: 'Enable electron-native-notifications hack',
