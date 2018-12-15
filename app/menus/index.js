@@ -27,6 +27,10 @@ class Menus {
 		this.window.reload();
 	}
 
+	hide() {
+		this.window.hide();
+	}
+
 	initialize() {
 		const appMenu = application(this);
 
@@ -37,9 +41,9 @@ class Menus {
 		]));
 
 		this.window.on('close', (event) => {
-			if (!shouldQuit) {
+			if (!shouldQuit && !this.config.closeAppOnCross) {
 				event.preventDefault();
-				this.window.hide();
+				this.hide();
 			} else {
 				app.quit();
 			}

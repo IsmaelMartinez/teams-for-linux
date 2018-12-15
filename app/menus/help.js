@@ -13,11 +13,7 @@ exports = module.exports = (app) => ({
 		},
 		{type: 'separator'},
 		{
-			label: `Teams-for-linux version ${require('./../../package.json').version}`,
-			enabled: false,
-		},
-		{
-			label: `Electron version ${app.getVersion()}`,
+			label: `Version ${app.getVersion()}`,
 			enabled: false,
 		},
 		{role: 'toggledevtools'},
