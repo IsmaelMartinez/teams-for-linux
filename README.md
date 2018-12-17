@@ -96,7 +96,7 @@ As a work around, only valid when running from source, you can enable the use of
 
 Starting the app with `yarn start`, and if you have your system configured with the right dictionaries and locale, you should be able to see the spellchecker working.
 
-Unfortunatelly, at this moment in time it is not possible to use local dictionaries with the packaged app. Fixing issue [51](https://github.com/atom/node-spellchecker/issues/51) in node-spellchecker should solve this issue.
+Unfortunately, at this moment in time it is not possible to use local dictionaries with the packaged app. Fixing issue [51](https://github.com/atom/node-spellchecker/issues/51) in node-spellchecker should solve this issue.
 
 ### No desktop notifications
 
