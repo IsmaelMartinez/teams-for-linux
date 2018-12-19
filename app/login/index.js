@@ -36,7 +36,7 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(window) {
 			isFirstLoginTry = false;
 			this.loginService(window, callback);
 		} else {
-			// if fails to authenticate we need to relanch the app as we are closed 
+			// if fails to authenticate we need to relanch the app as we have close the login browser window.
 			isFirstLoginTry = true;
 			app.relaunch();
 			app.exit(0);

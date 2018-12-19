@@ -9,11 +9,10 @@ const notifications = require('./notifications');
 	
 global.edgeUserAgent = config.edgeUserAgent;
 
-// app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
-// app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
+app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
+app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
 app.on('ready', () => {
-	let isFirstLoginTry = true;
 	let window = createWindow();
 	new Menus(window, config, iconPath);
 
@@ -33,18 +32,6 @@ app.on('ready', () => {
 	});
 
 	login.handleLoginDialogTry(window);
-	// window.webContents.on('login', (event, request, authInfo, callback) => {
-	// 	event.preventDefault();
-	// 	//if (isFirstLoginTry) {
-	// 		isFirstLoginTry = false;
-	// 		login.loginService(window, callback);
-	// 	//} else {
-	// 		// if fails to authenticate we need to relanch the app as we are closed 
-	// 	// 	isFirstLoginTry = true;
-	// 	// 	app.relaunch();
-	// 	// 	app.exit(0);
-	// 	// }
-	// });
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
