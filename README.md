@@ -83,7 +83,7 @@ Switching the userAgent with the persistence turn on sometimes have the side eff
 
 ### Spellchecker not working
 
-Details are in issue [#28](/issues/28)
+Details are in issue [#28](https://github.com/IsmaelMartinez/teams-for-linux/issues/28)
 
 In short, node_spellchecker only ships with en_US dictionary.
 
