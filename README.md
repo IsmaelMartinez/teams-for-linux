@@ -104,10 +104,6 @@ Some notifications daemons in linux don't support the implementation that Micros
 
 This project includes a desktop notification hack that can be enable by running the application with `teams --enableDesktopNotificationsHack`.
 
-## Available configuration arguments
-
-Read more about this and another config arguments in the [config README.md](config/README.md) file.
-
 ## License
 
 [GPLv3](LICENSE.md)
