@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/IsmaelMartinez/teams-for-linux.svg?branch=master)](https://travis-ci.org/IsmaelMartinez/teams-for-linux)
 
+[![devDependencies Status](https://david-dm.org/IsmaelMartinez/teams-for-linux/dev-status.svg)](https://david-dm.org/IsmaelMartinez/teams-for-linux)
+
 Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.
 
