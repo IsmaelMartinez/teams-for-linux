@@ -6,9 +6,14 @@ function argv(configPath) {
 		.env(true)
 		.config(path.join(configPath, 'teams.json'))
 		.options({
-			disableDesktopNotificationsHack: {
+			closeAppOnCross: {
 				default: false,
-				describe: 'Disable electron-native-notifications hack',
+				describe: 'Close the app when clicking the close (X) cross',
+				type: 'boolean',
+			},
+			enableDesktopNotificationsHack: {
+				default: false,
+				describe: 'Enable electron-native-notifications hack',
 				type: 'boolean',
 			},
 			url: {

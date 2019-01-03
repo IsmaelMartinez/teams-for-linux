@@ -1,15 +1,15 @@
-const open = require('opn');
+const {shell} = require('electron');
 
 exports = module.exports = (app) => ({
 	label: 'Help',
 	submenu: [
 		{
 			label: 'Online Documentation',
-			click: () => open('https://support.office.com/en-us/teams?omkt=en-001'),
+			click: () => shell.openExternal('https://support.office.com/en-us/teams?omkt=en-001'),
 		},
 		{
 			label: 'Github Project',
-			click: () => open('https://github.com/IsmaelMartinez/teams-for-linux'),
+			click: () => shell.openExternal('https://github.com/IsmaelMartinez/teams-for-linux'),
 		},
 		{type: 'separator'},
 		{
