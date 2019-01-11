@@ -1,4 +1,4 @@
-const { shell, app, BrowserWindow, ipcMain } = require('electron');
+const { shell, app, BrowserWindow } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
