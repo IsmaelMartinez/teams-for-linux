@@ -1,3 +1,5 @@
+# Notifications
+
 This folder has the code that handles the desktop notifications hack implementation.
 
 There only the [index.js](index.js) file. The desktop notification is a temporary solution that will be hopefully face out as linux clients start implementing its support. 

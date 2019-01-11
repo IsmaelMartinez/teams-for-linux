@@ -2,6 +2,7 @@
 	const path = require('path');
 	const { ipcRenderer, remote } = require('electron');
 	const pageTitleNotifications = require('./pageTitleNotifications');
+	require('./onlineOfflineListener')();
 	require('./rightClickMenuWithSpellcheck');
 	require('./zoom')();
 

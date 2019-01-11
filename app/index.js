@@ -1,4 +1,4 @@
-const { shell, app, BrowserWindow } = require('electron');
+const { shell, app, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
@@ -6,6 +6,7 @@ const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
+const onlineOffline = require('./onlineOffline');
 	
 global.edgeUserAgent = config.edgeUserAgent;
 
@@ -32,6 +33,7 @@ app.on('ready', () => {
 	});
 
 	login.handleLoginDialogTry(window);
+	onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
