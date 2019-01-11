@@ -27,16 +27,16 @@
   },
   "dependencies": {
     "electron-native-notification": "^1.2.1",
-    "electron-window-state": "^4.1.1",
-    "yargs": "^12.0.1",
-    "electron-spell-check-provider": "*",
-    "electron-editor-context-menu": "*"
+    "electron-window-state": "^5.0.3",
+    "yargs": "^12.0.5",
+    "electron-spell-check-provider": "^1.1.1",
+    "electron-editor-context-menu": "^1.1.1"
   },
   "devDependencies": {
-    "electron": "^3.0.0",
+    "electron": "^4.0.1",
     "electron-builder": "^20.28.4",
-    "eslint": "^5.10.0",
-    "yarn": "^1.12.3"
+    "eslint": "^5.12.0",
+    "yarn": "^1.13.0"
   },
   "build": {
     "appId": "teams-for-linux",
