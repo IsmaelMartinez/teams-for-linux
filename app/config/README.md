@@ -1,3 +1,5 @@
+# Config
+
 This folder contains the configuration options available for the app.
 
 ## Available starting arguments

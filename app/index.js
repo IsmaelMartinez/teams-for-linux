@@ -6,6 +6,7 @@ const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
+const onlineOffline = require('./onlineOffline');
 	
 global.edgeUserAgent = config.edgeUserAgent;
 
@@ -32,6 +33,7 @@ app.on('ready', () => {
 	});
 
 	login.handleLoginDialogTry(window);
+	onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
