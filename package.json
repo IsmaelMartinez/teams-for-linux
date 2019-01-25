@@ -73,7 +73,8 @@
         "default"
       ],
       "plugs": [
-        "default"
+        "default",
+        "camera"
       ]
     }
   }
