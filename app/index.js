@@ -26,7 +26,10 @@ app.on('ready', () => {
 	}
 
 	window.webContents.on('new-window', (event, url, frame, disposition) => {
-		if (disposition !== 'background-tab') {      
+		if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+			event.preventDefault();
+			window.loadURL(url);
+		} else if (disposition !== 'background-tab') {      
 			event.preventDefault();
 			shell.openExternal(url);
 		}
