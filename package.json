@@ -56,7 +56,8 @@
         "deb",
         "tar.gz",
         "snap",
-        "AppImage"
+        "AppImage",
+        "pacman"
       ],
       "publish": {
         "provider": "github",
