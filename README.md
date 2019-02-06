@@ -11,6 +11,10 @@
 Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.
 
+<a href="https://liberapay.com/ismaelmartinez/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+
+<img src="http://img.shields.io/liberapay/receives/ismaelmartinez.svg?logo=liberapay">
+
 ## Install
 
 You can download the tarball, rpm or deb from the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
