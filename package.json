@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -33,9 +33,9 @@
     "electron-editor-context-menu": "^1.1.1"
   },
   "devDependencies": {
-    "electron": "^4.0.1",
-    "electron-builder": "^20.28.4",
-    "eslint": "^5.12.0",
+    "electron": "^4.0.4",
+    "electron-builder": "^20.38.5",
+    "eslint": "^5.13.0",
     "yarn": "^1.13.0"
   },
   "build": {
@@ -67,8 +67,7 @@
       "synopsis": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
       "confinement": "strict",
       "grade": "devel",
-      "buildPackages": [
-      ],
+      "buildPackages": [],
       "stagePackages": [
         "default"
       ],
