@@ -17,7 +17,22 @@
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
-			setTimeout(navigator.__defineGetter__('userAgent', () => remote.getGlobal('edgeUserAgent')), 5000);
+			setTimeout( () => {
+				angular.element(document).injector().get('callingSupportService').isChromeVideoMultipartyEnabled = true;
+				angular.element(document).injector().get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
+				angular.element(document).injector().get('callingSupportService').isChromeVideoMultipartyEnabled = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableCallingChromeOneOnOne = true;
+				angular.element(document).injector().get('settingsService').appConfig.callingEnableChromeMeetingSingleVideo = true;
+				angular.element(document).injector().get('settingsService').appConfig.callingEnableChromeMultipartyVideo = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableChromeScreenSharing = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableAddToChatButtonForMeetings = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableCallingScreenPreviewLabel = true;
+				
+				// // others... 
+				// enableAddToChatButtonForMeetings
+				// enableCallingScreenPreviewLabel 	
+			}, 5000);	
+			//setTimeout(navigator.__defineGetter__('userAgent', () => remote.getGlobal('edgeUserAgent')), 5000);
 		},
 	);
 }());

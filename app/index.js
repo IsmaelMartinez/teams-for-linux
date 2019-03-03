@@ -4,6 +4,7 @@ const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
 const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
+const fs = require('fs');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
@@ -35,6 +36,7 @@ app.on('ready', () => {
 		}
 	});
 
+
 	login.handleLoginDialogTry(window);
 	onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
 
@@ -43,9 +45,22 @@ app.on('ready', () => {
 	window.once('ready-to-show', () => window.show());
 
 	window.webContents.on('did-finish-load', () => {
-		window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
-		window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
+		// if (window.webContents.executeJavaScript('.icons-call-control-present-new').length > 0){
+
+		// }
+		//		window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
+		//		window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
+		fs.readFile(__dirname + '\\css.css','utf-8', (err, data) => {
+			if (!err){
+				console.log('css is',data.toString());
+				window.webContents.insertCSS(data);
+			}else{
+				console.log(' file fuck ', err);
+			}
+		});
+
 	});
+
 
 	window.on('closed', () => { window = null; });
 
