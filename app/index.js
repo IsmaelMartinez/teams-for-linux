@@ -4,13 +4,10 @@ const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
 const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
-const fs = require('fs');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
 	
-global.edgeUserAgent = config.edgeUserAgent;
-
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 

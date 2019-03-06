@@ -42,5 +42,4 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(window) {
 			app.exit(0);
 		}
 	});
-}
-
+};
