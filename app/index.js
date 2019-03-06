@@ -45,20 +45,8 @@ app.on('ready', () => {
 	window.once('ready-to-show', () => window.show());
 
 	window.webContents.on('did-finish-load', () => {
-		// if (window.webContents.executeJavaScript('.icons-call-control-present-new').length > 0){
-
-		// }
-		//		window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
-		//		window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
-		fs.readFile(__dirname + '\\css.css','utf-8', (err, data) => {
-			if (!err){
-				console.log('css is',data.toString());
-				window.webContents.insertCSS(data);
-			}else{
-				console.log(' file fuck ', err);
-			}
-		});
-
+		window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
+		window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
 	});
 
 

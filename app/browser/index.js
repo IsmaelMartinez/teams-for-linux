@@ -27,12 +27,24 @@
 				angular.element(document).injector().get('settingsService').appConfig.enableChromeScreenSharing = true;
 				angular.element(document).injector().get('settingsService').appConfig.enableAddToChatButtonForMeetings = true;
 				angular.element(document).injector().get('settingsService').appConfig.enableCallingScreenPreviewLabel = true;
-				
-				// // others... 
-				// enableAddToChatButtonForMeetings
-				// enableCallingScreenPreviewLabel 	
-			}, 5000);	
-			//setTimeout(navigator.__defineGetter__('userAgent', () => remote.getGlobal('edgeUserAgent')), 5000);
+				angular.element(document).injector().get('settingsService').appConfig.promoteMobile = false;
+				angular.element(document).injector().get('settingsService').appConfig.promoteDesktop = false;
+				angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
+				//enableSharingOnlyCallChrome
+				//enableSeeMyScreenshare
+				//enableSeeMyScreenshareEndpointMetadata
+				//enableMobileDownloadMailDialog = false
+				//enableSeeMyScreenshareUFD
+				//enableScreenSharingToolbar
+				//enableNewChatCalling
+				// enableUnreadMessagesButton
+				//enableTeamDiscoverabilitySetting
+				//enableTeamGalleryV2
+				//enableTeamChannelMembershipService
+				//enableSmartReplies
+				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
+//last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
+			}, 3000);
 		},
 	);
 }());
