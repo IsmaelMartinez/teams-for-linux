@@ -1,6 +1,6 @@
 (function () {
 	const path = require('path');
-	const { ipcRenderer, remote } = require('electron');
+	const { ipcRenderer } = require('electron');
 	const pageTitleNotifications = require('./pageTitleNotifications');
 	require('./onlineOfflineListener')();
 	require('./rightClickMenuWithSpellcheck');
@@ -17,7 +17,28 @@
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
-			setTimeout(navigator.__defineGetter__('userAgent', () => remote.getGlobal('edgeUserAgent')), 5000);
+			setTimeout( () => {
+				// Chrome video/audio meeting related 
+				angular.element(document).injector().get('callingSupportService').isChromeVideoMultipartyEnabled = true;
+				angular.element(document).injector().get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
+				angular.element(document).injector().get('callingSupportService').isChromeVideoMultipartyEnabled = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableCallingChromeOneOnOne = true;
+				angular.element(document).injector().get('settingsService').appConfig.callingEnableChromeMeetingSingleVideo = true;
+				angular.element(document).injector().get('settingsService').appConfig.callingEnableChromeMultipartyVideo = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableChromeScreenSharing = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableAddToChatButtonForMeetings = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableSharingOnlyCallChrome = true;
+				
+				//Disabling promote stuff
+				angular.element(document).injector().get('settingsService').appConfig.promoteMobile = false;
+				angular.element(document).injector().get('settingsService').appConfig.promoteDesktop = false;
+				angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
+				
+				// Future tests can be done in here...
+				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
+				//last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
+			}, 3000);
 		},
 	);
 }());

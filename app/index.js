@@ -10,9 +10,7 @@ const onlineOffline = require('./onlineOffline');
 const gotTheLock = app.requestSingleInstanceLock();
 
 let window = null;
-
-global.edgeUserAgent = config.edgeUserAgent;
-
+	
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
@@ -40,6 +38,7 @@ if (!gotTheLock) {
 			notifications.addDesktopNotificationHack(iconPath);
 		}
 
+<<<<<<< HEAD
 		window.webContents.on('new-window', (event, url, frame, disposition) => {
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
@@ -49,6 +48,11 @@ if (!gotTheLock) {
 				shell.openExternal(url);
 			}
 		});
+=======
+
+	login.handleLoginDialogTry(window);
+	onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
+>>>>>>> 761ad6c38a0e20a1f479ac00fe050c49570a0627
 
 		login.handleLoginDialogTry(window);
 		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
@@ -62,7 +66,12 @@ if (!gotTheLock) {
 			window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
 		});
 
+<<<<<<< HEAD
 		window.on('closed', () => { window = null; });
+=======
+
+	window.on('closed', () => { window = null; });
+>>>>>>> 761ad6c38a0e20a1f479ac00fe050c49570a0627
 
 		window.loadURL(config.url);
 
