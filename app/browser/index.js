@@ -1,3 +1,4 @@
+/* global angular */
 (function () {
 	const path = require('path');
 	const { ipcRenderer } = require('electron');
