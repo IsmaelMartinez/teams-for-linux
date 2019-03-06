@@ -7,54 +7,70 @@ const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
-	
+const gotTheLock = app.requestSingleInstanceLock()
+
+let myWindow = null
+
 global.edgeUserAgent = config.edgeUserAgent;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
-app.on('ready', () => {
-	let window = createWindow();
-	new Menus(window, config, iconPath);
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (myWindow) {
+      if (myWindow.isMinimized()) myWindow.restore()
+      myWindow.focus()
+    }
+  })
 
-	window.on('page-title-updated', (event, title) => {
-		window.webContents.send('page-title', title);
-	});
+	app.on('ready', () => {
+		let window = createWindow();
+		new Menus(window, config, iconPath);
 
-	if (config.enableDesktopNotificationsHack) {
-		notifications.addDesktopNotificationHack(iconPath);
-	}
+		window.on('page-title-updated', (event, title) => {
+			window.webContents.send('page-title', title);
+		});
 
-	window.webContents.on('new-window', (event, url, frame, disposition) => {
-		if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
-			event.preventDefault();
-			window.loadURL(url);
-		} else if (disposition !== 'background-tab') {      
-			event.preventDefault();
-			shell.openExternal(url);
+		if (config.enableDesktopNotificationsHack) {
+			notifications.addDesktopNotificationHack(iconPath);
+		}
+
+		window.webContents.on('new-window', (event, url, frame, disposition) => {
+			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+				event.preventDefault();
+				window.loadURL(url);
+			} else if (disposition !== 'background-tab') {
+				event.preventDefault();
+				shell.openExternal(url);
+			}
+		});
+
+		login.handleLoginDialogTry(window);
+		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
+
+		window.webContents.setUserAgent(config.chromeUserAgent);
+
+		window.once('ready-to-show', () => window.show());
+
+		window.webContents.on('did-finish-load', () => {
+			window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
+			window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
+		});
+
+		window.on('closed', () => { window = null; });
+
+		window.loadURL(config.url);
+
+		if (config.webDebug) {
+			window.openDevTools();
 		}
 	});
+}
 
-	login.handleLoginDialogTry(window);
-	onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
-
-	window.webContents.setUserAgent(config.chromeUserAgent);
-
-	window.once('ready-to-show', () => window.show());
-
-	window.webContents.on('did-finish-load', () => {
-		window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
-		window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
-	});
-
-	window.on('closed', () => { window = null; });
-
-	window.loadURL(config.url);
-
-	if (config.webDebug) {
-		window.openDevTools();
-	}
-});
 
 function createWindow() {
 	// Load the previous state with fallback to defaults
