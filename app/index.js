@@ -9,6 +9,8 @@ const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
 const gotTheLock = app.requestSingleInstanceLock()
 
+let myWindow = null
+
 global.edgeUserAgent = config.edgeUserAgent;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
