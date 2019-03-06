@@ -7,9 +7,9 @@ const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
-const gotTheLock = app.requestSingleInstanceLock()
+const gotTheLock = app.requestSingleInstanceLock();
 
-let myWindow = null
+let window = null;
 
 global.edgeUserAgent = config.edgeUserAgent;
 
@@ -17,18 +17,19 @@ app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
 if (!gotTheLock) {
-  app.quit()
+	console.warn('App already running');
+	app.quit();
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Someone tried to run a second instance, we should focus our window.
-    if (myWindow) {
-      if (myWindow.isMinimized()) myWindow.restore()
-      myWindow.focus()
-    }
-  })
+	app.on('second-instance', () => {
+		// Someone tried to run a second instance, we should focus our window.
+		if (window) {
+			if (window.isMinimized()) window.restore();
+			window.focus();
+		}
+	});
 
 	app.on('ready', () => {
-		let window = createWindow();
+		window = createWindow();
 		new Menus(window, config, iconPath);
 
 		window.on('page-title-updated', (event, title) => {
