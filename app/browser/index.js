@@ -30,18 +30,19 @@
 				angular.element(document).injector().get('settingsService').appConfig.promoteMobile = false;
 				angular.element(document).injector().get('settingsService').appConfig.promoteDesktop = false;
 				angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
-				//enableSharingOnlyCallChrome
-				//enableSeeMyScreenshare
-				//enableSeeMyScreenshareEndpointMetadata
-				//enableMobileDownloadMailDialog = false
-				//enableSeeMyScreenshareUFD
-				//enableScreenSharingToolbar
-				//enableNewChatCalling
-				// enableUnreadMessagesButton
+				angular.element(document).injector().get('settingsService').appConfig.enableSharingOnlyCallChrome = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableSeeMyScreenshare = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableSeeMyScreenshareEndpointMetadata = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableSeeMyScreenshareUFD = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
+				angular.element(document).injector().get('settingsService').appConfig.enableScreenSharingToolbar = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableNewChatCalling = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableUnreadMessagesButton = true;
+				angular.element(document).injector().get('settingsService').appConfig.enableSmartReplies = true;
+
 				//enableTeamDiscoverabilitySetting
 				//enableTeamGalleryV2
 				//enableTeamChannelMembershipService
-				//enableSmartReplies
 				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
 //last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
 			}, 3000);
