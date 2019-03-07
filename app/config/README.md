@@ -21,6 +21,7 @@ Here is the list of available arguments and its usage:
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 |
 | ntlmV2enabled | set enable-ntlm-v2 value | true |
 | authServerWhitelist | set auth-server-whitelist value | * |
+| customCSSLocation | Location for custom CSS styles | |
 
 As an example, to disable the persitence, you can run the following command:
 

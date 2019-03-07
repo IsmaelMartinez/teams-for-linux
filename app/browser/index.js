@@ -18,6 +18,7 @@
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
+			
 			setTimeout( () => {
 				// Chrome video/audio meeting related 
 				angular.element(document).injector().get('callingSupportService').isChromeVideoMultipartyEnabled = true;

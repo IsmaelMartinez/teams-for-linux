@@ -7,6 +7,7 @@ const login = require('./login');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
+const fs = require('fs');
 const gotTheLock = app.requestSingleInstanceLock();
 
 let window = null;
@@ -56,6 +57,13 @@ if (!gotTheLock) {
 		window.once('ready-to-show', () => window.show());
 
 		window.webContents.on('did-finish-load', () => {
+			if (config.customCSSLocation) {
+				fs.readFile(config.customCSSLocation, 'utf-8', (error, data) => {
+					if(!error){
+						window.webContents.insertCSS(data);
+					}
+				});
+			}
 			window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
 			window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
 		});

@@ -47,6 +47,11 @@ function argv(configPath) {
 				describe: 'Set auth-server-whitelist value',
 				type: 'string',
 			},
+			customCSSFileLocation: {
+				default: '',
+				describe: 'Location of the custom CSS styles',
+				type: 'string'
+			}
 		})
 		.parse(process.argv.slice(1));
 }
