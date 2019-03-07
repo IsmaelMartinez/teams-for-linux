@@ -47,9 +47,9 @@ function argv(configPath) {
 				describe: 'Set auth-server-whitelist value',
 				type: 'string',
 			},
-			customCSSFileLocation: {
+			customCSSLocation: {
 				default: '',
-				describe: 'Location of the custom CSS styles',
+				describe: 'custom CSS styles file location',
 				type: 'string'
 			}
 		})
