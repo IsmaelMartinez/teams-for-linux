@@ -4,7 +4,7 @@ const path = require('path');
 function argv(configPath) {
 	return yargs
 		.env(true)
-		.config(path.join(configPath, 'teams.json'))
+		.config('settings', path.join(configPath, 'teams.json'))
 		.options({
 			closeAppOnCross: {
 				default: false,
