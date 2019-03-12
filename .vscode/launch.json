@@ -10,7 +10,7 @@
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-            "args" : ["./app"]
+            "args" : ["--disable-http-cache","./app"]
           }
     ]
 }
