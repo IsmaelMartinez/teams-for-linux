@@ -34,13 +34,13 @@
     var self = remote.getCurrentWindow();
     self.once('pickDesktopMedia', function (types) {
       console.log(types);
-      desktopCapturer.getSources({ types: types }, (error, sources) => {
+      desktopCapturer.getSources({ types: types, thumbnailSize: { width: 800, height: 600} }, (error, sources) => {
         if (error) return;
 
         var grid = $('#grid')
         $.each(sources, function (i, source) {
           console.log(source);
-          var ele = $('<div class="square"><a><img class="grid-image" height="196"></img></a></div>');
+          var ele = $('<div class="square"><a><img class="grid-image" height="250"></img></a></div>');
           ele.find("img").prop("src", source.thumbnail.toDataURL());
           ele.find('a').click(function () {
             self.emit('choseDesktopMedia', source.id)
