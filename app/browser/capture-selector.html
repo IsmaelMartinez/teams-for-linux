@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script>
+    delete window.module;
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <style>
+    #grid {
+      padding-bottom: 200px;
+      overflow-y: scroll;
+      width: 100%;
+      min-height: 100%;
+      height: 100%;
+    }
+
+    .square {
+      -webkit-app-region: no-drag;
+      float: left;
+      margin: 10px 0 0 10px;
+    }
+
+    .square>img {
+      width: auto;
+      height: 196px;
+    }
+  </style>
+  <script>
+    console.log('getting sources');
+    const { remote, desktopCapturer } = require('electron')
+
+    var self = remote.getCurrentWindow();
+    self.once('pickDesktopMedia', function (types) {
+      console.log(types);
+      desktopCapturer.getSources({ types: types }, (error, sources) => {
+        if (error) return;
+
+        var grid = $('#grid')
+        $.each(sources, function (i, source) {
+          console.log(source);
+          var ele = $('<div class="square"><a><img class="grid-image" height="196"></img></a></div>');
+          ele.find("img").prop("src", source.thumbnail.toDataURL());
+          ele.find('a').click(function () {
+            self.emit('choseDesktopMedia', source.id)
+            self.hide();
+            setTimeout(function () {
+              self.close();
+            }, 1000);
+          })
+          grid.append(ele);
+        })
+      })
+
+    })
+
+    setTimeout(function () {
+      remote.getCurrentWindow().emit('chooseDesktopMedia', 'poopfarts');
+    }, 2000)
+  </script>
+</head>
+
+<body>
+  <div id='grid'>
+  </div>
+</body>
+
+</html>

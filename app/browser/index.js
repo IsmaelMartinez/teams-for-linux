@@ -6,6 +6,7 @@
 	require('./onlineOfflineListener')();
 	require('./rightClickMenuWithSpellcheck');
 	require('./zoom')();
+	require('./chrome-api');
 
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
@@ -18,9 +19,9 @@
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
-			
-			setTimeout( () => {
-				// Chrome video/audio meeting related 
+
+			setTimeout(() => {
+				// Chrome video/audio meeting related
 				angular.element(document).injector().get('callingSupportService').oneOnOneCallingEnabled = true;
 				angular.element(document).injector().get('callingSupportService').isChromeMeetingSingleVideoEnabled = true;
 				angular.element(document).injector().get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
@@ -34,13 +35,13 @@
 				angular.element(document).injector().get('settingsService').appConfig.enableScreenSharingToolbar = true;
 				angular.element(document).injector().get('settingsService').appConfig.enableCallingScreenPreviewLabel = true;
 				angular.element(document).injector().get('settingsService').appConfig.callingEnableChromeOneToOneVideo = true;
-				
+
 				//Disabling promote stuff
 				angular.element(document).injector().get('settingsService').appConfig.promoteMobile = false;
 				angular.element(document).injector().get('settingsService').appConfig.promoteDesktop = false;
 				angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
 				angular.element(document).injector().get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
-				
+
 				angular.element(document).injector().get('settingsService').settingsService.refreshSettings();
 				// Future tests can be done in here...
 				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
