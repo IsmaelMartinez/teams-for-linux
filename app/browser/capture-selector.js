@@ -5,7 +5,6 @@ function selectSource(callback) {
 	const selectorWindow = new BrowserWindow({
 		title: 'Share Your Screen',
 		modal: true,
-		frame: false,
 		parent: remote.getCurrentWindow(),
 		autoHideMenuBar: true,
 		width: 1024,
