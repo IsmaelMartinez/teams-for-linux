@@ -7,8 +7,8 @@ function selectSource(callback) {
 		modal: true,
 		parent: remote.getCurrentWindow(),
 		autoHideMenuBar: true,
-		width: 1024,
-		height: 768
+		width: 680,
+		height: 480
 	});
 
 	selectorWindow.webContents.once('did-finish-load', function () {

@@ -8,24 +8,29 @@
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <style>
-    #grid {
-      padding-bottom: 200px;
-      overflow-y: scroll;
-      width: 100%;
-      min-height: 100%;
-      height: 100%;
+    .imageHolder { 
+      position: relative; 
+      width: 320px; 
+      height: 180px; 
+      display: inline-block;
+    } 
+    .imageHolder .caption { 
+      width: 320px; 
+      height: 50px; 
+      bottom: 0px; 
+      left: 0px; 
+      color: #ffffff; 
+      background: rgb(38, 114, 236);
+      text-align:center; 
+      font-weight:bold; 
+      opacity:0.7; 
     }
-
-    .square {
-      -webkit-app-region: no-drag;
-      float: left;
-      margin: 10px 0 0 10px;
+    .imageAttr {
+      position: absolute;
+      height:180px;
+      width: 320px;
     }
-
-    .square>img {
-      width: auto;
-      height: 196px;
-    }
+    
   </style>
   <script>
     console.log('getting sources');
@@ -37,10 +42,11 @@
       desktopCapturer.getSources({ types: types, thumbnailSize: { width: 800, height: 600} }, (error, sources) => {
         if (error) return;
 
-        var grid = $('#grid')
+        var grid = $('#desktopCapturerGallery')
         $.each(sources, function (i, source) {
           console.log(source);
-          var ele = $('<div class="square"><a><img class="grid-image" height="250"></img></a></div>');
+          let title = source.name.slice(0, 40);
+          var ele = $('<div class="imageHolder"><a><img class="imageAttr" alt"'+ title + '"></><div class="caption"><br>' + title + '</br></div></a></div>');
           ele.find("img").prop("src", source.thumbnail.toDataURL());
           ele.find('a').click(function () {
             self.emit('choseDesktopMedia', source.id)
@@ -62,7 +68,7 @@
 </head>
 
 <body>
-  <div id='grid'>
+  <div id='desktopCapturerGallery'>
   </div>
 </body>
 

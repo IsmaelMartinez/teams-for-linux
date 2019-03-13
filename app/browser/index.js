@@ -46,7 +46,7 @@
 				// Future tests can be done in here...
 				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
 				//last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
-			}, 1000);
+			}, 3000);
 		},
 	);
 }());
