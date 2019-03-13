@@ -60,9 +60,7 @@
         "pacman"
       ],
       "publish": {
-        "provider": "github",
-        "releaseType": "draft",
-        "publishAutoUpdate": true
+        "provider": "github"
       }
     },
     "snap": {
