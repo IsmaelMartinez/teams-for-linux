@@ -61,7 +61,8 @@
       ],
       "publish": {
         "provider": "github",
-        "releaseType": "draft"
+        "releaseType": "draft",
+        "publishAutoUpdate": true
       }
     },
     "snap": {
