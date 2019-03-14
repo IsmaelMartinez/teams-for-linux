@@ -23,7 +23,7 @@ function selectSource(callback) {
 	const url = require('url').format({
 		protocol: 'file',
 		slashes: true,
-		pathname: require('path').join(__dirname, 'capture-selector.html')
+		pathname: require('path').join(__dirname, 'captureSelector.html')
 	});
 
 	selectorWindow.on('close', () => callback());

@@ -6,7 +6,7 @@
 	require('./onlineOfflineListener')();
 	require('./rightClickMenuWithSpellcheck');
 	require('./zoom')();
-	require('./chrome-api');
+	require('./chromeApi');
 
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 

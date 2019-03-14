@@ -1,4 +1,4 @@
-const { selectSource } = require('./capture-selector');
+const { selectSource } = require('./captureSelector');
 
 window.chrome = {
 	'runtime': {

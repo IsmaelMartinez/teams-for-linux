@@ -14,7 +14,6 @@ let window = null;
 	
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
-app.commandLine.appendSwitch('enable-webrtc-h264-with-openh264-ffmpeg');
 
 if (!gotTheLock) {
 	console.warn('App already running');
