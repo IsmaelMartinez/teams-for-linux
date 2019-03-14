@@ -15,6 +15,7 @@ let window = null;
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
+
 if (!gotTheLock) {
 	console.warn('App already running');
 	app.quit();
