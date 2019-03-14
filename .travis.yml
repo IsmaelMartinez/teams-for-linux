@@ -17,7 +17,7 @@ script:
       -v ~/.cache/electron:/root/.cache/electron \
       -v ~/.cache/electron-builder:/root/.cache/electron-builder \
       electronuserland/builder \
-      /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn dist:linux"
+      /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release --linux"
 
 branches:
   except:
