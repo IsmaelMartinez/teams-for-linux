@@ -3,6 +3,8 @@
 	const path = require('path');
 	const { ipcRenderer } = require('electron');
 	const pageTitleNotifications = require('./pageTitleNotifications');
+	const ActivityManager = require('./activityManager');
+	
 	require('./onlineOfflineListener')();
 	require('./rightClickMenuWithSpellcheck');
 	require('./zoom')();
@@ -10,10 +12,9 @@
 
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-	pageTitleNotifications({
-		ipc: ipcRenderer,
-		iconPath,
-	});
+	new ActivityManager(ipcRenderer, iconPath).start();
+
+	pageTitleNotifications(ipcRenderer);
 
 	// HACK: changing the userAgent to chrome after 5 seconds to fix the issue of notifications disapearing.
 	document.addEventListener(

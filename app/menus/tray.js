@@ -14,17 +14,19 @@ class ApplicationTray {
 		this.tray.on('click', () => this.showAndFocusWindow());
 		this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
-		ipcMain.on('notifications', (event, {count, icon}) => this.updateTrayImage(count, icon));
+		ipcMain.on('tray-update', (event, {icon, flash}) => this.updateTrayImage(icon, flash));
 	}
 
-	showAndFocusWindow (){
+	showAndFocusWindow() {
 		this.window.show();
 		this.window.focus();
 	}
 
-	updateTrayImage (count, icon) {
-		this.tray.setImage(nativeImage.createFromDataURL(icon));
-		this.window.flashFrame(count > 0);
+	updateTrayImage(iconUrl, flash) {
+		const image = nativeImage.createFromDataURL(iconUrl);
+
+		this.tray.setImage(image);
+		this.window.flashFrame(flash);
 	}
 }
 exports = module.exports = ApplicationTray;
