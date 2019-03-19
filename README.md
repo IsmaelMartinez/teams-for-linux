@@ -8,7 +8,7 @@
 [![dependencies Status](https://david-dm.org/IsmaelMartinez/teams-for-linux/status.svg)](https://david-dm.org/IsmaelMartinez/teams-for-linux) 
 [![devDependencies Status](https://david-dm.org/IsmaelMartinez/teams-for-linux/dev-status.svg)](https://david-dm.org/IsmaelMartinez/teams-for-linux?type=dev)
 
-Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.org/).
+Unofficial Microsoft Outlook client for Linux using [Electron](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.
 
 ## Install
@@ -47,7 +47,7 @@ sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 
 Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
 
-The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
+The camera is a restricted device on Snap, so you need to allow the access to the camera on Outlook For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
 
 ```bash
 sudo snap connect teams:camera core:camera

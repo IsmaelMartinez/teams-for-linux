@@ -1,16 +1,16 @@
 {
-  "name": "teams-for-linux",
+  "name": "outlook-for-linux",
   "version": "0.1.17",
   "main": "app/index.js",
-  "description": "Unofficial client for Microsoft Teams for Linux",
-  "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
+  "description": "Unofficial client for Microsoft outlook for Linux",
+  "homepage": "https://github.com/noizo/outlook-for-linux",
   "keywords": [
-    "Teams",
-    "Microsoft Teams"
+    "outlook",
+    "Microsoft outlook"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://github.com/IsmaelMartinez/teams-for-linux"
+    "url": "git+ssh://github.com/noizo/outlook-for-linux"
   },
   "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
@@ -39,17 +39,17 @@
     "yarn": "^1.13.0"
   },
   "build": {
-    "appId": "teams-for-linux",
+    "appId": "outlook-for-linux",
     "linux": {
       "category": "Network;Chat",
       "packageCategory": "net",
-      "executableName": "teams",
-      "synopsis": "Microsoft Teams for Linux",
-      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "executableName": "outlook",
+      "synopsis": "Microsoft outlook for Linux",
+      "description": "Unofficial Microsoft outlook client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
       "desktop": {
-        "Name": "Microsoft Teams for Linux",
-        "Comment": "Unofficial client for Microsoft Teams for Linux",
-        "StartupWMClass": "teams-for-linux"
+        "Name": "Microsoft outlook for Linux",
+        "Comment": "Unofficial client for Microsoft outlook for Linux",
+        "StartupWMClass": "outlook-for-linux"
       },
       "target": [
         "rpm",
@@ -66,7 +66,7 @@
       }
     },
     "snap": {
-      "synopsis": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "synopsis": "Unofficial Microsoft outlook client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
       "confinement": "strict",
       "grade": "devel",
       "buildPackages": [],

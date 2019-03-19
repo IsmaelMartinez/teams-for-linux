@@ -41,7 +41,7 @@ if (!gotTheLock) {
 		}
 
 		window.webContents.on('new-window', (event, url, frame, disposition) => {
-			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+			if (url.startsWith('https://outlook.office.com')) {
 				event.preventDefault();
 				window.loadURL(url);
 			} else if (disposition !== 'background-tab') {

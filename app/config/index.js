@@ -4,7 +4,7 @@ const path = require('path');
 function argv(configPath) {
 	return yargs
 		.env(true)
-		.config('settings', path.join(configPath, 'teams.json'))
+		.config('settings', path.join(configPath, 'outlook.json'))
 		.options({
 			closeAppOnCross: {
 				default: false,
@@ -17,8 +17,8 @@ function argv(configPath) {
 				type: 'boolean',
 			},
 			url: {
-				default: 'https://teams.microsoft.com/',
-				describe: 'Microsoft Teams URL',
+				default: 'https://outlook.office.com/',
+				describe: 'Microsoft Outlook URL',
 				type: 'string',
 			},
 			webDebug: {
@@ -27,7 +27,7 @@ function argv(configPath) {
 				type: 'boolean',
 			},
 			partition: {
-				default: 'persist:teams-4-linux',
+				default: 'persist:outlook-4-linux',
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string',
 			},
