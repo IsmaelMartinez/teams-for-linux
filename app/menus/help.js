@@ -9,7 +9,7 @@ exports = module.exports = (app) => ({
 		},
 		{
 			label: 'Github Project',
-			click: () => shell.openExternal('https://github.com/IsmaelMartinez/teams-for-linux'),
+			click: () => shell.openExternal('https://github.com/noizo/outlook-for-linux'),
 		},
 		{type: 'separator'},
 		{

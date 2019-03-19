@@ -6,7 +6,7 @@ exports.addDesktopNotificationHack = function addDesktopNotificationHack(iconPat
 		if (msg.count > 0) {
 			const body = ((msg.text) ? `(${msg.count}): ${msg.text}` : `You got ${msg.count} notification(s)`);
 			const notification = new NativeNotification(
-				'Microsoft Teams',
+				'Microsoft Outlook',
 				{
 					body,
 					icon: iconPath,

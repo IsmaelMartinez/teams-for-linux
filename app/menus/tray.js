@@ -10,7 +10,7 @@ class ApplicationTray {
 
 	addTray() {
 		this.tray = new Tray(this.iconPath);
-		this.tray.setToolTip('Microsoft Teams');
+		this.tray.setToolTip('Microsoft Outlook');
 		this.tray.on('click', () => this.showAndFocusWindow());
 		this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
