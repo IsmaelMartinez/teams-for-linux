@@ -1,4 +1,4 @@
-# teams-for-linux
+# Outlook-for-linux
 
 ![](https://img.shields.io/github/release/IsmaelMartinez/teams-for-linux.svg?style=flat)
 ![](https://img.shields.io/github/downloads/IsmaelMartinez/teams-for-linux/total.svg?style=flat)
