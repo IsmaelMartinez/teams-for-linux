@@ -12,7 +12,7 @@ function argv(configPath) {
 				type: 'boolean',
 			},
 			enableDesktopNotificationsHack: {
-				default: false,
+				default: true,
 				describe: 'Enable electron-native-notifications hack',
 				type: 'boolean',
 			},
