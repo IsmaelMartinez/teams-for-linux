@@ -32,7 +32,7 @@
 				// angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
 				// angular.element(document).injector().get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
 
-				// angular.element(document).injector().get('settingsService').settingsService.refreshSettings();
+				angular.element(document).injector().get('settingsService').settingsService.refreshSettings();
 				// Future tests can be done in here...
 				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
 				//last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
