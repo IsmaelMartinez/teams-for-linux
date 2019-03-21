@@ -35,11 +35,14 @@ Is possible to specify the snap or AppImage build type using running this:
 yarn run dist:linux:snap
 ```
 
+This will build the snap into the `dist/` directory.
+
 ### Install using snap file
 
 To install the snap file using the generated file use this command.
 
 ```bash
+cd dist
 sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 ```
 
