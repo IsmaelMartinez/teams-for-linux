@@ -32,14 +32,21 @@ This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder.
 Is possible to specify the snap or AppImage build type using running this:
 
 ```bash
+# Standalone build
 yarn run dist:linux:snap
+
+# Or, if you have docker installed, you can alternatively build there
+./dockerBuildSnap.sh
 ```
+
+This will build the snap into the `dist/` directory.
 
 ### Install using snap file
 
 To install the snap file using the generated file use this command.
 
 ```bash
+cd dist
 sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 ```
 
