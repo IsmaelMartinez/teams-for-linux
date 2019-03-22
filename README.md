@@ -52,10 +52,9 @@ sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 
 ### Install using snap from store
 
-_This is not currently stable but will be soon_
 
 ```bash
-sudo snap install --edge teams-for-linux
+sudo snap install teams-for-linux
 ```
 
 #### Use camera using the Snap build
