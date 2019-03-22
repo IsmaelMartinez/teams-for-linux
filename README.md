@@ -132,7 +132,7 @@ Unfortunately, at this moment in time it is not possible to use local dictionari
 
 Some notifications daemons in linux don't support the implementation that Microsoft implemented in the browser.
 
-This project includes a desktop notification hack that can be enable by running the application with `teams --enableDesktopNotificationsHack`.
+This project includes a desktop notification hack that can be enable by running the application with `teams-for-linux --enableDesktopNotificationsHack`.
 
 ## License
 
