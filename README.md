@@ -41,13 +41,21 @@ yarn run dist:linux:snap
 
 This will build the snap into the `dist/` directory.
 
-### Install using snap file
+### Install using locally built snap file
 
 To install the snap file using the generated file use this command.
 
 ```bash
 cd dist
 sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
+```
+
+### Install using snap from store
+
+_This is not currently stable but will be soon_
+
+```bash
+sudo snap install --edge teams-for-linux
 ```
 
 #### Use camera using the Snap build
@@ -57,7 +65,7 @@ Snap uses confinement to provide more security, this restric the access to hardw
 The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
 
 ```bash
-sudo snap connect teams:camera core:camera
+sudo snap connect teams-for-linux:camera core:camera
 ```
 
 ## Available starting arguments
