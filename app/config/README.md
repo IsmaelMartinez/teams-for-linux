@@ -26,7 +26,7 @@ Here is the list of available arguments and its usage:
 As an example, to disable the persitence, you can run the following command:
 
 ```bash
-teams --partition nopersist
+teams-for-linux --partition nopersist
 ```
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
