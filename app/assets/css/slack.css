@@ -473,13 +473,13 @@ margin-left: 0.4rem !important;
 .message-list-common:not(.chat-style) thread .ts-message
 {
 padding: 0 !important;
-/* BOYD - slim down the space between messages */ !important;
+/* BOYD - slim down the space between messages */;
 }
 
 .message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-container
 {
 padding-left: 16px !important;
-/* BOYD - adjust the message text to be under the username */ !important;
+/* BOYD - adjust the message text to be under the username */;
 }
 
 .message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-top-row
@@ -494,14 +494,12 @@ height: 14px !important;
 padding: 0 !important;
 display: block !important;
 overflow: visible !important;
-/* for timestamp */ !important;
 }
 
 /* Thread "subject" must be aligned too. */
 .message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .thread-subject
 {
 padding-left: 15rem !important;
-/* NAME-WIDTH */ !important;
 }
 
 /** Chat: just pad every messages, simple column design **/
@@ -511,8 +509,7 @@ message-list.chat-style .media-left ~ .ts-message-thread-body ,
 message-list.chat-style .self .media-left ~ .ts-message-thread-body
 {
 padding-left: 15rem !important;
-/* NAME-WIDTH */
- !important;
+/* NAME-WIDTH */;
 }
 
 .ts-message-list-container .ts-message-list-item
@@ -533,7 +530,6 @@ padding: 0 !important;
 display: block !important;
 overflow: visible !important;
 /* for timestamp */
- !important;
 }
 
 
@@ -595,7 +591,7 @@ border-left: 1px solid #f3f2f1 !important;
 {
 padding-top: 0 !important;
 padding-bottom: 0 !important;
-/* BOYD - zeroed both of these out */ !important;
+/* BOYD - zeroed both of these out */;
 }
 
 .message-list-common:not(.chat-style) .conversation-start .message-body-container
@@ -619,7 +615,6 @@ margin: 0 !important;
 /*     padding-top: 0.1rem !important;
   padding-bottom: 0.1rem !important; */
 padding: 0 !important;
-/* BOYD - condense down the message reply padding */ !important;
 }
 
 /* Chat */
@@ -677,14 +672,14 @@ margin-bottom: 0.1rem !important;
 .message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row,
 .message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row .timestamp-column
 {
-/*     background: rgb(252, 252, 251) !important; */ !important;
+     background: rgb(252, 252, 251) !important;
 }
 
 /* replies in thread */
 .message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row,
 .message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
 {
-/*     background: rgb(244, 243, 242) !important; */ !important;
+     background: rgb(244, 243, 242) !important;
 }
 
 
@@ -694,14 +689,14 @@ margin-bottom: 0.1rem !important;
 .message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row,
 .message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
 {
-/*     background: rgb(255, 255, 255) !important; */ !important;
+     background: rgb(255, 255, 255) !important;
 }
 
 /* My messages */
 .message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row,
 .message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
 {
-/*     background: rgb(224, 224, 237) !important; */ !important;
+     background: rgb(224, 224, 237) !important;
 }
 
 /* Shrink those oversized "Cards" */
