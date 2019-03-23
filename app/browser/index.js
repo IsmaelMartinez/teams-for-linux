@@ -16,22 +16,14 @@
 
 	pageTitleNotifications(ipcRenderer);
 
-	// HACK: changing the userAgent to chrome after 5 seconds to fix the issue of notifications disapearing.
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
 
 			setTimeout(() => {
-				// Chrome video/audio meeting related
 				enableChromeVideoAudioMeetings();
-				
-				//Disabling promote stuff
 				disablePromoteStuff();
-				// angular.element(document).injector().get('settingsService').appConfig.promoteMobile = false;
-				// angular.element(document).injector().get('settingsService').appConfig.promoteDesktop = false;
-				// angular.element(document).injector().get('settingsService').appConfig.hideGetAppButton = true;
-				// angular.element(document).injector().get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
-
+				
 				angular.element(document).injector().get('settingsService').settingsService.refreshSettings();
 				// Future tests can be done in here...
 				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
