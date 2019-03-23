@@ -58,13 +58,7 @@ if (!gotTheLock) {
 		window.once('ready-to-show', () => window.show());
 
 		window.webContents.on('did-finish-load', () => {
-			if (config.customCSSLocation) {
-				fs.readFile(config.customCSSLocation, 'utf-8', (error, data) => {
-					if(!error){
-						window.webContents.insertCSS(data);
-					}
-				});
-			}
+			applyCustomCSSStyleIfPresent();
 			window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
 			window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
 		});
@@ -79,6 +73,21 @@ if (!gotTheLock) {
 	});
 }
 
+function applyCustomCSSStyleIfPresent() {
+	if (config.customCSSName) {
+		applyCustomCSSFromLocation(path.join(__dirname, 'assets', 'css', config.customCSSName + '.css'));
+	} else if (config.customCSSLocation) {
+		applyCustomCSSFromLocation(config.customCSSLocation);
+	}
+}
+
+function applyCustomCSSFromLocation(cssLocation) {
+	fs.readFile(cssLocation, 'utf-8', (error, data) => {
+		if(!error){
+			window.webContents.insertCSS(data);
+		}
+	});
+}
 
 function createWindow() {
 	// Load the previous state with fallback to defaults

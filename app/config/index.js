@@ -47,6 +47,11 @@ function argv(configPath) {
 				describe: 'Set auth-server-whitelist value',
 				type: 'string',
 			},
+			customCSSName: {
+				default: '',
+				describe: 'custom CSS name for the packaged available options. Currently those are: "compactDark", "compactLight", "tweaks", "slack", ',
+				type: 'string'
+			},
 			customCSSLocation: {
 				default: '',
 				describe: 'custom CSS styles file location',

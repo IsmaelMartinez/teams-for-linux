@@ -1,0 +1,726 @@
+/* 
+From https://userstyles.org/styles/165569/slack-teams
+*/
+
+/*
+ * microsoft_teams_condensed_light.css
+ * Generated on 2018-10-21 22:49:20
+ * hacked on by Mike Boyd
+ */
+
+/**** general.css ****/
+
+/* First section is basic optimizations which should not break anything */
+
+/* BOYD - shrink the channel list! */
+@media (min-width: 1500px)
+{
+  .app-rail-common>div, .fullscreen-layout .ts-left-rail-wrapper, .left-rail-item, .ts-left-rail-wrapper {
+    width: 28rem !important;
+}
+
+.app-left-rail-width
+{
+  width: 28rem !important;
+}
+}
+
+/*messages use all available space instead of a narrow center column  (group-chat)  */
+.ts-message-list-container
+{
+max-width: 100% !important;
+}
+
+/* Same for team-chat 
+  (I copied this huge list of selectors given by firefox Developper tool, I don't
+  exactly understand if they are all relevant )
+*/
+.message-list-common:not(.chat-style) .button-row,
+.message-list-common:not(.chat-style) .large-max-stage, 
+.message-list-common:not(.chat-style) .message-list-common .button-row,
+.message-list-common:not(.chat-style) .message-pane .new-typing-indicator,
+.message-list-common:not(.chat-style) .middle-messages-context-stripe .ts-message-list-container,
+.message-list-common:not(.chat-style) .ts-add-message .ts-new-message, 
+.message-list-common:not(.chat-style) .ts-message-list-container, 
+.message-list-common:not(.chat-style) .ts-new-meetup-animated,
+.message-list-common:not(.chat-style) virtual-repeat > .list-wrap > .item-wrap, 
+.ts-add-message.is-not-chat .ts-new-message
+{
+      max-width: 100% !important;
+
+}
+
+/* reducing the unused space at the new message field at the bottom */
+.ts-add-message {
+  margin: .3rem 0 .5rem !important;
+}
+
+/*border around the new message field at the bottom, more slack-like */
+.ts-add-message .ts-border-newcompose:not(.ts-new-message-expand) .ts-new-message-footer {
+  border: 2px solid rgba(134,134,134,.7) !important;
+}
+
+/* slack-like channel list */
+.ts-left-rail-wrapper {
+  color: black !important;
+  background: #3F0E40 !important;
+}
+.ts-channel-list .team.match-parent {
+   margin-bottom: 0 !important; 
+} 
+.ts-left-rail-wrapper a {
+  color: rgb(178,159,179) !important;
+}
+.team-operations-container-item {
+  color: rgb(178,159,179) !important;
+}
+.channel-list-team-header a.unread {
+  font-weight: bold !important;
+/*     color: rgb(178,159,179) !important; */
+  color: white !important;
+}
+.ts-channel-list a.ts-unread-channel {
+  font-weight: 700 !important;
+  color: white !important;
+/*     color: rgb(178,159,179) !important; */
+}
+.ts-left-rail-tree .ts-tree-header {
+  color: rgb(178,159,179) !important;
+}
+.channel-list-team-header a {
+  padding: 0 .5rem 0 2rem !important;
+}
+.channel-list-team-header {
+  height: 3.2rem !important;
+}
+.ts-channel-list .name-channel-type .truncate.header-text {
+  padding-right: 0 !important;
+}
+.popover.left-rail-popover .simple-scrollbar {
+  background: #3F0E40 !important;
+}
+.popover.left-rail-popover .channel-overflow-teamname {
+  margin: 0 !important;
+}
+.popover.left-rail-popover {
+  background: #3F0E40 !important;
+  padding: .8rem 0 0 0 !important;
+  border: 1px solid black !important;
+}
+.popover.left-rail-popover .channel-overflow-teamname {
+  color: rgb(178,159,179) !important;
+}
+.ts-channel-list .open-channel-mgr.left-rail-selected {
+  color: #6264a7 !important;
+  background: #350D36 !important;
+}
+.left-rail-selected {
+  background: #1164A3 !important;
+}
+.left-rail-selected * {
+  color: white !important;
+}
+.left-rail-item-hover.menu-open, .left-rail-item-hover.menu-open .status-mask, .left-rail-item-hover:hover, .left-rail-item-hover:hover .status-mask {
+  background: #350D36 !important;
+  color: rgb(178,159,179) !important;
+}
+.left-rail-header-hover.menu-open *, .left-rail-header-hover:active *, .left-rail-header-hover:focus *, .left-rail-header-hover:hover *, .left-rail-item-hover.menu-open *, .left-rail-item-hover:hover *, body.acc-keyboard-mode [class*=left-rail-item-kb]:focus .left-rail-header-hover * {
+  color: rgb(178,159,179) !important;
+}
+.left-rail-item-hover.menu-open.left-rail-selected, .left-rail-item-hover.menu-open.left-rail-selected .status-mask, .left-rail-item-hover.menu-open:active, .left-rail-item-hover:active, .left-rail-item-hover:active .status-mask, .left-rail-item-hover:hover.left-rail-selected, .left-rail-item-hover:hover.left-rail-selected .status-mask {
+  background: #1164A3 !important;
+}
+.left-rail-selected:hover {
+  background: #1164A3 !important;
+}
+.ts-channel-list a:hover, body.acc-keyboard-mode .ts-channel-list a:focus {
+  color: #6264a7 !important;
+}
+body.acc-keyboard-mode .file-entry:focus *, body.acc-keyboard-mode .left-rail-item-hover:focus *, body.acc-keyboard-mode .left-rail-item-kb-l1:focus .left-rail-item-kb-target-l1:not(.left-rail-header-hover) *, body.acc-keyboard-mode .left-rail-item-kb-l2:focus .left-rail-item-kb-target-l2:not(.left-rail-header-hover) *, body.acc-keyboard-mode.new-left-rails-flyovers-styles .dialpad-member.left-rail-item-hover:focus *, body.acc-keyboard-mode.new-left-rails-flyovers-styles .left-rail-item-hover:focus *, body.acc-keyboard-mode.new-left-rails-flyovers-styles .left-rail-item-kb-l1:focus .left-rail-item-kb-target-l1 *, body.acc-keyboard-mode.new-left-rails-flyovers-styles .left-rail-item-kb-l2:focus .left-rail-item-kb-target-l2 *, body.acc-keyboard-mode.new-left-rails-flyovers-styles .ts-left-rail-tree .ts-tree-header:focus * {
+  color: rgb(178,159,179) !important;
+}
+
+/* can't forget chat list coloring! */
+.chat-list .recipient-group-list-item a.cle-item:not(.ts-unread-channel)
+{
+color: rgb(178,159,179) !important;
+}
+
+.chat-list .recipient-group-list-item .truncate-name
+{
+color: rgb(178,159,179) !important;
+}
+
+.child-popover, div.popover
+{
+background: #3F0E40 !important;
+padding: .8rem 0 0 0 !important;
+border: 1px solid black !important;
+}
+
+.app-default-menu li>.ts-sym, .app-default-menu li>a, .pre, code, pre
+{
+color: rgb(178,159,179) !important;
+}
+
+/* user info coloring */
+.ts-person-short-info-card .personinformation .details
+{
+color: rgb(178,159,179) !important;
+}
+
+/* webhook/bot info coloring */
+.ts-person-short-info-card .personinformationcard .personandfavoritewrapper .details-bot>div
+{
+color: rgb(178,159,179) !important;
+}
+
+/* the list of likes coloring */
+.ts-person-card-list .ts-persons:hover a, .ts-person-card-list .ts-persons:hover span, body.acc-keyboard-mode .ts-person-card-list .ts-persons:focus a, body.acc-keyboard-mode .ts-person-card-list .ts-persons:focus span
+{
+color: rgb(178,159,179) !important;
+}
+
+.ts-person-card-list .ts-persons a, .ts-person-card-list .ts-persons span
+{
+color: rgb(178,159,179) !important;
+}
+
+/* activites list */
+.ts-left-rail
+{
+color: rgb(178,159,179) !important;
+}
+
+.feed-content .feed-name
+{
+color: rgb(178,159,179) !important;
+}
+
+.feed-content .feed-subject
+{
+color: rgb(150, 136, 151) !important;
+}
+
+.feed-content .feed-message
+{
+color: rgb(114, 104, 115) !important;
+}
+
+.feed-content .left-rail-item
+{
+padding: .1rem 2rem !important;
+}
+
+/*  files */
+.dialog-mode .files-navigation li button, .ts-left-rail .files-navigation li button
+{
+color: rgb(178,159,179) !important;
+}
+
+.dialog-mode .files-navigation li.selected-element button, .ts-left-rail .files-navigation li.selected-element button
+{
+color: black !important;
+}
+
+/* User info popup */
+/*name*/
+.person-card .ts-person-short-info-card .personinformationcard .personandfavoritewrapper .personname, .ts-people-meeting-tab .pmt-grouped-events-container .pmt-event-container .personinfo .name
+{
+color: white !important;
+}
+
+/*info*/
+.ts-person-short-info-card .personinformationcard .personandfavoritewrapper .details>div
+{
+color: rgb(178,159,179) !important;
+}
+
+/*timestamp*/
+.ts-person-short-info-card .personinformationcard .personandfavoritewrapper .ts-skype-status-message
+{
+color: rgb(178,159,179) !important;
+}
+
+/*search box*/
+.input-extension-popover .input-extension-search-box
+{
+color: rgb(178,159,179) !important;
+}
+
+.input-extension-scroll-search-results
+{
+color: rgb(178,159,179) !important;
+}
+
+.input-extension-popover .text-label
+{
+color: rgb(178,159,179) !important;
+}
+
+/*sticker popup*/
+.input-extension-popover .nav>li>a
+{
+color: rgb(114, 104, 115) !important;
+}
+
+.input-extension-popover .nav-tabs>li.active>a, .input-extension-popover .nav-tabs>li.active>a:focus, .input-extension-popover .nav-tabs>li.active>a:hover
+{
+color: rgb(178,159,179) !important;
+font-weight: bold !important;
+}
+
+/* get rid of dorky blue line at bottom of new message field when clicked */
+.ts-add-message .new-message-bg-light-f .ts-new-message-footer::after,
+.ts-reply-message .new-message-bg-light-f .ts-new-message-footer::after,
+.edit-message-form .new-message-bg-light-f .extension-icons-container::after,
+.ts-create-update-meeting .ts-new-message.new-message-bg-light-f .ts-new-message-footer::after,
+.edit-message-form .new-message-bg-light-f .extension-icons-container::after
+{
+border-bottom: 0 !important;
+}
+
+.ts-add-message
+{
+     background-color: white !important;
+}
+
+/* fixing the spacing for the "like" and other options */
+thread thread-body .message-actions-container
+{
+right: 0rem !important;
+margin-top: 0rem !important;
+}
+
+.ts-message-thread-body.align-item-left
+{
+max-width: 96% !important;
+}
+
+
+/* Increase line width of short messages (useful to avoid the "hover" menu hiding everything */
+.ts-message-thread-body .message-body-container
+{
+  /* "100%" does not work in this context so I gave it an arbitrary medium size instead */
+min-width: 50rem !important;
+}
+
+virtual-repeat > .list-wrap > .item-wrap
+{
+max-width: 100% !important;
+}
+
+/* My own message: keep left-aligned like others */
+.chat-style .self .ts-message-thread-body
+{
+justify-content: left !important;
+}
+
+/* Needs explicit padding to get same alignments */
+message-list.chat-style .self .media-left ~ .ts-message-thread-body
+{
+padding-left: 4.3rem !important;
+}
+
+/* The placeholder for my messages, used while loading data,
+ would still be visible on the wrong place after messages are
+ actually loaded */
+.placeholder-item.message-body-width.self
+{
+right: initial !important;
+}
+
+/* The editor: give it same alignment / 100% than messages */
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
+virtual-repeat > .list-wrap > *.item-wrap
+{
+max-width: 100% !important;
+}
+
+div#ts-bottom-compose-identifier
+{
+max-width: 100% !important;
+}
+
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse
+{
+margin: 0 8rem !important;
+}
+
+
+
+
+
+/* ====================== */
+
+/* Next section is advanced customization, which may break some things. */
+
+
+
+/* We will move some elements outside of their parent div, so allow overflow */
+.ts-message-thread-body,
+.ts-message-thread-body .message-body,
+virtual-repeat > .list-wrap > .item-wrap,
+thread .ts-message .merge-bubble,
+acc-message-list-focusable
+{
+overflow: visible !important;
+}
+
+/* BOYD - make the message background white */
+virtual-repeat>.list-wrap.list-wrap-v3>.item-wrap
+{
+     background: white !important;
+}
+
+/* same for threads in teams chat */
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body.align-item-left
+{
+overflow: visible !important;
+}
+
+/* Prevent the action menu (like, save, ...) to hide the end of a line,
+ by putting it on the right outside of the message.
+ Two rules, for the 1st message of a "thread", and the other messages.
+*/
+thread .ts-message .message-actions-container,
+thread .ts-message .merge-bubble .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .merge-bubble .message-actions-container
+{
+position: absolute !important;
+right: -7.2rem !important;
+top: 0 !important;
+}
+
+
+/* Hide the message placeholders which stay visible with the wrong
+ place/size after our customization.
+ Don't know what they're for exactly anyway.
+*/
+
+.vr-item-placeholders
+{
+display: none !important;
+}
+
+
+/* thread reply editor aligned with other messages */
+.message-list-common:not(.chat-style) .ts-new-message-footer.new-message-common.rich-style-enabled,
+.message-list-common:not(.chat-style) .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse
+{
+margin: 0 !important;
+}
+/**** condensed.css ****/
+
+/* Additionnal tweaks for even more condensed view */
+
+/** Remove avatars, replace them with the textual name **/
+
+
+/* thread .ts-message .media-left {
+  display: none !important;
+} */
+/* BOYD - shrink padding around avatars, re-add them */
+.thread-body>.media-left
+{
+padding: 0 !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message .conversation-start .media-left
+{
+padding-top: 0 !important;
+margin-right: 4px !important;
+}
+
+/* BOYD - hide the reply button until message is hovered */
+/* TODO: this is a little buggy an inconsistent, probably has something to do with scripts calculating heights behind the scenes 
+too glitchy, and hard to "catch" the reply button. disabling for now
+*/
+/*   .ts-message-list-item .thread-action-reply-message {
+  display: none !important;
+}
+.ts-message-list-item:hover .thread-action-reply-message {
+  display: block !important;
+} */
+
+/* BOYD - squish skype status into avatar */
+.message-list-common:not(.chat-style) .ts-message .thread-body-status>.ts-skype-status
+{
+top: 0 !important;
+}
+
+/* Increase message padding to fit the longer names instead of avatars.
+ Arbitrary use of "15rem", longer names will be truncated.
+ Search for NAME-WIDTH to customize it.
+*/
+
+
+/** Teams threads **/
+
+/* Name of the poster shown on the left, in place of the avatar. */
+
+
+.ts-message-thread-body  .message-body-top-row .ts-msg-name
+{
+width: 15rem !important;
+/* NAME-WIDTH */
+margin-left: 0.4rem !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message
+{
+padding: 0 !important;
+/* BOYD - slim down the space between messages */ !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-container
+{
+padding-left: 16px !important;
+/* BOYD - adjust the message text to be under the username */ !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-top-row
+{
+position: static !important;
+/* BOYD - bump the message text down to the next line */
+left: 0 !important;
+width: 15rem !important;
+/* NAME-WIDTH */
+height: 14px !important;
+/* BOYD - keep hover-over from making meddage height bigger */
+padding: 0 !important;
+display: block !important;
+overflow: visible !important;
+/* for timestamp */ !important;
+}
+
+/* Thread "subject" must be aligned too. */
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .thread-subject
+{
+padding-left: 15rem !important;
+/* NAME-WIDTH */ !important;
+}
+
+/** Chat: just pad every messages, simple column design **/
+
+/* Needs explicit padding to get same alignments */
+message-list.chat-style .media-left ~ .ts-message-thread-body ,
+message-list.chat-style .self .media-left ~ .ts-message-thread-body
+{
+padding-left: 15rem !important;
+/* NAME-WIDTH */
+ !important;
+}
+
+.ts-message-list-container .ts-message-list-item
+{
+padding: 0 !important;
+}
+
+
+/* Name of the poster shown on the left, in place of the avatar. */
+.ts-message-thread-body  .message-body-top-row
+{
+position: absolute !important;
+left: -15rem !important;
+ /* NAME-WIDTH */
+width: 15rem !important;
+/* NAME-WIDTH */
+padding: 0 !important;
+display: block !important;
+overflow: visible !important;
+/* for timestamp */
+ !important;
+}
+
+
+/* Date/Time of the message shown above, on hover, to avoid reserving
+ too much horizontal space or using 2 lines.
+ Putting it above instead of below solves Z-order which would
+ hide it under the poster name of next message.
+*/
+
+.ts-message-thread-body  .message-body-top-row .timestamp-column
+{
+position: absolute !important;
+top: -1.5rem !important;
+left: 0 !important;
+margin-left: 0 !important;
+display: none !important;
+}
+
+
+/* Keep this commented until fixed for Teams version
+.self .ts-message-thread-body  .message-body-top-row .timestamp-column{
+  position:absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  display:none !important;
+}
+*/
+
+.ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+{
+display: block !important;
+}
+
+/* Note: "Edited" indicator will be displayed too low, like on another message.
+ Hide/show on hover doesn't work here because it's always present in the
+ html, edited or not: it's probably toggled from a js code so I can't
+ statically control it.
+*/
+
+
+
+/* --- */
+
+
+/* Reduce vertical space between chat messages */
+.chat-style thread .ts-message
+{
+padding-top: 0.2rem !important;
+}
+
+/* Teams */
+
+.ts-middle-messages-container
+{
+border-left: 1px solid #f3f2f1 !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message .conversation-common.conversation-start .message-body
+{
+padding-top: 0 !important;
+padding-bottom: 0 !important;
+/* BOYD - zeroed both of these out */ !important;
+}
+
+.message-list-common:not(.chat-style) .conversation-start .message-body-container
+{
+margin-bottom: 0.2rem !important;
+}
+
+/* BOYD - zero out some more margins */
+.conversation-reply .message-body-container
+{
+margin: 0 !important;
+}
+
+.thread-action-reply-message
+{
+margin: 0 !important;
+}
+
+.message-list-common:not(.chat-style) thread .ts-message .conversation-common.conversation-reply .media .message-body
+{
+/*     padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important; */
+padding: 0 !important;
+/* BOYD - condense down the message reply padding */ !important;
+}
+
+/* Chat */
+
+/* BOYD - nuke the borders */
+.message-list-common:not(.chat-style) thread .ts-message .conversation-common.conversation-start .message-body
+{
+border: 0 !important;
+}
+/* BOYD - nuke the borders */
+.message-list-common:not(.chat-style) .conversation-common.conversation-start .ts-message-thread-body
+{
+border-bottom: 0 !important;
+}
+
+/* BOYD - move the timestamp next to the name */
+.ts-message-thread-body .message-body-top-row .timestamp-column
+{
+position: relative !important;
+margin-left: 120px !important;
+}
+
+.ts-message-thread-body .message-body
+{
+  /* 0.2rem minimal to keep alignment with action menu */
+padding-top: 0.2rem !important;
+padding-bottom: 0.2rem !important;
+}
+
+/* BOYD - TODO - keep the EDIT indicator from making the message box bigger on hover-over */
+/* BOYD - scoot the EDIT indicator out of the way */
+.edit-indicator
+{
+float: right !important;
+}
+/* BOYD - make sure the edit indicator floats off to the right a good ways */
+.message-list-common:not(.chat-style) thread .ts-message .ts-message-thread-body .message-body-top-row
+{
+width: auto !important;
+}
+
+.message-body-container
+{
+margin-bottom: 0.1rem !important;
+}
+
+/**** colors_light.css ****/
+
+/*** Name of the poster, timestamp: shown (above) on hover ***/
+
+
+/** Teams thread **/
+
+/* 1st thread message  - These are all commented out, they mess with the switch between themes.  Looks great in default though :D */
+.message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row .timestamp-column
+{
+/*     background: rgb(252, 252, 251) !important; */ !important;
+}
+
+/* replies in thread */
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+{
+/*     background: rgb(244, 243, 242) !important; */ !important;
+}
+
+
+/** Chat **/
+
+/* Others messages */
+.message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+{
+/*     background: rgb(255, 255, 255) !important; */ !important;
+}
+
+/* My messages */
+.message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+{
+/*     background: rgb(224, 224, 237) !important; */ !important;
+}
+
+/* Shrink those oversized "Cards" */
+.ts-o365-connector-card .o365-card-title
+{
+margin: 0 !important;
+}
+
+.ts-o365-connector-card-section .o365-card-activity-container
+{
+margin: 0 !important;
+}
+
+.ts-o365-connector-card-section .o365-card-section-title
+{
+margin: 0 !important;
+}
+
+.ts-o365-connector-card-section .card-facts
+{
+margin: 0 !important;
+}

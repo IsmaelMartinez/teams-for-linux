@@ -1,0 +1,220 @@
+/*
+From https://userstyles.org/styles/164545/compact-microsoft-teams-for-light-theme
+*/
+
+/*
+ * microsoft_teams_compact_light.css
+ * Generated on 2018-10-23 23:11:38
+ */
+
+/**** general.css ****/
+
+/* First section is basic optimizations which should not break anything */
+
+/*messages use all available space instead of a narrow center column  (group-chat)  */
+  .ts-message-list-container
+  {
+    max-width: 100% !important;
+  }
+
+/* Same for team-chat 
+    (I copied this huge list of selectors given by firefox Developper tool, I don't
+    exactly understand if they are all relevant )
+*/
+.message-list-common:not(.chat-style) .button-row,
+.message-list-common:not(.chat-style) .large-max-stage, 
+.message-list-common:not(.chat-style) .message-list-common .button-row,
+.message-list-common:not(.chat-style) .message-pane .new-typing-indicator,
+.message-list-common:not(.chat-style) .middle-messages-context-stripe .ts-message-list-container,
+.message-list-common:not(.chat-style) .ts-add-message .ts-new-message, 
+.message-list-common:not(.chat-style) .ts-message-list-container, 
+.message-list-common:not(.chat-style) .ts-new-meetup-animated,
+.message-list-common:not(.chat-style) virtual-repeat > .list-wrap > .item-wrap, 
+.ts-add-message.is-not-chat .ts-new-message
+{
+        max-width: 100% !important;
+
+}
+
+
+/* Increase line width of short messages (useful to avoid the "hover" menu hiding everything */
+.ts-message-thread-body .message-body-container {
+    /* "100%" does not work in this context so I gave it an arbitrary medium size instead */
+    min-width: 50rem !important;
+}
+
+
+virtual-repeat > .list-wrap > .item-wrap {
+    max-width: 100% !important;
+}
+
+/* My own message: keep left-aligned like others */
+.chat-style .self .ts-message-thread-body {
+    justify-content: left !important;
+}
+
+/* Needs explicit padding to get same alignments */
+message-list.chat-style .self .media-left ~ .ts-message-thread-body {
+    padding-left: 4.3rem !important;
+}
+
+/* The placeholder for my messages, used while loading data,
+   would still be visible on the wrong place after messages are
+   actually loaded */
+.placeholder-item.message-body-width.self {
+    right: initial !important;
+}
+
+/* Remove the remaining left-padding to use the available width */
+
+.ts-message-list-container .ts-message-list-item {
+    padding-left: 0.7em !important;
+}
+
+/* The editor: give it same alignment / 100% than messages */
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
+virtual-repeat > .list-wrap > *.item-wrap {
+    max-width: 100% !important;
+}
+
+div#ts-bottom-compose-identifier {
+    max-width: 100% !important;
+}
+
+
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
+   margin: 0 5.5rem !important;
+}
+
+
+
+
+
+/* ====================== */
+
+/* Next section is advanced customization, which may break some things. */
+
+
+
+/* We will move some elements outside of their parent div, so allow overflow */
+.ts-message-thread-body,
+.ts-message-thread-body .message-body,
+virtual-repeat > .list-wrap > .item-wrap,
+thread .ts-message .merge-bubble,
+acc-message-list-focusable
+{
+    overflow:visible !important;
+}
+
+/* same for threads in teams chat */
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body.align-item-left
+{
+    overflow:visible !important;
+}
+
+/* Prevent the action menu (like, save, ...) to hide the end of a line,
+   by putting it on the right outside of the message.
+   Two rules, for the 1st message of a "thread", and the other messages.
+*/
+thread .ts-message .message-actions-container,
+thread .ts-message .merge-bubble .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .merge-bubble .message-actions-container
+{
+    position:absolute !important;
+    right: -7.2rem !important;
+    top: 0 !important;
+}
+
+
+/* Hide the message placeholders which stay visible with the wrong
+   place/size after our customization.
+   Don't know what they're for exactly anyway.
+*/
+
+.vr-item-placeholders {
+    display:none !important;
+}
+
+
+/* thread reply editor aligned with other messages */
+.message-list-common:not(.chat-style) .ts-new-message-footer.new-message-common.rich-style-enabled,
+.message-list-common:not(.chat-style) .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
+    margin: 0 !important;
+}
+/**** compact.css ****/
+
+/*   Compact the height of lines by hiding the names/timestamps 
+    (This style also applies to the "teams" chats, but in this case
+     it breaks things in threads were alignment/colors are different
+     and visual result is not very clean. )
+*/
+
+
+
+/* Name of the poster, timestamp: hidden by default */
+.ts-message-thread-body  .message-body-top-row {
+ display:none !important;
+}
+
+/* Name of the poster, timestamp: shown (above) on hover
+   Note: they are "transparent" instead of using
+   the message background color.
+*/
+.ts-message-thread-body:hover  .message-body-top-row {
+    position:absolute !important;
+    top:-1.5rem !important;
+    left: 0 !important;  /* Needed for threaded replies which would overflow on the right with the 100% width */
+    width:100% !important;
+    display:flex !important;
+    /* default is transparent; need to pick from the active theme */
+}
+
+
+
+/* the avatar with its padding makes taller the 1st message of each user */
+.thread-body > .media-left {
+    padding: 0 !important;
+}
+
+/* re-align skype-status icon with new padding */
+.ts-message .thread-body-status > .ts-skype-status {
+    left:2.2rem !important;
+    top:2rem !important;
+}
+
+/**** colors_light.css ****/
+
+/*** Name of the poster, timestamp: shown (above) on hover ***/
+
+
+/** Teams thread **/
+
+/* 1st thread message  */
+.message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row .timestamp-column  {
+    background: rgb(252, 252, 251) !important;
+}
+
+/* replies in thread */
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row .timestamp-column {
+    background: rgb(244, 243, 242) !important;
+}
+
+
+/** Chat **/
+
+/* Others messages */
+.message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row .timestamp-column {
+    background: rgb(255, 255, 255) !important;
+}
+
+/* My messages */
+.message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row .timestamp-column {
+    background: rgb(224, 224, 237) !important;
+}
