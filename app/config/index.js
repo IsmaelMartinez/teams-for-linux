@@ -49,7 +49,7 @@ function argv(configPath) {
 			},
 			customCSSName: {
 				default: '',
-				describe: 'custom CSS name for the packaged available options. Currently those are: "compactDark", "compactLight", "tweaks", ',
+				describe: 'custom CSS name for the packaged available options. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
 				type: 'string'
 			},
 			customCSSLocation: {
