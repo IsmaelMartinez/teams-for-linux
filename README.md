@@ -111,7 +111,7 @@ We are defaulting in opening the links in a external browser, but links can be o
 
 ### No history
 
-Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` (or, if using snap `rm -rf /home/$HOME/snap/teams*`, should fix the issue.
+Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` or, if using snap `rm -rf /home/$HOME/snap/teams*`, should fix the issue.
 
 ### Spellchecker not working
 
