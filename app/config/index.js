@@ -2,7 +2,6 @@ const yargs = require('yargs');
 const path = require('path');
 
 function argv(configPath) {
-	console.log(configPath);
 	return yargs
 		.env(true)
 		.config(require(path.join(configPath, 'config.json')))

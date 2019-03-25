@@ -18,7 +18,7 @@ Here is the list of available arguments and its usage:
 | webDebug | start with the browser developer tools open  |  false |
 | url | url to open | https://teams.microsoft.com/ |
 | config | config file location | ~/.config/teams.json |
-| chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 |
+| chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36 |
 | ntlmV2enabled | set enable-ntlm-v2 value | true |
 | authServerWhitelist | set auth-server-whitelist value | * |
 | customCSSName | Custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" | |
@@ -29,5 +29,7 @@ As an example, to disable the persitence, you can run the following command:
 ```bash
 teams-for-linux --partition nopersist
 ```
+
+Alternatively, you can use a file called `config.json` with the configuration options. This file needs to be located in `~/.config/teams-for-linux/config.json`
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
