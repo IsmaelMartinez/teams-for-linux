@@ -17,7 +17,7 @@ Here is the list of available arguments and its usage:
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition | persist:teams-4-linux |
 | webDebug | start with the browser developer tools open  |  false |
 | url | url to open | https://teams.microsoft.com/ |
-| config | config file location | ~/.config/config.json |
+| config | config file location | ~/.config/teams-for-linux/config.json |
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36 |
 | ntlmV2enabled | set enable-ntlm-v2 value | true |
 | authServerWhitelist | set auth-server-whitelist value | * |
