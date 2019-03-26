@@ -77,7 +77,7 @@ This is a fairly small project. IMO, the ideal size for getting started with ele
 
 Just fork the repo and dive in. The app/index.js is the starting of all the application.
 
-Once changes are made, just do a pull request to master.
+Once changes are made, just do a pull request to the branch with the following version number.
 
 Each subfolder has a README.md file that explains the reason of existence and any extra required information.
 
@@ -93,11 +93,13 @@ This is because of this fork history. Jamie expressed his desire to refactor the
 
 This branch is a child fork of [JamieMagee teams-for-linux](https://github.com/JamieMagee/teams-for-linux) repo, that is itself a fork of [Ivelkov teams-for-linux](https://github.com/ivelkov/teams-for-linux).
 
-Jamie has express his desire to refactor this project in Typescript and to support it, but he doesn't have the time to support it at the moment. I have tried to contact Ivelkov for a few months but haven't receive any answers.
+Jamie has express his desire to refactor this project in Typescript and to support it, but he has archive the project and I suspect that means he doesn't have the time to support it. I have tried to contact Ivelkov for a few months but haven't receive any answers.
 
-For that reason, decided to refork it and fix a few things that where not working. Mainly the notification and the gif animations, but the list is fairly big.
+For that reason, decided to refork it and fix a few things that where not working. The list has grown since then to support many features and to fix most of the bugs.
 
 Ideally this project will die when Microsoft implements a desktop client for linux. Please do vote for it in the [Microsoft Suggestions Forum](https://microsoftteams.uservoice.com/forums/555103-public/suggestions/16911565-linux-client)
+
+Currently, the project is in a stable condition, and should continue as long as needed. Non stable versions are released as pre-release.
 
 ## Known issues
 
@@ -109,7 +111,7 @@ We are defaulting in opening the links in a external browser, but links can be o
 
 ### No history
 
-Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` should fix the issue.
+Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` or, if using snap `rm -rf /home/$HOME/snap/teams*`, should fix the issue.
 
 ### Spellchecker not working
 

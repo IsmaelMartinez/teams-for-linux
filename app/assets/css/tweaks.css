@@ -1,0 +1,31 @@
+/* 
+From https://userstyles.org/styles/154382/microsoft-teams-tweaks
+*/
+
+message-list.chat-style .self .media-left ~ .ts-message-thread-body
+{
+  padding-left: 42px !important;
+}
+
+.chat-style .self .ts-message-thread-body
+{
+  justify-content: initial !important;
+}
+
+.list-wrap.list-wrap-v3.ts-message-list-container, 
+.ts-new-message-footer.new-message-common.rich-style-enabled, .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
+virtual-repeat>.list-wrap>*.item-wrap,
+div#ts-bottom-compose-identifier
+{
+  max-width: initial !important;
+}
+
+.ts-new-message-footer.new-message-common.rich-style-enabled, .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse
+{
+  margin: 0 3rem !important;
+}
+
+.placeholder-item.message-body-width.self
+{
+  right: initial !important;
+}

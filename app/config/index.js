@@ -4,7 +4,7 @@ const path = require('path');
 function argv(configPath) {
 	return yargs
 		.env(true)
-		.config('settings', path.join(configPath, 'teams.json'))
+		.config(require(path.join(configPath, 'config.json')))
 		.options({
 			closeAppOnCross: {
 				default: false,
@@ -46,6 +46,11 @@ function argv(configPath) {
 				default: '*',
 				describe: 'Set auth-server-whitelist value',
 				type: 'string',
+			},
+			customCSSName: {
+				default: '',
+				describe: 'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
+				type: 'string'
 			},
 			customCSSLocation: {
 				default: '',

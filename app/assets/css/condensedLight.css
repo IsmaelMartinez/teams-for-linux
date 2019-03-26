@@ -1,0 +1,349 @@
+/*
+From https://userstyles.org/styles/164547/condensed-microsoft-teams-for-light-theme
+*/
+
+/*
+ * microsoft_teams_condensed_light.css
+ * Generated on 2018-10-21 22:49:20
+ */
+
+/**** general.css ****/
+
+/* First section is basic optimizations which should not break anything */
+
+/*messages use all available space instead of a narrow center column  (group-chat)  */
+  .ts-message-list-container
+  {
+    max-width: 100% !important;
+  }
+
+/* Same for team-chat 
+    (I copied this huge list of selectors given by firefox Developper tool, I don't
+    exactly understand if they are all relevant )
+*/
+.message-list-common:not(.chat-style) .button-row,
+.message-list-common:not(.chat-style) .large-max-stage, 
+.message-list-common:not(.chat-style) .message-list-common .button-row,
+.message-list-common:not(.chat-style) .message-pane .new-typing-indicator,
+.message-list-common:not(.chat-style) .middle-messages-context-stripe .ts-message-list-container,
+.message-list-common:not(.chat-style) .ts-add-message .ts-new-message, 
+.message-list-common:not(.chat-style) .ts-message-list-container, 
+.message-list-common:not(.chat-style) .ts-new-meetup-animated,
+.message-list-common:not(.chat-style) virtual-repeat > .list-wrap > .item-wrap, 
+.ts-add-message.is-not-chat .ts-new-message
+{
+        max-width: 100% !important;
+
+}
+
+
+/* Increase line width of short messages (useful to avoid the "hover" menu hiding everything */
+.ts-message-thread-body .message-body-container {
+    /* "100%" does not work in this context so I gave it an arbitrary medium size instead */
+    min-width: 50rem !important;
+}
+
+
+virtual-repeat > .list-wrap > .item-wrap {
+    max-width: 100% !important;
+}
+
+/* My own message: keep left-aligned like others */
+.chat-style .self .ts-message-thread-body {
+    justify-content: left !important;
+}
+
+/* Needs explicit padding to get same alignments */
+message-list.chat-style .self .media-left ~ .ts-message-thread-body {
+    padding-left: 4.3rem !important;
+}
+
+/* The placeholder for my messages, used while loading data,
+   would still be visible on the wrong place after messages are
+   actually loaded */
+.placeholder-item.message-body-width.self {
+    right: initial !important;
+}
+
+/* The editor: give it same alignment / 100% than messages */
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
+virtual-repeat > .list-wrap > *.item-wrap {
+    max-width: 100% !important;
+}
+
+div#ts-bottom-compose-identifier {
+    max-width: 100% !important;
+}
+
+
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
+   margin: 0 8rem !important;
+}
+
+
+
+
+
+/* ====================== */
+
+/* Next section is advanced customization, which may break some things. */
+
+
+
+/* We will move some elements outside of their parent div, so allow overflow */
+.ts-message-thread-body,
+.ts-message-thread-body .message-body,
+virtual-repeat > .list-wrap > .item-wrap,
+thread .ts-message .merge-bubble,
+acc-message-list-focusable
+{
+    overflow:visible !important;
+}
+
+/* same for threads in teams chat */
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body.align-item-left
+{
+    overflow:visible !important;
+}
+
+/* Prevent the action menu (like, save, ...) to hide the end of a line,
+   by putting it on the right outside of the message.
+   Two rules, for the 1st message of a "thread", and the other messages.
+*/
+thread .ts-message .message-actions-container,
+thread .ts-message .merge-bubble .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .message-actions-container,
+.message-list-common:not(.chat-style) thread .ts-message .merge-bubble .message-actions-container
+{
+    position:absolute !important;
+    right: -7.2rem !important;
+    top: 0 !important;
+}
+
+
+/* Hide the message placeholders which stay visible with the wrong
+   place/size after our customization.
+   Don't know what they're for exactly anyway.
+*/
+
+.vr-item-placeholders {
+    display:none !important;
+}
+
+
+/* thread reply editor aligned with other messages */
+.message-list-common:not(.chat-style) .ts-new-message-footer.new-message-common.rich-style-enabled,
+.message-list-common:not(.chat-style) .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
+    margin: 0 !important;
+}
+/**** condensed.css ****/
+
+/* Additionnal tweaks for even more condensed view */
+
+/** Remove avatars, replace them with the textual name **/
+
+
+thread .ts-message .media-left {
+    display: none !important;
+}
+
+/* Increase message padding to fit the longer names instead of avatars.
+   Arbitrary use of "15rem", longer names will be truncated.
+   Search for NAME-WIDTH to customize it.
+ */
+
+
+/** Teams threads **/
+
+/* Name of the poster shown on the left, in place of the avatar. */
+
+
+.ts-message-thread-body  .message-body-top-row .ts-msg-name {
+    width:15rem !important;  /* NAME-WIDTH */
+    margin-left:0.4rem !important;
+}
+
+
+.message-list-common:not(.chat-style) thread .ts-message  {
+    padding-left: 0 !important;
+}
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-container {
+    padding-left:15rem !important; /* NAME-WIDTH */
+}
+
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .message-body-top-row {
+    position:absolute !important;
+    left: 0 !important;
+    width:15rem !important;  /* NAME-WIDTH */
+    padding:0 !important;
+    display:block !important;
+    overflow:visible !important;  /* for timestamp */
+}
+
+/* Thread "subject" must be aligned too. */
+.message-list-common:not(.chat-style) thread .ts-message  .ts-message-thread-body  .thread-subject {
+    padding-left:15rem !important; /* NAME-WIDTH */
+}
+
+/* thread replies: reduce indentation since it doesn't need to account for avatar */
+  thread .ts-message .conversation-common:not(.conversation-start) .media
+  {
+    margin-left: 3rem !important;
+  }
+
+  .thread-action-reply-message
+  {
+    padding-left: 3rem !important;
+  }
+
+/** Chat: just pad every messages, simple column design **/
+
+/* Needs explicit padding to get same alignments */
+  message-list.chat-style .media-left ~ .ts-message-thread-body ,
+message-list.chat-style .self .media-left ~ .ts-message-thread-body
+  {
+    padding-left: 15rem !important;
+  /* NAME-WIDTH */;
+  }
+
+  .ts-message-list-container .ts-message-list-item
+  {
+    padding: 0 !important;
+  }
+
+
+/* Name of the poster shown on the left, in place of the avatar. */
+  .ts-message-thread-body  .message-body-top-row
+  {
+    position: absolute !important;
+    left: -15rem !important;
+   /* NAME-WIDTH */
+    width: 15rem !important;
+  /* NAME-WIDTH */
+    padding: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+  /* for timestamp */;
+  }
+
+
+/* Date/Time of the message shown above, on hover, to avoid reserving
+   too much horizontal space or using 2 lines.
+   Putting it above instead of below solves Z-order which would
+   hide it under the poster name of next message.
+*/
+
+  .ts-message-thread-body  .message-body-top-row .timestamp-column
+  {
+    position: absolute !important;
+    top: -1.5rem !important;
+    left: 0 !important;
+    margin-left: 0 !important;
+    display: none !important;
+  }
+
+
+/* Keep this commented until fixed for Teams version
+.self .ts-message-thread-body  .message-body-top-row .timestamp-column{
+    position:absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    display:none !important;
+}
+*/
+
+  .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+  {
+    display: block !important;
+  }
+
+/* Note: "Edited" indicator will be displayed too low, like on another message.
+   Hide/show on hover doesn't work here because it's always present in the
+   html, edited or not: it's probably toggled from a js code so I can't
+   statically control it.
+*/
+
+
+
+/* --- */
+
+
+/* Reduce vertical space between chat messages */
+  .chat-style thread .ts-message
+  {
+    padding-top: 0.2rem !important;
+  }
+
+/* Teams */
+
+
+  .message-list-common:not(.chat-style) thread .ts-message .conversation-common.conversation-start .message-body
+  {
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.1rem !important;
+  }
+
+  .message-list-common:not(.chat-style) .conversation-start .message-body-container
+  {
+    margin-bottom: 0.2rem !important;
+  }
+
+  .message-list-common:not(.chat-style) thread .ts-message .conversation-common.conversation-reply .media .message-body
+  {
+    padding-top: 0.1rem !important;
+    padding-bottom: 0.1rem !important;
+  }
+
+/* Chat */
+
+  .ts-message-thread-body .message-body
+  {
+    /* 0.2rem minimal to keep alignment with action menu */
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+  }
+
+  .message-body-container
+  {
+    margin-bottom: 0.1rem !important;
+  }
+
+/**** colors_light.css ****/
+
+/*** Name of the poster, timestamp: shown (above) on hover ***/
+
+
+/** Teams thread **/
+
+/* 1st thread message  */
+  .message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-start .ts-message-thread-body:hover .message-body-top-row .timestamp-column
+  {
+    background: rgb(252, 252, 251) !important;
+  }
+
+/* replies in thread */
+  .message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+  {
+    background: rgb(244, 243, 242) !important;
+  }
+
+
+/** Chat **/
+
+/* Others messages */
+  .message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+  {
+    background: rgb(255, 255, 255) !important;
+  }
+
+/* My messages */
+  .message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row,
+.message-list-common.chat-style .self .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
+  {
+    background: rgb(224, 224, 237) !important;
+  }
