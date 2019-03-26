@@ -2,9 +2,10 @@ const yargs = require('yargs');
 const path = require('path');
 
 function argv(configPath) {
+	let configFile = getConfigFile(configPath);
 	return yargs
 		.env(true)
-		.config(require(path.join(configPath, 'config.json')))
+		.config(configFile)
 		.options({
 			closeAppOnCross: {
 				default: false,
@@ -59,6 +60,14 @@ function argv(configPath) {
 			}
 		})
 		.parse(process.argv.slice(1));
+}
+
+function getConfigFile(configPath) {
+	try {
+		return require(path.join(configPath, 'config.json'));
+	} catch (e){
+		return {};
+	}
 }
 
 exports = module.exports = argv;
