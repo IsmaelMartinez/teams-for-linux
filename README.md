@@ -77,23 +77,21 @@ This is a fairly small project. IMO, the ideal size for getting started with ele
 
 Just fork the repo and dive in. The app/index.js is the starting of all the application.
 
-Once changes are made, just do a pull request to the branch with the following version number.
+Once changes are made, just do a pull request to master.
 
 Each subfolder has a README.md file that explains the reason of existence and any extra required information.
 
 ### Version number
 
-Just increase the lower (last) number in the package.json version string number.
-
-We are not following SemVer at the moment.
-
-This is because of this fork history. Jamie expressed his desire to refactor the project (0.2.0 branch) in Typescript and to support it.
+We are following SemVer at the moment. The lower number in master will be increased after a release (basically, to avoid re-releasing stuff with some changes), but release number will be decided just before a release trying to use SemVer standards. 
 
 ## History
 
 This branch is a child fork of [JamieMagee teams-for-linux](https://github.com/JamieMagee/teams-for-linux) repo, that is itself a fork of [Ivelkov teams-for-linux](https://github.com/ivelkov/teams-for-linux).
 
-Jamie has express his desire to refactor this project in Typescript and to support it, but he has archive the project and I suspect that means he doesn't have the time to support it. I have tried to contact Ivelkov for a few months but haven't receive any answers.
+Jamie did express his desire to refactor this project in Typescript and to support it, but he has archive the project and I suspect that means he doesn't have the time to support it. 
+
+I have tried to contact Ivelkov for a few months but haven't receive any answers.
 
 For that reason, decided to refork it and fix a few things that where not working. The list has grown since then to support many features and to fix most of the bugs.
 
