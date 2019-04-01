@@ -1,3 +1,4 @@
+
 const { selectSource } = require('./captureSelector');
 
 window.chrome = {
@@ -6,10 +7,10 @@ window.chrome = {
 			if (messageName == 'version') {
 				callback({ version: '1.1.0' });
 			} else if (messageName == 'get-sourceId') {
-				selectSource(source => {
+				selectSource(sourceId => {
 					callback({
 						type: 'success',
-						streamId: source
+						streamId: sourceId
 					});
 				});
 			} else {
@@ -21,3 +22,4 @@ window.chrome = {
 		}
 	}
 };
+
