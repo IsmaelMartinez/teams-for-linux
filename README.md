@@ -3,7 +3,6 @@
 ![](https://img.shields.io/github/release/IsmaelMartinez/teams-for-linux.svg?style=flat)
 ![](https://img.shields.io/github/downloads/IsmaelMartinez/teams-for-linux/total.svg?style=flat)
 
-
 [![Build Status](https://travis-ci.org/IsmaelMartinez/teams-for-linux.svg?branch=master)](https://travis-ci.org/IsmaelMartinez/teams-for-linux) 
 [![dependencies Status](https://david-dm.org/IsmaelMartinez/teams-for-linux/status.svg)](https://david-dm.org/IsmaelMartinez/teams-for-linux) 
 [![devDependencies Status](https://david-dm.org/IsmaelMartinez/teams-for-linux/dev-status.svg)](https://david-dm.org/IsmaelMartinez/teams-for-linux?type=dev)
@@ -11,93 +10,17 @@
 Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.
 
-## Install
-
-You can download the tarball, rpm or deb from the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
-
-## Run from source
-
-```bash
-yarn start
-```
-
-## Build for linux
-
-```bash
-yarn run dist:linux
-```
-
-This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular linux distributions.
-
-Is possible to specify the snap or AppImage build type using running this:
-
-```bash
-# Standalone build
-yarn run dist:linux:snap
-
-# Or, if you have docker installed, you can alternatively build there
-./dockerBuildSnap.sh
-```
-
-This will build the snap into the `dist/` directory.
-
-### Install using locally built snap file
-
-To install the snap file using the generated file use this command.
-
-```bash
-cd dist
-sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
-```
-
-### Install using snap from store
-
-
-```bash
-sudo snap install teams-for-linux
-```
-
-#### Use camera using the Snap build
-
-Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
-
-The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
-
-```bash
-sudo snap connect teams-for-linux:camera core:camera
-```
-
 ## Available starting arguments
 
 Check in the config [README.md](app/config/README.md) in the config folder.
 
-## Development
+## Contributing
 
-This is a fairly small project. IMO, the ideal size for getting started with electron.
-
-Just fork the repo and dive in. The app/index.js is the starting of all the application.
-
-Once changes are made, just do a pull request to master.
-
-Each subfolder has a README.md file that explains the reason of existence and any extra required information.
-
-### Version number
-
-We are following SemVer at the moment. The lower number in master will be increased after a release (basically, to avoid re-releasing stuff with some changes), but release number will be decided just before a release trying to use SemVer standards. 
+Please refer to the [CONTRIBUTE.md](CONTRIBUTE.md) file for more information about how to run this application from source, and/or how to contribute.
 
 ## History
 
-This branch is a child fork of [JamieMagee teams-for-linux](https://github.com/JamieMagee/teams-for-linux) repo, that is itself a fork of [Ivelkov teams-for-linux](https://github.com/ivelkov/teams-for-linux).
-
-Jamie did express his desire to refactor this project in Typescript and to support it, but he has archive the project and I suspect that means he doesn't have the time to support it. 
-
-I have tried to contact Ivelkov for a few months but haven't receive any answers.
-
-For that reason, decided to refork it and fix a few things that where not working. The list has grown since then to support many features and to fix most of the bugs.
-
-Ideally this project will die when Microsoft implements a desktop client for linux. Please do vote for it in the [Microsoft Suggestions Forum](https://microsoftteams.uservoice.com/forums/555103-public/suggestions/16911565-linux-client)
-
-Currently, the project is in a stable condition, and should continue as long as needed. Non stable versions are released as pre-release.
+Read about the history about this project in the [HISTORY.md](HISTORY.md) file.
 
 ## Known issues
 
