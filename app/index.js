@@ -82,6 +82,7 @@ if (!gotTheLock) {
 				console.log('Unknown cert issuer for url: ' + url);
 				console.log('Issuer Name: ' + unknownIssuerCert.issuerName);
 				console.log('The unknown certificate fingerprint is: ' + unknownIssuerCert.fingerprint);
+				callback(false);
 			}
 		} else {
 			console.log('An unexpected SSL error has occured: ' + error);
