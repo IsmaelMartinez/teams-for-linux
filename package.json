@@ -59,7 +59,9 @@
         "AppImage",
         "pacman"
       ],
-      "mimeTypes": ["application/sip"],
+      "mimeTypes": [
+        "application/sip"
+      ],
       "publish": {
         "provider": "github",
         "releaseType": "draft"
