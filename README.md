@@ -15,7 +15,7 @@ Check in the config [README.md](app/config/README.md) in the config folder.
 
 ## Contributing
 
-Please refer to the [CONTRIBUTE.md](CONTRIBUTE.md) file for more information about how to run this application from source, and/or how to contribute.
+Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information about how to run this application from source, and/or how to contribute.
 
 ## History
 
