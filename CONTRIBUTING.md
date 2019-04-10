@@ -1,4 +1,4 @@
-# Contribute
+# Contributing
 
 First of all, thanks for thinking about contributing. Hopefully the following guidelines will help you contributing. If you got any questions, do add a issue with your questions and we will try to help.
 
