@@ -57,6 +57,11 @@ function argv(configPath) {
 				default: '',
 				describe: 'custom CSS styles file location',
 				type: 'string'
+			},
+			customCACertsFingerprints: {
+				default: [],
+				describe: 'Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate',
+				type: 'array'
 			}
 		})
 		.parse(process.argv.slice(1));
