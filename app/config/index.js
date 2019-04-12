@@ -12,6 +12,11 @@ function argv(configPath) {
 				describe: 'Close the app when clicking the close (X) cross',
 				type: 'boolean',
 			},
+			onlineOfflineReload: {
+				default: true,
+				describe: 'Reload page when going from offline to online',
+				type: 'boolean',
+			},
 			enableDesktopNotificationsHack: {
 				default: false,
 				describe: 'Enable electron-native-notifications hack',

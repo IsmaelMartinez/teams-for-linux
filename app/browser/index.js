@@ -51,6 +51,10 @@
 		injector.get('settingsService').appConfig.enableScreenSharingToolbar = true;
 		injector.get('settingsService').appConfig.enableCallingScreenPreviewLabel = true;
 		injector.get('settingsService').appConfig.callingEnableChromeOneToOneVideo = true;
+		injector.get('settingsService').appConfig.enableMeetingStartedNotificationWeb = true;
+		injector.get('settingsService').appConfig.enableMicOSUnmuteOnUnmute = true;
+		injector.get('settingsService').appConfig.enableModeratorsSupport = true;
+		injector.get('settingsService').appConfig.enableRecordPPTSharing = true;
 	}
 
 	function disablePromoteStuff(injector) {
