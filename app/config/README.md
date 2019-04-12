@@ -37,7 +37,7 @@ Alternatively, you can use a file called `config.json` with the configuration op
 
 ## Getting custom CA Certs fingerprints
 
-The expected fingerprints are of the form `sha256/<md5 encoded sha256sum>`. Tools like openssl usually deliver the sha256sum
+The expected fingerprints are of the form `sha256/<base64 encoded sha256sum>`. Tools like openssl usually deliver the sha256sum
  encoded in hexadecimal format. If you have access to the nodejs console, the fingerprint of the CA that cannot be validated
  will be printed out. You can then start teams-for-linux again with
 ```bash
