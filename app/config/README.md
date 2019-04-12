@@ -12,6 +12,7 @@ Here is the list of available arguments and its usage:
 |:-:|:-:|:-:|
 | help  | show the available commands | false |
 | version | show the version number | false |
+| onlineOfflineReload | Reload page when going from offline to online | true |
 | disableDesktopNotificationsHack | disable electron-desktop-notifications extension hack | false |
 | closeAppOnCross | Close the app when clicking the close (X) cross | false |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition | persist:teams-4-linux |

@@ -51,8 +51,10 @@ if (!gotTheLock) {
 		});
 
 		login.handleLoginDialogTry(window);
-		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
-
+		if (config.onlineOfflineReload) {
+			onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
+		}
+		
 		window.webContents.setUserAgent(config.chromeUserAgent);
 
 		window.once('ready-to-show', () => window.show());
