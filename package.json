@@ -51,6 +51,13 @@
         "Comment": "Unofficial client for Microsoft Teams for Linux",
         "StartupWMClass": "teams-for-linux"
       },
+      "extraResources": [
+        {
+          "from": "node_modules/spellchecker/vendor",
+          "to": "app.asar.unpacked/node_modules/spellchecker/vendor",
+          "filter": "**/*"
+        }
+      ],
       "target": [
         "rpm",
         "deb",
