@@ -13,5 +13,5 @@
     my-part:
       # See 'snapcraft plugins'
       plugin: nodejs
-      node-engine: '10.15.3'
+      node-engine: '8.9.4'
   
