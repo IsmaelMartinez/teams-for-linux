@@ -19,12 +19,13 @@ deploy:
   - provider: releases
     api_key:
       secure: iDQ43pycfmaBA84tTCHLHHzniaHQS1blTlISLpiFzZNZtqxWuS8i8VIxitq9UQ2vuUthKx5o7pubhkD8CxspHp5YNuqTmraUu8Zy6BdZIC2bzp4gjUJNYtSxeL1cpxF3NO+EzmSh8jO8289KQVTlC+4MA6JBCxS4psLy5BpSzQoi7Evn7iDYHI3nbtV9Xw9GhhBpH3N5jzv6+Nvm8VlIHCDPXlzcqf4iEg+u7r2hoXXAKR4kcsFREDj95KVbiB+NUciKLNixMJbWGD1sKEzi1JFcgrtnRiWmbGr1fRdlAyEW6PrDvu4xmKHQayV5GC9FSTtAp86n26VNtGwz64mpsZWlbRQNvINRWXBX/nM8Rqxs/LgiXirR8x7K23/Gp4DjGKUFYzM+jUQIx4ha+CmlpjwTvxAT13dfWNsDX6VPTjWtkIcZ3ypXlAYRa2mwHV4/NskJUStw3Aqya6ovhBwzTYY+NQioJOHVnSwL+Sk2092SITgqbHKpxUkfQzbVCiiWJtIfvYGpDTxdEFogPEMX4zyjNO/UCc98MaD6MxKJLlva4NpqjnMpdKbwrHZtptt6VV8GhYqhAwZ+TepSMObUhl/I+P2G8dvfZu5eMSmokYGQmVKUKzfMXMY91/AUyxWumPSWPnREdaM+UvNZ1Hevnx8DdywDJzp1gN/GwJK9hcE=
-    file: [dist/*.deb,dist/*.rpm, dist/*.tar.gz, dist/*.snap, dist/*.AppImage]
+    file: [ dist/latest-linux.yml, dist/*.AppImage, dist/*.pacman, dist/*.tar.gz, dist/*.rpm, dist/*.deb, dist/*.snap]
     draft: true
     on:
       branch: develop || travis-changes
     skip_cleanup: true
   - provider: snap
+    file: [dist/*.snap]
     snap: teams-for-linux
     on:
       branch: develop || travis-changes
