@@ -9,9 +9,6 @@ cache:
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
 
-install:
-  - yarn --link-duplicates --pure-lockfile
-
 script:
     |
     docker run --rm \
@@ -21,6 +18,17 @@ script:
       -v ~/.cache/electron-builder:/root/.cache/electron-builder \
       electronuserland/builder \
       /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn dist:linux"
+
+deploy:
+  - provider: releases
+    file: dist/*.*
+    skip_cleanup: true
+    draft: true
+  - provider: snap
+    snap: teams-for-linux
+    channel: edge
+    skip_cleanup: true
+
 
 branches:
   except:
