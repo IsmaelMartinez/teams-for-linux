@@ -12,5 +12,5 @@
   parts:
     my-part:
       # See 'snapcraft plugins'
-      plugin: default
+      plugin: nodejs
   
