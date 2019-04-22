@@ -70,7 +70,7 @@
     "snap": {
       "synopsis": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "confinement": "strict",
-      "grade": "devel",
+      "grade": "stable",
       "buildPackages": [],
       "stagePackages": [
         "default"
