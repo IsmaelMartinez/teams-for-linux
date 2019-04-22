@@ -22,14 +22,7 @@ deploy:
     file: [ dist/latest-linux.yml, dist/*.AppImage, dist/*.pacman, dist/*.tar.gz, dist/*.rpm, dist/*.deb, dist/*.snap]
     draft: true
     on:
-      branch: develop || travis-changes
-    skip_cleanup: true
-  - provider: snap
-    file: [dist/*.snap]
-    snap: teams-for-linux
-    on:
-      branch: develop || travis-changes
-      channel: edge
+      branch: develop || master
     skip_cleanup: true
 branches:
   except:
