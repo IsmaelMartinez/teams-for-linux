@@ -24,10 +24,18 @@ deploy:
     file: dist/*.*
     skip_cleanup: true
     draft: true
+    on: 
+      branch: master || develop || travis-changes
   - provider: snap
     snap: teams-for-linux
-    channel: edge
+    on:
+      branch: master
+      channel: stable
+    on:
+      branch: develop || travis-changes
+      channel: edge
     skip_cleanup: true
+  
 
 
 branches:
