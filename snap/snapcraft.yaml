@@ -10,8 +10,15 @@
   confinement: strict
 
   parts:
-    my-part:
+    teams-for-linux:
       # See 'snapcraft plugins'
       plugin: nodejs
       node-engine: '8.9.4'
+      node-package-manager: yarn
+      source: .
+  
+  apps:
+    teams-for-linux:
+      command: bin/teams-for-linux
+      plugs: ['network','camera']
   
