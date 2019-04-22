@@ -23,11 +23,13 @@ deploy:
     draft: true
     on:
       branch: develop || travis-changes
+    skip_cleanup: true
   - provider: snap
     snap: teams-for-linux
     on:
       branch: develop || travis-changes
       channel: edge
+    skip_cleanup: true
 branches:
   except:
   - "/^v\\d+\\.\\d+\\.\\d+$/"
