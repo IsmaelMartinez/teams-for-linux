@@ -30,7 +30,7 @@
       after:
         - desktop-gtk2
         
-       build: node_modules/.bin/electron-builder
+      build: node_modules/.bin/electron-builder
       install: |
         mkdir $SNAPCRAFT_PART_INSTALL/app
         mv dist/linux-unpacked/* $SNAPCRAFT_PART_INSTALL/app
