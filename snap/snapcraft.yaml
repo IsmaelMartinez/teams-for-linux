@@ -16,9 +16,36 @@
       node-engine: '8.12.0'
       node-package-manager: yarn
       source: .
+      stage-packages:
+        - libnotify4
+        - libappindicator1
+        - libxtst6
+        - libnss3
+        - libxss1
+        - fontconfig-config
+        - gconf2
+        - libasound2
+        - pulseaudio
+
+      after:
+        - desktop-gtk2
+        
+       build: node_modules/.bin/electron-builder
+      install: |
+        mkdir $SNAPCRAFT_PART_INSTALL/app
+        mv dist/linux-unpacked/* $SNAPCRAFT_PART_INSTALL/app
+      prime:
+        - -node_modules
   
   apps:
     teams-for-linux:
       command: bin/teams-for-linux
-      plugs: ['network','camera']
+      plugs: 
+        - network
+        - pulseaudio
+        - gsettings
+        - browser-support
+        - home
+        - x11
+        - unity7
   
