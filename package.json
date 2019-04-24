@@ -76,7 +76,8 @@
       "artifactName": "teams-for-linux-isma",
       "publish": {
         "provider": "snap",
-        "channel": "edge"
+        "publisherName": "teams-for-linux-isma",
+        "releaseType": "edge"
       }
     }
   }
