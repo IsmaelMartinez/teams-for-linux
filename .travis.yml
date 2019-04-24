@@ -15,6 +15,14 @@ script: |
     -v ~/.cache/electron-builder:/root/.cache/electron-builder \
     electronuserland/builder \
     /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release"
+deploy:
+  - provider: snap
+    file: [dist/*.snap]
+    snap: teams-for-linux-isma
+    on:
+      branch: develop || travis-changes
+      channel: edge
+    skip_cleanup: true
 branches:
   except:
   - "/^v\\d+\\.\\d+\\.\\d+$/"
