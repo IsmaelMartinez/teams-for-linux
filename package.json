@@ -73,12 +73,7 @@
       "summary": "teams-for-linux",
       "confinement": "strict",
       "grade": "stable",
-      "artifactName": "teams-for-linux-isma",
-      "publish": {
-        "provider": "snap",
-        "publisherName": "teams-for-linux-isma",
-        "releaseType": "edge"
-      }
+      "artifactName": "teams-for-linux-isma"
     }
   }
 }
