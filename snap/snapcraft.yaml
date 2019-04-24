@@ -14,7 +14,7 @@
       # See 'snapcraft plugins'
       plugin: nodejs
       node-engine: '8.12.0'
-      node-package-manager: yarn
+      # node-package-manager: yarn
       source: .
       stage-packages:
         - libnotify4
