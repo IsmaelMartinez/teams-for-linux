@@ -39,7 +39,7 @@
   
   apps:
     teams-for-linux:
-      command: bin/teams-for-linux
+      command: $SNAP/teams-for-linux
       plugs: 
         - network
         - pulseaudio
