@@ -32,8 +32,8 @@
         
       build: node_modules/.bin/electron-builder
       install: |
-        mkdir $SNAPCRAFT_PART_INSTALL/app
-        mv dist/linux-unpacked/* $SNAPCRAFT_PART_INSTALL/app
+        mkdir $SNAPCRAFT_PART_INSTALL
+        mv dist/linux-unpacked/* $SNAPCRAFT_PART_INSTALL
       prime:
         - -node_modules
   
