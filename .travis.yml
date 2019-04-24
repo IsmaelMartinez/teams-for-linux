@@ -22,7 +22,7 @@ script: |
 deploy:
   - provider: snap
     file: [dist/*.snap]
-    snap: teams-for-linux-isma
+    snap: teams-for-linux
     on:
       branch: develop || travis-changes
       channel: edge
