@@ -73,7 +73,7 @@
       "summary": "teams-for-linux",
       "confinement": "strict",
       "grade": "stable",
-      "artifactName": "teams-for-linux-isma"
+      "artifactName": "teams-for-linux"
     }
   }
 }
