@@ -1,6 +1,6 @@
 {
   "name": "outlook-for-linux",
-  "version": "0.1.17",
+  "version": "0.2.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft outlook for Linux",
   "homepage": "https://github.com/noizo/outlook-for-linux",
@@ -44,11 +44,11 @@
       "category": "Network;Chat",
       "packageCategory": "net",
       "executableName": "outlook",
-      "synopsis": "Microsoft outlook for Linux",
-      "description": "Unofficial Microsoft outlook client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "synopsis": "Microsoft Outlook for Linux",
+      "description": "Unofficial Microsoft Outlook client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "desktop": {
         "Name": "Microsoft outlook for Linux",
-        "Comment": "Unofficial client for Microsoft outlook for Linux",
+        "Comment": "Unofficial client for Microsoft Outlook for Linux",
         "StartupWMClass": "outlook-for-linux"
       },
       "target": [
@@ -59,14 +59,16 @@
         "AppImage",
         "pacman"
       ],
-      "mimeTypes": ["application/sip"],
+      "mimeTypes": [
+        "application/sip"
+      ],
       "publish": {
         "provider": "github",
         "releaseType": "draft"
       }
     },
     "snap": {
-      "synopsis": "Unofficial Microsoft outlook client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "synopsis": "Unofficial Microsoft Outlook client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "confinement": "strict",
       "grade": "devel",
       "buildPackages": [],

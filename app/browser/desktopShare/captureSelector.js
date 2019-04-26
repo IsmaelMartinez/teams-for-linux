@@ -1,24 +1,21 @@
-const { remote } = require('electron');
+const { remote, screen } = require('electron');
 const { BrowserWindow } = remote;
 
 function selectSource(callback) {
+	var display  = screen.getPrimaryDisplay();
 	const selectorWindow = new BrowserWindow({
 		title: 'Share Your Screen',
-		modal: true,
 		parent: remote.getCurrentWindow(),
 		autoHideMenuBar: true,
 		width: 680,
-		height: 480
+		height: 480,
+		x: display.bounds.width - 680,
+		y: display.bounds.height -480
 	});
 
 	selectorWindow.webContents.once('did-finish-load', function () {
 		selectorWindow.emit('pickDesktopMedia', ['screen', 'window']);
 	});
-
-	// Launch fullscreen with DevTools open, usage: npm run debug
-	// selectorWindow.webContents.openDevTools()
-	// mainWindow.maximize()
-	// require('devtron').install()
 
 	const url = require('url').format({
 		protocol: 'file',

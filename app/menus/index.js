@@ -19,7 +19,11 @@ class Menus {
 	}
 
 	open() {
-		this.window.show();
+		if (!this.window.isVisible()) {
+			this.window.show();
+		}
+
+		this.window.focus();
 	}
 
 	reload() {

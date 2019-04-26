@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script>
+    delete window.module;
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <style>
+    .imageHolder { 
+      position: relative; 
+      width: 320px; 
+      height: 180px; 
+      display: inline-block;
+    } 
+    .imageHolder .caption { 
+      width: 320px; 
+      height: 50px; 
+      bottom: 0px; 
+      left: 0px; 
+      color: #ffffff; 
+      background: rgb(38, 114, 236);
+      text-align:center; 
+      font-weight:bold; 
+      opacity:0.7; 
+    }
+    .imageAttr {
+      position: absolute;
+      height:180px;
+      width: 320px;
+    }
+    
+  </style>
+  <script>
+    console.log('getting sources');
+    const { remote, desktopCapturer, screen } = require('electron');
+    
+    var self = remote.getCurrentWindow();
+    self.once('pickDesktopMedia', (types) => {
+      console.log(types);
+      desktopCapturer.getSources({ types: types, thumbnailSize: { width: 800, height: 600} }, (error, sources) => {
+        if (error) return;
+
+        var grid = $('#desktopCapturerGallery');
+        $.each(sources, (i, source) => {
+          console.log(source);
+          let title = source.name.slice(0, 40);
+          var ele = $('<div class="imageHolder"><a><img class="imageAttr" alt="'+ title + '"/><div class="caption"><br>' + title + '</br></div></a></div>');
+          ele.find("img").prop("src", source.thumbnail.toDataURL());
+          ele.find('a').click( () => {
+            self.emit('choseDesktopMedia', source.id);
+            grid.hide();
+            self.setSize(340, 260);
+            var display  = screen.getPrimaryDisplay();
+            self.setPosition(display.bounds.width - 340, display.bounds.height - 260);
+            navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: source.id,
+                  minWidth: 1280,
+                  maxWidth: 1280,
+                  minHeight: 720,
+                  maxHeight: 720
+                }
+              }
+            }).then((stream) => {
+              var video = document.querySelector('video');
+              video.srcObject = stream;
+              video.style.display = 'block';
+            })
+            .catch((e) => alert(e));
+            return;
+          });
+          grid.append(ele);
+        });
+      });
+
+    });
+
+    setTimeout(function () {
+      remote.getCurrentWindow().emit('chooseDesktopMedia', 'poopfarts');
+    }, 2000);
+  </script>
+</head>
+
+<body>
+  <div id='desktopCapturerGallery'>
+  </div>
+  <video style='display: none;' id="sharingVideo" width="320" height="240" controls autoplay></video>
+</body>
+
+</html>
