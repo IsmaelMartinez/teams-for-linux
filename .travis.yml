@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: xenial
 services: docker
 language: minimal
 cache:
@@ -7,10 +7,10 @@ cache:
   - node_modules
   - "$HOME/.cache/electron"
   - "$HOME/.cache/electron-builder"
-before_script:
-  - sudo apt update
-  - sudo apt install snapd
-  - sudo snap install snapcraft --classic
+# before_script:
+#   - sudo apt update
+#   - sudo apt install snapd
+#   - sudo snap install snapcraft --classic
 script: |
   docker run --rm \
     --env-file <(env | grep -v '\r' | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
@@ -21,7 +21,8 @@ script: |
     /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release"
 deploy:
   - provider: snap
-    file: [dist/*.snap]
+    snap: dist/teams-for-linux*.snap
+    # file: [dist/*.snap]
     on:
       branch: develop || travis-changes
       channel: edge
