@@ -63,8 +63,7 @@
       "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron",
       "summary": "teams-for-linux",
       "confinement": "strict",
-      "grade": "stable",
-      "artifactName": "teams-for-linux"
+      "grade": "stable"
     }
   }
 }
