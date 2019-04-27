@@ -40,6 +40,7 @@
   },
   "build": {
     "appId": "teams-for-linux",
+    "asarUnpack": ["node_modules/spellchecker/vendor/hunspell_dictionaries"],
     "linux": {
       "category": "Network;Chat",
       "packageCategory": "net",
