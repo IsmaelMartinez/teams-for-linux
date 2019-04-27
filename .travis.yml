@@ -21,9 +21,9 @@ script: |
     /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release"
 deploy:
   - provider: script
+    script: bash scripts/deploy-snap.sh 
     on:
       branch: develop || travis-changes
-      script: bash scripts/deploy-snap.sh 
     skip_cleanup: true
 branches:
   except:
