@@ -20,12 +20,10 @@ script: |
     electronuserland/builder \
     /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release"
 deploy:
-  - provider: snap
-    snap: dist/teams-for-linux*.snap
-    # file: [dist/*.snap]
+  - provider: script
     on:
       branch: develop || travis-changes
-      channel: edge
+      script: bash scripts/deploy-snap.sh 
     skip_cleanup: true
 branches:
   except:

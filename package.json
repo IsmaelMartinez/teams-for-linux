@@ -52,20 +52,11 @@
         "StartupWMClass": "teams-for-linux"
       },
       "target": [
-        "rpm",
-        "deb",
-        "tar.gz",
-        "snap",
-        "AppImage",
-        "pacman"
+        "snap"
       ],
       "mimeTypes": [
         "application/sip"
-      ],
-      "publish": {
-        "provider": "github",
-        "releaseType": "draft"
-      }
+      ]
     },
     "snap": {
       "synopsis": "teams-for-linux",
