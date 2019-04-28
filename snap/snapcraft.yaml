@@ -1,0 +1,51 @@
+
+  name: teams-for-linux-isma
+  version: '0.2.1'
+  summary: teams-for-linux
+  description: |
+    Unofficial Microsoft Teams client for Linux using Electron. 
+    It uses the Web App and wraps it as a standalone application using Electron.
+
+  grade: stable
+  confinement: strict
+
+  parts:
+    teams-for-linux:
+      # See 'snapcraft plugins'
+      plugin: nodejs
+      # node-engine: '8.12.0'
+      # node-package-manager: yarn
+      source: .
+      stage-packages:
+        - libnotify4
+        - libappindicator1
+        - libxtst6
+        - libnss3
+        - libxss1
+        - fontconfig-config
+        - gconf2
+        - libasound2
+        - pulseaudio
+
+      after:
+        - desktop-gtk2
+        
+      build: node_modules/.bin/electron-builder
+      install: |
+        mkdir $SNAPCRAFT_PART_INSTALL
+        mv dist/linux-unpacked/* $SNAPCRAFT_PART_INSTALL
+      prime:
+        - -node_modules
+  
+  apps:
+    teams-for-linux:
+      command: $SNAP/teams-for-linux
+      plugs: 
+        - network
+        - pulseaudio
+        - gsettings
+        - browser-support
+        - home
+        - x11
+        - unity7
+  
