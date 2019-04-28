@@ -55,10 +55,8 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",
         "AppImage",
-        "pacman",
-        "snap"
+        "pacman"
       ],
       "mimeTypes": [
         "application/sip"
