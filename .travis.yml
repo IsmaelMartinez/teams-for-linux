@@ -21,6 +21,9 @@ deploy:
     on:
       branch: develop || travis-changes
       channel: edge
+    on:
+      branch: master
+      channel: stable
     skip_cleanup: true
 branches:
   except:
