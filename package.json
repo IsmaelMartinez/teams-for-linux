@@ -41,6 +41,9 @@
   "build": {
     "appId": "teams-for-linux",
     "linux": {
+      "summary": "teams-for-linux",
+      "confinement": "strict",
+      "grade": "stable",
       "category": "Network;Chat",
       "packageCategory": "net",
       "executableName": "teams-for-linux",
@@ -55,6 +58,7 @@
         "rpm",
         "deb",
         "tar.gz",
+        "snap",  
         "AppImage",
         "pacman"
       ],
@@ -65,14 +69,6 @@
         "provider": "github",
         "releaseType": "draft"
       }
-      
-    },
-    "snap": {
-      "synopsis": "teams-for-linux",
-      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron",
-      "summary": "teams-for-linux",
-      "confinement": "strict",
-      "grade": "stable"
     }
   }
 }
