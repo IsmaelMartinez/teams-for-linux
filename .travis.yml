@@ -18,13 +18,16 @@ script: |
 deploy:
   - provider: snap
     snap: dist/teams-for-linux*.snap
+    channel: edge  
+    skip_cleanup: true
     on:
       branch: develop || travis-changes
-      channel: edge
+  - provider: snap
+    snap: dist/teams-for-linux*.snap
+    channel: stable  
+    skip_cleanup: true
     on:
       branch: master
-      channel: stable
-    skip_cleanup: true
 branches:
   except:
   - "/^v\\d+\\.\\d+\\.\\d+$/"
