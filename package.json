@@ -41,7 +41,6 @@
   "build": {
     "appId": "teams-for-linux",
     "linux": {
-      "summary": "teams-for-linux",
       "confinement": "strict",
       "grade": "stable",
       "category": "Network;Chat",
