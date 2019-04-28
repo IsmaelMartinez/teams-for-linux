@@ -21,7 +21,7 @@ deploy:
     channel: edge  
     skip_cleanup: true
     on:
-      branch: develop || travis-changes
+      branch: develop
   - provider: snap
     snap: dist/teams-for-linux*.snap
     channel: stable  
