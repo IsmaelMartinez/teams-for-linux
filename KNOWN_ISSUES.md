@@ -38,3 +38,13 @@ Please refer to the issue #99 for more info.
 Some notifications daemons in linux don't support the implementation that Microsoft implemented in the browser.
 
 This project includes a desktop notification hack that can be enable by running the application with `teams-for-linux --enableDesktopNotificationsHack`.
+
+## Use camera using the Snap build
+
+Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
+
+The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
+
+```bash
+sudo snap connect teams-for-linux:camera core:camera
+```
