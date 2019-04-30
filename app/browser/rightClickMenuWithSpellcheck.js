@@ -6,8 +6,19 @@
 const { remote, webFrame } = require('electron');
 const SpellCheckProvider = require('electron-spell-check-provider');
 const buildEditorContextMenu = remote.require('electron-editor-context-menu');
+const fs = require('fs');
+const spellchecker = require('spellchecker');
 const appLocale = remote.app.getLocale();
 let selection;
+
+const sysDictPath = '/usr/share/hunspell';
+
+try {
+	if (fs.statSync(sysDictPath)) {
+		spellchecker.setDictionary(appLocale, sysDictPath);
+	}
+} catch (error) {
+}
 
 function resetSelection() {
 	selection = {
