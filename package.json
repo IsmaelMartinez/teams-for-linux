@@ -38,7 +38,7 @@
     "yargs": "^13.2.2"
   },
   "devDependencies": {
-    "electron": "^4.0.7",
+    "electron": "^4.2.0",
     "electron-builder": "^20.38.5",
     "eslint": "^5.15.1",
     "yarn": "^1.13.0"
@@ -79,7 +79,10 @@
       "grade": "stable",
       "plugs": [
         "default",
-        "camera"
+        "camera",
+        "screen-inhibit-control",
+        "wayland",
+        "upower-observe"
       ]
     }
   }
