@@ -41,7 +41,7 @@ if (!gotTheLock) {
 		}
 
 		window.webContents.on('new-window', (event, url, frame, disposition, options) => {
-			console.log('DEBUG - new-window triggered')
+			console.debug('DEBUG - new-window triggered')
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
 				window.loadURL(url);
@@ -49,11 +49,11 @@ if (!gotTheLock) {
 				event.preventDefault();
 				if ((url === 'about:blank')) {
 					// Create a new hidden window to load the request in the background
-					console.log('DEBUG - captured about:blank');
-				  const win = new BrowserWindow({
-				    webContents: options.webContents, // use existing webContents if provided
-				    show: false
-				  })
+					console.debug('DEBUG - captured about:blank');
+					const win = new BrowserWindow({
+						webContents: options.webContents, // use existing webContents if provided
+						show: false
+					})
 					options.webContents.session.webRequest.onBeforeRequest((details, callback) => {
 						domain = details.url.match(/:\/\/(.[^/]+)/)[1]
 						if (/^.*(microsoft|outlook|skype|urlp\.sfbassets).*$/.test(domain)) {
@@ -61,7 +61,7 @@ if (!gotTheLock) {
 							callback({})
 						} else {
 							// Open the request externally
-							console.log('DEBUG - webRequest intercepted! url: ' + details.url);
+							console.debug('DEBUG - webRequest intercepted! url: ' + details.url);
 							shell.openExternal(details.url);
 							callback({ cancel: true })
 						}
@@ -70,9 +70,9 @@ if (!gotTheLock) {
 					// Close the new window once it is done loading.
 					win.once('ready-to-show', () => win.close())
 
-				  event.newGuest = win
+					event.newGuest = win
 				} else {
-					console.log('DEBUG - opening external link to ' + url)
+					console.debug('DEBUG - opening external link to ' + url)
 					shell.openExternal(url);
 				}
 			}
