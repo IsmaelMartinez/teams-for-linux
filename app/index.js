@@ -40,13 +40,41 @@ if (!gotTheLock) {
 			notifications.addDesktopNotificationHack(iconPath);
 		}
 
-		window.webContents.on('new-window', (event, url, frame, disposition) => {
+		window.webContents.on('new-window', (event, url, frame, disposition, options) => {
+			console.log('DEBUG - new-window triggered')
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
 				window.loadURL(url);
 			} else if (disposition !== 'background-tab') {
 				event.preventDefault();
-				shell.openExternal(url);
+				if ((url === 'about:blank')) {
+					// Create a new hidden window to load the request in the background
+					console.log('DEBUG - captured about:blank');
+				  const win = new BrowserWindow({
+				    webContents: options.webContents, // use existing webContents if provided
+				    show: false
+				  })
+					options.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+						domain = details.url.match(/:\/\/(.[^/]+)/)[1]
+						if (/^.*(microsoft|outlook|skype|urlp\.sfbassets).*$/.test(domain)) {
+							// Proceed normally
+							callback({})
+						} else {
+							// Open the request externally
+							console.log('DEBUG - webRequest intercepted! url: ' + details.url);
+							shell.openExternal(details.url);
+							callback({ cancel: true })
+						}
+					});
+
+					// Close the new window once it is done loading.
+					win.once('ready-to-show', () => win.close())
+
+				  event.newGuest = win
+				} else {
+					console.log('DEBUG - opening external link to ' + url)
+					shell.openExternal(url);
+				}
 			}
 		});
 
@@ -54,7 +82,7 @@ if (!gotTheLock) {
 		if (config.onlineOfflineReload) {
 			onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
 		}
-		
+
 		window.webContents.setUserAgent(config.chromeUserAgent);
 
 		window.once('ready-to-show', () => window.show());
