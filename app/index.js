@@ -9,6 +9,11 @@ const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
 const fs = require('fs');
 const gotTheLock = app.requestSingleInstanceLock();
+const teamsDomainsRegex = RegExp(
+	'^.*(' + config.teamsDomains.join('|').replace('.','\\.') + ').*$',
+	'i'
+)
+console.debug('DEBUG: Using this for teams regex: ' + teamsDomainsRegex);
 
 let window = null;
 
@@ -40,6 +45,21 @@ if (!gotTheLock) {
 			notifications.addDesktopNotificationHack(iconPath);
 		}
 
+		window.webContents.session.webRequest.onBeforeRequest(['http*'], (details, callback) => {
+			const domain = details.url.match(/:\/\/(.[^/]+)/)[1]
+
+			// Filter out requests and domains used by the Teams application
+			if (teamsDomainsRegex.test(domain)) {
+				// Proceed normally
+				callback({})
+			} else {
+				// Open the request externally
+				console.debug('DEBUG - webRequest for domain ' + domain + ' intercepted!');
+				shell.openExternal(details.url);
+				callback({ cancel: true })
+			}
+		});
+
 		window.webContents.on('new-window', (event, url, frame, disposition, options) => {
 			console.debug('DEBUG - new-window triggered')
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
@@ -54,18 +74,6 @@ if (!gotTheLock) {
 						webContents: options.webContents, // use existing webContents if provided
 						show: false
 					})
-					options.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-						domain = details.url.match(/:\/\/(.[^/]+)/)[1]
-						if (/^.*(microsoft|outlook|skype|urlp\.sfbassets).*$/.test(domain)) {
-							// Proceed normally
-							callback({})
-						} else {
-							// Open the request externally
-							console.debug('DEBUG - webRequest intercepted! url: ' + details.url);
-							shell.openExternal(details.url);
-							callback({ cancel: true })
-						}
-					});
 
 					// Close the new window once it is done loading.
 					win.once('ready-to-show', () => win.close())

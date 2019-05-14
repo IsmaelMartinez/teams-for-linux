@@ -67,6 +67,17 @@ function argv(configPath) {
 				default: [],
 				describe: 'Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate',
 				type: 'array'
+			},
+			teamsDomains: {
+				default: [
+					'live.com',
+					'microsoft.com',
+					'microsoftonline.com',
+					'outlook.office.com',
+					'skype.com',
+					'urlp.sfbassets'],
+				describe: 'Array of domains load in the app as part of Teams',
+				type: 'array'
 			}
 		})
 		.parse(process.argv.slice(1));
@@ -76,6 +87,7 @@ function getConfigFile(configPath) {
 	try {
 		return require(path.join(configPath, 'config.json'));
 	} catch (e){
+		console.error('Error loading config: ' + e)
 		return {};
 	}
 }
