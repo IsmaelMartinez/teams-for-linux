@@ -31,12 +31,18 @@ class Menus {
 		this.window.reload();
 	}
 
+	debug() {
+		this.window.openDevTools();
+	}
+
 	hide() {
 		this.window.hide();
 	}
 
 	initialize() {
-		const appMenu = application(this);
+		let appMenu = application(this);
+		if (!this.config.webDebug)
+			appMenu.submenu.splice(3,1);
 
 		this.window.setMenu(Menu.buildFromTemplate([
 			appMenu,

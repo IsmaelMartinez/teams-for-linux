@@ -18,6 +18,11 @@ exports = module.exports = (Menus) => ({
 			click: () => Menus.hide(),
 		},
 		{
+			label: 'Debug',
+			accelerator: 'ctrl+D',
+			click: () => Menus.debug(),
+		},
+		{
 			label: 'Quit',
 			accelerator: 'ctrl+Q',
 			click: () => Menus.quit(),
