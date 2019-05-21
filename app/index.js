@@ -59,7 +59,9 @@ if (!gotTheLock) {
 		
 		window.webContents.setUserAgent(config.chromeUserAgent);
 
-		window.once('ready-to-show', () => window.show());
+		if(!config.minimized) { 
+			window.once('ready-to-show', () => window.show());
+		}
 
 		window.webContents.on('did-finish-load', () => {
 			applyCustomCSSStyleIfPresent();
