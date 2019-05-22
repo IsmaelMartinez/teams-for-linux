@@ -70,6 +70,10 @@ if (!gotTheLock) {
 		window.on('closed', () => { window = null; });
 
 		window.loadURL(config.url);
+
+		if (config.webDebug) {
+			window.openDevTools();
+		}
 	});
 
 	app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {

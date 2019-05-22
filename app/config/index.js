@@ -29,7 +29,7 @@ function argv(configPath) {
 			},
 			webDebug: {
 				default: false,
-				describe: 'Enable debug in drop-down menu',
+				describe: 'Enable debug at start',
 				type: 'boolean',
 			},
 			partition: {

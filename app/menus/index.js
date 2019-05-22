@@ -40,9 +40,7 @@ class Menus {
 	}
 
 	initialize() {
-		let appMenu = application(this);
-		if (!this.config.webDebug)
-			appMenu.submenu.splice(3,1);
+		const appMenu = application(this);
 
 		this.window.setMenu(Menu.buildFromTemplate([
 			appMenu,
