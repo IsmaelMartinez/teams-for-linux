@@ -1,7 +1,6 @@
 exports = module.exports = (Menus) => ({
 	label: 'Application',
 	submenu: [
-
 		{
 			label: 'Open',
 			accelerator: 'ctrl+O',
@@ -16,6 +15,11 @@ exports = module.exports = (Menus) => ({
 			label: 'Hide',
 			accelerator: 'ctrl+H',
 			click: () => Menus.hide(),
+		},
+		{
+			label: 'Debug',
+			accelerator: 'ctrl+D',
+			click: () => Menus.debug(),
 		},
 		{
 			label: 'Quit',

@@ -44,6 +44,8 @@ if (!gotTheLock) {
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
 				window.loadURL(url);
+			} else if (url === 'about:blank') {
+				event.preventDefault();
 			} else if (disposition !== 'background-tab') {
 				event.preventDefault();
 				shell.openExternal(url);
@@ -57,7 +59,9 @@ if (!gotTheLock) {
 		
 		window.webContents.setUserAgent(config.chromeUserAgent);
 
-		window.once('ready-to-show', () => window.show());
+		if(!config.minimized) { 
+			window.once('ready-to-show', () => window.show());
+		}
 
 		window.webContents.on('did-finish-load', () => {
 			applyCustomCSSStyleIfPresent();
@@ -75,7 +79,7 @@ if (!gotTheLock) {
 	});
 
 	app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
-		if (error === "net::ERR_CERT_AUTHORITY_INVALID") {
+		if (error === 'net::ERR_CERT_AUTHORITY_INVALID') {
 			let unknownIssuerCert = getCertIssuer(certificate);
 			if (config.customCACertsFingerprints.indexOf(unknownIssuerCert.fingerprint) !== -1) {
 				event.preventDefault();

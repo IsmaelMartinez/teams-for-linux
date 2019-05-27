@@ -8,7 +8,7 @@ I have tried to contact Ivelkov for a few months but haven't receive any answers
 
 For that reason, decided to refork it and fix a few things that where not working. The list has grown since then to support many features and to fix most of the bugs.
 
-To be able to use a few github functionalities, it was decided to unfork the project #87.
+To be able to use a few github functionalities, it was decided to unfork the project [#87](https://github.com/IsmaelMartinez/teams-for-linux/issues/87).
 
 Ideally this project will die when Microsoft implements a desktop client for linux. Please do vote for it in the [Microsoft Suggestions Forum](https://microsoftteams.uservoice.com/forums/555103-public/suggestions/16911565-linux-client)
 

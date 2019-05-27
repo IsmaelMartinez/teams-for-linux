@@ -1,6 +1,7 @@
 {
   "name": "teams-for-linux",
-  "version": "0.2.0",
+  "productName": "Teams for Linux",
+  "version": "0.3.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -12,7 +13,11 @@
     "type": "git",
     "url": "git+ssh://github.com/IsmaelMartinez/teams-for-linux"
   },
-  "author": "Ivelin Velkov <ivelin.velkov@gmail.com>",
+  "author": {
+    "name": "Ismael Martinez",
+    "email": "ismaelmartinez@gmail.com",
+    "url": "https://github.com/IsmaelMartinez/"
+  },
   "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
@@ -33,15 +38,16 @@
     "yargs": "^13.2.2"
   },
   "devDependencies": {
-    "electron": "^4.0.7",
+    "electron": "^4.2.0",
     "electron-builder": "^20.38.5",
     "eslint": "^5.15.1",
     "yarn": "^1.13.0"
   },
   "build": {
     "appId": "teams-for-linux",
+    "asarUnpack": ["node_modules/spellchecker/vendor/hunspell_dictionaries"],
     "linux": {
-      "category": "Network;Chat",
+      "category": "Chat;Network;Office",
       "packageCategory": "net",
       "executableName": "teams-for-linux",
       "synopsis": "Microsoft Teams for Linux",
@@ -55,7 +61,7 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",
+        "snap",  
         "AppImage",
         "pacman"
       ],
@@ -68,16 +74,15 @@
       }
     },
     "snap": {
-      "synopsis": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
+      "summary": "Teams for Linux",
       "confinement": "strict",
-      "grade": "devel",
-      "buildPackages": [],
-      "stagePackages": [
-        "default"
-      ],
+      "grade": "stable",
       "plugs": [
         "default",
-        "camera"
+        "camera",
+        "screen-inhibit-control",
+        "wayland",
+        "upower-observe"
       ]
     }
   }

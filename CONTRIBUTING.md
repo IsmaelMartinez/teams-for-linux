@@ -67,16 +67,6 @@ sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 sudo snap install teams-for-linux
 ```
 
-#### Use camera using the Snap build
-
-Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
-
-The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
-
-```bash
-sudo snap connect teams-for-linux:camera core:camera
-```
-
 ## Version number
 
 We are following SemVer at the moment. The lower number in master will be increased after a release (basically, to avoid re-releasing stuff with some changes), but release number will be decided just before a release trying to use SemVer standards.
