@@ -27,6 +27,11 @@ function argv(configPath) {
 				describe: 'Microsoft Teams URL',
 				type: 'string',
 			},
+			minimized: {
+				default: false,
+				describe: 'Start the application minimized',
+				type: 'boolean',
+			},
 			webDebug: {
 				default: false,
 				describe: 'Enable debug at start',
