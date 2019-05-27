@@ -31,6 +31,10 @@ class Menus {
 		this.window.reload();
 	}
 
+	debug() {
+		this.window.openDevTools();
+	}
+
 	hide() {
 		this.window.hide();
 	}
