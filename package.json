@@ -38,10 +38,10 @@
     "yargs": "^13.3.0"
   },
   "devDependencies": {
-    "electron": "^4.2.0",
-    "electron-builder": "^20.38.5",
-    "eslint": "^5.15.1",
-    "yarn": "^1.13.0"
+    "electron": "^5.0.4",
+    "electron-builder": "^20.43.0",
+    "eslint": "^5.16.0",
+    "yarn": "^1.16.0"
   },
   "build": {
     "appId": "teams-for-linux",
