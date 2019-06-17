@@ -1,51 +1,104 @@
 /**
- * This code comes from the electron-spell-check-provider README.md. Refer to it for further details.
- * 
- * I have remove most of the comments and extend it to detect the app locale. 
+ * From 
+ * https://github.com/mixmaxhq/electron-spell-check-provider/issues/18
  */
+
 const { remote, webFrame } = require('electron');
-const SpellCheckProvider = require('electron-spell-check-provider');
 const buildEditorContextMenu = remote.require('electron-editor-context-menu');
-const fs = require('fs');
 const spellchecker = require('spellchecker');
 const appLocale = remote.app.getLocale();
-let selection;
+var osLocale = require('os-locale');	
+var EN_VARIANT = /^en/;
 
-const sysDictPath = '/usr/share/hunspell';
+// Prevent the spellchecker from showing contractions as errors.
+var ENGLISH_SKIP_WORDS = [
+	'ain',
+	'couldn',
+	'didn',
+	'doesn',
+	'hadn',
+	'hasn',
+	'mightn',
+	'mustn',
+	'needn',
+	'oughtn',
+	'shan',
+	'shouldn',
+	'wasn',
+	'weren',
+	'wouldn'
+];
 
-try {
-	if (fs.statSync(sysDictPath)) {
-		spellchecker.setDictionary(appLocale, sysDictPath);
+function setupLinux(locale) {
+	if (process.env.HUNSPELL_DICTIONARIES || locale !== 'en_US') {
+		// apt-get install hunspell-<locale> can be run for easy access to other dictionaries
+		var location = process.env.HUNSPELL_DICTIONARIES || '/usr/share/hunspell';
+		spellchecker.setDictionary(locale, location);
 	}
-} catch (error) {
 }
 
-function resetSelection() {
-	selection = {
-		isMisspelled: false,
-		spellingSuggestions: []
-	};
+var locale = osLocale.sync().replace('-', '_');
+
+// The LANG environment variable is how node spellchecker finds its default language:
+//   https://github.com/atom/node-spellchecker/blob/59d2d5eee5785c4b34e9669cd5d987181d17c098/lib/spellchecker.js#L29
+if (!process.env.LANG) {
+	process.env.LANG = locale;
 }
 
-function updateSelectionWithSuggestions(suggestions) {
-	if (window.getSelection().toString()) {
-		selection.isMisspelled = true;
-		selection.spellingSuggestions = suggestions.slice(0, 5);
+setupLinux(locale);
+
+var simpleChecker = window.spellChecker = {
+	spellCheck: function (text) {
+		return !this.isMisspelled(text);
+	},
+	isMisspelled: function (text) {
+		var misspelled = spellchecker.isMisspelled(text);
+
+		// The idea is to make this as fast as possible. For the many, many calls which
+		//   don't result in the red squiggly, we minimize the number of checks.
+		if (!misspelled) {
+			return false;
+		}
+
+		// Only if we think we've found an error do we check the locale and skip list.
+		if (locale.match(EN_VARIANT) && text.contains(ENGLISH_SKIP_WORDS)) {
+			return false;
+		}
+
+		return true;
+	},
+	getSuggestions: function (text) {
+		return spellchecker.getCorrectionsForMisspelling(text);
+	},
+	add: function (text) {
+		spellchecker.add(text);
 	}
-}
+};
 
-const spellCheckProviderCallback = new SpellCheckProvider(appLocale).on('misspelling', updateSelectionWithSuggestions);
-
-window.addEventListener('mousedown', resetSelection);
- 
-webFrame.setSpellCheckProvider(appLocale, true, spellCheckProviderCallback);
+webFrame.setSpellCheckProvider(
+	appLocale,
+	true,
+	simpleChecker
+);
 
 window.addEventListener('contextmenu', (e) => {
-	if (!e.target.closest('textarea, input, [contenteditable="true"]')) return; 
-	setTimeout(() => {
-		const menu = buildEditorContextMenu(selection);
+	// Only show the context menu in text editors.
+	if (!e.target.closest('textarea, input, [contenteditable="true"]')) {
+		return;
+	}
+
+	var selectedText = window.getSelection().toString();
+	var isMisspelled = selectedText && simpleChecker.isMisspelled(selectedText);
+	var spellingSuggestions = isMisspelled && simpleChecker.getSuggestions(selectedText).slice(0, 5);
+	var menu = buildEditorContextMenu({
+		isMisspelled: isMisspelled,
+		spellingSuggestions: spellingSuggestions,
+	});
+
+	// The 'contextmenu' event is emitted after 'selectionchange' has fired but possibly before the
+	// visible selection has changed. Try to wait to show the menu until after that, otherwise the
+	// visible selection will update after the menu dismisses and look weird.
+	setTimeout(function () {
 		menu.popup(remote.getCurrentWindow());
 	}, 30);
 });
-
-resetSelection();
