@@ -11,6 +11,7 @@ const fs = require('fs');
 const gotTheLock = app.requestSingleInstanceLock();
 
 let window = null;
+global.config = config;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
