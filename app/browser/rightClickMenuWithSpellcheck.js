@@ -61,7 +61,7 @@ var simpleChecker = window.spellChecker = {
 		}
 
 		// Only if we think we've found an error do we check the locale and skip list.
-		if (locale.match(EN_VARIANT) && text.contains(ENGLISH_SKIP_WORDS)) {
+		if (locale.match(EN_VARIANT) && ENGLISH_SKIP_WORDS.includes(text)) {
 			return false;
 		}
 
