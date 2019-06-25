@@ -35,7 +35,8 @@
     "electron-native-notification": "^1.2.1",
     "electron-window-state": "^5.0.3",
     "spellchecker": "^3.6.0",
-    "yargs": "^13.3.0"
+    "yargs": "^13.3.0",
+    "os-locale": "^3.1.0"
   },
   "devDependencies": {
     "electron": "^4.2.0",
