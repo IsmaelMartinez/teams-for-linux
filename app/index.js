@@ -15,8 +15,7 @@ global.config = config;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
-
-console.log('true if successfully setting app as default protocol client for msteams: ', app.setAsDefaultProtocolClient('msteams'));
+app.setAsDefaultProtocolClient('msteams');
 
 if (!gotTheLock) {
 	console.warn('App already running');
