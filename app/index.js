@@ -135,6 +135,7 @@ function createWindow() {
 
 		width: windowState.width,
 		height: windowState.height,
+		backgroundColor: '#fff',
 
 		show: false,
 		autoHideMenuBar: true,

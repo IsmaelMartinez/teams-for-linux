@@ -7,6 +7,7 @@ function selectSource(callback) {
 		title: 'Share Your Screen',
 		parent: remote.getCurrentWindow(),
 		autoHideMenuBar: true,
+		backgroundColor: '#fff',
 		width: 680,
 		height: 480,
 		x: display.bounds.width - 680,
