@@ -145,6 +145,7 @@ function createWindow() {
 			preload: path.join(__dirname, 'browser', 'index.js'),
 			nativeWindowOpen: true,
 			plugins: true,
+			nodeIntegration: false,
 		},
 	});
 
