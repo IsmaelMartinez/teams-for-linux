@@ -7,7 +7,6 @@ const { remote, webFrame } = require('electron');
 const buildEditorContextMenu = remote.require('electron-editor-context-menu');
 const spellchecker = require('spellchecker');
 const appLocale = remote.app.getLocale();
-var osLocale = require('os-locale');	
 var EN_VARIANT = /^en/;
 
 // Prevent the spellchecker from showing contractions as errors.
@@ -37,15 +36,13 @@ function setupLinux(locale) {
 	}
 }
 
-var locale = osLocale.sync().replace('-', '_');
-
 // The LANG environment variable is how node spellchecker finds its default language:
 //   https://github.com/atom/node-spellchecker/blob/59d2d5eee5785c4b34e9669cd5d987181d17c098/lib/spellchecker.js#L29
 if (!process.env.LANG) {
-	process.env.LANG = locale;
+	process.env.LANG = appLocale;
 }
 
-setupLinux(locale);
+setupLinux(appLocale);
 
 var simpleChecker = window.spellChecker = {
 	spellCheck: function (text) {
@@ -61,7 +58,7 @@ var simpleChecker = window.spellChecker = {
 		}
 
 		// Only if we think we've found an error do we check the locale and skip list.
-		if (locale.match(EN_VARIANT) && ENGLISH_SKIP_WORDS.includes(text)) {
+		if (appLocale.match(EN_VARIANT) && ENGLISH_SKIP_WORDS.includes(text)) {
 			return false;
 		}
 
