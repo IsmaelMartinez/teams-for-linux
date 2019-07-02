@@ -48,6 +48,10 @@
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
     ],
+    "protocols": {
+      "name": "msteams",
+      "schemes": ["msteams"]
+    },
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",
@@ -66,9 +70,6 @@
         "snap",
         "AppImage",
         "pacman"
-      ],
-      "mimeTypes": [
-        "application/sip"
       ],
       "publish": {
         "provider": "github",
