@@ -34,7 +34,11 @@ This project includes a desktop notification hack that can be enable by running 
 
 Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
 
-The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
+The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that you can use the Software Store in your Operating System after the installation of the snap, look for a similar option in your Software Store app:
+
+![Enable camera in Software Store](static/snap-store-permissons.png)
+
+You can also use this command to create an interface to the camera:
 
 ```bash
 sudo snap connect teams-for-linux:camera core:camera
