@@ -1,4 +1,4 @@
-const { shell, app, session, BrowserWindow } = require('electron');
+const { shell, app, BrowserWindow } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
@@ -21,21 +21,12 @@ if (!gotTheLock) {
 	console.warn('App already running');
 	app.quit();
 } else {
-	const ses = session.fromPartition(config.partition);
-
-	ses.protocol.registerHttpProtocol('msteams', (request, callback) => {
-		console.log('requets', request);
-		const url = request.url.substr(7);
-		callback({ path: path.normalize(`${__dirname}/${url}`) });
-	}, (error) => {
-		if (error) console.error('Failed to register protocol');
-	});
-
-	app.on('second-instance', () => {
+	app.on('second-instance', (args) => {
 		// Someone tried to run a second instance, we should focus our window.
 		if (window) {
 			if (window.isMinimized()) window.restore();
 			window.focus();
+			window.webContents.send('openUrl', args[0]);
 		}
 	});
 
