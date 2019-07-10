@@ -46,9 +46,7 @@ if (!gotTheLock) {
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
 				window.loadURL(url);
-			} else if (url === 'about:blank') {
-				event.preventDefault();
-			} else if (disposition !== 'background-tab') {
+			} else if ((disposition !== 'background-tab') && (url !== 'about:blank')) {
 				event.preventDefault();
 				shell.openExternal(url);
 			}
