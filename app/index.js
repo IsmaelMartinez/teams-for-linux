@@ -15,17 +15,18 @@ global.config = config;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
-
+app.setAsDefaultProtocolClient('msteams');
 
 if (!gotTheLock) {
 	console.warn('App already running');
 	app.quit();
 } else {
-	app.on('second-instance', () => {
+	app.on('second-instance', (args) => {
 		// Someone tried to run a second instance, we should focus our window.
 		if (window) {
 			if (window.isMinimized()) window.restore();
 			window.focus();
+			window.webContents.send('openUrl', args[0]);
 		}
 	});
 

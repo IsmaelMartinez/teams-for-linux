@@ -1,7 +1,7 @@
 {
   "name": "teams-for-linux",
   "productName": "Teams for Linux",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -45,9 +45,11 @@
   },
   "build": {
     "appId": "teams-for-linux",
-    "asarUnpack": [
-      "node_modules/spellchecker/vendor/hunspell_dictionaries"
-    ],
+    "asarUnpack": ["node_modules/spellchecker/vendor/hunspell_dictionaries"],
+    "protocols": {
+      "name": "msteams",
+      "schemes": ["msteams"]
+    },
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",
@@ -63,12 +65,9 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",
+        "snap",  
         "AppImage",
         "pacman"
-      ],
-      "mimeTypes": [
-        "application/sip"
       ],
       "publish": {
         "provider": "github",
