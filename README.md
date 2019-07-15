@@ -1,5 +1,6 @@
 # teams-for-linux
 
+[![Gitter chat](https://badges.gitter.im/ismaelmartinez/teams-for-linux.png)](https://gitter.im/teams-for-linux/community "Gitter chat")
 ![](https://img.shields.io/github/release/IsmaelMartinez/teams-for-linux.svg?style=flat)
 ![](https://img.shields.io/github/downloads/IsmaelMartinez/teams-for-linux/total.svg?style=flat)
 [![Build Status](https://travis-ci.org/IsmaelMartinez/teams-for-linux.svg?branch=develop)](https://travis-ci.org/IsmaelMartinez/teams-for-linux)
