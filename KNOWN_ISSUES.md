@@ -52,6 +52,8 @@ Sometimes developers from Microsoft Teams make some changes that breaks the appl
 
 This the most common try, if this doesn't work for you please see the next one.
 
-+ Delete this folder `.config/Teams for Linux/Partitions/teams-4-linux/Service Worker`
++ Close the application and delete this folder `.config/Teams for Linux/Partitions/teams-4-linux/Service Worker`
 
 This is a known bug at https://github.com/IsmaelMartinez/teams-for-linux/issues/171
+
+Open Microsoft Teams and you should see everything working. If you reload or close the application and see the blank page again, please repeat the second workaround.
