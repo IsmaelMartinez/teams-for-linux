@@ -18,11 +18,7 @@ In short, node_spellchecker only ships with en_US dictionary.
 
 As a work around, you can enable the use of local dictionaries by installing hunspell and your locale dictionary as indicates in this link [https://github.com/atom/spell-check#debian-ubuntu-and-mint](https://github.com/atom/spell-check#debian-ubuntu-and-mint)
 
-## Strange link icon on snap app
-
-Some snap installation show a non standard icon for links. If you suffer this, please use the deb package instead.
-
-Please refer to the issue #99 for more info.
+Also check [#154](https://github.com/IsmaelMartinez/teams-for-linux/issues/154) in case you have an issue with the detection of the locale.
 
 ## No desktop notifications
 
@@ -46,14 +42,16 @@ sudo snap connect teams-for-linux:camera core:camera
 
 ## Blank page
 
-Sometimes developers from Microsoft Teams make some changes that breaks the application, for this reason you may encounter a blank page and title saying `Microsoft Teams - initializing`. There are two workarounds for this:
+Some users have reported a blank page on login (with the title `Microsoft Teams - initializing`). 
 
-+ Right click on the Microsoft Teams icon tray and click on Refresh.
+The following workarounds tend to solve the issue:
 
-This the most common try, if this doesn't work for you please see the next one.
++ Right click on the Microsoft Teams icon tray and click on Refresh. (Ctrl+R)
 
-+ Close the application and delete this folder `.config/Teams for Linux/Partitions/teams-4-linux/Service Worker`
+If the above doesn't work:
 
-This is a known bug at https://github.com/IsmaelMartinez/teams-for-linux/issues/171
++ Close the application and delete the Service Worker folder under`.config/Teams for Linux/Partitions/teams-4-linux/Service Worker` (or `.config/teams-for-linux/Partitions/teams-4-linux/Service Worker`)
 
-Open Microsoft Teams and you should see everything working. If you reload or close the application and see the blank page again, please repeat the second workaround.
+Refer to [171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
+
+If when you reload or close the application you get the blank page again, please repeat the second workaround.
