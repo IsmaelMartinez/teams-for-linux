@@ -52,6 +52,6 @@ If the above doesn't work:
 
 + Close the application and delete the Service Worker folder under`.config/Teams for Linux/Partitions/teams-4-linux/Service Worker` (or `.config/teams-for-linux/Partitions/teams-4-linux/Service Worker`)
 
-Refer to [171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
+Refer to [#171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
 
 If when you reload or close the application you get the blank page again, please repeat the second workaround.
