@@ -43,3 +43,17 @@ You can also use this command to create an interface to the camera:
 ```bash
 sudo snap connect teams-for-linux:camera core:camera
 ```
+
+## Blank page
+
+Sometimes developers from Microsoft Teams make some changes that breaks the application, for this reason you may encounter a blank page and title saying `Microsoft Teams - initializing`. There are two workarounds for this:
+
++ Right click on the Microsoft Teams icon tray and click on Refresh.
+
+This the most common try, if this doesn't work for you please see the next one.
+
++ Close the application and delete this folder `.config/Teams for Linux/Partitions/teams-4-linux/Service Worker`
+
+This is a known bug at https://github.com/IsmaelMartinez/teams-for-linux/issues/171
+
+Open Microsoft Teams and you should see everything working. If you reload or close the application and see the blank page again, please repeat the second workaround.
