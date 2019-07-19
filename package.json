@@ -39,7 +39,7 @@
   "devDependencies": {
     "electron": "4.2.0",
     "electron-builder": "20.44.4",
-    "eslint": "5.16.0",
+    "eslint": "6.0.1",
     "yarn": "1.16.0"
   },
   "build": {
