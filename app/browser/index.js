@@ -1,21 +1,29 @@
 /* global angular */
 (function () {
 	const path = require('path');
-	const { ipcRenderer } = require('electron');
+	const { ipcRenderer, remote } = require('electron');
 	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
-	
-	require('./onlineOfflineListener')();
-	require('./rightClickMenuWithSpellcheck');
-	require('./zoom')();
-	require('./desktopShare/chromeApi');
+	const config = remote.getGlobal('config');
 
+	if (config.onlineOfflineReload) {
+		require('./onlineOfflineListener')();
+	}
+	if (config.rightClickWithSpellcheck) {
+		require('./rightClickMenuWithSpellcheck');
+	}
+	require('./zoom')();
+
+	require('./desktopShare/chromeApi');
+	
 	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
 	new ActivityManager(ipcRenderer, iconPath).start();
 
-	pageTitleNotifications(ipcRenderer);
-
+	if (config.enableDesktopNotificationsHack) {
+		pageTitleNotifications(ipcRenderer);
+	}
+	
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {

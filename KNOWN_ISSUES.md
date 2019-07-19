@@ -16,22 +16,9 @@ Details are in issue [#28](https://github.com/IsmaelMartinez/teams-for-linux/iss
 
 In short, node_spellchecker only ships with en_US dictionary.
 
-As a work around, only valid when running from source, you can enable the use of local dictionaries by following the next steps:
+As a work around, you can enable the use of local dictionaries by installing hunspell and your locale dictionary as indicates in this link [https://github.com/atom/spell-check#debian-ubuntu-and-mint](https://github.com/atom/spell-check#debian-ubuntu-and-mint)
 
-1. Install hunspell and your locale dictionary as indicates in this link [https://github.com/atom/spell-check#debian-ubuntu-and-mint](https://github.com/atom/spell-check#debian-ubuntu-and-mint)
-2. Run the following commands from the root of the app (where this README.md file is located)
-  1.`mv node_modules/spellchecker/vendor/hunspell_dictionaries node_modules/spellchecker/vendor/hunspell_dictionaries.old` mv the en_US dictionaries to another location.
-  2.`ln -s /usr/share/hunspell/ node_modules/spellchecker/vendor/hunspell_dictionaries` create a simbolic link to the hunspell dictionaries. Note, I am using the default location for hunspell.
-
-Starting the app with `yarn start`, and if you have your system configured with the right dictionaries and locale, you should be able to see the spellchecker working.
-
-Unfortunately, at this moment in time it is not possible to use local dictionaries with the packaged app. Fixing issue [51](https://github.com/atom/node-spellchecker/issues/51) in node-spellchecker should solve this issue.
-
-## Strange link icon on snap app
-
-Some snap installation show a non standard icon for links. If you suffer this, please use the deb package instead.
-
-Please refer to the issue #99 for more info.
+Also check [#154](https://github.com/IsmaelMartinez/teams-for-linux/issues/154) in case you have an issue with the detection of the locale.
 
 ## No desktop notifications
 
@@ -43,8 +30,28 @@ This project includes a desktop notification hack that can be enable by running 
 
 Snap uses confinement to provide more security, this restric the access to hardware or data on your device to prevent security issues.
 
-The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that run this command after the installation of the snap to create an interface to the camera:
+The camera is a restricted device on Snap, so you need to allow the access to the camera on Teams For Linux to be able to do videocalls, to do that you can use the Software Store in your Operating System after the installation of the snap, look for a similar option in your Software Store app:
+
+![Enable camera in Software Store](static/snap-store-permissons.png)
+
+You can also use this command to create an interface to the camera:
 
 ```bash
 sudo snap connect teams-for-linux:camera core:camera
 ```
+
+## Blank page
+
+Some users have reported a blank page on login (with the title `Microsoft Teams - initializing`). 
+
+The following workarounds tend to solve the issue:
+
++ Right click on the Microsoft Teams icon tray and click on Refresh. (Ctrl+R)
+
+If the above doesn't work:
+
++ Close the application and delete the Service Worker folder under`.config/Teams for Linux/Partitions/teams-4-linux/Service Worker` (or `.config/teams-for-linux/Partitions/teams-4-linux/Service Worker`)
+
+Refer to [#171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
+
+If when you reload or close the application you get the blank page again, please repeat the second workaround.

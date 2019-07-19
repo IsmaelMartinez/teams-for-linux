@@ -1,7 +1,6 @@
 {
   "name": "teams-for-linux",
-  "productName": "Teams for Linux",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -31,21 +30,25 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "electron-editor-context-menu": "^1.1.1",
-    "electron-native-notification": "^1.2.1",
-    "electron-spell-check-provider": "^1.1.1",
-    "electron-window-state": "^5.0.3",
-    "yargs": "^13.2.2"
+    "electron-editor-context-menu": "1.1.1",
+    "electron-native-notification": "1.2.1",
+    "electron-window-state": "5.0.3",
+    "spellchecker": "3.6.1",
+    "yargs": "13.3.0"
   },
   "devDependencies": {
-    "electron": "^4.2.0",
-    "electron-builder": "^20.38.5",
-    "eslint": "^5.15.1",
-    "yarn": "^1.13.0"
+    "electron": "4.2.0",
+    "electron-builder": "20.44.4",
+    "eslint": "5.16.0",
+    "yarn": "1.16.0"
   },
   "build": {
     "appId": "teams-for-linux",
     "asarUnpack": ["node_modules/spellchecker/vendor/hunspell_dictionaries"],
+    "protocols": {
+      "name": "msteams",
+      "schemes": ["msteams"]
+    },
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",
@@ -64,9 +67,6 @@
         "snap",  
         "AppImage",
         "pacman"
-      ],
-      "mimeTypes": [
-        "application/sip"
       ],
       "publish": {
         "provider": "github",

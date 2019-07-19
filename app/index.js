@@ -11,20 +11,22 @@ const fs = require('fs');
 const gotTheLock = app.requestSingleInstanceLock();
 
 let window = null;
+global.config = config;
 
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
-
+app.setAsDefaultProtocolClient('msteams');
 
 if (!gotTheLock) {
 	console.warn('App already running');
 	app.quit();
 } else {
-	app.on('second-instance', () => {
+	app.on('second-instance', (args) => {
 		// Someone tried to run a second instance, we should focus our window.
 		if (window) {
 			if (window.isMinimized()) window.restore();
 			window.focus();
+			window.webContents.send('openUrl', args[0]);
 		}
 	});
 
@@ -44,9 +46,7 @@ if (!gotTheLock) {
 			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 				event.preventDefault();
 				window.loadURL(url);
-			} else if (url === 'about:blank') {
-				event.preventDefault();
-			} else if (disposition !== 'background-tab') {
+			} else if ((disposition !== 'background-tab') && (url !== 'about:blank')) {
 				event.preventDefault();
 				shell.openExternal(url);
 			}
@@ -134,6 +134,7 @@ function createWindow() {
 
 		width: windowState.width,
 		height: windowState.height,
+		backgroundColor: '#fff',
 
 		show: false,
 		autoHideMenuBar: true,

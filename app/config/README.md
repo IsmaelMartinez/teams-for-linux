@@ -13,11 +13,12 @@ Here is the list of available arguments and its usage:
 | help  | show the available commands | false |
 | version | show the version number | false |
 | onlineOfflineReload | Reload page when going from offline to online | true |
-| disableDesktopNotificationsHack | disable electron-desktop-notifications extension hack | false |
+| rightClickWithSpellcheck | Enable/Disable the right click menu with spellchecker| true |
+| enableDesktopNotificationsHack | Enable electron-desktop-notifications extension hack | false |
 | closeAppOnCross | Close the app when clicking the close (X) cross | false |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition | persist:teams-4-linux |
 | webDebug | Start with the browser developer tools open  |  false |
-| minimized | Start the application minimized | false | 
+| minimized | Start the application minimized | false |
 | url | url to open | https://teams.microsoft.com/ |
 | config | config file location | ~/.config/teams-for-linux/config.json |
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36 |
