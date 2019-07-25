@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 exports.onDidFinishLoad = function onDidFinishLoad(content) {
     applyCustomCSSStyleIfPresent(content);
     content.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
