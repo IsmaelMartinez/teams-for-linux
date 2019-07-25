@@ -2,7 +2,9 @@ const yargs = require('yargs');
 const path = require('path');
 
 function argv(configPath) {
+	console.log('configPath =', configPath);
 	let configFile = getConfigFile(configPath);
+	console.log('configFile =', configFile);
 	return yargs
 		.env(true)
 		.config(configFile)

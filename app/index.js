@@ -4,10 +4,11 @@ const path = require('path');
 const iconPath = path.join(__dirname, 'assets', 'icons', 'icon-96x96.png');
 const config = require('./config')(app.getPath('userData'));
 const login = require('./login');
+const certificate = require('./certificate');
+const customCSS = require('./customCSS');
 const Menus = require('./menus');
 const notifications = require('./notifications');
 const onlineOffline = require('./onlineOffline');
-const fs = require('fs');
 const gotTheLock = app.requestSingleInstanceLock();
 
 let window = null;
@@ -21,103 +22,65 @@ if (!gotTheLock) {
 	console.warn('App already running');
 	app.quit();
 } else {
-	app.on('second-instance', (args) => {
-		// Someone tried to run a second instance, we should focus our window.
-		if (window) {
-			if (window.isMinimized()) window.restore();
-			window.focus();
-			window.webContents.send('openUrl', args[0]);
-		}
-	});
-
-	app.on('ready', () => {
-		window = createWindow();
-		new Menus(window, config, iconPath);
-
-		window.on('page-title-updated', (event, title) => {
-			window.webContents.send('page-title', title);
-		});
-
-		if (config.enableDesktopNotificationsHack) {
-			notifications.addDesktopNotificationHack(iconPath);
-		}
-
-		window.webContents.on('new-window', (event, url, frame, disposition) => {
-			if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
-				event.preventDefault();
-				window.loadURL(url);
-			} else if ((disposition !== 'background-tab') && (url !== 'about:blank')) {
-				event.preventDefault();
-				shell.openExternal(url);
-			}
-		});
-
-		login.handleLoginDialogTry(window);
-		if (config.onlineOfflineReload) {
-			onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
-		}
-		
-		window.webContents.setUserAgent(config.chromeUserAgent);
-
-		if(!config.minimized) { 
-			window.once('ready-to-show', () => window.show());
-		}
-
-		window.webContents.on('did-finish-load', () => {
-			applyCustomCSSStyleIfPresent();
-			window.webContents.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
-			window.webContents.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
-		});
-
-		window.on('closed', () => { window = null; });
-
-		window.loadURL(config.url);
-
-		if (config.webDebug) {
-			window.openDevTools();
-		}
-	});
-
-	app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
-		if (error === 'net::ERR_CERT_AUTHORITY_INVALID') {
-			let unknownIssuerCert = getCertIssuer(certificate);
-			if (config.customCACertsFingerprints.indexOf(unknownIssuerCert.fingerprint) !== -1) {
-				event.preventDefault();
-				callback(true);
-			} else {
-				console.log('Unknown cert issuer for url: ' + url);
-				console.log('Issuer Name: ' + unknownIssuerCert.issuerName);
-				console.log('The unknown certificate fingerprint is: ' + unknownIssuerCert.fingerprint);
-				callback(false);
-			}
-		} else {
-			console.log('An unexpected SSL error has occured: ' + error);
-			callback(false);
-		}
-	});
+	app.on('second-instance', onAppSecondInstance);
+	app.on('ready', onAppReady);
+	app.on('certificate-error', certificate.onAppCertificateError);
 }
 
-function getCertIssuer(cert) {
-	if ('issuerCert' in cert && cert.issuerCert !== cert) {
-		return getCertIssuer(cert.issuerCert);
-	}
-	return cert;
-}
-
-function applyCustomCSSStyleIfPresent() {
-	if (config.customCSSName) {
-		applyCustomCSSFromLocation(path.join(__dirname, 'assets', 'css', config.customCSSName + '.css'));
-	} else if (config.customCSSLocation) {
-		applyCustomCSSFromLocation(config.customCSSLocation);
+function onAppSecondInstance (args) {
+	console.log('second-instance started');
+	if (window) {
+		console.log('focusing on window');
+		if (window.isMinimized()) window.restore();
+		window.focus();
+		window.webContents.send('openUrl', args[0]);
 	}
 }
 
-function applyCustomCSSFromLocation(cssLocation) {
-	fs.readFile(cssLocation, 'utf-8', (error, data) => {
-		if(!error){
-			window.webContents.insertCSS(data);
+function onAppReady() {
+	window = createWindow();
+	new Menus(window, config, iconPath);
+
+	window.on('page-title-updated', (event, title) => {
+		window.webContents.send('page-title', title);
+	});
+
+	if (config.enableDesktopNotificationsHack) {
+		notifications.addDesktopNotificationHack(iconPath);
+	}
+
+	window.webContents.on('new-window', (event, url, frame, disposition) => {
+		if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+			event.preventDefault();
+			window.loadURL(url);
+		} else if ((disposition !== 'background-tab') && (url !== 'about:blank')) {
+			event.preventDefault();
+			shell.openExternal(url);
 		}
 	});
+
+	login.handleLoginDialogTry(window);
+	if (config.onlineOfflineReload) {
+		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
+	}
+
+	window.webContents.setUserAgent(config.chromeUserAgent);
+
+	if (!config.minimized) {
+		window.once('ready-to-show', () => window.show());
+	}
+
+	window.webContents.on('did-finish-load', () => {
+		customCSS.onDidFinishLoad(window.webContents)
+	});
+
+	window.on('closed', () => { window = null; });
+
+	window.loadURL(config.url);
+
+	if (config.webDebug) {
+		window.openDevTools();
+	}
 }
 
 function createWindow() {

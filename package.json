@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -64,7 +64,7 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",  
+        "snap",
         "AppImage",
         "pacman"
       ],
