@@ -42,7 +42,7 @@ sudo snap connect teams-for-linux:camera core:camera
 
 ## Blank page
 
-Some users have reported a blank page on login (with the title `Microsoft Teams - initializing`). 
+Some users have reported a blank page on login (with the title `Microsoft Teams - initializing`).
 
 The following workarounds tend to solve the issue:
 

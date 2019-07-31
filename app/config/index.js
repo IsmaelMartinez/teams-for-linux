@@ -2,7 +2,9 @@ const yargs = require('yargs');
 const path = require('path');
 
 function argv(configPath) {
+	console.log('configPath =', configPath);
 	let configFile = getConfigFile(configPath);
+	console.log('configFile =', configFile);
 	return yargs
 		.env(true)
 		.config(configFile)
@@ -86,6 +88,7 @@ function getConfigFile(configPath) {
 	try {
 		return require(path.join(configPath, 'config.json'));
 	} catch (e){
+		console.error('Failed to get teh config file', e);
 		return {};
 	}
 }
