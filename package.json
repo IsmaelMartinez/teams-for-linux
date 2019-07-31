@@ -77,6 +77,9 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
+      "environment": {
+        "DISABLE_WAYLAND": 1
+      },
       "plugs": [
         "default",
         "camera",
