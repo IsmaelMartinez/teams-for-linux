@@ -49,7 +49,7 @@ exports.onAppReady = function onAppReady() {
 	}
 }
 
-exports.onAppSecondInstance = function onAppSecondInstance (args) {
+exports.onAppSecondInstance = function onAppSecondInstance(args) {
 	console.log('second-instance started');
 	if (window) {
 		console.log('focusing on window');
