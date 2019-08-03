@@ -38,9 +38,6 @@
 					injector.get('settingsService').settingsService.refreshSettings();
 
 				}
-				// Future tests can be done in here...
-				// angular.element(document).injector().get('settingsService').appConfig.replyBoxFocusAfterNewMessage = true;
-				//last I look is enableIncomingVideoUnsupportedUfd groing from down to up.
 			}, 3000);
 		},
 	);
@@ -49,21 +46,21 @@
 		injector.get('callingSupportService').oneOnOneCallingEnabled = true;
 
 		injector.get('callingSupportService').isDesktopApp	 = true;
-		// injector.get('callingSupportService').isChromeMeetingSingleVideoEnabled = true;
-		// injector.get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
-		// injector.get('callingSupportService').isChromeVideoMultipartyEnabled = true;
+		injector.get('callingSupportService').isChromeMeetingSingleVideoEnabled = true;
+		injector.get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
+		injector.get('callingSupportService').isChromeVideoMultipartyEnabled = true;
 		injector.get('settingsService').appConfig.angularDebugInfoEnabled = true;
-		// injector.get('settingsService').appConfig.enableCallingChromeOneOnOne = true;
-		// injector.get('settingsService').appConfig.callingEnableChromeMeetingSingleVideo = true;
-		// injector.get('settingsService').appConfig.callingEnableChromeMultipartyVideo = true;
-		// injector.get('settingsService').appConfig.callingEnabledLinux = true;
+		injector.get('settingsService').appConfig.enableCallingChromeOneOnOne = true;
+		injector.get('settingsService').appConfig.callingEnableChromeMeetingSingleVideo = true;
+		injector.get('settingsService').appConfig.callingEnableChromeMultipartyVideo = true;
+		injector.get('settingsService').appConfig.callingEnabledLinux = true;
 		injector.get('settingsService').appConfig.enableChromeScreenSharing = true;
-		// injector.get('settingsService').appConfig.enableAddToChatButtonForMeetings = true;
-		// injector.get('settingsService').appConfig.enableSharingOnlyCallChrome = true;
-		// injector.get('settingsService').appConfig.enableScreenSharingToolbar = true;
+		injector.get('settingsService').appConfig.enableAddToChatButtonForMeetings = true;
+		injector.get('settingsService').appConfig.enableSharingOnlyCallChrome = true;
+		injector.get('settingsService').appConfig.enableScreenSharingToolbar = true;
 		injector.get('settingsService').appConfig.enableCallingScreenPreviewLabel = true;
-		// injector.get('settingsService').appConfig.callingEnableChromeOneToOneVideo = true;
-		// injector.get('settingsService').appConfig.enableMeetingStartedNotificationWeb = true;
+		injector.get('settingsService').appConfig.callingEnableChromeOneToOneVideo = true;
+		injector.get('settingsService').appConfig.enableMeetingStartedNotificationWeb = true;
 		injector.get('settingsService').appConfig.enableMicOSUnmuteOnUnmute = true;
 		injector.get('settingsService').appConfig.enableModeratorsSupport = true;
 		injector.get('settingsService').appConfig.enableRecordPPTSharing = true;
