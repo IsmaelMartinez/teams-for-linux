@@ -24,11 +24,13 @@
 		pageTitleNotifications(ipcRenderer);
 	}
 
-	document.addEventListener(
-		'DOMContentLoaded',
-		() => {
+	document.addEventListener('DOMContentLoaded',() => {
+		modifyAngularSettingsWithTimeot();
+	});
 
-			setTimeout(() => {
+	function modifyAngularSettingsWithTimeot() {
+		setTimeout(() => {
+			try {
 				let injector = angular.element(document).injector();
 
 				if(injector) {
@@ -36,15 +38,17 @@
 					disablePromoteStuff(injector);
 
 					injector.get('settingsService').settingsService.refreshSettings();
-
 				}
-			}, 3000);
-		},
-	);
+			} catch (error) {
+				if (error instanceof ReferenceError) {
+					modifyAngularSettingsWithTimeot();
+				}
+			}
+		}, 4000);
+	}
 
 	function enableChromeVideoAudioMeetings(injector) {
 		injector.get('callingSupportService').oneOnOneCallingEnabled = true;
-
 		injector.get('callingSupportService').isDesktopApp	 = true;
 		injector.get('callingSupportService').isChromeMeetingSingleVideoEnabled = true;
 		injector.get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
