@@ -54,7 +54,7 @@
       "packageCategory": "net",
       "executableName": "teams-for-linux",
       "synopsis": "Microsoft Teams for Linux",
-      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App\n and wraps it as a standalone application using Electron.",
+      "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "desktop": {
         "Name": "Microsoft Teams for Linux",
         "Comment": "Unofficial client for Microsoft Teams for Linux",
