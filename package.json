@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -33,14 +33,14 @@
     "electron-editor-context-menu": "1.1.1",
     "electron-native-notification": "1.2.1",
     "electron-window-state": "5.0.3",
-    "spellchecker": "3.6.1",
-    "yargs": "13.3.0"
+    "spellchecker": "3.7.0",
+    "yargs": "14.0.0"
   },
   "devDependencies": {
-    "electron": "4.2.0",
-    "electron-builder": "20.44.4",
+    "electron": "4.2.8",
+    "electron-builder": "21.1.5",
     "eslint": "5.16.0",
-    "yarn": "1.16.0"
+    "yarn": "1.17.3"
   },
   "build": {
     "appId": "teams-for-linux",
@@ -64,7 +64,7 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",  
+        "snap",
         "AppImage",
         "pacman"
       ],
@@ -77,6 +77,9 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
+      "environment": {
+        "DISABLE_WAYLAND": 1
+      },
       "plugs": [
         "default",
         "camera",

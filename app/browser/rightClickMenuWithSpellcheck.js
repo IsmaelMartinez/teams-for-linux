@@ -1,5 +1,5 @@
 /**
- * From 
+ * Base from 
  * https://github.com/mixmaxhq/electron-spell-check-provider/issues/18
  */
 
