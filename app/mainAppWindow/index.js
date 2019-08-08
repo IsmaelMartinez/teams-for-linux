@@ -8,11 +8,11 @@ const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
-
 let window = null;
 
 exports.onAppReady = function onAppReady() {
 	window = createWindow();
+	window.webContents.session.clearCache(()=> console.log("session cache cleared"));
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
