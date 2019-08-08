@@ -10,10 +10,12 @@ const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 
 let aboutBlankRequestCount = 0;
+
 let window = null;
 
 exports.onAppReady = function onAppReady() {
 	window = createWindow();
+	window.webContents.session.clearCache(()=> console.log("session cache cleared"));
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
@@ -90,12 +92,12 @@ function onNewWindow(event, url, frame, disposition, options) {
 		const win = new BrowserWindow({
 			webContents: options.webContents, // use existing webContents if provided
 			show: false
-		})
+		});
 
 		// Close the new window once it is done loading.
-		win.once('ready-to-show', () => win.close())
+		win.once('ready-to-show', () => win.close());
 
-		event.newGuest = win
+		event.newGuest = win;
 	} else if (disposition !== 'background-tab') {
 		event.preventDefault();
 		shell.openExternal(url);
