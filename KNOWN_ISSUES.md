@@ -50,7 +50,9 @@ The following workarounds tend to solve the issue:
 
 If the above doesn't work:
 
-+ Close the application and delete the cache folder `.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
++ Close the application and delete the application cache folder
+  + `.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
+  + or for Snap installation, `snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`.
 
 Refer to [#171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
 
