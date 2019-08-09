@@ -17,6 +17,7 @@ exports.onAppReady = async function onAppReady() {
 	window = createWindow();
 	await clearCache(window.webContents.session);
 	await clearStorageData(window.webContents.session);
+
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
