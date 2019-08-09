@@ -42,10 +42,17 @@ exports.onAppReady = function onAppReady() {
 	}
 
 	window.webContents.on('did-finish-load', () => {
-		customCSS.onDidFinishLoad(window.webContents)
+		customCSS.onDidFinishLoad(window.webContents);
 	});
 
-	window.on('closed', () => { window = null; });
+	window.on('close', () => {
+		console.log('window close');
+		window.webContents.session.flushStorageData();
+	})
+	window.on('closed', () => {
+		console.log('window closed');
+		window = null;
+	});
 
 	window.loadURL(config.url);
 
