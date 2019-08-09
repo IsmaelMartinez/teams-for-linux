@@ -16,5 +16,9 @@ if (!gotTheLock) {
 } else {
 	app.on('second-instance', mainAppWindow.onAppSecondInstance);
 	app.on('ready', mainAppWindow.onAppReady);
+	app.on('before-quit', () => console.log('before-quit'));
+	app.on('quit', () => console.log('quit'));
+	app.on('renderer-process-crashed', () => console.log('renderer-process-crashed'));
+	app.on('will-quit', () => console.log('will-quit'));
 	app.on('certificate-error', certificate.onAppCertificateError);
 }
