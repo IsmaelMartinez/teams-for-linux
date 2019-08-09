@@ -7,6 +7,7 @@ exports = module.exports = () => ({
 				{role: 'resetZoom'},
 				{role: 'zoomIn'},
 				{role: 'zoomOut'},
+				{role: 'togglefullscreen'},
 			],
 		},
 	],
