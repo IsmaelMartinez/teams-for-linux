@@ -88,5 +88,10 @@
 		injector.get('settingsService').appConfig.hideGetAppButton = true;
 		injector.get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
 	}
+	Object.defineProperty(navigator.serviceWorker, 'register', {
+		value: () => {
+			return Promise.reject()
+		}
+	});
 }());
 
