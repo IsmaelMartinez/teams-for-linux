@@ -21,7 +21,7 @@ Here is the list of available arguments and its usage:
 | minimized | Start the application minimized | false |
 | url | url to open | https://teams.microsoft.com/ |
 | config | config file location | ~/.config/teams-for-linux/config.json |
-| chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36 |
+| chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36 |
 | ntlmV2enabled | set enable-ntlm-v2 value | true |
 | authServerWhitelist | set auth-server-whitelist value | * |
 | customCSSName | Custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" | |
