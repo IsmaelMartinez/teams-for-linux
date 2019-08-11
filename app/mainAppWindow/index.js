@@ -13,11 +13,10 @@ let aboutBlankRequestCount = 0;
 
 let window = null;
 
-exports.onAppReady = async function onAppReady() {
+exports.onAppReady = function onAppReady() {
 	window = createWindow();
-	await clearCache(window.webContents.session);
-	await clearStorageData(window.webContents.session);
-
+	window.webContents.session.clearCache(()=> console.log("session cache cleared"));
+	window.webContents.session.clearStorageData({ storages: ['appcache']} ,()=> console.log("appcache cleared"));
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
@@ -148,12 +147,4 @@ function createWindow() {
 	};
 
 	return window;
-}
-
-const clearCache = (session) => {
-	new Promise((resolve) => session.clearCache(resolve(console.log("session cache cleared"))));
-}
-
-const clearStorageData = (session) => {
-	new Promise((resolve) => session.clearStorageData({ storages: ['appcache']} , resolve(console.log("appcache cleared")) ));
 }
