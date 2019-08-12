@@ -16,7 +16,6 @@ let window = null;
 exports.onAppReady = function onAppReady() {
 	window = createWindow();
 	window.webContents.session.clearCache(()=> console.log("session cache cleared"));
-	window.webContents.session.clearStorageData({ storages: ['appcache']} ,()=> console.log("appcache cleared"));
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
