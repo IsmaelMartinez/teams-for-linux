@@ -61,8 +61,12 @@
         "StartupWMClass": "teams-for-linux"
       },
       "target": [
+        "rpm",
         "deb",
-        "tar.gz"
+        "tar.gz",
+        "snap",
+        "AppImage",
+        "pacman"
       ],
       "publish": {
         "provider": "github",
