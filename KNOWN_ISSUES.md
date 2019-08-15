@@ -8,7 +8,14 @@ We are defaulting in opening the links in a external browser, but links can be o
 
 ## No history
 
-Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under `~/.config/teams-for-linux` or, if using snap `rm -rf /home/$HOME/snap/teams*`, should fix the issue.
+Switching the userAgent with the persistence turn on sometimes have the side effect of "loosing" the channels history. Removing the data under the appropriate config directory should fix the issue.
+
+### Config folder locations:
+
+* Vanilla install: `rm -rf ~/.config/teams-for-linux`
+* snap: `rm -rf ~/snap/teams-for-linux/current/.config/teams-for-linux/`
+* --user installed flatpak: `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux`
+* from source: `rm -rf ~/.config/Electron/`
 
 ## Spellchecker not working
 
