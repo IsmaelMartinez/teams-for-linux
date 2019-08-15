@@ -15,6 +15,7 @@ Switching the userAgent with the persistence turn on sometimes have the side eff
 * Vanilla install: `rm -rf ~/.config/teams-for-linux`
 * snap: `rm -rf ~/snap/teams-for-linux/current/.config/teams-for-linux/`
 * --user installed flatpak: `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux`
+* from source: `rm -rf ~/.config/Electron/`
 
 ## Spellchecker not working
 
