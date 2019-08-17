@@ -6,7 +6,7 @@
 const { remote, webFrame } = require('electron');
 const buildEditorContextMenu = remote.require('electron-editor-context-menu');
 const spellchecker = require('spellchecker');
-const appLocale = remote.app.getLocale();
+const appLocale = remote.app.getLocale().replace('-', '_');
 var EN_VARIANT = /^en/;
 
 // Prevent the spellchecker from showing contractions as errors.
