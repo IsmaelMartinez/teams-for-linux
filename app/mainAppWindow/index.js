@@ -9,6 +9,8 @@ const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 
+let aboutBlankRequestCount = 0;
+
 let window = null;
 
 exports.onAppReady = function onAppReady() {
@@ -25,6 +27,8 @@ exports.onAppReady = function onAppReady() {
 
 	window.webContents.on('new-window', onNewWindow);
 
+	window.webContents.session.webRequest.onBeforeRequest(['http*'], onBeforeRequestHandler);
+
 	login.handleLoginDialogTry(window);
 	if (config.onlineOfflineReload) {
 		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
@@ -37,10 +41,17 @@ exports.onAppReady = function onAppReady() {
 	}
 
 	window.webContents.on('did-finish-load', () => {
-		customCSS.onDidFinishLoad(window.webContents)
+		customCSS.onDidFinishLoad(window.webContents);
 	});
 
-	window.on('closed', () => { window = null; });
+	window.on('close', () => {
+		console.log('window close');
+		window.webContents.session.flushStorageData();
+	})
+	window.on('closed', () => {
+		console.log('window closed');
+		window = null;
+	});
 
 	window.loadURL(config.url);
 
@@ -59,11 +70,41 @@ exports.onAppSecondInstance = function onAppSecondInstance(args) {
 	}
 }
 
-function onNewWindow(event, url, frame, disposition) {
+function onBeforeRequestHandler(details, callback) {
+	// Check if the counter was incremented
+	if (aboutBlankRequestCount < 1) {
+		// Proceed normally
+		callback({});
+	} else {
+		// Open the request externally
+		console.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
+		shell.openExternal(details.url);
+		// decrement the counter
+		aboutBlankRequestCount -= 1;
+		callback({ cancel: true });
+	}
+}
+
+function onNewWindow(event, url, frame, disposition, options) {
 	if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 		event.preventDefault();
 		window.loadURL(url);
-	} else if ((disposition !== 'background-tab') && (url !== 'about:blank')) {
+	} else if (url === 'about:blank') {
+		event.preventDefault();
+		// Increment the counter
+		aboutBlankRequestCount += 1;
+		// Create a new hidden window to load the request in the background
+		console.debug('DEBUG - captured about:blank');
+		const win = new BrowserWindow({
+			webContents: options.webContents, // use existing webContents if provided
+			show: false
+		});
+
+		// Close the new window once it is done loading.
+		win.once('ready-to-show', () => win.close());
+
+		event.newGuest = win;
+	} else if (disposition !== 'background-tab') {
 		event.preventDefault();
 		shell.openExternal(url);
 	}

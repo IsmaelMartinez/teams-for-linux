@@ -53,7 +53,7 @@ function argv(configPath) {
 				describe: 'Google Chrome User Agent',
 				type: 'string',
 				default:
-					'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3835.0 Safari/537.36',
+					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36',
 			},
 			ntlmV2enabled: {
 				default: 'true',
@@ -88,7 +88,11 @@ function getConfigFile(configPath) {
 	try {
 		return require(path.join(configPath, 'config.json'));
 	} catch (e){
+<<<<<<< HEAD
+		console.info('Failed to get the config file, using default values');
+=======
 		console.error('Failed to get the config file', e);
+>>>>>>> origin
 		return {};
 	}
 }
