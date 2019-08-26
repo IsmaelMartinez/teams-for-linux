@@ -3,7 +3,7 @@ parameters:
   package: ''
 
 jobs:
-- job: Build${{ parameters.package }}
+- job: Build
   pool:
     vmImage: 'ubuntu-latest'
   steps:
