@@ -7,5 +7,6 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   steps:
+  - script: yarn --link-duplicates --pure-lockfile
   - script: yarn run dist:linux:${{ parameters.package }}
     displayName: 'Run electron-build ${{ parameters.package }}'

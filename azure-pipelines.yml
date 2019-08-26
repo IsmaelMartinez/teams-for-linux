@@ -8,14 +8,6 @@ trigger:
 
 
 stages:
-- stage: InstallDependencies
-  jobs:
-  - job: Dependencies
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    - script: yarn --link-duplicates --pure-lockfile
-      displayName: 'Getting dependencies with Yarn'
 - stage:
   jobs:
   - template: jobs/electron-build.yml
