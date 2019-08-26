@@ -9,14 +9,42 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: yarn --link-duplicates --pure-lockfile
-  displayName: 'Getting dependencies with Yarn'
-
-- script: yarn run dist:linux:tar.gz
-  displayName: 'Run electron-build'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+- stage: InstallDependencies
+  jobs:
+  - job: Dependencies
+    steps:
+    - script: yarn --link-duplicates --pure-lockfile
+      displayName: 'Getting dependencies with Yarn'
+- stage:
+  jobs:
+  - job: BuildTarGz
+    steps:
+    - script: yarn run dist:linux:tar.gz
+      displayName: 'Run electron-build'
+  - job: BuildDeb
+    steps:
+    - script: yarn run dist:linux:deb
+      displayName: 'Run electron-build'
+  - job: BuildRPM
+    steps:
+    - script: yarn run dist:linux:rpm
+      displayName: 'Run electron-build'
+  - job: BuildPacman
+    steps:
+    - script: yarn run dist:linux:pacman
+      displayName: 'Run electron-build'
+  - job: BuildSnap
+    steps:
+    - script: yarn run dist:linux:snap
+      displayName: 'Run electron-build'
+  - job: BuildAppImage
+    steps:
+    - script: yarn run dist:linux:appimage
+      displayName: 'Run electron-build'
+- stage: DeployPackages
+  jobs:
+  - job: Deploy
+    steps:
+    - script: echo deploying...
+      displayName: 'Deploy bla'
