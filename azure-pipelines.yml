@@ -20,3 +20,12 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+- task: GitHubRelease@0
+  inputs:
+    gitHubConnection: 'github release teams-for-linux'
+    repositoryName: '$(Build.Repository.Name)'
+    action: 'create'
+    target: '$(Build.SourceVersion)'
+    tagSource: 'auto'
+    isDraft: true
+    compareWith: 'lastFullRelease'
