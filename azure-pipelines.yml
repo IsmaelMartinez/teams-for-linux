@@ -6,9 +6,6 @@
 trigger:
 - azure-pipelines
 
-variables:
-  GH_TOKEN: $(System.GH_TOKEN)
-
 stages:
 - stage:
   jobs:
