@@ -12,7 +12,7 @@ stages:
   jobs:
   - template: jobs/electron-build.yml
     parameters:
-      package: tar.gz
+      package: targz
   - template: jobs/electron-build.yml
     parameters:
       package: deb

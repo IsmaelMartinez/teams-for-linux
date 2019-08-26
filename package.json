@@ -28,7 +28,7 @@
     "dist:linux:rpm": "electron-builder --linux rpm",
     "dist:linux:deb": "electron-builder --linux deb",
     "dist:linux:pacman": "electron-builder --linux pacman",
-    "dist:linux:tar.gz": "electron-builder --linux tar.gz",
+    "dist:linux:targz": "electron-builder --linux tar.gz",
     "dist:linux:appimage": "electron-builder --linux AppImage",
     "dist:linux:snap": "electron-builder --linux snap",
     "release": "electron-builder"
