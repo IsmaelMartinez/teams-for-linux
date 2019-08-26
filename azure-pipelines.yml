@@ -6,45 +6,59 @@
 trigger:
 - azure-pipelines
 
-pool:
-  vmImage: 'ubuntu-latest'
 
 stages:
 - stage: InstallDependencies
   jobs:
   - job: Dependencies
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn --link-duplicates --pure-lockfile
       displayName: 'Getting dependencies with Yarn'
 - stage:
   jobs:
   - job: BuildTarGz
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:tar.gz
       displayName: 'Run electron-build'
   - job: BuildDeb
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:deb
       displayName: 'Run electron-build'
   - job: BuildRPM
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:rpm
       displayName: 'Run electron-build'
   - job: BuildPacman
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:pacman
       displayName: 'Run electron-build'
   - job: BuildSnap
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:snap
       displayName: 'Run electron-build'
   - job: BuildAppImage
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: yarn run dist:linux:appimage
       displayName: 'Run electron-build'
 - stage: DeployPackages
   jobs:
   - job: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - script: echo deploying...
       displayName: 'Deploy bla'
