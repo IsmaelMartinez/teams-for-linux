@@ -10,8 +10,8 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- script: yarn run dist:linux:tar.gz
+  displayName: 'Run electron-build'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
