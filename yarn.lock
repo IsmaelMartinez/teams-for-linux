@@ -622,9 +622,10 @@ electron-download@^4.1.0:
     semver "^5.4.1"
     sumchecker "^2.0.2"
 
-"electron-editor-context-menu@https://github.com/IsmaelMartinez/electron-editor-context-menu":
-  version "1.1.2"
-  resolved "https://github.com/IsmaelMartinez/electron-editor-context-menu#4c97e39a90c60e3af5df737427dc960d73fb4af9"
+electron-editor-context-menu@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/electron-editor-context-menu/-/electron-editor-context-menu-1.1.1.tgz#dc30098e0dfb37f62628e43303124c7f3379572d"
+  integrity sha1-3DAJjg37N/YmKOQzAxJMfzN5Vy0=
   dependencies:
     lodash.clonedeep "^4.3.0"
     lodash.defaults "^4.0.1"
