@@ -68,17 +68,21 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		url = processArgs(args)
 		if (url) {
 			window.loadURL(url)
+		} else {
+			if (window.isMinimized()) window.restore();
+			window.focus();
 		}
 	}
 }
 
 function processArgs(args) {
+	console.debug("processArgs", args);
 	for (const arg of args) {
 		if (arg.startsWith('msteams:/l/meetup-join/')) {
-			console.log('showing on window');
+			console.log('meetup-join argument received');
 			window.show()
 			pathMeetup = arg.substring(8, arg.length)
-			url = 'https://teams.microsoft.com' + pathMeetup
+			url = config.url + pathMeetup
 			return url
 		}
 	}
