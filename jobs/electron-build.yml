@@ -1,0 +1,11 @@
+
+parameters:
+  package: ''
+
+jobs:
+- job: Build${{ parameters.package }}
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - script: yarn run dist:linux:${{ parameters.package }}
+    displayName: 'Run electron-build ${{ parameters.package }}'
