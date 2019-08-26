@@ -75,11 +75,7 @@
         "snap",
         "AppImage",
         "pacman"
-      ],
-      "publish": {
-        "provider": "github",
-        "releaseType": "draft"
-      }
+      ]
     },
     "snap": {
       "summary": "Teams for Linux",
