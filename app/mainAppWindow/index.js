@@ -53,20 +53,38 @@ exports.onAppReady = function onAppReady() {
 		window = null;
 	});
 
-	window.loadURL(config.url);
+	url = processArgs(process.argv)
+	window.loadURL( url ? url:config.url);
 
 	if (config.webDebug) {
 		window.openDevTools();
 	}
 }
 
-exports.onAppSecondInstance = function onAppSecondInstance(args) {
+exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	console.log('second-instance started');
 	if (window) {
-		console.log('focusing on window');
-		if (window.isMinimized()) window.restore();
-		window.focus();
-		window.webContents.send('openUrl', args[0]);
+		event.preventDefault();
+		url = processArgs(args)
+		if (url) {
+			window.loadURL(url)
+		} else {
+			if (window.isMinimized()) window.restore();
+			window.focus();
+		}
+	}
+}
+
+function processArgs(args) {
+	console.debug("processArgs", args);
+	for (const arg of args) {
+		if (arg.startsWith('msteams:/l/meetup-join/')) {
+			console.log('meetup-join argument received');
+			window.show()
+			pathMeetup = arg.substring(8, arg.length)
+			url = config.url + pathMeetup
+			return url
+		}
 	}
 }
 
@@ -88,7 +106,6 @@ function onBeforeRequestHandler(details, callback) {
 function onNewWindow(event, url, frame, disposition, options) {
 	if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 		event.preventDefault();
-		window.loadURL(url);
 	} else if (url === 'about:blank') {
 		event.preventDefault();
 		// Increment the counter
