@@ -3,6 +3,7 @@ const config = require('./config')(app.getPath('userData'));
 const certificate = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
+require('electron-dl')()
 
 global.config = config;
 
