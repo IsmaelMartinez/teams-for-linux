@@ -34,6 +34,11 @@ function argv(configPath) {
 				describe: 'Microsoft Teams URL',
 				type: 'string',
 			},
+			proxyServer: {
+				default: null,
+				describe: 'Proxy Server with format address:port',
+				type: 'string',
+			},
 			minimized: {
 				default: false,
 				describe: 'Start the application minimized',
