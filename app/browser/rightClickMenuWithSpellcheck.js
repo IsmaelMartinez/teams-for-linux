@@ -1,12 +1,13 @@
 /**
- * Base from 
+ * Base from
  * https://github.com/mixmaxhq/electron-spell-check-provider/issues/18
  */
 
-const { remote, webFrame } = require('electron');
+const { clipboard, remote, webFrame } = require('electron');
 const buildEditorContextMenu = remote.require('electron-editor-context-menu');
 const spellchecker = require('spellchecker');
 const appLocale = remote.app.getLocale().replace('-', '_');
+
 var EN_VARIANT = /^en/;
 
 // Prevent the spellchecker from showing contractions as errors.
@@ -78,19 +79,38 @@ webFrame.setSpellCheckProvider(
 	simpleChecker
 );
 
+
 window.addEventListener('contextmenu', (e) => {
 	// Only show the context menu in text editors.
-	if (!e.target.closest('textarea, input, [contenteditable="true"]')) {
-		return;
+	let isEditable = e.target.closest('textarea, input, [contenteditable="true"]')
+	let selection = {}
+	let template = {}
+	if (isEditable) {
+		var selectedText = window.getSelection().toString();
+		var isMisspelled = selectedText && simpleChecker.isMisspelled(selectedText);
+		var spellingSuggestions = isMisspelled && simpleChecker.getSuggestions(selectedText).slice(0, 5);
+		selection = {
+			isMisspelled: isMisspelled,
+			spellingSuggestions: spellingSuggestions,
+		}
+	} else {
+		template = [{
+			label: 'Copy',
+			role: 'copy'
+		},{
+			label: 'Copy URL',
+			click: () => {
+				clipboard.writeText(e.target.href);
+			},
+			visible: (e.target.href ? true: false)
+		},{
+			type: 'separator'
+		}, {
+			label: 'Select All',
+			role: 'selectall'
+		}];
 	}
-
-	var selectedText = window.getSelection().toString();
-	var isMisspelled = selectedText && simpleChecker.isMisspelled(selectedText);
-	var spellingSuggestions = isMisspelled && simpleChecker.getSuggestions(selectedText).slice(0, 5);
-	var menu = buildEditorContextMenu({
-		isMisspelled: isMisspelled,
-		spellingSuggestions: spellingSuggestions,
-	});
+	let menu = buildEditorContextMenu(selection, template);
 
 	// The 'contextmenu' event is emitted after 'selectionchange' has fired but possibly before the
 	// visible selection has changed. Try to wait to show the menu until after that, otherwise the

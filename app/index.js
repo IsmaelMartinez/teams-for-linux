@@ -3,12 +3,14 @@ const config = require('./config')(app.getPath('userData'));
 const certificate = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
-require('electron-dl')()
+if (config.useElectronDl) require('electron-dl')()
 
 global.config = config;
 
+if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
+app.commandLine.appendSwitch('try-supported-channel-layouts');
 app.setAsDefaultProtocolClient('msteams');
 
 if (!gotTheLock) {

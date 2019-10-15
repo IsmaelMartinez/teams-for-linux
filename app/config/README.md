@@ -20,6 +20,8 @@ Here is the list of available arguments and its usage:
 | webDebug | Start with the browser developer tools open  |  false |
 | minimized | Start the application minimized | false |
 | url | url to open | https://teams.microsoft.com/ |
+| proxyServer | Proxy Server with format address:port| None |
+| useElectronDl | Use Electron dl to automatically download files to the download folder | false |
 | config | config file location | ~/.config/teams-for-linux/config.json |
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36 |
 | ntlmV2enabled | set enable-ntlm-v2 value | true |
