@@ -40,6 +40,14 @@ Alternatively, you can use a file called `config.json` with the configuration op
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
 
+Example: 
+
+```json
+{
+    "closeAppOnCross": true
+}
+```
+
 ## Getting custom CA Certs fingerprints
 
 Information about how to get the custom CA Certs fingerprints is now available under the [certificate README.md file](../certificate/README.md)
