@@ -29,7 +29,7 @@
     "dist:linux:deb": "electron-builder --linux deb",
     "dist:linux:rpm": "electron-builder --linux rpm",
     "dist:linux:appimage": "electron-builder --linux AppImage",
-    "dist:linux:snap": "electron-builder --linux snap",
+    "dist:linux:snap": "electron-builder --linux snap -p always",
     "release": "electron-builder"
   },
   "dependencies": {
