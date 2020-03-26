@@ -95,7 +95,7 @@
       ],
       "publish": {
         "provider": "snapStore",
-        "channels": ["edge", "beta"]
+        "channels": ["edge"]
       }
     }
   }
