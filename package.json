@@ -23,7 +23,6 @@
     "lint": "eslint **/*.js",
     "start": "yarn install && electron ./app",
     "pack": "electron-builder --dir",
-    "build": "electron-builder",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
     "dist:linux:appimage": "electron-builder --linux AppImage",
