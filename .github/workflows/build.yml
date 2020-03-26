@@ -6,7 +6,7 @@ on:
       - test-git-actions
 
 jobs:
-  release:
+  release-deb:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -26,4 +26,26 @@ jobs:
         run: |
           yarn --link-duplicates --pure-lockfile
           yarn dist:linux:deb
+        shell: bash
+
+  release-rpm:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build/release Electron app
+        run: |
+          yarn --link-duplicates --pure-lockfile
+          yarn dist:linux:rpm
         shell: bash
