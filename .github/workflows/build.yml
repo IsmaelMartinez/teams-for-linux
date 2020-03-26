@@ -94,28 +94,6 @@ jobs:
           yarn dist:linux:targz
         shell: bash
 
-  release-pacman:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 10
-
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:pacman
-        shell: bash
-
   release-snap:
     runs-on: ${{ matrix.os }}
 
