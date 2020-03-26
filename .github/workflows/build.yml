@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - test-git-actions
+      - develop
 
 jobs:
   release-deb:
