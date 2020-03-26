@@ -72,7 +72,6 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",
         "AppImage"
       ],
       "publish": {
@@ -93,7 +92,11 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ]
+      ],
+      "publish": {
+        "provider": "snap",
+        "channels": ["edge", "beta"]
+      }
     }
   }
 }
