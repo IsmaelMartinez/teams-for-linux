@@ -94,7 +94,7 @@
         "upower-observe"
       ],
       "publish": {
-        "provider": "snap",
+        "provider": "snapStore",
         "channels": ["edge", "beta"]
       }
     }
