@@ -23,5 +23,7 @@ jobs:
           node-version: 12
 
       - name: Build/release Electron app
-        run:
-          yarn --link-duplicates --pure-lockfile && yarn release
+        run: |
+          yarn --link-duplicates --pure-lockfile
+          yarn dist:linux
+        shell: bash
