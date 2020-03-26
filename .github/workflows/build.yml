@@ -109,7 +109,6 @@ jobs:
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
         with:
-          # Log in to Snap Store
           snapcraft_token: ${{ secrets.snapcraft_token }}
 
       - name: Install Node.js, NPM and Yarn
