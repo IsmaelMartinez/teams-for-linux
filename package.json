@@ -25,6 +25,8 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
+    "dist:linux:deb": "electron-builder --linux deb",
+    "dist:linux:rpm": "electron-builder --linux rpm",
     "dist:linux:appimage": "electron-builder --linux AppImage",
     "dist:linux:snap": "electron-builder --linux snap",
     "release": "electron-builder"

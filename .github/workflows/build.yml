@@ -20,10 +20,10 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 10
 
       - name: Build/release Electron app
         run: |
           yarn --link-duplicates --pure-lockfile
-          yarn dist:linux
+          yarn dist:linux:deb
         shell: bash
