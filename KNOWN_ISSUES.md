@@ -62,9 +62,13 @@ The following workarounds tend to solve the issue:
 If the above doesn't work:
 
 *  Close the application and delete the application cache folder
+
   *  `.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
+
   *  for Snap installation, `snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`.
+
   *  for flatpack, `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application\ Cache/`
+
   >  Check the config locations to find other installations location
 
 Refer to [#171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
