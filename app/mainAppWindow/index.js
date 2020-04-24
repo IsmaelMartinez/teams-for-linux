@@ -41,6 +41,15 @@ exports.onAppReady = function onAppReady() {
 	}
 
 	window.webContents.on('did-finish-load', () => {
+		console.log('did-finish-load');
+		window.webContents.executeJavaScript(`
+			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
+			openBrowserButton && openBrowserButton.click();
+		`);
+		window.webContents.executeJavaScript(`
+			tryAgainLink = document.getElementById('try-again-link');
+			tryAgainLink && tryAgainLink.click()
+		`);
 		customCSS.onDidFinishLoad(window.webContents);
 	});
 
@@ -53,7 +62,7 @@ exports.onAppReady = function onAppReady() {
 		window = null;
 	});
 
-	url = processArgs(process.argv)
+	const url = processArgs(process.argv);
 	window.loadURL( url ? url:config.url);
 
 	if (config.webDebug) {
@@ -63,11 +72,13 @@ exports.onAppReady = function onAppReady() {
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	console.log('second-instance started');
+	let allowFurtherRequests = true;
 	if (window) {
 		event.preventDefault();
-		url = processArgs(args)
-		if (url) {
-			window.loadURL(url)
+		const url = processArgs(args);
+		if (url && allowFurtherRequests)  {
+			allowFurtherRequests = false;
+			setTimeout(() => { allowFurtherRequests = true}, 10000);
 		} else {
 			if (window.isMinimized()) window.restore();
 			window.focus();
@@ -80,15 +91,13 @@ function processArgs(args) {
 	for (const arg of args) {
 		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
 			console.log('meetup-join argument received with https protocol');
-			window.show()
-			return arg
+			window.show();
+			return arg;
 		}
 		if (arg.startsWith('msteams:/l/meetup-join/')) {
 			console.log('meetup-join argument received with msteams protocol');
-			window.show()
-			pathMeetup = arg.substring(8, arg.length)
-			url = config.url + pathMeetup
-			return url
+			window.show();
+			return config.url + arg.substring(8, arg.length);
 		}
 	}
 }

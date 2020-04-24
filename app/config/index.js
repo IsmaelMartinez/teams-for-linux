@@ -1,6 +1,15 @@
 const yargs = require('yargs');
 const path = require('path');
 
+function getConfigFile(configPath) {
+	try {
+		return require(path.join(configPath, 'config.json'));
+	} catch (e){
+		console.info('Failed to get the config file, using default values');
+		return {};
+	}
+}
+
 function argv(configPath) {
 	console.log('configPath =', configPath);
 	let configFile = getConfigFile(configPath);
@@ -92,15 +101,6 @@ function argv(configPath) {
 			}
 		})
 		.parse(process.argv.slice(1));
-}
-
-function getConfigFile(configPath) {
-	try {
-		return require(path.join(configPath, 'config.json'));
-	} catch (e){
-		console.info('Failed to get the config file, using default values');
-		return {};
-	}
 }
 
 exports = module.exports = argv;
