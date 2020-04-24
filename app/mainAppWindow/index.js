@@ -62,7 +62,7 @@ exports.onAppReady = function onAppReady() {
 		window = null;
 	});
 
-	const url = processArgs(process.argv)
+	const url = processArgs(process.argv);
 	window.loadURL( url ? url:config.url);
 
 	if (config.webDebug) {
@@ -75,7 +75,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	let allowFurtherRequests = true;
 	if (window) {
 		event.preventDefault();
-		const url = processArgs(args)
+		const url = processArgs(args);
 		if (url && allowFurtherRequests)  {
 			allowFurtherRequests = false;
 			setTimeout(() => { allowFurtherRequests = true}, 10000);
@@ -91,15 +91,13 @@ function processArgs(args) {
 	for (const arg of args) {
 		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
 			console.log('meetup-join argument received with https protocol');
-			window.show()
-			return arg
+			window.show();
+			return arg;
 		}
 		if (arg.startsWith('msteams:/l/meetup-join/')) {
 			console.log('meetup-join argument received with msteams protocol');
-			window.show()
-			pathMeetup = arg.substring(8, arg.length)
-			url = config.url + pathMeetup
-			return url
+			window.show();
+			return config.url + arg.substring(8, arg.length);
 		}
 	}
 }
