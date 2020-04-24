@@ -28,23 +28,11 @@
 		modifyAngularSettingsWithTimeot();
 	});
 
-	function modifyAngularSettingsWithTimeot() {
-		setTimeout(() => {
-			try {
-				let injector = angular.element(document).injector();
-
-				if(injector) {
-					enableChromeVideoAudioMeetings(injector);
-					disablePromoteStuff(injector);
-
-					injector.get('settingsService').settingsService.refreshSettings();
-				}
-			} catch (error) {
-				if (error instanceof ReferenceError) {
-					modifyAngularSettingsWithTimeot();
-				}
-			}
-		}, 4000);
+	function disablePromoteStuff(injector) {
+		injector.get('settingsService').appConfig.promoteMobile = false;
+		injector.get('settingsService').appConfig.promoteDesktop = false;
+		injector.get('settingsService').appConfig.hideGetAppButton = true;
+		injector.get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
 	}
 
 	function enableChromeVideoAudioMeetings(injector) {
@@ -82,12 +70,25 @@
 		injector.get('settingsService').appConfig.disableCallingOnlineCheck = false;
 	}
 
-	function disablePromoteStuff(injector) {
-		injector.get('settingsService').appConfig.promoteMobile = false;
-		injector.get('settingsService').appConfig.promoteDesktop = false;
-		injector.get('settingsService').appConfig.hideGetAppButton = true;
-		injector.get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
+	function modifyAngularSettingsWithTimeot() {
+		setTimeout(() => {
+			try {
+				let injector = angular.element(document).injector();
+
+				if(injector) {
+					enableChromeVideoAudioMeetings(injector);
+					disablePromoteStuff(injector);
+
+					injector.get('settingsService').settingsService.refreshSettings();
+				}
+			} catch (error) {
+				if (error instanceof ReferenceError) {
+					modifyAngularSettingsWithTimeot();
+				}
+			}
+		}, 4000);
 	}
+
 	Object.defineProperty(navigator.serviceWorker, 'register', {
 		value: () => {
 			return Promise.reject()
