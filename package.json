@@ -42,9 +42,9 @@
   },
   "devDependencies": {
     "electron": "4.2.8",
-    "electron-builder": "21.2.0",
+    "electron-builder": "22.5.1",
     "eslint": "5.16.0",
-    "yarn": "1.22.0"
+    "yarn": "1.22.4"
   },
   "build": {
     "appId": "teams-for-linux",
