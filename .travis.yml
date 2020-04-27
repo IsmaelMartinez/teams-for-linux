@@ -15,16 +15,19 @@ script: |
     -v ~/.cache/electron-builder:/root/.cache/electron-builder \
     electronuserland/builder \
     /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release"
+before_deploy:
+  - sudo apt-get update -qq
+  - sudo apt-get install snapd
 deploy:
   - provider: snap
     snap: dist/teams-for-linux*.snap
-    channel: edge  
+    channel: edge
     skip_cleanup: true
     on:
       branch: develop
   - provider: snap
     snap: dist/teams-for-linux*.snap
-    channel: stable  
+    channel: stable
     skip_cleanup: true
     on:
       branch: master
