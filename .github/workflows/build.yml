@@ -8,6 +8,7 @@ on:
     branches:
       - test-git-actions
       - develop
+      - master
 
 defaults:
   run:
@@ -31,6 +32,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:deb
 
   release-rpm:
@@ -49,6 +51,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:rpm
 
   release-appimage:
@@ -67,6 +70,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:appimage
 
   release-targz:
@@ -85,6 +89,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:targz
 
   release-snap:
@@ -108,4 +113,5 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:snap
