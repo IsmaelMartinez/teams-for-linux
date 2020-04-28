@@ -9,13 +9,14 @@ on:
       - test-git-actions
       - develop
 
+defaults:
+  run:
+    shell: bash
+
+
 jobs:
   release-deb:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
@@ -26,18 +27,14 @@ jobs:
         with:
           node-version: 10
 
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:deb
-        shell: bash
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        run: yarn dist:linux:deb
 
   release-rpm:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
@@ -48,18 +45,14 @@ jobs:
         with:
           node-version: 10
 
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:rpm
-        shell: bash
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        run: yarn dist:linux:rpm
 
   release-appimage:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
@@ -70,18 +63,14 @@ jobs:
         with:
           node-version: 10
 
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:appimage
-        shell: bash
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        run: yarn dist:linux:appimage
 
   release-targz:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out Git repository
@@ -92,35 +81,31 @@ jobs:
         with:
           node-version: 10
 
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:targz
-        shell: bash
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        run: yarn dist:linux:targz
 
   release-snap:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
         with:
           snapcraft_token: ${{ secrets.snapcraft_token }}
 
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
           node-version: 10
 
-      - name: Build/release Electron app
-        run: |
-          yarn --link-duplicates --pure-lockfile
-          yarn dist:linux:snap
-        shell: bash
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        run: yarn dist:linux:snap
