@@ -48,7 +48,7 @@
     "yarn": "1.22.4"
   },
   "build": {
-    "appId": "teams-for-linux",
+    "appId": "teams-for-linux-isma",
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
     ],
@@ -93,7 +93,11 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ]
+      ],
+      "publish": {
+        "provider": "snapStore",
+        "releaseType": "beta"
+      }
     }
   }
 }
