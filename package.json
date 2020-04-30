@@ -29,7 +29,8 @@
     "dist:linux:deb": "electron-builder --linux deb",
     "dist:linux:rpm": "electron-builder --linux rpm",
     "dist:linux:appimage": "electron-builder --linux AppImage",
-    "dist:linux:snap": "electron-builder --linux snap -p always",
+    "dist:linux:snap": "electron-builder --linux snap -p always --c.publish.channels=beta --c.publish.provider=snapStore",
+    "dist:linux:snap:edge": "electron-builder --linux snap -p always --c.publish.channels=edge --c.publish.provider=snapStore",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -68,10 +69,6 @@
         "Comment": "Unofficial client for Microsoft Teams for Linux",
         "StartupWMClass": "teams-for-linux"
       },
-      "arch": [
-        "x64",
-        "ia32"
-      ],
       "target": [
         "rpm",
         "deb",
@@ -96,11 +93,7 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ],
-      "publish": {
-        "provider": "snapStore",
-        "channels": ["beta"]
-      }
+      ]
     }
   }
 }
