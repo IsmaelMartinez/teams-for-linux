@@ -68,6 +68,10 @@
         "Comment": "Unofficial client for Microsoft Teams for Linux",
         "StartupWMClass": "teams-for-linux"
       },
+      "arch": [
+        "x64",
+        "ia32"
+      ],
       "target": [
         "rpm",
         "deb",
