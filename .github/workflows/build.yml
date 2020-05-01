@@ -4,11 +4,7 @@ env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
 
 on:
-  push:
-    branches:
-      - test-git-actions
-      - develop
-      - master
+  push
 
 defaults:
   run:
@@ -112,5 +108,5 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release Edge
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:snap
