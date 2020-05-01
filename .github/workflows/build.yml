@@ -107,6 +107,6 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
-      - name: Release Edge
+      - name: Release
         if: contains(github.ref, 'develop') || contains(github.ref, 'master')
         run: yarn dist:linux:snap
