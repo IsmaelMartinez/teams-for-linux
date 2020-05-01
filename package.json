@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -25,8 +25,11 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
+    "dist:linux:targz": "electron-builder --linux tar.gz",
+    "dist:linux:deb": "electron-builder --linux deb",
+    "dist:linux:rpm": "electron-builder --linux rpm",
     "dist:linux:appimage": "electron-builder --linux AppImage",
-    "dist:linux:snap": "electron-builder --linux snap",
+    "dist:linux:snap": "electron-builder --linux snap -p always",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -39,9 +42,9 @@
   },
   "devDependencies": {
     "electron": "4.2.8",
-    "electron-builder": "21.2.0",
+    "electron-builder": "22.5.1",
     "eslint": "5.16.0",
-    "yarn": "1.22.0"
+    "yarn": "1.22.4"
   },
   "build": {
     "appId": "teams-for-linux",
@@ -69,9 +72,7 @@
         "rpm",
         "deb",
         "tar.gz",
-        "snap",
-        "AppImage",
-        "pacman"
+        "AppImage"
       ],
       "publish": {
         "provider": "github",
@@ -91,7 +92,11 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ]
+      ],
+      "publish": {
+        "provider": "snapStore",
+        "releaseType": "edge"
+      }
     }
   }
 }

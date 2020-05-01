@@ -1,0 +1,112 @@
+name: Build & Release
+
+env:
+  GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
+
+on:
+  push
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        run: yarn dist:linux:deb
+
+  rpm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        run: yarn dist:linux:rpm
+
+  appimage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        run: yarn dist:linux:appimage
+
+  targz:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        run: yarn dist:linux:targz
+
+  snap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v1
+        with:
+          snapcraft_token: ${{ secrets.snapcraft_token }}
+
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        run: yarn dist:linux:snap
