@@ -13,14 +13,14 @@ Here is the list of available arguments and its usage:
 | help  | show the available commands | false |
 | version | show the version number | false |
 | onlineOfflineReload | Reload page when going from offline to online | true |
-| rightClickWithSpellcheck | Enable/Disable the right click menu with spellchecker| true |
+| rightClickWithSpellcheck | Enable/Disable the right click menu with spellchecker | true |
 | enableDesktopNotificationsHack | Enable electron-desktop-notifications extension hack | false |
 | closeAppOnCross | Close the app when clicking the close (X) cross | false |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition | persist:teams-4-linux |
 | webDebug | Start with the browser developer tools open  |  false |
 | minimized | Start the application minimized | false |
-| url | url to open | https://teams.microsoft.com/ |
-| proxyServer | Proxy Server with format address:port| None |
+| url | url to open | [https://teams.microsoft.com/](https://teams.microsoft.com/) |
+| proxyServer | Proxy Server with format address:port | None |
 | useElectronDl | Use Electron dl to automatically download files to the download folder | false |
 | config | config file location | ~/.config/teams-for-linux/config.json |
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36 |
@@ -39,6 +39,14 @@ teams-for-linux --partition nopersist
 Alternatively, you can use a file called `config.json` with the configuration options. This file needs to be located in `~/.config/teams-for-linux/config.json`
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
+
+Example:
+
+```json
+{
+    "closeAppOnCross": true
+}
+```
 
 ## Getting custom CA Certs fingerprints
 
