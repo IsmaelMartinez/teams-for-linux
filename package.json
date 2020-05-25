@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -25,11 +25,11 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
-    "dist:linux:targz": "electron-builder --linux tar.gz --ia32 --x64 --armv71 --arm64",
-    "dist:linux:deb": "electron-builder --linux deb --ia32 --x64 --armv71 --arm64",
-    "dist:linux:rpm": "electron-builder --linux rpm --ia32 --x64 --armv71 --arm64",
-    "dist:linux:appimage": "electron-builder --linux AppImage --ia32 --x64 --armv71 --arm64",
-    "dist:linux:snap": "electron-builder --linux snap -p always --ia32 --x64 --armv71 --arm64",
+    "dist:linux:targz": "electron-builder -l --ia32 --x64 --armv71 --arm64 tar.gz ",
+    "dist:linux:deb": "electron-builder -l --ia32 --x64 --armv71 --arm64 deb",
+    "dist:linux:rpm": "electron-builder -l --ia32 --x64 --armv71 --arm64 rpm",
+    "dist:linux:appimage": "electron-builder -l --ia32 --x64 --armv71 --arm64 AppImage",
+    "dist:linux:snap": "electron-builder -l --ia32 --x64 --armv71 --arm64 snap -p always",
     "release": "electron-builder"
   },
   "dependencies": {
