@@ -25,11 +25,11 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
-    "dist:linux:targz": "electron-builder --linux tar.gz",
-    "dist:linux:deb": "electron-builder --linux deb",
-    "dist:linux:rpm": "electron-builder --linux rpm",
-    "dist:linux:appimage": "electron-builder --linux AppImage",
-    "dist:linux:snap": "electron-builder --linux snap -p always",
+    "dist:linux:targz": "electron-builder --linux tar.gz --ia32 --x64 --armv71 --arm64",
+    "dist:linux:deb": "electron-builder --linux deb --ia32 --x64 --armv71 --arm64",
+    "dist:linux:rpm": "electron-builder --linux rpm --ia32 --x64 --armv71 --arm64",
+    "dist:linux:appimage": "electron-builder --linux AppImage --ia32 --x64 --armv71 --arm64",
+    "dist:linux:snap": "electron-builder --linux snap -p always --ia32 --x64 --armv71 --arm64",
     "release": "electron-builder"
   },
   "dependencies": {
