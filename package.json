@@ -25,11 +25,11 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
-    "dist:linux:targz": "electron-builder -l --ia32 --x64 --armv71 --arm64 tar.gz ",
-    "dist:linux:deb": "electron-builder -l --ia32 --x64 --armv71 --arm64 deb",
-    "dist:linux:rpm": "electron-builder -l --ia32 --x64 --armv71 --arm64 rpm",
-    "dist:linux:appimage": "electron-builder -l --ia32 --x64 --armv71 --arm64 AppImage",
-    "dist:linux:snap": "electron-builder -l --ia32 --x64 --armv71 --arm64 snap -p always",
+    "dist:linux:targz": "electron-builder -l --ia32 --x64 --armv7l --arm64 tar.gz ",
+    "dist:linux:deb": "electron-builder -l --ia32 --x64 --armv7l --arm64 deb",
+    "dist:linux:rpm": "electron-builder -l --ia32 --x64 --armv7l --arm64 rpm",
+    "dist:linux:appimage": "electron-builder -l --ia32 --x64 --armv7l --arm64 AppImage",
+    "dist:linux:snap": "electron-builder -l --ia32 --x64 --armv7l --arm64 snap -p always",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -74,9 +74,6 @@
         "tar.gz",
         "AppImage"
       ],
-      "arch": [
-        "x64", "ia32", "armv7l", "arm64"
-      ],
       "publish": {
         "provider": "github",
         "releaseType": "draft"
@@ -95,9 +92,6 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ],
-      "arch": [
-        "x64", "ia32", "armv7l", "arm64"
       ],
       "publish": {
         "provider": "snapStore",
