@@ -74,6 +74,9 @@
         "tar.gz",
         "AppImage"
       ],
+      "arch": [
+        "x64", "ia32", "armv7l", "arm64"
+      ],
       "publish": {
         "provider": "github",
         "releaseType": "draft"
@@ -92,6 +95,9 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
+      ],
+      "arch": [
+        "x64", "ia32", "armv7l", "arm64"
       ],
       "publish": {
         "provider": "snapStore",
