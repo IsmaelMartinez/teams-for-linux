@@ -21,13 +21,13 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:deb
 
   rpm:
@@ -40,13 +40,13 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:rpm
 
   appimage:
@@ -59,13 +59,13 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:appimage
 
   targz:
@@ -78,13 +78,13 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:targz
 
   snap:
@@ -102,13 +102,13 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:snap
 
   snap-armv7l:
@@ -126,12 +126,12 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop') || contains(github.ref, 'main')
         run: yarn dist:linux:snap:armv7l
 
