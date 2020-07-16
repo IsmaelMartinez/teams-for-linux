@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "electron": "7.2.4",
-    "electron-builder": "22.5.1",
+    "electron-builder": "22.7.0",
     "eslint": "5.16.0",
     "yarn": "1.22.4"
   },
