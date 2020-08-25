@@ -9,14 +9,14 @@
 [![Known Vulnerabilities](https://snyk.io//test/github/IsmaelMartinez/teams-for-linux/badge.svg?targetFile=package.json)](https://snyk.io//test/github/IsmaelMartinez/teams-for-linux?targetFile=package.json)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8954c6c7e85c4ab9b92aef9f54f22eab)](https://www.codacy.com/manual/IsmaelMartinez/teams-for-linux?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IsmaelMartinez/teams-for-linux&amp;utm_campaign=Badge_Grade)
 
-Unofficial Microsoft Teams client for Linux using [Electron](https://electronjs.org/).
+Unofficial Microsoft Teams client for Linux using [`Electron`](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.
 
 ## Downloads
 
-Binaries available under https://github.com/IsmaelMartinez/teams-for-linux/releases for AppImage, rpm, deb, snap and tar.gz
+Binaries available under https://github.com/IsmaelMartinez/teams-for-linux/releases for `AppImage`, `rpm`, `deb`, `snap`, and `tar.gz`.
 
-In case of AppImage, we recommend to use [AppImageLauncher](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
+In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
 
 Also available in:
 
@@ -28,20 +28,20 @@ Also available in:
 
 ## Starting arguments
 
-Check in the config [README.md](app/config/README.md) in the config folder.
+Check in the config [`README.md`](app/config/README.md) in the config folder.
 
 ## Contributing
 
-Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information about how to run this application from source, and/or how to contribute.
+Please refer to the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for more information about how to run this application from source, and/or how to contribute.
 
 ## Known issues
 
-Known issues and workarounds can be found in the [KNOWN_ISSUES.md](KNOWN_ISSUES.md) file.
+Known issues and workarounds can be found in the [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) file.
 
 ## History
 
-Read about the history about this project in the [HISTORY.md](HISTORY.md) file.
+Read about the history about this project in the [`HISTORY.md`](HISTORY.md) file.
 
 ## License
 
-[GPLv3](LICENSE.md)
+License: [`GPLv3`](LICENSE.md)
