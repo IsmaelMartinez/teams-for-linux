@@ -8,7 +8,7 @@ This is a fairly small project. IMO, the ideal size for getting started with ele
 
 Just fork the repo and dive in. The app/index.js is the starting of all the application.
 
-Once changes are made, just do a pull request to develop.
+Once changes are made, just do a pull request in a branch of develop.
 
 Each subfolder has a README.md file that explains the reason of existence and any extra required information.
 
@@ -69,4 +69,6 @@ sudo snap install teams-for-linux
 
 ## Version number
 
-We are following SemVer at the moment. The lower number in master will be increased after a release (basically, to avoid re-releasing stuff with some changes), but release number will be decided just before a release trying to use SemVer standards.
+We are following SemVer at the moment. The lower number in develop will be increased after a release.
+
+Decide the release number before merging to develop following SemVer.
