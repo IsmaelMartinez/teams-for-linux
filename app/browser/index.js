@@ -24,7 +24,7 @@
 		pageTitleNotifications(ipcRenderer);
 	}
 
-	document.addEventListener('DOMContentLoaded',() => {
+	document.addEventListener('DOMContentLoaded', () => {
 		modifyAngularSettingsWithTimeot();
 	});
 
@@ -37,7 +37,7 @@
 
 	function enableChromeVideoAudioMeetings(injector) {
 		injector.get('callingSupportService').oneOnOneCallingEnabled = true;
-		injector.get('callingSupportService').isDesktopApp	 = true;
+		injector.get('callingSupportService').isDesktopApp = true;
 		injector.get('callingSupportService').isChromeMeetingSingleVideoEnabled = true;
 		injector.get('callingSupportService').isChromeVideoOneOnOneEnabled = true;
 		injector.get('callingSupportService').isChromeVideoMultipartyEnabled = true;
@@ -75,7 +75,7 @@
 			try {
 				let injector = angular.element(document).injector();
 
-				if(injector) {
+				if (injector) {
 					enableChromeVideoAudioMeetings(injector);
 					disablePromoteStuff(injector);
 
@@ -91,7 +91,7 @@
 
 	Object.defineProperty(navigator.serviceWorker, 'register', {
 		value: () => {
-			return Promise.reject()
+			return Promise.reject();
 		}
 	});
 }());

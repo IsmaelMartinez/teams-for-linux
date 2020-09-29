@@ -14,4 +14,4 @@ The original idea was to let the project die when Microsoft would implement a de
 However, the development of this project continued, as it is suprior on some aspects (screen share able to share single windows, normal window border [#281](https://github.com/IsmaelMartinez/teams-for-linux/issues/281#issuecomment-601578412), command-line interface,  and, of course, open-source).
 
 Currently, the project is in a stable condition, and should continue as long as needed. Non stable versions are released as pre-release. 
-IsmaelMartinez is not "implementing new features, only fixing issues, but happy to help and […] accept new PRs" ([351](https://github.com/IsmaelMartinez/teams-for-linux/issues/351#issuecomment-626590582)).
+IsmaelMartinez is not "implementing new features, only fixing issues, but happy to help and accept new PRs" ([351](https://github.com/IsmaelMartinez/teams-for-linux/issues/351#issuecomment-626590582)).

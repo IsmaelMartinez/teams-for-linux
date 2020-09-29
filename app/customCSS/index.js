@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 exports.onDidFinishLoad = function onDidFinishLoad(content) {
-    applyCustomCSSStyleIfPresent(content);
-    content.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
-    content.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
+	applyCustomCSSStyleIfPresent(content);
+	content.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
+	content.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
 }
 
 function applyCustomCSSStyleIfPresent(content) {
