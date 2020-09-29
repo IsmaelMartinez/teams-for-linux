@@ -24,7 +24,7 @@ It uses the Web App and wraps it as a standalone application using Electron.
 
 ## Downloads
 
-Binaries available under https://github.com/IsmaelMartinez/teams-for-linux/releases for `AppImage`, `rpm`, `deb`, `snap`, and `tar.gz`.
+Binaries available under [releases](https://github.com/IsmaelMartinez/teams-for-linux/releases) for `AppImage`, `rpm`, `deb`, `snap`, and `tar.gz`.
 
 In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
 
