@@ -3,8 +3,7 @@ name: Build & Release
 env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
 
-on:
-  push
+on: push
 
 defaults:
   run:
@@ -27,7 +26,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:deb
 
   rpm:
@@ -46,7 +45,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:rpm
 
   appimage:
@@ -65,7 +64,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:appimage
 
   targz:
@@ -84,7 +83,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:targz
 
   snap:
@@ -108,7 +107,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:snap
 
   snap-armv7l:
@@ -132,6 +131,5 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop') || contains(github.ref, 'master')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:snap:armv7l
-
