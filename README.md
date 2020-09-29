@@ -1,5 +1,15 @@
 # teams-for-linux
 
+This project is in maintenance mode only. Microsoft is now providing a client that, more or less works. 
+
+Please do report bugs and questions in the issues section. I will do my best to help getting those sorted.
+
+Also, PRs are welcomed, but I am not evolving this client.
+
+Its been a pleasure helping people without a Linux and/or Mac computer specially on this times.
+
+---
+
 [![Gitter chat](https://badges.gitter.im/ismaelmartinez/teams-for-linux.png)](https://gitter.im/teams-for-linux/community "Gitter chat")
 ![](https://img.shields.io/github/release/IsmaelMartinez/teams-for-linux.svg?style=flat)
 ![](https://img.shields.io/github/downloads/IsmaelMartinez/teams-for-linux/total.svg?style=flat)
