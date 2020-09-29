@@ -82,9 +82,9 @@ webFrame.setSpellCheckProvider(
 
 window.addEventListener('contextmenu', (e) => {
 	// Only show the context menu in text editors.
-	let isEditable = e.target.closest('textarea, input, [contenteditable="true"]')
-	let selection = {}
-	let template = {}
+	let isEditable = e.target.closest('textarea, input, [contenteditable="true"]');
+	let selection = {};
+	let template = {};
 	if (isEditable) {
 		var selectedText = window.getSelection().toString();
 		var isMisspelled = selectedText && simpleChecker.isMisspelled(selectedText);
@@ -92,18 +92,18 @@ window.addEventListener('contextmenu', (e) => {
 		selection = {
 			isMisspelled: isMisspelled,
 			spellingSuggestions: spellingSuggestions,
-		}
+		};
 	} else {
 		template = [{
 			label: 'Copy',
 			role: 'copy'
-		},{
+		}, {
 			label: 'Copy URL',
 			click: () => {
 				clipboard.writeText(e.target.href);
 			},
-			visible: (e.target.href ? true: false)
-		},{
+			visible: (e.target.href ? true : false)
+		}, {
 			type: 'separator'
 		}, {
 			label: 'Select All',

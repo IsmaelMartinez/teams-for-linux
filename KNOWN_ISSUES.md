@@ -43,17 +43,17 @@ Some users have reported a blank page on login (with the title `Microsoft Teams 
 
 The following workarounds tend to solve the issue:
 
-*  Right click on the Microsoft Teams icon tray and click on Refresh. (Ctrl+R)
+*    Right click on the Microsoft Teams icon tray and click on Refresh. (Ctrl+R)
 
 If the above doesn't work:
 
-*  Close the application and delete the application cache folder
+*    Close the application and delete the application cache folder
 
-  *  `.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
+  *    `.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
 
-  *  for Snap installation, `snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`.
+  *    for Snap installation, `snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`.
 
-  *  for flatpack, `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application\ Cache/`
+  *    for flatpack, `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application\ Cache/`
 
   >  Check the config locations to find other installations location
 
