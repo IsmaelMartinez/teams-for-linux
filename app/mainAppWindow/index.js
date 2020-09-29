@@ -56,19 +56,19 @@ exports.onAppReady = function onAppReady() {
 	window.on('close', () => {
 		console.log('window close');
 		window.webContents.session.flushStorageData();
-	})
+	});
 	window.on('closed', () => {
 		console.log('window closed');
 		window = null;
 	});
 
 	const url = processArgs(process.argv);
-	window.loadURL( url ? url:config.url);
+	window.loadURL(url ? url : config.url);
 
 	if (config.webDebug) {
 		window.openDevTools();
 	}
-}
+};
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	console.log('second-instance started');
@@ -76,18 +76,18 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	if (window) {
 		event.preventDefault();
 		const url = processArgs(args);
-		if (url && allowFurtherRequests)  {
+		if (url && allowFurtherRequests) {
 			allowFurtherRequests = false;
-			setTimeout(() => { allowFurtherRequests = true}, 10000);
+			setTimeout(() => { allowFurtherRequests = true; }, 10000);
 		} else {
 			if (window.isMinimized()) window.restore();
 			window.focus();
 		}
 	}
-}
+};
 
 function processArgs(args) {
-	console.debug("processArgs", args);
+	console.debug('processArgs', args);
 	for (const arg of args) {
 		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
 			console.log('meetup-join argument received with https protocol');
@@ -139,7 +139,7 @@ function onNewWindow(event, url, frame, disposition, options) {
 		event.preventDefault();
 		shell.openExternal(url);
 	}
-};
+}
 
 function createWindow() {
 	// Load the previous state with fallback to defaults
