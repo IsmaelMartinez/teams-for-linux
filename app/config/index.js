@@ -4,7 +4,7 @@ const path = require('path');
 function getConfigFile(configPath) {
 	try {
 		return require(path.join(configPath, 'config.json'));
-	} catch (e){
+	} catch (e) {
 		console.info('Failed to get the config file, using default values');
 		return {};
 	}
@@ -72,7 +72,7 @@ function argv(configPath) {
 				describe: 'Google Chrome User Agent',
 				type: 'string',
 				default:
-					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36',
+					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3202.75 Safari/537.36',
 			},
 			ntlmV2enabled: {
 				default: 'true',
