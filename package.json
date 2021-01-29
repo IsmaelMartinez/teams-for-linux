@@ -42,7 +42,7 @@
     "yargs": "16.0.0"
   },
   "devDependencies": {
-    "electron": "4.2.8",
+    "electron": "9.4.0",
     "electron-builder": "22.5.1",
     "eslint": "5.16.0",
     "yarn": "1.22.4"
