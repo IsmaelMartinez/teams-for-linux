@@ -79,7 +79,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		const url = processArgs(args);
 		if (url && allowFurtherRequests) {
 			allowFurtherRequests = false;
-			setTimeout(() => { allowFurtherRequests = true; }, 10000);
+			setTimeout(() => { allowFurtherRequests = true; }, 5000);
 			window.loadURL(url)
 		} else {
 			if (window.isMinimized()) window.restore();
