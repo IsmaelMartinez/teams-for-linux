@@ -81,10 +81,9 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 			allowFurtherRequests = false;
 			setTimeout(() => { allowFurtherRequests = true; }, 5000);
 			window.loadURL(url)
-		} else {
-			if (window.isMinimized()) window.restore();
-			window.focus();
 		}
+		if (window.isMinimized()) window.restore();
+		window.focus();
 	}
 };
 
