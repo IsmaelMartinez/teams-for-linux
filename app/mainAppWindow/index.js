@@ -70,15 +70,17 @@ exports.onAppReady = function onAppReady() {
 	}
 };
 
+let allowFurtherRequests = true;
+
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	console.log('second-instance started');
-	let allowFurtherRequests = true;
 	if (window) {
 		event.preventDefault();
 		const url = processArgs(args);
 		if (url && allowFurtherRequests) {
 			allowFurtherRequests = false;
 			setTimeout(() => { allowFurtherRequests = true; }, 10000);
+			window.loadURL(url)
 		} else {
 			if (window.isMinimized()) window.restore();
 			window.focus();
