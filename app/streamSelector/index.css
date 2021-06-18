@@ -1,0 +1,41 @@
+.container-fluid {
+  height: 100vh;
+  background-color: #373644;
+}
+
+.container-fluid .row {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.container-fluid .btn-group {
+  width: 100%;
+}
+
+.video-container {
+  padding-top: 1rem;
+  width: 100%;
+  cursor: pointer;
+}
+
+.video-container video {
+  width: 100%;
+  height: auto;
+  box-sizing: border-box;
+  box-shadow: 0 20px 10px rgb(0 0 0 / 50%);
+  transform: translateY(0px);
+}
+
+.video-container video.active {
+  border: 1px solid chocolate;
+}
+
+.video-container video:hover {
+  border: 1px solid azure;
+}
+
+.label-container {
+  width: 100%;
+  font-size: 1.75rem;
+  text-align: center;
+}

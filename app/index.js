@@ -12,6 +12,7 @@ app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 app.setAsDefaultProtocolClient('msteams');
+app.allowRendererProcessReuse = false;
 
 if (!gotTheLock) {
 	console.warn('App already running');

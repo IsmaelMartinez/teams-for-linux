@@ -1,5 +1,5 @@
 
-const { shell, BrowserWindow } = require('electron');
+const { shell, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
@@ -8,6 +8,7 @@ const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
+const { StreamSelector } = require("../streamSelector")
 
 let aboutBlankRequestCount = 0;
 
@@ -27,7 +28,7 @@ exports.onAppReady = function onAppReady() {
 
 	window.webContents.on('new-window', onNewWindow);
 
-	window.webContents.session.webRequest.onBeforeRequest(['http*'], onBeforeRequestHandler);
+	window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
 	if (config.onlineOfflineReload) {
@@ -168,10 +169,21 @@ function createWindow() {
 			nativeWindowOpen: true,
 			plugins: true,
 			nodeIntegration: false,
+      contextIsolation: false,
+      enableRemoteModule: true
 		},
 	});
-
-	windowState.manage(window);
+  
+  ipcMain.on("select-source", event => {
+    const streamSelector = new StreamSelector(window);
+    streamSelector.show().then(sourceId => {
+      event.reply("select-source", sourceId);
+    }).catch(e => {
+      event.reply("select-source", null);
+    });
+  });
+	
+  windowState.manage(window);
 	window.eval = global.eval = function () { // eslint-disable-line no-eval
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
