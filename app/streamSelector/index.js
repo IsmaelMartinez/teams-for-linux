@@ -52,19 +52,24 @@ class StreamSelector {
       },
       parent: this.parent,
       modal: true,
-      width: 600,
-      height: 210
+      width: 500,
+      height: 500
     });
+
     this.window.setMenu(null);
     this.window.loadFile(path.join(__dirname, "index.html"));
-    this.window.show();
+    this.window.once('ready-to-show', () => {
+      this.window.show();
+    });
+
     return new Promise((resolve, reject) => {
-      ipcMain.once("selected-source", (event, sourceId) => {
+      const _handler = (event, sourceId) => {
         this.selectedSource = sourceId;
         this.window.close();
-      });
-
-      this.window.once('closed', () => {
+      };
+      ipcMain.once("selected-source", _handler);
+      this.window.once('closed', (e) => {
+        ipcMain.removeListener("selected-source", _handler);
         this.window = null;
         if (this.selectedSource) {
           resolve(this.selectedSource);

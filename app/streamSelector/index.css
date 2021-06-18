@@ -1,11 +1,11 @@
+html,
+body,
 .container-fluid {
-  height: 100vh;
   background-color: #373644;
 }
 
-.container-fluid .row {
-  overflow-y: auto;
-  overflow-x: hidden;
+.container-fluid {
+  height: max-content;
 }
 
 .container-fluid .btn-group {
@@ -31,11 +31,21 @@
 }
 
 .video-container video:hover {
-  border: 1px solid azure;
+  border: 2px solid brown;
 }
 
 .label-container {
   width: 100%;
   font-size: 1.75rem;
   text-align: center;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 5px;
 }
