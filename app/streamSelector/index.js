@@ -1,9 +1,10 @@
-const { BrowserWindow, ipcMain } = require("electron");
+const { BrowserWindow, ipcMain, BrowserView } = require("electron");
 const path = require("path");
 
 let _StreamSelector_parent = new WeakMap();
 let _StreamSelector_window = new WeakMap();
 let _StreamSelector_selectedSource = new WeakMap();
+let _StreamSelector_callback = new WeakMap();
 class StreamSelector {
   /**
    * @param {BrowserWindow} parent 
@@ -12,6 +13,7 @@ class StreamSelector {
     _StreamSelector_parent.set(this, parent);
     _StreamSelector_window.set(this, null);
     _StreamSelector_selectedSource.set(this, null);
+    _StreamSelector_callback.set(this, null);
   }
 
   /**
@@ -22,13 +24,13 @@ class StreamSelector {
   }
 
   /**
-   * @type {BrowserWindow}
+   * @type {BrowserView}
    */
-  get window() {
+  get view() {
     return _StreamSelector_window.get(this);
   }
 
-  set window(value) {
+  set view(value) {
     _StreamSelector_window.set(this, value);
   }
 
@@ -43,41 +45,59 @@ class StreamSelector {
     _StreamSelector_selectedSource.set(this, value);
   }
 
-  show() {
-    this.window = new BrowserWindow({
-      show: false,
+  get callback() {
+    return _StreamSelector_callback.get(this);
+  }
+
+  set callback(value) {
+    if (typeof (value) == "function") {
+      _StreamSelector_callback.set(this, value);
+    }
+  }
+
+  /**
+   * 
+   * @param {(sourceId:string)=>void} callback 
+   */
+  show(callback) {
+    let self = this;
+    self.callback = callback;
+    self.view = new BrowserView({
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
-      },
-      parent: this.parent,
-      modal: true,
-      width: 500,
-      height: 500
+      }
     });
+    self.view.webContents.loadFile(path.join(__dirname, "index.html"));
+    self.parent.addBrowserView(self.view);
+    
+    let _resize = () => {
+      setTimeout(() => {
+        const pbounds = self.parent.getBounds();
+        self.view.setBounds({
+          x: 0,
+          y: pbounds.height - 200,
+          width: pbounds.width,
+          height: 200
+        });
+      }, 0);
+    };
+    _resize();
 
-    this.window.setMenu(null);
-    this.window.loadFile(path.join(__dirname, "index.html"));
-    this.window.once('ready-to-show', () => {
-      this.window.show();
-    });
+    let _close = (event, sourceId) => {
+      self.parent.removeBrowserView(self.view);
+      self.view = null;
+      self.parent.removeListener("resize", _resize);
+      ipcMain.removeListener("selected-source", _close);
+      ipcMain.removeListener("close-view", _close);
+      if (self.callback) {
+        self.callback(sourceId);
+      }
+    };
 
-    return new Promise((resolve, reject) => {
-      const _handler = (event, sourceId) => {
-        this.selectedSource = sourceId;
-        this.window.close();
-      };
-      ipcMain.once("selected-source", _handler);
-      this.window.once('closed', (e) => {
-        ipcMain.removeListener("selected-source", _handler);
-        this.window = null;
-        if (this.selectedSource) {
-          resolve(this.selectedSource);
-        } else {
-          reject();
-        }
-      });
-    });
+    this.parent.on("resize", _resize);
+    ipcMain.once("selected-source", _close);
+    ipcMain.once("close-view", _close);
   }
 }
 

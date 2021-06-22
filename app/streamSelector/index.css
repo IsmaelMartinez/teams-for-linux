@@ -1,7 +1,8 @@
 html,
 body,
 .container-fluid {
-  background-color: #373644;
+  /*background-color: #373644;*/
+  background-color: #1b1a1a;
 }
 
 .container-fluid {
@@ -36,16 +37,45 @@ body,
 
 .label-container {
   width: 100%;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   text-align: center;
+  overflow-wrap: break-word;
 }
 
 ::-webkit-scrollbar {
   width: 10px;
+  height: 5px;
   background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.8);
+  /*background-color: rgba(255, 255, 255, 0.8);*/
+  background-color: #373644;
   border-radius: 5px;
+}
+
+.container-fluid .row {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  display: flex;
+  max-height: 20rem;
+}
+
+.container-fluid .row [class^="col-"] {
+  max-width: 20rem;
+}
+
+.container-fluid[data-view="screens"] .row [class^="col-"].window,
+.container-fluid[data-view="windows"] .row [class^="col-"].screen {
+  display: none;
+}
+
+i.bi.bi-x-lg {
+  padding-top: 0.5rem;
+  padding-right: 1rem;
+  cursor: pointer;
+}
+
+i.bi.bi-x-lg:hover {
+  color: brown;
 }
