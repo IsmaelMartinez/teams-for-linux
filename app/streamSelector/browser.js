@@ -8,9 +8,19 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelector('.container-fluid').setAttribute('data-view', e.target.getAttribute('data-view'));
   };
+
+  const _closePreviews = () => {
+    const vidElements = document.getElementsByTagName('video');
+    for (const vidElement of vidElements) {
+      vidElement.pause();
+      vidElement.srcObject.getVideoTracks()[0].stop();
+    };
+  };
+
   document.querySelector('#btn-screens').addEventListener("click", _tabClick);
   document.querySelector('#btn-windows').addEventListener("click", _tabClick);
   document.querySelector('#btn-close').addEventListener("click", () => {
+    _closePreviews();
     ipcRenderer.send("close-view");
   });
   desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async sources => {
@@ -39,17 +49,16 @@ window.addEventListener("DOMContentLoaded", () => {
           mandatory: {
             chromeMediaSource: 'desktop',
             chromeMediaSourceId: source.id,
-            minWidth: 1280,
-            maxWidth: 1280,
-            minHeight: 720,
-            maxHeight: 720
+            minWidth: 192,
+            maxWidth: 192,
+            minHeight: 108,
+            maxHeight: 108
           }
         }
       });
       videoElement.srcObject = stream;
       videoElement.onclick = () => {
-        videoElement.pause();
-        stream.getVideoTracks()[0].stop();
+        _closePreviews();
         ipcRenderer.send("selected-source", source.id);
       };
       videoElement.onloadedmetadata = (e) => videoElement.play();
