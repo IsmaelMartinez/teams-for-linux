@@ -176,8 +176,8 @@ function createWindow() {
   
   ipcMain.on("select-source", event => {
     const streamSelector = new StreamSelector(window);
-    streamSelector.show((sourceId) => {
-      event.reply("select-source", sourceId);
+    streamSelector.show((source) => {
+      event.reply("select-source", source);
     });
   });
 	

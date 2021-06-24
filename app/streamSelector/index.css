@@ -79,3 +79,29 @@ i.bi.bi-x-lg {
 i.bi.bi-x-lg:hover {
   color: brown;
 }
+
+.btn-group .btn {
+  height: 3rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.screen-size-container {
+  padding: 0.25rem 0.25rem 0rem 0.75rem;
+  display: flex;
+}
+
+.screen-size-container label {
+  margin-right: 1rem;
+  font-size: 1.5rem;
+}
+
+.screen-size-container select {
+  color: #fff;
+  background-color: #373644;
+  border: none;
+}
+
+.btn.btn-primary {
+  background-color: #373644;
+}

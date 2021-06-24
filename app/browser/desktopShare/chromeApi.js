@@ -6,18 +6,18 @@ window.addEventListener("DOMContentLoaded", () => {
   MediaDevices.prototype.getDisplayMedia = () => {
     return new Promise((resolve, reject) => {
       // Request main process to allow access to screen sharing
-      ipcRenderer.once('select-source', (event, sourceId) => {
-        if (sourceId) {
+      ipcRenderer.once('select-source', (event, source) => {
+        if (source) {
           navigator.mediaDevices.getUserMedia({
             audio: false,
             video: {
               mandatory: {
                 chromeMediaSource: 'desktop',
-                chromeMediaSourceId: sourceId,
-                minWidth: 1920,
-                maxWidth: 1920,
-                minHeight: 1080,
-                maxHeight: 1080
+                chromeMediaSourceId: source.id,
+                minWidth: source.screen.width,
+                maxWidth: source.screen.width,
+                minHeight: source.screen.height,
+                maxHeight: source.screen.height
               }
             }
           }).then(stream => {

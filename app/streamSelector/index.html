@@ -15,8 +15,13 @@
 
 <body>
   <div class="btn-group">
-    <button class="btn btn-primary" id="btn-screens" data-view="screens">Screens</button>
-    <button class="btn btn-secondary" id="btn-windows" data-view="windows">Windows</button>
+    <button class="btn btn-secondary" id="btn-screens" data-view="screens">Screens</button>
+    <button class="btn btn-primary" id="btn-windows" data-view="windows">Windows</button>
+    <div class="screen-size-container">
+      <label for="screen-size">Quality</label>
+      <select id="screen-size" class="ml-2 form-control-md">
+      </select>
+    </div>
   </div>
   <i class="bi bi-x-lg pull-right" id="btn-close"></i>
   <div class="container-fluid" data-view="screens">

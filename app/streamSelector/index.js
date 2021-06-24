@@ -1,5 +1,35 @@
-const { BrowserWindow, ipcMain, BrowserView } = require("electron");
+const { BrowserWindow, ipcMain, BrowserView, screen } = require("electron");
 const path = require("path");
+const resolutions = [
+  {
+    width: 1280,
+    height: 720,
+    name: 'HD',
+    alt_name: '720p',
+    default: false
+  },
+  {
+    width: 1920,
+    height: 1080,
+    name: 'FHD',
+    alt_name: '1080p',
+    default: true
+  },
+  {
+    width: 2048,
+    height: 1080,
+    name: '2K',
+    alt_name: 'QHD',
+    default: false
+  },
+  {
+    width: 3840,
+    height: 2160,
+    name: '4K',
+    alt_name: 'UHD',
+    default: false
+  }
+];
 
 let _StreamSelector_parent = new WeakMap();
 let _StreamSelector_window = new WeakMap();
@@ -68,30 +98,39 @@ class StreamSelector {
         contextIsolation: false
       }
     });
+
+    ipcMain.once('get-screensizes-request', event => {
+      const pdisplay = screen.getPrimaryDisplay();
+      event.reply('get-screensizes-response', resolutions.slice(0, resolutions.findIndex(r => {
+        return r.width >= pdisplay.size.width && r.height >= pdisplay.size.height;
+      }) + 1).map(s => {
+        return Object.assign({}, s);
+      }));
+    });
+
     self.view.webContents.loadFile(path.join(__dirname, "index.html"));
     self.parent.addBrowserView(self.view);
-    
     let _resize = () => {
       setTimeout(() => {
         const pbounds = self.parent.getBounds();
         self.view.setBounds({
           x: 0,
-          y: pbounds.height - 200,
+          y: pbounds.height - 180,
           width: pbounds.width,
-          height: 200
+          height: 180
         });
       }, 0);
     };
     _resize();
 
-    let _close = (event, sourceId) => {
+    let _close = (event, source) => {
       self.parent.removeBrowserView(self.view);
       self.view = null;
       self.parent.removeListener("resize", _resize);
       ipcMain.removeListener("selected-source", _close);
       ipcMain.removeListener("close-view", _close);
       if (self.callback) {
-        self.callback(sourceId);
+        self.callback(source);
       }
     };
 
