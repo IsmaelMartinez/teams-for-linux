@@ -8,7 +8,7 @@ const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
-const { StreamSelector } = require("../streamSelector")
+const { StreamSelector } = require('../streamSelector');
 
 let aboutBlankRequestCount = 0;
 
@@ -169,19 +169,19 @@ function createWindow() {
 			nativeWindowOpen: true,
 			plugins: true,
 			nodeIntegration: false,
-      contextIsolation: false,
-      enableRemoteModule: true
+			contextIsolation: false,
+			enableRemoteModule: true
 		},
 	});
-  
-  ipcMain.on("select-source", event => {
-    const streamSelector = new StreamSelector(window);
-    streamSelector.show((source) => {
-      event.reply("select-source", source);
-    });
-  });
-	
-  windowState.manage(window);
+
+	ipcMain.on('select-source', event => {
+		const streamSelector = new StreamSelector(window);
+		streamSelector.show((source) => {
+			event.reply('select-source', source);
+		});
+	});
+
+	windowState.manage(window);
 	window.eval = global.eval = function () { // eslint-disable-line no-eval
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
