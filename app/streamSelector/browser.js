@@ -46,6 +46,10 @@ async function createPreview(properties) {
 	columnElement.appendChild(videoContainerElement);
 	columnElement.appendChild(labelElement);
 	properties.rowElement.appendChild(columnElement);
+	await createPreviewStream(properties, videoElement);
+}
+
+async function createPreviewStream(properties, videoElement) {
 	const stream = await navigator.mediaDevices.getUserMedia({
 		audio: false,
 		video: {
