@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select source</title>
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../assets/css/bootstrap.superhero.min.css" />
+  <link rel="stylesheet" href="../assets/css/bootstrap-icons.css" />
+  <link rel="stylesheet" href="./index.css" />
+  <script src="./browser.js"></script>
+</head>
+
+<body>
+  <div class="btn-group">
+    <button class="btn btn-secondary" id="btn-screens" data-view="screens">Screens</button>
+    <button class="btn btn-primary" id="btn-windows" data-view="windows">Windows</button>
+    <div class="screen-size-container">
+      <label for="screen-size">Quality</label>
+      <select id="screen-size" class="ml-2 form-control-md">
+      </select>
+    </div>
+  </div>
+  <i class="bi bi-x-lg pull-right" id="btn-close"></i>
+  <div class="container-fluid" data-view="screens">
+    <div class="row">
+    </div>
+  </div>
+</body>
+
+</html>

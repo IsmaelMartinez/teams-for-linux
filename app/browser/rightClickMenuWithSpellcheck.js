@@ -75,7 +75,6 @@ var simpleChecker = window.spellChecker = {
 
 webFrame.setSpellCheckProvider(
 	appLocale,
-	true,
 	simpleChecker
 );
 

@@ -1,5 +1,5 @@
 
-const { shell, BrowserWindow } = require('electron');
+const { shell, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
@@ -8,6 +8,7 @@ const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
+const { StreamSelector } = require('../streamSelector');
 
 let aboutBlankRequestCount = 0;
 
@@ -27,7 +28,7 @@ exports.onAppReady = function onAppReady() {
 
 	window.webContents.on('new-window', onNewWindow);
 
-	window.webContents.session.webRequest.onBeforeRequest(['http*'], onBeforeRequestHandler);
+	window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
 	if (config.onlineOfflineReload) {
@@ -168,7 +169,16 @@ function createWindow() {
 			nativeWindowOpen: true,
 			plugins: true,
 			nodeIntegration: false,
+			contextIsolation: false,
+			enableRemoteModule: true
 		},
+	});
+
+	ipcMain.on('select-source', event => {
+		const streamSelector = new StreamSelector(window);
+		streamSelector.show((source) => {
+			event.reply('select-source', source);
+		});
 	});
 
 	windowState.manage(window);
