@@ -99,39 +99,17 @@ class StreamSelector {
 			}
 		});
 
-		ipcMain.once('get-screensizes-request', event => {
-			const pdisplay = screen.getPrimaryDisplay();
-			event.reply('get-screensizes-response', resolutions.slice(0, resolutions.findIndex(r => {
-				return r.width >= pdisplay.size.width && r.height >= pdisplay.size.height;
-			}) + 1).map(s => {
-				return Object.assign({}, s);
-			}));
-		});
-
+		createScreenRequestHandler();
 		self.view.webContents.loadFile(path.join(__dirname, 'index.html'));
 		self.parent.addBrowserView(self.view);
+
 		let _resize = () => {
-			setTimeout(() => {
-				const pbounds = self.parent.getBounds();
-				self.view.setBounds({
-					x: 0,
-					y: pbounds.height - 180,
-					width: pbounds.width,
-					height: 180
-				});
-			}, 0);
+			resizeView(self);
 		};
-		_resize();
+		resizeView(self);
 
 		let _close = (event, source) => {
-			self.parent.removeBrowserView(self.view);
-			self.view = null;
-			self.parent.removeListener('resize', _resize);
-			ipcMain.removeListener('selected-source', _close);
-			ipcMain.removeListener('close-view', _close);
-			if (self.callback) {
-				self.callback(source);
-			}
+			closeView({ view: self, _resize, _close, source });
 		};
 
 		this.parent.on('resize', _resize);
@@ -140,4 +118,40 @@ class StreamSelector {
 	}
 }
 
+function closeView(properties) {
+	properties.view.parent.removeBrowserView(properties.view.view);
+	properties.view.view = null;
+	properties.view.parent.removeListener('resize', properties._resize);
+	ipcMain.removeListener('selected-source', properties._close);
+	ipcMain.removeListener('close-view', properties._close);
+	if (properties.view.callback) {
+		properties.view.callback(properties.source);
+	}
+}
+
+function resizeView(view) {
+	setTimeout(() => {
+		const pbounds = view.parent.getBounds();
+		view.view.setBounds({
+			x: 0,
+			y: pbounds.height - 180,
+			width: pbounds.width,
+			height: 180
+		});
+	}, 0);
+}
+
+function createScreenRequestHandler() {
+	ipcMain.once('get-screensizes-request', event => {
+		const pdisplay = screen.getPrimaryDisplay();
+		event.reply('get-screensizes-response', resolutions.slice(0, resolutions.findIndex(r => {
+			return r.width >= pdisplay.size.width && r.height >= pdisplay.size.height;
+		}) + 1).map(s => {
+			return Object.assign({}, s);
+		}));
+	});
+}
+
 module.exports = { StreamSelector };
+
+
