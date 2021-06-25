@@ -30,7 +30,7 @@ In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.c
 
 Also available in:
 
-[![AUR: teams-for-linux](https://img.shields.io/badge/AUR-nheko-blue.svg)](https://aur.archlinux.org/packages/teams-for-linux)
+[![AUR: teams-for-linux](https://img.shields.io/badge/AUR-teams--for--linux-blue.svg)](https://aur.archlinux.org/packages/teams-for-linux)
 
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/teams-for-linux)
 
