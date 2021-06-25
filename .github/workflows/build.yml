@@ -25,9 +25,20 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
-      - name: Release
-        if: contains(github.ref, 'develop')
-        run: yarn dist:linux:deb
+      #- name: Release
+      #  if: contains(github.ref, 'develop')
+      #  run: yarn dist:linux:deb
+        
+      - name: Electron Builder Action
+        uses: samuelmeuli/action-electron-builder@v1.6.0
+        with:
+          github_token: ${{ secrets.github_token }}
+
+          # If the commit is tagged with a version (e.g. "v1.0.0"),
+          # release the app after building
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          build_script_name: dist:linux:deb
+
 
   rpm:
     runs-on: ubuntu-latest
