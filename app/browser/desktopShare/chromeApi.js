@@ -2,18 +2,18 @@ const { ipcRenderer } = require('electron');
 // In order to have this functionality working, contextIsolation should be disabled.
 // In new versions of electron, contextIsolation is set to true by default.
 // We should explicitly set it to false when creating BrowserWindow
-window.addEventListener('DOMContentLoaded', overrideGetDisplayMedia);
+window.addEventListener('DOMContentLoaded', ()=>{
+	MediaDevices.prototype.getDisplayMedia = customGetDisplayMedia;
+});
 
-function overrideGetDisplayMedia() {
-	MediaDevices.prototype.getDisplayMedia = () => {
-		return new Promise((resolve, reject) => {
-			// Request main process to allow access to screen sharing
-			ipcRenderer.once('select-source', (event, source) => {
-				startStreaming({ source, resolve, reject });
-			});
-			ipcRenderer.send('select-source');
+function customGetDisplayMedia() {
+	return new Promise((resolve, reject) => {
+		// Request main process to allow access to screen sharing
+		ipcRenderer.once('select-source', (event, source) => {
+			startStreaming({ source, resolve, reject });
 		});
-	};
+		ipcRenderer.send('select-source');
+	});
 }
 
 function startStreaming(properties) {
