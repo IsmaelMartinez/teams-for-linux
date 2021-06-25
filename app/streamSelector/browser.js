@@ -13,39 +13,45 @@ function createSourceSelector() {
 function createPreviewScreen(screens) {
 	let windowsIndex = 0;
 	const sscontainer = document.getElementById('screen-size');
-	createEventHandlers(screens, sscontainer);
+	createEventHandlers({ screens, sscontainer });
 	desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
 		const rowElement = document.querySelector('.container-fluid .row');
 		for (const source of sources) {
-			windowsIndex = await createPreview(source, windowsIndex, rowElement, screens, sscontainer);
+			await createPreview({
+				source,
+				title: source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`,
+				rowElement,
+				screens,
+				sscontainer
+			});
 		}
 	});
 }
 
-async function createPreview(source, windowsIndex, rowElement, screens, sscontainer) {
+async function createPreview(properties) {
 	let columnElement = document.createElement('div');
-	columnElement.className = `col-5 ${source.id.startsWith('screen:') ? 'screen' : 'window'}`;
+	columnElement.className = `col-5 ${properties.source.id.startsWith('screen:') ? 'screen' : 'window'}`;
 	// Video container
 	let videoContainerElement = document.createElement('div');
 	videoContainerElement.className = 'video-container';
 	// Video
 	let videoElement = document.createElement('video');
-	videoElement.setAttribute('data-id', source.id);
-	videoElement.title = source.name;
+	videoElement.setAttribute('data-id', properties.source.id);
+	videoElement.title = properties.source.name;
 	videoContainerElement.appendChild(videoElement);
 	// Label
 	let labelElement = document.createElement('div');
 	labelElement.className = 'label-container';
-	labelElement.appendChild(document.createTextNode(source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`));
+	labelElement.appendChild(document.createTextNode(properties.title));
 	columnElement.appendChild(videoContainerElement);
 	columnElement.appendChild(labelElement);
-	rowElement.appendChild(columnElement);
+	properties.rowElement.appendChild(columnElement);
 	const stream = await navigator.mediaDevices.getUserMedia({
 		audio: false,
 		video: {
 			mandatory: {
 				chromeMediaSource: 'desktop',
-				chromeMediaSourceId: source.id,
+				chromeMediaSourceId: properties.source.id,
 				minWidth: 192,
 				maxWidth: 192,
 				minHeight: 108,
@@ -53,24 +59,28 @@ async function createPreview(source, windowsIndex, rowElement, screens, sscontai
 			}
 		}
 	});
-	playPreview(videoElement, stream, source, screens, sscontainer);
-	return windowsIndex;
+	videoElement.srcObject = stream;
+	playPreview({
+		videoElement,
+		source: properties.source,
+		screens: properties.screens,
+		sscontainer: properties.sscontainer
+	});
 }
 
-function playPreview(videoElement, stream, source, screens, sscontainer) {
-	videoElement.srcObject = stream;
-	videoElement.onclick = () => {
+function playPreview(properties) {
+	properties.videoElement.onclick = () => {
 		closePreviews();
 		ipcRenderer.send('selected-source', {
-			id: source.id,
-			screen: screens[sscontainer.value]
+			id: properties.source.id,
+			screen: properties.screens[properties.sscontainer.value]
 		});
 	};
-	videoElement.onloadedmetadata = () => videoElement.play();
+	properties.videoElement.onloadedmetadata = () => properties.videoElement.play();
 }
 
-function createEventHandlers(screens, sscontainer) {
-	createQualitySelector(screens, sscontainer);
+function createEventHandlers(properties) {
+	createQualitySelector(properties);
 	document.querySelector('#btn-screens').addEventListener('click', toggleSources);
 	document.querySelector('#btn-windows').addEventListener('click', toggleSources);
 	document.querySelector('#btn-close').addEventListener('click', () => {
@@ -95,18 +105,18 @@ function toggleSources(e) {
 	document.querySelector('.container-fluid').setAttribute('data-view', e.target.getAttribute('data-view'));
 }
 
-function createQualitySelector(screens, sscontainer) {
-	screens.forEach((s, i) => {
+function createQualitySelector(properties) {
+	properties.screens.forEach((s, i) => {
 		const opt = document.createElement('option');
 		opt.appendChild(document.createTextNode(s.name));
 		opt.value = i;
-		sscontainer.appendChild(opt);
+		properties.sscontainer.appendChild(opt);
 	});
-	let defaultSelection = screens.findIndex(s => {
+	let defaultSelection = properties.screens.findIndex(s => {
 		return s.default;
 	});
 
-	defaultSelection = defaultSelection > -1 ? defaultSelection : screens.length - 1;
-	sscontainer.selectedIndex = defaultSelection;
+	defaultSelection = defaultSelection > -1 ? defaultSelection : properties.screens.length - 1;
+	properties.sscontainer.selectedIndex = defaultSelection;
 }
 
