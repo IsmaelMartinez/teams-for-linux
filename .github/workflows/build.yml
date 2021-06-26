@@ -25,22 +25,9 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
-      #- name: Release
-      #  if: contains(github.ref, 'develop')
-      #  run: yarn dist:linux:deb
-        
-      - name: Electron Builder Action
-        uses: samuelmeuli/action-electron-builder@v1.6.0
-        with:
-          github_token: ${{ secrets.github_token }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          #release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          skip_build: true
-          release: true
-          build_script_name: dist:linux:deb
-
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:linux:deb -- --publish always
 
   rpm:
     runs-on: ubuntu-latest
@@ -59,7 +46,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:rpm
+        run: yarn dist:linux:rpm -- --publish always
 
   appimage:
     runs-on: ubuntu-latest
@@ -78,7 +65,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:appimage
+        run: yarn dist:linux:appimage -- --publish always
 
   targz:
     runs-on: ubuntu-latest
@@ -97,7 +84,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:targz
+        run: yarn dist:linux:targz -- --publish always
 
   snap:
     runs-on: ubuntu-latest
@@ -120,7 +107,7 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-#        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:snap -- --publish always
 
   snap-armv7l:
@@ -145,4 +132,4 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap:armv7l
+        run: yarn dist:linux:snap:armv7l -- --publish always
