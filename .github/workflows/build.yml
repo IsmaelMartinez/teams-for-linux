@@ -37,6 +37,7 @@ jobs:
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           #release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          skip_build: true
           release: true
           build_script_name: dist:linux:deb
 
@@ -119,8 +120,8 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap
+#        if: contains(github.ref, 'develop')
+        run: yarn dist:linux:snap -- --publish always
 
   snap-armv7l:
     runs-on: ubuntu-latest
