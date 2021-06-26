@@ -25,12 +25,12 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
-    "dist:linux:targz": "electron-builder --x64 --armv7l --arm64 -l tar.gz ",
+    "dist:linux:targz": "electron-builder --x64 --armv7l --arm64 -l tar.gz",
     "dist:linux:deb": "electron-builder --x64 --armv7l --arm64 -l deb",
     "dist:linux:rpm": "electron-builder --x64 --armv7l --arm64 -l rpm",
     "dist:linux:appimage": "electron-builder --x64 --armv7l --arm64 -l AppImage",
-    "dist:linux:snap": "electron-builder -l snap -p always",
-    "dist:linux:snap:armv7l": "electron-builder --x64 --armv7l -l snap -p always",
+    "dist:linux:snap": "electron-builder -l snap",
+    "dist:linux:snap:armv7l": "electron-builder --x64 --armv7l -l snap",
     "release": "electron-builder"
   },
   "dependencies": {
