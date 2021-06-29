@@ -22,6 +22,8 @@ exports.onAppReady = function onAppReady() {
 		window.webContents.send('page-title', title);
 	});
 
+	window.on('blur', () => window.focus());
+
 	if (config.enableDesktopNotificationsHack) {
 		notifications.addDesktopNotificationHack(iconPath);
 	}
