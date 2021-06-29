@@ -16,15 +16,19 @@ function createPreviewScreen(screens) {
 	createEventHandlers({ screens, sscontainer });
 	desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
 		const rowElement = document.querySelector('.container-fluid .row');
-		for (const source of sources) {
-			await createPreview({
-				source,
-				title: source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`,
-				rowElement,
-				screens,
-				sscontainer
-			});
-		}
+		ipcRenderer.once('disable-blur-response', async () => {
+			for (const source of sources) {
+				await createPreview({
+					source,
+					title: source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`,
+					rowElement,
+					screens,
+					sscontainer
+				});
+			}
+			ipcRenderer.send('enable-blur-request');
+		});
+		ipcRenderer.send('disable-blur-request');
 	});
 }
 
