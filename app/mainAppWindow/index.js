@@ -37,7 +37,7 @@ exports.onAppReady = function onAppReady() {
 
 	window.webContents.on('new-window', onNewWindow);
 
-	window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*'] }, onBeforeRequestHandler);
+	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
 	if (config.onlineOfflineReload) {
@@ -131,7 +131,7 @@ function onBeforeRequestHandler(details, callback) {
 function onNewWindow(event, url, frame, disposition, options) {
 	if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 		event.preventDefault();
-	} else if (url === 'about:blank') {
+	} else if (url === 'about:blank' || url === 'about:blank#blocked') {
 		event.preventDefault();
 		// Increment the counter
 		aboutBlankRequestCount += 1;
