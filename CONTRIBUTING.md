@@ -40,7 +40,7 @@ yarn run dist:linux
 If you want to use a node container to create your packages, use this command:
 (docker user should replace podman by docker)
 ```bash
-podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:12 /bin/bash -c "apt update && apt install -y rpm && yarn install && yarn run dist:linux"
+podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:14 /bin/bash -c "apt update && apt install -y rpm && yarn install && yarn run dist:linux"
 ```
 
 This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular linux distributions.
