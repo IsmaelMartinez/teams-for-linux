@@ -11,6 +11,10 @@ if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.prox
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
+if (process.env.XDG_SESSION_TYPE == 'wayland') {
+	console.log('INFO: Running under Wayland, switching to PipeWire...');
+	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+}
 app.setAsDefaultProtocolClient('msteams');
 app.allowRendererProcessReuse = false;
 
