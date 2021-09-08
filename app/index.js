@@ -13,7 +13,8 @@ app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	console.log('INFO: Running under Wayland, switching to PipeWire...');
-	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+	app.commandLine.appendSwitch('ozone-platform', 'wayland');
+	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer;UseOzonePlatform');
 }
 app.setAsDefaultProtocolClient('msteams');
 app.allowRendererProcessReuse = false;
