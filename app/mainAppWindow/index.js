@@ -1,4 +1,4 @@
-
+require('@electron/remote/main').initialize();
 const { shell, BrowserWindow, ipcMain } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -12,9 +12,11 @@ const { StreamSelector } = require('../streamSelector');
 
 let aboutBlankRequestCount = 0;
 
+let config;
 let window = null;
 
-exports.onAppReady = function onAppReady() {
+exports.onAppReady = function onAppReady(mainConfig) {
+	config = mainConfig;
 	window = createWindow();
 	new Menus(window, config, iconPath);
 
@@ -41,7 +43,7 @@ exports.onAppReady = function onAppReady() {
 
 	login.handleLoginDialogTry(window);
 	if (config.onlineOfflineReload) {
-		onlineOffline.reloadPageWhenOfflineToOnline(window, config.url);
+		onlineOffline.reloadPageWhenOfflineToOnline(window, config);
 	}
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
@@ -60,7 +62,7 @@ exports.onAppReady = function onAppReady() {
 			tryAgainLink = document.getElementById('try-again-link');
 			tryAgainLink && tryAgainLink.click()
 		`);
-		customCSS.onDidFinishLoad(window.webContents);
+		customCSS.onDidFinishLoad(window.webContents, config);
 	});
 
 	window.on('close', () => {
@@ -73,7 +75,7 @@ exports.onAppReady = function onAppReady() {
 	});
 
 	const url = processArgs(process.argv);
-	window.loadURL(url ? url : config.url);
+	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
 
 	if (config.webDebug) {
 		window.openDevTools();
@@ -90,7 +92,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		if (url && allowFurtherRequests) {
 			allowFurtherRequests = false;
 			setTimeout(() => { allowFurtherRequests = true; }, 5000);
-			window.loadURL(url)
+			window.loadURL(url, { userAgent: config.chromeUserAgent });
 		}
 		if (window.isMinimized()) window.restore();
 		window.focus();
@@ -176,12 +178,10 @@ function createWindow() {
 			partition: config.partition,
 			preload: path.join(__dirname, '..', 'browser', 'index.js'),
 			nativeWindowOpen: true,
-			plugins: true,
-			nodeIntegration: false,
-			contextIsolation: false,
-			enableRemoteModule: true
+			plugins: true
 		},
 	});
+	require('@electron/remote/main').enable(window.webContents);
 
 	ipcMain.on('select-source', event => {
 		const streamSelector = new StreamSelector(window);

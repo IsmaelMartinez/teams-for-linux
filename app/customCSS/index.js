@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-exports.onDidFinishLoad = function onDidFinishLoad(content) {
-	applyCustomCSSStyleIfPresent(content);
+exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
+	applyCustomCSSStyleIfPresent(content, config);
 	content.insertCSS('#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }');
 	content.insertCSS('.zoetrope { animation-iteration-count: 1 !important; }');
-}
+};
 
-function applyCustomCSSStyleIfPresent(content) {
+function applyCustomCSSStyleIfPresent(content, config) {
 	if (config.customCSSName) {
 		applyCustomCSSFromLocation(content, path.join(__dirname, 'assets', 'css', config.customCSSName + '.css'));
 	} else if (config.customCSSLocation) {
