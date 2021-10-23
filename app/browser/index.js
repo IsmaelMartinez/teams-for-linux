@@ -1,31 +1,33 @@
 /* global angular */
 (function () {
 	const path = require('path');
-	const { ipcRenderer, remote } = require('electron');
+	const { ipcRenderer } = require('electron');
 	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
-	const config = remote.getGlobal('config');
+	let config;
+	ipcRenderer.invoke('getConfig').then(mainConfig => {
+		config = mainConfig;
+		if (config.onlineOfflineReload) {
+			require('./onlineOfflineListener')();
+		}
+		if (config.rightClickWithSpellcheck) {
+			require('./rightClickMenuWithSpellcheck');
+		}
+		require('./zoom')();
 
-	if (config.onlineOfflineReload) {
-		require('./onlineOfflineListener')();
-	}
-	if (config.rightClickWithSpellcheck) {
-		require('./rightClickMenuWithSpellcheck');
-	}
-	require('./zoom')();
+		require('./desktopShare/chromeApi');
 
-	require('./desktopShare/chromeApi');
+		const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-	const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
+		new ActivityManager(ipcRenderer, iconPath).start();
 
-	new ActivityManager(ipcRenderer, iconPath).start();
+		if (config.enableDesktopNotificationsHack) {
+			pageTitleNotifications(ipcRenderer);
+		}
 
-	if (config.enableDesktopNotificationsHack) {
-		pageTitleNotifications(ipcRenderer);
-	}
-
-	document.addEventListener('DOMContentLoaded', () => {
-		modifyAngularSettingsWithTimeot();
+		document.addEventListener('DOMContentLoaded', () => {
+			modifyAngularSettingsWithTimeout();
+		});
 	});
 
 	function disablePromoteStuff(injector) {
@@ -35,7 +37,7 @@
 		injector.get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
 	}
 
-	function modifyAngularSettingsWithTimeot() {
+	function modifyAngularSettingsWithTimeout() {
 		setTimeout(() => {
 			try {
 				let injector = angular.element(document).injector();
@@ -47,7 +49,7 @@
 				}
 			} catch (error) {
 				if (error instanceof ReferenceError) {
-					modifyAngularSettingsWithTimeot();
+					modifyAngularSettingsWithTimeout();
 				}
 			}
 		}, 4000);

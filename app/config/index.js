@@ -72,7 +72,7 @@ function argv(configPath) {
 				describe: 'Google Chrome User Agent',
 				type: 'string',
 				default:
-					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3202.75 Safari/537.36',
+					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36',
 			},
 			ntlmV2enabled: {
 				default: 'true',
