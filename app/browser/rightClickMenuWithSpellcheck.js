@@ -3,10 +3,11 @@
  * https://github.com/mixmaxhq/electron-spell-check-provider/issues/18
  */
 
-const { clipboard, remote, webFrame } = require('electron');
-const buildEditorContextMenu = remote.require('electron-editor-context-menu');
-const spellchecker = require('spellchecker');
-const appLocale = remote.app.getLocale().replace('-', '_');
+const { clipboard, webFrame } = require('electron');
+const remoteModule = require('@electron/remote');
+const buildEditorContextMenu = remoteModule.require('electron-editor-context-menu');
+const spellchecker = remoteModule.require('spellchecker');
+const appLocale = remoteModule.app.getLocale().replace('-', '_');
 
 var EN_VARIANT = /^en/;
 
@@ -115,6 +116,6 @@ window.addEventListener('contextmenu', (e) => {
 	// visible selection has changed. Try to wait to show the menu until after that, otherwise the
 	// visible selection will update after the menu dismisses and look weird.
 	setTimeout(function () {
-		menu.popup(remote.getCurrentWindow());
+		menu.popup(remoteModule.getCurrentWindow());
 	}, 30);
 });
