@@ -33,7 +33,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap -- --publish always
+        run: yarn dist:linux:snap --publish always
 
   snap-armv7l:
     runs-on: ubuntu-latest
@@ -57,4 +57,4 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap:armv7l -- --publish always
+        run: yarn dist:linux:snap:armv7l --publish always
