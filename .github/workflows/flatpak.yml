@@ -25,7 +25,7 @@ jobs:
       - run: npm install --package-lock-only
 
       - name: Install python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
 
       - name: Install pip3 and packages
         uses: BSFishy/pip-action@v1
