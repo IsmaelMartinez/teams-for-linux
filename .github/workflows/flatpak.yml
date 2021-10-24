@@ -10,6 +10,9 @@ jobs:
 
   flatpak:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8']
     container:
       image: bilelmoussaoui/flatpak-github-actions:gnome-40
       options: --privileged
