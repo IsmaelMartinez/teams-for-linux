@@ -18,8 +18,11 @@ jobs:
       - name: Install flatpak & flatpak-builder
         run: sudo apt-get install flatpak flatpak-builder -y
 
+      - name: Add flathub repo
+        run: sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
       - name: Install flatpak dependencies
-        run: flatpak install org.freedesktop.Sdk/x86_64/21.08 -y
+        run: flatpak install flathub org.freedesktop.Sdk/x86_64/21.08 -y
 
       - name: Check out Git repository
         uses: actions/checkout@v2
