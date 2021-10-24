@@ -1,5 +1,8 @@
-name: Build & Release
+name: Snap Build
 
+env:
+  GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
+  
 on: push
 
 defaults:
@@ -7,24 +10,6 @@ defaults:
     shell: bash
 
 jobs:
-  deb:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14
-
-      - name: Build
-        run: yarn --link-duplicates --pure-lockfile
-
-      - name: Release
-        if: contains(github.ref, 'develop')
-        run: yarn dist:linux:deb -- --publish always
 
   snap:
     runs-on: ubuntu-latest
