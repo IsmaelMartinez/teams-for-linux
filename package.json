@@ -96,8 +96,8 @@
         "upower-observe"
       ],
       "publish": {
-        "provider": "snapStore",
-        "releaseType": "edge"
+        "provider": "github",
+        "releaseType": "prerelease"
       }
     }
   }
