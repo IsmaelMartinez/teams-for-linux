@@ -1,5 +1,8 @@
 name: Snap Build
 
+env:
+  GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
+  
 on: push
 
 defaults:
