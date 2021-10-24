@@ -24,8 +24,10 @@ jobs:
           node-version: 14
       - run: npm install --package-lock-only
 
-      - name: Generate flatpak node package list
+      - name: Install python
         uses: actions/setup-python@v1
+
+      - name: Install pip3 and packages
         uses: BSFishy/pip-action@v1
         with:
           packages: | 
