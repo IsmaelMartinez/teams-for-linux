@@ -15,6 +15,9 @@ jobs:
         python-version: ['3.8']
 
     steps:
+      - name: Install flatpak & flatpak-builder
+        run: sudo apt-get install flatpak flatpak-builder -y
+        
       - name: Check out Git repository
         uses: actions/checkout@v2
       
