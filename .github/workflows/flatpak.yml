@@ -1,0 +1,43 @@
+name: Flatpak Build
+
+on: push
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-40
+      options: --privileged
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      
+      - name: Install Node.js, NPM, Yarn and generate package-lock.json
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - run: npm install --package-lock-only
+
+      - name: Generate flatpak node package list
+        uses: actions/setup-python@v1
+        uses: BSFishy/pip-action@v1
+        with:
+          packages: | 
+            aiohttp
+      - run: python3 flatpak-node-generator.py npm --xdg-layout package-lock.json 
+
+      - name: Prepare package.json for flatpak-builder
+        uses: sergeysova/jq-action@v2
+        with:
+          cmd: jq '.build.linux.target="dir"' <<<$(<package.json) > package.json
+      
+      - name: Install flatpak-builder
+        uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
+        with:
+          manifest-path: org.flathub.teams-for-linux.yml
