@@ -18,6 +18,9 @@ jobs:
       options: --privileged
 
     steps:
+      - name: Install libffi7
+      - run: sudo apt install libffi7 -y
+
       - name: Check out Git repository
         uses: actions/checkout@v2
       
