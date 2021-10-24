@@ -19,8 +19,10 @@ jobs:
 
     steps:
       - name: Install libffi7
-        run: sudo apt-get install libffi7 -y
-
+        uses: ryankurte/action-apt@v0.3.0
+        with:
+          packages:"libffi7"
+        
       - name: Check out Git repository
         uses: actions/checkout@v2
       
