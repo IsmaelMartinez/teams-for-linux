@@ -53,7 +53,5 @@ jobs:
         with:
           cmd: jq '.build.linux.target="dir"' <<<$(<package.json) > package.json
       
-      - name: Install flatpak-builder
-        uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
-        with:
-          manifest-path: org.flathub.teams-for-linux.yml
+      - name: Start flatpak build
+        run: sudo flatpak-builder flatpak-build org.flathub.teams-for-linux.yml --install --force-clean --user
