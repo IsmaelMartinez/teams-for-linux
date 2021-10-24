@@ -23,8 +23,8 @@ jobs:
 
       - name: Install flatpak dependencies
         run: sudo flatpak install flathub org.freedesktop.Sdk/x86_64/21.08 -y |
-          sudo flatpak install flathub org.electronjs.Electron2.BaseApp//21.08 |
-          sudo flatpak install flathub org.freedesktop.Sdk.Extension.node14//21.08
+          sudo flatpak install flathub org.electronjs.Electron2.BaseApp//21.08 -y |
+          sudo flatpak install flathub org.freedesktop.Sdk.Extension.node14//21.08 -y
 
       - name: Check out Git repository
         uses: actions/checkout@v2
