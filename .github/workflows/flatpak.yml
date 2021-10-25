@@ -54,4 +54,4 @@ jobs:
           cmd: jq '.build.linux.target="dir"' <<<$(<package.json) > package.json
       
       - name: Start flatpak build
-        run: sudo flatpak-builder flatpak-build org.flathub.teams-for-linux.yml --install --force-clean --user
+        run: sudo flatpak-builder flatpak-build com.github.ismaelmartinez.teams-for-linux.yml --install --force-clean --user
