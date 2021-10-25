@@ -14,7 +14,12 @@ if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	app.commandLine.appendSwitch('ozone-platform', 'wayland');
 	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer;UseOzonePlatform');
 }
-app.setAsDefaultProtocolClient('msteams');
+
+const protocolClient = 'msteams';
+if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
+	app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+}
+
 app.allowRendererProcessReuse = false;
 
 if (!gotTheLock) {
