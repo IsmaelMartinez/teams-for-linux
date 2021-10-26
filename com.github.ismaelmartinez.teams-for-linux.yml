@@ -1,0 +1,56 @@
+app-id: com.github.ismaelmartinez.teams-for-linux
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '21.08'
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node14
+command: run.sh
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=pulseaudio
+  - --share=network
+build-options:
+  append-path: /usr/lib/sdk/node14/bin
+  cflags: -O2 -g
+  cxxflags: -O2 -g
+  env:
+    NPM_CONFIG_LOGLEVEL: info
+modules:
+  - name: teams-for-linux
+    buildsystem: simple
+    build-options:
+      env:
+        XDG_CACHE_HOME: /run/build/teams-for-linux/flatpak-node/cache
+        npm_config_cache: /run/build/teams-for-linux/flatpak-node/npm-cache
+        npm_config_nodedir: /usr/lib/sdk/node14
+        npm_config_offline: 'true'
+    subdir: main
+    sources:
+      - type: archive
+        url: https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v1.0.13/teams-for-linux-1.0.13.tar.gz
+        sha256: ead3766f1286a279a15ccb334ef4e2b460d5a5a3fe0a9b17239ee5b204874ff2
+      - type: dir
+        path: ..
+        dest: main
+      - generated-sources.json
+      # Wrapper to launch the app
+      - type: script
+        dest-filename: run.sh
+        commands:
+          - zypak-wrapper.sh /app/main/teams-for-linux "$@"
+    build-commands:
+      # Install npm dependencies
+      - npm install --offline
+      # Build the app; in this example the `dist` script
+      # in package.json runs electron-builder
+      - |
+        . ../flatpak-node/electron-builder-arch-args.sh
+        npm run dist -- $ELECTRON_BUILDER_ARCH_ARGS  --linux --dir
+      # Bundle app and dependencies
+      - cp -a dist/linux*unpacked /app/main
+      # Install app wrapper
+      - install -Dm755 -t /app/bin/ ../run.sh

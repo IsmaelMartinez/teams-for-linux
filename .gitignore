@@ -2,3 +2,7 @@ node_modules/
 dist/
 parts/
 snap/.snapcraft/
+package-lock.json
+generated-sources.json
+.flatpak-builder/
+flatpak-build/
