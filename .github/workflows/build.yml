@@ -25,6 +25,9 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
+      - name: Set chrome-sandbox permissions (flatpak)
+        run: sudo chown root ./node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 ./node_modules/electron/dist/chrome-sandbox
+
       - name: Release
         if: contains(github.ref, 'develop')
         run: yarn dist:linux:deb -- --publish always

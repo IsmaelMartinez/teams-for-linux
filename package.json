@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -94,7 +94,10 @@
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
-      ]
+      ],
+			"publish":[
+				"snapStore"
+			]
     }
   }
 }

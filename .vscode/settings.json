@@ -1,8 +1,21 @@
 {
 	"cSpell.words": [
+		"buildsystem",
+		"cflags",
+		"cxxflags",
+		"electronjs",
+		"flathub",
+		"flatpak",
+		"freedesktop",
+		"ismaelmartinez",
+		"LOGLEVEL",
 		"msteams",
+		"nodedir",
 		"ntlm",
+		"pulseaudio",
+		"subdir",
 		"submenu",
-		"zoetrope"
+		"zoetrope",
+		"zypak"
 	]
 }
