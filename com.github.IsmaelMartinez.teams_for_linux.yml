@@ -1,0 +1,45 @@
+app-id: com.github.IsmaelMartinez.teams_for_linux
+base: org.electronjs.Electron2.BaseApp
+base-version: '21.08'
+runtime: org.freedesktop.Platform
+runtime-version: '21.08'
+sdk: org.freedesktop.Sdk
+command: teams-for-linux
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=x11
+  - --socket=pulseaudio
+  - --share=network
+  - --device=all
+  - --filesystem=home
+  - --filesystem=xdg-run/dconf
+  - --filesystem=~/.config/dconf:ro
+  - --env=DCONF_USER_CONFIG_DIR=.config/dconf
+  - --talk-name=ca.desrt.dconf
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --env=XDG_CURRENT_DESKTOP=Unity
+  - --talk-name=org.gtk.Notifications
+modules:
+  - name: teams-for-linux
+    buildsystem: simple
+    build-commands:
+      - ar x teams-for-linux_1.0.14_amd64.deb
+      - tar -xf data.tar.xz
+      - cp -r ./opt/* /app/
+      - cp -r ./usr/share/* /app/share/
+      - ln -s /app/teams-for-linux/teams-for-linux /app/bin
+      - install -Dm644 com.github.IsmaelMartinez.teams_for_linux.appdata.xml -t /app/share/metainfo
+      - mv ${FLATPAK_DEST}/share/applications/teams-for-linux.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - desktop-file-edit --set-key Exec --set-value "teams-for-linux %U" ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - desktop-file-edit --set-key Icon --set-value "com.github.IsmaelMartinez.teams_for_linux" ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - rm -rf ${FLATPAK_DEST}/share/icons/hicolor/1024x1024/
+      - find ${FLATPAK_DEST}/share/icons -type f -name *.png -exec rename teams-for-linux.png ${FLATPAK_ID}.png '{}' \;
+    sources:
+      - type: file
+        url: https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v1.0.14/teams-for-linux_1.0.14_amd64.deb
+        sha256: 8f760c05cc51364ac5191f4c891e7d7f9c3de37c38744605cb0a3883b8297993
+      - type: file
+        path: com.github.IsmaelMartinez.teams_for_linux.appdata.xml
