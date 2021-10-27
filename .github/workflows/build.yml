@@ -25,6 +25,7 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
+      # This is to fix chrome-sandbox permission error on flatpak package
       - name: Set chrome-sandbox permissions (flatpak)
         run: sudo chown root ./node_modules/electron/dist/chrome-sandbox
         run: sudo chmod 4755 ./node_modules/electron/dist/chrome-sandbox
