@@ -14,6 +14,19 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+		<release version="1.0.17" date="2021-10-28">
+      <description>
+        <p>
+          Screen sharing now works.
+        </p>
+        <ul>
+          <li>Fix: #492 Can't share screen on Ubuntu</li>
+        </ul>
+        <p>
+          Thanks to all who contributed to this project.
+        </p>
+      </description>
+    </release>
 		<release version="1.0.16" date="2021-10-28">
       <description>
         <p>
