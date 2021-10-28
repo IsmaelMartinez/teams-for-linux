@@ -45,7 +45,7 @@ modules:
       - ln -s /app/teams-for-linux/teams-for-linux /app/bin
       - install -Dm644 com.github.IsmaelMartinez.teams_for_linux.appdata.xml -t /app/share/metainfo
       - mv ${FLATPAK_DEST}/share/applications/teams-for-linux.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
-      - desktop-file-edit --set-key Exec --set-value "teams-for-linux %U" ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - desktop-file-edit --set-key Exec --set-value "run.sh teams-for-linux %U" ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
       - desktop-file-edit --set-key Icon --set-value "com.github.IsmaelMartinez.teams_for_linux" ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
       - rm -rf ${FLATPAK_DEST}/share/icons/hicolor/1024x1024/
       - find ${FLATPAK_DEST}/share/icons -type f -name *.png -exec rename teams-for-linux.png ${FLATPAK_ID}.png '{}' \;
