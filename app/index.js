@@ -44,6 +44,15 @@ async function handleGetConfig() {
 	return config;
 }
 
-function handleCertificateError(event, webContents, url, error, certificate, callback){
-	certificateModule.onAppCertificateError(event, webContents, url, error, certificate, callback, config);
+function handleCertificateError() {
+	const arg = {
+		event: arguments[0],
+		webContents: arguments[1],
+		url: arguments[2],
+		error: arguments[3],
+		certificate: arguments[4],
+		callback: arguments[5],
+		config: config
+	};
+	certificateModule.onAppCertificateError(arg);
 }
