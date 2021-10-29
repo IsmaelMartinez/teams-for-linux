@@ -1,6 +1,6 @@
 const { app, ipcMain } = require('electron');
 const config = require('./config')(app.getPath('userData'));
-const certificate = require('./certificate');
+const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
 if (config.useElectronDl) require('electron-dl')();
@@ -32,7 +32,7 @@ if (!gotTheLock) {
 	app.on('quit', () => console.log('quit'));
 	app.on('renderer-process-crashed', () => console.log('renderer-process-crashed'));
 	app.on('will-quit', () => console.log('will-quit'));
-	app.on('certificate-error', certificate.onAppCertificateError);
+	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
 }
 
@@ -42,4 +42,17 @@ function handleAppReady() {
 
 async function handleGetConfig() {
 	return config;
+}
+
+function handleCertificateError() {
+	const arg = {
+		event: arguments[0],
+		webContents: arguments[1],
+		url: arguments[2],
+		error: arguments[3],
+		certificate: arguments[4],
+		callback: arguments[5],
+		config: config
+	};
+	certificateModule.onAppCertificateError(arg);
 }
