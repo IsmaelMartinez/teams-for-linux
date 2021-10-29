@@ -1,5 +1,5 @@
 
-exports.onAppCertificateError = function onAppCertificateError (event, webContents, url, error, certificate, callback) {
+exports.onAppCertificateError = function onAppCertificateError(event, webContents, url, error, certificate, callback, config) {
 	if (error === 'net::ERR_CERT_AUTHORITY_INVALID') {
 		let unknownIssuerCert = getCertIssuer(certificate);
 		if (config.customCACertsFingerprints.indexOf(unknownIssuerCert.fingerprint) !== -1) {
