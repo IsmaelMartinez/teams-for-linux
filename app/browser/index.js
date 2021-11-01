@@ -13,7 +13,7 @@
 		if (config.rightClickWithSpellcheck) {
 			require('./rightClickMenuWithSpellcheck');
 		}
-		require('./zoom')();
+		require('./zoom')(config);
 
 		require('./desktopShare/chromeApi');
 

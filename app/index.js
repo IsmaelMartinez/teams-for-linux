@@ -1,5 +1,9 @@
 const { app, ipcMain } = require('electron');
 const config = require('./config')(app.getPath('userData'));
+const Store = require('electron-store');
+const store = new Store({
+	name: 'tfl-settings'
+});
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
@@ -34,6 +38,8 @@ if (!gotTheLock) {
 	app.on('will-quit', () => console.log('will-quit'));
 	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
+	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
+	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 }
 
 function handleAppReady() {
@@ -42,6 +48,44 @@ function handleAppReady() {
 
 async function handleGetConfig() {
 	return config;
+}
+
+async function handleGetZoomLevel(event, name) {
+	const partition = getPartition(name) || {};
+	return partition.zoomLevel ? partition.zoomLevel : 0;
+}
+
+async function handleSaveZoomLevel(event, args) {
+	let partition = getPartition(args.partition) || {};
+	partition.name = args.partition;
+	partition.zoomLevel = args.zoomLevel;
+	savePartition(partition);
+	return;
+}
+
+function getPartitions() {
+	return store.get('app.partitions') || [];
+}
+
+function getPartition(name) {
+	const partitions = getPartitions();
+	return partitions.filter(p => {
+		return p.name == name;
+	})[0];
+}
+
+function savePartition(arg) {
+	const partitions = getPartitions();
+	const partitionIndex = partitions.findIndex(p => {
+		return p.name == arg.name;
+	});
+
+	if (partitionIndex >= 0) {
+		partitions[partitionIndex] = arg;
+	} else {
+		partitions.push(arg);
+	}
+	store.set('app.partitions', partitions);
 }
 
 function handleCertificateError() {
