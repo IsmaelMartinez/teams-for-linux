@@ -874,7 +874,7 @@ electron-publish@22.13.1:
     lazy-val "^1.0.5"
     mime "^2.5.2"
 
-electron-store@^8.0.1:
+electron-store@8.0.1:
   version "8.0.1"
   resolved "https://registry.yarnpkg.com/electron-store/-/electron-store-8.0.1.tgz#9b598c1d2edeffebee9d8c1cd957ad368c528925"
   integrity sha512-ZyLvNywiqSpbwC/pp89O/AycVWY/UJIkmtyzF2Bd0Nm/rLmcFc0NTGuLdg6+LE8mS8qsiK5JMoe4PnrecLHH5w==

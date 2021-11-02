@@ -2,7 +2,7 @@ const { app, ipcMain } = require('electron');
 const config = require('./config')(app.getPath('userData'));
 const Store = require('electron-store');
 const store = new Store({
-	name: 'tfl-settings'
+	name: 'settings'
 });
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();

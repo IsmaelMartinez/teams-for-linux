@@ -23,14 +23,15 @@ exports = module.exports = (config) => {
 };
 
 function restoreZoomLevel(config) {
-	ipcRenderer.invoke('getZoomLevel', config.partition).then(zl => {
-		webFrame.setZoomLevel(zl);
+	ipcRenderer.invoke('getZoomLevel', config.partition).then(zoomLevel => {
+		webFrame.setZoomLevel(zoomLevel);
 	});
 }
 
 function setNextZoomLevel(keyName, config) {
 	const zoomFactor = zoomLevels[keyName];
 	var zoomLevel = webFrame.getZoomLevel();
+	console.log(`Current zoom level: ${zoomLevel}`);
 	if (typeof (zoomFactor) !== 'number') {
 		return;
 	}
@@ -39,6 +40,6 @@ function setNextZoomLevel(keyName, config) {
 	webFrame.setZoomLevel(zoomLevel);
 	ipcRenderer.invoke('saveZoomLevel', {
 		partition: config.partition,
-		zoomLevel: zoomLevel
+		zoomLevel: webFrame.getZoomLevel()
 	});
 }
