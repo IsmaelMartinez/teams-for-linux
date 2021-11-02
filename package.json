@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -38,6 +38,7 @@
     "electron-dl": "ismaelmartinez/electron-dl",
     "electron-editor-context-menu": "1.1.1",
     "electron-native-notification": "1.2.1",
+    "electron-store": "8.0.1",
     "electron-window-state": "5.0.3",
     "spellchecker": "3.7.1",
     "yargs": "17.2.1"
