@@ -17,7 +17,7 @@
 
 		require('./desktopShare/chromeApi');
 
-		const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
+		const iconPath = path.join(__dirname, '../assets/icons/com.github.IsmaelMartinez.teams_for_linux.png');
 
 		new ActivityManager(ipcRenderer, iconPath).start();
 
