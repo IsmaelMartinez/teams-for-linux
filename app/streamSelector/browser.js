@@ -4,10 +4,25 @@ window.addEventListener('DOMContentLoaded', createSourceSelector());
 function createSourceSelector() {
 	return () => {
 		ipcRenderer.once('get-screensizes-response', (event, screens) => {
-			createPreviewScreen(screens);
+			//Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
+			if (process.env["XDG_SESSION_TYPE"] === "wayland")
+				requestSingleScreenOrWindow(screens);
+			else
+				createPreviewScreen(screens);
 		});
 		ipcRenderer.send('get-screensizes-request');
 	};
+}
+
+function requestSingleScreenOrWindow(screens) {
+	desktopCapturer.getSources({ types: ['screen'] }).then(async (sources) => {
+		if (sources.length !== 0) {
+			ipcRenderer.send('selected-source', {
+				id: sources[0].id,
+				screen: screens.find(s => s.default)
+			});
+		}
+	});
 }
 
 function createPreviewScreen(screens) {
