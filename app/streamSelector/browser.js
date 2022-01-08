@@ -4,7 +4,8 @@ window.addEventListener('DOMContentLoaded', init());
 function init() {
 	return () => {
 		if (process.env["XDG_SESSION_TYPE"] === "wayland")
-			initRequestSource();
+                         //Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
+			initRequestSource(requestSingleScreenOrWindow);
 		else
 			createSourceSelector();
 	}
