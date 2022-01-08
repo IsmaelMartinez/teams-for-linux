@@ -10,10 +10,9 @@ function init() {
 	}
 }
 
-function initRequestSource() {
-	//Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
+function initRequestSource(callback) {
 	ipcRenderer.once('get-screensizes-response', (event, screens) => {
-		requestSingleScreenOrWindow(screens);
+		callback(screens);
 	});
 	ipcRenderer.send('get-screensizes-request');
 }
