@@ -7,7 +7,7 @@ function init() {
                          //Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
 			initRequestSource(requestSingleScreenOrWindow);
 		else
-			createSourceSelector();
+			createSourceSelector(createPreviewScreen);
 	}
 }
 
