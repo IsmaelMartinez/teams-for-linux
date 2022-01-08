@@ -1,4 +1,4 @@
-const { app, ipcMain } = require('electron');
+const { app, ipcMain, desktopCapturer } = require('electron');
 const config = require('./config')(app.getPath('userData'));
 const Store = require('electron-store');
 const store = new Store({
@@ -16,6 +16,7 @@ app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	console.log('INFO: Running under Wayland, switching to PipeWire...');
 	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,UseOzonePlatform');
+	app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
 }
 
 const protocolClient = 'msteams';
@@ -39,6 +40,7 @@ if (!gotTheLock) {
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
+	ipcMain.handle('desktopCaturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 }
 
 function handleAppReady() {

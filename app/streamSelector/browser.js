@@ -1,4 +1,4 @@
-const { desktopCapturer, ipcRenderer } = require('electron');
+const { ipcRenderer } = require('electron');
 window.addEventListener('DOMContentLoaded', init());
 
 function init() {
@@ -20,7 +20,7 @@ function initRequestSource(callback) {
 }
 
 function requestSingleScreenOrWindow(screens) {
-	desktopCapturer.getSources({ types: ['screen'] }).then(async (sources) => {
+	ipcRenderer.invoke('desktopCaturerGetSources', { types: ['screen'] }).then(async (sources) => {
 		if (sources.length === 0)
 			return;
 
@@ -37,7 +37,7 @@ function createPreviewScreen(screens) {
 	let windowsIndex = 0;
 	const sscontainer = document.getElementById('screen-size');
 	createEventHandlers({ screens, sscontainer });
-	desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
+	ipcRenderer.invoke('desktopCaturerGetSources', { types: ['window', 'screen'] }).then(async (sources) => {
 		const rowElement = document.querySelector('.container-fluid .row');
 		ipcRenderer.once('disable-blur-response', async () => {
 			for (const source of sources) {
