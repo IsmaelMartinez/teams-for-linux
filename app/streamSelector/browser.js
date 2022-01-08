@@ -1,14 +1,37 @@
 const { desktopCapturer, ipcRenderer } = require('electron');
-window.addEventListener('DOMContentLoaded', createSourceSelector());
+window.addEventListener('DOMContentLoaded', init());
 
-function createSourceSelector() {
+function init() {
 	return () => {
-		ipcRenderer.once('get-screensizes-response', (event, screens) => {
-			createPreviewScreen(screens);
-		});
-		ipcRenderer.send('get-screensizes-request');
-	};
+		if (process.env["XDG_SESSION_TYPE"] === "wayland") {
+			//Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
+			initRequestSource(requestSingleScreenOrWindow);
+		} else {
+			initRequestSource(createPreviewScreen);
+		}
+	}
 }
+
+function initRequestSource(callback) {
+	ipcRenderer.once('get-screensizes-response', (event, screens) => {
+		callback(screens);
+	});
+	ipcRenderer.send('get-screensizes-request');
+}
+
+function requestSingleScreenOrWindow(screens) {
+	desktopCapturer.getSources({ types: ['screen'] }).then(async (sources) => {
+		if (sources.length === 0)
+			return;
+
+		const properties = {
+			id: sources[0].id,
+			screen: screens.find(s => s.default)
+		};
+		ipcRenderer.send('selected-source', properties);
+	});
+}
+
 
 function createPreviewScreen(screens) {
 	let windowsIndex = 0;
