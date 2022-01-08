@@ -31,12 +31,6 @@ function requestSingleScreenOrWindow(screens) {
 	});
 }
 
-function createSourceSelector() {
-	ipcRenderer.once('get-screensizes-response', (event, screens) => {
-		createPreviewScreen(screens);
-	});
-	ipcRenderer.send('get-screensizes-request');
-}
 
 function createPreviewScreen(screens) {
 	let windowsIndex = 0;
