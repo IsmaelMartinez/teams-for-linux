@@ -1,4 +1,4 @@
-const { ipcMain, BrowserView, screen } = require('electron');
+const { ipcMain, BrowserView } = require('electron');
 const path = require('path');
 const resolutions = [
 	{
@@ -143,11 +143,8 @@ function resizeView(view) {
 
 function createScreenRequestHandler() {
 	ipcMain.once('get-screensizes-request', event => {
-		const pdisplay = screen.getPrimaryDisplay();
-		event.reply('get-screensizes-response', resolutions.slice(0, resolutions.findIndex(r => {
-			return r.width >= pdisplay.size.width && r.height >= pdisplay.size.height;
-		}) + 1).map(s => {
-			return Object.assign({}, s);
+		event.reply('get-screensizes-response', resolutions.map(resolution => {
+			return Object.assign({}, resolution);
 		}));
 	});
 }
