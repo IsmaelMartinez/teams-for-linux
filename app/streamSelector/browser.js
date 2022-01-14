@@ -3,13 +3,13 @@ window.addEventListener('DOMContentLoaded', init());
 
 function init() {
 	return () => {
-		if (process.env["XDG_SESSION_TYPE"] === "wayland") {
+		if (process.env['XDG_SESSION_TYPE'] === 'wayland') {
 			//Pipewire dialog already allows user to select screen/window so request directly to avoid prompting user multiple times to select screen
 			initRequestSource(requestSingleScreenOrWindow);
 		} else {
 			initRequestSource(createPreviewScreen);
 		}
-	}
+	};
 }
 
 function initRequestSource(callback) {
