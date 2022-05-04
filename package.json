@@ -34,20 +34,20 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@electron/remote": "^2.0.1",
+    "@electron/remote": "^2.0.8",
     "electron-dl": "ismaelmartinez/electron-dl",
     "electron-editor-context-menu": "1.1.1",
     "electron-native-notification": "1.2.1",
     "electron-store": "8.0.1",
     "electron-window-state": "5.0.3",
     "spellchecker": "3.7.1",
-    "yargs": "17.2.1"
+    "yargs": "17.4.1"
   },
   "devDependencies": {
-    "electron": "^16.0.6",
-    "electron-builder": "22.13.1",
-    "eslint": "8.1.0",
-    "yarn": "1.22.17"
+    "electron": "^18.2.0",
+    "electron-builder": "23.0.3",
+    "eslint": "8.14.0",
+    "yarn": "1.22.18"
   },
   "build": {
     "appId": "teams-for-linux",
