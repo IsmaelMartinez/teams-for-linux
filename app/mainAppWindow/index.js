@@ -177,9 +177,9 @@ function createWindow() {
 		webPreferences: {
 			partition: config.partition,
 			preload: path.join(__dirname, '..', 'browser', 'index.js'),
-			nativeWindowOpen: true,
 			plugins: true,
-			contextIsolation: false
+			contextIsolation: false,
+			sandbox:false
 		},
 	});
 	require('@electron/remote/main').enable(window.webContents);
