@@ -28,11 +28,6 @@ function argv(configPath) {
 				describe: 'Reload page when going from offline to online',
 				type: 'boolean',
 			},
-			rightClickWithSpellcheck: {
-				default: true,
-				describe: 'Enable/Disable the right click menu with spellchecker',
-				type: 'boolean',
-			},
 			enableDesktopNotificationsHack: {
 				default: false,
 				describe: 'Enable electron-native-notifications hack',
