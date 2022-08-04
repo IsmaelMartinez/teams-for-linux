@@ -40,7 +40,7 @@ if (!gotTheLock) {
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
-	ipcMain.handle('desktopCaturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
+	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 }
 
 function handleAppReady() {
