@@ -24,15 +24,6 @@ exports.onAppReady = function onAppReady(mainConfig) {
 		window.webContents.send('page-title', title);
 	});
 
-	ipcMain.on('disable-blur-request', (event) => {
-		window.setAlwaysOnTop(true);
-		event.reply('disable-blur-response');
-	});
-
-	ipcMain.on('enable-blur-request', () => {
-		window.setAlwaysOnTop(false);
-	});
-
 	if (config.enableDesktopNotificationsHack) {
 		notifications.addDesktopNotificationHack(iconPath);
 	}
