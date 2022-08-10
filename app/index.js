@@ -32,15 +32,18 @@ if (!gotTheLock) {
 } else {
 	app.on('second-instance', mainAppWindow.onAppSecondInstance);
 	app.on('ready', handleAppReady);
-	app.on('before-quit', () => console.log('before-quit'));
 	app.on('quit', () => console.log('quit'));
-	app.on('renderer-process-crashed', () => console.log('renderer-process-crashed'));
+	app.on('render-process-gone', onAppKilled);
 	app.on('will-quit', () => console.log('will-quit'));
 	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
-	ipcMain.handle('desktopCaturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
+	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
+}
+
+function onAppKilled() {
+	process.exit(0);
 }
 
 function handleAppReady() {

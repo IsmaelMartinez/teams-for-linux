@@ -5,6 +5,11 @@ const help = require('./help');
 const Tray = require('./tray');
 let shouldQuit = false;
 
+function onBeforeQuit() {
+	console.log('before-quit');
+	shouldQuit = true;
+}
+
 class Menus {
 	constructor(window, config, iconPath) {
 		this.window = window;
@@ -14,7 +19,6 @@ class Menus {
 	}
 
 	quit() {
-		shouldQuit = true;
 		app.quit();
 	}
 
@@ -48,11 +52,15 @@ class Menus {
 			help(app, this.window),
 		]));
 
+		app.on('before-quit', onBeforeQuit);
+
 		this.window.on('close', (event) => {
+			console.log('window close');
 			if (!shouldQuit && !this.config.closeAppOnCross) {
 				event.preventDefault();
 				this.hide();
 			} else {
+				this.window.webContents.session.flushStorageData();
 				app.quit();
 			}
 		});

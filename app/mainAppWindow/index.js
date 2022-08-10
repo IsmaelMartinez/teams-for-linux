@@ -56,10 +56,6 @@ exports.onAppReady = function onAppReady(mainConfig) {
 		customCSS.onDidFinishLoad(window.webContents, config);
 	});
 
-	window.on('close', () => {
-		console.log('window close');
-		window.webContents.session.flushStorageData();
-	});
 	window.on('closed', () => {
 		console.log('window closed');
 		window = null;
@@ -170,7 +166,7 @@ function createWindow() {
 			preload: path.join(__dirname, '..', 'browser', 'index.js'),
 			plugins: true,
 			contextIsolation: false,
-			sandbox:false
+			sandbox: false
 		},
 	});
 	require('@electron/remote/main').enable(window.webContents);

@@ -20,7 +20,7 @@ function initRequestSource(callback) {
 }
 
 function requestSingleScreenOrWindow(screens) {
-	ipcRenderer.invoke('desktopCaturerGetSources', { types: ['screen'] }).then(async (sources) => {
+	ipcRenderer.invoke('desktopCapturerGetSources', { types: ['screen'] }).then(async (sources) => {
 		if (sources.length === 0)
 			return;
 
@@ -37,7 +37,7 @@ function createPreviewScreen(screens) {
 	let windowsIndex = 0;
 	const sscontainer = document.getElementById('screen-size');
 	createEventHandlers({ screens, sscontainer });
-	ipcRenderer.invoke('desktopCaturerGetSources', { types: ['window', 'screen'] }).then(async (sources) => {
+	ipcRenderer.invoke('desktopCapturerGetSources', { types: ['window', 'screen'] }).then(async (sources) => {
 		const rowElement = document.querySelector('.container-fluid .row');
 		for (const source of sources) {
 			await createPreview({
