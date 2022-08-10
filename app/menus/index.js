@@ -61,7 +61,6 @@ class Menus {
 				this.hide();
 			} else {
 				this.window.webContents.session.flushStorageData();
-				app.quit();
 			}
 		});
 

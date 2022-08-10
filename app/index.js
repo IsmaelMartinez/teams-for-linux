@@ -43,13 +43,19 @@ if (!gotTheLock) {
 }
 
 function onAppTerminated(signal) {
-	console.log(`Terminated by ${signal} signal.`);
-	app.quit();
+	if (signal == 'SIGTERM') {
+		process.abort();
+	} else {
+		process.exit(0);
+	}
 }
 
 function handleAppReady() {
+	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
 	process.on('SIGTERM', onAppTerminated);
+	//Just catch the error
+	process.stdout.on('error', () => {});
 	mainAppWindow.onAppReady(config);
 }
 
