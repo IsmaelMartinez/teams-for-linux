@@ -47,8 +47,12 @@ function onRenderProcessGone() {
 	app.quit();
 }
 
-function onAppTerminated() {
-	app.quit();
+function onAppTerminated(signal) {
+	if (signal == 'SIGTERM') {
+		process.abort();
+	} else {
+		app.quit();
+	}
 }
 
 function handleAppReady() {
