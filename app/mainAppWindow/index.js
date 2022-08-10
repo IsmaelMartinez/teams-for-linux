@@ -40,7 +40,7 @@ exports.onAppReady = function onAppReady(mainConfig) {
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
 	if (!config.minimized) {
-		window.once('ready-to-show', () => window.show());
+		window.show();
 	}
 
 	window.webContents.on('did-finish-load', () => {
