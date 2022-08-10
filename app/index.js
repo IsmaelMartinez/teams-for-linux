@@ -33,7 +33,7 @@ if (!gotTheLock) {
 	app.on('second-instance', mainAppWindow.onAppSecondInstance);
 	app.on('ready', handleAppReady);
 	app.on('quit', () => console.log('quit'));
-	app.on('render-process-gone', onAppKilled);
+	app.on('render-process-gone', () => console.log('render-process-gone'));
 	app.on('will-quit', () => console.log('will-quit'));
 	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
@@ -42,11 +42,14 @@ if (!gotTheLock) {
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 }
 
-function onAppKilled() {
-	process.exit(0);
+function onAppTerminated(signal) {
+	console.log(`Terminated by ${signal} signal.`);
+	app.quit();
 }
 
 function handleAppReady() {
+	process.on('SIGINT', onAppTerminated);
+	process.on('SIGTERM', onAppTerminated);
 	mainAppWindow.onAppReady(config);
 }
 
