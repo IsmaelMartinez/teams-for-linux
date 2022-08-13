@@ -119,7 +119,8 @@ class StreamSelector {
 }
 
 function closeView(properties) {
-	properties.view.parent.removeBrowserView(properties.view.view);
+	properties.view.parent.setBrowserView(null);
+	properties.view.view.webContents.destroy();
 	properties.view.view = null;
 	properties.view.parent.removeListener('resize', properties._resize);
 	ipcMain.removeListener('selected-source', properties._close);
