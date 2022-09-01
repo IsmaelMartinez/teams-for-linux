@@ -85,19 +85,24 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 			setTimeout(() => { allowFurtherRequests = true; }, 5000);
 			window.loadURL(url, { userAgent: config.chromeUserAgent });
 		}
-		
-		// If minimized, restore.
-		if (window.isMinimized()) {
-			window.restore();
-		}
-		// If closed to tray, show.
-		else if(!window.isVisible()) {
-			window.show();
-		}
-		
-		window.focus();
+
+		restoreWindow();
 	}
 };
+
+function restoreWindow() {
+	// If minimized, restore.
+	if (window.isMinimized()) {
+		window.restore();
+	}
+
+	// If closed to tray, show.
+	else if (!window.isVisible()) {
+		window.show();
+	}
+
+	window.focus();
+}
 
 function processArgs(args) {
 	console.debug('processArgs', args);
