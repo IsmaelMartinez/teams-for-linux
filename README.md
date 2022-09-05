@@ -1,12 +1,10 @@
 # teams-for-linux
 
-This project is in maintenance mode only. Microsoft is now providing a client that, more or less works. 
+This is an unofficial Microsoft Teams client. The official client for Linux will retire by end of 2022.
 
-Please do report bugs and questions in the issues section. I will do my best to help getting those sorted.
+Please do report bugs and questions in the issues section. We will try to attend them at the earliest.
 
-Also, PRs are welcomed, but I am not evolving this client.
-
-Its been a pleasure helping people without a Linux and/or Mac computer specially on this times.
+PRs and suggestions are welcomed. We will continue to support the community.
 
 ---
 
