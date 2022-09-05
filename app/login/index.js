@@ -1,7 +1,7 @@
-const {app, ipcMain, BrowserWindow} = require('electron');
+const { app, ipcMain, BrowserWindow } = require('electron');
 let isFirstLoginTry = true;
 
-exports.loginService = function loginService(parentWindow, callback) {	
+exports.loginService = function loginService(parentWindow, callback) {
 	let win = new BrowserWindow({
 		width: 363,
 		height: 124,
@@ -11,7 +11,12 @@ exports.loginService = function loginService(parentWindow, callback) {
 
 		show: false,
 		autoHideMenuBar: true,
+		webPreferences: {
+			contextIsolation: false,
+			nodeIntegration: true
+		}
 	});
+	require('@electron/remote/main').enable(win.webContents);
 
 	win.once('ready-to-show', () => {
 		win.show();
