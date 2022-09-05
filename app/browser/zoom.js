@@ -1,8 +1,8 @@
 const { webFrame, ipcRenderer } = require('electron');
 
 const zoomLevels = {
-	'+': 1,
-	'-': -1,
+	'+': 0.25,
+	'-': -0.25,
 	'0': 0
 };
 
@@ -20,7 +20,14 @@ exports = module.exports = (config) => {
 			setNextZoomLevel(keyName, config);
 		}
 	}, false);
+	require('@electron/remote').getCurrentWindow().webContents.on('zoom-changed',setZoomChangedHandler(config));
 };
+
+function setZoomChangedHandler(config) {
+	return (event, zoomDirection) => {
+		setNextZoomLevel(zoomDirection == 'in' ? '+' : '-', config);
+	};
+}
 
 function restoreZoomLevel(config) {
 	ipcRenderer.invoke('getZoomLevel', config.partition).then(zoomLevel => {
