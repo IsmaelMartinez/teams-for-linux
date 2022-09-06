@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -37,9 +37,11 @@
     "@electron/remote": "^2.0.8",
     "electron-dl": "ismaelmartinez/electron-dl",
     "electron-editor-context-menu": "1.1.1",
+    "electron-is-dev": "2.0.0",
     "electron-native-notification": "1.2.1",
     "electron-store": "8.1.0",
     "electron-window-state": "5.0.3",
+    "play-sound": "1.1.5",
     "yargs": "17.5.1"
   },
   "devDependencies": {
@@ -59,6 +61,12 @@
         "msteams"
       ]
     },
+    "extraResources": [
+      {
+        "from": "app/assets/sounds",
+        "to": "assets/sounds"
+      }
+    ],
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",

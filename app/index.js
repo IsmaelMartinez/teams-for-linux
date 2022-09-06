@@ -1,4 +1,7 @@
 const { app, ipcMain, desktopCapturer } = require('electron');
+const path = require('path');
+var player = require('play-sound')({});
+const isDev = require('electron-is-dev');
 const config = require('./config')(app.getPath('userData'));
 const Store = require('electron-store');
 const store = new Store({
@@ -40,6 +43,14 @@ if (!gotTheLock) {
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
+	ipcMain.on('play-notification-sound', playNotificationSound);
+}
+
+// eslint-disable-next-line no-unused-vars
+function playNotificationSound(event, audio) {
+	const file = path.join(__dirname, `${isDev ? '' : '../../'}assets/sounds/notification.wav`);
+	console.log(`Playing file: ${file}`);
+	player.play(file);
 }
 
 function onRenderProcessGone() {

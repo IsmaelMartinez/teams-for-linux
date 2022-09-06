@@ -22,10 +22,7 @@ exports.loginService = function loginService(parentWindow, callback) {
 		win.show();
 	});
 
-	ipcMain.on('submitForm', (event, data) => {
-		callback(data.username, data.password);
-		win.close();
-	});
+	ipcMain.on('submitForm', submitFormHandler(callback, win));
 
 	win.on('closed', () => {
 		win = null;
@@ -48,3 +45,10 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(window) {
 		}
 	});
 };
+
+function submitFormHandler(callback, win) {
+	return (event, data) => {
+		callback(data.username, data.password);
+		win.close();
+	};
+}
