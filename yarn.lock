@@ -888,7 +888,7 @@ electron-editor-context-menu@1.1.1:
     lodash.isempty "^4.1.2"
     lodash.isfunction "^3.0.8"
 
-electron-is-dev@^2.0.0:
+electron-is-dev@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/electron-is-dev/-/electron-is-dev-2.0.0.tgz#833487a069b8dad21425c67a19847d9064ab19bd"
   integrity sha512-3X99K852Yoqu9AcW50qz3ibYBWY79/pBhlMCab8ToEWS48R0T9tyxRiQhwylE7zQdXrMnx2JKqUJyMPmt5FBqA==
@@ -2078,7 +2078,7 @@ pkg-up@^3.1.0:
   dependencies:
     find-up "^3.0.0"
 
-play-sound@^1.1.5:
+play-sound@1.1.5:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/play-sound/-/play-sound-1.1.5.tgz#5b44aa0ed59e2ec2f80710210ed783c79b6fb854"
   integrity sha512-gbdF1iLNyL5r9Ne9YwARGMkrvfR4EL9G1ZLtFPLkI2tQt0kkHw5CHM5E6Gl/lDuuk/Uj/O5Q29Bi08jMK4egbA==
