@@ -18,7 +18,12 @@ app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	console.log('INFO: Running under Wayland, switching to PipeWire...');
-	app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,UseOzonePlatform');
+	
+	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue("enable-features").split(',') : [];
+	if (!features.includes("WebRTCPipeWireCapturer"))
+		features.push("WebRTCPipeWireCapturer");
+
+	app.commandLine.appendSwitch("enable-features", features.join(','));
 	app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
 }
 
