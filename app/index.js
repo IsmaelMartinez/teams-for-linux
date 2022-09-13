@@ -1,6 +1,19 @@
 const { app, ipcMain, desktopCapturer } = require('electron');
 const path = require('path');
-var player = require('play-sound')({});
+
+// Notification sound player
+// eslint-disable-next-line no-unused-vars
+const { NodeSound, NodeSoundPlayer } = require('node-sound');
+/**
+ * @type {NodeSoundPlayer}
+ */
+let player;
+try {
+	player = NodeSound.getDefaultPlayer();
+} catch (e) {
+	console.log(e);
+}
+
 const isDev = require('electron-is-dev');
 const config = require('./config')(app.getPath('userData'));
 const Store = require('electron-store');
@@ -18,12 +31,12 @@ app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	console.log('INFO: Running under Wayland, switching to PipeWire...');
-	
-	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue("enable-features").split(',') : [];
-	if (!features.includes("WebRTCPipeWireCapturer"))
-		features.push("WebRTCPipeWireCapturer");
 
-	app.commandLine.appendSwitch("enable-features", features.join(','));
+	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
+	if (!features.includes('WebRTCPipeWireCapturer'))
+		features.push('WebRTCPipeWireCapturer');
+
+	app.commandLine.appendSwitch('enable-features', features.join(','));
 	app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
 }
 
