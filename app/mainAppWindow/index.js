@@ -56,18 +56,7 @@ exports.onAppReady = function onAppReady(mainConfig) {
 		window.show();
 	}
 
-	window.webContents.on('did-finish-load', () => {
-		logger.debug('did-finish-load');
-		window.webContents.executeJavaScript(`
-			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
-			openBrowserButton && openBrowserButton.click();
-		`);
-		window.webContents.executeJavaScript(`
-			tryAgainLink = document.getElementById('try-again-link');
-			tryAgainLink && tryAgainLink.click()
-		`);
-		customCSS.onDidFinishLoad(window.webContents, config);
-	});
+	window.webContents.on('did-finish-load', onDidFinishLoad);
 
 	window.on('closed', () => {
 		logger.debug('window closed');
@@ -98,6 +87,19 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		restoreWindow();
 	}
 };
+
+function onDidFinishLoad() {
+	logger.debug('did-finish-load');
+	window.webContents.executeJavaScript(`
+			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
+			openBrowserButton && openBrowserButton.click();
+		`);
+	window.webContents.executeJavaScript(`
+			tryAgainLink = document.getElementById('try-again-link');
+			tryAgainLink && tryAgainLink.click()
+		`);
+	customCSS.onDidFinishLoad(window.webContents, config);
+}
 
 function restoreWindow() {
 	// If minimized, restore.
