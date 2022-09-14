@@ -1,20 +1,21 @@
 const yargs = require('yargs');
 const path = require('path');
+const { LucidLog } = require('lucid-log');
+let logger;
 
 function getConfigFile(configPath) {
 	try {
 		return require(path.join(configPath, 'config.json'));
 	} catch (e) {
-		console.info('Failed to get the config file, using default values');
-		return {};
+		return null;
 	}
 }
 
 function argv(configPath) {
-	console.log('configPath =', configPath);
 	let configFile = getConfigFile(configPath);
-	console.log('configFile =', configFile);
-	return yargs
+	const missingConfig = configFile == null;
+	configFile = configFile || {};
+	let config = yargs
 		.env(true)
 		.config(configFile)
 		.options({
@@ -93,9 +94,26 @@ function argv(configPath) {
 				default: [],
 				describe: 'Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate',
 				type: 'array'
+			},
+			appLogLevels: {
+				default: 'error',
+				describe: 'Comma separated list of log levels (error,warn,info,debug)',
+				type: 'string'
 			}
 		})
 		.parse(process.argv.slice(1));
+
+	logger = new LucidLog({
+		levels: config.appLogLevels.split(',')
+	});
+
+	logger.debug('configPath:', configPath);
+	if (missingConfig) {
+		logger.info('Failed to get the config file, using default values');
+	}
+	logger.debug('configFile:', configFile);
+
+	return config;
 }
 
 exports = module.exports = argv;

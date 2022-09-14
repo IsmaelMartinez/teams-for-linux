@@ -1,18 +1,18 @@
 
-exports.onAppCertificateError = function onAppCertificateError(arg) {
+exports.onAppCertificateError = function onAppCertificateError(arg, logger) {
 	if (arg.error === 'net::ERR_CERT_AUTHORITY_INVALID') {
 		let unknownIssuerCert = getCertIssuer(arg.certificate);
 		if (arg.config.customCACertsFingerprints.indexOf(unknownIssuerCert.fingerprint) !== -1) {
 			arg.event.preventDefault();
 			arg.callback(true);
 		} else {
-			console.log('Unknown cert issuer for url: ' + arg.url);
-			console.log('Issuer Name: ' + unknownIssuerCert.issuerName);
-			console.log('The unknown certificate fingerprint is: ' + unknownIssuerCert.fingerprint);
+			logger.error('Unknown cert issuer for url: ' + arg.url);
+			logger.error('Issuer Name: ' + unknownIssuerCert.issuerName);
+			logger.error('The unknown certificate fingerprint is: ' + unknownIssuerCert.fingerprint);
 			arg.callback(false);
 		}
 	} else {
-		console.log('An unexpected SSL error has occurred: ' + arg.error);
+		logger.error('An unexpected SSL error has occurred: ' + arg.error);
 		arg.callback(false);
 	}
 };
