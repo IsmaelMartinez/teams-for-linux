@@ -9,6 +9,12 @@ const Menus = require('../menus');
 const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
+const { LucidLog } = require('lucid-log');
+
+/**
+ * @type {LucidLog}
+ */
+let logger;
 
 let aboutBlankRequestCount = 0;
 
@@ -21,6 +27,9 @@ let window = null;
 
 exports.onAppReady = function onAppReady(mainConfig) {
 	config = mainConfig;
+	logger = new LucidLog({
+		levels: config.appLogLevels.split(',')
+	});
 	window = createWindow();
 	new Menus(window, config, iconPath);
 
@@ -47,21 +56,10 @@ exports.onAppReady = function onAppReady(mainConfig) {
 		window.show();
 	}
 
-	window.webContents.on('did-finish-load', () => {
-		console.log('did-finish-load');
-		window.webContents.executeJavaScript(`
-			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
-			openBrowserButton && openBrowserButton.click();
-		`);
-		window.webContents.executeJavaScript(`
-			tryAgainLink = document.getElementById('try-again-link');
-			tryAgainLink && tryAgainLink.click()
-		`);
-		customCSS.onDidFinishLoad(window.webContents, config);
-	});
+	window.webContents.on('did-finish-load', onDidFinishLoad);
 
 	window.on('closed', () => {
-		console.log('window closed');
+		logger.debug('window closed');
 		window = null;
 	});
 
@@ -76,7 +74,7 @@ exports.onAppReady = function onAppReady(mainConfig) {
 let allowFurtherRequests = true;
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
-	console.log('second-instance started');
+	logger.debug('second-instance started');
 	if (window) {
 		event.preventDefault();
 		const url = processArgs(args);
@@ -89,6 +87,19 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		restoreWindow();
 	}
 };
+
+function onDidFinishLoad() {
+	logger.debug('did-finish-load');
+	window.webContents.executeJavaScript(`
+			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
+			openBrowserButton && openBrowserButton.click();
+		`);
+	window.webContents.executeJavaScript(`
+			tryAgainLink = document.getElementById('try-again-link');
+			tryAgainLink && tryAgainLink.click()
+		`);
+	customCSS.onDidFinishLoad(window.webContents, config);
+}
 
 function restoreWindow() {
 	// If minimized, restore.
@@ -105,15 +116,15 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	console.debug('processArgs', args);
+	logger.debug('processArgs:', args);
 	for (const arg of args) {
 		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
-			console.log('meetup-join argument received with https protocol');
+			logger.debug('meetup-join argument received with https protocol');
 			window.show();
 			return arg;
 		}
 		if (arg.startsWith('msteams:/l/meetup-join/')) {
-			console.log('meetup-join argument received with msteams protocol');
+			logger.debug('meetup-join argument received with msteams protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
 		}
@@ -127,7 +138,7 @@ function onBeforeRequestHandler(details, callback) {
 		callback({});
 	} else {
 		// Open the request externally
-		console.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
+		logger.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
 		shell.openExternal(details.url);
 		// decrement the counter
 		aboutBlankRequestCount -= 1;
@@ -143,7 +154,7 @@ function onNewWindow(event, url, frame, disposition, options) {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
 		// Create a new hidden window to load the request in the background
-		console.debug('DEBUG - captured about:blank');
+		logger.debug('DEBUG - captured about:blank');
 		const win = new BrowserWindow({
 			webContents: options.webContents, // use existing webContents if provided
 			show: false

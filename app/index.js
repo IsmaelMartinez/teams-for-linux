@@ -1,5 +1,11 @@
 const { app, ipcMain, desktopCapturer } = require('electron');
 const path = require('path');
+const { LucidLog } = require('lucid-log');
+const isDev = require('electron-is-dev');
+const config = require('./config')(app.getPath('userData'));
+const logger = new LucidLog({
+	levels: config.appLogLevels.split(',')
+});
 
 // Notification sound player
 // eslint-disable-next-line no-unused-vars
@@ -11,11 +17,9 @@ let player;
 try {
 	player = NodeSound.getDefaultPlayer();
 } catch (e) {
-	console.log(e);
+	logger.info('No audio players found. Audio notifications might not work.');
 }
 
-const isDev = require('electron-is-dev');
-const config = require('./config')(app.getPath('userData'));
 const Store = require('electron-store');
 const store = new Store({
 	name: 'settings'
@@ -30,7 +34,7 @@ app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (process.env.XDG_SESSION_TYPE == 'wayland') {
-	console.log('INFO: Running under Wayland, switching to PipeWire...');
+	logger.info('Running under Wayland, switching to PipeWire...');
 
 	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
 	if (!features.includes('WebRTCPipeWireCapturer'))
@@ -48,14 +52,14 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
 app.allowRendererProcessReuse = false;
 
 if (!gotTheLock) {
-	console.warn('App already running');
+	logger.info('App already running');
 	app.quit();
 } else {
 	app.on('second-instance', mainAppWindow.onAppSecondInstance);
 	app.on('ready', handleAppReady);
-	app.on('quit', () => console.log('quit'));
+	app.on('quit', () => logger.debug('quit'));
 	app.on('render-process-gone', onRenderProcessGone);
-	app.on('will-quit', () => console.log('will-quit'));
+	app.on('will-quit', () => logger.debug('will-quit'));
 	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
@@ -67,12 +71,12 @@ if (!gotTheLock) {
 // eslint-disable-next-line no-unused-vars
 function playNotificationSound(event, audio) {
 	const file = path.join(__dirname, `${isDev ? '' : '../../'}assets/sounds/notification.wav`);
-	console.log(`Playing file: ${file}`);
+	logger.debug(`Playing file: ${file}`);
 	player.play(file);
 }
 
 function onRenderProcessGone() {
-	console.log('render-process-gone');
+	logger.debug('render-process-gone');
 	app.quit();
 }
 
@@ -145,5 +149,5 @@ function handleCertificateError() {
 		callback: arguments[5],
 		config: config
 	};
-	certificateModule.onAppCertificateError(arg);
+	certificateModule.onAppCertificateError(arg,logger);
 }

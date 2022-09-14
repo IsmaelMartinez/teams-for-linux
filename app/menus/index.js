@@ -3,18 +3,17 @@ const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
 const Tray = require('./tray');
-let shouldQuit = false;
-
-function onBeforeQuit() {
-	console.log('before-quit');
-	shouldQuit = true;
-}
+const { LucidLog } = require('lucid-log');
 
 class Menus {
 	constructor(window, config, iconPath) {
 		this.window = window;
 		this.iconPath = iconPath;
 		this.config = config;
+		this.allowQuit = false;
+		this.logger = new LucidLog({
+			levels: config.appLogLevels.split(',')
+		});
 		this.initialize();
 	}
 
@@ -52,19 +51,26 @@ class Menus {
 			help(app, this.window),
 		]));
 
-		app.on('before-quit', onBeforeQuit);
+		app.on('before-quit', () => this.onBeforeQuit());
 
-		this.window.on('close', (event) => {
-			console.log('window close');
-			if (!shouldQuit && !this.config.closeAppOnCross) {
-				event.preventDefault();
-				this.hide();
-			} else {
-				this.window.webContents.session.flushStorageData();
-			}
-		});
+		this.window.on('close', (event) => this.onClose(event));
 
 		new Tray(this.window, appMenu.submenu, this.iconPath);
+	}
+
+	onBeforeQuit() {
+		this.logger.debug('before-quit');
+		this.allowQuit = true;
+	}
+
+	onClose(event) {
+		this.logger.debug('window close');
+		if (!this.allowQuit && !this.config.closeAppOnCross) {
+			event.preventDefault();
+			this.hide();
+		} else {
+			this.window.webContents.session.flushStorageData();
+		}
 	}
 }
 
