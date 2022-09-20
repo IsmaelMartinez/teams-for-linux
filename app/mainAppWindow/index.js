@@ -195,7 +195,8 @@ function createWindow() {
 			preload: path.join(__dirname, '..', 'browser', 'index.js'),
 			plugins: true,
 			contextIsolation: false,
-			sandbox: false
+			sandbox: false,
+			spellcheck: true
 		},
 	});
 	require('@electron/remote/main').enable(window.webContents);

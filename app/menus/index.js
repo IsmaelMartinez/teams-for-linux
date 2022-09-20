@@ -1,4 +1,4 @@
-const { app, Menu } = require('electron');
+const { app, Menu, MenuItem } = require('electron');
 const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
@@ -55,6 +55,8 @@ class Menus {
 
 		this.window.on('close', (event) => this.onClose(event));
 
+		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
+
 		new Tray(this.window, appMenu.submenu, this.iconPath);
 	}
 
@@ -72,6 +74,72 @@ class Menus {
 			this.window.webContents.session.flushStorageData();
 		}
 	}
+}
+
+/**
+ * @param {Electron.Event} event 
+ * @param {Electron.ContextMenuParams} params 
+ */
+function assignContextMenuHandler(window) {
+	return (event, params) => {
+		const menu = new Menu();
+
+		// Add each spelling suggestion
+		assignReplaceWordHandler(params, menu, window);
+
+		// Allow users to add the misspelled word to the dictionary
+		assignAddToDictionaryHandler(params, menu, window);
+
+		menu.popup();
+	};
+}
+
+function assignReplaceWordHandler(params, menu, window) {
+	for (const suggestion of params.dictionarySuggestions) {
+		menu.append(new MenuItem({
+			label: suggestion,
+			click: () => window.webContents.replaceMisspelling(suggestion)
+		}));
+	}
+}
+
+function assignAddToDictionaryHandler(params, menu, window) {
+	if (params.misspelledWord) {
+		menu.append(
+			new MenuItem({
+				label: 'Add to dictionary',
+				click: () => window.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+			})
+		);
+
+		menu.append(
+			new MenuItem({
+				type: 'separator'
+			})
+		);
+	}
+
+	addTextEditMenuItems(menu);
+}
+
+function addTextEditMenuItems(menu) {
+	menu.append(
+		new MenuItem({
+			role: 'cut'
+		})
+	);
+
+	menu.append(
+		new MenuItem({
+			role: 'copy'
+		})
+	);
+
+	menu.append(
+		new MenuItem({
+			role: 'paste'
+		})
+	);
 }
 
 exports = module.exports = Menus;
