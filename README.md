@@ -1,6 +1,6 @@
 # teams-for-linux
 
-This is an unofficial Microsoft Teams client. We hear rumours that the official client for Linux will retire by end of 2022 ([Read](https://news.ycombinator.com/item?id=32678839)).
+This is an unofficial Microsoft Teams client. The official client for Linux is [rumoured](https://news.ycombinator.com/item?id=32678839) to be retired by end of 2022.
 
 Please do report bugs and questions in the issues section. We will try to attend them at the earliest.
 
