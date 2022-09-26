@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain } = require('electron');
+const { shell, BrowserWindow, ipcMain, app } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
@@ -61,6 +61,7 @@ exports.onAppReady = function onAppReady(mainConfig) {
 	window.on('closed', () => {
 		logger.debug('window closed');
 		window = null;
+		app.quit();
 	});
 
 	const url = processArgs(process.argv);

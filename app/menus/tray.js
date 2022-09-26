@@ -14,7 +14,7 @@ class ApplicationTray {
 		this.tray.on('click', () => this.showAndFocusWindow());
 		this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
-		ipcMain.on('tray-update', (event, {icon, flash}) => this.updateTrayImage(icon, flash));
+		ipcMain.on('tray-update', (event, { icon, flash }) => this.updateTrayImage(icon, flash));
 	}
 
 	showAndFocusWindow() {
@@ -27,6 +27,10 @@ class ApplicationTray {
 
 		this.tray.setImage(image);
 		this.window.flashFrame(flash);
+	}
+
+	close() {
+		this.tray.destroy();
 	}
 }
 exports = module.exports = ApplicationTray;

@@ -149,5 +149,5 @@ function handleCertificateError() {
 		callback: arguments[5],
 		config: config
 	};
-	certificateModule.onAppCertificateError(arg,logger);
+	certificateModule.onAppCertificateError(arg, logger);
 }
