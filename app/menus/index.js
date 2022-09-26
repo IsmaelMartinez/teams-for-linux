@@ -18,7 +18,8 @@ class Menus {
 	}
 
 	quit() {
-		app.quit();
+		this.allowQuit = true;
+		this.window.close();
 	}
 
 	open() {
@@ -57,7 +58,7 @@ class Menus {
 
 		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
 
-		new Tray(this.window, appMenu.submenu, this.iconPath);
+		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath);
 	}
 
 	onBeforeQuit() {
@@ -71,6 +72,7 @@ class Menus {
 			event.preventDefault();
 			this.hide();
 		} else {
+			this.tray.close();
 			this.window.webContents.session.flushStorageData();
 		}
 	}
