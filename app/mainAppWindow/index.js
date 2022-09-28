@@ -184,7 +184,23 @@ async function createWindow() {
 	}
 
 	// Create the window
-	const window = new BrowserWindow({
+	const window = createNewBrowserWindow(windowState);
+
+	require('@electron/remote/main').enable(window.webContents);
+
+	ipcMain.on('select-source', assignSelectSourceHandler(window));
+
+	windowState.manage(window);
+
+	window.eval = global.eval = function () { // eslint-disable-line no-eval
+		throw new Error('Sorry, this app does not support window.eval().');
+	};
+
+	return window;
+}
+
+function createNewBrowserWindow(windowState) {
+	return new BrowserWindow({
 		x: windowState.x,
 		y: windowState.y,
 
@@ -205,18 +221,6 @@ async function createWindow() {
 			spellcheck: true
 		},
 	});
-
-	require('@electron/remote/main').enable(window.webContents);
-
-	ipcMain.on('select-source', assignSelectSourceHandler(window));
-
-	windowState.manage(window);
-
-	window.eval = global.eval = function () { // eslint-disable-line no-eval
-		throw new Error('Sorry, this app does not support window.eval().');
-	};
-
-	return window;
 }
 
 function assignSelectSourceHandler(window) {
