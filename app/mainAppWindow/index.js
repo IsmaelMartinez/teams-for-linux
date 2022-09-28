@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session } = require('electron');
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
@@ -25,12 +25,12 @@ let config;
  */
 let window = null;
 
-exports.onAppReady = function onAppReady(mainConfig) {
+exports.onAppReady = async function onAppReady(mainConfig) {
 	config = mainConfig;
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
-	window = createWindow();
+	window = await createWindow();
 	new Menus(window, config, iconPath);
 
 	window.on('page-title-updated', (event, title) => {
@@ -171,15 +171,36 @@ function onNewWindow(event, url, frame, disposition, options) {
 	}
 }
 
-function createWindow() {
+async function createWindow() {
 	// Load the previous state with fallback to defaults
 	const windowState = windowStateKeeper({
 		defaultWidth: 0,
 		defaultHeight: 0,
 	});
 
+	if (config.clearStorage) {
+		const defSession = session.fromPartition(config.partition);
+		await defSession.clearStorageData();
+	}
+
 	// Create the window
-	const window = new BrowserWindow({
+	const window = createNewBrowserWindow(windowState);
+
+	require('@electron/remote/main').enable(window.webContents);
+
+	ipcMain.on('select-source', assignSelectSourceHandler(window));
+
+	windowState.manage(window);
+
+	window.eval = global.eval = function () { // eslint-disable-line no-eval
+		throw new Error('Sorry, this app does not support window.eval().');
+	};
+
+	return window;
+}
+
+function createNewBrowserWindow(windowState) {
+	return new BrowserWindow({
 		x: windowState.x,
 		y: windowState.y,
 
@@ -200,19 +221,13 @@ function createWindow() {
 			spellcheck: true
 		},
 	});
-	require('@electron/remote/main').enable(window.webContents);
+}
 
-	ipcMain.on('select-source', event => {
+function assignSelectSourceHandler(window) {
+	return event => {
 		const streamSelector = new StreamSelector(window);
 		streamSelector.show((source) => {
 			event.reply('select-source', source);
 		});
-	});
-
-	windowState.manage(window);
-	window.eval = global.eval = function () { // eslint-disable-line no-eval
-		throw new Error('Sorry, this app does not support window.eval().');
 	};
-
-	return window;
 }
