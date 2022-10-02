@@ -85,3 +85,22 @@ jobs:
       - name: Release
         if: contains(github.ref, 'develop')
         run: yarn dist:linux:targz -- --publish always
+
+  dmg:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:mac -- --publish always
