@@ -4,7 +4,14 @@ const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
-const iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon-96x96.png');
+const os = require('os');
+const isMac = os.platform() === 'darwin';
+
+let iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon-96x96.png');
+if (isMac) {
+	iconPath = path.join(__dirname, '../assets/icons/icon-16x16.png');		
+}
+
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
@@ -18,7 +25,6 @@ const { LucidLog } = require('lucid-log');
 let logger;
 
 let aboutBlankRequestCount = 0;
-
 let config;
 
 /**
@@ -186,13 +192,11 @@ async function createWindow() {
 
 	// Create the window
 	const window = createNewBrowserWindow(windowState);
-
 	require('@electron/remote/main').enable(window.webContents);
-
 	ipcMain.on('select-source', assignSelectSourceHandler(window));
 
 	windowState.manage(window);
-
+	
 	window.eval = global.eval = function () { // eslint-disable-line no-eval
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
@@ -209,7 +213,7 @@ function createNewBrowserWindow(windowState) {
 		height: windowState.height,
 		backgroundColor: isDarkMode ? '#302a75' : '#fff',
 
-		show: false,
+		show: true,
 		autoHideMenuBar: true,
 		icon: iconPath,
 

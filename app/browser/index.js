@@ -1,9 +1,11 @@
 /* global angular */
 (function () {
 	const path = require('path');
+
 	const { ipcRenderer } = require('electron');
 	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
+
 	let config;
 	ipcRenderer.invoke('getConfig').then(mainConfig => {
 		config = mainConfig;

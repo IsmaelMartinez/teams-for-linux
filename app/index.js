@@ -142,12 +142,12 @@ async function handleGetConfig() {
 	return config;
 }
 
-async function handleGetZoomLevel(event, name) {
+async function handleGetZoomLevel(_, name) {
 	const partition = getPartition(name) || {};
 	return partition.zoomLevel ? partition.zoomLevel : 0;
 }
 
-async function handleSaveZoomLevel(event, args) {
+async function handleSaveZoomLevel(_, args) {
 	let partition = getPartition(args.partition) || {};
 	partition.name = args.partition;
 	partition.zoomLevel = args.zoomLevel;

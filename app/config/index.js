@@ -96,7 +96,7 @@ function argv(configPath) {
 				type: 'array'
 			},
 			appLogLevels: {
-				default: 'error',
+				default: 'error,warn,info,debug',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
 			},
@@ -119,7 +119,7 @@ function argv(configPath) {
 
 	logger.debug('configPath:', configPath);
 	if (missingConfig) {
-		logger.info('Failed to get the config file, using default values');
+		logger.info('No config file found, using default values');
 	}
 	logger.debug('configFile:', configFile);
 

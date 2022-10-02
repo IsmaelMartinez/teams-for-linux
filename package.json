@@ -31,6 +31,7 @@
     "dist:linux:appimage": "electron-builder --x64 --armv7l --arm64 -l AppImage",
     "dist:linux:snap": "electron-builder -l snap",
     "dist:linux:snap:armv7l": "electron-builder --armv7l -l snap",
+    "dist:mac": "electron-builder --mac",
     "release": "electron-builder"
   },
   "dependencies": {
