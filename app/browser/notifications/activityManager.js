@@ -2,15 +2,19 @@ const TrayIconRenderer = require('./trayIconRenderer');
 const activityHub = require('./activityHub');
 
 class ActivityManager {
-	constructor(ipc, baseIconPath) {
-		this.ipc = ipc;
+	/**
+	 * @param {Electron.IpcRenderer} ipcRenderer 
+	 * @param {string} baseIconPath 
+	 */
+	constructor(ipcRenderer, baseIconPath) {
+		this.ipcRenderer = ipcRenderer;
 		this.subscribed = false;
 		this.iconRenderer = new TrayIconRenderer(baseIconPath);
 	}
 
 	updateActivityCount(count) {
 		this.iconRenderer.render(count).then(icon => {
-			this.ipc.send('tray-update', {
+			this.ipcRenderer.send('tray-update', {
 				icon: icon,
 				flash: (count > 0)
 			});
@@ -19,6 +23,8 @@ class ActivityManager {
 
 	start() {
 		activityHub.on('activities-count-updated', (data) => this.updateActivityCount(data.count));
+		activityHub.on('call-connected', () => this.ipcRenderer.invoke('disable-screensaver'));
+		activityHub.on('call-disconnected', () => this.ipcRenderer.invoke('enable-screensaver'));
 		activityHub.start();
 	}
 }

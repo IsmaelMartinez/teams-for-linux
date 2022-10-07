@@ -102,6 +102,8 @@ function whenControllerReady(callback) {
 
 function assignEventHandlers(controller) {
 	assignActivitiesCountUpdateHandler(controller);
+	assignCallConnectedHandler(controller);
+	assignCallDisconnectedHandler(controller);
 }
 
 function assignActivitiesCountUpdateHandler(controller) {
@@ -120,9 +122,36 @@ function assignActivitiesCountUpdateHandler(controller) {
 function onActivitiesCountUpdated(controller) {
 	const count = controller.bellNotificationsService.getNewActivitiesCount() + controller.chatListService.getUnreadCountFromChatList();
 	const handlers = getEventHandlers('activities-count-updated');
-	console.log(handlers);
 	for (const handler of handlers) {
 		handler.handler({ count: count });
+	}
+}
+
+function assignCallConnectedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callConnected,
+		() => onCallConnected(controller));
+}
+
+function onCallConnected() {
+	const handlers = getEventHandlers('call-connected');
+	for (const handler of handlers) {
+		handler.handler({});
+	}
+}
+
+function assignCallDisconnectedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callDisposed,
+		() => onCallDisconnected(controller));
+}
+
+function onCallDisconnected() {
+	const handlers = getEventHandlers('call-disconnected');
+	for (const handler of handlers) {
+		handler.handler({});
 	}
 }
 

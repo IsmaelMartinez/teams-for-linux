@@ -1,4 +1,4 @@
-const { app, ipcMain, desktopCapturer } = require('electron');
+const { app, ipcMain, desktopCapturer, powerSaveBlocker } = require('electron');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
@@ -6,6 +6,8 @@ const config = require('./config')(app.getPath('userData'));
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
 });
+
+let blockerId = null;
 
 // Notification sound player
 // eslint-disable-next-line no-unused-vars
@@ -66,6 +68,8 @@ if (!gotTheLock) {
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.on('play-notification-sound', playNotificationSound);
+	ipcMain.handle('disable-screensaver', handleDisablePowerSaver);
+	ipcMain.handle('enable-screensaver', handleEnablePowerSaver);
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -73,6 +77,21 @@ function playNotificationSound(event, audio) {
 	const file = path.join(__dirname, `${isDev ? '' : '../../'}assets/sounds/notification.wav`);
 	logger.debug(`Playing file: ${file}`);
 	player.play(file);
+}
+
+function handleDisablePowerSaver() {
+	if (blockerId == null) {
+		blockerId = powerSaveBlocker.start('prevent-display-sleep');
+		logger.debug('Power save is disabled.');
+	}
+}
+
+function handleEnablePowerSaver() {
+	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
+		logger.debug('Power save is restored');
+		powerSaveBlocker.stop(blockerId);
+		blockerId = null;
+	}
 }
 
 function onRenderProcessGone() {
