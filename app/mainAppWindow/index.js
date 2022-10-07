@@ -92,7 +92,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 function onDidFinishLoad() {
 	logger.debug('did-finish-load');
 	window.webContents.executeJavaScript(`
-			openBrowserButton = document.getElementById('openTeamsClientInBrowser');
+			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
 		`);
 	window.webContents.executeJavaScript(`
