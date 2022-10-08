@@ -8,7 +8,6 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, baseIconPath) {
 		this.ipcRenderer = ipcRenderer;
-		this.subscribed = false;
 		this.iconRenderer = new TrayIconRenderer(baseIconPath);
 	}
 
@@ -22,11 +21,38 @@ class ActivityManager {
 	}
 
 	start() {
-		activityHub.on('activities-count-updated', (data) => this.updateActivityCount(data.count));
-		activityHub.on('call-connected', () => this.ipcRenderer.invoke('disable-screensaver'));
-		activityHub.on('call-disconnected', () => this.ipcRenderer.invoke('enable-screensaver'));
+		activityHub.on('activities-count-updated', updateActivityCountHandler(this));
+		activityHub.on('call-connected', disablePowerSaverHandler(this));
+		activityHub.on('call-disconnected', restorePowerSaverHandler(this));
 		activityHub.start();
 	}
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function updateActivityCountHandler(self) {
+	return (data) => {
+		self.updateActivityCount(data.count);
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function disablePowerSaverHandler(self) {
+	return () => {
+		self.ipcRenderer.invoke('disable-powersaver');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function restorePowerSaverHandler(self) {
+	return () => {
+		self.ipcRenderer.invoke('restore-powersaver');
+	};
 }
 
 module.exports = exports = ActivityManager;
