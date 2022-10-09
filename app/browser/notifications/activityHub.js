@@ -176,12 +176,16 @@ async function onMessageUpdatesFromWorker(data) {
 		const handlers = getEventHandlers('meeting-started');
 		const events = getMeetingEvents(data);
 		for (const e of events) {
-			for (const handler of handlers) {
-				handler.handler({
-					title: JSON.parse(e.properties.meeting).meetingtitle
-				});
-			}
+			callMeetingStartedEventHandlers(handlers, e);
 		}
+	}
+}
+
+function callMeetingStartedEventHandlers(handlers, e) {
+	for (const handler of handlers) {
+		handler.handler({
+			title: JSON.parse(e.properties.meeting).meetingtitle
+		});
 	}
 }
 
