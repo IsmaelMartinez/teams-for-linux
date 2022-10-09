@@ -24,6 +24,7 @@ class ActivityManager {
 		activityHub.on('activities-count-updated', updateActivityCountHandler(this));
 		activityHub.on('call-connected', disablePowerSaverHandler(this));
 		activityHub.on('call-disconnected', restorePowerSaverHandler(this));
+		activityHub.on('meeting-started', meetingStartNotifyHandler(this));
 		activityHub.start();
 	}
 }
@@ -32,7 +33,7 @@ class ActivityManager {
  * @param {ActivityManager} self 
  */
 function updateActivityCountHandler(self) {
-	return (data) => {
+	return async (data) => {
 		self.updateActivityCount(data.count);
 	};
 }
@@ -41,7 +42,7 @@ function updateActivityCountHandler(self) {
  * @param {ActivityManager} self 
  */
 function disablePowerSaverHandler(self) {
-	return () => {
+	return async () => {
 		self.ipcRenderer.invoke('disable-powersaver');
 	};
 }
@@ -50,8 +51,20 @@ function disablePowerSaverHandler(self) {
  * @param {ActivityManager} self 
  */
 function restorePowerSaverHandler(self) {
-	return () => {
+	return async () => {
 		self.ipcRenderer.invoke('restore-powersaver');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+// eslint-disable-next-line no-unused-vars
+function meetingStartNotifyHandler(self) {
+	return async () => {
+		new window.Notification('Teams for Linux', {
+			type: 'meeting-started', body: 'Meeting started'
+		});
 	};
 }
 
