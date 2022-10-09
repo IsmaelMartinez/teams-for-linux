@@ -8,7 +8,6 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, baseIconPath) {
 		this.ipcRenderer = ipcRenderer;
-		this.subscribed = false;
 		this.iconRenderer = new TrayIconRenderer(baseIconPath);
 	}
 
@@ -22,11 +21,51 @@ class ActivityManager {
 	}
 
 	start() {
-		activityHub.on('activities-count-updated', (data) => this.updateActivityCount(data.count));
-		activityHub.on('call-connected', () => this.ipcRenderer.invoke('disable-screensaver'));
-		activityHub.on('call-disconnected', () => this.ipcRenderer.invoke('enable-screensaver'));
+		activityHub.on('activities-count-updated', updateActivityCountHandler(this));
+		activityHub.on('call-connected', disablePowerSaverHandler(this));
+		activityHub.on('call-disconnected', restorePowerSaverHandler(this));
+		activityHub.on('meeting-started', meetingStartNotifyHandler(this));
 		activityHub.start();
 	}
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function updateActivityCountHandler(self) {
+	return async (data) => {
+		self.updateActivityCount(data.count);
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function disablePowerSaverHandler(self) {
+	return async () => {
+		self.ipcRenderer.invoke('disable-powersaver');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function restorePowerSaverHandler(self) {
+	return async () => {
+		self.ipcRenderer.invoke('restore-powersaver');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+// eslint-disable-next-line no-unused-vars
+function meetingStartNotifyHandler(self) {
+	return async () => {
+		new window.Notification('Teams for Linux', {
+			type: 'meeting-started', body: 'Meeting started'
+		});
+	};
 }
 
 module.exports = exports = ActivityManager;

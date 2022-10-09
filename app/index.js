@@ -7,6 +7,16 @@ const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
 });
 
+const audioPathPrefix = isDev ? '' : '../../';
+const notificationSounds = [{
+	type: 'new-message',
+	file: path.join(__dirname, audioPathPrefix, 'assets/sounds/new_message.wav')
+},
+{
+	type: 'meeting-started',
+	file: path.join(__dirname, audioPathPrefix, 'assets/sounds/meeting_started.wav')
+}];
+
 let blockerId = null;
 
 // Notification sound player
@@ -29,6 +39,7 @@ const store = new Store({
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
+const { option } = require('yargs');
 if (config.useElectronDl) require('electron-dl')();
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
@@ -68,30 +79,41 @@ if (!gotTheLock) {
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.on('play-notification-sound', playNotificationSound);
-	ipcMain.handle('disable-screensaver', handleDisablePowerSaver);
-	ipcMain.handle('enable-screensaver', handleEnablePowerSaver);
+	ipcMain.handle('disable-powersaver', handleDisablePowerSaver);
+	ipcMain.handle('restore-powersaver', handleEnablePowerSaver);
 }
 
 // eslint-disable-next-line no-unused-vars
-function playNotificationSound(event, audio) {
-	const file = path.join(__dirname, `${isDev ? '' : '../../'}assets/sounds/notification.wav`);
-	logger.debug(`Playing file: ${file}`);
-	player.play(file);
-}
+function playNotificationSound(event, options) {
+	const sound = notificationSounds.filter(ns => {
+		return ns.type === options.type;
+	})[0];
 
-function handleDisablePowerSaver() {
-	if (blockerId == null) {
-		blockerId = powerSaveBlocker.start('prevent-display-sleep');
-		logger.debug('Power save is disabled.');
+	if (sound) {
+		logger.debug(`Playing file: ${sound.file}`);
+		player.play(sound.file);
 	}
 }
 
+function handleDisablePowerSaver() {
+	var isDisabled = false;
+	if (blockerId == null) {
+		blockerId = powerSaveBlocker.start('prevent-display-sleep');
+		logger.debug('Power save is disabled.');
+		isDisabled = true;
+	}
+	return isDisabled;
+}
+
 function handleEnablePowerSaver() {
+	var isEnabled = false;
 	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
 		logger.debug('Power save is restored');
 		powerSaveBlocker.stop(blockerId);
 		blockerId = null;
+		isEnabled = true;
 	}
+	return isEnabled;
 }
 
 function onRenderProcessGone() {

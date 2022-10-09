@@ -7,7 +7,8 @@ const eventHandlers = [];
 const supportedEvents = [
 	'call-connected',
 	'call-disconnected',
-	'activities-count-updated'
+	'activities-count-updated',
+	'meeting-started'
 ];
 
 class ActivityHub {
@@ -15,7 +16,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'} event 
+	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
 	 * @param {(data)=>void} handler
 	 * @returns {number} handle 
 	 */
@@ -24,7 +25,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'} event 
+	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
 	 * @param {number} handle
 	 * @returns {number} handle 
 	 */
@@ -79,7 +80,7 @@ function removeEventHandler(event, handle) {
 
 /**
  * 
- * @param {'call-connected'|'call-disconnected'|'activities-count-updated'} event 
+ * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
  * @returns {Array<{handler:(data)=>void,event:string,handle:number}>} handlers
  */
 function getEventHandlers(event) {
@@ -104,8 +105,16 @@ function assignEventHandlers(controller) {
 	assignActivitiesCountUpdateHandler(controller);
 	assignCallConnectedHandler(controller);
 	assignCallDisconnectedHandler(controller);
+	assignWorkerMessagingUpdatesHandler(controller);
 }
 
+function getMeetingEvents(data) {
+	return data.filter(d => {
+		return d.messagetype === 'Event/Call' && d.properties.meeting;
+	});
+}
+
+// Handlers
 function assignActivitiesCountUpdateHandler(controller) {
 	controller.eventingService.$on(
 		controller.$scope,
@@ -119,7 +128,28 @@ function assignActivitiesCountUpdateHandler(controller) {
 	onActivitiesCountUpdated(controller);
 }
 
-function onActivitiesCountUpdated(controller) {
+function assignCallConnectedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callConnected,
+		() => onCallConnected());
+}
+
+function assignCallDisconnectedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callDisposed,
+		() => onCallDisconnected());
+}
+
+function assignWorkerMessagingUpdatesHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.workerMessagingUpdates.messageUpdatesFromWorker,
+		(event, data) => onMessageUpdatesFromWorker(data));
+}
+
+async function onActivitiesCountUpdated(controller) {
 	const count = controller.bellNotificationsService.getNewActivitiesCount() + controller.chatListService.getUnreadCountFromChatList();
 	const handlers = getEventHandlers('activities-count-updated');
 	for (const handler of handlers) {
@@ -127,31 +157,35 @@ function onActivitiesCountUpdated(controller) {
 	}
 }
 
-function assignCallConnectedHandler(controller) {
-	controller.eventingService.$on(
-		controller.$scope,
-		controller.constants.events.calling.callConnected,
-		() => onCallConnected(controller));
-}
-
-function onCallConnected() {
+async function onCallConnected() {
 	const handlers = getEventHandlers('call-connected');
 	for (const handler of handlers) {
 		handler.handler({});
 	}
 }
 
-function assignCallDisconnectedHandler(controller) {
-	controller.eventingService.$on(
-		controller.$scope,
-		controller.constants.events.calling.callDisposed,
-		() => onCallDisconnected(controller));
-}
-
-function onCallDisconnected() {
+async function onCallDisconnected() {
 	const handlers = getEventHandlers('call-disconnected');
 	for (const handler of handlers) {
 		handler.handler({});
+	}
+}
+
+async function onMessageUpdatesFromWorker(data) {
+	if (Array.isArray(data)) {
+		const handlers = getEventHandlers('meeting-started');
+		const events = getMeetingEvents(data);
+		for (const e of events) {
+			callMeetingStartedEventHandlers(handlers, e);
+		}
+	}
+}
+
+function callMeetingStartedEventHandlers(handlers, e) {
+	for (const handler of handlers) {
+		handler.handler({
+			title: JSON.parse(e.properties.meeting).meetingtitle
+		});
 	}
 }
 
