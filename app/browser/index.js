@@ -16,7 +16,7 @@
 
 		const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-		new ActivityManager(ipcRenderer, iconPath).start();
+		new ActivityManager(ipcRenderer, iconPath, config).start();
 
 		if (config.enableDesktopNotificationsHack) {
 			pageTitleNotifications(ipcRenderer);

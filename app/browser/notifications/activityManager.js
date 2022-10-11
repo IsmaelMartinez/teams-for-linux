@@ -6,9 +6,10 @@ class ActivityManager {
 	 * @param {Electron.IpcRenderer} ipcRenderer 
 	 * @param {string} baseIconPath 
 	 */
-	constructor(ipcRenderer, baseIconPath) {
+	constructor(ipcRenderer, baseIconPath, config) {
 		this.ipcRenderer = ipcRenderer;
 		this.iconRenderer = new TrayIconRenderer(baseIconPath);
+		this.config = config;
 	}
 
 	updateActivityCount(count) {
@@ -61,11 +62,14 @@ function restorePowerSaverHandler(self) {
  */
 // eslint-disable-next-line no-unused-vars
 function meetingStartNotifyHandler(self) {
-	return async () => {
-		new window.Notification('Teams for Linux', {
-			type: 'meeting-started', body: 'Meeting started'
-		});
-	};
+	if (!self.config.disableMeetingNotifications) {
+		return async (meeting) => {
+			new window.Notification('Meeting has started', {
+				type: 'meeting-started', body: meeting.title
+			});
+		};
+	}
+	return null;
 }
 
 module.exports = exports = ActivityManager;
