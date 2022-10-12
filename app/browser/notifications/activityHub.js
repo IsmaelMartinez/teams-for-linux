@@ -155,13 +155,18 @@ function getMeetingNotificationList(workerEvents, calendarEvents) {
 	const notificationList = [];
 	for (const we of workerEvents) {
 		const meetingId = we.conversationLink.split('/')[1].split(';')[0];
-		for (const ce of calendarEvents) {
-			if (JSON.parse(ce.skypeTeamsData).cid === meetingId) {
-				notificationList.push(ce);
-			}
-		}
+		addEligibleCalendarEvents(calendarEvents, meetingId, notificationList);
 	}
 	return notificationList;
+}
+
+function addEligibleCalendarEvents(calendarEvents, meetingId, notificationList) {
+	for (const ce of calendarEvents) {
+		if (JSON.parse(ce.skypeTeamsData).cid === meetingId) {
+			notificationList.push(ce);
+			break;
+		}
+	}
 }
 
 // Handlers
