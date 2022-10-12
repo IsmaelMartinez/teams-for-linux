@@ -108,10 +108,65 @@ function assignEventHandlers(controller) {
 	assignWorkerMessagingUpdatesHandler(controller);
 }
 
+/**
+ * @param {'*'} data 
+ * @returns {Array<object>}
+ */
 function getMeetingEvents(data) {
 	return data.filter(d => {
-		return d.messagetype === 'Event/Call' && d.properties.meeting;
+		return d.messagetype === 'Event/Call' && d.content === '<partlist alt =""></partlist>';
 	});
+}
+
+async function getActiveCaledarEvents(controller) {
+	await refreshCalendarEvents(controller);
+	const calendarEvents = controller.calendarService.getCachedEvents();
+	const rightNow = new Date();
+	return calendarEvents.filter(ce => {
+		return new Date(ce.endTime) - rightNow > 0;
+	});
+}
+
+
+async function refreshCalendarEvents(controller) {
+	const c = controller.calendarService.refreshCalendarEvents();
+	do {
+		await new Promise(r => setTimeout(r, 1000));
+	} while (c.$$state.status == 0);
+	return c.$$state.status;
+}
+
+
+//conversationLink
+async function getActiveMeetingEvents(controller, data) {
+	const workerEvents = getMeetingEvents(data);
+	if (workerEvents.length > 0) {
+		/**
+		 * @type {Array<object>}
+		 */
+		const calendarEvents = await getActiveCaledarEvents(controller);
+		return getMeetingNotificationList(workerEvents, calendarEvents);
+	} else {
+		return [];
+	}
+}
+
+function getMeetingNotificationList(workerEvents, calendarEvents) {
+	const notificationList = [];
+	for (const we of workerEvents) {
+		const meetingId = we.conversationLink.split('/')[1].split(';')[0];
+		addEligibleCalendarEvents(calendarEvents, meetingId, notificationList);
+	}
+	return notificationList;
+}
+
+function addEligibleCalendarEvents(calendarEvents, meetingId, notificationList) {
+	for (const ce of calendarEvents) {
+		if (JSON.parse(ce.skypeTeamsData).cid === meetingId) {
+			notificationList.push(ce);
+			break;
+		}
+	}
 }
 
 // Handlers
@@ -146,7 +201,7 @@ function assignWorkerMessagingUpdatesHandler(controller) {
 	controller.eventingService.$on(
 		controller.$scope,
 		controller.constants.events.workerMessagingUpdates.messageUpdatesFromWorker,
-		(event, data) => onMessageUpdatesFromWorker(data));
+		(event, data) => onMessageUpdatesFromWorker(controller, data));
 }
 
 async function onActivitiesCountUpdated(controller) {
@@ -171,10 +226,10 @@ async function onCallDisconnected() {
 	}
 }
 
-async function onMessageUpdatesFromWorker(data) {
+async function onMessageUpdatesFromWorker(controller, data) {
 	if (Array.isArray(data)) {
 		const handlers = getEventHandlers('meeting-started');
-		const events = getMeetingEvents(data);
+		const events = await getActiveMeetingEvents(controller, data);
 		for (const e of events) {
 			callMeetingStartedEventHandlers(handlers, e);
 		}
@@ -184,7 +239,7 @@ async function onMessageUpdatesFromWorker(data) {
 function callMeetingStartedEventHandlers(handlers, e) {
 	for (const handler of handlers) {
 		handler.handler({
-			title: JSON.parse(e.properties.meeting).meetingtitle
+			title: e.subject
 		});
 	}
 }

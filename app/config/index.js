@@ -104,6 +104,11 @@ function argv(configPath) {
 				default: false,
 				describe: 'Whether to clear the storage before creating the window or not',
 				type: 'boolean',
+			},
+			disableMeetingNotifications:{
+				default: false,
+				describe: 'Whether to disable meeting notifications or not',
+				type: 'boolean',
 			}
 		})
 		.parse(process.argv.slice(1));
