@@ -20,7 +20,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -39,7 +39,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -58,7 +58,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -77,7 +77,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -87,7 +87,7 @@ jobs:
         run: yarn dist:linux:targz -- --publish always
 
   dmg:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Check out Git repository
@@ -96,7 +96,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
