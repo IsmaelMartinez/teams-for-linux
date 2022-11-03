@@ -1,6 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, remote } = require('electron');
-const nativeTheme = remote.nativeTheme;
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
