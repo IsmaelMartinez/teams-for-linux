@@ -1,5 +1,7 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, remote } = require('electron');
+const nativeTheme = remote.nativeTheme;
+const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
@@ -206,7 +208,7 @@ function createNewBrowserWindow(windowState) {
 
 		width: windowState.width,
 		height: windowState.height,
-		backgroundColor: '#fff',
+		backgroundColor: isDarkMode ? '#302a75' : '#fff',
 
 		show: false,
 		autoHideMenuBar: true,
