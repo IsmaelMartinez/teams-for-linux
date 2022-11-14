@@ -1,5 +1,4 @@
 const { nativeImage } = require('electron');
-
 class TrayIconRenderer {
 
 	constructor(baseIconPath) {
@@ -8,7 +7,7 @@ class TrayIconRenderer {
 
 	render(newActivityCount) {
 		const baseIcon = nativeImage.createFromPath(this.baseIconPath);
-
+		const iconSize = baseIcon.getSize()
 		return new Promise(resolve => {
 			const canvas = document.createElement('canvas');
 			canvas.height = 140;
@@ -19,6 +18,8 @@ class TrayIconRenderer {
 			// Create the red circle for notifications
 			image.onload = () => {
 				const ctx = canvas.getContext('2d');
+
+
 				ctx.drawImage(image, 0, 0, 140, 140);
 				if (newActivityCount > 0) {
 					ctx.fillStyle = 'red';
@@ -36,7 +37,18 @@ class TrayIconRenderer {
 					}
 				}
 
-				const iconUrl = canvas.toDataURL();
+				// Resize the icon to original
+				const resizedCanvas = document.createElement("canvas"),
+					rctx = resizedCanvas.getContext("2d");
+				resizedCanvas.width = iconSize.width;
+				resizedCanvas.height = iconSize.height;
+
+				const scaleFactorX = iconSize.width / canvas.width,
+					scaleFactorY = iconSize.height / canvas.height;
+				rctx.scale(scaleFactorX, scaleFactorY)
+				rctx.drawImage(canvas, 0, 0);
+
+				const iconUrl = resizedCanvas.toDataURL();
 
 				resolve(iconUrl);
 			};

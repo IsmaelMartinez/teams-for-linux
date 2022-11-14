@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.8",
+    "afplay": "^1.0.3",
     "electron-dl": "ismaelmartinez/electron-dl",
     "electron-editor-context-menu": "1.1.1",
     "electron-is-dev": "2.0.0",
@@ -109,7 +110,7 @@
         "snapStore"
       ]
     },
-    "mac" :{
+    "mac": {
       "category": "public.app-category.productivity"
     }
   }

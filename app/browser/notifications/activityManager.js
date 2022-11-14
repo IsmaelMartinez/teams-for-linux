@@ -4,11 +4,11 @@ const activityHub = require('./activityHub');
 class ActivityManager {
 	/**
 	 * @param {Electron.IpcRenderer} ipcRenderer 
-	 * @param {string} baseIconPath 
+	 * @param {./config} config
 	 */
-	constructor(ipcRenderer, baseIconPath, config) {
+	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
-		this.iconRenderer = new TrayIconRenderer(baseIconPath);
+		this.iconRenderer = new TrayIconRenderer(config.appIcon);
 		this.config = config;
 	}
 

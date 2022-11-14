@@ -22,14 +22,19 @@ const notificationSounds = [{
 let blockerId = null;
 
 // Notification sound player
-// eslint-disable-next-line no-unused-vars
-const { NodeSound, NodeSoundPlayer } = require('node-sound');
 /**
- * @type {NodeSoundPlayer}
+ * @type {NodeSoundPlayer | Afplay}
  */
 let player;
 try {
-	player = NodeSound.getDefaultPlayer();
+	if (isMac) {
+		const Afplay = require('afplay');
+		player = new Afplay;
+	} else {
+		// eslint-disable-next-line no-unused-vars
+		const { NodeSound, NodeSoundPlayer } = require('node-sound');
+		player = NodeSound.getDefaultPlayer();
+	}
 } catch (e) {
 	logger.info('No audio players found. Audio notifications might not work.');
 }
@@ -41,7 +46,6 @@ const store = new Store({
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
-const { option } = require('yargs');
 if (config.useElectronDl) require('electron-dl')();
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);

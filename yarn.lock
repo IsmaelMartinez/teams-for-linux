@@ -227,6 +227,11 @@ acorn@^8.8.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.8.0.tgz#88c0187620435c7f6015803f5539dae05a9dbea8"
   integrity sha512-QOxyigPVrpZ2GXT+PFyZTl6TtOFc5egxHIP9IlQ+RbupQuX4RkT/Bee4/kQuC02Xkzg84JcT7oLYtDIQxp+v7w==
 
+afplay@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/afplay/-/afplay-1.0.3.tgz#c750c68a3dfea19a17ed53c6641fc70c023feb67"
+  integrity sha512-ajngZAuNw/2E3TSqx2kSyGEm7irKP58AHm4OBmPa8KfVg94NavwNpTBwtrhPy1tBgF89NzoRnptZKdK7KFavBg==
+
 agent-base@6:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-6.0.2.tgz#49fff58577cfee3f37176feab4c22e00f86d7f77"

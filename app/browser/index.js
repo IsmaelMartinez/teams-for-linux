@@ -16,9 +16,8 @@
 
 		require('./desktopShare/chromeApi');
 
-		const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-		new ActivityManager(ipcRenderer, iconPath, config).start();
+		new ActivityManager(ipcRenderer, config).start();
 
 		if (config.enableDesktopNotificationsHack) {
 			pageTitleNotifications(ipcRenderer);

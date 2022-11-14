@@ -5,12 +5,6 @@ const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
 const os = require('os');
-const isMac = os.platform() === 'darwin';
-
-let iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon-96x96.png');
-if (isMac) {
-	iconPath = path.join(__dirname, '../assets/icons/icon-16x16.png');		
-}
 
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
@@ -37,8 +31,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
+
 	window = await createWindow();
-	new Menus(window, config, iconPath);
+	new Menus(window, config, config.appIcon);
 
 	window.on('page-title-updated', (event, title) => {
 		window.webContents.send('page-title', title);
@@ -196,7 +191,7 @@ async function createWindow() {
 	ipcMain.on('select-source', assignSelectSourceHandler(window));
 
 	windowState.manage(window);
-	
+
 	window.eval = global.eval = function () { // eslint-disable-line no-eval
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
@@ -215,7 +210,7 @@ function createNewBrowserWindow(windowState) {
 
 		show: true,
 		autoHideMenuBar: true,
-		icon: iconPath,
+		icon: config.appIcon,
 
 		webPreferences: {
 			partition: config.partition,
