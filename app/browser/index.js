@@ -1,8 +1,6 @@
 /* global angular */
 (function () {
-	const path = require('path');
-
-	const { ipcRenderer } = require('electron');
+	const { ipcRenderer, systemPreferences } = require('electron');
 	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
 
@@ -14,7 +12,9 @@
 		}
 		require('./zoom')(config);
 
-		require('./desktopShare/chromeApi');
+		if ((!config.isMac) || (systemPreferences.getMediaAccessStatus('screen') == 'granted')) {
+			require('./desktopShare/chromeApi');
+		}
 
 
 		new ActivityManager(ipcRenderer, config).start();
