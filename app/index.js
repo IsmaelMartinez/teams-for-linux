@@ -2,6 +2,8 @@ const { app, ipcMain, desktopCapturer, systemPreferences, powerSaveBlocker } = r
 const path = require('path');
 const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
+const os = require('os');
+const isMac = os.platform() === 'darwin';
 const config = require('./config')(app.getPath('userData'));
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
@@ -25,7 +27,7 @@ let blockerId = null;
  */
 let player;
 try {
-	if (config.isMac) {
+	if (isMac) {
 		const Afplay = require('afplay');
 		player = new Afplay;
 	} else {
@@ -51,7 +53,7 @@ app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 
-if (config.isMac) {
+if (isMac) {
 	requestCameraAccess();
 
 } else if (process.env.XDG_SESSION_TYPE == 'wayland') {
