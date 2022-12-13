@@ -29,6 +29,7 @@ Here is the list of available arguments and its usage:
 | customCSSName | Custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" | |
 | customCSSLocation | Location for custom CSS styles | |
 | customCACertsFingerprints | custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate (see below) | [] |
+| appIcon | 'Teams app icon to show in the tray' | ../assets/icons/icon-16x16.png if Mac or ../assets/icons/icon-96x96.png otherwise|  
 
 As an example, to disable the persitence, you can run the following command:
 

@@ -54,7 +54,7 @@ app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 
 if (isMac) {
-	requestCameraAccess();
+	requestMediaAccess();
 
 } else if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	logger.info('Running under Wayland, switching to PipeWire...');
@@ -203,9 +203,9 @@ function handleCertificateError() {
 	certificateModule.onAppCertificateError(arg, logger);
 }
 
-async function requestCameraAccess() {
-	let status = systemPreferences.getMediaAccessStatus('camera');
-	logger.debug(`mac camera status ${status}`);
-	const permission = await systemPreferences.askForMediaAccess('camera');
-	logger.debug(`mac camera permission ${permission}`);
+async function requestMediaAccess() {
+	['camera','microphone','screen'].map(async (permission) => {
+		const status= await systemPreferences.askForMediaAccess(permission);
+		logger.debug(`mac permission ${permission} asked current status ${status}`);
+	});
 }

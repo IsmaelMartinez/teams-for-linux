@@ -4,8 +4,6 @@ const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
-const os = require('os');
-
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
@@ -208,7 +206,7 @@ function createNewBrowserWindow(windowState) {
 		height: windowState.height,
 		backgroundColor: isDarkMode ? '#302a75' : '#fff',
 
-		show: true,
+		show: false,
 		autoHideMenuBar: true,
 		icon: config.appIcon,
 
