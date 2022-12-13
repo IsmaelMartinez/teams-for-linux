@@ -100,7 +100,7 @@ function argv(configPath) {
 				type: 'array'
 			},
 			appLogLevels: {
-				default: 'error,warn,info,debug',
+				default: 'error,warn',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
 			},
