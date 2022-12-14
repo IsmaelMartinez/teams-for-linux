@@ -1,6 +1,10 @@
 const yargs = require('yargs');
 const path = require('path');
+const os = require('os');
 const { LucidLog } = require('lucid-log');
+
+const isMac = os.platform() === 'darwin';
+
 let logger;
 
 function getConfigFile(configPath) {
@@ -96,7 +100,7 @@ function argv(configPath) {
 				type: 'array'
 			},
 			appLogLevels: {
-				default: 'error',
+				default: 'error,warn',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
 			},
@@ -105,10 +109,15 @@ function argv(configPath) {
 				describe: 'Whether to clear the storage before creating the window or not',
 				type: 'boolean',
 			},
-			disableMeetingNotifications:{
+			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
 				type: 'boolean',
+			},
+			appIcon: {
+				default: path.join(__dirname, '..', 'assets', 'icons', isMac ? 'icon-16x16.png' : 'icon-96x96.png'),
+				describe: 'Teams app icon to show in the tray',
+				type: 'string'
 			}
 		})
 		.parse(process.argv.slice(1));
@@ -119,7 +128,7 @@ function argv(configPath) {
 
 	logger.debug('configPath:', configPath);
 	if (missingConfig) {
-		logger.info('Failed to get the config file, using default values');
+		logger.info('No config file found, using default values');
 	}
 	logger.debug('configFile:', configFile);
 

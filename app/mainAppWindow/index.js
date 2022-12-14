@@ -4,7 +4,6 @@ const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
-const iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon-96x96.png');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const notifications = require('../notifications');
@@ -18,7 +17,6 @@ const { LucidLog } = require('lucid-log');
 let logger;
 
 let aboutBlankRequestCount = 0;
-
 let config;
 
 /**
@@ -31,8 +29,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
+
 	window = await createWindow();
-	new Menus(window, config, iconPath);
+	new Menus(window, config, config.appIcon);
 
 	window.on('page-title-updated', (event, title) => {
 		window.webContents.send('page-title', title);
@@ -186,9 +185,7 @@ async function createWindow() {
 
 	// Create the window
 	const window = createNewBrowserWindow(windowState);
-
 	require('@electron/remote/main').enable(window.webContents);
-
 	ipcMain.on('select-source', assignSelectSourceHandler(window));
 
 	windowState.manage(window);
@@ -211,7 +208,7 @@ function createNewBrowserWindow(windowState) {
 
 		show: false,
 		autoHideMenuBar: true,
-		icon: iconPath,
+		icon: config.appIcon,
 
 		webPreferences: {
 			partition: config.partition,

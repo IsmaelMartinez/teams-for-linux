@@ -1,7 +1,9 @@
-const { app, ipcMain, desktopCapturer, powerSaveBlocker } = require('electron');
+const { app, ipcMain, desktopCapturer, systemPreferences, powerSaveBlocker } = require('electron');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
+const os = require('os');
+const isMac = os.platform() === 'darwin';
 const config = require('./config')(app.getPath('userData'));
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
@@ -20,14 +22,19 @@ const notificationSounds = [{
 let blockerId = null;
 
 // Notification sound player
-// eslint-disable-next-line no-unused-vars
-const { NodeSound, NodeSoundPlayer } = require('node-sound');
 /**
- * @type {NodeSoundPlayer}
+ * @type {NodeSoundPlayer | Afplay}
  */
 let player;
 try {
-	player = NodeSound.getDefaultPlayer();
+	if (isMac) {
+		const Afplay = require('afplay');
+		player = new Afplay;
+	} else {
+		// eslint-disable-next-line no-unused-vars
+		const { NodeSound, NodeSoundPlayer } = require('node-sound');
+		player = NodeSound.getDefaultPlayer();
+	}
 } catch (e) {
 	logger.info('No audio players found. Audio notifications might not work.');
 }
@@ -39,14 +46,17 @@ const store = new Store({
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
-const { option } = require('yargs');
 if (config.useElectronDl) require('electron-dl')();
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
-if (process.env.XDG_SESSION_TYPE == 'wayland') {
+
+if (isMac) {
+	requestMediaAccess();
+
+} else if (process.env.XDG_SESSION_TYPE == 'wayland') {
 	logger.info('Running under Wayland, switching to PipeWire...');
 
 	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
@@ -142,12 +152,12 @@ async function handleGetConfig() {
 	return config;
 }
 
-async function handleGetZoomLevel(event, name) {
+async function handleGetZoomLevel(_, name) {
 	const partition = getPartition(name) || {};
 	return partition.zoomLevel ? partition.zoomLevel : 0;
 }
 
-async function handleSaveZoomLevel(event, args) {
+async function handleSaveZoomLevel(_, args) {
 	let partition = getPartition(args.partition) || {};
 	partition.name = args.partition;
 	partition.zoomLevel = args.zoomLevel;
@@ -191,4 +201,11 @@ function handleCertificateError() {
 		config: config
 	};
 	certificateModule.onAppCertificateError(arg, logger);
+}
+
+async function requestMediaAccess() {
+	['camera','microphone','screen'].map(async (permission) => {
+		const status= await systemPreferences.askForMediaAccess(permission);
+		logger.debug(`mac permission ${permission} asked current status ${status}`);
+	});
 }
