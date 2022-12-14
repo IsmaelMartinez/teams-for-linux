@@ -1,9 +1,11 @@
 /* global angular */
 (function () {
 	const path = require('path');
+
 	const { ipcRenderer } = require('electron');
 	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
+
 	let config;
 	ipcRenderer.invoke('getConfig').then(mainConfig => {
 		config = mainConfig;
@@ -14,9 +16,8 @@
 
 		require('./desktopShare/chromeApi');
 
-		const iconPath = path.join(__dirname, '../assets/icons/icon-96x96.png');
 
-		new ActivityManager(ipcRenderer, iconPath, config).start();
+		new ActivityManager(ipcRenderer, config).start();
 
 		if (config.enableDesktopNotificationsHack) {
 			pageTitleNotifications(ipcRenderer);

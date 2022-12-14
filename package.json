@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -31,10 +31,12 @@
     "dist:linux:appimage": "electron-builder --x64 --armv7l --arm64 -l AppImage",
     "dist:linux:snap": "electron-builder -l snap",
     "dist:linux:snap:armv7l": "electron-builder --armv7l -l snap",
+    "dist:mac": "electron-builder --mac",
     "release": "electron-builder"
   },
   "dependencies": {
     "@electron/remote": "^2.0.8",
+    "afplay": "^1.0.3",
     "electron-dl": "ismaelmartinez/electron-dl",
     "electron-editor-context-menu": "1.1.1",
     "electron-is-dev": "2.0.0",
@@ -107,6 +109,9 @@
       "publish": [
         "snapStore"
       ]
+    },
+    "mac": {
+      "category": "public.app-category.productivity"
     }
   }
 }
