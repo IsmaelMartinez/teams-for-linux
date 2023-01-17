@@ -41,6 +41,15 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 		notifications.addDesktopNotificationHack(iconPath);
 	}
 
+	if (config.spellCheckerLanguages) {
+		try {
+			window.webContents.session.setSpellCheckerLanguages(config.spellCheckerLanguages);
+		} catch {
+			logger.warn('Specified languages are not correct. Falling back to en-US');
+			window.webContents.session.setSpellCheckerLanguages(['en-US']);
+		}
+	}
+
 	window.webContents.on('new-window', onNewWindow);
 
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);

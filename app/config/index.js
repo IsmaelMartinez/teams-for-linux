@@ -118,6 +118,11 @@ function argv(configPath) {
 				default: path.join(__dirname, '..', 'assets', 'icons', isMac ? 'icon-16x16.png' : 'icon-96x96.png'),
 				describe: 'Teams app icon to show in the tray',
 				type: 'string'
+			},
+			spellCheckerLanguages: {
+				default: [],
+				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
+				type: 'array',
 			}
 		})
 		.parse(process.argv.slice(1));
