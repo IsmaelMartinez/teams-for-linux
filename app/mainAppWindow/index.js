@@ -37,27 +37,11 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 		window.webContents.send('page-title', title);
 	});
 
-	if (config.enableDesktopNotificationsHack) {
-		notifications.addDesktopNotificationHack(iconPath);
-	}
-
 	window.webContents.on('new-window', onNewWindow);
 
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
-	if (config.onlineOfflineReload) {
-		onlineOffline.reloadPageWhenOfflineToOnline(window, config);
-	}
-
-	window.webContents.setUserAgent(config.chromeUserAgent);
-
-	if (!config.minimized) {
-		window.show();
-	}
-	else {
-		window.hide();
-	}
 
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 
@@ -70,9 +54,7 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	const url = processArgs(process.argv);
 	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
 
-	if (config.webDebug) {
-		window.openDevTools();
-	}
+	applyAppConfiguration(config, window);
 };
 
 let allowFurtherRequests = true;
@@ -91,6 +73,52 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 		restoreWindow();
 	}
 };
+
+/**
+ * Applies the configuration passed as arguments when executing the app.
+ * @param config Configuration object.
+ * @param {BrowserWindow} window The browser window.
+ */
+function applyAppConfiguration(config, window) {
+	if (config.enableDesktopNotificationsHack) {
+		// eslint-disable-next-line no-undef
+		notifications.addDesktopNotificationHack(iconPath);
+	}
+
+	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
+
+	if (config.onlineOfflineReload) {
+		onlineOffline.reloadPageWhenOfflineToOnline(window, config);
+	}
+
+	window.webContents.setUserAgent(config.chromeUserAgent);
+
+	if (!config.minimized) {
+		window.show();
+	} else {
+		window.hide();
+	}
+
+	if (config.webDebug) {
+		window.openDevTools();
+	}
+}
+
+/**
+ * Applies Electron's spell checker capabilities if language codes are provided.
+ * @param {Array<string>} languages Array of language codes to use with spell checker.
+ * @param {BrowserWindow} window The browser window.
+ */
+function applySpellCheckerConfiguration(languages, window) {
+	if (languages) {
+		try {
+			window.webContents.session.setSpellCheckerLanguages(languages);
+		} catch (error) {
+			logger.warn('Specified languages are not correct. Falling back to en-US');
+			window.webContents.session.setSpellCheckerLanguages(['en-US']);
+		}
+	}
+}
 
 function onDidFinishLoad() {
 	logger.debug('did-finish-load');
