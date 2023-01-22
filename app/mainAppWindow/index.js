@@ -95,6 +95,8 @@ function applyAppConfiguration(config, window) {
 
 	if (!config.minimized) {
 		window.show();
+	} else {
+		window.hide();
 	}
 
 	if (config.webDebug) {
