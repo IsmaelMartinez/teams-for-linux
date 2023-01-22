@@ -55,6 +55,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	if (!config.minimized) {
 		window.show();
 	}
+	else {
+		window.hide();
+	}
 
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 
