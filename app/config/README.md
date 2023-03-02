@@ -32,6 +32,8 @@ Here is the list of available arguments and its usage:
 | clientCertPath clientCertPassword | custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | [] |
 | appIcon | 'Teams app icon to show in the tray' | ../assets/icons/icon-16x16.png if Mac or ../assets/icons/icon-96x96.png otherwise|  
 | spellCheckerLanguages | Language codes to use with Electron\'s spell checker (experimental) | [] |
+| customUserDir | Custom User Directory so that you can have multiple profiles | |
+
 
 As an example, to disable the persitence, you can run the following command:
 

@@ -48,6 +48,11 @@ function argv(configPath) {
 				describe: 'Proxy Server with format address:port',
 				type: 'string',
 			},
+			customUserDir: {
+				default: null,
+				describe: 'Custom User Directory so that you can have multiple profiles',
+				type: 'string',
+			},
 			useElectronDl: {
 				default: false,
 				describe: 'Use Electron dl to automatically download files to the download folder',

@@ -4,6 +4,9 @@ const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
+if (app.commandLine.hasSwitch('customUserDir')) {
+	app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
+}
 const config = require('./config')(app.getPath('userData'));
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
