@@ -91,6 +91,12 @@ function applyAppConfiguration(config, window) {
 		onlineOffline.reloadPageWhenOfflineToOnline(window, config);
 	}
 
+	if (typeof config.clientCertPath !== 'undefined') {
+		app.importCertificate({ certificate: config.clientCertPath, password: config.clientCertPassword }, (result) => {
+			logger.info('Loaded certificate: ' + config.clientCertPath + ', result: ' + result);
+		});
+	}
+
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
 	if (!config.minimized) {

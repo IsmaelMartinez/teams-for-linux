@@ -29,6 +29,7 @@ Here is the list of available arguments and its usage:
 | customCSSName | Custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" | |
 | customCSSLocation | Location for custom CSS styles | |
 | customCACertsFingerprints | custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate (see below) | [] |
+| clientCertPath clientCertPassword | custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | [] |
 | appIcon | 'Teams app icon to show in the tray' | ../assets/icons/icon-16x16.png if Mac or ../assets/icons/icon-96x96.png otherwise|  
 | spellCheckerLanguages | Language codes to use with Electron\'s spell checker (experimental) | [] |
 
