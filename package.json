@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.52",
+  "version": "1.0.53",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -91,6 +91,9 @@
         "provider": "github",
         "releaseType": "draft"
       }
+    },
+    "rpm": {
+      "fpm": ["--rpm-rpmbuild-define=_build_id_links none"]
     },
     "snap": {
       "summary": "Teams for Linux",
