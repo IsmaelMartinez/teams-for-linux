@@ -33,6 +33,9 @@ Here is the list of available arguments and its usage:
 | appIcon | 'Teams app icon to show in the tray' | ../assets/icons/icon-16x16.png if Mac or ../assets/icons/icon-96x96.png otherwise|  
 | spellCheckerLanguages | Language codes to use with Electron\'s spell checker (experimental) | [] |
 | customUserDir | Custom User Directory so that you can have multiple profiles | |
+| appLogLevels | Comma separated list of log levels (error,warn,info,debug) | error,warn |
+| clearStorage | Whether to clear the storage before creating the window or not | false |
+| disableMeetingNotifications | Whether to disable meeting notifications or not | false |
 
 
 As an example, to disable the persitence, you can run the following command:
