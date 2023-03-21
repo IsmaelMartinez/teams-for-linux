@@ -128,6 +128,11 @@ function argv(configPath) {
 				default: [],
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
 				type: 'array',
+			},
+			defaultTitle: {
+				default: 'Microsoft Teams',
+				describe: 'A text to be suffixed with page title',
+				type: 'string',
 			}
 		})
 		.parse(process.argv.slice(1));
