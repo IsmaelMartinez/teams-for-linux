@@ -36,7 +36,7 @@ Here is the list of available arguments and its usage:
 | appLogLevels | Comma separated list of log levels (error,warn,info,debug) | error,warn |
 | clearStorage | Whether to clear the storage before creating the window or not | false |
 | disableMeetingNotifications | Whether to disable meeting notifications or not | false |
-| defaultTitle | A text to be suffixed with page title | Microsoft Teams |
+| appTitle | A text to be suffixed with page title | Microsoft Teams |
 
 
 As an example, to disable the persitence, you can run the following command:

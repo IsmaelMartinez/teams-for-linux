@@ -24,7 +24,7 @@ class ActivityManager {
 	start() {
 		setEventHandlers(this);
 		activityHub.start();
-		activityHub.setDefaultTitle(this.config.defaultTitle);
+		activityHub.setDefaultTitle(this.config.appTitle);
 	}
 }
 
