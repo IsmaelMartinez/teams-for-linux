@@ -131,7 +131,7 @@ function argv(configPath) {
 			},
 			defaultTitle: {
 				default: 'Microsoft Teams',
-				describe: 'A value to be suffixed with page title',
+				describe: 'A text to be suffixed with page title',
 				type: 'string',
 			}
 		})
