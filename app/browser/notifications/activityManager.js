@@ -27,6 +27,7 @@ class ActivityManager {
 		activityHub.on('call-disconnected', restorePowerSaverHandler(this));
 		activityHub.on('meeting-started', meetingStartNotifyHandler(this));
 		activityHub.start();
+		activityHub.setDefaultTitle(this.config.appTitle);
 	}
 }
 

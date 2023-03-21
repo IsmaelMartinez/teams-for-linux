@@ -36,6 +36,12 @@ class ActivityHub {
 	start() {
 		whenControllerReady(assignEventHandlers);
 	}
+
+	setDefaultTitle(title) {
+		whenControllerReady(controller => {
+			controller.pageTitleDefault = title;
+		});
+	}
 }
 
 function isSupportedEvent(event) {
