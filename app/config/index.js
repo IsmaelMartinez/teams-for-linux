@@ -129,7 +129,7 @@ function argv(configPath) {
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
 				type: 'array',
 			},
-			appTitle: {
+			defaultTitle: {
 				default: 'Microsoft Teams',
 				describe: 'A value to be suffixed with page title',
 				type: 'string',
