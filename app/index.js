@@ -98,13 +98,15 @@ if (!gotTheLock) {
 
 // eslint-disable-next-line no-unused-vars
 function playNotificationSound(event, options) {
-	const sound = notificationSounds.filter(ns => {
-		return ns.type === options.type;
-	})[0];
+	if (!config.disableNotificationSound) {
+		const sound = notificationSounds.filter(ns => {
+			return ns.type === options.type;
+		})[0];
 
-	if (sound) {
-		logger.debug(`Playing file: ${sound.file}`);
-		player.play(sound.file);
+		if (sound) {
+			logger.debug(`Playing file: ${sound.file}`);
+			player.play(sound.file);
+		}
 	}
 }
 
@@ -207,8 +209,8 @@ function handleCertificateError() {
 }
 
 async function requestMediaAccess() {
-	['camera','microphone','screen'].map(async (permission) => {
-		const status= await systemPreferences.askForMediaAccess(permission);
+	['camera', 'microphone', 'screen'].map(async (permission) => {
+		const status = await systemPreferences.askForMediaAccess(permission);
 		logger.debug(`mac permission ${permission} asked current status ${status}`);
 	});
 }
