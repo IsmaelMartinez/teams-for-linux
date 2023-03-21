@@ -22,13 +22,20 @@ class ActivityManager {
 	}
 
 	start() {
-		activityHub.on('activities-count-updated', updateActivityCountHandler(this));
-		activityHub.on('call-connected', disablePowerSaverHandler(this));
-		activityHub.on('call-disconnected', restorePowerSaverHandler(this));
-		activityHub.on('meeting-started', meetingStartNotifyHandler(this));
+		setEventHandlers(this);
 		activityHub.start();
 		activityHub.setDefaultTitle(this.config.defaultTitle);
 	}
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function setEventHandlers(self) {
+	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
+	activityHub.on('call-connected', disablePowerSaverHandler(self));
+	activityHub.on('call-disconnected', restorePowerSaverHandler(self));
+	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
 }
 
 /**
