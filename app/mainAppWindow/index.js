@@ -37,8 +37,8 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 		window.webContents.send('page-title', title);
 	});
 
-	window.webContents.on('new-window', onNewWindow);
-
+	window.webContents.setWindowOpenHandler(onNewWindow);
+	
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
@@ -184,27 +184,28 @@ function onBeforeRequestHandler(details, callback) {
 	}
 }
 
-function onNewWindow(event, url, frame, disposition, options) {
-	if (url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
-		event.preventDefault();
-	} else if (url === 'about:blank' || url === 'about:blank#blocked') {
-		event.preventDefault();
+function onNewWindow(details) {
+	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+		logger.debug('DEBUG - captured meetup-join url');	
+		return { action: 'deny' };
+	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
 		// Create a new hidden window to load the request in the background
 		logger.debug('DEBUG - captured about:blank');
 		const win = new BrowserWindow({
-			webContents: options.webContents, // use existing webContents if provided
+			webContents: details.options.webContents, // use existing webContents if provided
 			show: false
 		});
 
 		// Close the new window once it is done loading.
 		win.once('ready-to-show', () => win.close());
 
-		event.newGuest = win;
-	} else if (disposition !== 'background-tab') {
-		event.preventDefault();
-		shell.openExternal(url);
+		return { action: 'deny' };
+	} else if (details.disposition !== 'background-tab') {
+		logger.debug('DEBUG - captured non background-tab. Opening externally');
+		shell.openExternal(details.url);
+		return { action: 'deny' };
 	}
 }
 
