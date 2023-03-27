@@ -53,6 +53,7 @@ if (config.useElectronDl) require('electron-dl')();
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
+app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling');
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
 
