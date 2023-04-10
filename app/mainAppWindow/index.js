@@ -110,8 +110,6 @@ function applyAppConfiguration(config, window) {
 	if (config.webDebug) {
 		window.openDevTools();
 	}
-
-	window.on('restore', restoreWakeLock)
 }
 
 /**
@@ -238,6 +236,7 @@ async function createWindow() {
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
 
+	window.on('restore', restoreWakeLock);
 	return window;
 }
 
