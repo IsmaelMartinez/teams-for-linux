@@ -1,5 +1,6 @@
-const TrayIconRenderer = require('./trayIconRenderer');
-const activityHub = require('./activityHub');
+const TrayIconRenderer = require('../tools/trayIconRenderer');
+const activityHub = require('../tools/activityHub');
+const wakeLock = require('../tools/wakeLock');
 
 class ActivityManager {
 	/**
@@ -22,6 +23,7 @@ class ActivityManager {
 	}
 
 	start() {
+		setActivityHandlers(this);
 		setEventHandlers(this);
 		activityHub.start();
 		activityHub.setDefaultTitle(this.config.appTitle);
@@ -31,11 +33,19 @@ class ActivityManager {
 /**
  * @param {ActivityManager} self 
  */
-function setEventHandlers(self) {
+function setActivityHandlers(self) {
 	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
-	activityHub.on('call-connected', disablePowerSaverHandler(self));
-	activityHub.on('call-disconnected', restorePowerSaverHandler(self));
+	activityHub.on('call-connected', callConnectedHandler(self));
+	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function setEventHandlers(self) {
+	self.ipcRenderer.on('enable-wakelock', () => wakeLock.enable());
+	self.ipcRenderer.on('disable-wakelock', () => wakeLock.disable());
 }
 
 /**
@@ -50,18 +60,18 @@ function updateActivityCountHandler(self) {
 /**
  * @param {ActivityManager} self 
  */
-function disablePowerSaverHandler(self) {
+function callConnectedHandler(self) {
 	return async () => {
-		self.ipcRenderer.invoke('disable-powersaver');
+		self.ipcRenderer.invoke('call-connected');
 	};
 }
 
 /**
  * @param {ActivityManager} self 
  */
-function restorePowerSaverHandler(self) {
+function callDisconnectedHandler(self) {
 	return async () => {
-		self.ipcRenderer.invoke('restore-powersaver');
+		self.ipcRenderer.invoke('call-disconnected');
 	};
 }
 

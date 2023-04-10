@@ -1,4 +1,4 @@
-const { app, ipcMain, desktopCapturer, systemPreferences, powerSaveBlocker } = require('electron');
+const { app, ipcMain, desktopCapturer, systemPreferences } = require('electron');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
@@ -93,8 +93,6 @@ if (!gotTheLock) {
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.on('play-notification-sound', playNotificationSound);
-	ipcMain.handle('disable-powersaver', handleDisablePowerSaver);
-	ipcMain.handle('restore-powersaver', handleEnablePowerSaver);
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -109,27 +107,6 @@ function playNotificationSound(event, options) {
 			player.play(sound.file);
 		}
 	}
-}
-
-function handleDisablePowerSaver() {
-	var isDisabled = false;
-	if (blockerId == null) {
-		blockerId = powerSaveBlocker.start('prevent-display-sleep');
-		logger.debug('Power save is disabled.');
-		isDisabled = true;
-	}
-	return isDisabled;
-}
-
-function handleEnablePowerSaver() {
-	var isEnabled = false;
-	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
-		logger.debug('Power save is restored');
-		powerSaveBlocker.stop(blockerId);
-		blockerId = null;
-		isEnabled = true;
-	}
-	return isEnabled;
 }
 
 function onRenderProcessGone() {

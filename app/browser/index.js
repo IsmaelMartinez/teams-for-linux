@@ -14,7 +14,7 @@
 		}
 		require('./zoom')(config);
 
-		require('./desktopShare/chromeApi');
+		require('./tools/chromeApi');
 
 
 		new ActivityManager(ipcRenderer, config).start();

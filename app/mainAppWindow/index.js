@@ -11,6 +11,8 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 
+let isOnCall = false;
+
 /**
  * @type {LucidLog}
  */
@@ -38,7 +40,7 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window.webContents.setWindowOpenHandler(onNewWindow);
-	
+
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
@@ -55,6 +57,10 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
 
 	applyAppConfiguration(config, window);
+
+	window.on('restore', restoreWakeLock)
+	ipcMain.handle('call-connected', handleOnCallConnected);
+	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 };
 
 let allowFurtherRequests = true;
@@ -186,7 +192,7 @@ function onBeforeRequestHandler(details, callback) {
 
 function onNewWindow(details) {
 	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
-		logger.debug('DEBUG - captured meetup-join url');	
+		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
@@ -266,4 +272,20 @@ function assignSelectSourceHandler(window) {
 			event.reply('select-source', source);
 		});
 	};
+}
+
+async function handleOnCallConnected() {
+	isOnCall = true;
+	window.webContents.send('enable-wakelock');
+}
+
+async function handleOnCallDisconnected() {
+	isOnCall = false;
+	window.webContents.send('disable-wakelock');
+}
+
+async function restoreWakeLock() {
+	if (isOnCall) {
+		window.webContents.send('enable-wakelock');
+	}
 }
