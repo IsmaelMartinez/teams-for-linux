@@ -57,10 +57,6 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
 
 	applyAppConfiguration(config, window);
-
-	window.on('restore', restoreWakeLock)
-	ipcMain.handle('call-connected', handleOnCallConnected);
-	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 };
 
 let allowFurtherRequests = true;
@@ -114,6 +110,8 @@ function applyAppConfiguration(config, window) {
 	if (config.webDebug) {
 		window.openDevTools();
 	}
+
+	window.on('restore', restoreWakeLock)
 }
 
 /**
@@ -231,6 +229,8 @@ async function createWindow() {
 	const window = createNewBrowserWindow(windowState);
 	require('@electron/remote/main').enable(window.webContents);
 	ipcMain.on('select-source', assignSelectSourceHandler(window));
+	ipcMain.handle('call-connected', handleOnCallConnected);
+	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 
 	windowState.manage(window);
 
