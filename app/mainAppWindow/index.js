@@ -11,6 +11,8 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 
+let isOnCall = false;
+
 /**
  * @type {LucidLog}
  */
@@ -38,7 +40,7 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window.webContents.setWindowOpenHandler(onNewWindow);
-	
+
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 
 	login.handleLoginDialogTry(window);
@@ -186,7 +188,7 @@ function onBeforeRequestHandler(details, callback) {
 
 function onNewWindow(details) {
 	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
-		logger.debug('DEBUG - captured meetup-join url');	
+		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
@@ -225,6 +227,8 @@ async function createWindow() {
 	const window = createNewBrowserWindow(windowState);
 	require('@electron/remote/main').enable(window.webContents);
 	ipcMain.on('select-source', assignSelectSourceHandler(window));
+	ipcMain.handle('call-connected', handleOnCallConnected);
+	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 
 	windowState.manage(window);
 
@@ -232,6 +236,7 @@ async function createWindow() {
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
 
+	window.on('restore', restoreWakeLock);
 	return window;
 }
 
@@ -266,4 +271,20 @@ function assignSelectSourceHandler(window) {
 			event.reply('select-source', source);
 		});
 	};
+}
+
+async function handleOnCallConnected() {
+	isOnCall = true;
+	window.webContents.send('enable-wakelock');
+}
+
+async function handleOnCallDisconnected() {
+	isOnCall = false;
+	window.webContents.send('disable-wakelock');
+}
+
+async function restoreWakeLock() {
+	if (isOnCall) {
+		window.webContents.send('enable-wakelock');
+	}
 }
