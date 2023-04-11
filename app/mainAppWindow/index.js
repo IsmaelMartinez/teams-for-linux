@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -11,7 +11,7 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 
-let isOnCall = false;
+let blockerId = null;
 
 /**
  * @type {LucidLog}
@@ -236,7 +236,6 @@ async function createWindow() {
 		throw new Error('Sorry, this app does not support window.eval().');
 	};
 
-	window.on('restore', restoreWakeLock);
 	return window;
 }
 
@@ -274,17 +273,22 @@ function assignSelectSourceHandler(window) {
 }
 
 async function handleOnCallConnected() {
-	isOnCall = true;
-	window.webContents.send('enable-wakelock');
+	var isDisabled = false;
+	if (blockerId == null) {
+		blockerId = powerSaveBlocker.start('prevent-display-sleep');
+		logger.debug('Power save is disabled.');
+		isDisabled = true;
+	}
+	return isDisabled;
 }
 
 async function handleOnCallDisconnected() {
-	isOnCall = false;
-	window.webContents.send('disable-wakelock');
-}
-
-async function restoreWakeLock() {
-	if (isOnCall) {
-		window.webContents.send('enable-wakelock');
+	var isEnabled = false;
+	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
+		logger.debug('Power save is restored');
+		powerSaveBlocker.stop(blockerId);
+		blockerId = null;
+		isEnabled = true;
 	}
+	return isEnabled;
 }
