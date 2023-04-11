@@ -10,9 +10,9 @@
 	ipcRenderer.invoke('getConfig').then(mainConfig => {
 		config = mainConfig;
 		if (config.onlineOfflineReload) {
-			require('./onlineOfflineListener')();
+			require('./tools/onlineOfflineListener')();
 		}
-		require('./zoom')(config);
+		require('./tools/zoom')(config);
 
 		require('./tools/chromeApi');
 
