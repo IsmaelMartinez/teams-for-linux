@@ -138,6 +138,11 @@ function argv(configPath) {
 				default: 'Microsoft Teams',
 				describe: 'A text to be suffixed with page title',
 				type: 'string',
+			},
+			appIdleTimeout: {
+				default: 300,
+				describe: 'A value in seconds to be considered before app shows the status as away',
+				type: 'number',
 			}
 		})
 		.parse(process.argv.slice(1));
