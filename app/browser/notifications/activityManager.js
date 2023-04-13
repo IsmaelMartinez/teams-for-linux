@@ -99,20 +99,28 @@ function meetingStartNotifyHandler(self) {
 function myStatusChangedHandler(self) {
 	return async (event) => {
 		if (self.myStatus !== event.data.status) {
-			if ((event.data.status == 3 || event.data.status == 5) && event.isInactive && event.data.status !== self.myStatus && self.myStatus !== -1) {
-				const idleTime = await self.ipcRenderer.invoke('getSystemIdleTime');
-				if (idleTime < self.config.appIdleTimeout) {
-					console.log(`Trying to prevent changing status to 'away'`);
-					activityHub.setMyStatus(1);
-					self.myStatus = 1;
-				} else {
-					self.myStatus = event.data.status;
-				}
+			if (isAway(event, self)) {
+				await evaluateAndPreventAwayStatus(self, event);
 			} else {
 				self.myStatus = event.data.status;
 			}
 		}
 	};
+}
+
+async function evaluateAndPreventAwayStatus(self, event) {
+	const idleTime = await self.ipcRenderer.invoke('getSystemIdleTime');
+	if (idleTime < self.config.appIdleTimeout) {
+		console.log(`Trying to prevent changing status to 'away'`);
+		activityHub.setMyStatus(1);
+		self.myStatus = 1;
+	} else {
+		self.myStatus = event.data.status;
+	}
+}
+
+function isAway(event, self) {
+	return (event.data.status == 3 || event.data.status == 5) && event.isInactive && event.data.status !== self.myStatus && self.myStatus !== -1;
 }
 
 module.exports = exports = ActivityManager;
