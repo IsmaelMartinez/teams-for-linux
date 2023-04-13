@@ -8,7 +8,8 @@ const supportedEvents = [
 	'call-connected',
 	'call-disconnected',
 	'activities-count-updated',
-	'meeting-started'
+	'meeting-started',
+	'my-status-changed'
 ];
 
 class ActivityHub {
@@ -16,7 +17,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
+	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
 	 * @param {(data)=>void} handler
 	 * @returns {number} handle 
 	 */
@@ -25,7 +26,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
+	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
 	 * @param {number} handle
 	 * @returns {number} handle 
 	 */
@@ -40,6 +41,16 @@ class ActivityHub {
 	setDefaultTitle(title) {
 		whenControllerReady(controller => {
 			controller.pageTitleDefault = title;
+		});
+	}
+
+	/**
+	 * @param {number} status 
+	 */
+	setMyStatus(status) {
+		whenControllerReady((controller) => {
+			const presenseService = window.angular.element(document.body).injector().get('presenceService');
+			presenseService.setMyStatus(status, null, true);
 		});
 	}
 }
@@ -86,7 +97,7 @@ function removeEventHandler(event, handle) {
 
 /**
  * 
- * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'} event 
+ * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
  * @returns {Array<{handler:(data)=>void,event:string,handle:number}>} handlers
  */
 function getEventHandlers(event) {
@@ -112,6 +123,7 @@ function assignEventHandlers(controller) {
 	assignCallConnectedHandler(controller);
 	assignCallDisconnectedHandler(controller);
 	assignWorkerMessagingUpdatesHandler(controller);
+	assignMyStatusChangedHandler(controller);
 }
 
 /**
@@ -210,6 +222,13 @@ function assignWorkerMessagingUpdatesHandler(controller) {
 		(event, data) => onMessageUpdatesFromWorker(controller, data));
 }
 
+function assignMyStatusChangedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.presence.myStatusChanged,
+		(event, data) => onMyStatusChanged(controller, data));
+}
+
 async function onActivitiesCountUpdated(controller) {
 	const count = controller.bellNotificationsService.getNewActivitiesCount() + controller.chatListService.getUnreadCountFromChatList();
 	const handlers = getEventHandlers('activities-count-updated');
@@ -247,6 +266,13 @@ function callMeetingStartedEventHandlers(handlers, e) {
 		handler.handler({
 			title: e.subject
 		});
+	}
+}
+
+async function onMyStatusChanged(controller, data) {
+	const handlers = getEventHandlers('my-status-changed');
+	for (const handler of handlers) {
+		handler.handler({ data: data, isInactive: window.teamspace.services.ApplicationState[controller.appStateService.current] === 'Inactive' || window.teamspace.services.ApplicationState[controller.appStateService.current] === 'LongInactive' });
 	}
 }
 
