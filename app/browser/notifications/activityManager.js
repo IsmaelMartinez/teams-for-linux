@@ -28,6 +28,15 @@ class ActivityManager {
 		setEventHandlers(this);
 		activityHub.start();
 		activityHub.setDefaultTitle(this.config.appTitle);
+		this.watchSystemIdleState();
+	}
+
+	watchSystemIdleState() {
+		const self = this;
+		self.ipcRenderer.invoke('getSystemIdleState').then((value) => {
+			activityHub.setMachineState(value === 'active' ? 1 : 2);
+			setTimeout(() => self.watchSystemIdleState(), 10000);
+		})
 	}
 }
 
@@ -39,7 +48,7 @@ function setActivityHandlers(self) {
 	activityHub.on('call-connected', callConnectedHandler(self));
 	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
-	activityHub.on('my-status-changed', myStatusChangedHandler(self));
+	//activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
 /**

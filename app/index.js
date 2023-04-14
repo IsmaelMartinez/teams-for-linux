@@ -90,6 +90,7 @@ if (!gotTheLock) {
 	app.on('certificate-error', handleCertificateError);
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getSystemIdleTime', handleGetSystemIdleTime);
+	ipcMain.handle('getSystemIdleState', handleGetSystemIdleState);
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
@@ -138,6 +139,12 @@ async function handleGetConfig() {
 
 async function handleGetSystemIdleTime() {
 	return powerMonitor.getSystemIdleTime();
+}
+
+async function handleGetSystemIdleState() {
+	const idleState = powerMonitor.getSystemIdleState(config.appIdleTimeout);
+	logger.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState ${idleState}`);
+	return idleState;
 }
 
 async function handleGetZoomLevel(_, name) {
