@@ -35,8 +35,8 @@ class ActivityManager {
 		const self = this;
 		self.ipcRenderer.invoke('getSystemIdleState').then((value) => {
 			activityHub.setMachineState(value === 'active' ? 1 : 2);
-			setTimeout(() => self.watchSystemIdleState(), 10000);
-		})
+			setTimeout(() => self.watchSystemIdleState(), self.config.appIdleTimeoutCheckInterval * 1000);
+		});
 	}
 }
 
