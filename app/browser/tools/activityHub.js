@@ -53,6 +53,16 @@ class ActivityHub {
 			presenseService.setMyStatus(status, null, true);
 		});
 	}
+
+	/**
+	 * @param {number} state 
+	 */
+	setMachineState(state) {
+		whenControllerReady((controller) => {
+			controller.appStateService.machineState = state;
+			controller.appStateService.current = state == 1 && (controller.appStateService.current == 4 || controller.appStateService.current == 5) ? 3 : controller.appStateService.current;
+		});
+	}
 }
 
 function isSupportedEvent(event) {
