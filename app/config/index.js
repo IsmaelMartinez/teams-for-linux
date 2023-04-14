@@ -143,6 +143,11 @@ function argv(configPath) {
 				default: 300,
 				describe: 'A value in seconds to be considered before app shows the status as away',
 				type: 'number',
+			},
+			appIdleTimeoutCheckInterval: {
+				default: 10,
+				describe: 'A value in seconds as poll interval to check if the application idle timedout',
+				type: 'number',
 			}
 		})
 		.parse(process.argv.slice(1));

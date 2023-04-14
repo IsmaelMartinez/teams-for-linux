@@ -59,8 +59,8 @@ class ActivityHub {
 	 */
 	setMachineState(state) {
 		whenControllerReady((controller) => {
-			controller.appStateService.machineState = state;
-			controller.appStateService.current = state == 1 && (controller.appStateService.current == 4 || controller.appStateService.current == 5) ? 3 : controller.appStateService.current;
+			controller.appStateService.setMachineState(state);
+			controller.appStateService.setActive(state == 1 && (controller.appStateService.current == 4 || controller.appStateService.current == 5) ? 3 : controller.appStateService.current);
 		});
 	}
 }
