@@ -149,6 +149,11 @@ function argv(configPath) {
 				describe: 'A value in seconds as poll interval to check if the application idle timedout',
 				type: 'number'
 			},
+			appActiveCheckInterval: {
+				default: 2,
+				describe: 'A value in seconds as poll interval to check if the application is active from being idle',
+				type: 'number'
+			},
 			screenLockInhibitionMethod: {
 				default: 'Electron',
 				describe: 'Screen lock inhibition method to be used',
