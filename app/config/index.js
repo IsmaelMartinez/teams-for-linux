@@ -130,7 +130,7 @@ function argv(configPath) {
 				type: 'string'
 			},
 			spellCheckerLanguages: {
-				default: ['en-US'],
+				default: ['en-US','en-GB'],
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
 				type: 'array'
 			},

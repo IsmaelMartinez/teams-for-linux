@@ -4,6 +4,7 @@ const preferences = require('./preferences');
 const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
+let scLanguages;
 
 class Menus {
 	constructor(window, config, iconPath) {
@@ -14,6 +15,7 @@ class Menus {
 		this.logger = new LucidLog({
 			levels: config.appLogLevels.split(',')
 		});
+		scLanguages = config.spellCheckerLanguages;
 		this.initialize();
 	}
 
@@ -121,10 +123,14 @@ function assignAddToDictionaryHandler(params, menu, window) {
 		);
 	}
 
-	addTextEditMenuItems(menu);
+	addTextEditMenuItems(menu, window);
 }
 
-function addTextEditMenuItems(menu) {
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Electron.BrowserWindow} window 
+ */
+function addTextEditMenuItems(menu, window) {
 	menu.append(
 		new MenuItem({
 			role: 'cut'
@@ -142,6 +148,67 @@ function addTextEditMenuItems(menu) {
 			role: 'paste'
 		})
 	);
+
+	addSpellCheckMenuItems(menu, window);
+}
+
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Electron.BrowserWindow} window 
+ */
+function addSpellCheckMenuItems(menu, window) {
+	menu.append(
+		new MenuItem({
+			type: 'separator'
+		})
+	);
+
+	menu.append(
+		new MenuItem({
+			label: 'Writing Language',
+			submenu: createSpellCheckLanguagesMenu(window)
+		})
+	);
+}
+
+/**
+ * @param {Electron.BrowserWindow} window 
+ */
+function createSpellCheckLanguagesMenu(window) {
+	const curLanguages = window.webContents.session.getSpellCheckerLanguages();
+	const sclMenu = new Menu();
+	sclMenu.append(
+		createAllLanguagesMenuItem(curLanguages, window)
+	);
+
+	for (const ln of scLanguages) {
+		sclMenu.append(
+			createLanguageMenuItem(ln, curLanguages, window)
+		);
+	}
+	return sclMenu;
+}
+
+function createLanguageMenuItem(ln, curLanguages, window) {
+	return new MenuItem({
+		label: ln,
+		type: 'radio',
+		checked: curLanguages.length == 1 && curLanguages[0] == ln,
+		click: () => {
+			window.webContents.session.setSpellCheckerLanguages([ln]);
+		}
+	});
+}
+
+function createAllLanguagesMenuItem(curLanguages, window) {
+	return new MenuItem({
+		label: 'All',
+		type: 'radio',
+		checked: curLanguages.length > 1,
+		click: () => {
+			window.webContents.session.setSpellCheckerLanguages(scLanguages);
+		}
+	});
 }
 
 exports = module.exports = Menus;
