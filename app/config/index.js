@@ -26,68 +26,68 @@ function argv(configPath) {
 			closeAppOnCross: {
 				default: false,
 				describe: 'Close the app when clicking the close (X) cross',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			onlineOfflineReload: {
 				default: true,
 				describe: 'Reload page when going from offline to online',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			enableDesktopNotificationsHack: {
 				default: false,
 				describe: 'Enable electron-native-notifications hack',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			url: {
 				default: 'https://teams.microsoft.com/',
 				describe: 'Microsoft Teams URL',
-				type: 'string',
+				type: 'string'
 			},
 			proxyServer: {
 				default: null,
 				describe: 'Proxy Server with format address:port',
-				type: 'string',
+				type: 'string'
 			},
 			customUserDir: {
 				default: null,
 				describe: 'Custom User Directory so that you can have multiple profiles',
-				type: 'string',
+				type: 'string'
 			},
 			useElectronDl: {
 				default: false,
 				describe: 'Use Electron dl to automatically download files to the download folder',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			minimized: {
 				default: false,
 				describe: 'Start the application minimized',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			webDebug: {
 				default: false,
 				describe: 'Enable debug at start',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			partition: {
 				default: 'persist:teams-4-linux',
 				describe: 'BrowserWindow webpreferences partition',
-				type: 'string',
+				type: 'string'
 			},
 			chromeUserAgent: {
+				default: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
 				describe: 'Google Chrome User Agent',
-				type: 'string',
-				default:
-					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+				type: 'string'
+				
 			},
 			ntlmV2enabled: {
 				default: 'true',
 				describe: 'Set enable-ntlm-v2 value',
-				type: 'string',
+				type: 'string'
 			},
 			authServerWhitelist: {
 				default: '*',
 				describe: 'Set auth-server-whitelist value',
-				type: 'string',
+				type: 'string'
 			},
 			customCSSName: {
 				default: '',
@@ -112,17 +112,17 @@ function argv(configPath) {
 			clearStorage: {
 				default: false,
 				describe: 'Whether to clear the storage before creating the window or not',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			disableNotificationSound: {
 				default: false,
 				describe: 'Disable chat/meeting start notification sound',
-				type: 'boolean',
+				type: 'boolean'
 			},
 			appIcon: {
 				default: path.join(__dirname, '..', 'assets', 'icons', isMac ? 'icon-16x16.png' : 'icon-96x96.png'),
@@ -132,22 +132,28 @@ function argv(configPath) {
 			spellCheckerLanguages: {
 				default: ['en-US'],
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
-				type: 'array',
+				type: 'array'
 			},
 			appTitle: {
 				default: 'Microsoft Teams',
 				describe: 'A text to be suffixed with page title',
-				type: 'string',
+				type: 'string'
 			},
 			appIdleTimeout: {
 				default: 300,
 				describe: 'A value in seconds to be considered before app shows the status as away',
-				type: 'number',
+				type: 'number'
 			},
 			appIdleTimeoutCheckInterval: {
 				default: 10,
 				describe: 'A value in seconds as poll interval to check if the application idle timedout',
-				type: 'number',
+				type: 'number'
+			},
+			screenLockInhibitionMethod: {
+				default: 'Electron',
+				describe: 'Screen lock inhibition method to be used',
+				type: 'string',
+				choices: ['Electron','WakeLockSentinel']
 			}
 		})
 		.parse(process.argv.slice(1));

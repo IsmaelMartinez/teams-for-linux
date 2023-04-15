@@ -143,7 +143,7 @@ async function handleGetSystemIdleTime() {
 
 async function handleGetSystemIdleState() {
 	const idleState = powerMonitor.getSystemIdleState(config.appIdleTimeout);
-	logger.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState ${idleState}`);
+	logger.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${idleState}'`);
 	return idleState;
 }
 
