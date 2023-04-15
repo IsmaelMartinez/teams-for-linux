@@ -48,7 +48,6 @@ function setActivityHandlers(self) {
 	activityHub.on('call-connected', callConnectedHandler(self));
 	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
-	//activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
 /**

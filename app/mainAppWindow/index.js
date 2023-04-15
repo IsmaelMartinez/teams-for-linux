@@ -13,6 +13,8 @@ const { LucidLog } = require('lucid-log');
 
 let blockerId = null;
 
+let isOnCall = false;
+
 /**
  * @type {LucidLog}
  */
@@ -226,9 +228,7 @@ async function createWindow() {
 	// Create the window
 	const window = createNewBrowserWindow(windowState);
 	require('@electron/remote/main').enable(window.webContents);
-	ipcMain.on('select-source', assignSelectSourceHandler(window));
-	ipcMain.handle('call-connected', handleOnCallConnected);
-	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
+	assignEventHandlers(window);
 
 	windowState.manage(window);
 
@@ -237,6 +237,15 @@ async function createWindow() {
 	};
 
 	return window;
+}
+
+function assignEventHandlers(newWindow) {
+	ipcMain.on('select-source', assignSelectSourceHandler());
+	ipcMain.handle('call-connected', handleOnCallConnected);
+	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
+	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
+		newWindow.on('restore', enableWakeLockOnWindowRestore);
+	}
 }
 
 function createNewBrowserWindow(windowState) {
@@ -263,7 +272,7 @@ function createNewBrowserWindow(windowState) {
 	});
 }
 
-function assignSelectSourceHandler(window) {
+function assignSelectSourceHandler() {
 	return event => {
 		const streamSelector = new StreamSelector(window);
 		streamSelector.show((source) => {
@@ -273,22 +282,50 @@ function assignSelectSourceHandler(window) {
 }
 
 async function handleOnCallConnected() {
+	isOnCall = true;
+	return config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
+}
+
+function disableScreenLockElectron() {
 	var isDisabled = false;
 	if (blockerId == null) {
 		blockerId = powerSaveBlocker.start('prevent-display-sleep');
-		logger.debug('Power save is disabled.');
+		logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
 		isDisabled = true;
 	}
 	return isDisabled;
 }
 
+function disableScreenLockWakeLockSentinel() {
+	window.webContents.send('enable-wakelock');
+	logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
+	return true;
+}
+
 async function handleOnCallDisconnected() {
+	isOnCall = false;
+	return config.screenLockInhibitionMethod === 'Electron' ? enableScreenLockElectron() : enableScreenLockWakeLockSentinel();
+}
+
+function enableScreenLockElectron() {
 	var isEnabled = false;
 	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
-		logger.debug('Power save is restored');
+		logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
 		powerSaveBlocker.stop(blockerId);
 		blockerId = null;
 		isEnabled = true;
 	}
 	return isEnabled;
+}
+
+function enableScreenLockWakeLockSentinel() {
+	window.webContents.send('disable-wakelock');
+	logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
+	return true;
+}
+
+function enableWakeLockOnWindowRestore() {
+	if (isOnCall) {
+		window.webContents.send('enable-wakelock');
+	}
 }
