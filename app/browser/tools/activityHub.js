@@ -59,7 +59,11 @@ class ActivityHub {
 	 */
 	setMachineState(state) {
 		whenControllerReady((controller) => {
-			this.refreshAppState(controller, state);
+			if (state === 1) {
+				this.refreshAppState(controller, state);
+			} else {
+				controller.appStateService.setMachineState(state);
+			}
 		});
 	}
 
