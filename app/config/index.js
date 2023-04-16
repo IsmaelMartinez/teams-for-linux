@@ -141,22 +141,22 @@ function argv(configPath) {
 			},
 			appIdleTimeout: {
 				default: 300,
-				describe: 'A value in seconds to be considered before app shows the status as away',
+				describe: 'A numeric value in seconds as duration before app considers the system as idle',
 				type: 'number'
 			},
 			appIdleTimeoutCheckInterval: {
 				default: 10,
-				describe: 'A value in seconds as poll interval to check if the application idle timedout',
+				describe: 'A numeric value in seconds as poll interval to check if the appIdleTimeout is reached',
 				type: 'number'
 			},
 			appActiveCheckInterval: {
 				default: 2,
-				describe: 'A value in seconds as poll interval to check if the application is active from being idle',
+				describe: 'A numeric value in seconds as poll interval to check if the system is active from being idle',
 				type: 'number'
 			},
 			screenLockInhibitionMethod: {
 				default: 'Electron',
-				describe: 'Screen lock inhibition method to be used',
+				describe: 'Screen lock inhibition method to be used (Electron/WakeLockSentinel)',
 				type: 'string',
 				choices: ['Electron','WakeLockSentinel']
 			}
