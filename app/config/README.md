@@ -37,7 +37,11 @@ Here is the list of available arguments and its usage:
 | clearStorage | Whether to clear the storage before creating the window or not | false |
 | disableMeetingNotifications | Whether to disable meeting notifications or not | false |
 | disableNotificationSound | Disable chat/meeting start notification sound | false |
-| appTitle | A text to be suffixed with page title | Microsoft Teams |
+| appIdleTimeout | A numeric value in seconds as duration before app considers the system as idle | 300 |
+| appIdleTimeoutCheckInterval | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached | 10 |
+| appActiveCheckInterval | A numeric value in seconds as poll interval to check if the system is active from being idle | 2 |
+| screenLockInhibitionMethod | Screen lock inhibition method to be used (Electron/WakeLockSentinel) | Electron |
+
 
 
 As an example, to disable the persitence, you can run the following command:
