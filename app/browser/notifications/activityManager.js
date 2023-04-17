@@ -49,6 +49,7 @@ function setActivityHandlers(self) {
 	activityHub.on('call-connected', callConnectedHandler(self));
 	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
+	activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
 /**
@@ -106,34 +107,10 @@ function meetingStartNotifyHandler(self) {
  */
 // eslint-disable-next-line no-unused-vars
 function myStatusChangedHandler(self) {
+	// eslint-disable-next-line no-unused-vars
 	return async (event) => {
-		if (PresenceState.isAway(event, self)) {
-			await evaluateAndPreventAwayStatus(self, event);
-		}
+		// To do: self.ipcRenderer.send('user-status-changed', { data: event.data })
 	};
-}
-
-async function evaluateAndPreventAwayStatus(self, event) {
-	const idleTime = await self.ipcRenderer.invoke('getSystemIdleTime');
-	console.log(`System Idle: ${idleTime}s`);
-	if (idleTime < self.config.appIdleTimeout) {
-		console.log(`Trying to prevent changing status to 'away'`);
-		activityHub.setMyStatus(1);
-		self.myStatus = 1;
-	}
-}
-
-class PresenceState {
-	static isAway(event, self) {
-		console.log(`My Status: ${self.myStatus}, Event Status: ${event.data.status}, IsInactive: ${event.isInactive}`);
-		const result = this.isInactive(event) && event.data.status !== self.myStatus && self.myStatus !== -1;
-		self.myStatus = event.data.status !== self.myStatus ? event.data.status : self.myStatus;
-		return result;
-	}
-
-	static isInactive(event) {
-		return (event.data.status == 3 || event.data.status == 5) && event.isInactive;
-	}
 }
 
 module.exports = exports = ActivityManager;
