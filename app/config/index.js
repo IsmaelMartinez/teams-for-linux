@@ -124,6 +124,11 @@ function argv(configPath) {
 				describe: 'Disable chat/meeting start notification sound',
 				type: 'boolean'
 			},
+			disableNotificationSoundIfNotAvailable: {
+				default: true,
+				describe: 'Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)',
+				type: 'boolean'
+			},
 			appIcon: {
 				default: path.join(__dirname, '..', 'assets', 'icons', isMac ? 'icon-16x16.png' : 'icon-96x96.png'),
 				describe: 'Teams app icon to show in the tray',

@@ -37,6 +37,7 @@ Here is the list of available arguments and its usage:
 | clearStorage | Whether to clear the storage before creating the window or not | false |
 | disableMeetingNotifications | Whether to disable meeting notifications or not | false |
 | disableNotificationSound | Disable chat/meeting start notification sound | false |
+| disableNotificationSoundIfNotAvailable | Disable chat/meeting start notification sound if status is not Available (e.g. busy, in a call) | true |
 | appIdleTimeout | A numeric value in seconds as duration before app considers the system as idle | 300 |
 | appIdleTimeoutCheckInterval | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached | 10 |
 | appActiveCheckInterval | A numeric value in seconds as poll interval to check if the system is active from being idle | 2 |

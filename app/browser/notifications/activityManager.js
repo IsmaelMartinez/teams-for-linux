@@ -49,6 +49,7 @@ function setActivityHandlers(self) {
 	activityHub.on('call-connected', callConnectedHandler(self));
 	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
+	activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
 /**
@@ -107,6 +108,7 @@ function meetingStartNotifyHandler(self) {
 // eslint-disable-next-line no-unused-vars
 function myStatusChangedHandler(self) {
 	return async (event) => {
+		self.ipcRenderer.send('user-status-changed', { data: event.data })
 		if (PresenceState.isAway(event, self)) {
 			await evaluateAndPreventAwayStatus(self, event);
 		}
