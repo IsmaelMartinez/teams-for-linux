@@ -109,7 +109,7 @@ function meetingStartNotifyHandler(self) {
 function myStatusChangedHandler(self) {
 	// eslint-disable-next-line no-unused-vars
 	return async (event) => {
-		// To do: self.ipcRenderer.send('user-status-changed', { data: event.data })
+		self.ipcRenderer.send('user-status-changed', { data: event.data })
 	};
 }
 
