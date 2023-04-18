@@ -23,6 +23,7 @@ const notificationSounds = [{
 }];
 
 let blockerId = null;
+let userStatus = -1;
 
 // Notification sound player
 /**
@@ -95,19 +96,26 @@ if (!gotTheLock) {
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.on('play-notification-sound', playNotificationSound);
+	ipcMain.on('user-status-changed', userStatusChangedHandler);
 }
 
 // eslint-disable-next-line no-unused-vars
 function playNotificationSound(event, options) {
-	if (!config.disableNotificationSound) {
-		const sound = notificationSounds.filter(ns => {
-			return ns.type === options.type;
-		})[0];
+	// Player failed to load or notification sound disabled in config
+	if (!player || config.disableNotificationSound) {
+		return;
+	}
+	// Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
+	if (config.disableNotificationSoundIfNotAvailable && userStatus !== 1 && userStatus !== -1) {
+		return;
+	}
+	const sound = notificationSounds.filter(ns => {
+		return ns.type === options.type;
+	})[0];
 
-		if (sound) {
-			logger.debug(`Playing file: ${sound.file}`);
-			player.play(sound.file);
-		}
+	if (sound) {
+		logger.debug(`Playing file: ${sound.file}`);
+		player.play(sound.file);
 	}
 }
 
@@ -203,4 +211,14 @@ async function requestMediaAccess() {
 		const status = await systemPreferences.askForMediaAccess(permission);
 		logger.debug(`mac permission ${permission} asked current status ${status}`);
 	});
+}
+
+/**
+ * Handle user-status-changed message
+ * 
+ * @param {*} event 
+ * @param {*} options 
+ */
+function userStatusChangedHandler(event, options) {
+	userStatus = options.data.status;
 }
