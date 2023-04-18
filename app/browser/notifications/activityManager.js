@@ -109,9 +109,6 @@ function meetingStartNotifyHandler(self) {
 function myStatusChangedHandler(self) {
 	return async (event) => {
 		self.ipcRenderer.send('user-status-changed', { data: event.data })
-		if (PresenceState.isAway(event, self)) {
-			await evaluateAndPreventAwayStatus(self, event);
-		}
 	};
 }
 
