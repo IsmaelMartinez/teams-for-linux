@@ -22,7 +22,6 @@ const notificationSounds = [{
 	file: path.join(__dirname, audioPathPrefix, 'assets/sounds/meeting_started.wav')
 }];
 
-let blockerId = null;
 let userStatus = -1;
 
 // Notification sound player

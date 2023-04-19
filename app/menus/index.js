@@ -1,4 +1,4 @@
-const { app, Menu, MenuItem } = require('electron');
+const { app, Menu, MenuItem, powerMonitor } = require('electron');
 const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
@@ -32,8 +32,11 @@ class Menus {
 		this.window.focus();
 	}
 
-	reload() {
-		this.window.show();
+	reload(show = true) {
+		if (show) {
+			this.window.show();
+		}
+
 		this.window.reload();
 	}
 
@@ -61,6 +64,8 @@ class Menus {
 		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
 
 		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath);
+
+		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
 	}
 
 	onBeforeQuit() {
@@ -78,6 +83,17 @@ class Menus {
 			this.window.webContents.session.flushStorageData();
 		}
 	}
+}
+
+/**
+ * @param {Menus} self 
+ * @returns 
+ */
+function assignSystemResumeEventHandler(self) {
+	return async () => {
+		self.logger.debug('Reloading the page on system resume');
+		self.reload(false);
+	};
 }
 
 /**
