@@ -57,14 +57,15 @@ class Menus {
 			help(app, this.window),
 		]));
 
-		app.on('before-quit', () => this.onBeforeQuit());
-
-		this.window.on('close', (event) => this.onClose(event));
-
-		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
-
+		this.initializeEventHandlers();
+		
 		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath);
+	}
 
+	initializeEventHandlers() {
+		app.on('before-quit', () => this.onBeforeQuit());
+		this.window.on('close', (event) => this.onClose(event));
+		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
 		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
 	}
 
