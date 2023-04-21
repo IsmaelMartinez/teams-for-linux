@@ -114,6 +114,11 @@ function argv(configPath) {
 				describe: 'Whether to clear the storage before creating the window or not',
 				type: 'boolean'
 			},
+			disableNotifications: {
+				default: false,
+				describe: 'A flag to disable all notifications',
+				type: 'boolean'
+			},
 			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
