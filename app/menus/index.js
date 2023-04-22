@@ -5,6 +5,7 @@ const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvidder');
+const checkConnectivity = require('./connectivity');
 
 class Menus {
 	constructor(window, config, iconPath) {
@@ -92,8 +93,14 @@ class Menus {
  */
 function assignSystemResumeEventHandler(self) {
 	return async () => {
-		self.logger.debug('Reloading the page on system resume');
-		self.reload(false);
+		self.logger.debug('Waiting for network');
+		const isConnected = await checkConnectivity(2000, 30);
+		if (isConnected) {
+			self.logger.debug('Reloading the page on system resume');
+			self.reload(false);
+		} else {
+			self.logger.error('No internet connection');
+		}
 	};
 }
 
