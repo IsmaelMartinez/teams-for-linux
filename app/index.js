@@ -8,18 +8,19 @@ if (app.commandLine.hasSwitch('customUserDir')) {
 	app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
 }
 const config = require('./config')(app.getPath('userData'));
+config.appPath = path.join(__dirname, isDev ? '' : '../../');
+
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
 });
 
-const audioPathPrefix = isDev ? '' : '../../';
 const notificationSounds = [{
 	type: 'new-message',
-	file: path.join(__dirname, audioPathPrefix, 'assets/sounds/new_message.wav')
+	file: path.join(config.appPath, 'assets/sounds/new_message.wav')
 },
 {
 	type: 'meeting-started',
-	file: path.join(__dirname, audioPathPrefix, 'assets/sounds/meeting_started.wav')
+	file: path.join(config.appPath, 'assets/sounds/meeting_started.wav')
 }];
 
 let userStatus = -1;
