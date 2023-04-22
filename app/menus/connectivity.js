@@ -3,12 +3,12 @@ async function checkConnectivity(timeout, retries) {
 	var resolved = false;
 	for (var i = 1; i <= retries && !resolved; i++) {
 		if (i > 1) await sleep(timeout);
-		resolved = await checkIt();
+		resolved = await checkConnectionState();
 	}
 	return resolved;
 }
 
-async function checkIt() {
+async function checkConnectionState() {
 	try {
 		await resolveDNS();
 		return true;
@@ -23,7 +23,7 @@ function sleep(timeout) {
 
 function resolveDNS() {
 	return new Promise((res, rej) => {
-		dns.resolve('www.google.com', (err) => {
+		dns.resolve('www.microsoft.com', (err) => {
 			if (err) {
 				rej(err);
 			} else {
