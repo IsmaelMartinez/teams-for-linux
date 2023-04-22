@@ -4,7 +4,7 @@ const preferences = require('./preferences');
 const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
-let scLanguages;
+const { SpellCheckProvider } = require('../spellCheckProvidder');
 
 class Menus {
 	constructor(window, config, iconPath) {
@@ -15,7 +15,6 @@ class Menus {
 		this.logger = new LucidLog({
 			levels: config.appLogLevels.split(',')
 		});
-		scLanguages = config.spellCheckerLanguages;
 		this.initialize();
 	}
 
@@ -58,14 +57,15 @@ class Menus {
 		]));
 
 		this.initializeEventHandlers();
-		
+
 		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath);
+		this.spellCheckProvider = new SpellCheckProvider(this.window, this.logger);
 	}
 
 	initializeEventHandlers() {
 		app.on('before-quit', () => this.onBeforeQuit());
 		this.window.on('close', (event) => this.onClose(event));
-		this.window.webContents.on('context-menu', assignContextMenuHandler(this.window));
+		this.window.webContents.on('context-menu', assignContextMenuHandler(this));
 		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
 	}
 
@@ -98,38 +98,47 @@ function assignSystemResumeEventHandler(self) {
 }
 
 /**
- * @param {Electron.Event} event 
- * @param {Electron.ContextMenuParams} params 
+ * @param {Menus} menus 
  */
-function assignContextMenuHandler(window) {
+function assignContextMenuHandler(menus) {
 	return (event, params) => {
 		const menu = new Menu();
 
 		// Add each spelling suggestion
-		assignReplaceWordHandler(params, menu, window);
+		assignReplaceWordHandler(params, menu, menus);
 
 		// Allow users to add the misspelled word to the dictionary
-		assignAddToDictionaryHandler(params, menu, window);
+		assignAddToDictionaryHandler(params, menu, menus);
 
 		menu.popup();
 	};
 }
 
-function assignReplaceWordHandler(params, menu, window) {
+/**
+ * @param {object} params 
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
+function assignReplaceWordHandler(params, menu, menus) {
 	for (const suggestion of params.dictionarySuggestions) {
 		menu.append(new MenuItem({
 			label: suggestion,
-			click: () => window.webContents.replaceMisspelling(suggestion)
+			click: () => menus.window.webContents.replaceMisspelling(suggestion)
 		}));
 	}
 }
 
-function assignAddToDictionaryHandler(params, menu, window) {
+/**
+ * @param {object} params 
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
+function assignAddToDictionaryHandler(params, menu, menus) {
 	if (params.misspelledWord) {
 		menu.append(
 			new MenuItem({
 				label: 'Add to dictionary',
-				click: () => window.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+				click: () => menus.window.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
 			})
 		);
 
@@ -140,14 +149,14 @@ function assignAddToDictionaryHandler(params, menu, window) {
 		);
 	}
 
-	addTextEditMenuItems(menu, window);
+	addTextEditMenuItems(menu, menus);
 }
 
 /**
  * @param {Electron.Menu} menu 
- * @param {Electron.BrowserWindow} window 
+ * @param {Menus} menus 
  */
-function addTextEditMenuItems(menu, window) {
+function addTextEditMenuItems(menu, menus) {
 	menu.append(
 		new MenuItem({
 			role: 'cut'
@@ -166,14 +175,14 @@ function addTextEditMenuItems(menu, window) {
 		})
 	);
 
-	addSpellCheckMenuItems(menu, window);
+	addSpellCheckMenuItems(menu, menus);
 }
 
 /**
  * @param {Electron.Menu} menu 
- * @param {Electron.BrowserWindow} window 
+ * @param {Menus} menus 
  */
-function addSpellCheckMenuItems(menu, window) {
+function addSpellCheckMenuItems(menu, menus) {
 	menu.append(
 		new MenuItem({
 			type: 'separator'
@@ -182,50 +191,80 @@ function addSpellCheckMenuItems(menu, window) {
 
 	menu.append(
 		new MenuItem({
-			label: 'Writing Language',
-			submenu: createSpellCheckLanguagesMenu(window)
+			label: 'Writing Languages',
+			submenu: createSpellCheckLanguagesMenu(menus)
 		})
 	);
 }
 
 /**
- * @param {Electron.BrowserWindow} window 
+ * @param {Menus} menus 
  */
-function createSpellCheckLanguagesMenu(window) {
-	const curLanguages = window.webContents.session.getSpellCheckerLanguages();
-	const sclMenu = new Menu();
-	sclMenu.append(
-		createAllLanguagesMenuItem(curLanguages, window)
-	);
-
-	for (const ln of scLanguages) {
-		sclMenu.append(
-			createLanguageMenuItem(ln, curLanguages, window)
+function createSpellCheckLanguagesMenu(menus) {
+	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
+	const splChkMenu = new Menu();
+	for (const language of menus.spellCheckProvider.supportedList) {
+		splChkMenu.append(
+			createLanguageMenuItem(language, activeLanguages, menus)
 		);
 	}
-	return sclMenu;
+	return splChkMenu;
 }
 
-function createLanguageMenuItem(ln, curLanguages, window) {
+/**
+ * @param {{language:string,code:string}} language 
+ * @param {Array<string>} activeLanguages 
+ * @param {Menus} menus 
+ * @returns 
+ */
+function createLanguageMenuItem(language, activeLanguages, menus) {
 	return new MenuItem({
-		label: ln,
-		type: 'radio',
-		checked: curLanguages.length == 1 && curLanguages[0] == ln,
-		click: () => {
-			window.webContents.session.setSpellCheckerLanguages([ln]);
-		}
+		label: language.language,
+		type: 'checkbox',
+		id: language.code,
+		checked: activeLanguages.some(c => language.code === c),
+		click: (menuItem) => chooseLanguage(menuItem, menus)
 	});
 }
 
-function createAllLanguagesMenuItem(curLanguages, window) {
-	return new MenuItem({
-		label: 'All',
-		type: 'radio',
-		checked: curLanguages.length > 1,
-		click: () => {
-			window.webContents.session.setSpellCheckerLanguages(scLanguages);
-		}
-	});
+/**
+ * @param {MenuItem} item 
+ * @param {Menus} menus 
+ */
+function chooseLanguage(item, menus) {
+	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
+	if (item.checked) {
+		addToList(activeLanguages, item.id);
+	} else {
+		removeFromList(activeLanguages, item.id);
+	}
+	menus.spellCheckProvider.setLanguages(activeLanguages);
+}
+
+/**
+ * @param {Array<string>} list 
+ * @param {string} item 
+ */
+function removeFromList(list, item) {
+	const itemIndex = list.findIndex(l => l == item);
+	if (itemIndex >= 0) {
+		list.splice(itemIndex, 1);
+	}
+
+	return list;
+}
+
+/**
+ * @param {Array<string>} list 
+ * @param {string} item 
+ */
+function addToList(list, item) {
+	const itemIndex = list.findIndex(l => l == item);
+	if (itemIndex < 0) {
+		list.push(item);
+	}
+
+	return list;
 }
 
 exports = module.exports = Menus;

@@ -10,6 +10,7 @@ const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
+const { SpellCheckProvider } = require('../spellCheckProvidder');
 
 let blockerId = null;
 
@@ -120,13 +121,14 @@ function applyAppConfiguration(config, window) {
  * @param {BrowserWindow} window The browser window.
  */
 function applySpellCheckerConfiguration(languages, window) {
-	if (languages) {
-		try {
-			window.webContents.session.setSpellCheckerLanguages(languages);
-		} catch (error) {
-			logger.warn('Specified languages are not correct. Falling back to en-US');
-			window.webContents.session.setSpellCheckerLanguages(['en-US']);
+	const spellCheckProvider = new SpellCheckProvider(window, logger);
+	if (spellCheckProvider.setLanguages(languages).length == 0) {
+		// If failed to set user supplied languages, fallback to system locale.
+		const systemList = [app.getLocale()];
+		if (app.getLocale() !== app.getSystemLocale()) {
+			systemList.push(app.getSystemLocale());
 		}
+		spellCheckProvider.setLanguages(systemList);
 	}
 }
 
