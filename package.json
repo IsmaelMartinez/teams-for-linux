@@ -106,6 +106,7 @@
         "wayland",
         "upower-observe"
       ],
+      "buildPackages": ["libpipewire-0.3-0"],
       "stagePackages":["default","libpipewire-0.3-0"],
       "publish": [
         "snapStore"
