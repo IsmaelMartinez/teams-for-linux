@@ -10,7 +10,7 @@ const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
-const { SpellCheckProvider } = require('../spellCheckProvidder');
+const { SpellCheckProvider } = require('../spellCheckProvider');
 
 let blockerId = null;
 
