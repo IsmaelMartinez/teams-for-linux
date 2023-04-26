@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.72",
+  "version": "1.0.73",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -99,9 +99,6 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
-      "environment": {
-        "DISABLE_WAYLAND": 1
-      },
       "plugs": [
         "default",
         "camera",
@@ -109,6 +106,7 @@
         "wayland",
         "upower-observe"
       ],
+      "stagePackages":["default","libpipewire-0.3-0"],
       "publish": [
         "snapStore"
       ]
