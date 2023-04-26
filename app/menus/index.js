@@ -167,25 +167,7 @@ function assignAddToDictionaryHandler(params, menu, menus) {
  */
 function addTextEditMenuItems(params, menu, menus) {
 	if (params.isEditable) {
-		menu.append(
-			new MenuItem({
-				role: 'cut'
-			})
-		);
-
-		menu.append(
-			new MenuItem({
-				role: 'copy'
-			})
-		);
-
-		menu.append(
-			new MenuItem({
-				role: 'paste'
-			})
-		);
-
-		addSpellCheckMenuItems(menu, menus);
+		buildEditContextMenu(menu, menus);
 	} else if (params.linkURL !== '') {
 		menu.append(
 			new MenuItem({
@@ -194,6 +176,28 @@ function addTextEditMenuItems(params, menu, menus) {
 			})
 		);
 	}
+}
+
+function buildEditContextMenu(menu, menus) {
+	menu.append(
+		new MenuItem({
+			role: 'cut'
+		})
+	);
+
+	menu.append(
+		new MenuItem({
+			role: 'copy'
+		})
+	);
+
+	menu.append(
+		new MenuItem({
+			role: 'paste'
+		})
+	);
+
+	addSpellCheckMenuItems(menu, menus);
 }
 
 /**
