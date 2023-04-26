@@ -1,10 +1,10 @@
-const { app, Menu, MenuItem, powerMonitor } = require('electron');
+const { app, Menu, MenuItem, powerMonitor, clipboard } = require('electron');
 const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
-const { SpellCheckProvider } = require('../spellCheckProvidder');
+const { SpellCheckProvider } = require('../spellCheckProvider');
 const checkConnectivity = require('./connectivity');
 
 class Menus {
@@ -117,7 +117,9 @@ function assignContextMenuHandler(menus) {
 		// Allow users to add the misspelled word to the dictionary
 		assignAddToDictionaryHandler(params, menu, menus);
 
-		menu.popup();
+		if (menu.items.length > 0) {
+			menu.popup();
+		}
 	};
 }
 
@@ -156,33 +158,42 @@ function assignAddToDictionaryHandler(params, menu, menus) {
 		);
 	}
 
-	addTextEditMenuItems(menu, menus);
+	addTextEditMenuItems(params, menu, menus);
 }
 
 /**
  * @param {Electron.Menu} menu 
  * @param {Menus} menus 
  */
-function addTextEditMenuItems(menu, menus) {
-	menu.append(
-		new MenuItem({
-			role: 'cut'
-		})
-	);
+function addTextEditMenuItems(params, menu, menus) {
+	if (params.isEditable) {
+		menu.append(
+			new MenuItem({
+				role: 'cut'
+			})
+		);
 
-	menu.append(
-		new MenuItem({
-			role: 'copy'
-		})
-	);
+		menu.append(
+			new MenuItem({
+				role: 'copy'
+			})
+		);
 
-	menu.append(
-		new MenuItem({
-			role: 'paste'
-		})
-	);
+		menu.append(
+			new MenuItem({
+				role: 'paste'
+			})
+		);
 
-	addSpellCheckMenuItems(menu, menus);
+		addSpellCheckMenuItems(menu, menus);
+	} else if (params.linkURL !== '') {
+		menu.append(
+			new MenuItem({
+				label: 'Copy',
+				click: () => clipboard.writeText(params.linkURL)
+			})
+		);
+	}
 }
 
 /**
