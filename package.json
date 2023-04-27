@@ -100,25 +100,12 @@
       "confinement": "strict",
       "grade": "stable",
       "plugs": [
-        "desktop", 
-        "desktop-legacy", 
-        "home", 
-        "x11", 
-        "wayland", 
-        "unity7", 
-        "browser-support", 
-        "network", 
-        "gsettings", 
-        "audio-playback", 
-        "pulseaudio", 
-        "opengl", 
-        "camera", 
-        "screen-inhibit-control", 
-        "wayland", 
+        "default",
+        "camera",
+        "screen-inhibit-control",
+        "wayland",
         "upower-observe"
       ],
-      "buildPackages":["libpipewire-0.3"],
-      "stagePackages":["default","libpipewire-0.3"],
       "publish": [
         "snapStore"
       ]
