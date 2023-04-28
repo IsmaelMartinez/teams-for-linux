@@ -7,13 +7,7 @@
 	let config;
 	ipcRenderer.invoke('getConfig').then(mainConfig => {
 		config = mainConfig;
-		if (config.onlineOfflineReload) {
-			require('./tools/onlineOfflineListener')();
-		}
-		require('./tools/zoom')(config);
-
-		require('./tools/chromeApi');
-
+		initializeModules(config);
 
 		new ActivityManager(ipcRenderer, config).start();
 
@@ -84,4 +78,15 @@
 	}
 	window.Notification = CustomNotification;
 }());
+
+function initializeModules(config) {
+	if (config.onlineOfflineReload) {
+		require('./tools/onlineOfflineListener')();
+	}
+	require('./tools/zoom').init(config);
+
+	require('./tools/shortcuts').init(config);
+
+	require('./tools/chromeApi');
+}
 
