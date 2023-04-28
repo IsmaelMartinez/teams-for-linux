@@ -10,7 +10,9 @@
 		if (config.onlineOfflineReload) {
 			require('./tools/onlineOfflineListener')();
 		}
-		require('./tools/zoom')(config);
+		require('./tools/zoom').init(config);
+
+		require('./tools/shortcuts').init(config);
 
 		require('./tools/chromeApi');
 
