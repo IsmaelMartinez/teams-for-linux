@@ -48,7 +48,7 @@ class ActivityHub {
 	 * @param {number} status 
 	 */
 	setMyStatus(status) {
-		whenControllerReady((controller) => {
+		whenControllerReady(() => {
 			const presenseService = window.angular.element(document.body).injector().get('presenceService');
 			presenseService.setMyStatus(status, null, true);
 		});
@@ -146,6 +146,12 @@ function assignEventHandlers(controller) {
 	assignCallDisconnectedHandler(controller);
 	assignWorkerMessagingUpdatesHandler(controller);
 	assignMyStatusChangedHandler(controller);
+	performPlatformTweaks(controller);
+}
+
+function performPlatformTweaks(controller) {
+	const isRunningOnWindows = process.platform === 'win32' || process.platform === 'linux';
+	controller.callingService.callingAlertsService.isRunningOnWindows = () => isRunningOnWindows;
 }
 
 /**
