@@ -33,11 +33,6 @@ function argv(configPath) {
 				describe: 'Reload page when going from offline to online',
 				type: 'boolean'
 			},
-			enableDesktopNotificationsHack: {
-				default: false,
-				describe: 'Enable electron-native-notifications hack',
-				type: 'boolean'
-			},
 			url: {
 				default: 'https://teams.microsoft.com/',
 				describe: 'Microsoft Teams URL',

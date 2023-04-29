@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.0.75",
+  "version": "1.0.76",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",

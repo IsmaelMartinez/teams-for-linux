@@ -35,8 +35,6 @@ Also check [#154](https://github.com/IsmaelMartinez/teams-for-linux/issues/154) 
 
 Some notifications daemons in linux don't support the implementation that Microsoft implemented in the browser.
 
-This project includes a desktop notification hack that can be enable by running the application with `teams-for-linux --enableDesktopNotificationsHack`.
-
 ## Blank page
 
 Some users have reported a blank page on login (with the title `Microsoft Teams - initializing`).

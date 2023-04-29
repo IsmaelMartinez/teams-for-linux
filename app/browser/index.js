@@ -1,7 +1,6 @@
 /* global angular */
 (function () {
 	const { ipcRenderer } = require('electron');
-	const pageTitleNotifications = require('./notifications/pageTitleNotifications');
 	const ActivityManager = require('./notifications/activityManager');
 
 	let config;
@@ -10,10 +9,6 @@
 		initializeModules(config);
 
 		new ActivityManager(ipcRenderer, config).start();
-
-		if (config.enableDesktopNotificationsHack) {
-			pageTitleNotifications(ipcRenderer);
-		}
 
 		document.addEventListener('DOMContentLoaded', () => {
 			modifyAngularSettingsWithTimeout();
