@@ -6,7 +6,6 @@ const path = require('path');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
-const notifications = require('../notifications');
 const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
@@ -85,11 +84,6 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
  * @param {BrowserWindow} window The browser window.
  */
 function applyAppConfiguration(config, window) {
-	if (config.enableDesktopNotificationsHack) {
-		// eslint-disable-next-line no-undef
-		notifications.addDesktopNotificationHack(iconPath);
-	}
-
 	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
 	if (config.onlineOfflineReload) {
