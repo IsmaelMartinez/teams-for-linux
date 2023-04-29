@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -184,6 +184,10 @@ function onBeforeRequestHandler(details, callback) {
 	}
 }
 
+/**
+ * @param {Electron.HandlerDetails} details 
+ * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+ */
 function onNewWindow(details) {
 	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
 		logger.debug('DEBUG - captured meetup-join url');
@@ -202,11 +206,38 @@ function onNewWindow(details) {
 		win.once('ready-to-show', () => win.close());
 
 		return { action: 'deny' };
-	} else if (details.disposition !== 'background-tab') {
-		logger.debug('DEBUG - captured non background-tab. Opening externally');
-		shell.openExternal(details.url);
-		return { action: 'deny' };
 	}
+
+	return secureOpenLink(details);
+}
+
+/**
+ * @param {Electron.HandlerDetails} details 
+ * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+ */
+function secureOpenLink(details) {
+	logger.debug(`Requesting to open '${details.url}'`);
+	const value = dialog.showMessageBoxSync(window, {
+		type: 'question',
+		buttons: ['External', 'Internal', 'Deny'],
+		title: 'Open Link',
+		normalizeAccessKeys: true,
+		defaultId: 2,
+		cancelId: 2,
+		message: 'How would you like to open the link?\n\nExternal: Opens in new window without sharing context.\nInternal: Opens in new window sharing context (Unsafe). Useful for SSO.\nDeny: Denies opening the link.'
+	});
+
+	if (value === 0) {
+		shell.openExternal(details.url);
+	}
+	return value === 1 ? {
+		action: 'allow',
+		overrideBrowserWindowOptions: {
+			modal: true,
+			useContentSize: true,
+			parent: window
+		}
+	} : { action: 'deny' };
 }
 
 async function createWindow() {
