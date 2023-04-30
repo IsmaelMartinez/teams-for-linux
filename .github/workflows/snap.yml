@@ -29,7 +29,7 @@ jobs:
         run: sudo apt install pipewire
 
       - name: Install multipass and run
-        run: sudo snap install multipass && multipass launch
+        run: sudo snap install multipass && sudo multipass launch
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -59,7 +59,7 @@ jobs:
         run: sudo apt install pipewire
 
       - name: Install multipass and run
-        run: sudo snap install multipass && multipass launch
+        run: sudo snap install multipass && sudo multipass launch
       
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
