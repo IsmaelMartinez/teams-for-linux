@@ -53,7 +53,7 @@ jobs:
           node-version: 14
 
       - name: Install pipewire
-        run: sudo apt install pipewire
+        run: sudo apt install pipewire && export SNAPCRAFT_BUILD_ENVIRONMENT=lxd
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
