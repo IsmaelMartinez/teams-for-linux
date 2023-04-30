@@ -26,10 +26,7 @@ jobs:
           node-version: 14
 
       - name: Install pipewire
-        run: sudo apt install pipewire
-
-      - name: Install multipass and run
-        run: sudo snap install multipass && multipass start
+        run: sudo apt install pipewire && export SNAPCRAFT_BUILD_ENVIRONMENT=lxd
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -58,9 +55,6 @@ jobs:
       - name: Install pipewire
         run: sudo apt install pipewire
 
-      - name: Install multipass and run
-        run: sudo snap install multipass && multipass start
-      
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
