@@ -103,24 +103,12 @@
         "DISABLE_WAYLAND": 1
       },
       "plugs": [
-        "desktop",
-        "desktop-legacy",
-        "home",
-        "x11",
-        "wayland",
-        "unity7",
-        "browser-support",
-        "network",
-        "gsettings",
-        "audio-playback",
-        "pulseaudio",
-        "opengl",
+        "default",
         "camera",
         "screen-inhibit-control",
         "wayland",
         "upower-observe"
       ],
-      "stagePackages":["default","pipewire"],
       "publish": [
         "snapStore"
       ]
