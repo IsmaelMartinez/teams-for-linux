@@ -31,6 +31,9 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
+      - name: Install lxd
+        run: sudo snap install lxd
+        
       - name: Release
         if: contains(github.ref, 'develop')
         run: export SNAPCRAFT_BUILD_ENVIRONMENT=lxd && yarn dist:linux:snap --publish always
@@ -58,6 +61,9 @@ jobs:
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
+      - name: Install lxd
+        run: sudo snap install lxd
+        
       - name: Release
         if: contains(github.ref, 'develop')
         run: export SNAPCRAFT_BUILD_ENVIRONMENT=lxd && yarn dist:linux:snap:armv7l --publish always
