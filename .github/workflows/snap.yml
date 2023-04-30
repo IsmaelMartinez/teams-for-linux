@@ -26,14 +26,14 @@ jobs:
           node-version: 14
 
       - name: Install pipewire
-        run: sudo apt install pipewire && export SNAPCRAFT_BUILD_ENVIRONMENT=lxd
+        run: sudo apt install pipewire
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap --publish always
+        run: export SNAPCRAFT_BUILD_ENVIRONMENT=lxd && yarn dist:linux:snap --publish always
 
   snap-armv7l:
     runs-on: ubuntu-latest
@@ -53,11 +53,11 @@ jobs:
           node-version: 14
 
       - name: Install pipewire
-        run: sudo apt install pipewire && export SNAPCRAFT_BUILD_ENVIRONMENT=lxd
+        run: sudo apt install pipewire
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:snap:armv7l --publish always
+        run: export SNAPCRAFT_BUILD_ENVIRONMENT=lxd && yarn dist:linux:snap:armv7l --publish always
