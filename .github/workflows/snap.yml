@@ -13,17 +13,20 @@ jobs:
 
     steps:
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
+        uses: samuelmeuli/action-snapcraft@v2
         with:
           snapcraft_token: ${{ secrets.snapcraft_token }}
 
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+        uses: aactions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
+
+      - name: Install pipewire
+        run: sudo apt install pipewire
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
@@ -37,17 +40,20 @@ jobs:
 
     steps:
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
+        uses: samuelmeuli/action-snapcraft@v2
         with:
           snapcraft_token: ${{ secrets.snapcraft_token }}
 
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+        uses: aactions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
+
+      - name: Install pipewire
+        run: sudo apt install pipewire
 
       - name: Build
         run: yarn --link-duplicates --pure-lockfile
