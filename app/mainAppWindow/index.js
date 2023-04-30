@@ -217,7 +217,7 @@ function onNewWindow(details) {
  */
 function secureOpenLink(details) {
 	logger.debug(`Requesting to open '${details.url}'`);
-	const value = dialog.showMessageBoxSync(window, {
+	const command = dialog.showMessageBoxSync(window, {
 		type: 'question',
 		buttons: ['External', 'Internal', 'Deny'],
 		title: 'Open Link',
@@ -227,10 +227,14 @@ function secureOpenLink(details) {
 		message: 'How would you like to open the link?\n\nExternal: Opens in new window without sharing context.\nInternal: Opens in new window sharing context (Unsafe). Useful for SSO.\nDeny: Denies opening the link.'
 	});
 
-	if (value === 0) {
+	if (command === 0) {
 		shell.openExternal(details.url);
 	}
-	return value === 1 ? {
+
+	/**
+	 * @type {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+	 */
+	const returnValue = command === 1 ? {
 		action: 'allow',
 		overrideBrowserWindowOptions: {
 			modal: true,
@@ -238,6 +242,28 @@ function secureOpenLink(details) {
 			parent: window
 		}
 	} : { action: 'deny' };
+
+	if (command === 1) {
+		removePopupWindowMenu();
+	}
+
+	return returnValue;
+}
+
+async function removePopupWindowMenu() {
+	for (var i = 1; i <= 200; i++) {
+		await sleep(10);
+		const childWindows = window.getChildWindows();
+		if (childWindows.length) {
+			childWindows[0].removeMenu();
+			break;
+		}
+	}
+	return;
+}
+
+async function sleep(ms) {
+	return await new Promise(r => setTimeout(r, ms));
 }
 
 async function createWindow() {
