@@ -35,9 +35,9 @@ const KEY_MAPS = {
 
 function initInternal() {
 	document.addEventListener('DOMContentLoaded', async () => {
-		window.addEventListener('keydown', keyUpHandler, false);
+		window.addEventListener('keydown', keyDownEventHandler, false);
 		whenIframeReady((iframe) => {
-			iframe.contentDocument.addEventListener('keydown', keyUpHandler, false);
+			iframe.contentDocument.addEventListener('keydown', keyDownEventHandler, false);
 		});
 	});
 }
@@ -54,7 +54,7 @@ function whenIframeReady(callback) {
 	}
 }
 
-function keyUpHandler(event) {
+function keyDownEventHandler(event) {
 	const keyName = event.key;
 	if (keyName === 'Control' || keyName === 'Alt') {
 		return;
