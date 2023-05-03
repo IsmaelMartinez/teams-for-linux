@@ -72,7 +72,7 @@ function argv(configPath) {
 				default: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
 				describe: 'Google Chrome User Agent',
 				type: 'string'
-				
+
 			},
 			ntlmV2enabled: {
 				default: 'true',
@@ -163,7 +163,7 @@ function argv(configPath) {
 				default: 'Electron',
 				describe: 'Screen lock inhibition method to be used (Electron/WakeLockSentinel)',
 				type: 'string',
-				choices: ['Electron','WakeLockSentinel']
+				choices: ['Electron', 'WakeLockSentinel']
 			}
 		})
 		.parse(process.argv.slice(1));

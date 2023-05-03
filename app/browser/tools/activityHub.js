@@ -1,3 +1,4 @@
+const instance = require('./instance');
 /**
  * @type {Array<{handler:(data)=>void,event:string,handle:number}>}
  */
@@ -35,11 +36,11 @@ class ActivityHub {
 	}
 
 	start() {
-		whenControllerReady(assignEventHandlers);
+		instance.whenControllerReady(assignEventHandlers);
 	}
 
 	setDefaultTitle(title) {
-		whenControllerReady(controller => {
+		instance.whenControllerReady(controller => {
 			controller.pageTitleDefault = title;
 		});
 	}
@@ -48,7 +49,7 @@ class ActivityHub {
 	 * @param {number} status 
 	 */
 	setMyStatus(status) {
-		whenControllerReady(() => {
+		instance.whenControllerReady(() => {
 			const presenseService = window.angular.element(document.body).injector().get('presenceService');
 			presenseService.setMyStatus(status, null, true);
 		});
@@ -58,7 +59,7 @@ class ActivityHub {
 	 * @param {number} state 
 	 */
 	setMachineState(state) {
-		whenControllerReady((controller) => {
+		instance.whenControllerReady((controller) => {
 			if (state === 1) {
 				this.refreshAppState(controller, state);
 			} else {
@@ -126,18 +127,6 @@ function getEventHandlers(event) {
 	return eventHandlers.filter(e => {
 		return e.event === event;
 	});
-}
-
-/**
- * @param {(controller)=>void} callback 
- */
-function whenControllerReady(callback) {
-	const controller = typeof window.angular !== 'undefined' ? window.angular.element(document.documentElement).controller() : null;
-	if (controller) {
-		callback(controller);
-	} else {
-		setTimeout(() => whenControllerReady(callback), 4000);
-	}
 }
 
 function assignEventHandlers(controller) {
