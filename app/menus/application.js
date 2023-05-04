@@ -24,35 +24,44 @@ exports = module.exports = (Menus) => ({
 		{
 			type: 'separator',
 		},
-		{
-			label: 'Settings',
-			submenu: [
-				{
-					label: 'Save',
-					click: () => Menus.saveSettings()
-				},
-				{
-					label: 'Restore',
-					click: () => Menus.restoreSettings()
-				}
-			]
-		},
+		getSettingsMenu(Menus)
+		,
 		{
 			type: 'separator',
 		},
-		{
-			label: 'Quit',
-			submenu: [
-				{
-					label: 'Normally',
-					accelerator: 'ctrl+Q',
-					click: () => Menus.quit()
-				},
-				{
-					label: 'Clear Storage',
-					click: () => Menus.quit(true)
-				}
-			]
-		}
+		getQuitMenu(Menus)
 	],
 });
+
+function getSettingsMenu(Menus) {
+	return {
+		label: 'Settings',
+		submenu: [
+			{
+				label: 'Save',
+				click: () => Menus.saveSettings()
+			},
+			{
+				label: 'Restore',
+				click: () => Menus.restoreSettings()
+			}
+		]
+	};
+}
+
+function getQuitMenu(Menus) {
+	return {
+		label: 'Quit',
+		submenu: [
+			{
+				label: 'Normally',
+				accelerator: 'ctrl+Q',
+				click: () => Menus.quit()
+			},
+			{
+				label: 'Clear Storage',
+				click: () => Menus.quit(true)
+			}
+		]
+	};
+}
