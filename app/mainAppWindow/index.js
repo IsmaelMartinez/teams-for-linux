@@ -15,6 +15,8 @@ let blockerId = null;
 
 let isOnCall = false;
 
+let isControlPressed = false;
+
 /**
  * @type {LucidLog}
  */
@@ -37,23 +39,7 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	window = await createWindow();
 	new Menus(window, config, config.appIcon);
 
-	window.on('page-title-updated', (event, title) => {
-		window.webContents.send('page-title', title);
-	});
-
-	window.webContents.setWindowOpenHandler(onNewWindow);
-
-	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
-
-	login.handleLoginDialogTry(window);
-
-	window.webContents.on('did-finish-load', onDidFinishLoad);
-
-	window.on('closed', () => {
-		logger.debug('window closed');
-		window = null;
-		app.quit();
-	});
+	addEventHandlers();
 
 	const url = processArgs(process.argv);
 	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
@@ -211,30 +197,51 @@ function onNewWindow(details) {
 	return secureOpenLink(details);
 }
 
+function onPageTitleUpdated(event, title) {
+	window.webContents.send('page-title', title);
+}
+
+function onWindowClosed() {
+	logger.debug('window closed');
+	window = null;
+	app.quit();
+}
+
+function addEventHandlers() {
+	window.on('page-title-updated', onPageTitleUpdated);
+	window.webContents.setWindowOpenHandler(onNewWindow);
+	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
+	login.handleLoginDialogTry(window);
+	window.webContents.on('did-finish-load', onDidFinishLoad);
+	window.on('closed', onWindowClosed);
+	window.webContents.addListener('before-input-event', onBeforeInput);
+}
+
+
+/**
+ * @param {Electron.Event} event 
+ * @param {Electron.Input} input 
+ */
+function onBeforeInput(event, input) {
+	isControlPressed = input.control;
+}
+
 /**
  * @param {Electron.HandlerDetails} details 
  * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
  */
 function secureOpenLink(details) {
 	logger.debug(`Requesting to open '${details.url}'`);
-	const command = dialog.showMessageBoxSync(window, {
-		type: 'question',
-		buttons: ['External', 'Internal', 'Deny'],
-		title: 'Open Link',
-		normalizeAccessKeys: true,
-		defaultId: 2,
-		cancelId: 2,
-		message: 'How would you like to open the link?\n\nExternal: Opens in new window without sharing context.\nInternal: Opens in new window sharing context (Unsafe). Useful for SSO.\nDeny: Denies opening the link.'
-	});
+	const action = getLinkAction();
 
-	if (command === 0) {
+	if (action === 0) {
 		shell.openExternal(details.url);
 	}
 
 	/**
 	 * @type {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
 	 */
-	const returnValue = command === 1 ? {
+	const returnValue = action === 1 ? {
 		action: 'allow',
 		overrideBrowserWindowOptions: {
 			modal: true,
@@ -243,11 +250,26 @@ function secureOpenLink(details) {
 		}
 	} : { action: 'deny' };
 
-	if (command === 1) {
+	if (action === 1) {
 		removePopupWindowMenu();
 	}
 
 	return returnValue;
+}
+
+function getLinkAction() {
+	const action = isControlPressed ? dialog.showMessageBoxSync(window, {
+		type: 'warning',
+		buttons: ['Allow', 'Deny'],
+		title: 'Open URL',
+		normalizeAccessKeys: true,
+		defaultId: 1,
+		cancelId: 1,
+		message: 'This will open the URL in the application context. If this is for SSO, click Allow otherwise Deny.'
+	}) + 1 : 0;
+
+	isControlPressed = false;
+	return action;
 }
 
 async function removePopupWindowMenu() {
