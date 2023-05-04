@@ -6,7 +6,7 @@
 	let config;
 	ipcRenderer.invoke('getConfig').then(mainConfig => {
 		config = mainConfig;
-		initializeModules(config);
+		initializeModules(config, ipcRenderer);
 
 		new ActivityManager(ipcRenderer, config).start();
 
@@ -49,7 +49,7 @@
 	let classicNotification = window.Notification;
 	class CustomNotification {
 		constructor(title, options) {
-			if(config.disableNotifications){
+			if (config.disableNotifications) {
 				return;
 			}
 			options = options || {};
@@ -74,14 +74,18 @@
 	window.Notification = CustomNotification;
 }());
 
-function initializeModules(config) {
+/**
+ * @param {object} config 
+ * @param {Electron.IpcRenderer} ipcRenderer 
+ */
+function initializeModules(config, ipcRenderer) {
 	if (config.onlineOfflineReload) {
 		require('./tools/onlineOfflineListener')();
 	}
+
 	require('./tools/zoom').init(config);
-
 	require('./tools/shortcuts').init(config);
-
 	require('./tools/chromeApi');
+	require('./tools/settings').init(config, ipcRenderer);
 }
 
