@@ -1,4 +1,6 @@
-const { app, Menu, MenuItem, powerMonitor, clipboard } = require('electron');
+const { app, Menu, MenuItem, powerMonitor, clipboard, dialog, session, ipcMain } = require('electron');
+const fs = require('fs'),
+	path = require('path');
 const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
@@ -9,6 +11,9 @@ const checkConnectivity = require('./connectivity');
 
 class Menus {
 	constructor(window, config, iconPath) {
+		/**
+		 * @type {Electron.BrowserWindow}
+		 */
 		this.window = window;
 		this.iconPath = iconPath;
 		this.config = config;
@@ -19,8 +24,24 @@ class Menus {
 		this.initialize();
 	}
 
-	quit() {
+	async quit(clearStorage = false) {
 		this.allowQuit = true;
+
+		clearStorage = clearStorage && dialog.showMessageBoxSync(this.window, {
+			buttons: ['Yes', 'No'],
+			title: 'Quit',
+			normalizeAccessKeys: true,
+			defaultId: 1,
+			cancelId: 1,
+			message: 'Are you sure you want to clear the storage before quitting?',
+			type: 'question'
+		}) === 0;
+
+		if (clearStorage) {
+			const defSession = session.fromPartition(this.config.partition);
+			await defSession.clearStorageData();
+		}
+
 		this.window.close();
 	}
 
@@ -84,6 +105,35 @@ class Menus {
 			this.tray.close();
 			this.window.webContents.session.flushStorageData();
 		}
+	}
+
+	saveSettings() {
+		ipcMain.once('get-teams-settings', saveSettingsInternal);
+		this.window.webContents.send('get-teams-settings');
+	}
+
+	restoreSettings() {
+		ipcMain.once('set-teams-settings', restoreSettingsInternal);
+		this.window.webContents.send('set-teams-settings', JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'teams_settings.json'))));
+	}
+}
+
+function saveSettingsInternal(event, arg) {
+	fs.writeFileSync(path.join(app.getPath('userData'), 'teams_settings.json'), JSON.stringify(arg));
+	dialog.showMessageBoxSync(this.window, {
+		message: 'Settings have been saved successfully!',
+		title: 'Save settings',
+		type: 'info'
+	});
+}
+
+function restoreSettingsInternal(event, arg) {
+	if (arg) {
+		dialog.showMessageBoxSync(this.window, {
+			message: 'Settings have been restored successfully!',
+			title: 'Restore settings',
+			type: 'info'
+		});
 	}
 }
 

@@ -22,9 +22,37 @@ exports = module.exports = (Menus) => ({
 			click: () => Menus.debug(),
 		},
 		{
-			label: 'Quit',
-			accelerator: 'ctrl+Q',
-			click: () => Menus.quit(),
+			type: 'separator',
 		},
+		{
+			label: 'Settings',
+			submenu: [
+				{
+					label: 'Save',
+					click: () => Menus.saveSettings()
+				},
+				{
+					label: 'Restore',
+					click: () => Menus.restoreSettings()
+				}
+			]
+		},
+		{
+			type: 'separator',
+		},
+		{
+			label: 'Quit',
+			submenu: [
+				{
+					label: 'Normally',
+					accelerator: 'ctrl+Q',
+					click: () => Menus.quit()
+				},
+				{
+					label: 'Clear Storage',
+					click: () => Menus.quit(true)
+				}
+			]
+		}
 	],
 });
