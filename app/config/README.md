@@ -42,7 +42,7 @@ Here is the list of available arguments and its usage:
 | appIdleTimeoutCheckInterval | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached | 10 |
 | appActiveCheckInterval | A numeric value in seconds as poll interval to check if the system is active from being idle | 2 |
 | screenLockInhibitionMethod | Screen lock inhibition method to be used (Electron/WakeLockSentinel) | Electron |
-
+| forceBackground | Provide a local path to a meeting background (select any background image then) - experimental | empty |
 
 
 As an example, to disable the persitence, you can run the following command:

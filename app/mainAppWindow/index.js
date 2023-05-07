@@ -10,6 +10,7 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
+const fs = require('fs');
 
 let blockerId = null;
 
@@ -37,6 +38,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window = await createWindow();
+
+	forceBackground(config.forceBackground);
+
 	new Menus(window, config, config.appIcon);
 
 	addEventHandlers();
@@ -403,4 +407,33 @@ function enableWakeLockOnWindowRestore() {
 	if (isOnCall) {
 		window.webContents.send('enable-wakelock');
 	}
+}
+
+function forceBackground(forceBackgroundPath) {
+	if (forceBackgroundPath === undefined) {
+		return;
+	}
+
+	fs.readFile(forceBackgroundPath, {}, (error, data) => {
+		if (!error) {
+			let mime = 'image/jpeg';
+			if (config.forceBackgroundPath.toLower().endsWith('.png')) {
+				mime = 'image/png';
+			}
+
+			const base64Image = 'data:' + mime + ';base64,' + data.toString('base64');
+			window.webContents.executeJavaScript(`
+setTimeout(function () {
+	console.log('forceBackground ${forceBackgroundPath}');
+	const imageData = '${base64Image}';
+	const controller = typeof window.angular !== 'undefined' ? window.angular.element(document.documentElement).controller() : null;
+	const x = controller.callingService._deviceManagerService.setBackgroundImageOnDevice;
+	controller.callingService._deviceManagerService.setBackgroundImageOnDevice = (...args) => {
+		args[0] = imageData;
+		x.apply(controller.callingService._deviceManagerService, [...args]);
+	};
+},0);
+`);
+		}
+	});
 }
