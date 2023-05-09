@@ -155,9 +155,17 @@ function processArgs(args) {
 	}
 }
 
+/**
+ * @param {Electron.OnBeforeRequestListenerDetails} details 
+ * @param {Electron.CallbackResponse} callback 
+ */
 function onBeforeRequestHandler(details, callback) {
+	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
+		const imgUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', 'http://localhost/');
+		callback({ redirectURL: imgUrl });
+	}
 	// Check if the counter was incremented
-	if (aboutBlankRequestCount < 1) {
+	else if (aboutBlankRequestCount < 1) {
 		// Proceed normally
 		callback({});
 	} else {
@@ -168,6 +176,49 @@ function onBeforeRequestHandler(details, callback) {
 		aboutBlankRequestCount -= 1;
 		callback({ cancel: true });
 	}
+}
+
+/**
+ * @param {Electron.OnHeadersReceivedListenerDetails} details 
+ * @param {Electron.HeadersReceivedResponse} callback 
+ */
+function onHeadersReceivedHandler(details, callback) {
+	if (details.responseHeaders['content-security-policy']) {
+		const policies = details.responseHeaders['content-security-policy'][0].split(';');
+		setImgSrcSecurityPolicy(policies);
+		setConnectSrcSecurityPolicy(policies);
+		details.responseHeaders['content-security-policy'][0] = policies.join(';');
+	}
+	callback({
+		responseHeaders: details.responseHeaders
+	});
+}
+
+function setConnectSrcSecurityPolicy(policies) {
+	const connectsrcIndex = policies.findIndex(f => f.indexOf('connect-src') >= 0);
+	if (connectsrcIndex >= 0) {
+		policies[connectsrcIndex] = policies[connectsrcIndex] + ' http://localhost:*';
+	}
+}
+
+function setImgSrcSecurityPolicy(policies) {
+	const imgsrcIndex = policies.findIndex(f => f.indexOf('img-src') >= 0);
+	if (imgsrcIndex >= 0) {
+		policies[imgsrcIndex] = policies[imgsrcIndex] + ' http://localhost:*';
+	}
+}
+
+/**
+ * @param {Electron.OnBeforeSendHeadersListenerDetails} detail 
+ * @param {Electron.BeforeSendResponse} callback 
+ */
+function onBeforeSendHeadersHandler(detail, callback) {
+	if (detail.url.startsWith('http://localhost/')) {
+		detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
+	}
+	callback({
+		requestHeaders: detail.requestHeaders
+	});
 }
 
 /**
@@ -211,6 +262,8 @@ function addEventHandlers() {
 	window.on('page-title-updated', onPageTitleUpdated);
 	window.webContents.setWindowOpenHandler(onNewWindow);
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
+	window.webContents.session.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, onHeadersReceivedHandler);
+	window.webContents.session.webRequest.onBeforeSendHeaders({ urls: ['http://*/*'] }, onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 	window.on('closed', onWindowClosed);

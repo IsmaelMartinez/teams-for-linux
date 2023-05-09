@@ -66,3 +66,41 @@ Example:
 ## Getting custom CA Certs fingerprints
 
 Information about how to get the custom CA Certs fingerprints is now available under the [certificate README.md file](../certificate/README.md)
+
+## Custom backgrounds
+
+We added a feature to load custom background images during a video call. This is available from version `1.0.84`.
+
+### Things to remember:
+
+1. Currently app does not feature adding or removing custom images. You have to rely on any locally hosted light weight web servers to serve images.
+2. Custom images are always loaded with `http://locahost/<image-path>`. So, you have to make sure the web server is running and `http://localhost` responds to the request.
+3. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
+
+For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
+```xml
+<Directory /var/www/>
+	Header set Access-Control-Allow-Origin "*"
+	Options Indexes FollowSymLinks
+	AllowOverride None
+	Require all granted
+</Directory>
+```
+
+### Configuring list of images
+
+1. List of images are to be stored in `custom_bg.json` in `config` folder.
+2. It would look like this:
+```js
+[
+	{
+		"filetype": "jpg", // Type of image
+		"id": "Custom_bg01", // Id of the image. Give a unique name without spaces.
+		"name": "Custom bg", // Name of your image.
+		"src": "/teams-for-linux/custom-bg/<path-to-image>", // Path to the image to be loaded when selected from the preview.
+		"thumb_src": "/teams-for-linux/custom-bg/<path-to-thumb-image>" // Path to the image to be shown on the preview screen. You can use same as the original or a cropped down image also.
+	}
+]
+```
+
+As you can see from the above example, it's a JSON array so you can configure any number of images of your choice.

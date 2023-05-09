@@ -1,5 +1,6 @@
 const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { LucidLog } = require('lucid-log');
 const isDev = require('electron-is-dev');
 const os = require('os');
@@ -95,6 +96,7 @@ if (!gotTheLock) {
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
+	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
 	ipcMain.on('play-notification-sound', playNotificationSound);
 	ipcMain.on('user-status-changed', userStatusChangedHandler);
 }
@@ -166,6 +168,15 @@ async function handleSaveZoomLevel(_, args) {
 	partition.zoomLevel = args.zoomLevel;
 	savePartition(partition);
 	return;
+}
+
+async function handleGetCustomBGList() {
+	const file = path.join(app.getPath('userData'), 'custom_bg.json');
+	if (!fs.existsSync(file)) {
+		return [];
+	} else {
+		return JSON.parse(fs.readFileSync(file));
+	}
 }
 
 function getPartitions() {
