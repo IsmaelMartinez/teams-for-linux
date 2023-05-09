@@ -87,5 +87,6 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/shortcuts').init(config);
 	require('./tools/chromeApi');
 	require('./tools/settings').init(config, ipcRenderer);
+	require('./tools/customBackgrounds')(config, ipcRenderer);
 }
 
