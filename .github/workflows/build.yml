@@ -104,3 +104,22 @@ jobs:
       - name: Release
         if: contains(github.ref, 'develop')
         run: yarn dist:mac -- --publish always
+
+  exe:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:windows -- --publish always
