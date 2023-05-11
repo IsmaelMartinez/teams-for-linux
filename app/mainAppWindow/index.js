@@ -18,6 +18,11 @@ let isOnCall = false;
 let isControlPressed = false;
 
 /**
+ * @type {URL}
+ */
+let customBGServiceUrl;
+
+/**
  * @type {LucidLog}
  */
 let logger;
@@ -161,7 +166,8 @@ function processArgs(args) {
  */
 function onBeforeRequestHandler(details, callback) {
 	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
-		const imgUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', 'http://localhost/');
+		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
+		const imgUrl = new URL(reqUrl, customBGServiceUrl.href).href;
 		callback({ redirectURL: imgUrl });
 	}
 	// Check if the counter was incremented
@@ -197,14 +203,15 @@ function onHeadersReceivedHandler(details, callback) {
 function setConnectSrcSecurityPolicy(policies) {
 	const connectsrcIndex = policies.findIndex(f => f.indexOf('connect-src') >= 0);
 	if (connectsrcIndex >= 0) {
-		policies[connectsrcIndex] = policies[connectsrcIndex] + ' http://localhost:*';
+		policies[connectsrcIndex] = policies[connectsrcIndex] + ` ${customBGServiceUrl.origin}`;
+		console.log(policies[connectsrcIndex]);
 	}
 }
 
 function setImgSrcSecurityPolicy(policies) {
 	const imgsrcIndex = policies.findIndex(f => f.indexOf('img-src') >= 0);
 	if (imgsrcIndex >= 0) {
-		policies[imgsrcIndex] = policies[imgsrcIndex] + ' http://localhost:*';
+		policies[imgsrcIndex] = policies[imgsrcIndex] + ` ${customBGServiceUrl.origin}`;
 	}
 }
 
@@ -213,7 +220,7 @@ function setImgSrcSecurityPolicy(policies) {
  * @param {Electron.BeforeSendResponse} callback 
  */
 function onBeforeSendHeadersHandler(detail, callback) {
-	if (detail.url.startsWith('http://localhost/')) {
+	if (detail.url.startsWith(customBGServiceUrl.href)) {
 		detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
 	}
 	callback({
@@ -259,15 +266,32 @@ function onWindowClosed() {
 }
 
 function addEventHandlers() {
+	initializeCustomBGServiceURL();
 	window.on('page-title-updated', onPageTitleUpdated);
 	window.webContents.setWindowOpenHandler(onNewWindow);
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 	window.webContents.session.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, onHeadersReceivedHandler);
-	window.webContents.session.webRequest.onBeforeSendHeaders({ urls: ['http://*/*'] }, onBeforeSendHeadersHandler);
+	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 	window.on('closed', onWindowClosed);
 	window.webContents.addListener('before-input-event', onBeforeInput);
+}
+
+function getWebRequestFilterFromURL() {
+	const filter = customBGServiceUrl.protocol === 'http:' ? { urls: ['http://*/*'] } : { urls: ['https://*/*'] };
+	return filter;
+}
+
+function initializeCustomBGServiceURL() {
+	try {
+		customBGServiceUrl = new URL('', config.customBGServiceBaseUrl);
+		logger.debug(`Custom background service url is '${config.customBGServiceBaseUrl}'`);
+	}
+	catch (err) {
+		logger.error(`Invalid custom background service url '${config.customBGServiceBaseUrl}', updating to default 'http://localhost'`);
+		customBGServiceUrl = new URL('', 'http://localhost');
+	}
 }
 
 

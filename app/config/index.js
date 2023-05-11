@@ -164,6 +164,11 @@ function argv(configPath) {
 				describe: 'Screen lock inhibition method to be used (Electron/WakeLockSentinel)',
 				type: 'string',
 				choices: ['Electron', 'WakeLockSentinel']
+			},
+			customBGServiceBaseUrl: {
+				default: 'http://localhost',
+				describe: 'Base URL of the server which provides custom background images',
+				type: 'string'
 			}
 		})
 		.parse(process.argv.slice(1));
