@@ -2,6 +2,8 @@ const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor } = requi
 const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
+const helpers = require('./helpers');
+
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
@@ -99,6 +101,7 @@ if (!gotTheLock) {
 	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
 	ipcMain.on('play-notification-sound', playNotificationSound);
 	ipcMain.on('user-status-changed', userStatusChangedHandler);
+	downloadCustomBGServiceRemoteConfig();
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -171,7 +174,7 @@ async function handleSaveZoomLevel(_, args) {
 }
 
 async function handleGetCustomBGList() {
-	const file = path.join(app.getPath('userData'), 'custom_bg.json');
+	const file = path.join(app.getPath('userData'), 'custom_bg_remote.json');
 	if (!fs.existsSync(file)) {
 		return [];
 	} else {
@@ -232,4 +235,45 @@ async function requestMediaAccess() {
  */
 function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
+}
+
+async function downloadCustomBGServiceRemoteConfig() {
+	var cbsurl;
+	try {
+		cbsurl = new URL('', config.customBGServiceBaseUrl);
+	}
+	catch (err) {
+		cbsurl = new URL('', 'http://localhost');
+	}
+
+	const remotepath = helpers.joinURLs(cbsurl.href, 'config.json');
+	logger.debug(`Fetching custom background configuration from '${remotepath}'`);
+	helpers.getAsync(remotepath)
+		.then(onCustomBGServiceConfigDownloadSuccess)
+		.catch(onCustomBGServiceConfigDownloadFailure);
+	if (config.customBGServiceConfigFetchInterval > 0) {
+		setTimeout(downloadCustomBGServiceRemoteConfig, config.customBGServiceConfigFetchInterval * 1000);
+	}
+}
+
+function onCustomBGServiceConfigDownloadSuccess(data) {
+	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	try {
+		fs.writeFileSync(dlpath, data);
+		logger.debug(`Custom background service remote configuration stored at '${dlpath}'`);
+	}
+	catch (err) {
+		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+	}
+}
+
+function onCustomBGServiceConfigDownloadFailure(err) {
+	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	logger.error(err.message);
+	try {
+		fs.writeFileSync(dlpath, JSON.stringify([]));
+	}
+	catch (err) {
+		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+	}
 }

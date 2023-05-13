@@ -10,6 +10,7 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
+const helpers = require('../helpers');
 
 let blockerId = null;
 
@@ -167,7 +168,8 @@ function processArgs(args) {
 function onBeforeRequestHandler(details, callback) {
 	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
-		const imgUrl = new URL(reqUrl, customBGServiceUrl.href).href;
+		const imgUrl = getBGRedirectUrl(reqUrl);
+		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
 		callback({ redirectURL: imgUrl });
 	}
 	// Check if the counter was incremented
@@ -182,6 +184,10 @@ function onBeforeRequestHandler(details, callback) {
 		aboutBlankRequestCount -= 1;
 		callback({ cancel: true });
 	}
+}
+
+function getBGRedirectUrl(rel) {
+	return helpers.joinURLs(customBGServiceUrl.href, rel);
 }
 
 /**
@@ -204,7 +210,6 @@ function setConnectSrcSecurityPolicy(policies) {
 	const connectsrcIndex = policies.findIndex(f => f.indexOf('connect-src') >= 0);
 	if (connectsrcIndex >= 0) {
 		policies[connectsrcIndex] = policies[connectsrcIndex] + ` ${customBGServiceUrl.origin}`;
-		console.log(policies[connectsrcIndex]);
 	}
 }
 
