@@ -169,6 +169,11 @@ function argv(configPath) {
 				default: 'http://localhost',
 				describe: 'Base URL of the server which provides custom background images',
 				type: 'string'
+			},
+			customBGServiceConfigFetchInterval: {
+				default: 0,
+				describe: 'A numeric value in seconds as poll interval to download background service config download',
+				type: 'number'
 			}
 		})
 		.parse(process.argv.slice(1));

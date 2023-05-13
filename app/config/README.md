@@ -43,6 +43,7 @@ Here is the list of available arguments and its usage:
 | appActiveCheckInterval | A numeric value in seconds as poll interval to check if the system is active from being idle | 2 |
 | screenLockInhibitionMethod | Screen lock inhibition method to be used (Electron/WakeLockSentinel) | Electron |
 | customBGServiceBaseUrl | Base URL of the server which provides custom background images | http://localhost |
+| customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download custom background service configuration. If 0, it will be downloaded only at application start | 0 |
 
 
 
@@ -74,9 +75,10 @@ We added a feature to load custom background images during a video call. This is
 
 ### Things to remember:
 
-1. Currently app does not feature adding or removing custom images. You have to rely on any locally hosted light weight web servers to serve images.
-2. Custom images are always loaded with `http://locahost/<image-path>`. So, you have to make sure the web server is running and `http://localhost` responds to the request.
-3. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
+1. Currently app does not feature adding or removing custom images. You have to rely on any locally/remotely hosted web servers to serve images.
+2. Two new command-line parameters `customBGServiceBaseUrl` and `customBGServiceConfigFetchInterval` are introduced. See above for details.
+3. Custom images are always loaded with `<customBGServiceBaseUrl>/<image-path>`. So, you have to make sure the web server is running and `<customBGServiceBaseUrl>` responds to the request.
+4. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
 
 For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 ```xml
@@ -90,18 +92,27 @@ For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 
 ### Configuring list of images
 
-1. List of images are to be stored in `custom_bg.json` in `config` folder.
+1. List of images are to be stored in `<customBGServiceBaseUrl>/config.json`.
 2. It would look like this:
 ```js
 [
 	{
-		"filetype": "jpg", // Type of image
-		"id": "Custom_bg01", // Id of the image. Give a unique name without spaces.
-		"name": "Custom bg", // Name of your image.
-		"src": "/teams-for-linux/custom-bg/<path-to-image>", // Path to the image to be loaded when selected from the preview.
-		"thumb_src": "/teams-for-linux/custom-bg/<path-to-thumb-image>" // Path to the image to be shown on the preview screen. You can use same as the original or a cropped down image also.
+		"filetype": "jpg",
+		"id": "Custom_bg01",
+		"name": "Custom bg",
+		"src": "/teams-for-linux/custom-bg/<path-to-image>",
+		"thumb_src": "/teams-for-linux/custom-bg/<path-to-thumb-image>"
 	}
 ]
-```
 
+```
 As you can see from the above example, it's a JSON array so you can configure any number of images of your choice.
+
+### About config entries
+- `filetype`: Type of image (Ex: jpg)
+- `id`: Id of the image. Give a unique name without spaces.
+- `name`: Name of your image.
+- `src`: Path to the image to be loaded when selected from the preview.
+- `thumb_src`: Path to the image to be shown on the preview screen. Provide a law resolution picture as it's shown on the preview page. The smaller the image the quicker the preview will be. 
+
+Image paths are relative to `customBGServiceBaseUrl`. They should always start with `/teams-for-linux/custom-bg/`. If your image is at `https://example.com/images/sample.jpg`, then `src` would be `/teams-for-linux/custom-bg/images/sample.jpg`.
