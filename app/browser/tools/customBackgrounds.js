@@ -33,7 +33,7 @@ async function customBGProvider(...args) {
 	/**
 	 * @type {Array<any>}
 	 */
-	const ms_response = await bgMSMethod.apply(bgMSService, [...args]);
+	const ms_response = config.customBGServiceIgnoreMSDefaults ? [] : await bgMSMethod.apply(bgMSService, [...args]);
 	const customList = await ipRenderer.invoke('getCustomBGList');
 	ms_response.push(...customList);
 	return ms_response;

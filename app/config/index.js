@@ -170,6 +170,11 @@ function argv(configPath) {
 				describe: 'Base URL of the server which provides custom background images',
 				type: 'string'
 			},
+			customBGServiceIgnoreMSDefaults: {
+				default: false,
+				describe: 'A flag indicates whether to ignore Microsoft provided images or not',
+				type: 'boolean'
+			},
 			customBGServiceConfigFetchInterval: {
 				default: 0,
 				describe: 'A numeric value in seconds as poll interval to download background service config download',
