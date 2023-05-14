@@ -259,11 +259,28 @@ async function downloadCustomBGServiceRemoteConfig() {
 function onCustomBGServiceConfigDownloadSuccess(data) {
 	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
 	try {
-		fs.writeFileSync(dlpath, data);
+		const configJSON = JSON.parse(data);
+		for (var i = 0; i < configJSON.length; i++) {
+			setPath(configJSON[i]);
+		}
+		fs.writeFileSync(dlpath, JSON.stringify(configJSON));
 		logger.debug(`Custom background service remote configuration stored at '${dlpath}'`);
 	}
 	catch (err) {
 		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+	}
+}
+
+/**
+ * @param {{filetype: string,id: string, name: string, src: string, thumb_src: string }} cfg 
+ */
+function setPath(cfg) {
+	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
+		cfg.src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
+	}
+
+	if (!cfg.thumb_src.startsWith('/teams-for-linux/custom-bg/')) {
+		cfg.thumb_src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.thumb_src);
 	}
 }
 
