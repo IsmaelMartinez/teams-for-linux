@@ -30,18 +30,13 @@ let userStatus = -1;
 
 // Notification sound player
 /**
- * @type {NodeSoundPlayer | Afplay}
+ * @type {NodeSoundPlayer}
  */
 let player;
 try {
-	if (isMac) {
-		const Afplay = require('afplay');
-		player = new Afplay;
-	} else {
-		// eslint-disable-next-line no-unused-vars
-		const { NodeSound, NodeSoundPlayer } = require('node-sound');
-		player = NodeSound.getDefaultPlayer();
-	}
+	// eslint-disable-next-line no-unused-vars
+	const { NodeSound, NodeSoundPlayer } = require('node-sound');
+	player = NodeSound.getDefaultPlayer();
 } catch (e) {
 	logger.info('No audio players found. Audio notifications might not work.');
 }
@@ -99,19 +94,21 @@ if (!gotTheLock) {
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
-	ipcMain.on('play-notification-sound', playNotificationSound);
-	ipcMain.on('user-status-changed', userStatusChangedHandler);
+	ipcMain.handle('play-notification-sound', playNotificationSound);
+	ipcMain.handle('user-status-changed', userStatusChangedHandler);
 	downloadCustomBGServiceRemoteConfig();
 }
 
 // eslint-disable-next-line no-unused-vars
-function playNotificationSound(event, options) {
+async function playNotificationSound(event, options) {
 	// Player failed to load or notification sound disabled in config
 	if (!player || config.disableNotificationSound) {
+		logger.debug('Notification sounds are disabled');
 		return;
 	}
 	// Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
 	if (config.disableNotificationSoundIfNotAvailable && userStatus !== 1 && userStatus !== -1) {
+		logger.debug('Notification sounds are disabled when user is not active');
 		return;
 	}
 	const sound = notificationSounds.filter(ns => {
@@ -121,7 +118,11 @@ function playNotificationSound(event, options) {
 	if (sound) {
 		logger.debug(`Playing file: ${sound.file}`);
 		player.play(sound.file);
+		return;
 	}
+
+	logger.debug('No notification sound played', player, options);
+	return;
 }
 
 function onRenderProcessGone() {
@@ -233,8 +234,10 @@ async function requestMediaAccess() {
  * @param {*} event 
  * @param {*} options 
  */
-function userStatusChangedHandler(event, options) {
+async function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
+	logger.debug(`User status changed to '${userStatus}'`);
+	return;
 }
 
 async function downloadCustomBGServiceRemoteConfig() {

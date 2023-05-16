@@ -8,11 +8,8 @@ The [onlineOfflineListener.js](tools/onlineOfflineListener.js) adds listeners to
 
 The [zoom.js](tools/zoom.js) inject the keyboard shortcuts for zoom in the browser.
 
-The [rightClickMenuWithSpellcheck.js](tools/rightClickMenuWithSpellcheck.js) handles the spellchecker and right menu click funcionality. We are leveraging the spellchecker capabilitites to [electron-spell-check-provider](https://www.npmjs.com/package/electron-spell-check-provider) and the right click menu to the  [electron-editor-context-menu](https://github.com/mixmaxhq/electron-editor-context-menu) modules.
-
 The notifications folder contains:
 
-*    [pageTitleNotifications.js](notifications/pageTitleNotifications.js) file handles the emitting of an event when the page-title changes and indicates that there is an unread message.
 *    [activityManager.js](notifications/activityManager.js) listens for changes in the chatListService and bellNotificationsService to update the unread count.
 *    [trayIconRenderer.js](tools/trayIconRenderer.js) renders a new icon with the number of unread messages.
 
