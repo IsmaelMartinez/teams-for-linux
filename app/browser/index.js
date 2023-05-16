@@ -58,7 +58,9 @@
 				type: options.type ? options.type : 'new-message',
 				audio: 'default'
 			};
-			ipcRenderer.send('play-notification-sound', notifSound);
+			console.log('Requesting application to play sound');
+			ipcRenderer.invoke('play-notification-sound', notifSound);
+			console.log('Continues to default notification workflow');
 			return new classicNotification(title, options);
 		}
 		static requestPermission(callback) {
