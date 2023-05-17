@@ -48,13 +48,14 @@ Here is the list of available arguments and its usage:
 
 
 
-As an example, to disable the persitence, you can run the following command:
+As an example, to disable the persistence, you can run the following command:
 
 ```bash
 teams-for-linux --partition nopersist
 ```
 
-Alternatively, you can use a file called `config.json` with the configuration options. This file needs to be located in `~/.config/teams-for-linux/config.json`
+Alternatively, you can use a file called `config.json` with the configuration options. This file needs to be located in `~/.config/teams-for-linux/config.json`.
+For Snap installations, the file is located in `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`.
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
 
