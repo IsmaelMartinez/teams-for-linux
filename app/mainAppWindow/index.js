@@ -146,15 +146,17 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
+	var regHttps = /^https:\/\/teams.microsoft.com\/l\/(meetup-join|channel)\//g;
+	var regMS = /^msteams:\/l\/(meetup-join|channel)\//g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
-		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
-			logger.debug('meetup-join argument received with https protocol');
+		if (regHttps.test(arg)) {
+			logger.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
 		}
-		if (arg.startsWith('msteams:/l/meetup-join/')) {
-			logger.debug('meetup-join argument received with msteams protocol');
+		if (regMS.test(arg)) {
+			logger.debug('A url argument received with msteams protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
 		}
