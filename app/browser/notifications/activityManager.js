@@ -21,6 +21,7 @@ class ActivityManager {
 				flash: (count > 0)
 			});
 		});
+		this.ipcRenderer.invoke('set-badge-count', count);
 	}
 
 	start() {
