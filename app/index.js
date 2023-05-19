@@ -96,6 +96,7 @@ if (!gotTheLock) {
 	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
 	ipcMain.handle('play-notification-sound', playNotificationSound);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
+	ipcMain.handle('set-badge-count', setBadgeCountHandler);
 	downloadCustomBGServiceRemoteConfig();
 }
 
@@ -237,6 +238,18 @@ async function requestMediaAccess() {
 async function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
 	logger.debug(`User status changed to '${userStatus}'`);
+	return;
+}
+
+/**
+ * Handle user-status-changed message
+ * 
+ * @param {*} event 
+ * @param {*} count 
+ */
+async function setBadgeCountHandler(event, count) {
+	logger.debug(`Badge count set to '${count}'`);
+	app.setBadgeCount(count);
 	return;
 }
 
