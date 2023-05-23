@@ -127,11 +127,11 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:rpm
 
       - name: Push
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         id: push
         uses: cloudsmith-io/action@master
         with:
@@ -161,11 +161,11 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:rpm
 
       - name: Push
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         id: push
         uses: cloudsmith-io/action@master
         with:
@@ -195,11 +195,11 @@ jobs:
         run: yarn --link-duplicates --pure-lockfile
 
       - name: Release
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         run: yarn dist:linux:rpm
 
       - name: Push
-        #if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'develop')
         id: push
         uses: cloudsmith-io/action@master
         with:
