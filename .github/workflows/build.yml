@@ -28,6 +28,21 @@ jobs:
       - name: Release
         if: contains(github.ref, 'develop')
         run: yarn dist:linux:deb -- --publish always
+      
+      - name: Push
+        if: contains(github.ref, 'develop')
+        id: push
+        uses: cloudsmith-io/action@master
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          command: "push"
+          format: "deb"
+          owner: "cloudsmith"
+          repo: "actions"
+          distro: "ubuntu"
+          release: "xenial"
+          republish: "true" # needed ONLY if version is not changing
+          file: "dist/*.deb"
 
   rpm:
     runs-on: ubuntu-latest
