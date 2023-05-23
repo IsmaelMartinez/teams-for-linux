@@ -30,7 +30,7 @@ jobs:
         run: yarn dist:linux:deb -- --publish always
       
       - name: Push
-        if: contains(github.ref, 'develop')
+        # if: contains(github.ref, 'develop')
         id: push
         uses: cloudsmith-io/action@master
         with:
