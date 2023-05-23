@@ -57,7 +57,7 @@ jobs:
           command: "push"
           format: "deb"
           owner: "cloudsmith"
-          repo: "jijojospehk/teams-for-linux/packages"
+          repo: "jijo-joseph/teams-for-linux/packages"
           distro: "any"
           release: "any"
           republish: "true" # needed ONLY if version is not changing
