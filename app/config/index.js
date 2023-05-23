@@ -164,6 +164,21 @@ function argv(configPath) {
 				describe: 'Screen lock inhibition method to be used (Electron/WakeLockSentinel)',
 				type: 'string',
 				choices: ['Electron', 'WakeLockSentinel']
+			},
+			customBGServiceBaseUrl: {
+				default: 'http://localhost',
+				describe: 'Base URL of the server which provides custom background images',
+				type: 'string'
+			},
+			customBGServiceIgnoreMSDefaults: {
+				default: false,
+				describe: 'A flag indicates whether to ignore Microsoft provided images or not',
+				type: 'boolean'
+			},
+			customBGServiceConfigFetchInterval: {
+				default: 0,
+				describe: 'A numeric value in seconds as poll interval to download background service config download',
+				type: 'number'
 			}
 		})
 		.parse(process.argv.slice(1));

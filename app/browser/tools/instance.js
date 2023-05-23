@@ -1,32 +1,27 @@
 class Instance {
 	/**
-	 * @param {(controller)=>void} callback
+	 * @returns {Promise<{controller:object,injector:object}>}
 	 */
-	whenControllerReady(callback) {
-		const controller = typeof window.angular !== 'undefined' ? window.angular.element(document.documentElement).controller() : null;
-		if (controller) {
-			callback(controller);
-		} else {
-			setTimeout(() => this.whenControllerReady(callback), 4000);
-		}
-	}
-
-	/**
-	 * @returns {Promise<object>}
-	 */
-	async whenControllerReadyAsync() {
-		const controller = getController();
-		if (controller) {
-			return controller;
+	async whenReady() {
+		const obj = getAppObjects();
+		if (obj) {
+			return obj;
 		} else {
 			await sleep(4000);
-			return await this.whenControllerReadyAsync();
+			return await this.whenReady();
 		}
 	}
 }
 
-function getController() {
-	return typeof window.angular !== 'undefined' ? window.angular.element(document.documentElement).controller() : null;
+function getAppObjects() {
+	if (typeof window.angular == 'undefined') {
+		return null;
+	}
+
+	return {
+		controller: window.angular.element(document.documentElement).controller(),
+		injector: window.angular.element(document.documentElement).injector()
+	};
 }
 
 async function sleep(ms) {

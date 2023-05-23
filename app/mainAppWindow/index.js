@@ -10,12 +10,18 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
+const helpers = require('../helpers');
 
 let blockerId = null;
 
 let isOnCall = false;
 
 let isControlPressed = false;
+
+/**
+ * @type {URL}
+ */
+let customBGServiceUrl;
 
 /**
  * @type {LucidLog}
@@ -140,24 +146,36 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
+	var regHttps = /^https:\/\/teams.microsoft.com\/l\/(meetup-join|channel)\//g;
+	var regMS = /^msteams:\/l\/(meetup-join|channel)\//g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
-		if (arg.startsWith('https://teams.microsoft.com/l/meetup-join/')) {
-			logger.debug('meetup-join argument received with https protocol');
+		if (regHttps.test(arg)) {
+			logger.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
 		}
-		if (arg.startsWith('msteams:/l/meetup-join/')) {
-			logger.debug('meetup-join argument received with msteams protocol');
+		if (regMS.test(arg)) {
+			logger.debug('A url argument received with msteams protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
 		}
 	}
 }
 
+/**
+ * @param {Electron.OnBeforeRequestListenerDetails} details 
+ * @param {Electron.CallbackResponse} callback 
+ */
 function onBeforeRequestHandler(details, callback) {
+	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
+		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
+		const imgUrl = getBGRedirectUrl(reqUrl);
+		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+		callback({ redirectURL: imgUrl });
+	}
 	// Check if the counter was incremented
-	if (aboutBlankRequestCount < 1) {
+	else if (aboutBlankRequestCount < 1) {
 		// Proceed normally
 		callback({});
 	} else {
@@ -168,6 +186,53 @@ function onBeforeRequestHandler(details, callback) {
 		aboutBlankRequestCount -= 1;
 		callback({ cancel: true });
 	}
+}
+
+function getBGRedirectUrl(rel) {
+	return helpers.joinURLs(customBGServiceUrl.href, rel);
+}
+
+/**
+ * @param {Electron.OnHeadersReceivedListenerDetails} details 
+ * @param {Electron.HeadersReceivedResponse} callback 
+ */
+function onHeadersReceivedHandler(details, callback) {
+	if (details.responseHeaders['content-security-policy']) {
+		const policies = details.responseHeaders['content-security-policy'][0].split(';');
+		setImgSrcSecurityPolicy(policies);
+		setConnectSrcSecurityPolicy(policies);
+		details.responseHeaders['content-security-policy'][0] = policies.join(';');
+	}
+	callback({
+		responseHeaders: details.responseHeaders
+	});
+}
+
+function setConnectSrcSecurityPolicy(policies) {
+	const connectsrcIndex = policies.findIndex(f => f.indexOf('connect-src') >= 0);
+	if (connectsrcIndex >= 0) {
+		policies[connectsrcIndex] = policies[connectsrcIndex] + ` ${customBGServiceUrl.origin}`;
+	}
+}
+
+function setImgSrcSecurityPolicy(policies) {
+	const imgsrcIndex = policies.findIndex(f => f.indexOf('img-src') >= 0);
+	if (imgsrcIndex >= 0) {
+		policies[imgsrcIndex] = policies[imgsrcIndex] + ` ${customBGServiceUrl.origin}`;
+	}
+}
+
+/**
+ * @param {Electron.OnBeforeSendHeadersListenerDetails} detail 
+ * @param {Electron.BeforeSendResponse} callback 
+ */
+function onBeforeSendHeadersHandler(detail, callback) {
+	if (detail.url.startsWith(customBGServiceUrl.href)) {
+		detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
+	}
+	callback({
+		requestHeaders: detail.requestHeaders
+	});
 }
 
 /**
@@ -208,13 +273,32 @@ function onWindowClosed() {
 }
 
 function addEventHandlers() {
+	initializeCustomBGServiceURL();
 	window.on('page-title-updated', onPageTitleUpdated);
 	window.webContents.setWindowOpenHandler(onNewWindow);
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
+	window.webContents.session.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, onHeadersReceivedHandler);
+	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 	window.on('closed', onWindowClosed);
 	window.webContents.addListener('before-input-event', onBeforeInput);
+}
+
+function getWebRequestFilterFromURL() {
+	const filter = customBGServiceUrl.protocol === 'http:' ? { urls: ['http://*/*'] } : { urls: ['https://*/*'] };
+	return filter;
+}
+
+function initializeCustomBGServiceURL() {
+	try {
+		customBGServiceUrl = new URL('', config.customBGServiceBaseUrl);
+		logger.debug(`Custom background service url is '${config.customBGServiceBaseUrl}'`);
+	}
+	catch (err) {
+		logger.error(`Invalid custom background service url '${config.customBGServiceBaseUrl}', updating to default 'http://localhost'`);
+		customBGServiceUrl = new URL('', 'http://localhost');
+	}
 }
 
 

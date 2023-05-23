@@ -58,7 +58,9 @@
 				type: options.type ? options.type : 'new-message',
 				audio: 'default'
 			};
-			ipcRenderer.send('play-notification-sound', notifSound);
+			console.log('Requesting application to play sound');
+			ipcRenderer.invoke('play-notification-sound', notifSound);
+			console.log('Continues to default notification workflow');
 			return new classicNotification(title, options);
 		}
 		static requestPermission(callback) {
@@ -87,5 +89,6 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/shortcuts').init(config);
 	require('./tools/chromeApi');
 	require('./tools/settings').init(config, ipcRenderer);
+	require('./tools/customBackgrounds')(config, ipcRenderer);
 }
 

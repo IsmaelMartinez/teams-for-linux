@@ -1,6 +1,9 @@
 const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { LucidLog } = require('lucid-log');
+const helpers = require('./helpers');
+
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
@@ -27,18 +30,13 @@ let userStatus = -1;
 
 // Notification sound player
 /**
- * @type {NodeSoundPlayer | Afplay}
+ * @type {NodeSoundPlayer}
  */
 let player;
 try {
-	if (isMac) {
-		const Afplay = require('afplay');
-		player = new Afplay;
-	} else {
-		// eslint-disable-next-line no-unused-vars
-		const { NodeSound, NodeSoundPlayer } = require('node-sound');
-		player = NodeSound.getDefaultPlayer();
-	}
+	// eslint-disable-next-line no-unused-vars
+	const { NodeSound, NodeSoundPlayer } = require('node-sound');
+	player = NodeSound.getDefaultPlayer();
 } catch (e) {
 	logger.info('No audio players found. Audio notifications might not work.');
 }
@@ -95,18 +93,23 @@ if (!gotTheLock) {
 	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
 	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
-	ipcMain.on('play-notification-sound', playNotificationSound);
-	ipcMain.on('user-status-changed', userStatusChangedHandler);
+	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
+	ipcMain.handle('play-notification-sound', playNotificationSound);
+	ipcMain.handle('user-status-changed', userStatusChangedHandler);
+	ipcMain.handle('set-badge-count', setBadgeCountHandler);
+	downloadCustomBGServiceRemoteConfig();
 }
 
 // eslint-disable-next-line no-unused-vars
-function playNotificationSound(event, options) {
+async function playNotificationSound(event, options) {
 	// Player failed to load or notification sound disabled in config
 	if (!player || config.disableNotificationSound) {
+		logger.debug('Notification sounds are disabled');
 		return;
 	}
 	// Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
 	if (config.disableNotificationSoundIfNotAvailable && userStatus !== 1 && userStatus !== -1) {
+		logger.debug('Notification sounds are disabled when user is not active');
 		return;
 	}
 	const sound = notificationSounds.filter(ns => {
@@ -116,7 +119,11 @@ function playNotificationSound(event, options) {
 	if (sound) {
 		logger.debug(`Playing file: ${sound.file}`);
 		player.play(sound.file);
+		return;
 	}
+
+	logger.debug('No notification sound played', player, options);
+	return;
 }
 
 function onRenderProcessGone() {
@@ -166,6 +173,15 @@ async function handleSaveZoomLevel(_, args) {
 	partition.zoomLevel = args.zoomLevel;
 	savePartition(partition);
 	return;
+}
+
+async function handleGetCustomBGList() {
+	const file = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	if (!fs.existsSync(file)) {
+		return [];
+	} else {
+		return JSON.parse(fs.readFileSync(file));
+	}
 }
 
 function getPartitions() {
@@ -219,6 +235,78 @@ async function requestMediaAccess() {
  * @param {*} event 
  * @param {*} options 
  */
-function userStatusChangedHandler(event, options) {
+async function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
+	logger.debug(`User status changed to '${userStatus}'`);
+	return;
+}
+
+/**
+ * Handle user-status-changed message
+ * 
+ * @param {*} event 
+ * @param {*} count 
+ */
+async function setBadgeCountHandler(event, count) {
+	logger.debug(`Badge count set to '${count}'`);
+	app.setBadgeCount(count);
+	return;
+}
+
+async function downloadCustomBGServiceRemoteConfig() {
+	var cbsurl;
+	try {
+		cbsurl = new URL('', config.customBGServiceBaseUrl);
+	}
+	catch (err) {
+		cbsurl = new URL('', 'http://localhost');
+	}
+
+	const remotepath = helpers.joinURLs(cbsurl.href, 'config.json');
+	logger.debug(`Fetching custom background configuration from '${remotepath}'`);
+	helpers.getAsync(remotepath)
+		.then(onCustomBGServiceConfigDownloadSuccess)
+		.catch(onCustomBGServiceConfigDownloadFailure);
+	if (config.customBGServiceConfigFetchInterval > 0) {
+		setTimeout(downloadCustomBGServiceRemoteConfig, config.customBGServiceConfigFetchInterval * 1000);
+	}
+}
+
+function onCustomBGServiceConfigDownloadSuccess(data) {
+	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	try {
+		const configJSON = JSON.parse(data);
+		for (var i = 0; i < configJSON.length; i++) {
+			setPath(configJSON[i]);
+		}
+		fs.writeFileSync(dlpath, JSON.stringify(configJSON));
+		logger.debug(`Custom background service remote configuration stored at '${dlpath}'`);
+	}
+	catch (err) {
+		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+	}
+}
+
+/**
+ * @param {{filetype: string,id: string, name: string, src: string, thumb_src: string }} cfg 
+ */
+function setPath(cfg) {
+	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
+		cfg.src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
+	}
+
+	if (!cfg.thumb_src.startsWith('/teams-for-linux/custom-bg/')) {
+		cfg.thumb_src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.thumb_src);
+	}
+}
+
+function onCustomBGServiceConfigDownloadFailure(err) {
+	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	logger.error(err.message);
+	try {
+		fs.writeFileSync(dlpath, JSON.stringify([]));
+	}
+	catch (err) {
+		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+	}
 }

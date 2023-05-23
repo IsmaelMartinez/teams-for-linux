@@ -36,22 +36,12 @@ class ActivityHub {
 	}
 
 	start() {
-		instance.whenControllerReady(assignEventHandlers);
+		instance.whenReady().then(assignEventHandlers);
 	}
 
 	setDefaultTitle(title) {
-		instance.whenControllerReady(controller => {
-			controller.pageTitleDefault = title;
-		});
-	}
-
-	/**
-	 * @param {number} status 
-	 */
-	setMyStatus(status) {
-		instance.whenControllerReady(() => {
-			const presenseService = window.angular.element(document.body).injector().get('presenceService');
-			presenseService.setMyStatus(status, null, true);
+		instance.whenReady().then(inst => {
+			inst.controller.pageTitleDefault = title;
 		});
 	}
 
@@ -59,11 +49,11 @@ class ActivityHub {
 	 * @param {number} state 
 	 */
 	setMachineState(state) {
-		instance.whenControllerReady((controller) => {
+		instance.whenReady().then((inst) => {
 			if (state === 1) {
-				this.refreshAppState(controller, state);
+				this.refreshAppState(inst.controller, state);
 			} else {
-				controller.appStateService.setMachineState(state);
+				inst.controller.appStateService.setMachineState(state);
 			}
 		});
 	}
@@ -129,13 +119,16 @@ function getEventHandlers(event) {
 	});
 }
 
-function assignEventHandlers(controller) {
-	assignActivitiesCountUpdateHandler(controller);
-	assignCallConnectedHandler(controller);
-	assignCallDisconnectedHandler(controller);
-	assignWorkerMessagingUpdatesHandler(controller);
-	assignMyStatusChangedHandler(controller);
-	performPlatformTweaks(controller);
+/**
+ * @param {{controller:object,injector:object}} inst 
+ */
+function assignEventHandlers(inst) {
+	assignActivitiesCountUpdateHandler(inst.controller);
+	assignCallConnectedHandler(inst.controller);
+	assignCallDisconnectedHandler(inst.controller);
+	assignWorkerMessagingUpdatesHandler(inst.controller);
+	assignMyStatusChangedHandler(inst.controller);
+	performPlatformTweaks(inst.controller);
 }
 
 function performPlatformTweaks(controller) {
