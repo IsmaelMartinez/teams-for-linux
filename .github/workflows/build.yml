@@ -42,7 +42,7 @@ jobs:
           distro: "ubuntu"
           release: "xenial"
           republish: "true" # needed ONLY if version is not changing
-          file: "dist/*.deb"
+          file: "dist/teams-for-linux_*_amd64.deb"
 
   rpm:
     runs-on: ubuntu-latest
