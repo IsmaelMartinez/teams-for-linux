@@ -1,4 +1,4 @@
-name: Build & Release
+name: Build & Cloudsmith Push
 
 env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
@@ -110,3 +110,105 @@ jobs:
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
           file: "dist/teams-for-linux_*_armv7l.deb"
+
+  cloudsmith-rpm-aarch64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:linux:rpm
+
+      - name: Push
+        if: contains(github.ref, 'develop')
+        id: push
+        uses: cloudsmith-io/action@master
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          command: "push"
+          format: "rpm"
+          owner: "teams-for-linux"
+          repo: "packages"
+          distro: "any-distro"
+          release: "any-version"
+          republish: "true" # needed ONLY if version is not changing
+          file: "dist/teams-for-linux*.aarch64.rpm"
+
+  cloudsmith-rpm-x86_64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:linux:rpm
+
+      - name: Push
+        if: contains(github.ref, 'develop')
+        id: push
+        uses: cloudsmith-io/action@master
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          command: "push"
+          format: "rpm"
+          owner: "teams-for-linux"
+          repo: "packages"
+          distro: "any-distro"
+          release: "any-version"
+          republish: "true" # needed ONLY if version is not changing
+          file: "dist/teams-for-linux*.x86_64.rpm"
+
+  cloudsmith-rpm-armv7l:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        if: contains(github.ref, 'develop')
+        run: yarn dist:linux:rpm
+
+      - name: Push
+        if: contains(github.ref, 'develop')
+        id: push
+        uses: cloudsmith-io/action@master
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          command: "push"
+          format: "rpm"
+          owner: "teams-for-linux"
+          repo: "packages"
+          distro: "any-distro"
+          release: "any-version"
+          republish: "true" # needed ONLY if version is not changing
+          file: "dist/teams-for-linux*.armv7l.rpm"
