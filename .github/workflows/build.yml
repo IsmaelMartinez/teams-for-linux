@@ -57,7 +57,7 @@ jobs:
           command: "push"
           format: "deb"
           owner: "cloudsmith"
-          repo: "actions"
+          repo: "teams-for-linux/packages"
           distro: "ubuntu"
           release: "xenial"
           republish: "true" # needed ONLY if version is not changing
