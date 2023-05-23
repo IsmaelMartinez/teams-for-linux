@@ -77,7 +77,6 @@ jobs:
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
           file: "dist/teams-for-linux_*_arm64.deb"
-
   cloudsmith-deb-armv7l:
     runs-on: ubuntu-latest
 
