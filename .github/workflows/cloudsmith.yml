@@ -137,7 +137,7 @@ jobs:
         with:
           api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           command: "push"
-          format: "deb"
+          format: "rpm"
           owner: "teams-for-linux"
           repo: "packages"
           distro: "any-distro"
@@ -171,7 +171,7 @@ jobs:
         with:
           api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           command: "push"
-          format: "deb"
+          format: "rpm"
           owner: "teams-for-linux"
           repo: "packages"
           distro: "any-distro"
@@ -205,7 +205,7 @@ jobs:
         with:
           api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           command: "push"
-          format: "deb"
+          format: "rpm"
           owner: "teams-for-linux"
           repo: "packages"
           distro: "any-distro"
