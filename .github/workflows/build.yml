@@ -56,8 +56,8 @@ jobs:
           api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           command: "push"
           format: "deb"
-          owner: "cloudsmith"
-          repo: "teams-for-linux/packages"
+          owner: "teams-for-linux"
+          repo: "packages"
           distro: "any-distro"
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
