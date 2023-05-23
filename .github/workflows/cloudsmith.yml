@@ -144,7 +144,7 @@ jobs:
           distro: "any-distro"
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
-          file: "dist/teams-for-linux_*.aarch64.rpm"
+          file: "dist/teams-for-linux*.aarch64.rpm"
 
   cloudsmith-rpm-x86_64:
     runs-on: ubuntu-latest
@@ -178,7 +178,7 @@ jobs:
           distro: "any-distro"
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
-          file: "dist/teams-for-linux_*.x86_64.rpm"
+          file: "dist/teams-for-linux*.x86_64.rpm"
 
   cloudsmith-rpm-armv7l:
     runs-on: ubuntu-latest
@@ -212,4 +212,4 @@ jobs:
           distro: "any-distro"
           release: "any-version"
           republish: "true" # needed ONLY if version is not changing
-          file: "dist/teams-for-linux_*.armv7l.rpm"
+          file: "dist/teams-for-linux*.armv7l.rpm"
