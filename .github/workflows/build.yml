@@ -57,9 +57,9 @@ jobs:
           command: "push"
           format: "deb"
           owner: "cloudsmith"
-          repo: "teams-for-linux/packages"
-          distro: "ubuntu"
-          release: "xenial"
+          repo: "jijojospehk/teams-for-linux/packages"
+          distro: "any"
+          release: "any"
           republish: "true" # needed ONLY if version is not changing
           file: "dist/teams-for-linux_*_amd64.deb"
 
