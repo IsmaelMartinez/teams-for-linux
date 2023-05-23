@@ -28,6 +28,25 @@ jobs:
       - name: Release
         if: contains(github.ref, 'develop')
         run: yarn dist:linux:deb -- --publish always
+
+  cloudsmith-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build
+        run: yarn --link-duplicates --pure-lockfile
+
+      - name: Release
+        # if: contains(github.ref, 'develop')
+        run: yarn dist:linux:deb
       
       - name: Push
         # if: contains(github.ref, 'develop')
