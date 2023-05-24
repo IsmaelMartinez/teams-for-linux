@@ -3,9 +3,9 @@ name: On publish
 env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
 
-on: 
+on:
   release:
-    types:[published]
+    types: [published]
 
 defaults:
   run:
