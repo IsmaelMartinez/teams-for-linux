@@ -1,0 +1,20 @@
+name: On publish
+
+env:
+  GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
+
+on: 
+  push:
+    types:[published]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display version
+        run: echo $GITHUB_REF
