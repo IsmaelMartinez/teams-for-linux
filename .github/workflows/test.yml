@@ -16,5 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Display version
+      - name: Display version 1
+        run: echo $GITHUB_REF
+
+      - name: Display version 2
         run: echo $GITHUB_REF
