@@ -4,7 +4,7 @@ env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
 
 on: 
-  push:
+  release:
     types:[published]
 
 defaults:
