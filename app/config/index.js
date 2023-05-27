@@ -125,7 +125,7 @@ function argv(configPath) {
 				type: 'boolean'
 			},
 			disableNotificationSoundIfNotAvailable: {
-				default: true,
+				default: false,
 				describe: 'Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)',
 				type: 'boolean'
 			},
