@@ -35,7 +35,7 @@ let userStatus = -1;
 let player;
 try {
 	// eslint-disable-next-line no-unused-vars
-	const { NodeSound, NodeSoundPlayer } = require('node-sound');
+	const { NodeSound } = require('node-sound');
 	player = NodeSound.getDefaultPlayer();
 } catch (e) {
 	logger.info('No audio players found. Audio notifications might not work.');
@@ -59,7 +59,7 @@ app.commandLine.appendSwitch('try-supported-channel-layouts');
 if (isMac) {
 	requestMediaAccess();
 
-} else if (process.env.XDG_SESSION_TYPE == 'wayland') {
+} else if (process.env.XDG_SESSION_TYPE === 'wayland') {
 	logger.info('Running under Wayland, switching to PipeWire...');
 
 	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
@@ -118,12 +118,11 @@ async function playNotificationSound(event, options) {
 
 	if (sound) {
 		logger.debug(`Playing file: ${sound.file}`);
-		player.play(sound.file);
+		await player.play(sound.file);
 		return;
 	}
 
 	logger.debug('No notification sound played', player, options);
-	return;
 }
 
 function onRenderProcessGone() {
@@ -132,7 +131,7 @@ function onRenderProcessGone() {
 }
 
 function onAppTerminated(signal) {
-	if (signal == 'SIGTERM') {
+	if (signal === 'SIGTERM') {
 		process.abort();
 	} else {
 		app.quit();
@@ -172,7 +171,6 @@ async function handleSaveZoomLevel(_, args) {
 	partition.name = args.partition;
 	partition.zoomLevel = args.zoomLevel;
 	savePartition(partition);
-	return;
 }
 
 async function handleGetCustomBGList() {
@@ -191,14 +189,14 @@ function getPartitions() {
 function getPartition(name) {
 	const partitions = getPartitions();
 	return partitions.filter(p => {
-		return p.name == name;
+		return p.name === name;
 	})[0];
 }
 
 function savePartition(arg) {
 	const partitions = getPartitions();
 	const partitionIndex = partitions.findIndex(p => {
-		return p.name == arg.name;
+		return p.name === arg.name;
 	});
 
 	if (partitionIndex >= 0) {
@@ -238,7 +236,6 @@ async function requestMediaAccess() {
 async function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
 	logger.debug(`User status changed to '${userStatus}'`);
-	return;
 }
 
 /**
@@ -250,21 +247,20 @@ async function userStatusChangedHandler(event, options) {
 async function setBadgeCountHandler(event, count) {
 	logger.debug(`Badge count set to '${count}'`);
 	app.setBadgeCount(count);
-	return;
 }
 
 async function downloadCustomBGServiceRemoteConfig() {
-	var cbsurl;
+	let customBGUrl;
 	try {
-		cbsurl = new URL('', config.customBGServiceBaseUrl);
+		customBGUrl = new URL('', config.customBGServiceBaseUrl);
 	}
 	catch (err) {
-		cbsurl = new URL('', 'http://localhost');
+		customBGUrl = new URL('', 'http://localhost');
 	}
 
-	const remotepath = helpers.joinURLs(cbsurl.href, 'config.json');
-	logger.debug(`Fetching custom background configuration from '${remotepath}'`);
-	helpers.getAsync(remotepath)
+	const remotePath = helpers.joinURLs(customBGUrl.href, 'config.json');
+	logger.debug(`Fetching custom background configuration from '${remotePath}'`);
+	helpers.getAsync(remotePath)
 		.then(onCustomBGServiceConfigDownloadSuccess)
 		.catch(onCustomBGServiceConfigDownloadFailure);
 	if (config.customBGServiceConfigFetchInterval > 0) {
@@ -273,17 +269,17 @@ async function downloadCustomBGServiceRemoteConfig() {
 }
 
 function onCustomBGServiceConfigDownloadSuccess(data) {
-	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
+	const downloadPath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
 	try {
 		const configJSON = JSON.parse(data);
-		for (var i = 0; i < configJSON.length; i++) {
+		for (let i = 0; i < configJSON.length; i++) {
 			setPath(configJSON[i]);
 		}
-		fs.writeFileSync(dlpath, JSON.stringify(configJSON));
-		logger.debug(`Custom background service remote configuration stored at '${dlpath}'`);
+		fs.writeFileSync(downloadPath, JSON.stringify(configJSON));
+		logger.debug(`Custom background service remote configuration stored at '${downloadPath}'`);
 	}
 	catch (err) {
-		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+		logger.error(`Failed to save remote configuration at '${downloadPath}'`);
 	}
 }
 
