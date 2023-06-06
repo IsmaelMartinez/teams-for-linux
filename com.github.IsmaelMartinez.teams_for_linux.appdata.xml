@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.github.IsmaelMartinez.teams_for_linux</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0</project_license>
+	<name>teams-for-linux</name>
+	<summary>Unofficial Microsoft Teams client for Linux using Electron</summary>
+	<description>
+		<p>Unofficial Microsoft Teams client for Linux using Electron.</p>
+		<p>It uses the Web App and wraps it as a standalone application using Electron.</p>
+	</description>
+	<url type="homepage">https://github.com/IsmaelMartinez/teams-for-linux</url>
+	<url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/KNOWN_ISSUES.md</url>
+	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
+	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
+	<releases>
+		<release version="1.1.2" date="2023-06-06">
+			<description>
+				<ul>
+					<li>Restored appdata.xml</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.1.1" date="2023-05-31">
+			<description>
+				<ul>
+					<li>New: Badge count on supported desktop environments</li>
+					<li>Update: default value for disableNotificationSoundIfNotAvailable is set to false</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.92" date="2023-05-18">
+			<description>
+				<ul>
+					<li>Fix: External links are not opened correctly when they point to a Teams channel</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.90" date="2023-05-16">
+			<description>
+				<ul>
+					<li>New: Code refactoring</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.88" date="2023-05-14">
+			<description>
+				<ul>
+					<li>New: Now custom background images can be downloaded from a remote server</li>
+					<li>New: Command line parameter --customBGServiceIgnoreMSDefaults to ignore Microsoft provided images</li>
+					<li>New: Custom background service 'config.json' need not have prefix '/teams-for-linux/custom-bg/' for 'src' and 'thumb_src'</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.86" date="2023-05-11">
+			<description>
+				<ul>
+					<li>New: User can set custom backgrounds for video calls. Read the documentation in git repo</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.83" date="2023-05-04">
+			<description>
+				<ul>
+					<li>New: CTRL + Click for SSO login.</li>
+					<li>New: Settings menu entry with 'Save' and 'Restore'. Settings saved and restored are theme, chat density, devices.</li>
+					<li>New: Extended quit menu with 'Normally' and 'Clear Storage'. 'Normally' would be the default but 'Clear Storage' would give a fresh start on next launch.</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.80" date="2023-04-30">
+			<description>
+				<ul>
+					<li>New: Removed menu bar from the popup windows</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.79" date="2023-04-30">
+			<description>
+				<ul>
+					<li>New: Default chrome user agent set dynamically based on electron version</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.78" date="2023-04-29">
+			<description>
+				<ul>
+					<li>New: Safely open links</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.77" date="2023-04-29">
+			<description>
+				<ul>
+					<li>Update: Removed obsolete flag --enableDesktopNotificationsHack</li>
+					<li>Fix: Mac keyboard shortcuts are shown</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.74" date="2023-04-28">
+			<description>
+				<ul>
+					<li>New: Back/Forward navigation using keys</li>
+					<li>Fix: Now zoom in/out shortcuts work while on chat window</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.72" date="2023-04-26">
+			<description>
+				<ul>
+					<li>Fix: Right click link -> copy not working</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.71" date="2023-04-23">
+			<description>
+				<ul>
+					<li>Fix: Teams gets unloaded after suspend</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.70" date="2023-04-22">
+			<description>
+				<ul>
+					<li>New: Improved selection of spell check languages</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.69" date="2023-04-21">
+			<description>
+				<ul>
+					<li>New: Disable all notifications with --disableNotifications flag</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.68" date="2023-04-19">
+			<description>
+				<ul>
+					<li>New: Disable/Enable Notification Sound if not Available with --disableNotificationSoundIfNotAvailable flag</li>
+					<li>Fix: Teams gets unloaded after suspend</li>
+					<li>Minor code optimization</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.65" date="2023-04-16">
+			<description>
+				<ul>
+					<li>Updated documentation</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.64" date="2023-04-16">
+			<description>
+				<ul>
+					<li>New: Option to choose spellcheck language while writing</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.63" date="2023-04-15">
+			<description>
+				<ul>
+					<li>New: command line option --appActiveCheckInterval</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.62" date="2023-04-15">
+			<description>
+				<ul>
+					<li>Update: Application presence state optimisation</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.61" date="2023-04-15">
+			<description>
+				<ul>
+					<li>New: Command line option --screenLockInhibitionMethod to choose screen lock inhibition method. Possible values are Electron and WakeLockSentinel</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.60" date="2023-04-13">
+			<description>
+				<ul>
+					<li>Fix: away after a couple minutes</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.59-2" date="2023-04-11">
+			<description>
+				<ul>
+					<li>Added required permisions for inhibiting screen lock</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.59" date="2023-04-11">
+			<description>
+				<ul>
+					<li>Fix: Prevent screensaver while in call</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.58" date="2023-04-01">
+			<description>
+				<ul>
+					<li>Fix: Click on link to external meetings is ignored</li>
+					<li>Fix: No longer able to open meeting invitations in app</li>
+					<li>Fix: Option for SSO Login Popups for certain Apps</li>
+					<li>Fix: The new-window event is deprecated and will be removed. Please use contents.setWindowOpenHandler() instead</li>
+					<li>New: Set default spellchecker language to en-US</li>
+					<li>New: Disable hardware media key handling</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.55" date="2023-03-22">
+			<description>
+				<ul>
+					<li>New command line option --disableNotificationSound</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.54" date="2023-03-21">
+			<description>
+				<ul>
+					<li>Add doc for additional settings (#703)</li>
+					<li>New command line argument --appTitle for custom page title</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.52" date="2023-03-08">
+			<description>
+				<ul>
+					<li>Release to fix dependabot removing the "integration" section from the yarn.lock files</li>
+					<li>Bringing the multi account option to those who asked for it</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.50" date="2023-03-02">
+			<description>
+				<ul>
+					<li>Add: Option to load client certificates for corporate auth</li>
+					<li>Add: Corporate account authentication with smart-card</li>
+					<li>Add: Option to set the spellchecker languages</li>
+					<li>Add: WIP Mac OS support</li>
+					<li>Add: Minimal support for dark mode</li>
+					<li>Fix: Minimise on startup</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.45" date="2022-10-12">
+			<description>
+				<ul>
+					<li>Fix: Cannot find how to turn off notifications for started meetings (620)</li>
+					<li>Fix: Showing expired notifications</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.44" date="2022-10-09">
+			<description>
+				<ul>
+					<li>Fix: Prevent screensaver while in a call (613)</li>
+					<li>Fix: No meeting notifications in KDE (470)</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.42" date="2022-10-08">
+			<description>
+				<ul>
+					<li>Fix: The interstitial page of "Open Teams in Browser" / "Download Linux Client" / "Open in Teams App" opens when the app is started. By @breunigs</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.41" date="2022-09-29">
+			<description>
+				<ul>
+					<li>New: A command line flag (--clearStorage) to start afresh</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.40" date="2022-09-29">
+			<description>
+				<ul>
+					<li>Update: Electron version upgraded to 21.0.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.39" date="2022-09-26">
+			<description>
+				<ul>
+					<li>Fixed: Option closeAppOnCross not working (#602)</li>
+					<li>Update: Electron version upgraded to 20.2.0</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.38" date="2022-09-20">
+			<description>
+				<ul>
+					<li>Fixed: Right click in text box does not work (#594)</li>
+					<li>New: Spellcheck is back</li>
+					<li>Update: Electron version upgraded to 20.1.4</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.37" date="2022-09-14">
+			<description>
+				<ul>
+					<li>New: Command line argument --appLogLevels for controlling application logs. This can have values error, warn, info, debug. It can be single or multiple levels separated by comma. Default is error. Ex: --appLogLevels=error,warn</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.36" date="2022-09-13">
+			<description>
+				<ul>
+					<li>Fixed: No notification sound when installed through flatpak (569)</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.35" date="2022-09-10">
+			<description>
+				<ul>
+					<li>New: More flexible command line arguments</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.33" date="2022-09-06">
+			<description>
+				<ul>
+					<li>Fixed: No more notification sound (565)</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.32" date="2022-09-06">
+			<description>
+				<ul>
+					<li>Fixed: Add "zoom-in/out" functionnality (560)</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.31" date="2022-09-05">
+			<description>
+				<ul>
+					<li>Fixed: Impossible to submit company login (538)</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.30" date="2022-09-01">
+			<description>
+				<ul>
+					<li>Fixed: Open window when clicking on your launcher (556)</li>
+					<li>Electron version upgraded to 20.1.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.29" date="2022-08-13">
+			<description>
+				<ul>
+					<li>Fixed: Leaks X11 client connections, eventually causing screen sharing failure</li>
+					<li>Electron version upgraded to 20.0.2</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.28" date="2022-08-11">
+			<description>
+				<ul>
+					<li>Fixed: Kill signal does not terminate the app</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.27" date="2022-08-10">
+			<description>
+				<ul>
+					<li>Fixed: Cannot start teams-for-linux again after quit</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.26" date="2022-08-09">
+			<description>
+				<ul>
+					<li>Bumped electron version to 20.0.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.25" date="2022-08-02">
+			<description>
+				<ul>
+					<li>Bumped electron version to 20.0.0</li>
+					<li>Spellchecker is no longer available due to incompatibilities with the latest node versions</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.24" date="2022-03-21">
+			<description>
+				<ul>
+					<li>Fix: #519 Black window on wayland</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.23" date="2022-01-14">
+			<description>
+				<p>
+					Fixes available in this build:
+				</p>
+				<ul>
+					<li>Fix: #455 Screen share: black screen + mouse vs Ubuntu 21.04 + Chrome. Thanks to @pablorq, @herbiejhopkins and @IsmaelMartinez</li>
+				</ul>
+				<ul>
+					<li>Fix: #505 Cannot share screen nor window with snap. Thanks to @crazyscientist and @jijojosephk.</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.0.20" date="2021-11-02">
+			<description>
+				<p>
+					Fixes available in this build:
+				</p>
+				<ul>
+					<li>#447: Zoom resets to 100% on app close or refresh</li>
+				</ul>
+				<p>
+					Thanks @DiegoChajtur for reporting #447
+				</p>
+			</description>
+		</release>
+		<release version="1.0.19" date="2021-10-29">
+			<description>
+				<p>
+					Fixes available in this build:
+				</p>
+				<ul>
+					<li>#488: Javascript error in main process</li>
+				</ul>
+				<p>
+					Thanks @FPSUsername for reporting #488
+				</p>
+			</description>
+		</release>
+		<release version="1.0.18" date="2021-10-28">
+			<description>
+				<p>
+					Latest release is out!
+				</p>
+				<ul>
+					<li>Fix: #497 Flatpak install - Not launching from menu entry</li>
+				</ul>
+				<p>
+					Thanks to all who contributed to this project.
+				</p>
+			</description>
+		</release>
+		<release version="1.0.17" date="2021-10-28">
+			<description>
+				<p>
+					Screen sharing now works.
+				</p>
+				<ul>
+					<li>Fix: #492 Can't share screen on Ubuntu</li>
+				</ul>
+				<p>
+					Thanks to all who contributed to this project.
+				</p>
+			</description>
+		</release>
+		<release version="1.0.16" date="2021-10-28">
+			<description>
+				<p>
+					This release has been focused on fixing flatpak runtime issues.
+				</p>
+				<ul>
+					<li>Fix: #489 - Application fails to launch</li>
+					<li>Known issue: Screen sharing does not work</li>
+				</ul>
+				<p>
+					Thanks to all who contributed to this project.
+				</p>
+			</description>
+		</release>
+		<release version="1.0.15" date="2021-10-24">
+			<description>
+				<p>
+					This release has been focused on fixing flatpak runtime issues.
+				</p>
+				<ul>
+					<li>#489</li>
+				</ul>
+				<p>
+					Thanks to all who contributed to this project.
+				</p>
+			</description>
+		</release>
+		<release version="1.0.13" date="2021-10-24">
+			<description>
+				<p>
+					This release has been focused on fixing small issues and improving screen sharing capabilities.
+				</p>
+				<ul>
+					<li>Major bump from version 1.0.0 to 1.0.13</li>
+					<li>Migrated to Electron v15</li>
+				</ul>
+				<p>
+					Thanks to all who contributed to this project.
+				</p>
+			</description>
+		</release>
+		<release version="1.0.0" date="2019-11-01">
+			<description>
+				<p>
+					While we wait for Microsoft... Here we go, we are now version 1.0.0 🍾🎉
+					
+					This release has been focus on fixing small issues, improving config options (specially for proxy),
+					adding some bots to help automation, adding more functionality to the right click button 
+					and automatically place your downloads into the download folder (opt in feature)
+				</p>
+				<ul>
+					<li>Adding electron dl to automatically place your dowloads into the dowload folder (opt-in feature, check the config options) (#295)</li>
+					<li>Enabling the right click on url and adding copy URL to that menu option (#294)</li>
+					<li>Add proxy server to config options to ease configuration (#292)</li>
+					<li>Adding the 'try-supported-channel-layouts' to avoid locking the audio on the 1st instance (#291)</li>
+					<li>Feature/fix anylint issues and close #272 (#288)</li>
+					<li>Bump eslint-utils from 1.3.1 to 1.4.2 (#287)</li>
+					<li>fix: enable meetups join also for https protocol links (#283)</li>
+					<li>Updating stale.yml</li>
+					<li>feat: add join meeting via link outside application (#255)</li>
+					<li>Feat adding snyk (#260)</li>
+					<li>Replacing depShield for snyk to check vulnerabilities (#259)</li>
+					<li>revert - Fix depshield issues (#258)</li>
+					<li>Fix depshield issues (#256)</li>
+					<li>Update README.md</li>
+					<li>Adding stale bot</li>
+					<li>Fix merge issue (#238)</li>
+				</ul>
+				<p>
+					Thanks to @standagh, @emanuelbatista, @jef79m and everybody that created issues/enhancements, fixed and/or tested them.
+					
+					Special thanks to @julian-alarcon for continuously supporting the snap version of this project and to anyone else that is supporting other package types.
+					
+					Thanks also to @byteSamurai for introducing hacktoverfest. I manage to get a t-shirt and to get a few people on my team to also contribute.
+					
+					Its been a long ride, and looks like Microsoft has heard us out loud, but until they got something working as stable as this, I will continue contributing.
+					
+					Release notes partly done by Stamp.
+				</p>
+			</description>
+		</release>
+		<release version="0.7.0" date="2019-08-19">
+			<description>
+				<p>Because #217, you need to clear you config folder before your 1st login (config folder locations). This is not necessary if you are moving from version 0.6.6 or higher.</p>
+				<p>This release is been mostly concentrated on bug fixes and making this a bit more stable.</p>
+				<ul>
+					<li>Fix #220. Electron's getLocale, and Chromium's l10n_util, can return the language code in the IETF BCP 47 format (en-US) instead of the ISO 15897 format (en_US). Hunspell, the dictionaries included with this project, and the JavaScript code here assumes the ISO 15897 format, so this hotfix converts what getLocale returns. (#234) (97eb15f) Thanks to @pnickerson-cashstar</li>
+					<li>Add flatpak to configuration directory list (#232) (afbb725) Thanks to @agates</li>
+					<li>Fix #208. Increasing the electron-builder (#231) (555e364)</li>
+					<li>Fix #221: updating readme with a link to AppImageLauncher (#226) (4fce0df) Thanks to @orange-buffalo</li>
+					<li>Fix #171. Can't open Microsoft Teams - blank screen (#218) (f0242d2) Thanks to @inglor and @basaas</li>
+					<li>Fix #204. Updating default user agent string (#217) (952c55a) Thanks to @whofferbert</li>
+					<li>Feature #185 Adding the ability to toogle fullscreen f11 (#216) (adeec1d) Thanks to @rt3norio</li>
+					<li>Update KNOWN_ISSUES to reference cache folder (#171) (#210) (36af526) Thanks to @skyghis</li>
+					<li>Fix #182. Better handle external requests in new windows (#206) (599e140) Thanks to @HarlemSquirrel</li>
+				</ul>
+				<p>Extras</p>
+				<ul>
+					<li>Special thanks also to all the people that reported issues, tested them, fixed them, improved the documentation, and, in general, helped making this a bit more stable. All of this will not be possible with your contributions.</li>
+				</ul>
+				<p>Apologies if I have missed anyone.</p>
+			</description>
+		</release>
+		<release version="0.4.0" date="2019-07-19">
+			<description>
+				<p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
+				<p>#149 Re-implementing the spellchecker to improve performance. (PR #152, #155 and #163)</p>
+				<p>#123 Is now possible as the main issue was with the spellchecker (issue #149)</p>
+				<p>#41 Teams-for-linux now also available in Flatpak! (Thanks to @gabops)</p>
+				<p>#99 Fixing the cursor in snap (PR #168)</p>
+				<p>#61 Improving the screen-share quality by adding a white end to the browserviews. This is a chrome issue that basically doesn't trigger then the antialiasing. Strange but it works! (PR #165)</p>
+				<p>#89 Adding the basic part for the xdg-open. This might need a few improvements as it is currently quite difficult to test. (PR #170)</p>
+				<p>#162 Improving the documentation for snap as people keep coming back reporting camera not working (Thanks @julian-alarcon) (PR in #167)</p>
+				<p>#171 blank screen issue. Workaround found and documented (Thanks to @sant123 for documenting and the others for finding/testing the solution!) (PR #178)</p>
+				<p>#176 Fixing the multiple icons in dock (Thanks to @lkms) (PR #179)</p>
+				<p>#98 Fixing the loop when launching that some people where experiencing.</p>
+				<p>#109 and #107 Improving the handling of "about:blank" links (mainly connectors and preview images) (Thanks to @HarlemSquirrel) (PRs #131 and #172)</p>
+			</description>
+		</release>
+		<release version="0.3.0" date="2019-05-27">
+			<description>
+				<p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
+				<p>automating the snap release (Thanks to @julian-alarcon and @benyanke)</p>
+				<p>Fixing snap and camera not working together (Thanks to @julian-alarcon)</p>
+				<p>Unpacking the spellchecker dictionaries and adding the ones installed in hunspell (Thanks to @vadimi and @noderat )</p>
+				<p>Updating the MS icon (Thanks to @julian-alarcon)</p>
+				<p>removing the apparmor=DENIED messages in syslog for snap build (Thanks to @julian-alarcon)</p>
+				<p>Adding the --minimized option to start the app minimized (Thanks to @didster)</p>
+				<p>Adding webDebug to the tray menu options</p>
+			</description>
+		</release>
+	</releases>
+	<developer_name>Ismael Martinez</developer_name>
+	<screenshots>
+		<screenshot type="default">
+			<image type="source">https://iili.io/sUyRS9.png</image>
+		</screenshot>
+		<screenshot>
+			<image type="source">https://iili.io/sUyuFS.png</image>
+		</screenshot>
+		<screenshot>
+			<image type="source">https://iili.io/sUyAc7.png</image>
+		</screenshot>
+		<screenshot>
+			<image type="source">https://iili.io/sUyIP2.png</image>
+		</screenshot>
+		<screenshot>
+			<image type="source">https://iili.io/sUy79e.png</image>
+		</screenshot>
+	</screenshots>
+	<content_rating type="oars-1.0">
+		<content_attribute id="violence-cartoon">none</content_attribute>
+		<content_attribute id="violence-fantasy">none</content_attribute>
+		<content_attribute id="violence-realistic">none</content_attribute>
+		<content_attribute id="violence-bloodshed">none</content_attribute>
+		<content_attribute id="violence-sexual">none</content_attribute>
+		<content_attribute id="drugs-alcohol">none</content_attribute>
+		<content_attribute id="drugs-narcotics">none</content_attribute>
+		<content_attribute id="drugs-tobacco">none</content_attribute>
+		<content_attribute id="sex-nudity">none</content_attribute>
+		<content_attribute id="sex-themes">none</content_attribute>
+		<content_attribute id="language-profanity">none</content_attribute>
+		<content_attribute id="language-humor">none</content_attribute>
+		<content_attribute id="language-discrimination">none</content_attribute>
+		<content_attribute id="social-chat">none</content_attribute>
+		<content_attribute id="social-info">none</content_attribute>
+		<content_attribute id="social-audio">none</content_attribute>
+		<content_attribute id="social-location">none</content_attribute>
+		<content_attribute id="social-contacts">none</content_attribute>
+		<content_attribute id="money-purchasing">none</content_attribute>
+		<content_attribute id="money-gambling">none</content_attribute>
+	</content_rating>
+</component>
