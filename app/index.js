@@ -102,6 +102,7 @@ if (!gotTheLock) {
 
 // eslint-disable-next-line no-unused-vars
 async function playNotificationSound(event, options) {
+	logger.debug(`Notificaion => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`);
 	// Player failed to load or notification sound disabled in config
 	if (!player || config.disableNotificationSound) {
 		logger.debug('Notification sounds are disabled');
