@@ -14,6 +14,27 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.1.6" date="2023-06-15">
+			<description>
+				<ul>
+					<li>Fix: A rare crash when session times out</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.1.4" date="2023-06-15">
+			<description>
+				<ul>
+					<li>New: Added flag --disableNotificationWindowFlash which disables flashing the window frame when there is a new notification</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.1.3" date="2023-06-13">
+			<description>
+				<ul>
+					<li>New: Additional logs to debug notification issues</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.1.2" date="2023-06-06">
 			<description>
 				<ul>
