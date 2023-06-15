@@ -114,6 +114,11 @@ function argv(configPath) {
 				describe: 'A flag to disable all notifications',
 				type: 'boolean'
 			},
+			disableNotificationWindowFlash: {
+				default: false,
+				describe: 'A flag indicates whether to disable window flashing when there is a notification',
+				type: 'boolean'
+			},
 			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
