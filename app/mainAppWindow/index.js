@@ -246,16 +246,9 @@ function onNewWindow(details) {
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
-		// Create a new hidden window to load the request in the background
+		
 		logger.debug('DEBUG - captured about:blank');
-		const win = new BrowserWindow({
-			webContents: details.options.webContents, // use existing webContents if provided
-			show: false
-		});
-
-		// Close the new window once it is done loading.
-		win.once('ready-to-show', () => win.close());
-
+		
 		return { action: 'deny' };
 	}
 
