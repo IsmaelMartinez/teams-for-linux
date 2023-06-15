@@ -18,7 +18,7 @@ class ActivityManager {
 		this.iconRenderer.render(count).then(icon => {
 			this.ipcRenderer.send('tray-update', {
 				icon: icon,
-				flash: (count > 0)
+				flash: (count > 0 && !this.config.disableNotificationWindowFlash)
 			});
 		});
 		this.ipcRenderer.invoke('set-badge-count', count);
