@@ -43,12 +43,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window = await createWindow();
-	if (config.menubar == 'hidden') {
-		window.removeMenu();
-	} else {
-		new Menus(window, config, config.appIcon);
-	}
-
+	
+	new Menus(window, config, config.appIcon);
+	
 	addEventHandlers();
 
 	const url = processArgs(process.argv);
