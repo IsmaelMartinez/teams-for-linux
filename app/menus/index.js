@@ -72,11 +72,15 @@ class Menus {
 	initialize() {
 		const appMenu = application(this);
 
-		this.window.setMenu(Menu.buildFromTemplate([
-			appMenu,
-			preferences(),
-			help(app, this.window),
-		]));
+		if (this.config.menubar == 'hidden') {
+			this.window.removeMenu();
+		} else {
+			this.window.setMenu(Menu.buildFromTemplate([
+				appMenu,
+				preferences(),
+				help(app, this.window),
+			]));
+		}
 
 		this.initializeEventHandlers();
 

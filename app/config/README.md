@@ -46,6 +46,7 @@ Here is the list of available arguments and its usage:
 | customBGServiceBaseUrl | Base URL of the server which provides custom background images | http://localhost |
 | customBGServiceIgnoreMSDefaults | A flag indicates whether to ignore Microsoft provided images or not | false |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download custom background service configuration. If 0, it will be downloaded only at application start | 0 |
+| menubar | A value controls the menu bar behaviour (auto/visible/hidden) | auto |
 
 
 
