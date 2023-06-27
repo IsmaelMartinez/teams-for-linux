@@ -184,6 +184,12 @@ function argv(configPath) {
 				default: 0,
 				describe: 'A numeric value in seconds as poll interval to download background service config download',
 				type: 'number'
+			},
+			menubar: {
+				default: 'auto',
+				describe: 'A value controls the menu bar behaviour',
+				type: 'string',
+				choices: ['auto', 'visible', 'hidden']
 			}
 		})
 		.parse(process.argv.slice(1));

@@ -43,7 +43,11 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window = await createWindow();
-	new Menus(window, config, config.appIcon);
+	if (config.menubar == 'hidden') {
+		window.removeMenu();
+	} else {
+		new Menus(window, config, config.appIcon);
+	}
 
 	addEventHandlers();
 
@@ -246,9 +250,9 @@ function onNewWindow(details) {
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
-		
+
 		logger.debug('DEBUG - captured about:blank');
-		
+
 		return { action: 'deny' };
 	}
 
@@ -410,7 +414,7 @@ function createNewBrowserWindow(windowState) {
 		backgroundColor: isDarkMode ? '#302a75' : '#fff',
 
 		show: false,
-		autoHideMenuBar: true,
+		autoHideMenuBar: config.menubar == 'auto',
 		icon: config.appIcon,
 
 		webPreferences: {
