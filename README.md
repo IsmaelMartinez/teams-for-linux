@@ -25,7 +25,7 @@ Binaries available under [releases](https://github.com/IsmaelMartinez/teams-for-
 
 In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
 
-We have a dedicated deb and rpm repo at https://teamsforlinux.de hosted by @nbuechner :heart: Please follow the installation instructions below.
+We have a dedicated deb and rpm repo at https://teamsforlinux.de hosted with :heart: by [Nils Büchner](https://github.com/nbuechner). Please follow the installation instructions below.
 
 ### Debian/Ubuntu and other derivatives
 ```bash
