@@ -25,17 +25,27 @@ Binaries available under [releases](https://github.com/IsmaelMartinez/teams-for-
 
 In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
 
+We have a dedicated deb and rpm repo at https://teamsforlinux.de hosted by @nbuechner :heart: Please follow the installation instructions below.
+
 ### Debian/Ubuntu and other derivatives
 ```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/teams-for-linux/packages/setup.deb.sh' | sudo -E bash
+sudo wget -qO /etc/apt/keyrings/teams-for-linux.asc /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
+
+echo "deb [signed-by=/etc/apt/keyrings/teams-for-linux.asc arch=$(dpkg --print-architecture)] https://repo.teamsforlinux.de/debian/ stable main" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.list
+
 sudo apt update
+
 sudo apt install teams-for-linux
 ```
 ### RHEL/Fedora and other derivatives
 ```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/teams-for-linux/packages/setup.rpm.sh' | sudo -E bash
-sudo yum update
-sudo yum install teams-for-linux
+curl -1sLf -o /tmp/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc; rpm --import /tmp/teams-for-linux.asc; rm -f /tmp/teams-for-linux.asc
+
+curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforlinux.de/rpm/teams-for-linux.repo
+
+yum update
+
+yum install teams-for-linux
 ```
 
 Also available in:
