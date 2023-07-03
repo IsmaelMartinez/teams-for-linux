@@ -190,6 +190,11 @@ function argv(configPath) {
 				describe: 'A value controls the menu bar behaviour',
 				type: 'string',
 				choices: ['auto', 'visible', 'hidden']
+			},
+			disableAutogain: {
+				default: false,
+				describe: 'A flag indicates whether to disable mic auto gain or not',
+				type: 'boolean'
 			}
 		})
 		.parse(process.argv.slice(1));
