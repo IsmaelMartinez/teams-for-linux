@@ -90,6 +90,9 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/zoom').init(config);
 	require('./tools/shortcuts').init(config);
 	require('./tools/chromeApi');
+	if (config.disableAutogain) {
+		require('./tools/disableAutogain')();
+	}
 	require('./tools/settings').init(config, ipcRenderer);
 	require('./tools/customBackgrounds')(config, ipcRenderer);
 }
