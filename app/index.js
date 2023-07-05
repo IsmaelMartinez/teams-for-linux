@@ -48,7 +48,6 @@ const store = new Store({
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
-if (config.useElectronDl) require('electron-dl')();
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);

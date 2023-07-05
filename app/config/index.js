@@ -48,11 +48,6 @@ function argv(configPath) {
 				describe: 'Custom User Directory so that you can have multiple profiles',
 				type: 'string'
 			},
-			useElectronDl: {
-				default: false,
-				describe: 'Use Electron dl to automatically download files to the download folder',
-				type: 'boolean'
-			},
 			minimized: {
 				default: false,
 				describe: 'Start the application minimized',
