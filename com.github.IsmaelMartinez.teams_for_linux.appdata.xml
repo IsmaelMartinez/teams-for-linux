@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.2.0" date="2023-07-06">
+		<release version="1.2.2" date="2023-07-06">
 			<description>
 				<ul>
 					<li>Electron version downgraded to 24.6.2</li>
