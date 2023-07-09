@@ -11,6 +11,7 @@ const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const helpers = require('../helpers');
+const exec = require('child_process').exec;
 
 let blockerId = null;
 
@@ -43,9 +44,9 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	});
 
 	window = await createWindow();
-	
+
 	new Menus(window, config, config.appIcon);
-	
+
 	addEventHandlers();
 
 	const url = processArgs(process.argv);
@@ -313,7 +314,7 @@ function secureOpenLink(details) {
 	const action = getLinkAction();
 
 	if (action === 0) {
-		shell.openExternal(details.url);
+		openInBrowser(details);
 	}
 
 	/**
@@ -333,6 +334,18 @@ function secureOpenLink(details) {
 	}
 
 	return returnValue;
+}
+
+function openInBrowser(details) {
+	if (config.defaultURLHandler.trim() !== '') {
+		exec(`${config.defaultURLHandler.trim()} ${details.url}`, (error) => {
+			if (error) {
+				logger.error(error.message);
+			}
+		});
+	} else {
+		shell.openExternal(details.url);
+	}
 }
 
 function getLinkAction() {
