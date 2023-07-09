@@ -338,13 +338,15 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
 	if (config.defaultURLHandler.trim() !== '') {
-		exec(`${config.defaultURLHandler.trim()} ${details.url}`, (error) => {
-			if (error) {
-				logger.error(error.message);
-			}
-		});
+		exec(`${config.defaultURLHandler.trim()} ${details.url}`, openInBrowserErrorHandler);
 	} else {
 		shell.openExternal(details.url);
+	}
+}
+
+function openInBrowserErrorHandler(error) {
+	if (error) {
+		logger.error(error.message);
 	}
 }
 
