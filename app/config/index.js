@@ -190,6 +190,11 @@ function argv(configPath) {
 				default: false,
 				describe: 'A flag indicates whether to disable mic auto gain or not',
 				type: 'boolean'
+			},
+			defaultURLHandler:{
+				default:'',
+				describe:'Default application to be used to open the HTTP URLs',
+				type:'string'
 			}
 		})
 		.parse(process.argv.slice(1));
