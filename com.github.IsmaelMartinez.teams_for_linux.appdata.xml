@@ -14,6 +14,21 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.2.4" date="2023-07-11">
+			<description>
+				<ul>
+					<li>New: Support for monochrome icon</li>
+					<li>New: Empty spellchecker language list disables spellchcker</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.2.3" date="2023-07-09">
+			<description>
+				<ul>
+					<li>New: Command-line argument --defaultURLHandler to change the browser application to be used to open links instead of the system default</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.2.2" date="2023-07-06">
 			<description>
 				<ul>
