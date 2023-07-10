@@ -1,9 +1,6 @@
 const yargs = require('yargs');
 const path = require('path');
-const os = require('os');
 const { LucidLog } = require('lucid-log');
-
-const isMac = os.platform() === 'darwin';
 
 let logger;
 
@@ -130,7 +127,7 @@ function argv(configPath) {
 				type: 'boolean'
 			},
 			appIcon: {
-				default: path.join(__dirname, '..', 'assets', 'icons', isMac ? 'icon-16x16.png' : 'icon-96x96.png'),
+				default: '',
 				describe: 'Teams app icon to show in the tray',
 				type: 'string'
 			},
@@ -191,10 +188,16 @@ function argv(configPath) {
 				describe: 'A flag indicates whether to disable mic auto gain or not',
 				type: 'boolean'
 			},
-			defaultURLHandler:{
-				default:'',
-				describe:'Default application to be used to open the HTTP URLs',
-				type:'string'
+			defaultURLHandler: {
+				default: '',
+				describe: 'Default application to be used to open the HTTP URLs',
+				type: 'string'
+			},
+			appIconType: {
+				default: 'default',
+				describe: 'Type of tray icon to be used',
+				type: 'string',
+				choices: ['default', 'light', 'dark']
 			}
 		})
 		.parse(process.argv.slice(1));

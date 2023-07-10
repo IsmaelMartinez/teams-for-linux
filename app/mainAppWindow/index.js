@@ -12,6 +12,12 @@ const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const helpers = require('../helpers');
 const exec = require('child_process').exec;
+const TrayIconChooser = require('../browser/tools/trayIconChooser');
+
+/**
+ * @type {TrayIconChooser}
+ */
+let iconChooser;
 
 let blockerId = null;
 
@@ -39,13 +45,14 @@ let window = null;
 
 exports.onAppReady = async function onAppReady(mainConfig) {
 	config = mainConfig;
+	iconChooser = new TrayIconChooser(mainConfig);
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
 
 	window = await createWindow();
 
-	new Menus(window, config, config.appIcon);
+	new Menus(window, config, iconChooser.getFile());
 
 	addEventHandlers();
 
@@ -110,7 +117,7 @@ function applyAppConfiguration(config, window) {
  */
 function applySpellCheckerConfiguration(languages, window) {
 	const spellCheckProvider = new SpellCheckProvider(window, logger);
-	if (spellCheckProvider.setLanguages(languages).length == 0) {
+	if (spellCheckProvider.setLanguages(languages).length == 0 && languages.length > 0) {
 		// If failed to set user supplied languages, fallback to system locale.
 		const systemList = [app.getLocale()];
 		if (app.getLocale() !== app.getSystemLocale()) {
@@ -427,7 +434,7 @@ function createNewBrowserWindow(windowState) {
 
 		show: false,
 		autoHideMenuBar: config.menubar == 'auto',
-		icon: config.appIcon,
+		icon: iconChooser.getFile(),
 
 		webPreferences: {
 			partition: config.partition,
