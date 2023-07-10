@@ -1,9 +1,9 @@
 const { nativeImage } = require('electron');
+const TrayIconChooser = require('./trayIconChooser');
 class TrayIconRenderer {
-
-	constructor(baseIconPath) {
-		this.baseIconPath = baseIconPath;
-		this.baseIcon = nativeImage.createFromPath(this.baseIconPath);
+	constructor(config) {
+		const iconChooser = new TrayIconChooser(config);
+		this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
 		this.iconSize = this.baseIcon.getSize();
 	}
 

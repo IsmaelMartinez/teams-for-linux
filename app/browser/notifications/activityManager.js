@@ -9,7 +9,7 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
-		this.iconRenderer = new TrayIconRenderer(config.appIcon);
+		this.iconRenderer = new TrayIconRenderer(config);
 		this.config = config;
 		this.myStatus = -1;
 	}

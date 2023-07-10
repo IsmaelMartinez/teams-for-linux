@@ -28,7 +28,8 @@ Here is the list of available arguments and its usage:
 | customCSSLocation | Location for custom CSS styles | |
 | customCACertsFingerprints | custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate (see below) | [] |
 | clientCertPath clientCertPassword | custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | [] |
-| appIcon | 'Teams app icon to show in the tray' | ../assets/icons/icon-16x16.png if Mac or ../assets/icons/icon-96x96.png otherwise|  
+| appIcon | Teams app icon to show in the tray | |
+| appIconType | Type of tray icon to be used default/light/dark | default |
 | spellCheckerLanguages | Language codes to use with Electron\'s spell checker (experimental) | [] |
 | customUserDir | Custom User Directory so that you can have multiple profiles | |
 | appLogLevels | Comma separated list of log levels (error,warn,info,debug) | error,warn |
