@@ -10,7 +10,7 @@ defaults:
     shell: bash
 
 jobs:
-  deb:
+  linux_x64:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,9 +27,9 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:deb -- --publish always
+        run: yarn dist:linux:x64 -- --publish always
 
-  rpm:
+  linux_arm64:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,9 +46,9 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:rpm -- --publish always
+        run: yarn dist:linux:arm64 -- --publish always
 
-  appimage:
+  linux_arm:
     runs-on: ubuntu-latest
 
     steps:
@@ -65,26 +65,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:appimage -- --publish always
-
-  targz:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
-
-      - name: Build
-        run: yarn --link-duplicates --pure-lockfile
-
-      - name: Release
-        if: contains(github.ref, 'develop')
-        run: yarn dist:linux:targz -- --publish always
+        run: yarn dist:linux:arm -- --publish always
 
   dmg:
     runs-on: macos-latest

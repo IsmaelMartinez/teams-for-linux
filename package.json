@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -33,6 +33,9 @@
     "dist:linux:snap:armv7l": "electron-builder --armv7l -l snap",
     "dist:mac": "electron-builder --mac",
     "dist:windows": "electron-builder --windows --x64",
+    "dist:linux:x64":"electron-builder --x64 -l tar.gz deb rpm AppImage",
+    "dist:linux:arm64":"electron-builder --arm64 -l tar.gz deb rpm AppImage",
+    "dist:linux:arm":"electron-builder --armv7l -l tar.gz deb rpm AppImage",
     "release": "electron-builder"
   },
   "dependencies": {
