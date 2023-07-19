@@ -10,7 +10,11 @@ const isMac = os.platform() === 'darwin';
 if (app.commandLine.hasSwitch('customUserDir')) {
 	app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
 }
-const config = require('./config')(app.getPath('userData'));
+
+const { AppConfiguration } = require('./appConfiguration');
+const appConfig = new AppConfiguration(app.getPath('userData'));
+
+const config = appConfig.startupConfig;
 config.appPath = path.join(__dirname, isDev ? '' : '../../');
 
 const logger = new LucidLog({
@@ -41,10 +45,6 @@ try {
 	logger.info('No audio players found. Audio notifications might not work.');
 }
 
-const Store = require('electron-store');
-const store = new Store({
-	name: 'settings'
-});
 const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
@@ -144,7 +144,7 @@ function handleAppReady() {
 	process.on('SIGTERM', onAppTerminated);
 	//Just catch the error
 	process.stdout.on('error', () => { });
-	mainAppWindow.onAppReady(config);
+	mainAppWindow.onAppReady(appConfig);
 }
 
 async function handleGetConfig() {
@@ -183,7 +183,7 @@ async function handleGetCustomBGList() {
 }
 
 function getPartitions() {
-	return store.get('app.partitions') || [];
+	return appConfig.settingsStore.get('app.partitions') || [];
 }
 
 function getPartition(name) {
@@ -204,7 +204,7 @@ function savePartition(arg) {
 	} else {
 		partitions.push(arg);
 	}
-	store.set('app.partitions', partitions);
+	appConfig.settingsStore.set('app.partitions', partitions);
 }
 
 function handleCertificateError() {

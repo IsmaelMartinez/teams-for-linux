@@ -9,6 +9,7 @@ const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const checkConnectivity = require('./connectivity');
 
+let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
 	constructor(window, config, iconPath) {
 		/**
@@ -22,6 +23,22 @@ class Menus {
 			levels: config.appLogLevels.split(',')
 		});
 		this.initialize();
+	}
+
+	/**
+	 * @type {(languages:Array<string>)=>void}
+	 */
+	get onSpellCheckerLanguageChanged() {
+		return _Menus_onSpellCheckerLanguageChanged.get(this);
+	}
+
+	/**
+	 * @type {(languages:Array<string>)=>void}
+	 */
+	set onSpellCheckerLanguageChanged(value) {
+		if (typeof value === 'function') {
+			_Menus_onSpellCheckerLanguageChanged.set(this, value);
+		}
 	}
 
 	async quit(clearStorage = false) {
@@ -279,12 +296,40 @@ function addSpellCheckMenuItems(menu, menus) {
 function createSpellCheckLanguagesMenu(menus) {
 	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
 	const splChkMenu = new Menu();
-	for (const language of menus.spellCheckProvider.supportedList) {
-		splChkMenu.append(
-			createLanguageMenuItem(language, activeLanguages, menus)
-		);
+	for (const group of menus.spellCheckProvider.supportedListByGroup) {
+		const subMenu = new Menu();
+		splChkMenu.append(new MenuItem({
+			label: group.key,
+			submenu: subMenu
+		}));
+		for (const language of group.list) {
+			subMenu.append(
+				createLanguageMenuItem(language, activeLanguages, menus)
+			);
+		}
 	}
+
+	createSpellCheckLanguagesNoneMenuEntry(splChkMenu, menus);
+
 	return splChkMenu;
+}
+
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
+function createSpellCheckLanguagesNoneMenuEntry(menu, menus) {
+	menu.append(
+		new MenuItem({
+			type: 'separator'
+		})
+	);
+	menu.append(
+		new MenuItem({
+			label: 'None',
+			click: () => chooseLanguage(null, menus)
+		})
+	);
 }
 
 /**
@@ -309,12 +354,19 @@ function createLanguageMenuItem(language, activeLanguages, menus) {
  */
 function chooseLanguage(item, menus) {
 	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
-	if (item.checked) {
-		addToList(activeLanguages, item.id);
-	} else {
-		removeFromList(activeLanguages, item.id);
+	if (item) {
+		if (item.checked) {
+			addToList(activeLanguages, item.id);
+		} else {
+			removeFromList(activeLanguages, item.id);
+		}
 	}
-	menus.spellCheckProvider.setLanguages(activeLanguages);
+
+	const changes = menus.spellCheckProvider.setLanguages(item ? activeLanguages : []);
+
+	if (menus.onSpellCheckerLanguageChanged) {
+		menus.onSpellCheckerLanguageChanged.apply(menus, [changes]);
+	}
 }
 
 /**
