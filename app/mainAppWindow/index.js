@@ -13,6 +13,8 @@ const { SpellCheckProvider } = require('../spellCheckProvider');
 const helpers = require('../helpers');
 const exec = require('child_process').exec;
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
+// eslint-disable-next-line no-unused-vars
+const { AppConfiguration } = require('../appConfiguration');
 
 /**
  * @type {TrayIconChooser}
@@ -43,16 +45,26 @@ let config;
  */
 let window = null;
 
+/**
+ * @type {AppConfiguration}
+ */
+let appConfig = null;
+
+/**
+ * @param {AppConfiguration} mainConfig 
+ */
 exports.onAppReady = async function onAppReady(mainConfig) {
-	config = mainConfig;
-	iconChooser = new TrayIconChooser(mainConfig);
+	appConfig = mainConfig;
+	config = mainConfig.startupConfig;
+	iconChooser = new TrayIconChooser(mainConfig.startupConfig);
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
 
 	window = await createWindow();
 
-	new Menus(window, config, iconChooser.getFile());
+	const m = new Menus(window, config, iconChooser.getFile());
+	m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 
 	addEventHandlers();
 
@@ -61,6 +73,10 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 
 	applyAppConfiguration(config, window);
 };
+
+function onSpellCheckerLanguageChanged(languages) {
+	appConfig.legacyConfigStore.set('spellCheckerLanguages', languages);
+}
 
 let allowFurtherRequests = true;
 

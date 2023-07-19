@@ -24,6 +24,18 @@ class SpellCheckProvider {
 	}
 
 	/**
+	 * @type {Array<{key:string,list:{language:string,code:string}}>}
+	 */
+	get supportedListByGroup() {
+		var groupedList = [];
+		for (const language of this.supportedList) {
+			var key = language.language.substring(0, 1);
+			addLanguageToGroup(groupedList, key, language);
+		}
+		return groupedList;
+	}
+
+	/**
 	 * @type {Electron.BrowserWindow}
 	 */
 	get window() {
@@ -59,13 +71,11 @@ class SpellCheckProvider {
 		this.window.webContents.session.setSpellCheckerLanguages(setlanguages);
 		if (setlanguages.length > 0) {
 			this.logger.debug(`Language codes ${setlanguages.join(',')} set for spellchecker`);
+		} else {
+			this.logger.debug('Spellchecker is disabled!');
 		}
 
 		return setlanguages;
-	}
-
-	setSystemLanguages() {
-		//this.window.webContents.spl
 	}
 }
 
@@ -76,9 +86,11 @@ class SpellCheckProvider {
  */
 function init(intance, window) {
 	const listFromElectron = window.webContents.session.availableSpellCheckerLanguages;
-	_SpellCheckProvider_supportedList.set(intance, codes.filter(lf => {
+	var list = codes.filter(lf => {
 		return listContains(listFromElectron, lf.code);
-	}));
+	});
+	sortLanguages(list);
+	_SpellCheckProvider_supportedList.set(intance, list);
 }
 
 /**
@@ -90,6 +102,38 @@ function listContains(list, text) {
 	return list.some(l => {
 		return l === text;
 	});
+}
+
+/**
+ * @param {Array<{key:string,list:{language:string,code:string}}>} groupedList 
+ * @param {string} key 
+ * @param {{language:string,code:string}} language 
+ */
+function addLanguageToGroup(groupedList, key, language) {
+	const group = groupedList.filter(f => f.key === key)[0];
+	if (group) {
+		group.list.push(language);
+	} else {
+		groupedList.push({
+			key: key,
+			list: [language]
+		});
+	}
+}
+
+/**
+ * @param {Array<{language:string,code:string}} languages 
+ */
+function sortLanguages(languages) {
+	languages.sort((a, b) => {
+		return stringCompare(a.language.toLocaleLowerCase(), b.language.toLocaleLowerCase());
+	});
+}
+
+function stringCompare(str1, str2) {
+	const le = str1 < str2;
+	const gr = str1 > str2;
+	return le ? -1 : gr ? 1 : 0;
 }
 
 module.exports = { SpellCheckProvider };
