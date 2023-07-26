@@ -432,6 +432,7 @@ async function createWindow() {
 
 function assignEventHandlers(newWindow) {
 	ipcMain.on('select-source', assignSelectSourceHandler());
+	ipcMain.handle('select-source-wayland', assignSelectSourceHandlerWayland());
 	ipcMain.handle('call-connected', handleOnCallConnected);
 	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
@@ -463,6 +464,25 @@ function createNewBrowserWindow(windowState) {
 	});
 }
 
+function assignSelectSourceHandlerWayland() {
+	return async event => {
+		if (config.bypassWaylandSourceSelection) {
+			return 'default';
+		}
+
+		const actionValues = ['monitor', 'window', 'none'];
+		const action = await dialog.showMessageBox(window, {
+			type: 'question',
+			buttons: ['Monitor', 'Window', "Cancel"],
+			title: 'Type of source',
+			normalizeAccessKeys: true,
+			defaultId: 0,
+			cancelId: 2,
+			message: 'Please choose the type of source (Monitor/Window)'
+		});
+		return actionValues[action.response];
+	};
+}
 function assignSelectSourceHandler() {
 	return event => {
 		const streamSelector = new StreamSelector(window);

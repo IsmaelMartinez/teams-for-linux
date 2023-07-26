@@ -49,6 +49,7 @@ Here is the list of available arguments and its usage:
 | menubar | A value controls the menu bar behaviour (auto/visible/hidden) | auto |
 | disableAutogain | A flag indicates whether to disable mic auto gain or not | false |
 | defaultURLHandler | Default application to be used to open the HTTP URLs |  |
+| bypassWaylandSourceSelection | A flag indicates whether to bypass wayland source selection dialog when screen a share request is received | false |
 
 
 
