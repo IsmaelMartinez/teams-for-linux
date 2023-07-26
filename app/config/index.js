@@ -198,6 +198,11 @@ function argv(configPath) {
 				describe: 'Type of tray icon to be used',
 				type: 'string',
 				choices: ['default', 'light', 'dark']
+			},
+			bypassWaylandSourceSelection: {
+				default: false,
+				describe: 'A flag indicates whether to bypass wayland source selection dialog when screen a share request is received',
+				type: 'boolean'
 			}
 		})
 		.parse(process.argv.slice(1));

@@ -22,12 +22,17 @@ function init(config) {
 }
 
 async function customGetDisplayMediaWayland(...args) {
-	var displaySurface = 'monitor';
-	if (confirm('Press OK for windows and Cancel for monitors')) {
-		displaySurface = 'window';
+	// Request main process to allow access to screen sharing
+	const surface = await ipcRenderer.invoke('select-source-wayland');
+
+	if (surface === 'none') {
+		return null;
 	}
-	args[0].video = { displaySurface };
-	return _getDisplayMedia.apply(navigator.mediaDevices, args);
+
+	args[0].audio = false;
+	args[0].video = { displaySurface: surface };
+
+	return await _getDisplayMedia.apply(navigator.mediaDevices, args);
 }
 
 function customGetDisplayMediaX11() {
