@@ -31,6 +31,7 @@ const notificationSounds = [{
 }];
 
 let userStatus = -1;
+let isAppQuitting = false;
 
 // Notification sound player
 /**
@@ -127,10 +128,13 @@ async function playNotificationSound(event, options) {
 
 function onRenderProcessGone() {
 	logger.debug('render-process-gone');
-	app.quit();
+	if (isAppQuitting) {
+		app.quit();
+	}
 }
 
 function onAppTerminated(signal) {
+	isAppQuitting = true;
 	if (signal === 'SIGTERM') {
 		process.abort();
 	} else {
