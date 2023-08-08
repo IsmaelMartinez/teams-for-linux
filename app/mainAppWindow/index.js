@@ -74,6 +74,10 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	applyAppConfiguration(config, window);
 };
 
+exports.refresh = async () => {
+	window.reload();
+};
+
 function onSpellCheckerLanguageChanged(languages) {
 	appConfig.legacyConfigStore.set('spellCheckerLanguages', languages);
 }
@@ -465,7 +469,7 @@ function createNewBrowserWindow(windowState) {
 }
 
 function assignSelectSourceHandlerWayland() {
-	return async event => {
+	return async () => {
 		if (config.bypassWaylandSourceSelection) {
 			return 'default';
 		}
@@ -473,7 +477,7 @@ function assignSelectSourceHandlerWayland() {
 		const actionValues = ['monitor', 'window', 'none'];
 		const action = await dialog.showMessageBox(window, {
 			type: 'question',
-			buttons: ['Monitor', 'Window', "Cancel"],
+			buttons: ['Monitor', 'Window', 'Cancel'],
 			title: 'Type of source',
 			normalizeAccessKeys: true,
 			defaultId: 0,

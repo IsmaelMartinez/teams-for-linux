@@ -130,6 +130,8 @@ function onRenderProcessGone() {
 	logger.debug('render-process-gone');
 	if (isAppQuitting) {
 		app.quit();
+	} else {
+		mainAppWindow.refresh();
 	}
 }
 
