@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -109,7 +109,13 @@
         "camera",
         "screen-inhibit-control",
         "wayland",
-        "upower-observe"
+        "upower-observe",
+        "audio-record",
+        "gnome-42-2204",
+        "hardware-observe",
+        "network-bind",
+        "network-manager-observe",
+        "system-observe"
       ],
       "publish": [
         "snapStore"
