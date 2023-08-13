@@ -111,7 +111,6 @@
         "wayland",
         "upower-observe",
         "audio-record",
-        "gnome-42-2204",
         "hardware-observe",
         "network-bind",
         "network-manager-observe",
