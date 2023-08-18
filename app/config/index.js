@@ -26,7 +26,7 @@ function argv(configPath) {
 				type: 'boolean'
 			},
 			onlineOfflineReload: {
-				default: true,
+				default: false,
 				describe: 'Reload page when going from offline to online',
 				type: 'boolean'
 			},

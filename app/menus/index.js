@@ -7,7 +7,7 @@ const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
-const checkConnectivity = require('./connectivity');
+const { checkConnectivity } = require('../helpers');
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
