@@ -2,7 +2,7 @@ const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor } = requi
 const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
-const helpers = require('./helpers');
+const { httpHelper } = require('./helpers');
 
 const isDev = require('electron-is-dev');
 const os = require('os');
@@ -258,9 +258,9 @@ async function downloadCustomBGServiceRemoteConfig() {
 		customBGUrl = new URL('', 'http://localhost');
 	}
 
-	const remotePath = helpers.joinURLs(customBGUrl.href, 'config.json');
+	const remotePath = httpHelper.joinURLs(customBGUrl.href, 'config.json');
 	logger.debug(`Fetching custom background configuration from '${remotePath}'`);
-	helpers.getAsync(remotePath)
+	httpHelper.getAsync(remotePath)
 		.then(onCustomBGServiceConfigDownloadSuccess)
 		.catch(onCustomBGServiceConfigDownloadFailure);
 	if (config.customBGServiceConfigFetchInterval > 0) {
@@ -288,11 +288,11 @@ function onCustomBGServiceConfigDownloadSuccess(data) {
  */
 function setPath(cfg) {
 	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
-		cfg.src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
+		cfg.src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
 	}
 
 	if (!cfg.thumb_src.startsWith('/teams-for-linux/custom-bg/')) {
-		cfg.thumb_src = helpers.joinURLs('/teams-for-linux/custom-bg/', cfg.thumb_src);
+		cfg.thumb_src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.thumb_src);
 	}
 }
 

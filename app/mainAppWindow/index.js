@@ -10,11 +10,12 @@ const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
-const helpers = require('../helpers');
+const { httpHelper } = require('../helpers');
 const exec = require('child_process').exec;
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
+const connMgr =  require('../connectionManager');
 
 /**
  * @type {TrayIconChooser}
@@ -69,13 +70,13 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	addEventHandlers();
 
 	const url = processArgs(process.argv);
-	window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
+	//window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
+	connMgr.start(url,{
+		window: window,
+		config: config
+	});
 
 	applyAppConfiguration(config, window);
-};
-
-exports.refresh = async () => {
-	window.reload();
 };
 
 function onSpellCheckerLanguageChanged(languages) {
@@ -218,7 +219,7 @@ function onBeforeRequestHandler(details, callback) {
 }
 
 function getBGRedirectUrl(rel) {
-	return helpers.joinURLs(customBGServiceUrl.href, rel);
+	return httpHelper.joinURLs(customBGServiceUrl.href, rel);
 }
 
 /**
