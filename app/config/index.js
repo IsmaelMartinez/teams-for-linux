@@ -25,11 +25,6 @@ function argv(configPath) {
 				describe: 'Close the app when clicking the close (X) cross',
 				type: 'boolean'
 			},
-			onlineOfflineReload: {
-				default: false,
-				describe: 'Reload page when going from offline to online',
-				type: 'boolean'
-			},
 			url: {
 				default: 'https://teams.microsoft.com/',
 				describe: 'Microsoft Teams URL',

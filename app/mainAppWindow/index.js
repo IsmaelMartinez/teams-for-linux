@@ -6,7 +6,6 @@ const path = require('path');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
-const onlineOffline = require('../onlineOffline');
 const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
@@ -70,7 +69,6 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	addEventHandlers();
 
 	const url = processArgs(process.argv);
-	//window.loadURL(url ? url : config.url, { userAgent: config.chromeUserAgent });
 	connMgr.start(url,{
 		window: window,
 		config: config
@@ -107,10 +105,6 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
  */
 function applyAppConfiguration(config, window) {
 	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
-
-	if (config.onlineOfflineReload) {
-		onlineOffline.reloadPageWhenOfflineToOnline(window, config);
-	}
 
 	if (typeof config.clientCertPath !== 'undefined') {
 		app.importCertificate({ certificate: config.clientCertPath, password: config.clientCertPassword }, (result) => {
