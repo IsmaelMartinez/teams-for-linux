@@ -4,8 +4,6 @@ The files in here handle the code that talks with the browser  page.
 
 The [index.js](index.js) is the entry point.
 
-The [onlineOfflineListener.js](tools/onlineOfflineListener.js) adds listeners to the online/offline events and emit an 'online-status-changed' to the ipc when it receives a online/offline event.
-
 The [zoom.js](tools/zoom.js) inject the keyboard shortcuts for zoom in the browser.
 
 The notifications folder contains:

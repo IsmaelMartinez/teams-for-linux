@@ -1,4 +1,4 @@
-const { app, Menu, MenuItem, powerMonitor, clipboard, dialog, session, ipcMain } = require('electron');
+const { app, Menu, MenuItem, clipboard, dialog, session, ipcMain } = require('electron');
 const fs = require('fs'),
 	path = require('path');
 const application = require('./application');
@@ -7,7 +7,7 @@ const help = require('./help');
 const Tray = require('./tray');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
-const { checkConnectivity } = require('../helpers');
+const connectionManager = require('../connectionManager');
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -75,7 +75,7 @@ class Menus {
 			this.window.show();
 		}
 
-		this.window.reload();
+		connectionManager.refresh();
 	}
 
 	debug() {
@@ -109,7 +109,6 @@ class Menus {
 		app.on('before-quit', () => this.onBeforeQuit());
 		this.window.on('close', (event) => this.onClose(event));
 		this.window.webContents.on('context-menu', assignContextMenuHandler(this));
-		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
 	}
 
 	onBeforeQuit() {
@@ -156,23 +155,6 @@ function restoreSettingsInternal(event, arg) {
 			type: 'info'
 		});
 	}
-}
-
-/**
- * @param {Menus} self 
- * @returns 
- */
-function assignSystemResumeEventHandler(self) {
-	return async () => {
-		self.logger.debug('Waiting for network');
-		const isConnected = await checkConnectivity(2000, 30);
-		if (isConnected) {
-			self.logger.debug('Reloading the page on system resume');
-			self.reload(false);
-		} else {
-			self.logger.error('No internet connection');
-		}
-	};
 }
 
 /**
