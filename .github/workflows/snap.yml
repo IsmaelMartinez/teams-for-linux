@@ -11,11 +11,12 @@ jobs:
   snap:
     runs-on: ubuntu-latest
 
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+
     steps:
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
-        with:
-          snapcraft_token: ${{ secrets.snapcraft_token }}
+        uses: samuelmeuli/action-snapcraft@v2
 
       - name: Check out Git repository
         uses: actions/checkout@v2
@@ -35,11 +36,12 @@ jobs:
   snap-armv7l:
     runs-on: ubuntu-latest
 
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+
     steps:
       - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v1
-        with:
-          snapcraft_token: ${{ secrets.snapcraft_token }}
+        uses: samuelmeuli/action-snapcraft@v2
 
       - name: Check out Git repository
         uses: actions/checkout@v2
