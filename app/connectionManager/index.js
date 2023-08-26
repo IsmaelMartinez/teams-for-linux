@@ -1,5 +1,5 @@
 const { ipcMain, powerMonitor } = require('electron');
-const { checkConnectivity } = require('../helpers');
+const { httpHelper } = require('../helpers');
 const { LucidLog } = require('lucid-log');
 
 let _ConnectionManager_window = new WeakMap();
@@ -48,18 +48,19 @@ class ConnectionManager {
 		_ConnectionManager_currentUrl.set(this, url ? url : this.config.url);
 		ipcMain.on('offline-retry', assignOfflineRetryHandler(this));
 		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
+		this.window.webContents.on('did-fail-load', assignOnDidFailLoadEventHandler(this));
 		this.refresh();
 	}
 
 	async refresh() {
 		const currentUrl = this.window.webContents.getURL();
 		const hasUrl = currentUrl && currentUrl.startsWith('https://') ? true : false;
-		const connected = await checkConnectivity(1000, 1);
+		const connected = await httpHelper.isOnline(1000, 1);
 		if (!connected) {
 			this.window.setTitle('Waiting for network...');
 			this.logger.debug('Waiting for network...');
 		}
-		const retryConnected = await checkConnectivity(1000, 30);
+		const retryConnected = await httpHelper.isOnline(1000, 30);
 		if (retryConnected) {
 			if (hasUrl) {
 				this.window.reload();
@@ -89,6 +90,18 @@ function assignOfflineRetryHandler(cm) {
 function assignSystemResumeEventHandler(cm) {
 	return () => {
 		cm.refresh();
+	};
+}
+
+/**
+ * @param {ConnectionManager} cm 
+ */
+function assignOnDidFailLoadEventHandler(cm) {
+	return (event, code, description) => {
+		cm.logger.error(description);
+		if (description === 'ERR_INTERNET_DISCONNECTED' || description === 'ERR_NETWORK_CHANGED') {
+			cm.refresh();
+		}
 	};
 }
 

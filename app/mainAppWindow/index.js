@@ -441,6 +441,7 @@ function assignEventHandlers(newWindow) {
 
 function createNewBrowserWindow(windowState) {
 	return new BrowserWindow({
+		title:'Teams for Linux',
 		x: windowState.x,
 		y: windowState.y,
 
