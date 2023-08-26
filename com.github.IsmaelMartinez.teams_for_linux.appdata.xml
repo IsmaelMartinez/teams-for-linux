@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.3.7" date="2023-08-26">
+			<description>
+				<ul>
+					<li>New: Network check logic uses HTTP instead of DNS resolve</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.3.5" date="2023-08-20">
 			<description>
 				<ul>
