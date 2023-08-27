@@ -70,6 +70,25 @@ class Menus {
 		this.window.focus();
 	}
 
+	about() {
+		const appInfo = [];
+		appInfo.push(`teams-for-linux@${app.getVersion()}\n`);
+		for (const prop in process.versions) {
+			if (prop === 'node' || prop === 'v8' || prop === 'electron' || prop === 'chrome') {
+				appInfo.push(`${prop}: ${process.versions[prop]}`);
+			}
+		}
+		dialog.showMessageBoxSync(this.window, {
+			buttons: ['OK'],
+			title: 'About',
+			normalizeAccessKeys: true,
+			defaultId: 0,
+			cancelId: 0,
+			message: appInfo.join('\n'),
+			type: 'info'
+		});
+	}
+
 	reload(show = true) {
 		if (show) {
 			this.window.show();

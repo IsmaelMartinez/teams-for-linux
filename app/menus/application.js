@@ -2,6 +2,13 @@ exports = module.exports = (Menus) => ({
 	label: 'Application',
 	submenu: [
 		{
+			label: 'About',
+			click: () => Menus.about(),
+		},
+		{
+			type: 'separator',
+		},
+		{
 			label: 'Open',
 			accelerator: 'ctrl+O',
 			click: () => Menus.open(),
