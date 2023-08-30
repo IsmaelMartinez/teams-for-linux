@@ -1,5 +1,4 @@
-const https = require('https');
-const http = require('http');
+const { net } = require('electron');
 
 class HTTPHelper {
 	joinURLs(url1, url2) {
@@ -15,13 +14,14 @@ class HTTPHelper {
 	/**
 	 * @param {number} timeout 
 	 * @param {number} retries 
-	 * @param {string} proxyAddress 
 	 * @returns 
 	 */
-	async isOnline(timeout, retries, proxyAddress) {
+	async isOnline(timeout, retries) {
 		var resolved = false;
 		for (var i = 1; i <= retries && !resolved; i++) {
-			resolved = await isOnlineInternal(proxyAddress);
+			// Not using net.isOnline(), because it's too optimistic, it returns
+			// true before we can actually issue successful https requests.
+			resolved = await isOnlineInternal();
 			if (!resolved) await sleep(timeout);
 		}
 		return resolved;
@@ -42,7 +42,9 @@ function removeTrailingSlash(url) {
 }
 
 function processRequest(url, resolve, reject) {
-	const request = getHttpClient(url).request(url, (response) => {
+	const request = net.request(url);
+
+	request.on('response', (response) => {
 		let data = '';
 		if (response.statusCode >= 200 && response.statusCode < 300) {
 			response.on('data', (chunk) => {
@@ -64,21 +66,13 @@ function processRequest(url, resolve, reject) {
 	request.end();
 }
 
-function getHttpClient(url) {
-	return url.startsWith('http://') ? http : https;
-}
-
-async function isOnlineInternal() {
-	return await isOnlineInternalWithoutProxy();
-}
-
-function isOnlineInternalWithoutProxy() {
+function isOnlineInternal() {
 	return new Promise((resolve) => {
-		var req = https.request({
-			host: 'teams.microsoft.com',
-			method: 'CONNECT'
+		var req = net.request({
+			url: 'https://teams.microsoft.com',
+			method: 'HEAD'
 		});
-		req.on('connect', () => {
+		req.on('response', () => {
 			resolve(true);
 		});
 		req.on('error', () => {
