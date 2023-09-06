@@ -59,7 +59,7 @@ class ConnectionManager {
 			this.window.setTitle('Waiting for network...');
 			this.logger.debug('Waiting for network...');
 		}
-		const retryConnected = await this.isOnline(1000, 30, this.config.url);
+		const retryConnected = connected || await this.isOnline(1000, 30, this.config.url);
 		if (retryConnected) {
 			if (hasUrl) {
 				this.window.reload();
@@ -80,11 +80,39 @@ class ConnectionManager {
 	async isOnline(timeout, retries, testUrl) {
 		var resolved = false;
 		for (var i = 1; i <= retries && !resolved; i++) {
-			// Not using net.isOnline(), because it's too optimistic, it returns
-			// true before we can actually issue successful https requests.
-			this.logger.debug('checking for network, using net.request on ' + testUrl);
-			resolved = await isOnlineInternal(testUrl);
+			switch (this.config.onlineCheckMethod) {
+				case 'none':
+					// That's more an escape gate in case all methods are broken, it disables
+					// the network test (assumes we're online).
+					this.logger.warn('Network test is disabled, assuming online status.');
+					resolved = true;
+					break;
+				case 'dns':
+					// Sometimes too optimistic, might be false-positive where an HTTP proxy is
+					// mandatory but not reachable yet.
+					const testDomain = (new URL(testUrl)).hostname;
+					this.logger.debug('Testing network using net.resolveHost() for ' + testDomain);
+					resolved = await isOnlineDns(testDomain);
+					break;
+				case 'native':
+					// Sounds good but be careful, too optimistic in my experience; and at the contrary,
+					// might also be false negative where no DNS is available for internet domains, but
+					// an HTTP proxy is actually available and working.
+					this.logger.debug('Testing network using net.isOnline()');
+					resolved = net.isOnline();
+					break;
+				case 'https':
+				default:
+					// Perform an actual HTTPS request, similar to loading the Teams app.
+					this.logger.debug('Testing network using net.request() for ' + testUrl);
+					resolved = await isOnlineHttps(testUrl);
+			}
 			if (!resolved) await sleep(timeout);
+		}
+		if (resolved) {
+			this.logger.debug('Network test successful with method ' + this.config.onlineCheckMethod);
+		} else {
+			this.logger.debug('Network test failed with method ' + this.config.onlineCheckMethod);
 		}
 		return resolved;
 	}
@@ -125,7 +153,7 @@ function sleep(timeout) {
 	return new Promise(r => setTimeout(r, timeout));
 }
 
-function isOnlineInternal(testUrl) {
+function isOnlineHttps(testUrl) {
 	return new Promise((resolve) => {
 		var req = net.request({
 			url: testUrl,
@@ -138,6 +166,14 @@ function isOnlineInternal(testUrl) {
 			resolve(false);
 		});
 		req.end();
+	});
+}
+
+function isOnlineDns(testDomain) {
+	return new Promise((resolve) => {
+		net.resolveHost(testDomain)
+			.then(() => resolve(true))
+			.catch(() => resolve(false));
 	});
 }
 

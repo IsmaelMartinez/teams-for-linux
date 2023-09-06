@@ -198,6 +198,12 @@ function argv(configPath) {
 				default: false,
 				describe: 'A flag indicates whether to bypass wayland source selection dialog when screen a share request is received',
 				type: 'boolean'
+			},
+			onlineCheckMethod: {
+				default: 'https',
+				describe: 'Type of network test for checking online status.',
+				type: 'string',
+				choices: ['https', 'dns', 'native', 'none']
 			}
 		})
 		.parse(process.argv.slice(1));
