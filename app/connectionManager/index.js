@@ -1,5 +1,4 @@
-const { ipcMain, powerMonitor } = require('electron');
-const { httpHelper } = require('../helpers');
+const { ipcMain, net, powerMonitor } = require('electron');
 const { LucidLog } = require('lucid-log');
 
 let _ConnectionManager_window = new WeakMap();
@@ -55,12 +54,12 @@ class ConnectionManager {
 	async refresh() {
 		const currentUrl = this.window.webContents.getURL();
 		const hasUrl = currentUrl && currentUrl.startsWith('https://') ? true : false;
-		const connected = await httpHelper.isOnline(1000, 1);
+		const connected = await this.isOnline(1000, 1, this.config.url);
 		if (!connected) {
 			this.window.setTitle('Waiting for network...');
 			this.logger.debug('Waiting for network...');
 		}
-		const retryConnected = await httpHelper.isOnline(1000, 30);
+		const retryConnected = await this.isOnline(1000, 30, this.config.url);
 		if (retryConnected) {
 			if (hasUrl) {
 				this.window.reload();
@@ -71,6 +70,23 @@ class ConnectionManager {
 			this.window.setTitle('No internet connection');
 			this.logger.error('No internet connection');
 		}
+	}
+
+	/**
+	 * @param {number} timeout 
+	 * @param {number} retries 
+	 * @returns 
+	 */
+	async isOnline(timeout, retries, testUrl) {
+		var resolved = false;
+		for (var i = 1; i <= retries && !resolved; i++) {
+			// Not using net.isOnline(), because it's too optimistic, it returns
+			// true before we can actually issue successful https requests.
+			this.logger.debug('checking for network, using net.request on ' + testUrl);
+			resolved = await isOnlineInternal(testUrl);
+			if (!resolved) await sleep(timeout);
+		}
+		return resolved;
 	}
 }
 
@@ -103,6 +119,26 @@ function assignOnDidFailLoadEventHandler(cm) {
 			cm.refresh();
 		}
 	};
+}
+
+function sleep(timeout) {
+	return new Promise(r => setTimeout(r, timeout));
+}
+
+function isOnlineInternal(testUrl) {
+	return new Promise((resolve) => {
+		var req = net.request({
+			url: testUrl,
+			method: 'HEAD'
+		});
+		req.on('response', () => {
+			resolve(true);
+		});
+		req.on('error', () => {
+			resolve(false);
+		});
+		req.end();
+	});
 }
 
 module.exports = new ConnectionManager();
