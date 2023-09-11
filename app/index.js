@@ -96,7 +96,6 @@ if (!gotTheLock) {
 	ipcMain.handle('play-notification-sound', playNotificationSound);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
 	ipcMain.handle('set-badge-count', setBadgeCountHandler);
-	downloadCustomBGServiceRemoteConfig();
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -139,6 +138,7 @@ function onAppTerminated(signal) {
 }
 
 function handleAppReady() {
+	downloadCustomBGServiceRemoteConfig();
 	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
 	process.on('SIGTERM', onAppTerminated);

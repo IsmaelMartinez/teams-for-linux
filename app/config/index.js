@@ -207,6 +207,12 @@ function argv(configPath) {
 				default: false,
 				describe: 'Enable debug at start',
 				type: 'boolean'
+			},
+			onlineCheckMethod: {
+				default: 'https',
+				describe: 'Type of network test for checking online status.',
+				type: 'string',
+				choices: ['https', 'dns', 'native', 'none']
 			}
 		})
 		.parse(process.argv.slice(1));

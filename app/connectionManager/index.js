@@ -1,5 +1,4 @@
-const { ipcMain, powerMonitor } = require('electron');
-const { httpHelper } = require('../helpers');
+const { ipcMain, net, powerMonitor } = require('electron');
 const { LucidLog } = require('lucid-log');
 
 let _ConnectionManager_window = new WeakMap();
@@ -55,12 +54,12 @@ class ConnectionManager {
 	async refresh() {
 		const currentUrl = this.window.webContents.getURL();
 		const hasUrl = currentUrl && currentUrl.startsWith('https://') ? true : false;
-		const connected = await httpHelper.isOnline(1000, 1);
+		const connected = await this.isOnline(1000, 1);
 		if (!connected) {
 			this.window.setTitle('Waiting for network...');
 			this.logger.debug('Waiting for network...');
 		}
-		const retryConnected = await httpHelper.isOnline(1000, 30);
+		const retryConnected = connected || await this.isOnline(1000, 30);
 		if (retryConnected) {
 			if (hasUrl) {
 				this.window.reload();
@@ -70,6 +69,54 @@ class ConnectionManager {
 		} else {
 			this.window.setTitle('No internet connection');
 			this.logger.error('No internet connection');
+		}
+	}
+
+	/**
+	 * @param {number} timeout 
+	 * @param {number} retries 
+	 * @returns 
+	 */
+	async isOnline(timeout, retries) {
+		const onlineCheckMethod = this.config.onlineCheckMethod;
+		var resolved = false;
+		for (var i = 1; i <= retries && !resolved; i++) {
+			resolved = this.isOnlineTest(onlineCheckMethod, this.config.url);
+			if (!resolved) await sleep(timeout);
+		}
+		if (resolved) {
+			this.logger.debug('Network test successful with method ' + onlineCheckMethod);
+		} else {
+			this.logger.debug('Network test failed with method ' + onlineCheckMethod);
+		}
+		return resolved;
+	}
+
+	async isOnlineTest(onlineCheckMethod, testUrl) {
+		switch (onlineCheckMethod) {
+			case 'none':
+				// That's more an escape gate in case all methods are broken, it disables
+				// the network test (assumes we're online).
+				this.logger.warn('Network test is disabled, assuming online status.');
+				return true;
+			case 'dns':
+				// Sometimes too optimistic, might be false-positive where an HTTP proxy is
+				// mandatory but not reachable yet.
+				const testDomain = (new URL(testUrl)).hostname;
+				this.logger.debug('Testing network using net.resolveHost() for ' + testDomain);
+				return await isOnlineDns(testDomain);
+
+			case 'native':
+				// Sounds good but be careful, too optimistic in my experience; and at the contrary,
+				// might also be false negative where no DNS is available for internet domains, but
+				// an HTTP proxy is actually available and working.
+				this.logger.debug('Testing network using net.isOnline()');
+				return net.isOnline();
+			case 'https':
+			default:
+				// Perform an actual HTTPS request, similar to loading the Teams app.
+				this.logger.debug('Testing network using net.request() for ' + testUrl);
+				return await isOnlineHttps(testUrl);
 		}
 	}
 }
@@ -103,6 +150,34 @@ function assignOnDidFailLoadEventHandler(cm) {
 			cm.refresh();
 		}
 	};
+}
+
+function sleep(timeout) {
+	return new Promise(r => setTimeout(r, timeout));
+}
+
+function isOnlineHttps(testUrl) {
+	return new Promise((resolve) => {
+		var req = net.request({
+			url: testUrl,
+			method: 'HEAD'
+		});
+		req.on('response', () => {
+			resolve(true);
+		});
+		req.on('error', () => {
+			resolve(false);
+		});
+		req.end();
+	});
+}
+
+function isOnlineDns(testDomain) {
+	return new Promise((resolve) => {
+		net.resolveHost(testDomain)
+			.then(() => resolve(true))
+			.catch(() => resolve(false));
+	});
 }
 
 module.exports = new ConnectionManager();
