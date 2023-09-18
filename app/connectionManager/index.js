@@ -81,7 +81,7 @@ class ConnectionManager {
 		const onlineCheckMethod = this.config.onlineCheckMethod;
 		var resolved = false;
 		for (var i = 1; i <= retries && !resolved; i++) {
-			resolved = this.isOnlineTest(onlineCheckMethod, this.config.url);
+			resolved = await this.isOnlineTest(onlineCheckMethod, this.config.url);
 			if (!resolved) await sleep(timeout);
 		}
 		if (resolved) {
@@ -94,29 +94,29 @@ class ConnectionManager {
 
 	async isOnlineTest(onlineCheckMethod, testUrl) {
 		switch (onlineCheckMethod) {
-			case 'none':
-				// That's more an escape gate in case all methods are broken, it disables
-				// the network test (assumes we're online).
-				this.logger.warn('Network test is disabled, assuming online status.');
-				return true;
-			case 'dns':
-				// Sometimes too optimistic, might be false-positive where an HTTP proxy is
-				// mandatory but not reachable yet.
-				const testDomain = (new URL(testUrl)).hostname;
-				this.logger.debug('Testing network using net.resolveHost() for ' + testDomain);
-				return await isOnlineDns(testDomain);
-
-			case 'native':
-				// Sounds good but be careful, too optimistic in my experience; and at the contrary,
-				// might also be false negative where no DNS is available for internet domains, but
-				// an HTTP proxy is actually available and working.
-				this.logger.debug('Testing network using net.isOnline()');
-				return net.isOnline();
-			case 'https':
-			default:
-				// Perform an actual HTTPS request, similar to loading the Teams app.
-				this.logger.debug('Testing network using net.request() for ' + testUrl);
-				return await isOnlineHttps(testUrl);
+		case 'none':
+			// That's more an escape gate in case all methods are broken, it disables
+			// the network test (assumes we're online).
+			this.logger.warn('Network test is disabled, assuming online status.');
+			return true;
+		case 'dns': {
+			// Sometimes too optimistic, might be false-positive where an HTTP proxy is
+			// mandatory but not reachable yet.
+			const testDomain = (new URL(testUrl)).hostname;
+			this.logger.debug('Testing network using net.resolveHost() for ' + testDomain);
+			return await isOnlineDns(testDomain);
+		}
+		case 'native':
+			// Sounds good but be careful, too optimistic in my experience; and at the contrary,
+			// might also be false negative where no DNS is available for internet domains, but
+			// an HTTP proxy is actually available and working.
+			this.logger.debug('Testing network using net.isOnline()');
+			return net.isOnline();
+		case 'https':
+		default:
+			// Perform an actual HTTPS request, similar to loading the Teams app.
+			this.logger.debug('Testing network using net.request() for ' + testUrl);
+			return await isOnlineHttps(testUrl);
 		}
 	}
 }

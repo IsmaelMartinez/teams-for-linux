@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.3.11" date="2023-09-18">
+			<description>
+				<ul>
+					<li>Fix: A glitch in network waiting loop</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.3.10" date="2023-09-07">
 			<description>
 				<ul>
