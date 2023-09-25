@@ -106,7 +106,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 function applyAppConfiguration(config, window) {
 	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
-	if (typeof config.clientCertPath !== 'undefined') {
+	if (typeof config.clientCertPath !== 'undefined' && config.clientCertPath !== '') {
 		app.importCertificate({ certificate: config.clientCertPath, password: config.clientCertPassword }, (result) => {
 			logger.info('Loaded certificate: ' + config.clientCertPath + ', result: ' + result);
 		});
