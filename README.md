@@ -1,8 +1,8 @@
 # teams-for-linux
 
-This is an unofficial Microsoft Teams client. The official client for Linux from Microsoft is retired by the end of 2022 and is replaced with PWA. Read the blog [here](https://techcommunity.microsoft.com/t5/microsoft-teams-blog/microsoft-teams-progressive-web-app-now-available-on-linux/ba-p/3669846).
+This is an unofficial Microsoft Teams client. The official client for Linux from Microsoft is retired by the end of 2022 and be replaced with PWA. Read the blog [here](https://techcommunity.microsoft.com/t5/microsoft-teams-blog/microsoft-teams-progressive-web-app-now-available-on-linux/ba-p/3669846).
 
-Please do report bugs and questions in the issues section. We will try to attend them at the earliest.
+Please report bugs and questions in the issues section. We will attend them as soon as possible.
 
 PRs and suggestions are welcomed. We will continue to support the community.
 
@@ -23,19 +23,17 @@ It uses the Web App and wraps it as a standalone application using Electron.
 
 Binaries available under [releases](https://github.com/IsmaelMartinez/teams-for-linux/releases) for `AppImage`, `rpm`, `deb`, `snap`, and `tar.gz`.
 
-In case of `AppImage`, we recommend to use [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
+In the case of `AppImage`, we recommend using [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the best desktop experience.
 
 We have a dedicated deb and rpm repo at https://teamsforlinux.de hosted with :heart: by [Nils Büchner](https://github.com/nbuechner). Please follow the installation instructions below.
 
 ### Debian/Ubuntu and other derivatives
 ```bash
-sudo wget -qO /etc/apt/keyrings/teams-for-linux.asc /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
+sudo wget -qO /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
 
 echo "deb [signed-by=/etc/apt/keyrings/teams-for-linux.asc arch=$(dpkg --print-architecture)] https://repo.teamsforlinux.de/debian/ stable main" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.list
 
-sudo apt update
-
-sudo apt install teams-for-linux
+sudo apt update && sudo apt install teams-for-linux
 ```
 ### RHEL/Fedora and other derivatives
 ```bash
@@ -43,9 +41,7 @@ curl -1sLf -o /tmp/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-l
 
 curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforlinux.de/rpm/teams-for-linux.repo
 
-yum update
-
-yum install teams-for-linux
+sudo yum update && sudo yum install teams-for-linux
 ```
 
 Also available in:
@@ -72,7 +68,7 @@ Known issues and workarounds can be found in the [`KNOWN_ISSUES.md`](KNOWN_ISSUE
 
 ## History
 
-Read about the history about this project in the [`HISTORY.md`](HISTORY.md) file.
+Read about the history of this project in the [`HISTORY.md`](HISTORY.md) file.
 
 ## License
 
