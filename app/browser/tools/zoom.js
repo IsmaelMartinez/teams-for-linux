@@ -4,9 +4,13 @@ const logger = new LucidLog({
 	levels: ['debug']
 });
 
-const zoomLevels = {
-	'+': 0.25,
-	'-': -0.25,
+//zoomFactor can be configurable
+const zoomFactor = 0.25;
+const zoomMin = -7.5; //-7.5 * 20% = -150% or 50% of original
+const zoomMax = 7.5; // 7.5 * 20% = +200% or 300% of original
+const zoomOffsets = {
+	'+': 1,
+	'-': -1,
 	'0': 0
 };
 
@@ -24,7 +28,6 @@ class Zoom {
 		_Zoom_config.set(this, config);
 		_Zoom_initialized.set(this, true);
 		this.restoreZoomLevel();
-		require('@electron/remote').getCurrentWindow().webContents.on('zoom-changed', setZoomChangedHandler(config));
 	}
 
 	get config() {
@@ -52,12 +55,6 @@ class Zoom {
 	}
 }
 
-function setZoomChangedHandler(config) {
-	return (event, zoomDirection) => {
-		setNextZoomLevel(zoomDirection == 'in' ? '+' : '-', config);
-	};
-}
-
 function restoreZoomLevelInternal(config) {
 	ipcRenderer.invoke('getZoomLevel', config.partition).then(zoomLevel => {
 		webFrame.setZoomLevel(zoomLevel);
@@ -65,14 +62,15 @@ function restoreZoomLevelInternal(config) {
 }
 
 function setNextZoomLevel(keyName, config) {
-	const zoomFactor = zoomLevels[keyName];
-	var zoomLevel = webFrame.getZoomLevel();
+	const zoomOffset = zoomOffsets[keyName];
+	let zoomLevel = webFrame.getZoomLevel();
 	logger.debug(`Current zoom level: ${zoomLevel}`);
-	if (typeof (zoomFactor) !== 'number') {
+	if (typeof (zoomOffset) !== 'number') {
 		return;
 	}
 
-	zoomLevel = zoomFactor == 0 ? 0 : zoomLevel + zoomFactor;
+	zoomLevel = zoomOffset === 0 ? 0 : zoomLevel + zoomOffset * zoomFactor;
+	if (zoomLevel < zoomMin || zoomLevel > zoomMax) return;
 	webFrame.setZoomLevel(zoomLevel);
 	ipcRenderer.invoke('saveZoomLevel', {
 		partition: config.partition,
