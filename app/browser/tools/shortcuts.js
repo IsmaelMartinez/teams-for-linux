@@ -36,13 +36,23 @@ const KEY_MAPS = {
 };
 
 function initInternal() {
-	document.addEventListener('DOMContentLoaded', async () => {
-		window.addEventListener('keydown', keyDownEventHandler, false);
-		window.addEventListener('wheel', wheelEventHandler, {passive: false});
-		whenIframeReady((iframe) => {
-			iframe.contentDocument.addEventListener('keydown', keyDownEventHandler, false);
-			iframe.contentDocument.addEventListener('wheel', wheelEventHandler, {passive: false});
-		});
+	whenWindowReady(addEventListeners);
+}
+
+function whenWindowReady(callback) {
+	if (window) {
+		callback();
+	} else {
+		setTimeout(() => whenWindowReady(callback), 1000);
+	}
+}
+
+function addEventListeners() {
+	window.addEventListener('keydown', keyDownEventHandler, false);
+	window.addEventListener('wheel', wheelEventHandler, {passive: false});
+	whenIframeReady((iframe) => {
+		iframe.contentDocument.addEventListener('keydown', keyDownEventHandler, false);
+		iframe.contentDocument.addEventListener('wheel', wheelEventHandler, {passive: false});
 	});
 }
 
@@ -54,7 +64,7 @@ function whenIframeReady(callback) {
 	if (iframe) {
 		callback(iframe);
 	} else {
-		setTimeout(() => whenIframeReady(callback), 4000);
+		setTimeout(() => whenIframeReady(callback), 1000);
 	}
 }
 
