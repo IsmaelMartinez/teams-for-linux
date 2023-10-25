@@ -136,6 +136,11 @@ function argv(configPath) {
 				describe: 'A flag indicates whether to disable mic auto gain or not',
 				type: 'boolean'
 			},
+			disableGpu: {
+				default: false,
+				describe: 'A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)',
+				type: 'boolean'
+			},
 			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
