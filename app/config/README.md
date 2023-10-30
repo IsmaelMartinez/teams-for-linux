@@ -33,6 +33,7 @@ Here is the list of available arguments and its usage:
 | config | config file location | ~/.config/teams-for-linux/config.json |
 | defaultURLHandler | Default application to be used to open the HTTP URLs |  |
 | disableAutogain | A flag indicates whether to disable mic auto gain or not | false |
+| disableGpu | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank) | false |
 | disableMeetingNotifications | Whether to disable meeting notifications or not | false |
 | disableNotifications | A flag to disable all notifications | false |
 | disableNotificationSound | Disable chat/meeting start notification sound | false |

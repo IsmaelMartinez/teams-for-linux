@@ -76,6 +76,16 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
 
 app.allowRendererProcessReuse = false;
 
+if (config.disableGpu) {
+	logger.info('Disabling GPU support...');
+	app.commandLine.appendSwitch('disable-gpu');
+	app.commandLine.appendSwitch('disable-software-rasterizer');
+	// app.commandLine.appendSwitch('disable-gpu-compositing');
+	// app.commandLine.appendSwitch('disable-gpu-rasterization');
+	// app.commandLine.appendSwitch('disable-gpu-sandbox');
+	// app.disableHardwareAcceleration();
+}
+
 if (!gotTheLock) {
 	logger.info('App already running');
 	app.quit();
