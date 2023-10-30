@@ -10,7 +10,7 @@ const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
-const exec = require('child_process').exec;
+const execFile = require('child_process').execFile;
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
@@ -360,7 +360,7 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
 	if (config.defaultURLHandler.trim() !== '') {
-		exec(`${config.defaultURLHandler.trim()} "${details.url}"`, openInBrowserErrorHandler);
+		execFile(config.defaultURLHandler.trim(), [details.url], openInBrowserErrorHandler);
 	} else {
 		shell.openExternal(details.url);
 	}
