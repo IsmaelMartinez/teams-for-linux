@@ -360,7 +360,7 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
 	if (config.defaultURLHandler.trim() !== '') {
-		exec(`${config.defaultURLHandler.trim()} ${details.url}`, openInBrowserErrorHandler);
+		exec(`${config.defaultURLHandler.trim()} "${details.url}"`, openInBrowserErrorHandler);
 	} else {
 		shell.openExternal(details.url);
 	}
