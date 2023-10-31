@@ -29,11 +29,15 @@ We have a dedicated deb and rpm repo at https://teamsforlinux.de hosted with :he
 
 ### Debian/Ubuntu and other derivatives
 ```bash
+sudo mkdir -p /etc/apt/keyrings
+
 sudo wget -qO /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
 
 echo "deb [signed-by=/etc/apt/keyrings/teams-for-linux.asc arch=$(dpkg --print-architecture)] https://repo.teamsforlinux.de/debian/ stable main" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.list
 
-sudo apt update && sudo apt install teams-for-linux
+sudo apt update
+
+sudo apt install teams-for-linux
 ```
 ### RHEL/Fedora and other derivatives
 ```bash
@@ -41,7 +45,9 @@ curl -1sLf -o /tmp/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-l
 
 curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforlinux.de/rpm/teams-for-linux.repo
 
-sudo yum update && sudo yum install teams-for-linux
+yum update
+
+yum install teams-for-linux
 ```
 
 Also available in:
