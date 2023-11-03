@@ -218,6 +218,10 @@ function argv(configPath) {
 				describe: 'Type of network test for checking online status.',
 				type: 'string',
 				choices: ['https', 'dns', 'native', 'none']
+			},
+			incomingCallCommand: {
+				default: null,
+				describe: 'Command to execute on an incoming call.'
 			}
 		})
 		.parse(process.argv.slice(1));
