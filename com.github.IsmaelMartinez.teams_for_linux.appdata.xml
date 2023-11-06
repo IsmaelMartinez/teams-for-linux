@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.3.19" date="2023-11-06">
+			<description>
+				<ul>
+					<li>New: Moved about menu entry to bottom</li>
+					<li>Update: Upgraded electron version to 27.0.3</li>
+					<li>Update: Edited documentation</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.3.18" date="2023-10-31">
 			<description>
 				<ul>
