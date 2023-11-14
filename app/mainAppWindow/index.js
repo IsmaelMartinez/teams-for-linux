@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -159,6 +159,17 @@ function onDidFinishLoad() {
 	customCSS.onDidFinishLoad(window.webContents, config);
 }
 
+function onDidFrameFinishLoad(event, isMainFrame, frameProcessId, frameRoutingId) {
+	logger.debug('did-frame-finish-load', event, isMainFrame);
+
+	if (isMainFrame) {
+		return; // We want to insert CSS only into the Teams V2 content iframe
+	}
+
+	const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
+	customCSS.onDidFrameFinishLoad(wf, config)
+}
+
 function restoreWindow() {
 	// If minimized, restore.
 	if (window.isMinimized()) {
@@ -302,6 +313,7 @@ function addEventHandlers() {
 	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
+	window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
 	window.on('closed', onWindowClosed);
 	window.webContents.addListener('before-input-event', onBeforeInput);
 }
