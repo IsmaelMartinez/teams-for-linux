@@ -10,11 +10,13 @@ const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
-const execFile = require('child_process').execFile;
+const { execFile, spawn } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr =  require('../connectionManager');
+
+const commandSplitRegex = /"(\\"|[^"])*?"|(\\ |[^\s])*/gm;
 
 /**
  * @type {TrayIconChooser}
@@ -26,6 +28,8 @@ let blockerId = null;
 let isOnCall = false;
 
 let isControlPressed = false;
+
+let incomingCallCommandProcess = null;
 
 /**
  * @type {URL}
@@ -444,6 +448,9 @@ async function createWindow() {
 function assignEventHandlers(newWindow) {
 	ipcMain.on('select-source', assignSelectSourceHandler());
 	ipcMain.handle('select-source-wayland', assignSelectSourceHandlerWayland());
+	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
+	ipcMain.handle('incoming-call-connecting', incomingCallCommandKill);
+	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandKill);
 	ipcMain.handle('call-connected', handleOnCallConnected);
 	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
@@ -502,6 +509,20 @@ function assignSelectSourceHandler() {
 			event.reply('select-source', source);
 		});
 	};
+}
+
+async function handleOnIncomingCallCreated() {
+	if (!incomingCallCommandProcess && config.incomingCallCommand) {
+		let commandParts = config.incomingCallCommand.match(commandSplitRegex);
+		incomingCallCommandProcess = spawn(commandParts.shift(), commandParts);
+	}
+}
+
+async function incomingCallCommandKill() {
+	if (incomingCallCommandProcess) {
+		incomingCallCommandProcess.kill('SIGKILL');
+		incomingCallCommandProcess = null;
+	}
 }
 
 async function handleOnCallConnected() {

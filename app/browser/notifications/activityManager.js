@@ -47,6 +47,9 @@ class ActivityManager {
  */
 function setActivityHandlers(self) {
 	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
+	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
+	activityHub.on('incoming-call-connecting', incomingCallConnectingHandler(self));
+	activityHub.on('incoming-call-disconnecting', incomingCallDisconnectingHandler(self));
 	activityHub.on('call-connected', callConnectedHandler(self));
 	activityHub.on('call-disconnected', callDisconnectedHandler(self));
 	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
@@ -67,6 +70,33 @@ function setEventHandlers(self) {
 function updateActivityCountHandler(self) {
 	return async (data) => {
 		self.updateActivityCount(data.count);
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function incomingCallCreatedHandler(self) {
+	return async () => {
+		self.ipcRenderer.invoke('incoming-call-created');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function incomingCallConnectingHandler(self) {
+	return async () => {
+		self.ipcRenderer.invoke('incoming-call-connecting');
+	};
+}
+
+/**
+ * @param {ActivityManager} self 
+ */
+function incomingCallDisconnectingHandler(self) {
+	return async () => {
+		self.ipcRenderer.invoke('incoming-call-disconnecting');
 	};
 }
 

@@ -51,6 +51,7 @@ Here is the list of available arguments and its usage:
 | url | url to open | [https://teams.microsoft.com/](https://teams.microsoft.com/) |
 | version | show the version number | false |
 | webDebug | Start with the browser developer tools open  |  false |
+| incomingCallCommand | Command to execute on an incoming call | |
 
 
 As an example, to disable the persistence, you can run the following command:
