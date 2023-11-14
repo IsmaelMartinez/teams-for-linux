@@ -33,6 +33,7 @@ Here is the list of available arguments and its usage:
 | config | config file location | ~/.config/teams-for-linux/config.json |
 | defaultURLHandler | Default application to be used to open the HTTP URLs |  |
 | disableAutogain | A flag indicates whether to disable mic auto gain or not | false |
+| disableGpu | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank) | false |
 | disableMeetingNotifications | Whether to disable meeting notifications or not | false |
 | disableNotifications | A flag to disable all notifications | false |
 | disableNotificationSound | Disable chat/meeting start notification sound | false |
@@ -50,6 +51,7 @@ Here is the list of available arguments and its usage:
 | url | url to open | [https://teams.microsoft.com/](https://teams.microsoft.com/) |
 | version | show the version number | false |
 | webDebug | Start with the browser developer tools open  |  false |
+| incomingCallCommand | Command to execute on an incoming call | |
 
 
 As an example, to disable the persistence, you can run the following command:

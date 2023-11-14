@@ -136,6 +136,11 @@ function argv(configPath) {
 				describe: 'A flag indicates whether to disable mic auto gain or not',
 				type: 'boolean'
 			},
+			disableGpu: {
+				default: false,
+				describe: 'A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)',
+				type: 'boolean'
+			},
 			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
@@ -213,6 +218,10 @@ function argv(configPath) {
 				describe: 'Type of network test for checking online status.',
 				type: 'string',
 				choices: ['https', 'dns', 'native', 'none']
+			},
+			incomingCallCommand: {
+				default: null,
+				describe: 'Command to execute on an incoming call.'
 			}
 		})
 		.parse(process.argv.slice(1));

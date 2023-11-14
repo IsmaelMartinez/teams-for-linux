@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -10,11 +10,13 @@ const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
-const exec = require('child_process').exec;
+const { execFile, spawn } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr =  require('../connectionManager');
+
+const commandSplitRegex = /"(\\"|[^"])*?"|(\\ |[^\s])*/gm;
 
 /**
  * @type {TrayIconChooser}
@@ -26,6 +28,8 @@ let blockerId = null;
 let isOnCall = false;
 
 let isControlPressed = false;
+
+let incomingCallCommandProcess = null;
 
 /**
  * @type {URL}
@@ -106,7 +110,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 function applyAppConfiguration(config, window) {
 	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
-	if (typeof config.clientCertPath !== 'undefined') {
+	if (typeof config.clientCertPath !== 'undefined' && config.clientCertPath !== '') {
 		app.importCertificate({ certificate: config.clientCertPath, password: config.clientCertPassword }, (result) => {
 			logger.info('Loaded certificate: ' + config.clientCertPath + ', result: ' + result);
 		});
@@ -153,6 +157,17 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`);
 	customCSS.onDidFinishLoad(window.webContents, config);
+}
+
+function onDidFrameFinishLoad(event, isMainFrame, frameProcessId, frameRoutingId) {
+	logger.debug('did-frame-finish-load', event, isMainFrame);
+
+	if (isMainFrame) {
+		return; // We want to insert CSS only into the Teams V2 content iframe
+	}
+
+	const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
+	customCSS.onDidFrameFinishLoad(wf, config)
 }
 
 function restoreWindow() {
@@ -298,6 +313,7 @@ function addEventHandlers() {
 	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
+	window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
 	window.on('closed', onWindowClosed);
 	window.webContents.addListener('before-input-event', onBeforeInput);
 }
@@ -360,7 +376,7 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
 	if (config.defaultURLHandler.trim() !== '') {
-		exec(`${config.defaultURLHandler.trim()} ${details.url}`, openInBrowserErrorHandler);
+		execFile(config.defaultURLHandler.trim(), [details.url], openInBrowserErrorHandler);
 	} else {
 		shell.openExternal(details.url);
 	}
@@ -432,6 +448,9 @@ async function createWindow() {
 function assignEventHandlers(newWindow) {
 	ipcMain.on('select-source', assignSelectSourceHandler());
 	ipcMain.handle('select-source-wayland', assignSelectSourceHandlerWayland());
+	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
+	ipcMain.handle('incoming-call-connecting', incomingCallCommandKill);
+	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandKill);
 	ipcMain.handle('call-connected', handleOnCallConnected);
 	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
@@ -490,6 +509,20 @@ function assignSelectSourceHandler() {
 			event.reply('select-source', source);
 		});
 	};
+}
+
+async function handleOnIncomingCallCreated() {
+	if (!incomingCallCommandProcess && config.incomingCallCommand) {
+		let commandParts = config.incomingCallCommand.match(commandSplitRegex);
+		incomingCallCommandProcess = spawn(commandParts.shift(), commandParts);
+	}
+}
+
+async function incomingCallCommandKill() {
+	if (incomingCallCommandProcess) {
+		incomingCallCommandProcess.kill('SIGKILL');
+		incomingCallCommandProcess = null;
+	}
 }
 
 async function handleOnCallConnected() {

@@ -6,6 +6,9 @@ const eventHandlers = [];
 
 // Supported events
 const supportedEvents = [
+	'incoming-call-created',
+	'incoming-call-connecting',
+	'incoming-call-disconnecting',
 	'call-connected',
 	'call-disconnected',
 	'activities-count-updated',
@@ -18,7 +21,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+	 * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
 	 * @param {(data)=>void} handler
 	 * @returns {number} handle 
 	 */
@@ -27,7 +30,7 @@ class ActivityHub {
 	}
 
 	/**
-	 * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+	 * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
 	 * @param {number} handle
 	 * @returns {number} handle 
 	 */
@@ -110,7 +113,7 @@ function removeEventHandler(event, handle) {
 
 /**
  * 
- * @param {'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+ * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
  * @returns {Array<{handler:(data)=>void,event:string,handle:number}>} handlers
  */
 function getEventHandlers(event) {
@@ -124,6 +127,9 @@ function getEventHandlers(event) {
  */
 function assignEventHandlers(inst) {
 	assignActivitiesCountUpdateHandler(inst.controller);
+	assignIncomingCallCreatedHandler(inst.controller);
+	assignIncomingCallConnectingHandler(inst.controller);
+	assignIncomingCallDisconnectingHandler(inst.controller);
 	assignCallConnectedHandler(inst.controller);
 	assignCallDisconnectedHandler(inst.controller);
 	assignWorkerMessagingUpdatesHandler(inst.controller);
@@ -211,6 +217,39 @@ function assignActivitiesCountUpdateHandler(controller) {
 	onActivitiesCountUpdated(controller);
 }
 
+function assignIncomingCallCreatedHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callCreated,
+		(e, data) => {
+			if (data.signalingSession.isIncomingCall) {
+				onIncomingCallCreated();
+			}
+		});
+}
+
+function assignIncomingCallConnectingHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callConnecting,
+		(e, data) => {
+			if (data.signalingSession.isIncomingCall) {
+				onIncomingCallConnecting();
+			}
+		});
+}
+
+function assignIncomingCallDisconnectingHandler(controller) {
+	controller.eventingService.$on(
+		controller.$scope,
+		controller.constants.events.calling.callDisconnecting,
+		(e, data) => {
+			if (data.signalingSession.isIncomingCall) {
+				onIncomingCallDisconnecting();
+			}
+		});
+}
+
 function assignCallConnectedHandler(controller) {
 	controller.eventingService.$on(
 		controller.$scope,
@@ -244,6 +283,27 @@ async function onActivitiesCountUpdated(controller) {
 	const handlers = getEventHandlers('activities-count-updated');
 	for (const handler of handlers) {
 		handler.handler({ count: count });
+	}
+}
+
+async function onIncomingCallCreated() {
+	const handlers = getEventHandlers('incoming-call-created');
+	for (const handler of handlers) {
+		handler.handler({});
+	}
+}
+
+async function onIncomingCallConnecting() {
+	const handlers = getEventHandlers('incoming-call-connecting');
+	for (const handler of handlers) {
+		handler.handler({});
+	}
+}
+
+async function onIncomingCallDisconnecting() {
+	const handlers = getEventHandlers('incoming-call-disconnecting');
+	for (const handler of handlers) {
+		handler.handler({});
 	}
 }
 

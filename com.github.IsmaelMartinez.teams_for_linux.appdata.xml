@@ -14,6 +14,65 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.3.20" date="2023-11-14">
+			<description>
+				<ul>
+					<li>Fix: custom css compatibility with New Teams</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.19" date="2023-11-06">
+			<description>
+				<ul>
+					<li>New: Moved about menu entry to bottom</li>
+					<li>Update: Upgraded electron version to 27.0.3</li>
+					<li>Update: Edited documentation</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.18" date="2023-10-31">
+			<description>
+				<ul>
+					<li>Updated documentation</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.17" date="2023-10-30">
+			<description>
+				<ul>
+					<li>Fix: Avoid calling child_process.exec with untrusted string</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.16" date="2023-10-30">
+			<description>
+				<ul>
+					<li>New: add flag --disableGpu to disable GPU and hardware acceleration</li>
+					<li>Update: Electron version upgraded to 27.0.2</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.13" date="2023-09-29">
+			<description>
+				<ul>
+					<li>Update: Electron version upgraded to 24.8.5</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.12" date="2023-09-28">
+			<description>
+				<ul>
+					<li>Fix: Import empty certificate path. The default config.clientCertPath is an empty string</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.11" date="2023-09-18">
+			<description>
+				<ul>
+					<li>Fix: A glitch in network waiting loop</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.3.10" date="2023-09-07">
 			<description>
 				<ul>
