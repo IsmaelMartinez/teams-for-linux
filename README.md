@@ -1,8 +1,10 @@
 # teams-for-linux
 
-This is an unofficial Microsoft Teams client. The official client for Linux from Microsoft is retired by the end of 2022 and be replaced with PWA. Read the blog [here](https://techcommunity.microsoft.com/t5/microsoft-teams-blog/microsoft-teams-progressive-web-app-now-available-on-linux/ba-p/3669846).
+This is an unofficial Microsoft Teams client. The official one from Microsoft is retired and got replaced with PWA. Read the blog [here](https://techcommunity.microsoft.com/t5/microsoft-teams-blog/microsoft-teams-progressive-web-app-now-available-on-linux/ba-p/3669846).
 
-Please report bugs and questions in the issues section. We will attend them as soon as possible.
+Please report bugs and questions in the issues section. We will attend them as soon as possible. Kindly go through the open issues before raising a new one and avoid duplicates. We encourage everyone to join our chat room in [matrix](https://matrix.to/#/#teams-for-linux_community:gitter.im) and ask your questions. That's probably the quickest way to find solutions.
+
+As this is a wrapper around the web version of teams, we would not be able to add certain features. It's not because we don't want to, but we're fully dependant on Microsoft in certain cases. We may close the issue stating the same reason. 
 
 PRs and suggestions are welcomed. We will continue to support the community.
 
