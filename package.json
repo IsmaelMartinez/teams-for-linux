@@ -50,6 +50,7 @@
   "devDependencies": {
     "electron": "27.0.4",
     "electron-builder": "24.6.4",
+    "@electron/fuses": "^1.6.2",
     "eslint": "8.53.0",
     "yarn": "1.22.19"
   },
@@ -122,6 +123,7 @@
     },
     "mac": {
       "category": "public.app-category.productivity"
-    }
+    },
+    "afterPack": "scripts/afterpack.js"
   }
 }
