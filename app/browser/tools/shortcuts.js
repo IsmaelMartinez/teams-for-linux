@@ -27,18 +27,32 @@ class Shortcuts {
 
 const KEY_MAPS = {
 	'CTRL_+': () => zoom.increaseZoomLevel(),
+	'CTRL_=': () => zoom.increaseZoomLevel(),
 	'CTRL_-': () => zoom.decreaseZoomLevel(),
+	'CTRL__': () => zoom.decreaseZoomLevel(),
 	'CTRL_0': () => zoom.resetZoomLevel(),
 	'ALT_ArrowLeft': () => window.history.back(),
 	'ALT_ArrowRight': () => window.history.forward()
 };
 
 function initInternal() {
-	document.addEventListener('DOMContentLoaded', async () => {
-		window.addEventListener('keydown', keyDownEventHandler, false);
-		whenIframeReady((iframe) => {
-			iframe.contentDocument.addEventListener('keydown', keyDownEventHandler, false);
-		});
+	whenWindowReady(addEventListeners);
+}
+
+function whenWindowReady(callback) {
+	if (window) {
+		callback();
+	} else {
+		setTimeout(() => whenWindowReady(callback), 1000);
+	}
+}
+
+function addEventListeners() {
+	window.addEventListener('keydown', keyDownEventHandler, false);
+	window.addEventListener('wheel', wheelEventHandler, {passive: false});
+	whenIframeReady((iframe) => {
+		iframe.contentDocument.addEventListener('keydown', keyDownEventHandler, false);
+		iframe.contentDocument.addEventListener('wheel', wheelEventHandler, {passive: false});
 	});
 }
 
@@ -50,7 +64,7 @@ function whenIframeReady(callback) {
 	if (iframe) {
 		callback(iframe);
 	} else {
-		setTimeout(() => whenIframeReady(callback), 4000);
+		setTimeout(() => whenIframeReady(callback), 1000);
 	}
 }
 
@@ -60,17 +74,29 @@ function keyDownEventHandler(event) {
 		return;
 	}
 
-	fireEvent(getKeyName(event, keyName));
+	fireEvent(event, keyName);
+}
+
+function wheelEventHandler(event) {
+	if (event.ctrlKey) {
+		event.preventDefault();
+		if (event.deltaY > 0) {
+			zoom.decreaseZoomLevel();
+		} else if (event.deltaY < 0) {
+			zoom.increaseZoomLevel();
+		}
+	}
 }
 
 function getKeyName(event, keyName) {
 	return `${event.ctrlKey ? 'CTRL_' : ''}${event.altKey ? 'ALT_' : ''}${keyName}`;
 }
 
-function fireEvent(key) {
-	const event = KEY_MAPS[key];
-	if (typeof (event) === 'function') {
-		event();
+function fireEvent(event, keyName) {
+	const handler = KEY_MAPS[getKeyName(event, keyName)];
+	if (typeof (handler) === 'function') {
+		event.preventDefault();
+		handler();
 	}
 }
 
