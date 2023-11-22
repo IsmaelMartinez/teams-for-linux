@@ -51,9 +51,15 @@ const mainAppWindow = require('./mainAppWindow');
 
 if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
-app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling');
 app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 app.commandLine.appendSwitch('try-supported-channel-layouts');
+
+const disabledFeatures = app.commandLine.hasSwitch('disable-features') ? app.commandLine.getSwitchValue('disable-features').split(',') : ['HardwareMediaKeyHandling'];
+
+if(!disabledFeatures.includes('HardwareMediaKeyHandling'))
+	disabledFeatures.push('HardwareMediaKeyHandling');
+
+app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
 
 if (isMac) {
 	requestMediaAccess();
