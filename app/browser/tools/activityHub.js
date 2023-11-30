@@ -196,7 +196,7 @@ function getMeetingNotificationList(workerEvents, calendarEvents) {
 
 function addEligibleCalendarEvents(calendarEvents, meetingId, notificationList) {
 	for (const ce of calendarEvents) {
-		if (JSON.parse(ce.skypeTeamsData).cid === meetingId) {
+		if (ce.skypeTeamsData && JSON.parse(ce.skypeTeamsData).cid === meetingId) {
 			notificationList.push(ce);
 			break;
 		}
