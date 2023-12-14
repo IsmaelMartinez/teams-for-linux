@@ -1,4 +1,5 @@
 const {flipFuses, FuseVersion, FuseV1Options} = require('@electron/fuses');
+const {chmod} = require('fs/promises');
 
 function getAppFileName(context) {
 	const productFileName = context.packager.appInfo.productFilename
@@ -19,8 +20,10 @@ function getAppFileName(context) {
 
 exports.default = async function afterPack(context) {
 	try {
+		const path = `${context.appOutDir}/${getAppFileName(context)}`;
+		await chmod(path, 0o755);
 		await flipFuses(
-			`${context.appOutDir}/${getAppFileName(context)}`,
+			path,
 			{
 			  version: FuseVersion.V1,
 			  [FuseV1Options.EnableCookieEncryption]: true,
