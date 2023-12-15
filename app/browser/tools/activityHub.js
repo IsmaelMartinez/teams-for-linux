@@ -223,7 +223,7 @@ function assignIncomingCallCreatedHandler(controller) {
 		controller.constants.events.calling.callCreated,
 		(e, data) => {
 			if (data.signalingSession.isIncomingCall) {
-				onIncomingCallCreated();
+				onIncomingCallCreated({ caller: data.signalingSession.remoteCaller.displayName });
 			}
 		});
 }
@@ -286,10 +286,10 @@ async function onActivitiesCountUpdated(controller) {
 	}
 }
 
-async function onIncomingCallCreated() {
+async function onIncomingCallCreated(data) {
 	const handlers = getEventHandlers('incoming-call-created');
 	for (const handler of handlers) {
-		handler.handler({});
+		handler.handler(data);
 	}
 }
 

@@ -16,8 +16,6 @@ const TrayIconChooser = require('../browser/tools/trayIconChooser');
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr =  require('../connectionManager');
 
-const commandSplitRegex = /"(\\"|[^"])*?"|(\\ |[^\s])*/gm;
-
 /**
  * @type {TrayIconChooser}
  */
@@ -511,16 +509,16 @@ function assignSelectSourceHandler() {
 	};
 }
 
-async function handleOnIncomingCallCreated() {
+async function handleOnIncomingCallCreated(e, data) {
 	if (!incomingCallCommandProcess && config.incomingCallCommand) {
-		let commandParts = config.incomingCallCommand.match(commandSplitRegex);
-		incomingCallCommandProcess = spawn(commandParts.shift(), commandParts);
+		const commandArgs = [...config.incomingCallCommandArgs, data.caller];
+		incomingCallCommandProcess = spawn(config.incomingCallCommand, commandArgs);
 	}
 }
 
 async function incomingCallCommandKill() {
 	if (incomingCallCommandProcess) {
-		incomingCallCommandProcess.kill('SIGKILL');
+		incomingCallCommandProcess.kill('SIGTERM');
 		incomingCallCommandProcess = null;
 	}
 }
