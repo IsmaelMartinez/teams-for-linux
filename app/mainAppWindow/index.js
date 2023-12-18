@@ -516,7 +516,7 @@ async function handleOnIncomingCallCreated(e, data) {
 	}
 }
 
-async function incomingCallCommandKill() {
+async function incomingCallCommandTerminate() {
 	if (incomingCallCommandProcess) {
 		incomingCallCommandProcess.kill('SIGTERM');
 		incomingCallCommandProcess = null;
