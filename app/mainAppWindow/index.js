@@ -510,7 +510,8 @@ function assignSelectSourceHandler() {
 }
 
 async function handleOnIncomingCallCreated(e, data) {
-	if (!incomingCallCommandProcess && config.incomingCallCommand) {
+	if (config.incomingCallCommand) {
+		incomingCallCommandTerminate();
 		const commandArgs = [...config.incomingCallCommandArgs, data.caller];
 		incomingCallCommandProcess = spawn(config.incomingCallCommand, commandArgs);
 	}
