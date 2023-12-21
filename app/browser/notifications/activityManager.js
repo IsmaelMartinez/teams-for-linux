@@ -77,8 +77,8 @@ function updateActivityCountHandler(self) {
  * @param {ActivityManager} self 
  */
 function incomingCallCreatedHandler(self) {
-	return async () => {
-		self.ipcRenderer.invoke('incoming-call-created');
+	return async (data) => {
+		self.ipcRenderer.invoke('incoming-call-created', data);
 	};
 }
 

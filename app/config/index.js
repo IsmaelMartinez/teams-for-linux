@@ -222,6 +222,10 @@ function argv(configPath) {
 			incomingCallCommand: {
 				default: null,
 				describe: 'Command to execute on an incoming call.'
+			},
+			incomingCallCommandArgs: {
+				default: [],
+				describe: 'Arguments for the incomming call command.'
 			}
 		})
 		.parse(process.argv.slice(1));
