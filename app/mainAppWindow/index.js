@@ -447,8 +447,8 @@ function assignEventHandlers(newWindow) {
 	ipcMain.on('select-source', assignSelectSourceHandler());
 	ipcMain.handle('select-source-wayland', assignSelectSourceHandlerWayland());
 	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
-	ipcMain.handle('incoming-call-connecting', incomingCallCommandKill);
-	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandKill);
+	ipcMain.handle('incoming-call-connecting', incomingCallCommandTerminate);
+	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandTerminate);
 	ipcMain.handle('call-connected', handleOnCallConnected);
 	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
 	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
