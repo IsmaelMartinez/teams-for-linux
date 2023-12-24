@@ -12,7 +12,7 @@ if (app.commandLine.hasSwitch('customUserDir')) {
 }
 
 const { AppConfiguration } = require('./appConfiguration');
-const appConfig = new AppConfiguration(app.getPath('userData'));
+const appConfig = new AppConfiguration(app.getPath('userData'), app.getVersion());
 
 const config = appConfig.startupConfig;
 config.appPath = path.join(__dirname, isDev ? '' : '../../');

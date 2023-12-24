@@ -12,13 +12,14 @@ function getConfigFile(configPath) {
 	}
 }
 
-function argv(configPath) {
+function argv(configPath, appVersion) {
 	let configFile = getConfigFile(configPath);
 	const missingConfig = configFile == null;
 	configFile = configFile || {};
 	let config = yargs
 		.env(true)
 		.config(configFile)
+		.version(appVersion)
 		.options({
 			appActiveCheckInterval: {
 				default: 2,
