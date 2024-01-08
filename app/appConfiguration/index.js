@@ -9,9 +9,9 @@ class AppConfiguration {
 	/**
 	 * @param {string} configPath 
 	 */
-	constructor(configPath) {
+	constructor(configPath, appVersion) {
 		_AppConfiguration_configPath.set(this, configPath);
-		_AppConfiguration_startupConfig.set(this, require('../config')(configPath));
+		_AppConfiguration_startupConfig.set(this, require('../config')(configPath, appVersion));
 		_AppConfiguration_legacyConfigStore.set(this, new Store({
 			name: 'config'
 		}));
