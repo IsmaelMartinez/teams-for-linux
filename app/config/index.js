@@ -62,11 +62,6 @@ function argv(configPath, appVersion) {
 				describe: 'Set auth-server-whitelist value',
 				type: 'string'
 			},
-			bypassWaylandSourceSelection: {
-				default: false,
-				describe: 'A flag indicates whether to bypass wayland source selection dialog when screen a share request is received',
-				type: 'boolean'
-			},
 			chromeUserAgent: {
 				default: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
 				describe: 'Google Chrome User Agent',

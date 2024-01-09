@@ -18,7 +18,6 @@ Here is the list of available arguments and its usage:
 | appLogLevels | Comma separated list of log levels (error,warn,info,debug) | error,warn |
 | appTitle |  A text to be suffixed with page title | Microsoft Teams |
 | authServerWhitelist | set auth-server-whitelist value | * |
-| bypassWaylandSourceSelection | A flag indicates whether to bypass wayland source selection dialog when screen a share request is received | false |
 | chromeUserAgent | user agent string for chrome | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36 |
 | customBGServiceBaseUrl | Base URL of the server which provides custom background images | http://localhost |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download custom background service configuration. If 0, it will be downloaded only at application start | 0 |
