@@ -120,7 +120,7 @@ class Menus {
 
 		this.initializeEventHandlers();
 
-		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath);
+		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath, this.config);
 		this.spellCheckProvider = new SpellCheckProvider(this.window, this.logger);
 	}
 
