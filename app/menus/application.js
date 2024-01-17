@@ -85,21 +85,25 @@ function getNotificationsMenu(Menus) {
 			},
 			{
 				label: 'Disable Meeting',
+				type: 'checkbox',
 				checked: Menus.config.disableMeetingNotifications,
 				click: () => Menus.config.disableMeetingNotifications = !Menus.config.disableMeetingNotifications
 			},
 			{
 				label: 'Disable Sound',
+				type: 'checkbox',
 				checked: Menus.config.disableNotificationSound,
 				click: () => Menus.config.disableNotificationSound = !Menus.config.disableNotificationSound
 			},
 			{
 				label: 'Disable Sound (if not available)',
+				type: 'checkbox',
 				checked: Menus.config.disableNotificationSoundIfNotAvailable,
 				click: () => Menus.config.disableNotificationSoundIfNotAvailable = !Menus.config.disableNotificationSoundIfNotAvailable
 			},
 			{
 				label: 'Disable Flash',
+				type: 'checkbox',
 				checked: Menus.config.disableNotificationWindowFlash,
 				click: () => Menus.config.disableNotificationWindowFlash = !Menus.config.disableNotificationWindowFlash
 			}
