@@ -137,27 +137,27 @@ function argv(configPath, appVersion) {
 				describe: 'A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)',
 				type: 'boolean'
 			},
-			disableMeetingNotifications: { //
+			disableMeetingNotifications: {
 				default: false,
 				describe: 'Whether to disable meeting notifications or not',
 				type: 'boolean'
 			},
-			disableNotifications: { //
+			disableNotifications: {
 				default: false,
 				describe: 'A flag to disable all notifications',
 				type: 'boolean'
 			},
-			disableNotificationSound: { //
+			disableNotificationSound: {
 				default: false,
 				describe: 'Disable chat/meeting start notification sound',
 				type: 'boolean'
 			},
-			disableNotificationSoundIfNotAvailable: { //
+			disableNotificationSoundIfNotAvailable: {
 				default: false,
 				describe: 'Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)',
 				type: 'boolean'
 			},
-			disableNotificationWindowFlash: { //
+			disableNotificationWindowFlash: {
 				default: false,
 				describe: 'A flag indicates whether to disable window flashing when there is a notification',
 				type: 'boolean'
