@@ -4,13 +4,13 @@ const disableAutogain = require('./disableAutogain');
 // In new versions of electron, contextIsolation is set to true by default.
 // We should explicitly set it to false when creating BrowserWindow
 
+let _getDisplayMedia;
+
 function init(config) {
 	window.addEventListener('DOMContentLoaded', () => {
 		if (process.env.XDG_SESSION_TYPE === 'wayland') {
-			ipcRenderer.once('get-screensizes-response', (event, screens) => {
-				customGetDisplayMediaWayland(screens);
-			});
-			ipcRenderer.send('get-screensizes-request');
+			_getDisplayMedia = MediaDevices.prototype.getDisplayMedia;
+			MediaDevices.prototype.getDisplayMedia = customGetDisplayMediaWayland;
 		} else {
 			MediaDevices.prototype.getDisplayMedia = customGetDisplayMediaX11;
 		}
@@ -21,17 +21,11 @@ function init(config) {
 	});
 }
 
-function customGetDisplayMediaWayland(screens) {
-	ipcRenderer.invoke('desktopCapturerGetSources', { types: ['window', 'screen'] }).then(async (sources) => {
-		if (sources.length === 0)
-			return;
+async function customGetDisplayMediaWayland(...args) {
+	args[0].audio = false;
+	args[0].systemAudio = 'exclude';
 
-		const properties = {
-			id: sources[0].id,
-			screen: screens.find(s => s.default)
-		};
-		ipcRenderer.send('selected-source', properties);
-	});
+	return await _getDisplayMedia.apply(navigator.mediaDevices, args);
 }
 
 function customGetDisplayMediaX11() {
