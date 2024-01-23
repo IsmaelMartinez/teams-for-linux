@@ -96,13 +96,13 @@ function getNotificationsMenu(Menus) {
 				click: () => Menus.config.disableNotificationSound = !Menus.config.disableNotificationSound
 			},
 			{
-				label: 'Disable Sound (if not available)',
+				label: 'Disable Sound when not available (e.g: busy, in a call)',
 				type: 'checkbox',
 				checked: Menus.config.disableNotificationSoundIfNotAvailable,
 				click: () => Menus.config.disableNotificationSoundIfNotAvailable = !Menus.config.disableNotificationSoundIfNotAvailable
 			},
 			{
-				label: 'Disable Flash',
+				label: 'Disables Window flash on new notifications',
 				type: 'checkbox',
 				checked: Menus.config.disableNotificationWindowFlash,
 				click: () => Menus.config.disableNotificationWindowFlash = !Menus.config.disableNotificationWindowFlash
