@@ -78,31 +78,31 @@ function getNotificationsMenu(Menus) {
 		label: 'Notifications',
 		submenu: [
 			{
-				label: 'Disable All',
+				label: 'Disable All Notifications',
 				type: 'checkbox',
 				checked: Menus.config.disableNotifications,
 				click: () => Menus.config.disableNotifications = !Menus.config.disableNotifications
 			},
 			{
-				label: 'Disable Meeting',
+				label: 'Disable Meeting Notifications',
 				type: 'checkbox',
 				checked: Menus.config.disableMeetingNotifications,
 				click: () => Menus.config.disableMeetingNotifications = !Menus.config.disableMeetingNotifications
 			},
 			{
-				label: 'Disable Sound',
+				label: 'Disable Notifications Sound',
 				type: 'checkbox',
 				checked: Menus.config.disableNotificationSound,
 				click: () => Menus.config.disableNotificationSound = !Menus.config.disableNotificationSound
 			},
 			{
-				label: 'Disable Sound when not available (e.g: busy, in a call)',
+				label: 'Disable Sound when Not Available (e.g: busy, in a call)',
 				type: 'checkbox',
 				checked: Menus.config.disableNotificationSoundIfNotAvailable,
 				click: () => Menus.config.disableNotificationSoundIfNotAvailable = !Menus.config.disableNotificationSoundIfNotAvailable
 			},
 			{
-				label: 'Disables Window flash on new notifications',
+				label: 'Disables Window Flash on New Notifications',
 				type: 'checkbox',
 				checked: Menus.config.disableNotificationWindowFlash,
 				click: () => Menus.config.disableNotificationWindowFlash = !Menus.config.disableNotificationWindowFlash
