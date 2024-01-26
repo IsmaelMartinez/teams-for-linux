@@ -88,5 +88,6 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/chromeApi')(config);
 	require('./tools/settings').init(config, ipcRenderer);
 	require('./tools/customBackgrounds')(config, ipcRenderer);
+	require('./tools/theme').init(config, ipcRenderer);
 }
 

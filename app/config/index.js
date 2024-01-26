@@ -97,6 +97,11 @@ function argv(configPath, appVersion) {
 				describe: 'custom CSS styles file location',
 				type: 'string'
 			},
+			followSystemTheme: {
+				default: false,
+				describe: 'Follow system theme',
+				type: 'boolean'
+			},
 			customUserDir: {
 				default: null,
 				describe: 'Custom User Directory so that you can have multiple profiles',
@@ -126,7 +131,7 @@ function argv(configPath, appVersion) {
 				default: '',
 				describe: 'Default application to be used to open the HTTP URLs',
 				type: 'string'
-			},	 
+			},
 			disableAutogain: {
 				default: false,
 				describe: 'A flag indicates whether to disable mic auto gain or not',

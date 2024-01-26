@@ -1,0 +1,22 @@
+const instance = require('./instance');
+
+class ThemeManager {
+    /**
+     * @param {Electron.BrowserWindow} window 
+     */
+    init(config, ipcRenderer) {
+        this.ipcRenderer = ipcRenderer;
+        this.config = config;
+        if (config.followSystemTheme) {
+            this.ipcRenderer.on('system-theme-changed', this.applyTheme);
+        }
+    }
+
+    applyTheme = async (event, ...args) => {
+        const theme = args[0] ? 'dark' : 'default';
+        const inst = await instance.whenReady();
+        inst.controller.layoutService.setTheme(theme);
+    }
+}
+
+module.exports = new ThemeManager();

@@ -14,7 +14,8 @@ const { execFile, spawn } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
-const connMgr =  require('../connectionManager');
+const connMgr = require('../connectionManager');
+const themeMgr = require('../browser/tools/theme');
 
 /**
  * @type {TrayIconChooser}
@@ -71,7 +72,7 @@ exports.onAppReady = async function onAppReady(mainConfig) {
 	addEventHandlers();
 
 	const url = processArgs(process.argv);
-	connMgr.start(url,{
+	connMgr.start(url, {
 		window: window,
 		config: config
 	});
@@ -155,6 +156,16 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`);
 	customCSS.onDidFinishLoad(window.webContents, config);
+	initSystemThemeFollow(config);
+}
+
+function initSystemThemeFollow(config) {
+	if (config.followSystemTheme) {
+		nativeTheme.on('updated', () => {
+			window.webContents.send('system-theme-changed', nativeTheme.shouldUseDarkColors);
+		});
+		window.webContents.send('system-theme-changed', nativeTheme.shouldUseDarkColors);
+	}
 }
 
 function onDidFrameFinishLoad(event, isMainFrame, frameProcessId, frameRoutingId) {
@@ -457,7 +468,7 @@ function assignEventHandlers(newWindow) {
 
 function createNewBrowserWindow(windowState) {
 	return new BrowserWindow({
-		title:'Teams for Linux',
+		title: 'Teams for Linux',
 		x: windowState.x,
 		y: windowState.y,
 
