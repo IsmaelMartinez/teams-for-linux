@@ -2,7 +2,8 @@ const instance = require('./instance');
 
 class ThemeManager {
     /**
-     * @param {Electron.BrowserWindow} window 
+     * @param {object} config
+     * @param {Electron.IpcRenderer} ipcRenderer
      */
     init(config, ipcRenderer) {
         this.ipcRenderer = ipcRenderer;
