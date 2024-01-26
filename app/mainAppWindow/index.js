@@ -15,7 +15,6 @@ const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
-const themeMgr = require('../browser/tools/theme');
 
 /**
  * @type {TrayIconChooser}
