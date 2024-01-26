@@ -164,7 +164,9 @@ function initSystemThemeFollow(config) {
 		nativeTheme.on('updated', () => {
 			window.webContents.send('system-theme-changed', nativeTheme.shouldUseDarkColors);
 		});
-		window.webContents.send('system-theme-changed', nativeTheme.shouldUseDarkColors);
+		setTimeout(() => {
+			window.webContents.send('system-theme-changed', nativeTheme.shouldUseDarkColors);
+		}, 2500);
 	}
 }
 
