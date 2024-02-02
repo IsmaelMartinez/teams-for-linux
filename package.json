@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -102,6 +102,7 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
+      "base": "core22",
       "environment": {
         "DISABLE_WAYLAND": 1
       },
