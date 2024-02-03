@@ -14,11 +14,120 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.9" date="2024-02-03">
+			<description>
+				<ul>
+					<li>New: Electron version upgraded to 28.2.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.8" date="2024-02-02">
+			<description>
+				<ul>
+					<li>New: Updated snap core to core22</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.7" date="2024-01-31">
+			<description>
+				<ul>
+					<li>New: Added --followSystemTheme config option</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.6" date="2024-01-28">
+			<description>
+				<ul>
+					<li>Fix: Notifications show the app's icon and not the sender's profile picture</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.5" date="2024-01-28">
+			<description>
+				<ul>
+					<li>New: Added the notification options to the tray menu</li>
+					<li>Fix: Wayland screenshare including system audio</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.4" date="2024-01-28">
+			<description>
+				<ul>
+					<li>Documentation: Added Flatpak config file location</li>
+					<li>New: Added apptitle to the tooltip</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.3" date="2024-01-22">
+			<description>
+				<ul>
+					<li>New: Rework wayland screenshare source selection</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.2" date="2024-01-22">
+			<description>
+				<ul>
+					<li>Fix: Getting version from cli arg with yargs after the Electron 28 bump</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.1" date="2024-01-08">
+			<description>
+				<ul>
+					<li>New: Electron version upgraded to 28.0.0</li>
+					<li>Fix: Updated ipc handlers for incomming call command</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.0" date="2023-12-21">
 			<description>
 				<ul>
 					<li>Electron version upgrade to 28.0.0</li>
 					<li>Update dependencies to latest versions</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.26" date="2023-12-17">
+			<description>
+				<ul>
+					<li>New: Make sure executable is writable before running fuses in afterpack script</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.25" date="2023-12-10">
+			<description>
+				<ul>
+					<li>Fix: Missing "Meeting started" notifications</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.24" date="2023-12-10">
+			<description>
+				<ul>
+					<li>New: Allow usage of arbitrary disable-features switch</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.23" date="2023-11-20">
+			<description>
+				<ul>
+					<li>New: Adds afterpack script to flip EnableCookieEncryption electron fuse</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.22" date="2023-11-17">
+			<description>
+				<ul>
+					<li>New: Increased node version in the runners</li>
+					<li>New: Enhanced zooming in and out controls</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.3.21" date="2023-11-14">
+			<description>
+				<ul>
+					<li>New: Added support for running custom scripts on events</li>
 				</ul>
 			</description>
 		</release>
