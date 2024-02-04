@@ -61,6 +61,16 @@ class ActivityHub {
 		});
 	}
 
+	/**
+	 * 
+	 * @param {number} status 
+	 */
+	setUserStatus(status) {
+		instance.whenReady().then((inst) => {
+			inst.injector.get('presenceService').setMyStatus(status, null, true);
+		});
+	}
+
 	refreshAppState(controller, state) {
 		const self = controller.appStateService;
 		controller.appStateService.refreshAppState.apply(self, [() => {

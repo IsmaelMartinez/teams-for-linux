@@ -31,6 +31,7 @@ const notificationSounds = [{
 }];
 
 let userStatus = -1;
+let idleTimeUserStatus = -1;
 
 // Notification sound player
 /**
@@ -56,7 +57,7 @@ app.commandLine.appendSwitch('try-supported-channel-layouts');
 
 const disabledFeatures = app.commandLine.hasSwitch('disable-features') ? app.commandLine.getSwitchValue('disable-features').split(',') : ['HardwareMediaKeyHandling'];
 
-if(!disabledFeatures.includes('HardwareMediaKeyHandling'))
+if (!disabledFeatures.includes('HardwareMediaKeyHandling'))
 	disabledFeatures.push('HardwareMediaKeyHandling');
 
 app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
@@ -172,9 +173,26 @@ async function handleGetSystemIdleTime() {
 }
 
 async function handleGetSystemIdleState() {
-	const idleState = powerMonitor.getSystemIdleState(config.appIdleTimeout);
-	logger.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, ActiveCheckPollInterval: ${config.appActiveCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${idleState}'`);
-	return idleState;
+	const systemIdleState = powerMonitor.getSystemIdleState(config.appIdleTimeout);
+	logger.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, ActiveCheckPollInterval: ${config.appActiveCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`);
+
+	if (systemIdleState !== 'active' && idleTimeUserStatus == -1) {
+		idleTimeUserStatus = userStatus;
+	}
+
+	const state = {
+		...{
+			system: systemIdleState,
+			userIdle: idleTimeUserStatus,
+			userCurrent: userStatus
+		}
+	};
+
+	if (systemIdleState === 'active') {
+		idleTimeUserStatus = -1
+	}
+	
+	return state;
 }
 
 async function handleGetZoomLevel(_, name) {
