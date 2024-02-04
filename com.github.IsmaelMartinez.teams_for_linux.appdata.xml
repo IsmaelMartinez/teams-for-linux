@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.10" date="2024-02-04">
+			<description>
+				<ul>
+					<li>New: Experimental switch --awayOnSystemIdle which sets the user status to away when system goes idle</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.9" date="2024-02-03">
 			<description>
 				<ul>

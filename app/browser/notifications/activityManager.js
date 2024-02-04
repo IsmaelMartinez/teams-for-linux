@@ -34,9 +34,18 @@ class ActivityManager {
 
 	watchSystemIdleState() {
 		const self = this;
-		self.ipcRenderer.invoke('getSystemIdleState').then((value) => {
-			activityHub.setMachineState(value === 'active' ? 1 : 2);
-			const timeOut = (value === 'active' ? self.config.appIdleTimeoutCheckInterval : self.config.appActiveCheckInterval) * 1000;
+		self.ipcRenderer.invoke('getSystemIdleState').then((state) => {
+			activityHub.setMachineState(state.system === 'active' ? 1 : 2);
+			const timeOut = (state.system === 'active' ? self.config.appIdleTimeoutCheckInterval : self.config.appActiveCheckInterval) * 1000;
+
+			if (this.config.awayOnSystemIdle) {
+				if (state.system === 'active' && state.userIdle === 1) {
+					activityHub.setUserStatus(1);
+				} else if (state.system !== 'active' && state.userCurrent === 1) {
+					activityHub.setUserStatus(3);
+				}
+			}
+
 			setTimeout(() => self.watchSystemIdleState(), timeOut);
 		});
 	}

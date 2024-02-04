@@ -227,6 +227,11 @@ function argv(configPath, appVersion) {
 			incomingCallCommandArgs: {
 				default: [],
 				describe: 'Arguments for the incomming call command.'
+			},
+			awayOnSystemIdle: {
+				default: false,
+				describe: 'Sets the user status as away when system goes idle',
+				type: 'boolean'
 			}
 		})
 		.parse(process.argv.slice(1));
