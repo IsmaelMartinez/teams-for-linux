@@ -25,14 +25,17 @@ class Shortcuts {
 	}
 }
 
+const isMac = os.platform() === 'darwin';
+const navigationModifiedKey = isMac ? 'META' : 'ALT';
+
 const KEY_MAPS = {
 	'CTRL_+': () => zoom.increaseZoomLevel(),
 	'CTRL_=': () => zoom.increaseZoomLevel(),
 	'CTRL_-': () => zoom.decreaseZoomLevel(),
 	'CTRL__': () => zoom.decreaseZoomLevel(),
 	'CTRL_0': () => zoom.resetZoomLevel(),
-	'ALT_ArrowLeft': () => window.history.back(),
-	'ALT_ArrowRight': () => window.history.forward()
+	[`${navigationModifiedKey}_ArrowLeft`]: () => window.history.back(),
+	[`${navigationModifiedKey}_ArrowRight`]: () => window.history.forward()
 };
 
 function initInternal() {
@@ -70,7 +73,7 @@ function whenIframeReady(callback) {
 
 function keyDownEventHandler(event) {
 	const keyName = event.key;
-	if (keyName === 'Control' || keyName === 'Alt') {
+	if (keyName === 'Control' || keyName === 'Alt' || keyName === 'Meta') {
 		return;
 	}
 
@@ -89,7 +92,7 @@ function wheelEventHandler(event) {
 }
 
 function getKeyName(event, keyName) {
-	return `${event.ctrlKey ? 'CTRL_' : ''}${event.altKey ? 'ALT_' : ''}${keyName}`;
+	return `${event.ctrlKey ? 'CTRL_' : ''}${event.altKey ? 'ALT_' : ''}${event.metaKey ? 'META_': ''}${keyName}`;
 }
 
 function fireEvent(event, keyName) {
