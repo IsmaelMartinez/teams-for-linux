@@ -26,7 +26,6 @@ class Shortcuts {
 }
 
 const isMac = os.platform() === 'darwin';
-const navigationModifiedKey = isMac ? 'META' : 'ALT';
 
 const KEY_MAPS = {
 	'CTRL_+': () => zoom.increaseZoomLevel(),
@@ -34,8 +33,14 @@ const KEY_MAPS = {
 	'CTRL_-': () => zoom.decreaseZoomLevel(),
 	'CTRL__': () => zoom.decreaseZoomLevel(),
 	'CTRL_0': () => zoom.resetZoomLevel(),
-	[`${navigationModifiedKey}_ArrowLeft`]: () => window.history.back(),
-	[`${navigationModifiedKey}_ArrowRight`]: () => window.history.forward()
+	// Alt (Option) Left / Right is used to jump words in Mac, so diabling the history navigation for Mac here
+	...(!isMac ? 
+		{ 
+			'ALT_ArrowLeft': () => window.history.back(),
+		    'ALT_ArrowRight': () => window.history.forward()
+		} 
+		: {}
+		)
 };
 
 function initInternal() {
@@ -73,7 +78,7 @@ function whenIframeReady(callback) {
 
 function keyDownEventHandler(event) {
 	const keyName = event.key;
-	if (keyName === 'Control' || keyName === 'Alt' || keyName === 'Meta') {
+	if (keyName === 'Control' || keyName === 'Alt') {
 		return;
 	}
 
@@ -92,7 +97,7 @@ function wheelEventHandler(event) {
 }
 
 function getKeyName(event, keyName) {
-	return `${event.ctrlKey ? 'CTRL_' : ''}${event.altKey ? 'ALT_' : ''}${event.metaKey ? 'META_': ''}${keyName}`;
+	return `${event.ctrlKey ? 'CTRL_' : ''}${event.altKey ? 'ALT_' : ''}${keyName}`;
 }
 
 function fireEvent(event, keyName) {
