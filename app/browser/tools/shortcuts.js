@@ -25,14 +25,22 @@ class Shortcuts {
 	}
 }
 
+const isMac = os.platform() === 'darwin';
+
 const KEY_MAPS = {
 	'CTRL_+': () => zoom.increaseZoomLevel(),
 	'CTRL_=': () => zoom.increaseZoomLevel(),
 	'CTRL_-': () => zoom.decreaseZoomLevel(),
 	'CTRL__': () => zoom.decreaseZoomLevel(),
 	'CTRL_0': () => zoom.resetZoomLevel(),
-	'ALT_ArrowLeft': () => window.history.back(),
-	'ALT_ArrowRight': () => window.history.forward()
+	// Alt (Option) Left / Right is used to jump words in Mac, so diabling the history navigation for Mac here
+	...(!isMac ? 
+		{ 
+			'ALT_ArrowLeft': () => window.history.back(),
+		    'ALT_ArrowRight': () => window.history.forward()
+		} 
+		: {}
+		)
 };
 
 function initInternal() {
