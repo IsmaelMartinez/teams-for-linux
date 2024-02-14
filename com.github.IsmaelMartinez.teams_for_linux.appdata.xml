@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.11" date="2024-02-14">
+			<description>
+				<ul>
+					<li>Fix: MacOS - Disable Option + Left / Right keyboard shortcuts for history navigation (it is used for word jumping on MacOS)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.10" date="2024-02-04">
 			<description>
 				<ul>
