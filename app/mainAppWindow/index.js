@@ -1,5 +1,5 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain, Notification } = require('electron');
 const isDarkMode = nativeTheme.shouldUseDarkColors;
 const windowStateKeeper = require('electron-window-state');
 const path = require('path');
@@ -15,6 +15,7 @@ const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
+const fs = require('fs');
 
 /**
  * @type {TrayIconChooser}
@@ -28,6 +29,8 @@ let isOnCall = false;
 let isControlPressed = false;
 
 let incomingCallCommandProcess = null;
+
+let lastNotifyTime = null;
 
 /**
  * @type {URL}
@@ -230,7 +233,8 @@ function onBeforeRequestHandler(details, callback) {
 	} else {
 		// Open the request externally
 		logger.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
-		shell.openExternal(details.url);
+		//shell.openExternal(details.url);
+		writeUrlBlockLog(details.url);
 		// decrement the counter
 		aboutBlankRequestCount -= 1;
 		callback({ cancel: true });
@@ -302,6 +306,34 @@ function onNewWindow(details) {
 	}
 
 	return secureOpenLink(details);
+}
+
+/**
+ * @param {string} url 
+ */
+async function writeUrlBlockLog(url) {
+	const curBlockTime = new Date();
+	const logfile = path.join(appConfig.configPath, 'teams-for-linux-blocked.log');
+	const lstream = fs.createWriteStream(logfile, { flags: 'a' }).on('error', onLogStreamError);
+	lstream.write(`[${new Date().toLocaleString()}]: Blocked '${url}'\n`, onLogStreamError);
+	lstream.end();
+	const notifDuration = lastNotifyTime == null ? 60 : (curBlockTime.getTime() - lastNotifyTime.getTime()) / 1000;
+	if (notifDuration >= 60) {
+		new Notification({
+			title: 'Teams for Linux',
+			body: 'One or more web requests have been blocked. Please check the log for more details.'
+		}).show();
+		lastNotifyTime = curBlockTime;
+	}
+}
+
+/**
+ * @param {Error} e 
+ */
+function onLogStreamError(e) {
+	if (e) {
+		logger.error(e.message);
+	}
 }
 
 function onPageTitleUpdated(event, title) {
