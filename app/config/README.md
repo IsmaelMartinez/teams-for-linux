@@ -38,6 +38,7 @@ Here is the list of available arguments and its usage:
 | disableNotificationSound | Disable chat/meeting start notification sound | false |
 | disableNotificationSoundIfNotAvailable | Disable chat/meeting start notification sound if status is not Available (e.g. busy, in a call) | true |
 | disableNotificationWindowFlash | A flag indicates whether to disable window flashing when there is a notification | false |
+| followSystemTheme | A flag to enable automatic app theme switching (Default vs Dark) based on the current system theme | false |
 | help  | show the available commands | false |
 | onlineCheckMethod | Type of network test for checking online status, can be: https, dns, native, none | https |
 | partition | [BrowserWindow](https://electronjs.org/docs/api/browser-window) webpreferences partition | persist:teams-4-linux |

@@ -242,7 +242,7 @@ function argv(configPath, appVersion) {
 
 	logger.debug('configPath:', configPath);
 	if (missingConfig) {
-		logger.info('No config file found, using default values');
+		logger.warn('No config file found, using default values');
 	}
 	logger.debug('configFile:', configFile);
 

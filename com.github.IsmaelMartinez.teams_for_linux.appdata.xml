@@ -14,6 +14,27 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.14" date="2024-03-11">
+			<description>
+				<ul>
+					<li>New: Electron version upgraded to 29.1.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.13" date="2024-03-04">
+			<description>
+				<ul>
+					<li>New: Electron version upgraded to 29.0.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.12" date="2024-02-14">
+			<description>
+				<ul>
+					<li>Fix: Preload script error introduced in 1.4.11</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.11" date="2024-02-14">
 			<description>
 				<ul>
