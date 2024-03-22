@@ -1,4 +1,3 @@
-/* global angular */
 (function () {
 	const { ipcRenderer } = require('electron');
 	const ActivityManager = require('./notifications/activityManager');
@@ -10,9 +9,6 @@
 
 		new ActivityManager(ipcRenderer, config).start();
 
-		document.addEventListener('DOMContentLoaded', () => {
-			modifyAngularSettingsWithTimeout();
-		});
 	});
 
 	Object.defineProperty(navigator.serviceWorker, 'register', {
