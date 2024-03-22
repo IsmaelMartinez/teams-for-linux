@@ -15,31 +15,6 @@
 		});
 	});
 
-	function disablePromoteStuff(injector) {
-		injector.get('settingsService').appConfig.promoteMobile = false;
-		injector.get('settingsService').appConfig.promoteDesktop = false;
-		injector.get('settingsService').appConfig.hideGetAppButton = true;
-		injector.get('settingsService').appConfig.enableMobileDownloadMailDialog = false;
-	}
-
-	function modifyAngularSettingsWithTimeout() {
-		setTimeout(() => {
-			try {
-				let injector = angular.element(document).injector();
-
-				if (injector) {
-					disablePromoteStuff(injector);
-
-					injector.get('settingsService').settingsService.refreshSettings();
-				}
-			} catch (error) {
-				if (error instanceof ReferenceError) {
-					modifyAngularSettingsWithTimeout();
-				}
-			}
-		}, 4000);
-	}
-
 	Object.defineProperty(navigator.serviceWorker, 'register', {
 		value: () => {
 			return Promise.reject();
