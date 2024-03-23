@@ -15,7 +15,9 @@ class ThemeManager {
 
     applyTheme = async (event, ...args) => {
         const theme = args[0] ? 'dark' : 'default';
-        const inst = await instance.whenReady();
+        const inst = await instance.whenReady().catch(() => {
+            console.error('Failed to apply Theme');
+        });
         inst.controller.layoutService.setTheme(theme);
     }
 }

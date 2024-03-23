@@ -17,7 +17,9 @@ let ipRenderer = null;
 function init(conf, ipcr) {
 	config = conf;
 	ipRenderer = ipcr;
-	instance.whenReady().then(overrideMSMethod);
+	instance.whenReady().then(overrideMSMethod).catch(() => {
+		console.error('Failed to override MS Method');
+	});
 }
 
 /**
