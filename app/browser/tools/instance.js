@@ -2,13 +2,17 @@ class Instance {
 	/**
 	 * @returns {Promise<{controller:object,injector:object}>}
 	 */
-	async whenReady() {
+	async whenReady(tries = 0) {
+		if (tries >= 5) {
+			throw new Error('Failed to get app objects after 5 tries');
+		}
+		
 		const obj = getAppObjects();
 		if (obj) {
 			return obj;
 		} else {
 			await sleep(4000);
-			return await this.whenReady();
+			return await this.whenReady(tries + 1);
 		}
 	}
 }

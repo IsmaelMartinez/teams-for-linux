@@ -39,12 +39,16 @@ class ActivityHub {
 	}
 
 	start() {
-		instance.whenReady().then(assignEventHandlers);
+		instance.whenReady().then(assignEventHandlers).catch(() => {
+			console.error('Failed to start Activity Hub by assigning Event Handlers');
+		});
 	}
 
 	setDefaultTitle(title) {
 		instance.whenReady().then(inst => {
 			inst.controller.pageTitleDefault = title;
+		}).catch(() => {
+			console.error('Failed to set Default Title');
 		});
 	}
 
@@ -58,6 +62,8 @@ class ActivityHub {
 			} else {
 				inst.controller.appStateService.setMachineState(state);
 			}
+		}).catch(() => {
+			console.error('Failed to set Machine State');
 		});
 	}
 
@@ -68,6 +74,8 @@ class ActivityHub {
 	setUserStatus(status) {
 		instance.whenReady().then((inst) => {
 			inst.injector.get('presenceService').setMyStatus(status, null, true);
+		}).catch(() => {
+			console.error('Failed to set User Status');
 		});
 	}
 

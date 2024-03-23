@@ -33,7 +33,10 @@ class Settings {
  * @param {Electron.IpcRendererEvent} event 
  */
 async function retrieve(event) {
-	const inst = await instance.whenReady();
+	const inst = await instance.whenReady().catch(() => {
+		console.error('Failed to retrieve Teams settings');
+		return;
+	});
 	const settings = {
 		theme: inst.controller.layoutService.getTheme(),
 		chatDensity: inst.controller.layoutService.getChatDensity(),
@@ -55,7 +58,10 @@ function getDeviceLabelFromId(controller, id, kind) {
  * @param {...any} args 
  */
 async function restore(event, ...args) {
-	const inst = await instance.whenReady();
+	const inst = await instance.whenReady().catch(() => {
+		console.error('Failed to restore Teams settings');
+		return;
+	});
 	inst.controller.layoutService.setTheme(args[0].theme);
 	inst.controller.layoutService.setChatDensity(args[0].chatDensity);
 	args[0].devices.camera = getDeviceIdFromLabel(inst.controller,args[0].devices.camera,1);
