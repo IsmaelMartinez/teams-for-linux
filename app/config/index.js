@@ -172,6 +172,11 @@ function argv(configPath, appVersion) {
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string'
 			},
+			optInV2: {
+				default: false,
+				describe: 'opt in to use V2',
+				type: 'boolean'
+			},
 			proxyServer: {
 				default: null,
 				describe: 'Proxy Server with format address:port',
