@@ -7,7 +7,8 @@ let _AppConfiguration_settingsStore = new WeakMap();
 
 class AppConfiguration {
 	/**
-	 * @param {string} configPath 
+	 * @param {string} configPath
+	 * @param appVersion
 	 */
 	constructor(configPath, appVersion) {
 		_AppConfiguration_configPath.set(this, configPath);
