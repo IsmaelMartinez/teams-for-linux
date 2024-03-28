@@ -119,8 +119,35 @@ function applyAppConfiguration(config, window) {
 
 	if (config.optInV2) {
 		config.url = 'https://teams.microsoft.com/v2/';
-		window.webContents.executeJavaScript('localStorage.setItem("tmp.isOptedIntoT2Web", true);', true);
-		window.reload();
+		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
+			.then(result => {
+				if ((result == null) || !result) {
+					window.webContents.executeJavaScript('localStorage.setItem("tmp.isOptedIntoT2Web", true);', true)
+						.then(window.reload())
+						.catch(err => {
+							console.log('could not set localStorage variable', err);
+						});
+				}
+			})
+			.catch(err => {
+				console.log('could not read localStorage variable', err);
+			});
+	}
+
+	if (!config.optInV2) {
+		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
+			.then(result => {
+				if (result) {
+					window.webContents.executeJavaScript('localStorage.removeItem("tmp.isOptedIntoT2Web");', true)
+						.then(window.reload())
+						.catch(err => {
+							console.log('could not remove localStorage variable', err);
+						});
+				}
+			})
+			.catch(err => {
+				console.log('could not read localStorage variable', err);
+			});
 	}
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
