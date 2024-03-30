@@ -117,7 +117,23 @@ function applyAppConfiguration(config, window) {
 		});
 	}
 
-	if (config.optInV2) {
+	handleTeamsV2OptIn();
+
+	window.webContents.setUserAgent(config.chromeUserAgent);
+
+	if (!config.minimized) {
+		window.show();
+	} else {
+		window.hide();
+	}
+
+	if (config.webDebug) {
+		window.openDevTools();
+	}
+}
+
+function handleTeamsV2OptIn(config) {
+	if (config.optInTeamsV2) {
 		config.url = 'https://teams.microsoft.com/v2/';
 		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
 			.then(result => {
@@ -132,35 +148,10 @@ function applyAppConfiguration(config, window) {
 			.catch(err => {
 				console.log('could not read localStorage variable', err);
 			});
+		return;
 	}
-
-	if (!config.optInV2) {
-		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
-			.then(result => {
-				if (result) {
-					window.webContents.executeJavaScript('localStorage.removeItem("tmp.isOptedIntoT2Web");', true)
-						.then(window.reload())
-						.catch(err => {
-							console.log('could not remove localStorage variable', err);
-						});
-				}
-			})
-			.catch(err => {
-				console.log('could not read localStorage variable', err);
-			});
-	}
-
-	window.webContents.setUserAgent(config.chromeUserAgent);
-
-	if (!config.minimized) {
-		window.show();
-	} else {
-		window.hide();
-	}
-
-	if (config.webDebug) {
-		window.openDevTools();
-	}
+	window.webContents.executeJavaScript('localStorage.removeItem("tmp.isOptedIntoT2Web");', true)
+		.then(window.reload());
 }
 
 /**
