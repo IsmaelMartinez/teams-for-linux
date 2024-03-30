@@ -172,7 +172,7 @@ function argv(configPath, appVersion) {
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string'
 			},
-			optInV2: {
+			optInTeamsV2: {
 				default: false,
 				describe: 'opt in to use V2',
 				type: 'boolean'
