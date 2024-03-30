@@ -117,7 +117,7 @@ function applyAppConfiguration(config, window) {
 		});
 	}
 
-	handleTeamsV2OptIn();
+	handleTeamsV2OptIn(config);
 
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
