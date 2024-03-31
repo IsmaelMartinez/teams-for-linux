@@ -172,6 +172,11 @@ function argv(configPath, appVersion) {
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string'
 			},
+			optInTeamsV2: {
+				default: false,
+				describe: 'Opt in to use Teams V2',
+				type: 'boolean'
+			},
 			proxyServer: {
 				default: null,
 				describe: 'Proxy Server with format address:port',

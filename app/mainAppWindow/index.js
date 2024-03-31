@@ -117,6 +117,8 @@ function applyAppConfiguration(config, window) {
 		});
 	}
 
+	handleTeamsV2OptIn(config);
+
 	window.webContents.setUserAgent(config.chromeUserAgent);
 
 	if (!config.minimized) {
@@ -128,6 +130,28 @@ function applyAppConfiguration(config, window) {
 	if (config.webDebug) {
 		window.openDevTools();
 	}
+}
+
+function handleTeamsV2OptIn(config) {
+	if (config.optInTeamsV2) {
+		config.url = 'https://teams.microsoft.com/v2/';
+		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
+			.then(result => {
+				if ((result == null) || !result) {
+					window.webContents.executeJavaScript('localStorage.setItem("tmp.isOptedIntoT2Web", true);', true)
+						.then(window.reload())
+						.catch(err => {
+							console.log('could not set localStorage variable', err);
+						});
+				}
+			})
+			.catch(err => {
+				console.log('could not read localStorage variable', err);
+			});
+		return;
+	}
+	window.webContents.executeJavaScript('localStorage.removeItem("tmp.isOptedIntoT2Web");', true)
+		.then(window.reload());
 }
 
 /**
@@ -180,7 +204,7 @@ function onDidFrameFinishLoad(event, isMainFrame, frameProcessId, frameRoutingId
 	}
 
 	const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
-	customCSS.onDidFrameFinishLoad(wf, config)
+	customCSS.onDidFrameFinishLoad(wf, config);
 }
 
 function restoreWindow() {
@@ -355,7 +379,7 @@ function addEventHandlers() {
 	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
 	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
-	window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
+	window.webContents.on('did-frame-finish-load', onDidFrameFinishLoad);
 	window.on('closed', onWindowClosed);
 	window.webContents.addListener('before-input-event', onBeforeInput);
 }
