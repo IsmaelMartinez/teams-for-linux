@@ -174,7 +174,7 @@ function argv(configPath, appVersion) {
 			},
 			optInTeamsV2: {
 				default: false,
-				describe: 'opt in to use V2',
+				describe: 'Opt in to use Teams V2',
 				type: 'boolean'
 			},
 			proxyServer: {
