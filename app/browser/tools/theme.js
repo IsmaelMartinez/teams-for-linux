@@ -1,4 +1,4 @@
-const instance = require('./instance');
+const ReactHandler = require('./reactHandler');
 
 class ThemeManager {
     /**
@@ -8,17 +8,18 @@ class ThemeManager {
     init(config, ipcRenderer) {
         this.ipcRenderer = ipcRenderer;
         this.config = config;
+        ReactHandler.getTeams2ClientPreferences().followOsTheme = config.followSystemTheme;
         if (config.followSystemTheme) {
-            this.ipcRenderer.on('system-theme-changed', this.applyTheme);
+            console.log('followSystemTheme', config.followSystemTheme);
+            this.ipcRenderer.on('system-theme-changed', this.applyTheme);   
         }
     }
 
     applyTheme = async (event, ...args) => {
         const theme = args[0] ? 'dark' : 'default';
-        const inst = await instance.whenReady().catch(() => {
-            console.error('Failed to apply Theme');
-        });
-        inst.controller.layoutService.setTheme(theme);
+        const clientPreferences = ReactHandler.getTeams2ClientPreferences();
+        clientPreferences.useTheme = theme;
+        console.log('Theme changed to', theme);
     }
 }
 

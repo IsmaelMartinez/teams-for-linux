@@ -222,8 +222,8 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	var regHttps = /^https:\/\/teams.microsoft.com\/l\/(meetup-join|channel)\//g;
-	var regMS = /^msteams:\/l\/(meetup-join|channel)\//g;
+	var regHttps = /^https:\/\/teams.microsoft.com\/.*(?:meetup-join|channel)/g;
+	var regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
 		if (regHttps.test(arg)) {
@@ -317,7 +317,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
  * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
  */
 function onNewWindow(details) {
-	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join')) {
+	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join')) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {

@@ -28,5 +28,14 @@ If applicable, add screenshots to help explain your problem.
  - Installation package [deb, rpm, snap, AppImage, tar.gz, source...]
  - Version [e.g. 0.1.17]
 
+**Debug**
+When possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.
+
+The provide in this section the output from both the terminal and the browser debug console.
+
+```bash
+teams-for-linux --webDebug --appLogLevels=error,info,warn,debug
+```
+
 **Additional context**
 Add any other context about the problem here.
