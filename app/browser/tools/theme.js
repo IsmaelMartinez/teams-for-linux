@@ -27,7 +27,7 @@ class ThemeManager {
         const clientPreferences = ReactHandler.getTeams2ClientPreferences();
         if (clientPreferences) {
             console.log('Using react to set the theme');
-            clientPreferences.theme.useTheme = theme;
+            clientPreferences.theme.userTheme = theme;
             console.log('Theme changed to', theme);    
         } else {
             console.log('Using angular to set the theme');
