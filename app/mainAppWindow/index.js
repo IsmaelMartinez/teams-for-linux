@@ -222,7 +222,7 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	var regHttps = /^https:\/\/teams.microsoft.com\/.*(?:meetup-join|channel)/g;
+	var regHttps = /^https:\/\/teams\.microsoft\.com\/.*(?:meetup-join|channel)/g;
 	var regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
