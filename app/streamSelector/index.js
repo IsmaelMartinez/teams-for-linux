@@ -151,5 +151,3 @@ function createScreenRequestHandler() {
 }
 
 module.exports = { StreamSelector };
-
-

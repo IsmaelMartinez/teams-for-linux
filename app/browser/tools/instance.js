@@ -15,18 +15,6 @@ class Instance {
 			return await this.whenReady(tries + 1);
 		}
 	}
-
-	getTeams2ReactElement() {
-		return document.getElementById('app');
-	}
-
-	getTeams2CoreServices() {
-		return this.getTeams2ReactElement()?._reactRootContainer?._internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
-	}
-
-	getTeams2IdleTracker() {
-		return this.getTeams2CoreServices()?.clientState?._idleTracker;
-	}
 }
 
 function getAppObjects() {

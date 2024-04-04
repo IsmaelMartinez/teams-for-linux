@@ -123,4 +123,3 @@ function createQualitySelector(properties) {
 	defaultSelection = defaultSelection > -1 ? defaultSelection : properties.screens.length - 1;
 	properties.sscontainer.selectedIndex = defaultSelection;
 }
-

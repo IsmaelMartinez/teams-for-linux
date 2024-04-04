@@ -1,4 +1,5 @@
 const instance = require('./instance');
+const ReactHandler = require('./reactHandler');
 /**
  * @type {Array<{handler:(data)=>void,event:string,handle:number}>}
  */
@@ -56,7 +57,7 @@ class ActivityHub {
 	 * @param {number} state 
 	 */
 	setMachineState(state) {
-		const teams2IdleTracker = instance.getTeams2IdleTracker();
+		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
 		if (teams2IdleTracker) {
 			try {
 				console.log(`setMachineState teams2 state=${state}`);
