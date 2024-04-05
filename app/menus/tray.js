@@ -24,6 +24,7 @@ class ApplicationTray {
 	}
 
 	updateTrayImage(iconUrl, flash) {
+		console.log('updateTrayImage');
 		const image = nativeImage.createFromDataURL(iconUrl);
 
 		this.tray.setImage(image);

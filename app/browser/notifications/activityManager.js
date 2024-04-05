@@ -9,7 +9,7 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
-		this.iconRenderer = new TrayIconRenderer(config);
+		this.iconRenderer = new TrayIconRenderer().init(config);
 		this.config = config;
 		this.myStatus = -1;
 	}
@@ -55,6 +55,7 @@ class ActivityManager {
  * @param {ActivityManager} self 
  */
 function setActivityHandlers(self) {
+	console.log('setActivityHandlers');
 	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
 	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
 	activityHub.on('incoming-call-connecting', incomingCallConnectingHandler(self));
@@ -76,8 +77,10 @@ function setEventHandlers(self) {
 /**
  * @param {ActivityManager} self 
  */
-function updateActivityCountHandler(self) {
+function updateActivityCountHandler() {
 	return async (data) => {
+		// const event = new CustomEvent('unread-count', { detail: { number: data.count } });
+		// window.dispatchEvent(event);
 		self.updateActivityCount(data.count);
 	};
 }

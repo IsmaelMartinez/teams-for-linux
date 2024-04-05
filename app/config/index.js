@@ -62,6 +62,11 @@ function argv(configPath, appVersion) {
 				describe: 'Set auth-server-whitelist value',
 				type: 'string'
 			},
+			awayOnSystemIdle: {
+				default: false,
+				describe: 'Sets the user status as away when system goes idle',
+				type: 'boolean'
+			},
 			chromeUserAgent: {
 				default: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
 				describe: 'Google Chrome User Agent',
@@ -98,7 +103,7 @@ function argv(configPath, appVersion) {
 				type: 'string'
 			},
 			followSystemTheme: {
-				default: false,
+				default: true,
 				describe: 'Follow system theme',
 				type: 'boolean'
 			},
@@ -167,20 +172,13 @@ function argv(configPath, appVersion) {
 				describe: 'A flag indicates whether to disable window flashing when there is a notification',
 				type: 'boolean'
 			},
-			partition: {
-				default: 'persist:teams-4-linux',
-				describe: 'BrowserWindow webpreferences partition',
-				type: 'string'
-			},
-			optInTeamsV2: {
-				default: false,
-				describe: 'Opt in to use Teams V2',
-				type: 'boolean'
-			},
-			proxyServer: {
+			incomingCallCommand: {
 				default: null,
-				describe: 'Proxy Server with format address:port',
-				type: 'string'
+				describe: 'Command to execute on an incoming call.'
+			},
+			incomingCallCommandArgs: {
+				default: [],
+				describe: 'Arguments for the incomming call command.'
 			},
 			menubar: {
 				default: 'auto',
@@ -196,6 +194,27 @@ function argv(configPath, appVersion) {
 			ntlmV2enabled: {
 				default: 'true',
 				describe: 'Set enable-ntlm-v2 value',
+				type: 'string'
+			},
+			onlineCheckMethod: {
+				default: 'https',
+				describe: 'Type of network test for checking online status.',
+				type: 'string',
+				choices: ['https', 'dns', 'native', 'none']
+			},
+			optInTeamsV2: {
+				default: false,
+				describe: 'Opt in to use Teams V2',
+				type: 'boolean'
+			},
+			partition: {
+				default: 'persist:teams-4-linux',
+				describe: 'BrowserWindow webpreferences partition',
+				type: 'string'
+			},
+			proxyServer: {
+				default: null,
+				describe: 'Proxy Server with format address:port',
 				type: 'string'
 			},
 			screenLockInhibitionMethod: {
@@ -214,28 +233,14 @@ function argv(configPath, appVersion) {
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},
+			useMutationToTitleLogic: {
+				default: true,
+				describe: 'Use MutationObserver to update counter from title',
+				type: 'boolean'
+			},
 			webDebug: {
 				default: false,
 				describe: 'Enable debug at start',
-				type: 'boolean'
-			},
-			onlineCheckMethod: {
-				default: 'https',
-				describe: 'Type of network test for checking online status.',
-				type: 'string',
-				choices: ['https', 'dns', 'native', 'none']
-			},
-			incomingCallCommand: {
-				default: null,
-				describe: 'Command to execute on an incoming call.'
-			},
-			incomingCallCommandArgs: {
-				default: [],
-				describe: 'Arguments for the incomming call command.'
-			},
-			awayOnSystemIdle: {
-				default: false,
-				describe: 'Sets the user status as away when system goes idle',
 				type: 'boolean'
 			}
 		})

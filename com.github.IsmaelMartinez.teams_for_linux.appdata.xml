@@ -14,6 +14,38 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.18" date="2024-04-04">
+			<description>
+				<ul>
+					<li>adding how to debug in bug report, moving react logic into its own ha… by @IsmaelMartinez in #1176</li>
+					<li>Feature/teams v2 changes theme by @IsmaelMartinez in #1177</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.17" date="2024-03-31">
+			<description>
+				<ul>
+					<li>feat: add opt in handling for teams v2 by @mhenselin in #1160</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.16" date="2024-03-28">
+			<description>
+				<ul>
+					<li>Removing the angular recurring call to disable some promotions as I s… by @IsmaelMartinez in #1152</li>
+					<li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1153</li>
+					<li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1154</li>
+					<li>add support for changing idle (away) state in Teams2 by @bastidest in #1157</li>
+				</ul>
+			</description>
+		</release>	
+		<release version="1.4.15" date="2024-03-23">
+			<description>
+				<ul>
+					<li>Added bail out logic to the angular detection as this is creating some memory issues in some users</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.14" date="2024-03-11">
 			<description>
 				<ul>
