@@ -1,4 +1,3 @@
-const TrayIconRenderer = require('../tools/trayIconRenderer');
 const activityHub = require('../tools/activityHub');
 const wakeLock = require('../tools/wakeLock');
 
@@ -9,19 +8,8 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
-		this.iconRenderer = new TrayIconRenderer().init(config);
 		this.config = config;
 		this.myStatus = -1;
-	}
-
-	updateActivityCount(count) {
-		this.iconRenderer.render(count).then(icon => {
-			this.ipcRenderer.send('tray-update', {
-				icon: icon,
-				flash: (count > 0 && !this.config.disableNotificationWindowFlash)
-			});
-		});
-		this.ipcRenderer.invoke('set-badge-count', count);
 	}
 
 	start() {
@@ -79,9 +67,8 @@ function setEventHandlers(self) {
  */
 function updateActivityCountHandler() {
 	return async (data) => {
-		// const event = new CustomEvent('unread-count', { detail: { number: data.count } });
-		// window.dispatchEvent(event);
-		self.updateActivityCount(data.count);
+		const event = new CustomEvent('unread-count', { detail: { number: data.count } });
+		window.dispatchEvent(event);
 	};
 }
 

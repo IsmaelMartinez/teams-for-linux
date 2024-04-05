@@ -1,25 +1,25 @@
 const { nativeImage } = require('electron');
 const TrayIconChooser = require('./trayIconChooser');
 class TrayIconRenderer {
-	constructor(config) {
-	// init(config, ipcRenderer) {
-		// this.ipcRenderer = ipcRenderer;
+	init(config, ipcRenderer) {
+		this.ipcRenderer = ipcRenderer;
+		this.config = config;
 		const iconChooser = new TrayIconChooser(config);
 		this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
 		this.iconSize = this.baseIcon.getSize();
-	// 	window.addEventListener('unread-count', this.updateActivityCount.bind(this));
-	// }
+		window.addEventListener('unread-count', this.updateActivityCount.bind(this));
+	}
 
-	// updateActivityCount(event) {
-	// 	const count = event.detail.number;
-	// 	this.render(count).then(icon => {
-	// 		console.log('sending tray-update');
-	// 		this.ipcRenderer.send('tray-update', {
-	// 			icon: icon,
-	// 			flash: (count > 0 && !this.config.disableNotificationWindowFlash)
-	// 		});
-	// 	});
-	// 	this.ipcRenderer.invoke('set-badge-count', count);
+	updateActivityCount(event) {
+		const count = event.detail.number;
+		this.render(count).then(icon => {
+			console.log('sending tray-update');
+			this.ipcRenderer.send('tray-update', {
+				icon: icon,
+				flash: (count > 0 && !this.config.disableNotificationWindowFlash)
+			});
+		});
+		this.ipcRenderer.invoke('set-badge-count', count);
 	}
 
 	render(newActivityCount) {
