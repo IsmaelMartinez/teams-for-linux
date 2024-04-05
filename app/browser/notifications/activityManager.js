@@ -1,4 +1,3 @@
-const TrayIconRenderer = require('../tools/trayIconRenderer');
 const activityHub = require('../tools/activityHub');
 const wakeLock = require('../tools/wakeLock');
 
@@ -9,19 +8,8 @@ class ActivityManager {
 	 */
 	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
-		this.iconRenderer = new TrayIconRenderer(config);
 		this.config = config;
 		this.myStatus = -1;
-	}
-
-	updateActivityCount(count) {
-		this.iconRenderer.render(count).then(icon => {
-			this.ipcRenderer.send('tray-update', {
-				icon: icon,
-				flash: (count > 0 && !this.config.disableNotificationWindowFlash)
-			});
-		});
-		this.ipcRenderer.invoke('set-badge-count', count);
 	}
 
 	start() {
@@ -51,9 +39,6 @@ class ActivityManager {
 	}
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function setActivityHandlers(self) {
 	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
 	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
@@ -65,71 +50,48 @@ function setActivityHandlers(self) {
 	activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function setEventHandlers(self) {
 	self.ipcRenderer.on('enable-wakelock', () => wakeLock.enable());
 	self.ipcRenderer.on('disable-wakelock', () => wakeLock.disable());
 }
 
-/**
- * @param {ActivityManager} self 
- */
-function updateActivityCountHandler(self) {
+function updateActivityCountHandler() {
 	return async (data) => {
-		self.updateActivityCount(data.count);
+		const event = new CustomEvent('unread-count', { detail: { number: data.count } });
+		window.dispatchEvent(event);
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallCreatedHandler(self) {
 	return async (data) => {
 		self.ipcRenderer.invoke('incoming-call-created', data);
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallConnectingHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('incoming-call-connecting');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallDisconnectingHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('incoming-call-disconnecting');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function callConnectedHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('call-connected');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function callDisconnectedHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('call-disconnected');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 // eslint-disable-next-line no-unused-vars
 function meetingStartNotifyHandler(self) {
 	if (!self.config.disableMeetingNotifications) {
@@ -142,9 +104,6 @@ function meetingStartNotifyHandler(self) {
 	return null;
 }
 
-/**
- * @param {ActivityManager} self 
- */
 // eslint-disable-next-line no-unused-vars
 function myStatusChangedHandler(self) {
 	// eslint-disable-next-line no-unused-vars

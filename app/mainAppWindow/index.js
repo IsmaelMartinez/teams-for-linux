@@ -150,8 +150,6 @@ function handleTeamsV2OptIn(config) {
 			});
 		return;
 	}
-	window.webContents.executeJavaScript('localStorage.removeItem("tmp.isOptedIntoT2Web");', true)
-		.then(window.reload());
 }
 
 /**

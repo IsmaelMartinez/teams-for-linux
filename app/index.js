@@ -3,7 +3,6 @@ const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
 const { httpHelper } = require('./helpers');
-
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
@@ -257,23 +256,11 @@ async function requestMediaAccess() {
 	});
 }
 
-/**
- * Handle user-status-changed message
- * 
- * @param {*} event 
- * @param {*} options 
- */
 async function userStatusChangedHandler(event, options) {
 	userStatus = options.data.status;
 	logger.debug(`User status changed to '${userStatus}'`);
 }
 
-/**
- * Handle user-status-changed message
- * 
- * @param {*} event 
- * @param {*} count 
- */
 async function setBadgeCountHandler(event, count) {
 	logger.debug(`Badge count set to '${count}'`);
 	app.setBadgeCount(count);
