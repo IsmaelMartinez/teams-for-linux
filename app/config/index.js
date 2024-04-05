@@ -103,7 +103,7 @@ function argv(configPath, appVersion) {
 				type: 'string'
 			},
 			followSystemTheme: {
-				default: true,
+				default: false,
 				describe: 'Follow system theme',
 				type: 'boolean'
 			},
@@ -233,8 +233,8 @@ function argv(configPath, appVersion) {
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},
-			useMutationToTitleLogic: {
-				default: true,
+			useMutationTitleLogic: {
+				default: false,
 				describe: 'Use MutationObserver to update counter from title',
 				type: 'boolean'
 			},

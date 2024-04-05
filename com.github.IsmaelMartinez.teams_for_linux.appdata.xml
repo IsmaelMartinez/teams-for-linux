@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.19" date="2024-04-05">
+			<description>
+				<ul>
+					<li>updating tray icon with the number in the document.title. This is hidden behind a feature flag/config option called useMutationTitleLogic</li>
+					<li>moved trayIconRenderer out of the activityHub, and to react to events instead.</li>
+					<li>re-order config readme to show in the right order.</li>
+					<li>removing the 'removal' of the opt in for teamsv2. Now if you use that feature flag and want to revert you will need to do it manually.</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.18" date="2024-04-04">
 			<description>
 				<ul>

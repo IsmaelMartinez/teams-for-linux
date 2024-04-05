@@ -1,7 +1,7 @@
 class MutationObserverTitle {
     
 	init(config) {
-		if (config.useMutationToTitleLogic) {
+		if (config.useMutationTitleLogic) {
 			console.log('MutationObserverTitle enabled');
 			window.addEventListener('DOMContentLoaded', this._applyMutationToTitleLogic);
 		}

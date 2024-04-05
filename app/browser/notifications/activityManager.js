@@ -39,11 +39,7 @@ class ActivityManager {
 	}
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function setActivityHandlers(self) {
-	console.log('setActivityHandlers');
 	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
 	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
 	activityHub.on('incoming-call-connecting', incomingCallConnectingHandler(self));
@@ -54,17 +50,11 @@ function setActivityHandlers(self) {
 	activityHub.on('my-status-changed', myStatusChangedHandler(self));
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function setEventHandlers(self) {
 	self.ipcRenderer.on('enable-wakelock', () => wakeLock.enable());
 	self.ipcRenderer.on('disable-wakelock', () => wakeLock.disable());
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function updateActivityCountHandler() {
 	return async (data) => {
 		const event = new CustomEvent('unread-count', { detail: { number: data.count } });
@@ -72,54 +62,36 @@ function updateActivityCountHandler() {
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallCreatedHandler(self) {
 	return async (data) => {
 		self.ipcRenderer.invoke('incoming-call-created', data);
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallConnectingHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('incoming-call-connecting');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function incomingCallDisconnectingHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('incoming-call-disconnecting');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function callConnectedHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('call-connected');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 function callDisconnectedHandler(self) {
 	return async () => {
 		self.ipcRenderer.invoke('call-disconnected');
 	};
 }
 
-/**
- * @param {ActivityManager} self 
- */
 // eslint-disable-next-line no-unused-vars
 function meetingStartNotifyHandler(self) {
 	if (!self.config.disableMeetingNotifications) {
@@ -132,9 +104,6 @@ function meetingStartNotifyHandler(self) {
 	return null;
 }
 
-/**
- * @param {ActivityManager} self 
- */
 // eslint-disable-next-line no-unused-vars
 function myStatusChangedHandler(self) {
 	// eslint-disable-next-line no-unused-vars
