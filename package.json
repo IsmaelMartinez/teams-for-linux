@@ -49,9 +49,9 @@
   },
   "devDependencies": {
     "@electron/fuses": "^1.7.0",
-    "electron": "29.1.1",
+    "electron": "29.2.0",
     "electron-builder": "24.13.3",
-    "eslint": "8.57.0",
+    "eslint": "9.0.0",
     "yarn": "1.22.22"
   },
   "build": {
