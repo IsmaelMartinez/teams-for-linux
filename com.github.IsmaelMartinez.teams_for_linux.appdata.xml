@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.23" date="2024-04-12">
+			<description>
+				<ul>
+					<li>Additional logs for debugging custom background issues</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.22" date="2024-04-12">
 			<description>
 				<ul>

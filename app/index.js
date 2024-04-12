@@ -296,7 +296,7 @@ function onCustomBGServiceConfigDownloadSuccess(data) {
 		logger.debug(`Custom background service remote configuration stored at '${downloadPath}'`);
 	}
 	catch (err) {
-		logger.error(`Failed to save remote configuration at '${downloadPath}'`);
+		logger.error(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
 	}
 }
 
@@ -315,11 +315,11 @@ function setPath(cfg) {
 
 function onCustomBGServiceConfigDownloadFailure(err) {
 	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
-	logger.error(err.message);
+	logger.error(`Failed to fetch custom background remote configuration. ${err.message}`);
 	try {
 		fs.writeFileSync(dlpath, JSON.stringify([]));
 	}
 	catch (err) {
-		logger.error(`Failed to save remote configuration at '${dlpath}'`);
+		logger.error(`Failed to save custom background default configuration at '${dlpath}'. ${err.message}`);
 	}
 }
