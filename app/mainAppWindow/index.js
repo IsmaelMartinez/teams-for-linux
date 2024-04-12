@@ -56,19 +56,19 @@ let window = null;
 let appConfig = null;
 
 /**
- * @param {AppConfiguration} mainConfig 
+ * @param {AppConfiguration} configGroup 
  */
-exports.onAppReady = async function onAppReady(mainConfig) {
-	appConfig = mainConfig;
-	config = mainConfig.startupConfig;
-	iconChooser = new TrayIconChooser(mainConfig.startupConfig);
+exports.onAppReady = async function onAppReady(configGroup) {
+	appConfig = configGroup;
+	config = configGroup.startupConfig;
+	iconChooser = new TrayIconChooser(configGroup.startupConfig);
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
 
 	window = await createWindow();
 
-	const m = new Menus(window, config, iconChooser.getFile());
+	const m = new Menus(window, configGroup, iconChooser.getFile());
 	m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 
 	addEventHandlers();

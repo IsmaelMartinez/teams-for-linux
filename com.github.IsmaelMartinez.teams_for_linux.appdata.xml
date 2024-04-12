@@ -14,6 +14,28 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.22" date="2024-04-12">
+			<description>
+				<ul>
+					<li>Electron version upgraded to 29.3.0</li>
+					<li>Fix: Teams doesn't remember the setting disable notification sound</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.21" date="2024-04-07">
+			<description>
+				<ul>
+					<li>Electron version upgraded to 29.2.0</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.20" date="2024-04-06">
+			<description>
+				<ul>
+					<li>Now the notification badge count clears when all are read</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.19" date="2024-04-05">
 			<description>
 				<ul>
