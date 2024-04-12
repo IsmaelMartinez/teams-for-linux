@@ -18,6 +18,10 @@ class ApplicationTray {
 		ipcMain.on('tray-update', (event, { icon, flash }) => this.updateTrayImage(icon, flash));
 	}
 
+	setContextMenu(appMenu) {
+		this.tray.setContextMenu(Menu.buildFromTemplate(appMenu));
+	}
+
 	showAndFocusWindow() {
 		this.window.show();
 		this.window.focus();

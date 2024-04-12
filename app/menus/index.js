@@ -11,16 +11,16 @@ const connectionManager = require('../connectionManager');
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
-	constructor(window, config, iconPath) {
+	constructor(window, configGroup, iconPath) {
 		/**
 		 * @type {Electron.BrowserWindow}
 		 */
 		this.window = window;
 		this.iconPath = iconPath;
-		this.config = config;
+		this.configGroup = configGroup;
 		this.allowQuit = false;
 		this.logger = new LucidLog({
-			levels: config.appLogLevels.split(',')
+			levels: configGroup.startupConfig.appLogLevels.split(',')
 		});
 		this.initialize();
 	}
@@ -55,7 +55,7 @@ class Menus {
 		}) === 0;
 
 		if (clearStorage) {
-			const defSession = session.fromPartition(this.config.partition);
+			const defSession = session.fromPartition(this.configGroup.startupConfig.partition);
 			await defSession.clearStorageData();
 		}
 
@@ -108,7 +108,7 @@ class Menus {
 	initialize() {
 		const appMenu = application(this);
 
-		if (this.config.menubar == 'hidden') {
+		if (this.configGroup.startupConfig.menubar == 'hidden') {
 			this.window.removeMenu();
 		} else {
 			this.window.setMenu(Menu.buildFromTemplate([
@@ -120,7 +120,7 @@ class Menus {
 
 		this.initializeEventHandlers();
 
-		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath, this.config);
+		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath, this.configGroup.startupConfig);
 		this.spellCheckProvider = new SpellCheckProvider(this.window, this.logger);
 	}
 
@@ -137,7 +137,7 @@ class Menus {
 
 	onClose(event) {
 		this.logger.debug('window close');
-		if (!this.allowQuit && !this.config.closeAppOnCross) {
+		if (!this.allowQuit && !this.configGroup.startupConfig.closeAppOnCross) {
 			event.preventDefault();
 			this.hide();
 		} else {
@@ -154,6 +154,42 @@ class Menus {
 	restoreSettings() {
 		ipcMain.once('set-teams-settings', restoreSettingsInternal);
 		this.window.webContents.send('set-teams-settings', JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'teams_settings.json'))));
+	}
+
+	updateMenu() {
+		const appMenu = application(this);
+		this.window.setMenu(Menu.buildFromTemplate([
+			appMenu,
+			preferences(),
+			help(app, this.window),
+		]));
+		this.tray.setContextMenu(appMenu.submenu);
+	}
+
+	toggleDisableNotifications() {
+		this.configGroup.startupConfig.disableNotifications = !this.configGroup.startupConfig.disableNotifications
+		this.configGroup.legacyConfigStore.set('disableNotifications', this.configGroup.startupConfig.disableNotifications);
+		this.updateMenu();
+	}
+	toggleDisableMeetingNotifications() {
+		this.configGroup.startupConfig.disableMeetingNotifications = !this.configGroup.startupConfig.disableMeetingNotifications
+		this.configGroup.legacyConfigStore.set('disableMeetingNotifications', this.configGroup.startupConfig.disableMeetingNotifications);
+		this.updateMenu();
+	}
+	toggleDisableNotificationSound() {
+		this.configGroup.startupConfig.disableNotificationSound = !this.configGroup.startupConfig.disableNotificationSound
+		this.configGroup.legacyConfigStore.set('disableNotificationSound', this.configGroup.startupConfig.disableNotificationSound);
+		this.updateMenu();
+	}
+	toggleDisableNotificationSoundIfNotAvailable() {
+		this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable = !this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable
+		this.configGroup.legacyConfigStore.set('disableNotificationSoundIfNotAvailable', this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable);
+		this.updateMenu();
+	}
+	toggleDisableNotificationWindowFlash() {
+		this.configGroup.startupConfig.disableNotificationWindowFlash = !this.configGroup.startupConfig.disableNotificationWindowFlash
+		this.configGroup.legacyConfigStore.set('disableNotificationWindowFlash', this.configGroup.startupConfig.disableNotificationWindowFlash);
+		this.updateMenu();
 	}
 }
 
