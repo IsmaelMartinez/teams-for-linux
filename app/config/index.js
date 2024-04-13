@@ -242,6 +242,11 @@ function argv(configPath, appVersion) {
 				default: false,
 				describe: 'Enable debug at start',
 				type: 'boolean'
+			},
+			electronCLIFlags: {
+				default: [],
+				describe: "Electron CLI flags",
+				type: 'array'
 			}
 		})
 		.parse(process.argv.slice(1));

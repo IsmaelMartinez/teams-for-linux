@@ -6,10 +6,11 @@ const { httpHelper } = require('./helpers');
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
-if (app.commandLine.hasSwitch('customUserDir')) {
-	app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
-}
 
+// This must be executed before loading the config file.
+addCommandLineSwitchesBeforeConfigLoad();
+
+// Load config file.
 const { AppConfiguration } = require('./appConfiguration');
 const appConfig = new AppConfiguration(app.getPath('userData'), app.getVersion());
 
@@ -19,6 +20,10 @@ config.appPath = path.join(__dirname, isDev ? '' : '../../');
 const logger = new LucidLog({
 	levels: config.appLogLevels.split(',')
 });
+
+// This must only be executed after loading the config file and logger is initialized.
+addCommandLineSwitchesAfterConfigLoad();
+
 
 const notificationSounds = [{
 	type: 'new-message',
@@ -49,30 +54,8 @@ const certificateModule = require('./certificate');
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require('./mainAppWindow');
 
-if (config.proxyServer) app.commandLine.appendSwitch('proxy-server', config.proxyServer);
-app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
-app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
-app.commandLine.appendSwitch('try-supported-channel-layouts');
-
-const disabledFeatures = app.commandLine.hasSwitch('disable-features') ? app.commandLine.getSwitchValue('disable-features').split(',') : ['HardwareMediaKeyHandling'];
-
-if (!disabledFeatures.includes('HardwareMediaKeyHandling'))
-	disabledFeatures.push('HardwareMediaKeyHandling');
-
-app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
-
 if (isMac) {
 	requestMediaAccess();
-
-} else if (process.env.XDG_SESSION_TYPE === 'wayland') {
-	logger.info('Running under Wayland, switching to PipeWire...');
-
-	const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
-	if (!features.includes('WebRTCPipeWireCapturer'))
-		features.push('WebRTCPipeWireCapturer');
-
-	app.commandLine.appendSwitch('enable-features', features.join(','));
-	app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
 }
 
 const protocolClient = 'msteams';
@@ -81,12 +64,6 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
 }
 
 app.allowRendererProcessReuse = false;
-
-if (config.disableGpu) {
-	logger.info('Disabling GPU support...');
-	app.commandLine.appendSwitch('disable-gpu');
-	app.commandLine.appendSwitch('disable-software-rasterizer');
-}
 
 if (!gotTheLock) {
 	logger.info('App already running');
@@ -108,6 +85,73 @@ if (!gotTheLock) {
 	ipcMain.handle('play-notification-sound', playNotificationSound);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
 	ipcMain.handle('set-badge-count', setBadgeCountHandler);
+}
+
+function addCommandLineSwitchesBeforeConfigLoad() {
+	// Custom user data directory
+	if (app.commandLine.hasSwitch('customUserDir')) {
+		app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
+	}
+
+	app.commandLine.appendSwitch('try-supported-channel-layouts');
+
+	// Disabled features
+	const disabledFeatures = app.commandLine.hasSwitch('disable-features') ? app.commandLine.getSwitchValue('disable-features').split(',') : ['HardwareMediaKeyHandling'];
+
+	if (!disabledFeatures.includes('HardwareMediaKeyHandling'))
+		disabledFeatures.push('HardwareMediaKeyHandling');
+
+	app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
+}
+
+function addCommandLineSwitchesAfterConfigLoad() {
+	// Wayland
+	if (process.env.XDG_SESSION_TYPE === 'wayland') {
+		logger.info('Running under Wayland, switching to PipeWire...');
+
+		const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
+		if (!features.includes('WebRTCPipeWireCapturer'))
+			features.push('WebRTCPipeWireCapturer');
+
+		app.commandLine.appendSwitch('enable-features', features.join(','));
+		app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
+	}
+
+	// Proxy
+	if (config.proxyServer) {
+		app.commandLine.appendSwitch('proxy-server', config.proxyServer);
+	}
+
+	app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
+	app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
+
+	// GPU
+	if (config.disableGpu) {
+		logger.info('Disabling GPU support...');
+		app.commandLine.appendSwitch('disable-gpu');
+		app.commandLine.appendSwitch('disable-software-rasterizer');
+	}
+
+	addElectronCLIFlagsFromConfig();
+}
+
+function addElectronCLIFlagsFromConfig() {
+	if (Array.isArray(config.electronCLIFlags)) {
+		for (const flag of config.electronCLIFlags) {
+			if (typeof (flag) === 'string') {
+				logger.debug(`Adding electron CLI flag '${flag}'`);
+				app.commandLine.appendSwitch(flag);
+			} else if (Array.isArray(flag) && typeof (flag[0]) === 'string') {
+				if (!(typeof (flag[1]) === 'undefined' || typeof (flag[1]) === 'object' || typeof (flag[1]) === 'function')) {
+					logger.debug(`Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`);
+					app.commandLine.appendSwitch(flag[0], flag[1]);
+				} else {
+					logger.debug(`Adding electron CLI flag '${flag[0]}'`);
+					app.commandLine.appendSwitch(flag[0]);
+				}
+			}
+		}
+	}
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -186,7 +230,7 @@ async function handleGetSystemIdleState() {
 	if (systemIdleState === 'active') {
 		idleTimeUserStatus = -1
 	}
-	
+
 	return state;
 }
 

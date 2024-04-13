@@ -55,6 +55,7 @@ Here is the list of available arguments and its usage:
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | false               |
 | version                         | Show the version number                                                                  | false                 |
 | webDebug                        | Enable web debugging                                                                     | false               |
+| electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 
 
 As an example, to disable the persistence, you can run the following command:
@@ -79,6 +80,24 @@ Example:
 ## Getting custom CA Certs fingerprints
 
 Information about how to get the custom CA Certs fingerprints is now available under the [certificate README.md file](../certificate/README.md)
+
+## Electron CLI flags
+
+Now the `config.json` can have electron CLI flags which will be added when the application starts.
+
+Example:
+
+```json
+{
+    "electronCLIFlags": [
+		["ozone-platform","wayland"]
+		"disable-software-rasterizer"
+	]
+}
+```
+
+As you can see from the above example, switches with values must be of array where the first entry will be the switch and the second one will be the value. It can be a simple string otherwise.
+
 
 ## Custom backgrounds
 
