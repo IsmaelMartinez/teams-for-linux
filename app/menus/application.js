@@ -106,6 +106,29 @@ function getNotificationsMenu(Menus) {
 				type: 'checkbox',
 				checked: Menus.configGroup.startupConfig.disableNotificationWindowFlash,
 				click: () => Menus.toggleDisableNotificationWindowFlash()
+			},
+			{
+				label: 'Urgency',
+				submenu:[
+					{
+						label: 'Low',
+						type: 'checkbox',
+						checked: Menus.configGroup.startupConfig.defaultNotificationUrgency === 'low',
+						click: () => Menus.setNotificationUrgency('low')
+					},
+					{
+						label: 'Normal',
+						type: 'checkbox',
+						checked: Menus.configGroup.startupConfig.defaultNotificationUrgency === 'normal',
+						click: () => Menus.setNotificationUrgency('normal')
+					},
+					{
+						label: 'Critical',
+						type: 'checkbox',
+						checked: Menus.configGroup.startupConfig.defaultNotificationUrgency === 'critical',
+						click: () => Menus.setNotificationUrgency('critical')
+					}
+				]
 			}
 		]
 	};
