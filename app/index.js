@@ -1,4 +1,4 @@
-const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor } = require('electron');
+const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
@@ -83,6 +83,7 @@ if (!gotTheLock) {
 	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
 	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
 	ipcMain.handle('play-notification-sound', playNotificationSound);
+	ipcMain.handle('show-notification', showNotification);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
 	ipcMain.handle('set-badge-count', setBadgeCountHandler);
 }
@@ -152,6 +153,22 @@ function addElectronCLIFlagsFromConfig() {
 			}
 		}
 	}
+}
+
+async function showNotification(event, options) {
+	logger.debug('Showing notification using electron API');
+	playNotificationSound(null, {
+		type: options.type,
+		audio: 'default',
+		title: options.title,
+		body: options.body
+	});
+	new Notification({
+		icon: nativeImage.createFromDataURL(options.icon),
+		title: options.title,
+		body: options.body,
+		urgency: config.defaultNotificationUrgency
+	}).show();
 }
 
 // eslint-disable-next-line no-unused-vars
