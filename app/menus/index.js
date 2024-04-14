@@ -171,24 +171,34 @@ class Menus {
 		this.configGroup.legacyConfigStore.set('disableNotifications', this.configGroup.startupConfig.disableNotifications);
 		this.updateMenu();
 	}
+
 	toggleDisableMeetingNotifications() {
 		this.configGroup.startupConfig.disableMeetingNotifications = !this.configGroup.startupConfig.disableMeetingNotifications
 		this.configGroup.legacyConfigStore.set('disableMeetingNotifications', this.configGroup.startupConfig.disableMeetingNotifications);
 		this.updateMenu();
 	}
+
 	toggleDisableNotificationSound() {
 		this.configGroup.startupConfig.disableNotificationSound = !this.configGroup.startupConfig.disableNotificationSound
 		this.configGroup.legacyConfigStore.set('disableNotificationSound', this.configGroup.startupConfig.disableNotificationSound);
 		this.updateMenu();
 	}
+
 	toggleDisableNotificationSoundIfNotAvailable() {
 		this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable = !this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable
 		this.configGroup.legacyConfigStore.set('disableNotificationSoundIfNotAvailable', this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable);
 		this.updateMenu();
 	}
+
 	toggleDisableNotificationWindowFlash() {
 		this.configGroup.startupConfig.disableNotificationWindowFlash = !this.configGroup.startupConfig.disableNotificationWindowFlash
 		this.configGroup.legacyConfigStore.set('disableNotificationWindowFlash', this.configGroup.startupConfig.disableNotificationWindowFlash);
+		this.updateMenu();
+	}
+
+	setNotificationUrgency(value) {
+		this.configGroup.startupConfig.defaultNotificationUrgency = value;
+		this.configGroup.legacyConfigStore.set('defaultNotificationUrgency', value);
 		this.updateMenu();
 	}
 }
