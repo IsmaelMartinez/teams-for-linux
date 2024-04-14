@@ -23,7 +23,7 @@ Here is the list of available arguments and its usage:
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | string                |
 | customBGServiceIgnoreMSDefaults | A flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | number                |
-| customCACertsFingerprints       | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | array             |
+| customCACertsFingerprints       | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | []             |
 | customCSSName                   | custom CSS name for the packaged available css files                                      | string                |
 | customCSSLocation               | custom CSS styles file location                                                           | string                |
 | followSystemTheme               | Follow system theme                                                                      | false               |
@@ -49,13 +49,15 @@ Here is the list of available arguments and its usage:
 | optInTeamsV2                    | Opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | string                |
 | proxyServer                     | Proxy Server with format address:port                                                     | string                |
-| screenLockInhibitionMethod      | Screen lock inhibition method to be used (Electron/WakeLockSentinel)                      | string                |
-| spellCheckerLanguages           | Array of languages to use with Electron's spell checker (experimental)                    | array                 |
+| screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | Electron                |
+| spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | url                             | Microsoft Teams URL                                                                      | string                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | false               |
 | version                         | Show the version number                                                                  | false                 |
 | webDebug                        | Enable web debugging                                                                     | false               |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
+| notificationMethod | Notification method to be used by the application (`web`/`electron`) | web |
+| defaultNotificationUrgency | Default urgency for new notifications (`low`/`normal`/`critical`). Only applicable when `notificationMethod` is `electron` | normal |
 
 
 As an example, to disable the persistence, you can run the following command:

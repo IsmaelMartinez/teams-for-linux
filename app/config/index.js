@@ -247,6 +247,18 @@ function argv(configPath, appVersion) {
 				default: [],
 				describe: "Electron CLI flags",
 				type: 'array'
+			},
+			notificationMethod: {
+				default: 'web',
+				describe: 'Notification method to be used by the application (web/electron)',
+				type: 'string',
+				choices: ['web', 'electron']
+			},
+			defaultNotificationUrgency: {
+				default: 'normal',
+				describe: 'Default urgency for new notifications (low/normal/critical)',
+				type: 'string',
+				choices: ['low', 'normal', 'critical']
 			}
 		})
 		.parse(process.argv.slice(1));
