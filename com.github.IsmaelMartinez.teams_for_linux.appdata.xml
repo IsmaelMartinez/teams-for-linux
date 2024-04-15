@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.27" date="2024-04-15">
+			<description>
+				<ul>
+					<li>Rearranged quit menu</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.26" date="2024-04-14">
 			<description>
 				<ul>

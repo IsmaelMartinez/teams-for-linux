@@ -29,7 +29,15 @@ exports = module.exports = (Menus) => ({
 		{
 			type: 'separator',
 		},
-		getQuitMenu(Menus),
+		{
+			label: 'Quit',
+			accelerator: 'ctrl+Q',
+			click: () => Menus.quit()
+		},
+		{
+			label: 'Quit (Clear Storage)',
+			click: () => Menus.quit(true)
+		},
 		{
 			type: 'separator',
 		},
@@ -51,23 +59,6 @@ function getSettingsMenu(Menus) {
 			{
 				label: 'Restore',
 				click: () => Menus.restoreSettings()
-			}
-		]
-	};
-}
-
-function getQuitMenu(Menus) {
-	return {
-		label: 'Quit',
-		submenu: [
-			{
-				label: 'Normally',
-				accelerator: 'ctrl+Q',
-				click: () => Menus.quit()
-			},
-			{
-				label: 'Clear Storage',
-				click: () => Menus.quit(true)
 			}
 		]
 	};
