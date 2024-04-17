@@ -88,6 +88,10 @@ function onSpellCheckerLanguageChanged(languages) {
 
 let allowFurtherRequests = true;
 
+exports.show = function(){
+	window.show();
+};
+
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	logger.debug('second-instance started');
 	if (window) {

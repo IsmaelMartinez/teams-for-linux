@@ -157,18 +157,24 @@ function addElectronCLIFlagsFromConfig() {
 
 async function showNotification(event, options) {
 	logger.debug('Showing notification using electron API');
+
 	playNotificationSound(null, {
 		type: options.type,
 		audio: 'default',
 		title: options.title,
 		body: options.body
 	});
-	new Notification({
+
+	var notification = new Notification({
 		icon: nativeImage.createFromDataURL(options.icon),
 		title: options.title,
 		body: options.body,
 		urgency: config.defaultNotificationUrgency
-	}).show();
+	});
+
+	notification.on('click', mainAppWindow.show);
+
+	notification.show();
 }
 
 // eslint-disable-next-line no-unused-vars
