@@ -234,7 +234,7 @@ function argv(configPath, appVersion) {
 				type: 'string'
 			},
 			useMutationTitleLogic: {
-				default: false,
+				default: true,
 				describe: 'Use MutationObserver to update counter from title',
 				type: 'boolean'
 			},

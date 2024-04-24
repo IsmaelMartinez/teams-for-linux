@@ -52,7 +52,7 @@ Here is the list of available arguments and its usage:
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | Electron                |
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | url                             | Microsoft Teams URL                                                                      | string                |
-| useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | false               |
+| useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
 | webDebug                        | Enable web debugging                                                                     | false               |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
