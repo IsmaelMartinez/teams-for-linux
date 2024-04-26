@@ -219,7 +219,7 @@ function onAppTerminated(signal) {
 function handleAppReady() {
 	// check for configuration errors
 	if (config.error) {
-		dialog.showErrorBox('Configuration error', config.error)
+		dialog.showErrorBox('Configuration error', config.error);
 	}
 	
 	if (config.isCustomBackgroundEnabled) {
