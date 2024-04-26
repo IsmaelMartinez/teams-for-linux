@@ -32,6 +32,7 @@ Here is the list of available arguments and its usage:
 | clientCertPath                  | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)   | string                |
 | clientCertPassword              | Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format) | string          |
 | closeAppOnCross                 | Close the app when clicking the close (X) cross                                           | false               |
+| defaultNotificationUrgency | Default urgency for new notifications (`low`/`normal`/`critical`). Only applicable when `notificationMethod` is `electron` | normal |
 | defaultURLHandler               | Default application to be used to open the HTTP URLs                                      | string                |
 | disableAutogain                 | A flag indicates whether to disable mic auto gain or not                                  | false               |
 | disableGpu                      | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank) | false               |
@@ -40,10 +41,13 @@ Here is the list of available arguments and its usage:
 | disableNotificationSound        | Disable chat/meeting start notification sound                                            | false               |
 | disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false         |
 | disableNotificationWindowFlash  | A flag indicates whether to disable window flashing when there is a notification          | false               |
+| electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 | incomingCallCommand             | Command to execute on an incoming call.                                                   |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |                       |
+| isCustomBackgroundEnabled	   | A flag indicates whether to enable custom background images or not                       | true               |
 | menubar                         | A value controls the menu bar behaviour                                                   | string                |
 | minimized                       | Start the application minimized                                                          | false               |
+| notificationMethod | Notification method to be used by the application (`web`/`electron`) | web |
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | string                |
 | onlineCheckMethod               | Type of network test for checking online status.                                          | string                |
 | optInTeamsV2                    | Opt in to use Teams V2                                                                   | false               |
@@ -55,9 +59,6 @@ Here is the list of available arguments and its usage:
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
 | webDebug                        | Enable web debugging                                                                     | false               |
-| electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
-| notificationMethod | Notification method to be used by the application (`web`/`electron`) | web |
-| defaultNotificationUrgency | Default urgency for new notifications (`low`/`normal`/`critical`). Only applicable when `notificationMethod` is `electron` | normal |
 
 
 As an example, to disable the persistence, you can run the following command:
