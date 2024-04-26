@@ -1,4 +1,4 @@
-const { app, ipcMain, desktopCapturer, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
+const { app, dialog, ipcMain, desktopCapturer, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
@@ -217,6 +217,11 @@ function onAppTerminated(signal) {
 }
 
 function handleAppReady() {
+	// check for configuration errors
+	if (config.error) {
+		dialog.showErrorBox('Configuration error', config.error)
+	}
+
 	downloadCustomBGServiceRemoteConfig();
 	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
