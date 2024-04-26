@@ -9,7 +9,6 @@ function getConfigFile(configPath) {
 }
 
 function argv(configPath, appVersion) {
-	configPath = "/home/kwe/dev_private/teams-for-linux/"
 	let configFile = null;
 	let configError = null;
 	try {
