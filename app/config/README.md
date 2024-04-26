@@ -112,6 +112,7 @@ We added a feature to load custom background images during a video call. This is
 2. 3 new command-line parameters `customBGServiceBaseUrl`, `customBGServiceIgnoreMSDefaults` and `customBGServiceConfigFetchInterval` are introduced. See above for details.
 3. Custom images are always loaded with `<customBGServiceBaseUrl>/<image-path>`. So, you have to make sure the web server is running and `<customBGServiceBaseUrl>` responds to the request.
 4. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
+5. In Teams version 2, this will replace Microsoft's default images.
 
 For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 ```xml
@@ -126,8 +127,8 @@ For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 ### Configuring list of images
 
 1. List of images are to be stored in `<customBGServiceBaseUrl>/config.json`.
-2. It would look like this:
-```js
+2. In Teams V1, it would look like this:
+```json
 [
 	{
 		"filetype": "jpg",
@@ -137,8 +138,22 @@ For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 		"thumb_src": "/<path-to-thumb-image>"
 	}
 ]
-
 ```
+3. In Teams V2, it would look like this:
+```json
+{
+	"videoBackgroundImages": [
+		{
+			"filetype": "png",
+			"id": "Custom_bg01",
+			"name": "Custom bg",
+			"src": "/evergreen-assets/backgroundimages/<path-to-image>",
+			"thumb_src": "/evergreen-assets/backgroundimages/<path-to-thumb-image>"
+		}
+	]
+}
+```
+
 As you can see from the above example, it's a JSON array so you can configure any number of images of your choice.
 
 ### About the entries
@@ -146,6 +161,6 @@ As you can see from the above example, it's a JSON array so you can configure an
 - `id`: Id of the image. Give a unique name without spaces.
 - `name`: Name of your image.
 - `src`: Path to the image to be loaded when selected from the preview. Provide a picture with resolution 1920x1080 (Based on Microsoft CDN) though any resolution would work. This is to avoid unnecessary traffic by loading large size images.
-- `thumb_src`: Path to the image to be shown on the preview screen. Provide a low resolution picture (280x158 based on Microsoft CDN) as it's shown on the preview page. The smaller the image the quicker the preview will be. 
+- `thumb_src`: Path to the image to be shown on the preview screen. Provide a low resolution picture (280x158 based on Microsoft CDN) as it's shown on the preview page. The smaller the image the quicker the preview will be.
 
 Image paths are relative to `customBGServiceBaseUrl`. If your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg`.
