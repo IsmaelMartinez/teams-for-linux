@@ -253,7 +253,7 @@ function onBeforeRequestHandler(details, callback) {
 		callback({ redirectURL: imgUrl });
 	}
 	// Custom background replace for teams v2
-	else if (details.url.startsWith('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/')) {
+	else if (details.url.startsWith('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/' && config.isCustomBackgroundEnabled)) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/', '');
 		const imgUrl = getBGRedirectUrl(reqUrl);
 		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);

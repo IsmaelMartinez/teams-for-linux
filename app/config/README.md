@@ -112,7 +112,7 @@ We added a feature to load custom background images during a video call. This is
 2. 3 new command-line parameters `customBGServiceBaseUrl`, `customBGServiceIgnoreMSDefaults` and `customBGServiceConfigFetchInterval` are introduced. See above for details.
 3. Custom images are always loaded with `<customBGServiceBaseUrl>/<image-path>`. So, you have to make sure the web server is running and `<customBGServiceBaseUrl>` responds to the request.
 4. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
-5. In Teams version 2, this will replace Microsoft's default images.
+5. In Teams version 2, this will replace Microsoft's default images. To use standard Microsoft images, you must activate the flag --isCustomBackgroundEnabled=false
 
 For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 ```xml
