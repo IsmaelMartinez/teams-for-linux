@@ -183,7 +183,7 @@ function argv(configPath, appVersion) {
 				describe: "Electron CLI flags",
 				type: 'array'
 			},
-			XWincomingCallCommand: {
+			incomingCallCommand: {
 				default: null,
 				describe: 'Command to execute on an incoming call.'
 			},
