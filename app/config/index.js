@@ -132,6 +132,12 @@ function argv(configPath, appVersion) {
 				describe: 'Close the app when clicking the close (X) cross',
 				type: 'boolean'
 			},
+			defaultNotificationUrgency: {
+				default: 'normal',
+				describe: 'Default urgency for new notifications (low/normal/critical)',
+				type: 'string',
+				choices: ['low', 'normal', 'critical']
+			},
 			defaultURLHandler: {
 				default: '',
 				describe: 'Default application to be used to open the HTTP URLs',
@@ -172,13 +178,23 @@ function argv(configPath, appVersion) {
 				describe: 'A flag indicates whether to disable window flashing when there is a notification',
 				type: 'boolean'
 			},
-			incomingCallCommand: {
+			electronCLIFlags: {
+				default: [],
+				describe: "Electron CLI flags",
+				type: 'array'
+			},
+			XWincomingCallCommand: {
 				default: null,
 				describe: 'Command to execute on an incoming call.'
 			},
 			incomingCallCommandArgs: {
 				default: [],
 				describe: 'Arguments for the incomming call command.'
+			},
+			isCustomBackgroundEnabled: {
+				default: true,
+				describe: 'A flag indicates whether to enable custom background or not',
+				type: 'boolean'
 			},
 			menubar: {
 				default: 'auto',
@@ -190,6 +206,12 @@ function argv(configPath, appVersion) {
 				default: false,
 				describe: 'Start the application minimized',
 				type: 'boolean'
+			},
+			notificationMethod: {
+				default: 'web',
+				describe: 'Notification method to be used by the application (web/electron)',
+				type: 'string',
+				choices: ['web', 'electron']
 			},
 			ntlmV2enabled: {
 				default: 'true',
@@ -242,23 +264,6 @@ function argv(configPath, appVersion) {
 				default: false,
 				describe: 'Enable debug at start',
 				type: 'boolean'
-			},
-			electronCLIFlags: {
-				default: [],
-				describe: "Electron CLI flags",
-				type: 'array'
-			},
-			notificationMethod: {
-				default: 'web',
-				describe: 'Notification method to be used by the application (web/electron)',
-				type: 'string',
-				choices: ['web', 'electron']
-			},
-			defaultNotificationUrgency: {
-				default: 'normal',
-				describe: 'Default urgency for new notifications (low/normal/critical)',
-				type: 'string',
-				choices: ['low', 'normal', 'critical']
 			}
 		})
 		.parse(process.argv.slice(1));
