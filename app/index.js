@@ -217,7 +217,9 @@ function onAppTerminated(signal) {
 }
 
 function handleAppReady() {
-	downloadCustomBGServiceRemoteConfig();
+	if (config.isCustomBackgroundEnabled) {
+		downloadCustomBGServiceRemoteConfig();
+	}
 	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
 	process.on('SIGTERM', onAppTerminated);
