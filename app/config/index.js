@@ -271,7 +271,7 @@ function argv(configPath, appVersion) {
 		.parse(process.argv.slice(1));
 
 	if (configError) {
-		config['error'] = configError
+		config['error'] = configError;
 	}
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
