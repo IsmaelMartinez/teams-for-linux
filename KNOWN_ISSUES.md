@@ -58,3 +58,24 @@ If the above doesn't work:
 Refer to [#171](https://github.com/IsmaelMartinez/teams-for-linux/issues/171) for more info
 
 If when you reload or close the application you get the blank page again, please repeat the second workaround.
+
+## No Apple Silicon Mac build
+It appears that Apple Silicon can't run unsigned code, and the Apple Developer account that is required for signing
+costs $99/year. Thus, only Intel Mac release is pre-built in Github releases. This issue is tracked in
+[#1225](https://github.com/IsmaelMartinez/teams-for-linux/issues/1225).
+
+The Intel build works on Apple Silicon Macs, but runs slow because it is emulated.
+
+You can **build your own Apple Silicon build from this repo yourself**, signed with your own local developer account keys. This is free, but the keys work only on our Mac.
+
+The steps below expect that you have NodeJS and Yarn installed (both are in Homebrew).
+
+1. Download XCode (from AppStore)
+2. Open it
+3. Menu bar XCode -> Settings -> Accounts
+4. Select your account -> Manage certificates
+5. Click plus on lower left -> Apple development
+6. Close the settings menu and create a new project in XCode. Does not matter which one, just create something using
+   the wizard, doesn't matter what. This is required to get the certificate into your local Keychain as trusted.
+7. Run `yarn install`, `yarn dist:mac:arm64` in this repository. You should see `signing` step in the output with no errors, except for `skipped macOS notarization` warning.
+8. The app is built in the `dist/mac-arm64/` folder, from where you can copy it to Applications.
