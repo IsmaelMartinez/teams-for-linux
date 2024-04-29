@@ -84,7 +84,7 @@ jobs:
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:mac -- --publish always
+        run: yarn dist:mac:x64 -- --publish always
 
   exe:
     runs-on: windows-latest
