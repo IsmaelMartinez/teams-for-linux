@@ -56,7 +56,7 @@ let window = null;
 let appConfig = null;
 
 /**
- * @param {AppConfiguration} configGroup 
+ * @param {AppConfiguration} configGroup
  */
 exports.onAppReady = async function onAppReady(configGroup) {
 	appConfig = configGroup;
@@ -242,12 +242,19 @@ function processArgs(args) {
 }
 
 /**
- * @param {Electron.OnBeforeRequestListenerDetails} details 
- * @param {Electron.CallbackResponse} callback 
+ * @param {Electron.OnBeforeRequestListenerDetails} details
+ * @param {Electron.CallbackResponse} callback
  */
 function onBeforeRequestHandler(details, callback) {
 	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
+		const imgUrl = getBGRedirectUrl(reqUrl);
+		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+		callback({ redirectURL: imgUrl });
+	}
+	// Custom background replace for teams v2
+	else if (details.url.startsWith('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/') && config.isCustomBackgroundEnabled) {
+		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/', '');
 		const imgUrl = getBGRedirectUrl(reqUrl);
 		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
 		callback({ redirectURL: imgUrl });
@@ -272,8 +279,8 @@ function getBGRedirectUrl(rel) {
 }
 
 /**
- * @param {Electron.OnHeadersReceivedListenerDetails} details 
- * @param {Electron.HeadersReceivedResponse} callback 
+ * @param {Electron.OnHeadersReceivedListenerDetails} details
+ * @param {Electron.HeadersReceivedResponse} callback
  */
 function onHeadersReceivedHandler(details, callback) {
 	if (details.responseHeaders['content-security-policy']) {
@@ -302,8 +309,8 @@ function setImgSrcSecurityPolicy(policies) {
 }
 
 /**
- * @param {Electron.OnBeforeSendHeadersListenerDetails} detail 
- * @param {Electron.BeforeSendResponse} callback 
+ * @param {Electron.OnBeforeSendHeadersListenerDetails} detail
+ * @param {Electron.BeforeSendResponse} callback
  */
 function onBeforeSendHeadersHandler(detail, callback) {
 	if (detail.url.startsWith(customBGServiceUrl.href)) {
@@ -315,7 +322,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 /**
- * @param {Electron.HandlerDetails} details 
+ * @param {Electron.HandlerDetails} details
  * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
  */
 function onNewWindow(details) {
@@ -335,7 +342,7 @@ function onNewWindow(details) {
 }
 
 /**
- * @param {string} url 
+ * @param {string} url
  */
 async function writeUrlBlockLog(url) {
 	const curBlockTime = new Date();
@@ -354,7 +361,7 @@ async function writeUrlBlockLog(url) {
 }
 
 /**
- * @param {Error} e 
+ * @param {Error} e
  */
 function onLogStreamError(e) {
 	if (e) {
@@ -404,15 +411,15 @@ function initializeCustomBGServiceURL() {
 
 
 /**
- * @param {Electron.Event} event 
- * @param {Electron.Input} input 
+ * @param {Electron.Event} event
+ * @param {Electron.Input} input
  */
 function onBeforeInput(event, input) {
 	isControlPressed = input.control;
 }
 
 /**
- * @param {Electron.HandlerDetails} details 
+ * @param {Electron.HandlerDetails} details
  * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
  */
 function secureOpenLink(details) {
