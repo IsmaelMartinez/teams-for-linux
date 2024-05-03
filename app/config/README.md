@@ -44,7 +44,7 @@ Here is the list of available arguments and its usage:
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 | incomingCallCommand             | Command to execute on an incoming call.                                                   |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |                       |
-| isCustomBackgroundEnabled	   | A flag indicates whether to enable custom background images or not                       | true               |
+| isCustomBackgroundEnabled	   | A flag indicates whether to enable custom background images or not                       | false              |
 | menubar                         | A value controls the menu bar behaviour                                                   | string                |
 | minimized                       | Start the application minimized                                                          | false               |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | web |
