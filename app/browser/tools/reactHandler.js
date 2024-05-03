@@ -15,7 +15,8 @@ class ReactHandler {
 
     _getTeams2CoreServices() {
         const reactElement = this._getTeams2ReactElement();
-        return reactElement?._reactRootContainer?._internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
+        const internalRoot = reactElement?._reactRootContainer?._internalRoot || reactElement?._reactRootContainer;
+        return internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
     }
 }
 
