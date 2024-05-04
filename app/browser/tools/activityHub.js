@@ -68,7 +68,7 @@ class ActivityHub {
 					// ALTERNATIVE: teams2IdleTracker._idleStateBehaviorSubject.next('Inactive');
 					teams2IdleTracker.transitionToIdle();
 				}
-			} catch(e) {
+			} catch (e) {
 				console.error('Failed to set teams2 Machine State', e);
 			}
 		} else {
@@ -89,11 +89,25 @@ class ActivityHub {
 	 * @param {number} status 
 	 */
 	setUserStatus(status) {
-		instance.whenReady().then((inst) => {
-			inst.injector.get('presenceService').setMyStatus(status, null, true);
-		}).catch(() => {
-			console.error('Failed to set User Status');
-		});
+		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
+		if (teams2IdleTracker) {
+			try {
+				console.log(`setUserStatus teams2 status=${status}`);
+				if (status === 1) {
+					teams2IdleTracker.handleMonitoredWindowEvent();
+				} else {
+					teams2IdleTracker.transitionToIdle();
+				}
+			} catch (e) {
+				console.error('Failed to set teams2 User Status', e);
+			}
+		} else {
+			instance.whenReady().then((inst) => {
+				inst.injector.get('presenceService').setMyStatus(status, null, true);
+			}).catch(() => {
+				console.error('Failed to set User Status');
+			});
+		}
 	}
 
 	refreshAppState(controller, state) {
