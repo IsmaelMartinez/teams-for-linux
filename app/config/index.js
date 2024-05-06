@@ -194,7 +194,7 @@ function argv(configPath, appVersion) {
 				describe: 'Arguments for the incomming call command.'
 			},
 			isCustomBackgroundEnabled: {
-				default: true,
+				default: false,
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
 			},

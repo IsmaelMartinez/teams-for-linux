@@ -14,10 +14,24 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.4.36" date="2024-05-03">
+		<release version="1.4.38" date="2024-05-06">
 			<description>
 				<ul>
 					<li>Show error message if configuration is invalid</li>
+        </ul>
+			</description>
+		</release>
+		<release version="1.4.37" date="2024-05-04">
+			<description>
+				<ul>
+					<li>Fix awayOnSystemIdle flag in Teams V2</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.36" date="2024-05-03">
+			<description>
+				<ul>
+					<li>Fix custom backgrounds in Teams V2</li>
 				</ul>
 			</description>
 		</release>
@@ -1046,9 +1060,9 @@
 			<description>
 				<p>
 					While we wait for Microsoft... Here we go, we are now version 1.0.0 🍾🎉
-					
+
 					This release has been focus on fixing small issues, improving config options (specially for proxy),
-					adding some bots to help automation, adding more functionality to the right click button 
+					adding some bots to help automation, adding more functionality to the right click button
 					and automatically place your downloads into the download folder (opt in feature)
 				</p>
 				<ul>
@@ -1071,13 +1085,13 @@
 				</ul>
 				<p>
 					Thanks to @standagh, @emanuelbatista, @jef79m and everybody that created issues/enhancements, fixed and/or tested them.
-					
+
 					Special thanks to @julian-alarcon for continuously supporting the snap version of this project and to anyone else that is supporting other package types.
-					
+
 					Thanks also to @byteSamurai for introducing hacktoverfest. I manage to get a t-shirt and to get a few people on my team to also contribute.
-					
+
 					Its been a long ride, and looks like Microsoft has heard us out loud, but until they got something working as stable as this, I will continue contributing.
-					
+
 					Release notes partly done by Stamp.
 				</p>
 			</description>
