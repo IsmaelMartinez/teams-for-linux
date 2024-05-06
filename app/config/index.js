@@ -5,15 +5,17 @@ const { LucidLog } = require('lucid-log');
 let logger;
 
 function getConfigFile(configPath) {
-	try {
-		return require(path.join(configPath, 'config.json'));
-	} catch (e) {
-		return null;
-	}
+	return require(path.join(configPath, 'config.json'));
 }
 
 function argv(configPath, appVersion) {
-	let configFile = getConfigFile(configPath);
+	let configFile = null;
+	let configError = null;
+	try {
+		configFile = getConfigFile(configPath);
+	} catch (e) {
+		configError = e.message;
+	}
 	const missingConfig = configFile == null;
 	configFile = configFile || {};
 	let config = yargs
@@ -268,6 +270,9 @@ function argv(configPath, appVersion) {
 		})
 		.parse(process.argv.slice(1));
 
+	if (configError) {
+		config['error'] = configError;
+	}
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
