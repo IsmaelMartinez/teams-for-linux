@@ -14,10 +14,12 @@ class AppConfiguration {
 		_AppConfiguration_configPath.set(this, configPath);
 		_AppConfiguration_startupConfig.set(this, require('../config')(configPath, appVersion));
 		_AppConfiguration_legacyConfigStore.set(this, new Store({
-			name: 'config'
+			name: 'config',
+			clearInvalidConfig: true
 		}));
 		_AppConfiguration_settingsStore.set(this, new Store({
-			name: 'settings'
+			name: 'settings',
+			clearInvalidConfig: true
 		}));
 	}
 
