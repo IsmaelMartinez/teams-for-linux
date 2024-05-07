@@ -1,21 +1,34 @@
 const yargs = require('yargs');
+const fs = require('fs');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
 
 let logger;
 
+function getConfigFilePath(configPath) {
+	return path.join(configPath, 'config.json');
+}
+
+function checkConfigFileExistance(configPath) {
+	return fs.existsSync(getConfigFilePath(configPath));
+}
+
 function getConfigFile(configPath) {
-	return require(path.join(configPath, 'config.json'));
+	return require(getConfigFilePath(configPath));
 }
 
 function argv(configPath, appVersion) {
 	let configFile = null;
 	let configError = null;
-	try {
-		configFile = getConfigFile(configPath);
-	} catch (e) {
-		configError = e.message;
+	
+	if (checkConfigFileExistance(configPath)) {
+		try {
+			configFile = getConfigFile(configPath);
+		} catch (e) {
+			configError = e.message;
+		}
 	}
+
 	const missingConfig = configFile == null;
 	configFile = configFile || {};
 	let config = yargs
@@ -279,7 +292,11 @@ function argv(configPath, appVersion) {
 
 	logger.debug('configPath:', configPath);
 	if (missingConfig) {
-		logger.warn('No config file found, using default values');
+		if (configError) {
+			logger.warn('Error in config file, using default values:\n' + configError);
+		} else {
+			logger.warn('No config file found, using default values');
+		}
 	}
 	logger.debug('configFile:', configFile);
 

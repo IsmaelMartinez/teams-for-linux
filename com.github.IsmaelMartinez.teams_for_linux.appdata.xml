@@ -14,11 +14,18 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.4.39" date="2024-05-07">
+			<description>
+				<ul>
+					<li>Don't show error in case of missing config file.</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.38" date="2024-05-06">
 			<description>
 				<ul>
 					<li>Show error message if configuration is invalid</li>
-        </ul>
+				</ul>
 			</description>
 		</release>
 		<release version="1.4.37" date="2024-05-04">
