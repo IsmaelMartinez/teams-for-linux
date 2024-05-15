@@ -62,9 +62,9 @@ Also available in:
 
 <a href='https://flathub.org/apps/details/com.github.IsmaelMartinez.teams_for_linux'><img width='170' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
-## Starting arguments
+## Configuration and starting arguments
 
-Check in the config [`README.md`](app/config/README.md) in the config folder.
+Please check in the config [`README.md`](app/config/README.md) of the config folder for startup or configuration options, to enable or disable certain features or behaviors.
 
 ## Contributing
 
