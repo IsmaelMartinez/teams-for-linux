@@ -55,6 +55,11 @@ Here is the list of available arguments and its usage:
 | proxyServer                     | Proxy Server with format address:port                                                     | string                |
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | Electron                |
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
+
+| ssoUser           | Login that will be sent for basic_auth SSO login. | string                 |
+
+| ssoPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. | string                 |
+
 | url                             | Microsoft Teams URL                                                                      | string                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |

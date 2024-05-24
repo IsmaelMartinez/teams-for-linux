@@ -73,6 +73,8 @@ exports.onAppReady = async function onAppReady(configGroup) {
 
 	addEventHandlers();
 
+	login.handleLoginDialogTry(window, {'ssoUser': config.ssoUser, 'ssoPasswordCommand': config.ssoPasswordCommand});
+
 	const url = processArgs(process.argv);
 	connMgr.start(url, {
 		window: window,
@@ -386,7 +388,6 @@ function addEventHandlers() {
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
 	window.webContents.session.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, onHeadersReceivedHandler);
 	window.webContents.session.webRequest.onBeforeSendHeaders(getWebRequestFilterFromURL(), onBeforeSendHeadersHandler);
-	login.handleLoginDialogTry(window);
 	window.webContents.on('did-finish-load', onDidFinishLoad);
 	window.webContents.on('did-frame-finish-load', onDidFrameFinishLoad);
 	window.on('closed', onWindowClosed);

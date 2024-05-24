@@ -265,6 +265,16 @@ function argv(configPath, appVersion) {
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
 				type: 'array'
 			},
+			ssoUser: {
+				default: '',
+				describe: 'User to use for SSO auth.',
+				type: 'string'
+			},
+			ssoPasswordCommand: {
+				default: '',
+				describe: 'Command to execute to retrieve password for SSO auth.',
+				type: 'string'
+			},
 			url: {
 				default: 'https://teams.microsoft.com/',
 				describe: 'Microsoft Teams URL',
