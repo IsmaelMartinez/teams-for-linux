@@ -18,6 +18,8 @@
 			<description>
 				<ul>
 					<li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
+					<li>Adding fcitx-frontend-gtk3 to snapbuild stage options flags</li>
+					<li>Adding --rpm-digest sha256 to the electron-builder rpm command</li>
 				</ul>
 			</description>
 		</release>
