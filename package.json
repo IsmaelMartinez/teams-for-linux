@@ -96,7 +96,7 @@
     },
     "rpm": {
       "fpm": [
-        "--rpm-rpmbuild-define=_build_id_links none --rpm-digest sha256"
+        "--rpm-rpmbuild-define=_build_id_links none --rpm-digest=sha256"
       ]
     },
     "snap": {
@@ -118,10 +118,6 @@
         "network-bind",
         "network-manager-observe",
         "system-observe"
-      ],
-      "stagePackages": [
-        "default",
-        "fcitx-frontend-gtk3"
       ],
       "publish": [
         "snapStore"
