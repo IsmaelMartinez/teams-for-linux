@@ -142,7 +142,7 @@ function applyAppConfiguration(config, window) {
 
 function handleTeamsV2OptIn(config) {
 	if (config.optInTeamsV2) {
-		config.url = 'https://teams.microsoft.com/v2/';
+		setConfigUrlTeamsV2(config);
 		window.webContents.executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
 			.then(result => {
 				if ((result == null) || !result) {
@@ -157,6 +157,12 @@ function handleTeamsV2OptIn(config) {
 				console.log('could not read localStorage variable', err);
 			});
 		return;
+	}
+}
+
+function setConfigUrlTeamsV2(config) {
+	if(!config.url.includes('/v2')) {
+		config.url = config.url+'/v2/';
 	}
 }
 
@@ -228,7 +234,7 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	var regHttps = /^https:\/\/teams\.microsoft\.com\/.*(?:meetup-join|channel)/g;
+	var regHttps = /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g;
 	var regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
@@ -330,7 +336,12 @@ function onBeforeSendHeadersHandler(detail, callback) {
  * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
  */
 function onNewWindow(details) {
-	if (details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join')) {
+	if (	
+			details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || 
+			details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join') ||
+			details.url.startsWith('https://teams.live.com/l/meetup-join') ||
+			details.url.startsWith('https://teams.live.com/v2/l/meetup-join') 
+	) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
