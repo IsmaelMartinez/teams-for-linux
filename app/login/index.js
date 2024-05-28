@@ -33,20 +33,18 @@ exports.loginService = function loginService(parentWindow, callback) {
 	win.loadURL(`file://${__dirname}/login.html`);
 };
 
-exports.handleLoginDialogTry = function handleLoginDialogTry(window, {ssoUser, ssoPasswordCommand}) {
+exports.handleLoginDialogTry = function handleLoginDialogTry(window, {ssoBasicAuthUser, ssoBasicAuthPasswordCommand}) {
 	window.webContents.on('login', (event, request, authInfo, callback) => {
 		event.preventDefault();
 		if (isFirstLoginTry) {
 			isFirstLoginTry = false;
-			if (ssoUser && ssoPasswordCommand) {
-
-				console.log(`Retrieve password using command : ${ssoPasswordCommand}`);
-
+			if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
+				console.log(`Retrieve password using command : ${ssoBasicAuthPasswordCommand}`);
 				try {
-					const ssoPassword = execSync(ssoPasswordCommand).toString();
-					callback(ssoUser, ssoPassword);
+					const ssoPassword = execSync(ssoBasicAuthPasswordCommand).toString();
+					callback(ssoBasicAuthUser, ssoPassword);
 				} catch (error) {
-					console.error(`Failed to execute ssoPasswordCommand. Status Code: ${error.status} with '${error.message}'`);
+					console.error(`Failed to execute ssoBasicAuthPasswordCommand. Status Code: ${error.status} with '${error.message}'`);
 				}
 			} else {
 				console.debug("Using dialogue window.");

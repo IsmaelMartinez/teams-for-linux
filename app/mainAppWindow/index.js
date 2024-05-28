@@ -61,19 +61,21 @@ let appConfig = null;
 exports.onAppReady = async function onAppReady(configGroup) {
 	appConfig = configGroup;
 	config = configGroup.startupConfig;
-	iconChooser = new TrayIconChooser(configGroup.startupConfig);
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
 
 	window = await createWindow();
 
-	const m = new Menus(window, configGroup, iconChooser.getFile());
-	m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
-
+	if (config.trayIconEnabled) {
+		iconChooser = new TrayIconChooser(configGroup.startupConfig);
+		const m = new Menus(window, configGroup, iconChooser.getFile());
+		m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
+	}
+	
 	addEventHandlers();
 
-	login.handleLoginDialogTry(window, {'ssoUser': config.ssoUser, 'ssoPasswordCommand': config.ssoPasswordCommand});
+	login.handleLoginDialogTry(window, {'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand});
 
 	const url = processArgs(process.argv);
 	connMgr.start(url, {
@@ -545,7 +547,7 @@ function createNewBrowserWindow(windowState) {
 
 		show: false,
 		autoHideMenuBar: config.menubar == 'auto',
-		icon: iconChooser.getFile(),
+		icon: iconChooser ? iconChooser.getFile() : undefined,
 
 		webPreferences: {
 			partition: config.partition,

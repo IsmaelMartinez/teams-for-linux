@@ -14,6 +14,23 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.5.0" date="2024-05-28">
+			<description>
+				<ul>
+					<li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
+					<li>Adding fcitx-frontend-gtk3 to snapbuild stage options flags</li>
+					<li>Adding --rpm-digest sha256 to the electron-builder rpm command</li>
+					<li>Adding the config option trayIconEnabled that defaults to true</li>	
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.40" date="2024-05-24">
+			<description>
+				<ul>
+					<li>Adding ssoUser and ssoPasswordCommand to allow to bypass needing to add your password.</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.4.39" date="2024-05-07">
 			<description>
 				<ul>

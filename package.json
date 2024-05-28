@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.4.40",
+  "version": "1.5.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -96,7 +96,7 @@
     },
     "rpm": {
       "fpm": [
-        "--rpm-rpmbuild-define=_build_id_links none"
+        "--rpm-rpmbuild-define=_build_id_links none --rpm-digest sha256"
       ]
     },
     "snap": {
@@ -118,6 +118,10 @@
         "network-bind",
         "network-manager-observe",
         "system-observe"
+      ],
+      "stagePackages": [
+        "default",
+        "fcitx-frontend-gtk3"
       ],
       "publish": [
         "snapStore"
