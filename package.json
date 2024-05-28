@@ -96,7 +96,7 @@
     },
     "rpm": {
       "fpm": [
-        "--rpm-rpmbuild-define=_build_id_links none --rpm-digest=sha256"
+        "--rpm-rpmbuild-define=_build_id_links none"
       ]
     },
     "snap": {
