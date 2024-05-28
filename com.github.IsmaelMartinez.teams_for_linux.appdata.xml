@@ -14,7 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.4.40" date="2024-05-07">
+		<release version="1.5.0" date="2024-05-28">
+			<description>
+				<ul>
+					<li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.4.40" date="2024-05-24">
 			<description>
 				<ul>
 					<li>Adding ssoUser and ssoPasswordCommand to allow to bypass needing to add your password.</li>

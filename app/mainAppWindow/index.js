@@ -73,7 +73,7 @@ exports.onAppReady = async function onAppReady(configGroup) {
 
 	addEventHandlers();
 
-	login.handleLoginDialogTry(window, {'ssoUser': config.ssoUser, 'ssoPasswordCommand': config.ssoPasswordCommand});
+	login.handleLoginDialogTry(window, {'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand});
 
 	const url = processArgs(process.argv);
 	connMgr.start(url, {

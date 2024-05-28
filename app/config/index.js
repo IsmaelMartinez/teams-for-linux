@@ -265,14 +265,14 @@ function argv(configPath, appVersion) {
 				describe: 'Array of languages to use with Electron\'s spell checker (experimental)',
 				type: 'array'
 			},
-			ssoUser: {
+			ssoBasicAuthUser: {
 				default: '',
-				describe: 'User to use for SSO auth.',
+				describe: 'User to use for SSO basic auth.',
 				type: 'string'
 			},
-			ssoPasswordCommand: {
+			ssoBasicAuthPasswordCommand: {
 				default: '',
-				describe: 'Command to execute to retrieve password for SSO auth.',
+				describe: 'Command to execute to retrieve password for SSO basic auth.',
 				type: 'string'
 			},
 			url: {
