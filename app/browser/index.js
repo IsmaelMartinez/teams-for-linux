@@ -66,7 +66,10 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/shortcuts').init(config);
 	require('./tools/chromeApi')(config);
 	require('./tools/mutationTitle').init(config);
-	require('./tools/trayIconRenderer').init(config, ipcRenderer);
+	if (config.trayIconEnabled) {
+		console.debug('tray icon is enabled');
+		require('./tools/trayIconRenderer').init(config, ipcRenderer);
+	}
 	require('./tools/settings').init(config, ipcRenderer);
 	require('./tools/customBackgrounds')(config, ipcRenderer);
 	require('./tools/theme').init(config, ipcRenderer);

@@ -57,6 +57,7 @@ Here is the list of available arguments and its usage:
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. | string                 |
 | ssoBasicAuthPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. | string                 |
+| trayIconEnabled				 | Enable tray icon                                                                          | true               |
 | url                             | Microsoft Teams URL                                                                      | string                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |

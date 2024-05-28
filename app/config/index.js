@@ -63,7 +63,7 @@ function argv(configPath, appVersion) {
 				type: 'number'
 			},
 			appLogLevels: {
-				default: 'error,warn',
+				default: 'debug,info,error,warn',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
 			},
@@ -274,6 +274,11 @@ function argv(configPath, appVersion) {
 				default: '',
 				describe: 'Command to execute to retrieve password for SSO basic auth.',
 				type: 'string'
+			},
+			trayIconEnabled: {
+				default: true,
+				describe: 'Enable tray icon',
+				type: 'boolean'
 			},
 			url: {
 				default: 'https://teams.microsoft.com/',
