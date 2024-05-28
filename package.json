@@ -119,6 +119,10 @@
         "network-manager-observe",
         "system-observe"
       ],
+      "stagePackages": [
+        "default",
+        "fcitx-frontend-gtk3"
+      ],
       "publish": [
         "snapStore"
       ]
