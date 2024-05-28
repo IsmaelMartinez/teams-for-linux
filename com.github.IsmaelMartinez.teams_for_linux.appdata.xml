@@ -25,7 +25,6 @@
 			<description>
 				<ul>
 					<li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
-					<li>Adding --rpm-digest sha256 to the electron-builder rpm command</li>
 					<li>Adding the config option trayIconEnabled that defaults to true</li>
 				</ul>
 			</description>
