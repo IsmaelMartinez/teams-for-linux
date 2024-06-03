@@ -16,6 +16,7 @@ const TrayIconChooser = require('../browser/tools/trayIconChooser');
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
 const fs = require('fs');
+const intune = require('../intune');
 
 /**
  * @type {TrayIconChooser}
@@ -64,6 +65,10 @@ exports.onAppReady = async function onAppReady(configGroup) {
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
+
+	if (config.ssoInTuneEnabled) {
+		intune.initSso(logger, config.ssoInTuneAuthUser);
+	}
 
 	window = await createWindow();
 
@@ -323,12 +328,16 @@ function setImgSrcSecurityPolicy(policies) {
  * @param {Electron.BeforeSendResponse} callback
  */
 function onBeforeSendHeadersHandler(detail, callback) {
-	if (detail.url.startsWith(customBGServiceUrl.href)) {
-		detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
+	if (intune.isSsoUrl(detail.url)) {
+		intune.addSsoCookie(logger, detail, callback);
+	} else {
+		if (detail.url.startsWith(customBGServiceUrl.href)) {
+			detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
+		}
+		callback({
+			requestHeaders: detail.requestHeaders
+		});
 	}
-	callback({
-		requestHeaders: detail.requestHeaders
-	});
 }
 
 /**
@@ -409,6 +418,7 @@ function addEventHandlers() {
 
 function getWebRequestFilterFromURL() {
 	const filter = customBGServiceUrl.protocol === 'http:' ? { urls: ['http://*/*'] } : { urls: ['https://*/*'] };
+	intune.setupUrlFilter(filter);
 	return filter;
 }
 
