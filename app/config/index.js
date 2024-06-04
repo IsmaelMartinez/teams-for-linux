@@ -275,6 +275,16 @@ function argv(configPath, appVersion) {
 				describe: 'Command to execute to retrieve password for SSO basic auth.',
 				type: 'string'
 			},
+			ssoInTuneEnabled: {
+				default: false,
+				describe: 'Enable Single-Sign-On using Microsoft InTune.',
+				type: 'boolean'
+			},
+			ssoInTuneAuthUser: {
+				default: '',
+				describe: 'User (e-mail) to use for InTune SSO.',
+				type: 'string'
+			},
 			trayIconEnabled: {
 				default: true,
 				describe: 'Enable tray icon',
