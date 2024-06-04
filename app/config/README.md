@@ -167,4 +167,4 @@ As you can see from the above example, it's a JSON array so you can configure an
 - `src`: Path to the image to be loaded when selected from the preview. Provide a picture with resolution 1920x1080 (Based on Microsoft CDN) though any resolution would work. This is to avoid unnecessary traffic by loading large size images.
 - `thumb_src`: Path to the image to be shown on the preview screen. Provide a low resolution picture (280x158 based on Microsoft CDN) as it's shown on the preview page. The smaller the image the quicker the preview will be.
 
-Image paths are relative to `customBGServiceBaseUrl`. If your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg`.
+Image paths are relative to `customBGServiceBaseUrl`. If your customBGServiceBaseUrl is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
