@@ -24,14 +24,14 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Build
         run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: npm run dist:linux:snap --publish always
+        run: npm run dist:linux:snap -- --publish always
 
   snap-armv7l:
     runs-on: ubuntu-latest
@@ -49,11 +49,11 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Build
         run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: npm run dist:linux:snap:armv7l --publish always
+        run: npm run dist:linux:snap:armv7l -- --publish always
