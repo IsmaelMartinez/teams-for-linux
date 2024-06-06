@@ -68,7 +68,7 @@ The Intel build works on Apple Silicon Macs, but runs slow because it is emulate
 
 You can **build your own Apple Silicon build from this repo yourself**, signed with your own local developer account keys. This is free, but the keys work only on our Mac.
 
-The steps below expect that you have NodeJS and Yarn installed (both are in Homebrew).
+The steps below expect that you have NodeJS and npm installed (both are in Homebrew).
 
 1. Download XCode (from AppStore)
 2. Open it
@@ -77,5 +77,5 @@ The steps below expect that you have NodeJS and Yarn installed (both are in Home
 5. Click plus on lower left -> Apple development
 6. Close the settings menu and create a new project in XCode. Does not matter which one, just create something using
    the wizard, doesn't matter what. This is required to get the certificate into your local Keychain as trusted.
-7. Run `yarn install`, `yarn dist:mac:arm64` in this repository. You should see `signing` step in the output with no errors, except for `skipped macOS notarization` warning.
+7. Run `npm ci`, `npm run dist:mac:arm64` in this repository. You should see `signing` step in the output with no errors, except for `skipped macOS notarization` warning.
 8. The app is built in the `dist/mac-arm64/` folder, from where you can copy it to Applications.

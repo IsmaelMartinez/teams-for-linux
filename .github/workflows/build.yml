@@ -17,17 +17,17 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Build
-        run: yarn --link-duplicates --pure-lockfile
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:x64 -- --publish always
+        run: npm run dist:linux:x64 -- --publish always
 
   linux_arm64:
     runs-on: ubuntu-latest
@@ -36,17 +36,17 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Build
-        run: yarn --link-duplicates --pure-lockfile
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:arm64 -- --publish always
+        run: npm run dist:linux:arm64 -- --publish always
 
   linux_arm:
     runs-on: ubuntu-latest
@@ -55,17 +55,17 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Build
-        run: yarn --link-duplicates --pure-lockfile
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:linux:arm -- --publish always
+        run: npm run dist:linux:arm -- --publish always
 
   dmg:
     runs-on: macos-latest
@@ -74,17 +74,17 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Build
-        run: yarn --link-duplicates --pure-lockfile
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:mac:x64 -- --publish always
+        run: npm run dist:mac:x64 -- --publish always
 
   exe:
     runs-on: windows-latest
@@ -93,14 +93,14 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Build
-        run: yarn --link-duplicates --pure-lockfile
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'develop')
-        run: yarn dist:windows -- --publish always
+        run: npm run dist:windows -- --publish always

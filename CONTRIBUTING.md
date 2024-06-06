@@ -14,33 +14,33 @@ Each subfolder has a README.md file that explains the reason of existence and an
 
 ## Pre-requisites
 
-To run this application from source, you will need yarn installed.
+To run this application from source, you will need npm installed.
 
-Please refer to the [yarn installation page](https://yarnpkg.com/en/docs/install)
+Please refer to the [npm installation page](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
 ## Run from source
 
 To run the application from source:
 
 ```bash
-yarn start
+npm run start
 ```
 
 ## Build for linux
 
-We are using [electron-build](https://www.electron.build/) in conbination with [travis-ci](https://travis-ci.org/) to create our build files.
+We are using [electron-build](https://www.electron.build/) in combination with github actions to create our build files.
 
 If you want to generate the build locally, you can run the following command:
 
 ```bash
-yarn run dist:linux
+npm run dist:linux
 ```
 
 ### Using a node container and podman (or docker)
 If you want to use a node container to create your packages, use this command:
 (docker user should replace podman by docker)
 ```bash
-podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:14 /bin/bash -c "apt update && apt install -y rpm && yarn install && yarn run dist:linux"
+podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:14 /bin/bash -c "apt update && apt install -y rpm && npm ci && npm run dist:linux"
 ```
 
 This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular linux distributions.
@@ -51,7 +51,7 @@ Is possible to specify the snap or AppImage build type using running this:
 
 ```bash
 # Standalone build
-yarn run dist:linux:snap
+npm run dist:linux:snap
 
 # Or, if you have docker installed, you can alternatively build there
 ./dockerBuildSnap.sh
