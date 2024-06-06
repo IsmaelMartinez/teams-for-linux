@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -21,7 +21,7 @@
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint **/*.js",
-    "start": "yarn install && electron ./app",
+    "start": "npm ci && electron ./app",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
@@ -53,8 +53,7 @@
     "@electron/fuses": "^1.7.0",
     "electron": "29.3.0",
     "electron-builder": "24.13.3",
-    "eslint": "9.0.0",
-    "yarn": "1.22.22"
+    "eslint": "9.0.0"
   },
   "build": {
     "appId": "teams-for-linux",
