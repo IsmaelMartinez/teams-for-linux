@@ -24,7 +24,6 @@ const logger = new LucidLog({
 // This must only be executed after loading the config file and logger is initialized.
 addCommandLineSwitchesAfterConfigLoad();
 
-
 const notificationSounds = [{
 	type: 'new-message',
 	file: path.join(config.appPath, 'assets/sounds/new_message.wav')
@@ -37,10 +36,6 @@ const notificationSounds = [{
 let userStatus = -1;
 let idleTimeUserStatus = -1;
 
-// Notification sound player
-/**
- * @type {NodeSoundPlayer}
- */
 let player;
 try {
 	// eslint-disable-next-line no-unused-vars
@@ -374,9 +369,6 @@ function onCustomBGServiceConfigDownloadSuccess(data) {
 	}
 }
 
-/**
- * @param {{filetype: string,id: string, name: string, src: string, thumb_src: string }} cfg 
- */
 function setPath(cfg) {
 	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
 		cfg.src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.src);

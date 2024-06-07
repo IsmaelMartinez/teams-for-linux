@@ -1,144 +1,156 @@
 const { StreamSelector } = require('../streamSelector');
 const { BrowserWindow, ipcMain, session, nativeTheme, powerSaveBlocker } = require('electron');
 const { spawn } = require('child_process');
+const path = require('path');
 const windowStateKeeper = require('electron-window-state');
 
-let incomingCallCommandProcess = null;
-let blockerId = null;
-let isOnCall = false;
+class WindowManager {
 
-export async function createWindow() {
-	// Load the previous state with fallback to defaults
-	const windowState = windowStateKeeper({
-		defaultWidth: 0,
-		defaultHeight: 0,
-	});
-
-	if (config.clearStorage) {
-		const defSession = session.fromPartition(config.partition);
-		await defSession.clearStorageData();
+	constructor(config, iconChooser, logger) {
+		this.config = config;
+		this.iconChooser = iconChooser;
+		this.logger = logger;
+		this.isOnCall = false;
+		this.blockerId = null;
+		this.window = null;
+		this.incomingCallCommandProcess = null;
 	}
 
-	// Create the window
-	const window = createNewBrowserWindow(windowState);
-	require('@electron/remote/main').enable(window.webContents);
-	assignEventHandlers(window);
-
-	windowState.manage(window);
-
-	window.eval = global.eval = function () { // eslint-disable-line no-eval
-		throw new Error('Sorry, this app does not support window.eval().');
-	};
-
-	return window;
-}
-
-function createNewBrowserWindow(windowState) {
-	return new BrowserWindow({
-		title: 'Teams for Linux',
-		x: windowState.x,
-		y: windowState.y,
-
-		width: windowState.width,
-		height: windowState.height,
-		backgroundColor: nativeTheme.shouldUseDarkColors ? '#302a75' : '#fff',
-
-		show: false,
-		autoHideMenuBar: config.menubar == 'auto',
-		icon: iconChooser ? iconChooser.getFile() : undefined,
-
-		webPreferences: {
-			partition: config.partition,
-			preload: path.join(__dirname, '..', 'browser', 'index.js'),
-			plugins: true,
-			contextIsolation: false,
-			sandbox: false,
-			spellcheck: true
-		},
-	});
-}
-
-function assignEventHandlers(newWindow) {
-	ipcMain.on('select-source', assignSelectSourceHandler());
-	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
-	ipcMain.handle('incoming-call-connecting', incomingCallCommandTerminate);
-	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandTerminate);
-	ipcMain.handle('call-connected', handleOnCallConnected);
-	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
-	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
-		newWindow.on('restore', en	return event => {)ableWakeLockOnWindowRestore);
-	}
-}
-
-function assignSelectSourceHandler() {
-	return event => {
-async 		const streamSelector = new StreamSelector(window);
-		streamSelector.show((source) => {
-			event.reply('select-source', source);
+	async createWindow() {
+		// Load the previous state with fallback to defaults
+		const windowState = windowStateKeeper({
+			defaultWidth: 0,
+			defaultHeight: 0,
 		});
-	};
-}
-
-async function handleOnIncomingCallCreated(e, data) {
-llComm	if (config.incomingCallCommand) {
-		incomingCallCommandTerminate();
-		const commandArgs = [...config.incomingCallCommandArgs, data.caller];
-		incomingCallCommandProcess = spawn(config.incomingCallCommand, commandArgs);
+	
+		if (this.config.clearStorage) {
+			const defSession = session.fromPartition(this.config.partition);
+			await defSession.clearStorageData();
+		}
+	
+		// Create the window
+		this.window = this.createNewBrowserWindow(windowState);
+		require('@electron/remote/main').enable(this.window.webContents);
+		this.assignEventHandlers();
+	
+		windowState.manage(this.window);
+	
+		this.window.eval = global.eval = function () { // eslint-disable-line no-eval
+			throw new Error('Sorry, this app does not support window.eval().');
+		};
+	
+		return this.window;
 	}
-}
 
-comingasync function incomingCallCommandTerminate() {
-	if (incomingCallCommandProcess) {
-		incomingCallCommandProcess.kill('SIGTERM');
-		incomingCallCommandProcess = null;
+
+	createNewBrowserWindow(windowState) {
+		return new BrowserWindow({
+			title: 'Teams for Linux',
+			x: windowState.x,
+			y: windowState.y,
+
+			width: windowState.width,
+			height: windowState.height,
+			backgroundColor: nativeTheme.shouldUseDarkColors ? '#302a75' : '#fff',
+
+			show: false,
+			autoHideMenuBar: this.config.menubar == 'auto',
+			icon: this.iconChooser ? this.iconChooser.getFile() : undefined,
+
+			webPreferences: {
+				partition: this.config.partition,
+				preload: path.join(__dirname, '..', 'browser', 'index.js'),
+				plugins: true,
+				contextIsolation: false,
+				sandbox: false,
+				spellcheck: true
+			},
+		});
 	}
-}
- tr
-async function handleOnCallConnected() {
-	isOnCall = true;
-	return config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
-}
 
-function disableScreenLockElectron() {
-	var isDisabled = false;
-	if (blockerId == null) {
-		blockerId = powerSaveBlocker.start('prevent-display-sleep');
-		logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
-		isDisabled = true;
+	assignEventHandlers() {
+		ipcMain.on('select-source', this.assignSelectSourceHandler());
+		ipcMain.handle('incoming-call-created', this.handleOnIncomingCallCreated);
+		ipcMain.handle('incoming-call-connecting', this.incomingCallCommandTerminate);
+		ipcMain.handle('incoming-call-disconnecting', this.incomingCallCommandTerminate);
+		ipcMain.handle('call-connected', this.handleOnCallConnected);
+		ipcMain.handle('call-disconnected', this.handleOnCallDisconnected);
+		if (this.config.screenLockInhibitionMethod === 'WakeLockSentinel') {
+			this.window.on('restore', this.enableWakeLockOnWindowRestore);
+		}
 	}
-	return isDisabled;
-}
-leScreenLockWakeLockSentinel() {c	
-function disableScreenLockWakeLockSentinel() {
-	window.webContents.send('enable-wakelock');
-	logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
-	return true;
-}
-nec
-async function handleOnCallDisconnected() {
-	isOnCall = false;
-	return config.screenLockInhibitionMethod === 'Electron' ? enableScreenLockElectron() : enableScreenLockWakeLockSentinel();
-}
-
-function enableScreenLockElectron() {
-	var isEnabled = false;
-	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
-		logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
-		powerSaveBlocker.stop(blockerId);
-		blockerId = null;
-		isEnabled = true;
+	
+	assignSelectSourceHandler() {
+		return event => {
+			const streamSelector = new StreamSelector(window);
+			streamSelector.show((source) => {
+				event.reply('select-source', source);
+			});
+		};
 	}
-	return isEnabled;
-}
 
-function enableScreenLockWakeLockSentinel() {
-	window.webContents.send('disable-wakelock');
-	logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
-	return true;
-}
-
-function enableWakeLockOnWindowRestore() {
-	if (isOnCall) {
-		window.webContents.send('enable-wakelock');
+	async handleOnIncomingCallCreated(e, data) {
+		if (this.config.incomingCallCommand) {
+			this.incomingCallCommandTerminate();
+			const commandArgs = [...this.config.incomingCallCommandArgs, data.caller];
+			this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+		}
 	}
+
+	async incomingCallCommandTerminate() {
+		if (this.incomingCallCommandProcess) {
+			this.incomingCallCommandProcess.kill('SIGTERM');
+			this.incomingCallCommandProcess = null;
+		}
+	}
+
+	async handleOnCallConnected() {
+		this.isOnCall = true;
+		return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+	}
+
+	disableScreenLockElectron() {
+		if (this.blockerId == null) {
+			this.blockerId = powerSaveBlocker.start('prevent-display-sleep');
+			this.logger.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
+			return true;
+		}
+		return false;
+	}
+
+	disableScreenLockWakeLockSentinel() {
+		this.window.webContents.send('enable-wakelock');
+		this.logger.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
+		return true;
+	}
+
+	async handleOnCallDisconnected() {
+		this.isOnCall = false;
+		return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+	}
+
+	enableScreenLockElectron() {
+		if (this.blockerId != null && powerSaveBlocker.isStarted(this.blockerId)) {
+			this.logger.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
+			powerSaveBlocker.stop(this.blockerId);
+			this.blockerId = null;
+			return true;
+		}
+		return false;
+	}
+
+	enableScreenLockWakeLockSentinel() {
+		this.window.webContents.send('disable-wakelock');
+		this.logger.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
+		return true;
+	}
+
+	enableWakeLockOnWindowRestore() {
+		if (this.isOnCall) {
+			this.window.webContents.send('enable-wakelock');
+		}
+	}
+	
 }
+
+exports = module.exports = WindowManager;

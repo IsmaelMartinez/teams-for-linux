@@ -213,9 +213,6 @@ function restoreSettingsInternal(event, arg) {
 	}
 }
 
-/**
- * @param {Menus} menus 
- */
 function assignContextMenuHandler(menus) {
 	return (event, params) => {
 		const menu = new Menu();
@@ -232,11 +229,6 @@ function assignContextMenuHandler(menus) {
 	};
 }
 
-/**
- * @param {object} params 
- * @param {Electron.Menu} menu 
- * @param {Menus} menus 
- */
 function assignReplaceWordHandler(params, menu, menus) {
 	for (const suggestion of params.dictionarySuggestions) {
 		menu.append(new MenuItem({
@@ -246,11 +238,6 @@ function assignReplaceWordHandler(params, menu, menus) {
 	}
 }
 
-/**
- * @param {object} params 
- * @param {Electron.Menu} menu 
- * @param {Menus} menus 
- */
 function assignAddToDictionaryHandler(params, menu, menus) {
 	if (params.misspelledWord) {
 		menu.append(

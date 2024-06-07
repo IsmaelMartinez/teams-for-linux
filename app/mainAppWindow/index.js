@@ -13,7 +13,7 @@ const TrayIconChooser = require('../browser/tools/trayIconChooser');
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
 const fs = require('fs');
-const { createWindow } = require('./windowManager');
+const WindowManager = require('./windowManager');
 
 let iconChooser;
 let intune;
@@ -42,7 +42,9 @@ exports.onAppReady = async function onAppReady(configGroup) {
 		iconChooser = new TrayIconChooser(configGroup.startupConfig);
 	}
 
-	window = await createWindow();
+	windowManager = new WindowManager(configGroup, iconChooser, logger);
+
+	window = await windowManager.createWindow();
 	
 	if (iconChooser) {	
 		const m = new Menus(window, configGroup, iconChooser.getFile());
