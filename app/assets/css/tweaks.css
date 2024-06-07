@@ -29,3 +29,13 @@ div#ts-bottom-compose-identifier
 {
   right: initial !important;
 }
+
+/* Hide the "waffle menu" and align the logo to match the native client */
+
+button[data-tid="waffle-open-button"] {
+    display: none !important;
+}
+
+svg[data-tid="titlebar-teams-icon"] {
+    margin-left: 25px !important;
+}
