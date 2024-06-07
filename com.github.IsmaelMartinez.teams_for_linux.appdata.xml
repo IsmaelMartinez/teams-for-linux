@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>FIX missing icon in alt-tab</li>
+					<li>Improve tweaks css file, to hide the "waffle" menu and align the logo</li>
 				</ul>
 			</description>
 		</release>
