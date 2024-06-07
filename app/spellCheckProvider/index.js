@@ -1,19 +1,31 @@
 const codes = require('./codes');
+// eslint-disable-next-line no-unused-vars
+const { LucidLog } = require('lucid-log');
 
 let _SpellCheckProvider_supportedList = new WeakMap();
 let _SpellCheckProvider_logger = new WeakMap();
 let _SpellCheckProvider_window = new WeakMap();
 class SpellCheckProvider {
+	/**
+	 * @param {Electron.BrowserWindow} window 
+	 * @param {LucidLog} logger;
+	 */
 	constructor(window, logger) {
 		_SpellCheckProvider_logger.set(this, logger);
 		_SpellCheckProvider_window.set(this, window);
 		init(this, window);
 	}
-	
+
+	/**
+	 * @type {Array<{language:string,code:string}>}
+	 */
 	get supportedList() {
 		return _SpellCheckProvider_supportedList.get(this);
 	}
 
+	/**
+	 * @type {Array<{key:string,list:{language:string,code:string}}>}
+	 */
 	get supportedListByGroup() {
 		var groupedList = [];
 		for (const language of this.supportedList) {
@@ -23,10 +35,16 @@ class SpellCheckProvider {
 		return groupedList;
 	}
 
+	/**
+	 * @type {Electron.BrowserWindow}
+	 */
 	get window() {
 		return _SpellCheckProvider_window.get(this);
 	}
 
+	/**
+	 * @type {LucidLog}
+	 */
 	get logger() {
 		return _SpellCheckProvider_logger.get(this);
 	}
@@ -37,6 +55,10 @@ class SpellCheckProvider {
 		});
 	}
 
+	/**
+	 * @param {Array<string>} codes 
+	 * @returns {Array<string>}
+	 */
 	setLanguages(codes) {
 		const setlanguages = [];
 		for (const c of codes) {
@@ -57,6 +79,11 @@ class SpellCheckProvider {
 	}
 }
 
+
+/**
+ * @param {SpellCheckProvider} intance
+ * @param {Electron.BrowserWindow} window 
+ */
 function init(intance, window) {
 	const listFromElectron = window.webContents.session.availableSpellCheckerLanguages;
 	var list = codes.filter(lf => {
@@ -66,12 +93,22 @@ function init(intance, window) {
 	_SpellCheckProvider_supportedList.set(intance, list);
 }
 
+/**
+ * 
+ * @param {Array<string>} list 
+ * @param {string} text 
+ */
 function listContains(list, text) {
 	return list.some(l => {
 		return l === text;
 	});
 }
 
+/**
+ * @param {Array<{key:string,list:{language:string,code:string}}>} groupedList 
+ * @param {string} key 
+ * @param {{language:string,code:string}} language 
+ */
 function addLanguageToGroup(groupedList, key, language) {
 	const group = groupedList.filter(f => f.key === key)[0];
 	if (group) {
@@ -84,6 +121,9 @@ function addLanguageToGroup(groupedList, key, language) {
 	}
 }
 
+/**
+ * @param {Array<{language:string,code:string}} languages 
+ */
 function sortLanguages(languages) {
 	languages.sort((a, b) => {
 		return stringCompare(a.language.toLocaleLowerCase(), b.language.toLocaleLowerCase());

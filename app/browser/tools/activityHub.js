@@ -1,5 +1,8 @@
 const instance = require('./instance');
 const ReactHandler = require('./reactHandler');
+/**
+ * @type {Array<{handler:(data)=>void,event:string,handle:number}>}
+ */
 const eventHandlers = [];
 
 // Supported events
@@ -18,10 +21,20 @@ class ActivityHub {
 	constructor() {
 	}
 
+	/**
+	 * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+	 * @param {(data)=>void} handler
+	 * @returns {number} handle 
+	 */
 	on(event, handler) {
 		return addEventHandler(event, handler);
 	}
 
+	/**
+	 * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+	 * @param {number} handle
+	 * @returns {number} handle 
+	 */
 	off(event, handle) {
 		return removeEventHandler(event, handle);
 	}
@@ -40,14 +53,19 @@ class ActivityHub {
 		});
 	}
 
+	/**
+	 * @param {number} state 
+	 */
 	setMachineState(state) {
 		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
 		if (teams2IdleTracker) {
 			try {
 				console.log(`setMachineState teams2 state=${state}`);
 				if (state === 1) {
+					// ALTERNATIVE: teams2IdleTracker._idleStateBehaviorSubject.next('Active');
 					teams2IdleTracker.handleMonitoredWindowEvent();
 				} else {
+					// ALTERNATIVE: teams2IdleTracker._idleStateBehaviorSubject.next('Inactive');
 					teams2IdleTracker.transitionToIdle();
 				}
 			} catch (e) {
@@ -66,6 +84,10 @@ class ActivityHub {
 		}
 	}
 
+	/**
+	 * 
+	 * @param {number} status 
+	 */
 	setUserStatus(status) {
 		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
 		if (teams2IdleTracker) {
@@ -138,12 +160,20 @@ function removeEventHandler(event, handle) {
 	return null;
 }
 
+/**
+ * 
+ * @param {'incoming-call-created'|'incoming-call-connecting'|'incoming-call-disconnecting'|'call-connected'|'call-disconnected'|'activities-count-updated'|'meeting-started'|'my-status-changed'} event 
+ * @returns {Array<{handler:(data)=>void,event:string,handle:number}>} handlers
+ */
 function getEventHandlers(event) {
 	return eventHandlers.filter(e => {
 		return e.event === event;
 	});
 }
 
+/**
+ * @param {{controller:object,injector:object}} inst 
+ */
 function assignEventHandlers(inst) {
 	assignActivitiesCountUpdateHandler(inst.controller);
 	assignIncomingCallCreatedHandler(inst.controller);
@@ -161,6 +191,10 @@ function performPlatformTweaks(controller) {
 	controller.callingService.callingAlertsService.isRunningOnWindows = () => isRunningOnWindows;
 }
 
+/**
+ * @param {'*'} data 
+ * @returns {Array<object>}
+ */
 function getMeetingEvents(data) {
 	return data.filter(d => {
 		return d.messagetype === 'Event/Call' && d.content === '<partlist alt =""></partlist>';
@@ -185,10 +219,14 @@ async function refreshCalendarEvents(controller) {
 	return c.$$state.status;
 }
 
+
 //conversationLink
 async function getActiveMeetingEvents(controller, data) {
 	const workerEvents = getMeetingEvents(data);
 	if (workerEvents.length > 0) {
+		/**
+		 * @type {Array<object>}
+		 */
 		const calendarEvents = await getActiveCaledarEvents(controller);
 		return getMeetingNotificationList(workerEvents, calendarEvents);
 	} else {

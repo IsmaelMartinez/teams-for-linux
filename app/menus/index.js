@@ -12,6 +12,9 @@ const connectionManager = require('../connectionManager');
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
 	constructor(window, configGroup, iconPath) {
+		/**
+		 * @type {Electron.BrowserWindow}
+		 */
 		this.window = window;
 		this.iconPath = iconPath;
 		this.configGroup = configGroup;
@@ -22,10 +25,16 @@ class Menus {
 		this.initialize();
 	}
 
+	/**
+	 * @type {(languages:Array<string>)=>void}
+	 */
 	get onSpellCheckerLanguageChanged() {
 		return _Menus_onSpellCheckerLanguageChanged.get(this);
 	}
 
+	/**
+	 * @type {(languages:Array<string>)=>void}
+	 */
 	set onSpellCheckerLanguageChanged(value) {
 		if (typeof value === 'function') {
 			_Menus_onSpellCheckerLanguageChanged.set(this, value);
@@ -270,6 +279,10 @@ function assignAddToDictionaryHandler(params, menu, menus) {
 	addTextEditMenuItems(params, menu, menus);
 }
 
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
 function addTextEditMenuItems(params, menu, menus) {
 	if (params.isEditable) {
 		buildEditContextMenu(menu, menus);
@@ -305,6 +318,10 @@ function buildEditContextMenu(menu, menus) {
 	addSpellCheckMenuItems(menu, menus);
 }
 
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
 function addSpellCheckMenuItems(menu, menus) {
 	menu.append(
 		new MenuItem({
@@ -320,6 +337,9 @@ function addSpellCheckMenuItems(menu, menus) {
 	);
 }
 
+/**
+ * @param {Menus} menus 
+ */
 function createSpellCheckLanguagesMenu(menus) {
 	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
 	const splChkMenu = new Menu();
@@ -341,6 +361,10 @@ function createSpellCheckLanguagesMenu(menus) {
 	return splChkMenu;
 }
 
+/**
+ * @param {Electron.Menu} menu 
+ * @param {Menus} menus 
+ */
 function createSpellCheckLanguagesNoneMenuEntry(menu, menus) {
 	menu.append(
 		new MenuItem({
@@ -355,6 +379,12 @@ function createSpellCheckLanguagesNoneMenuEntry(menu, menus) {
 	);
 }
 
+/**
+ * @param {{language:string,code:string}} language 
+ * @param {Array<string>} activeLanguages 
+ * @param {Menus} menus 
+ * @returns 
+ */
 function createLanguageMenuItem(language, activeLanguages, menus) {
 	return new MenuItem({
 		label: language.language,
@@ -365,6 +395,10 @@ function createLanguageMenuItem(language, activeLanguages, menus) {
 	});
 }
 
+/**
+ * @param {MenuItem} item 
+ * @param {Menus} menus 
+ */
 function chooseLanguage(item, menus) {
 	const activeLanguages = menus.window.webContents.session.getSpellCheckerLanguages();
 	if (item) {
@@ -382,6 +416,10 @@ function chooseLanguage(item, menus) {
 	}
 }
 
+/**
+ * @param {Array<string>} list 
+ * @param {string} item 
+ */
 function removeFromList(list, item) {
 	const itemIndex = list.findIndex(l => l == item);
 	if (itemIndex >= 0) {
@@ -391,6 +429,10 @@ function removeFromList(list, item) {
 	return list;
 }
 
+/**
+ * @param {Array<string>} list 
+ * @param {string} item 
+ */
 function addToList(list, item) {
 	const itemIndex = list.findIndex(l => l == item);
 	if (itemIndex < 0) {

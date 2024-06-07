@@ -1,4 +1,7 @@
 class Instance {
+	/**
+	 * @returns {Promise<{controller:object,injector:object}>}
+	 */
 	async whenReady(tries = 0) {
 		if (tries >= 5) {
 			throw new Error('Failed to get app objects after 5 tries');
@@ -30,3 +33,4 @@ async function sleep(ms) {
 }
 
 module.exports = new Instance();
+

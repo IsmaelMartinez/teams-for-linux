@@ -24,6 +24,7 @@ class MutationObserverTitle {
 		observer.observe(window.document.querySelector('title'),{ childList: true });
 		console.log('MutationObserverTitle logic applied');
 	}
+    
 }
 
 exports = module.exports = new MutationObserverTitle();

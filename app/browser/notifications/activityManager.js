@@ -2,6 +2,10 @@ const activityHub = require('../tools/activityHub');
 const wakeLock = require('../tools/wakeLock');
 
 class ActivityManager {
+	/**
+	 * @param {Electron.IpcRenderer} ipcRenderer 
+	 * @param {./config} config
+	 */
 	constructor(ipcRenderer, config) {
 		this.ipcRenderer = ipcRenderer;
 		this.config = config;

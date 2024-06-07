@@ -57,6 +57,10 @@
 	window.Notification = CustomNotification;
 }());
 
+/**
+ * @param {object} config 
+ * @param {Electron.IpcRenderer} ipcRenderer 
+ */
 function initializeModules(config, ipcRenderer) {
 	require('./tools/zoom').init(config);
 	require('./tools/shortcuts').init(config);
@@ -70,3 +74,4 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/customBackgrounds')(config, ipcRenderer);
 	require('./tools/theme').init(config, ipcRenderer);
 }
+

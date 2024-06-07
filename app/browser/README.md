@@ -1,12 +1,15 @@
 # Browser
 
-The files in here handle the code that talks with the browser page.
+The files in here handle the code that talks with the browser  page.
 
 The [index.js](index.js) is the entry point.
 
-The notifications folder contains the [activityManager.js](notifications/activityManager.js) listens for changes in the chatListService and bellNotificationsService to update the unread count.
+The [zoom.js](tools/zoom.js) inject the keyboard shortcuts for zoom in the browser.
 
-The tools folder contains a lot of files that should be self descriptive.
+The notifications folder contains:
+
+*    [activityManager.js](notifications/activityManager.js) listens for changes in the chatListService and bellNotificationsService to update the unread count.
+*    [trayIconRenderer.js](tools/trayIconRenderer.js) renders a new icon with the number of unread messages.
 
 The desktopShare folder contains the logic to add basic destop sharing capabilities to the app.
 

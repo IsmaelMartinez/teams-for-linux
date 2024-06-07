@@ -1,31 +1,65 @@
 require('@electron/remote/main').initialize();
-const { shell, app, nativeTheme, dialog, webFrameMain, Notification } = require('electron');
+const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain, Notification } = require('electron');
+const isDarkMode = nativeTheme.shouldUseDarkColors;
+const windowStateKeeper = require('electron-window-state');
 const path = require('path');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
+const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
 const fs = require('fs');
-const { createWindow } = require('./windowManager');
 
+/**
+ * @type {TrayIconChooser}
+ */
 let iconChooser;
+
 let intune;
+
+let blockerId = null;
+
+let isOnCall = false;
+
 let isControlPressed = false;
+
+let incomingCallCommandProcess = null;
+
 let lastNotifyTime = null;
+
+/**
+ * @type {URL}
+ */
 let customBGServiceUrl;
+
+/**
+ * @type {LucidLog}
+ */
 let logger;
+
 let aboutBlankRequestCount = 0;
 let config;
+
+/**
+ * @type {BrowserWindow}
+ */
 let window = null;
+
+/**
+ * @type {AppConfiguration}
+ */
 let appConfig = null;
 
+/**
+ * @param {AppConfiguration} configGroup
+ */
 exports.onAppReady = async function onAppReady(configGroup) {
 	appConfig = configGroup;
 	config = configGroup.startupConfig;
@@ -59,7 +93,7 @@ exports.onAppReady = async function onAppReady(configGroup) {
 		config: config
 	});
 
-	applyConfigArguments(config, window);
+	applyAppConfiguration(config, window);
 };
 
 function onSpellCheckerLanguageChanged(languages) {
@@ -87,7 +121,12 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 	}
 };
 
-function applyConfigArguments(config, window) {
+/**
+ * Applies the configuration passed as arguments when executing the app.
+ * @param config Configuration object.
+ * @param {BrowserWindow} window The browser window.
+ */
+function applyAppConfiguration(config, window) {
 	applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
 	if (typeof config.clientCertPath !== 'undefined' && config.clientCertPath !== '') {
@@ -137,6 +176,11 @@ function setConfigUrlTeamsV2(config) {
 	}
 }
 
+/**
+ * Applies Electron's spell checker capabilities if language codes are provided.
+ * @param {Array<string>} languages Array of language codes to use with spell checker.
+ * @param {BrowserWindow} window The browser window.
+ */
 function applySpellCheckerConfiguration(languages, window) {
 	const spellCheckProvider = new SpellCheckProvider(window, logger);
 	if (spellCheckProvider.setLanguages(languages).length == 0 && languages.length > 0) {
@@ -217,6 +261,10 @@ function processArgs(args) {
 	}
 }
 
+/**
+ * @param {Electron.OnBeforeRequestListenerDetails} details
+ * @param {Electron.CallbackResponse} callback
+ */
 function onBeforeRequestHandler(details, callback) {
 	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
@@ -250,6 +298,10 @@ function getBGRedirectUrl(rel) {
 	return httpHelper.joinURLs(customBGServiceUrl.href, rel);
 }
 
+/**
+ * @param {Electron.OnHeadersReceivedListenerDetails} details
+ * @param {Electron.HeadersReceivedResponse} callback
+ */
 function onHeadersReceivedHandler(details, callback) {
 	if (details.responseHeaders['content-security-policy']) {
 		const policies = details.responseHeaders['content-security-policy'][0].split(';');
@@ -276,6 +328,10 @@ function setImgSrcSecurityPolicy(policies) {
 	}
 }
 
+/**
+ * @param {Electron.OnBeforeSendHeadersListenerDetails} detail
+ * @param {Electron.BeforeSendResponse} callback
+ */
 function onBeforeSendHeadersHandler(detail, callback) {
 	if (intune && intune.isSsoUrl(detail.url)) {
 		intune.addSsoCookie(logger, detail, callback);
@@ -289,25 +345,34 @@ function onBeforeSendHeadersHandler(detail, callback) {
 	}
 }
 
+/**
+ * @param {Electron.HandlerDetails} details
+ * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+ */
 function onNewWindow(details) {
 	if (	
-		details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || 
-		details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join') ||
-		details.url.startsWith('https://teams.live.com/l/meetup-join') ||
-		details.url.startsWith('https://teams.live.com/v2/l/meetup-join') 
+			details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || 
+			details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join') ||
+			details.url.startsWith('https://teams.live.com/l/meetup-join') ||
+			details.url.startsWith('https://teams.live.com/v2/l/meetup-join') 
 	) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
+
 		logger.debug('DEBUG - captured about:blank');
+
 		return { action: 'deny' };
 	}
 
 	return secureOpenLink(details);
 }
 
+/**
+ * @param {string} url
+ */
 async function writeUrlBlockLog(url) {
 	const curBlockTime = new Date();
 	const logfile = path.join(appConfig.configPath, 'teams-for-linux-blocked.log');
@@ -324,6 +389,9 @@ async function writeUrlBlockLog(url) {
 	}
 }
 
+/**
+ * @param {Error} e
+ */
 function onLogStreamError(e) {
 	if (e) {
 		logger.error(e.message);
@@ -373,10 +441,19 @@ function initializeCustomBGServiceURL() {
 	}
 }
 
+
+/**
+ * @param {Electron.Event} event
+ * @param {Electron.Input} input
+ */
 function onBeforeInput(event, input) {
 	isControlPressed = input.control;
 }
 
+/**
+ * @param {Electron.HandlerDetails} details
+ * @returns {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+ */
 function secureOpenLink(details) {
 	logger.debug(`Requesting to open '${details.url}'`);
 	const action = getLinkAction();
@@ -385,6 +462,9 @@ function secureOpenLink(details) {
 		openInBrowser(details);
 	}
 
+	/**
+	 * @type {{action: 'deny'} | {action: 'allow', outlivesOpener?: boolean, overrideBrowserWindowOptions?: Electron.BrowserWindowConstructorOptions}}
+	 */
 	const returnValue = action === 1 ? {
 		action: 'allow',
 		overrideBrowserWindowOptions: {
@@ -432,7 +512,7 @@ function getLinkAction() {
 
 async function removePopupWindowMenu() {
 	for (var i = 1; i <= 200; i++) {
-		await new Promise(r => setTimeout(r, 10));
+		await sleep(10);
 		const childWindows = window.getChildWindows();
 		if (childWindows.length) {
 			childWindows[0].removeMenu();
@@ -440,4 +520,144 @@ async function removePopupWindowMenu() {
 		}
 	}
 	return;
+}
+
+async function sleep(ms) {
+	return await new Promise(r => setTimeout(r, ms));
+}
+
+async function createWindow() {
+	// Load the previous state with fallback to defaults
+	const windowState = windowStateKeeper({
+		defaultWidth: 0,
+		defaultHeight: 0,
+	});
+
+	if (config.clearStorage) {
+		const defSession = session.fromPartition(config.partition);
+		await defSession.clearStorageData();
+	}
+
+	// Create the window
+	const window = createNewBrowserWindow(windowState);
+	require('@electron/remote/main').enable(window.webContents);
+	assignEventHandlers(window);
+
+	windowState.manage(window);
+
+	window.eval = global.eval = function () { // eslint-disable-line no-eval
+		throw new Error('Sorry, this app does not support window.eval().');
+	};
+
+	return window;
+}
+
+function assignEventHandlers(newWindow) {
+	ipcMain.on('select-source', assignSelectSourceHandler());
+	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
+	ipcMain.handle('incoming-call-connecting', incomingCallCommandTerminate);
+	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandTerminate);
+	ipcMain.handle('call-connected', handleOnCallConnected);
+	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
+	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
+		newWindow.on('restore', enableWakeLockOnWindowRestore);
+	}
+}
+
+function createNewBrowserWindow(windowState) {
+	return new BrowserWindow({
+		title: 'Teams for Linux',
+		x: windowState.x,
+		y: windowState.y,
+
+		width: windowState.width,
+		height: windowState.height,
+		backgroundColor: isDarkMode ? '#302a75' : '#fff',
+
+		show: false,
+		autoHideMenuBar: config.menubar == 'auto',
+		icon: iconChooser ? iconChooser.getFile() : undefined,
+
+		webPreferences: {
+			partition: config.partition,
+			preload: path.join(__dirname, '..', 'browser', 'index.js'),
+			plugins: true,
+			contextIsolation: false,
+			sandbox: false,
+			spellcheck: true
+		},
+	});
+}
+
+function assignSelectSourceHandler() {
+	return event => {
+		const streamSelector = new StreamSelector(window);
+		streamSelector.show((source) => {
+			event.reply('select-source', source);
+		});
+	};
+}
+
+async function handleOnIncomingCallCreated(e, data) {
+	if (config.incomingCallCommand) {
+		incomingCallCommandTerminate();
+		const commandArgs = [...config.incomingCallCommandArgs, data.caller];
+		incomingCallCommandProcess = spawn(config.incomingCallCommand, commandArgs);
+	}
+}
+
+async function incomingCallCommandTerminate() {
+	if (incomingCallCommandProcess) {
+		incomingCallCommandProcess.kill('SIGTERM');
+		incomingCallCommandProcess = null;
+	}
+}
+
+async function handleOnCallConnected() {
+	isOnCall = true;
+	return config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
+}
+
+function disableScreenLockElectron() {
+	var isDisabled = false;
+	if (blockerId == null) {
+		blockerId = powerSaveBlocker.start('prevent-display-sleep');
+		logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
+		isDisabled = true;
+	}
+	return isDisabled;
+}
+
+function disableScreenLockWakeLockSentinel() {
+	window.webContents.send('enable-wakelock');
+	logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
+	return true;
+}
+
+async function handleOnCallDisconnected() {
+	isOnCall = false;
+	return config.screenLockInhibitionMethod === 'Electron' ? enableScreenLockElectron() : enableScreenLockWakeLockSentinel();
+}
+
+function enableScreenLockElectron() {
+	var isEnabled = false;
+	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
+		logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
+		powerSaveBlocker.stop(blockerId);
+		blockerId = null;
+		isEnabled = true;
+	}
+	return isEnabled;
+}
+
+function enableScreenLockWakeLockSentinel() {
+	window.webContents.send('disable-wakelock');
+	logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
+	return true;
+}
+
+function enableWakeLockOnWindowRestore() {
+	if (isOnCall) {
+		window.webContents.send('enable-wakelock');
+	}
 }
