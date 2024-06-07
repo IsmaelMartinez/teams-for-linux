@@ -6,38 +6,23 @@ let _ConnectionManager_config = new WeakMap();
 let _ConnectionManager_logger = new WeakMap();
 let _ConnectionManager_currentUrl = new WeakMap();
 class ConnectionManager {
-	/**
-	 * @returns {Electron.BrowserWindow}
-	 */
+
 	get window() {
 		return _ConnectionManager_window.get(this);
 	}
 
-	/**
-	 * @returns {*}
-	 */
 	get config() {
 		return _ConnectionManager_config.get(this);
 	}
 
-	/**
-	 * @returns {LucidLog}
-	 */
 	get logger() {
 		return _ConnectionManager_logger.get(this);
 	}
 
-	/**
-	 * @returns {string}
-	 */
 	get currentUrl() {
 		return _ConnectionManager_currentUrl.get(this);
 	}
 
-	/**
-	 * @param {string} url
-	 * @param {{window:Electron.BrowserWindow,config:object}} options
-	 */
 	start(url, options) {
 		_ConnectionManager_window.set(this, options.window);
 		_ConnectionManager_config.set(this, options.config);
@@ -72,11 +57,6 @@ class ConnectionManager {
 		}
 	}
 
-	/**
-	 * @param {number} timeout 
-	 * @param {number} retries 
-	 * @returns 
-	 */
 	async isOnline(timeout, retries) {
 		const onlineCheckMethod = this.config.onlineCheckMethod;
 		var resolved = false;
@@ -121,28 +101,18 @@ class ConnectionManager {
 	}
 }
 
-/**
- * 
- * @param {ConnectionManager} cm 
- */
 function assignOfflineRetryHandler(cm) {
 	return () => {
 		cm.refresh();
 	};
 }
 
-/**
- * @param {ConnectionManager} cm 
- */
 function assignSystemResumeEventHandler(cm) {
 	return () => {
 		cm.refresh();
 	};
 }
 
-/**
- * @param {ConnectionManager} cm 
- */
 function assignOnDidFailLoadEventHandler(cm) {
 	return (event, code, description) => {
 		cm.logger.error(description);

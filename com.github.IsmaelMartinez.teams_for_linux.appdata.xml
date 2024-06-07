@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.7.0" date="2024-06-07">
+			<description>
+				<ul>
+					<li>Increase electron version to 30.1.0</li>
+					<li>General small refactoring work</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.6.1" date="2024-06-07">
 			<description>
 				<ul>

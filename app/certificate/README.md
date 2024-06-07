@@ -1,8 +1,8 @@
 # Certificate
 
-This folder contains the handlers for certicate.
+This folder contains the handlers for certificate.
 
-You can define the valid certificates by prodiving the customCACertsFingerprints config option.
+You can define the valid certificates by providing the customCACertsFingerprints config option.
 
 Further information about config options can be found in the [config README.md file](../config/README.md).
 
