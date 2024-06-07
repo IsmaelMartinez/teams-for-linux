@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.6.1" date="2024-06-07">
+			<description>
+				<ul>
+					<li>FIX missing icon in alt-tab</li>
+					<li>Improve tweaks css file, to hide the "waffle" menu and align the logo</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.6.0" date="2024-06-06">
 			<description>
 				<ul>

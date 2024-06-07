@@ -72,10 +72,13 @@ exports.onAppReady = async function onAppReady(configGroup) {
 		intune.initSso(logger, config.ssoInTuneAuthUser);
 	}
 
-	window = await createWindow();
-
 	if (config.trayIconEnabled) {
 		iconChooser = new TrayIconChooser(configGroup.startupConfig);
+	}
+
+	window = await createWindow();
+	
+	if (iconChooser) {	
 		const m = new Menus(window, configGroup, iconChooser.getFile());
 		m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 	}
