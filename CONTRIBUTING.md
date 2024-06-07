@@ -1,16 +1,16 @@
 # Contributing
 
-First of all, thanks for thinking about contributing. Hopefully the following guidelines will help you contributing. If you got any questions, do add a issue with your questions and we will try to help.
+First of all, thank you for considering contributing to this project. We appreciate your interest and would like to provide some guidelines to help you get started. If you have any questions, please feel free to open a discussion and we will be happy to assist you.
 
 ## Development
 
-This is a fairly small project. IMO, the ideal size for getting started with electron.
+This is a fairly small project, making it ideal for getting started with Electron.
 
-Just fork the repo and dive in. The app/index.js is the starting of all the application.
+To contribute, fork the repository and make your changes. The starting point of the application is `app/index.js`.
 
-Once changes are made, just do a pull request in a branch of develop.
+After making your changes, submit a pull request to the `develop` branch.
 
-Each subfolder has a README.md file that explains the reason of existence and any extra required information.
+Each subfolder contains a `README.md` file that provides additional information and explains the purpose of the folder.
 
 ## Pre-requisites
 
@@ -26,9 +26,9 @@ To run the application from source:
 npm run start
 ```
 
-## Build for linux
+## Build for Linux
 
-We are using [electron-build](https://www.electron.build/) in combination with github actions to create our build files.
+We are using [electron-build](https://www.electron.build/) in combination with GitHub Actions to create our build files.
 
 If you want to generate the build locally, you can run the following command:
 
@@ -36,25 +36,26 @@ If you want to generate the build locally, you can run the following command:
 npm run dist:linux
 ```
 
+## Building for other systems
+
+The package is also build for other systems. Check the `package.json` file for the available build commands.
+
 ### Using a node container and podman (or docker)
+
 If you want to use a node container to create your packages, use this command:
 (docker user should replace podman by docker)
 ```bash
 podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:14 /bin/bash -c "apt update && apt install -y rpm && npm ci && npm run dist:linux"
 ```
 
-This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular linux distributions.
+This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder. This files can be run in most popular Linux distributions.
 
 ### Snap build
 
-Is possible to specify the snap or AppImage build type using running this:
+Is possible to specify the snap build type using running this:
 
 ```bash
-# Standalone build
 npm run dist:linux:snap
-
-# Or, if you have docker installed, you can alternatively build there
-./dockerBuildSnap.sh
 ```
 
 This will build the snap into the `dist/` directory.
@@ -74,8 +75,18 @@ sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
 sudo snap install teams-for-linux
 ```
 
-## Version number
+## Release process
 
-We are following SemVer at the moment. The lower number in develop will be increased after a release.
+The release is mostly automated using GitHub Actions. The release is triggered by merging to develop.
 
-Decide the release number before merging to develop following SemVer.
+### Versioning
+
+The version increase follows the next rules:
+
+* By default increase the lower number of the version in the `package.json` file. (Example: 1.0.0 -> 1.0.1)
+* For any release that can break changes, increase the middle number. Please increase this number if you are increasing a major version of electron. (Example: 1.0.0 -> 1.1.0)
+* The higher number is reserved at the moment
+
+### appdata.xml
+
+For each release, create a new section in the [com.github.IsmaelMartinez.teams_for_linux.appdata.xml](com.github.IsmaelMartinez.teams_for_linux.appdata.xml) file. This will automatically update the appstream data in the flathub repository.
