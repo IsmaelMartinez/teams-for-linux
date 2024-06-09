@@ -4,10 +4,6 @@ const ReactHandler = require('./reactHandler');
 let _Settings_config = new WeakMap();
 let _Settings_ipcRenderer = new WeakMap();
 class Settings {
-	/**
-	 * @param {object} config 
-	 * @param {Electron.IpcRenderer} ipcRenderer 
-	 */
 	init(config, ipcRenderer) {
 		_Settings_config.set(this, config);
 		_Settings_ipcRenderer.set(this, ipcRenderer);
@@ -15,24 +11,15 @@ class Settings {
 		this.ipcRenderer.on('set-teams-settings', restore);
 	}
 
-	/**
-	 * @type {object}
-	 */
 	get config() {
 		return _Settings_config.get(this);
 	}
 
-	/**
-	 * @type {Electron.IpcRenderer}
-	 */
 	get ipcRenderer() {
 		return _Settings_ipcRenderer.get(this);
 	}
 }
 
-/**
- * @param {Electron.IpcRendererEvent} event 
- */
 async function retrieve(event) {
 	const clientPreferences = ReactHandler.getTeams2ClientPreferences();
 
@@ -65,10 +52,6 @@ function getDeviceLabelFromId(controller, id, kind) {
 	return item ? item.label : '';
 }
 
-/**
- * @param {Electron.IpcRendererEvent} event 
- * @param {...any} args 
- */
 async function restore(event, ...args) {
 	const clientPreferences = ReactHandler.getTeams2ClientPreferences();
 

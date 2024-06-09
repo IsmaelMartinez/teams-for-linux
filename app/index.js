@@ -24,7 +24,6 @@ const logger = new LucidLog({
 // This must only be executed after loading the config file and logger is initialized.
 addCommandLineSwitchesAfterConfigLoad();
 
-
 const notificationSounds = [{
 	type: 'new-message',
 	file: path.join(config.appPath, 'assets/sounds/new_message.wav')
@@ -37,17 +36,12 @@ const notificationSounds = [{
 let userStatus = -1;
 let idleTimeUserStatus = -1;
 
-// Notification sound player
-/**
- * @type {NodeSoundPlayer}
- */
 let player;
 try {
-	// eslint-disable-next-line no-unused-vars
 	const { NodeSound } = require('node-sound');
 	player = NodeSound.getDefaultPlayer();
-} catch (e) {
-	logger.info('No audio players found. Audio notifications might not work.');
+} catch (err) {
+	logger.info(`No audio players found. Audio notifications might not work. ${err}`);
 }
 
 const certificateModule = require('./certificate');
@@ -177,8 +171,7 @@ async function showNotification(event, options) {
 	notification.show();
 }
 
-// eslint-disable-next-line no-unused-vars
-async function playNotificationSound(event, options) {
+async function playNotificationSound(_event, options) {
 	logger.debug(`Notificaion => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`);
 	// Player failed to load or notification sound disabled in config
 	if (!player || config.disableNotificationSound) {
@@ -325,7 +318,10 @@ function handleCertificateError() {
 
 async function requestMediaAccess() {
 	['camera', 'microphone', 'screen'].map(async (permission) => {
-		const status = await systemPreferences.askForMediaAccess(permission);
+		const status = await 
+			systemPreferences.askForMediaAccess(permission)
+				.catch(err => { 
+					console.error(`Error while requesting access for "${permission}": ${err}`); });
 		logger.debug(`mac permission ${permission} asked current status ${status}`);
 	});
 }
@@ -346,6 +342,7 @@ async function downloadCustomBGServiceRemoteConfig() {
 		customBGUrl = new URL('', config.customBGServiceBaseUrl);
 	}
 	catch (err) {
+		console.warning(`Failed to load custom background service configuration. ${err}. Setting Background service URL to http://localhost `);
 		customBGUrl = new URL('', 'http://localhost');
 	}
 
@@ -374,9 +371,6 @@ function onCustomBGServiceConfigDownloadSuccess(data) {
 	}
 }
 
-/**
- * @param {{filetype: string,id: string, name: string, src: string, thumb_src: string }} cfg 
- */
 function setPath(cfg) {
 	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
 		cfg.src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
