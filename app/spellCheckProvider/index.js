@@ -1,5 +1,8 @@
 const codes = require('./codes');
 
+// eslint-disable-next-line no-unused-vars
+const { LucidLog } = require('lucid-log');
+
 let _SpellCheckProvider_supportedList = new WeakMap();
 let _SpellCheckProvider_logger = new WeakMap();
 let _SpellCheckProvider_window = new WeakMap();
