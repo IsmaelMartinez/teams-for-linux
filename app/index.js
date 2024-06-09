@@ -38,11 +38,10 @@ let idleTimeUserStatus = -1;
 
 let player;
 try {
-	// eslint-disable-next-line no-unused-vars
 	const { NodeSound } = require('node-sound');
 	player = NodeSound.getDefaultPlayer();
-} catch (e) {
-	logger.info('No audio players found. Audio notifications might not work.');
+} catch (err) {
+	logger.info(`No audio players found. Audio notifications might not work. ${err}`);
 }
 
 const certificateModule = require('./certificate');
@@ -172,8 +171,7 @@ async function showNotification(event, options) {
 	notification.show();
 }
 
-// eslint-disable-next-line no-unused-vars
-async function playNotificationSound(event, options) {
+async function playNotificationSound(_event, options) {
 	logger.debug(`Notificaion => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`);
 	// Player failed to load or notification sound disabled in config
 	if (!player || config.disableNotificationSound) {
@@ -320,7 +318,10 @@ function handleCertificateError() {
 
 async function requestMediaAccess() {
 	['camera', 'microphone', 'screen'].map(async (permission) => {
-		const status = await systemPreferences.askForMediaAccess(permission);
+		const status = await 
+			systemPreferences.askForMediaAccess(permission)
+				.catch(err => { 
+					console.error(`Error while requesting access for "${permission}": ${err}`); });
 		logger.debug(`mac permission ${permission} asked current status ${status}`);
 	});
 }
@@ -341,6 +342,7 @@ async function downloadCustomBGServiceRemoteConfig() {
 		customBGUrl = new URL('', config.customBGServiceBaseUrl);
 	}
 	catch (err) {
+		console.warning(`Failed to load custom background service configuration. ${err}. Setting Background service URL to http://localhost `);
 		customBGUrl = new URL('', 'http://localhost');
 	}
 

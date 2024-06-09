@@ -1,28 +1,23 @@
 require('@electron/remote/main').initialize();
-const { shell, BrowserWindow, ipcMain, app, session, nativeTheme, powerSaveBlocker, dialog, webFrameMain, Notification } = require('electron');
-const isDarkMode = nativeTheme.shouldUseDarkColors;
-const windowStateKeeper = require('electron-window-state');
+const { shell, app, nativeTheme, dialog, webFrameMain, Notification } = require('electron');
 const path = require('path');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
-const { StreamSelector } = require('../streamSelector');
 const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
-const { execFile, spawn } = require('child_process');
+const { execFile } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
 const { AppConfiguration } = require('../appConfiguration');
 const connMgr = require('../connectionManager');
 const fs = require('fs');
+const BrowserWindowManager = require('../mainAppWindow/browserWindowManager');
 
 let iconChooser;
 let intune;
-let blockerId = null;
-let isOnCall = false;
 let isControlPressed = false;
-let incomingCallCommandProcess = null;
 let lastNotifyTime = null;
 let customBGServiceUrl;
 let logger;
@@ -47,7 +42,13 @@ exports.onAppReady = async function onAppReady(configGroup) {
 		iconChooser = new TrayIconChooser(configGroup.startupConfig);
 	}
 
-	window = await createWindow();
+	const browserWindowManager = new BrowserWindowManager({
+		config: config,
+		logger: logger,
+		iconChooser: iconChooser
+	});
+
+	window = await browserWindowManager.createWindow();
 	
 	if (iconChooser) {	
 		const m = new Menus(window, configGroup, iconChooser.getFile());
@@ -449,140 +450,4 @@ async function removePopupWindowMenu() {
 
 async function sleep(ms) {
 	return await new Promise(r => setTimeout(r, ms));
-}
-
-async function createWindow() {
-	// Load the previous state with fallback to defaults
-	const windowState = windowStateKeeper({
-		defaultWidth: 0,
-		defaultHeight: 0,
-	});
-
-	if (config.clearStorage) {
-		const defSession = session.fromPartition(config.partition);
-		await defSession.clearStorageData();
-	}
-
-	// Create the window
-	const window = createNewBrowserWindow(windowState);
-	require('@electron/remote/main').enable(window.webContents);
-	assignEventHandlers(window);
-
-	windowState.manage(window);
-
-	window.eval = global.eval = function () { // eslint-disable-line no-eval
-		throw new Error('Sorry, this app does not support window.eval().');
-	};
-
-	return window;
-}
-
-function assignEventHandlers(newWindow) {
-	ipcMain.on('select-source', assignSelectSourceHandler());
-	ipcMain.handle('incoming-call-created', handleOnIncomingCallCreated);
-	ipcMain.handle('incoming-call-connecting', incomingCallCommandTerminate);
-	ipcMain.handle('incoming-call-disconnecting', incomingCallCommandTerminate);
-	ipcMain.handle('call-connected', handleOnCallConnected);
-	ipcMain.handle('call-disconnected', handleOnCallDisconnected);
-	if (config.screenLockInhibitionMethod === 'WakeLockSentinel') {
-		newWindow.on('restore', enableWakeLockOnWindowRestore);
-	}
-}
-
-function createNewBrowserWindow(windowState) {
-	return new BrowserWindow({
-		title: 'Teams for Linux',
-		x: windowState.x,
-		y: windowState.y,
-
-		width: windowState.width,
-		height: windowState.height,
-		backgroundColor: isDarkMode ? '#302a75' : '#fff',
-
-		show: false,
-		autoHideMenuBar: config.menubar == 'auto',
-		icon: iconChooser ? iconChooser.getFile() : undefined,
-
-		webPreferences: {
-			partition: config.partition,
-			preload: path.join(__dirname, '..', 'browser', 'index.js'),
-			plugins: true,
-			contextIsolation: false,
-			sandbox: false,
-			spellcheck: true
-		},
-	});
-}
-
-function assignSelectSourceHandler() {
-	return event => {
-		const streamSelector = new StreamSelector(window);
-		streamSelector.show((source) => {
-			event.reply('select-source', source);
-		});
-	};
-}
-
-async function handleOnIncomingCallCreated(e, data) {
-	if (config.incomingCallCommand) {
-		incomingCallCommandTerminate();
-		const commandArgs = [...config.incomingCallCommandArgs, data.caller];
-		incomingCallCommandProcess = spawn(config.incomingCallCommand, commandArgs);
-	}
-}
-
-async function incomingCallCommandTerminate() {
-	if (incomingCallCommandProcess) {
-		incomingCallCommandProcess.kill('SIGTERM');
-		incomingCallCommandProcess = null;
-	}
-}
-
-async function handleOnCallConnected() {
-	isOnCall = true;
-	return config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
-}
-
-function disableScreenLockElectron() {
-	var isDisabled = false;
-	if (blockerId == null) {
-		blockerId = powerSaveBlocker.start('prevent-display-sleep');
-		logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
-		isDisabled = true;
-	}
-	return isDisabled;
-}
-
-function disableScreenLockWakeLockSentinel() {
-	window.webContents.send('enable-wakelock');
-	logger.debug(`Power save is disabled using ${config.screenLockInhibitionMethod} API.`);
-	return true;
-}
-
-async function handleOnCallDisconnected() {
-	isOnCall = false;
-	return config.screenLockInhibitionMethod === 'Electron' ? enableScreenLockElectron() : enableScreenLockWakeLockSentinel();
-}
-
-function enableScreenLockElectron() {
-	var isEnabled = false;
-	if (blockerId != null && powerSaveBlocker.isStarted(blockerId)) {
-		logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
-		powerSaveBlocker.stop(blockerId);
-		blockerId = null;
-		isEnabled = true;
-	}
-	return isEnabled;
-}
-
-function enableScreenLockWakeLockSentinel() {
-	window.webContents.send('disable-wakelock');
-	logger.debug(`Power save is restored using ${config.screenLockInhibitionMethod} API`);
-	return true;
-}
-
-function enableWakeLockOnWindowRestore() {
-	if (isOnCall) {
-		window.webContents.send('enable-wakelock');
-	}
 }

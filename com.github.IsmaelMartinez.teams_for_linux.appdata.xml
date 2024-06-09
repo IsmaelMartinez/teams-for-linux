@@ -17,7 +17,6 @@
 		<release version="1.7.0" date="2024-06-07">
 			<description>
 				<ul>
-					<li>Increase electron version to 30.1.0</li>
 					<li>General small refactoring work</li>
 				</ul>
 			</description>
