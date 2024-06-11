@@ -12,55 +12,56 @@ Here is the list of available arguments and its usage:
 |---------------------------------|--------------------------------------------------------------------------------------------|-----------------------|
 | appActiveCheckInterval          | A numeric value in seconds as poll interval to check if the system is active from being idle | 2                     |
 | appIcon                         | Teams app icon to show in the tray                                                       |                       |
-| appIconType                     | Type of tray icon to be used default/light/dark                                           | default               |
+| appIconType                     | Type of tray icon to be used default/light/dark                                           | *default*, light, dark              |
 | appIdleTimeout                  | A numeric value in seconds as duration before app considers the system as idle             | 300                   |
 | appIdleTimeoutCheckInterval     | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached      | 10                    |
 | appLogLevels                    | Comma separated list of log levels (error,warn,info,debug)                                | error,warn            |
 | appTitle                        | A text to be suffixed with page title                                                    | Microsoft Teams       |
-| authServerWhitelist             | Set auth-server-whitelist value                                                           | string                |
-| awayOnSystemIdle                | Sets the user status as away when system goes idle                                        | false               |
-| chromeUserAgent                 | Google Chrome User Agent                                                                 | string                |
-| customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | string                |
-| customBGServiceIgnoreMSDefaults | A flag indicates whether to ignore Microsoft provided images or not                       | false               |
-| customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | number                |
+| authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
+| awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
+| chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
+| customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
+| customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
+| customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
 | customCACertsFingerprints       | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | []             |
-| customCSSName                   | custom CSS name for the packaged available css files                                      | string                |
-| customCSSLocation               | custom CSS styles file location                                                           | string                |
-| followSystemTheme               | Follow system theme                                                                      | false               |
-| customUserDir                   | Custom User Directory so that you can have multiple profiles                              | string                |
-| clearStorage                    | Whether to clear the storage before creating the window or not                            | false               |
+| customCSSName                   | custom CSS name for the packaged available css files                                      |                  |
+| customCSSLocation               | custom CSS styles file location                                                           |                 |
+| followSystemTheme               | Boolean to determine if to follow system theme                                                                      | false               |
+| customUserDir                   | Custom User Directory so that you can have multiple profiles                              | null                |
+| clearStorage                    | Boolean to clear the storage before creating the window or not                            | false               |
 | clientCertPath                  | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)   | string                |
 | clientCertPassword              | Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format) | string          |
 | closeAppOnCross                 | Close the app when clicking the close (X) cross                                           | false               |
 | defaultNotificationUrgency | Default urgency for new notifications (`low`/`normal`/`critical`). Only applicable when `notificationMethod` is `electron` | normal |
-| defaultURLHandler               | Default application to be used to open the HTTP URLs                                      | string                |
-| disableAutogain                 | A flag indicates whether to disable mic auto gain or not                                  | false               |
-| disableGpu                      | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank) | false               |
-| disableMeetingNotifications     | Whether to disable meeting notifications or not                                           | false               |
-| disableNotifications            | A flag to disable all notifications                                                      | false               |
+| defaultURLHandler               | Default application to be used to open the HTTP URLs (string)                                    |                 |
+| disableAutogain                 | Disable mic auto gain or not                                  | false               |
+| disableGpu                      | Disable GPU and hardware acceleration (can be useful if the window remains blank) | false               |
+| disableMeetingNotifications     | Disable meeting notifications                                           | false               |
+| disableNotifications            | Disable all notifications                                                      | false               |
 | disableNotificationSound        | Disable chat/meeting start notification sound                                            | false               |
 | disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false         |
-| disableNotificationWindowFlash  | A flag indicates whether to disable window flashing when there is a notification          | false               |
+| disableNotificationWindowFlash  | Disable window flashing when there is a notification          | false               |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
-| incomingCallCommand             | Command to execute on an incoming call.                                                   |                       |
-| incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |                       |
-| isCustomBackgroundEnabled	   | A flag indicates whether to enable custom background images or not                       | false              |
-| menubar                         | A value controls the menu bar behaviour                                                   | string                |
-| minimized                       | Start the application minimized                                                          | false               |
-| notificationMethod | Notification method to be used by the application (`web`/`electron`) | web |
-| ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | string                |
-| onlineCheckMethod               | Type of network test for checking online status.                                          | string                |
-| optInTeamsV2                    | Opt in to use Teams V2                                                                   | false               |
-| partition                       | BrowserWindow webpreferences partition                                                    | string                |
-| proxyServer                     | Proxy Server with format address:port                                                     | string                |
-| screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | Electron                |
+| incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
+| incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
+| isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
+| meetupJoinRegEx |  Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g |
+| menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
+| minimized                       | Boolean to start the application minimized                                                          | false               |
+| notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
+| ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
+| onlineCheckMethod               | Type of network test for checking online status.                                          | *https*, dns, native, none                |
+| optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
+| partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
+| proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
+| screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | *Electron*, WakeLockSentinel                |
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
-| ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. | string                 |
-| ssoBasicAuthPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. | string                 |
+| ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. (string) |                  |
+| ssoBasicAuthPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. |                  |
 | ssoIntuneEnabled                | Enable InTune Single-Sign-On                                                             | false
-| ssoIntuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           | string                 |
+| ssoIntuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           |                  |
 | trayIconEnabled				 | Enable tray icon                                                                          | true               |
-| url                             | Microsoft Teams URL                                                                      | string                |
+| url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
 | webDebug                        | Enable web debugging                                                                     | false               |
