@@ -11,7 +11,7 @@ From https://userstyles.org/styles/164545/compact-microsoft-teams-for-light-them
 
 /* First section is basic optimizations which should not break anything */
 
-/*messages use all available space instead of a narrow center column  (group-chat)  */
+/* messages use all available space instead of a narrow center column  (group-chat)  */
   .ts-message-list-container
   {
     max-width: 100% !important;
@@ -33,16 +33,13 @@ From https://userstyles.org/styles/164545/compact-microsoft-teams-for-light-them
 .ts-add-message.is-not-chat .ts-new-message
 {
         max-width: 100% !important;
-
 }
-
 
 /* Increase line width of short messages (useful to avoid the "hover" menu hiding everything */
 .ts-message-thread-body .message-body-container {
     /* "100%" does not work in this context so I gave it an arbitrary medium size instead */
     min-width: 50rem !important;
 }
-
 
 virtual-repeat > .list-wrap > .item-wrap {
     max-width: 100% !important;
@@ -66,7 +63,6 @@ message-list.chat-style .self .media-left ~ .ts-message-thread-body {
 }
 
 /* Remove the remaining left-padding to use the available width */
-
 .ts-message-list-container .ts-message-list-item {
     padding-left: 0.7em !important;
 }
@@ -82,21 +78,14 @@ div#ts-bottom-compose-identifier {
     max-width: 100% !important;
 }
 
-
 .ts-new-message-footer.new-message-common.rich-style-enabled,
 .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
    margin: 0 5.5rem !important;
 }
 
-
-
-
-
 /* ====================== */
 
 /* Next section is advanced customization, which may break some things. */
-
-
 
 /* We will move some elements outside of their parent div, so allow overflow */
 .ts-message-thread-body,
@@ -128,12 +117,10 @@ thread .ts-message .merge-bubble .message-actions-container,
     top: 0 !important;
 }
 
-
 /* Hide the message placeholders which stay visible with the wrong
    place/size after our customization.
    Don't know what they're for exactly anyway.
 */
-
 .vr-item-placeholders {
     display:none !important;
 }
@@ -144,6 +131,7 @@ thread .ts-message .merge-bubble .message-actions-container,
 .message-list-common:not(.chat-style) .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
     margin: 0 !important;
 }
+
 /**** compact.css ****/
 
 /*   Compact the height of lines by hiding the names/timestamps 
@@ -151,8 +139,6 @@ thread .ts-message .merge-bubble .message-actions-container,
      it breaks things in threads were alignment/colors are different
      and visual result is not very clean. )
 */
-
-
 
 /* Name of the poster, timestamp: hidden by default */
 .ts-message-thread-body  .message-body-top-row {
@@ -169,10 +155,9 @@ thread .ts-message .merge-bubble .message-actions-container,
     left: 0 !important;  /* Needed for threaded replies which would overflow on the right with the 100% width */
     width:100% !important;
     display:flex !important;
+
     /* default is transparent; need to pick from the active theme */
 }
-
-
 
 /* the avatar with its padding makes taller the 1st message of each user */
 .thread-body > .media-left {
@@ -189,7 +174,6 @@ thread .ts-message .merge-bubble .message-actions-container,
 
 /*** Name of the poster, timestamp: shown (above) on hover ***/
 
-
 /** Teams thread **/
 
 /* 1st thread message  */
@@ -203,7 +187,6 @@ thread .ts-message .merge-bubble .message-actions-container,
 .message-list-common:not(.chat-style) .conversation-reply .ts-message-thread-body:hover  .message-body-top-row .timestamp-column {
     background: rgb(244, 243, 242) !important;
 }
-
 
 /** Chat **/
 

@@ -18,7 +18,8 @@
 			<description>
 				<ul>
 					<li>Adding a meetupJoinRegEx config option to handle meetup-join/channel regular expressions</li>
-					<li>Aligning 
+					<li>Aligning setWindowOpenHandler and processArgs to use the meetupJoinRegEx config option</li>
+					<li>Small linting fixes for css files</li>
 				</ul>
 			</description>
 		</release>
