@@ -27,7 +27,6 @@ async function retrieve(event) {
 		console.warn('Failed to retrieve Teams settings from react');
 		const inst = await instance.whenReady().catch(() => {
 			console.warn('Failed to retrieve Teams settings from angular');
-			return;
 		});
 		const settings = {
 			theme: inst.controller.layoutService.getTheme(),
@@ -59,7 +58,6 @@ async function restore(event, ...args) {
 		console.warn('Failed to retrieve Teams settings from react');
 		const inst = await instance.whenReady().catch(() => {
 			console.warn('Failed to retrieve Teams settings from angular');
-			return;
 		});
 
 		inst.controller.layoutService.setTheme(args[0].theme);

@@ -29,16 +29,16 @@ class ConnectionManager {
 		_ConnectionManager_logger.set(this, new LucidLog({
 			levels: options.config.appLogLevels.split(',')
 		}));
-		_ConnectionManager_currentUrl.set(this, url ? url : this.config.url);
+		_ConnectionManager_currentUrl.set(this, url || this.config.url);
 		ipcMain.on('offline-retry', assignOfflineRetryHandler(this));
-		powerMonitor.on('resume', assignSystemResumeEventHandler(this));
+		powerMonitor.on('resume', assignOfflineRetryHandler(this));
 		this.window.webContents.on('did-fail-load', assignOnDidFailLoadEventHandler(this));
 		this.refresh();
 	}
 
 	async refresh() {
 		const currentUrl = this.window.webContents.getURL();
-		const hasUrl = currentUrl && currentUrl.startsWith('https://') ? true : false;
+		const hasUrl = currentUrl?.startsWith('https://');
 		const connected = await this.isOnline(1000, 1);
 		if (!connected) {
 			this.window.setTitle('Waiting for network...');
@@ -59,8 +59,8 @@ class ConnectionManager {
 
 	async isOnline(timeout, retries) {
 		const onlineCheckMethod = this.config.onlineCheckMethod;
-		var resolved = false;
-		for (var i = 1; i <= retries && !resolved; i++) {
+		let resolved = false;
+		for (let i = 1; i <= retries && !resolved; i++) {
 			resolved = await this.isOnlineTest(onlineCheckMethod, this.config.url);
 			if (!resolved) await sleep(timeout);
 		}
@@ -107,12 +107,6 @@ function assignOfflineRetryHandler(cm) {
 	};
 }
 
-function assignSystemResumeEventHandler(cm) {
-	return () => {
-		cm.refresh();
-	};
-}
-
 function assignOnDidFailLoadEventHandler(cm) {
 	return (event, code, description) => {
 		cm.logger.error(description);
@@ -128,7 +122,7 @@ function sleep(timeout) {
 
 function isOnlineHttps(testUrl) {
 	return new Promise((resolve) => {
-		var req = net.request({
+		const req = net.request({
 			url: testUrl,
 			method: 'HEAD'
 		});

@@ -18,10 +18,9 @@ class SpellCheckProvider {
 	}
 
 	get supportedListByGroup() {
-		var groupedList = [];
+		let groupedList = [];
 		for (const language of this.supportedList) {
-			var key = language.language.substring(0, 1);
-			addLanguageToGroup(groupedList, key, language);
+			addLanguageToGroup(groupedList, language.language.substring(0, 1), language);
 		}
 		return groupedList;
 	}
@@ -62,7 +61,7 @@ class SpellCheckProvider {
 
 function init(intance, window) {
 	const listFromElectron = window.webContents.session.availableSpellCheckerLanguages;
-	var list = codes.filter(lf => {
+	let list = codes.filter(lf => {
 		return listContains(listFromElectron, lf.code);
 	});
 	sortLanguages(list);

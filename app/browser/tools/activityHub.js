@@ -15,9 +15,6 @@ const supportedEvents = [
 ];
 
 class ActivityHub {
-	constructor() {
-	}
-
 	on(event, handler) {
 		return addEventHandler(event, handler);
 	}

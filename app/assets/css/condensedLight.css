@@ -121,7 +121,6 @@ thread .ts-message .merge-bubble .message-actions-container,
     display:none !important;
 }
 
-
 /* thread reply editor aligned with other messages */
 .message-list-common:not(.chat-style) .ts-new-message-footer.new-message-common.rich-style-enabled,
 .message-list-common:not(.chat-style) .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
@@ -189,7 +188,7 @@ thread .ts-message .media-left {
 message-list.chat-style .self .media-left ~ .ts-message-thread-body
   {
     padding-left: 15rem !important;
-  /* NAME-WIDTH */;
+  /* NAME-WIDTH */
   }
 
   .ts-message-list-container .ts-message-list-item
@@ -208,7 +207,7 @@ message-list.chat-style .self .media-left ~ .ts-message-thread-body
     padding: 0 !important;
     display: block !important;
     overflow: visible !important;
-  /* for timestamp */;
+  /* for timestamp */
   }
 
 
@@ -226,14 +225,6 @@ message-list.chat-style .self .media-left ~ .ts-message-thread-body
     display: none !important;
   }
 
-/* Keep this commented until fixed for Teams version
-.self .ts-message-thread-body  .message-body-top-row .timestamp-column{
-    position:absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    display:none !important;
-}
-*/
   .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
   {
     display: block !important;

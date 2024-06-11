@@ -159,7 +159,7 @@ async function showNotification(event, options) {
 		body: options.body
 	});
 
-	var notification = new Notification({
+	const notification = new Notification({
 		icon: nativeImage.createFromDataURL(options.icon),
 		title: options.title,
 		body: options.body,

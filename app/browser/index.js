@@ -42,7 +42,7 @@
 				return new classicNotification(title, options);
 			} else {
 				ipcRenderer.invoke('show-notification', options);
-				return { onclick: null, onclose: null, onerror: null, onclose: null };
+				return { onclick: null, onclose: null, onerror: null };
 			}
 		}
 		

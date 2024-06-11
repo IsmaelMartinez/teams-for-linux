@@ -30,7 +30,7 @@ let disableAutogain = function () {
 	}
 	function disableAutogain(constraints) {
 		console.log('Automatically unsetting gain!', constraints);
-		if (constraints && constraints.audio) {
+		if (constraints?.audio) {
 			if (typeof constraints.audio !== 'object') {
 				constraints.audio = {};
 			}
@@ -45,8 +45,7 @@ let disableAutogain = function () {
 
 	function patchFunction(object, name, createNewFunction) {
 		if (name in object) {
-			var original = object[name];
-			object[name] = createNewFunction(original);
+			object[name] = createNewFunction(object[name]);
 		}
 	}
 
