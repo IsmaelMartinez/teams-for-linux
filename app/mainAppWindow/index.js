@@ -206,11 +206,11 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	var regHttps = /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g;
 	var regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
-		if (regHttps.test(arg)) {
+		logger.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
+		if (new RegExp(config.meetupJoinRegEx).test(arg)) {
 			logger.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
@@ -296,12 +296,8 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-	if (	
-		details.url.startsWith('https://teams.microsoft.com/l/meetup-join') || 
-		details.url.startsWith('https://teams.microsoft.com/v2/l/meetup-join') ||
-		details.url.startsWith('https://teams.live.com/l/meetup-join') ||
-		details.url.startsWith('https://teams.live.com/v2/l/meetup-join') 
-	) {
+	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
+	if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {

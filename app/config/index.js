@@ -200,16 +200,23 @@ function argv(configPath, appVersion) {
 			},
 			incomingCallCommand: {
 				default: null,
-				describe: 'Command to execute on an incoming call.'
+				describe: 'Command to execute on an incoming call.',
+				type: 'string'
 			},
 			incomingCallCommandArgs: {
 				default: [],
-				describe: 'Arguments for the incomming call command.'
+				describe: 'Arguments for the incomming call command.',
+				type: 'array'
 			},
 			isCustomBackgroundEnabled: {
 				default: false,
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
+			},
+			meetupJoinRegEx: {
+				default: '^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)',
+				describe: 'Meetup-join and channel regular expession',
+				type: 'string'
 			},
 			menubar: {
 				default: 'auto',

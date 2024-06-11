@@ -1,7 +1,6 @@
 /* 
 From https://userstyles.org/styles/154382/microsoft-teams-tweaks
 */
-
 message-list.chat-style .self .media-left ~ .ts-message-thread-body
 {
   padding-left: 42px !important;
@@ -31,7 +30,6 @@ div#ts-bottom-compose-identifier
 }
 
 /* Hide the "waffle menu" and align the logo to match the native client */
-
 button[data-tid="waffle-open-button"] {
     display: none !important;
 }
