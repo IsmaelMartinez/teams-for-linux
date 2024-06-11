@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.7.2" date="2024-06-11">
+			<description>
+				<ul>
+					<li>Moved to sonarcloud from codacity and fixed some sonarcloud issues</li>
+					<li>Moved from deprecated v2 version of codeql to v3</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.7.1" date="2024-06-11">
 			<description>
 				<ul>
