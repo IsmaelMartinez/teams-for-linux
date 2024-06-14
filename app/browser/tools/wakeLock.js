@@ -1,4 +1,4 @@
-var _WakeLock_lock = new WeakMap();
+let _WakeLock_lock = new WeakMap();
 class WakeLock {
 	constructor() {
 		_WakeLock_lock.set(this, null);
@@ -6,7 +6,7 @@ class WakeLock {
 
 	async enable() {
 		try {
-			var lock = await navigator.wakeLock.request('screen');
+			let lock = await navigator.wakeLock.request('screen');
 			lock.addEventListener('release', () => {
 				console.log('Wake Lock was released');
 			});
@@ -19,7 +19,7 @@ class WakeLock {
 	}
 
 	async disable() {
-		var lock = _WakeLock_lock.get(this);
+		let lock = _WakeLock_lock.get(this);
 		if (!lock) {
 			return;
 		}

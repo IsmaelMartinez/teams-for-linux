@@ -36,7 +36,7 @@ class ActivityManager {
 }
 
 function setActivityHandlers(self) {
-	activityHub.on('activities-count-updated', updateActivityCountHandler(self));
+	activityHub.on('activities-count-updated', updateActivityCountHandler());
 	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
 	activityHub.on('incoming-call-connecting', incomingCallConnectingHandler(self));
 	activityHub.on('incoming-call-disconnecting', incomingCallDisconnectingHandler(self));

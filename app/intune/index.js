@@ -1,14 +1,11 @@
 const dbus = require('@homebridge/dbus-native');
 const { LucidLog } = require('lucid-log');
 
-var sessionBus = dbus.sessionBus();
-
-var intuneAccount = null;
-
-var brokerService = sessionBus.getService('com.microsoft.identity.broker1');
+let intuneAccount = null;
+const brokerService = dbus.sessionBus().getService('com.microsoft.identity.broker1');
 
 function processInTuneAccounts(logger, resp, ssoInTuneAuthUser) {
-	response = JSON.parse(resp);
+	const response = JSON.parse(resp);
 	if ('error' in response) {
 		logger.warn('Failed to retrieve InTune account list: ' + response.error.context);
 		return;
@@ -18,7 +15,7 @@ function processInTuneAccounts(logger, resp, ssoInTuneAuthUser) {
 		intuneAccount = response.accounts[0];
 		logger.debug('Using first available InTune account (' + intuneAccount.username + ')');
 	} else {
-		for (account in response.accounts) {
+		for (const account in response.accounts) {
 			if (account.username == ssoIntuneAuthUser) {
 				intuneAccount = account;
 				logger.debug('Found matching InTune account (' + intuneAccount.username + ')');

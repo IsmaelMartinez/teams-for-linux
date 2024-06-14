@@ -1,4 +1,4 @@
-const { app, dialog, ipcMain, desktopCapturer, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
+const { app, dialog, ipcMain, desktopCapturer, globalShortcut, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { LucidLog } = require('lucid-log');
@@ -69,6 +69,8 @@ if (!gotTheLock) {
 	app.on('render-process-gone', onRenderProcessGone);
 	app.on('will-quit', () => logger.debug('will-quit'));
 	app.on('certificate-error', handleCertificateError);
+	app.on('browser-window-focus', handleGlobalShortcutDisabled);
+	app.on('browser-window-blur', handleGlobalShortcutDisabledRevert);
 	ipcMain.handle('getConfig', handleGetConfig);
 	ipcMain.handle('getSystemIdleTime', handleGetSystemIdleTime);
 	ipcMain.handle('getSystemIdleState', handleGetSystemIdleState);
@@ -159,7 +161,7 @@ async function showNotification(event, options) {
 		body: options.body
 	});
 
-	var notification = new Notification({
+	const notification = new Notification({
 		icon: nativeImage.createFromDataURL(options.icon),
 		title: options.title,
 		body: options.body,
@@ -390,4 +392,23 @@ function onCustomBGServiceConfigDownloadFailure(err) {
 	catch (err) {
 		logger.error(`Failed to save custom background default configuration at '${dlpath}'. ${err.message}`);
 	}
+}
+
+function handleGlobalShortcutDisabled () {
+	config.disableGlobalShortcuts.map((shortcut) => {
+		if (shortcut) {
+			globalShortcut.register(shortcut, () => {
+				console.debug(`Global shortcut ${shortcut} disabled`);
+			});
+		}
+	});
+}
+
+function handleGlobalShortcutDisabledRevert () {
+	config.disableGlobalShortcuts.map((shortcut) => {
+		if (shortcut) {
+			globalShortcut.unregister(shortcut);
+			console.debug(`Global shortcut ${shortcut} unregistered`);
+		}
+	});
 }

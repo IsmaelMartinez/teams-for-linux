@@ -189,7 +189,7 @@ thread .ts-message .media-left {
 message-list.chat-style .self .media-left ~ .ts-message-thread-body
   {
     padding-left: 15rem !important;
-  /* NAME-WIDTH */;
+  /* NAME-WIDTH */
   }
 
   .ts-message-list-container .ts-message-list-item
@@ -208,7 +208,7 @@ message-list.chat-style .self .media-left ~ .ts-message-thread-body
     padding: 0 !important;
     display: block !important;
     overflow: visible !important;
-  /* for timestamp */;
+  /* for timestamp */
   }
 
 /* Date/Time of the message shown above, on hover, to avoid reserving
@@ -225,14 +225,6 @@ message-list.chat-style .self .media-left ~ .ts-message-thread-body
     display: none !important;
   }
 
-/* Keep this commented until fixed for Teams version
-.self .ts-message-thread-body  .message-body-top-row .timestamp-column{
-    position:absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    display:none !important;
-}
-*/
   .ts-message-thread-body:hover  .message-body-top-row .timestamp-column
   {
     display: block !important;

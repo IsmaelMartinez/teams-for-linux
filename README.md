@@ -16,7 +16,7 @@ PRs and suggestions are welcomed. We will continue to support the community.
 ![Build & Release](https://github.com/IsmaelMartinez/teams-for-linux/workflows/Build%20&%20Release/badge.svg)
 ![](https://img.shields.io/librariesio/github/IsmaelMartinez/teams-for-linux)
 [![Known Vulnerabilities](https://snyk.io//test/github/IsmaelMartinez/teams-for-linux/badge.svg?targetFile=package.json)](https://snyk.io//test/github/IsmaelMartinez/teams-for-linux?targetFile=package.json)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8954c6c7e85c4ab9b92aef9f54f22eab)](https://www.codacy.com/manual/IsmaelMartinez/teams-for-linux?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IsmaelMartinez/teams-for-linux&amp;utm_campaign=Badge_Grade)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=IsmaelMartinez_teams-for-linux&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=IsmaelMartinez_teams-for-linux)
 
 Unofficial Microsoft Teams client for Linux using [`Electron`](https://electronjs.org/).
 It uses the Web App and wraps it as a standalone application using Electron.

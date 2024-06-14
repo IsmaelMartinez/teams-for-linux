@@ -13,9 +13,8 @@ class BrowserWindowManager {
         this.isOnCall = false;
         this.incomingCallCommandProcess = null;
         this.blockerId = null;
-        this.window;
+        this.window = null;
     }
-
 
     async createWindow() {
         // Load the previous state with fallback to defaults
@@ -92,7 +91,7 @@ class BrowserWindowManager {
     
     async handleOnIncomingCallCreated(e, data) {
         if (this.config.incomingCallCommand) {
-            incomingCallCommandTerminate();
+            this.incomingCallCommandTerminate();
             const commandArgs = [...this.config.incomingCallCommandArgs, data.caller];
             this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
         }
@@ -107,17 +106,16 @@ class BrowserWindowManager {
     
     async handleOnCallConnected() {
         this.isOnCall = true;
-        return this.config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
+        return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
     }
 
     disableScreenLockElectron() {
-        var isDisabled = false;
         if (this.blockerId == null) {
             this.blockerId = powerSaveBlocker.start('prevent-display-sleep');
             this.logger.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
-            isDisabled = true;
+            return true;
         }
-        return isDisabled;
+        return false;
     }
     
     disableScreenLockWakeLockSentinel() {
@@ -132,14 +130,13 @@ class BrowserWindowManager {
     }
     
     enableScreenLockElectron() {
-        var isEnabled = false;
         if (this.blockerId != null && powerSaveBlocker.isStarted(this.blockerId)) {
             this.logger.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
             powerSaveBlocker.stop(this.blockerId);
             this.blockerId = null;
-            isEnabled = true;
+            return true;
         }
-        return isEnabled;
+        return false;
     }
     
     enableScreenLockWakeLockSentinel() {

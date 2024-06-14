@@ -1,7 +1,6 @@
 html,
 body,
 .container-fluid {
-  /*background-color: #373644;*/
   background-color: #1b1a1a;
 }
 
@@ -49,7 +48,6 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  /*background-color: rgba(255, 255, 255, 0.8);*/
   background-color: #373644;
   border-radius: 5px;
 }

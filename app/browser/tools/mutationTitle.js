@@ -14,7 +14,7 @@ class MutationObserverTitle {
 				console.log('title changed');
 				console.log(window.document.title);
 				const regex = /^\((\d+)\)/;
-				const match = window.document.title.match(regex);
+				const match = regex.exec(window.document.title);
 				const number = match ? match[1] : 0;
 				console.log(number);
 				const event = new CustomEvent('unread-count', { detail: { number: number } });

@@ -49,12 +49,12 @@ exports.onAppReady = async function onAppReady(configGroup) {
 	});
 
 	window = await browserWindowManager.createWindow();
-
-	if (iconChooser) {
+	
+	if (iconChooser) {	
 		const m = new Menus(window, configGroup, iconChooser.getFile());
 		m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 	}
-
+	
 	addEventHandlers();
 
 	login.handleLoginDialogTry(window, {'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand});
@@ -133,7 +133,6 @@ function handleTeamsV2OptIn(config) {
 			.catch(err => {
 				console.log('could not read localStorage variable', err);
 			});
-		return;
 	}
 }
 
@@ -206,7 +205,7 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	var regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
+	const regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
 	logger.debug('processArgs:', args);
 	for (const arg of args) {
 		logger.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
@@ -283,7 +282,7 @@ function setImgSrcSecurityPolicy(policies) {
 }
 
 function onBeforeSendHeadersHandler(detail, callback) {
-	if (intune && intune.isSsoUrl(detail.url)) {
+	if (intune?.isSsoUrl(detail.url)) {
 		intune.addSsoCookie(logger, detail, callback);
 	} else {
 		if (detail.url.startsWith(customBGServiceUrl.href)) {
@@ -296,7 +295,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(details.url)}`);
+	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
 	if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
@@ -360,7 +359,7 @@ function getWebRequestFilterFromURL() {
 	if (intune) {
 		intune.setupUrlFilter(filter);
 	}
-
+	
 	return filter;
 }
 
@@ -433,7 +432,7 @@ function getLinkAction() {
 }
 
 async function removePopupWindowMenu() {
-	for (var i = 1; i <= 200; i++) {
+	for (let i = 1; i <= 200; i++) {
 		await sleep(10);
 		const childWindows = window.getChildWindows();
 		if (childWindows.length) {
@@ -441,7 +440,6 @@ async function removePopupWindowMenu() {
 			break;
 		}
 	}
-	return;
 }
 
 async function sleep(ms) {
