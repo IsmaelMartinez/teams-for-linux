@@ -19,6 +19,7 @@
 				<ul>
 					<li>Moved to sonarcloud from codacity and fixed some sonarcloud issues</li>
 					<li>Moved from deprecated v2 version of codeql to v3</li>
+					<li>Added disableGlobalShortcuts config option to disable global shortcuts</li>
 				</ul>
 			</description>
 		</release>

@@ -2,6 +2,7 @@ const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
+const {type}=require('os');
 
 let logger;
 
@@ -63,7 +64,7 @@ function argv(configPath, appVersion) {
 				type: 'number'
 			},
 			appLogLevels: {
-				default: 'error,warn',
+				default: 'error,warn,info,debug',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
 			},
@@ -192,6 +193,11 @@ function argv(configPath, appVersion) {
 				default: false,
 				describe: 'A flag indicates whether to disable window flashing when there is a notification',
 				type: 'boolean'
+			},
+			disableGlobalShortcuts: {
+				default: [],
+				describe: 'Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use',
+				type: 'array',
 			},
 			electronCLIFlags: {
 				default: [],

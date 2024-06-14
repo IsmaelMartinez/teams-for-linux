@@ -41,6 +41,7 @@ Here is the list of available arguments and its usage:
 | disableNotificationSound        | Disable chat/meeting start notification sound                                            | false               |
 | disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false         |
 | disableNotificationWindowFlash  | Disable window flashing when there is a notification          | false               |
+| disableGlobalShortcuts | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use | [] |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |

@@ -91,7 +91,7 @@ class BrowserWindowManager {
     
     async handleOnIncomingCallCreated(e, data) {
         if (this.config.incomingCallCommand) {
-            incomingCallCommandTerminate();
+            this.incomingCallCommandTerminate();
             const commandArgs = [...this.config.incomingCallCommandArgs, data.caller];
             this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
         }
@@ -106,7 +106,7 @@ class BrowserWindowManager {
     
     async handleOnCallConnected() {
         this.isOnCall = true;
-        return this.config.screenLockInhibitionMethod === 'Electron' ? disableScreenLockElectron() : disableScreenLockWakeLockSentinel();
+        return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
     }
 
     disableScreenLockElectron() {

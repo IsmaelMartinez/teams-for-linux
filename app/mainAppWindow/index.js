@@ -49,12 +49,12 @@ exports.onAppReady = async function onAppReady(configGroup) {
 	});
 
 	window = await browserWindowManager.createWindow();
-
-	if (iconChooser) {
+	
+	if (iconChooser) {	
 		const m = new Menus(window, configGroup, iconChooser.getFile());
 		m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 	}
-
+	
 	addEventHandlers();
 
 	login.handleLoginDialogTry(window, {'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand});
@@ -295,7 +295,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(details.url)}`);
+	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
 	if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
@@ -359,7 +359,7 @@ function getWebRequestFilterFromURL() {
 	if (intune) {
 		intune.setupUrlFilter(filter);
 	}
-
+	
 	return filter;
 }
 
