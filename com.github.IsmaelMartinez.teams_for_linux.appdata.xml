@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.7.2" date="2024-06-11">
+		<release version="1.7.2" date="2024-06-14">
 			<description>
 				<ul>
 					<li>Moved to sonarcloud from codacity and fixed some sonarcloud issues</li>
