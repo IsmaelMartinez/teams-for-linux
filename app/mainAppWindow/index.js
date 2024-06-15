@@ -295,7 +295,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
+	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(details.url)}`);
 	if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
 		logger.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
