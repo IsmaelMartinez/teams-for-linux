@@ -3,8 +3,8 @@
 	<id>com.github.IsmaelMartinez.teams_for_linux</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0</project_license>
-	<name>teams-for-linux</name>
-	<summary>Unofficial Microsoft Teams client for Linux using Electron</summary>
+	<name>Portal for Teams</name>
+	<summary>Unofficial Microsoft Teams client for Linux</summary>
 	<description>
 		<p>Unofficial Microsoft Teams client for Linux using Electron.</p>
 		<p>It uses the Web App and wraps it as a standalone application using Electron.</p>
@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.7.3" date="2024-06-18">
+			<description>
+				<ul>
+					<li>App renamed to Portal for Teams in flathub</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.7.2" date="2024-06-14">
 			<description>
 				<ul>
