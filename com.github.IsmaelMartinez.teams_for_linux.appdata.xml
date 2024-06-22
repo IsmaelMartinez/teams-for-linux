@@ -6,8 +6,8 @@
 	<name>Portal for Teams</name>
 	<summary>Unofficial Microsoft Teams client for Linux</summary>
 	<description>
-		<p>Unofficial Microsoft Teams client for Linux using Electron.</p>
-		<p>It uses the Web App and wraps it as a standalone application using Electron.</p>
+		<p>Experience seamless integration with the Microsoft Teams Web App in a standalone Electron application.</p>
+		<p>This application is an unofficial client for Microsoft Teams.</p>
 	</description>
 	<url type="homepage">https://github.com/IsmaelMartinez/teams-for-linux</url>
 	<url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/KNOWN_ISSUES.md</url>
