@@ -69,7 +69,7 @@ class BrowserWindowManager {
 
 
     assignEventHandlers() {
-        ipcMain.on('select-source', this.assignSelectSourceHandler);
+        ipcMain.on('select-source', this.assignSelectSourceHandler());
         ipcMain.handle('incoming-call-created', this.handleOnIncomingCallCreated);
         ipcMain.handle('incoming-call-connecting', this.incomingCallCommandTerminate);
         ipcMain.handle('incoming-call-disconnecting', this.incomingCallCommandTerminate);
