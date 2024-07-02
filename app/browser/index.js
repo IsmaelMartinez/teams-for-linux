@@ -3,7 +3,7 @@
 	const ActivityManager = require('./notifications/activityManager');
 
 	let config;
-	ipcRenderer.invoke('getConfig').then(mainConfig => {
+	ipcRenderer.invoke('get-config').then(mainConfig => {
 		config = mainConfig;
 		initializeModules(config, ipcRenderer);
 

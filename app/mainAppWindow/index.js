@@ -39,7 +39,7 @@ exports.onAppReady = async function onAppReady(configGroup) {
 	}
 
 	if (config.trayIconEnabled) {
-		iconChooser = new TrayIconChooser(configGroup.startupConfig);
+		iconChooser = new TrayIconChooser(config);
 	}
 
 	const browserWindowManager = new BrowserWindowManager({

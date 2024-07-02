@@ -56,7 +56,7 @@ class Zoom {
 }
 
 function restoreZoomLevelInternal(config) {
-	ipcRenderer.invoke('getZoomLevel', config.partition).then(zoomLevel => {
+	ipcRenderer.invoke('get-zoom-level', config.partition).then(zoomLevel => {
 		webFrame.setZoomLevel(zoomLevel);
 	});
 }
@@ -72,7 +72,7 @@ function setNextZoomLevel(keyName, config) {
 	zoomLevel = zoomOffset === 0 ? 0 : zoomLevel + zoomOffset * zoomFactor;
 	if (zoomLevel < zoomMin || zoomLevel > zoomMax) return;
 	webFrame.setZoomLevel(zoomLevel);
-	ipcRenderer.invoke('saveZoomLevel', {
+	ipcRenderer.invoke('save-zoom-level', {
 		partition: config.partition,
 		zoomLevel: webFrame.getZoomLevel()
 	});

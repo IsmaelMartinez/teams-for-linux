@@ -1,5 +1,4 @@
 const dbus = require('@homebridge/dbus-native');
-const { LucidLog } = require('lucid-log');
 
 let intuneAccount = null;
 const brokerService = dbus.sessionBus().getService('com.microsoft.identity.broker1');
@@ -16,14 +15,14 @@ function processInTuneAccounts(logger, resp, ssoInTuneAuthUser) {
 		logger.debug('Using first available InTune account (' + intuneAccount.username + ')');
 	} else {
 		for (const account in response.accounts) {
-			if (account.username == ssoIntuneAuthUser) {
+			if (account.username == ssoInTuneAuthUser) {
 				intuneAccount = account;
 				logger.debug('Found matching InTune account (' + intuneAccount.username + ')');
 				break;
 			}
 		}
 		if (intuneAccount == null) {
-			logger.warn('Failed to find matching InTune account for ' + ssoIntuneAuthUser + '.');
+			logger.warn('Failed to find matching InTune account for ' + ssoInTuneAuthUser + '.');
 		}
 	}
 }
@@ -56,7 +55,7 @@ exports.isSsoUrl = function isSsoUrl(url) {
 }
 
 function processPrtResponse(logger, resp, detail) {
-	response = JSON.parse(resp);
+	const response = JSON.parse(resp);
 	if ('error' in response) {
 		logger.warn('Failed to retrieve Intune SSO cookie: ' + response.error.context);
 	} else {

@@ -23,7 +23,7 @@ async function overrideMSMethod(inst) {
 
 async function customBGProvider(...args) {
 	const ms_response = config.customBGServiceIgnoreMSDefaults ? [] : await bgMSMethod.apply(bgMSService, [...args]);
-	const customList = await ipRenderer.invoke('getCustomBGList');
+	const customList = await ipRenderer.invoke('get-custom-bg-list');
 	ms_response.push(...customList);
 	return ms_response;
 }

@@ -14,7 +14,7 @@ function createPreviewScreen(screens) {
 	let windowsIndex = 0;
 	const sscontainer = document.getElementById('screen-size');
 	createEventHandlers({ screens, sscontainer });
-	ipcRenderer.invoke('desktopCapturerGetSources', { types: ['window', 'screen'] }).then(async (sources) => {
+	ipcRenderer.invoke('desktop-capturer-get-sources', { types: ['window', 'screen'] }).then(async (sources) => {
 		const rowElement = document.querySelector('.container-fluid .row');
 		for (const source of sources) {
 			await createPreview({

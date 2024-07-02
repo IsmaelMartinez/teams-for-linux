@@ -71,17 +71,23 @@ if (!gotTheLock) {
 	app.on('certificate-error', handleCertificateError);
 	app.on('browser-window-focus', handleGlobalShortcutDisabled);
 	app.on('browser-window-blur', handleGlobalShortcutDisabledRevert);
-	ipcMain.handle('getConfig', handleGetConfig);
-	ipcMain.handle('getSystemIdleTime', handleGetSystemIdleTime);
-	ipcMain.handle('getSystemIdleState', handleGetSystemIdleState);
-	ipcMain.handle('getZoomLevel', handleGetZoomLevel);
-	ipcMain.handle('saveZoomLevel', handleSaveZoomLevel);
-	ipcMain.handle('desktopCapturerGetSources', (event, opts) => desktopCapturer.getSources(opts));
-	ipcMain.handle('getCustomBGList', handleGetCustomBGList);
+	ipcMain.on('config-file-changed', restartApp);
+	ipcMain.handle('get-config', async () => { return config } );
+	ipcMain.handle('get-system-idle-state', handleGetSystemIdleState);
+	ipcMain.handle('get-zoom-level', handleGetZoomLevel);
+	ipcMain.handle('save-zoom-level', handleSaveZoomLevel);
+	ipcMain.handle('desktop-capturer-get-sources', (event, opts) => desktopCapturer.getSources(opts));
+	ipcMain.handle('get-custom-bg-list', handleGetCustomBGList);
 	ipcMain.handle('play-notification-sound', playNotificationSound);
 	ipcMain.handle('show-notification', showNotification);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
 	ipcMain.handle('set-badge-count', setBadgeCountHandler);
+}
+
+function restartApp() {
+	console.log('Restarting app...');
+	app.relaunch();
+	app.exit();
 }
 
 function addCommandLineSwitchesBeforeConfigLoad() {
@@ -214,7 +220,23 @@ function onAppTerminated(signal) {
 function handleAppReady() {
 	// check for configuration errors
 	if (config.error) {
-		dialog.showErrorBox('Configuration error', config.error);
+		dialog.showMessageBox(
+			{
+				title: 'Configuration error',
+				icon: nativeImage.createFromPath(path.join(config.appPath, 'assets/icons/setting-error.256x256.png')),
+				message: `Error in config file ${config.error}.\n Loading default configuration`
+			}
+		);
+	}
+	if (config.warning) {
+		// check for configuration warnings
+		dialog.showMessageBox(
+			{ 
+				title: 'Configuration Warning',
+				icon: nativeImage.createFromPath(path.join(config.appPath, 'assets/icons/alert-diamond.256x256.png')),
+				message: config.warning
+			}
+		);
 	}
 	
 	if (config.isCustomBackgroundEnabled) {
@@ -226,14 +248,6 @@ function handleAppReady() {
 	//Just catch the error
 	process.stdout.on('error', () => { });
 	mainAppWindow.onAppReady(appConfig);
-}
-
-async function handleGetConfig() {
-	return config;
-}
-
-async function handleGetSystemIdleTime() {
-	return powerMonitor.getSystemIdleTime();
 }
 
 async function handleGetSystemIdleState() {

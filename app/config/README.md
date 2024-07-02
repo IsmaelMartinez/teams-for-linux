@@ -65,6 +65,7 @@ Here is the list of available arguments and its usage:
 | url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
+| watchConfigFile | Watch for changes in the config file and restarts the app | false |
 | webDebug                        | Enable web debugging                                                                     | false               |
 
 
