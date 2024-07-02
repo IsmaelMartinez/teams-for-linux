@@ -19,6 +19,7 @@
 				<ul>
 					<li>Add watchConfigFile option to restart the app if the configuration changes</li>
 					<li>Modify configError message to have an icon and adding the ability to provide warning dialogs (for config deprecations)</li>
+					<li>Changing app description to be more flathub compliat</li>
 					<li>Refactoring around inTune and the config file handling</li>
 					<li>Refactoring events to all be kebab-case instead of a mix of kebab-case and camelCase</li>
 				</ul>
