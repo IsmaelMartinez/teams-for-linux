@@ -1,7 +1,6 @@
 const dbus = require('@homebridge/dbus-native');
-const { LucidLog } = require('lucid-log');
 
-let intuneAccount = null;
+let inTuneAccount = null;
 const brokerService = dbus.sessionBus().getService('com.microsoft.identity.broker1');
 
 function processInTuneAccounts(logger, resp, ssoInTuneAuthUser) {
@@ -12,18 +11,18 @@ function processInTuneAccounts(logger, resp, ssoInTuneAuthUser) {
 	};
 
 	if (ssoInTuneAuthUser == '') {
-		intuneAccount = response.accounts[0];
-		logger.debug('Using first available InTune account (' + intuneAccount.username + ')');
+		inTuneAccount = response.accounts[0];
+		logger.debug('Using first available InTune account (' + inTuneAccount.username + ')');
 	} else {
 		for (const account in response.accounts) {
-			if (account.username == ssoIntuneAuthUser) {
-				intuneAccount = account;
-				logger.debug('Found matching InTune account (' + intuneAccount.username + ')');
+			if (account.username == ssoInTuneAuthUser) {
+				inTuneAccount = account;
+				logger.debug('Found matching InTune account (' + inTuneAccount.username + ')');
 				break;
 			}
 		}
-		if (intuneAccount == null) {
-			logger.warn('Failed to find matching InTune account for ' + ssoIntuneAuthUser + '.');
+		if (inTuneAccount == null) {
+			logger.warn('Failed to find matching InTune account for ' + ssoInTuneAuthUser + '.');
 		}
 	}
 }
@@ -52,11 +51,11 @@ exports.setupUrlFilter = function setupUrlFilter(filter) {
 }
 
 exports.isSsoUrl = function isSsoUrl(url) {
-	return intuneAccount != null && url.startsWith('https://login.microsoftonline.com/');
+	return inTuneAccount != null && url.startsWith('https://login.microsoftonline.com/');
 }
 
 function processPrtResponse(logger, resp, detail) {
-	response = JSON.parse(resp);
+	const response = JSON.parse(resp);
 	if ('error' in response) {
 		logger.warn('Failed to retrieve Intune SSO cookie: ' + response.error.context);
 	} else {
@@ -67,7 +66,7 @@ function processPrtResponse(logger, resp, detail) {
 
 exports.addSsoCookie = function addIntuneSsoCookie(logger, detail, callback) {
 	logger.debug('Retrieving InTune SSO cookie');
-	if (intuneAccount == null) {
+	if (inTuneAccount == null) {
 		logger.info("InTune SSO not active");
 		callback({
 			requestHeaders: detail.requestHeaders
@@ -77,7 +76,7 @@ exports.addSsoCookie = function addIntuneSsoCookie(logger, detail, callback) {
 	brokerService.getInterface(
 		'/com/microsoft/identity/broker1',
 		'com.microsoft.identity.Broker1', function(err, broker) {
-			broker.acquirePrtSsoCookie('0.0', '', JSON.stringify({'ssoUrl':detail.url, 'account':intuneAccount, 'authParameters':{'authority':'https://login.microsoftonline.com/common/'}}), function(err, resp) {
+			broker.acquirePrtSsoCookie('0.0', '', JSON.stringify({'ssoUrl':detail.url, 'account':inTuneAccount, 'authParameters':{'authority':'https://login.microsoftonline.com/common/'}}), function(err, resp) {
 				processPrtResponse(logger, resp, detail);
 				callback({
 					requestHeaders: detail.requestHeaders

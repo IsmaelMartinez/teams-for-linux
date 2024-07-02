@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.7.5" date="2024-07-02">
+			<description>
+				<ul>
+					<li>Add watchConfigFile option to restart the app if the configuration changes</li>
+					<li>Modify configError message to have an icon and adding the ability to provide warning dialogs (for config deprecations)</li>
+					<li>Changing app description to be more flathub compliat</li>
+					<li>Refactoring around inTune and the config file handling</li>
+					<li>Refactoring events to all be kebab-case instead of a mix of kebab-case and camelCase</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.7.4" date="2024-06-25">
 			<description>
 				<ul>

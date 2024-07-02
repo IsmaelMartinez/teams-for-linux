@@ -80,4 +80,6 @@ Read about the history of this project in the [`HISTORY.md`](HISTORY.md) file.
 
 ## License
 
+Some icons are from (Icon Duck)[https://iconduck.com/sets/hugeicons-essential-free-icons] under the `CC BY 4.0` license.
+
 License: [`GPLv3`](LICENSE.md)

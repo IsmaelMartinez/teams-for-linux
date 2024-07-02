@@ -2,7 +2,7 @@ const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
 const { LucidLog } = require('lucid-log');
-const {type}=require('os');
+const { ipcMain } = require('electron');
 
 let logger;
 
@@ -19,22 +19,28 @@ function getConfigFile(configPath) {
 }
 
 function argv(configPath, appVersion) {
-	let configFile = null;
-	let configError = null;
+	const configObject = {
+		configFile: {},
+		configError: null,
+		configWarning: null,
+		isConfigFile: false
+	}
 	
 	if (checkConfigFileExistance(configPath)) {
 		try {
-			configFile = getConfigFile(configPath);
+			configObject.configFile = getConfigFile(configPath);
+			configObject.isConfigFile = true;
 		} catch (e) {
-			configError = e.message;
+			configObject.configError = e.message;
+			console.warn('Error in config file, using default values:\n' + configObject.configError);
 		}
+	} else {
+		console.warn('No config file found, using default values');
 	}
 
-	const missingConfig = configFile == null;
-	configFile = configFile || {};
 	let config = yargs
 		.env(true)
-		.config(configFile)
+		.config(configObject.configFile)
 		.version(appVersion)
 		.options({
 			appActiveCheckInterval: {
@@ -313,6 +319,11 @@ function argv(configPath, appVersion) {
 				describe: 'Use MutationObserver to update counter from title',
 				type: 'boolean'
 			},
+			watchConfigFile: {
+				default: false,
+				describe: 'Watch for changes in the config file and reload the app',
+				type: 'boolean'
+			},
 			webDebug: {
 				default: false,
 				describe: 'Enable debug at start',
@@ -321,22 +332,23 @@ function argv(configPath, appVersion) {
 		})
 		.parse(process.argv.slice(1));
 
-	if (configError) {
-		config['error'] = configError;
+	if (configObject.configError) {
+		config['error'] = configObject.configError;
 	}
+
+	if (configObject.isConfigFile && config.watchConfigFile) {
+		fs.watch(getConfigFilePath(configPath), (event, filename) => {
+			logger.info(`Config file ${filename} changed ${event}. Relaunching app...`);
+			ipcMain.emit('config-file-changed');
+		});
+	}
+
 	logger = new LucidLog({
 		levels: config.appLogLevels.split(',')
 	});
 
 	logger.debug('configPath:', configPath);
-	if (missingConfig) {
-		if (configError) {
-			logger.warn('Error in config file, using default values:\n' + configError);
-		} else {
-			logger.warn('No config file found, using default values');
-		}
-	}
-	logger.debug('configFile:', configFile);
+	logger.debug('configFile:', configObject.configFile);
 
 	return config;
 }
