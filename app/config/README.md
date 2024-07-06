@@ -59,8 +59,8 @@ Here is the list of available arguments and its usage:
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. (string) |                  |
 | ssoBasicAuthPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. |                  |
-| ssoIntuneEnabled                | Enable InTune Single-Sign-On                                                             | false
-| ssoIntuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           |                  |
+| ssoInTuneEnabled                | Enable InTune Single-Sign-On                                                             | false
+| ssoInTuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           |                  |
 | trayIconEnabled				 | Enable tray icon                                                                          | true               |
 | url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
