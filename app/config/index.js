@@ -170,6 +170,16 @@ function argv(configPath, appVersion) {
 				describe: 'A flag indicates whether to disable mic auto gain or not',
 				type: 'boolean'
 			},
+			disableContextIsolation: {
+				default: false,
+				describe: 'Disable context isolation on the main BrowserWindow (WIP - this will break most functionaly)',
+				type: 'boolean'
+			},
+			disableSandbox: {
+				default: false,
+				describe: 'Disable the sandbox for the BrowserWindow (WIP - this will break most functionaly)',
+				type: 'boolean'
+			},
 			disableGpu: {
 				default: false,
 				describe: 'A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)',

@@ -108,7 +108,7 @@ function assignOfflineRetryHandler(cm) {
 }
 
 function assignOnDidFailLoadEventHandler(cm) {
-	return (event, code, description) => {
+	return (_event, _code, description) => {
 		cm.logger.error(description);
 		if (description === 'ERR_INTERNET_DISCONNECTED' || description === 'ERR_NETWORK_CHANGED') {
 			cm.refresh();

@@ -60,13 +60,12 @@ class BrowserWindowManager {
                 partition: this.config.partition,
                 preload: path.join(__dirname, '..', 'browser', 'index.js'),
                 plugins: true,
-                contextIsolation: false,
-                sandbox: false,
+                contextIsolation: this.config.disableContextIsolation,
+                sandbox: this.config.disableSandbox,
                 spellcheck: true
             },
         });
     }
-
 
     assignEventHandlers() {
         ipcMain.on('select-source', this.assignSelectSourceHandler());
@@ -126,7 +125,7 @@ class BrowserWindowManager {
     
     async handleOnCallDisconnected() {
         this.isOnCall = false;
-        return this.config.screenLockInhibitionMethod === 'Electron' ? enableScreenLockElectron() : enableScreenLockWakeLockSentinel();
+        return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
     }
     
     enableScreenLockElectron() {
@@ -151,6 +150,5 @@ class BrowserWindowManager {
         }
     }
 }
-
 
 module.exports = BrowserWindowManager;

@@ -64,9 +64,6 @@ function addEventListeners() {
 	});
 }
 
-/**
- * @param {(iframe:HTMLIFrameElement)=> void} callback 
- */
 function whenIframeReady(callback) {
 	const iframe = window.document.getElementsByTagName('iframe')[0];
 	if (iframe) {

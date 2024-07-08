@@ -34,7 +34,7 @@ exports.loginService = function loginService(parentWindow, callback) {
 };
 
 exports.handleLoginDialogTry = function handleLoginDialogTry(window, {ssoBasicAuthUser, ssoBasicAuthPasswordCommand}) {
-	window.webContents.on('login', (event, request, authInfo, callback) => {
+	window.webContents.on('login', (event, _request, _authInfo, callback) => {
 		event.preventDefault();
 		if (isFirstLoginTry) {
 			isFirstLoginTry = false;
@@ -60,7 +60,7 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(window, {ssoBasicAu
 };
 
 function submitFormHandler(callback, win) {
-	return (event, data) => {
+	return (_event, data) => {
 		callback(data.username, data.password);
 		win.close();
 	};

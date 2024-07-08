@@ -374,7 +374,7 @@ function initializeCustomBGServiceURL() {
 	}
 }
 
-function onBeforeInput(event, input) {
+function onBeforeInput(_event, input) {
 	isControlPressed = input.control;
 }
 

@@ -64,9 +64,6 @@ class StreamSelector {
 		_StreamSelector_window.set(this, value);
 	}
 
-	/**
-	 * @type {string}
-	 */
 	get selectedSource() {
 		return _StreamSelector_selectedSource.get(this);
 	}
@@ -85,10 +82,6 @@ class StreamSelector {
 		}
 	}
 
-	/**
-	 * 
-	 * @param {(sourceId:string)=>void} callback 
-	 */
 	show(callback) {
 		let self = this;
 		self.callback = callback;
@@ -108,7 +101,7 @@ class StreamSelector {
 		};
 		resizeView(self);
 
-		let _close = (event, source) => {
+		let _close = (_event, source) => {
 			closeView({ view: self, _resize, _close, source });
 		};
 
