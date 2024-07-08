@@ -20,8 +20,8 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
-| disableContextIsolation 	   | Disable context isolation in the renderer process (this will break functionality) | false               |
-| disableSandbox				  | Disable sandbox for the renderer process  (this will break functionality)                                                | false               |
+| contextIsolation 	   | Use context isolation in the renderer process (disabling this will break functionality) | false               |
+| sandbox				  | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
