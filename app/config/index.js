@@ -129,6 +129,11 @@ function argv(configPath, appVersion) {
 				describe: 'Follow system theme',
 				type: 'boolean'
 			},
+			contextIsolation: {
+				default: false,
+				describe: 'Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionaly)',
+				type: 'boolean'
+			},
 			customUserDir: {
 				default: null,
 				describe: 'Custom User Directory so that you can have multiple profiles',
@@ -168,16 +173,6 @@ function argv(configPath, appVersion) {
 			disableAutogain: {
 				default: false,
 				describe: 'A flag indicates whether to disable mic auto gain or not',
-				type: 'boolean'
-			},
-			disableContextIsolation: {
-				default: false,
-				describe: 'Disable context isolation on the main BrowserWindow (WIP - this will break most functionaly)',
-				type: 'boolean'
-			},
-			disableSandbox: {
-				default: false,
-				describe: 'Disable the sandbox for the BrowserWindow (WIP - this will break most functionaly)',
 				type: 'boolean'
 			},
 			disableGpu: {
@@ -282,6 +277,11 @@ function argv(configPath, appVersion) {
 				default: null,
 				describe: 'Proxy Server with format address:port',
 				type: 'string'
+			},
+			sandbox: {
+				default: false,
+				describe: 'Sandbox for the BrowserWindow (WIP - disabling this will break most functionaly)',
+				type: 'boolean'
 			},
 			screenLockInhibitionMethod: {
 				default: 'Electron',

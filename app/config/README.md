@@ -20,8 +20,7 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
-| disableContextIsolation 	   | Disable context isolation in the renderer process (this will break functionality) | false               |
-| disableSandbox				  | Disable sandbox for the renderer process  (this will break functionality)                                                | false               |
+| contextIsolation 	   | Use context isolation in the renderer process (disabling this will break functionality) | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
@@ -57,6 +56,7 @@ Here is the list of available arguments and its usage:
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
+| sandbox				  | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | *Electron*, WakeLockSentinel                |
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. (string) |                  |
