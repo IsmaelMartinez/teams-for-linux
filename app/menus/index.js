@@ -194,7 +194,7 @@ class Menus {
 	}
 }
 
-function saveSettingsInternal(event, arg) {
+function saveSettingsInternal(_event, arg) {
 	fs.writeFileSync(path.join(app.getPath('userData'), 'teams_settings.json'), JSON.stringify(arg));
 	dialog.showMessageBoxSync(this.window, {
 		message: 'Settings have been saved successfully!',
@@ -203,7 +203,7 @@ function saveSettingsInternal(event, arg) {
 	});
 }
 
-function restoreSettingsInternal(event, arg) {
+function restoreSettingsInternal(_event, arg) {
 	if (arg) {
 		dialog.showMessageBoxSync(this.window, {
 			message: 'Settings have been restored successfully!',

@@ -20,13 +20,14 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
+| disableContextIsolation 	   | Disable context isolation in the renderer process (this will break functionality) | false               |
+| disableSandbox				  | Disable sandbox for the renderer process  (this will break functionality)                                                | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
 | customCACertsFingerprints       | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | []             |
 | customCSSName                   | custom CSS name for the packaged available css files                                      |                  |
 | customCSSLocation               | custom CSS styles file location                                                           |                 |
-| followSystemTheme               | Boolean to determine if to follow system theme                                                                      | false               |
 | customUserDir                   | Custom User Directory so that you can have multiple profiles                              | null                |
 | clearStorage                    | Boolean to clear the storage before creating the window or not                            | false               |
 | clientCertPath                  | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)   | string                |
@@ -43,6 +44,7 @@ Here is the list of available arguments and its usage:
 | disableNotificationWindowFlash  | Disable window flashing when there is a notification          | false               |
 | disableGlobalShortcuts | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use | [] |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
+| followSystemTheme               | Boolean to determine if to follow system theme                                                                      | false               |
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |

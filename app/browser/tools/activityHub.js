@@ -182,7 +182,6 @@ async function refreshCalendarEvents(controller) {
 	return c.$$state.status;
 }
 
-//conversationLink
 async function getActiveMeetingEvents(controller, data) {
 	const workerEvents = getMeetingEvents(data);
 	if (workerEvents.length > 0) {
@@ -211,7 +210,6 @@ function addEligibleCalendarEvents(calendarEvents, meetingId, notificationList) 
 	}
 }
 
-// Handlers
 function assignActivitiesCountUpdateHandler(controller) {
 	controller.eventingService.$on(
 		controller.$scope,

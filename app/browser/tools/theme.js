@@ -18,7 +18,7 @@ class ThemeManager {
 		}
 	}
 
-	async applyTheme (event, ...args) {
+	async applyTheme (_event, ...args) {
 		const theme = args[0] ? 'dark' : 'default';
 		const clientPreferences = ReactHandler.getTeams2ClientPreferences();
 		if (clientPreferences) {

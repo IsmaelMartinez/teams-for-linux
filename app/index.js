@@ -157,7 +157,7 @@ function addElectronCLIFlagsFromConfig() {
 	}
 }
 
-async function showNotification(event, options) {
+async function showNotification(_event, options) {
 	logger.debug('Showing notification using electron API');
 
 	playNotificationSound(null, {
@@ -342,12 +342,12 @@ async function requestMediaAccess() {
 	});
 }
 
-async function userStatusChangedHandler(event, options) {
+async function userStatusChangedHandler(_event, options) {
 	userStatus = options.data.status;
 	logger.debug(`User status changed to '${userStatus}'`);
 }
 
-async function setBadgeCountHandler(event, count) {
+async function setBadgeCountHandler(_event, count) {
 	logger.debug(`Badge count set to '${count}'`);
 	app.setBadgeCount(count);
 }
