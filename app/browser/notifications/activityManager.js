@@ -19,15 +19,32 @@ class ActivityManager {
 	watchSystemIdleState() {
 		const self = this;
 		self.ipcRenderer.invoke('get-system-idle-state').then((state) => {
-			activityHub.setMachineState(state.system === 'active' ? 1 : 2);
-			const timeOut = (state.system === 'active' ? self.config.appIdleTimeoutCheckInterval : self.config.appActiveCheckInterval) * 1000;
-
+			let timeOut;
 			if (this.config.awayOnSystemIdle) {
+				/*
+					Same logic as before: 
+						awayOnSystemIdle = true, sets status "Away" when screen is locked.
+				*/
+				activityHub.setMachineState(state.system === 'active' ? 1 : 2);
+				timeOut = (state.system === 'active' ? self.config.appIdleTimeoutCheckInterval : self.config.appActiveCheckInterval) * 1000;
+
 				if (state.system === 'active' && state.userIdle === 1) {
 					activityHub.setUserStatus(1);
 				} else if (state.system !== 'active' && state.userCurrent === 1) {
 					activityHub.setUserStatus(3);
 				}
+			} else {
+				/*
+					Handle screen locked: 
+						awayOnSystemIdle = false, keeps status "Available" when locking the screen.
+				*/
+				if ((state.system === 'active') || (state.system === 'locked')) {
+					activityHub.setMachineState(1);
+					timeOut = self.config.appIdleTimeoutCheckInterval * 1000;
+				} else {
+					activityHub.setMachineState(2);
+					timeOut = self.config.appActiveCheckInterval * 1000;
+				}			
 			}
 
 			setTimeout(() => self.watchSystemIdleState(), timeOut);
