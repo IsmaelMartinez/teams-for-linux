@@ -110,7 +110,9 @@ function addCommandLineSwitchesBeforeConfigLoad() {
 function addCommandLineSwitchesAfterConfigLoad() {
 	// Wayland
 	if (process.env.XDG_SESSION_TYPE === 'wayland') {
-		logger.info('Running under Wayland, switching to PipeWire...');
+		logger.info('Running under Wayland, switching to PipeWire and enabling Wayland...');
+
+		process.env.ELECTRON_OZONE_PLATFORM_HINT = 'auto';
 
 		const features = app.commandLine.hasSwitch('enable-features') ? app.commandLine.getSwitchValue('enable-features').split(',') : [];
 		if (!features.includes('WebRTCPipeWireCapturer'))
