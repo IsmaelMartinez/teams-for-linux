@@ -42,11 +42,20 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
+<<<<<<< Updated upstream
     "@homebridge/dbus-native": "^0.6.0",
     "electron-is-dev": "^2.0.0",
     "electron-store": "^8.2.0",
     "electron-window-state": "^5.0.3",
     "lucid-log": "^0.0.3",
+=======
+    "@homebridge/dbus-native": "0.6.0",
+    "electron-is-dev": "2.0.0",
+    "electron-log": "^5.1.5",
+    "electron-store": "8.2.0",
+    "electron-window-state": "5.0.3",
+    "lodash": "^4.17.21",
+>>>>>>> Stashed changes
     "node-sound": "^0.0.8",
     "yargs": "^17.7.2"
   },

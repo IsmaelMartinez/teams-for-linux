@@ -55,7 +55,7 @@ function startStreaming(properties) {
 		}).then(stream => {
 			properties.resolve(stream);
 		}).catch(e => {
-			console.log(e.message);
+			console.error(e.message);
 			properties.reject(e.message);
 		});
 	} else {

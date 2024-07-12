@@ -4,7 +4,6 @@ const path = require('path');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
-const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { httpHelper } = require('../helpers');
 const { execFile } = require('child_process');
@@ -20,7 +19,6 @@ let intune;
 let isControlPressed = false;
 let lastNotifyTime = null;
 let customBGServiceUrl;
-let logger;
 let aboutBlankRequestCount = 0;
 let config;
 let window = null;
@@ -29,13 +27,10 @@ let appConfig = null;
 exports.onAppReady = async function onAppReady(configGroup) {
 	appConfig = configGroup;
 	config = configGroup.startupConfig;
-	logger = new LucidLog({
-		levels: config.appLogLevels.split(',')
-	});
 
 	if (config.ssoInTuneEnabled) {
 		intune = require('../intune');
-		intune.initSso(logger, config.ssoInTuneAuthUser);
+		intune.initSso(config.ssoInTuneAuthUser);
 	}
 
 	if (config.trayIconEnabled) {
@@ -44,7 +39,6 @@ exports.onAppReady = async function onAppReady(configGroup) {
 
 	const browserWindowManager = new BrowserWindowManager({
 		config: config,
-		logger: logger,
 		iconChooser: iconChooser
 	});
 
@@ -79,7 +73,7 @@ exports.show = function(){
 };
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
-	logger.debug('second-instance started');
+	console.debug('second-instance started');
 	if (window) {
 		event.preventDefault();
 		const url = processArgs(args);
@@ -98,7 +92,7 @@ function applyAppConfiguration(config, window) {
 
 	if (typeof config.clientCertPath !== 'undefined' && config.clientCertPath !== '') {
 		app.importCertificate({ certificate: config.clientCertPath, password: config.clientCertPassword }, (result) => {
-			logger.info('Loaded certificate: ' + config.clientCertPath + ', result: ' + result);
+			console.info('Loaded certificate: ' + config.clientCertPath + ', result: ' + result);
 		});
 	}
 
@@ -126,12 +120,12 @@ function handleTeamsV2OptIn(config) {
 					window.webContents.executeJavaScript('localStorage.setItem("tmp.isOptedIntoT2Web", true);', true)
 						.then(window.reload())
 						.catch(err => {
-							console.log('could not set localStorage variable', err);
+							console.debug('could not set localStorage variable', err);
 						});
 				}
 			})
 			.catch(err => {
-				console.log('could not read localStorage variable', err);
+				console.debug('could not read localStorage variable', err);
 			});
 	}
 }
@@ -143,7 +137,7 @@ function setConfigUrlTeamsV2(config) {
 }
 
 function applySpellCheckerConfiguration(languages, window) {
-	const spellCheckProvider = new SpellCheckProvider(window, logger);
+	const spellCheckProvider = new SpellCheckProvider(window);
 	if (spellCheckProvider.setLanguages(languages).length == 0 && languages.length > 0) {
 		// If failed to set user supplied languages, fallback to system locale.
 		const systemList = [app.getLocale()];
@@ -155,7 +149,7 @@ function applySpellCheckerConfiguration(languages, window) {
 }
 
 function onDidFinishLoad() {
-	logger.debug('did-finish-load');
+	console.debug('did-finish-load');
 	window.webContents.executeJavaScript(`
 			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
@@ -180,7 +174,7 @@ function initSystemThemeFollow(config) {
 }
 
 function onDidFrameFinishLoad(event, isMainFrame, frameProcessId, frameRoutingId) {
-	logger.debug('did-frame-finish-load', event, isMainFrame);
+	console.debug('did-frame-finish-load', event, isMainFrame);
 
 	if (isMainFrame) {
 		return; // We want to insert CSS only into the Teams V2 content iframe
@@ -206,16 +200,16 @@ function restoreWindow() {
 
 function processArgs(args) {
 	const regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
-	logger.debug('processArgs:', args);
+	console.debug('processArgs:', args);
 	for (const arg of args) {
-		logger.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
+		console.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
 		if (new RegExp(config.meetupJoinRegEx).test(arg)) {
-			logger.debug('A url argument received with https protocol');
+			console.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
 		}
 		if (regMS.test(arg)) {
-			logger.debug('A url argument received with msteams protocol');
+			console.debug('A url argument received with msteams protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
 		}
@@ -226,14 +220,14 @@ function onBeforeRequestHandler(details, callback) {
 	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
 		const imgUrl = getBGRedirectUrl(reqUrl);
-		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+		console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
 		callback({ redirectURL: imgUrl });
 	}
 	// Custom background replace for teams v2
 	else if (details.url.startsWith('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/') && config.isCustomBackgroundEnabled) {
 		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/', '');
 		const imgUrl = getBGRedirectUrl(reqUrl);
-		logger.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+		console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
 		callback({ redirectURL: imgUrl });
 	}
 	// Check if the counter was incremented
@@ -242,7 +236,7 @@ function onBeforeRequestHandler(details, callback) {
 		callback({});
 	} else {
 		// Open the request externally
-		logger.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
+		console.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
 		//shell.openExternal(details.url);
 		writeUrlBlockLog(details.url);
 		// decrement the counter
@@ -283,7 +277,7 @@ function setImgSrcSecurityPolicy(policies) {
 
 function onBeforeSendHeadersHandler(detail, callback) {
 	if (intune?.isSsoUrl(detail.url)) {
-		intune.addSsoCookie(logger, detail, callback);
+		intune.addSsoCookie(detail, callback);
 	} else {
 		if (detail.url.startsWith(customBGServiceUrl.href)) {
 			detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
@@ -295,14 +289,14 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-	logger.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(details.url)}`);
+	console.debug(`testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(details.url)}`);
 	if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
-		logger.debug('DEBUG - captured meetup-join url');
+		console.debug('DEBUG - captured meetup-join url');
 		return { action: 'deny' };
 	} else if (details.url === 'about:blank' || details.url === 'about:blank#blocked') {
 		// Increment the counter
 		aboutBlankRequestCount += 1;
-		logger.debug('DEBUG - captured about:blank');
+		console.debug('DEBUG - captured about:blank');
 		return { action: 'deny' };
 	}
 
@@ -327,16 +321,16 @@ async function writeUrlBlockLog(url) {
 
 function onLogStreamError(e) {
 	if (e) {
-		logger.error(e.message);
+		console.error(`onLogStreamError ${e.message}`);
 	}
 }
 
-function onPageTitleUpdated(event, title) {
+function onPageTitleUpdated(_event, title) {
 	window.webContents.send('page-title', title);
 }
 
 function onWindowClosed() {
-	logger.debug('window closed');
+	console.debug('window closed');
 	window = null;
 	app.quit();
 }
@@ -366,10 +360,10 @@ function getWebRequestFilterFromURL() {
 function initializeCustomBGServiceURL() {
 	try {
 		customBGServiceUrl = new URL('', config.customBGServiceBaseUrl);
-		logger.debug(`Custom background service url is '${config.customBGServiceBaseUrl}'`);
+		console.debug(`Custom background service url is '${config.customBGServiceBaseUrl}'`);
 	}
-	catch (err) {
-		logger.error(`Invalid custom background service url '${config.customBGServiceBaseUrl}', updating to default 'http://localhost'`);
+	catch (_err) {
+		console.error(`Invalid custom background service url '${config.customBGServiceBaseUrl}', updating to default 'http://localhost'`);
 		customBGServiceUrl = new URL('', 'http://localhost');
 	}
 }
@@ -379,7 +373,7 @@ function onBeforeInput(_event, input) {
 }
 
 function secureOpenLink(details) {
-	logger.debug(`Requesting to open '${details.url}'`);
+	console.debug(`Requesting to open '${details.url}'`);
 	const action = getLinkAction();
 
 	if (action === 0) {
@@ -412,7 +406,7 @@ function openInBrowser(details) {
 
 function openInBrowserErrorHandler(error) {
 	if (error) {
-		logger.error(error.message);
+		console.error(`openInBrowserErrorHandler ${error.message}`);
 	}
 }
 

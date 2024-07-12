@@ -47,6 +47,7 @@ Here is the list of available arguments and its usage:
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
+| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | Falsy                 |
 | meetupJoinRegEx |  Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g |
 | menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
 | minimized                       | Boolean to start the application minimized                                                          | false               |
@@ -111,7 +112,6 @@ Example:
 
 As you can see from the above example, switches with values must be of array where the first entry will be the switch and the second one will be the value. It can be a simple string otherwise.
 
-
 ## Custom backgrounds
 
 We added a feature to load custom background images during a video call. This is available from version `1.0.84`.
@@ -168,6 +168,7 @@ For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 As you can see from the above example, it's a JSON array so you can configure any number of images of your choice.
 
 ### About the entries
+
 - `filetype`: Type of image (Ex: jpg)
 - `id`: Id of the image. Give a unique name without spaces.
 - `name`: Name of your image.
@@ -175,3 +176,69 @@ As you can see from the above example, it's a JSON array so you can configure an
 - `thumb_src`: Path to the image to be shown on the preview screen. Provide a low resolution picture (280x158 based on Microsoft CDN) as it's shown on the preview page. The smaller the image the quicker the preview will be.
 
 Image paths are relative to `customBGServiceBaseUrl`. If your customBGServiceBaseUrl is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
+
+## TODO: For the electron-log
+
+* add warning for `appLogLevels` that are not valid. So people know they are using wrong values.
+
+In version x.x.x we added the ability to not log anything (default), log to the console, or use electron-log as your log manager.
+
+This is managed by the `logConfig` option, that has the following options:
+
+| Option                          | Usage                                                                                      |
+|---------------------------------|--------------------------------------------------------------------------------------------|
+| Falsy                           | Any [Falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value as described  would result in no logs recorded (default)  |
+| console                         | Log to the console using the `console` object                                              |
+| object  (*)                     | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object    |
+
+By default, the application would not log anything, disabling the logger completely.
+
+### Examples of `electron-log` config options
+
+You have some simple options to use the `electron-log` as your log manager. Like:
+* Use the default `electron-log` values:
+```json
+{ "logConfig": "{}" }
+```
+* Making console level as `debug` and disabling the log to file
+```json
+{
+	"logConfig": {
+		"transports": {
+			"console": {
+				"level": "debug"
+			},
+			"file": {
+				"level": false
+			}
+		}
+	}
+}
+```
+
+or more complex
+
+* Changing the console log format and rotating the file logs:
+```json
+{
+	"logConfig": {
+		"transports": {
+			"file": {
+				"maxSize": 100000,
+				"format": "{processType} [{h}:{i}:{s}.{ms}] {text}",
+				"level": "debug"
+			},
+			"console": {
+				"format": "[{h}:{i}:{s}.{ms}] {text}",
+				"level": "info"
+			}
+		}
+	}
+}
+```
+
+### Limitations
+
+I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed) 
+
+* edit the templates to reference to the new log levels to use (and indicate they are hierarchical)

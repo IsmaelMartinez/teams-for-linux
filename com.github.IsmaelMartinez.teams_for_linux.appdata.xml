@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.8.2" date="2024-07-12">
+			<description>
+				<ul>
+					<li>Adding --help option to show the config options</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.8.1" date="2024-07-10">
 			<description>
 				<ul>

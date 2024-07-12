@@ -8,7 +8,6 @@ class BrowserWindowManager {
 
     constructor(properties) {
         this.config = properties.config;
-        this.logger = properties.logger;
         this.iconChooser = properties.iconChooser;
         this.isOnCall = false;
         this.incomingCallCommandProcess = null;
@@ -111,7 +110,7 @@ class BrowserWindowManager {
     disableScreenLockElectron() {
         if (this.blockerId == null) {
             this.blockerId = powerSaveBlocker.start('prevent-display-sleep');
-            this.logger.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
+            console.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
             return true;
         }
         return false;
@@ -119,7 +118,7 @@ class BrowserWindowManager {
     
     disableScreenLockWakeLockSentinel() {
         this.window.webContents.send('enable-wakelock');
-        this.logger.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
+        console.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
         return true;
     }
     
@@ -130,7 +129,7 @@ class BrowserWindowManager {
     
     enableScreenLockElectron() {
         if (this.blockerId != null && powerSaveBlocker.isStarted(this.blockerId)) {
-            this.logger.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
+            console.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
             powerSaveBlocker.stop(this.blockerId);
             this.blockerId = null;
             return true;
@@ -140,7 +139,7 @@ class BrowserWindowManager {
     
     enableScreenLockWakeLockSentinel() {
         this.window.webContents.send('disable-wakelock');
-        this.logger.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
+        console.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
         return true;
     }
     

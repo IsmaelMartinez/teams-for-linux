@@ -41,7 +41,7 @@ class ActivityHub {
 		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
 		if (teams2IdleTracker) {
 			try {
-				console.log(`setMachineState teams2 state=${state}`);
+				console.debug(`setMachineState teams2 state=${state}`);
 				if (state === 1) {
 					teams2IdleTracker.handleMonitoredWindowEvent();
 				} else {
@@ -67,7 +67,7 @@ class ActivityHub {
 		const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
 		if (teams2IdleTracker) {
 			try {
-				console.log(`setUserStatus teams2 status=${status}`);
+				console.debug(`setUserStatus teams2 status=${status}`);
 				if (status === 1) {
 					teams2IdleTracker.handleMonitoredWindowEvent();
 				} else {

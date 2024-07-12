@@ -1,10 +1,8 @@
 const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
-const { LucidLog } = require('lucid-log');
 const { ipcMain } = require('electron');
-
-let logger;
+const logger = require('./logger');
 
 function getConfigFilePath(configPath) {
 	return path.join(configPath, 'config.json');
@@ -70,6 +68,7 @@ function argv(configPath, appVersion) {
 				type: 'number'
 			},
 			appLogLevels: {
+				deprecated: true,
 				default: 'error,warn,info,debug',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
@@ -230,6 +229,11 @@ function argv(configPath, appVersion) {
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
 			},
+			logConfig: {
+				default: 'console',
+				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
+				type: 'object'
+			},
 			meetupJoinRegEx: {
 				default: '^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)',
 				describe: 'Meetup-join and channel regular expession',
@@ -340,6 +344,7 @@ function argv(configPath, appVersion) {
 				type: 'boolean'
 			}
 		})
+		.help().strict(true)
 		.parse(process.argv.slice(1));
 
 	if (configObject.configError) {
@@ -348,17 +353,15 @@ function argv(configPath, appVersion) {
 
 	if (configObject.isConfigFile && config.watchConfigFile) {
 		fs.watch(getConfigFilePath(configPath), (event, filename) => {
-			logger.info(`Config file ${filename} changed ${event}. Relaunching app...`);
+			console.info(`Config file ${filename} changed ${event}. Relaunching app...`);
 			ipcMain.emit('config-file-changed');
 		});
 	}
 
-	logger = new LucidLog({
-		levels: config.appLogLevels.split(',')
-	});
+	logger.init(config.logConfig);
 
-	logger.debug('configPath:', configPath);
-	logger.debug('configFile:', configObject.configFile);
+	console.debug('configPath:', configPath);
+	console.debug('configFile:', configObject.configFile);
 
 	return config;
 }

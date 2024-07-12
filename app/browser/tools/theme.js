@@ -8,12 +8,12 @@ class ThemeManager {
 
 		const clientPreferences = ReactHandler.getTeams2ClientPreferences();
 		if (clientPreferences) {
-			console.log('Using react to set the follow system theme');
+			console.debug('Using react to set the follow system theme');
 			ReactHandler.getTeams2ClientPreferences().theme.followOsTheme = config.followSystemTheme;
 		}
 
 		if (config.followSystemTheme) {
-			console.log('followSystemTheme', config.followSystemTheme);
+			console.debug('followSystemTheme', config.followSystemTheme);
 			this.ipcRenderer.on('system-theme-changed', this.applyTheme);   
 		}
 	}
@@ -22,11 +22,11 @@ class ThemeManager {
 		const theme = args[0] ? 'dark' : 'default';
 		const clientPreferences = ReactHandler.getTeams2ClientPreferences();
 		if (clientPreferences) {
-			console.log('Using react to set the theme');
+			console.debug('Using react to set the theme');
 			clientPreferences.theme.userTheme = theme;
-			console.log('Theme changed to', theme);    
+			console.debug('Theme changed to', theme);    
 		} else {
-			console.log('Using angular to set the theme');
+			console.debug('Using angular to set the theme');
 			const inst = await instance.whenReady().catch(() => {
 				console.error('Failed to apply Theme');
 			});

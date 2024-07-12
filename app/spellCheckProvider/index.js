@@ -1,14 +1,9 @@
 const codes = require('./codes');
 
-// eslint-disable-next-line no-unused-vars
-const { LucidLog } = require('lucid-log');
-
 let _SpellCheckProvider_supportedList = new WeakMap();
-let _SpellCheckProvider_logger = new WeakMap();
 let _SpellCheckProvider_window = new WeakMap();
 class SpellCheckProvider {
-	constructor(window, logger) {
-		_SpellCheckProvider_logger.set(this, logger);
+	constructor(window) {
 		_SpellCheckProvider_window.set(this, window);
 		init(this, window);
 	}
@@ -29,10 +24,6 @@ class SpellCheckProvider {
 		return _SpellCheckProvider_window.get(this);
 	}
 
-	get logger() {
-		return _SpellCheckProvider_logger.get(this);
-	}
-
 	isLanguageSupported(code) {
 		return this.supportedList.some(i => {
 			return i.code === code;
@@ -43,16 +34,16 @@ class SpellCheckProvider {
 		const setlanguages = [];
 		for (const c of codes) {
 			if (!this.isLanguageSupported(c)) {
-				this.logger.warn(`Unsupported language code '${c}' for spellchecker`);
+				console.warn(`Unsupported language code '${c}' for spellchecker`);
 			} else {
 				setlanguages.push(c);
 			}
 		}
 		this.window.webContents.session.setSpellCheckerLanguages(setlanguages);
 		if (setlanguages.length > 0) {
-			this.logger.debug(`Language codes ${setlanguages.join(',')} set for spellchecker`);
+			console.debug(`Language codes ${setlanguages.join(',')} set for spellchecker`);
 		} else {
-			this.logger.debug('Spellchecker is disabled!');
+			console.debug('Spellchecker is disabled!');
 		}
 
 		return setlanguages;

@@ -13,7 +13,7 @@ class TrayIconRenderer {
 	updateActivityCount(event) {
 		const count = event.detail.number;
 		this.render(count).then(icon => {
-			console.log('sending tray-update');
+			console.debug('sending tray-update');
 			this.ipcRenderer.send('tray-update', {
 				icon: icon,
 				flash: (count > 0 && !this.config.disableNotificationWindowFlash)

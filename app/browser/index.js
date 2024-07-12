@@ -36,9 +36,9 @@
 					title: title,
 					body: options.body
 				};
-				console.log('Requesting application to play sound');
+				console.debug('Requesting application to play sound');
 				ipcRenderer.invoke('play-notification-sound', notifSound);
-				console.log('Continues to default notification workflow');
+				console.debug('Continues to default notification workflow');
 				return new classicNotification(title, options);
 			} else {
 				ipcRenderer.invoke('show-notification', options);
