@@ -10,7 +10,7 @@ function getConfigFilePath(configPath) {
 	return path.join(configPath, 'config.json');
 }
 
-function checkConfigFileExistance(configPath) {
+function checkConfigFileExistence(configPath) {
 	return fs.existsSync(getConfigFilePath(configPath));
 }
 
@@ -25,8 +25,8 @@ function argv(configPath, appVersion) {
 		configWarning: null,
 		isConfigFile: false
 	}
-	
-	if (checkConfigFileExistance(configPath)) {
+
+	if (checkConfigFileExistence(configPath)) {
 		try {
 			configObject.configFile = getConfigFile(configPath);
 			configObject.isConfigFile = true;
@@ -131,7 +131,7 @@ function argv(configPath, appVersion) {
 			},
 			contextIsolation: {
 				default: false,
-				describe: 'Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionaly)',
+				describe: 'Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)',
 				type: 'boolean'
 			},
 			customUserDir: {
@@ -222,7 +222,7 @@ function argv(configPath, appVersion) {
 			},
 			incomingCallCommandArgs: {
 				default: [],
-				describe: 'Arguments for the incomming call command.',
+				describe: 'Arguments for the incoming call command.',
 				type: 'array'
 			},
 			isCustomBackgroundEnabled: {
@@ -232,7 +232,7 @@ function argv(configPath, appVersion) {
 			},
 			meetupJoinRegEx: {
 				default: '^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)',
-				describe: 'Meetup-join and channel regular expession',
+				describe: 'Meetup-join and channel regular expression',
 				type: 'string'
 			},
 			menubar: {
@@ -280,7 +280,7 @@ function argv(configPath, appVersion) {
 			},
 			sandbox: {
 				default: false,
-				describe: 'Sandbox for the BrowserWindow (WIP - disabling this will break most functionaly)',
+				describe: 'Sandbox for the BrowserWindow (WIP - disabling this will break most functionality)',
 				type: 'boolean'
 			},
 			screenLockInhibitionMethod: {
