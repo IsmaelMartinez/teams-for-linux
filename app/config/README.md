@@ -51,7 +51,7 @@ Here is the list of available arguments and its usage:
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
-| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | Falsy                 |
+| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | *console*                 |
 | meetupJoinRegEx |  Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g |
 | menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
 | minimized                       | Boolean to start the application minimized                                                          | false               |
@@ -119,6 +119,8 @@ As you can see from the above example, switches with values must be of array whe
 ## Custom backgrounds
 
 We added a feature to load custom background images during a video call. This is available from version `1.0.84`.
+
+You can find an example of this feature in the [../customBackground/example/README.md](../customBackground/example/README.md) file.
 
 ### Things to remember:
 
@@ -246,7 +248,3 @@ or more complex
 ### Limitations
 
 I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed) 
-
-
-
-TODO: Edit the templates to reference to the new log levels to use (and indicate they are hierarchical)

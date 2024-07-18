@@ -1,8 +1,7 @@
 const log = require('electron-log/main');
 const _ = require('lodash');
-/*
-Currently only supports file and console transports level objects.
-*/
+
+
 exports.init = function (config) {
     if (config) {
         if (config == 'console') {
@@ -26,7 +25,7 @@ exports.init = function (config) {
         }
         
     } else {
-        console.log('logs disabled from now on');
+        console.log('Overwriting the console functions to disable the logs');
         console.log = function () {};
         console.info = function () {};
         console.debug = function () {};

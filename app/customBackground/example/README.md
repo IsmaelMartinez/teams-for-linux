@@ -11,7 +11,7 @@ Before running this example, ensure you have Node.js and npm installed on your s
 To start the server and serve the application on port 80, run the following command in your terminal:
 
 ```bash
-http-server -p 80 --cors "*" -g
+npx http-server -p 80 --cors "*" -g
 ```
 
 You can now access the application by navigating to `http://localhost` in your browser.
