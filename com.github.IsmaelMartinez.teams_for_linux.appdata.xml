@@ -20,9 +20,10 @@
 					<li>Moving from lucid-log to electron-log</li>
 					<li>Adding --logConfig option to allow choosing between console, electron-log or Falsy (no logs in console)</li>
 					<li>Adding --help option to show the config options</li>
-					<li>Deprecating --appLogLevels in favour of --logConfig</li>
+					<li>Deprecating --appLogLevels in favor of --logConfig</li>
 					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
 					<li>Refactoring the customBackground service and including an example</li>
+					<li>Updating electron to 30.2.0, and other small dependecy updates</li>
 				</ul>
 			</description>
 		</release>
