@@ -23,7 +23,7 @@
 					<li>Deprecating --appLogLevels in favor of --logConfig</li>
 					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
 					<li>Refactoring the customBackground service and including an example</li>
-					<li>Updating electron to 30.2.0, and other small dependecy updates</li>
+					<li>Updating electron to 30.2.0, and other small dependency updates</li>
 				</ul>
 			</description>
 		</release>
