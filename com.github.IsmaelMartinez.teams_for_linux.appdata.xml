@@ -22,6 +22,7 @@
 					<li>Adding --help option to show the config options</li>
 					<li>Deprecating --appLogLevels in favour of --logConfig</li>
 					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
+					<li>Refactoring the customBackground service and including an example</li>
 				</ul>
 			</description>
 		</release>

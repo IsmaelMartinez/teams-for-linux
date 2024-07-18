@@ -220,7 +220,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'array'
 			},
 			isCustomBackgroundEnabled: {
-				default: true,
+				default: false,
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
 			},
