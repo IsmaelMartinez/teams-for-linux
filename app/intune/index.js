@@ -75,11 +75,7 @@ exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
 	}
 	brokerService.getInterface(
 		'/com/microsoft/identity/broker1',
-<<<<<<< Updated upstream
 		'com.microsoft.identity.Broker1', function(_err, broker) {
-=======
-		'com.microsoft.identity.Broker1', function(err, broker) {
->>>>>>> Stashed changes
 			broker.acquirePrtSsoCookie('0.0', '', JSON.stringify({'ssoUrl':detail.url, 'account':inTuneAccount, 'authParameters':{'authority':'https://login.microsoftonline.com/common/'}}), function(_err, resp) {
 				processPrtResponse(resp, detail);
 				callback({

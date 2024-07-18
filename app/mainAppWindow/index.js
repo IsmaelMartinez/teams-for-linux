@@ -5,7 +5,6 @@ const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
 const { SpellCheckProvider } = require('../spellCheckProvider');
-const { httpHelper } = require('../helpers');
 const { execFile } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 // eslint-disable-next-line no-unused-vars
@@ -18,15 +17,16 @@ let iconChooser;
 let intune;
 let isControlPressed = false;
 let lastNotifyTime = null;
-let customBGServiceUrl;
 let aboutBlankRequestCount = 0;
 let config;
 let window = null;
 let appConfig = null;
+let customBackgroundService = null;
 
-exports.onAppReady = async function onAppReady(configGroup) {
+exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 	appConfig = configGroup;
 	config = configGroup.startupConfig;
+	customBackgroundService = customBackground;
 
 	if (config.ssoInTuneEnabled) {
 		intune = require('../intune');
@@ -217,18 +217,10 @@ function processArgs(args) {
 }
 
 function onBeforeRequestHandler(details, callback) {
-	if (details.url.startsWith('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/')) {
-		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/', '');
-		const imgUrl = getBGRedirectUrl(reqUrl);
-		console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
-		callback({ redirectURL: imgUrl });
-	}
-	// Custom background replace for teams v2
-	else if (details.url.startsWith('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/') && config.isCustomBackgroundEnabled) {
-		const reqUrl = details.url.replace('https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/', '');
-		const imgUrl = getBGRedirectUrl(reqUrl);
-		console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
-		callback({ redirectURL: imgUrl });
+	const customBackgroundRedirect = customBackgroundService.beforeRequestHandlerRedirectUrl(details);
+
+	if (customBackgroundRedirect) {
+		callback(customBackgroundRedirect);
 	}
 	// Check if the counter was incremented
 	else if (aboutBlankRequestCount < 1) {
@@ -245,43 +237,19 @@ function onBeforeRequestHandler(details, callback) {
 	}
 }
 
-function getBGRedirectUrl(rel) {
-	return httpHelper.joinURLs(customBGServiceUrl.href, rel);
-}
-
 function onHeadersReceivedHandler(details, callback) {
-	if (details.responseHeaders['content-security-policy']) {
-		const policies = details.responseHeaders['content-security-policy'][0].split(';');
-		setImgSrcSecurityPolicy(policies);
-		setConnectSrcSecurityPolicy(policies);
-		details.responseHeaders['content-security-policy'][0] = policies.join(';');
-	}
+	customBackgroundService.onHeadersReceivedHandler(details);
 	callback({
 		responseHeaders: details.responseHeaders
 	});
-}
-
-function setConnectSrcSecurityPolicy(policies) {
-	const connectsrcIndex = policies.findIndex(f => f.indexOf('connect-src') >= 0);
-	if (connectsrcIndex >= 0) {
-		policies[connectsrcIndex] = policies[connectsrcIndex] + ` ${customBGServiceUrl.origin}`;
-	}
-}
-
-function setImgSrcSecurityPolicy(policies) {
-	const imgsrcIndex = policies.findIndex(f => f.indexOf('img-src') >= 0);
-	if (imgsrcIndex >= 0) {
-		policies[imgsrcIndex] = policies[imgsrcIndex] + ` ${customBGServiceUrl.origin}`;
-	}
 }
 
 function onBeforeSendHeadersHandler(detail, callback) {
 	if (intune?.isSsoUrl(detail.url)) {
 		intune.addSsoCookie(detail, callback);
 	} else {
-		if (detail.url.startsWith(customBGServiceUrl.href)) {
-			detail.requestHeaders['Access-Control-Allow-Origin'] = '*';
-		}
+		customBackgroundService.addCustomBackgroundHeaders(detail, callback);
+		
 		callback({
 			requestHeaders: detail.requestHeaders
 		});
@@ -336,7 +304,7 @@ function onWindowClosed() {
 }
 
 function addEventHandlers() {
-	initializeCustomBGServiceURL();
+	customBackgroundService.initializeCustomBGServiceURL();
 	window.on('page-title-updated', onPageTitleUpdated);
 	window.webContents.setWindowOpenHandler(onNewWindow);
 	window.webContents.session.webRequest.onBeforeRequest({ urls: ['https://*/*'] }, onBeforeRequestHandler);
@@ -349,23 +317,12 @@ function addEventHandlers() {
 }
 
 function getWebRequestFilterFromURL() {
-	const filter = customBGServiceUrl.protocol === 'http:' ? { urls: ['http://*/*'] } : { urls: ['https://*/*'] };
+	const filter = customBackgroundService.isCustomBackgroundHttpProtocol() ? { urls: ['http://*/*'] } : { urls: ['https://*/*'] };
 	if (intune) {
 		intune.setupUrlFilter(filter);
 	}
 	
 	return filter;
-}
-
-function initializeCustomBGServiceURL() {
-	try {
-		customBGServiceUrl = new URL('', config.customBGServiceBaseUrl);
-		console.debug(`Custom background service url is '${config.customBGServiceBaseUrl}'`);
-	}
-	catch (_err) {
-		console.error(`Invalid custom background service url '${config.customBGServiceBaseUrl}', updating to default 'http://localhost'`);
-		customBGServiceUrl = new URL('', 'http://localhost');
-	}
 }
 
 function onBeforeInput(_event, input) {

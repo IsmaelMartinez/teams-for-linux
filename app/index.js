@@ -1,7 +1,6 @@
 const { app, dialog, ipcMain, desktopCapturer, globalShortcut, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
 const path = require('path');
-const fs = require('fs');
-const { httpHelper } = require('./helpers');
+const CustomBackground = require('./customBackground');
 const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
@@ -35,7 +34,7 @@ try {
 	const { NodeSound } = require('node-sound');
 	player = NodeSound.getDefaultPlayer();
 } catch (err) {
-	console.info(`No audio players found. Audio notifications might not work. ${err}`);
+	console.warn(`No audio players found. Audio notifications might not work. ${err}`);
 }
 
 const certificateModule = require('./certificate');
@@ -71,7 +70,6 @@ if (!gotTheLock) {
 	ipcMain.handle('get-zoom-level', handleGetZoomLevel);
 	ipcMain.handle('save-zoom-level', handleSaveZoomLevel);
 	ipcMain.handle('desktop-capturer-get-sources', (_event, opts) => desktopCapturer.getSources(opts));
-	ipcMain.handle('get-custom-bg-list', handleGetCustomBGList);
 	ipcMain.handle('play-notification-sound', playNotificationSound);
 	ipcMain.handle('show-notification', showNotification);
 	ipcMain.handle('user-status-changed', userStatusChangedHandler);
@@ -151,11 +149,8 @@ function addElectronCLIFlagsFromConfig() {
 	}
 }
 
-<<<<<<< Updated upstream
+//TODO: Refator this area (move up or group)
 async function showNotification(_event, options) {
-=======
-async function showNotification(event, options) {
->>>>>>> Stashed changes
 	console.debug('Showing notification using electron API');
 
 	playNotificationSound(null, {
@@ -220,14 +215,14 @@ function handleAppReady() {
 	if (config.error) {
 		dialog.showMessageBox(
 			{
-				title: 'Configuration error',
+				title: 'Configuration Error',
 				icon: nativeImage.createFromPath(path.join(config.appPath, 'assets/icons/setting-error.256x256.png')),
-				message: `Error in config file ${config.error}.\n Loading default configuration`
+				message: `Error in config file '${config.error}'.\n Loading default configuration`
 			}
 		);
 	}
+	// check for configuration warnings		
 	if (config.warning) {
-		// check for configuration warnings
 		dialog.showMessageBox(
 			{ 
 				title: 'Configuration Warning',
@@ -237,15 +232,12 @@ function handleAppReady() {
 		);
 	}
 	
-	if (config.isCustomBackgroundEnabled) {
-		downloadCustomBGServiceRemoteConfig();
-	}
 	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
 	process.on('SIGTERM', onAppTerminated);
 	//Just catch the error
 	process.stdout.on('error', () => { });
-	mainAppWindow.onAppReady(appConfig);
+	mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
 }
 
 async function handleGetSystemIdleState() {
@@ -271,6 +263,7 @@ async function handleGetSystemIdleState() {
 	return state;
 }
 
+//TODO:Consider moving partitions to another module (maybe with the handle zooom level)
 async function handleGetZoomLevel(_, name) {
 	const partition = getPartition(name) || {};
 	return partition.zoomLevel ? partition.zoomLevel : 0;
@@ -281,15 +274,6 @@ async function handleSaveZoomLevel(_, args) {
 	partition.name = args.partition;
 	partition.zoomLevel = args.zoomLevel;
 	savePartition(partition);
-}
-
-async function handleGetCustomBGList() {
-	const file = path.join(app.getPath('userData'), 'custom_bg_remote.json');
-	if (!fs.existsSync(file)) {
-		return [];
-	} else {
-		return JSON.parse(fs.readFileSync(file));
-	}
 }
 
 function getPartitions() {
@@ -317,6 +301,7 @@ function savePartition(arg) {
 	appConfig.settingsStore.set('app.partitions', partitions);
 }
 
+//TODO: Move in certificateModule
 function handleCertificateError() {
 	const arg = {
 		event: arguments[0],
@@ -348,62 +333,6 @@ async function userStatusChangedHandler(_event, options) {
 async function setBadgeCountHandler(_event, count) {
 	console.debug(`Badge count set to '${count}'`);
 	app.setBadgeCount(count);
-}
-
-async function downloadCustomBGServiceRemoteConfig() {
-	let customBGUrl;
-	try {
-		customBGUrl = new URL('', config.customBGServiceBaseUrl);
-	}
-	catch (err) {
-		console.warning(`Failed to load custom background service configuration. ${err}. Setting Background service URL to http://localhost `);
-		customBGUrl = new URL('', 'http://localhost');
-	}
-
-	const remotePath = httpHelper.joinURLs(customBGUrl.href, 'config.json');
-	console.debug(`Fetching custom background configuration from '${remotePath}'`);
-	httpHelper.getAsync(remotePath)
-		.then(onCustomBGServiceConfigDownloadSuccess)
-		.catch(onCustomBGServiceConfigDownloadFailure);
-	if (config.customBGServiceConfigFetchInterval > 0) {
-		setTimeout(downloadCustomBGServiceRemoteConfig, config.customBGServiceConfigFetchInterval * 1000);
-	}
-}
-
-function onCustomBGServiceConfigDownloadSuccess(data) {
-	const downloadPath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
-	try {
-		const configJSON = JSON.parse(data);
-		for (let i = 0; i < configJSON.length; i++) {
-			setPath(configJSON[i]);
-		}
-		fs.writeFileSync(downloadPath, JSON.stringify(configJSON));
-		console.debug(`Custom background service remote configuration stored at '${downloadPath}'`);
-	}
-	catch (err) {
-		console.error(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
-	}
-}
-
-function setPath(cfg) {
-	if (!cfg.src.startsWith('/teams-for-linux/custom-bg/')) {
-		cfg.src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.src);
-	}
-
-	if (!cfg.thumb_src.startsWith('/teams-for-linux/custom-bg/')) {
-		cfg.thumb_src = httpHelper.joinURLs('/teams-for-linux/custom-bg/', cfg.thumb_src);
-	}
-}
-
-function onCustomBGServiceConfigDownloadFailure(err) {
-	const dlpath = path.join(app.getPath('userData'), 'custom_bg_remote.json');
-	console.error(`Failed to fetch custom background remote configuration. ${err.message}`);
-	try {
-		fs.writeFileSync(dlpath, JSON.stringify([]));
-	}
-	catch (err) {
-		console.error(`Failed to save custom background default configuration at '${dlpath}'. ${err.message}`);
-	}
 }
 
 function handleGlobalShortcutDisabled () {

@@ -16,14 +16,7 @@ function getConfigFile(configPath) {
 	return require(getConfigFilePath(configPath));
 }
 
-function argv(configPath, appVersion) {
-	const configObject = {
-		configFile: {},
-		configError: null,
-		configWarning: null,
-		isConfigFile: false
-	}
-	
+function populateConfigObjectFromFile(configObject, configPath) {
 	if (checkConfigFileExistance(configPath)) {
 		try {
 			configObject.configFile = getConfigFile(configPath);
@@ -35,8 +28,10 @@ function argv(configPath, appVersion) {
 	} else {
 		console.warn('No config file found, using default values');
 	}
+}
 
-	let config = yargs
+function extractYargConfig(configObject, appVersion) {
+	return yargs
 		.env(true)
 		.config(configObject.configFile)
 		.version(appVersion)
@@ -68,7 +63,7 @@ function argv(configPath, appVersion) {
 				type: 'number'
 			},
 			appLogLevels: {
-				deprecated: true,
+				deprecated: 'Use `logConfig` instead',
 				default: 'error,warn,info,debug',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
@@ -225,12 +220,12 @@ function argv(configPath, appVersion) {
 				type: 'array'
 			},
 			isCustomBackgroundEnabled: {
-				default: false,
+				default: true,
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
 			},
 			logConfig: {
-				default: 'console',
+				default: '{}',
 				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
 				type: 'object'
 			},
@@ -324,7 +319,7 @@ function argv(configPath, appVersion) {
 				type: 'boolean'
 			},
 			url: {
-				default: 'https://teams.microsoft.com/',
+				default: 'https://teams.microsoft.com/v2',
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},
@@ -344,12 +339,40 @@ function argv(configPath, appVersion) {
 				type: 'boolean'
 			}
 		})
-		.help().strict(true)
+		.help()
 		.parse(process.argv.slice(1));
+}
+
+function checkUsedDeprecatedValues(configObject,config) {
+	const deprecatedOptions=yargs.getDeprecatedOptions();
+	for(const option in deprecatedOptions) {
+		if(option in configObject.configFile) {
+			const deprecatedWarningMessage=`Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
+			console.warn(deprecatedWarningMessage);
+			config['warning']=deprecatedWarningMessage;
+		} else {
+			console.debug(`all good with ${option} you aren't using them`);
+		}
+	}
+}
+
+function argv(configPath, appVersion) {
+	const configObject = {
+		configFile: {},
+		configError: null,
+		configWarning: null,
+		isConfigFile: false
+	}
+	
+	populateConfigObjectFromFile(configObject, configPath);
+	
+	let config = extractYargConfig(configObject, appVersion);
 
 	if (configObject.configError) {
 		config['error'] = configObject.configError;
 	}
+
+	checkUsedDeprecatedValues(configObject, config);
 
 	if (configObject.isConfigFile && config.watchConfigFile) {
 		fs.watch(getConfigFilePath(configPath), (event, filename) => {

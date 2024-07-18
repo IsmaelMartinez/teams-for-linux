@@ -26,6 +26,7 @@ exports.init = function (config) {
         }
         
     } else {
+        console.log('logs disabled from now on');
         console.log = function () {};
         console.info = function () {};
         console.debug = function () {};

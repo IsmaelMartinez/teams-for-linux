@@ -31,7 +31,7 @@ async function customGetDisplayMediaWayland(...args) {
 function customGetDisplayMediaX11() {
 	return new Promise((resolve, reject) => {
 		// Request main process to allow access to screen sharing
-		ipcRenderer.once('select-source', (event, source) => {
+		ipcRenderer.once('select-source', (_event, source) => {
 			startStreaming({ source, resolve, reject });
 		});
 		ipcRenderer.send('select-source');

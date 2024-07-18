@@ -14,10 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.8.2" date="2024-07-12">
+		<release version="1.9.0" date="2024-07-12">
 			<description>
 				<ul>
+					<li>Moving from lucid-log to electron-log</li>
+					<li>Adding --logConfig option to allow choosing between console, electron-log or Falsy (no logs in console)</li>
 					<li>Adding --help option to show the config options</li>
+					<li>Deprecating --appLogLevels in favour of --logConfig</li>
+					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
 				</ul>
 			</description>
 		</release>

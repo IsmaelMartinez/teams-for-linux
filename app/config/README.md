@@ -1,6 +1,10 @@
 # Config
 
-This folder contains the configuration options available for the app.
+This folder contains the configuration options available for the app. You can see this options by running the app with the `--help` flag.
+
+```bash
+teams-for-linux --help
+```
 
 ## Available starting arguments
 
@@ -20,7 +24,7 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
-| contextIsolation 	   | Use context isolation in the renderer process (disabling this will break functionality) | false               |
+| contextIsolation 	   | Use context isolation in the renderer process (disabling this will break some functionality) | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
@@ -177,29 +181,31 @@ As you can see from the above example, it's a JSON array so you can configure an
 
 Image paths are relative to `customBGServiceBaseUrl`. If your customBGServiceBaseUrl is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
 
-## TODO: For the electron-log
+## LogConfig option.
 
-* add warning for `appLogLevels` that are not valid. So people know they are using wrong values.
+IMPORTANT: This option deprecates `appLogLevels`, that would be removed in the next major version.
 
-In version x.x.x we added the ability to not log anything (default), log to the console, or use electron-log as your log manager.
+In version 1.9.0 we added the ability to log to the console (default), or use electron-log as your log manager or to not log at all.
 
 This is managed by the `logConfig` option, that has the following options:
 
 | Option                          | Usage                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------|
-| Falsy                           | Any [Falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value as described  would result in no logs recorded (default)  |
-| console                         | Log to the console using the `console` object                                              |
-| object  (*)                     | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object    |
+| Falsy                           | Any [Falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value as described  would result in no logs recorded |
+| console  (default)              | Log to the console using the `console` object                                              |
+| object  (*)                     | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object.  |
 
-By default, the application would not log anything, disabling the logger completely.
+(*) The object must be a valid `electron-log` configuration object. You can see the available options in the [electron-log documentation](https://www.npmjs.com/package/electron-log).
 
 ### Examples of `electron-log` config options
 
 You have some simple options to use the `electron-log` as your log manager. Like:
+
 * Use the default `electron-log` values:
 ```json
 { "logConfig": "{}" }
 ```
+
 * Making console level as `debug` and disabling the log to file
 ```json
 {
@@ -241,4 +247,6 @@ or more complex
 
 I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed) 
 
-* edit the templates to reference to the new log levels to use (and indicate they are hierarchical)
+
+
+TODO: Edit the templates to reference to the new log levels to use (and indicate they are hierarchical)
