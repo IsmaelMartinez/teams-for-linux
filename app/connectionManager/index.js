@@ -100,7 +100,7 @@ function assignOfflineRetryHandler(cm) {
 
 function assignOnDidFailLoadEventHandler(cm) {
 	return (event, code, description) => {
-		console.error(`assignOnDidFailLoadEventHandler : ${event} - ${code} - ${description}`);
+		console.error(`assignOnDidFailLoadEventHandler : ${JSON.stringify(event)} - ${code} - ${description}`);
 		if (description === 'ERR_INTERNET_DISCONNECTED' || description === 'ERR_NETWORK_CHANGED') {
 			cm.refresh();
 		}
