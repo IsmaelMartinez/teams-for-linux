@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.9.0" date="2024-07-12">
+		<release version="1.9.0" date="2024-07-19">
 			<description>
 				<ul>
 					<li>Moving from lucid-log to electron-log</li>
@@ -39,7 +39,7 @@
 				<ul>
 					<li>Increase electron version to 30.1.2</li>
 					<li>Fix handleOnCallConnected not calling disable screen lock</li>
-					<li>Adding contextIsolation and sandbox config options. These will break most functionality but are added as a WIP to help assessing what it would break</li>
+					<li>Adding contextIsolation and sandbox config options. These will break some functionality but are added as a WIP to help assessing what it would break</li>
 				</ul>
 			</description>
 		</release>

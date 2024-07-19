@@ -279,7 +279,7 @@ function extractYargConfig(configObject, appVersion) {
 			},
 			sandbox: {
 				default: false,
-				describe: 'Sandbox for the BrowserWindow (WIP - disabling this will break most functionality)',
+				describe: 'Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)',
 				type: 'boolean'
 			},
 			screenLockInhibitionMethod: {

@@ -301,7 +301,6 @@ function savePartition(arg) {
 	appConfig.settingsStore.set('app.partitions', partitions);
 }
 
-//TODO: Move in certificateModule
 function handleCertificateError() {
 	const arg = {
 		event: arguments[0],

@@ -117,8 +117,8 @@ class CustomBackground {
         const downloadPath = path.join(this.app.getPath('userData'), 'custom_bg_remote.json');
         try {
             const configJSON = JSON.parse(data);
-            for (let i = 0; i < configJSON.length; i++) {
-                setPath(configJSON[i]);
+            for (let config of configJSON) {
+                setPath(config);
             }
             fs.writeFileSync(downloadPath, JSON.stringify(configJSON));
             console.debug(`Custom background service remote configuration stored at '${downloadPath}'`);

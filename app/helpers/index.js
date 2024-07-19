@@ -13,7 +13,7 @@ class HTTPHelper {
 }
 
 function removeLeadingSlash(url) {
-	return (url[0] == '/') ? url = url.substr(1) : url;
+	return (url[0] == '/') ? url.substr(1) : url;
 }
 
 function removeTrailingSlash(url) {
