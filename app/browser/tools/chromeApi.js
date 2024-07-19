@@ -31,7 +31,7 @@ async function customGetDisplayMediaWayland(...args) {
 function customGetDisplayMediaX11() {
 	return new Promise((resolve, reject) => {
 		// Request main process to allow access to screen sharing
-		ipcRenderer.once('select-source', (event, source) => {
+		ipcRenderer.once('select-source', (_event, source) => {
 			startStreaming({ source, resolve, reject });
 		});
 		ipcRenderer.send('select-source');
@@ -55,7 +55,7 @@ function startStreaming(properties) {
 		}).then(stream => {
 			properties.resolve(stream);
 		}).catch(e => {
-			console.log(e.message);
+			console.error(e.message);
 			properties.reject(e.message);
 		});
 	} else {

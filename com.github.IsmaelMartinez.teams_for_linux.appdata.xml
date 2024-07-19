@@ -14,6 +14,19 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.9.0" date="2024-07-19">
+			<description>
+				<ul>
+					<li>Moving from lucid-log to electron-log</li>
+					<li>Adding --logConfig option to allow choosing between console, electron-log or Falsy (no logs in console)</li>
+					<li>Adding --help option to show the config options</li>
+					<li>Deprecating --appLogLevels in favor of --logConfig</li>
+					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
+					<li>Refactoring the customBackground service and including an example</li>
+					<li>Updating electron to 30.2.0, and other small dependency updates</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.8.1" date="2024-07-10">
 			<description>
 				<ul>
@@ -26,7 +39,7 @@
 				<ul>
 					<li>Increase electron version to 30.1.2</li>
 					<li>Fix handleOnCallConnected not calling disable screen lock</li>
-					<li>Adding contextIsolation and sandbox config options. These will break most functionality but are added as a WIP to help assessing what it would break</li>
+					<li>Adding contextIsolation and sandbox config options. These will break some functionality but are added as a WIP to help assessing what it would break</li>
 				</ul>
 			</description>
 		</release>

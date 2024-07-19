@@ -34,8 +34,10 @@ When possible, please run the application from the terminal using `--webDebug` a
 The provide in this section the output from both the terminal and the browser debug console.
 
 ```bash
-teams-for-linux --webDebug --appLogLevels=error,info,warn,debug
+teams-for-linux --webDebug --logConfig='{}'
 ```
+
+*IMPORTANT:* Ensure that you mask any sensitive information before posting the output.
 
 **Additional context**
 Add any other context about the problem here.

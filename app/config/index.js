@@ -1,10 +1,8 @@
 const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
-const { LucidLog } = require('lucid-log');
 const { ipcMain } = require('electron');
-
-let logger;
+const logger = require('./logger');
 
 function getConfigFilePath(configPath) {
 	return path.join(configPath, 'config.json');
@@ -18,14 +16,7 @@ function getConfigFile(configPath) {
 	return require(getConfigFilePath(configPath));
 }
 
-function argv(configPath, appVersion) {
-	const configObject = {
-		configFile: {},
-		configError: null,
-		configWarning: null,
-		isConfigFile: false
-	}
-
+function populateConfigObjectFromFile(configObject, configPath) {
 	if (checkConfigFileExistence(configPath)) {
 		try {
 			configObject.configFile = getConfigFile(configPath);
@@ -37,8 +28,10 @@ function argv(configPath, appVersion) {
 	} else {
 		console.warn('No config file found, using default values');
 	}
+}
 
-	let config = yargs
+function extractYargConfig(configObject, appVersion) {
+	return yargs
 		.env(true)
 		.config(configObject.configFile)
 		.version(appVersion)
@@ -70,6 +63,7 @@ function argv(configPath, appVersion) {
 				type: 'number'
 			},
 			appLogLevels: {
+				deprecated: 'Use `logConfig` instead',
 				default: 'error,warn,info,debug',
 				describe: 'Comma separated list of log levels (error,warn,info,debug)',
 				type: 'string'
@@ -230,6 +224,11 @@ function argv(configPath, appVersion) {
 				describe: 'A flag indicates whether to enable custom background or not',
 				type: 'boolean'
 			},
+			logConfig: {
+				default: '{}',
+				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
+				type: 'object'
+			},
 			meetupJoinRegEx: {
 				default: '^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)',
 				describe: 'Meetup-join and channel regular expression',
@@ -280,7 +279,7 @@ function argv(configPath, appVersion) {
 			},
 			sandbox: {
 				default: false,
-				describe: 'Sandbox for the BrowserWindow (WIP - disabling this will break most functionality)',
+				describe: 'Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)',
 				type: 'boolean'
 			},
 			screenLockInhibitionMethod: {
@@ -320,7 +319,7 @@ function argv(configPath, appVersion) {
 				type: 'boolean'
 			},
 			url: {
-				default: 'https://teams.microsoft.com/',
+				default: 'https://teams.microsoft.com/v2',
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},
@@ -340,25 +339,52 @@ function argv(configPath, appVersion) {
 				type: 'boolean'
 			}
 		})
+		.help()
 		.parse(process.argv.slice(1));
+}
+
+function checkUsedDeprecatedValues(configObject,config) {
+	const deprecatedOptions=yargs.getDeprecatedOptions();
+	for(const option in deprecatedOptions) {
+		if(option in configObject.configFile) {
+			const deprecatedWarningMessage=`Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
+			console.warn(deprecatedWarningMessage);
+			config['warning']=deprecatedWarningMessage;
+		} else {
+			console.debug(`all good with ${option} you aren't using them`);
+		}
+	}
+}
+
+function argv(configPath, appVersion) {
+	const configObject = {
+		configFile: {},
+		configError: null,
+		configWarning: null,
+		isConfigFile: false
+	}
+	
+	populateConfigObjectFromFile(configObject, configPath);
+	
+	let config = extractYargConfig(configObject, appVersion);
 
 	if (configObject.configError) {
 		config['error'] = configObject.configError;
 	}
 
+	checkUsedDeprecatedValues(configObject, config);
+
 	if (configObject.isConfigFile && config.watchConfigFile) {
 		fs.watch(getConfigFilePath(configPath), (event, filename) => {
-			logger.info(`Config file ${filename} changed ${event}. Relaunching app...`);
+			console.info(`Config file ${filename} changed ${event}. Relaunching app...`);
 			ipcMain.emit('config-file-changed');
 		});
 	}
 
-	logger = new LucidLog({
-		levels: config.appLogLevels.split(',')
-	});
+	logger.init(config.logConfig);
 
-	logger.debug('configPath:', configPath);
-	logger.debug('configFile:', configObject.configFile);
+	console.debug('configPath:', configPath);
+	console.debug('configFile:', configObject.configFile);
 
 	return config;
 }

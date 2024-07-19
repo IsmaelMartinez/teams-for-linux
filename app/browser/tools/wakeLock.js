@@ -8,13 +8,13 @@ class WakeLock {
 		try {
 			let lock = await navigator.wakeLock.request('screen');
 			lock.addEventListener('release', () => {
-				console.log('Wake Lock was released');
+				console.debug('Wake Lock was released');
 			});
-			console.log('Wake Lock is active');
+			console.debug('Wake Lock is active');
 			_WakeLock_lock.set(this, lock);
 
 		} catch (err) {
-			console.error(`${err.name}, ${err.message}`);
+			console.error(`wakelog enable error ${err.name}, ${err.message}`);
 		}
 	}
 
@@ -28,7 +28,7 @@ class WakeLock {
 			lock = null;
 			_WakeLock_lock.set(this, lock);
 		} catch (err) {
-			console.error(`${err.name}, ${err.message}`);
+			console.error(`wakelog disable error ${err.name}, ${err.message}`);
 		}
 	}
 }

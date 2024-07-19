@@ -1,0 +1,25 @@
+{
+	"videoBackgroundImages": [
+		{
+			"filetype": "jpg",
+			"id": "Custom_bg01",
+			"name": "Aerial photography of rock formation",
+			"src": "/evergreen-assets/backgroundimages/visar-neziri-CAQvwCoHLhw-unsplash.jpg",
+			"thumb_src": "/evergreen-assets/backgroundimages/visar-neziri-CAQvwCoHLhw-unsplash-thumb.jpg"
+		},
+		{
+			"filetype": "jpg",
+			"id": "Custom_bg02",
+			"name": "Green thick forest during daytime",
+			"src": "/evergreen-assets/backgroundimages/colin-horn-fR9U2S31Exs-unsplash.jpg",
+			"thumb_src": "/evergreen-assets/backgroundimages/colin-horn-fR9U2S31Exs-unsplash-thumb.jpg"
+		},
+		{
+			"filetype": "jpg",
+			"id": "Custom_bg03",
+			"name": "A large sand dune with a blue sky in the background",
+			"src": "/evergreen-assets/backgroundimages/kurt-cotoaga-WvzhI-31ku0-unsplash.jpg",
+			"thumb_src": "/evergreen-assets/backgroundimages/kurt-cotoaga-WvzhI-31ku0-unsplash-thumb.jpg"
+		}
+	]
+}

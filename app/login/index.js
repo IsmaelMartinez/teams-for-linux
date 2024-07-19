@@ -39,7 +39,7 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(window, {ssoBasicAu
 		if (isFirstLoginTry) {
 			isFirstLoginTry = false;
 			if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
-				console.log(`Retrieve password using command : ${ssoBasicAuthPasswordCommand}`);
+				console.debug(`Retrieve password using command : ${ssoBasicAuthPasswordCommand}`);
 				try {
 					const ssoPassword = execSync(ssoBasicAuthPasswordCommand).toString();
 					callback(ssoBasicAuthUser, ssoPassword);

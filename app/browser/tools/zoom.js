@@ -1,8 +1,4 @@
 const { webFrame, ipcRenderer } = require('electron');
-const { LucidLog } = require('lucid-log');
-const logger = new LucidLog({
-	levels: ['debug']
-});
 
 //zoomFactor can be configurable
 const zoomFactor = 0.25;
@@ -64,7 +60,7 @@ function restoreZoomLevelInternal(config) {
 function setNextZoomLevel(keyName, config) {
 	const zoomOffset = zoomOffsets[keyName];
 	let zoomLevel = webFrame.getZoomLevel();
-	logger.debug(`Current zoom level: ${zoomLevel}`);
+	console.debug(`Current zoom level: ${zoomLevel}`);
 	if (typeof (zoomOffset) !== 'number') {
 		return;
 	}

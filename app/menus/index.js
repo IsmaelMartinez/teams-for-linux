@@ -5,7 +5,6 @@ const application = require('./application');
 const preferences = require('./preferences');
 const help = require('./help');
 const Tray = require('./tray');
-const { LucidLog } = require('lucid-log');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const connectionManager = require('../connectionManager');
 
@@ -16,9 +15,6 @@ class Menus {
 		this.iconPath = iconPath;
 		this.configGroup = configGroup;
 		this.allowQuit = false;
-		this.logger = new LucidLog({
-			levels: configGroup.startupConfig.appLogLevels.split(',')
-		});
 		this.initialize();
 	}
 
@@ -112,7 +108,7 @@ class Menus {
 		this.initializeEventHandlers();
 
 		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath, this.configGroup.startupConfig);
-		this.spellCheckProvider = new SpellCheckProvider(this.window, this.logger);
+		this.spellCheckProvider = new SpellCheckProvider(this.window);
 	}
 
 	initializeEventHandlers() {
@@ -122,12 +118,12 @@ class Menus {
 	}
 
 	onBeforeQuit() {
-		this.logger.debug('before-quit');
+		console.debug('before-quit');
 		this.allowQuit = true;
 	}
 
 	onClose(event) {
-		this.logger.debug('window close');
+		console.debug('window close');
 		if (!this.allowQuit && !this.configGroup.startupConfig.closeAppOnCross) {
 			event.preventDefault();
 			this.hide();
@@ -214,7 +210,7 @@ function restoreSettingsInternal(_event, arg) {
 }
 
 function assignContextMenuHandler(menus) {
-	return (event, params) => {
+	return (_event, params) => {
 		const menu = new Menu();
 
 		// Add each spelling suggestion

@@ -19,5 +19,6 @@ class ReactHandler {
         return internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
     }
 }
+//document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices
 
 module.exports = new ReactHandler();
