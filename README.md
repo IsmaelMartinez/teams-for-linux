@@ -66,6 +66,10 @@ Also available in:
 
 Please check in the config [`README.md`](app/config/README.md) of the config folder for startup or configuration options, to enable or disable certain features or behaviors.
 
+## Running teams-for-linux in a firejail
+
+A simple shell script that runs teams-for-linux in a firejail is hosted at https://codeberg.org/lars_uffmann/teams-for-linux-jailed. The script can be used both to start t4l, as well as to join meetings with an active t4l instance.
+
 ## Contributing
 
 Please refer to the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for more information about how to run this application from source, and/or how to contribute.
