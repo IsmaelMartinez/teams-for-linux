@@ -108,7 +108,7 @@ Example:
 ```json
 {
     "electronCLIFlags": [
-		["ozone-platform","wayland"]
+		["ozone-platform","wayland"],
 		"disable-software-rasterizer"
 	]
 }
