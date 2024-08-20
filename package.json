@@ -44,7 +44,7 @@
     "@electron/remote": "^2.1.2",
     "@homebridge/dbus-native": "0.6.0",
     "electron-is-dev": "2.0.0",
-    "electron-log": "^5.1.6",
+    "electron-log": "^5.1.7",
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
     "http-server": "^14.1.1",
