@@ -125,6 +125,7 @@ function addCommandLineSwitchesAfterConfigLoad() {
 		console.info('Disabling GPU support...');
 		app.commandLine.appendSwitch('disable-gpu');
 		app.commandLine.appendSwitch('disable-software-rasterizer');
+		app.disableHardwareAcceleration();
 	}
 
 	addElectronCLIFlagsFromConfig();
