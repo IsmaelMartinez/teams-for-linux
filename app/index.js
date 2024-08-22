@@ -117,6 +117,11 @@ function addCommandLineSwitchesAfterConfigLoad() {
 		app.commandLine.appendSwitch('proxy-server', config.proxyServer);
 	}
 
+	if (config.class) {
+		console.info('Setting WM_CLASS property to custom value ' + config.class);
+		app.setName(config.class);
+	}
+
 	app.commandLine.appendSwitch('auth-server-whitelist', config.authServerWhitelist);
 	app.commandLine.appendSwitch('enable-ntlm-v2', config.ntlmV2enabled);
 
@@ -222,17 +227,17 @@ function handleAppReady() {
 			}
 		);
 	}
-	// check for configuration warnings		
+	// check for configuration warnings
 	if (config.warning) {
 		dialog.showMessageBox(
-			{ 
+			{
 				title: 'Configuration Warning',
 				icon: nativeImage.createFromPath(path.join(config.appPath, 'assets/icons/alert-diamond.256x256.png')),
 				message: config.warning
 			}
 		);
 	}
-	
+
 	process.on('SIGTRAP', onAppTerminated);
 	process.on('SIGINT', onAppTerminated);
 	process.on('SIGTERM', onAppTerminated);
@@ -317,9 +322,9 @@ function handleCertificateError() {
 
 async function requestMediaAccess() {
 	['camera', 'microphone', 'screen'].map(async (permission) => {
-		const status = await 
+		const status = await
 			systemPreferences.askForMediaAccess(permission)
-				.catch(err => { 
+				.catch(err => {
 					console.error(`Error while requesting access for "${permission}": ${err}`); });
 		console.debug(`mac permission ${permission} asked current status ${status}`);
 	});

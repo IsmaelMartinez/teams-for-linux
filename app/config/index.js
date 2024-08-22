@@ -133,6 +133,11 @@ function extractYargConfig(configObject, appVersion) {
 				describe: 'Custom User Directory so that you can have multiple profiles',
 				type: 'string'
 			},
+			class: {
+				default: null,
+				describe: 'A custom value for the WM_CLASS property',
+				type: 'string',
+			},
 			clearStorage: {
 				default: false,
 				describe: 'Whether to clear the storage before creating the window or not',
@@ -363,9 +368,9 @@ function argv(configPath, appVersion) {
 		configWarning: null,
 		isConfigFile: false
 	}
-	
+
 	populateConfigObjectFromFile(configObject, configPath);
-	
+
 	let config = extractYargConfig(configObject, appVersion);
 
 	if (configObject.configError) {

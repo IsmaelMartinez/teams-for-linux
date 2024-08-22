@@ -24,6 +24,7 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
+| class							  | A custom value for the WM_CLASS property                                                  |                 |
 | contextIsolation 	   | Use context isolation in the renderer process (disabling this will break some functionality) | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
@@ -247,4 +248,4 @@ or more complex
 
 ### Limitations
 
-I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed) 
+I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed)
