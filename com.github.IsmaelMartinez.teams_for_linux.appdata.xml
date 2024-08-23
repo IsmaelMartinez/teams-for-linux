@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.9.3" date="2024-08-23">
+			<description>
+				<ul>
+					<li>Revert the default url to be teams v1, not v2.</li>
+					<li>Update the logger to be `console` by default, as the documentation indicates</li>
+					<li>Update electron from  30.2.0 to 30.4.0</li>
+					<li>Update electron from  eslint and global libraries</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.9.2" date="2024-08-22">
 			<description>
 				<ul>

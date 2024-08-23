@@ -230,7 +230,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			logConfig: {
-				default: '{}',
+				default: 'console',
 				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
 				type: 'object'
 			},
@@ -324,7 +324,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			url: {
-				default: 'https://teams.microsoft.com/v2',
+				default: 'https://teams.microsoft.com',
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},
