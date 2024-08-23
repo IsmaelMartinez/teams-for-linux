@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.9.5" date="2024-08-23">
+			<description>
+				<ul>
+					<li>Fix Incomplete regular expression for hostnames for github scanning in ms teams url</li>
+					<li>Printing the render-process-gone reason to help analyse #1369</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.9.4" date="2024-08-23">
 			<description>
 				<ul>

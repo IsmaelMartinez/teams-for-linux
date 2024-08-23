@@ -203,8 +203,9 @@ async function playNotificationSound(_event, options) {
 	console.debug('No notification sound played', player, options);
 }
 
-function onRenderProcessGone() {
-	console.debug('render-process-gone');
+function onRenderProcessGone(event, details) {
+	console.error(`render-process-gone with reason: '${details.reason}'.`);
+	console.error(`Event '${event}' and details '${details}'`);
 	app.quit();
 }
 
