@@ -52,7 +52,7 @@ Here is the list of available arguments and its usage:
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
-| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | *console*                 |
+| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | *{}* (electron-log)        |
 | meetupJoinRegEx |  Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g |
 | menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
 | minimized                       | Boolean to start the application minimized                                                          | false               |

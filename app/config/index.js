@@ -230,7 +230,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			logConfig: {
-				default: 'console',
+				default: '{}',
 				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
 				type: 'object'
 			},

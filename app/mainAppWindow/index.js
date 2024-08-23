@@ -199,7 +199,8 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-	const regMS = /^msteams:\/.*(?:meetup-join|channel)/g;
+	const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel)/g;
+	const v2msTeams = /^msteams:\/\/teams.microsoft.com\/l\/(?:meetup-join|channel)/g;
 	console.debug('processArgs:', args);
 	for (const arg of args) {
 		console.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
@@ -207,11 +208,16 @@ function processArgs(args) {
 			console.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
-		}
-		if (regMS.test(arg)) {
-			console.debug('A url argument received with msteams protocol');
+		} 
+		if (v1msTeams.test(arg)) {
+			console.debug('A url argument received with msteams v1 protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
+		} 
+		if (v2msTeams.test(arg)) {
+			console.debug('A url argument received with msteams v2 protocol');
+			window.show();
+			return arg.replace('msteams', 'https');
 		}
 	}
 }
