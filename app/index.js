@@ -129,6 +129,7 @@ function addCommandLineSwitchesAfterConfigLoad() {
 	if (config.disableGpu) {
 		console.info('Disabling GPU support...');
 		app.commandLine.appendSwitch('disable-gpu');
+		app.commandLine.appendSwitch('disable-gpu-compositing');
 		app.commandLine.appendSwitch('disable-software-rasterizer');
 		app.disableHardwareAcceleration();
 	}
@@ -203,9 +204,10 @@ async function playNotificationSound(_event, options) {
 	console.debug('No notification sound played', player, options);
 }
 
-function onRenderProcessGone(event, details) {
-	console.error(`render-process-gone with reason: '${details.reason}'.`);
-	console.error(`Event '${event}' and details '${details}'`);
+function onRenderProcessGone(event, webContents, details) {
+	// https://www.electronjs.org/docs/latest/api/app#event-render-process-gone
+	// only details provides useful information
+	console.error(`render-process-gone ${JSON.stringify(details)}`);
 	app.quit();
 }
 
