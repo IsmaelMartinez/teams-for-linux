@@ -195,10 +195,10 @@ This is managed by the `logConfig` option, that has the following options:
 | Option                          | Usage                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------|
 | Falsy                           | Any [Falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value as described  would result in no logs recorded |
-| console  (default)              | Log to the console using the `console` object                                              |
-| object  (*)                     | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object.  |
+| console                         | Log to the console using the `console` object                                              |
+| {} JSONObject  (*) - default           | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object.  |
 
-(*) The object must be a valid `electron-log` configuration object. You can see the available options in the [electron-log documentation](https://www.npmjs.com/package/electron-log).
+(*) The JSONObject must be a valid `electron-log` configuration object. You can see the available options in the [electron-log documentation](https://www.npmjs.com/package/electron-log).
 
 ### Examples of `electron-log` config options
 
@@ -225,7 +225,7 @@ You have some simple options to use the `electron-log` as your log manager. Like
 }
 ```
 
-or more complex
+Or more complex:
 
 * Changing the console log format and rotating the file logs:
 ```json
