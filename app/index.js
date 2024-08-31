@@ -205,8 +205,6 @@ async function playNotificationSound(_event, options) {
 }
 
 function onRenderProcessGone(event, webContents, details) {
-	// https://www.electronjs.org/docs/latest/api/app#event-render-process-gone
-	// only details provides useful information
 	console.error(`render-process-gone ${JSON.stringify(details)}`);
 	app.quit();
 }
