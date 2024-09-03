@@ -48,6 +48,7 @@ Here is the list of available arguments and its usage:
 | disableNotificationWindowFlash  | Disable window flashing when there is a notification          | false               |
 | disableGlobalShortcuts | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use | [] |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
+| emulateWinChromiumPlatform| Use windows platform information in chromium. This is helpful if MFA app does not support Linux.| false |
 | followSystemTheme               | Boolean to determine if to follow system theme                                                                      | false               |
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
