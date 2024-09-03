@@ -352,13 +352,13 @@ function extractYargConfig(configObject, appVersion) {
 		.parse(process.argv.slice(1));
 }
 
-function checkUsedDeprecatedValues(configObject, config) {
-	const deprecatedOptions = yargs.getDeprecatedOptions();
+function checkUsedDeprecatedValues(configObject,config) {
+	const deprecatedOptions=yargs.getDeprecatedOptions();
 	for (const option in deprecatedOptions) {
 		if (option in configObject.configFile) {
-			const deprecatedWarningMessage = `Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
+			const deprecatedWarningMessage=`Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
 			console.warn(deprecatedWarningMessage);
-			config['warning'] = deprecatedWarningMessage;
+			config['warning']=deprecatedWarningMessage;
 		} else {
 			console.debug(`all good with ${option} you aren't using them`);
 		}
