@@ -14,6 +14,20 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.10.0" date="2024-09-03">
+			<description>
+				<ul>
+					<li>Changing the T4L icons to comply with Flathub policies</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.9.6" date="2024-09-02">
+			<description>
+				<ul>
+					<li>refine disabling gpu & fix render-process-gone logging</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.9.5" date="2024-08-23">
 			<description>
 				<ul>
