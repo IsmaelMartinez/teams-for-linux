@@ -24,7 +24,7 @@
 		<release version="1.9.6" date="2024-09-02">
 			<description>
 				<ul>
-					<li>refine disabling gpu & fix render-process-gone logging</li>
+					<li>refine disabling gpu and fix render-process-gone logging</li>
 				</ul>
 			</description>
 		</release>
