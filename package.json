@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -100,6 +100,16 @@
       }
     },
     "rpm": {
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss",
+        "libXScrnSaver",
+        "(libXtst or libXtst6)",
+        "xdg-utils",
+        "at-spi2-core",
+        "(libuuid or libuuid1)"
+      ],
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
         "--rpm-digest=sha256"
