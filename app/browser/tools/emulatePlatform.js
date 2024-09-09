@@ -1,7 +1,7 @@
 class PlatformEmulator {
     init(config) {
         //proceed without emulating windows platform in browser
-        if (config.emulateWinChromiumPlatform == false) {
+        if (!config.emulateWinChromiumPlatform) {
             return
         }
 
