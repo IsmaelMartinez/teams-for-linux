@@ -45,7 +45,7 @@
 				return { onclick: null, onclose: null, onerror: null };
 			}
 		}
-		
+
 		static async requestPermission() {
 			return 'granted';
 		}
@@ -69,4 +69,5 @@ function initializeModules(config, ipcRenderer) {
 	require('./tools/settings').init(config, ipcRenderer);
 	require('./tools/customBackgrounds')(config, ipcRenderer);
 	require('./tools/theme').init(config, ipcRenderer);
+	require('./tools/emulatePlatform').init(config);
 }
