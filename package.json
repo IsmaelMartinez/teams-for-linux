@@ -127,7 +127,6 @@
         "default",
         "camera",
         "screen-inhibit-control",
-        "wayland",
         "upower-observe",
         "audio-record",
         "hardware-observe",
