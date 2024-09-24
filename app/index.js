@@ -95,10 +95,10 @@ function addCommandLineSwitchesBeforeConfigLoad() {
 }
 
 function addCommandLineSwitchesAfterConfigLoad() {
-    if (config.customUserDir) {
-        app.setPath('userData', config.customUserDir);
-    }
-    
+	if (config.customUserDir) {
+		app.setPath('userData', config.customUserDir);
+	}
+
 	// Wayland
 	if (process.env.XDG_SESSION_TYPE === 'wayland') {
 		console.info('Running under Wayland, switching to PipeWire...');
