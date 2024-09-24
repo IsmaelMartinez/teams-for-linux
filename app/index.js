@@ -83,11 +83,6 @@ function restartApp() {
 }
 
 function addCommandLineSwitchesBeforeConfigLoad() {
-	// Custom user data directory
-	if (app.commandLine.hasSwitch('customUserDir')) {
-		app.setPath('userData', app.commandLine.getSwitchValue('customUserDir'));
-	}
-
 	app.commandLine.appendSwitch('try-supported-channel-layouts');
 
 	// Disabled features
@@ -100,6 +95,10 @@ function addCommandLineSwitchesBeforeConfigLoad() {
 }
 
 function addCommandLineSwitchesAfterConfigLoad() {
+    if (config.customUserDir) {
+        app.setPath('userData', config.customUserDir);
+    }
+    
 	// Wayland
 	if (process.env.XDG_SESSION_TYPE === 'wayland') {
 		console.info('Running under Wayland, switching to PipeWire...');
