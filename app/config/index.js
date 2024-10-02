@@ -234,7 +234,16 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			logConfig: {
-				default: '{}',
+				default: {
+					"transports": {
+						"console": {
+							"level": "info"
+						},
+						"file": {
+							"level": false
+						}
+					}
+				},
 				describe: 'Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.',
 				type: 'object'
 			},
@@ -266,6 +275,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'string'
 			},
 			onlineCheckMethod: {
+				deprecated: 'It has been automated. Please remove this option from your config file.',
 				default: 'https',
 				describe: 'Type of network test for checking online status.',
 				type: 'string',
