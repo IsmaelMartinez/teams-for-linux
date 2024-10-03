@@ -19,7 +19,7 @@ Here is the list of available arguments and its usage:
 | appIconType                     | Type of tray icon to be used default/light/dark                                           | *default*, light, dark              |
 | appIdleTimeout                  | A numeric value in seconds as duration before app considers the system as idle             | 300                   |
 | appIdleTimeoutCheckInterval     | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached      | 10                    |
-| appLogLevels                    | Comma separated list of log levels (error,warn,info,debug)                                | error,warn            |
+| appLogLevels  **deprecated - use logLevels**                  | Comma separated list of log levels (error,warn,info,debug)                                | error,warn            |
 | appTitle                        | A text to be suffixed with page title                                                    | Microsoft Teams       |
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
@@ -53,13 +53,13 @@ Here is the list of available arguments and its usage:
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
-| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | *{}* (electron-log)        |
-| meetupJoinRegEx |  Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft|live)\.com\/.*(?:meetup-join|channel)/g |
+| logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | **console.info** via (electron-log)        |
+| meetupJoinRegEx |  Meetup-join and channel regular expession |  /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel)/g |
 | menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
 | minimized                       | Boolean to start the application minimized                                                          | false               |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
-| onlineCheckMethod               | Type of network test for checking online status.                                          | *https*, dns, native, none                |
+| onlineCheckMethod  **automated - please remove**             | Type of network test for checking online status.                                          | *https*, dns, native, none                |
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
@@ -205,18 +205,14 @@ This is managed by the `logConfig` option, that has the following options:
 
 You have some simple options to use the `electron-log` as your log manager. Like:
 
-* Use the default `electron-log` values:
-```json
-{ "logConfig": "{}" }
-```
-
-* Making console level as `debug` and disabling the log to file
+**Current configuration**
+* Making console level as `info` and disabling the log to file. :
 ```json
 {
 	"logConfig": {
 		"transports": {
 			"console": {
-				"level": "debug"
+				"level": "info"
 			},
 			"file": {
 				"level": false
@@ -225,6 +221,13 @@ You have some simple options to use the `electron-log` as your log manager. Like
 	}
 }
 ```
+
+
+* Use the default `electron-log` values:
+```json
+{ "logConfig": {} }
+```
+
 
 Or more complex:
 

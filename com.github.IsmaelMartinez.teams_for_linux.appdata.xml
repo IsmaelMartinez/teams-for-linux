@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.11.1" date="2024-10-03">
+			<description>
+				<ul>
+					<li>Automated network check and deprecating `onlineCheckMethod`</li>
+					<li>Changing default logger to console.info and no file, instead of using the electron-log defaults</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.11.0" date="2024-09-24">
 			<description>
 				<ul>

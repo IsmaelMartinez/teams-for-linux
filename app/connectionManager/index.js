@@ -21,8 +21,8 @@ class ConnectionManager {
 		_ConnectionManager_window.set(this, options.window);
 		_ConnectionManager_config.set(this, options.config);
 		_ConnectionManager_currentUrl.set(this, url || this.config.url);
-		ipcMain.on('offline-retry', assignOfflineRetryHandler(this));
-		powerMonitor.on('resume', assignOfflineRetryHandler(this));
+		ipcMain.on('offline-retry', this.refresh)
+		powerMonitor.on('resume', this.refresh);
 		this.window.webContents.on('did-fail-load', assignOnDidFailLoadEventHandler(this));
 		this.refresh();
 	}
@@ -30,13 +30,10 @@ class ConnectionManager {
 	async refresh() {
 		const currentUrl = this.window.webContents.getURL();
 		const hasUrl = currentUrl?.startsWith('https://');
-		const connected = await this.isOnline(1000, 1);
-		if (!connected) {
-			this.window.setTitle('Waiting for network...');
-			console.debug('Waiting for network...');
-		}
-		const retryConnected = connected || await this.isOnline(1000, 30);
-		if (retryConnected) {
+		this.window.setTitle('Waiting for network...');
+		console.debug('Waiting for network...');
+		const connected = await this.isOnline();
+		if (connected) {
 			if (hasUrl) {
 				this.window.reload();
 			} else {
@@ -48,54 +45,63 @@ class ConnectionManager {
 		}
 	}
 
-	async isOnline(timeout, retries) {
-		const onlineCheckMethod = this.config.onlineCheckMethod;
-		let resolved = false;
-		for (let i = 1; i <= retries && !resolved; i++) {
-			resolved = await this.isOnlineTest(onlineCheckMethod, this.config.url);
-			if (!resolved) await sleep(timeout);
-		}
-		if (resolved) {
-			console.debug('Network test successful with method ' + onlineCheckMethod);
-		} else {
-			console.debug('Network test failed with method ' + onlineCheckMethod);
-		}
-		return resolved;
-	}
+	async isOnline() {
+		const onlineCheckMethods = [
+			{
+				// Perform an actual HTTPS request, similar to loading the Teams app.
+				method: 'https',
+				tries: 10,
+				networkTest: async () => { 
+					console.debug('Testing network using net.request() for ' + this.config.url);
+					return await isOnlineHttps(this.config.url);
+				}
+			},
+			{
+				// Sometimes too optimistic, might be false-positive where an HTTP proxy is
+				// mandatory but not reachable yet.
+				method: 'dns',
+				tries: 5,
+				networkTest: async () => {
+					const testDomain = (new URL(this.config.url)).hostname;
+					console.debug('Testing network using net.resolveHost() for ' + testDomain);
+					return await isOnlineDns(testDomain);
+				}
+			},
+			{
+				// Sounds good but be careful, too optimistic in my experience; and at the contrary,
+				// might also be false negative where no DNS is available for internet domains, but
+				// an HTTP proxy is actually available and working.
+				method: 'native',
+				tries: 5,
+				networkTest: async () => { 
+					console.debug('Testing network using net.isOnline()');
+					return net.isOnline();
+				 }
+			},
+			{
+				// That's more an escape gate in case all methods are broken, it disables
+				// the network test (assumes we're online).
+				method: 'none',
+				tries: 1,
+				networkTest: async () => { 
+					console.warn('Network test is disabled, assuming online.');
+					return true;
+				 }
+			}
+		];
 
-	async isOnlineTest(onlineCheckMethod, testUrl) {
-		switch (onlineCheckMethod) {
-		case 'none':
-			// That's more an escape gate in case all methods are broken, it disables
-			// the network test (assumes we're online).
-			console.warn('Network test is disabled, assuming online status.');
-			return true;
-		case 'dns': {
-			// Sometimes too optimistic, might be false-positive where an HTTP proxy is
-			// mandatory but not reachable yet.
-			const testDomain = (new URL(testUrl)).hostname;
-			console.debug('Testing network using net.resolveHost() for ' + testDomain);
-			return await isOnlineDns(testDomain);
+		for (const onlineCheckMethod of onlineCheckMethods) {
+			for (let i = 1; i <= onlineCheckMethod.tries; i++) {
+				const online = await onlineCheckMethod.networkTest();
+				if (online) {
+					console.debug('Network test successful with method ' + onlineCheckMethod.method);
+					return true;
+				}
+				await sleep(500);
+			}
 		}
-		case 'native':
-			// Sounds good but be careful, too optimistic in my experience; and at the contrary,
-			// might also be false negative where no DNS is available for internet domains, but
-			// an HTTP proxy is actually available and working.
-			console.debug('Testing network using net.isOnline()');
-			return net.isOnline();
-		case 'https':
-		default:
-			// Perform an actual HTTPS request, similar to loading the Teams app.
-			console.debug('Testing network using net.request() for ' + testUrl);
-			return await isOnlineHttps(testUrl);
-		}
+		return false;
 	}
-}
-
-function assignOfflineRetryHandler(cm) {
-	return () => {
-		cm.refresh();
-	};
 }
 
 function assignOnDidFailLoadEventHandler(cm) {

@@ -1,7 +1,6 @@
 const log = require('electron-log/main');
 const _ = require('lodash');
 
-
 exports.init = function (config) {
     if (config) {
         if (config == 'console') {
@@ -12,7 +11,6 @@ exports.init = function (config) {
             _.mergeWith(log, config,
                 (obj, src) => typeof obj === 'function' ? Object.assign(obj, src) : undefined,
             );
-            console.debug(`Logger initialised with transports: ${JSON.stringify(log.transports)}`);
             log.initialize();
             Object.assign(console, log.functions);    
             if (log.transports?.file?.level) {
