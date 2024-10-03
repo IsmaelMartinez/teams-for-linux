@@ -275,7 +275,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'string'
 			},
 			onlineCheckMethod: {
-				deprecated: 'It has been automated. Please remove this option from your config file.',
+				deprecated: 'It has been automated.\n Please remove this option from your config file',
 				default: 'https',
 				describe: 'Type of network test for checking online status.',
 				type: 'string',
