@@ -1,9 +1,7 @@
 const { app, Menu, MenuItem, clipboard, dialog, session, ipcMain } = require('electron');
 const fs = require('fs'),
 	path = require('path');
-const application = require('./application');
-const preferences = require('./preferences');
-const help = require('./help');
+const appMenu = require('./appMenu');
 const Tray = require('./tray');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const connectionManager = require('../connectionManager');
@@ -93,21 +91,17 @@ class Menus {
 	}
 
 	initialize() {
-		const appMenu = application(this);
+		const menu = appMenu(this);
 
 		if (this.configGroup.startupConfig.menubar == 'hidden') {
 			this.window.removeMenu();
 		} else {
-			this.window.setMenu(Menu.buildFromTemplate([
-				appMenu,
-				preferences(),
-				help(app, this.window),
-			]));
+			this.window.setMenu(Menu.buildFromTemplate([menu]));
 		}
 
 		this.initializeEventHandlers();
 
-		this.tray = new Tray(this.window, appMenu.submenu, this.iconPath, this.configGroup.startupConfig);
+		this.tray = new Tray(this.window, menu.submenu, this.iconPath, this.configGroup.startupConfig);
 		this.spellCheckProvider = new SpellCheckProvider(this.window);
 	}
 
@@ -144,13 +138,9 @@ class Menus {
 	}
 
 	updateMenu() {
-		const appMenu = application(this);
-		this.window.setMenu(Menu.buildFromTemplate([
-			appMenu,
-			preferences(),
-			help(app, this.window),
-		]));
-		this.tray.setContextMenu(appMenu.submenu);
+		const menu = appMenu(this);
+		this.window.setMenu(Menu.buildFromTemplate([menu]));
+		this.tray.setContextMenu(menu.submenu);
 	}
 
 	toggleDisableNotifications() {
