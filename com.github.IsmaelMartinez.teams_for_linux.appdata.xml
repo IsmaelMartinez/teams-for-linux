@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.11.2" date="2024-10-14">
+			<description>
+				<ul>
+					<li>Modifying the menu to include zoom, and help sections</li>
+					<li>Fix some sonarcloud detected issues</li>
+					<li>Add debug log for cookie change for authtoken and domain teams.microsoft.com</li>
+					<li>Updated electron to 32.2.0</li>
+					<li>Updated electron-builder 25.1.8</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.11.1" date="2024-10-03">
 			<description>
 				<ul>
