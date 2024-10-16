@@ -21,34 +21,33 @@ class ActivityManager {
 		self.ipcRenderer.invoke('get-system-idle-state').then((state) => {
 			let timeOut;
 			if (this.config.awayOnSystemIdle) {
-				/*
-					Same logic as before: 
-						awayOnSystemIdle = true, sets status "Away" when screen is locked.
-				*/
-				activityHub.setMachineState(state.system === 'active' ? 1 : 2);
-				timeOut = (state.system === 'active' ? self.config.appIdleTimeoutCheckInterval : self.config.appActiveCheckInterval) * 1000;
-
-				if (state.system === 'active' && state.userIdle === 1) {
-					activityHub.setUserStatus(1);
-				} else if (state.system !== 'active' && state.userCurrent === 1) {
-					activityHub.setUserStatus(3);
-				}
+				timeOut = this.setStatusAwayWhenScreenLocked(state);
 			} else {
-				/*
-					Handle screen locked: 
-						awayOnSystemIdle = false, keeps status "Available" when locking the screen.
-				*/
-				if ((state.system === 'active') || (state.system === 'locked')) {
-					activityHub.setMachineState(1);
-					timeOut = self.config.appIdleTimeoutCheckInterval * 1000;
-				} else {
-					activityHub.setMachineState(2);
-					timeOut = self.config.appActiveCheckInterval * 1000;
-				}			
+				timeOut = this.keepStatusAvailableWhenScreenLocked(state);
 			}
-
 			setTimeout(() => self.watchSystemIdleState(), timeOut);
 		});
+	}
+    
+	setStatusAwayWhenScreenLocked(state) {
+		activityHub.setMachineState(state.system === 'active' ? 1 : 2);
+		const timeOut = (state.system === 'active' ? this.config.appIdleTimeoutCheckInterval : this.config.appActiveCheckInterval) * 1000;
+
+		if (state.system === 'active' && state.userIdle === 1) {
+			activityHub.setUserStatus(1);
+		} else if (state.system !== 'active' && state.userCurrent === 1) {
+			activityHub.setUserStatus(3);
+		}
+		return timeOut;
+	}
+
+	keepStatusAvailableWhenScreenLocked(state) {
+		if ((state.system === 'active') || (state.system === 'locked')) {
+			activityHub.setMachineState(1);
+			return this.config.appIdleTimeoutCheckInterval * 1000;
+		}
+		activityHub.setMachineState(2);
+		return this.config.appActiveCheckInterval * 1000;
 	}
 }
 

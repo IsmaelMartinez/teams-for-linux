@@ -402,7 +402,7 @@ function argv(configPath, appVersion) {
 
 	logger.init(config.logConfig);
 
-	console.debug('configPath:', configPath);
+	console.info('configPath:', configPath);
 	console.debug('configFile:', configObject.configFile);
 
 	return config;

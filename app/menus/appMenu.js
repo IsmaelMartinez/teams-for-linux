@@ -1,5 +1,7 @@
+const { shell } = require('electron');
+
 exports = module.exports = (Menus) => ({
-	label: 'Application',
+	label: 'Teams for Linux',
 	submenu: [
 		{
 			label: 'Open',
@@ -25,7 +27,16 @@ exports = module.exports = (Menus) => ({
 			type: 'separator',
 		},
 		getSettingsMenu(Menus),
+		getPreferencesMenu(),
 		getNotificationsMenu(Menus),
+		{
+			type: 'separator',
+		},
+		{
+			label: 'About',
+			click: () => Menus.about(),
+		},
+		getHelpMenu(),
 		{
 			type: 'separator',
 		},
@@ -38,13 +49,6 @@ exports = module.exports = (Menus) => ({
 			label: 'Quit (Clear Storage)',
 			click: () => Menus.quit(true)
 		},
-		{
-			type: 'separator',
-		},
-		{
-			label: 'About',
-			click: () => Menus.about(),
-		}
 	],
 });
 
@@ -62,6 +66,18 @@ function getSettingsMenu(Menus) {
 			}
 		]
 	};
+}
+
+function getPreferencesMenu() {
+	return {
+		label: 'Zoom',
+		submenu: [
+			{role: 'resetZoom'},
+			{role: 'zoomIn'},
+			{role: 'zoomOut'},
+			{role: 'togglefullscreen'},
+		],
+	}
 }
 
 function getNotificationsMenu(Menus) {
@@ -122,5 +138,25 @@ function getNotificationsMenu(Menus) {
 				]
 			}
 		]
+	};
+}
+
+function getHelpMenu () {
+	return {
+		label: 'Help',
+		submenu: [
+			{
+				label: 'Online Documentation',
+				click: () => shell.openExternal('https://support.office.com/en-us/teams'),
+			},
+			{
+				label: 'Github Project',
+				click: () => shell.openExternal('https://github.com/IsmaelMartinez/teams-for-linux'),
+			},
+			{
+				label: 'Microsoft Teams Support',
+				click:() => shell.openExternal('https://answers.microsoft.com/en-us/msteams/forum'),
+			},
+		],
 	};
 }
