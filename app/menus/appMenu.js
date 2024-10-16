@@ -27,7 +27,7 @@ exports = module.exports = (Menus) => ({
 			type: 'separator',
 		},
 		getSettingsMenu(Menus),
-		getPreferencesMenu(Menus),
+		getPreferencesMenu(),
 		getNotificationsMenu(Menus),
 		{
 			type: 'separator',
