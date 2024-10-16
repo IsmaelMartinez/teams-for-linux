@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.11.2" date="2024-10-14">
+		<release version="1.11.2" date="2024-10-16">
 			<description>
 				<ul>
 					<li>Modifying the menu to include zoom, and help sections</li>
