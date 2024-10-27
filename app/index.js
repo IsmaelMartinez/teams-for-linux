@@ -1,7 +1,6 @@
 const { app, dialog, ipcMain, desktopCapturer, globalShortcut, systemPreferences, powerMonitor, Notification, nativeImage } = require('electron');
 const path = require('path');
 const CustomBackground = require('./customBackground');
-const isDev = require('electron-is-dev');
 const os = require('os');
 const isMac = os.platform() === 'darwin';
 
@@ -13,7 +12,7 @@ const { AppConfiguration } = require('./appConfiguration');
 const appConfig = new AppConfiguration(app.getPath('userData'), app.getVersion());
 
 const config = appConfig.startupConfig;
-config.appPath = path.join(__dirname, isDev ? '' : '../../');
+config.appPath = path.join(__dirname, !app.isPackaged ? '' : '../../');
 
 addCommandLineSwitchesAfterConfigLoad();
 
