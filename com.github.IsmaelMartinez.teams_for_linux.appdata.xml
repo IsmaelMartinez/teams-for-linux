@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.11.3" date="2024-10-27">
+			<description>
+				<ul>
+					<li>Update electron to 33.0.2</li>
+					<li>Remove electron-is-dev and just use the app.isPackaged</li>
+					<li>Other small library updates</li>
+				</ul>
+			</description>
 		<release version="1.11.2" date="2024-10-16">
 			<description>
 				<ul>
