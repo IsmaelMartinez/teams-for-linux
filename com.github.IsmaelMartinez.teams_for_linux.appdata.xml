@@ -10,7 +10,7 @@
 		<p>This application is an unofficial client for Microsoft Teams.</p>
 	</description>
 	<url type="homepage">https://github.com/IsmaelMartinez/teams-for-linux</url>
-	<url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/KNOWN_ISSUES.md</url>
+	<url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/main/KNOWN_ISSUES.md</url>
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>

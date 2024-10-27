@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'main')
         run: npm run dist:linux:x64 -- --publish always
 
   linux_arm64:
@@ -45,7 +45,7 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'main')
         run: npm run dist:linux:arm64 -- --publish always
 
   linux_arm:
@@ -64,7 +64,7 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'main')
         run: npm run dist:linux:arm -- --publish always
 
   dmg:
@@ -83,7 +83,7 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'main')
         run: npm run dist:mac:x64 -- --publish always
 
   exe:
@@ -102,5 +102,5 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'develop')
+        if: contains(github.ref, 'main')
         run: npm run dist:windows -- --publish always

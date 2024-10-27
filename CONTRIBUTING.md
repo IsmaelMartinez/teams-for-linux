@@ -8,7 +8,7 @@ This is a fairly small project, making it ideal for getting started with Electro
 
 To contribute, fork the repository and make your changes. The starting point of the application is `app/index.js`.
 
-After making your changes, submit a pull request to the `develop` branch.
+After making your changes, submit a pull request to the `main` branch.
 
 Each subfolder contains a `README.md` file that provides additional information and explains the purpose of the folder.
 
@@ -77,7 +77,7 @@ sudo snap install teams-for-linux
 
 ## Release process
 
-The release is mostly automated using GitHub Actions. The release is triggered by merging to develop.
+The release is mostly automated using GitHub Actions. The release is triggered by merging to main.
 
 ### Versioning
 
