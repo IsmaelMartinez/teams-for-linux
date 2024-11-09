@@ -50,6 +50,7 @@ Here is the list of available arguments and its usage:
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 | emulateWinChromiumPlatform| Use windows platform information in chromium. This is helpful if MFA app does not support Linux.| false |
 | followSystemTheme               | Boolean to determine if to follow system theme                                                                      | false               |
+| frame | Specify false to create a Frameless Window. Default is true | false |
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
 | isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |

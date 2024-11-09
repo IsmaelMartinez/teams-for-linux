@@ -18,8 +18,6 @@ exports.loginService = function loginService(parentWindow, callback) {
 			nodeIntegration: true
 		}
 	});
-	require('@electron/remote/main').enable(win.webContents);
-
 	win.once('ready-to-show', () => {
 		win.show();
 	});

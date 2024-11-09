@@ -118,15 +118,6 @@ function extractYargConfig(configObject, appVersion) {
 				describe: 'custom CSS styles file location',
 				type: 'string'
 			},
-			emulateWinChromiumPlatform: {
-				default: false,
-				describe: 'Use windows platform information in chromium. This is helpful if MFA app does not support Linux.'
-			},
-			followSystemTheme: {
-				default: false,
-				describe: 'Follow system theme',
-				type: 'boolean'
-			},
 			contextIsolation: {
 				default: false,
 				describe: 'Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)',
@@ -215,8 +206,22 @@ function extractYargConfig(configObject, appVersion) {
 			},
 			electronCLIFlags: {
 				default: [],
-				describe: "Electron CLI flags",
+				describe: 'Electron CLI flags',
 				type: 'array'
+			},
+			emulateWinChromiumPlatform: {
+				default: false,
+				describe: 'Use windows platform information in chromium. This is helpful if MFA app does not support Linux.'
+			},
+			followSystemTheme: {
+				default: false,
+				describe: 'Follow system theme',
+				type: 'boolean'
+			},
+			frame: {
+				default: false,
+				describe: 'Specify false to create a Frameless Window. Default is true',
+				type: 'string'
 			},
 			incomingCallCommand: {
 				default: null,

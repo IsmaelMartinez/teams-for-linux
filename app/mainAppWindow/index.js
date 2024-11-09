@@ -1,4 +1,3 @@
-require('@electron/remote/main').initialize();
 const { shell, app, nativeTheme, dialog, webFrameMain, Notification } = require('electron');
 const path = require('path');
 const login = require('../login');
@@ -7,8 +6,7 @@ const Menus = require('../menus');
 const { SpellCheckProvider } = require('../spellCheckProvider');
 const { execFile } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
-// eslint-disable-next-line no-unused-vars
-const { AppConfiguration } = require('../appConfiguration');
+require('../appConfiguration');
 const connMgr = require('../connectionManager');
 const fs = require('fs');
 const BrowserWindowManager = require('../mainAppWindow/browserWindowManager');
