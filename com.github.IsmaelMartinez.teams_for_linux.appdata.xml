@@ -19,7 +19,6 @@
 				<ul>
 					<li>Allow frameless window by using the config 'frame' option</li>
 					<li>Remove unused electron remote package</li>
-					<li>Adding --production to the npm ci to reduce the bundling package size</li>
 				</ul>
 			</description>
 		</release>

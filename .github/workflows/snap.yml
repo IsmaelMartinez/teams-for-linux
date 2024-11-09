@@ -27,7 +27,7 @@ jobs:
           node-version: 20
 
       - name: Build
-        run: npm ci --production
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'main')
@@ -52,7 +52,7 @@ jobs:
           node-version: 20
 
       - name: Build
-        run: npm ci --production
+        run: npm ci
 
       - name: Release
         if: contains(github.ref, 'main')
