@@ -29,7 +29,6 @@ class BrowserWindowManager {
 
         // Create the window
         this.window = this.createNewBrowserWindow(windowState);
-        require('@electron/remote/main').enable(this.window.webContents);
         this.assignEventHandlers();
 
         windowState.manage(this.window);
@@ -54,6 +53,7 @@ class BrowserWindowManager {
             show: false,
             autoHideMenuBar: this.config.menubar == 'auto',
             icon: this.iconChooser ? this.iconChooser.getFile() : undefined,
+            frame: config.frame,
 
             webPreferences: {
                 partition: this.config.partition,

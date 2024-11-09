@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "1.11.3",
+  "version": "1.11.4",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -41,7 +41,6 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.2",
     "@homebridge/dbus-native": "0.6.0",
     "electron-log": "^5.2.0",
     "electron-store": "8.2.0",
