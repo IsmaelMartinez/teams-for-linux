@@ -53,7 +53,7 @@ class BrowserWindowManager {
             show: false,
             autoHideMenuBar: this.config.menubar == 'auto',
             icon: this.iconChooser ? this.iconChooser.getFile() : undefined,
-            frame: config.frame,
+            frame: this.config.frame,
 
             webPreferences: {
                 partition: this.config.partition,
