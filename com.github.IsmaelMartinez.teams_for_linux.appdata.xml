@@ -14,7 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.11.4" date="2024-11-09">
+		<release version="1.11.5" date="2024-11-11">
+			<description>
+				<ul>
+					<li>Change the default value of frame to true</li>
+					<li>Package updates including moving to electron 33.2.0</li>
+				</ul>
+			</description>
+		</release><release version="1.11.4" date="2024-11-09">
 			<description>
 				<ul>
 					<li>Allow frameless window by using the config 'frame' option</li>
