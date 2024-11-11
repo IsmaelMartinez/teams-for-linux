@@ -219,7 +219,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			frame: {
-				default: false,
+				default: true,
 				describe: 'Specify false to create a Frameless Window. Default is true',
 				type: 'string'
 			},
