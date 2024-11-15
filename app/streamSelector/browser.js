@@ -1,32 +1,51 @@
-const { ipcRenderer } = require('electron');
-window.addEventListener('DOMContentLoaded', init());
-
-function init() {
-	return () => {
-		ipcRenderer.once('get-screensizes-response', (event, screens) => {
-			createPreviewScreen(screens);
-		});
-		ipcRenderer.send('get-screensizes-request');
-	};
-}
-
-function createPreviewScreen(screens) {
+window.addEventListener('DOMContentLoaded', () => {
+	const screens = [
+		{
+			width: 1280,
+			height: 720,
+			name: 'HD',
+			alt_name: '720p',
+			default: false
+		},
+		{
+			width: 1920,
+			height: 1080,
+			name: 'FHD',
+			alt_name: '1080p',
+			default: true
+		},
+		{
+			width: 2048,
+			height: 1080,
+			name: '2K',
+			alt_name: 'QHD',
+			default: false
+		},
+		{
+			width: 3840,
+			height: 2160,
+			name: '4K',
+			alt_name: 'UHD',
+			default: false
+		}
+	];
 	let windowsIndex = 0;
 	const sscontainer = document.getElementById('screen-size');
 	createEventHandlers({ screens, sscontainer });
-	ipcRenderer.invoke('desktop-capturer-get-sources', { types: ['window', 'screen'] }).then(async (sources) => {
-		const rowElement = document.querySelector('.container-fluid .row');
-		for (const source of sources) {
-			await createPreview({
-				source,
-				title: source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`,
-				rowElement,
-				screens,
-				sscontainer
-			});
-		}
-	});
-}
+	window.api.desktopCapturerGetSources({ types: ['window', 'screen'] })
+		.then(async (sources) => {
+			const rowElement = document.querySelector('.container-fluid .row');
+			for (const source of sources) {
+				await createPreview({
+					source,
+					title: source.id.startsWith('screen:') ? source.name : `Window ${++windowsIndex}`,
+					rowElement,
+					screens,
+					sscontainer
+				});
+			}
+		});
+});
 
 async function createPreview(properties) {
 	let columnElement = document.createElement('div');
@@ -75,7 +94,7 @@ async function createPreviewStream(properties, videoElement) {
 function playPreview(properties) {
 	properties.videoElement.onclick = () => {
 		closePreviews();
-		ipcRenderer.send('selected-source', {
+		window.api.selectedSource({
 			id: properties.source.id,
 			screen: properties.screens[properties.sscontainer.value]
 		});
@@ -89,7 +108,7 @@ function createEventHandlers(properties) {
 	document.querySelector('#btn-windows').addEventListener('click', toggleSources);
 	document.querySelector('#btn-close').addEventListener('click', () => {
 		closePreviews();
-		ipcRenderer.send('close-view');
+		window.api.closeView();
 	});
 }
 
