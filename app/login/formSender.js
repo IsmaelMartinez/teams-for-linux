@@ -6,5 +6,10 @@ function sendForm(event) { // eslint-disable-line no-unused-vars
 		{
 			username: document.getElementById('username').value,
 			password: document.getElementById('password').value,
-		});
+		}
+	);
+	// window.api.submitForm({
+	// 	username: document.getElementById('username').value,
+	// 	password: document.getElementById('password').value,
+	// });
 }

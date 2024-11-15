@@ -1,35 +1,5 @@
-const { ipcMain, BrowserView } = require('electron');
+const { ipcMain, WebContentsView } = require('electron');
 const path = require('path');
-const resolutions = [
-	{
-		width: 1280,
-		height: 720,
-		name: 'HD',
-		alt_name: '720p',
-		default: false
-	},
-	{
-		width: 1920,
-		height: 1080,
-		name: 'FHD',
-		alt_name: '1080p',
-		default: true
-	},
-	{
-		width: 2048,
-		height: 1080,
-		name: '2K',
-		alt_name: 'QHD',
-		default: false
-	},
-	{
-		width: 3840,
-		height: 2160,
-		name: '4K',
-		alt_name: 'UHD',
-		default: false
-	}
-];
 
 let _StreamSelector_parent = new WeakMap();
 let _StreamSelector_window = new WeakMap();
@@ -54,7 +24,7 @@ class StreamSelector {
 	}
 
 	/**
-	 * @type {BrowserView}
+	 * @type {WebContentsView}
 	 */
 	get view() {
 		return _StreamSelector_window.get(this);
@@ -85,16 +55,14 @@ class StreamSelector {
 	show(callback) {
 		let self = this;
 		self.callback = callback;
-		self.view = new BrowserView({
+		self.view = new WebContentsView({
 			webPreferences: {
-				nodeIntegration: true,
-				contextIsolation: false
+				preload: path.join(__dirname, 'preload.js')
 			}
 		});
 
-		createScreenRequestHandler();
 		self.view.webContents.loadFile(path.join(__dirname, 'index.html'));
-		self.parent.addBrowserView(self.view);
+		self.parent.contentView.addChildView(self.view);
 
 		let _resize = () => {
 			resizeView(self);
@@ -102,6 +70,9 @@ class StreamSelector {
 		resizeView(self);
 
 		let _close = (_event, source) => {
+			//'screen:x:0' -> whole screen
+			//'window:x:0' -> small window
+			// show captured source in a new view? Maybe reuse the same view, but make it smaller? probably best a new "file"/view
 			closeView({ view: self, _resize, _close, source });
 		};
 
@@ -133,14 +104,6 @@ function resizeView(view) {
 			height: 180
 		});
 	}, 0);
-}
-
-function createScreenRequestHandler() {
-	ipcMain.once('get-screensizes-request', event => {
-		event.reply('get-screensizes-response', resolutions.map(resolution => {
-			return Object.assign({}, resolution);
-		}));
-	});
 }
 
 module.exports = { StreamSelector };

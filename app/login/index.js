@@ -1,5 +1,6 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const { execSync } = require('child_process');
+// const path = require('path');
 
 let isFirstLoginTry = true;
 
@@ -16,6 +17,7 @@ exports.loginService = function loginService(parentWindow, callback) {
 		webPreferences: {
 			contextIsolation: false,
 			nodeIntegration: true
+			//preload: path.join(__dirname, 'preload.js')
 		}
 	});
 	win.once('ready-to-show', () => {
