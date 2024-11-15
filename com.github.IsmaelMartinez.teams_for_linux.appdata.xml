@@ -31,7 +31,7 @@
 				</ul>
 			</description>
 		</release>
-		</release><release version="1.11.4" date="2024-11-09">
+		<release version="1.11.4" date="2024-11-09">
 			<description>
 				<ul>
 					<li>Allow frameless window by using the config 'frame' option</li>
