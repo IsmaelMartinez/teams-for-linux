@@ -19,6 +19,7 @@
 				<ul>
 					<li>Improving security on the loginForm by removing the need of contentIsolation</li>
 					<li>Removing the already deprecated `onlineCheckMethod` option from the config options</li>
+					<li>Updating the HISTORY section to be more inline with the current stated of affairs</li>
 				</ul>
 			</description>
 		</release>
