@@ -60,7 +60,6 @@ Here is the list of available arguments and its usage:
 | minimized                       | Boolean to start the application minimized                                                          | false               |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
-| onlineCheckMethod  **automated - please remove**             | Type of network test for checking online status.                                          | *https*, dns, native, none                |
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |

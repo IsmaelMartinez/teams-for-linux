@@ -22,7 +22,15 @@
                 color: rgb(255, 255, 255);">
     </form>
 
-    <script src='formSender.js'></script>
+    <script>
+        function sendForm(event) {
+            event.preventDefault();
+            window.api.submitForm({
+            	username: document.getElementById('username').value,
+            	password: document.getElementById('password').value,
+            });
+        }
+    </script>
 </body>
 
 </html>

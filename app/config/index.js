@@ -279,13 +279,6 @@ function extractYargConfig(configObject, appVersion) {
 				describe: 'Set enable-ntlm-v2 value',
 				type: 'string'
 			},
-			onlineCheckMethod: {
-				deprecated: 'It has been automated.\n Please remove this option from your config file',
-				default: 'https',
-				describe: 'Type of network test for checking online status.',
-				type: 'string',
-				choices: ['https', 'dns', 'native', 'none']
-			},
 			optInTeamsV2: {
 				default: false,
 				describe: 'Opt in to use Teams V2',

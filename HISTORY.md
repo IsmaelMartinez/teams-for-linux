@@ -10,8 +10,10 @@ For that reason, decided to refork it and fix a few things that where not workin
 
 To be able to use a few github functionalities, it was decided to unfork the project [#87](https://github.com/IsmaelMartinez/teams-for-linux/issues/87).
 
-The original idea was to let the project die when Microsoft would implement a desktop client for linux, as requested on the [Microsoft Suggestions Forum](https://microsoftteams.uservoice.com/forums/555103-public/suggestions/16911565-linux-client). Microsoft released a linux client on February 13, 2020 ([Download](https://www.microsoft.com/en-us/microsoft-365/microsoft-teams/download-app#desktopAppDownloadregion), [Instructions](https://docs.microsoft.com/en-us/microsoftteams/get-clients#linux)).
-However, the development of this project continued, as it is suprior on some aspects (screen share able to share single windows, normal window border [#281](https://github.com/IsmaelMartinez/teams-for-linux/issues/281#issuecomment-601578412), command-line interface,  and, of course, open-source).
+The original idea was to let the project die when Microsoft implemented a desktop client for Linux, as requested on the [Microsoft Suggestions Forum](https://microsoftteams.uservoice.com/forums/555103-public/suggestions/16911565-linux-client). Microsoft did released a Linux client on early 2020.
 
-Currently, the project is in a stable condition, and should continue as long as needed. Non stable versions are released as pre-release. 
-IsmaelMartinez is not "implementing new features, only fixing issues, but happy to help and accept new PRs" ([351](https://github.com/IsmaelMartinez/teams-for-linux/issues/351#issuecomment-626590582)).
+However, by the [end of 2022](https://learn.microsoft.com/en-us/answers/questions/1791839/where-is-teams-for-linux) Microsoft stopped its support, urging users to use the [PWA version](https://techcommunity.microsoft.com/blog/microsoftteamsblog/microsoft-teams-progressive-web-app-now-available-on-linux/3669846).
+
+Support for this project continues as some users still prefer this open-source version. Their contributions keep the project alive and are a significant part of this growing community.
+
+Currently, the project is stable and will continue as long as the community needs it. Non-stable versions are released as pre-releases. We appreciate any contributions, whether they are issues, ideas, PRs, or anything in between. These contributions are what keep this project thriving.
