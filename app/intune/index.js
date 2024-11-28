@@ -14,7 +14,7 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 		inTuneAccount = response.accounts[0];
 		console.debug('Using first available InTune account (' + inTuneAccount.username + ')');
 	} else {
-		for (const account in response.accounts) {
+		for (const account of response.accounts) {
 			if (account.username == ssoInTuneAuthUser) {
 				inTuneAccount = account;
 				console.debug('Found matching InTune account (' + inTuneAccount.username + ')');
