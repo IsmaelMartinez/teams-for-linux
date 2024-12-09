@@ -133,6 +133,9 @@ function addCommandLineSwitchesAfterConfigLoad() {
 		app.disableHardwareAcceleration();
 	}
 
+	// Fluent Scrollbar (flag feature)
+	app.commandLine.appendSwitch('enable-fluent-scrollbar');
+
 	addElectronCLIFlagsFromConfig();
 }
 
