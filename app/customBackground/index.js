@@ -124,7 +124,7 @@ class CustomBackground {
             console.debug(`Custom background service remote configuration stored at '${downloadPath}'`);
         }
         catch (err) {
-            console.error(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
+            console.warning(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
         }
     }
 }
