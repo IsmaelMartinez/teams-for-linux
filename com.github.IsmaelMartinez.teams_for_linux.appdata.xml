@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.12.4" date="2024-12-10">
+			<description>
+				<ul>
+					<li>Update electron version to 33.3.0</li>
+					<li>Change Fetched custom background remote configuration... error to warning</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.12.3" date="2024-11-30">
 			<description>
 				<ul>
