@@ -25,7 +25,7 @@ class CustomBackground {
             customBGUrl = new URL('', this.config.customBGServiceBaseUrl);
         }
         catch (err) {
-            console.warning(`Failed to load custom background service configuration. ${err}. Setting Background service URL to http://localhost `);
+            console.warn(`Failed to load custom background service configuration. ${err}. Setting Background service URL to http://localhost `);
             customBGUrl = new URL('', 'http://localhost');
         }
     
@@ -124,7 +124,7 @@ class CustomBackground {
             console.debug(`Custom background service remote configuration stored at '${downloadPath}'`);
         }
         catch (err) {
-            console.warning(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
+            console.warn(`Fetched custom background remote configuration but failed to save at '${downloadPath}'. ${err.message}`);
         }
     }
 }
