@@ -61,7 +61,7 @@ body:
         2.
         3.
         ...
-      render: bash
+      render: markdown
   - type: textarea
     id: expected-behavior
     attributes:
@@ -72,7 +72,7 @@ body:
         2.
         3.
         ...
-      render: bash
+      render: markdown
   - type: textarea
     id: debug
     attributes:
@@ -82,6 +82,7 @@ body:
         ```bash
         teams-for-linux --webDebug --logConfig='{}'
         ```
+      render: markdown
   - type: textarea
     id: additional-context
     attributes:
