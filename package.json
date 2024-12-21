@@ -56,7 +56,7 @@
     "electron": "^33.3.0",
     "electron-builder": "^25.1.8",
     "eslint": "^9.17.0",
-    "globals": "^15.13.0"
+    "globals": "^15.14.0"
   },
   "build": {
     "appId": "teams-for-linux",
