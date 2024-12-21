@@ -12,8 +12,8 @@ body:
       label: Can you reproduce this bug in the PWA?
       description: "If you can reproduce the bug in the PWA, it's likely a bug in the web app. Please report it to Microsoft instead"
       options:
-        - Yes
-        - No
+        - "Yes"
+        - "No"
         - Not applicable
       default: 0
     validations:
