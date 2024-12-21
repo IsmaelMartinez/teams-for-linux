@@ -25,6 +25,32 @@ body:
       description: A clear and concise description of what the bug is
     validations:
       required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: What package are you using?
+      options:
+        - deb
+        - rpm
+        - snap
+        - flatpak
+        - AppImage
+        - tar.gz
+        - aur
+        - macOS
+        - Windows
+        - Built from source
+      default: 0
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running?
+      placeholder: ex. 0.1.17
+    validations:
+      required: true
   - type: textarea
     id: repro
     attributes:
@@ -47,32 +73,6 @@ body:
         3.
         ...
       render: bash
-  - type: dropdown
-    id: package
-    attributes:
-      label: What package are you using?
-      options:
-        - Built from source
-        - deb
-        - rpm
-        - snap
-        - flatpak
-        - AppImage
-        - tar.gz
-        - aur
-        - macOS
-        - Windows
-      default: 0
-    validations:
-      required: true
-  - type: input
-    id: version
-    attributes:
-      label: Version
-      description: What version of our software are you running?
-      placeholder: ex. 0.1.17
-    validations:
-      required: true
   - type: textarea
     id: debug
     attributes:
@@ -82,8 +82,8 @@ body:
         ```bash
         teams-for-linux --webDebug --logConfig='{}'
         ```
-    validations:
-      required: false
-  - type: markdown
+  - type: textarea
+    id: additional-context
     attributes:
-      value: Add any other context about the problem here that can help us understand and solve it faster. (like screenshots, etc).
+      label: Additional context
+      description: Add any other context about the problem here that can help us understand and solve it faster. (like screenshots, etc).
