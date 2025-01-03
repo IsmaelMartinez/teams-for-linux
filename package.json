@@ -2,7 +2,7 @@
   "name": "teams-bmw",
   "version": "1.12.5",
   "main": "app/index.js",
-  "description": "Unofficial client for Microsoft Teams for Linux",
+  "description": "Unofficial client for Microsoft Teams BMW",
   "homepage": "https://github.com/SlyOrion/teams-for-linux",
   "keywords": [
     "Teams",
