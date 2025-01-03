@@ -18,7 +18,7 @@ The following is a list of locations depending on your type installation:
 |:-------------:|:-------------:|:-----:|
 | Vanilla install | `~/.config/teams-for-linux` | `rm -rf ~/.config/teams-for-linux` |
 | snap | `~/snap/teams-for-linux/current/.config/teams-for-linux/` |  `rm -rf ~/snap/teams-for-linux/current/.config/teams-for-linux/` |
-| --user installed flatpak | `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` | `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` |
+| --user installed flatpak | `~/.var/app/com.github.SlyOrion.teams_for_linux/config/teams-for-linux` | `rm -rf ~/.var/app/com.github.SlyOrion.teams_for_linux/config/teams-for-linux` |
 | From source | `~/.config/Electron/` | `rm -rf ~/.config/Electron/` |
 
 ## Spellchecker not working
@@ -51,7 +51,7 @@ If the above doesn't work:
 
   *    for Snap installation, `snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`.
 
-  *    for flatpak, `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application\ Cache/`
+  *    for flatpak, `~/.var/app/com.github.SlyOrion.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application\ Cache/`
 
   >  Check the config locations to find other installations location
 

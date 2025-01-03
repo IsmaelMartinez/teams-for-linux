@@ -72,10 +72,10 @@ function getPreferencesMenu() {
 	return {
 		label: 'Zoom',
 		submenu: [
-			{role: 'resetZoom'},
-			{role: 'zoomIn'},
-			{role: 'zoomOut'},
-			{role: 'togglefullscreen'},
+			{ role: 'resetZoom' },
+			{ role: 'zoomIn' },
+			{ role: 'zoomOut' },
+			{ role: 'togglefullscreen' },
 		],
 	}
 }
@@ -116,7 +116,7 @@ function getNotificationsMenu(Menus) {
 			},
 			{
 				label: 'Urgency',
-				submenu:[
+				submenu: [
 					{
 						label: 'Low',
 						type: 'checkbox',
@@ -141,7 +141,7 @@ function getNotificationsMenu(Menus) {
 	};
 }
 
-function getHelpMenu () {
+function getHelpMenu() {
 	return {
 		label: 'Help',
 		submenu: [
@@ -151,11 +151,11 @@ function getHelpMenu () {
 			},
 			{
 				label: 'Github Project',
-				click: () => shell.openExternal('https://github.com/IsmaelMartinez/teams-for-linux'),
+				click: () => shell.openExternal('https://github.com/SlyOrion/teams-for-linux'),
 			},
 			{
 				label: 'Microsoft Teams Support',
-				click:() => shell.openExternal('https://answers.microsoft.com/en-us/msteams/forum'),
+				click: () => shell.openExternal('https://answers.microsoft.com/en-us/msteams/forum'),
 			},
 		],
 	};

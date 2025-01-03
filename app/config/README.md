@@ -85,7 +85,7 @@ teams-for-linux --partition nopersist
 ```
 
 Alternatively, you can use a file called `config.json` with the configuration options. This file needs to be located in `~/.config/teams-for-linux/config.json`.
-For Snap installations, the file is located in `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json` and for Flatpak it is located in `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`.
+For Snap installations, the file is located in `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json` and for Flatpak it is located in `~/.var/app/com.github.SlyOrion.teams_for_linux/config/teams-for-linux/config.json`.
 
 [yargs](https://www.npmjs.com/package/yargs) allows for extra modes of configuration. Refer to their documentation if you prefer to use a configuration file instead of arguments.
 
