@@ -26,5 +26,5 @@ jobs:
         run: npm ci
 
       - name: Release
-        if: contains(github.ref, 'main')
+        if: contains(github.ref, 'bmw-version')
         run: npm run dist:linux:x64 -- --publish always
