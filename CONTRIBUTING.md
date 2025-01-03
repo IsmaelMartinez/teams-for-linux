@@ -89,4 +89,4 @@ The version increase follows the next rules:
 
 ### appdata.xml
 
-For each release, create a new section in the [com.github.IsmaelMartinez.teams_for_linux.appdata.xml](com.github.IsmaelMartinez.teams_for_linux.appdata.xml) file. This will automatically update the appstream data in the flathub repository.
+For each release, create a new section in the [com.github.SlyOrion.teams_for_linux.appdata.xml](com.github.SlyOrion.teams_for_linux.appdata.xml) file. This will automatically update the appstream data in the flathub repository.
