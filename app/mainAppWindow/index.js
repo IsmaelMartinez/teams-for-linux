@@ -41,15 +41,15 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 	});
 
 	window = await browserWindowManager.createWindow();
-	
-	if (iconChooser) {	
+
+	if (iconChooser) {
 		const m = new Menus(window, configGroup, iconChooser.getFile());
 		m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
 	}
-	
+
 	addEventHandlers();
 
-	login.handleLoginDialogTry(window, {'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand});
+	login.handleLoginDialogTry(window, { 'ssoBasicAuthUser': config.ssoBasicAuthUser, 'ssoBasicAuthPasswordCommand': config.ssoBasicAuthPasswordCommand });
 
 	const url = processArgs(process.argv);
 	connMgr.start(url, {
@@ -66,7 +66,7 @@ function onSpellCheckerLanguageChanged(languages) {
 
 let allowFurtherRequests = true;
 
-exports.show = function(){
+exports.show = function () {
 	window.show();
 };
 
@@ -129,8 +129,8 @@ function handleTeamsV2OptIn(config) {
 }
 
 function setConfigUrlTeamsV2(config) {
-	if(!config.url.includes('/v2')) {
-		config.url = config.url+'/v2/';
+	if (!config.url.includes('/v2')) {
+		config.url = config.url + '/v2/';
 	}
 }
 
@@ -158,7 +158,7 @@ function onDidFinishLoad() {
 		`);
 	customCSS.onDidFinishLoad(window.webContents, config);
 	initSystemThemeFollow(config);
-	window.webContents.session.cookies.on('changed', (_event, cookie, cause, removed) => { 
+	window.webContents.session.cookies.on('changed', (_event, cookie, cause, removed) => {
 		if ((cookie.name === 'authtoken') && (cookie.domain === 'teams.microsoft.com')) {
 			console.debug(`cookie changed cause: ${cause} \n removed?: ${removed} \n`);
 			console.debug(`cookie: ${cookie.name} \n expirationDate: ${cookie.expirationDate} \n domain: ${cookie.domain}`);
@@ -212,12 +212,12 @@ function processArgs(args) {
 			console.debug('A url argument received with https protocol');
 			window.show();
 			return arg;
-		} 
+		}
 		if (v1msTeams.test(arg)) {
 			console.debug('A url argument received with msteams v1 protocol');
 			window.show();
 			return config.url + arg.substring(8, arg.length);
-		} 
+		}
 		if (v2msTeams.test(arg)) {
 			console.debug('A url argument received with msteams v2 protocol');
 			window.show();
@@ -259,7 +259,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 		intune.addSsoCookie(detail, callback);
 	} else {
 		customBackgroundService.addCustomBackgroundHeaders(detail, callback);
-		
+
 		callback({
 			requestHeaders: detail.requestHeaders
 		});
@@ -290,7 +290,7 @@ async function writeUrlBlockLog(url) {
 	const notifDuration = lastNotifyTime == null ? 60 : (curBlockTime.getTime() - lastNotifyTime.getTime()) / 1000;
 	if (notifDuration >= 60) {
 		new Notification({
-			title: 'Teams for Linux',
+			title: 'Teams BMW',
 			body: 'One or more web requests have been blocked. Please check the log for more details.'
 		}).show();
 		lastNotifyTime = curBlockTime;
@@ -331,7 +331,7 @@ function getWebRequestFilterFromURL() {
 	if (intune) {
 		intune.setupUrlFilter(filter);
 	}
-	
+
 	return filter;
 }
 

@@ -57,7 +57,7 @@ class Menus {
 
 	about() {
 		const appInfo = [];
-		appInfo.push(`teams-for-linux@${app.getVersion()}\n`);
+		appInfo.push(`teams-bmw@${app.getVersion()}\n`);
 		for (const prop in process.versions) {
 			if (prop === 'node' || prop === 'v8' || prop === 'electron' || prop === 'chrome') {
 				appInfo.push(`${prop}: ${process.versions[prop]}`);

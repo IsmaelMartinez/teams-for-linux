@@ -42,7 +42,7 @@ class BrowserWindowManager {
 
     createNewBrowserWindow(windowState) {
         return new BrowserWindow({
-            title: 'Teams for Linux',
+            title: 'Teams BMW',
             x: windowState.x,
             y: windowState.y,
 
@@ -86,7 +86,7 @@ class BrowserWindowManager {
             });
         };
     }
-    
+
     async handleOnIncomingCallCreated(e, data) {
         if (this.config.incomingCallCommand) {
             this.incomingCallCommandTerminate();
@@ -101,7 +101,7 @@ class BrowserWindowManager {
             this.incomingCallCommandProcess = null;
         }
     }
-    
+
     async handleOnCallConnected() {
         this.isOnCall = true;
         return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
@@ -115,18 +115,18 @@ class BrowserWindowManager {
         }
         return false;
     }
-    
+
     disableScreenLockWakeLockSentinel() {
         this.window.webContents.send('enable-wakelock');
         console.debug(`Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`);
         return true;
     }
-    
+
     async handleOnCallDisconnected() {
         this.isOnCall = false;
         return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
     }
-    
+
     enableScreenLockElectron() {
         if (this.blockerId != null && powerSaveBlocker.isStarted(this.blockerId)) {
             console.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
@@ -136,13 +136,13 @@ class BrowserWindowManager {
         }
         return false;
     }
-    
+
     enableScreenLockWakeLockSentinel() {
         this.window.webContents.send('disable-wakelock');
         console.debug(`Power save is restored using ${this.config.screenLockInhibitionMethod} API`);
         return true;
     }
-    
+
     enableWakeLockOnWindowRestore() {
         if (this.isOnCall) {
             this.window.webContents.send('enable-wakelock');

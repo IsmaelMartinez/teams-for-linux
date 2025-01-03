@@ -80,7 +80,7 @@ body:
       description: "When possible, please run the application from the terminal using `--webDebug` and try to reproduce the error."
       value: |
         ```bash
-        teams-for-linux --webDebug --logConfig='{}'
+        teams-bmw --webDebug --logConfig='{}'
         ```
       render: markdown
   - type: textarea

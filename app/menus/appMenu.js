@@ -1,7 +1,7 @@
 const { shell } = require('electron');
 
 exports = module.exports = (Menus) => ({
-	label: 'Teams for Linux',
+	label: 'Teams BMW',
 	submenu: [
 		{
 			label: 'Open',
