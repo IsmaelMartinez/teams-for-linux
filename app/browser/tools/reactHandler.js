@@ -22,3 +22,5 @@ class ReactHandler {
 //document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices
 
 module.exports = new ReactHandler();
+
+// document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.authenticationService._coreAuthService._authProvider.acquireToken("https://graph.microsoft.com", { correlation: document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.correlation} )

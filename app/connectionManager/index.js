@@ -28,15 +28,21 @@ class ConnectionManager {
 	}
 
 	async refresh() {
-		const currentUrl = this.window.webContents.getURL();
+		if (!this.window) {
+			console.warn('Window is not available. Cannot refresh.');
+			return;
+		}
+		const currentUrl = this.window?.webContents?.getURL() || '';
 		const hasUrl = currentUrl?.startsWith('https://');
-		this.window.setTitle('Waiting for network...');
+		this.window?.setTitle('Waiting for network...');
 		console.debug('Waiting for network...');
 		const connected = await this.isOnline();
 		if (connected) {
 			if (hasUrl) {
+				console.debug('Reloading current page...');
 				this.window.reload();
 			} else {
+				console.debug('Loading initial URL...');
 				this.window.loadURL(this.currentUrl, { userAgent: this.config.chromeUserAgent });
 			}
 		} else {
