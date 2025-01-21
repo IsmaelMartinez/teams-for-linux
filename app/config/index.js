@@ -213,6 +213,11 @@ function extractYargConfig(configObject, appVersion) {
 				default: false,
 				describe: 'Use windows platform information in chromium. This is helpful if MFA app does not support Linux.'
 			},
+			enableBackgroundCallsAuthentication: {
+				default: true,
+				describe: 'Enable background calls for authentication to open in a child browser window (temporary solution for debugging)',
+				type: 'boolean'
+			},
 			followSystemTheme: {
 				default: false,
 				describe: 'Follow system theme',
@@ -242,7 +247,7 @@ function extractYargConfig(configObject, appVersion) {
 				default: {
 					"transports": {
 						"console": {
-							"level": "info"
+							"level": "debug"
 						},
 						"file": {
 							"level": false

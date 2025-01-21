@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.12.7" date="2025-02-15">
+			<description>
+				<ul>
+					<li>Adding enableBackgroundCallsAuthentication config option to validate if this keeps the user authenticated for longer</li>
+					<li>Removing the writeUrlBlockLog function that use to log those requests into a file for debugging</li>
+					<li>Handling of UnhandledPromiseRejectionWarning: TypeError: Cannot read properties of undefined (reading 'webContents') at PowerMonitor.refresh (.../app/connectionManager/index.js:31:34)</li>
+					<li>Checking the tray status before trying to update the badge count</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.12.6" date="2025-01-17">
 			<description>
 				<ul>

@@ -1,5 +1,4 @@
-const { shell, app, nativeTheme, dialog, webFrameMain, Notification } = require('electron');
-const path = require('path');
+const { shell, BrowserWindow, app, nativeTheme, dialog, webFrameMain } = require('electron');
 const login = require('../login');
 const customCSS = require('../customCSS');
 const Menus = require('../menus');
@@ -8,13 +7,11 @@ const { execFile } = require('child_process');
 const TrayIconChooser = require('../browser/tools/trayIconChooser');
 require('../appConfiguration');
 const connMgr = require('../connectionManager');
-const fs = require('fs');
 const BrowserWindowManager = require('../mainAppWindow/browserWindowManager');
 
 let iconChooser;
 let intune;
 let isControlPressed = false;
-let lastNotifyTime = null;
 let aboutBlankRequestCount = 0;
 let config;
 let window = null;
@@ -237,10 +234,17 @@ function onBeforeRequestHandler(details, callback) {
 		// Proceed normally
 		callback({});
 	} else {
-		// Open the request externally
 		console.debug('DEBUG - webRequest to  ' + details.url + ' intercepted!');
-		//shell.openExternal(details.url);
-		writeUrlBlockLog(details.url);
+		if (this.config.enableBackgroundCallsAuthentication) {
+			console.debug('Opening the request in a hidden child window for authentication');
+			const child = new BrowserWindow({ parent: window, show: false });
+			child.loadURL(details.url);
+			child.once('ready-to-show', () => {
+				console.debug('Destroying the hidden child window');
+				child.destroy();
+			})	
+		}
+		
 		// decrement the counter
 		aboutBlankRequestCount -= 1;
 		callback({ cancel: true });
@@ -279,28 +283,6 @@ function onNewWindow(details) {
 	}
 
 	return secureOpenLink(details);
-}
-
-async function writeUrlBlockLog(url) {
-	const curBlockTime = new Date();
-	const logfile = path.join(appConfig.configPath, 'teams-for-linux-blocked.log');
-	const lstream = fs.createWriteStream(logfile, { flags: 'a' }).on('error', onLogStreamError);
-	lstream.write(`[${new Date().toLocaleString()}]: Blocked '${url}'\n`, onLogStreamError);
-	lstream.end();
-	const notifDuration = lastNotifyTime == null ? 60 : (curBlockTime.getTime() - lastNotifyTime.getTime()) / 1000;
-	if (notifDuration >= 60) {
-		new Notification({
-			title: 'Teams for Linux',
-			body: 'One or more web requests have been blocked. Please check the log for more details.'
-		}).show();
-		lastNotifyTime = curBlockTime;
-	}
-}
-
-function onLogStreamError(e) {
-	if (e) {
-		console.error(`onLogStreamError ${e.message}`);
-	}
 }
 
 function onPageTitleUpdated(_event, title) {

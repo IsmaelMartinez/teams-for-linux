@@ -6,10 +6,7 @@ class ApplicationTray {
 		this.iconPath = iconPath;
 		this.appMenu = appMenu;
 		this.config = config;
-		this.addTray();
-	}
 
-	addTray() {
 		this.tray = new Tray(this.iconPath);
 		this.tray.setToolTip(this.config.appTitle);
 		this.tray.on('click', () => this.showAndFocusWindow());
@@ -28,14 +25,16 @@ class ApplicationTray {
 	}
 
 	updateTrayImage(iconUrl, flash) {
-		const image = nativeImage.createFromDataURL(iconUrl);
+		if (this.tray && !this.tray.isDestroyed()) {
+			const image = nativeImage.createFromDataURL(iconUrl);
 
-		this.tray.setImage(image);
-		this.window.flashFrame(flash);
+			this.tray.setImage(image);
+			this.window.flashFrame(flash);
+		}
 	}
 
 	close() {
-		this.tray.destroy();
+		!this.tray.isDestroyed() ? this.tray.destroy() : null;
 	}
 }
 exports = module.exports = ApplicationTray;
