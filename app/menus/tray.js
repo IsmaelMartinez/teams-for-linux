@@ -34,7 +34,9 @@ class ApplicationTray {
 	}
 
 	close() {
-		!this.tray.isDestroyed() ? this.tray.destroy() : null;
+		if (!this.tray.isDestroyed()) {
+			this.tray.destroy()
+		}
 	}
 }
 exports = module.exports = ApplicationTray;
