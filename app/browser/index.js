@@ -8,7 +8,6 @@
 		initializeModules(config, ipcRenderer);
 
 		new ActivityManager(ipcRenderer, config).start();
-
 	});
 
 	Object.defineProperty(navigator.serviceWorker, 'register', {
@@ -67,7 +66,6 @@ function initializeModules(config, ipcRenderer) {
 		require('./tools/trayIconRenderer').init(config, ipcRenderer);
 	}
 	require('./tools/settings').init(config, ipcRenderer);
-	require('./tools/customBackgrounds')(config, ipcRenderer);
 	require('./tools/theme').init(config, ipcRenderer);
 	require('./tools/emulatePlatform').init(config);
 }

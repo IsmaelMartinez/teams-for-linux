@@ -62,15 +62,9 @@ function extractYargConfig(configObject, appVersion) {
 				describe: 'A numeric value in seconds as poll interval to check if the appIdleTimeout is reached',
 				type: 'number'
 			},
-			appLogLevels: {
-				deprecated: 'Use `logConfig` instead',
-				default: 'error,warn,info,debug',
-				describe: 'Comma separated list of log levels (error,warn,info,debug)',
-				type: 'string'
-			},
 			appTitle: {
 				default: 'Microsoft Teams',
-				describe: 'A text to be suffixed with page title',
+				describe: 'A text to appear as the tray tooltip',
 				type: 'string'
 			},
 			authServerWhitelist: {
@@ -92,11 +86,6 @@ function extractYargConfig(configObject, appVersion) {
 				default: 'http://localhost',
 				describe: 'Base URL of the server which provides custom background images',
 				type: 'string'
-			},
-			customBGServiceIgnoreMSDefaults: {
-				default: false,
-				describe: 'A flag indicates whether to ignore Microsoft provided images or not',
-				type: 'boolean'
 			},
 			customBGServiceConfigFetchInterval: {
 				default: 0,
@@ -213,11 +202,6 @@ function extractYargConfig(configObject, appVersion) {
 				default: false,
 				describe: 'Use windows platform information in chromium. This is helpful if MFA app does not support Linux.'
 			},
-			enableBackgroundCallsAuthentication: {
-				default: true,
-				describe: 'Enable background calls for authentication to open in a child browser window (temporary solution for debugging)',
-				type: 'boolean'
-			},
 			followSystemTheme: {
 				default: false,
 				describe: 'Follow system theme',
@@ -284,11 +268,6 @@ function extractYargConfig(configObject, appVersion) {
 				describe: 'Set enable-ntlm-v2 value',
 				type: 'string'
 			},
-			optInTeamsV2: {
-				default: false,
-				describe: 'Opt in to use Teams V2',
-				type: 'boolean'
-			},
 			partition: {
 				default: 'persist:teams-4-linux',
 				describe: 'BrowserWindow webpreferences partition',
@@ -341,7 +320,7 @@ function extractYargConfig(configObject, appVersion) {
 				type: 'boolean'
 			},
 			url: {
-				default: 'https://teams.microsoft.com',
+				default: 'https://teams.microsoft.com/v2',
 				describe: 'Microsoft Teams URL',
 				type: 'string'
 			},

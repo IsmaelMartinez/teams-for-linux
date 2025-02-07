@@ -1,5 +1,4 @@
 const ReactHandler = require('./reactHandler');
-const instance = require('./instance');
 
 class ThemeManager {
 	init(config, ipcRenderer) {
@@ -25,13 +24,7 @@ class ThemeManager {
 			console.debug('Using react to set the theme');
 			clientPreferences.theme.userTheme = theme;
 			console.debug('Theme changed to', theme);    
-		} else {
-			console.debug('Using angular to set the theme');
-			const inst = await instance.whenReady().catch(() => {
-				console.error('Failed to apply Theme');
-			});
-			inst.controller.layoutService.setTheme(theme);
-		}
+		} 
 	}
 }
 

@@ -11,8 +11,6 @@ class ActivityManager {
 	start() {
 		setActivityHandlers(this);
 		setEventHandlers(this);
-		activityHub.start();
-		activityHub.setDefaultTitle(this.config.appTitle);
 		this.watchSystemIdleState();
 	}
 

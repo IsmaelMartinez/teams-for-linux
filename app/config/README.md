@@ -19,15 +19,13 @@ Here is the list of available arguments and its usage:
 | appIconType                     | Type of tray icon to be used default/light/dark                                           | *default*, light, dark              |
 | appIdleTimeout                  | A numeric value in seconds as duration before app considers the system as idle             | 300                   |
 | appIdleTimeoutCheckInterval     | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached      | 10                    |
-| appLogLevels  **deprecated - use logLevels**                  | Comma separated list of log levels (error,warn,info,debug)                                | error,warn            |
-| appTitle                        | A text to be suffixed with page title                                                    | Microsoft Teams       |
+| appTitle                        | A text to appear as the tray tooltip                                                    | Microsoft Teams       |
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
 | class							  | A custom value for the WM_CLASS property                                                  |                 |
 | contextIsolation 	   | Use context isolation in the renderer process (disabling this will break some functionality) | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
-| customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
 | customCACertsFingerprints       | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | []             |
 | customCSSName                   | custom CSS name for the packaged available css files                                      |                  |
@@ -60,7 +58,6 @@ Here is the list of available arguments and its usage:
 | minimized                       | Boolean to start the application minimized                                                          | false               |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
-| optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
 | sandbox				  | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
@@ -71,7 +68,7 @@ Here is the list of available arguments and its usage:
 | ssoInTuneEnabled                | Enable InTune Single-Sign-On                                                             | false
 | ssoInTuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           |                  |
 | trayIconEnabled				 | Enable tray icon                                                                          | true               |
-| url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/                |
+| url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/v2                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
 | watchConfigFile | Watch for changes in the config file and restarts the app | false |
@@ -120,20 +117,21 @@ As you can see from the above example, switches with values must be of array whe
 
 ## Custom backgrounds
 
-We added a feature to load custom background images during a video call. This is available from version `1.0.84`.
+We added a feature to load custom background images during a video call.
 
 You can find an example of this feature in the [../customBackground/example/README.md](../customBackground/example/README.md) file.
 
 ### Things to remember:
 
 1. Currently app does not feature adding or removing custom images. You have to rely on any locally/remotely hosted web servers to serve images.
-2. 3 new command-line parameters `customBGServiceBaseUrl`, `customBGServiceIgnoreMSDefaults` and `customBGServiceConfigFetchInterval` are introduced. See above for details.
+2. 2 config options, `customBGServiceBaseUrl` and `customBGServiceConfigFetchInterval` are introduced. See above for details.
 3. Custom images are always loaded with `<customBGServiceBaseUrl>/<image-path>`. So, you have to make sure the web server is running and `<customBGServiceBaseUrl>` responds to the request.
 4. You can choose any web server of your choice but make sure `Access-Control-Allow-Origin` is set to `*` in response headers from web server.
-5. In Teams version 2, this will replace Microsoft's default images.
-6. To use you must activate the flag `--isCustomBackgroundEnabled=true`. From version 1.4.36 this flag is change default to `false`.
+5. This will replace Microsoft's default images.
+6. To use you must activate the flag `--isCustomBackgroundEnabled=true`.
 
 For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
+
 ```xml
 <Directory /var/www/>
 	Header set Access-Control-Allow-Origin "*"
@@ -146,19 +144,8 @@ For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
 ### Configuring list of images
 
 1. List of images are to be stored in `<customBGServiceBaseUrl>/config.json`.
-2. In Teams V1, it would look like this:
-```json
-[
-	{
-		"filetype": "jpg",
-		"id": "Custom_bg01",
-		"name": "Custom bg",
-		"src": "/<path-to-image>",
-		"thumb_src": "/<path-to-thumb-image>"
-	}
-]
-```
-3. In Teams V2, it would look like this:
+1. In Teams V2, it would look like this:
+
 ```json
 {
 	"videoBackgroundImages": [
@@ -185,9 +172,7 @@ As you can see from the above example, it's a JSON array so you can configure an
 
 Image paths are relative to `customBGServiceBaseUrl`. If your customBGServiceBaseUrl is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
 
-## LogConfig option.
-
-IMPORTANT: This option deprecates `appLogLevels`, that would be removed in the next major version.
+## LogConfig option
 
 In version 1.9.0 we added the ability to log to the console (default), or use electron-log as your log manager or to not log at all.
 
@@ -196,8 +181,8 @@ This is managed by the `logConfig` option, that has the following options:
 | Option                          | Usage                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------|
 | Falsy                           | Any [Falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) value as described  would result in no logs recorded |
-| console                         | Log to the console using the `console` object                                              |
-| {} JSONObject  (*) - default           | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object.  |
+| console                         | Log to the console using the `console` object                                             |
+| {} JSONObject  (*) - default    | A valid [electron-log](https://www.npmjs.com/package/electron-log) configuration object.  |
 
 (*) The JSONObject must be a valid `electron-log` configuration object. You can see the available options in the [electron-log documentation](https://www.npmjs.com/package/electron-log).
 
@@ -206,7 +191,9 @@ This is managed by the `logConfig` option, that has the following options:
 You have some simple options to use the `electron-log` as your log manager. Like:
 
 **Current configuration**
-* Making console level as `info` and disabling the log to file. :
+
+- Making console level as `info` and disabling the log to file. :
+
 ```json
 {
 	"logConfig": {
@@ -222,16 +209,16 @@ You have some simple options to use the `electron-log` as your log manager. Like
 }
 ```
 
+- Use the default `electron-log` values:
 
-* Use the default `electron-log` values:
 ```json
 { "logConfig": {} }
 ```
 
-
 Or more complex:
 
-* Changing the console log format and rotating the file logs:
+- Changing the console log format and rotating the file logs:
+
 ```json
 {
 	"logConfig": {
