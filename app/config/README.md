@@ -262,7 +262,7 @@ I haven't explore all the options available in the `electron-log` configuration,
 
 ## Permission Handlers Configuration
 
-In version 1.9.0 we added the ability to configure the permission handlers for the application. This is managed by the `permissionHandlersConfig` option, that has the following options:
+In version 1.12.8 we added the ability to configure the permission handlers for the application. This is managed by the `permissionHandlersConfig` option, that has the following options:
 
 - `allowedDomains`: An array of domains that are allowed to request permissions. If the domain is not in this list, the request will be denied.
 - `allowedPermissions`: An array of permissions that are allowed to be requested. If the permission is not in this list, the request will be denied.

@@ -156,10 +156,8 @@ function onDidFinishLoad() {
 	customCSS.onDidFinishLoad(window.webContents, config);
 	initSystemThemeFollow(config);
 	window.webContents.session.cookies.on('changed', (_event, cookie, cause, removed) => { 
-		// if ((cookie.name === 'authtoken') && (cookie.domain === 'teams.microsoft.com')) {
-			console.debug(`cookie changed cause: ${cause} \n removed?: ${removed} \n`);
-			console.debug(`cookie: ${cookie.name} \n expirationDate: ${cookie.expirationDate} \n domain: ${cookie.domain} \n secure: ${cookie.secure} \n httpOnly: ${cookie.httpOnly} \n path: ${cookie.path} \n session: ${cookie.session} \n sameSite: ${cookie.sameSite}`);
-		// }
+		console.debug(`cookie changed cause: ${cause} \n removed?: ${removed} \n`);
+		console.debug(`cookie: ${cookie.name} \n expirationDate: ${cookie.expirationDate} \n domain: ${cookie.domain} \n secure: ${cookie.secure} \n httpOnly: ${cookie.httpOnly} \n path: ${cookie.path} \n session: ${cookie.session} \n sameSite: ${cookie.sameSite}`);
 	});
 
 	setupPermissionHandlers();
