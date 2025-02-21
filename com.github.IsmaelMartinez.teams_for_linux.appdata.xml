@@ -14,7 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="1.12.7" date="2025-02-15">
+		<release version="1.12.8" date="2025-02-21">
+			<description>
+				<ul>
+					<li>Adding permissionCheckHandler config option to verify if 3rd party cookies are affecting token refreshing</li>
+					<li>Removing enableBackgroundCallsAuthentication config option as it was broken, and probabaly not doing anything for us</li>
+					<li>Update electron to 33.4.1</li>
+				</ul>
+			</description>
+		<release version="1.12.7" date="2025-01-15">
 			<description>
 				<ul>
 					<li>Adding enableBackgroundCallsAuthentication config option to validate if this keeps the user authenticated for longer</li>

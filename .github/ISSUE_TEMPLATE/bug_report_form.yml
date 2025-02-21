@@ -9,8 +9,8 @@ body:
   - type: dropdown
     id: can-reproduce-pwa
     attributes:
-      label: Can you reproduce this bug in the PWA?
-      description: "If you can reproduce the bug in the PWA, it's likely a bug in the web app. Please report it to Microsoft instead"
+      label: Can you reproduce this bug in the website/PWA?
+      description: "If you can reproduce the bug in the website/PWA, it's likely a bug in the web app. Please report it to Microsoft instead"
       options:
         - "Yes"
         - "No"

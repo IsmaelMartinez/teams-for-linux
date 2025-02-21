@@ -213,11 +213,6 @@ function extractYargConfig(configObject, appVersion) {
 				default: false,
 				describe: 'Use windows platform information in chromium. This is helpful if MFA app does not support Linux.'
 			},
-			enableBackgroundCallsAuthentication: {
-				default: true,
-				describe: 'Enable background calls for authentication to open in a child browser window (temporary solution for debugging)',
-				type: 'boolean'
-			},
 			followSystemTheme: {
 				default: false,
 				describe: 'Follow system theme',
@@ -293,6 +288,29 @@ function extractYargConfig(configObject, appVersion) {
 				default: 'persist:teams-4-linux',
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string'
+			},
+			permissionHandlersConfig: {
+				default: {
+					allowedDomains : [
+						'microsoft.com',
+						'microsoftonline.com',
+						'teams.skype.com',
+						'teams.microsoft.com',
+						'sfbassets.com',
+						'skypeforbusiness.com',
+						'outlook.office.com',
+						'microsoftazuread-sso.com'
+					],
+					///autologon.microsoftazuread-sso.com
+					allowedPermissions: [
+						'background-sync',
+						'notifications',
+						'media',
+						'speaker-selection'
+					]
+				},
+				describe: 'Permission Handlers configuration',
+				type: 'object'
 			},
 			proxyServer: {
 				default: null,
