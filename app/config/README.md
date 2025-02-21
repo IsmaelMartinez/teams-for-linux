@@ -24,8 +24,8 @@ Here is the list of available arguments and its usage:
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
 | chromeUserAgent                 | Google Chrome User Agent                                                                 | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36                |
-| class							  | A custom value for the WM_CLASS property                                                  |                 |
-| contextIsolation 	   | Use context isolation in the renderer process (disabling this will break some functionality) | false               |
+| class         | A custom value for the WM_CLASS property                                                  |                 |
+| contextIsolation     | Use context isolation in the renderer process (disabling this will break some functionality) | false               |
 | customBGServiceBaseUrl          | Base URL of the server which provides custom background images                            | http://localhost                |
 | customBGServiceIgnoreMSDefaults | A boolean flag indicates whether to ignore Microsoft provided images or not                       | false               |
 | customBGServiceConfigFetchInterval | A numeric value in seconds as poll interval to download background service config download | 0                |
@@ -53,7 +53,7 @@ Here is the list of available arguments and its usage:
 | frame | Specify false to create a Frameless Window. Default is true | false |
 | incomingCallCommand             | Command to execute on an incoming call.  (string)                                                 |                       |
 | incomingCallCommandArgs         | Arguments for the incomming call command.                                                 |       []                |
-| isCustomBackgroundEnabled	   | A boolean flag to enable/disable custom background images                       | false              |
+| isCustomBackgroundEnabled    | A boolean flag to enable/disable custom background images                       | false              |
 | logConfig                       | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration)                | **console.info** via (electron-log)        |
 | meetupJoinRegEx |  Meetup-join and channel regular expession |  /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel)/g |
 | menubar                         | A value controls the menu bar behaviour                                                   | *auto*, visible, hidden               |
@@ -62,21 +62,21 @@ Here is the list of available arguments and its usage:
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
+| permissionHandlersConfig        | Permission Handlers configuration; `allowedDomains` and `allowedPermissions`. See [Permissions Handlers Configurarion](#permission-handlers-configuration) | allowedDomains : [ 'microsoft.com', 'microsoftonline.com', 'teams.skype.com', 'teams.microsoft.com', 'sfbassets.com','skypeforbusiness.com'], allowedPermissions: [ 'background-sync', 'notifications', 'media', 'speaker-selection'] |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
-| sandbox				  | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
+| sandbox      | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | *Electron*, WakeLockSentinel                |
 | spellCheckerLanguages           | Array of languages to use with Electron's spell checker                    | []                 |
 | ssoBasicAuthUser           | Login that will be sent for basic_auth SSO login. (string) |                  |
 | ssoBasicAuthPasswordCommand           | Command to execute, grab stdout and use it as a password for basic_auth SSO login. |                  |
 | ssoInTuneEnabled                | Enable InTune Single-Sign-On                                                             | false
 | ssoInTuneAuthUser               | User (e-mail) to be used for InTune SSO login.                                           |                  |
-| trayIconEnabled				 | Enable tray icon                                                                          | true               |
+| trayIconEnabled     | Enable tray icon                                                                          | true               |
 | url                             | Microsoft Teams URL (string)                                                                    | https://teams.microsoft.com/                |
 | useMutationTitleLogic         | Use MutationObserver to update counter from title                                          | true               |
 | version                         | Show the version number                                                                  | false                 |
 | watchConfigFile | Watch for changes in the config file and restarts the app | false |
 | webDebug                        | Enable web debugging                                                                     | false               |
-
 
 As an example, to disable the persistence, you can run the following command:
 
@@ -110,9 +110,9 @@ Example:
 ```json
 {
     "electronCLIFlags": [
-		["ozone-platform","wayland"],
-		"disable-software-rasterizer"
-	]
+  ["ozone-platform","wayland"],
+  "disable-software-rasterizer"
+ ]
 }
 ```
 
@@ -134,42 +134,46 @@ You can find an example of this feature in the [../customBackground/example/READ
 6. To use you must activate the flag `--isCustomBackgroundEnabled=true`. From version 1.4.36 this flag is change default to `false`.
 
 For apache2, `/etc/apache2/apache2.conf` may need to have an entry like this.
+
 ```xml
 <Directory /var/www/>
-	Header set Access-Control-Allow-Origin "*"
-	Options Indexes FollowSymLinks
-	AllowOverride None
-	Require all granted
+ Header set Access-Control-Allow-Origin "*"
+ Options Indexes FollowSymLinks
+ AllowOverride None
+ Require all granted
 </Directory>
 ```
 
 ### Configuring list of images
 
 1. List of images are to be stored in `<customBGServiceBaseUrl>/config.json`.
-2. In Teams V1, it would look like this:
+1. In Teams V1, it would look like this:
+
 ```json
 [
-	{
-		"filetype": "jpg",
-		"id": "Custom_bg01",
-		"name": "Custom bg",
-		"src": "/<path-to-image>",
-		"thumb_src": "/<path-to-thumb-image>"
-	}
+ {
+  "filetype": "jpg",
+  "id": "Custom_bg01",
+  "name": "Custom bg",
+  "src": "/<path-to-image>",
+  "thumb_src": "/<path-to-thumb-image>"
+ }
 ]
 ```
-3. In Teams V2, it would look like this:
+
+1. In Teams V2, it would look like this:
+
 ```json
 {
-	"videoBackgroundImages": [
-		{
-			"filetype": "png",
-			"id": "Custom_bg01",
-			"name": "Custom bg",
-			"src": "/evergreen-assets/backgroundimages/<path-to-image>",
-			"thumb_src": "/evergreen-assets/backgroundimages/<path-to-thumb-image>"
-		}
-	]
+ "videoBackgroundImages": [
+  {
+   "filetype": "png",
+   "id": "Custom_bg01",
+   "name": "Custom bg",
+   "src": "/evergreen-assets/backgroundimages/<path-to-image>",
+   "thumb_src": "/evergreen-assets/backgroundimages/<path-to-thumb-image>"
+  }
+ ]
 }
 ```
 
@@ -183,9 +187,9 @@ As you can see from the above example, it's a JSON array so you can configure an
 - `src`: Path to the image to be loaded when selected from the preview. Provide a picture with resolution 1920x1080 (Based on Microsoft CDN) though any resolution would work. This is to avoid unnecessary traffic by loading large size images.
 - `thumb_src`: Path to the image to be shown on the preview screen. Provide a low resolution picture (280x158 based on Microsoft CDN) as it's shown on the preview page. The smaller the image the quicker the preview will be.
 
-Image paths are relative to `customBGServiceBaseUrl`. If your customBGServiceBaseUrl is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
+Image paths are relative to `customBGServiceBaseUrl`. If your `customBGServiceBaseUrl` is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
 
-## LogConfig option.
+## LogConfig option
 
 IMPORTANT: This option deprecates `appLogLevels`, that would be removed in the next major version.
 
@@ -206,50 +210,86 @@ This is managed by the `logConfig` option, that has the following options:
 You have some simple options to use the `electron-log` as your log manager. Like:
 
 **Current configuration**
-* Making console level as `info` and disabling the log to file. :
+
+- Making console level as `info` and disabling the log to file. :
+
 ```json
 {
-	"logConfig": {
-		"transports": {
-			"console": {
-				"level": "info"
-			},
-			"file": {
-				"level": false
-			}
-		}
-	}
+ "logConfig": {
+  "transports": {
+   "console": {
+    "level": "info"
+   },
+   "file": {
+    "level": false
+   }
+  }
+ }
 }
 ```
 
+- Use the default `electron-log` values:
 
-* Use the default `electron-log` values:
 ```json
 { "logConfig": {} }
 ```
 
-
 Or more complex:
 
-* Changing the console log format and rotating the file logs:
+- Changing the console log format and rotating the file logs:
+
 ```json
 {
-	"logConfig": {
-		"transports": {
-			"file": {
-				"maxSize": 100000,
-				"format": "{processType} [{h}:{i}:{s}.{ms}] {text}",
-				"level": "debug"
-			},
-			"console": {
-				"format": "[{h}:{i}:{s}.{ms}] {text}",
-				"level": "info"
-			}
-		}
-	}
+ "logConfig": {
+  "transports": {
+   "file": {
+    "maxSize": 100000,
+    "format": "{processType} [{h}:{i}:{s}.{ms}] {text}",
+    "level": "debug"
+   },
+   "console": {
+    "format": "[{h}:{i}:{s}.{ms}] {text}",
+    "level": "info"
+   }
+  }
+ }
 }
 ```
 
 ### Limitations
 
 I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed)
+
+## Permission Handlers Configuration
+
+In version 1.9.0 we added the ability to configure the permission handlers for the application. This is managed by the `permissionHandlersConfig` option, that has the following options:
+
+- `allowedDomains`: An array of domains that are allowed to request permissions. If the domain is not in this list, the request will be denied.
+- `allowedPermissions`: An array of permissions that are allowed to be requested. If the permission is not in this list, the request will be denied.
+
+The configuration is an object with the following structure:
+
+```json
+{
+ "permissionHandlersConfig": {
+  "allowedDomains": [
+   "microsoft.com",
+   "microsoftonline.com",
+   "teams.skype.com",
+   "teams.microsoft.com",
+   "sfbassets.com",
+   "skypeforbusiness.com",
+   "outlook.office.com",
+   "microsoftazuread-sso.com"
+  ],
+  "allowedPermissions": [
+   "background-sync",
+   "notifications",
+   "media",
+   "speaker-selection"
+  ]
+ }
+}
+```
+
+Please refer to [Issue 1357](https://github.com/IsmaelMartinez/teams-for-linux/issues/1357) for more information.
