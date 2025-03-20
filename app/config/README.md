@@ -62,7 +62,7 @@ Here is the list of available arguments and its usage:
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
-| permissionHandlersConfig        | Permission Handlers configuration; `allowedDomains` and `allowedPermissions`. See [Permissions Handlers Configurarion](#permission-handlers-configuration) | allowedDomains : [ 'microsoft.com', 'microsoftonline.com', 'teams.skype.com', 'teams.microsoft.com', 'sfbassets.com','skypeforbusiness.com'], allowedPermissions: [ 'background-sync', 'notifications', 'media', 'speaker-selection'] |
+| permissionHandlersConfig        | Permission Handlers configuration; `allowedDomains` and `allowedPermissions`. See [Permissions Handlers Configurarion](#permission-handlers-configuration) | allowedDomains : [ 'microsoft.com', 'microsoftonline.com', 'teams.skype.com', 'teams.microsoft.com', 'sfbassets.com','skypeforbusiness.com','outlook.office.com','microsoftazuread-sso.com','teams.live.com'], allowedPermissions: [ 'background-sync', 'notifications', 'media', 'speaker-selection','clipboard-read','clipboard-write','clipboard-sanitized-write'] |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
 | sandbox      | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | *Electron*, WakeLockSentinel                |
@@ -280,13 +280,17 @@ The configuration is an object with the following structure:
    "sfbassets.com",
    "skypeforbusiness.com",
    "outlook.office.com",
-   "microsoftazuread-sso.com"
+   "microsoftazuread-sso.com",
+   "teams.live.com"
   ],
   "allowedPermissions": [
    "background-sync",
    "notifications",
    "media",
-   "speaker-selection"
+   "speaker-selection",
+   "clipboard-read",
+   "clipboard-write",
+   "clipboard-sanitized-write"
   ]
  }
 }

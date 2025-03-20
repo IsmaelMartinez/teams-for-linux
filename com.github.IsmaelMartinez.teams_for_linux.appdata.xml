@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="1.13.1" date="2025-03-20">
+			<description>
+				<ul>
+					<li>Update electron to 34.4.5 and other small library updates to fix issue 1590</li>
+					<li>Fixing permissions to allow copy link that stopped working when adding the permissionHandlersConfig (issue 1585)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.13.0" date="2025-03-04">
 			<description>
 				<ul>
