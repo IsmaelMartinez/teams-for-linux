@@ -231,7 +231,7 @@ function restoreWindow() {
 
 function processArgs(args) {
 	const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel)/g;
-	const v2msTeams = /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel)/g;
+	const v2msTeams = /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/g;
 	console.debug('processArgs:', args);
 	for (const arg of args) {
 		console.debug(`testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`);
