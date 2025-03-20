@@ -248,9 +248,9 @@ function handleAppReady() {
 
 async function handleGetSystemIdleState() {
 	const systemIdleState = powerMonitor.getSystemIdleState(config.appIdleTimeout);
-	console.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, ActiveCheckPollInterval: ${config.appActiveCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`);
-
+	
 	if (systemIdleState !== 'active' && idleTimeUserStatus == -1) {
+		console.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, ActiveCheckPollInterval: ${config.appActiveCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`);
 		idleTimeUserStatus = userStatus;
 	}
 
@@ -263,6 +263,7 @@ async function handleGetSystemIdleState() {
 	};
 
 	if (systemIdleState === 'active') {
+		console.debug(`GetSystemIdleState => IdleTimeout: ${config.appIdleTimeout}s, IdleTimeoutPollInterval: ${config.appIdleTimeoutCheckInterval}s, ActiveCheckPollInterval: ${config.appActiveCheckInterval}s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`);
 		idleTimeUserStatus = -1
 	}
 

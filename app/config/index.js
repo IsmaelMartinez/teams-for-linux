@@ -231,7 +231,7 @@ function extractYargConfig(configObject, appVersion) {
 				default: {
 					"transports": {
 						"console": {
-							"level": "debug"
+							"level": "info"
 						},
 						"file": {
 							"level": false
@@ -272,6 +272,29 @@ function extractYargConfig(configObject, appVersion) {
 				default: 'persist:teams-4-linux',
 				describe: 'BrowserWindow webpreferences partition',
 				type: 'string'
+			},
+			permissionHandlersConfig: {
+				default: {
+					allowedDomains : [
+						'microsoft.com',
+						'microsoftonline.com',
+						'teams.skype.com',
+						'teams.microsoft.com',
+						'sfbassets.com',
+						'skypeforbusiness.com',
+						'outlook.office.com',
+						'microsoftazuread-sso.com'
+					],
+					///autologon.microsoftazuread-sso.com
+					allowedPermissions: [
+						'background-sync',
+						'notifications',
+						'media',
+						'speaker-selection'
+					]
+				},
+				describe: 'Permission Handlers configuration',
+				type: 'object'
 			},
 			proxyServer: {
 				default: null,

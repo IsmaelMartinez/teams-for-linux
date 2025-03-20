@@ -9,7 +9,6 @@ class ActivityManager {
 	}
 
 	start() {
-		setActivityHandlers(this);
 		setEventHandlers(this);
 		this.watchSystemIdleState();
 	}
@@ -49,77 +48,9 @@ class ActivityManager {
 	}
 }
 
-function setActivityHandlers(self) {
-	activityHub.on('activities-count-updated', updateActivityCountHandler());
-	activityHub.on('incoming-call-created', incomingCallCreatedHandler(self));
-	activityHub.on('incoming-call-connecting', incomingCallConnectingHandler(self));
-	activityHub.on('incoming-call-disconnecting', incomingCallDisconnectingHandler(self));
-	activityHub.on('call-connected', callConnectedHandler(self));
-	activityHub.on('call-disconnected', callDisconnectedHandler(self));
-	activityHub.on('meeting-started', meetingStartNotifyHandler(self));
-	activityHub.on('my-status-changed', myStatusChangedHandler(self));
-}
-
 function setEventHandlers(self) {
 	self.ipcRenderer.on('enable-wakelock', () => wakeLock.enable());
 	self.ipcRenderer.on('disable-wakelock', () => wakeLock.disable());
-}
-
-function updateActivityCountHandler() {
-	return async (data) => {
-		const event = new CustomEvent('unread-count', { detail: { number: data.count } });
-		window.dispatchEvent(event);
-	};
-}
-
-function incomingCallCreatedHandler(self) {
-	return async (data) => {
-		self.ipcRenderer.invoke('incoming-call-created', data);
-	};
-}
-
-function incomingCallConnectingHandler(self) {
-	return async () => {
-		self.ipcRenderer.invoke('incoming-call-connecting');
-	};
-}
-
-function incomingCallDisconnectingHandler(self) {
-	return async () => {
-		self.ipcRenderer.invoke('incoming-call-disconnecting');
-	};
-}
-
-function callConnectedHandler(self) {
-	return async () => {
-		self.ipcRenderer.invoke('call-connected');
-	};
-}
-
-function callDisconnectedHandler(self) {
-	return async () => {
-		self.ipcRenderer.invoke('call-disconnected');
-	};
-}
-
-// eslint-disable-next-line no-unused-vars
-function meetingStartNotifyHandler(self) {
-	if (!self.config.disableMeetingNotifications) {
-		return async (meeting) => {
-			new window.Notification('Meeting has started', {
-				type: 'meeting-started', body: meeting.title
-			});
-		};
-	}
-	return null;
-}
-
-// eslint-disable-next-line no-unused-vars
-function myStatusChangedHandler(self) {
-	// eslint-disable-next-line no-unused-vars
-	return async (event) => {
-		self.ipcRenderer.invoke('user-status-changed', { data: event.data });
-	};
 }
 
 module.exports = exports = ActivityManager;

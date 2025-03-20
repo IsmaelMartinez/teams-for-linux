@@ -21,10 +21,27 @@
 					<li>optInTeamsV2 and customBGServiceIgnoreMSDefaults config options are no longer available as they where teams-v1 specific</li>
 					<li>Cleaning up teams-v1 logic in the app</li>
 					<li>Set default url to be https://teams.microsoft.com/v2 instead of https://teams.microsoft.com</li>
+					<li>Remove activityHub eventHandlers for the teams-v1 events</li>
 				</ul>
 			</description>
 		</release>
-		<release version="1.12.7" date="2025-01-25">
+		<release version="1.13.0" date="2025-03-04">
+			<description>
+				<ul>
+					<li>Update electron to 34.3.0 and other small library updates</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.12.8" date="2025-02-21">
+			<description>
+				<ul>
+					<li>Adding permissionCheckHandler config option to verify if 3rd party cookies are affecting token refreshing</li>
+					<li>Removing enableBackgroundCallsAuthentication config option as it was broken, and probabaly not doing anything for us</li>
+					<li>Update electron to 33.4.1</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.12.7" date="2025-01-15">
 			<description>
 				<ul>
 					<li>Adding enableBackgroundCallsAuthentication config option to validate if this keeps the user authenticated for longer</li>
