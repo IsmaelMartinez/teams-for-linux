@@ -163,7 +163,6 @@ function setupPermissionHandlers() {
 		console.debug(`DENIED setPermissionCheckHandler check ${permission} requested by ${url} with origin ${requestingOrigin}`);
 		return false;
 	});
-
 }
 //https://github.com/AzureAD/microsoft-authentication-library-for-js/wiki/ (check for more info about the auth flow)
 

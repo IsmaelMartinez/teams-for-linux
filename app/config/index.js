@@ -283,14 +283,18 @@ function extractYargConfig(configObject, appVersion) {
 						'sfbassets.com',
 						'skypeforbusiness.com',
 						'outlook.office.com',
-						'microsoftazuread-sso.com'
+						'microsoftazuread-sso.com',
+						'teams.live.com'
 					],
 					///autologon.microsoftazuread-sso.com
 					allowedPermissions: [
 						'background-sync',
 						'notifications',
 						'media',
-						'speaker-selection'
+						'speaker-selection',
+						'clipboard-read',
+						'clipboard-write',
+						'clipboard-sanitized-write'
 					]
 				},
 				describe: 'Permission Handlers configuration',

@@ -6,7 +6,7 @@ Jamie did express his desire to refactor this project in Typescript and to suppo
 
 I have tried to contact Ivelkov for a few months but haven't receive any answers.
 
-For that reason, decided to refork it and fix a few things that where not working. The list has grown since then to support many features and to fix most of the bugs.
+For that reason, decided to refork it and fix a few things that were not working. The list has grown since then to support many features and to fix most of the bugs.
 
 To be able to use a few github functionalities, it was decided to unfork the project [#87](https://github.com/IsmaelMartinez/teams-for-linux/issues/87).
 
