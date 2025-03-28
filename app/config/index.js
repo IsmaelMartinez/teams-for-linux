@@ -69,12 +69,6 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
         type: "number",
       },
-      appLogLevels: {
-        deprecated: "Use `logConfig` instead",
-        default: "error,warn,info,debug",
-        describe: "Comma separated list of log levels (error,warn,info,debug)",
-        type: "string",
-      },
       appTitle: {
         default: "Microsoft Teams",
         describe: "A text to be suffixed with page title",
@@ -314,38 +308,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "persist:teams-4-linux",
         describe: "BrowserWindow webpreferences partition",
         type: "string",
-      },
-      permissionHandlersConfig: {
-        default: {
-          allowedDomains: [
-            "microsoft.com",
-            "microsoftonline.com",
-            "teams.skype.com",
-            "teams.microsoft.com",
-            "sfbassets.com",
-            "skypeforbusiness.com",
-            "outlook.office.com",
-            "microsoftazuread-sso.com",
-            "teams.live.com",
-            "sharepoint.com",
-            "outlook.office.com",
-          ],
-          ///autologon.microsoftazuread-sso.com
-          allowedPermissions: [
-            "background-sync",
-            "notifications",
-            "media",
-            "speaker-selection",
-            "clipboard-read",
-            "clipboard-write",
-            "clipboard-sanitized-write",
-            "screen-wake-lock",
-            "persistent-storage",
-            "geolocation",
-          ],
-        },
-        describe: "Permission Handlers configuration",
-        type: "object",
       },
       proxyServer: {
         default: null,
