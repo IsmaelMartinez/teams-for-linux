@@ -322,7 +322,7 @@ function handleCertificateError() {
 }
 
 async function requestMediaAccess() {
-	['camera', 'microphone', 'screen'].forEach(async (permission) => {
+	['camera', 'microphone'].forEach(async (permission) => {
 		const status = await
 			systemPreferences.askForMediaAccess(permission)
 				.catch(err => {
