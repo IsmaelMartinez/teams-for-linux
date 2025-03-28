@@ -19,7 +19,6 @@ Here is the list of available arguments and its usage:
 | appIconType                     | Type of tray icon to be used default/light/dark                                           | *default*, light, dark              |
 | appIdleTimeout                  | A numeric value in seconds as duration before app considers the system as idle             | 300                   |
 | appIdleTimeoutCheckInterval     | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached      | 10                    |
-| appLogLevels  **deprecated - use logLevels**                  | Comma separated list of log levels (error,warn,info,debug)                                | error,warn            |
 | appTitle                        | A text to be suffixed with page title                                                    | Microsoft Teams       |
 | authServerWhitelist             | Set auth-server-whitelist value (string)                                                           | *                |
 | awayOnSystemIdle                | Boolean to set the user status as away when system goes idle                                        | false               |
@@ -189,8 +188,6 @@ As you can see from the above example, it's a JSON array so you can configure an
 Image paths are relative to `customBGServiceBaseUrl`. If your `customBGServiceBaseUrl` is `https://example.com` and your image is at `https://example.com/images/sample.jpg`, then `src` would be `/images/sample.jpg` and in Teams V2 `src` would be `/evergreen-assets/backgroundimages/images/sample.jpg`.
 
 ## LogConfig option
-
-IMPORTANT: This option deprecates `appLogLevels`, that would be removed in the next major version.
 
 In version 1.9.0 we added the ability to log to the console (default), or use electron-log as your log manager or to not log at all.
 

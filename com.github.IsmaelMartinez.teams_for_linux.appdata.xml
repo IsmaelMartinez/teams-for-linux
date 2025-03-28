@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Remove permissionCheckHandler and cookie printing</li>
+					<li>Remove deprecated appLogLevels. Use logConfig instead</li>
 				</ul>
 			</description>
 		</release>

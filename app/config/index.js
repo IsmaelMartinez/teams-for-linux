@@ -69,12 +69,6 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
         type: "number",
       },
-      appLogLevels: {
-        deprecated: "Use `logConfig` instead",
-        default: "error,warn,info,debug",
-        describe: "Comma separated list of log levels (error,warn,info,debug)",
-        type: "string",
-      },
       appTitle: {
         default: "Microsoft Teams",
         describe: "A text to be suffixed with page title",
