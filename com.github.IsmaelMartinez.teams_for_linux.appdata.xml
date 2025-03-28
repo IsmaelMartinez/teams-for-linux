@@ -18,6 +18,9 @@
 			<description>
 				<ul>
 					<li>Update the deep link regex to allow /l/chat deep links in addition to meetings and channels</li>
+					<li>Increase dependency versions to include fix from electron for #1487</li>
+					<li>Checking if the settings file exists when trying to restore it to fix #1547</li>
+					<li>Add screen-wake-lock, persistent-storage and geolocation to the allowed permission, and add sharepoint.com and outlook.office.com to the allowed domains</li>
 				</ul>
 			</description>
 		</release>
