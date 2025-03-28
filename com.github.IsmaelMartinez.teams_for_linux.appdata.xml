@@ -19,6 +19,7 @@
 				<ul>
 					<li>Update electron to 35.1.2</li>
 					<li>Update electron-builder to 26.0.12</li>
+					<li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li> 
 				</ul>
 			</description>
 		</release>

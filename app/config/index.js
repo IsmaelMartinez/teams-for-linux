@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
+const { deprecate } = require("util");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -137,6 +138,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       customUserDir: {
         default: null,
+        deprecated: "Use `ELECTRON_USER_DATA_PATH` env variable instead",
         describe:
           "Custom User Directory so that you can have multiple profiles",
         type: "string",
