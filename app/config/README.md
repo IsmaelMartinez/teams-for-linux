@@ -62,7 +62,6 @@ Here is the list of available arguments and its usage:
 | ntlmV2enabled                   | Set enable-ntlm-v2 value                                                                 | 'true'                |
 | optInTeamsV2                    | Boolean to opt in to use Teams V2                                                                   | false               |
 | partition                       | BrowserWindow webpreferences partition                                                    | persist:teams-4-linux                |
-| permissionHandlersConfig        | Permission Handlers configuration; `allowedDomains` and `allowedPermissions`. See [Permissions Handlers Configurarion](#permission-handlers-configuration) | allowedDomains : [ 'microsoft.com', 'microsoftonline.com', 'teams.skype.com', 'teams.microsoft.com', 'sfbassets.com','skypeforbusiness.com','outlook.office.com','microsoftazuread-sso.com','teams.live.com', 'sharepoint.com', 'outlook.office.com'], allowedPermissions: [ 'background-sync', 'notifications', 'media', 'speaker-selection','clipboard-read','clipboard-write','clipboard-sanitized-write','screen-wake-lock','persistent-storage','geolocation'] |
 | proxyServer                     | Proxy Server with format address:port (string)                                                  | null                |
 | sandbox      | Sandbox for the renderer process  (disabling this will break functionality)                                                | false               |
 | screenLockInhibitionMethod      | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`)                      | *Electron*, WakeLockSentinel                |
@@ -259,46 +258,3 @@ Or more complex:
 ### Limitations
 
 I haven't explore all the options available in the `electron-log` configuration, so I can't guarantee all the options would work. (specially those options that require a function to be passed)
-
-## Permission Handlers Configuration
-
-In version 1.12.8 we added the ability to configure the permission handlers for the application. This is managed by the `permissionHandlersConfig` option, that has the following options:
-
-- `allowedDomains`: An array of domains that are allowed to request permissions. If the domain is not in this list, the request will be denied.
-- `allowedPermissions`: An array of permissions that are allowed to be requested. If the permission is not in this list, the request will be denied.
-
-The configuration is an object with the following structure:
-
-```json
-{
- "permissionHandlersConfig": {
-  "allowedDomains": [
-   "microsoft.com",
-   "microsoftonline.com",
-   "teams.skype.com",
-   "teams.microsoft.com",
-   "sfbassets.com",
-   "skypeforbusiness.com",
-   "outlook.office.com",
-   "microsoftazuread-sso.com",
-   "teams.live.com",
-   "sharepoint.com",
-   "outlook.office.com"
-  ],
-  "allowedPermissions": [
-   "background-sync",
-   "notifications",
-   "media",
-   "speaker-selection",
-   "clipboard-read",
-   "clipboard-write",
-   "clipboard-sanitized-write",
-   "screen-wake-lock",
-   "persistent-storage",
-   "geolocation"
-  ]
- }
-}
-```
-
-Please refer to [Issue 1357](https://github.com/IsmaelMartinez/teams-for-linux/issues/1357) for more information.

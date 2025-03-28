@@ -187,76 +187,7 @@ function onDidFinishLoad() {
 		`);
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
-  window.webContents.session.cookies.on(
-    "changed",
-    (_event, cookie, cause, removed) => {
-      console.debug(
-        `cookie changed cause: ${cause} \n removed?: ${removed} \n`
-      );
-      console.debug(
-        `cookie: ${cookie.name} \n expirationDate: ${cookie.expirationDate} \n domain: ${cookie.domain} \n secure: ${cookie.secure} \n httpOnly: ${cookie.httpOnly} \n path: ${cookie.path} \n session: ${cookie.session} \n sameSite: ${cookie.sameSite}`
-      );
-    }
-  );
-
-  setupPermissionHandlers();
 }
-
-function setupPermissionHandlers() {
-  const partitionSession = session.fromPartition(config.partition);
-  partitionSession.setPermissionRequestHandler(
-    (webContents, permission, callback) => {
-      const url = webContents?.getURL();
-      console.warn(
-        `setPermissionRequestHandler ${permission} requested by ${url}`
-      );
-
-      if (
-        config.permissionHandlersConfig.allowedDomains.some((allowedDomain) =>
-          url.includes(allowedDomain)
-        ) &&
-        config.permissionHandlersConfig.allowedPermissions.some(
-          (allowedPermission) => permission.includes(allowedPermission)
-        )
-      ) {
-        console.debug(
-          `ALLOWED setPermissionRequestHandler ${permission} requested by ${url}`
-        );
-        return callback(true);
-      }
-      console.debug(
-        `DENIED setPermissionRequestHandler ${permission} requested by ${url}`
-      );
-
-      callback(false);
-    }
-  );
-
-  partitionSession.setPermissionCheckHandler(
-    (webContents, permission, requestingOrigin) => {
-      const url = webContents?.getURL() || requestingOrigin;
-      if (
-        config.permissionHandlersConfig.allowedDomains.some((allowedDomain) =>
-          url.includes(allowedDomain)
-        ) &&
-        config.permissionHandlersConfig.allowedPermissions.some(
-          (allowedPermission) => permission.includes(allowedPermission)
-        )
-      ) {
-        console.debug(
-          `ALLOWED setPermissionCheckHandler check ${permission} requested by ${url} with origin ${requestingOrigin}`
-        );
-        return true;
-      }
-
-      console.debug(
-        `DENIED setPermissionCheckHandler check ${permission} requested by ${url} with origin ${requestingOrigin}`
-      );
-      return false;
-    }
-  );
-}
-//https://github.com/AzureAD/microsoft-authentication-library-for-js/wiki/ (check for more info about the auth flow)
 
 function initSystemThemeFollow(config) {
   if (config.followSystemTheme) {

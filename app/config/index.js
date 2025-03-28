@@ -313,38 +313,6 @@ function extractYargConfig(configObject, appVersion) {
         describe: "BrowserWindow webpreferences partition",
         type: "string",
       },
-      permissionHandlersConfig: {
-        default: {
-          allowedDomains: [
-            "microsoft.com",
-            "microsoftonline.com",
-            "teams.skype.com",
-            "teams.microsoft.com",
-            "sfbassets.com",
-            "skypeforbusiness.com",
-            "outlook.office.com",
-            "microsoftazuread-sso.com",
-            "teams.live.com",
-            "sharepoint.com",
-            "outlook.office.com",
-          ],
-          ///autologon.microsoftazuread-sso.com
-          allowedPermissions: [
-            "background-sync",
-            "notifications",
-            "media",
-            "speaker-selection",
-            "clipboard-read",
-            "clipboard-write",
-            "clipboard-sanitized-write",
-            "screen-wake-lock",
-            "persistent-storage",
-            "geolocation",
-          ],
-        },
-        describe: "Permission Handlers configuration",
-        type: "object",
-      },
       proxyServer: {
         default: null,
         describe: "Proxy Server with format address:port",
