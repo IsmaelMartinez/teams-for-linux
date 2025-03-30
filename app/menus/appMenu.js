@@ -41,13 +41,13 @@ exports = module.exports = (Menus) => ({
       type: "separator",
     },
     {
+      label: "Quit (Clear Storage)",
+      click: () => Menus.quit(true),
+    },
+    {
       label: "Quit",
       accelerator: "ctrl+Q",
       click: () => Menus.quit(),
-    },
-    {
-      label: "Quit (Clear Storage)",
-      click: () => Menus.quit(true),
     },
   ],
 });
