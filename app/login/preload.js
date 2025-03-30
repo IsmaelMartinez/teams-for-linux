@@ -1,12 +1,7 @@
-const {
-    contextBridge,
-    ipcRenderer
-} = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld(
-    "api", {
-        submitForm: (args) => {
-            ipcRenderer.send('submitForm', args);
-        },
-    },
-);
+contextBridge.exposeInMainWorld("api", {
+  submitForm: (args) => {
+    ipcRenderer.send("submitForm", args);
+  },
+});

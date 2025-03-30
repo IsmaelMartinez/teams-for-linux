@@ -21,7 +21,7 @@ addCommandLineSwitchesBeforeConfigLoad();
 const { AppConfiguration } = require("./appConfiguration");
 const appConfig = new AppConfiguration(
   app.getPath("userData"),
-  app.getVersion()
+  app.getVersion(),
 );
 
 const config = appConfig.startupConfig;
@@ -49,7 +49,7 @@ try {
   player = NodeSound.getDefaultPlayer();
 } catch (err) {
   console.warn(
-    `No audio players found. Audio notifications might not work. ${err}`
+    `No audio players found. Audio notifications might not work. ${err}`,
   );
 }
 
@@ -88,7 +88,7 @@ if (!gotTheLock) {
   ipcMain.handle("get-zoom-level", handleGetZoomLevel);
   ipcMain.handle("save-zoom-level", handleSaveZoomLevel);
   ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
-    desktopCapturer.getSources(opts)
+    desktopCapturer.getSources(opts),
   );
   ipcMain.handle("play-notification-sound", playNotificationSound);
   ipcMain.handle("show-notification", showNotification);
@@ -143,7 +143,7 @@ function addCommandLineSwitchesAfterConfigLoad() {
 
   app.commandLine.appendSwitch(
     "auth-server-whitelist",
-    config.authServerWhitelist
+    config.authServerWhitelist,
   );
   app.commandLine.appendSwitch("enable-ntlm-v2", config.ntlmV2enabled);
 
@@ -174,7 +174,7 @@ function addElectronCLIFlagsFromConfig() {
           )
         ) {
           console.debug(
-            `Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`
+            `Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`,
           );
           app.commandLine.appendSwitch(flag[0], flag[1]);
         } else {
@@ -211,7 +211,7 @@ async function showNotification(_event, options) {
 
 async function playNotificationSound(_event, options) {
   console.debug(
-    `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
+    `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`,
   );
   // Player failed to load or notification sound disabled in config
   if (!player || config.disableNotificationSound) {
@@ -259,7 +259,7 @@ function handleAppReady() {
     dialog.showMessageBox({
       title: "Configuration Error",
       icon: nativeImage.createFromPath(
-        path.join(config.appPath, "assets/icons/setting-error.256x256.png")
+        path.join(config.appPath, "assets/icons/setting-error.256x256.png"),
       ),
       message: `Error in config file '${config.error}'.\n Loading default configuration`,
     });
@@ -269,7 +269,7 @@ function handleAppReady() {
     dialog.showMessageBox({
       title: "Configuration Warning",
       icon: nativeImage.createFromPath(
-        path.join(config.appPath, "assets/icons/alert-diamond.256x256.png")
+        path.join(config.appPath, "assets/icons/alert-diamond.256x256.png"),
       ),
       message: config.warning,
     });
@@ -285,7 +285,7 @@ function handleAppReady() {
 
 async function handleGetSystemIdleState() {
   const systemIdleState = powerMonitor.getSystemIdleState(
-    config.appIdleTimeout
+    config.appIdleTimeout,
   );
 
   if (systemIdleState !== "active" && idleTimeUserStatus == -1) {
@@ -296,7 +296,7 @@ async function handleGetSystemIdleState() {
         config.appIdleTimeoutCheckInterval
       }s, ActiveCheckPollInterval: ${
         config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
+      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`,
     );
     idleTimeUserStatus = userStatus;
   }
@@ -317,7 +317,7 @@ async function handleGetSystemIdleState() {
         config.appIdleTimeoutCheckInterval
       }s, ActiveCheckPollInterval: ${
         config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
+      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`,
     );
     idleTimeUserStatus = -1;
   }
@@ -382,11 +382,11 @@ async function requestMediaAccess() {
       .askForMediaAccess(permission)
       .catch((err) => {
         console.error(
-          `Error while requesting access for "${permission}": ${err}`
+          `Error while requesting access for "${permission}": ${err}`,
         );
       });
     console.debug(
-      `mac permission ${permission} asked current status ${status}`
+      `mac permission ${permission} asked current status ${status}`,
     );
   });
 }

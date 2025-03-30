@@ -45,15 +45,20 @@ class Menus {
         normalizeAccessKeys: true,
         defaultId: 1,
         cancelId: 1,
-        message: "Are you sure you want to clear the storage before quitting?",
+        message:
+          "Are you sure you want to clear the storage before quitting? If you have clearStorageData set in the config, it will use that configuration.",
         type: "question",
       }) === 0;
 
     if (clearStorage) {
       const defSession = session.fromPartition(
-        this.configGroup.startupConfig.partition
+        this.configGroup.startupConfig.partition,
       );
-      await defSession.clearStorageData();
+      if (this.configGroup.clearStorageData) {
+        await defSession.clearStorageData(this.configGroup.clearStorageData);
+      } else {
+        await defSession.clearStorageData();
+      }
     }
 
     this.window.close();
@@ -122,7 +127,7 @@ class Menus {
       this.window,
       menu.submenu,
       this.iconPath,
-      this.configGroup.startupConfig
+      this.configGroup.startupConfig,
     );
     this.spellCheckProvider = new SpellCheckProvider(this.window);
   }
@@ -158,12 +163,12 @@ class Menus {
     ipcMain.once("set-teams-settings", restoreSettingsInternal);
     const settingsPath = path.join(
       app.getPath("userData"),
-      "teams_settings.json"
+      "teams_settings.json",
     );
     if (fs.existsSync(settingsPath)) {
       this.window.webContents.send(
         "set-teams-settings",
-        JSON.parse(fs.readFileSync(settingsPath))
+        JSON.parse(fs.readFileSync(settingsPath)),
       );
     } else {
       dialog.showMessageBoxSync(this.window, {
@@ -185,7 +190,7 @@ class Menus {
       !this.configGroup.startupConfig.disableNotifications;
     this.configGroup.legacyConfigStore.set(
       "disableNotifications",
-      this.configGroup.startupConfig.disableNotifications
+      this.configGroup.startupConfig.disableNotifications,
     );
     this.updateMenu();
   }
@@ -195,7 +200,7 @@ class Menus {
       !this.configGroup.startupConfig.disableMeetingNotifications;
     this.configGroup.legacyConfigStore.set(
       "disableMeetingNotifications",
-      this.configGroup.startupConfig.disableMeetingNotifications
+      this.configGroup.startupConfig.disableMeetingNotifications,
     );
     this.updateMenu();
   }
@@ -205,7 +210,7 @@ class Menus {
       !this.configGroup.startupConfig.disableNotificationSound;
     this.configGroup.legacyConfigStore.set(
       "disableNotificationSound",
-      this.configGroup.startupConfig.disableNotificationSound
+      this.configGroup.startupConfig.disableNotificationSound,
     );
     this.updateMenu();
   }
@@ -215,7 +220,7 @@ class Menus {
       !this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable;
     this.configGroup.legacyConfigStore.set(
       "disableNotificationSoundIfNotAvailable",
-      this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable
+      this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable,
     );
     this.updateMenu();
   }
@@ -225,7 +230,7 @@ class Menus {
       !this.configGroup.startupConfig.disableNotificationWindowFlash;
     this.configGroup.legacyConfigStore.set(
       "disableNotificationWindowFlash",
-      this.configGroup.startupConfig.disableNotificationWindowFlash
+      this.configGroup.startupConfig.disableNotificationWindowFlash,
     );
     this.updateMenu();
   }
@@ -240,7 +245,7 @@ class Menus {
 function saveSettingsInternal(_event, arg) {
   fs.writeFileSync(
     path.join(app.getPath("userData"), "teams_settings.json"),
-    JSON.stringify(arg)
+    JSON.stringify(arg),
   );
   dialog.showMessageBoxSync(this.window, {
     message: "Settings have been saved successfully!",
@@ -281,7 +286,7 @@ function assignReplaceWordHandler(params, menu, menus) {
       new MenuItem({
         label: suggestion,
         click: () => menus.window.webContents.replaceMisspelling(suggestion),
-      })
+      }),
     );
   }
 }
@@ -293,15 +298,15 @@ function assignAddToDictionaryHandler(params, menu, menus) {
         label: "Add to dictionary",
         click: () =>
           menus.window.webContents.session.addWordToSpellCheckerDictionary(
-            params.misspelledWord
+            params.misspelledWord,
           ),
-      })
+      }),
     );
 
     menu.append(
       new MenuItem({
         type: "separator",
-      })
+      }),
     );
   }
 
@@ -316,7 +321,7 @@ function addTextEditMenuItems(params, menu, menus) {
       new MenuItem({
         label: "Copy",
         click: () => clipboard.writeText(params.linkURL),
-      })
+      }),
     );
   }
 }
@@ -325,19 +330,19 @@ function buildEditContextMenu(menu, menus) {
   menu.append(
     new MenuItem({
       role: "cut",
-    })
+    }),
   );
 
   menu.append(
     new MenuItem({
       role: "copy",
-    })
+    }),
   );
 
   menu.append(
     new MenuItem({
       role: "paste",
-    })
+    }),
   );
 
   addSpellCheckMenuItems(menu, menus);
@@ -347,14 +352,14 @@ function addSpellCheckMenuItems(menu, menus) {
   menu.append(
     new MenuItem({
       type: "separator",
-    })
+    }),
   );
 
   menu.append(
     new MenuItem({
       label: "Writing Languages",
       submenu: createSpellCheckLanguagesMenu(menus),
-    })
+    }),
   );
 }
 
@@ -368,7 +373,7 @@ function createSpellCheckLanguagesMenu(menus) {
       new MenuItem({
         label: group.key,
         submenu: subMenu,
-      })
+      }),
     );
     for (const language of group.list) {
       subMenu.append(createLanguageMenuItem(language, activeLanguages, menus));
@@ -384,13 +389,13 @@ function createSpellCheckLanguagesNoneMenuEntry(menu, menus) {
   menu.append(
     new MenuItem({
       type: "separator",
-    })
+    }),
   );
   menu.append(
     new MenuItem({
       label: "None",
       click: () => chooseLanguage(null, menus),
-    })
+    }),
   );
 }
 
@@ -416,7 +421,7 @@ function chooseLanguage(item, menus) {
   }
 
   const changes = menus.spellCheckProvider.setLanguages(
-    item ? activeLanguages : []
+    item ? activeLanguages : [],
   );
 
   if (menus.onSpellCheckerLanguageChanged) {

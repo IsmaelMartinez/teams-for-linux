@@ -26,7 +26,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-          configObject.configError
+          configObject.configError,
       );
     }
   } else {
@@ -144,8 +144,15 @@ function extractYargConfig(configObject, appVersion) {
       },
       clearStorage: {
         default: false,
+        deprecated: "Use `clearStorageData` instead",
         describe:
           "Whether to clear the storage before creating the window or not",
+        type: "boolean",
+      },
+      clearStorageData: {
+        default: null,
+        describe:
+          "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
         type: "boolean",
       },
       clientCertPath: {
@@ -417,7 +424,7 @@ function argv(configPath, appVersion) {
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
       console.info(
-        `Config file ${filename} changed ${event}. Relaunching app...`
+        `Config file ${filename} changed ${event}. Relaunching app...`,
       );
       ipcMain.emit("config-file-changed");
     });
