@@ -5,7 +5,6 @@ const {
   nativeTheme,
   dialog,
   webFrameMain,
-  session,
 } = require("electron");
 const login = require("../login");
 const customCSS = require("../customCSS");

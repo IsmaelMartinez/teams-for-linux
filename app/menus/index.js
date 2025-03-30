@@ -45,7 +45,8 @@ class Menus {
         normalizeAccessKeys: true,
         defaultId: 1,
         cancelId: 1,
-        message: "Are you sure you want to clear the storage before quitting?",
+        message:
+          "Are you sure you want to clear the storage before quitting? If you have clearStorageData set in the config, it will use that configuration.",
         type: "question",
       }) === 0;
 
@@ -53,7 +54,16 @@ class Menus {
       const defSession = session.fromPartition(
         this.configGroup.startupConfig.partition
       );
-      await defSession.clearStorageData();
+      if (this.configGroup.clearStorageData) {
+        console.debug(
+          "Clearing storage data on quit",
+          this.config.clearStorageData
+        );
+        await defSession.clearStorageData(this.configGroup.clearStorageData);
+      } else {
+        console.debug("Clearing storage on quit", this.config.clearStorageData);
+        await defSession.clearStorageData();
+      }
     }
 
     this.window.close();

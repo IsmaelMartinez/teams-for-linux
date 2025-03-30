@@ -1,36 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Login Dialog</title>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <form name="form" onSubmit="JavaScript:sendForm(event)">
-        <input type="text" name="username" id="username" value="" placeholder="email of/or domain\username" type="email"
-            autofocus style="width: 342px;">
-        <br><br>
-        <input type="password" name="password" id="password" value="" placeholder="Password" style="width: 342px;">
-        <br><br>
-        <input type="submit" value="Submit" style="
-                background-color: rgb(38, 114, 236);     
-                border: none;
-                min-width: 80px;
-                padding: 4px 20px 6px 20px;
-                color: rgb(255, 255, 255);">
+      <input
+        type="text"
+        name="username"
+        id="username"
+        value=""
+        placeholder="email of/or domain\username"
+        type="email"
+        autofocus
+        style="width: 342px"
+      />
+      <br /><br />
+      <input
+        type="password"
+        name="password"
+        id="password"
+        value=""
+        placeholder="Password"
+        style="width: 342px"
+      />
+      <br /><br />
+      <input
+        type="submit"
+        value="Submit"
+        style="
+          background-color: rgb(38, 114, 236);
+          border: none;
+          min-width: 80px;
+          padding: 4px 20px 6px 20px;
+          color: rgb(255, 255, 255);
+        "
+      />
     </form>
 
     <script>
-        function sendForm(event) {
-            event.preventDefault();
-            window.api.submitForm({
-            	username: document.getElementById('username').value,
-            	password: document.getElementById('password').value,
-            });
-        }
+      function sendForm(event) {
+        event.preventDefault();
+        window.api.submitForm({
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value,
+        });
+      }
     </script>
-</body>
-
+  </body>
 </html>
