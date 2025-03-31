@@ -108,14 +108,14 @@ function applyAppConfiguration(config, window) {
       },
       (result) => {
         console.info(
-          "Loaded certificate: " + config.clientCertPath + ", result: " + result
+          "Loaded certificate: " +
+            config.clientCertPath +
+            ", result: " +
+            result,
         );
-      }
+      },
     );
   }
-
-  handleTeamsV2OptIn(config);
-
   window.webContents.setUserAgent(config.chromeUserAgent);
 
   if (!config.minimized) {
@@ -126,36 +126,6 @@ function applyAppConfiguration(config, window) {
 
   if (config.webDebug) {
     window.openDevTools();
-  }
-}
-
-function handleTeamsV2OptIn(config) {
-  if (config.optInTeamsV2) {
-    setConfigUrlTeamsV2(config);
-    window.webContents
-      .executeJavaScript('localStorage.getItem("tmp.isOptedIntoT2Web");', true)
-      .then((result) => {
-        if (result == null || !result) {
-          window.webContents
-            .executeJavaScript(
-              'localStorage.setItem("tmp.isOptedIntoT2Web", true);',
-              true
-            )
-            .then(window.reload())
-            .catch((err) => {
-              console.debug("could not set localStorage variable", err);
-            });
-        }
-      })
-      .catch((err) => {
-        console.debug("could not read localStorage variable", err);
-      });
-  }
-}
-
-function setConfigUrlTeamsV2(config) {
-  if (!config.url.includes("/v2")) {
-    config.url = config.url + "/v2/";
   }
 }
 
@@ -193,13 +163,13 @@ function initSystemThemeFollow(config) {
     nativeTheme.on("updated", () => {
       window.webContents.send(
         "system-theme-changed",
-        nativeTheme.shouldUseDarkColors
+        nativeTheme.shouldUseDarkColors,
       );
     });
     setTimeout(() => {
       window.webContents.send(
         "system-theme-changed",
-        nativeTheme.shouldUseDarkColors
+        nativeTheme.shouldUseDarkColors,
       );
     }, 2500);
   }
@@ -209,7 +179,7 @@ function onDidFrameFinishLoad(
   event,
   isMainFrame,
   frameProcessId,
-  frameRoutingId
+  frameRoutingId,
 ) {
   console.debug("did-frame-finish-load", event, isMainFrame);
 
@@ -236,25 +206,17 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-  const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel)/g;
   const v2msTeams =
     /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/g;
   console.debug("processArgs:", args);
   for (const arg of args) {
     console.debug(
-      `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
-        arg
-      )}`
+      `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(arg)}`,
     );
     if (new RegExp(config.meetupJoinRegEx).test(arg)) {
       console.debug("A url argument received with https protocol");
       window.show();
       return arg;
-    }
-    if (v1msTeams.test(arg)) {
-      console.debug("A url argument received with msteams v1 protocol");
-      window.show();
-      return config.url + arg.substring(8, arg.length);
     }
     if (v2msTeams.test(arg)) {
       console.debug("A url argument received with msteams v2 protocol");
@@ -278,7 +240,7 @@ function onBeforeRequestHandler(details, callback) {
   } else {
     console.debug("DEBUG - webRequest to  " + details.url + " intercepted!");
     console.debug(
-      "Opening the request in a hidden child window for authentication"
+      "Opening the request in a hidden child window for authentication",
     );
     const child = new BrowserWindow({ parent: window, show: false });
     child.loadURL(details.url);
@@ -315,8 +277,8 @@ function onBeforeSendHeadersHandler(detail, callback) {
 function onNewWindow(details) {
   console.debug(
     `testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(
-      details.url
-    )}`
+      details.url,
+    )}`,
   );
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
     console.debug("DEBUG - captured meetup-join url");
@@ -350,15 +312,15 @@ function addEventHandlers() {
   window.webContents.setWindowOpenHandler(onNewWindow);
   window.webContents.session.webRequest.onBeforeRequest(
     { urls: ["https://*/*"] },
-    onBeforeRequestHandler
+    onBeforeRequestHandler,
   );
   window.webContents.session.webRequest.onHeadersReceived(
     { urls: ["https://*/*"] },
-    onHeadersReceivedHandler
+    onHeadersReceivedHandler,
   );
   window.webContents.session.webRequest.onBeforeSendHeaders(
     getWebRequestFilterFromURL(),
-    onBeforeSendHeadersHandler
+    onBeforeSendHeadersHandler,
   );
   window.webContents.on("did-finish-load", onDidFinishLoad);
   window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
@@ -413,7 +375,7 @@ function openInBrowser(details) {
     execFile(
       config.defaultURLHandler.trim(),
       [details.url],
-      openInBrowserErrorHandler
+      openInBrowserErrorHandler,
     );
   } else {
     shell.openExternal(details.url);

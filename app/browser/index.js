@@ -6,14 +6,7 @@
   ipcRenderer.invoke("get-config").then((mainConfig) => {
     config = mainConfig;
     initializeModules(config, ipcRenderer);
-
     new ActivityManager(ipcRenderer, config).start();
-  });
-
-  Object.defineProperty(navigator.serviceWorker, "register", {
-    value: () => {
-      return Promise.reject();
-    },
   });
 
   let classicNotification = window.Notification;
@@ -68,7 +61,6 @@ function initializeModules(config, ipcRenderer) {
     require("./tools/trayIconRenderer").init(config, ipcRenderer);
   }
   require("./tools/settings").init(config, ipcRenderer);
-  require("./tools/customBackgrounds")(config, ipcRenderer);
   require("./tools/theme").init(config, ipcRenderer);
   require("./tools/emulatePlatform").init(config);
 }

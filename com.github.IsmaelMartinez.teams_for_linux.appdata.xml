@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.0" date="2025-02-08">
+			<description>
+				<ul>
+					<li>Remove deprecated config enableBackgroundCallsAuthentication that was never announced but people didn't complain about</li>
+					<li>optInTeamsV2 and customBGServiceIgnoreMSDefaults config options are no longer available as they where teams-v1 specific</li>
+					<li>Cleaning up teams-v1 logic in the app</li>
+					<li>Set default url to be https://teams.microsoft.com/v2 instead of https://teams.microsoft.com</li>
+					<li>Remove activityHub eventHandlers for the teams-v1 events</li>
+				</ul>
+			</description>
+		</release>
 		<release vesrion="1.14.2" date="2025-03-30">
 			<description>
 				<ul>

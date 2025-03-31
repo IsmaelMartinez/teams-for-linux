@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
-const { deprecate } = require("util");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -94,12 +93,6 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Base URL of the server which provides custom background images",
         type: "string",
-      },
-      customBGServiceIgnoreMSDefaults: {
-        default: false,
-        describe:
-          "A flag indicates whether to ignore Microsoft provided images or not",
-        type: "boolean",
       },
       customBGServiceConfigFetchInterval: {
         default: 0,
@@ -279,7 +272,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       meetupJoinRegEx: {
         default:
-          "^https://teams.(microsoft|live).com/.*(?:meetup-join|channel)",
+          "^https://teams.(microsoft|live).com/.*(?:meetup-join|channel|chat)",
         describe: "Meetup-join and channel regular expression",
         type: "string",
       },
@@ -305,11 +298,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "true",
         describe: "Set enable-ntlm-v2 value",
         type: "string",
-      },
-      optInTeamsV2: {
-        default: false,
-        describe: "Opt in to use Teams V2",
-        type: "boolean",
       },
       partition: {
         default: "persist:teams-4-linux",
@@ -366,7 +354,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       url: {
-        default: "https://teams.microsoft.com",
+        default: "https://teams.microsoft.com/v2",
         describe: "Microsoft Teams URL",
         type: "string",
       },
