@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-          configObject.configError
+          configObject.configError,
       );
     }
   } else {
@@ -412,7 +412,7 @@ function argv(configPath, appVersion) {
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
       console.info(
-        `Config file ${filename} changed ${event}. Relaunching app...`
+        `Config file ${filename} changed ${event}. Relaunching app...`,
       );
       ipcMain.emit("config-file-changed");
     });
