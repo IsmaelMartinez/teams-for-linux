@@ -1,39 +1,36 @@
 /* 
 From https://userstyles.org/styles/154382/microsoft-teams-tweaks
 */
-message-list.chat-style .self .media-left ~ .ts-message-thread-body
-{
+message-list.chat-style .self .media-left ~ .ts-message-thread-body {
   padding-left: 42px !important;
 }
 
-.chat-style .self .ts-message-thread-body
-{
+.chat-style .self .ts-message-thread-body {
   justify-content: initial !important;
 }
 
-.list-wrap.list-wrap-v3.ts-message-list-container, 
-.ts-new-message-footer.new-message-common.rich-style-enabled, .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
-virtual-repeat>.list-wrap>*.item-wrap,
-div#ts-bottom-compose-identifier
-{
+.list-wrap.list-wrap-v3.ts-message-list-container,
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse,
+virtual-repeat > .list-wrap > *.item-wrap,
+div#ts-bottom-compose-identifier {
   max-width: initial !important;
 }
 
-.ts-new-message-footer.new-message-common.rich-style-enabled, .extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse
-{
+.ts-new-message-footer.new-message-common.rich-style-enabled,
+.extension-icons-container.new-message-common.compose-stripe.compose-stripe-flex-reverse {
   margin: 0 3rem !important;
 }
 
-.placeholder-item.message-body-width.self
-{
+.placeholder-item.message-body-width.self {
   right: initial !important;
 }
 
 /* Hide the "waffle menu" and align the logo to match the native client */
 button[data-tid="waffle-open-button"] {
-    display: none !important;
+  display: none !important;
 }
 
 svg[data-tid="titlebar-teams-icon"] {
-    margin-left: 25px !important;
+  margin-left: 25px !important;
 }

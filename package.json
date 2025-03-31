@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@homebridge/dbus-native": "0.6.0",
-    "electron-log": "^5.3.2",
+    "electron-log": "^5.3.3",
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.21",
@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
-    "@eslint/js": "^9.22.0",
+    "@eslint/js": "^9.23.0",
     "http-server": "^14.1.1",
-    "electron": "^34.3.3",
-    "electron-builder": "^25.1.8",
-    "eslint": "^9.22.0",
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.23.0",
     "globals": "^16.0.0"
   },
   "build": {
@@ -82,9 +82,11 @@
       "synopsis": "Teams for Linux",
       "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "desktop": {
-        "Name": "Teams for Linux",
-        "Comment": "Unofficial client for Microsoft Teams for Linux",
-        "StartupWMClass": "teams-for-linux"
+        "desktopActions": {
+          "Name": "Teams for Linux",
+          "Comment": "Unofficial client for Microsoft Teams for Linux",
+          "StartupWMClass": "teams-for-linux"
+        }
       },
       "target": [
         "rpm",

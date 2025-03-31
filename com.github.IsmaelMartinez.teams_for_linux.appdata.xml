@@ -17,11 +17,46 @@
 		<release version="2.0.0" date="2025-02-08">
 			<description>
 				<ul>
-					<li>Remove deprecated config options appLogLevels, and the enableBackgroundCallsAuthentication that was never announced but people didn't complain about</li>
+					<li>Remove deprecated config enableBackgroundCallsAuthentication that was never announced but people didn't complain about</li>
 					<li>optInTeamsV2 and customBGServiceIgnoreMSDefaults config options are no longer available as they where teams-v1 specific</li>
 					<li>Cleaning up teams-v1 logic in the app</li>
 					<li>Set default url to be https://teams.microsoft.com/v2 instead of https://teams.microsoft.com</li>
 					<li>Remove activityHub eventHandlers for the teams-v1 events</li>
+				</ul>
+			</description>
+		</release>
+		<release vesrion="1.14.2" date="2025-03-30">
+			<description>
+				<ul>
+					<li>Deprecate clearStorage in favour of clearStorageData</li>
+					<li>Reformat code using prettier</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.14.1" date="2025-03-28">
+			<description>
+				<ul>
+					<li>Remove permissionCheckHandler and cookie printing</li>
+					<li>Remove deprecated appLogLevels. Use logConfig instead</li>
+				</ul>
+			</description>
+		</release>
+		<release version="1.14.0" date="2025-03-28">
+			<description>
+				<ul>
+					<li>Update electron to 35.1.2</li>
+					<li>Update electron-builder to 26.0.12</li>
+					<li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li> 
+				</ul>
+			</description>
+		</release>
+		<release version="1.13.2" date="2025-03-25">
+			<description>
+				<ul>
+					<li>Update the deep link regex to allow /l/chat deep links in addition to meetings and channels</li>
+					<li>Increase dependency versions to include fix from electron for #1487</li>
+					<li>Checking if the settings file exists when trying to restore it to fix #1547</li>
+					<li>Add screen-wake-lock, persistent-storage and geolocation to the allowed permission, and add sharepoint.com and outlook.office.com to the allowed domains</li>
 				</ul>
 			</description>
 		</release>
