@@ -33,60 +33,48 @@ Here is the list of available arguments and its usage:
 | customCSSName                      | custom CSS name for the packaged available css files                                                                                    |                                                                                                                        |
 | customCSSLocation                  | custom CSS styles file location                                                                                                         |                                                                                                                        |
 | customUserDir (deprecated)         | Deprecated: Use `ELECTRON_USER_DATA_PATH` env variable instead.                                                                         | null                                                                                                                   |
-| clearStorage (deprecated)          | Deprecated: Use `clearStorageData` instead.                                                                                             | false                                                                                                                  |
-| clearStorageData                   | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions | null                                                                                                                   |
-
-| clientCertPath | Custom Client Certs for corporate authentication (certificate
-must be in pkcs12 format) | string | | clientCertPassword | Custom Client Certs
-password for corporate authentication (certificate must be in pkcs12 format) |
-string | | closeAppOnCross | Close the app when clicking the close (X) cross |
-false | | defaultNotificationUrgency | Default urgency for new notifications
-(`low`/`normal`/`critical`). Only applicable when `notificationMethod` is
-`electron` | normal | | defaultURLHandler | Default application to be used to
-open the HTTP URLs (string) | | | disableAutogain | Disable mic auto gain or not
-| false | | disableGpu | Disable GPU and hardware acceleration (can be useful if
-the window remains blank) | false | | disableMeetingNotifications | Disable
-meeting notifications | false | | disableNotifications | Disable all
-notifications | false | | disableNotificationSound | Disable chat/meeting start
-notification sound | false | | disableNotificationSoundIfNotAvailable | Disables
-notification sound unless status is Available (e.g. while in a call, busy, etc.)
-| false | | disableNotificationWindowFlash | Disable window flashing when there
-is a notification | false | | disableGlobalShortcuts | Array of global shortcuts
-to disable while the app is in focus. See
-https://www.electronjs.org/docs/latest/api/accelerator for available
-accelerators to use | [] | | electronCLIFlags | Electron CLI flags to be added
-when the app starts | [] | | emulateWinChromiumPlatform| Use windows platform
-information in chromium. This is helpful if MFA app does not support Linux.|
-false | | followSystemTheme | Boolean to determine if to follow system theme |
-false | | frame | Specify false to create a Frameless Window. Default is true |
-false | | incomingCallCommand | Command to execute on an incoming call. (string)
-| | | incomingCallCommandArgs | Arguments for the incomming call command. | [] |
-| isCustomBackgroundEnabled | A boolean flag to enable/disable custom background
-images | false | | logConfig | A string value to set the log manager to use
-(`Falsy`, `console`, or a valid electron-log configuration) | **console.info**
-via (electron-log) | | meetupJoinRegEx | Meetup-join and channel regular
-expession |
-/^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel)/g | |
-menubar | A value controls the menu bar behaviour | *auto*, visible, hidden | |
-minimized | Boolean to start the application minimized | false | |
-notificationMethod | Notification method to be used by the application
-(`web`/`electron`) | *web*, electron | | ntlmV2enabled | Set enable-ntlm-v2
-value | 'true' | | partition | BrowserWindow webpreferences partition |
-persist:teams-4-linux | | proxyServer | Proxy Server with format address:port
-(string) | null | | sandbox | Sandbox for the renderer process (disabling this
-will break functionality) | false | | screenLockInhibitionMethod | Screen lock
-inhibition method to be used (`Electron`/`WakeLockSentinel`) | *Electron\*,
-WakeLockSentinel | | spellCheckerLanguages | Array of languages to use with
-Electron's spell checker | [] | | ssoBasicAuthUser | Login that will be sent for
-basic_auth SSO login. (string) | | | ssoBasicAuthPasswordCommand | Command to
-execute, grab stdout and use it as a password for basic_auth SSO login. | | |
-ssoInTuneEnabled | Enable InTune Single-Sign-On | false | ssoInTuneAuthUser |
-User (e-mail) to be used for InTune SSO login. | | | trayIconEnabled | Enable
-tray icon | true | | url | Microsoft Teams URL (string) |
-https://teams.microsoft.com/ | | useMutationTitleLogic | Use MutationObserver to
-update counter from title | true | | version | Show the version number | false |
-| watchConfigFile | Watch for changes in the config file and restarts the app |
-false | | webDebug | Enable web debugging | false |
+| clearStorage (deprecated)          | Deprecated: Use `clearStorageData` instead.                                                                                             | false                                      |
+| clearStorageData                   | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions | null   |
+| clientCertPath | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | string |
+| clientCertPassword | Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format) | string |
+| closeAppOnCross | Close the app when clicking the close (X) cross |false |
+| defaultNotificationUrgency | Default urgency for new notifications (`low`/`normal`/`critical`). Only applicable when `notificationMethod` is `electron` | normal |
+| defaultURLHandler | Default application to be used to open the HTTP URLs (string) | |
+| disableAutogain | Disable mic auto gain or not | false |
+| disableGpu | Disable GPU and hardware acceleration (can be useful if the window remains blank) | false |
+| disableMeetingNotifications | Disable meeting notifications | false |
+| disableNotifications | Disable all notifications | false |
+| disableNotificationSound | Disable chat/meeting start notification sound | false |
+| disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false |
+| disableNotificationWindowFlash | Disable window flashing when there is a notification | false |
+| disableGlobalShortcuts | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use | [] |
+| electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
+| emulateWinChromiumPlatform| Use windows platform information in chromium. This is helpful if MFA app does not support Linux.| false |
+| followSystemTheme | Boolean to determine if to follow system theme | false |
+| frame | Specify false to create a Frameless Window. Default is true | false |
+| incomingCallCommand | Command to execute on an incoming call. (string) | |
+| incomingCallCommandArgs | Arguments for the incomming call command. | [] |
+| isCustomBackgroundEnabled | A boolean flag to enable/disable custom background images | false |
+| logConfig | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration) | **console.info** via (electron-log) |
+| meetupJoinRegEx | Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel|chat)/g | |
+menubar | A value controls the menu bar behaviour | *auto*, visible, hidden |
+| minimized | Boolean to start the application minimized | false |
+| notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
+| ntlmV2enabled | Set enable-ntlm-v2 value | 'true' |
+| partition | BrowserWindow webpreferences partition | persist:teams-4-linux |
+| proxyServer | Proxy Server with format address:port (string) | null |
+| sandbox | Sandbox for the renderer process (disabling this will break functionality) | false |
+| screenLockInhibitionMethod | Screen lock inhibition method to be used (`Electron`/`WakeLockSentinel`) | *Electron\*, WakeLockSentinel |
+| spellCheckerLanguages | Array of languages to use with Electron's spell checker | [] |
+| ssoBasicAuthUser | Login that will be sent for basic_auth SSO login. (string) | |
+| ssoBasicAuthPasswordCommand | Command to execute, grab stdout and use it as a password for basic_auth SSO login. | |
+| ssoInTuneEnabled | Enable InTune Single-Sign-On | false |
+| ssoInTuneAuthUser | User (e-mail) to be used for InTune SSO login. | |
+| trayIconEnabled | Enable tray icon | true | | url | Microsoft Teams URL (string) | https://teams.microsoft.com/ |
+| useMutationTitleLogic | Use MutationObserver to update counter from title | true |
+| version | Show the version number | false |
+| watchConfigFile | Watch for changes in the config file and restarts the app | false |
+| webDebug | Enable web debugging | false |
 
 As an example, to disable the persistence, you can run the following command:
 
@@ -146,7 +134,7 @@ You can find an example of this feature in the
 [../customBackground/example/README.md](../customBackground/example/README.md)
 file.
 
-### Things to remember:
+### Things to remember
 
 1. Currently app does not feature adding or removing custom images. You have to
    rely on any locally/remotely hosted web servers to serve images.
