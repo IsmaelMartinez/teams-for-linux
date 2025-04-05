@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-          configObject.configError,
+          configObject.configError
       );
     }
   } else {
@@ -125,7 +125,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       customUserDir: {
         default: null,
-        deprecated: "Use `ELECTRON_USER_DATA_PATH` env variable instead",
+        deprecated: "Use `--user-data-path` env variable instead",
         describe:
           "Custom User Directory so that you can have multiple profiles",
         type: "string",
@@ -412,7 +412,7 @@ function argv(configPath, appVersion) {
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
       console.info(
-        `Config file ${filename} changed ${event}. Relaunching app...`,
+        `Config file ${filename} changed ${event}. Relaunching app...`
       );
       ipcMain.emit("config-file-changed");
     });

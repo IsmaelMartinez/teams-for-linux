@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+	    <release version="2.0.1" date="2025-02-08">
+			<description>
+				<ul>
+					<li>Fix: Fix the electron-builder configuration to fix the desktop file been broken</li>
+					<li>Update dependencies including electron to version 35.1.4</li>
+				</ul>
+		</release>
 		<release version="2.0.0" date="2025-02-08">
 			<description>
 				<ul>

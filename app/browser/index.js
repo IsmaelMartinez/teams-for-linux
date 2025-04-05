@@ -1,12 +1,10 @@
 (function () {
   const { ipcRenderer } = require("electron");
-  const ActivityManager = require("./notifications/activityManager");
 
   let config;
   ipcRenderer.invoke("get-config").then((mainConfig) => {
     config = mainConfig;
     initializeModules(config, ipcRenderer);
-    new ActivityManager(ipcRenderer, config).start();
   });
 
   let classicNotification = window.Notification;
