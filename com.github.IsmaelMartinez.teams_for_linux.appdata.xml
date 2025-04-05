@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.3" date="2025-04-05">
+			<description>
+				<ul>
+					<li>Fix the appdata file typo in version 1.14.2, and fixing warnings for appstream-screenshot-missing-caption</li>
+					<li>Some formatting and minor improvements to the README/HISTORY/KNWON_ISSUES md files</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.2" date="2025-04-05">
 			<description>
 				<ul>
@@ -40,7 +48,7 @@
 				</ul>
 			</description>
 		</release>
-		<release vesrion="1.14.2" date="2025-03-30">
+		<release version="1.14.2" date="2025-03-30">
 			<description>
 				<ul>
 					<li>Deprecate clearStorage in favour of clearStorageData</li>
@@ -1565,18 +1573,23 @@
 	<screenshots>
 		<screenshot type="default">
 			<image type="source">https://iili.io/sUyRS9.png</image>
+			<caption>General Chat</caption>
 		</screenshot>
 		<screenshot>
 			<image type="source">https://iili.io/sUyuFS.png</image>
+			<caption>Calendar view</caption>
 		</screenshot>
 		<screenshot>
 			<image type="source">https://iili.io/sUyAc7.png</image>
+			<caption>Logging screen</caption>
 		</screenshot>
 		<screenshot>
 			<image type="source">https://iili.io/sUyIP2.png</image>
+			<caption>Call</caption>
 		</screenshot>
 		<screenshot>
 			<image type="source">https://iili.io/sUy79e.png</image>
+			<caption>Screen sharing</caption>
 		</screenshot>
 	</screenshots>
 	<content_rating type="oars-1.0">
