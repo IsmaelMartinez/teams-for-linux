@@ -39,9 +39,9 @@ standalone application using Electron.
 ## Downloads
 
 Binaries available under
-[releases](https://github.com/IsmaelMartinez/teams-for-linux/releases) for
-`AppImage`, `rpm`, `deb`, `snap`, and `tar.gz`. Also, believe it or not, for
-`Windows` and `macOS`.
+[releases](https://github.com/IsmaelMartinez/teams-for-linux/releases) for Linux
+packaging formats — AppImage, rpm, deb, snap, and tar.gz — and, believe it or not,
+for Windows and macOS as well.
 
 In the case of `AppImage`, we recommend using
 [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for the
