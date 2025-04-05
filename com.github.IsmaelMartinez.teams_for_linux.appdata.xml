@@ -20,6 +20,7 @@
 					<li>Fix: Fix the electron-builder configuration to fix the desktop file been broken</li>
 					<li>Update dependencies including electron to version 35.1.4</li>
 				</ul>
+			</description>
 		</release>
 		<release version="2.0.0" date="2025-02-08">
 			<description>
