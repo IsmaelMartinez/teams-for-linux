@@ -32,7 +32,7 @@ Here is the list of available arguments and its usage:
 | customCACertsFingerprints          | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate                                       | []                                                                                                                     |
 | customCSSName                      | custom CSS name for the packaged available css files                                                                                    |                                                                                                                        |
 | customCSSLocation                  | custom CSS styles file location                                                                                                         |                                                                                                                        |
-| customUserDir (deprecated)         | Deprecated: Use `ELECTRON_USER_DATA_PATH` env variable instead.                                                                         | null                                                                                                                   |
+| customUserDir (deprecated)         | Deprecated: Use `--user-data-path` env variable instead.                                                                         | null                                                                                                                   |
 | clearStorage (deprecated)          | Deprecated: Use `clearStorageData` instead.                                                                                             | false                                      |
 | clearStorageData                   | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions | null   |
 | clientCertPath | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | string |
@@ -56,7 +56,7 @@ Here is the list of available arguments and its usage:
 | incomingCallCommandArgs | Arguments for the incomming call command. | [] |
 | isCustomBackgroundEnabled | A boolean flag to enable/disable custom background images | false |
 | logConfig | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration) | **console.info** via (electron-log) |
-| meetupJoinRegEx | Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel|chat)/g | |
+| meetupJoinRegEx | Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel\|chat)/g | |
 menubar | A value controls the menu bar behaviour | *auto*, visible, hidden |
 | minimized | Boolean to start the application minimized | false |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
