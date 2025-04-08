@@ -61,6 +61,7 @@ menubar | A value controls the menu bar behaviour | *auto*, visible, hidden |
 | minimized | Boolean to start the application minimized | false |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | *web*, electron |
 | ntlmV2enabled | Set enable-ntlm-v2 value | 'true' |
+| onNewWindowOpenMeetupJoinUrlInApp: | Open meetupJoinRegEx URLs in the app instead of the default browser | false |
 | partition | BrowserWindow webpreferences partition | persist:teams-4-linux |
 | proxyServer | Proxy Server with format address:port (string) | null |
 | sandbox | Sandbox for the renderer process (disabling this will break functionality) | false |

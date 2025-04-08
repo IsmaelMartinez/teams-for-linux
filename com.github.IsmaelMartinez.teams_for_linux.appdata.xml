@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.6" date="2025-04-08">
+			<description>
+				<ul>
+					<li>Fix 1379 allow option for links in offline meetings to open in the app</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.5" date="2025-04-08">
 			<description>
 				<ul>

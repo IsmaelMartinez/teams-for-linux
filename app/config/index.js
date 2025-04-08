@@ -299,6 +299,12 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Set enable-ntlm-v2 value",
         type: "string",
       },
+      onNewWindowOpenMeetupJoinUrlInApp: {
+        default: false,
+        describe:
+          "Open meetupJoinRegEx URLs in the app instead of the default browser",
+        type: "boolean",
+      },
       partition: {
         default: "persist:teams-4-linux",
         describe: "BrowserWindow webpreferences partition",

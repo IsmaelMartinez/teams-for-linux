@@ -287,6 +287,9 @@ function onNewWindow(details) {
   );
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
     console.debug("DEBUG - captured meetup-join url");
+    if (config.onNewWindowOpenMeetupJoinUrlInApp) {
+      window.loadURL(details.url, { userAgent: config.chromeUserAgent });
+    }
     return { action: "deny" };
   } else if (
     details.url === "about:blank" ||
