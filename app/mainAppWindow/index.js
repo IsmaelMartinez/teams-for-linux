@@ -203,9 +203,9 @@ function restoreWindow() {
 }
 
 function processArgs(args) {
-  const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel|chat)/g;
+  const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel|chat)/;
   const v2msTeams =
-    /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/g;
+    /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/;
   console.debug("processArgs:", args);
   for (const arg of args) {
     console.debug(
