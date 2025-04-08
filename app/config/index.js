@@ -125,7 +125,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       customUserDir: {
         default: null,
-        deprecated: "Use `--user-data-path` env variable instead",
+        deprecated: "Use `--user-data-dir` env variable instead",
         describe:
           "Custom User Directory so that you can have multiple profiles",
         type: "string",
