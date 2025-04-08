@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.5" date="2025-04-08">
+			<description>
+				<ul>
+					<li>Fix 1644 Status is set to away unless mouse moves over Teams for Linux window</li>
+					<li>Fix user-data-dir references in the README</li>
+					<li>Fix unable to join some meeting links</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.4" date="2025-04-07">
 			<description>
 				<ul>
