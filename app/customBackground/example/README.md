@@ -1,7 +1,7 @@
 # Custom Background Example
 
 This project demonstrates the use of a custom background in the service. It
-leverages the `http-server` npm package to serve the application on port 80 -
+leverages the `http-server` npm package to serve the application on port 80,
 though you can use any web server.
 
 ## Prerequisites
