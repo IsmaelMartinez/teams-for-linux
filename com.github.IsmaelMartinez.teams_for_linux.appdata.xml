@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.7" date="2025-04-09">
+			<description>
+				<ul>
+					<li>Improving documentation by adding font square characters info fix in the KNOWN_ISSUES section</li>
+					<li>Adding information on how to run multiple instances in the app</li>
+					<li>Reshaping the config README file for easier reading</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.6" date="2025-04-08">
 			<description>
 				<ul>
