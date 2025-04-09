@@ -1,5 +1,9 @@
 # Known Issues
 
+If you don't find a solution to your problem here, please check the
+[config](app/config/README.md) options as they might be a feature instead of an
+issue.
+
 ## Oauth Services
 
 Some OAuth services (for example, GitHub) require that authentication windows
@@ -24,6 +28,23 @@ installation types, along with the commands to remove the data:
 |           snap           |           `~/snap/teams-for-linux/current/.config/teams-for-linux/`           |           `rm -rf ~/snap/teams-for-linux/current/.config/teams-for-linux/`           |
 | --user installed flatpak | `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` | `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` |
 |       From source        |                             `~/.config/Electron/`                             |                             `rm -rf ~/.config/Electron/`                             |
+
+## No rendering fonts correctly
+
+Some users have reported issues with fonts not rendering correctly. They render
+as squares.
+
+If you have this issue, try the following:
+
+```
+sudo rm /var/cache/fontconfig/*
+rm ~/.cache/fontconfig/*
+fc-cache -r
+```
+
+This issue is related to the fontconfig cache. The above commands will clear it.
+
+See [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357).
 
 ## Spellchecker Not Working
 
@@ -96,9 +117,9 @@ Steps:
 1. Download and open Xcode from the App Store.
 1. In Xcode, go to Xcode → Settings → Accounts and add your account.
 1. Under your account, click Manage Certificates and add an Apple Development
-    certificate.
+   certificate.
 1. Create a dummy project in Xcode (any project will work) to ensure the
-    certificate is added to your Keychain as trusted.
+   certificate is added to your Keychain as trusted.
 1. In the repository, run:
 
 ```bash
