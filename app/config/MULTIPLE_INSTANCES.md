@@ -7,10 +7,14 @@ session, and window behavior.
 ## Example
 
 ```bash
-./teams-for-linux --appIcon=/path/to/work-icon.png --class=teams-work --user-data-dir=~/.config/teams-profile-work
-
-./teams-for-linux --appIcon=/path/to/personal-icon.png --class=teams-personal --user-data-dir=~/.config/teams-profile-personal
+./teams-for-linux --appIcon=/path/to/work-icon.png --class=teams-work --user-data-dir=/home/user/.config/teams-profile-work
 ```
+
+```bash
+./teams-for-linux --appIcon=/path/to/personal-icon.png --class=teams-personal --user-data-dir=/home/user/.config/teams-profile-personal
+```
+
+Replace the `user-data-dir` with the full path where you want to store the profile.
 
 ## --appIcon
 
@@ -45,7 +49,7 @@ To simplify launching, create .desktop files like:
 ```bash
 [Desktop Entry]
 Name=Teams (Work)
-Exec=/path/to/teams-for-linux --appIcon=/path/to/work-icon.png --class=teams-work --user-data-dir=~/.config/teams-profile-work
+Exec=/path/to/teams-for-linux --appIcon=/path/to/work-icon.png --class=teams-work --user-data-dir=/home/user/.config/teams-profile-work
 Icon=/path/to/work-icon.png
 StartupWMClass=teams-work
 Type=Application
@@ -57,5 +61,7 @@ Categories=Chat;Network;Office;
 
 > **Note** that the values of `--class` and `StartupWMClass` are the same, which
 > makes the task bar icons work properly.
+
+Replace the `user-data-dir` with the full path where you want to store the profile.
 
 Repeat for other profiles with unique paths, icons, and class names.
