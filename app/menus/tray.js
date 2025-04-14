@@ -7,7 +7,7 @@ class ApplicationTray {
     this.appMenu = appMenu;
     this.config = config;
 
-    this.tray = new Tray(this.iconPath);
+    this.tray = new Tray(this.getIconImage(this.iconPath));
     this.tray.setToolTip(this.config.appTitle);
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
@@ -15,6 +15,14 @@ class ApplicationTray {
     ipcMain.on("tray-update", (_event, { icon, flash }) =>
       this.updateTrayImage(icon, flash),
     );
+  }
+
+  getIconImage(iconPath){
+    let image = nativeImage.createFromDataURL(iconPath);
+    const size = isMac ? 16: 96;
+    // automatically resize the icon to 22x22 or 44x44 depending on the scale factor
+    image = image.resize({ width: size, height: size });
+    return image;
   }
 
   setContextMenu(appMenu) {
@@ -28,7 +36,7 @@ class ApplicationTray {
 
   updateTrayImage(iconUrl, flash) {
     if (this.tray && !this.tray.isDestroyed()) {
-      const image = nativeImage.createFromDataURL(iconUrl);
+      const image = this.getIconImage(iconUrl);
 
       this.tray.setImage(image);
       this.window.flashFrame(flash);

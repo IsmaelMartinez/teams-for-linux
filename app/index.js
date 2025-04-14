@@ -141,6 +141,11 @@ function addCommandLineSwitchesAfterConfigLoad() {
     app.setName(config.class);
   }
 
+  if (config.appTitle) {
+    console.info("Setting app name to custom value " + config.appTitle);
+    app.setName(config.appTitle);
+  }
+
   app.commandLine.appendSwitch(
     "auth-server-whitelist",
     config.authServerWhitelist,
