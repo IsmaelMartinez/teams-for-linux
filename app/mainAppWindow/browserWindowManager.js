@@ -1,8 +1,10 @@
 const {
+  app,
   BrowserWindow,
   ipcMain,
   session,
   nativeTheme,
+  nativeImage,
   powerSaveBlocker,
 } = require("electron");
 const { spawn } = require("child_process");
@@ -52,6 +54,11 @@ class BrowserWindowManager {
   }
 
   createNewBrowserWindow(windowState) {
+    if (process.platform === 'darwin') {
+        const icon = nativeImage.createFromPath(this.iconChooser.getFile());
+        console.log("Setting Dock icon for macOS");
+        app.dock.setIcon(icon);
+    }
     return new BrowserWindow({
       title: "Teams for Linux",
       x: windowState.x,
