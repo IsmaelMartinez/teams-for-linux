@@ -203,16 +203,6 @@ class Menus {
     this.updateMenu();
   }
 
-  toggleDisableMeetingNotifications() {
-    this.configGroup.startupConfig.disableMeetingNotifications =
-      !this.configGroup.startupConfig.disableMeetingNotifications;
-    this.configGroup.legacyConfigStore.set(
-      "disableMeetingNotifications",
-      this.configGroup.startupConfig.disableMeetingNotifications
-    );
-    this.updateMenu();
-  }
-
   toggleDisableNotificationSound() {
     this.configGroup.startupConfig.disableNotificationSound =
       !this.configGroup.startupConfig.disableNotificationSound;

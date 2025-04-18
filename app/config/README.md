@@ -32,8 +32,6 @@ Here is the list of available arguments and its usage:
 | customCACertsFingerprints          | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate                                       | []                                                                                                                     |
 | customCSSName                      | custom CSS name for the packaged available css files                                                                                    |                                                                                                                        |
 | customCSSLocation                  | custom CSS styles file location                                                                                                         |                                                                                                                        |
-| customUserDir (deprecated)         | Deprecated: Use `--user-data-dir` env variable instead.                                                                                 | null                                                                                                                   |
-| clearStorage (deprecated)          | Deprecated: Use `clearStorageData` instead.                                                                                             | false                                      |
 | clearStorageData                   | Flag to clear storage data. Expects an object of the type <https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions> | null   |
 | clientCertPath | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) | string |
 | clientCertPassword | Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format) | string |
@@ -42,7 +40,6 @@ Here is the list of available arguments and its usage:
 | defaultURLHandler | Default application to be used to open the HTTP URLs (string) | |
 | disableAutogain | Disable mic auto gain or not | false |
 | disableGpu | Disable GPU and hardware acceleration (can be useful if the window remains blank) | false |
-| disableMeetingNotifications | Disable meeting notifications | false |
 | disableNotifications | Disable all notifications | false |
 | disableNotificationSound | Disable chat/meeting start notification sound | false |
 | disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false |
@@ -52,16 +49,13 @@ Here is the list of available arguments and its usage:
 | emulateWinChromiumPlatform| Use windows platform information in chromium. This is helpful if MFA app does not support Linux.| false |
 | followSystemTheme | Boolean to determine if to follow system theme | false |
 | frame | Specify false to create a Frameless Window. Default is true | false |
-| incomingCallCommand | Command to execute on an incoming call. (string) | |
-| incomingCallCommandArgs | Arguments for the incomming call command. | [] |
 | isCustomBackgroundEnabled | A boolean flag to enable/disable custom background images | false |
 | logConfig | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration) | **console.info** via (electron-log) |
 | meetupJoinRegEx | Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel\|chat)/g | |
 menubar | A value controls the menu bar behaviour | _auto_, visible, hidden |
 | minimized | Boolean to start the application minimized | false |
 | notificationMethod | Notification method to be used by the application (`web`/`electron`) | _web_, electron |
-| ntlmV2enabled | Set enable-ntlm-v2 value | 'true' |
-| onNewWindowOpenMeetupJoinUrlInApp: | Open meetupJoinRegEx URLs in the app instead of the default browser | false |
+| onNewWindowOpenMeetupJoinUrlInApp | Open meetupJoinRegEx URLs in the app instead of the default browser | true |
 | partition | BrowserWindow webpreferences partition | persist:teams-4-linux |
 | proxyServer | Proxy Server with format address:port (string) | null |
 | sandbox | Sandbox for the renderer process (disabling this will break functionality) | false |

@@ -91,12 +91,6 @@ function getNotificationsMenu(Menus) {
         click: () => Menus.toggleDisableNotifications(),
       },
       {
-        label: "Disable Meeting Notifications",
-        type: "checkbox",
-        checked: Menus.configGroup.startupConfig.disableMeetingNotifications,
-        click: () => Menus.toggleDisableMeetingNotifications(),
-      },
-      {
         label: "Disable Notifications Sound",
         type: "checkbox",
         checked: Menus.configGroup.startupConfig.disableNotificationSound,
@@ -162,14 +156,14 @@ function getHelpMenu() {
         label: "Github Project",
         click: () =>
           shell.openExternal(
-            "https://github.com/IsmaelMartinez/teams-for-linux",
+            "https://github.com/IsmaelMartinez/teams-for-linux"
           ),
       },
       {
         label: "Microsoft Teams Support",
         click: () =>
           shell.openExternal(
-            "https://answers.microsoft.com/en-us/msteams/forum",
+            "https://answers.microsoft.com/en-us/msteams/forum"
           ),
       },
     ],

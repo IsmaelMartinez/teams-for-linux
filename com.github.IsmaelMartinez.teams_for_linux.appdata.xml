@@ -14,6 +14,18 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.9" date="2025-04-18">
+			<description>
+				<ul>
+					<li>Remove disableMeetingNotifications as it is not possible anymore</li>
+					<li>Removing the incomingCallCommand and incomingCallCommandArgs as they are not working anymore</li>
+					<li>Removing ntlmV2enabled as it is not documented anymore in Chromium and it should be the default value</li>
+					<li>Removing deprecated `clearStorage` in favor of `clearStorageData`</li>
+					<li>Removing deprecated `customUserDir` in favor of `--user-data-dir`</li>
+					<li>Changing the default value of `onNewWindowOpenMeetupJoinUrlInApp` to `true`</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.8" date="2025-04-11">
 			<description>
 				<ul>

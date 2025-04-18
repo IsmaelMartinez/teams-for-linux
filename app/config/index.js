@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
+const { deprecate } = require("util");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -123,24 +124,10 @@ function extractYargConfig(configObject, appVersion) {
           "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
         type: "boolean",
       },
-      customUserDir: {
-        default: null,
-        deprecated: "Use `--user-data-dir` env variable instead",
-        describe:
-          "Custom User Directory so that you can have multiple profiles",
-        type: "string",
-      },
       class: {
         default: null,
         describe: "A custom value for the WM_CLASS property",
         type: "string",
-      },
-      clearStorage: {
-        default: false,
-        deprecated: "Use `clearStorageData` instead",
-        describe:
-          "Whether to clear the storage before creating the window or not",
-        type: "boolean",
       },
       clearStorageData: {
         default: null,
@@ -185,11 +172,6 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe:
           "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
-        type: "boolean",
-      },
-      disableMeetingNotifications: {
-        default: false,
-        describe: "Whether to disable meeting notifications or not",
         type: "boolean",
       },
       disableNotifications: {
@@ -240,16 +222,6 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Specify false to create a Frameless Window. Default is true",
         type: "boolean",
       },
-      incomingCallCommand: {
-        default: null,
-        describe: "Command to execute on an incoming call.",
-        type: "string",
-      },
-      incomingCallCommandArgs: {
-        default: [],
-        describe: "Arguments for the incoming call command.",
-        type: "array",
-      },
       isCustomBackgroundEnabled: {
         default: false,
         describe: "A flag indicates whether to enable custom background or not",
@@ -294,13 +266,8 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
         choices: ["web", "electron"],
       },
-      ntlmV2enabled: {
-        default: "true",
-        describe: "Set enable-ntlm-v2 value",
-        type: "string",
-      },
       onNewWindowOpenMeetupJoinUrlInApp: {
-        default: false,
+        default: true,
         describe:
           "Open meetupJoinRegEx URLs in the app instead of the default browser",
         type: "boolean",
