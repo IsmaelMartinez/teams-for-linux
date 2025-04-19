@@ -5,6 +5,7 @@ const {
   nativeTheme,
   dialog,
   webFrameMain,
+  nativeImage,
 } = require("electron");
 const login = require("../login");
 const customCSS = require("../customCSS");
@@ -15,6 +16,7 @@ const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
+const os = require("os");
 
 let iconChooser;
 let intune;
@@ -24,6 +26,8 @@ let config;
 let window = null;
 let appConfig = null;
 let customBackgroundService = null;
+
+const isMac = os.platform() === "darwin";
 
 exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   appConfig = configGroup;
@@ -37,6 +41,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
   if (config.trayIconEnabled) {
     iconChooser = new TrayIconChooser(config);
+
+    if (isMac) {
+        console.log("Setting Dock icon for macOS");
+        const icon = nativeImage.createFromPath(iconChooser.getFile());
+        const iconSize = icon.getSize();
+        if(iconSize.width < 128) {
+          console.warn("unable to set dock icon for macOS, icon size is less than 128x128, current size " + iconSize.width + "x" + iconSize.height);
+        }else{
+          app.dock.setIcon(icon);
+        }
+    }
+
   }
 
   const browserWindowManager = new BrowserWindowManager({

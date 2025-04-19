@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.10" date="2025-04-20">
+			<description>
+				<ul>
+					<li>New: dynamically set Docker icon for macOS</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.9" date="2025-04-18">
 			<description>
 				<ul>
@@ -121,7 +128,7 @@
 				<ul>
 					<li>Update electron to 35.1.2</li>
 					<li>Update electron-builder to 26.0.12</li>
-					<li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li> 
+					<li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li>
 				</ul>
 			</description>
 		</release>
@@ -281,14 +288,14 @@
 					<li>Moving the notification number to be in the bottom right hand side of the icon</li>
 				</ul>
 			</description>
-		</release>		
+		</release>
 		<release version="1.10.2" date="2024-09-10">
 			<description>
 				<ul>
 					<li>Add support to simulate Windows-based Chromium Browser</li>
 				</ul>
 			</description>
-		</release>		
+		</release>
 		<release version="1.10.1" date="2024-09-09">
 			<description>
 				<ul>
