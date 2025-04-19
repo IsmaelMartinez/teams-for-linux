@@ -1,4 +1,6 @@
 const { Tray, Menu, ipcMain, nativeImage } = require("electron");
+const os = require("os");
+const isMac = os.platform() === "darwin";
 
 class ApplicationTray {
   constructor(window, appMenu, iconPath, config) {
@@ -19,8 +21,8 @@ class ApplicationTray {
 
   getIconImage(iconPath){
     let image = nativeImage.createFromDataURL(iconPath);
+    // automatically resize the icon based on OS type
     const size = isMac ? 16: 96;
-    // automatically resize the icon to 22x22 or 44x44 depending on the scale factor
     image = image.resize({ width: size, height: size });
     return image;
   }
