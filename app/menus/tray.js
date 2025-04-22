@@ -1,4 +1,6 @@
 const { Tray, Menu, ipcMain, nativeImage } = require("electron");
+const os = require("os");
+const isMac = os.platform() === "darwin";
 
 class ApplicationTray {
   constructor(window, appMenu, iconPath, config) {
@@ -7,7 +9,7 @@ class ApplicationTray {
     this.appMenu = appMenu;
     this.config = config;
 
-    this.tray = new Tray(this.iconPath);
+    this.tray = new Tray(this.getIconImage(this.iconPath));
     this.tray.setToolTip(this.config.appTitle);
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
@@ -15,6 +17,14 @@ class ApplicationTray {
     ipcMain.on("tray-update", (_event, { icon, flash }) =>
       this.updateTrayImage(icon, flash),
     );
+  }
+
+  getIconImage(iconPath){
+    let image = nativeImage.createFromDataURL(iconPath);
+    // automatically resize the icon based on OS type
+    const size = isMac ? 16: 96;
+    image = image.resize({ width: size, height: size });
+    return image;
   }
 
   setContextMenu(appMenu) {
@@ -28,7 +38,7 @@ class ApplicationTray {
 
   updateTrayImage(iconUrl, flash) {
     if (this.tray && !this.tray.isDestroyed()) {
-      const image = nativeImage.createFromDataURL(iconUrl);
+      const image = this.getIconImage(iconUrl);
 
       this.tray.setImage(image);
       this.window.flashFrame(flash);
