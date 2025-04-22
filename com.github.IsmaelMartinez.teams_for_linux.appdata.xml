@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>New: dynamically set Docker icon for macOS</li>
+					<li>Updating electron to 35.2.0</li>
 				</ul>
 			</description>
 		</release>

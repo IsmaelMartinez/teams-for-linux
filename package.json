@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
-    "@eslint/js": "^9.24.0",
+    "@eslint/js": "^9.25.1",
     "http-server": "^14.1.1",
-    "electron": "^35.1.5",
+    "electron": "^35.2.0",
     "electron-builder": "^26.0.12",
-    "eslint": "^9.24.0",
+    "eslint": "^9.25.1",
     "globals": "^16.0.0"
   },
   "build": {
