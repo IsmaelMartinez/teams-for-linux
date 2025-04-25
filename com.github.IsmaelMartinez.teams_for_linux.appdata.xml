@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.11" date="2025-04-25">
+			<description>
+				<ul>
+					<li>Removing using the appTitle to setup the app name introduced in the previous version, as that breaks the icon in linux systems</li>
+					<li>Update electrno to 35.2.1</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.10" date="2025-04-20">
 			<description>
 				<ul>
