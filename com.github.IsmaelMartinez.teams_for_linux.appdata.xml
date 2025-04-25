@@ -18,7 +18,7 @@
 			<description>
 				<ul>
 					<li>Removing using the appTitle to setup the app name introduced in the previous version, as that breaks the icon in linux systems</li>
-					<li>Update electrno to 35.2.1</li>
+					<li>Update electron to 35.2.1</li>
 				</ul>
 			</description>
 		</release>
