@@ -136,11 +136,6 @@ function addCommandLineSwitchesAfterConfigLoad() {
     app.commandLine.appendSwitch("proxy-server", config.proxyServer);
   }
 
-  if (config.appTitle) {
-    console.info("Setting app name to custom value " + config.appTitle);
-    app.setName(config.appTitle);
-  }
-
   if (config.class) {
     console.info("Setting WM_CLASS property to custom value " + config.class);
     app.setName(config.class);
