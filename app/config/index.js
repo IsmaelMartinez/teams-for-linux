@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
-const { deprecate } = require("util");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
