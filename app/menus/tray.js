@@ -9,21 +9,23 @@ class ApplicationTray {
     this.appMenu = appMenu;
     this.config = config;
 
-    this.tray = new Tray(this.getIconImage(this.iconPath));
+    this.tray = new Tray(
+      isMac ? this.getIconImage(this.iconPath) : this.iconPath
+    );
     this.tray.setToolTip(this.config.appTitle);
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
     ipcMain.on("tray-update", (_event, { icon, flash }) =>
-      this.updateTrayImage(icon, flash),
+      this.updateTrayImage(icon, flash)
     );
   }
 
-  getIconImage(iconPath){
+  getIconImage(iconPath) {
     let image = nativeImage.createFromDataURL(iconPath);
-    // automatically resize the icon based on OS type
-    const size = isMac ? 16: 96;
-    image = image.resize({ width: size, height: size });
+    if (isMac) {
+      image = image.resize({ width: 16, height: 16 });
+    }
     return image;
   }
 
