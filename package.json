@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -53,10 +53,10 @@
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^9.26.0",
     "http-server": "^14.1.1",
-    "electron": "^35.2.2",
+    "electron": "^35.4.0",
     "electron-builder": "^26.0.12",
     "eslint": "^9.26.0",
-    "globals": "^16.0.0"
+    "globals": "^16.1.0"
   },
   "build": {
     "appId": "teams-for-linux",
