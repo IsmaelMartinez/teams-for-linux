@@ -345,6 +345,11 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable debug at start",
         type: "boolean",
       },
+      videoMenu: {
+        default: false,
+        describe: "Enable menu entry for controlling video elements",
+        type: "boolean",
+      }
     })
     .help()
     .parse(process.argv.slice(1));

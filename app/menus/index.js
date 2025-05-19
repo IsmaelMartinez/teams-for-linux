@@ -238,6 +238,16 @@ class Menus {
     this.configGroup.legacyConfigStore.set("defaultNotificationUrgency", value);
     this.updateMenu();
   }
+
+  forcePip() {
+    const script = `document.querySelectorAll('div[data-type="screen-sharing"] video').forEach(v => {v.removeAttribute("disablepictureinpicture"); v.requestPictureInPicture();})`;
+    this.window.webContents.executeJavaScript(script, true);
+  }
+
+  forceVideoControls() {
+    const script = `document.querySelectorAll('video').forEach(v => {v.removeAttribute("disablepictureinpicture"); v.toggleAttribute("controls");})`;
+    this.window.webContents.executeJavaScript(script, true);
+  }
 }
 
 function saveSettingsInternal(_event, arg) {
