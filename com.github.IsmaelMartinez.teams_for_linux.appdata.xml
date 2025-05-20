@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.14" date="2025-05-20">
+			<description>
+				<ul>
+					<li>Adding --videoMenu option to enable a menu section which contains options to manipulate video elements (enable video controls, enter picture-in-picture mode)</li>
+				</ul>
+			</description>
+		</release>
 	    <release version="2.0.13" date="2025-05-15">
 			<description>
 				<ul>

@@ -37,6 +37,12 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.about(),
     },
     getHelpMenu(),
+    ...(Menus.configGroup.startupConfig.videoMenu ? [
+      {
+        type: "separator",
+      },
+      getVideoMenu(Menus),
+    ]: []),
     {
       type: "separator",
     },
@@ -168,4 +174,20 @@ function getHelpMenu() {
       },
     ],
   };
+}
+
+function getVideoMenu(Menus) {
+  return       {
+    label: "Video",
+    submenu: [
+      {
+        label: "Force enable PiP mode for shared screen",
+        click: () => { Menus.forcePip() }
+      },
+      {
+        label: "Force toggle controls for all video elements",
+        click: () => { Menus.forceVideoControls() }
+      }
+    ]
+  }
 }
