@@ -138,7 +138,14 @@
       ]
     },
     "mac": {
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "extendInfo": {
+        "NSCameraUsageDescription": "We need camera access for video calls.",
+        "NSMicrophoneUsageDescription": "We need microphone access for audio."
+      },
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "afterPack": "scripts/afterpack.js"
   }
