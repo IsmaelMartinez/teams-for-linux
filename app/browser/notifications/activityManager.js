@@ -9,7 +9,9 @@ class ActivityManager {
   }
 
   start() {
+    setActivityHandlers(this);
     setEventHandlers(this);
+    activityHub.start();
     this.watchSystemIdleState();
   }
 
@@ -54,6 +56,62 @@ class ActivityManager {
 function setEventHandlers(self) {
   self.ipcRenderer.on("enable-wakelock", () => wakeLock.enable());
   self.ipcRenderer.on("disable-wakelock", () => wakeLock.disable());
+
+  self.ipcRenderer.on('incoming-call-action', (event, action) => {
+		console.log("ActionHTML", document.body.innerHTML);
+		const actionWrapper = document.querySelector('[data-testid="calling-actions"],[data-testid="msn-actions"]');
+		if (actionWrapper) {
+			const buttons = actionWrapper.querySelectorAll("button");
+			if (buttons.length > 0) {
+				switch (action) {
+					case 'ACCEPT_AUDIO':
+						if (buttons.length == 3) {
+							buttons[1].click();
+						}	
+
+					case 'ACCEPT_VIDEO':
+						buttons[0].click();
+						break;
+
+					case 'DECLINED':
+					default:
+						buttons[buttons.length - 1].click();
+						break;
+				}
+			}
+		}
+	});
+}
+
+function setActivityHandlers(self) {
+  activityHub.on("incoming-call-created", incomingCallCreatedHandler(self));
+  activityHub.on("incoming-call-ended", incomingCallEndedHandler(self));
+  activityHub.on("call-connected", callConnectedHandler(self));
+  activityHub.on("call-disconnected", callDisconnectedHandler(self));
+}
+
+function incomingCallCreatedHandler(self) {
+  return async (data) => {
+    self.ipcRenderer.invoke("incoming-call-created", data);
+  };
+}
+
+function incomingCallEndedHandler(self) {
+  return async () => {
+    self.ipcRenderer.invoke("incoming-call-ended");
+  };
+}
+
+function callConnectedHandler(self) {
+  return async () => {
+    self.ipcRenderer.invoke("call-connected");
+  };
+}
+
+function callDisconnectedHandler(self) {
+  return async () => {
+    self.ipcRenderer.invoke("call-disconnected");
+  };
 }
 
 module.exports = exports = ActivityManager;

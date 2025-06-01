@@ -43,6 +43,7 @@
   "dependencies": {
     "@homebridge/dbus-native": "0.6.0",
     "electron-log": "^5.4.0",
+    "electron-positioner": "^4.1.0",
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.21",

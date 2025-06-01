@@ -211,6 +211,11 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
+      enableIncomingCallToast: {
+				default: false,
+				describe: 'Enable incoming call toast',
+				type: 'boolean'
+			},
       followSystemTheme: {
         default: false,
         describe: "Follow system theme",
@@ -221,6 +226,16 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Specify false to create a Frameless Window. Default is true",
         type: "boolean",
       },
+      incomingCallCommand: {
+				default: null,
+				describe: 'Command to execute on an incoming call.',
+				type: 'string'
+			},
+			incomingCallCommandArgs: {
+				default: [],
+				describe: 'Arguments for the incoming call command.',
+				type: 'array'
+			},
       isCustomBackgroundEnabled: {
         default: false,
         describe: "A flag indicates whether to enable custom background or not",

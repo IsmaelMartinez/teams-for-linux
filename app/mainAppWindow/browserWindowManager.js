@@ -6,8 +6,10 @@ const {
   powerSaveBlocker,
 } = require("electron");
 const path = require("path");
+const { spawn } = require("child_process");
 const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../streamSelector");
+const IncomingCallToast = require("../incomingCallToast");
 
 class BrowserWindowManager {
   constructor(properties) {
@@ -16,6 +18,8 @@ class BrowserWindowManager {
     this.isOnCall = false;
     this.blockerId = null;
     this.window = null;
+    this.incomingCallCommandProcess = null;
+    this.incomingCallToast = null;
   }
 
   async createWindow() {
@@ -41,6 +45,10 @@ class BrowserWindowManager {
       // eslint-disable-line no-eval
       throw new Error("Sorry, this app does not support window.eval().");
     };
+
+    this.incomingCallToast = new IncomingCallToast((action) => {
+      this.window.webContents.send("incoming-call-action", action);
+    });
 
     return this.window;
   }
@@ -76,6 +84,10 @@ class BrowserWindowManager {
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
+    ipcMain.handle("incoming-call-created", this.assignOnIncomingCallCreatedHandler());
+    ipcMain.handle("incoming-call-ended", this.assingOnIncomingCallEndedHandler());
+    ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
+    ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
   }
 
   assignSelectSourceHandler() {
@@ -131,6 +143,50 @@ class BrowserWindowManager {
       this.window.webContents.send("enable-wakelock");
     }
   }
+
+  assignOnIncomingCallCreatedHandler() {
+    return async (e, data) => {
+        if (this.config.incomingCallCommand) {
+            this.handleOnIncomingCallEnded();
+            const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
+            this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+        }
+        if (this.config.enableIncomingCallToast) {
+            this.incomingCallToast.show(data);
+        }
+    }
+  }
+
+  assingOnIncomingCallEndedHandler() {
+    return async (e) => {
+        this.handleOnIncomingCallEnded();
+    };
+  }
+
+  handleOnIncomingCallEnded() {
+    if (this.incomingCallCommandProcess) {
+        this.incomingCallCommandProcess.kill('SIGTERM');
+        this.incomingCallCommandProcess = null;
+    }
+    if (this.config.enableIncomingCallToast) {
+        this.incomingCallToast.hide();
+    }
+  }
+
+  assignOnCallConnectedHandler() {
+    return async (e) => {
+        this.isOnCall = true;
+        return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+    };
+  }
+
+  assignOnCallDisconnectedHandler() {
+    return async (e) => {
+        this.isOnCall = false;
+        return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+    };
+  }
+
 }
 
 module.exports = BrowserWindowManager;

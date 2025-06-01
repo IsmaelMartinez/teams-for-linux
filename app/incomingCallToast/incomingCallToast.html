@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IncomingCallToast</title>
+
+    <link rel="stylesheet" href="../assets/css/bootstrap-icons.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #1B1D24;
+            margin: 0;
+            padding: 10px 10px 15px 10px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            color: white;
+        }
+
+        header {
+            font-size: 13px;
+        }
+        header > span {
+            margin-left: 10px;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        main > div {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        main img {
+            width: 100px;
+            height: 100px;
+            border-radius: 100%;
+        }
+        main p {
+            text-align: center;
+            font-size: 14px;
+            margin: 0 0 5px 0;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+        }
+        footer button {
+            transition: background-color 0.3s;
+            margin: 0;
+            padding: 0;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            background-color: #4f52b2;
+            min-width: 100px;
+		    min-height: 30px;
+        }
+        footer button:hover {
+            background-color: #2f316c;
+        }
+        footer button.decline {
+            background-color: #d13438;
+        }
+        footer button.decline:hover {
+            background-color: #821d20;
+        }
+        footer button.decline > i::before {
+            transform: rotate(135deg);
+        }
+    </style>
+</head>
+<body>
+    <header><i class="bi bi-microsoft-teams"></i><span>Microsoft Teams</span></header>
+    <main>
+        <div>
+            <img id="image" src="" alt="">
+        </div>
+        <p id="caller"></p>
+        <p id="text"></p>
+    </main>
+    <footer>
+        <button class="button accept-video"><i class="bi bi-camera-video-fill"></i></button>
+        <button class="button accept-audio"><i class="bi bi-telephone-fill"></i></button>
+        <button class="button decline"><i class="bi bi-telephone-fill"></i></button>
+    </footer>
+    <script>
+
+    </script>
+</body>
+</html>
