@@ -11,18 +11,22 @@ const supportedEvents = [
 class ActivityHub {
 
   on(event, handler) {
-		return addEventHandler(event, handler);
-	}
+    return addEventHandler(event, handler);
+  }
 
-	off(event, handle) {
-		return removeEventHandler(event, handle);
-	}
+  off(event, handle) {
+    return removeEventHandler(event, handle);
+  }
 
   start() {
-    setTimeout(() => {
-      assignEventHandlers(ReactHandler.getCommandChangeReportingService());
-      console.log("Events connected");
-    },10000);
+    const setup = setInterval(() => {
+      const changeReportingService = ReactHandler.getCommandChangeReportingService();
+      if (changeReportingService) {
+        assignEventHandlers(changeReportingService);
+        console.log("Events connected");
+        clearInterval(setup);
+      }
+    }, 10000);
   }
 
   setMachineState(state) {
@@ -77,53 +81,53 @@ class ActivityHub {
 }
 
 function isSupportedEvent(event) {
-	return supportedEvents.some(e => {
-		return e === event;
-	});
+  return supportedEvents.some(e => {
+    return e === event;
+  });
 }
 
 function isFunction(func) {
-	return typeof (func) === 'function';
+  return typeof (func) === 'function';
 }
 
 function getHandleIndex(event, handle) {
-	return eventHandlers.findIndex(h => {
-		return h.event === event && h.handle === handle;
-	});
+  return eventHandlers.findIndex(h => {
+    return h.event === event && h.handle === handle;
+  });
 }
 
 function addEventHandler(event, handler) {
-	let handle;
-	if (isSupportedEvent(event) && isFunction(handler)) {
-		handle = Math.ceil(Math.random() * 100000);
-		eventHandlers.push({
-			event: event,
-			handle: handle,
-			handler: handler
-		});
-	}
-	return handle;
+  let handle;
+  if (isSupportedEvent(event) && isFunction(handler)) {
+    handle = Math.ceil(Math.random() * 100000);
+    eventHandlers.push({
+      event: event,
+      handle: handle,
+      handler: handler
+    });
+  }
+  return handle;
 }
 
 function removeEventHandler(event, handle) {
-	const handlerIndex = getHandleIndex(event, handle);
-	if (handlerIndex > -1) {
-		eventHandlers[handlerIndex].handler = null;
-		eventHandlers.splice(handlerIndex, 1);
-		return handle;
-	}
+  const handlerIndex = getHandleIndex(event, handle);
+  if (handlerIndex > -1) {
+    eventHandlers[handlerIndex].handler = null;
+    eventHandlers.splice(handlerIndex, 1);
+    return handle;
+  }
 
-	return null;
+  return null;
 }
 
 function getEventHandlers(event) {
-	return eventHandlers.filter(e => {
-		return e.event === event;
-	});
+  return eventHandlers.filter(e => {
+    return e.event === event;
+  });
 }
 
 function assignEventHandlers(commandChangeReportingService) {
-	commandChangeReportingService.observeChanges().subscribe((e) => {
+  commandChangeReportingService.observeChanges().subscribe((e) => {
     if (["CommandStart", "ScenarioMarked"].indexOf(e.type) > -1) {
       if (["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) > -1) {
         if (e.context.entityCommand) {
@@ -132,7 +136,7 @@ function assignEventHandlers(commandChangeReportingService) {
             if ("incoming_call" === e.context.entityCommand.entityOptions?.crossClientScenarioName) {
               console.log("Call is incoming");
               // Gets triggered by incoming call.
-              onIncomingCallCreated({ 
+              onIncomingCallCreated({
                 caller: e.context.entityCommand.entityOptions.title,
                 image: e.context.entityCommand.entityOptions.mainImage?.src,
                 text: e.context.entityCommand.entityOptions.text
@@ -143,12 +147,12 @@ function assignEventHandlers(commandChangeReportingService) {
               onIncomingCallEnded();
             }
           } else if ("toast_activation" === e.context.entityCommand.command?.correlation?.scenarioName) {
-              const action = e.context.entityCommand.dataOptions?.actionType || "";
-              if (action.startsWith("Accept")) {
-                // Gets triggered when incoming Call is accepted.
-              } else if (action.startsWith("Reject")) {
-                // Gets triggered when incoming Call is declined.
-              }
+            const action = e.context.entityCommand.dataOptions?.actionType || "";
+            if (action.startsWith("Accept")) {
+              // Gets triggered when incoming Call is accepted.
+            } else if (action.startsWith("Reject")) {
+              // Gets triggered when incoming Call is declined.
+            }
           }
         } else {
           switch (e.context.step) {
@@ -170,31 +174,31 @@ function assignEventHandlers(commandChangeReportingService) {
 }
 
 async function onIncomingCallCreated(data) {
-	const handlers = getEventHandlers('incoming-call-created');
-	for (const handler of handlers) {
-		handler.handler(data);
-	}
+  const handlers = getEventHandlers('incoming-call-created');
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
 }
 
 async function onIncomingCallEnded() {
-	const handlers = getEventHandlers('incoming-call-ended');
-	for (const handler of handlers) {
-		handler.handler({});
-	}
+  const handlers = getEventHandlers('incoming-call-ended');
+  for (const handler of handlers) {
+    handler.handler({});
+  }
 }
 
 async function onCallConnected() {
-	const handlers = getEventHandlers('call-connected');
-	for (const handler of handlers) {
-		handler.handler({});
-	}
+  const handlers = getEventHandlers('call-connected');
+  for (const handler of handlers) {
+    handler.handler({});
+  }
 }
 
 async function onCallDisconnected() {
-	const handlers = getEventHandlers('call-disconnected');
-	for (const handler of handlers) {
-		handler.handler({});
-	}
+  const handlers = getEventHandlers('call-disconnected');
+  for (const handler of handlers) {
+    handler.handler({});
+  }
 }
 
 const activityHub = new ActivityHub();
