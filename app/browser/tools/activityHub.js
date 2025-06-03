@@ -23,7 +23,7 @@ class ActivityHub {
       const changeReportingService = ReactHandler.getCommandChangeReportingService();
       if (changeReportingService) {
         assignEventHandlers(changeReportingService);
-        console.log("Events connected");
+        console.debug("Events connected");
         clearInterval(setup);
       }
     }, 10000);
@@ -132,9 +132,9 @@ function assignEventHandlers(commandChangeReportingService) {
       if (["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) > -1) {
         if (e.context.entityCommand) {
           if (e.context.entityCommand.entityOptions?.isIncomingCall) {
-            console.log("IncomingCall", e);
+            console.debug("IncomingCall", e);
             if ("incoming_call" === e.context.entityCommand.entityOptions?.crossClientScenarioName) {
-              console.log("Call is incoming");
+              console.debug("Call is incoming");
               // Gets triggered by incoming call.
               onIncomingCallCreated({
                 caller: e.context.entityCommand.entityOptions.title,
@@ -142,7 +142,7 @@ function assignEventHandlers(commandChangeReportingService) {
                 text: e.context.entityCommand.entityOptions.text
               });
             } else {
-              console.log("Reacted to incoming call");
+              console.debug("Reacted to incoming call");
               // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
               onIncomingCallEnded();
             }
