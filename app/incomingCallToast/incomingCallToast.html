@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
         * {
             box-sizing: border-box;
         }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             background-color: #1B1D24;
@@ -23,9 +25,11 @@
         }
 
         header {
+            display: flex;
             font-size: 13px;
         }
-        header > span {
+
+        header>span {
             margin-left: 10px;
         }
 
@@ -35,17 +39,20 @@
             flex-direction: column;
             align-items: center;
         }
-        main > div {
+
+        main>div {
             flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         main img {
             width: 100px;
             height: 100px;
             border-radius: 100%;
         }
+
         main p {
             text-align: center;
             font-size: 14px;
@@ -56,6 +63,7 @@
             display: flex;
             justify-content: space-between;
         }
+
         footer button {
             transition: background-color 0.3s;
             margin: 0;
@@ -66,24 +74,29 @@
             border-radius: 3px;
             background-color: #4f52b2;
             min-width: 100px;
-		    min-height: 30px;
+            min-height: 30px;
         }
+
         footer button:hover {
             background-color: #2f316c;
         }
+
         footer button.decline {
             background-color: #d13438;
         }
+
         footer button.decline:hover {
             background-color: #821d20;
         }
-        footer button.decline > i::before {
+
+        footer button.decline>i::before {
             transform: rotate(135deg);
         }
     </style>
 </head>
+
 <body>
-    <header><i class="bi bi-microsoft-teams"></i><span>Microsoft Teams</span></header>
+    <header><img src="../assets/icons/icon-monochrome-light-16x16.png" /><span>Teams for Linux</span></header>
     <main>
         <div>
             <img id="image" src="" alt="">
@@ -100,4 +113,5 @@
 
     </script>
 </body>
+
 </html>
