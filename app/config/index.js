@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-          configObject.configError
+        configObject.configError
       );
     }
   } else {
@@ -212,10 +212,10 @@ function extractYargConfig(configObject, appVersion) {
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
       enableIncomingCallToast: {
-				default: false,
-				describe: 'Enable incoming call toast',
-				type: 'boolean'
-			},
+        default: false,
+        describe: 'Enable incoming call toast',
+        type: 'boolean'
+      },
       followSystemTheme: {
         default: false,
         describe: "Follow system theme",
@@ -227,15 +227,15 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       incomingCallCommand: {
-				default: null,
-				describe: 'Command to execute on an incoming call.',
-				type: 'string'
-			},
-			incomingCallCommandArgs: {
-				default: [],
-				describe: 'Arguments for the incoming call command.',
-				type: 'array'
-			},
+        default: null,
+        describe: 'Command to execute on an incoming call. (caution: "~" in path is not supported)',
+        type: 'string'
+      },
+      incomingCallCommandArgs: {
+        default: [],
+        describe: 'Arguments for the incoming call command.',
+        type: 'array'
+      },
       isCustomBackgroundEnabled: {
         default: false,
         describe: "A flag indicates whether to enable custom background or not",
