@@ -99,7 +99,7 @@ function getHandleIndex(event, handle) {
 function addEventHandler(event, handler) {
   let handle;
   if (isSupportedEvent(event) && isFunction(handler)) {
-    handle = Math.ceil(Math.random() * 100000);
+    handle = crypto.randomUUID();
     eventHandlers.push({
       event: event,
       handle: handle,
