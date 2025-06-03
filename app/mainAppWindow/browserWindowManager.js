@@ -85,7 +85,7 @@ class BrowserWindowManager {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
     ipcMain.handle("incoming-call-created", this.assignOnIncomingCallCreatedHandler());
-    ipcMain.handle("incoming-call-ended", this.assingOnIncomingCallEndedHandler());
+    ipcMain.handle("incoming-call-ended", this.assignOnIncomingCallEndedHandler());
     ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
     ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
   }
@@ -146,44 +146,44 @@ class BrowserWindowManager {
 
   assignOnIncomingCallCreatedHandler() {
     return async (e, data) => {
-        if (this.config.incomingCallCommand) {
-            this.handleOnIncomingCallEnded();
-            const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
-            this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
-        }
-        if (this.config.enableIncomingCallToast) {
-            this.incomingCallToast.show(data);
-        }
+      if (this.config.incomingCallCommand) {
+        this.handleOnIncomingCallEnded();
+        const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
+        this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+      }
+      if (this.config.enableIncomingCallToast) {
+        this.incomingCallToast.show(data);
+      }
     }
   }
 
-  assingOnIncomingCallEndedHandler() {
+  assignOnIncomingCallEndedHandler() {
     return async (e) => {
-        this.handleOnIncomingCallEnded();
+      this.handleOnIncomingCallEnded();
     };
   }
 
   handleOnIncomingCallEnded() {
     if (this.incomingCallCommandProcess) {
-        this.incomingCallCommandProcess.kill('SIGTERM');
-        this.incomingCallCommandProcess = null;
+      this.incomingCallCommandProcess.kill('SIGTERM');
+      this.incomingCallCommandProcess = null;
     }
     if (this.config.enableIncomingCallToast) {
-        this.incomingCallToast.hide();
+      this.incomingCallToast.hide();
     }
   }
 
   assignOnCallConnectedHandler() {
     return async (e) => {
-        this.isOnCall = true;
-        return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+      this.isOnCall = true;
+      return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
     };
   }
 
   assignOnCallDisconnectedHandler() {
     return async (e) => {
-        this.isOnCall = false;
-        return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+      this.isOnCall = false;
+      return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
     };
   }
 
