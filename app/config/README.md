@@ -83,7 +83,7 @@ teams-for-linux --partition nopersist
 ```
 
 Alternatively, you can use a `config.json` file with your configuration options.
-Place this file Addedin the appropriate location based on your installation type:
+Place this file in the appropriate location based on your installation type:
 
 - Vanilla: `~/.config/teams-for-linux/config.json`
 - Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
