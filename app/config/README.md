@@ -45,14 +45,14 @@ Here is the list of available arguments and its usage:
 | disableNotificationSoundIfNotAvailable | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | false |
 | disableNotificationWindowFlash | Disable window flashing when there is a notification | false |
 | disableGlobalShortcuts | Array of global shortcuts to disable while the app is in focus. See <https://www.electronjs.org/docs/latest/api/accelerator> for available accelerators to use | [] |
-| enableIncomingCallToast | Boolean to enable an incoming call toast that gives the name and image of the caller and action button to accept or reject the call | false |
+| enableIncomingCallToast | Boolean to enable an incoming call toast that shows the name and image of the caller and povides action buttons to accept or reject the call | false |
 | electronCLIFlags | Electron CLI flags to be added when the app starts | [] |
 | emulateWinChromiumPlatform| Use windows platform information in chromium. This is helpful if MFA app does not support Linux.| false |
 | followSystemTheme | Boolean to determine if to follow system theme | false |
 | frame | Specify false to create a Frameless Window. Default is true | false |
 | isCustomBackgroundEnabled | A boolean flag to enable/disable custom background images | false |
 | incomingCallCommand | Command/executable to run on an incoming call. Caution: "~" in the path is currently not supported. The command/executable is call with following arguments: 1.) The arguments of the optional incomingCallCommandArgs array property 2.) The name of the caller 3.) The subtext of the in app call notification 4.) The image of the caller as base64 data image | |
-| incomingCallCommandArgs | Addtional arguments array that get prepend to the default arguments of the incomingCallCommand. | [] |
+| incomingCallCommandArgs | Addtional arguments array that get prepend to the default arguments of the incomingCallCommand | [] |
 | logConfig | A string value to set the log manager to use (`Falsy`, `console`, or a valid electron-log configuration) | **console.info** via (electron-log) |
 | meetupJoinRegEx | Meetup-join and channel regular expession | /^https:\/\/teams\.(microsoft\|live)\.com\/.*(?:meetup-join\|channel\|chat)/g | |
 menubar | A value controls the menu bar behaviour | _auto_, visible, hidden |
