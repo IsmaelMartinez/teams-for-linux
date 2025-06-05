@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.16" date="2025-06-05">
+			<description>
+				<ul>
+					<li>Added a reimplementation of the call events to revive the incoming call scripts</li>
+					<li>Added an incoming call toast just like the one from the discontinued Linux Teams App from Microsoft</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.15" date="2025-05-25">
 			<description>
 				<ul>

@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-          configObject.configError
+        configObject.configError
       );
     }
   } else {
@@ -211,6 +211,11 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
+      enableIncomingCallToast: {
+        default: false,
+        describe: 'Enable incoming call toast',
+        type: 'boolean'
+      },
       followSystemTheme: {
         default: false,
         describe: "Follow system theme",
@@ -220,6 +225,16 @@ function extractYargConfig(configObject, appVersion) {
         default: true,
         describe: "Specify false to create a Frameless Window. Default is true",
         type: "boolean",
+      },
+      incomingCallCommand: {
+        default: null,
+        describe: 'Command to execute on an incoming call. (caution: "~" in path is not supported)',
+        type: 'string'
+      },
+      incomingCallCommandArgs: {
+        default: [],
+        describe: 'Arguments for the incoming call command.',
+        type: 'array'
       },
       isCustomBackgroundEnabled: {
         default: false,
