@@ -83,7 +83,7 @@ teams-for-linux --partition nopersist
 ```
 
 Alternatively, you can use a `config.json` file with your configuration options.
-Place this file in the appropriate location based on your installation type:
+Place this file Addedin the appropriate location based on your installation type:
 
 - Vanilla: `~/.config/teams-for-linux/config.json`
 - Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
@@ -134,14 +134,14 @@ Example:
   "incomingCallCommandArgs": ["-f", "1234"]
 }
 ```
-This will execute the following on an incoming call
+This will execute the following on an incoming call.
 
--> /home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER
+`/home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER`
 
 > Note: Only the property incomingCallCommand is necessary, 
-> incomingCallCommandArgs completely optional.
+> incomingCallCommandArgs is completely optional.
 
-> Note: Also this feature has no connection with incoming call toast feature. 
+> Note: This feature has no connection to the incoming call toast feature. 
 > These two features can be use separately.
 
 # Additional Documentation
