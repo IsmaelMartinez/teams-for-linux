@@ -63,4 +63,5 @@ function initializeModules(config, ipcRenderer) {
   require("./tools/settings").init(config, ipcRenderer);
   require("./tools/theme").init(config, ipcRenderer);
   require("./tools/emulatePlatform").init(config);
+  require("./tools/timestampCopyOverride").init(config);
 }
