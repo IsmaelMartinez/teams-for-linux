@@ -123,6 +123,11 @@ function extractYargConfig(configObject, appVersion) {
           "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
         type: "boolean",
       },
+      disableTimestampOnCopy: {
+        default: false,
+        describe: "Controls whether timestamps are included when copying messages in chats",
+        type: "boolean",
+      },
       class: {
         default: null,
         describe: "A custom value for the WM_CLASS property",
@@ -364,7 +369,7 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe: "Enable menu entry for controlling video elements",
         type: "boolean",
-      }
+      },
     })
     .help()
     .parse(process.argv.slice(1));
