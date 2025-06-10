@@ -20,9 +20,9 @@ class ActivityHub {
 
   start() {
     const setup = setInterval(() => {
-      const changeReportingService = ReactHandler.getCommandChangeReportingService();
-      if (changeReportingService) {
-        assignEventHandlers(changeReportingService);
+      const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
+      if (commandChangeReportingService) {
+        assignEventHandlers(commandChangeReportingService);
         console.debug("Events connected");
         clearInterval(setup);
       }
@@ -128,49 +128,59 @@ function getEventHandlers(event) {
 
 function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
-    if (["CommandStart", "ScenarioMarked"].indexOf(e.type) > -1) {
-      if (["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) > -1) {
-        if (e.context.entityCommand) {
-          if (e.context.entityCommand.entityOptions?.isIncomingCall) {
-            console.debug("IncomingCall", e);
-            if ("incoming_call" === e.context.entityCommand.entityOptions?.crossClientScenarioName) {
-              console.debug("Call is incoming");
-              // Gets triggered by incoming call.
-              onIncomingCallCreated({
-                caller: e.context.entityCommand.entityOptions.title,
-                image: e.context.entityCommand.entityOptions.mainImage?.src,
-                text: e.context.entityCommand.entityOptions.text
-              });
-            } else {
-              console.debug("Reacted to incoming call");
-              // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
-              onIncomingCallEnded();
-            }
-          } else if ("toast_activation" === e.context.entityCommand.command?.correlation?.scenarioName) {
-            const action = e.context.entityCommand.dataOptions?.actionType || "";
-            if (action.startsWith("Accept")) {
-              // Gets triggered when incoming Call is accepted.
-            } else if (action.startsWith("Reject")) {
-              // Gets triggered when incoming Call is declined.
-            }
-          }
-        } else {
-          switch (e.context.step) {
-            case "calling-screen-rendered":
-              // Gets triggered when call is connected.
-              onCallConnected();
-              break;
-            case "render_disconected":
-              // Gets triggered when call is disconnected.
-              onCallDisconnected();
-              break;
-            default:
-              break;
-          }
-        }
-      }
+    // Only Handle events that are from type ["CommandStart", "ScenarioMarked"]
+    // and have a context target of ["internal-command-handler", "use-command-reporting-callbacks"]
+    if (["CommandStart", "ScenarioMarked"].indexOf(e.type) < 0 ||
+      ["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) < 0) {
+      return;
+    }
+    if (e.context.entityCommand) {
+      handleCallEventEntityCommand(e.context.entityCommand);
+    } else {
+      handleCallEventStep(e.context.step);
     }
   });
+}
+
+function handleCallEventEntityCommand(entityCommand) {
+  if (entityCommand.entityOptions?.isIncomingCall) {
+    console.debug("IncomingCall", entityCommand);
+    if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
+      console.debug("Call is incoming");
+      // Gets triggered by incoming call.
+      onIncomingCallCreated({
+        caller: entityCommand.entityOptions.title,
+        image: entityCommand.entityOptions.mainImage?.src,
+        text: entityCommand.entityOptions.text
+      });
+    } else {
+      console.debug("Reacted to incoming call");
+      // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
+      onIncomingCallEnded();
+    }
+  } else if ("toast_activation" === entityCommand.command?.correlation?.scenarioName) {
+    const action = entityCommand.dataOptions?.actionType || "";
+    if (action.startsWith("Accept")) {
+      // Gets triggered when incoming Call is accepted.
+    } else if (action.startsWith("Reject")) {
+      // Gets triggered when incoming Call is declined.
+    }
+  }
+}
+
+function handleCallEventStep(step) {
+  switch (step) {
+    case "calling-screen-rendered":
+      // Gets triggered when call is connected.
+      onCallConnected();
+      break;
+    case "render_disconected":
+      // Gets triggered when call is disconnected.
+      onCallDisconnected();
+      break;
+    default:
+      break;
+  }
 }
 
 async function onIncomingCallCreated(data) {
