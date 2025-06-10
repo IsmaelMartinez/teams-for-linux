@@ -74,8 +74,10 @@ function setEventHandlers(self) {
             break;
 
           case 'DECLINE':
-          default:
             buttons[buttons.length - 1].click();
+            break;
+
+          default:
             break;
         }
       }
