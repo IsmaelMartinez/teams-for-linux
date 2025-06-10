@@ -158,13 +158,6 @@ function handleCallEventEntityCommand(entityCommand) {
       // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
       onIncomingCallEnded();
     }
-  } else if ("toast_activation" === entityCommand.command?.correlation?.scenarioName) {
-    const action = entityCommand.dataOptions?.actionType || "";
-    if (action.startsWith("Accept")) {
-      // Gets triggered when incoming Call is accepted.
-    } else if (action.startsWith("Reject")) {
-      // Gets triggered when incoming Call is declined.
-    }
   }
 }
 
