@@ -1,4 +1,10 @@
 class ReactHandler {
+
+  getCommandChangeReportingService() {
+    const teams2CoreServices = this._getTeams2CoreServices();
+    return teams2CoreServices?.commandChangeReportingService;
+  }
+
   getTeams2IdleTracker() {
     const teams2CoreServices = this._getTeams2CoreServices();
     return teams2CoreServices?.clientState?._idleTracker;
