@@ -7,3 +7,4 @@ generated-sources.json
 flatpak-build/
 .idea
 .DS_Store
+release-info.json

@@ -102,7 +102,7 @@ The version increase follows the next rules:
   (Example: 1.0.0 -> 1.1.0)
 - The higher number is reserved at the moment
 
-### appdata.xml
+### com.github.IsmaelMartinez.teams_for_linux.appdata.xml
 
 For each release, create a new section in the
 [com.github.IsmaelMartinez.teams_for_linux.appdata.xml](com.github.IsmaelMartinez.teams_for_linux.appdata.xml)
