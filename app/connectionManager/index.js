@@ -24,7 +24,7 @@ class ConnectionManager {
     powerMonitor.on("resume", this.refresh);
     this.window.webContents.on(
       "did-fail-load",
-      assignOnDidFailLoadEventHandler(this),
+      assignOnDidFailLoadEventHandler(this)
     );
     this.refresh();
   }
@@ -63,7 +63,7 @@ class ConnectionManager {
         tries: 10,
         networkTest: async () => {
           console.debug(
-            "Testing network using net.request() for " + this.config.url,
+            "Testing network using net.request() for " + this.config.url
           );
           return await isOnlineHttps(this.config.url);
         },
@@ -76,7 +76,7 @@ class ConnectionManager {
         networkTest: async () => {
           const testDomain = new URL(this.config.url).hostname;
           console.debug(
-            "Testing network using net.resolveHost() for " + testDomain,
+            "Testing network using net.resolveHost() for " + testDomain
           );
           return await isOnlineDns(testDomain);
         },
@@ -109,7 +109,7 @@ class ConnectionManager {
         const online = await onlineCheckMethod.networkTest();
         if (online) {
           console.debug(
-            "Network test successful with method " + onlineCheckMethod.method,
+            "Network test successful with method " + onlineCheckMethod.method
           );
           return true;
         }
@@ -123,7 +123,9 @@ class ConnectionManager {
 function assignOnDidFailLoadEventHandler(cm) {
   return (event, code, description) => {
     console.error(
-      `assignOnDidFailLoadEventHandler : ${JSON.stringify(event)} - ${code} - ${description}`,
+      `assignOnDidFailLoadEventHandler : ${JSON.stringify(
+        event
+      )} - ${code} - ${description}`
     );
     if (
       description === "ERR_INTERNET_DISCONNECTED" ||

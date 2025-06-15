@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.0.17" date="2025-06-15">
+			<description>
+				<ul>
+					<li>Update electron to 36.4.0 and @homebridge/dbus-native to 0.7.1 for improved ARM compatibility and security</li>
+					<li>Adding release info generation from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file</li>
+					<li>Validate the release version is ready on the build.yml github action</li>
+					<li>Updating github actions to use node 22</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.16" date="2025-06-05">
 			<description>
 				<ul>
