@@ -21,6 +21,7 @@
 					<li>Adding release info generation from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file</li>
 					<li>Validate the release version is ready on the build.yml github action</li>
 					<li>Updating github actions to use node 22</li>
+					<li>Added setting to include timestamps and usernames on copy (default)</li>
 				</ul>
 			</description>
 		</release>
