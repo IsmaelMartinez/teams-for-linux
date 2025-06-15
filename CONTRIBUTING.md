@@ -99,9 +99,7 @@ To add release notes and prepare a new release, follow these steps:
 
 2. **Run** `npm install` to update `package-lock.json`.
 
-3. **Add release notes** for the new version in the [`release_info.md`](release_info.md) file. List new features, bug fixes, and improvements.
-
-4. **Update** `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
+3. **Update** `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
   - Add a new `<release>` entry with the new version and date, and a summary of changes. For example:
 
   ```xml
