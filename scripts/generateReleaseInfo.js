@@ -55,12 +55,7 @@ async function generateReleaseInfo(projectRoot = null) {
 
   // Navigate to releases
   const component = result.component;
-  if (
-    !component ||
-    !component.releases ||
-    !component.releases[0] ||
-    !component.releases[0].release
-  ) {
+  if (!component?.releases?.[0]?.release) {
     throw new Error(
       "No releases found in com.github.IsmaelMartinez.teams_for_linux.appdata.xml."
     );
@@ -80,10 +75,10 @@ async function generateReleaseInfo(projectRoot = null) {
   const releaseDate = matchingRelease.$.date;
   let releaseNotes = "";
 
-  if (matchingRelease.description && matchingRelease.description[0]) {
+  if (matchingRelease.description?.[0]) {
     const descObj = matchingRelease.description[0];
 
-    if (descObj.ul && descObj.ul[0] && descObj.ul[0].li) {
+    if (descObj.ul?.[0]?.li) {
       // Extract list items and format as markdown
       const listItems = descObj.ul[0].li.map((li) => {
         // Handle both simple strings and complex objects
