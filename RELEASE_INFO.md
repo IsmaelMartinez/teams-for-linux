@@ -17,7 +17,7 @@ The release info integration automatically:
 
 1. **Pre-build**: The `prebuild` npm script runs `generate-release-info` before any build
 2. **After Pack**: The `afterPack` hook in electron-builder generates fresh release info for Linux builds
-3. **Publishing**: The `release-info.json` file is used by electron-builder when publishing Linux releases to GitHub
+3. **Publishing**: The `release-info.json` file is referenced by electron-builder's `releaseNotesFile` setting for Linux publishing to GitHub
 
 ### Generated Files
 
@@ -56,12 +56,15 @@ project/
 ```json
 {
   "build": {
-    "extraResources": [
-      {
-        "from": "release-info.json",
-        "to": "release-info.json"
+    "linux": {
+      "publish": {
+        "provider": "github",
+        "releaseType": "draft",
+        "releaseInfo": {
+          "releaseNotesFile": "release-info.json"
+        }
       }
-    ],
+    },
     "afterPack": "scripts/afterpack.js"
   }
 }
@@ -137,6 +140,7 @@ npm run generate-release-info
 ```
 
 Output:
+
 ```
 ✅ Version consistency check passed!
    package.json: 2.0.16
