@@ -88,23 +88,36 @@ sudo snap install teams-for-linux
 
 ## Release process
 
-The release is mostly automated using GitHub Actions. The release is triggered
-by merging to main.
+## Adding Release Notes
 
-### Versioning
+To add release notes and prepare a new release, follow these steps:
 
-The version increase follows the next rules:
+1. **Update the version** in `package.json` according to the versioning rules:
+  - Increment the last number for patches (e.g., `1.0.0` → `1.0.1`)
+  - Increment the middle number for minor or breaking changes (e.g., `1.0.0` → `1.1.0`)
+  - The first number is reserved
 
-- By default increase the lower number of the version in the `package.json`
-  file. (Example: 1.0.0 -> 1.0.1)
-- For any release that can break changes, increase the middle number. Please
-  increase this number if you are increasing a major version of electron.
-  (Example: 1.0.0 -> 1.1.0)
-- The higher number is reserved at the moment
+2. **Run** `npm install` to update `package-lock.json`.
 
-### com.github.IsmaelMartinez.teams_for_linux.appdata.xml
+3. **Add release notes** for the new version in the [`release_info.md`](release_info.md) file. List new features, bug fixes, and improvements.
 
-For each release, create a new section in the
-[com.github.IsmaelMartinez.teams_for_linux.appdata.xml](com.github.IsmaelMartinez.teams_for_linux.appdata.xml)
-file. This will automatically update the appstream data in the flathub
-repository.
+4. **Update** `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
+  - Add a new `<release>` entry with the new version and date, and a summary of changes. For example:
+
+  ```xml
+  <release version="2.0.17" date="2025-06-15">
+    <description>
+     <ul>
+      <li>New feature description</li>
+      <li>Bug fix description</li>
+      <li>Performance improvement</li>
+     </ul>
+    </description>
+  </release>
+  ```
+
+5. **Commit and push** your changes, then open a pull request.
+
+The release process is mostly automated using GitHub Actions and is triggered by merging to `main`.
+
+For more details on how the release info is generated, see the [Release Info](docs/RELEASE_INFO.md) documentation.

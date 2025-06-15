@@ -19,6 +19,8 @@
 				<ul>
 					<li>Update electron to 36.4.0 and @homebridge/dbus-native to 0.7.1 for improved ARM compatibility and security</li>
 					<li>Adding release info generation from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file</li>
+					<li>Validate the release version is ready on the build.yml github action</li>
+					<li>Updating github actions to use node 22</li>
 				</ul>
 			</description>
 		</release>

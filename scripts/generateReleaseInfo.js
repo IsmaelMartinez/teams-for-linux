@@ -141,7 +141,7 @@ if (require.main === module) {
       console.log("");
       console.log(JSON.stringify(releaseInfo, null, 2));
 
-      // Optional: Save to file
+      // Save to file
       const outputPath = path.join(__dirname, "..", "release-info.json");
       fs.writeFileSync(outputPath, JSON.stringify(releaseInfo, null, 2));
       console.log("");

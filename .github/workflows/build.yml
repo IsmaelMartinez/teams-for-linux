@@ -20,10 +20,13 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Build
         run: npm ci
+
+      - name: Validate Release Notes
+        run: npm run generate-release-info
 
       - name: Release
         if: contains(github.ref, 'main')
@@ -39,10 +42,13 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build
         run: npm ci
+
+      - name: Validate Release Notes
+        run: npm run generate-release-info
 
       - name: Release
         if: contains(github.ref, 'main')
@@ -58,10 +64,13 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build
         run: npm ci
+
+      - name: Validate Release Notes
+        run: npm run generate-release-info
 
       - name: Release
         if: contains(github.ref, 'main')
@@ -77,10 +86,13 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build
         run: npm ci
+
+      - name: Validate Release Notes
+        run: npm run generate-release-info
 
       - name: Release
         if: contains(github.ref, 'main')
@@ -96,10 +108,13 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build
         run: npm ci
+
+      - name: Validate Release Notes
+        run: npm run generate-release-info
 
       - name: Release
         if: contains(github.ref, 'main')

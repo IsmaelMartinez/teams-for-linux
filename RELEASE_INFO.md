@@ -161,11 +161,3 @@ npm run pack  # Automatically runs prebuild and afterPack hooks
 ```
 
 The release info will be automatically generated and bundled with the application.
-
-## Benefits
-
-1. **Consistency**: Ensures version numbers are synchronized across all files
-2. **Automation**: No manual work required during builds
-3. **Standards Compliance**: Follows electron-builder conventions
-4. **Runtime Access**: Release info available to the application at runtime
-5. **Single Source of Truth**: `com.github.IsmaelMartinez.teams_for_linux.appdata.xml` serves as the authoritative source for release notes
