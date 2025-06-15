@@ -93,8 +93,8 @@ sudo snap install teams-for-linux
 To add release notes and prepare a new release, follow these steps:
 
 1. **Update the version** in `package.json` according to the versioning rules:
-  - Increment the last number for patches (e.g., `1.0.0` → `1.0.1`)
-  - Increment the middle number for minor or breaking changes (e.g., `1.0.0` → `1.1.0`)
+  - Increment the last number for patches or minor changes (e.g., `1.0.0` → `1.0.1`)
+  - Increment the middle number for breaking changes (e.g., `1.0.0` → `1.1.0`)
   - The first number is reserved
 
 2. **Run** `npm install` to update `package-lock.json`.
