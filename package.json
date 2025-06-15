@@ -73,7 +73,6 @@
         "msteams"
       ]
     },
-    
     "extraResources": [
       {
         "from": "app/assets/sounds",
@@ -100,10 +99,10 @@
       ],
       "publish": {
         "provider": "github",
-        "releaseType": "draft",
-        "releaseInfo": {
-          "releaseNotesFile": "release-info.json"
-        }
+        "releaseType": "draft"
+      },
+      "releaseInfo": {
+        "releaseNotesFile": "release-info.json"
       }
     },
     "rpm": {
