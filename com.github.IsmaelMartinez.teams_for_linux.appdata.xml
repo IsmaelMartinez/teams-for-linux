@@ -14,6 +14,19 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.1.0" date="2025-07-06">
+			<description>
+				<ul>
+					<li>Update Electron to 37.2.0</li>
+					<li>Update @eslint/js to 9.30.1</li>
+					<li>Update eslint to 9.30.1</li>
+					<li>Update globals to 16.3.0</li>
+					<li>Reviewed Electron 37 breaking changes: no impact on this project</li>
+					<li>electron-store not updated due to breaking changes in v9+</li>
+					<li>yargs not updated due to breaking changes in v18+</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.18" date="2025-06-16">
 			<description>
 				<ul>
