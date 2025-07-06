@@ -84,10 +84,28 @@ class BrowserWindowManager {
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
-    ipcMain.handle("incoming-call-created", this.assignOnIncomingCallCreatedHandler());
-    ipcMain.handle("incoming-call-ended", this.assignOnIncomingCallEndedHandler());
-    ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
-    ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
+    ipcMain.handle(
+      "incoming-call-created",
+      this.assignOnIncomingCallCreatedHandler()
+    );
+    ipcMain.handle(
+      "incoming-call-ended",
+      this.assignOnIncomingCallEndedHandler()
+    );
+    ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
+    ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
+    ipcMain.handle("meeting-started", this.assignOnMeetingStartedHandler());
+    ipcMain.handle("meeting-joined", this.assignOnMeetingJoinedHandler());
+    ipcMain.handle("meeting-left", this.assignOnMeetingLeftHandler());
+    ipcMain.handle(
+      "meeting-invitation",
+      this.assignOnMeetingInvitationHandler()
+    );
+    ipcMain.handle("chat-message", this.assignOnChatMessageHandler());
+    ipcMain.handle(
+      "screen-sharing-started",
+      this.assignOnScreenSharingStartedHandler()
+    );
   }
 
   assignSelectSourceHandler() {
@@ -148,13 +166,21 @@ class BrowserWindowManager {
     return async (e, data) => {
       if (this.config.incomingCallCommand) {
         this.handleOnIncomingCallEnded();
-        const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
-        this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+        const commandArgs = [
+          ...this.config.incomingCallCommandArgs,
+          data.caller,
+          data.text,
+          data.image,
+        ];
+        this.incomingCallCommandProcess = spawn(
+          this.config.incomingCallCommand,
+          commandArgs
+        );
       }
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);
       }
-    }
+    };
   }
 
   assignOnIncomingCallEndedHandler() {
@@ -165,7 +191,7 @@ class BrowserWindowManager {
 
   handleOnIncomingCallEnded() {
     if (this.incomingCallCommandProcess) {
-      this.incomingCallCommandProcess.kill('SIGTERM');
+      this.incomingCallCommandProcess.kill("SIGTERM");
       this.incomingCallCommandProcess = null;
     }
     if (this.config.enableIncomingCallToast) {
@@ -176,17 +202,62 @@ class BrowserWindowManager {
   assignOnCallConnectedHandler() {
     return async (e) => {
       this.isOnCall = true;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.disableScreenLockElectron()
+        : this.disableScreenLockWakeLockSentinel();
     };
   }
 
   assignOnCallDisconnectedHandler() {
     return async (e) => {
       this.isOnCall = false;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.enableScreenLockElectron()
+        : this.enableScreenLockWakeLockSentinel();
     };
   }
 
+  assignOnMeetingStartedHandler() {
+    return async (e, data) => {
+      console.debug("Meeting started:", data);
+      // Future: Add meeting-specific logic here if needed
+    };
+  }
+
+  assignOnMeetingJoinedHandler() {
+    return async (e, data) => {
+      console.debug("Meeting joined:", data);
+      // Future: Add meeting-joined logic here if needed
+    };
+  }
+
+  assignOnMeetingLeftHandler() {
+    return async (e, data) => {
+      console.debug("Meeting left:", data);
+      // Future: Add meeting-left logic here if needed
+    };
+  }
+
+  assignOnMeetingInvitationHandler() {
+    return async (e, data) => {
+      console.debug("Meeting invitation:", data);
+      // Future: Add meeting invitation logic here if needed
+    };
+  }
+
+  assignOnChatMessageHandler() {
+    return async (e, data) => {
+      console.debug("Chat message/notification:", data);
+      // Future: Add chat message logic here if needed
+    };
+  }
+
+  assignOnScreenSharingStartedHandler() {
+    return async (e, data) => {
+      console.debug("Screen sharing started:", data);
+      // Future: Add screen sharing logic here if needed
+    };
+  }
 }
 
 module.exports = BrowserWindowManager;

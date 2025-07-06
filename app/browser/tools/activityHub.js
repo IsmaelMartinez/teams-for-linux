@@ -5,11 +5,16 @@ const supportedEvents = [
   "incoming-call-created",
   "incoming-call-ended",
   "call-connected",
-  "call-disconnected"
+  "call-disconnected",
+  "meeting-started",
+  "meeting-joined",
+  "meeting-left",
+  "meeting-invitation",
+  "chat-message",
+  "screen-sharing-started",
 ];
 
 class ActivityHub {
-
   on(event, handler) {
     return addEventHandler(event, handler);
   }
@@ -20,10 +25,15 @@ class ActivityHub {
 
   start() {
     const setup = setInterval(() => {
-      const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
+      const commandChangeReportingService =
+        ReactHandler.getCommandChangeReportingService();
       if (commandChangeReportingService) {
         assignEventHandlers(commandChangeReportingService);
-        console.debug("Events connected");
+
+        // Enable debug logging
+        ReactHandler.debugAllEvents();
+
+        console.debug("Events connected with debug logging enabled");
         clearInterval(setup);
       }
     }, 10000);
@@ -70,7 +80,7 @@ class ActivityHub {
         self.setActive(
           state == 1 && (self.current == 4 || self.current == 5)
             ? 3
-            : self.current,
+            : self.current
         );
       },
       "",
@@ -81,17 +91,17 @@ class ActivityHub {
 }
 
 function isSupportedEvent(event) {
-  return supportedEvents.some(e => {
+  return supportedEvents.some((e) => {
     return e === event;
   });
 }
 
 function isFunction(func) {
-  return typeof (func) === 'function';
+  return typeof func === "function";
 }
 
 function getHandleIndex(event, handle) {
-  return eventHandlers.findIndex(h => {
+  return eventHandlers.findIndex((h) => {
     return h.event === event && h.handle === handle;
   });
 }
@@ -103,7 +113,7 @@ function addEventHandler(event, handler) {
     eventHandlers.push({
       event: event,
       handle: handle,
-      handler: handler
+      handler: handler,
     });
   }
   return handle;
@@ -121,37 +131,61 @@ function removeEventHandler(event, handle) {
 }
 
 function getEventHandlers(event) {
-  return eventHandlers.filter(e => {
+  return eventHandlers.filter((e) => {
     return e.event === event;
   });
 }
 
 function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
-    // Only Handle events that are from type ["CommandStart", "ScenarioMarked"]
-    // and have a context target of ["internal-command-handler", "use-command-reporting-callbacks"]
-    if (["CommandStart", "ScenarioMarked"].indexOf(e.type) < 0 ||
-      ["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) < 0) {
+    // Expanded event handling to capture more Teams events including meetings and chats
+    if (
+      [
+        "CommandStart",
+        "ScenarioMarked",
+        "Rendered",
+        "ChunkLoadStarted",
+        "ChunkLoadSucceeded",
+      ].indexOf(e.type) < 0
+    ) {
       return;
     }
+
+    // Expanded target filtering to capture more event sources
+    const validTargets = [
+      "internal-command-handler",
+      "use-command-reporting-callbacks",
+      "internal-command-handler-execute-before-command-handled-hook",
+    ];
+
+    if (e.context.target && validTargets.indexOf(e.context.target) < 0) {
+      return;
+    }
+
+    // Handle different event structures
     if (e.context.entityCommand) {
       handleCallEventEntityCommand(e.context.entityCommand);
-    } else {
+    } else if (e.context.step) {
       handleCallEventStep(e.context.step);
     }
+
+    // Handle meeting and chat events based on improved patterns
+    handleMeetingChatEvents(e);
   });
 }
 
 function handleCallEventEntityCommand(entityCommand) {
   if (entityCommand.entityOptions?.isIncomingCall) {
     console.debug("IncomingCall", entityCommand);
-    if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
+    if (
+      "incoming_call" === entityCommand.entityOptions?.crossClientScenarioName
+    ) {
       console.debug("Call is incoming");
       // Gets triggered by incoming call.
       onIncomingCallCreated({
         caller: entityCommand.entityOptions.title,
         image: entityCommand.entityOptions.mainImage?.src,
-        text: entityCommand.entityOptions.text
+        text: entityCommand.entityOptions.text,
       });
     } else {
       console.debug("Reacted to incoming call");
@@ -176,31 +210,217 @@ function handleCallEventStep(step) {
   }
 }
 
+function handleMeetingChatEvents(event) {
+  console.debug(
+    "handleMeetingChatEvents called with event:",
+    event.type,
+    event.context?.entityCommand?.entity?.type
+  );
+
+  const step = event.context?.step;
+  const crossClientScenario =
+    event.context?.entityCommand?.entityOptions?.crossClientScenarioName;
+  const entityType = event.context?.entityCommand?.entity?.type;
+  const entityAction = event.context?.entityCommand?.entity?.action;
+  const scenarioName = event.context?.scenarioName;
+  const title = event.context?.entityCommand?.entityOptions?.title;
+  const text = event.context?.entityCommand?.entityOptions?.text;
+  const mainImage = event.context?.entityCommand?.entityOptions?.mainImage;
+  const toastType = event.context?.entityCommand?.entityOptions?.toastType;
+  const visibilityState =
+    event.context?.entityCommand?.command?.visibilityState;
+
+  // Log any event that might be a notification we're missing
+  if (
+    title ||
+    text ||
+    toastType ||
+    entityType === "toasts" ||
+    entityType === "bannerNotification" ||
+    entityAction === "create" ||
+    entityAction === "view" ||
+    visibilityState === "show"
+  ) {
+    console.debug("Potential notification event:", {
+      type: event.type,
+      entityType,
+      entityAction,
+      visibilityState,
+      title,
+      text,
+      toastType,
+      scenarioName,
+      crossClientScenario,
+    });
+  }
+
+  // Toast/Notification detection (Viva Insights, Teams notifications, etc.)
+  if (
+    entityType === "toasts" &&
+    entityAction === "view" &&
+    visibilityState === "show"
+  ) {
+    console.debug("Toast notification detected:", { title, text, toastType });
+    onChatMessage({
+      title: title || "New Notification",
+      text: text || "You have a new notification",
+      image: mainImage?.src,
+      type: toastType || "notification",
+    });
+    return; // Early return to avoid duplicate processing
+  }
+
+  // Banner notification detection
+  if (entityType === "bannerNotification") {
+    console.debug("Banner notification detected:", {
+      entityAction,
+      visibilityState,
+      title,
+      text,
+      id: event.context?.entityCommand?.entity?.id,
+    });
+
+    // Only trigger notifications for creation/show events, not deletion/hide events
+    if (
+      entityAction === "create" ||
+      (entityAction === "view" && visibilityState === "show")
+    ) {
+      console.debug("Triggering notification for banner creation/show");
+      onChatMessage({
+        title: title || "Teams Notification",
+        text: text || "You have a new notification",
+        image: mainImage?.src,
+        type: "banner-notification",
+      });
+    } else {
+      console.debug("Skipping notification for banner deletion/hide event");
+    }
+    return; // Early return to avoid duplicate processing
+  }
+
+  // Meeting start/join detection
+  if (
+    step === "render_calling_screen" ||
+    step === "calling-screen-rendered" ||
+    (entityType === "calls" && entityAction === "create")
+  ) {
+    onMeetingStarted({
+      title: title || "Meeting Started",
+      text: text || "You have joined a meeting",
+      image: mainImage?.src,
+    });
+  }
+
+  // Meeting invitation detection
+  if (
+    crossClientScenario === "meeting_invitation" ||
+    (entityType === "shareMeetingInfo" && entityAction === "view")
+  ) {
+    onMeetingInvitation({
+      title: title || "Meeting Invitation",
+      text: text || "You have a meeting invitation",
+      image: mainImage?.src,
+    });
+  }
+
+  // Screen sharing detection
+  if (
+    step === "render_screen_share" ||
+    scenarioName?.includes("screen_share")
+  ) {
+    onScreenSharingStarted({
+      title: "Screen Sharing Started",
+      text: "Screen sharing is now active",
+    });
+  }
+
+  // Chat message detection (based on common patterns)
+  if (
+    step?.includes("message") ||
+    scenarioName?.includes("chat") ||
+    entityType === "chat" ||
+    crossClientScenario?.includes("message")
+  ) {
+    onChatMessage({
+      title: title || "New Message",
+      text: text || "You have a new message",
+      image: mainImage?.src,
+    });
+  }
+
+  // Meeting end detection
+  if (
+    step === "render_disconected" ||
+    step === "render_call_end_screen" ||
+    step === "pause_ongoing_calling_scenarios"
+  ) {
+    onMeetingLeft({
+      title: "Meeting Ended",
+      text: "You have left the meeting",
+    });
+  }
+}
+
 async function onIncomingCallCreated(data) {
-  const handlers = getEventHandlers('incoming-call-created');
+  const handlers = getEventHandlers("incoming-call-created");
   for (const handler of handlers) {
     handler.handler(data);
   }
 }
 
 async function onIncomingCallEnded() {
-  const handlers = getEventHandlers('incoming-call-ended');
+  const handlers = getEventHandlers("incoming-call-ended");
   for (const handler of handlers) {
     handler.handler({});
   }
 }
 
 async function onCallConnected() {
-  const handlers = getEventHandlers('call-connected');
+  const handlers = getEventHandlers("call-connected");
   for (const handler of handlers) {
     handler.handler({});
   }
 }
 
 async function onCallDisconnected() {
-  const handlers = getEventHandlers('call-disconnected');
+  const handlers = getEventHandlers("call-disconnected");
   for (const handler of handlers) {
     handler.handler({});
+  }
+}
+
+async function onMeetingStarted(data) {
+  const handlers = getEventHandlers("meeting-started");
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+async function onMeetingLeft(data) {
+  const handlers = getEventHandlers("meeting-left");
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+async function onMeetingInvitation(data) {
+  const handlers = getEventHandlers("meeting-invitation");
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+async function onChatMessage(data) {
+  const handlers = getEventHandlers("chat-message");
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+async function onScreenSharingStarted(data) {
+  const handlers = getEventHandlers("screen-sharing-started");
+  for (const handler of handlers) {
+    handler.handler(data);
   }
 }
 

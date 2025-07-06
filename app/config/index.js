@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-        configObject.configError
+          configObject.configError
       );
     }
   } else {
@@ -125,7 +125,8 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableTimestampOnCopy: {
         default: false,
-        describe: "Controls whether timestamps are included when copying messages in chats",
+        describe:
+          "Controls whether timestamps are included when copying messages in chats",
         type: "boolean",
       },
       class: {
@@ -217,9 +218,9 @@ function extractYargConfig(configObject, appVersion) {
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
       enableIncomingCallToast: {
-        default: false,
-        describe: 'Enable incoming call toast',
-        type: 'boolean'
+        default: true,
+        describe: "Enable incoming call toast",
+        type: "boolean",
       },
       followSystemTheme: {
         default: false,
@@ -233,13 +234,14 @@ function extractYargConfig(configObject, appVersion) {
       },
       incomingCallCommand: {
         default: null,
-        describe: 'Command to execute on an incoming call. (caution: "~" in path is not supported)',
-        type: 'string'
+        describe:
+          'Command to execute on an incoming call. (caution: "~" in path is not supported)',
+        type: "string",
       },
       incomingCallCommandArgs: {
         default: [],
-        describe: 'Arguments for the incoming call command.',
-        type: 'array'
+        describe: "Arguments for the incoming call command.",
+        type: "array",
       },
       isCustomBackgroundEnabled: {
         default: false,
@@ -361,7 +363,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       webDebug: {
-        default: false,
+        default: true,
         describe: "Enable debug at start",
         type: "boolean",
       },
