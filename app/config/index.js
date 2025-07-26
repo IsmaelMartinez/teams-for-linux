@@ -25,7 +25,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in config file, using default values:\n" +
-        configObject.configError
+          configObject.configError
       );
     }
   } else {
@@ -125,13 +125,20 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableTimestampOnCopy: {
         default: false,
-        describe: "Controls whether timestamps are included when copying messages in chats",
+        describe:
+          "Controls whether timestamps are included when copying messages in chats",
         type: "boolean",
       },
       class: {
         default: null,
         describe: "A custom value for the WM_CLASS property",
         type: "string",
+      },
+      cacheManagement: {
+        default: { enabled: false },
+        describe:
+          "Cache management configuration to prevent daily logout issues",
+        type: "object",
       },
       clearStorageData: {
         default: null,
@@ -218,8 +225,8 @@ function extractYargConfig(configObject, appVersion) {
       },
       enableIncomingCallToast: {
         default: false,
-        describe: 'Enable incoming call toast',
-        type: 'boolean'
+        describe: "Enable incoming call toast",
+        type: "boolean",
       },
       followSystemTheme: {
         default: false,
@@ -233,13 +240,14 @@ function extractYargConfig(configObject, appVersion) {
       },
       incomingCallCommand: {
         default: null,
-        describe: 'Command to execute on an incoming call. (caution: "~" in path is not supported)',
-        type: 'string'
+        describe:
+          'Command to execute on an incoming call. (caution: "~" in path is not supported)',
+        type: "string",
       },
       incomingCallCommandArgs: {
         default: [],
-        describe: 'Arguments for the incoming call command.',
-        type: 'array'
+        describe: "Arguments for the incoming call command.",
+        type: "array",
       },
       isCustomBackgroundEnabled: {
         default: false,
