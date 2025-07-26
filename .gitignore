@@ -8,3 +8,4 @@ flatpak-build/
 .idea
 .DS_Store
 release-info.json
+debian-changelog
