@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.1.1",
+  "version": "2.0.18",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -43,7 +43,7 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@homebridge/dbus-native": "0.7.2",
+    "@homebridge/dbus-native": "0.7.1",
     "electron-log": "^5.4.1",
     "electron-positioner": "^4.1.0",
     "electron-store": "8.2.0",
@@ -54,11 +54,11 @@
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
-    "@eslint/js": "^9.32.0",
-    "electron": "^37.2.4",
-    "electron-builder": "^26.0.19",
-    "eslint": "^9.32.0",
-    "globals": "^16.3.0",
+    "@eslint/js": "^9.29.0",
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
@@ -118,8 +118,7 @@
       ],
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
-        "--rpm-digest=sha256",
-        "--upstream-changelog=debian-changelog"
+        "--rpm-digest=sha256"
       ]
     },
     "deb": {
@@ -133,9 +132,7 @@
         "at-spi2-core",
         "libuuid1"
       ],
-      "fpm": [
-        "--upstream-changelog=debian-changelog"
-      ]
+      "fpm": []
     },
     "snap": {
       "summary": "Teams for Linux",
