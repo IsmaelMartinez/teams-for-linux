@@ -224,6 +224,7 @@ class CacheManager {
    * Get directory size recursively
    */
   async getDirSize(dirPath) {
+    let totalSize = 0;
     try {
       const stat = await fsp.stat(dirPath);
       if (stat.isFile()) {
