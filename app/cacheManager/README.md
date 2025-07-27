@@ -24,7 +24,7 @@ Add to your Teams for Linux config:
 ```json
 {
   "cacheManagement": {
-    "enabled": true,
+    "enabled": false,
     "maxCacheSizeMB": 300,
     "cacheCheckIntervalMs": 3600000
   }

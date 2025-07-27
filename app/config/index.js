@@ -135,7 +135,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       cacheManagement: {
-        default: { enabled: false },
+        default: { enabled: false, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 },
         describe:
           "Cache management configuration to prevent daily logout issues",
         type: "object",

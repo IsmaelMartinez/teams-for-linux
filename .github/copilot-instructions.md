@@ -25,6 +25,8 @@ Teams for Linux is an Electron-based desktop application that wraps Microsoft Te
   - `app/menus/` - Application and tray menus
   - `app/connectionManager/` - Network connection handling
   - `app/certificate/` - SSL certificate management
+  - `app/incomingCallToast/` - Custom toast for incoming calls
+  - `app/streamSelector/` - Stream selection for screen sharing
 
 ## Development Patterns
 
@@ -83,6 +85,8 @@ npm run pack          # Development build without packaging
 
 ## Common Patterns
 
+- **Single Instance**: The application ensures only a single instance is running using `app.requestSingleInstanceLock()`.
+- **Command Line Switches**: Various command-line switches are appended (e.g., for Wayland/PipeWire, proxy settings, disabling GPU, and custom Electron CLI flags from config).
 - Use `electron-log` for logging throughout the application
 - Configuration changes require app restart (document this in features)
 - Browser scripts should be defensive against Teams web app changes

@@ -1,4 +1,5 @@
 const fs = require("fs");
+const fsp = require("fs").promises;
 const path = require("path");
 const electron = require("electron");
 
@@ -159,20 +160,22 @@ class CacheManager {
 
     for (const cleanupPath of cleanupPaths) {
       try {
-        if (fs.existsSync(cleanupPath)) {
-          const stat = fs.statSync(cleanupPath);
-          if (stat.isDirectory()) {
-            await this.cleanDirectory(cleanupPath);
-          } else {
-            fs.unlinkSync(cleanupPath);
-            console.debug("Removed file:", cleanupPath);
-          }
+        const stat = await fsp.stat(cleanupPath);
+        if (stat.isDirectory()) {
+          await this.cleanDirectory(cleanupPath);
+        } else {
+          await fsp.unlink(cleanupPath);
+          console.debug("Removed file:", cleanupPath);
         }
       } catch (error) {
-        console.warn("Failed to clean path:", {
-          path: cleanupPath,
-          error: error.message,
-        });
+        if (error.code === 'ENOENT') {
+          console.debug("Path does not exist, skipping:", cleanupPath);
+        } else {
+          console.warn("Failed to clean path:", {
+            path: cleanupPath,
+            error: error.message,
+          });
+        }
       }
     }
   }
@@ -182,22 +185,29 @@ class CacheManager {
    */
   async cleanDirectory(dirPath) {
     try {
-      const files = fs.readdirSync(dirPath);
+      const files = await fsp.readdir(dirPath);
 
       for (const file of files) {
         const filePath = path.join(dirPath, file);
-        const stat = fs.statSync(filePath);
+        const stat = await fsp.stat(filePath);
 
         if (stat.isDirectory()) {
           await this.cleanDirectory(filePath);
           // Try to remove empty directory
           try {
-            fs.rmdirSync(filePath);
-          } catch {
-            // Directory not empty, that's okay
+            await fsp.rmdir(filePath);
+          } catch (error) {
+            if (error.code === 'ENOTEMPTY') {
+              console.debug("Directory not empty, skipping rmdir:", filePath);
+            } else {
+              console.warn("Failed to remove directory:", {
+                path: filePath,
+                error: error.message,
+              });
+            }
           }
         } else {
-          fs.unlinkSync(filePath);
+          await fsp.unlink(filePath);
         }
       }
 
@@ -214,36 +224,37 @@ class CacheManager {
    * Get directory size recursively
    */
   async getDirSize(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-      return 0;
-    }
-
-    let totalSize = 0;
-
     try {
-      const stat = fs.statSync(dirPath);
+      const stat = await fsp.stat(dirPath);
       if (stat.isFile()) {
         return stat.size;
       }
 
       if (stat.isDirectory()) {
-        const files = fs.readdirSync(dirPath);
+        const files = await fsp.readdir(dirPath);
 
         for (const file of files) {
           const filePath = path.join(dirPath, file);
           try {
             totalSize += await this.getDirSize(filePath);
-          } catch {
-            // Skip files that can't be accessed
-            console.debug("Skipping inaccessible file:", filePath);
+          } catch (error) {
+            // Skip files that can't be accessed (e.g., permission errors, broken symlinks)
+            console.debug("Skipping inaccessible file:", {
+              path: filePath,
+              error: error.message,
+            });
           }
         }
       }
     } catch (error) {
-      console.debug("Error accessing path:", {
-        path: dirPath,
-        error: error.message,
-      });
+      if (error.code === 'ENOENT') {
+        return 0; // Path does not exist, size is 0
+      } else {
+        console.debug("Error accessing path:", {
+          path: dirPath,
+          error: error.message,
+        });
+      }
     }
 
     return totalSize;
