@@ -24,6 +24,7 @@ Here is the list of available arguments and its usage:
 | appTitle                           | A text to appear as the tray tooltip                                                                                                     | Microsoft Teams                                                                                                        |
 | authServerWhitelist                | Set auth-server-whitelist value (string)                                                                                                | \*                                                                                                                     |
 | awayOnSystemIdle                   | Boolean to set the user status as away when system goes idle                                                                            | false                                                                                                                  |
+| cacheManagement                    | Cache management configuration object (see Cache Management section below)                                                              | { enabled: false, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 }                                               |
 | chromeUserAgent                    | Google Chrome User Agent                                                                                                                | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36 |
 | class                              | A custom value for the WM_CLASS property. Sets the app name if provided                                                                                              |                                                                                                                        |
 | contextIsolation                   | Use context isolation in the renderer process (disabling this will break some functionality)                                            | false                                                                                                                  |
@@ -165,3 +166,28 @@ corresponding documentation:
 - **Custom CA Certs:**  
   To retrieve custom CA certificates fingerprints, please see the
   [Certificate README](../certificate/README.md).
+
+- **Cache Management:**  
+  To configure automatic cache cleanup to prevent daily logout issues, please see the
+  [Cache Manager README](../cacheManager/README.md).
+
+## Cache Management Configuration
+
+The cache management feature helps prevent daily logout issues caused by cache overflow. It can be configured in your `config.json`:
+
+```json
+{
+  "cacheManagement": {
+    "enabled": false,
+    "maxCacheSizeMB": 300,
+    "cacheCheckIntervalMs": 3600000
+  }
+}
+```
+
+**Options:**
+- `enabled` (boolean): Enable/disable automatic cache management (default: false)
+- `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
+- `cacheCheckIntervalMs` (number): How often to check cache size in milliseconds (default: 3600000 = 1 hour)
+
+The cache manager automatically detects your partition configuration and cleans the appropriate directories while preserving authentication data.

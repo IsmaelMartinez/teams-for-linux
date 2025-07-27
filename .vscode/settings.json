@@ -19,5 +19,17 @@
 		"submenu",
 		"zoetrope",
 		"zypak"
-	]
+	],
+	"github.copilot.enable": {
+		"*": true,
+		"yaml": true,
+		"plaintext": true,
+		"markdown": true,
+		"javascript": true,
+		"json": true
+	},
+	"github.copilot.advanced": {
+		"debug.overrideEngine": "gpt-4",
+		"debug.useNodeFetcher": true
+	}
 }

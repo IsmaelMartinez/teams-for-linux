@@ -54,6 +54,7 @@ try {
 }
 
 const certificateModule = require("./certificate");
+const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
 
@@ -279,6 +280,23 @@ function handleAppReady() {
   process.on("SIGTERM", onAppTerminated);
   //Just catch the error
   process.stdout.on("error", () => {});
+
+  // Initialize cache manager (addresses issue #1756: Daily logout)
+  if (config.cacheManagement?.enabled === true) {
+    const cacheManager = new CacheManager({
+      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
+      cacheCheckIntervalMs:
+        config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
+      partition: config.partition, // Pass partition config for dynamic cache paths
+    });
+    cacheManager.start();
+
+    // Stop cache manager on app termination
+    app.on("before-quit", () => {
+      cacheManager.stop();
+    });
+  }
+
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
 }
 

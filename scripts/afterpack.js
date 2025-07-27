@@ -1,7 +1,8 @@
 const { flipFuses, FuseVersion, FuseV1Options } = require("@electron/fuses");
 const { chmod } = require("fs/promises");
-const path = require('path');
-const { generateReleaseInfo } = require('./generateReleaseInfo');
+const path = require("path");
+const { generateReleaseInfo } = require("./generateReleaseInfo");
+const { generateDebianChangelog } = require("./generateDebianChangelog");
 
 function getAppFileName(context) {
   const productFileName = context.packager.appInfo.productFilename;
@@ -26,7 +27,7 @@ exports.default = async function afterPack(context) {
     if (context.electronPlatformName === "linux") {
       await generateReleaseInfoForLinux();
     }
-    
+
     const appPath = `${context.appOutDir}/${getAppFileName(context)}`;
     await chmod(appPath, 0o755);
     await flipFuses(appPath, {
@@ -41,18 +42,22 @@ exports.default = async function afterPack(context) {
 
 async function generateReleaseInfoForLinux() {
   try {
-    console.log('🔄 Generating release info for Linux publishing...');
-    
-    const projectRoot = path.join(__dirname, '..');
+    console.log("🔄 Generating release info for Linux publishing...");
+
+    const projectRoot = path.join(__dirname, "..");
     const { releaseInfo } = await generateReleaseInfo(projectRoot);
-    
+
+    // Generate Debian changelog for better package metadata (issue #1691)
+    console.log("🔄 Generating Debian changelog...");
+    await generateDebianChangelog(projectRoot);
+
     console.log(`✅ Release info ready for Linux publishing`);
     console.log(`   Release Name: ${releaseInfo.releaseName}`);
     console.log(`   Release Date: ${releaseInfo.releaseDate}`);
-    
+
     return releaseInfo;
   } catch (error) {
-    console.error('❌ Error generating release info:', error.message);
+    console.error("❌ Error generating release info:", error.message);
     throw error;
   }
 }
