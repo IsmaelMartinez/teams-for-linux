@@ -20,12 +20,7 @@
 					<li>Add configurable cache management to prevent daily logout issues (Issue #1756) - disabled by default, enable with config option</li>
 					<li>Add proper Debian changelog generation for package managers (Issue #1691)</li>
 					<li>Enhance build process with upstream changelog support for deb and rpm packages</li>
-					<li>Update Electron from 37.2.0 to 37.2.4 with major stability improvements:</li>
-					<li>  • Fixed window close callback crashes that caused unexpected app termination (addresses Issue #1757)</li>
-					<li>  • Enhanced desktop capture with reduced crashes and better screen sharing quality (addresses Issues #1762, #1743, #1715)</li>
-					<li>  • Improved window management and resizing functionality (addresses Issue #1736)</li>
-					<li>  • Updated Chromium to 138.0.7204.157 for security and performance improvements</li>
-					<li>  • Better Linux desktop environment compatibility and PipeWire integration</li>
+					<li>Update Electron to 37.2.4 (fixes window close callback crashes and updates Chromium to 138.0.7204.157)</li>
 					<li>Update @homebridge/dbus-native to 0.7.2 for improved ARM compatibility</li>
 					<li>Update ESLint to 9.32.0 and electron-builder to 26.0.19 for better development experience</li>
 				</ul>
