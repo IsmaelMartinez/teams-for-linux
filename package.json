@@ -118,8 +118,7 @@
       ],
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
-        "--rpm-digest=sha256",
-        "--upstream-changelog=debian-changelog"
+        "--rpm-digest=sha256"
       ]
     },
     "deb": {
@@ -132,9 +131,6 @@
         "xdg-utils",
         "at-spi2-core",
         "libuuid1"
-      ],
-      "fpm": [
-        "--upstream-changelog=debian-changelog"
       ]
     },
     "snap": {
