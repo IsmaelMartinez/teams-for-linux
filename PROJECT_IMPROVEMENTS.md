@@ -8,12 +8,12 @@ Here's a prioritized list of proposed improvements, ordered from easiest/lowest 
 
 These improvements primarily involve adding or updating markdown files and code comments, with minimal to no impact on application logic.
 
-*   **Configuration Documentation:** Create `docs/configuration.md` detailing all config options.
+*   **Configuration Documentation:** Created `docs/configuration.md` detailing all config options (Completed).
 *   **Module-Level Details and Interactions:** Enhanced `README.md` files within `app/` subdirectories (Completed).
-*   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` or created `docs/troubleshooting.md` (Completed).
-*   **Code-Level Comments and JSDoc:** Adopt consistent JSDoc commenting (In Progress).
-*   **Visual Aids (Architecture Diagrams):** Create high-level architecture diagrams.
-*   **API Documentation (IPC Channels):** Document all `ipcMain` handlers.
+*   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` with analysis and initial content (Completed).
+*   **Code-Level Comments and JSDoc:** Applying comments sparingly for clarity (In Progress).
+*   **Visual Aids (Architecture Diagrams):** Created high-level architecture diagrams (Completed).
+*   **API Documentation (IPC Channels):** Documenting `ipcMain` handlers (In Progress).
 
 ### 2. Consolidate Duplicated Logic (Low Risk / Easy)
 

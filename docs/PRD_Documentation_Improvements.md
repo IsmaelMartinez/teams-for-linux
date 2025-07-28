@@ -102,7 +102,7 @@ The following items are considered out of scope for this specific initiative:
 *   **Phase 2: Core Documentation Creation (4-6 weeks)**
     *   Create `docs/configuration.md`.
     *   Initial pass on `app/` module READMEs.
-    *   Draft `docs/troubleshooting.md`.
+    *   Draft `docs/troubleshooting.md` (In Progress - initial content added).
     *   Create initial architecture diagrams.
     *   Document core IPC channels.
 *   **Phase 3: Incremental JSDoc & Refinement (Ongoing)**
