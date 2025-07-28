@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.1.2",
+  "version": "2.1.1",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -29,6 +29,7 @@
     "dist": "electron-builder",
     "dist:linux": "electron-builder --linux",
     "dist:linux:targz": "electron-builder --x64 --armv7l --arm64 -l tar.gz",
+    "dist:linux:deb": "electron-builder --x64 --armv7l --arm64 -l deb",
     "dist:linux:rpm": "electron-builder --x64 --armv7l --arm64 -l rpm",
     "dist:linux:appimage": "electron-builder --x64 --armv7l --arm64 -l AppImage",
     "dist:linux:snap": "electron-builder -l snap",
@@ -36,9 +37,9 @@
     "dist:mac:x64": "electron-builder --mac --x64",
     "dist:mac:arm64": "electron-builder --mac --arm64",
     "dist:windows": "electron-builder --windows --x64",
-    "dist:linux:x64": "electron-builder --x64 -l tar.gz rpm AppImage",
-    "dist:linux:arm64": "electron-builder --arm64 -l tar.gz rpm AppImage",
-    "dist:linux:arm": "electron-builder --armv7l -l tar.gz rpm AppImage",
+    "dist:linux:x64": "electron-builder --x64 -l tar.gz deb rpm AppImage",
+    "dist:linux:arm64": "electron-builder --arm64 -l tar.gz deb rpm AppImage",
+    "dist:linux:arm": "electron-builder --armv7l -l tar.gz deb rpm AppImage",
     "release": "electron-builder"
   },
   "dependencies": {
@@ -92,6 +93,7 @@
       },
       "target": [
         "rpm",
+        "deb",
         "tar.gz",
         "AppImage"
       ],
@@ -117,6 +119,18 @@
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
         "--rpm-digest=sha256"
+      ]
+    },
+    "deb": {
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "at-spi2-core",
+        "libuuid1"
       ]
     },
     "snap": {
