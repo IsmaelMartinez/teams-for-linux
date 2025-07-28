@@ -1,0 +1,18 @@
+{
+    "id": 2893074698,
+    "number": 1584,
+    "title": "[Feat]: Remove teams-v1 support (EOL)",
+    "body": "### Describe the feature\n\nRemove teams-v1 support as it reaches end of life\n\n### Motivation\n\nCurrently, we default to teams-v1 allowing users to enable teams-v2.\n\nThis is a soft configuration that gracefully handles when people has already moved to teams-v2, but implies a lot of extra code that is now dead for teams-v1\n\nAs https://learn.microsoft.com/en-us/microsoftteams/teams-classic-client-end-of-availability is reaching EOL in the 1st of july, it will be great to have a release ready before that. \n\nThat will remove a lot of code that is only teams-v1 specific.\n\n### Alternatives\n\nLeave the dead code in there and default to teams-v2, or pretend this didn't happen\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-04T06:11:55+00:00",
+    "updated_at": "2025-03-31T21:10:33+00:00",
+    "closed_at": "2025-03-31T21:10:32+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1584",
+    "is_pull_request": false
+}

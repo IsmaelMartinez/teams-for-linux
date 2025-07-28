@@ -1,0 +1,20 @@
+{
+    "id": 1904907507,
+    "number": 958,
+    "title": "rpm %postun scriptlet fails",
+    "body": "**Describe the bug**\r\nUpgrading or re-installing the rpm produces the following messages:\r\n```\r\nRunning transaction\r\n  Preparing        :                                                                       1/1 \r\n  Reinstalling     : teams-for-linux-1.3.11-1.x86_64                                       1/2 \r\n  Running scriptlet: teams-for-linux-1.3.11-1.x86_64                                       1/2 \r\nupdate-alternatives is /sbin/update-alternatives\r\n\r\n  Cleanup          : teams-for-linux-1.3.11-1.x86_64                                       2/2 \r\n  Running scriptlet: teams-for-linux-1.3.11-1.x86_64                                       2/2 \r\n/usr/bin/teams-for-linux has not been configured as an alternative for teams-for-linux\r\nwarning: %postun(teams-for-linux-1.3.11-1.x86_64) scriptlet failed, exit status 2\r\n\r\nError in POSTUN scriptlet in rpm package teams-for-linux\r\n  Verifying        : teams-for-linux-1.3.11-1.x86_64                                       1/2 \r\n  Verifying        : teams-for-linux-1.3.11-1.x86_64                                       2/2 \r\n\r\nReinstalled:\r\n  teams-for-linux-1.3.11-1.x86_64\r\n```\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. update or re-install teams-for-linux via rpm\r\n\r\n**Expected behavior**\r\nIt's expected that routine rpm updates would not produce errors\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Fedora release 38 (Thirty Eight)\r\n - Installation package: rpm\r\n - Version: 3.1.11\r\n\r\n**Additional context**\r\nThe postuninstall scriptlet is\r\n```\r\n#!/bin/bash\r\n\r\n# Delete the link to the binary\r\nif type update-alternatives >/dev/null 2>&1; then\r\n    update-alternatives --remove 'teams-for-linux' '/usr/bin/teams-for-linux'\r\nelse\r\n    rm -f '/usr/bin/teams-for-linux'\r\nfi\r\n```\r\nand the problem is in the `update-alternatives` command. The last parameter should be the path to the binary (`/opt/teams-for-linux/teams-for-linux`) rather than the path to the alternatives link (`/usr/bin/teams-for-linux`). That is, the command should be:\r\n```\r\n   update-alternatives --remove 'teams-for-linux' '/opt/teams-for-linux/teams-for-linux'\r\n```\r\nBut this seems problematic, as it runs _after_ the install. It should include a check to see that `/usr/bin/teams-for-linux` doesn't resolve to an executable (`[ -e /usr/bin/teams-for-linux ]`). Otherwise it will remove the perfectly valid, just-installed link.\r\n\r\nFinally, in the course of writing this up, I'm starting to wonder if this is a problem with Electron rather than something in `teams-for-linux` itself. If nothing else, at least this documents it.",
+    "state": "closed",
+    "created_at": "2023-09-20T12:40:28+00:00",
+    "updated_at": "2024-09-09T14:31:04+00:00",
+    "closed_at": "2024-08-29T21:27:40+00:00",
+    "user": "utoddl",
+    "assignee": null,
+    "labels": [
+        "bug",
+        "blocked",
+        "hacktoberfest"
+    ],
+    "comments_count": 11,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/958",
+    "is_pull_request": false
+}

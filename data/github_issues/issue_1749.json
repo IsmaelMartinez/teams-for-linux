@@ -1,0 +1,18 @@
+{
+    "id": 3182779290,
+    "number": 1749,
+    "title": "[Bug]:",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nNot able to connect to tenant where I'm guest when they have their 2FA rules\n\n### What package are you using?\n\nsnap\n\n### Version\n\n2.0.16, 2.0.18\n\n### Reproduction steps\n\n```markdown\n1. I have my home org where I don't have permissions for teams. (not sure if relevant)\n2. With cleaned data I'll connect to my Work account.\n3. Application will let me choose to which tenant I want to connect.\n4. After choosing, it will return me back, with error from API\n\n\n    \"error_description\": \"AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access 'cc15fd57-2c6c-4117-a88c-83b1d56b4bbe'. Trace ID: c3e25e6a-f0cc-47a4-9a73-d21025a30500 Correlation ID: 993b7f98-49ee-4a5a-a384-252222503de4 Timestamp: 2025-06-26 20:56:49Z\",\n    \"error_codes\": [\n        50076\n    ],\n\nThe tenant I'm trying to connect to has it's own 2FA rules. The application will not ask me to fill in 2FA I have with their organization.\n\nWhen connecting from web and switching to this account I'm asked for 2FA from their org.\n```\n\n### Expected Behavior\n\n```markdown\n\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\n_No response_",
+    "state": "open",
+    "created_at": "2025-06-27T13:06:48+00:00",
+    "updated_at": "2025-07-18T09:24:20+00:00",
+    "closed_at": null,
+    "user": "marten-cz",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1749",
+    "is_pull_request": false
+}

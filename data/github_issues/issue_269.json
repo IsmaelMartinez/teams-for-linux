@@ -1,0 +1,21 @@
+{
+    "id": 486440498,
+    "number": 269,
+    "title": "How to use teams-for-linux behind a proxy (improvement/documentation)",
+    "body": "**Solution**\r\nStart teams-for-linux providing the proxy details as in the following command:\r\n\r\n```bash \r\nteams-for-linux --proxy-server=http://proxy-host:proxy-port\r\n```\r\n---\r\n\r\nHello,\r\nthank you for your effort to package teams for linux. But unfortunately I can't bring it to work on my machine.\r\n\r\n**Describe the bug**\r\nWhen I try to start teams for Linux I get the following message on command line:\r\n\r\n`configPath = /home/???????/.config/teams-for-linux`\r\n`Failed to get the config file, using default values`\r\n`configFile = {}`\r\n`Fontconfig warning: \"/usr/share/fontconfig/conf.avail/05-reset-dirs-sample.conf\", line 6: unknown element \"reset-dirs\"`\r\n\r\nThe Application Windows appears, but it keeps white without any content until I press CTRL-C to stop.\r\n\r\n**To Reproduce** (only reproducable on my machine ;-))\r\n1. Install teams-for-linux, doesn't matter rpm or Appl Image.\r\n2. remove config folder for teams for linux\r\n3. start teams-for linux\r\n\r\n**Expected behavior**\r\nI Expected a working teams for linux ;-)\r\n\r\n**Screenshots**\r\n![teams4linux](https://user-images.githubusercontent.com/740897/63867997-167c8180-c9b6-11e9-9e4c-501ff589951a.png)\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Fedora 30\r\n - Installation package rpm, AppImage\r\n - Version 0.70",
+    "state": "closed",
+    "created_at": "2019-08-28T15:04:47+00:00",
+    "updated_at": "2025-03-13T17:35:40+00:00",
+    "closed_at": "2019-11-01T06:53:49+00:00",
+    "user": "tlo8640",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "ready",
+        "documentation",
+        "hacktoberfest"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/269",
+    "is_pull_request": false
+}

@@ -1,0 +1,18 @@
+{
+    "id": 2965205043,
+    "number": 1633,
+    "title": "[Bug]: teams for linux deb app does not show ui",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nwhen teams for linux debian app is launched the teams window is not started\n\n### What package are you using?\n\ndeb\n\n### Version\n\n1.14.0\n\n### Reproduction steps\n\n```markdown\n1.install teams-for-linux through debian repo\n2.after installation launch teams-for-linux app\n3.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1. ui should open in order to use\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n\n❯ teams-for-linux --webDebug --logConfig='{}'\nall good with appLogLevels you aren't using them\nall good with customUserDir you aren't using them\nInitialising logger with config: \"{}\"\n10:43:55.138 › File logging at /home/pushkar/.config/teams-for-linux/logs/main.log with level silly\n10:43:55.140 › Console logging enabled with level silly\n10:43:55.140 › Logger initialised\n10:43:55.140 › configPath: /home/pushkar/.config/teams-for-linux\n10:43:55.141 › configFile: { closeAppOnCross: true, appIcon: true, appIconType: 'default' }\n10:43:55.144 › Running under Wayland, switching to PipeWire...\n10:43:55.203 › (node:54423) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.\n(Use `teams-for-linux --trace-deprecation ...` to show where the warning was created)\n10:43:55.360 › (node:54423) UnhandledPromiseRejectionWarning: TypeError: this.config.appIcon.trim is not a function\n    at TrayIconChooser.getFile (/opt/teams-for-linux/resources/app.asar/app/browser/tools/trayIconChooser.js:20:27)\n    at BrowserWindowManager.createNewBrowserWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:55:55)\n    at BrowserWindowManager.createWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:31:28)\n    at Object.onAppReady (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/index.js:48:39)\n    at App.handleAppReady (/opt/teams-for-linux/resources/app.asar/app/index.js:283:17)\n    at App.emit (node:events:530:35)\n10:43:55.361 › (node:54423) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 2)\n```\n\n### Additional context\n\nusing ubuntu 24.04",
+    "state": "closed",
+    "created_at": "2025-04-02T05:14:32+00:00",
+    "updated_at": "2025-04-02T05:29:08+00:00",
+    "closed_at": "2025-04-02T05:29:06+00:00",
+    "user": "pushkargogte",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1633",
+    "is_pull_request": false
+}

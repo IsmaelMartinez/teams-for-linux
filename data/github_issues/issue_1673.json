@@ -1,0 +1,18 @@
+{
+    "id": 3016317217,
+    "number": 1673,
+    "title": "[Bug]: 2.0.8 not found on RPM repo",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nThe 2.0.8 version is not released on the rpm repo\n\n### What package are you using?\n\nrpm\n\n### Version\n\n2.0.8\n\n### Reproduction steps\n\n```markdown\nupgrade\n\n\n[159/168] teams-for-linux-0:2.0.8-1.x86_64                                                                                                                                                             0% | 321.0   B/s | 146.0   B |  00m00s\n>>> Status code: 404 for https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm (IP: 188.114.96.7) - https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm                                                          \n>>> Status code: 404 for https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm (IP: 188.114.96.7) - https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm                                                          \n>>> Status code: 404 for https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm (IP: 188.114.96.7) - https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm                                                          \n>>> Status code: 404 for https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm (IP: 188.114.96.7) - https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm                                                          \n>>> Status code: 404 for https://repo.teamsforlinux.de/rpm/teams-for-linux-2.0.8.x86_64.rpm (IP: 188.114.96.7)\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\nNot really urgent :-)\n\nThanks!",
+    "state": "closed",
+    "created_at": "2025-04-24T07:33:05+00:00",
+    "updated_at": "2025-04-24T15:56:54+00:00",
+    "closed_at": "2025-04-24T14:22:05+00:00",
+    "user": "Frankkkkk",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1673",
+    "is_pull_request": false
+}

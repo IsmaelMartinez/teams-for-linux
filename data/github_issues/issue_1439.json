@@ -1,0 +1,18 @@
+{
+    "id": 2575860739,
+    "number": 1439,
+    "title": "Settings > presentation and accessibility = empty page",
+    "body": "**Describe the bug**\r\nIn Settings > presentation and accessibility there is no content at all!\r\n\r\n**Screenshots**\r\n![image](https://github.com/user-attachments/assets/bbd6b7e1-ece9-42c1-bdb8-14ef48107f63)\r\n\r\nManjaro Linux, KDE, ",
+    "state": "closed",
+    "created_at": "2024-10-09T12:56:53+00:00",
+    "updated_at": "2024-11-17T09:35:33+00:00",
+    "closed_at": "2024-11-17T09:35:33+00:00",
+    "user": "suther",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1439",
+    "is_pull_request": false
+}

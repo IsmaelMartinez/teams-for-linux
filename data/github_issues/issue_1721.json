@@ -1,0 +1,18 @@
+{
+    "id": 3120748511,
+    "number": 1721,
+    "title": "[Feat]: Open Teams in PWA mode",
+    "body": "### Describe the feature\n\nMake the Teams website \"believe\" it's running as a PWA.\n\n### Motivation\n\nIt would hide some things like the apps menu on the top left hand corner.\n\n### Alternatives\n\nYou could possibly manually hide those elements, similar to how uBlock Origin can hide them.\n\n### Additional context\n\nThe manifest.json might help: https://teams.microsoft.com/v2/manifest.json\n\nJust opening this URL doesn't work, you probably have to spoof something else in the app for it to load as a PWA: https://teams.microsoft.com/v2/?clientType=pwa",
+    "state": "open",
+    "created_at": "2025-06-05T10:54:20+00:00",
+    "updated_at": "2025-07-17T09:53:03+00:00",
+    "closed_at": null,
+    "user": "Lenni-builder",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1721",
+    "is_pull_request": false
+}

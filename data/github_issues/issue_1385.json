@@ -1,0 +1,16 @@
+{
+    "id": 2493532302,
+    "number": 1385,
+    "title": "refine disabling gpu & fix render-process-gone logging",
+    "body": "Relates to #1369. Example of the log message:\r\n\r\n```\r\n08:03:09.099 › render-process-gone {\"reason\":\"killed\",\"exitCode\":9}\r\n```",
+    "state": "closed",
+    "created_at": "2024-08-29T06:08:08+00:00",
+    "updated_at": "2024-09-02T21:39:01+00:00",
+    "closed_at": "2024-09-02T18:34:53+00:00",
+    "user": "GrzegorzKozub",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1385",
+    "is_pull_request": true
+}

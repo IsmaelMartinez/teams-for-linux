@@ -1,0 +1,16 @@
+{
+    "id": 2483351122,
+    "number": 1380,
+    "title": "fix the code scanning security advisory 2 and adding more info on the render-process-gone",
+    "body": null,
+    "state": "closed",
+    "created_at": "2024-08-23T15:09:03+00:00",
+    "updated_at": "2024-10-27T07:19:36+00:00",
+    "closed_at": "2024-08-23T15:09:27+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1380",
+    "is_pull_request": true
+}

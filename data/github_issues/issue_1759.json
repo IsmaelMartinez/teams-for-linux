@@ -1,0 +1,18 @@
+{
+    "id": 3236869485,
+    "number": 1759,
+    "title": "[Solution] Wayland: fix team scaling on HiDPI + scaling/fractional scaling",
+    "body": "Hi,\nI am using this project under [sway](https://github.com/swaywm/sway)/wayland. Also using HiDPI with scaling (eg fractional scale). This is leading to problems with ugly/fuzzy fonts when running on such display. \n\nTo cure this problem I removed `/usr/bin/teams-for-linux` symlink and put a file there with the following contents:\n```bash\n#!/bin/sh\nexec /opt/teams-for-linux/teams-for-linux --ozone-platform-hint=wayland \"$@\"\n```\nAnd made this file executable. After this it is starting as native wayland app and fonts/UI is crystal clear :)\nMaybe this would help someone...\n\nThis is how it looks before/after:\n<img width=\"3844\" height=\"2160\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/57c676fe-4bd1-4d84-85ae-b87ae9fda195\" />\n\n@IsmaelMartinez please close if you like - this is only for helping other with similar problem or to reference...",
+    "state": "closed",
+    "created_at": "2025-07-16T18:03:43+00:00",
+    "updated_at": "2025-07-28T16:57:10+00:00",
+    "closed_at": "2025-07-28T16:57:10+00:00",
+    "user": "manio",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1759",
+    "is_pull_request": false
+}

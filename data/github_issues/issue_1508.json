@@ -1,0 +1,16 @@
+{
+    "id": 2714372016,
+    "number": 1508,
+    "title": "Ubuntu, Wayland, screenshare not working",
+    "body": "**Describe the bug**\r\nI am using the Teams for Linux client on Ubuntu 24.04.1 and I cannot get the screenshare function to work on Wayland. \r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Go on \"Meet now\" from Calendar\r\n2. Start meeting\r\n3. Click on screenshare\r\n4. See error\r\n![image](https://github.com/user-attachments/assets/e5bb2bf1-5b60-4355-b0b9-d5985c656947)\r\n\r\n\r\n**Expected behavior**\r\nI expected the behavior to being able to share my screen. If I run Teams through Firefox I am able to share my screen without issues.\r\n\r\n**Screenshots**\r\nIf applicable, add screenshots to help explain your problem.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 24.04.1\r\n - Installation package: snap I think (?)\r\n - Version: 1415/24102001318.\r\n![image](https://github.com/user-attachments/assets/4d06eb29-6242-4f58-8017-3c71193ce45a)\r\n\r\n\r\n**Debug**\r\nWhen possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\n```\r\n09:49:46.306 › did-frame-finish-load {} false\r\n[42545:1203/094946.620209:ERROR:gles2_cmd_decoder_passthrough.cc(1053)] [GroupMarkerNotSet(crbug.com/242999)!:A0502300EC140000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content.\r\n09:49:53.710 › GetSystemIdleState => IdleTimeout: 300s, IdleTimeoutPollInterval: 10s, ActiveCheckPollInterval: 2s, IdleTime: 0s, IdleState: 'active'\r\n09:49:57.520 › Badge count set to '0'\r\n[42583:1203/095001.500739:ERROR:sdp_offer_answer.cc(424)] A BUNDLE group contains a codec collision for payload_type='101. All codecs must share the same type, encoding name, clock rate and parameters. (INVALID_PARAMETER)\r\n09:50:03.711 › GetSystemIdleState => IdleTimeout: 300s, IdleTimeoutPollInterval: 10s, ActiveCheckPollInterval: 2s, IdleTime: 0s, IdleState: 'active'\r\n```\r\n\r\n**Additional context**\r\nAdd any other context about the problem here.\r\n",
+    "state": "closed",
+    "created_at": "2024-12-03T08:50:41+00:00",
+    "updated_at": "2025-05-11T17:55:22+00:00",
+    "closed_at": "2024-12-10T15:36:45+00:00",
+    "user": "s163555",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1508",
+    "is_pull_request": false
+}

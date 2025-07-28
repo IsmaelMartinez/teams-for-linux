@@ -1,0 +1,20 @@
+{
+    "id": 3017900498,
+    "number": 1675,
+    "title": "[Bug]: electronCLIFlags are not picked up from config.json",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nelectronCLIFlags statements in config.json don't seem to apply\n\n### What package are you using?\n\nrpm\n\n### Version\n\n2.0.10\n\n### Reproduction steps\n\n```markdown\nIf I run teams-for-linux with these command-line arguments:\n\n$ teams-for-linux --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform-hint=auto\n\nI get Electron to use Wayland protocol (the flags are based on https://dev.to/archerallstars/how-to-run-electron-apps-under-linuxs-wayland-session-like-a-pro-2g25).\n\nBased on app/config/README.md, I've edited `.config/teams-for-linux/config.json` and added a top-level property:\n\n\n    \"electronCLIFlags\": [\n      [ \"enable-features\", \"UseOzonePlatform,WaylandWindowDecorations\"],\n      [\"ozone-platform-hint\", \"auto\" ]\n    ]\n\n\nI tried adding leading `--`, doesn't make a difference.\n```\n\n### Expected Behavior\n\n```markdown\nI expect that the same flags, as specified in the command line, would apply if listed in `/electronCLIFlags` property.\n```\n\n### Debug\n\n```markdown\n[vps@druid]~/ws/teams-for-linux/app/config$ teams-for-linux --webDebug --logConfig='{}'\nInitialising logger with config: \"{}\"\n18:59:43.981 › File logging at /home/vps/.config/teams-for-linux/logs/main.log with level silly\n18:59:43.982 › Console logging enabled with level silly\n18:59:43.982 › Logger initialised\n18:59:43.982 › configPath: /home/vps/.config/teams-for-linux\n18:59:43.982 › configFile: {\n  electronCLIFlags: [\n    [ 'enable-features', 'UseOzonePlatform,WaylandWindowDecorations' ],\n    [ 'ozone-platform-hint', 'auto' ]\n  ]\n}\n18:59:43.984 › Running under Wayland, switching to PipeWire...\n18:59:43.984 › Setting app name to custom value Microsoft Teams\n18:59:43.984 › Adding electron CLI flag 'enable-features' with value 'UseOzonePlatform,WaylandWindowDecorations'\n18:59:43.984 › Adding electron CLI flag 'ozone-platform-hint' with value 'auto'\n18:59:44.225 › (node:25624) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.\n(Use `teams-for-linux --trace-deprecation ...` to show where the warning was created)\n18:59:44.309 › processArgs: [\n  '/opt/teams-for-linux/teams-for-linux',\n  '--webDebug',\n  '--logConfig={}',\n  '--user-data-dir=/home/vps/.config/teams-for-linux'\n]\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-24T17:02:28+00:00",
+    "updated_at": "2025-06-04T09:37:52+00:00",
+    "closed_at": "2025-06-04T09:37:52+00:00",
+    "user": "veselov",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "known issue/workaround",
+        "Stale"
+    ],
+    "comments_count": 14,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1675",
+    "is_pull_request": false
+}

@@ -1,0 +1,18 @@
+{
+    "id": 2773474745,
+    "number": 1541,
+    "title": "[Bug]: Cannot use fcitx to change input method in teams-for-linux",
+    "body": "### Can you reproduce this bug in the PWA?\r\n\r\nYES\r\n\r\n### Describe the bug\r\n\r\nCannot use fcitx to change input method in teams-for-linux\r\n\r\n### What package are you using?\r\n\r\nAppImage\r\n\r\n### Version\r\n\r\n1.12.5\r\n\r\n### Reproduction steps\r\n\r\n```markdown\r\n1. Install teams-for-linux 1.12.5 (I tried appimage, the tarball, and deb file, but none of them worked).\r\n2. Make sure fcitx is running in the background and the user can switch the input methods in other apps, such as firefox, brave-browser, etc.\r\n3. Try to switch fcitx input method in teams-for-linux\r\n\r\nObservation: I can only input English in teams-for-linux, even if the fcitx is switched to use Chinese. I also verified that if I move the focus to other apps, I will be using Chinese, but I still can only input English in teams-for-linux.\r\n```\r\n\r\n\r\n### Expected Behavior\r\n\r\n```markdown\r\nTeams for linux should follow the fcitx's current input method.\r\n```\r\n\r\n\r\n### Debug\r\n\r\n```markdown\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\n\r\n\r\n### Additional context\r\n\r\nI am running Solus linux with hyprland. `\r\n\r\nThe workaround suggested in #1340 does not work for me. and `QT_IM_MODULE`  and `GTK_IM_MODULE` are both set to `fcitx`. I am using fcitx 4.2.9.9",
+    "state": "closed",
+    "created_at": "2025-01-07T18:24:15+00:00",
+    "updated_at": "2025-01-09T15:28:49+00:00",
+    "closed_at": "2025-01-09T15:28:49+00:00",
+    "user": "xulongwu4",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1541",
+    "is_pull_request": false
+}

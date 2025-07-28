@@ -1,0 +1,16 @@
+{
+    "id": 2586520973,
+    "number": 1446,
+    "title": "Ability to select default browser for links",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nWhen I open links it always opens Google Chrome. I use Firefox.\r\n\r\n**Describe the solution you'd like**\r\nI'd like an option / an explanation of how to pick a default browser for my links.\r\n\r\n**Describe alternatives you've considered**\r\nI have tried looking through the Issues on GitHub / the settings in the app and nothing is seemingly respecting the default browser of my OS (Ubuntu 24)",
+    "state": "closed",
+    "created_at": "2024-10-14T16:28:18+00:00",
+    "updated_at": "2024-10-24T07:24:49+00:00",
+    "closed_at": "2024-10-16T07:23:19+00:00",
+    "user": "Andrew-Cha",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1446",
+    "is_pull_request": false
+}

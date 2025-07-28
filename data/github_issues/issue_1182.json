@@ -1,0 +1,16 @@
+{
+    "id": 2231216909,
+    "number": 1182,
+    "title": " Teams v2: Can't join meeting using the calendar/meeting button",
+    "body": "**Describe the bug**\r\n\r\nWhen using Teams v2, I can not join meetings from the regular \"Join\" button (from the calendar view or from the meeting view)\r\n\r\nIt works from the in-app notification, but not from the regular button.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Enable Teams v2\r\n2. Go to the calendar\r\n3. Click on \"Join\"\r\n\r\n**Expected behavior**\r\nThe meeting is joined\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Linux (Ubuntu)\r\n - .deb\r\n - Version 1.4.21\r\n\r\n**Debug**\r\nOpened the debug pane and this is shown in the console when clinking on the \"Join\" button:\r\n\r\n    (index):3 Unhandled error/rejection {\"isTrusted\":true}\r\n    error @ (index):3\r\n    (anonymous) @ (index):3",
+    "state": "closed",
+    "created_at": "2024-04-08T13:22:36+00:00",
+    "updated_at": "2025-04-15T08:31:31+00:00",
+    "closed_at": "2024-04-10T11:35:16+00:00",
+    "user": "Zenkibou",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1182",
+    "is_pull_request": false
+}

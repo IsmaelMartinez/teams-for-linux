@@ -1,0 +1,18 @@
+{
+    "id": 3268519863,
+    "number": 1768,
+    "title": "[Bug]: deb depends upon \"gtk3\"",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nt4l 2.1.1 cannot be installed due to a broken dependency\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.1.1\n\n### Reproduction steps\n\nThe Debian package of version 2.1.1 cannot be installed, cause its dependency \"gtk3\" (and maybe others) do not exist on Bookworm or Trixie. There was no such problem for version 2.1.0.\n",
+    "state": "closed",
+    "created_at": "2025-07-28T07:29:41+00:00",
+    "updated_at": "2025-07-28T16:25:09+00:00",
+    "closed_at": "2025-07-28T16:14:13+00:00",
+    "user": "harridu",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1768",
+    "is_pull_request": false
+}

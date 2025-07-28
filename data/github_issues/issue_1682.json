@@ -1,0 +1,18 @@
+{
+    "id": 3021783099,
+    "number": 1682,
+    "title": "[Bug]: Latest Update Causes Hang at StartUp (Reversion)",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nOn startup Teams Starts immediately with respecting the delay, bnot miminimised\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\n1.Start up\n2.\n3.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\nflatpak run com.github.IsmaelMartinez.teams_for_linux --minimized",
+    "state": "closed",
+    "created_at": "2025-04-26T11:59:34+00:00",
+    "updated_at": "2025-05-30T12:58:01+00:00",
+    "closed_at": "2025-05-30T12:30:26+00:00",
+    "user": "cement-head",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1682",
+    "is_pull_request": false
+}

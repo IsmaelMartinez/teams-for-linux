@@ -1,0 +1,16 @@
+{
+    "id": 2660878312,
+    "number": 1480,
+    "title": "Mirror Appearance is not working in camera settings",
+    "body": "When clicked on mirror in camera settings, that button is not working\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-11-15T06:03:18+00:00",
+    "updated_at": "2024-11-15T06:06:09+00:00",
+    "closed_at": "2024-11-15T06:06:08+00:00",
+    "user": "AnkitExcelerate",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1480",
+    "is_pull_request": false
+}

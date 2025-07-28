@@ -1,0 +1,18 @@
+{
+    "id": 2745207569,
+    "number": 1527,
+    "title": "`firejail teams-for-linux` requires `/opt/teams-for-linux/chrome-sandbox` owned by root and has mode 4755",
+    "body": "#### `firejail teams-for-linux` requires `/opt/teams-for-linux/chrome-sandbox` owned by root and has mode 4755\r\n\r\n#### To Reproduce\r\n\r\n1. Open linux terminal (gnome-terminal or tilix)\r\n2. Type `firejail teams-for-linux`\r\n3. See error: `The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/teams-for-linux/chrome-sandbox is owned by root and has mode 4755. Parent is shutting down, bye...`\r\n\r\n#### Tried the [proposed solution](https://github.com/IsmaelMartinez/teams-for-linux/issues/1426#issuecomment-2384889316) to add apparmour file. It didn't solve the issue.\r\n\r\n#### Proposed solution(s)\r\n\r\nTo fix this, the debian install script needs to make a `chmod 4755 $(pkgdir_buildroot_debian)/opt/teams-for-linux/chrome-sandbox` or have a `debian/postinst` file which does `chmod 4755 /opt/teams-for-linux/chrome-sandbox` after install. Probably needed for all distributions, such as Fedora/openSUSE/Archlinux/Manjaro.\r\n\r\n#### System\r\n\r\n - OS: Ubuntu Budgie 24.04\r\n - Installation package: deb (from your repository)\r\n - Version: 1.12.3\r\n\r\n#### Reference(s)\r\n\r\nMaybe similar root cause as in issue [#1426](https://github.com/IsmaelMartinez/teams-for-linux/issues/1426#issuecomment-2431985357) but there is no concrete solution in the thread mentioning `firejail` and the choice to force changed permissions on the affected directory when the DEB package is created or include a `postinst` file to fix the issue after install.",
+    "state": "closed",
+    "created_at": "2024-12-17T15:17:20+00:00",
+    "updated_at": "2025-01-24T09:34:51+00:00",
+    "closed_at": "2025-01-24T09:34:50+00:00",
+    "user": "leukimi",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1527",
+    "is_pull_request": false
+}

@@ -1,0 +1,16 @@
+{
+    "id": 2980772171,
+    "number": 1648,
+    "title": "adding back the teams-v1 meeting link protocol, as it does look it is still used in some meetings",
+    "body": null,
+    "state": "closed",
+    "created_at": "2025-04-08T19:35:21+00:00",
+    "updated_at": "2025-04-08T19:44:48+00:00",
+    "closed_at": "2025-04-08T19:44:48+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1648",
+    "is_pull_request": true
+}

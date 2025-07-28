@@ -1,0 +1,18 @@
+{
+    "id": 2644334293,
+    "number": 1470,
+    "title": "sticky notifications",
+    "body": "**Describe the bug**\r\nMany times I have the notification icon (counter) without actually have anything new in the app. It happens after real notifications which are not cleaned after I read the message.  I have to restart the app to remove these notifications.\r\n\r\n**To Reproduce**\r\nI am not sure, but it happens almost daily, some notifications just not cleaned up.\r\n\r\n**Expected behavior**\r\nIdeally I wouldn't have any ghost notification, but I would be already happy if the scroll down menu would offer a restart option (\"refresh\" does not help).\r\n\r\n**Screenshots**\r\nIf applicable, add screenshots to help explain your problem.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 24.04\r\n - Installation package: snap\r\n - Version: 1.11.2 (but it's not new issue, I had it with many of the previous versions too)\r\n\r\n**Additional context**\r\nCan we just have a restart button?\r\n",
+    "state": "closed",
+    "created_at": "2024-11-08T15:18:06+00:00",
+    "updated_at": "2024-12-20T09:35:01+00:00",
+    "closed_at": "2024-12-20T09:35:00+00:00",
+    "user": "atommaki",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1470",
+    "is_pull_request": false
+}

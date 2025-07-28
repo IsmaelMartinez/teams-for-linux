@@ -1,0 +1,19 @@
+{
+    "id": 1868443771,
+    "number": 941,
+    "title": "Feature Request - Persistent Notification",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nSometimes I think it's better to have persistent notification like other messaging works, or like in windows. So I think, and hope, if it's possible, please make notification can be persistent on Teams for Linux.\r\n\r\nI do know there is number of notiification on teams icon on task bar, just... we need to history of chat notification on gdbus or such... it will be very very useful... :')\r\n\r\n**Describe the solution you'd like**\r\nAn option that can enable persistent notification, or at least longer dismisable notification\r\n\r\n**Describe alternatives you've considered**\r\nI tried using MS teams on way droid, and using GSConnect/KDEConnect, and having persistent notification, but it's a hazzle, as I now have 2 application running at same time\r\n\r\n**Additional context**\r\n- Related configuration https://stackoverflow.com/a/36868084,  and related project https://github.com/nativefier/nativefier\r\n\r\nI haven't tried to override the notification yet using user script on Browser, but I think I will try that....\r\n",
+    "state": "closed",
+    "created_at": "2023-08-27T10:30:56+00:00",
+    "updated_at": "2024-10-21T09:36:09+00:00",
+    "closed_at": "2024-10-21T09:36:08+00:00",
+    "user": "benyaminl",
+    "assignee": null,
+    "labels": [
+        "hacktoberfest",
+        "Stale"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/941",
+    "is_pull_request": false
+}

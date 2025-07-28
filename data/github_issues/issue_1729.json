@@ -1,0 +1,18 @@
+{
+    "id": 3142255205,
+    "number": 1729,
+    "title": "[Bug]: Clearing Storage got rid of my monthly view in Calendar?",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nClear Storage may have disabled or opted out of certain experimental or beta testing features that were not expected to be changed.\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.14\n\n### Reproduction steps\n\n```markdown\n\n```\n\n### Expected Behavior\n\n```markdown\n\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\nThis is more of a question first but maybe could be a bug.\n\nIn the Calendar app, I no longer have a monthly view, there is just: weekly views, agenda, and day.  I've had a monthly view as long as I can remember.  Copilot says this may have been a temp feature that MS is rolling out as part of their new calendar, and my account was selected for beta testing (something similar to Firefox Experiments maybe?), because apparently by default there is no monthly view.  Its disappearance seems to have coincided when I used \"Quit (Clear storage)\" earlier, and Copilot agrees I could have cleared some cookie that had me part of some beta test....  Does any of this make sense to you or sound possible?  It recommended I restore a backup of `~/.config/teams-for-linux` and even wrote a script to do it for me!\n\nI tried restoring a backup of `~/.config/teams-for-linux` from several days ago, but the monthly view is not back.  Is it possibly too late, and my account has been marked on MS's end as not beta testing anymore or something, and not able to have this feature?  or maybe I need to go further back in my backups?\n\nIf this a likely scenario then it could be considered a bug with the \"Clear Storage\" option?  maybe we should be looking harder for certain cached data that has enabled certain experiments or beta testing?  I was definitely used to that monthly calendar view and now I have to load up bloated Outlook on the Web to get a monthly view of my calendar.",
+    "state": "closed",
+    "created_at": "2025-06-13T04:56:52+00:00",
+    "updated_at": "2025-06-13T09:15:17+00:00",
+    "closed_at": "2025-06-13T09:15:17+00:00",
+    "user": "AGI-chandler",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1729",
+    "is_pull_request": false
+}

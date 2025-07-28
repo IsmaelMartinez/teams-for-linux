@@ -1,0 +1,16 @@
+{
+    "id": 2387817566,
+    "number": 1327,
+    "title": "can't share my screen in a meeting",
+    "body": "While on a meeting when clicking the share button it open the menu for sharing\r\nbut when clicking on Screen / Window nothing happen\r\n\r\n![image](https://github.com/IsmaelMartinez/teams-for-linux/assets/99732661/4c20e935-24d1-455c-b8f5-fa934806c9ab)\r\n\r\nis this known issue? is there any walk around?",
+    "state": "closed",
+    "created_at": "2024-07-03T06:48:36+00:00",
+    "updated_at": "2024-10-07T13:23:29+00:00",
+    "closed_at": "2024-07-08T10:23:16+00:00",
+    "user": "syahbes",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 22,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1327",
+    "is_pull_request": false
+}

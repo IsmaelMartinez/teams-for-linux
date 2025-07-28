@@ -1,0 +1,16 @@
+{
+    "id": 2471446133,
+    "number": 1367,
+    "title": "JavaScript error in writeOut",
+    "body": "**Describe the bug**\r\n\r\nTeams deb 1.8.1 under Debian 12, running since 12 days, window in background. When idle, a window with the following contents pops up:\r\n\r\nError\r\n\r\nA JavaScript error occurred in the main process\r\n\r\nUncaught Exception:\r\nError: write EIO\r\n  at afterWriteDispatched (node:internal/stream_base_commons:161:15)\r\n  at writeGeneric (node:internal/stream_base_commons:152:3)\r\n  at Socket._writeGeneric (node:net:953:11)\r\n  at Socket._write (node:net:965:8)\r\n  at writeOrBuffer (node:internal/streams/writable:564:12)\r\n  at _write (node:internal/streams/writable:493:10)\r\n  at Writable.write (node:internal/streams/writable:502:10)\r\n  at console.value (node:internal/console/constructor:304:16)\r\n  at console.warn (node:internal/console/constructor:384:26)\r\n  at writeOut (node:internal/process/warning:65:3)\r\n\r\nOk\r\n\r\nAfter clicking on \"Ok\", the window appears again. After clicking \"Ok\" again, teams continues to work normally.\r\n\r\n**To Reproduce**\r\n\r\nI couldn't identify specific steps to trigger the issue. Happens about once a week. The process started from GNU screen. The starting pty may or may not be open, not sure. This time this happened some minutes after resume in a different net.\r\n\r\n**Expected behavior**\r\nNo unhandled exceptions.\r\n\r\n**Screenshots**\r\n![20240817-javascript_exception](https://github.com/user-attachments/assets/65a4025e-c1c6-44af-901c-48d712f795ff)\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Debian\r\n - Installation package: deb\r\n - Version: 1.8.1\r\n\r\n**Debug**\r\n\r\nAs I don't know how to reproduce this, I've restarted teams-for-linux with --webDebug --logConfig='{}' and will comment if the problem occurs.\r\n\r\n**Additional context**\r\nNone\r\n",
+    "state": "closed",
+    "created_at": "2024-08-17T09:21:14+00:00",
+    "updated_at": "2024-10-03T10:05:47+00:00",
+    "closed_at": "2024-10-02T06:20:23+00:00",
+    "user": "ismagulb",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1367",
+    "is_pull_request": false
+}

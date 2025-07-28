@@ -1,0 +1,16 @@
+{
+    "id": 2591051176,
+    "number": 1450,
+    "title": "adding the stale action to the repo",
+    "body": "to help me manage the stale issues been more fair to all (as I normally just do it on a random semi-regular cadence). ",
+    "state": "closed",
+    "created_at": "2024-10-16T08:17:59+00:00",
+    "updated_at": "2024-10-16T08:18:38+00:00",
+    "closed_at": "2024-10-16T08:18:38+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1450",
+    "is_pull_request": true
+}

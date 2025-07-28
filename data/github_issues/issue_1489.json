@@ -1,0 +1,16 @@
+{
+    "id": 2678596415,
+    "number": 1489,
+    "title": "Log full with messages about YUV_420_BIPLANAR, usage=SCANOUT_CPU_READ_WRITE, buffer and mailbox",
+    "body": "I see many times per second this message in the logs:\r\n\r\n```\r\nNov 21 09:30:35 nyx com.github.IsmaelMartinez.teams_for_linux.desktop[2263981]: [55:1121/093035.193767:ERROR:gbm_pixmap_wayland.cc(82)] Cannot create bo with format= YUV_420_BIPLANAR and usage=SCANOUT_CPU_READ_WRITE\r\nNov 21 09:30:35 nyx com.github.IsmaelMartinez.teams_for_linux.desktop[2263981]: [55:1121/093035.193979:ERROR:gpu_channel.cc(503)] Buffer Handle is null.\r\nNov 21 09:30:35 nyx com.github.IsmaelMartinez.teams_for_linux.desktop[2264060]: [132:1121/093035.194231:ERROR:shared_image_interface_proxy.cc(134)] Buffer handle is null. Not creating a mailbox from it.\r\n```\r\n\r\nOne time I saw this (maybe this is related):\r\n```\r\nNov 21 09:30:35 nyx com.github.IsmaelMartinez.teams_for_linux.desktop[2264060]: [132:1121/093035.288736:ERROR:sdp_offer_answer.cc(424)] A BUNDLE group contains a codec collision for payload_type='101. All codecs must share the same type, encoding name, clock rate and parameters. (INVALID_PARAMETER)\r\n```\r\n\r\nI use Fedora 41, GNOME Wayland.\r\n```\r\nPortal for Teams\tcom.github.IsmaelMartinez.teams_for_linux\t1.11.5\tstable\tflathub\tsystem\r\n```\r\n",
+    "state": "closed",
+    "created_at": "2024-11-21T08:48:35+00:00",
+    "updated_at": "2024-12-21T12:07:24+00:00",
+    "closed_at": "2024-12-21T12:07:24+00:00",
+    "user": "janvlug",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1489",
+    "is_pull_request": false
+}

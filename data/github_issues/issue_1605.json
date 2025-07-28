@@ -1,0 +1,18 @@
+{
+    "id": 2946418213,
+    "number": 1605,
+    "title": "[Feat]: clearSession option in addition to clearStorage option",
+    "body": "### Describe the feature\n\nAn option to clear the current session after closing application without deleting configuration (background image, \"New Teams calendar\", ...)\n\n### Motivation\n\nAs long as #1357 is not fixed I prefer to relogin every morning but it's annoying that I have to set some locally saved configurations each day when I'm using the \"clearStorage\" option. So I would love to have a feature that only clears the session without deleting everything else.\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-25T12:46:06+00:00",
+    "updated_at": "2025-04-04T15:03:50+00:00",
+    "closed_at": "2025-03-30T09:07:55+00:00",
+    "user": "Flofler",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1605",
+    "is_pull_request": false
+}

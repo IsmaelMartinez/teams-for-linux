@@ -1,0 +1,18 @@
+{
+    "id": 2698867337,
+    "number": 1501,
+    "title": "Join Teams meeting without a login",
+    "body": "Upon startup, this app prompts for a login.  I would love it if the app could also connect to a Teams meeting _without_ a login such as through the URL provided in a Teams invite and/or by specifying the meeting ID and passcode via the method indicated here: https://www.microsoft.com/en-us/microsoft-teams/join-a-meeting\r\n\r\nI'm in a computing environment where the Admin gave us a video conferencing tool other than Teams and they make it difficult for folks to connect to a Teams meeting (I even get an error message about Teams being restricted by my Admin if I try to login on a device from home).  Unfortunately, most of our vendors host meetings via Teams, so being able to use this app to join a Teams meeting without a login could go a long way towards improving my Teams experience.  ",
+    "state": "closed",
+    "created_at": "2024-11-27T15:06:12+00:00",
+    "updated_at": "2025-01-16T09:11:51+00:00",
+    "closed_at": "2025-01-16T09:11:51+00:00",
+    "user": "CyrusCT",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1501",
+    "is_pull_request": false
+}

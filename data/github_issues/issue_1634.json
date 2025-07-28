@@ -1,0 +1,18 @@
+{
+    "id": 2965265907,
+    "number": 1634,
+    "title": "[Bug]: Sign in with HW key does not work",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nI belong to two organizations. When signing in to the guest org I want to use a HW key connected to my computer. This works well in the PWA app but fails in the Teams4Linux client. The reason probably is that the PIN entry for the HW key is not shown hence the key cannot be used.\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n1.13.2\n\n### Reproduction steps\n\n```markdown\n1. (Sign out from team)\n2. Initiate a sign in\n3. Pick the account (in my case there is only 1 account to use, HW key login enabled for that)\n4. If prompts for password choose \"Other ways to sign in\"\n5. Choose \"Face, fingerprint, PIN or security key\"\n\nAt this point a message is shown:\n\nFace, fingerprint, PIN or security key\nYour device will open a security window. Follow the instructions there to sign in.\n\n\nHowever the security window with PIN entry is not shown. <<< This is the problem\n```\n\n### Expected Behavior\n\n```markdown\n1. (Sign out from team)\n2. Initiate a sign in\n3. Pick the account (in my case there is only 1 account to use, HW key login enabled for that)\n4. If prompts for password choose \"Other ways to sign in\"\n5. Choose \"Face, fingerprint, PIN or security key\"\n6. PIN entry window pops up to \"unlock\" the HW key\n7. Touch HW key to send login code\n8. login success\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\n[teams.log](https://github.com/user-attachments/files/19561988/teams.log)",
+    "state": "closed",
+    "created_at": "2025-04-02T05:55:54+00:00",
+    "updated_at": "2025-04-02T07:59:58+00:00",
+    "closed_at": "2025-04-02T07:59:57+00:00",
+    "user": "ztamas83",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1634",
+    "is_pull_request": false
+}

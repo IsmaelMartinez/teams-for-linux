@@ -1,0 +1,16 @@
+{
+    "id": 2741935301,
+    "number": 1523,
+    "title": "Mic stopped working on Ubuntu",
+    "body": "**Describe the bug**\r\nMic stopped working suddenly on Ubuntu OS.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Go to '...'\r\n2. Click on '....'\r\n3. Scroll down to '....'\r\n4. See error\r\n\r\n**Expected behavior**\r\nA clear and concise description of what you expected to happen.\r\n\r\n**Screenshots**\r\nIf applicable, add screenshots to help explain your problem.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 22.04/24.04\r\n - Installation package [deb, rpm, snap, AppImage, tar.gz, source...]\r\n - Version 1.12.3\r\n\r\n**Debug**\r\nWhen possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\n\r\n*IMPORTANT:* Ensure that you mask any sensitive information before posting the output.\r\n\r\n**Additional context**\r\nAdd any other context about the problem here.\r\n",
+    "state": "closed",
+    "created_at": "2024-12-16T10:14:45+00:00",
+    "updated_at": "2024-12-21T12:08:27+00:00",
+    "closed_at": "2024-12-21T12:08:27+00:00",
+    "user": "naseebpanghal",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 11,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1523",
+    "is_pull_request": false
+}

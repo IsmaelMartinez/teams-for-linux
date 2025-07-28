@@ -1,0 +1,18 @@
+{
+    "id": 2748622168,
+    "number": 1529,
+    "title": "Receiving \"Waiting for Network\" window when trying to open app in Nobara > Fedora 40",
+    "body": "**Describe the bug**\r\nA clear and concise description of what the bug is.\r\nOn initial install/launch, the application window hangs on \"Waiting for Network\", and will not progress\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Install application\r\n2. Open Application post install\r\n3. Login using a gmail (or self hosted) e-mail address\r\n4. Upon authentication, the end result is a window where the header = \"Waiting for Network\"\r\n\r\n**Expected behavior**\r\nUpon login, I should be able to access the GUI.\r\n\r\n**Screenshots**\r\nI have included a console snippet along with the window: \r\n![image](https://github.com/user-attachments/assets/c198d4a2-2807-4df4-a331-783025f8e8fa)\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Nobara (Fedora 40)\r\n - Installation package: Flatpak and rpm -i ...\r\n![Version:](https://github.com/user-attachments/assets/ee41c33e-c8d5-4dee-b5b6-4501d2b21c3f)\r\n\r\n**Debug**\r\nAbove screenshot shows the output from the console; network shows normal behavior (200, 300 HTTP response types_\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\n\r\n*IMPORTANT:* Ensure that you mask any sensitive information before posting the output.\r\n\r\n**Additional context**\r\nAdd any other context about the problem here.\r\n",
+    "state": "closed",
+    "created_at": "2024-12-18T19:43:07+00:00",
+    "updated_at": "2025-04-29T08:10:32+00:00",
+    "closed_at": "2025-01-24T09:34:49+00:00",
+    "user": "mkadrlik",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1529",
+    "is_pull_request": false
+}

@@ -1,0 +1,18 @@
+{
+    "id": 3269517942,
+    "number": 1770,
+    "title": "[Bug]: Screen share",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nScreen share is not working \n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.1.1\n\n### Reproduction steps\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-07-28T11:33:13+00:00",
+    "updated_at": "2025-07-28T14:15:01+00:00",
+    "closed_at": "2025-07-28T14:15:01+00:00",
+    "user": "Anish-0211",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1770",
+    "is_pull_request": false
+}

@@ -1,0 +1,21 @@
+{
+    "id": 2995346861,
+    "number": 1661,
+    "title": "[Feat]: allow active Call in New Window",
+    "body": "### Describe the feature\n\nA Teams-Call should open in a new window\n\n### Motivation\n\n(i'm sorry, my english is not the best)\nI would like to see cameras and shared screens in the call and at the same time to be able to see other chats in Teams or browse through Sharepoint-Files.\nIn Teams, i often have to search for a specific file or a link from another chat for the participants in the current call. During searching, i miss everything that is currently being shared by another call participant.\nThis request corresponds to the behavior of the Windows app.\n\n### Alternatives\n\nI know that this feature is not offered in the browser version of Teams either, which certainly makes it difficult to implement. Perhaps there would be a way to display the current window as a split screen instead of opening a new window?\n(i'm not a programmer, but if i can help with translations in German or something like this, it would be a pleasure to help)\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-15T06:48:55+00:00",
+    "updated_at": "2025-06-13T09:37:33+00:00",
+    "closed_at": "2025-06-13T09:37:33+00:00",
+    "user": "zodiac715",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "known issue/workaround",
+        "blocked",
+        "Stale"
+    ],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1661",
+    "is_pull_request": false
+}

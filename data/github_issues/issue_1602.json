@@ -1,0 +1,18 @@
+{
+    "id": 2943309642,
+    "number": 1602,
+    "title": "[Feat]:Mic volume is automatically turning down while one meet",
+    "body": "### Describe the feature\n\nI understand that this is a chromium feature. WebRTC mic volume control. But it is so annoying that the mic automatically turning down while on meet. Need an option to access chrome://flags in teams or an option to disable this feature.\n\n### Motivation\n\nThe other person can not hear what I'm saying because the mic has turned down its volume automatically while on a meeting.\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-24T13:41:27+00:00",
+    "updated_at": "2025-03-26T13:51:19+00:00",
+    "closed_at": "2025-03-26T13:51:19+00:00",
+    "user": "anonlegionoke",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1602",
+    "is_pull_request": false
+}

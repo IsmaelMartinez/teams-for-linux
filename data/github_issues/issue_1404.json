@@ -1,0 +1,16 @@
+{
+    "id": 2521899202,
+    "number": 1404,
+    "title": "Setting for disabling automatic mic sensitivty adjustment",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nMy microphone input level gets reduced constantly by the app, even though I would like to control it myself.\r\nIt gets reduced to a level where no one in the call can hear me, so this is not very practical.\r\n\r\nI'm using this app (and love it by the way, thanks for making Teams workable again :smile:), but I'm not sure if this is fixable here.\r\n\r\n**Describe the solution you'd like**\r\nI would like a possibility to disable automatic adjustment of the microphone sensitivity.\r\n\r\n**Additional context**\r\nOn the Windows-app, it would look like this:\r\n![image](https://github.com/user-attachments/assets/3ddda073-51f3-4c9e-8a2d-0ae27139fbbf)\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-09-12T09:46:54+00:00",
+    "updated_at": "2024-10-02T06:33:34+00:00",
+    "closed_at": "2024-10-02T06:33:24+00:00",
+    "user": "dvbeek",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1404",
+    "is_pull_request": false
+}

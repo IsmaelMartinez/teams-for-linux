@@ -1,0 +1,19 @@
+{
+    "id": 2892224354,
+    "number": 1582,
+    "title": "[Bug]: Symantec Token Input Broken",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nA colleague is attempting to sign into Teams for Linux using his Symantec VIP token. Hi is able to input the token where needed except the window produced by Teams for Linux.\n\n### What package are you using?\n\ndeb\n\n### Version\n\nLatest\n\n### Reproduction steps\n\n```markdown\n1. Verify your identity via MS 365\n2. You will be redirected to Approve with Symantec - VIP‎\n3. The resulting verification window is as below:\n\n{{ 'securitycode.title' | translate }}\n{{ 'securitycode.desc.egidp' | translate }}\n{{ 'securitycode.label.placeholder' | translate }}\n{{ 'button.cancel' | translate }}{{ 'button.submit' | translate }}\n...\n```\n\n### Expected Behavior\n\n```markdown\n1. Verify your identity via MS 365\n2. You will be redirected to Approve with Symantec - VIP‎\n3. Receive a standard web page to input the token and hit submit\n4. Redirected to Teams\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n![Image](https://github.com/user-attachments/assets/942fc161-ffbd-468a-a2ce-c89363399ab2)\n\n**Broken Symantec - VIP‎ window**\n\n![Image](https://github.com/user-attachments/assets/61a1df91-8d7e-496f-b435-99a3060b9a52)",
+    "state": "closed",
+    "created_at": "2025-03-03T20:18:32+00:00",
+    "updated_at": "2025-03-04T05:53:49+00:00",
+    "closed_at": "2025-03-04T05:53:48+00:00",
+    "user": "daylove",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "duplicate"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1582",
+    "is_pull_request": false
+}

@@ -1,0 +1,19 @@
+{
+    "id": 2955441522,
+    "number": 1620,
+    "title": "[Feat]:  camera background  image  can select from files ?",
+    "body": "### Describe the feature\n\nNow on the cam menu camera bacground just select themes ,  backgraound image  selecting files from pc \n\n### Motivation\n\nOn windows version  camera menu supports  selecting background image from pc files ,  \nSame menu features for linux pls\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-28T08:56:13+00:00",
+    "updated_at": "2025-05-25T09:35:06+00:00",
+    "closed_at": "2025-05-25T09:35:06+00:00",
+    "user": "gunduzcagri",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 12,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1620",
+    "is_pull_request": false
+}

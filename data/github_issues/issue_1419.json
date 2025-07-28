@@ -1,0 +1,18 @@
+{
+    "id": 2545911615,
+    "number": 1419,
+    "title": "When attempting to join a Microsoft Teams meeting, I get the following error: \"...Make sure you're connected to the internet...\"",
+    "body": "When attempting to join a Microsoft Teams meeting, you may encounter the following error:\r\n\"Sorry we couldn't connect your call. Make sure you're connected to the internet and try again.\"\r\n\r\nThis issue can occur even when you have a working internet connection.\r\n\r\nSolution:\r\nThe problem can often be resolved by changing your DNS (Domain Name System) settings. Here's how to do it on both Linux and Windows systems:\r\n\r\nFor Linux (Ubuntu/Debian):\r\n\r\n1. Open a terminal.\r\n2. Edit the resolv.conf configuration file:\r\n   ```\r\n   sudo nano /etc/resolvconf/resolv.conf.d/head\r\n   ```\r\n3. Add the following lines:\r\n   ```\r\n   nameserver 8.8.8.8\r\n   nameserver 8.8.4.4\r\n   ```\r\n4. Save and exit the file (Ctrl+X, then Y, then Enter).\r\n5. Update the system's resolv.conf:\r\n   ```\r\n   sudo resolvconf -u\r\n   ```\r\n6. Verify the changes:\r\n   ```\r\n   cat /etc/resolv.conf\r\n   ```\r\n\r\nFor Windows:\r\n\r\n1. Open the Control Panel.\r\n2. Go to Network and Internet > Network and Sharing Center.\r\n3. Click on \"Change adapter settings\" on the left side.\r\n4. Right-click on your active network connection and select \"Properties\".\r\n5. Select \"Internet Protocol Version 4 (TCP/IPv4)\" and click \"Properties\".\r\n6. Select \"Use the following DNS server addresses\".\r\n7. Enter the following:\r\n   Preferred DNS server: 8.8.8.8\r\n   Alternate DNS server: 8.8.4.4\r\n8. Click OK to save the changes.\r\n9. Open Command Prompt as Administrator.\r\n10. Run the following command to flush the DNS cache:\r\n    ```\r\n    ipconfig /flushdns\r\n    ```\r\n\r\nAfter making these changes, restart your Microsoft Teams application and try joining the meeting again. The connection issue should be resolved.\r\n\r\nNote: The DNS servers used in this solution (8.8.8.8 and 8.8.4.4) are Google's public DNS servers. They are generally reliable and fast, but you can use other public DNS servers or your ISP's DNS servers if preferred.\r\n\r\nIf you continue to experience issues, please contact your IT support team or Microsoft Teams support for further assistance.\r\n\r\nCitations:\r\n[1] https://learn.microsoft.com/en-us/windows-server/networking/dns/troubleshoot/troubleshoot-dns-client\r\n[2] https://www.ricmedia.com/tutorials/set-permanent-dns-nameservers-ubuntu-debian-resolv-conf\r\n[3] https://learn.microsoft.com/en-US/windows-server/networking/dns/troubleshoot/troubleshoot-dns-server\r\n[4] https://www.tecmint.com/set-permanent-dns-nameservers-in-ubuntu-debian/\r\n[5] https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/manually-configuring-the-etc-resolv-conf-file_configuring-and-managing-networking\r\n[6] https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/troubleshoot-dns-guidance\r\n[7] https://answers.microsoft.com/en-us/microsoftedge/forum/all/dns-isnt-working-on-my-pc/86a6b382-2bf2-4263-b059-e816554a1897\r\n[8] https://answers.microsoft.com/en-us/msteams/forum/all/dns-resolution-failed-microsoft-teams-network/ba79627c-d39f-421b-9d5e-afa770c8ac3a\r\n",
+    "state": "closed",
+    "created_at": "2024-09-24T16:58:06+00:00",
+    "updated_at": "2024-10-02T06:38:08+00:00",
+    "closed_at": "2024-10-02T06:38:01+00:00",
+    "user": "miguelvallentte",
+    "assignee": null,
+    "labels": [
+        "duplicate"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1419",
+    "is_pull_request": false
+}

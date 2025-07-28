@@ -1,0 +1,18 @@
+{
+    "id": 3159042006,
+    "number": 1745,
+    "title": "[Bug]: Code shared via chat is not visible to other teamembers.",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nWhen sharing code via chat, If I use codeblock then its not visible to others. I was using older version where you can share  using <> Code option. But After upgrading that option is gone. and if you use the more options then  Code , its showing an empty small box box. It does not support any other languages\n\n### What package are you using?\n\nsnap\n\n### Version\n\n2.0.16\n\n### Reproduction steps\n\n```markdown\n1.Open a group chat\n2. click formatting options\n3. then codeblock\n4. Paste your code and select the language\n5. send\n6. check in other teams chat. it will not be visible\n7. 7. Also try more option  then code section and add your code there. it looks weired\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-06-19T05:50:38+00:00",
+    "updated_at": "2025-06-19T14:22:06+00:00",
+    "closed_at": "2025-06-19T14:22:06+00:00",
+    "user": "himsheda",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1745",
+    "is_pull_request": false
+}

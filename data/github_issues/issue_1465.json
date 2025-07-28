@@ -1,0 +1,16 @@
+{
+    "id": 2625600224,
+    "number": 1465,
+    "title": "Video from own webcam is low resolution and pixelated",
+    "body": "**Describe the bug**\r\n\r\nWhen in a teams meeting, my video from my own webcam is at a very low resolution and quite pixelated.\r\nIt looks like it's at a much lower resolution than 360p, and downscaled using a poor scaling.  I checked with other people and they also see my video quality is poor and pixelated, consistent with the way I'm seeing myself.\r\n\r\nMy webcam is 1080p capable.  There are no settings for choosing resolution in teams.  This problem only started happening a few weeks ago; previously it was fine.  Due to difficulties reproducing this unless I'm in a meeting with multiple people I haven't had much of a chance to test.\r\n\r\nThe webcam is a HiCamera UVC Camera.  In Cheese, it defaults to 1280x720 but I can set it as high as 1920x1080 and it works.  Interestingly, even at 360p, its lowest option, my camera looks fine, just soft, not pixelated like the problematic behavior I'm seeing in Teams.\r\n\r\nOther people in the meeting appear normal (their video from their webcam is clear, not pixely, and high resolution).\r\n\r\nIf I turn off my webcam and turn it on again, while still in the meeting, for the first 1-2 seconds my video is normal and high resolution without the pixely effect then it starts.\r\n\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n\r\n1. Join an existing meeting that multiple other people are already in (I couldn't reproduce this in a meeting I started with myself as the only participant)\r\n2. When joining, observe the video preview on the left\r\n3. After joining, observe the view of your own webcam video in the meeting\r\n\r\nI tend to use a background effect on my video but when I was testing it happened both with and without the background effect enabled.\r\n\r\n**Expected behavior**\r\nVideo is clear and looks like it would in any other app (eg in the \"cheese\" app)\r\n\r\n**Actual behavior**\r\n\r\nLow resolution poorly scaled pixelated video for me and everyone else's video looks normal.\r\n\r\n**Screenshots**\r\nDifficult to add a screenshot without privacy issues\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Linux Mint 21 (Ubuntu 22.04)\r\n - Installation package: flatpak\r\n - Version: 1.11.2\r\n\r\n**Debug**\r\nWas unable to reproduce in a meeting with myself.  Will",
+    "state": "closed",
+    "created_at": "2024-10-30T23:38:20+00:00",
+    "updated_at": "2025-02-23T22:53:25+00:00",
+    "closed_at": "2024-11-09T09:57:29+00:00",
+    "user": "trr",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 12,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1465",
+    "is_pull_request": false
+}

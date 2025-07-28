@@ -1,0 +1,18 @@
+{
+    "id": 2730532160,
+    "number": 1517,
+    "title": "Support for YubiKey",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nHello,\r\nMy company uses YubiKey keys for Microsoft products. And it seems the current version doesn't support them. After logging in, a pop-up window should appear to enter the PIN code, but it doesn't. I tried to use Teams for linux v1.12.3, the deb package.\r\n",
+    "state": "closed",
+    "created_at": "2024-12-10T16:00:09+00:00",
+    "updated_at": "2024-12-10T17:32:58+00:00",
+    "closed_at": "2024-12-10T17:05:50+00:00",
+    "user": "ruben-ambartsumiants",
+    "assignee": null,
+    "labels": [
+        "duplicate"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1517",
+    "is_pull_request": false
+}

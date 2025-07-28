@@ -1,0 +1,19 @@
+{
+    "id": 2984702868,
+    "number": 1653,
+    "title": "[Bug]: full path is needed for the --user-data-dir",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nThe docs says relative path, but you need a full path\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.7\n\n### Reproduction steps\n\n```markdown\nFrom https://github.com/IsmaelMartinez/teams-for-linux/issues/1632#issuecomment-2791593663\n```\n\n### Expected Behavior\n\n```markdown\nFor the docs to indicate the full path is needed.\n```\n\n### Debug\n\n```markdown\nNo debug needed, this is mostly a docs issue.\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-10T07:15:30+00:00",
+    "updated_at": "2025-04-11T09:12:04+00:00",
+    "closed_at": "2025-04-11T09:12:03+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "documentation"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1653",
+    "is_pull_request": false
+}

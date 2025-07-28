@@ -1,0 +1,19 @@
+{
+    "id": 2407286067,
+    "number": 1340,
+    "title": "cannot run fcitx5 input method for appimage format ",
+    "body": "![Peek 2024-07-14 14-11](https://github.com/user-attachments/assets/9e2f1cbd-b0b5-4961-bb37-427e3b1af633)\r\n\r\ni using the fcitx5 to input chinese \r\n\r\ni using the typora to compare teams\r\n\r\nthe teams cannot input chinese but typora it can using\r\n\r\nthe bug is your appimage not full gtk lib file ",
+    "state": "closed",
+    "created_at": "2024-07-14T06:15:11+00:00",
+    "updated_at": "2025-01-23T20:24:58+00:00",
+    "closed_at": "2024-10-17T02:00:33+00:00",
+    "user": "newyorkthink",
+    "assignee": null,
+    "labels": [
+        "known issue/workaround",
+        "Stale"
+    ],
+    "comments_count": 11,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1340",
+    "is_pull_request": false
+}

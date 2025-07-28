@@ -1,0 +1,19 @@
+{
+    "id": 2942902198,
+    "number": 1601,
+    "title": "[Bug]: v1.13.x cannot join meetings",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nwhen joining a meeting, I can enter the room and see the participants on the right and the one talking in the middle, but: no sound and people do not see me in. one-to-one calls work both ways. reverting to 1.12.8 fixed this\n\n### What package are you using?\n\ndeb\n\n### Version\n\n1.13.0, 1.13.1\n\n### Reproduction steps\n\n```markdown\n1. join a meeting\n2.\n3.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-24T11:16:32+00:00",
+    "updated_at": "2025-05-02T08:56:39+00:00",
+    "closed_at": "2025-05-02T08:56:38+00:00",
+    "user": "onip",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "Stale"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1601",
+    "is_pull_request": false
+}

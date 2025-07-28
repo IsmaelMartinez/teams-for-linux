@@ -1,0 +1,18 @@
+{
+    "id": 2380562308,
+    "number": 1323,
+    "title": "Teams doesn't open on Ubuntu 24.04 using Wayland",
+    "body": "**Describe the bug**\r\nTeams doesn't open on Ubuntu 24.04 using Wayland\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Run via command line `ELECTRON_OZONE_PLATFORM_HINT=wayland teams-for-linux`\r\n\r\n**Expected behavior**\r\nTeams open \r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 24.04\r\n - Installation package snap\r\n - Version 1.7.4\r\n\r\n**Debug**\r\n\r\n```$ ELECTRON_OZONE_PLATFORM_HINT=wayland teams-for-linux --webDebug --appLogLevels=error,info,warn,debug\r\nMESA-LOADER: failed to open radeonsi (search paths /snap/teams-for-linux/635/gnome-platform/usr/lib/x86_64-linux-gnu/dri)\r\nfailed to load driver: radeonsi\r\nMESA-LOADER: failed to open kms_swrast (search paths /snap/teams-for-linux/635/gnome-platform/usr/lib/x86_64-linux-gnu/dri)\r\nfailed to load driver: kms_swrast\r\nMESA-LOADER: failed to open swrast (search paths /snap/teams-for-linux/635/gnome-platform/usr/lib/x86_64-linux-gnu/dri)\r\nfailed to load swrast driver\r\n[DEBUG] configPath:,/home/michel/snap/teams-for-linux/635/.config/teams-for-linux\r\n[WARN] No config file found, using default values\r\n[DEBUG] configFile:,[object Object]\r\n[INFO] Running under Wayland, switching to PipeWire...\r\ndbus-send: /snap/teams-for-linux/635/lib/x86_64-linux-gnu/libdbus-1.so.3: version `LIBDBUS_PRIVATE_1.12.20' not found (required by dbus-send)\r\n[36467:0628/112322.526210:ERROR:wayland_connection.cc(196)] Failed to connect to Wayland display: No such file or directory (2)\r\n[36467:0628/112322.526240:ERROR:ozone_platform_wayland.cc(264)] Failed to initialize Wayland platform\r\n[36467:0628/112322.526242:ERROR:env.cc(257)] The platform failed to initialize.  Exiting.\r\n```\r\n",
+    "state": "closed",
+    "created_at": "2024-06-28T14:24:10+00:00",
+    "updated_at": "2025-06-16T13:55:11+00:00",
+    "closed_at": "2024-07-01T07:59:06+00:00",
+    "user": "drungrin",
+    "assignee": null,
+    "labels": [
+        "snap"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1323",
+    "is_pull_request": false
+}

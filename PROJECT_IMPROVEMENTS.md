@@ -9,9 +9,9 @@ Here's a prioritized list of proposed improvements, ordered from easiest/lowest 
 These improvements primarily involve adding or updating markdown files and code comments, with minimal to no impact on application logic.
 
 *   **Configuration Documentation:** Create `docs/configuration.md` detailing all config options.
-*   **Module-Level Details and Interactions:** Enhance `README.md` files within `app/` subdirectories.
-*   **Troubleshooting and FAQ:** Expand `KNOWN_ISSUES.md` or create `docs/troubleshooting.md`.
-*   **Code-Level Comments and JSDoc:** Adopt consistent JSDoc commenting.
+*   **Module-Level Details and Interactions:** Enhanced `README.md` files within `app/` subdirectories (Completed).
+*   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` or created `docs/troubleshooting.md` (Completed).
+*   **Code-Level Comments and JSDoc:** Adopt consistent JSDoc commenting (In Progress).
 *   **Visual Aids (Architecture Diagrams):** Create high-level architecture diagrams.
 *   **API Documentation (IPC Channels):** Document all `ipcMain` handlers.
 

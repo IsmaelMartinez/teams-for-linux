@@ -1,0 +1,16 @@
+{
+    "id": 3206285106,
+    "number": 1751,
+    "title": "chore: update Electron, @eslint/js, eslint, and globals to latest versions",
+    "body": "- Update Electron to 37.2.0\r\n- Update @eslint/js to 9.30.1\r\n- Update eslint to 9.30.1\r\n- Update globals to 16.3.0\r\n- Reviewed Electron 37 breaking changes: no impact on this project\r\n- electron-store not updated due to breaking changes in v9+\r\n- Update com.github.IsmaelMartinez.teams_for_linux.appdata.xml release",
+    "state": "closed",
+    "created_at": "2025-07-06T08:18:07+00:00",
+    "updated_at": "2025-07-06T08:20:14+00:00",
+    "closed_at": "2025-07-06T08:20:14+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1751",
+    "is_pull_request": true
+}

@@ -1,0 +1,19 @@
+{
+    "id": 2835821541,
+    "number": 1568,
+    "title": "[Bug]: Password not saving & have to sign-in every time",
+    "body": "### Can you reproduce this bug in the PWA?\n\nNo\n\n### Describe the bug\n\nWhen I would login before, it would save my login successfully if I ever restarted my PC or closed out the app. Now, every time I close it or restart my PC, I have to login again every single time. \n\n### What package are you using?\n\ndeb\n\n### Version\n\n1.12.6\n\n### Reproduction steps\n\n```markdown\n1. Sign in to Teams\n2. Close the application\n3. I have to sign in again.\n```\n\n### Expected Behavior\n\n```markdown\n1. Sign in to Teams\n2. Close the app\n3. Don't need to sign in again until I'm forced to by my org (1 week)\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-02-06T15:18:01+00:00",
+    "updated_at": "2025-02-07T22:49:27+00:00",
+    "closed_at": "2025-02-07T22:49:21+00:00",
+    "user": "adriandelgg",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "duplicate"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1568",
+    "is_pull_request": false
+}

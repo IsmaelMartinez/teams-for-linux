@@ -1,0 +1,16 @@
+{
+    "id": 2453745748,
+    "number": 1355,
+    "title": "Update README.md to add required JSON comma",
+    "body": "When running the example config provided here for Electron CLI flags, I got a JSON parse error for a missing comma:\r\n\r\n`A JavaScript error occurred in the main process\r\nUncaught Exception:\r\nSyntaxError: Expected ',' or ']' after array element in JSON at position 61 (line 4 column 3)\r\n    at JSON.parse (<anonymous>)`\r\n\r\nThis is a simple PR to add a single comma.",
+    "state": "closed",
+    "created_at": "2024-08-07T15:16:06+00:00",
+    "updated_at": "2024-08-08T15:35:57+00:00",
+    "closed_at": "2024-08-08T10:37:10+00:00",
+    "user": "blakeashleyjr",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1355",
+    "is_pull_request": true
+}

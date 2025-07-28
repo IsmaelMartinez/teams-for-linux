@@ -1,0 +1,18 @@
+{
+    "id": 2971122504,
+    "number": 1637,
+    "title": "[Bug]: cannot join teams meeting",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nI have meetings in the calendar, with teams links and code/password. However, for some meetings the \"Join\" button is not shown. When opening the calendar item and clicking the link nothing happens (firefox opens, but it does not forward to teams app - this might be an issue with firefox settings, but i dont know what to do), also there is nowhere an option to \"join meeting with code\". So sadly this teams port is useless for me as approx 25% of the meetings cannot be joined. I have not found out what the differences are in the invite (i use thunderbird).\n\n### What package are you using?\n\ndeb\n\n### Version\n\nlatest\n\n### Reproduction steps\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-04T02:33:57+00:00",
+    "updated_at": "2025-04-16T11:48:39+00:00",
+    "closed_at": "2025-04-08T20:00:18+00:00",
+    "user": "JeckPeppinger",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 10,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1637",
+    "is_pull_request": false
+}

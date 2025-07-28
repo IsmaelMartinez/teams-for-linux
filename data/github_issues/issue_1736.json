@@ -1,0 +1,18 @@
+{
+    "id": 3151590237,
+    "number": 1736,
+    "title": "[Bug]: Window resizing is broken on latest update",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo. It works perfect in various browsers and PWAs.\n\n### Describe the bug\n\nStarts up in a very small window. Resizing doesn't properly work. Can't maximize it either.\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n2.0.17\n\n### Reproduction steps\n\n```markdown\nJust try to resize or maximize it\n```\n\n### Expected Behavior\n\n```markdown\nTo work like earlier versions\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\nThis is my Distro and Specs:\n\n![Image](https://github.com/user-attachments/assets/a1b1b940-f81a-488d-bf46-99fee1f75324)\n\n\nAnd this is the app when maximized:\n\n![Image](https://github.com/user-attachments/assets/7ac54e04-f582-49e0-9793-57f7abc28768)\n\nLook at the small app window top left. I can't resize it either by dragging on the sides. Doesn't work. The app is just broken now.",
+    "state": "open",
+    "created_at": "2025-06-16T23:25:01+00:00",
+    "updated_at": "2025-07-28T11:59:21+00:00",
+    "closed_at": null,
+    "user": "shaunroselt",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 27,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1736",
+    "is_pull_request": false
+}

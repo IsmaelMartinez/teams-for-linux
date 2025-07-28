@@ -1,0 +1,18 @@
+{
+    "id": 2698318438,
+    "number": 1498,
+    "title": "Issues on Share Screen",
+    "body": "**Describe the bug**\r\nWhen you try to share your screen for the second time on the same call , the app crashes.\r\nI am using this version of the app \r\n![image](https://github.com/user-attachments/assets/536d721c-7707-4fef-8bfd-e0aba2aef8f8)\r\nThe environment Ubuntu 22.04 with X11\r\n\r\n\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-11-27T11:58:58+00:00",
+    "updated_at": "2024-11-28T09:04:56+00:00",
+    "closed_at": "2024-11-28T09:04:49+00:00",
+    "user": "ramilani12",
+    "assignee": null,
+    "labels": [
+        "duplicate"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1498",
+    "is_pull_request": false
+}

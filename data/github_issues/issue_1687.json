@@ -1,0 +1,18 @@
+{
+    "id": 3026516012,
+    "number": 1687,
+    "title": "[Bug]: outdated image in build instructions for docker / podman",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nThe build instructions in CONTRIBUTING.md reference docker image node:14 which no longer works.\n\n### What package are you using?\n\nBuilt from source\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\n1. Clone the git repo \n2. Excecute per CONTRIBUTING.md: docker run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:14 /bin/bash -c \"apt update && apt install -y rpm && npm ci && npm run dist:linux\"\n3. npm ci fails with \"error Cannot read property '@homebridge/dbus-native' of undefined\"\n```\n\n### Expected Behavior\n\n```markdown\n1. the app is being built correctly.\n```\n\n### Solution\nI found that the referenced image \"node:14\" seems outdated. Replacing it with \"node:20\" leads to a successful build.\n",
+    "state": "closed",
+    "created_at": "2025-04-28T23:38:55+00:00",
+    "updated_at": "2025-05-06T09:36:05+00:00",
+    "closed_at": "2025-05-06T09:35:18+00:00",
+    "user": "kaymes",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1687",
+    "is_pull_request": false
+}

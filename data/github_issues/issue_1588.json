@@ -1,0 +1,16 @@
+{
+    "id": 2906865272,
+    "number": 1588,
+    "title": "restore HISTORY.md file name",
+    "body": "In #1587 I accidentally changed the file name (I guess I was too trigger happy using GitHub's web IDE). This reverts that change. My apologies.",
+    "state": "closed",
+    "created_at": "2025-03-10T10:54:52+00:00",
+    "updated_at": "2025-03-10T11:25:59+00:00",
+    "closed_at": "2025-03-10T11:25:56+00:00",
+    "user": "sleeyax",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1588",
+    "is_pull_request": true
+}

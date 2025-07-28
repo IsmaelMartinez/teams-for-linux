@@ -1,0 +1,18 @@
+{
+    "id": 2794758661,
+    "number": 1547,
+    "title": "[Bug]: Uncaught exception when trying to import settings and backup file does not exist",
+    "body": "### Can you reproduce this bug in the PWA?\n\nNot applicable\n\n### Describe the bug\n\nAttempt to restore settings will fail with exception trace in popup window if no settings backup exists\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n1.12.5\n\n### Reproduction steps\n\n```markdown\n1.Open Teams\n2.Right-click the tray icon, reach Settings and then click Restore, without having made a Settings backup first\n3.A rather technical error popup is shown (see further down for screenshot)\n```\n\n### Expected Behavior\n\n```markdown\n1.No error, or a warning message informing the user that no settings could be restored because no settings backup file exists (maybe mentioning the full expected path on the filesystem would also be useful)\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\nScreenshot of the error popup:\n\n![Image](https://github.com/user-attachments/assets/d55c6195-b0d8-4b40-b639-f23b9c40bd11)\n\nContent of that directory at the time this happened:\n\n```\n❯ ll   \ntotal 100\ndrwx------. 1 andrea andrea   704 Jan 17 08:14  .\ndrwxr-xr-x. 1 andrea andrea    98 Jan  2 16:26  ..\ndrwx------. 1 andrea andrea    72 Jan 17 08:14  blob_storage\ndrwx------. 1 andrea andrea    20 Jan  2 14:59  Cache\ndrwx------. 1 andrea andrea    12 Jan  2 14:59 'Code Cache'\n-rw-rw-rw-. 1 andrea andrea    69 Jan  2 15:46  config.json\n-rw-------. 1 andrea andrea 20480 Jan  2 14:59  Cookies\n-rw-------. 1 andrea andrea     0 Jan  2 14:59  Cookies-journal\ndrwx------. 1 andrea andrea    18 Jan  2 14:59  Crashpad\ndrwx------. 1 andrea andrea    30 Jan  2 14:59  Dictionaries\ndrwx------. 1 andrea andrea    14 Jan  2 14:59 'Local Storage'\n-rw-------. 1 andrea andrea   629 Jan 14 12:19 'Network Persistent State'\n-rw-------. 1 andrea andrea   573 Jan  2 15:26  .org.chromium.Chromium.JTPExG\n-rw-------. 1 andrea andrea   573 Jan  2 15:27  .org.chromium.Chromium.MVkLmq\ndrwx------. 1 andrea andrea    26 Jan  2 14:59  Partitions\n-rw-------. 1 andrea andrea    57 Jan  2 14:59  Preferences\ndrwx------. 1 andrea andrea    34 Jan  2 14:59 'Shared Dictionary'\n-rw-------. 1 andrea andrea  4096 Jan  2 15:01  SharedStorage\n-rw-------. 1 andrea andrea     0 Jan 15 11:22  SharedStorage-wal\nlrwxrwxrwx. 1 andrea andrea    19 Jan 17 08:14  SingletonCookie -> 1214432390814470987\nlrwxrwxrwx. 1 andrea andrea    11 Jan 17 08:14  SingletonLock -> andromeda-2\nlrwxrwxrwx. 1 andrea andrea    93 Jan 17 08:14  SingletonSocket -> /run/user/1000/app/com.github.IsmaelMartinez.teams_for_linux/scoped_dir6vab7U/SingletonSocket\n-rw-------. 1 andrea andrea   189 Jan 17 08:14  TransportSecurity\n-rw-------. 1 andrea andrea 36864 Jan  2 15:12 'Trust Tokens'\n-rw-------. 1 andrea andrea     0 Jan  2 15:12 'Trust Tokens-journal'\n-rw-r--r--. 1 andrea andrea   137 Jan 17 08:14  window-state.json\n```\n\n`grep`:\n\n```\n❯ ll /home/andrea/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux | grep teams_\nlrwxrwxrwx. 1 andrea andrea    93 Jan 17 08:14 SingletonSocket -> /run/user/1000/app/com.github.IsmaelMartinez.teams_for_linux/scoped_dir6vab7U/SingletonSocket\n```",
+    "state": "closed",
+    "created_at": "2025-01-17T07:19:54+00:00",
+    "updated_at": "2025-03-28T07:24:17+00:00",
+    "closed_at": "2025-03-28T07:12:16+00:00",
+    "user": "andreaippo",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1547",
+    "is_pull_request": false
+}

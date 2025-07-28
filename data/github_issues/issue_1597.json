@@ -1,0 +1,16 @@
+{
+    "id": 2934752928,
+    "number": 1597,
+    "title": "Fixing issues 1590 nand 1585 (or at least trying)",
+    "body": "* Update electron to 34.4.5 and other small library updates to fix issue #1590\r\n* Fixing permissions to allow copy link that stopped working when adding the permissionHandlersConfig (issue #1585)",
+    "state": "closed",
+    "created_at": "2025-03-20T09:48:07+00:00",
+    "updated_at": "2025-03-20T09:50:39+00:00",
+    "closed_at": "2025-03-20T09:50:39+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1597",
+    "is_pull_request": true
+}

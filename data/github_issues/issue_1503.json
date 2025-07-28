@@ -1,0 +1,16 @@
+{
+    "id": 2704495679,
+    "number": 1503,
+    "title": "libffmpeg.so: cannot open shared object file",
+    "body": "**Describe the bug**\r\nI just installed Teams-for-Linux on a brand new Ubuntu 24.04.1.\r\nTo remove the \"The SUID sandbox\" error message, I add the appamor file as described on https://github.com/IsmaelMartinez/teams-for-linux/issues/1426#issuecomment-2384889316\r\n\r\nNow, I have this new error message when I start teams-for-linux and it exits\r\n> teams-for-linux: error while loading shared libraries: libffmpeg.so: cannot open shared object file: No such file or directory\r\n\r\n**To Reproduce**\r\nInstall teams-for-linux on a new Ubuntu 24.04.1 LTS using\r\n```\r\nsudo mkdir -p /etc/apt/keyrings\r\nsudo wget -qO /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc\r\necho \"deb [signed-by=/etc/apt/keyrings/teams-for-linux.asc arch=$(dpkg --print-architecture)] https://repo.teamsforlinux.de/debian/ stable main\" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.list\r\nsudo apt update\r\nsudo apt install teams-for-linux\r\n```\r\nand\r\n* copy content of [teams-for-linux.txt](https://github.com/user-attachments/files/17193424/teams-for-linux.txt) to /etc/apparmor.d/teams-for-linux\r\n* reload AppArmor: sudo systemctl reload apparmor.service\r\n* starts teams-for-linux\r\n```\r\n$ teams-for-linux\r\nteams-for-linux: error while loading shared libraries: libffmpeg.so: cannot open shared object file: No such file or directory\r\n$\r\n```\r\n**Expected behavior**\r\nTeams-for-linux starts.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 24.04.1\r\n - Installation package : sudo apt install teams-for-linux\r\n - Version 1.11.5 (from \"apt-cache policy teams-for-linux\")",
+    "state": "closed",
+    "created_at": "2024-11-29T09:32:06+00:00",
+    "updated_at": "2025-02-19T19:54:45+00:00",
+    "closed_at": "2024-12-02T09:05:23+00:00",
+    "user": "st4141",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1503",
+    "is_pull_request": false
+}

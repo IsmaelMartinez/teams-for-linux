@@ -1,0 +1,16 @@
+{
+    "id": 1430147295,
+    "number": 637,
+    "title": "unable to upload files",
+    "body": "when trying to upload files , a message is displayed : \"Upload failed - file is empty\" , or when dragging the file from the file manager to the window \"Some files couldn't be uploaded because they're missing necessary data\" .\r\nthe same behavior can be noticed on both flatpak and snap versions .\r\nthe files are not empty at all , and they can be uploaded from the teams website normally . ",
+    "state": "closed",
+    "created_at": "2022-10-31T16:40:58+00:00",
+    "updated_at": "2024-11-11T12:22:18+00:00",
+    "closed_at": "2024-03-12T01:25:24+00:00",
+    "user": "herobrine7gamer",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 9,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/637",
+    "is_pull_request": false
+}

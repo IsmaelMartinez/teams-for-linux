@@ -1,0 +1,18 @@
+{
+    "id": 3030716091,
+    "number": 1690,
+    "title": "[Bug]: Crash when making a screenshot, only when run through walker (application launcher)",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nI use [walker](https://github.com/abenz1267/walker) to launch teams. If I take a screenshot with grimblast, a second after taking the screenshot teams will crash.\n\n### What package are you using?\n\naur\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\n1. Start teams-for-linux through walker\n2. Make a screenshot with grimblast (https://github.com/hyprwm/contrib)\n3. Crashes (every time)\n```\n\n### Expected Behavior\n\n```markdown\nshouldn't crash\n```\n\n### Debug\n\n```markdown\nn/a\n```\n\n### Additional context\n\nCoredump when running through walker: [coredump-walker.txt](https://github.com/user-attachments/files/19974702/coredump-walker.txt)\n\nTriggering an abort when running from a terminal: [coredump-terminal.txt](https://github.com/user-attachments/files/19974709/coredump-terminal.txt) (to compare the executable, commandline options, control group, etc)",
+    "state": "closed",
+    "created_at": "2025-04-30T09:34:11+00:00",
+    "updated_at": "2025-05-01T08:22:48+00:00",
+    "closed_at": "2025-04-30T10:53:54+00:00",
+    "user": "zjeffer",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1690",
+    "is_pull_request": false
+}

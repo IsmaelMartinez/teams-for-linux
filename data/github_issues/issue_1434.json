@@ -1,0 +1,16 @@
+{
+    "id": 2566082887,
+    "number": 1434,
+    "title": "Multiple link widgets 'edits?)",
+    "body": "**Describe the bug**\r\nOn inserting a link to a GitHub issue in a channel message, multiple widgets popped up.\r\n\r\nRestarting Teams seems not to have an effect, hence does it not seem to be a display issue but rather recorded server-side? Or if so it is, the problem reproduces itself everytime that message is displayed.\r\n\r\nIt is important to note I edited the message several times, and each time new occurrences of the widgets were added to the list\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Insert a link to a GitHub issue in a channel message and send it\r\n2. Edit the message, removing and adding the link again, and send it again\r\n3. New occurrences of the widgets appear\r\n\r\n**Expected behavior**\r\nWell… :rofl: \r\n\r\n**Screenshots**\r\n![teams_link-widget](https://github.com/user-attachments/assets/ac942d31-0ca9-4f3c-992f-46c47c0fc230)\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: `Debian 11 Bullseye`\r\n - Installation package: `deb`\r\n - Version: `1.11.0`\r\n\r\n**Debug**\r\nWhen possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\n\r\n*IMPORTANT:* Ensure that you mask any sensitive information before posting the output.\r\n\r\n**Additional context**\r\nAdd any other context about the problem here.\r\n",
+    "state": "closed",
+    "created_at": "2024-10-04T10:55:36+00:00",
+    "updated_at": "2024-10-04T13:51:00+00:00",
+    "closed_at": "2024-10-04T13:50:59+00:00",
+    "user": "IncandescentChrysalis",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1434",
+    "is_pull_request": false
+}

@@ -1,0 +1,16 @@
+{
+    "id": 2500783785,
+    "number": 1390,
+    "title": "The left settings, chat etc. window covers the half of the screen and it's not resonsive",
+    "body": "**Describe the bug**\r\nThe left settings, chat etc. window covers the half of the screen when Teams is not maximized and it's not resonsive. The only way to fix it is to clear storige but after you exit Teams on the second start it's again like that. \r\n\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Just start Teams\r\n\r\n**Expected behavior**\r\nThe left pane should be responsive as it was after a few weeks.\r\n\r\n**Screenshots**\r\nIf applicable, add screenshots to help explain your problem.\r\n![Screenshot_2024_02_09_14_48](https://github.com/user-attachments/assets/a65e48fd-1978-4a96-a52c-9da227888fb3)\r\n\r\n**Desktop (please complete the following information):**\r\nOperating System: Arch Linux \r\nKDE Plasma Version: 6.1.4\r\nKDE Frameworks Version: 6.5.0\r\nQt Version: 6.7.2\r\nKernel Version: 6.10.6-arch1-1 (64-bit)\r\nGraphics Platform: X11\r\nProcessors: 32 × Intel® Core™ i9-14900KF\r\nMemory: 62.6 GiB of RAM\r\nGraphics Processor: NVIDIA GeForce RTX 4090/PCIe/SSE2\r\nManufacturer: ASUS\r\n\r\n**Debug**\r\nWhen possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n```\r\nTerminal output:\r\nhttps://pastebin.com/vafEqMaf\r\n\r\nTeams browser debug console:\r\nI don't know how to get it, there are too many elements and I don't know which one is needed but if you tell me I'll be happy to provide it.",
+    "state": "closed",
+    "created_at": "2024-09-02T11:58:31+00:00",
+    "updated_at": "2024-09-03T14:24:06+00:00",
+    "closed_at": "2024-09-03T12:07:16+00:00",
+    "user": "linuxrulezgames",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 11,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1390",
+    "is_pull_request": false
+}

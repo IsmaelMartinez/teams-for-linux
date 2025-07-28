@@ -240,6 +240,25 @@ async function playNotificationSound(_event, options) {
   console.debug("No notification sound played", player, options);
 }
 
+/**
+ * Handles the 'render-process-gone' event.
+ *
+ * When a renderer process (which hosts the web content, i.e., the Teams PWA)
+ * crashes or becomes unresponsive, Electron emits this event.
+ *
+ * The decision to immediately quit the application here is a design choice.
+ * A renderer process going "gone" often indicates a severe, unrecoverable
+ * issue with the web content or its interaction with Electron. Attempting
+ * to continue running with a crashed renderer can lead to an unstable
+ * and unpredictable user experience (e.g., blank screens, unresponsive UI).
+ *
+ * Quitting ensures a clean restart, allowing the user to relaunch the
+ * application and potentially recover from the issue.
+ *
+ * @param {Electron.Event} event - The event object.
+ * @param {Electron.WebContents} webContents - The WebContents that crashed.
+ * @param {Electron.RenderProcessGoneDetails} details - Details about the crash.
+ */
 function onRenderProcessGone(event, webContents, details) {
   console.error(`render-process-gone ${JSON.stringify(details)}`);
   app.quit();

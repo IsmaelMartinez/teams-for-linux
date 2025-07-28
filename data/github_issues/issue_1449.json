@@ -1,0 +1,16 @@
+{
+    "id": 2590951323,
+    "number": 1449,
+    "title": "Feature/modify menu fix some sonar issues and debug log cookie expiration info",
+    "body": "* Modifying the menu to include zoom, and help sections\r\n* Fix some sonarcloud detected issues\r\n* Add debug log for cookie change for authtoken and domain teams.microsoft.com\r\n* Updated electron to 32.2.0\r\n* Updated electron-builder 25.1.8",
+    "state": "closed",
+    "created_at": "2024-10-16T07:40:55+00:00",
+    "updated_at": "2024-10-27T07:19:43+00:00",
+    "closed_at": "2024-10-16T07:45:03+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1449",
+    "is_pull_request": true
+}

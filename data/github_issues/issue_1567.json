@@ -1,0 +1,18 @@
+{
+    "id": 2835429389,
+    "number": 1567,
+    "title": "[Bug]: camera sharing not working",
+    "body": "### Can you reproduce this bug in the PWA?\n\nYes\n\n### Describe the bug\n\nwhen i try to turn on the camera I have a explorer message saying to accept the sharing but not showing\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n1.12.6\n\n### Reproduction steps\n\n```markdown\n1.try to share video camera input \n2.one gets the message 'Want to use your camera and mic for the meeting?\nGive access to your camera and mic by clicking the camera icon in Omnibar, and then Always allow.' but no message to accept is shown\n3. can not use camera\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.that the camera is turned on\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\nwhen click in open video options, the camera turns on, but when i click on camera button to turn it on, it shows this message and i can not do anything:\n\n![Image](https://github.com/user-attachments/assets/ba983a77-75e7-4d2c-844f-da3b467fa015)",
+    "state": "closed",
+    "created_at": "2025-02-06T12:42:05+00:00",
+    "updated_at": "2025-03-13T04:29:33+00:00",
+    "closed_at": "2025-02-24T22:22:15+00:00",
+    "user": "otaolafranc",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1567",
+    "is_pull_request": false
+}

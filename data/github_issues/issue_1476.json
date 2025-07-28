@@ -1,0 +1,16 @@
+{
+    "id": 2655803690,
+    "number": 1476,
+    "title": "Is it technically possible to manage breakout rooms in teams-for-linux?",
+    "body": "The basic idea is to split participants of a meeting in different rooms. In teaching this is useful for practical team work\r\n\r\nHere is official info about breakout rooms:\r\n\r\nhttps://support.microsoft.com/en-us/office/use-breakout-rooms-in-microsoft-teams-meetings-7de1f48a-da07-466c-a5ab-4ebace28e461\r\n\r\nApparently it's supported only in Windows and Mac systems but I don't know if this is due to some technical constraint or it could be somehow workarounded.\r\n\r\nThank you for your help and time invested in teams-for-linux, very appreciated!\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-11-13T15:00:47+00:00",
+    "updated_at": "2024-11-20T11:39:20+00:00",
+    "closed_at": "2024-11-20T11:39:20+00:00",
+    "user": "kupiqu",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1476",
+    "is_pull_request": false
+}

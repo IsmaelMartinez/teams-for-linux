@@ -1,0 +1,16 @@
+{
+    "id": 3029188478,
+    "number": 1688,
+    "title": "Fix: removing apt update warning \"doesn't support architecture 'i386'\"",
+    "body": "This PR fixes the warning during apt update && upgrade \r\n> \"N: Skipping acquire of configured file 'main/binary-i386/Packages' as repository 'https://repo.teamsforlinux.de/debian stable InRelease' doesn't support architecture 'i386'\"\r\n\r\nby appending the \"Architectures: amd64\" into `/etc/apt/sources.list.d/teams-for-linux-packages.sources`.\r\n\r\nSmall change and Thanks for reviewing!",
+    "state": "closed",
+    "created_at": "2025-04-29T18:31:25+00:00",
+    "updated_at": "2025-05-06T08:09:18+00:00",
+    "closed_at": "2025-05-06T08:09:18+00:00",
+    "user": "Crescent-Saturn",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1688",
+    "is_pull_request": true
+}

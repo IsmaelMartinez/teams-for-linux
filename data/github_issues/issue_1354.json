@@ -1,0 +1,19 @@
+{
+    "id": 2453544419,
+    "number": 1354,
+    "title": "Show shared content by a peer in full screen mode",
+    "body": "It would be great to have the chance to show the content shared during a call (e.g. shared screen during a presentation) in full screen, without buttons or overlays covering what's received.",
+    "state": "closed",
+    "created_at": "2024-08-07T13:51:08+00:00",
+    "updated_at": "2024-12-11T09:36:48+00:00",
+    "closed_at": "2024-12-11T09:36:48+00:00",
+    "user": "massimiliano-della-rovere",
+    "assignee": null,
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1354",
+    "is_pull_request": false
+}

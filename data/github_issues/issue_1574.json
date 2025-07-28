@@ -1,0 +1,18 @@
+{
+    "id": 2866685271,
+    "number": 1574,
+    "title": "[Bug]: Just a moment while we get things ready (Forever)",
+    "body": "### Can you reproduce this bug in the PWA?\n\nNot applicable\n\n### Describe the bug\n\nI open Teams, Select my clients Domain, and get the eternal message.\n\n### What package are you using?\n\ndeb\n\n### Version\n\nUbuntu 24.04.2 LTS,  Latest Edge 1.12.7 & Latest Stable\n\n### Reproduction steps\n\n```markdown\n1.Launch Teams\n2.Select PrideGroup (Client Domain)\n3.Watch The Spinner For An Eternity\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.Open Teams Interface and allow me to communicate with my client\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n![Image](https://github.com/user-attachments/assets/8ab2b001-2dd0-432e-8547-aefac16c591d)\n![Image](https://github.com/user-attachments/assets/f282139d-18f3-4492-8956-825601950bd8)\n![Image](https://github.com/user-attachments/assets/4604715d-fd95-4a37-a547-5d4baa83d800)",
+    "state": "closed",
+    "created_at": "2025-02-20T16:30:08+00:00",
+    "updated_at": "2025-02-24T07:24:53+00:00",
+    "closed_at": "2025-02-24T07:24:52+00:00",
+    "user": "itserenity",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1574",
+    "is_pull_request": false
+}

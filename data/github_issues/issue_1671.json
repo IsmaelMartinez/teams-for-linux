@@ -1,0 +1,19 @@
+{
+    "id": 3015185409,
+    "number": 1671,
+    "title": "[Feat]: Ability to join/transfer an ongoing call from another device",
+    "body": "### Describe the feature\n\nAllow joining or transferring an active Teams call from another device to the teams-for-linux client.\n\n### Motivation\n\nHi Ismael (and contributors),\nFirst of all, thank you for your great work on teams-for-linux. It's an invaluable tool for Linux users!\nI would like to request a new feature that mirrors functionality available in the official Microsoft Teams clients (Windows, macOS, mobile).\n\nCurrently, if a user is already in a Teams call or meeting on one device (e.g., a Windows PC or a smartphone), the official Teams client on another device, upon launch, detects the ongoing call and offers options like:\n\"Add this device\": Join the ongoing call with the second device, adding it to the session (often muting the mic/speaker initially).\n\"Transfer to this device\": Move the entire call session from the first device to the second one, ending the call on the original device.\n\nCurrent Behaviour in teams-for-linux:\nAs far as I can tell, teams-for-linux does not currently detect if the user is already in a call on another device signed into the same account. Therefore, there is no option to join or transfer an existing active call to the Linux client.\n\nDesired Behaviour:\nIt would be extremely helpful if teams-for-linux could detect an ongoing call associated with the user's account on other devices and provide similar options (\"Join\" / \"Transfer\") to seamlessly bring the Linux client into the active session.\n\nUse Case / Motivation:\nThis feature significantly enhances flexibility. Users often need to switch devices during a call (e.g., move from a mobile device to a desktop for better screen sharing or a more stable connection) or might want to use their Linux machine alongside another device (e.g., manage video/screenshare on Linux while handling audio on a phone).\n\nThank you for considering this feature request!\n\n![Image](https://github.com/user-attachments/assets/56d4738f-6d24-475a-bb63-e04037df2035)\n\n\n![Image](https://github.com/user-attachments/assets/417d860c-f4ee-4bce-90b5-426c2958922f)\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-23T20:32:35+00:00",
+    "updated_at": "2025-04-24T08:21:48+00:00",
+    "closed_at": "2025-04-24T08:21:47+00:00",
+    "user": "Aleprex",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "blocked"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1671",
+    "is_pull_request": false
+}

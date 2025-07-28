@@ -1,0 +1,18 @@
+{
+    "id": 2704782420,
+    "number": 1505,
+    "title": "How to call a secondary ringer script?",
+    "body": "I am using teams-for-linux (1.11.5, installed from tar.gz; **a great project, thanks!**) and since a few days we use it as phone too. That works, but there is (neither in the web version nor in teams-for-linux (of course)) the option to use/configure a \"secondary ringer\" (as in the Windows version), so that the PC speakers would ring too on an incoming call. And only the headphones - if I do not wear them - are very silent.\r\n\r\nThere seems to be a perfect solution for that problem - a command line option:\r\n\r\n`teams-for-linux --incomingCallCommand /path/to/my/secondary-ringer-program.sh`\r\n\r\nHowever, it does not seem to work. Is that option not meant for that task? What is it used for?\r\nThere are some bug reports, which mention secondary ringer scripts (I saw them), but no description, how it they should be called.\r\n\r\nBest regards, Wolfgang",
+    "state": "closed",
+    "created_at": "2024-11-29T11:03:28+00:00",
+    "updated_at": "2024-11-29T14:22:18+00:00",
+    "closed_at": "2024-11-29T14:22:03+00:00",
+    "user": "daute",
+    "assignee": null,
+    "labels": [
+        "duplicate"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1505",
+    "is_pull_request": false
+}

@@ -1,0 +1,18 @@
+{
+    "id": 3268508093,
+    "number": 1767,
+    "title": "[Feat]: Switching to personal account",
+    "body": "### Describe the feature\n\nSwitching to personal account\n\n### Motivation\n\nIs it possible to add feature to switch to personal account or that's limitation wit Teams PWA and can't be added here?\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "open",
+    "created_at": "2025-07-28T07:26:26+00:00",
+    "updated_at": "2025-07-28T14:17:04+00:00",
+    "closed_at": null,
+    "user": "zelimir86",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1767",
+    "is_pull_request": false
+}

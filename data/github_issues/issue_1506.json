@@ -1,0 +1,16 @@
+{
+    "id": 2707102070,
+    "number": 1506,
+    "title": "updating the electron version to 33.2.1",
+    "body": "From the [electron release notes](https://releases.electronjs.org/releases/stable)\r\n\r\nhttps://github.com/electron/electron/issues/44277 - upload file bug might fix https://github.com/IsmaelMartinez/teams-for-linux/issues/1469 \r\nhttps://github.com/electron/electron/pull/44800 and https://github.com/electron/electron/pull/44753 - drag issue, might fix the https://github.com/IsmaelMartinez/teams-for-linux/issues/1487 (more a hope than anything)\r\nhttps://github.com/electron/electron/pull/44671 - WebContentsView issue that might fix https://github.com/IsmaelMartinez/teams-for-linux/issues/1490\r\n",
+    "state": "closed",
+    "created_at": "2024-11-30T09:52:17+00:00",
+    "updated_at": "2024-11-30T09:52:47+00:00",
+    "closed_at": "2024-11-30T09:52:47+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1506",
+    "is_pull_request": true
+}

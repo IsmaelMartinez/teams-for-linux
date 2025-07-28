@@ -1,0 +1,18 @@
+{
+    "id": 2924333096,
+    "number": 1595,
+    "title": "[Feat]: Custom background for teams-for-linux",
+    "body": "### Describe the feature\n\nPossibility to add custom image as a background on teams call\n\n### Motivation\n\nI would like to set a custom background image (e.g., a .png file) that I downloaded from Google Images. I want to use this feature to change my background wallpaper during chat calls, matching the image to the theme of the conversation.\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\nmaybe is there any other possibility to load custom images for example using the terminal and modifying the config etc? if so please provide me steps :)\n\n\nafaik there is a windows edition that supports choosing the images",
+    "state": "closed",
+    "created_at": "2025-03-17T09:23:50+00:00",
+    "updated_at": "2025-03-20T09:13:35+00:00",
+    "closed_at": "2025-03-17T10:01:57+00:00",
+    "user": "pacion",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1595",
+    "is_pull_request": false
+}

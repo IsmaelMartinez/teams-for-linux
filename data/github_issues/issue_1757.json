@@ -1,0 +1,18 @@
+{
+    "id": 3234959453,
+    "number": 1757,
+    "title": "[Bug]: App automatically closes",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nSometimes the app randomly closes and I have to install it again for it to work, I've tried both AUR and Flatpak and neither work. I know it's not a problem with my PC since I have a coworker who has Ubuntu 22.04 and tried installing snap and the same thing happens.\n\n### What package are you using?\n\naur\n\n### Version\n\n2.1.0-1",
+    "state": "open",
+    "created_at": "2025-07-16T08:16:47+00:00",
+    "updated_at": "2025-07-28T17:01:05+00:00",
+    "closed_at": null,
+    "user": "mmartinez1164",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1757",
+    "is_pull_request": false
+}

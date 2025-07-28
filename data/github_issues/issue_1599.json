@@ -1,0 +1,19 @@
+{
+    "id": 2942189797,
+    "number": 1599,
+    "title": "[Bug]: Upload/Change Image is showing different language output in Ubuntu OS",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nUploade image popup not showing the data properly\n\n### What package are you using?\n\ndeb\n\n### Version\n\n1.13.1\n\n### Reproduction steps\n\n```markdown\n1. Go to any groups or chat\n2. Try to upload an image\n3. View the image upload dialog box\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n![Image](https://github.com/user-attachments/assets/06932b7c-8924-415b-811a-f442a22e7c63)",
+    "state": "closed",
+    "created_at": "2025-03-24T06:49:47+00:00",
+    "updated_at": "2025-03-24T06:59:27+00:00",
+    "closed_at": "2025-03-24T06:59:20+00:00",
+    "user": "miyanialkesh7",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "duplicate"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1599",
+    "is_pull_request": false
+}

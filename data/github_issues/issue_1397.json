@@ -1,0 +1,16 @@
+{
+    "id": 2509636975,
+    "number": 1397,
+    "title": "The organizational structure is displayed abnormally",
+    "body": "The organizational structure is displayed abnormally, the parent ogranizational cannot be displayed\r\nVersion：1.10.0\r\nOS：Ubuntu 20.04\r\n\r\nScreenshot 1\r\n![2024-09-06_13-30](https://github.com/user-attachments/assets/460875d3-1619-4462-b7d4-4a6dd4c7f98d)\r\n\r\nScreenshot 2\r\n![2024-09-06_14-33](https://github.com/user-attachments/assets/5963e3cf-9c9e-4a71-aea6-e0159754c7d2)\r\n",
+    "state": "closed",
+    "created_at": "2024-09-06T06:35:35+00:00",
+    "updated_at": "2024-09-09T02:06:20+00:00",
+    "closed_at": "2024-09-06T08:03:01+00:00",
+    "user": "rangerzhou",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1397",
+    "is_pull_request": false
+}

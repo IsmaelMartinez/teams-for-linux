@@ -1,0 +1,16 @@
+{
+    "id": 2955220402,
+    "number": 1617,
+    "title": "Increasing the version of electron to fix the window resize, and checking if the settings file is present before trying to restore it",
+    "body": "* Update the deep link regex to allow /l/chat deep links in addition to meetings and channels\r\n* Increase dependency versions to include fix from electron for #1487\r\n* Checking if the settings file exists when trying to restore it to fix #1547\r\n* Add screen-wake-lock, persistent-storage and geolocation to the allowed permission, and add sharepoint.com and outlook.office.com to the allowed domains",
+    "state": "closed",
+    "created_at": "2025-03-28T07:08:02+00:00",
+    "updated_at": "2025-03-28T07:12:15+00:00",
+    "closed_at": "2025-03-28T07:12:15+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1617",
+    "is_pull_request": true
+}

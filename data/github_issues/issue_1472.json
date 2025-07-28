@@ -1,0 +1,16 @@
+{
+    "id": 2647004139,
+    "number": 1472,
+    "title": "1.11.4 regression: t4l dies at startup",
+    "body": "**Describe the bug**\r\nSince the upgrade to version 1.11.4 teams-for-linux dies at startup:\r\n```\r\n{hdunkel@dpcl082:aixigo 09:41:51 (master) 1103} teams-for-linux --trace-warnings --webDebug --logConfig='{}'\r\nall good with appLogLevels you aren't using them\r\nall good with onlineCheckMethod you aren't using them\r\nInitialising logger with config: \"{}\"\r\n09:41:58.649  File logging at /home/hdunkel/.config/teams-for-linux/logs/main.log with level silly\r\n09:41:58.651  Console logging enabled with level silly\r\n09:41:58.652  Logger initialised\r\n09:41:58.653  configPath: /home/hdunkel/.config/teams-for-linux\r\n09:41:58.653  configFile: { appIcon: '/usr/share/icons/hicolor/48x48/apps/teams-for-linux.png' }\r\n09:41:58.840  (node:324415) UnhandledPromiseRejectionWarning: ReferenceError: config is not defined\r\n    at BrowserWindowManager.createNewBrowserWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:56:20)\r\n    at BrowserWindowManager.createWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:31:28)\r\n    at Object.onAppReady (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/index.js:43:38)\r\n    at App.handleAppReady (/opt/teams-for-linux/resources/app.asar/app/index.js:246:16)\r\n    at App.emit (node:events:531:35)\r\n    at emitUnhandledRejectionWarning (node:internal/process/promises:298:15)\r\n    at warnWithErrorCodeUnhandledRejectionsMode (node:internal/process/promises:406:5)\r\n    at processPromiseRejections (node:internal/process/promises:470:17)\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:96:32)\r\n09:41:58.841  (node:324415) ReferenceError: config is not defined\r\n    at BrowserWindowManager.createNewBrowserWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:56:20)\r\n    at BrowserWindowManager.createWindow (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/browserWindowManager.js:31:28)\r\n    at Object.onAppReady (/opt/teams-for-linux/resources/app.asar/app/mainAppWindow/index.js:43:38)\r\n    at App.handleAppReady (/opt/teams-for-linux/resources/app.asar/app/index.js:246:16)\r\n    at App.emit (node:events:531:35)\r\n[324517:1110/094158.893056:ERROR:viz_main_impl.cc(181)] Exiting GPU process due to errors during initialization\r\n```\r\nAfter moving back to 1.11.3 the problem is gone.\r\n\r\nVerified on Debian 12 and Sid.\r\n\r\n**Desktop (please complete the following information):**\r\n - Debian 12\r\n - Installation package deb\r\n - 1.11.4\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-11-10T08:43:59+00:00",
+    "updated_at": "2024-11-11T09:47:22+00:00",
+    "closed_at": "2024-11-11T08:14:19+00:00",
+    "user": "harridu",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1472",
+    "is_pull_request": false
+}

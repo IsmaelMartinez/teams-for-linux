@@ -1,0 +1,19 @@
+{
+    "id": 3002387633,
+    "number": 1662,
+    "title": "[Feat]: With `trayIconEnabled` set to `false` context menu doesn't show",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nRight-clicking the misspelled word for example just selects it instead of showing the context menu.\n\n![Image](https://github.com/user-attachments/assets/ba63ffa1-624b-4d1f-984c-3c952303602c)\n\n### What package are you using?\n\naur\n\n### Version\n\n2.0.8\n\n### Reproduction steps\n\nConfig:\n\n```json\n{\n  \"trayIconEnabled\": false\n}\n```\n\n### Expected Behavior\n\n![Image](https://github.com/user-attachments/assets/e8d60356-ed0f-4cb4-8264-e9ff6e5d9ea4)\n\n",
+    "state": "closed",
+    "created_at": "2025-04-17T12:44:35+00:00",
+    "updated_at": "2025-05-25T09:35:04+00:00",
+    "closed_at": "2025-05-25T09:35:04+00:00",
+    "user": "GrzegorzKozub",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1662",
+    "is_pull_request": false
+}

@@ -1,0 +1,18 @@
+{
+    "id": 2750591973,
+    "number": 1531,
+    "title": "Feature: Make sure the version in use is stable",
+    "body": "According to this issue [link](https://answers.microsoft.com/en-us/msteams/forum/all/web-teams-microphone-issue/6406dab7-4f50-4ec6-b38d-af9aca2ea132), Microsoft Teams can choose some users to be on some testing group.\r\n\r\nAs we in linux have so much barriers to overcome, I think it would be great if we could always be on a stable environment.\r\n\r\nAccording to the issue, there is a way to force the use of a stable web version of msteams.\r\n\r\n```\r\nFor now, changing the link to the following works:\r\nhttps://teams.microsoft.com/v2/?ring=general\r\nThis forces teams to use the pool of regular mainstream users that doesn't get any experimental features such as the one that's currently breaking everything...\r\n```\r\n\r\nCan/should this be the default for this snap? \r\nIf not, is it possible to create some documentation that allows the user to change it if wanted/needed?\r\n",
+    "state": "closed",
+    "created_at": "2024-12-19T14:54:05+00:00",
+    "updated_at": "2025-01-24T09:34:49+00:00",
+    "closed_at": "2025-01-24T09:34:47+00:00",
+    "user": "abacao",
+    "assignee": null,
+    "labels": [
+        "Stale"
+    ],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1531",
+    "is_pull_request": false
+}

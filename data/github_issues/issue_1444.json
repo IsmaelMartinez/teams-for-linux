@@ -1,0 +1,18 @@
+{
+    "id": 2582808285,
+    "number": 1444,
+    "title": "Hide Title Bar",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nI'm trying to hide the title-bar in liinux, I know it's possible using electron, just can't find it in this app.\r\nI also know there's an older issue on this topic - but doesn't seem to work properly [issue](https://github.com/IsmaelMartinez/teams-for-linux/issues/185)\r\n\r\n**Describe the solution you'd like**\r\nHave a flag in the configuration to activate it the \"frame: false\" option in electron when creating the window\r\n\r\nThanks!\r\n",
+    "state": "closed",
+    "created_at": "2024-10-12T10:45:55+00:00",
+    "updated_at": "2025-01-17T23:40:52+00:00",
+    "closed_at": "2025-01-17T22:29:54+00:00",
+    "user": "jorge-uptio",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "blocked"
+    ],
+    "comments_count": 16,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1444",
+    "is_pull_request": false
+}

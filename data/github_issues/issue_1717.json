@@ -1,0 +1,18 @@
+{
+    "id": 3098264473,
+    "number": 1717,
+    "title": "[Bug]: Cannot authenticate in app (trello)",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nWhen I add the Trello app in some chat, it shows a log in button. When I click that button, it opens the authentication window in the system's default browser. The link must be openned inside teams-for-linux, otherwise the auth cookies will be set in the default browser, not in teams-for-linux.\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.14\n\n### Reproduction steps\n\n```markdown\n1. Go to a chat\n2. Click on + to add an app\n3. Chose Trello\n4. Try to login\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-05-28T18:49:46+00:00",
+    "updated_at": "2025-05-29T13:49:26+00:00",
+    "closed_at": "2025-05-29T13:49:25+00:00",
+    "user": "diegorubert",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1717",
+    "is_pull_request": false
+}

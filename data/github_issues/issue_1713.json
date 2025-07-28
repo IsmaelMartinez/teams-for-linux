@@ -1,0 +1,18 @@
+{
+    "id": 3090318773,
+    "number": 1713,
+    "title": "[Bug]: Close button while in chat does not work",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nWhile in a meeting with the Chats tab open, you cannot simply close it by pressing the close button. You need to navigate to another tab, say the people tab to close it from there. Which is a bit inconvenient\n\n### What package are you using?\n\nrpm\n\n### Version\n\n2.0.14:\n\n### Reproduction steps\n\n```markdown\n1. Open them teams-fo-linux app and join a meeting\n2. Move to the chat Icon and select it\n3. Try to close it with the close button within the chats(the X icon)\n4. Notice that it does not close, you need to open another icon section, such as the people icon, and close that for the side-profile to disappear.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1. Open them teams-fo-linux app and join a meeting\n2. Move to the chat Icon and select it\n3. Close it with the close button within the chats(the X icon)\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\nHere is a video recording of the behaviour. The cursor is not available, but you can see its movement since when it hovers over an item, its primary colour changes to blue-ish.\n\n1. Behaviour on my teams-for-linux app.\n\nhttps://github.com/user-attachments/assets/8aa27ca0-2b72-449e-8746-eb1f705912d4\n\n2. Behaviour on the website.(Not replicated)\n\nhttps://github.com/user-attachments/assets/5bd999d0-aac8-4bb6-a933-4d570cccd5c8",
+    "state": "closed",
+    "created_at": "2025-05-26T07:39:05+00:00",
+    "updated_at": "2025-06-04T06:40:06+00:00",
+    "closed_at": "2025-06-04T06:40:04+00:00",
+    "user": "mbvgua",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1713",
+    "is_pull_request": false
+}

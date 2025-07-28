@@ -1,0 +1,20 @@
+{
+    "id": 3150447325,
+    "number": 1734,
+    "title": "[Bug]: Can't start after upgrading to 2.0.17. GTK Errors causing process to crash.",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nAs of 2.0.17, the process no longer starts. If I attempt to start in the console, I see this error:\n\n```\n(process:1003603): Gtk-ERROR **: 08:31:54.329: GTK 2/3 symbols detected. Using GTK 2/3 and GTK 4 in the same process is not supported\n\nTrace/breakpoint trap (core dumped)\n```\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.17\n\n### Reproduction steps\n\n```markdown\n1. Upgrade to 2.0.17\n2. Start teams-for-linux\n\nI'm on Ubuntu 22.04.\n```\n\n### Expected Behavior\n\n```markdown\n1. The application starts\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n\njames@sauron ~ $ teams-for-linux --webDebug --logConfig='{}'\nNo config file found, using default values\nInitialising logger with config: \"{}\"\n08:35:10.060 › File logging at /home/james/.config/teams-for-linux/logs/main.log with level silly\n08:35:10.061 › Console logging enabled with level silly\n08:35:10.061 › Logger initialised\n08:35:10.062 › configPath: /home/james/.config/teams-for-linux\n08:35:10.062 › configFile: {}\n08:35:10.099 › (node:1004301) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.\n(Use `teams-for-linux --trace-deprecation ...` to show where the warning was created)\n\n(process:1004301): Gtk-ERROR **: 08:35:10.105: GTK 2/3 symbols detected. Using GTK 2/3 and GTK 4 in the same process is not supported\nTrace/breakpoint trap (core dumped)\n\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-06-16T15:34:36+00:00",
+    "updated_at": "2025-06-19T10:35:18+00:00",
+    "closed_at": "2025-06-16T16:02:40+00:00",
+    "user": "crankycyclops",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "duplicate",
+        "not an issue"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1734",
+    "is_pull_request": false
+}

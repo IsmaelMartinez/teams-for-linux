@@ -1,0 +1,16 @@
+{
+    "id": 2564900028,
+    "number": 1432,
+    "title": "Don't change icon",
+    "body": "Could you please NOT change the icon on every update?\r\nSince the app doesn't have a proper notification system, I have another code that regularly checks the icon and if it looks like there's a red notification number on it, sends me a signal.\r\nEvery time you change the icon or the location of the red dot, it breaks my system.\r\n\r\nHere are some examples of the changes you make:\r\n\r\n![teams-o](https://github.com/user-attachments/assets/e52785c1-3442-4dbd-83f0-8bb5e94fe06d)\r\n![teams-old](https://github.com/user-attachments/assets/32216a12-c169-4e44-b13c-536c8b118abb)\r\n![teamsold](https://github.com/user-attachments/assets/40695a36-4352-4daa-972d-c7e94827a6ba)\r\n![teams](https://github.com/user-attachments/assets/f99920b4-bbbd-42b9-9151-9d494b415dc7)\r\n",
+    "state": "closed",
+    "created_at": "2024-10-03T19:57:46+00:00",
+    "updated_at": "2024-10-03T20:17:54+00:00",
+    "closed_at": "2024-10-03T20:17:25+00:00",
+    "user": "youknow16",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1432",
+    "is_pull_request": false
+}

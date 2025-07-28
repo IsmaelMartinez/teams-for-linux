@@ -1,0 +1,18 @@
+{
+    "id": 2272559836,
+    "number": 1238,
+    "title": "give some information of the app name in the popup of appdicator",
+    "body": "For example:\r\n\r\ncould you change \"Open\" to \"Open Teams for Linux\"\r\nor change \"About\" to \"About Teams for Linux\"\r\n\r\nso we can get the name of the app, especially when the tray icon is not clear or we are not familiar with the icon.\r\n\r\n\r\n![image](https://github.com/IsmaelMartinez/teams-for-linux/assets/27529/508fe038-f86c-44c5-82bc-f4d7a1911a48)\r\n",
+    "state": "closed",
+    "created_at": "2024-04-30T22:09:16+00:00",
+    "updated_at": "2024-10-16T07:59:56+00:00",
+    "closed_at": "2024-10-16T07:59:56+00:00",
+    "user": "lidaobing",
+    "assignee": null,
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1238",
+    "is_pull_request": false
+}

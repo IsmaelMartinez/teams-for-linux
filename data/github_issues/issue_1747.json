@@ -1,0 +1,18 @@
+{
+    "id": 3163795784,
+    "number": 1747,
+    "title": "[Feat]: Option to use Electron native spellchecker",
+    "body": "### Describe the feature\n\nOption to use Electron native spellchecker\n\n### Motivation\n\nHi, I understand that a lot of Teams features are Microsoft things that can't be controlled by teams-for-linux. But in case there's any way to manipulate or override the functionality via some kind of hidden setting I'm creating this feature request. Basically, Teams has recently implemented its own spellchecker overlay with a right-click HTML/Javascript menu for spelling suggestions. Frankly, it's awful compared to the one that is integrated into the Chromium platform for all Electron apps, as the Teams implementation only allows for selecting up to 3 languages and it gets confused with mixed-language messages. I tried deleting all of the selected languages from the Teams spellchecker settings, and it allows them to all be deleted, but after returning later to that settings panel the U.S. English language re-appears. When completely disabling the spellchecker option there it does disable it, and in the message composer field the right-click Electron menu for \"Writing Languages\" does allow selecting languages, but there is no actual underlining wrong words or correction suggestions. This used to work as expected in teams-for-linux before Teams implemented their own spellchecker, so I wonder if there is a way to force the Electron platform spellchecker to work. This probably isn't at all relevant, but this situation reminds me of the TinyMCE HTML composer that many blogs and forum platforms use, which also implemented its own overlay HTML/Javascript spellchecker that can be disabled so that it falls back to the regular browser's native spellchecker:\nhttps://www.tiny.cloud/docs/tinymce/latest/spell-checking\n\nThanks as always for maintaining this essential lifeline for Linux users that need to use Teams!",
+    "state": "open",
+    "created_at": "2025-06-20T16:08:41+00:00",
+    "updated_at": "2025-07-02T07:22:40+00:00",
+    "closed_at": null,
+    "user": "geckolinux",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement"
+    ],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1747",
+    "is_pull_request": false
+}

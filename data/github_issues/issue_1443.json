@@ -1,0 +1,16 @@
+{
+    "id": 2581463466,
+    "number": 1443,
+    "title": "No Call Window within a Group Chat",
+    "body": "**Describe the bug**\r\nIf i join a call within a group chat, no call windows appears, but I can hear the others and the others hear me.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Go to 'a Group Chat'\r\n2. Click on 'join or Start Call'\r\n\r\n4. No call windows appears\r\n\r\n**Expected behavior**\r\na call windows shoud appear where i can see the other members of the call and the buttons end call, mute, cam off/on and cast display\r\n\r\n**Desktop (please complete the following information):**\r\n - Linux Mint Cinnamon\r\n - Version 6.2.9",
+    "state": "closed",
+    "created_at": "2024-10-11T14:01:35+00:00",
+    "updated_at": "2024-10-13T07:33:31+00:00",
+    "closed_at": "2024-10-12T20:30:08+00:00",
+    "user": "chwiget",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1443",
+    "is_pull_request": false
+}

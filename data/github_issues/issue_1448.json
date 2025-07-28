@@ -1,0 +1,16 @@
+{
+    "id": 2589430007,
+    "number": 1448,
+    "title": "Share screen isn't working",
+    "body": "I'm using Ubuntu 24.04 LTS, share screen isn't working, it shows this error message.\r\n\r\n![image](https://github.com/user-attachments/assets/eff13b22-b7be-4ec6-b610-d37c7e9fb9d6)\r\n\r\n\r\nHowever, Teams can access the camera and can start the video. Also sharing white board works fine. the problem is in sharing desktop window or some app screen.",
+    "state": "closed",
+    "created_at": "2024-10-15T17:32:35+00:00",
+    "updated_at": "2024-10-16T08:04:00+00:00",
+    "closed_at": "2024-10-16T08:04:00+00:00",
+    "user": "shady236",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1448",
+    "is_pull_request": false
+}

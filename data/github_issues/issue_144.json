@@ -1,0 +1,18 @@
+{
+    "id": 452579304,
+    "number": 144,
+    "title": "Need to kill the process after closing the window",
+    "body": "In version 0.3.0, we found on our system we need to kill the process after closing the window.  If we don't kill the process, we can't restart Teams for Linux from the launcher.\r\n\r\nSteps to reproduce the behavior:\r\n\r\n- Open the app by: Go to Unity launcher, search 'teams', click on 'Teams for Linux'\r\n(note Teams for Linux opens)\r\n- log in\r\n- Click on red x icon in the window title bar to close Teams for Linux\r\n(Note that the app window closes)\r\n- Open the app again by: Go to Unity launcher, search 'teams', click on 'Teams for Linux'\r\n(Note that nothing happens.  No window opens.)\r\n- Open terminal and enter:\r\n\r\n`ps -x | grep teams`\r\n\r\n(Note that 5 related processes are found)\r\n` 3457 ?        Sl     1:36 /snap/teams-for-linux/15/teams-for-linux`\r\n\r\n`3600 ?        S      0:00 /snap/teams-for-linux/15/teams-for-linux --type=zygote --no-sandbox`\r\n\r\n` 3857 ?        Sl     0:00 /snap/teams-for-linux/15/teams-for-linux --type=gpu-process --enable-features=SharedArrayBuffer --no-sandbox --gpu-preferences=KAAAAAAAAACAAABAAQAAAAAAAAAAAGAAAAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAA --use-gl=swiftshader-webgl --service-request-channel-token=9971161000485549725`\r\n\r\n `3858 ?        Sl     0:02 /snap/teams-for-linux/15/teams-for-linux --type=renderer --no-sandbox --enable-features=SharedArrayBuffer --service-pipe-token=10248881762839586933 --lang=en-US --app-path=/snap/teams-for-linux/15/resources/app.asar --user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) TeamsforLinux/0.3.0 Chrome/69.0.3497.128 Electron/4.2.0 Safari/537.36 --node-integration=true --webview-tag=true --no-sandbox --background-color=#fff --num-raster-threads=4 --enable-main-frame-before-activation --service-request-channel-token=10248881762839586933 --renderer-client-id=5 --shared-files=v8_context_snapshot_data:100,v8_natives_data:101`\r\n\r\n`31279 ?        Sl     0:10 /snap/teams-for-linux/15/teams-for-linux --type=renderer --no-sandbox --enable-features=SharedArrayBuffer --disable-gpu-compositing --service-pipe-token=4062787146318338780 --lang=en-US --app-path=/snap/teams-for-linux/15/resources/app.asar --user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) TeamsforLinux/0.3.0 Chrome/69.0.3497.128 Electron/4.2.0 Safari/537.36 --enable-plugins --node-integration=false --webview-tag=false --no-sandbox --native-window-open --preload=/snap/teams-for-linux/15/resources/app.asar/app/browser/index.js --background-color=#fff --num-raster-threads=4 --enable-main-frame-before-activation --service-request-channel-token=4062787146318338780 --renderer-client-id=13 --shared-files=v8_context_snapshot_data:100,v8_natives_data:101`\r\n`\r\n\r\n- In terminal, enter:\r\n`kill -9 3457`\r\n- Open the app by:  Go to Unity launcher, search 'teams', click on 'Teams for Linux'\r\n(Note that app opens now)\r\n\r\nDesktop:\r\n\r\nOS: [Linux]\r\nInstallation package [Ubuntu 16.0.4 LTS]\r\nVersion [0.3.0]\r\n\r\nWe did not have this issue in version 0.2.1.\r\n",
+    "state": "closed",
+    "created_at": "2019-06-05T15:49:28+00:00",
+    "updated_at": "2024-09-25T07:36:28+00:00",
+    "closed_at": "2019-06-08T11:44:15+00:00",
+    "user": "kw-at-oocl",
+    "assignee": null,
+    "labels": [
+        "not an issue"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/144",
+    "is_pull_request": false
+}

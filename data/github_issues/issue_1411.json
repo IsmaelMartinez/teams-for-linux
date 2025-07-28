@@ -1,0 +1,16 @@
+{
+    "id": 2538520959,
+    "number": 1411,
+    "title": "Camera Flickering with Wayland on Electron 30.*",
+    "body": "**Describe the bug**\r\nIn meetings with cameras the camera picture flickers (it looks like it partially interlaces a couple of previews frames with the current one).\r\n\r\nThis only happens when setting `ELECTRON_OZONE_PLATFORM_HINT=auto` for teams-for-linux. It doesn't happen with xwayland it also doesn't happen in chromium 129 with wayland.\r\n\r\nI have two independent systems that observe this, both are on Arch with KDE and have Intel graphics (`Intel(R) Core(TM) Ultra 7 155U`).\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Set `ELECTRON_OZONE_PLATFORM_HINT=auto`\r\n2. Start teams-for-linux\r\n3. Join a call with someone that has the camera active\r\n4. Let them waive at the camera\r\n\r\nI assume this might behave differently on differently on different GPUs and/or desktops\r\n\r\n**Expected behavior**\r\nClean video feeds\r\n\r\n**Screenshots**\r\nI don't have screenshots, but it's very noticable when it happens, especially with fast horizontal movement.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Arch (non-testing)\r\n - Installation package: AUR teams-for-linux package (fyi, I'm one of the maintainers)\r\n - Version: 1.10.2\r\n\r\n**Additional context**\r\n\r\nGiven that no issue exists in chromium 129 and that it seems to be wayland/ozone specific, I just tried building teams-for-linux with electron 32.1.2 and that actually fixes the issue.\r\n",
+    "state": "closed",
+    "created_at": "2024-09-20T10:59:10+00:00",
+    "updated_at": "2024-10-02T10:05:53+00:00",
+    "closed_at": "2024-10-02T06:35:46+00:00",
+    "user": "pschichtel",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 9,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1411",
+    "is_pull_request": false
+}

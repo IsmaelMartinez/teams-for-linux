@@ -1,0 +1,16 @@
+{
+    "id": 2575802265,
+    "number": 1438,
+    "title": "Giphy GIFs are not displayed",
+    "body": "**Describe the bug**\r\nGIFs from Giphy are not displayed\r\n\r\n**Expected behavior**\r\nThe GIF is embedded\r\n\r\n**Screenshots**\r\n![image](https://github.com/user-attachments/assets/02641bfd-3193-4849-b96f-57c19fee2a75)\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Pop!_OS 22.04 LTS\r\n - Installation package flatpak\r\n - Version 1.11.0\r\n",
+    "state": "closed",
+    "created_at": "2024-10-09T12:34:28+00:00",
+    "updated_at": "2024-10-11T12:38:39+00:00",
+    "closed_at": "2024-10-11T12:38:39+00:00",
+    "user": "SimonIT",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1438",
+    "is_pull_request": false
+}

@@ -1,0 +1,19 @@
+{
+    "id": 3029460430,
+    "number": 1689,
+    "title": "[Bug]: unexpected switch to a different chat",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nScreen switches into a random chat \n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\nThe bug became being steady reproducible and appeared approx. on version ~2.0.9. It can happen any time, but here's how i managed to reproduce it manually:\n1. Open up an image which was previously sent in a chat\n2. Right click -> Copy image\n\nAnd there we go: the image all of the sudden closes and the screen switches to a random chat.\n\nPlease note: after app restart, the issue is gone for a time being, but over the course of the time it's back again.\n```\n\n### Expected Behavior\n\n```markdown\nteams-for-linux works without random switches as in the website/PWA\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-29T20:25:47+00:00",
+    "updated_at": "2025-06-13T09:37:32+00:00",
+    "closed_at": "2025-06-13T09:37:32+00:00",
+    "user": "igoregit",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "Stale"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1689",
+    "is_pull_request": false
+}

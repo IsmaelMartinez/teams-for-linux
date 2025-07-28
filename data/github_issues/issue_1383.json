@@ -1,0 +1,19 @@
+{
+    "id": 2491561580,
+    "number": 1383,
+    "title": "Character coding mixup in filenames when saving files",
+    "body": "**Describe the bug**\r\nWhen saving files, it seems to be getting the character coding wrong, interpreting UTF-8 filenames as latin-1. At least in DMs, I don't see the same issue in team channels. This does not happen when using Teams in Firefox.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Send a file in a conversation, with a file name that contains a non-ASCII character\r\n2. Click the three dots and choose to download the file\r\n3. File has messed up filename. E.g. \"ä\" becomes \"Ã¤\"\r\n\r\n**Expected behavior**\r\nFile is saved with the correct filename\r\n\r\n**Screenshots**\r\n![Screenshot_20240828_112228](https://github.com/user-attachments/assets/fda09ea3-df5a-4438-8497-3158a976bef6)\r\n\r\n\r\n**Desktop (please complete the following information):**\r\n - Operating System: openSUSE Leap 15.6\r\n- KDE Plasma Version: 5.27.11\r\n- KDE Frameworks Version: 5.115.0\r\n- Qt Version: 5.15.12\r\n- Kernel Version: 6.4.0-150600.23.17-default (64-bit)\r\n- Graphics Platform: X11\r\n- Processors: 16 × AMD Ryzen 7 1700X Eight-Core Processor\r\n- Memory: 62.7 Gibyte of RAM\r\n- Graphics Processor: AMD Radeon RX 6500 XT\r\n - Installation package: Flatpak\r\n - Version: 1.9.2\r\n",
+    "state": "closed",
+    "created_at": "2024-08-28T09:29:08+00:00",
+    "updated_at": "2024-10-02T06:24:34+00:00",
+    "closed_at": "2024-10-02T06:24:33+00:00",
+    "user": "LinAGKar",
+    "assignee": null,
+    "labels": [
+        "known issue/workaround",
+        "flatpak"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1383",
+    "is_pull_request": false
+}

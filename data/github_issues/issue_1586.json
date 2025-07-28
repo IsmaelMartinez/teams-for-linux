@@ -1,0 +1,18 @@
+{
+    "id": 2902169165,
+    "number": 1586,
+    "title": "[Bug]: USB Jabra Auto Pick Up and Notification Issue",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nUSB Jabra Auto Pick Up and Notification Issue\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n1.12.7 \n\n### Reproduction steps\n\n```markdown\n1. When you get a teams call, USB headsets (JABRA with Mic) will not pick up automatically. I have to for select it from settings. However, if I boot with USB headsets then it's fine.\n2. Notifications not making a sound or not showing in Gnome center panel\n```\n\n### Expected Behavior\n\n```markdown\n1. When I get a call, and plug in the USB headsets, the app should switch to USB headsets automatically\n2. When I get a message, app is not notifying on the gnome center panel or make a sound\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\nHi thank you very much for supporting this awsome app. I have been using it since 4 years.  For some reason, if I dont boot in with USB headsets (Jabra with mic) teams will not pick up the headsets automically. I have to force select it. Problem no 2: I use worspace on Fedora 41, I do not get notifications on gnome center pannel or sound for that matter.",
+    "state": "closed",
+    "created_at": "2025-03-07T06:46:46+00:00",
+    "updated_at": "2025-03-07T13:49:15+00:00",
+    "closed_at": "2025-03-07T13:49:13+00:00",
+    "user": "rahulfedora",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1586",
+    "is_pull_request": false
+}

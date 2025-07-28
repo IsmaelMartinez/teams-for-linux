@@ -1,0 +1,20 @@
+{
+    "id": 1953056574,
+    "number": 986,
+    "title": "Disabled context isolation is a security hole/please enable",
+    "body": "**Describe the bug**\r\nFor #434 and further #492 context isolation was disabled. This is a security issue as it exposes\r\nall electron api to websites running inside Electron.\r\n\r\nIf I understand correctly one has to implement contextBridges to be able to use ipcRender which\r\nis required for WebRTC.\r\nI've linked a few documentation pages around this below.\r\n\r\n**Desktop :**\r\n - OS: any\r\n - Installation package: any\r\n - Version: >1.0.0.17\r\n\r\n**Additional context**\r\n- Related issue: #492\r\n- Commit in question: https://github.com/IsmaelMartinez/teams-for-linux/commit/6e8782b41016e628b69c73de8a4422d175105701\r\n- [Electron on Context Isolation](https://www.electronjs.org/docs/latest/tutorial/context-isolation)\r\n- [Electron on contextBridge](https://www.electronjs.org/docs/latest/api/context-bridge)\r\n- [WebRTC-hid-SDK on Context Isolation](https://github.com/RibbonCommunications/webrtc-hid-sdk/blob/HEAD/docs/context-isolation.md)",
+    "state": "closed",
+    "created_at": "2023-10-19T21:07:31+00:00",
+    "updated_at": "2025-01-20T09:35:25+00:00",
+    "closed_at": "2025-01-20T09:35:25+00:00",
+    "user": "Thaodan",
+    "assignee": null,
+    "labels": [
+        "help wanted",
+        "known issue/workaround",
+        "Stale"
+    ],
+    "comments_count": 26,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/986",
+    "is_pull_request": false
+}

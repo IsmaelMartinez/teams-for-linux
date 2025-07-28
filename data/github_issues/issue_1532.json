@@ -1,0 +1,16 @@
+{
+    "id": 2753949614,
+    "number": 1532,
+    "title": "Keeps processes running after quitting",
+    "body": "After quitting the application (from the tray), ps shows there are still processes running.\r\n\r\nSteps to reproduce the behavior:\r\n1. Start Teams and log in.\r\n2. Log out and quit Teams (using menu in tray).\r\n3. In a terminal type ps aux | grep teams | grep -v grep\r\n4. Find three processes labeled  /snap/teams-for-linux/724/teams-for-linux.\r\n\r\n**Expected behavior**\r\nQuitting an application should remove all its processes IMHO.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Kubuntu 24.10\r\n - Installation package snap\r\n - Version 1.12.5\r\n \r\n\r\n**Debug**\r\nSee attached file.\r\n[teamsdebug.txt](https://github.com/user-attachments/files/18218425/teamsdebug.txt)\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-12-21T12:02:23+00:00",
+    "updated_at": "2025-01-28T07:08:31+00:00",
+    "closed_at": "2025-01-28T07:08:31+00:00",
+    "user": "MennoLabs",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 10,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1532",
+    "is_pull_request": false
+}

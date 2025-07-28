@@ -1,0 +1,19 @@
+{
+    "id": 2926282227,
+    "number": 1596,
+    "title": "[Bug]: FATAL:setuid_sandbox_host.cc",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nsetting permissions properly\n\n### What package are you using?\n\ndeb\n\n### Version\n\n1.12.7\n\n### Reproduction steps\n\n```markdown\n1. try launching the app in either app or terminal\n```\n\n### Expected Behavior\n\n```markdown\n1. just open\n```\n\n### Debug\n\n```markdown\nbean@bean-82fe:~$ teams-for-linux \n[14817:0317/211910.791195:FATAL:setuid_sandbox_host.cc(163)] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/teams-for-linux/chrome-sandbox is owned by root and has mode 4755.\nTrace/breakpoint trap (core dumped)\n\n\n\njust a suggestion, please add these commands to fix the issue, some people may not know about these steps to fix this\n\nsudo chown root:root /opt/teams-for-linux/chrome-sandbox\nsudo chmod 4755 /opt/teams-for-linux/chrome-sandbox\n\nafter using the commands above will make the app work normally\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-17T20:25:29+00:00",
+    "updated_at": "2025-03-18T09:22:49+00:00",
+    "closed_at": "2025-03-18T09:22:45+00:00",
+    "user": "BeanGreen247",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "duplicate"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1596",
+    "is_pull_request": false
+}

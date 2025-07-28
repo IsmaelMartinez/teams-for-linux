@@ -48,7 +48,7 @@ This initiative will focus on the following key areas of documentation:
     *   Frequent runtime errors and their potential causes/solutions.
     *   How to collect debug logs and other diagnostic information.
     *   Answers to frequently asked questions by users and developers.
-    *   Review all issues closed in the last 3 years and look for patterns and recurrent issues.
+    *   **Targeted Issue Analysis:** Review issues from the last year, prioritizing those with keywords indicating solutions or high engagement, to extract concrete troubleshooting steps and workarounds. Focus on the most frequent categories identified in the issue analysis report (e.g., Installation/Update, UI/UX, Audio/Video, Performance/Stability, Screen Sharing, Login/Authentication).
 *   **Location:** Expand `KNOWN_ISSUES.md` or create `docs/troubleshooting.md`.
 
 ### 3.4. Code-Level Comments and JSDoc

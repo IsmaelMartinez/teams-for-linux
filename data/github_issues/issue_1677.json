@@ -1,0 +1,19 @@
+{
+    "id": 3018143342,
+    "number": 1677,
+    "title": "[Bug]: 2.0.10 in Ubuntu/Gnome creates additional icon in task bar",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nAfter upgrade 2.0.9 -> 2.0.10, now when I launch app from pinned icon, app starts but adds and responds on new generic icon in the taskbar. So now I have two icons - one is pinned, another is really running app.\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.10\n\n### Reproduction steps\n\n```markdown\nJust upgraded 2.0.9 -> 2.0.10\nUbuntu 25.04\n\nThank you.\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-04-24T18:37:07+00:00",
+    "updated_at": "2025-04-26T11:57:51+00:00",
+    "closed_at": "2025-04-25T12:46:15+00:00",
+    "user": "doka380",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "known issue/workaround"
+    ],
+    "comments_count": 12,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1677",
+    "is_pull_request": false
+}

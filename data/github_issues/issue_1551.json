@@ -1,0 +1,16 @@
+{
+    "id": 2796413095,
+    "number": 1551,
+    "title": "Fix 1444 updating and fix frame option type",
+    "body": "updating package.json",
+    "state": "closed",
+    "created_at": "2025-01-17T22:33:41+00:00",
+    "updated_at": "2025-01-17T23:41:05+00:00",
+    "closed_at": "2025-01-17T22:33:50+00:00",
+    "user": "IsmaelMartinez",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1551",
+    "is_pull_request": true
+}

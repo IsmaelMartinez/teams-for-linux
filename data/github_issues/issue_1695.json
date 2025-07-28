@@ -1,0 +1,18 @@
+{
+    "id": 3040367569,
+    "number": 1695,
+    "title": "[Bug]: Teams takes a long time to load",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nWhen I start Teams, it takes almost a minute to load. Before, it used to start right away. I tried reinstalling, but it didn’t help.\n\n### What package are you using?\n\nflatpak\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\n1.Start portal for teams.\n2.Fans are spinning.\n3.Nothing happens.\n4.After a minutes or so the program starts.\n...\n```\n\n### Expected Behavior\n\n```markdown\n1.Start portal for teams.\n2.Window comes up immediately.\n3.Login.\n4.Use the program.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-05-05T17:46:17+00:00",
+    "updated_at": "2025-05-06T17:44:33+00:00",
+    "closed_at": "2025-05-06T17:44:33+00:00",
+    "user": "Ovii2",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1695",
+    "is_pull_request": false
+}

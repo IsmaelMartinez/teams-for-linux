@@ -1,0 +1,19 @@
+{
+    "id": 2887032405,
+    "number": 1581,
+    "title": "[Feat]: Sync mic status with os",
+    "body": "### Describe the feature\n\nIs there a way to sync the mic mute/unmute status with the os\n\n### Motivation\n\nIt's annoying to have the mic mute/unmute status disjointed because I can be on mute in the os but not in teams or the other way around.\nI'd like the physical buttons on my headset (which change the mic status in linux) to also change the mic status in teams.\nIS that possible?\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-02-28T12:30:11+00:00",
+    "updated_at": "2025-04-07T09:36:48+00:00",
+    "closed_at": "2025-04-07T09:36:48+00:00",
+    "user": "syco",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 3,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1581",
+    "is_pull_request": false
+}

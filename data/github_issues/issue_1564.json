@@ -1,0 +1,19 @@
+{
+    "id": 2827651959,
+    "number": 1564,
+    "title": "[Feat]: Company Security policy permits only Edge",
+    "body": "### Describe the feature\n\nClient should have Edge as sandbox if it's possible.\n\n### Motivation\n\nSince company now controls my access with intun-portal, only edge is allowed to get to company resources. It would be very nice, that teams client would have edge sandbox or agent somehow, so i can use your great client again. Now i'm stucked with client in edge browser.\n\nTnx,\nTine\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-02-03T14:18:56+00:00",
+    "updated_at": "2025-05-07T11:53:45+00:00",
+    "closed_at": "2025-03-11T09:36:11+00:00",
+    "user": "pingwin74",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1564",
+    "is_pull_request": false
+}

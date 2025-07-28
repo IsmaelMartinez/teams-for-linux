@@ -1,0 +1,16 @@
+{
+    "id": 2654771863,
+    "number": 1475,
+    "title": "Installation does not work on Linux Mint",
+    "body": "**Describe the bug**\r\nWhen following the Ubuntu-instructions on Mint, it ends up in an error:\r\n> deb [signed-by=/etc/apt/keyrings/teams-for-linux.asc arch=amd64] https://repo.teamsforlinux.de/debian/ stable main\r\n> Hit:1 http://security.ubuntu.com/ubuntu noble-security InRelease\r\n> Ign:2 https://mirrors.evoluso.com/linuxmint-packages/linuxmint-packages wilma InRelease         \r\n> Get:3 https://repo.teamsforlinux.de/debian stable InRelease [10,8 kB]                           \r\n> Hit:4 http://archive.ubuntu.com/ubuntu noble InRelease    \r\n> Hit:5 https://mirrors.evoluso.com/linuxmint-packages/linuxmint-packages wilma Release\r\n> Hit:6 http://archive.ubuntu.com/ubuntu noble-updates InRelease\r\n> Err:3 https://repo.teamsforlinux.de/debian stable InRelease\r\n>   Unknown error executing apt-key\r\n> Hit:7 http://archive.ubuntu.com/ubuntu noble-backports InRelease\r\n> Reading package lists... Done\r\n> W: GPG error: https://repo.teamsforlinux.de/debian stable InRelease: Unknown error executing apt-key\r\n> E: The repository 'https://repo.teamsforlinux.de/debian stable InRelease' is not signed.\r\n> N: Updating from such a repository can't be done securely, and is therefore disabled by default.\r\n\r\n**To Reproduce**\r\nhttps://github.com/IsmaelMartinez/teams-for-linux?tab=readme-ov-file#debianubuntu-and-other-derivatives\r\n\r\n**Expected behavior**\r\napt update will refresh without errors\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Linux Mint 22 Cinnamon\r\n - Cinnamon Version: 6.2.9\r\n - Linux Kernel: 6.8.0-48-generic\r\n\r\n**Work around**\r\n> sudo apt update --allow-insecure-repositories",
+    "state": "closed",
+    "created_at": "2024-11-13T09:11:27+00:00",
+    "updated_at": "2024-11-15T11:26:17+00:00",
+    "closed_at": "2024-11-15T08:59:07+00:00",
+    "user": "dvbeek",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1475",
+    "is_pull_request": false
+}

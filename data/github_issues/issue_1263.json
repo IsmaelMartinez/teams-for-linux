@@ -1,0 +1,18 @@
+{
+    "id": 2301525547,
+    "number": 1263,
+    "title": "Provide way of disabling the automatic volume adjustment",
+    "body": "Teams is notorious for trying to auto adjust the microphone.  The teams client has a toggle to turn this off but it seems to be missing from web version.   I believe chromium has a experimental flag that might assist with this, but I am unsure how to set for the electron app.\r\n\r\nchrome://flags/#enable-webrtc-allow-input-volume-adjustment",
+    "state": "closed",
+    "created_at": "2024-05-16T23:09:52+00:00",
+    "updated_at": "2025-03-21T10:45:57+00:00",
+    "closed_at": "2024-06-11T05:26:48+00:00",
+    "user": "lunarwtr",
+    "assignee": null,
+    "labels": [
+        "known issue/workaround"
+    ],
+    "comments_count": 17,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1263",
+    "is_pull_request": false
+}

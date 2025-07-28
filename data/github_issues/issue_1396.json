@@ -1,0 +1,16 @@
+{
+    "id": 2506803332,
+    "number": 1396,
+    "title": "libgtk-3-0 dependency for Ubuntu 24.04",
+    "body": "libgtk-3-0 dependency for Ubuntu 24.04 is invalid.\r\nIt cannot be installed. It must be libgtk-3-0t64.\r\n\r\n**To Reproduce**\r\nTry install deb on Ubuntu 24.04.\r\n\r\n**Expected behavior**\r\nSuccessful installation.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 24.04.01\r\n - deb\r\n - the latest one\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-09-05T05:27:43+00:00",
+    "updated_at": "2024-09-05T07:12:18+00:00",
+    "closed_at": "2024-09-05T07:12:06+00:00",
+    "user": "AlexLevkovich",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1396",
+    "is_pull_request": false
+}

@@ -1,0 +1,16 @@
+{
+    "id": 2486968091,
+    "number": 1382,
+    "title": "Support for creating + using Custom Emojis",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nI'm always frustrated when my colleagues can slack around creating and spamming their own emojis while I can't. According to the [Microsoft Documentation](https://support.microsoft.com/en-us/office/use-custom-emoji-in-microsoft-teams-84feb1c4-6d2b-4ecd-8e55-a93c828fc53a), I should be able to, however I suspect the current `teams-for-linux` client doesn't seem to implement it.\r\n\r\n**Describe the solution you'd like**\r\n\r\nI want to be able to manage my organizations' emojis via `teams-for-linux`.\r\n\r\n**Describe alternatives you've considered**\r\n\r\nCry in awe of not being able to party-parrot inside Teams.\r\n\r\n**Additional context**\r\n\r\nI've also tried it in my browser using `teams.microsoft.com` however it also won't work there.",
+    "state": "closed",
+    "created_at": "2024-08-26T14:06:49+00:00",
+    "updated_at": "2024-08-29T08:34:24+00:00",
+    "closed_at": "2024-08-29T08:16:16+00:00",
+    "user": "torbendury",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 4,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1382",
+    "is_pull_request": false
+}

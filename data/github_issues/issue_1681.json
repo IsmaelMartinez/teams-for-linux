@@ -1,0 +1,18 @@
+{
+    "id": 3021782021,
+    "number": 1681,
+    "title": "[Bug]: No tray icon since 2.0.9 (Ubuntu 22.04 with Mate desktop 1.26.0)",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nNo tray icon since 2.0.9\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.10, 2.0.11\n\n### Reproduction steps\n\nRun `teams-for-linux` and observe no tray icon in `notification-area-applet`.\nUbuntu 22.04 with Mate desktop 1.26.0.\n\n```\nii  mate-desktop   1.26.0-1     amd64        Library with common API for various MATE modules\nii  mate-applets   1.26.0-1     amd64        Various applets for the MATE panel\nii  mate-panel     1.26.2-1     amd64        launcher and docking facility for MATE\n```\n\nI have two `teams-for-linux` apps and no tray icon for both since 2.0.9:\n* One is the default one: `Exec=/opt/teams-for-linux/teams-for-linux %U` + `Icon=teams-for-linux`\n* The other one is \"custom\": `Exec=/opt/teams-for-linux/teams-for-linux --appIcon=/home/georgii/pics/icons/teams-for-linux-skype.png --class=teams-for-linux-skype --user-data-dir=/home/georgii/.config/teams-for-linux-skype %U` + `Icon=teams-for-linux-skype` (the icon exists and worked w/o issues in 2.0.8)\n\n### Expected Behavior\n\nThe app icon appears in tray (notification area) in Mate panel.\n\n### Debug\n\n```shell\n> teams-for-linux --webDebug --logConfig='{}'\nInitialising logger with config: \"{}\"\n14:55:41.261 › File logging at /home/georgii/.config/teams-for-linux/logs/main.log with level silly\n14:55:41.262 › Console logging enabled with level silly\n14:55:41.262 › Logger initialised\n14:55:41.262 › configPath: /home/georgii/.config/teams-for-linux\n14:55:41.262 › configFile: {\n  '//README': 'https://github.com/IsmaelMartinez/teams-for-linux/tree/main/app/config/README.md',\n  closeAppOnCross: true,\n  defaultURLHandler: '/home/giermulnik/bin/xdg-open.yz',\n  followSystemTheme: true,\n  notificationMethod: 'electron',\n  optInTeamsV2: true,\n  spellCheckerLanguages: [ 'en-GB', 'uk', 'ru' ]\n}\n14:55:41.324 › App already running\n14:55:41.327 › (node:519056) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.\n(Use `teams-for-linux --trace-deprecation ...` to show where the warning was created)\n[519056:0426/145541.329680:ERROR:ozone_platform_x11.cc(246)] Missing X server or $DISPLAY\n[519056:0426/145541.329732:ERROR:env.cc(257)] The platform failed to initialize.  Exiting.\n```\n\nNot at that laptop at the moment hence can only run via SSH. If this is not sufficient, please let me know, and I'll update by running the same at that laptop's GUI session on Monday.\n\n### Additional context\n\nThe issue isn't in place on older installation of Mate on Linux Mint 19.3 (Tricia):\n```\nii  mate-desktop        1.22.2-1+trici amd64          Library with common API for various MATE modules\nii  mate-applets        1.22.2-1+trici amd64          Various applets for the MATE panel\nii  mate-panel          1.22.2-1mint1+ amd64          launcher and docking facility for MATE\n```",
+    "state": "closed",
+    "created_at": "2025-04-26T11:57:23+00:00",
+    "updated_at": "2025-05-07T15:44:38+00:00",
+    "closed_at": "2025-05-06T16:15:28+00:00",
+    "user": "yermulnik",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 15,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1681",
+    "is_pull_request": false
+}

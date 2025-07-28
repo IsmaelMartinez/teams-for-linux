@@ -1,0 +1,20 @@
+{
+    "id": 472298915,
+    "number": 185,
+    "title": "Enable Frameless / Hide Title Bar",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nI would like to be able to remove the window title bar, so i can have bigger 'work area' when on fullscreen, because my notebook resolution is not great.\r\n\r\n**Describe the solution you'd like**\r\nI would like to have a setting or checkbox that on the next app start would remove the title bar.\r\n\r\n**Describe alternatives you've considered**\r\nI could press F11 to achieve the same funcionality\r\n\r\n**Additional context**\r\nI don't think there is any more information that i can give\r\n\r\nThanks in advance",
+    "state": "closed",
+    "created_at": "2019-07-24T13:56:42+00:00",
+    "updated_at": "2025-01-07T16:46:41+00:00",
+    "closed_at": "2019-08-09T20:15:02+00:00",
+    "user": "rt3norio",
+    "assignee": null,
+    "labels": [
+        "enhancement",
+        "help wanted",
+        "good first issue"
+    ],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/185",
+    "is_pull_request": false
+}

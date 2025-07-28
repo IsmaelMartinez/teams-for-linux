@@ -1,0 +1,18 @@
+{
+    "id": 2913833320,
+    "number": 1591,
+    "title": "[Bug]: Wayland screen sharing problem like usual...",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nScreen sharing not working on wayland\n\n### What package are you using?\n\nAppImage\n\n### Version\n\n1.13.0\n\n### Reproduction steps\n\n```markdown\nNever ending story... bump to latest wayland.\nTry to share a screen.\nPlease bump to Electron v35.0.1\n```\n\n### Expected Behavior\n\n```markdown\n1.\n2.\n3.\n...\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-03-12T12:37:24+00:00",
+    "updated_at": "2025-03-24T09:07:04+00:00",
+    "closed_at": "2025-03-16T21:58:19+00:00",
+    "user": "str0g",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 5,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1591",
+    "is_pull_request": false
+}

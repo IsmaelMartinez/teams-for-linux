@@ -1,0 +1,16 @@
+{
+    "id": 2416343006,
+    "number": 1345,
+    "title": "problems with backticks",
+    "body": "**Describe the bug**\r\nWhen typing a backtick (`) for me it does not trigger an inline code, not does typing triple-backticks trigger a code block.\r\nIt's especially relevant, that my keyboard requires me to type shift+^ for the backtick, and then followed by the space to \"finalize\" the backtick.\r\nIt works in the web app. Just not in this electron app. So it could be related.\r\n\r\n",
+    "state": "closed",
+    "created_at": "2024-07-18T13:15:13+00:00",
+    "updated_at": "2024-12-09T16:23:39+00:00",
+    "closed_at": "2024-09-03T05:38:46+00:00",
+    "user": "luxzeitlos",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 17,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1345",
+    "is_pull_request": false
+}

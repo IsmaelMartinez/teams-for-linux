@@ -1,0 +1,18 @@
+{
+    "id": 3042333360,
+    "number": 1698,
+    "title": "[Bug]: Teams for Linux 2.0.11 does not support hardware security keys",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNo\n\n### Describe the bug\n\nWhen using a hardware security key, in a normal browser the key will prompt for e.g. a PIN to unlock it so it can be used. That pop-up for key entry never shows up in Teams for Linux.\n\n### What package are you using?\n\ntar.gz\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\nYou get presented with:\n\n> Face, fingerprint, PIN or security key\n> Your device will open a security window. Follow the instructions there to sign in.\n\nduring logon, but no window ever shows up.\n```\n",
+    "state": "closed",
+    "created_at": "2025-05-06T10:24:06+00:00",
+    "updated_at": "2025-05-06T14:02:13+00:00",
+    "closed_at": "2025-05-06T14:02:11+00:00",
+    "user": "madsl",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 1,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1698",
+    "is_pull_request": false
+}

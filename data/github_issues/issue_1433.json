@@ -1,0 +1,16 @@
+{
+    "id": 2565767867,
+    "number": 1433,
+    "title": "2FA authentication window does not show up",
+    "body": "**Describe the bug**\r\nI changed my settings for the microsoft account to another 2FA method (YubiKey).\r\nI logged out from the microsoft account and restarted ms-teams.\r\nWhen I want to login, I type in my account e-mail and go on.\r\nI guess a window should open now where I can enter my PIN and the Token to get access to the account, but nothing shows up.\r\n\r\nAfter a while the process recognized, that something is wrong and offered me to use my password.\r\nUsing this, I could log in myself just using the password.\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Enable a 2FA method using a YubiKey or something similar\r\n2. Log out from ms-teams account\r\n3. Restart ms-teams\r\n4. Follow the login process, which will stuck after entering the account e-mail\r\n\r\n**Expected behavior**\r\nI would expect a pop up window to open where I can enter the login credentials (YubiKey Pin and access token)\r\n\r\n**Screenshots**\r\nScreenshot showing the last state where the process stucks.\r\nNo browser window is opened and nothing else happens for like 5 minutes.\r\n![Bildschirmfoto vom 2024-10-04 09-52-55](https://github.com/user-attachments/assets/2abaff87-539a-4aa6-b2c8-bc703619c060)\r\n\r\n**Desktop**\r\n - OS: Linux Ubuntu 22.04\r\n - Installation package snap via Ubuntu Software Center\r\n - Version 1415/24081700421\r\n\r\n**Debug**\r\nDebug execution lets teams quit after several seconds.\r\n\r\n**Additional context**\r\nNothing to add.\r\n",
+    "state": "closed",
+    "created_at": "2024-10-04T08:19:12+00:00",
+    "updated_at": "2024-10-07T13:45:21+00:00",
+    "closed_at": "2024-10-07T13:08:49+00:00",
+    "user": "upcycleist",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1433",
+    "is_pull_request": false
+}

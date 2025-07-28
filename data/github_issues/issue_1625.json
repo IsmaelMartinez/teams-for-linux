@@ -1,0 +1,18 @@
+{
+    "id": 2956344904,
+    "number": 1625,
+    "title": "[Bug]: Teams doesn't start / refuses to open window of running instance after update",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nAfter updating teams4linux, the application doesn't start when clicking the icon. If it was still running, the application window won't open either.\n\n### What package are you using?\n\ndeb\n\n### Version\n\nSo far: any!\n\n### Reproduction steps\n\n```markdown\n1. Close Teams\n2. Update (maybe also happens on a fresh install -- not sure & not tested)\n3. Try to open Teams\n\nIf I try to run Teams from bash, the reason for it not starting is shown:\n\n[48366:0328/145817.029483:FATAL:setuid_sandbox_host.cc(163)] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /opt/teams-for-linux/chrome-sandbox is owned by root and has mode 4755.\n\nWhen changing the permissions everything works again. I would prefer however if I didn't have to change this myself after every update.\n```\n\n### Expected Behavior\n\n```markdown\n1. Teams opens when clicking the icon after an update\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\nOS (in case it's specific to this OS):\nDistributor ID:\tUbuntu\nDescription:\tUbuntu 24.04.2 LTS\nRelease:\t24.04\nCodename:\tnoble\n",
+    "state": "closed",
+    "created_at": "2025-03-28T14:32:04+00:00",
+    "updated_at": "2025-03-28T15:11:59+00:00",
+    "closed_at": "2025-03-28T14:39:39+00:00",
+    "user": "malice00",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 7,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1625",
+    "is_pull_request": false
+}

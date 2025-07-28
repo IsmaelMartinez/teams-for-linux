@@ -1,0 +1,16 @@
+{
+    "id": 2503505764,
+    "number": 1395,
+    "title": "Implement emulateWinChromiumPlatform Flag for OS Emulation",
+    "body": "**Challenge**\r\n\r\nSome organizations use a Multi-Factor Authentication (MFA) application that supports only Windows and Mac systems. Users with unsupported operating systems, like Linux, are denied access due to system checks.\r\n\r\n**Problem Analysis**\r\n\r\nWeb-based MFA applications often use properties such as `navigator.userAgent`, `navigator.userAgentData.platform`, `navigator.platform`, and `navigator.userAgentData.getHighEntropyValues` to detect the user's operating system. Although there is an option to modify the user agent, other properties also need emulation to fully mimic a Windows environment.\r\n\r\n**Technical Details**\r\n\r\nThe implementation introduce a new PlatformEmulator class. It will be executed as part of preload script for chromium. This class will override specified property to emulate windows platform. \r\n\r\n**Solution**\r\n\r\nAdd the `emulateWinChromiumPlatform` flag to the CLI and configuration file, allowing users to opt-in to Windows platform emulation in Chromium browsers. This flag is turned off by default to avoid interference with existing workflows.\r\n\r\n\r\n**Documentation**\r\n\r\nUpdated the README and the configuration documentation to include instructions on how to use the new `emulateWinChromiumPlatform` flag.\r\n\r\n**Potential Impacts**\r\n\r\nThis change should not impact existing users as the default behavior remains unchanged. The feature is opt-in to ensure that only users needing this emulation enable it.\r\n",
+    "state": "closed",
+    "created_at": "2024-09-03T18:30:01+00:00",
+    "updated_at": "2024-09-11T13:46:00+00:00",
+    "closed_at": "2024-09-10T06:17:21+00:00",
+    "user": "3wweiweiwu",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 10,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/pull/1395",
+    "is_pull_request": true
+}

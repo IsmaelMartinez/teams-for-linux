@@ -1,0 +1,18 @@
+{
+    "id": 3259949689,
+    "number": 1764,
+    "title": "[Bug]: Fedora RPM packages are way behind",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nFedora RPM packages are way behind latest version\n\n### What package are you using?\n\nrpm\n\n### Version\n\nlatest\n\n### Reproduction steps\n\n```markdown\n❯ sudo yum update\nUpdating and loading repositories:\nRepositories loaded.\nNothing to do.\n\n❯ sudo yum install teams-for-linux\nUpdating and loading repositories:\nRepositories loaded.\nPackage \"teams-for-linux-1.13.0-1.x86_64\" is already installed.\n```\n\n```\n sudo dnf install ~/Downloads/teams-for-linux-2.1.0.x86_64.rpm\nUpdating and loading repositories:\nRepositories loaded.\nPackage                                                                                 Arch               Version                                                                                 Repository                                              Size\nUpgrading:\n teams-for-linux                                                                        x86_64             2.1.0-1                                                                                 @commandline                                       303.8 MiB\n   replacing teams-for-linux                                                            x86_64             1.13.0-1                                                                                @commandline                                       283.8 MiB\n\nTransaction Summary:\n Upgrading:          1 package\n Replacing:          1 package\n```\n\n### Expected Behavior\n\n```markdown\nIt should install latest version\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-07-24T13:40:28+00:00",
+    "updated_at": "2025-07-28T17:00:22+00:00",
+    "closed_at": "2025-07-28T17:00:22+00:00",
+    "user": "nitin88",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1764",
+    "is_pull_request": false
+}

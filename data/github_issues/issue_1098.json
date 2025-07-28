@@ -1,0 +1,18 @@
+{
+    "id": 2127721530,
+    "number": 1098,
+    "title": "Meeting Links Not Opening",
+    "body": "Meeting links using msteams://teams.microsoft.com are not starting a meeting inside teams-on-linux.  Copying and pasting the meeting link inside teams-on-linux and then clicking on the link does work.  I've gone through the issues and it seemed like this was already fixed, so I don't know if it's \"just me\"\r\n\r\nExample:\r\n```\r\n/opt/teams-for-linux/teams-for-linux \"msteams://teams.microsoft.com/l/meetup-join/<meeting link goes here>\"}\" --appLogLevels=error,info,warn,debug\r\n\r\nDEBUG] configPath:,/home/chris/.config/teams-for-linux\r\n[DEBUG] configFile:,[object Object]\r\n[INFO] App already running\r\n```\r\n\r\nI'm running on Devuan Daedalus (Debian Bookworm).  Running Teams-For-Linux deb package 1.4.10\r\n\r\nIf run \r\n/opt/teams-for-linux/teams-for-linux https:/teams.microsoft.com/<meetinglink>\r\nIt gives me the same already running error, but it opens a whole new window, replacing the previous window, and opens up the meeting.\r\n\r\nI do have Microsoft's Teams client installed as well.  xdg-mime settings shows teams-for-linux as being the default:\r\n```\r\nxdg-mime query default x-scheme-handler/msteams\r\nteams-for-linux.desktop\r\n```\r\n\r\nAny suggestions would be appreciated.\r\n",
+    "state": "closed",
+    "created_at": "2024-02-09T19:19:11+00:00",
+    "updated_at": "2024-10-09T17:16:36+00:00",
+    "closed_at": "2024-08-21T20:57:51+00:00",
+    "user": "Ryushin",
+    "assignee": null,
+    "labels": [
+        "known issue/workaround"
+    ],
+    "comments_count": 65,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1098",
+    "is_pull_request": false
+}

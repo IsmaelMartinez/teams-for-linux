@@ -1,0 +1,19 @@
+{
+    "id": 2251294078,
+    "number": 1208,
+    "title": "Feature Request: Add configuration option to disable in-app notifications for \"electron\" notificationMethod",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nI find the in-app notification windows in TeamsV2 to be distracting, and when they appear in the bottom right of the screen they block screen real estate of the message typing bar and the send button. \r\n\r\n\r\n\r\n**Describe the solution you'd like**\r\n\r\nI would like a configuration option, documented in the config README which disables the display of these in-app notification windows, without affecting the system notifications delivered by the `\"notificationMethod\": \"electron\"` config option.\r\n\r\n**Describe alternatives you've considered**\r\n\r\nAn alternative to this for me would be to move these notification windows to the top left of the screen where they are less in the way, and use a less bright color scheme. However these notifications would still be redundant with the system notifications I already get.\r\n\r\n**Additional context**\r\n\r\nAn example notification window which I would like to disable:\r\n![TeamsNotificationBlur](https://github.com/IsmaelMartinez/teams-for-linux/assets/48334845/6742135c-4b6e-48ad-be53-a26a7c8b31ce)",
+    "state": "closed",
+    "created_at": "2024-04-18T18:23:23+00:00",
+    "updated_at": "2024-10-27T09:34:29+00:00",
+    "closed_at": "2024-10-27T09:34:28+00:00",
+    "user": "vapdrs",
+    "assignee": null,
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 10,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1208",
+    "is_pull_request": false
+}

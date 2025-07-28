@@ -1,0 +1,16 @@
+{
+    "id": 2480549577,
+    "number": 1374,
+    "title": "We are having trouble loading your messages. Try refreshing",
+    "body": "**Describe the bug**\r\nWhen I open teams I get the following message \"We are having trouble loading your messages. Try refreshing\"\r\n\r\n**To Reproduce**\r\nSteps to reproduce the behavior:\r\n1. Open Teams for Linux\r\n\r\n**Expected behavior**\r\nThe web version of Teams works as always.\r\n\r\n**Screenshots**\r\n![image](https://github.com/user-attachments/assets/17e78d8a-238f-44b8-b977-57d5dcc7f894)\r\nIf applicable, add screenshots to help explain your problem.\r\n\r\n**Desktop (please complete the following information):**\r\n - OS: Ubuntu 22.04.4 LTS\r\n - Installation package: Snap\r\n - Version 1.9.1\r\n\r\n**Debug**\r\nWhen possible, please run the application from the terminal using `--webDebug` and try to reproduce the error.\r\n\r\nThe provide in this section the output from both the terminal and the browser debug console.\r\n\r\n```bash\r\nteams-for-linux --webDebug --logConfig='{}'\r\n\r\nNo config file found, using default values\r\nall good with appLogLevels you aren't using them\r\nInitialising logger with config: \"{}\"\r\nLogger initialised with transports: {}\r\n08:28:55.110 › File logging at /home/gonzalocoelho/snap/teams-for-linux/655/.config/teams-for-linux/logs/main.log with level silly\r\n08:28:55.113 › Console logging enabled with level silly\r\n08:28:55.114 › Logger initialised\r\n08:28:55.114 › configPath: /home/gonzalocoelho/snap/teams-for-linux/655/.config/teams-for-linux\r\n08:28:55.115 › configFile: {}\r\ndbus-send: /snap/teams-for-linux/655/lib/x86_64-linux-gnu/libdbus-1.so.3: version `LIBDBUS_PRIVATE_1.12.20' not found (required by dbus-send)\r\n08:28:55.257 › App already running\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.299: Theme parsing error: gtk.css:1422:23: 'font-feature-settings' is not a valid property name\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.307: Theme parsing error: gtk.css:3308:25: 'font-feature-settings' is not a valid property name\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.309: Theme parsing error: gtk.css:3770:23: 'font-feature-settings' is not a valid property name\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.593: Theme parsing error: gtk.css:1422:23: 'font-feature-settings' is not a valid property name\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.600: Theme parsing error: gtk.css:3308:25: 'font-feature-settings' is not a valid property name\r\n\r\n(teams-for-linux:650599): Gtk-WARNING **: 08:28:55.602: Theme parsing error: gtk.css:3770:23: 'font-feature-settings' is not a valid property name\r\ncp-frontend $\r\n\r\n\r\n```\r\n\r\n*IMPORTANT:* Ensure that you mask any sensitive information before posting the output.\r\n\r\n**Additional context**\r\nAdd any other context about the problem here.\r\n",
+    "state": "closed",
+    "created_at": "2024-08-22T11:29:53+00:00",
+    "updated_at": "2024-08-22T12:13:25+00:00",
+    "closed_at": "2024-08-22T12:13:25+00:00",
+    "user": "coelhogonzalo",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 2,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1374",
+    "is_pull_request": false
+}

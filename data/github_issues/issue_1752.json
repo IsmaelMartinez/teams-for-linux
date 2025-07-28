@@ -1,0 +1,18 @@
+{
+    "id": 3212509768,
+    "number": 1752,
+    "title": "[Bug]: Latin characters are not working on text input",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nYes\n\n### Describe the bug\n\nWhen I update version form 2.0.17 to 2.1.0 can't use characters like ãúó in textfields.\n\n### What package are you using?\n\nrpm\n\n### Version\n\n2.1.0\n\n### Reproduction steps\n\n```markdown\n1. Update version to 2.1.0\n2. New message to myself\n3. Try to type \" última maçã de órion \" \n\nActual Result: ultima maca de orion\n```\n\n### Expected Behavior\n\n```markdown\n1. Update version to 2.1.0\n2. New message to myself\n3. Try to type \" última maçã de órion \" \n\nExpected: última maçã de órion\n```\n\n### Debug\n\n```markdown\nteams-for-linux --webDebug --logConfig='{}'\n```\n\n### Additional context\n\n_No response_",
+    "state": "open",
+    "created_at": "2025-07-08T13:11:53+00:00",
+    "updated_at": "2025-07-28T17:03:09+00:00",
+    "closed_at": null,
+    "user": "FabioBeneditto",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug"
+    ],
+    "comments_count": 6,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1752",
+    "is_pull_request": false
+}

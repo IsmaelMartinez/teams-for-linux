@@ -1,0 +1,16 @@
+{
+    "id": 2457799749,
+    "number": 1360,
+    "title": "other sign in methods if passkey is enabled",
+    "body": "**Is your feature request related to a problem? Please describe.**\r\nI cant login anymore when i enable my passkeys in Microsoft.  It defaults to my pin/fingerprint login but i cant select a other sign in method.\r\n\r\n**Describe the solution you'd like**\r\nA extra option to sign in via a other methode when passkey is trying?\r\n\r\n**Describe alternatives you've considered**\r\nRemoving my passkey but it is also useful for other applications/web based login\r\n\r\n\r\nEDIT: \r\nApparently it selects my last login method as default. If i login somewhere else through other means, the teams-linux client will remember that somehow. \r\n",
+    "state": "closed",
+    "created_at": "2024-08-09T12:21:19+00:00",
+    "updated_at": "2024-08-09T13:04:38+00:00",
+    "closed_at": "2024-08-09T13:03:21+00:00",
+    "user": "narimantos",
+    "assignee": null,
+    "labels": [],
+    "comments_count": 0,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1360",
+    "is_pull_request": false
+}

@@ -1,0 +1,19 @@
+{
+    "id": 3077210703,
+    "number": 1709,
+    "title": "[Feat]: Force teams to refresh automatically",
+    "body": "### Describe the feature\n\nI would like for teams for linux to make sure all messages are available so that i don't have to do it manually. \n\n### Motivation\n\nI have found previous messages that are missing in my chats that only appear after i click refresh.\nI think it shouldn't happen, could it be automated?\nI didn't have this issue with the regular app.\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-05-20T14:20:50+00:00",
+    "updated_at": "2025-07-14T09:41:25+00:00",
+    "closed_at": "2025-07-14T09:41:25+00:00",
+    "user": "hyunlee1o",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 8,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1709",
+    "is_pull_request": false
+}

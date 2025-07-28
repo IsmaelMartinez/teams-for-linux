@@ -1,0 +1,19 @@
+{
+    "id": 3035203702,
+    "number": 1693,
+    "title": "[Bug]: Teams app notifications are not showing up in system notification center",
+    "body": "### Can you reproduce this bug in the website/PWA?\n\nNot applicable\n\n### Describe the bug\n\nThe issue is that when I get a notification on the app, that is not reflected in the system notification center. For other apps, when they receive a notification, it is shown in the system notification center. Everytime I need to check the teams notifications, I have to open the app. PS: The popup appears but just that it is not collected in the system notification center.\n\n### What package are you using?\n\ndeb\n\n### Version\n\n2.0.11\n\n### Reproduction steps\n\n```markdown\n1. Notification comes in the app\n2. Pop up is displayed\n3. But in the system notification center, the notification is not present.\n```\n\n### Expected Behavior\n\n```markdown\n\n```\n\n### Debug\n\n```markdown\n\n```\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-05-02T05:18:58+00:00",
+    "updated_at": "2025-07-10T09:38:59+00:00",
+    "closed_at": "2025-07-10T09:38:59+00:00",
+    "user": "bonniesimon",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "bug",
+        "Stale"
+    ],
+    "comments_count": 9,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1693",
+    "is_pull_request": false
+}

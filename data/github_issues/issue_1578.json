@@ -1,0 +1,19 @@
+{
+    "id": 2879434457,
+    "number": 1578,
+    "title": "[Feat]: Skip \"are you sure you want to stay signed in\" screen",
+    "body": "### Describe the feature\n\nI'd like to be able to skip pushing yes every single time\n\n### Motivation\n\nI currently use https://github.com/wtimme/firefox-microsoftonline-stay-signed-in on firefox, because my work mandates that we sign in every single 24 hour period, pushing yes on this is annoying and essentially completely pointless, i'd like to be able to just skip this\n\n### Alternatives\n\n_No response_\n\n### Additional context\n\n_No response_",
+    "state": "closed",
+    "created_at": "2025-02-25T19:55:30+00:00",
+    "updated_at": "2025-06-06T09:37:12+00:00",
+    "closed_at": "2025-06-06T09:37:12+00:00",
+    "user": "Kommynct",
+    "assignee": "IsmaelMartinez",
+    "labels": [
+        "enhancement",
+        "Stale"
+    ],
+    "comments_count": 11,
+    "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1578",
+    "is_pull_request": false
+}
