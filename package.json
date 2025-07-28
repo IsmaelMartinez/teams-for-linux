@@ -121,18 +121,6 @@
         "--rpm-digest=sha256"
       ]
     },
-    "deb": {
-      "depends": [
-        "gtk3",
-        "libnotify",
-        "nss",
-        "libxss1",
-        "libxtst6",
-        "xdg-utils",
-        "at-spi2-core",
-        "libuuid1"
-      ]
-    },
     "snap": {
       "summary": "Teams for Linux",
       "confinement": "strict",
