@@ -81,7 +81,7 @@ Also available in:
 
 For detailed configuration options, including startup arguments to enable or
 disable specific features, please refer to the
-[Configuration Documentation](docs/configuration.md) in the config folder.
+[Configuration Documentation](docs/configuration.md).
 
 ## Running teams-for-linux in a firejail
 
