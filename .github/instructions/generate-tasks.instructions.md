@@ -122,6 +122,18 @@ This section captures enhancements and non-critical features that could be imple
 - Code organization improvements
 ```
 
+## Markdown Standards
+
+When creating task lists, leverage existing markdown library features instead of building custom solutions:
+
+- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation if task list becomes long
+- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for critical information
+- **Code Blocks:** Use proper syntax highlighting with language identifiers for commands and code snippets
+- **Tables:** Use standard markdown tables for structured data comparison
+- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking
+- **Links:** Use relative paths for internal documentation and issue references
+- **Diagrams:** Consider GitHub's Mermaid support for complex workflow or architecture diagrams when helpful
+
 ## Interaction Model
 
 The process explicitly requires a pause after generating parent tasks to get user confirmation ("Go") before proceeding to generate the detailed sub-tasks. This ensures the high-level plan aligns with user expectations before diving into details.

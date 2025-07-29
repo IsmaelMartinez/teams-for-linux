@@ -2,6 +2,8 @@
 
 This document serves as a comprehensive knowledge base, leveraging insights from GitHub issues to provide solutions and workarounds for common problems encountered with Teams for Linux.
 
+<!-- toc -->
+
 ## How to Use This Document
 
 This knowledge base is organized by common problem categories. Each entry includes a description of the issue, its potential causes, and one or more solutions or workarounds. Where applicable, references to relevant GitHub issues are provided for further context.

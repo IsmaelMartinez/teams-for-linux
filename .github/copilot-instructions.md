@@ -67,8 +67,21 @@ When contributing, please align your changes with these goals.
 - **A Core Responsibility:** Documentation is not an afterthought; it is a core part of the development process.
 - **Update as You Go:** When you make a code change, update the relevant documentation in the same pull request.
 - **Module READMEs:** Ensure the `README.md` in the module you are working on is up-to-date.
-- **Code Comments:** Add comments sparingly. Focus on the *why* behind complex, non-obvious, or unusual code, not the *what*. Use JSDoc for public APIs.
+- **Code Comments:** Add comments sparingly. Focus on the _why_ behind complex, non-obvious, or unusual code, not the _what_. Use JSDoc for public APIs.
 - **Central Docs:** For changes affecting configuration, IPC, or overall architecture, update the corresponding documents in the `/docs` directory.
+
+## Markdown Standards
+
+When creating or updating documentation, leverage existing markdown library features instead of building custom solutions:
+
+- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation instead of manual lists
+- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for important information, warnings, and critical notes
+- **Code Blocks:** Use proper syntax highlighting with language identifiers (e.g., `javascript, `bash)
+- **Tables:** Use standard markdown tables with proper alignment for structured data
+- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking and checklists
+- **Links:** Use relative paths for internal documentation links and absolute URLs for external resources
+- **Collapsible Sections:** Use GitHub's `<details>` and `<summary>` elements for optional or lengthy information
+- **Diagrams:** Consider GitHub's Mermaid support for flowcharts, sequence diagrams, and architecture diagrams when applicable
 
 ## Build & Development
 

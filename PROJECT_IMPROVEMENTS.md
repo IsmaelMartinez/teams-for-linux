@@ -12,7 +12,7 @@ These improvements primarily involve adding or updating markdown files and code 
 *   **Module-Level Details and Interactions:** Enhanced `README.md` files within `app/` subdirectories (Completed).
 *   **Multiple Teams Instances Documentation:** Moved `MULTIPLE_INSTANCES.md` to `docs/multiple-instances.md` and updated links (Completed).
 *   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` with analysis and initial content (Completed).
-*   **Knowledge Base Improvements:** Improve documentation using analyzed GitHub issues data for common problems and solutions (To Do).
+*   **Knowledge Base Improvements:** Improve documentation using analyzed GitHub issues data for common problems and solutions (PRD Created - `tasks/prd-knowledge-base-improvements.md`).
 *   **Code-Level Comments and JSDoc:** Applying comments sparingly for clarity (Completed - Strategic comments added to complex patterns).
 *   **Visual Aids (Architecture Diagrams):** Created high-level architecture diagrams (Completed).
 *   **API Documentation (IPC Channels):** Documenting `ipcMain` handlers (Completed - Comprehensive IPC API documentation created).
