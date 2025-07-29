@@ -137,7 +137,7 @@ This knowledge base is organized by common problem categories. Each entry includ
     *   Open your operating system's sound settings.
     *   Ensure the microphone is enabled, not muted, and its volume is adequately set.
     *   Check application-specific permissions for Teams to access the microphone.
-3.  **Restart PulseAudio (Linux):
+3.  **Restart PulseAudio (Linux):**
     *   Open a terminal and run: `pulseaudio -k && pulseaudio --start`
     *   Restart Teams for Linux.
 
