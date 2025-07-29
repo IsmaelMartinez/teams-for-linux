@@ -10,7 +10,7 @@ These improvements primarily involve adding or updating markdown files and code 
 
 *   **Configuration Documentation:** Created `docs/configuration.md` detailing all config options (Completed).
 *   **Module-Level Details and Interactions:** Enhanced `README.md` files within `app/` subdirectories (Completed).
-*   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` with analysis and initial content (Completed).
+*   **Troubleshooting and FAQ:** Integrated into `docs/knowledge-base.md` (Completed).
 *   **Knowledge Base Improvements:** Improve documentation using analyzed GitHub issues data for common problems and solutions.
     *   **Sub-task 1:** Create basic `knowledge-base.md` (Completed).
     *   **Sub-task 2:** Integrate `KNOWN_ISSUES.md` content into `knowledge-base.md` (Completed).

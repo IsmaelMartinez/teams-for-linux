@@ -100,7 +100,7 @@ refer to the [`CONTRIBUTING.md`](CONTRIBUTING.md) file.
 ## Known issues
 
 A list of known issues and possible workarounds is available in the
-[`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) file. Please check it before opening a new
+[`Knowledge Base`](docs/knowledge-base.md) file. Please check it before opening a new
 issue.
 
 ## History
