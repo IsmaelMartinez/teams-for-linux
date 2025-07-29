@@ -21,6 +21,9 @@ const os = require("os");
 let iconChooser;
 let intune;
 let isControlPressed = false;
+// Counter for tracking about:blank navigation attempts to handle authentication flows.
+// Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to 
+// intercept these and handle them in a hidden window to complete the auth process.
 let aboutBlankRequestCount = 0;
 let config;
 let window = null;
@@ -218,8 +221,18 @@ function restoreWindow() {
   window.focus();
 }
 
+/**
+ * Processes command line arguments to extract Teams URLs and protocol handlers.
+ * Handles both msteams:// protocol links and HTTPS URLs that match the Teams domain pattern.
+ * This enables deep linking into Teams conversations, meetings, and channels.
+ * 
+ * @param {string[]} args - Command line arguments to process
+ * @returns {string|null} Processed URL to navigate to, or null if no valid URL found
+ */
 function processArgs(args) {
+  // Legacy Teams protocol format: msteams:/l/meetup-join/...
   const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel|chat)/;
+  // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
   const v2msTeams =
     /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/;
   console.debug("processArgs:", args);

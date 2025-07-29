@@ -10,6 +10,12 @@
   });
 
   let classicNotification = window.Notification;
+  /**
+   * Custom notification implementation that intercepts Teams' notification requests.
+   * This provides control over notification behavior and allows routing notifications
+   * through either web notifications or native Electron notifications based on config.
+   * Also enables custom sound handling and notification filtering.
+   */
   class CustomNotification {
     constructor(title, options) {
       if (config.disableNotifications) {

@@ -103,6 +103,10 @@ function restartApp() {
   app.exit();
 }
 
+/**
+ * Applies critical Electron command line switches that must be set before config loading.
+ * These switches affect core Electron behavior and cannot be changed after app initialization.
+ */
 function addCommandLineSwitchesBeforeConfigLoad() {
   app.commandLine.appendSwitch("try-supported-channel-layouts");
 
@@ -111,14 +115,22 @@ function addCommandLineSwitchesBeforeConfigLoad() {
     ? app.commandLine.getSwitchValue("disable-features").split(",")
     : ["HardwareMediaKeyHandling"];
 
+  // Prevent hardware media keys from interfering with Teams' built-in media controls
+  // This ensures Teams' own play/pause buttons work correctly instead of conflicting
+  // with system-level media key handling
   if (!disabledFeatures.includes("HardwareMediaKeyHandling"))
     disabledFeatures.push("HardwareMediaKeyHandling");
 
   app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
 }
 
+/**
+ * Applies configuration-dependent command line switches after config is loaded.
+ * Handles environment-specific optimizations (Wayland) and user preferences.
+ */
 function addCommandLineSwitchesAfterConfigLoad() {
-  // Wayland
+  // Wayland-specific optimization for Linux desktop environments
+  // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
     console.info("Running under Wayland, switching to PipeWire...");
 
