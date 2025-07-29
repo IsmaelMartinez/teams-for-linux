@@ -22,7 +22,7 @@ let iconChooser;
 let intune;
 let isControlPressed = false;
 // Counter for tracking about:blank navigation attempts to handle authentication flows.
-// Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to 
+// Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to
 // intercept these and handle them in a hidden window to complete the auth process.
 let aboutBlankRequestCount = 0;
 let config;
@@ -46,16 +46,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     iconChooser = new TrayIconChooser(config);
 
     if (isMac) {
-        console.log("Setting Dock icon for macOS");
-        const icon = nativeImage.createFromPath(iconChooser.getFile());
-        const iconSize = icon.getSize();
-        if(iconSize.width < 128) {
-          console.warn("unable to set dock icon for macOS, icon size is less than 128x128, current size " + iconSize.width + "x" + iconSize.height);
-        }else{
-          app.dock.setIcon(icon);
-        }
+      console.log("Setting Dock icon for macOS");
+      const icon = nativeImage.createFromPath(iconChooser.getFile());
+      const iconSize = icon.getSize();
+      if (iconSize.width < 128) {
+        console.warn(
+          "unable to set dock icon for macOS, icon size is less than 128x128, current size " +
+            iconSize.width +
+            "x" +
+            iconSize.height
+        );
+      } else {
+        app.dock.setIcon(icon);
+      }
     }
-
   }
 
   const browserWindowManager = new BrowserWindowManager({
@@ -225,7 +229,7 @@ function restoreWindow() {
  * Processes command line arguments to extract Teams URLs and protocol handlers.
  * Handles both msteams:// protocol links and HTTPS URLs that match the Teams domain pattern.
  * This enables deep linking into Teams conversations, meetings, and channels.
- * 
+ *
  * @param {string[]} args - Command line arguments to process
  * @returns {string|null} Processed URL to navigate to, or null if no valid URL found
  */

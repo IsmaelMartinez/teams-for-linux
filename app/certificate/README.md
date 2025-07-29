@@ -6,7 +6,7 @@ You can define the valid certificates by providing the customCACertsFingerprints
 config option.
 
 Further information about config options can be found in the
-[config README.md file](../config/README.md).
+[Configuration Documentation](../../docs/configuration.md).
 
 ## Getting custom CA Certs fingerprints
 

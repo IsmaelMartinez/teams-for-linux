@@ -1,8 +1,8 @@
 /**
  * Handles certificate validation errors for corporate environments with custom CAs.
- * This allows Teams to work in enterprise networks with self-signed or custom 
+ * This allows Teams to work in enterprise networks with self-signed or custom
  * certificate authorities by checking against a user-configured whitelist.
- * 
+ *
  * @param {Object} arg - Certificate error details
  * @param {string} arg.error - The certificate error type
  * @param {Electron.Certificate} arg.certificate - The failing certificate
@@ -15,7 +15,7 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
     let unknownIssuerCert = getCertIssuer(arg.certificate);
     if (
       arg.config.customCACertsFingerprints.indexOf(
-        unknownIssuerCert.fingerprint,
+        unknownIssuerCert.fingerprint
       ) !== -1
     ) {
       arg.event.preventDefault();
@@ -25,7 +25,7 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
       console.error("Issuer Name: " + unknownIssuerCert.issuerName);
       console.error(
         "The unknown certificate fingerprint is: " +
-          unknownIssuerCert.fingerprint,
+          unknownIssuerCert.fingerprint
       );
       arg.callback(false);
     }
@@ -39,7 +39,7 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
  * Recursively traverses the certificate chain to find the root issuer.
  * This is necessary because certificates can have intermediate CAs,
  * and we need to validate against the actual root certificate authority.
- * 
+ *
  * @param {Electron.Certificate} cert - Certificate to examine
  * @returns {Electron.Certificate} The root issuer certificate
  */
