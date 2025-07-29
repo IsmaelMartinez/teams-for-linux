@@ -2,6 +2,96 @@
 
 This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory (e.g., `~/.config/teams-for-linux/config.json` on Linux).
 
+## Example Usage
+
+As an example, to disable persistence, you can run the following command:
+
+```bash
+teams-for-linux --partition nopersist
+```
+
+Alternatively, you can use a `config.json` file with your configuration options.
+Place this file in the appropriate location based on your installation type:
+
+- Vanilla: `~/.config/teams-for-linux/config.json`
+- Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
+- Flatpak:
+  `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
+
+[yargs](https://www.npmjs.com/package/yargs) supports multiple configuration
+methods—refer to their documentation if you prefer using a configuration file
+over command-line arguments.
+
+Example `config.json`:
+
+```json
+{
+  "closeAppOnCross": true
+}
+```
+
+## Electron CLI Flags
+
+The configuration file can include Electron CLI flags that will be added when
+the application starts.
+
+Example:
+
+```json
+{
+  "electronCLIFlags": [
+    ["ozone-platform", "wayland"],
+    "disable-software-rasterizer"
+  ]
+}
+```
+
+> Note: For options that require a value, provide them as an array where the
+> first element is the flag and the second is its value. If no value is needed,
+> you can use a simple string.
+
+## Incoming Call Command
+
+To use the incoming call command feature a command or executable needs to be configured.
+
+Example:
+
+```json
+{
+  "incomingCallCommand": "/home/user/incomingCallScript.sh",
+  "incomingCallCommandArgs": ["-f", "1234"]
+}
+```
+This will execute the following on an incoming call.
+
+`/home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER`
+
+> Note: Only the property incomingCallCommand is necessary, 
+> incomingCallCommandArgs is completely optional.
+> Note: This feature has no connection to the incoming call toast feature. 
+> These two features can be use separately.
+
+## Cache Management Configuration
+
+The cache management feature helps prevent daily logout issues caused by cache overflow. It can be configured in your `config.json`:
+
+```json
+{
+  "cacheManagement": {
+    "enabled": false,
+    "maxCacheSizeMB": 300,
+    "cacheCheckIntervalMs": 3600000
+  }
+}
+```
+
+**Options:**
+- `enabled` (boolean): Enable/disable automatic cache management (default: false)
+- `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
+- `cacheCheckIntervalMs` (number): How often to check cache size in milliseconds (default: 3600000 = 1 hour)
+
+The cache manager automatically detects your partition configuration and cleans the appropriate directories while preserving authentication data.
+
 ## General Options
 
 | Option Name | Type | Default Value | Description |
