@@ -14,7 +14,7 @@ These improvements primarily involve adding or updating markdown files and code 
 *   **Knowledge Base Improvements:** Improve documentation using analyzed GitHub issues data for common problems and solutions (To Do).
 *   **Code-Level Comments and JSDoc:** Applying comments sparingly for clarity (Completed - Strategic comments added to complex patterns).
 *   **Visual Aids (Architecture Diagrams):** Created high-level architecture diagrams (Completed).
-*   **API Documentation (IPC Channels):** Documenting `ipcMain` handlers (In Progress).
+*   **API Documentation (IPC Channels):** Documenting `ipcMain` handlers (Completed - Comprehensive IPC API documentation created).
 
 ### 2. Consolidate Duplicated Logic (Low Risk / Easy)
 
@@ -220,7 +220,7 @@ The project already has a good foundation for documentation:
 
 While the existing documentation is a good start, there are several areas where it could be enhanced for clarity, completeness, and ease of use:
 
-*   **API Documentation (IPC Channels):**    *   **Current State:** IPC communication is handled directly in `app/index.js` with `ipcMain.on` and `ipcMain.handle`. The `copilot-instructions.md` lists some examples, but there's no comprehensive, centralized documentation of all IPC channels, their expected arguments, and return values.    *   **Impact:** New features or modifications to existing ones require developers to infer IPC usage by reading through `app/index.js` and corresponding renderer-side code, which is inefficient and prone to errors.    *   **Proposed Solution:** Create a dedicated section or document (e.g., `docs/ipc-api.md` or within `copilot-instructions.md`) that lists all `ipcMain` handlers, their purpose, expected input parameters, and the structure of their return values. This could be generated automatically if a consistent pattern (e.g., JSDoc comments) is adopted.
+*   **API Documentation (IPC Channels):**    *   **Current State:** IPC communication is handled directly in `app/index.js` with `ipcMain.on` and `ipcMain.handle`. The `copilot-instructions.md` lists some examples, but there's no comprehensive, centralized documentation of all IPC channels, their expected arguments, and return values.    *   **Impact:** New features or modifications to existing ones require developers to infer IPC usage by reading through `app/index.js` and corresponding renderer-side code, which is inefficient and prone to errors.    *   **Proposed Solution:** Create a dedicated section or document (e.g., `docs/ipc-api.md` or within `copilot-instructions.md`) that lists all `ipcMain` handlers, their purpose, expected input parameters, and the structure of their return values. This could be generated automatically if a consistent pattern (e.g., JSDoc comments) is adopted.    *   **Status:** Completed - Created comprehensive `docs/ipc-api.md` documenting all IPC channels with parameters, return values, and usage examples.
 
 
 
