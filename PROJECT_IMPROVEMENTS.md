@@ -11,6 +11,7 @@ These improvements primarily involve adding or updating markdown files and code 
 *   **Configuration Documentation:** Created `docs/configuration.md` detailing all config options (Completed).
 *   **Module-Level Details and Interactions:** Enhanced `README.md` files within `app/` subdirectories (Completed).
 *   **Troubleshooting and FAQ:** Expanded `KNOWN_ISSUES.md` with analysis and initial content (Completed).
+*   **Knowledge Base Improvements:** Improve documentation using analyzed GitHub issues data for common problems and solutions (To Do).
 *   **Code-Level Comments and JSDoc:** Applying comments sparingly for clarity (In Progress).
 *   **Visual Aids (Architecture Diagrams):** Created high-level architecture diagrams (Completed).
 *   **API Documentation (IPC Channels):** Documenting `ipcMain` handlers (In Progress).

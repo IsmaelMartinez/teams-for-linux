@@ -51,7 +51,18 @@ This initiative will focus on the following key areas of documentation:
     *   **Targeted Issue Analysis:** Review issues from the last year, prioritizing those with keywords indicating solutions or high engagement, to extract concrete troubleshooting steps and workarounds. Focus on the most frequent categories identified in the issue analysis report (e.g., Installation/Update, UI/UX, Audio/Video, Performance/Stability, Screen Sharing, Login/Authentication).
 *   **Location:** Expand `KNOWN_ISSUES.md` or create `docs/troubleshooting.md`.
 
-### 3.4. Code-Level Comments and JSDoc
+### 3.4. Knowledge Base Improvements
+
+*   **Description:** Leverage the collected GitHub issues data to create a comprehensive knowledge base of common problems and their solutions.
+*   **Content:**
+    *   Analysis of the most frequently reported issues and their resolutions.
+    *   Pattern recognition of recurring problems across different user environments.
+    *   Documented workarounds and solutions derived from successful issue resolutions.
+    *   Cross-referencing of related issues to provide comprehensive context.
+    *   Integration of community-contributed solutions and best practices.
+*   **Location:** `docs/knowledge-base.md` or enhancement of existing `KNOWN_ISSUES.md`.
+
+### 3.5. Code-Level Comments and JSDoc
 
 *   **Description:** Apply code comments and JSDoc sparingly, focusing on areas where the code's intent is not immediately obvious, or where design decisions are unusual, rare, or strange.
 *   **Content:**
@@ -60,7 +71,7 @@ This initiative will focus on the following key areas of documentation:
     *   Avoid redundant comments that merely restate what the code already clearly expresses.
 *   **Implementation:** Incremental adoption during new feature development and bug fixes, with a focus on high-value comments that add significant clarity.
 
-### 3.5. Visual Aids (Architecture Diagrams)
+### 3.6. Visual Aids (Architecture Diagrams)
 
 *   **Description:** Create high-level architecture diagrams to provide a visual overview of the system.
 *   **Content:**
@@ -68,7 +79,7 @@ This initiative will focus on the following key areas of documentation:
     *   Diagrams showing the flow of data and control between major components.
 *   **Location:** `docs/architecture/` (new directory)
 
-### 3.6. API Documentation (IPC Channels)
+### 3.7. API Documentation (IPC Channels)
 
 *   **Description:** Centralize and document all Inter-Process Communication (IPC) channels.
 *   **Content:**
@@ -103,6 +114,7 @@ The following items are considered out of scope for this specific initiative:
     *   Create `docs/configuration.md`.
     *   Initial pass on `app/` module READMEs.
     *   Draft `docs/troubleshooting.md` (In Progress - initial content added).
+    *   Create knowledge base from GitHub issues analysis data.
     *   Create initial architecture diagrams.
     *   Document core IPC channels.
 *   **Phase 3: Incremental JSDoc & Refinement (Ongoing)**
