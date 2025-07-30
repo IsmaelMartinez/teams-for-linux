@@ -2,15 +2,15 @@
 
 ## Introduction/Overview
 
-This feature will create an automated knowledge base system that analyzes GitHub issues from the Teams for Linux project to categorize common problems and provide users with easy access to proven solutions. The goal is to reduce support burden by enabling self-service problem resolution, freeing developer time for feature development while improving user experience through faster issue resolution.
+This feature will create a simple knowledge base system that analyzes GitHub issues from the Teams for Linux project to categorize common problems and provide users with easy access to proven solutions. The goal is to reduce support burden by enabling self-service problem resolution through a manually-executed, 3-step pipeline that extracts, categorizes, and generates documentation from historical issues.
 
 ## Goals
 
-1. **Reduce Support Burden**: Decrease repetitive support requests by 40-60% through self-service solutions
-2. **Improve User Experience**: Enable users to find solutions within 2-3 clicks from common symptoms
-3. **Preserve Institutional Knowledge**: Capture and organize historical solutions from 7+ years of project issues
-4. **Free Developer Time**: Redirect time from support to feature development
-5. **Create Searchable Resource**: Build a categorized, searchable knowledge base of common issues and solutions
+1. **Reduce Support Burden**: Decrease repetitive support requests by organizing historical solutions
+2. **Improve User Experience**: Enable users to find solutions through categorized documentation
+3. **Preserve Institutional Knowledge**: Capture and organize solutions from 7+ years of project issues
+4. **Create Searchable Resource**: Build a categorized knowledge base using GitHub markdown standards
+5. **Simple Maintenance**: Provide a straightforward, manually-executed process for updates
 
 ## User Stories
 
@@ -27,42 +27,43 @@ This feature will create an automated knowledge base system that analyzes GitHub
 ## Functional Requirements
 
 1. **GitHub Data Extraction**
-   - The system must extract all issues from the teams-for-linux repository using GitHub API
+   - The system must extract all issues from the teams-for-linux repository using standard GitHub REST API
    - The system must capture issue metadata: title, body, labels, comments, resolution status
-   - The system must identify resolved issues with accepted solutions
    - The system must handle API rate limiting and pagination
+   - The system must work without special dependencies (no MCP tools required)
 
-2. **Issue Analysis and Categorization**
-   - The system must categorize issues by problem type (GPU/display, audio, installation, configuration, etc.)
-   - The system must identify recurring patterns and symptoms across issues
-   - The system must extract solution steps from resolved issues and comments
-   - The system must rank solutions by success rate and community acceptance
+2. **Simple Issue Categorization**
+   - The system must categorize issues using simple pattern-based rules (keywords, labels)
+   - The system must use human-readable categorization rules for easy maintenance
+   - The system must group issues by common problem types (installation, audio, video, etc.)
+   - The system must be maintainable by contributors without NLP expertise
 
 3. **Knowledge Base Generation**
-   - The system must generate structured markdown documentation in `docs/knowledge-base/`
+   - The system must generate structured markdown documentation following GitHub standards
    - The system must create category-based organization with clear navigation
-   - The system must provide search-friendly formatting with keywords and tags
    - The system must include links to original GitHub issues for full context
+   - The system must be runnable as a manual 3-step process
 
-4. **Solution Presentation**
-   - The system must present step-by-step resolution guides for common issues
-   - The system must include command-line examples and configuration snippets
-   - The system must provide troubleshooting decision trees for complex problems
-   - The system must link related issues and alternative solutions
+4. **Simple 3-Step Pipeline**
+   - **Step 1**: Extract all issues from GitHub API and save to JSON
+   - **Step 2**: Apply categorization rules to group issues by type
+   - **Step 3**: Generate markdown documentation using GitHub standards
 
-5. **Maintenance and Updates**
-   - The system must support periodic regeneration from updated GitHub data
-   - The system must preserve manual edits and enhancements to generated content
-   - The system must track solution effectiveness and update rankings
+5. **Manual Operation**
+   - The system must be executable manually when knowledge base updates are needed
+   - The system must not require automated scheduling or GitHub Actions
+   - The system must be simple enough for any contributor to run and maintain
 
 ## Non-Goals (Out of Scope)
 
-- Real-time issue tracking or monitoring dashboards
+- Complex NLP analysis or machine learning algorithms
+- Real-time issue tracking or automated monitoring
+- GitHub Actions automation or scheduled execution
 - Interactive troubleshooting wizard or chatbot interface
-- Issue creation, submission, or management functionality
-- User account system or authentication requirements
+- Advanced solution ranking algorithms or quality scoring
+- Template systems or complex documentation frameworks
 - Integration with external support platforms
-- Automated issue resolution or bot responses
+- User account system or authentication requirements
 
 ## Design Considerations
 
@@ -92,168 +93,171 @@ docs/knowledge-base/
 
 ## Technical Considerations
 
-### Existing Solutions Research
+### Simplified Approach
 
-**GitHub API and Analysis Tools:**
-- **GitHub GraphQL API**: Provides comprehensive issue data with efficient querying
-- **GitHub REST API**: Simpler for basic issue extraction, good rate limits
-- **Octokit**: Official GitHub SDK for JavaScript with built-in rate limiting
-- **gh CLI**: Command-line tool for GitHub operations, good for scripting
+**Standard GitHub REST API:**
+- **GitHub REST API**: Simple, well-documented, works everywhere
+- **Node.js HTTPS**: Built-in module, no external dependencies
+- **Standard JSON**: Simple data storage and processing
+- **GitHub Markdown**: Standard formatting, no template complexity
 
-**Knowledge Base Platforms:**
-- **GitBook**: Professional documentation platform with GitHub integration
-- **Notion**: Flexible knowledge base with API, but potential vendor lock-in
-- **Confluence**: Enterprise-grade but heavyweight for this use case
-- **Static Site Generators**: Jekyll, Hugo, VitePress for GitHub Pages integration
+**Simple Categorization:**
+- **Pattern Matching**: Keywords, labels, and title analysis
+- **Human-Readable Rules**: Documented in `categorization-rules.md`
+- **No NLP Libraries**: Avoid complexity, focus on practical patterns
+- **Manual Refinement**: Easy to update and maintain rules
 
-**Analysis and NLP Tools:**
-- **Natural Language Toolkit (NLTK)**: Python library for text analysis
-- **spaCy**: Advanced NLP for entity extraction and categorization
-- **OpenAI API**: For intelligent categorization and solution extraction
-- **GitHub Insights**: Built-in analytics but limited for custom analysis
+### 3-Step Process Architecture
 
-### Build vs. Buy Analysis
-
-**Recommended Approach: Custom Build with Existing APIs**
-
-**Pros:**
-- Full control over categorization logic and output format
-- No vendor lock-in or ongoing subscription costs
-- Perfect integration with existing project documentation
-- Can be tailored specifically to Teams for Linux issue patterns
-- Maintainable by project team with existing JavaScript/Node.js skills
-
-**Cons:**
-- Higher initial development time (estimated 2-3 weeks)
-- Requires ongoing maintenance for API changes
-- Need to implement own analysis algorithms
-
-**Alternative Considered: GitBook/Notion Integration**
-- Pros: Professional interface, built-in search, collaborative editing
-- Cons: Vendor lock-in, ongoing costs, less integration with project workflow
-
-### Implementation Architecture
-
-**Data Pipeline:**
-1. **GitHub API Client**: Node.js script using Octokit for data extraction
-2. **Issue Analyzer**: JavaScript module for categorization and pattern detection
-3. **Solution Extractor**: Logic to identify and rank solution quality
-4. **Documentation Generator**: Template-based markdown file generation
-5. **Integration Script**: Automated pipeline for periodic updates
-
-**Technology Stack:**
-- **Node.js**: Core runtime for GitHub API interaction
-- **Octokit**: GitHub API SDK with rate limiting
-- **Markdown-it**: Markdown processing and generation
-- **Natural**: JavaScript NLP library for basic text analysis
-- **GitHub Actions**: Automated pipeline for periodic regeneration
-
-### Data Processing Workflow
+**Step 1: Extract**
 ```
-GitHub Issues → API Extraction → Text Analysis → Categorization → 
-Solution Ranking → Markdown Generation → Documentation Integration
+GitHub REST API → JSON storage → Raw issue data
 ```
 
-### Evaluation Criteria for Multiple Options
+**Step 2: Categorize** 
+```
+Pattern matching → Rule application → Categorized groups
+```
 
-**Development Time vs. Quality Trade-offs:**
-- Custom solution: 2-3 weeks development, perfect fit
-- GitBook integration: 1 week setup, ongoing subscription costs
-- Notion integration: 3-5 days setup, vendor dependency risk
+**Step 3: Generate**
+```
+Template processing → Markdown generation → Documentation files
+```
 
-**Maintenance Overhead:**
-- Custom: Medium (API updates, algorithm refinement)
-- GitBook: Low (platform handles infrastructure)
-- Notion: Low (platform managed, but content migration risk)
+### Technology Stack (Simplified)
 
-**Integration Complexity:**
-- Custom: High initial, seamless long-term integration
-- GitBook: Medium (webhook setup, content sync)
-- Notion: High (API integration, formatting limitations)
+- **Node.js**: Core runtime with built-in HTTPS
+- **Standard Libraries**: fs, path, https (no external dependencies)
+- **GitHub API**: Direct REST calls, no SDK complexity
+- **Markdown**: Standard GitHub-flavored markdown
+- **JSON**: Simple data storage and processing
 
-**Feature Completeness:**
-- Custom: 100% tailored to requirements
-- GitBook: 80% (some advanced categorization limitations)
-- Notion: 70% (limited by platform constraints)
+### Manual Execution Benefits
 
-**Recommendation: Custom Solution**
-Best long-term value with full control and perfect integration, despite higher initial investment.
+- **No Automation Complexity**: Run when needed, not on schedule
+- **Easy Debugging**: Step-by-step execution for troubleshooting
+- **Simple Maintenance**: No CI/CD integration to maintain
+- **Contributor Friendly**: Anyone can run and understand the process
+- **Cost Effective**: No ongoing automation infrastructure
 
 ## Success Metrics
 
 ### Primary Metrics
-- **Support Request Reduction**: 40-60% decrease in GitHub issues for problems covered by knowledge base
-- **User Self-Service Rate**: 70%+ of knowledge base visitors find solutions without filing issues
-- **Time to Resolution**: Average user problem resolution time under 10 minutes
-- **Knowledge Base Usage**: 500+ monthly page views within 3 months of launch
+
+- **Knowledge Base Usage**: Track documentation page views and user engagement
+- **Issue Reference Reduction**: Monitor decrease in duplicate issues already covered by knowledge base
+- **Self-Service Success**: Measure user ability to find solutions independently
 
 ### Secondary Metrics
-- **Content Coverage**: 80%+ of recurring issue types documented with solutions
-- **Solution Accuracy**: 90%+ positive feedback on solution effectiveness
-- **Developer Time Savings**: 5-10 hours per week reduction in support time
-- **Documentation Quality**: Clear categorization with <3 clicks to find relevant solutions
 
-### Analytics Implementation
-- GitHub Pages analytics for usage tracking
-- Issue template updates to capture knowledge base effectiveness
-- Quarterly surveys for user satisfaction with self-service options
+- **Content Coverage**: Percentage of common issue types documented with solutions
+- **Documentation Quality**: User feedback and solution effectiveness
+- **Maintenance Efficiency**: Time required to update and maintain knowledge base
+
+### Simple Analytics
+
+- GitHub Pages analytics for basic usage tracking
+- Issue template updates to capture knowledge base references
+- Periodic community feedback on documentation usefulness
 
 ## Open Questions
 
-1. **Update Frequency**: How often should the knowledge base be regenerated from GitHub data? (Recommendation: Monthly for the first 6 months, then quarterly)
+1. **Update Frequency**: How often should the knowledge base be regenerated? (Recommendation: Run manually when significant new issues accumulate)
 
-2. **Manual Curation Level**: Should generated content be reviewed and edited manually before publication, or published automatically with periodic review?
+2. **Manual Review**: Should generated content be reviewed before publication? (Recommendation: Yes, brief review for quality)
 
-3. **Multilingual Support**: Should the knowledge base support multiple languages given the international user base?
+3. **Historical Scope**: Include entire project history (7+ years) or focus on recent issues? (Recommendation: All issues for comprehensive coverage)
 
-4. **Integration with Application**: Future consideration - should the knowledge base be accessible from within the Teams for Linux application itself?
+4. **Community Feedback**: How should users provide feedback on documentation quality? (Recommendation: Simple GitHub issues or comments)
 
-5. **Community Contribution**: Should users be able to contribute additional solutions or corrections directly to the knowledge base?
+## Implementation Status
 
-6. **Feedback Mechanism**: How should users provide feedback on solution effectiveness? GitHub issues, embedded forms, or other methods?
+### ✅ Completed Features
 
-7. **Historical Data Scope**: Should analysis include issues from the entire project history (7+ years) or focus on recent issues (last 2-3 years) for relevance?
+1. **GitHub Data Extraction (Phase 1 Complete)**
+   - ✅ Standard GitHub REST API extraction script (`extract-issues.js`)
+   - ✅ Comprehensive rate limiting and pagination handling
+   - ✅ GitHub Personal Access Token authentication support
+   - ✅ JSON data storage with validation and metadata
+   - ✅ Zero external dependencies (Node.js built-ins only)
+   - ✅ Tested with 1000+ issues extraction
 
-## Tasks
+2. **Issue Categorization System (Phase 1 Complete)**
+   - ✅ Human-readable categorization rules (`categorization-rules.md`)
+   - ✅ 10 comprehensive issue categories with keyword patterns
+   - ✅ Manual categorization process documented
+   - ✅ AI-assistant friendly rule structure
 
-### 1. GitHub Data Extraction
-- [ ] 1.1 Create a script to extract issues from the Teams for Linux repository using the GitHub API.
-- [ ] 1.2 Capture issue metadata (title, body, labels, comments, resolution status).
-- [ ] 1.3 Handle API rate limiting and pagination.
+3. **Documentation and Architecture (Phase 1 Complete)**
+   - ✅ Comprehensive system documentation (`README.md`)
+   - ✅ Architecture diagrams and flow documentation
+   - ✅ GitHub token setup and troubleshooting guides
+   - ✅ Updated main knowledge base documentation
+   - ✅ Clean, maintainable file structure (4 essential files)
 
-### 2. Issue Analysis and Categorization
-- [ ] 2.1 Develop a module to categorize issues by problem type (e.g., GPU/display, audio, installation).
-- [ ] 2.2 Implement pattern detection for recurring symptoms across issues.
-- [ ] 2.3 Extract solution steps from resolved issues and comments.
-- [ ] 2.4 Rank solutions by success rate and community acceptance.
+4. **System Refactoring (Major Milestone)**
+   - ✅ **MCP dependency removal**: Eliminated VS Code/MCP requirements
+   - ✅ **Universal compatibility**: Works in any Node.js environment
+   - ✅ **Simplified architecture**: 3-step manual process
+   - ✅ **Enhanced accessibility**: Any contributor can now run extraction
+   - ✅ **Zero external dependencies**: Pure Node.js implementation
 
-### 3. Knowledge Base Generation
-- [ ] 3.1 Create a module to generate structured markdown documentation.
-- [ ] 3.2 Organize content into categories with clear navigation.
-- [ ] 3.3 Format content for search optimization (keywords, tags).
-- [ ] 3.4 Include links to original GitHub issues for context.
+### 🚧 In Progress / Future Implementation
 
-### 4. Solution Presentation
-- [ ] 4.1 Design step-by-step resolution guides for common issues.
-- [ ] 4.2 Include command-line examples and configuration snippets.
-- [ ] 4.3 Create troubleshooting decision trees for complex problems.
-- [ ] 4.4 Link related issues and alternative solutions.
+1. **Documentation Generation (Phase 2)**
+   - 📋 Planned: Automated markdown generation from categorized issues
+   - 📋 Planned: Category-based organization with navigation
+   - 📋 Planned: GitHub issue links and context preservation
 
-### 5. Maintenance and Updates
-- [ ] 5.1 Automate periodic regeneration of the knowledge base from updated GitHub data.
-- [ ] 5.2 Preserve manual edits and enhancements to generated content.
-- [ ] 5.3 Track solution effectiveness and update rankings.
+2. **Enhanced Features (Phase 3)**
+   - 📋 Future: Incremental extraction updates
+   - 📋 Future: GitHub Actions automation workflow
+   - 📋 Future: Advanced categorization refinements
+
+## Current System Status
+
+### What Works Now
+
+- **Full Issue Extraction**: Successfully extracts all 1000+ issues from repository
+- **Rate Limiting**: Handles GitHub API limits (60/hour without token, 5000/hour with token)
+- **Data Validation**: Comprehensive issue data with metadata and validation
+- **Documentation**: Complete usage guides and troubleshooting
+- **Manual Categorization**: Clear rules for classifying issues into 10 categories
+
+### Ready for Use
+
+The knowledge base extraction system is **production-ready** for Phase 1:
+
+```bash
+# Extract all issues (requires GitHub token for full dataset)
+export GITHUB_TOKEN=ghp_your_token_here
+node scripts/knowledge-base/extract-issues.js
+
+# Categorize using established rules
+# Manual process guided by scripts/knowledge-base/categorization-rules.md
+
+# Documentation generation - Future implementation
+```
 
 ## Future Improvements
 
 ### Priority 2 (Nice-to-Have)
-- Add multilingual support for the knowledge base.
-- Implement a feedback mechanism for users to rate solutions.
+
+- **Incremental Updates**: Add support for processing only new/changed issues since last run
+- **Enhanced Categorization**: Refine pattern matching rules based on real-world usage
+- **Solution Quality Indicators**: Add simple indicators for solution effectiveness
+- **Multi-format Output**: Generate additional formats like searchable JSON for advanced users
 
 ### Priority 3 (Future Consideration)
-- Integrate the knowledge base into the Teams for Linux application as an in-app feature.
-- Enable community contributions to the knowledge base.
+
+- **Automation**: Optional GitHub Actions workflow for periodic updates
+- **Community Integration**: Simple system for users to suggest rule improvements
+- **Application Integration**: In-app knowledge base access within Teams for Linux
+- **Analytics**: Basic tracking of which documentation sections are most useful
 
 ### Technical Debt Considerations
-- Refactor scripts for modularity and reusability.
-- Optimize performance of data extraction and analysis pipelines.
+
+- **Modularity**: Refactor scripts for better reusability as the system grows
+- **Performance**: Optimize data processing for very large issue datasets
+- **Error Handling**: Add comprehensive error handling and recovery mechanisms
+- **Testing**: Create unit tests for categorization rules and markdown generation

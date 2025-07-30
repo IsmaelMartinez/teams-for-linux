@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "GitHub Issues Extraction - MCP Integration Demo",
+			"type": "shell",
+			"command": "echo",
+			"args": [
+				"This task demonstrates MCP integration. The actual extraction happens through GitHub Copilot MCP tools in VS Code."
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
