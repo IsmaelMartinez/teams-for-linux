@@ -2,11 +2,11 @@
 
 /**
  * GitHub Issues Extraction Script for Knowledge Base
- * 
+ *
  * This script extracts all issues from the teams-for-linux repository
  * using the GitHub API via MCP tools. It implements proper rate limiting,
  * pagination handling, and incremental updates.
- * 
+ *
  * Features:
  * - Rate limiting and exponential backoff
  * - Pagination handling for large datasets
@@ -18,8 +18,8 @@
 
 /* global mcp_github_list_issues, mcp_github_get_issue_comments */
 
-const fs = require('fs').promises;
-const path = require('path');
+const fs = require("fs").promises;
+const path = require("path");
 
 // Configuration
 const CONFIG = {
@@ -265,15 +265,18 @@ class GitHubIssuesExtractor {
       console.log(`💬 Extracting comments for issue #${issueNumber}`);
 
       // Check if we're in VS Code environment with MCP tools available
-      if (typeof mcp_github_get_issue_comments !== 'undefined') {
+      if (typeof mcp_github_get_issue_comments !== "undefined") {
         try {
           return await mcp_github_get_issue_comments({
             owner: CONFIG.REPO_OWNER,
             repo: CONFIG.REPO_NAME,
-            issue_number: issueNumber
+            issue_number: issueNumber,
           });
         } catch (error) {
-          console.warn(`⚠️ MCP comment extraction failed for issue #${issueNumber}:`, error.message);
+          console.warn(
+            `⚠️ MCP comment extraction failed for issue #${issueNumber}:`,
+            error.message
+          );
           return []; // Fallback to empty array
         }
       } else {
@@ -368,12 +371,15 @@ class GitHubIssuesExtractor {
    */
   async callGitHubAPI(params) {
     // Check if we're in a VS Code environment with MCP tools available
-    if (typeof mcp_github_list_issues !== 'undefined') {
+    if (typeof mcp_github_list_issues !== "undefined") {
       try {
         console.log(`🔗 Using MCP GitHub API for page ${params.page}`);
         return await mcp_github_list_issues(params);
       } catch (error) {
-        console.warn(`⚠️ MCP call failed, falling back to simulation:`, error.message);
+        console.warn(
+          `⚠️ MCP call failed, falling back to simulation:`,
+          error.message
+        );
         return this.simulateApiCall(params);
       }
     } else {
