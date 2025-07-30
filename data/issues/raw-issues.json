@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "repository": "IsmaelMartinez/teams-for-linux",
+    "created": "2025-07-30T02:54:51.891Z"
+  },
+  "validation": {
+    "totalIssues": 1,
+    "uniqueIssues": 1,
+    "issuesWithComments": 0,
+    "closedIssues": 0,
+    "openIssues": 1,
+    "pullRequests": 0,
+    "validationTime": "2025-07-30T02:54:51.996Z"
+  },
+  "issues": [
+    {
+      "id": 1234567,
+      "number": 1773,
+      "title": "[Feat]: Sample issue for testing",
+      "body": "Sample issue body...",
+      "state": "open",
+      "author": {
+        "login": "testuser",
+        "type": "User",
+        "association": "NONE"
+      },
+      "labels": [
+        {
+          "name": "enhancement",
+          "color": "a2eeef",
+          "description": "New feature"
+        }
+      ],
+      "assignees": [],
+      "created_at": "2025-07-30T00:00:00Z",
+      "updated_at": "2025-07-30T00:00:00Z",
+      "closed_at": null,
+      "comments_count": 0,
+      "reactions": {
+        "total_count": 0
+      },
+      "html_url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1773",
+      "extracted_at": "2025-07-30T02:54:51.893Z",
+      "is_pull_request": false
+    }
+  ]
+}

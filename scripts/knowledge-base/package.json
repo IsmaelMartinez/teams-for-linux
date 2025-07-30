@@ -6,11 +6,12 @@
   "scripts": {
     "extract:full": "node extract-issues.js",
     "extract:incremental": "node extract-issues.js --incremental",
+    "test:mcp": "node test-mcp-integration.js",
     "analyze": "node analyze-issues.js",
     "generate": "node generate-knowledge-base.js",
     "build": "npm run extract:incremental && npm run analyze && npm run generate",
     "build:full": "npm run extract:full && npm run analyze && npm run generate",
-    "test": "echo 'Tests to be implemented' && exit 0",
+    "test": "npm run test:mcp",
     "lint": "eslint *.js"
   },
   "dependencies": {
