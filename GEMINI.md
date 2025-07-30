@@ -1,5 +1,5 @@
 # Gemini Instructions for Teams for Linux
 
-Please refer to the `.github/copilot-instructions.md` file for detailed instructions on the project overview, architecture, development patterns, build process, testing, and common patterns.
+This document provides instructions and guidelines for contributing to the Teams for Linux project.
 
-Any updates to these instructions should be made directly in the `.github/copilot-instructions.md` file.
+For detailed information on the project overview, architecture, development patterns, build process, testing, and common patterns, please refer to the `docs/` directory.
