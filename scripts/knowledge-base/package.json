@@ -1,0 +1,34 @@
+{
+  "name": "teams-for-linux-knowledge-base",
+  "version": "1.0.0",
+  "description": "Knowledge base generation scripts for Teams for Linux project",
+  "main": "index.js",
+  "scripts": {
+    "extract:full": "node extract-issues.js",
+    "extract:incremental": "node extract-issues.js --incremental",
+    "analyze": "node analyze-issues.js",
+    "generate": "node generate-knowledge-base.js",
+    "build": "npm run extract:incremental && npm run analyze && npm run generate",
+    "build:full": "npm run extract:full && npm run analyze && npm run generate",
+    "test": "echo 'Tests to be implemented' && exit 0",
+    "lint": "eslint *.js"
+  },
+  "dependencies": {
+    "natural": "^6.12.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "keywords": [
+    "teams-for-linux",
+    "knowledge-base",
+    "github-issues",
+    "nlp",
+    "automation"
+  ],
+  "author": "Teams for Linux Contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

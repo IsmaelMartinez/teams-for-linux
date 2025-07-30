@@ -30,6 +30,12 @@ When contributing, please align your changes with these goals.
 - **Architecture Diagrams**: See `docs/architecture/` for visual overviews of the system.
 - **Configuration Details**: See `docs/configuration.md`.
 - **IPC API**: See `docs/ipc-api.md` for a list of all IPC channels.
+- **Multiple Instances**: See `docs/multiple-instances.md` for running multiple instances.
+- **Custom Backgrounds**: See `docs/custom-backgrounds.md` for custom video backgrounds.
+- **Log Configuration**: See `docs/log-config.md` for logging options.
+- **Certificate Handling**: See `docs/certificate.md` for custom CA certificates.
+- **Cache Management**: See `docs/cache-manager.md` for cache cleanup.
+- **Knowledge Base**: See `docs/knowledge-base.md` for known issues and solutions.
 - **Module-specific READMEs**: Each subdirectory in `app/` should have a `README.md` explaining its purpose and interactions.
 
 ## Development Patterns
