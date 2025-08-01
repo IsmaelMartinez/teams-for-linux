@@ -81,7 +81,7 @@ Also available in:
 
 For detailed configuration options, including startup arguments to enable or
 disable specific features, please refer to the
-[Configuration README](app/config/README.md) in the config folder.
+[Configuration Documentation](docs/configuration.md).
 
 ## Running teams-for-linux in a firejail
 
@@ -100,7 +100,7 @@ refer to the [`CONTRIBUTING.md`](CONTRIBUTING.md) file.
 ## Known issues
 
 A list of known issues and possible workarounds is available in the
-[`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) file. Please check it before opening a new
+[`Knowledge Base`](docs/knowledge-base.md) file. Please check it before opening a new
 issue.
 
 ## History

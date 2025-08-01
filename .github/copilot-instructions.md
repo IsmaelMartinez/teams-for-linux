@@ -2,55 +2,86 @@
 
 ## Project Overview
 
-Teams for Linux is an Electron-based desktop application that wraps Microsoft Teams web app for Linux users. The app provides a native desktop experience with additional features like custom CSS, backgrounds, notifications, and system integration.
+Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app, providing a native desktop experience for Linux users. The app enhances the web version with features like custom CSS, custom backgrounds, system notifications, and deep integration with the desktop environment.
+
+## Project Vision & Refactoring Goals
+
+The project is currently undergoing a strategic effort to improve its architecture, maintainability, and developer experience. Key goals include:
+
+- **Increased Modularity:** Refactoring the monolithic `app/index.js` into smaller, single-responsibility modules (e.g., for IPC handling, command-line parsing, notification management).
+- **Modernization:** Adopting modern JavaScript features (`async/await`, `const`/`let`) and simplifying patterns (e.g., class private fields).
+- **Robustness:** Implementing comprehensive error handling, structured logging, and centralized state management.
+- **Testability:** Introducing a formal testing framework to build a suite of unit and integration tests.
+- **Clarity:** Enhancing documentation across all levels of the project.
+
+When contributing, please align your changes with these goals.
 
 ## Architecture & Key Components
 
 ### Main Application Structure
 
-- **Entry Point**: `app/index.js` - Main Electron process with app lifecycle management
-- **Configuration**: `app/appConfiguration/` - Centralized config management using electron-store
-- **Main Window**: `app/mainAppWindow/` - BrowserWindow management and Teams web app wrapper
-- **Browser Tools**: `app/browser/tools/` - Client-side scripts injected into Teams web interface
+- **Entry Point**: `app/index.js` - Main Electron process. **Note:** This file is being actively refactored. New functionalities should be placed in separate, dedicated modules rather than being added here directly.
+- **Configuration**: `app/appConfiguration/` - Centralized configuration management. See `docs/configuration.md` for a detailed breakdown of all options.
+- **Main Window**: `app/mainAppWindow/` - Manages the main `BrowserWindow` and the Teams web app wrapper.
+- **Browser Tools**: `app/browser/tools/` - Client-side scripts injected into the Teams web interface.
 
-### Key Modules
+### Key Documentation
 
-- **Notifications**: `app/browser/notifications/` - Activity tracking and desktop notifications
-- **Cache Management**: `app/cacheManager/` - Automatic cache cleanup to prevent OAuth token corruption
-- **Custom Features**:
-  - `app/customCSS/` - User-defined styling injection
-  - `app/customBackground/` - Custom Teams background support
-  - `app/spellCheckProvider/` - Multi-language spell checking
-- **System Integration**:
-  - `app/menus/` - Application and tray menus
-  - `app/connectionManager/` - Network connection handling
-  - `app/certificate/` - SSL certificate management
-  - `app/incomingCallToast/` - Custom toast for incoming calls
-  - `app/streamSelector/` - Stream selection for screen sharing
+- **Architecture Diagrams**: See `docs/architecture/` for visual overviews of the system.
+- **Configuration Details**: See `docs/configuration.md`.
+- **IPC API**: See `docs/ipc-api.md` for a list of all IPC channels.
+- **Module-specific READMEs**: Each subdirectory in `app/` should have a `README.md` explaining its purpose and interactions.
 
 ## Development Patterns
 
 ### Configuration Management
 
-```javascript
-// All config through AppConfiguration class
-const { AppConfiguration } = require("./appConfiguration");
-const appConfig = new AppConfiguration(
-  app.getPath("userData"),
-  app.getVersion()
-);
-```
+- All configuration is managed through the `AppConfiguration` class.
+- **Guiding Principle:** Treat the configuration object as immutable after startup. Changes should be managed via methods within `AppConfiguration` to ensure consistency.
+- For class properties, prefer standard JavaScript private fields (`#property`) over `WeakMap` for simplicity and readability.
 
-### Browser Script Injection
+### State Management
 
-- Scripts in `app/browser/tools/` are injected into Teams web interface
-- Use `window.addEventListener('DOMContentLoaded')` pattern for DOM manipulation
-- Follow existing patterns in `reactHandler.js` and `settings.js`
+- Avoid using global variables.
+- For state shared between modules (e.g., `userStatus`, `aboutBlankRequestCount`), create or use a dedicated state management module to provide controlled access and modification methods.
 
-### Event Communication
+### Event Communication (IPC)
 
-- Main process ↔ Renderer: Standard Electron IPC patterns
-- Browser scripts ↔ Main: Custom event dispatching through DOM events
+- **Current State:** IPC is handled via `ipcMain.on` and `ipcMain.handle` calls, primarily in `app/index.js`.
+- **Future Direction:** We are moving towards a centralized event bus or IPC abstraction layer to improve structure and maintainability. New IPC channels should be well-documented in `docs/ipc-api.md`.
+
+### Modern JavaScript Practices
+
+- **`var` is disallowed.** Use `const` by default and `let` only when a variable must be reassigned.
+- Use `async/await` for all asynchronous operations instead of promise chains (`.then()`).
+- Use arrow functions for concise callbacks.
+
+### Error Handling & Logging
+
+- Implement a robust error handling strategy using `try-catch` blocks in `async` functions.
+- Aim for graceful degradation and provide clear user feedback for errors.
+- Use `electron-log` for structured logging. Ensure log levels are used consistently and avoid logging sensitive information.
+
+## Documentation
+
+- **A Core Responsibility:** Documentation is not an afterthought; it is a core part of the development process.
+- **Update as You Go:** When you make a code change, update the relevant documentation in the same pull request.
+- **Module READMEs:** Ensure the `README.md` in the module you are working on is up-to-date.
+- **Code Comments:** Add comments sparingly. Focus on the _why_ behind complex, non-obvious, or unusual code, not the _what_. Use JSDoc for public APIs.
+- **Central Docs:** For changes affecting configuration, IPC, or overall architecture, update the corresponding documents in the `/docs` directory.
+
+## Markdown Standards
+
+When creating or updating documentation, leverage existing markdown library features instead of building custom solutions:
+
+- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation instead of manual lists
+- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for important information, warnings, and critical notes
+- **Code Blocks:** Use proper syntax highlighting with language identifiers (e.g., `javascript, `bash)
+- **Tables:** Use standard markdown tables with proper alignment for structured data
+- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking and checklists
+- **Links:** Use relative paths for internal documentation links and absolute URLs for external resources
+- **Collapsible Sections:** Use GitHub's `<details>` and `<summary>` elements for optional or lengthy information
+- **Diagrams:** Consider GitHub's Mermaid support for flowcharts, sequence diagrams, and architecture diagrams when applicable
 
 ## Build & Development
 
@@ -65,38 +96,27 @@ npm run pack          # Development build without packaging
 
 ### Build Configuration
 
-- **electron-builder** config in `package.json` under `"build"` section
-- Platform-specific builds: Linux (primary), macOS, Windows
-- Multiple output formats: AppImage, deb, rpm, snap, tar.gz
-
-### Release Process
-
-- Automated via GitHub Actions (`.github/workflows/build.yml`)
-- Version managed in `package.json` and propagated to build metadata
-- Release info generated by `scripts/generateReleaseInfo.js`
-- Debian changelog generated by `scripts/generateDebianChangelog.js` for proper package management
+- **electron-builder** config in `package.json` under the `"build"` section.
+- Release process is automated via GitHub Actions (`.github/workflows/build.yml`).
 
 ## Testing & Quality
 
-- **Linting**: ESLint with custom config (`eslint.config.mjs`)
-- **Security**: Snyk integration for vulnerability scanning
-- **Code Quality**: SonarCloud integration
-- **CI/CD**: GitHub Actions for build validation and releases
+- **Linting**: ESLint with custom config (`eslint.config.mjs`) is mandatory.
+- **Security**: Snyk and CodeQL for vulnerability scanning.
+- **CI/CD**: GitHub Actions for build validation and releases.
+- **Unit & Integration Testing**: The project currently lacks sufficient test coverage. A key goal is to introduce a testing framework (e.g., Jest) and build out a comprehensive test suite. Contributions in this area are highly encouraged.
 
 ## Common Patterns
 
-- **Single Instance**: The application ensures only a single instance is running using `app.requestSingleInstanceLock()`.
-- **Command Line Switches**: Various command-line switches are appended (e.g., for Wayland/PipeWire, proxy settings, disabling GPU, and custom Electron CLI flags from config).
-- Use `electron-log` for logging throughout the application
-- Configuration changes require app restart (document this in features)
-- Browser scripts should be defensive against Teams web app changes
-- Follow existing error handling patterns in main modules
+- **Single Instance**: The app uses `app.requestSingleInstanceLock()` to ensure only one instance is running.
+- **Command Line Switches**: The app processes various command-line switches. Logic for this is being centralized from `app/index.js` into a dedicated module.
+- **Defensive Coding:** Browser scripts should be written defensively, as the Teams web app DOM can change without notice.
 
 ## External Dependencies
 
-- **Core**: Electron, electron-builder for packaging
-- **System**: @homebridge/dbus-native for Linux desktop integration
-- **Storage**: electron-store for persistent configuration
-- **Audio**: node-sound for notification sounds (optional dependency)
+- **Core**: Electron, electron-builder
+- **System**: @homebridge/dbus-native (Linux desktop integration)
+- **Storage**: electron-store (persistent configuration)
+- **Audio**: node-sound (optional, for notification sounds)
 
 When working on this codebase, always consider cross-platform compatibility and the fact that the Teams web interface can change independently of this application.

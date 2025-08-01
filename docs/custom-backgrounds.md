@@ -2,7 +2,7 @@
 
 We have added a feature to load custom background images during video calls. For
 a complete example of this feature, please see the
-[example README](example/README.md).
+[example README](../app/customBackground/example/README.md).
 
 ## Important Considerations
 

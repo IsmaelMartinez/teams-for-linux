@@ -103,6 +103,10 @@ function restartApp() {
   app.exit();
 }
 
+/**
+ * Applies critical Electron command line switches that must be set before config loading.
+ * These switches affect core Electron behavior and cannot be changed after app initialization.
+ */
 function addCommandLineSwitchesBeforeConfigLoad() {
   app.commandLine.appendSwitch("try-supported-channel-layouts");
 
@@ -111,14 +115,22 @@ function addCommandLineSwitchesBeforeConfigLoad() {
     ? app.commandLine.getSwitchValue("disable-features").split(",")
     : ["HardwareMediaKeyHandling"];
 
+  // Prevent hardware media keys from interfering with Teams' built-in media controls
+  // This ensures Teams' own play/pause buttons work correctly instead of conflicting
+  // with system-level media key handling
   if (!disabledFeatures.includes("HardwareMediaKeyHandling"))
     disabledFeatures.push("HardwareMediaKeyHandling");
 
   app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
 }
 
+/**
+ * Applies configuration-dependent command line switches after config is loaded.
+ * Handles environment-specific optimizations (Wayland) and user preferences.
+ */
 function addCommandLineSwitchesAfterConfigLoad() {
-  // Wayland
+  // Wayland-specific optimization for Linux desktop environments
+  // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
     console.info("Running under Wayland, switching to PipeWire...");
 
@@ -240,6 +252,25 @@ async function playNotificationSound(_event, options) {
   console.debug("No notification sound played", player, options);
 }
 
+/**
+ * Handles the 'render-process-gone' event.
+ *
+ * When a renderer process (which hosts the web content, i.e., the Teams PWA)
+ * crashes or becomes unresponsive, Electron emits this event.
+ *
+ * The decision to immediately quit the application here is a design choice.
+ * A renderer process going "gone" often indicates a severe, unrecoverable
+ * issue with the web content or its interaction with Electron. Attempting
+ * to continue running with a crashed renderer can lead to an unstable
+ * and unpredictable user experience (e.g., blank screens, unresponsive UI).
+ *
+ * Quitting ensures a clean restart, allowing the user to relaunch the
+ * application and potentially recover from the issue.
+ *
+ * @param {Electron.Event} event - The event object.
+ * @param {Electron.WebContents} webContents - The WebContents that crashed.
+ * @param {Electron.RenderProcessGoneDetails} details - Details about the crash.
+ */
 function onRenderProcessGone(event, webContents, details) {
   console.error(`render-process-gone ${JSON.stringify(details)}`);
   app.quit();

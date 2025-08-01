@@ -18,4 +18,4 @@ Check [#77](https://github.com/IsmaelMartinez/teams-for-linux/issues/77) for
 more information about it and how to integrate further styles.
 
 Further information about config options can be found in the
-[config README.md file](../config/README.md).
+[Configuration Documentation](../../docs/configuration.md).

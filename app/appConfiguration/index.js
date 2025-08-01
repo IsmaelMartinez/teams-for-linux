@@ -1,30 +1,42 @@
 const Store = require("electron-store");
 
+// WeakMap-based private fields pattern provides true privacy without relying on newer
+// JavaScript private field syntax (#property). This ensures compatibility with older
+// Node.js versions while preventing external access to internal state.
 let _AppConfiguration_configPath = new WeakMap();
 let _AppConfiguration_startupConfig = new WeakMap();
 let _AppConfiguration_legacyConfigStore = new WeakMap();
 let _AppConfiguration_settingsStore = new WeakMap();
 
+/**
+ * Manages application configuration including startup settings and persistent stores.
+ * Uses WeakMaps for true private fields to ensure configuration data cannot be accessed
+ * or modified externally, providing a secure configuration management layer.
+ */
 class AppConfiguration {
+  /**
+   * @param {string} configPath - Path to the configuration directory
+   * @param {string} appVersion - Current application version for config compatibility
+   */
   constructor(configPath, appVersion) {
     _AppConfiguration_configPath.set(this, configPath);
     _AppConfiguration_startupConfig.set(
       this,
-      require("../config")(configPath, appVersion),
+      require("../config")(configPath, appVersion)
     );
     _AppConfiguration_legacyConfigStore.set(
       this,
       new Store({
         name: "config",
         clearInvalidConfig: true,
-      }),
+      })
     );
     _AppConfiguration_settingsStore.set(
       this,
       new Store({
         name: "settings",
         clearInvalidConfig: true,
-      }),
+      })
     );
   }
 

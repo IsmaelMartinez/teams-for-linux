@@ -7,7 +7,7 @@ exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
     applyCustomCSSToContent(content, customCssLocation);
   }
   content.insertCSS(
-    "#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }",
+    "#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }"
   );
   content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
 };
@@ -36,10 +36,15 @@ function applyCustomCSSToContent(content, cssLocation) {
   });
 }
 
-// Teams V2 use iframe for the main view. The content.insertCSS
-// does not work for that for some reason, so here, we listen for
-// on-did-frame-finish-load events, and inject additional <style>
-// element into them using JavaScript.
+/**
+ * Applies custom CSS to iframe-based content for Teams V2.
+ * Teams V2 uses iframes for the main view where content.insertCSS() doesn't work,
+ * so we inject <style> elements directly into the DOM using JavaScript execution.
+ * This is a workaround for iframe CSS isolation in Electron.
+ *
+ * @param {Electron.WebFrameMain} webFrame - The iframe's web frame
+ * @param {string} cssLocation - Path to the CSS file to inject
+ */
 function applyCustomCSSToFrame(webFrame, cssLocation) {
   const customCssId = "tfl-custom-css-style";
 
