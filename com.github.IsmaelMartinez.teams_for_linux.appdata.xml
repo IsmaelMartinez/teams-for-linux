@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.1.3" date="2025-08-01">
+			<description>
+				<ul>
+					<li>Documentation improvements</li>
+					<li>Created future prds and ai research documents for documentation-health and ui-system-strategic-analysis</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.1.2" date="2025-07-28">
 			<description>
 				<ul>
