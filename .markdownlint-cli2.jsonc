@@ -1,0 +1,55 @@
+{
+  // Configuration for markdownlint-cli2
+  // See https://github.com/DavidAnson/markdownlint-cli2#configuration
+  
+  "config": {
+    // Default settings for all rules
+    "default": true,
+    
+    // Disable problematic rules for this project
+    "MD013": false,        // Line length - varies in documentation
+    "MD033": false,        // Allow inline HTML (GitHub alerts, collapsible sections)
+    "MD041": false,        // First line doesn't need to be H1 (many files have frontmatter)
+    
+    // Configure specific rules for GitHub standards
+    "MD003": { "style": "atx" },           // Use # style headings
+    "MD004": { "style": "dash" },          // Use - for unordered lists  
+    "MD007": { "indent": 2 },              // Unordered list indentation
+    "MD009": { "br_spaces": 2 },           // Trailing spaces for line breaks
+    "MD012": { "maximum": 1 },             // Maximum consecutive blank lines
+    "MD022": { "lines_above": 1, "lines_below": 1 }, // Blank lines around headings
+    "MD024": { "siblings_only": true },               // Allow duplicate headings in different sections
+    "MD025": { "front_matter_title": "^\\s*title\\s*[:=]" }, // Single H1 with frontmatter support
+    "MD026": { "punctuation": ".,;:!" },   // No trailing punctuation in headings
+    "MD029": { "style": "ordered" },       // Use 1. 2. 3. for ordered lists
+    "MD030": { "ul_single": 1, "ol_single": 1, "ul_multi": 1, "ol_multi": 1 }, // Spaces after list markers
+    "MD035": { "style": "---" },           // Horizontal rule style
+    "MD036": { "punctuation": ".,;:!?" },  // No emphasis as headings
+    "MD040": true,                         // Fenced code blocks should have language
+    "MD046": { "style": "fenced" },        // Use fenced code blocks
+    "MD048": { "style": "backtick" },      // Use ``` for code fences
+    "MD049": { "style": "asterisk" },      // Use * for emphasis
+    "MD050": { "style": "asterisk" }       // Use ** for strong emphasis
+  },
+  
+  // Files to ignore
+  "ignores": [
+    "node_modules/**",
+    "build/**",
+    "dist/**",
+    ".git/**",
+    "CHANGELOG.md",        // Generated file with different formatting
+    "HISTORY.md"           // Generated file with different formatting
+  ],
+  
+  // Custom formatters (if needed)
+  "outputFormatters": [
+    // Default formatter provides good output
+  ],
+  
+  // Fix mode settings
+  "fix": false,  // Set to true to enable auto-fixing
+  
+  // Show rule names in output
+  "showFound": false
+}

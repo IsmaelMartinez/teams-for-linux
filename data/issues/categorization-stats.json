@@ -1,0 +1,18 @@
+{
+  "totalIssues": 1627,
+  "categorizedCount": 1627,
+  "categoryDistribution": {
+    "ui-ux": 223,
+    "installation-updates": 1016,
+    "performance-stability": 33,
+    "configuration": 19,
+    "audio-video": 61,
+    "other": 159,
+    "features": 50,
+    "screen-sharing": 42,
+    "login-authentication": 12,
+    "notifications": 12
+  },
+  "processingTime": 14,
+  "timestamp": "2025-07-31T22:11:32.258Z"
+}

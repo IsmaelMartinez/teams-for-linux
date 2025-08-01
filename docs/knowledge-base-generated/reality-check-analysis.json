@@ -1,0 +1,6557 @@
+{
+  "metadata": {
+    "analysisDate": "2025-08-01T02:23:52.577Z",
+    "totalIssues": 1627,
+    "analysisType": "reality-check"
+  },
+  "actualTrends": {
+    "monthlyActual": {
+      "2025-07": {
+        "total": 26,
+        "open": 11,
+        "closed": 15
+      },
+      "2025-06": {
+        "total": 32,
+        "open": 7,
+        "closed": 25
+      },
+      "2025-05": {
+        "total": 25,
+        "open": 3,
+        "closed": 22
+      },
+      "2025-04": {
+        "total": 58,
+        "open": 0,
+        "closed": 58
+      },
+      "2025-03": {
+        "total": 51,
+        "open": 0,
+        "closed": 51
+      },
+      "2025-02": {
+        "total": 19,
+        "open": 0,
+        "closed": 19
+      },
+      "2025-01": {
+        "total": 25,
+        "open": 0,
+        "closed": 25
+      },
+      "2024-12": {
+        "total": 24,
+        "open": 0,
+        "closed": 24
+      },
+      "2024-11": {
+        "total": 36,
+        "open": 0,
+        "closed": 36
+      },
+      "2024-10": {
+        "total": 33,
+        "open": 0,
+        "closed": 33
+      },
+      "2024-09": {
+        "total": 38,
+        "open": 0,
+        "closed": 38
+      },
+      "2024-08": {
+        "total": 32,
+        "open": 1,
+        "closed": 31
+      },
+      "2024-07": {
+        "total": 27,
+        "open": 0,
+        "closed": 27
+      },
+      "2024-06": {
+        "total": 38,
+        "open": 0,
+        "closed": 38
+      },
+      "2024-05": {
+        "total": 37,
+        "open": 0,
+        "closed": 37
+      },
+      "2024-04": {
+        "total": 71,
+        "open": 1,
+        "closed": 70
+      },
+      "2024-03": {
+        "total": 30,
+        "open": 0,
+        "closed": 30
+      },
+      "2024-02": {
+        "total": 37,
+        "open": 0,
+        "closed": 37
+      },
+      "2024-01": {
+        "total": 23,
+        "open": 0,
+        "closed": 23
+      },
+      "2023-12": {
+        "total": 23,
+        "open": 0,
+        "closed": 23
+      },
+      "2023-11": {
+        "total": 25,
+        "open": 0,
+        "closed": 25
+      },
+      "2023-10": {
+        "total": 35,
+        "open": 0,
+        "closed": 35
+      },
+      "2023-09": {
+        "total": 17,
+        "open": 0,
+        "closed": 17
+      },
+      "2023-08": {
+        "total": 33,
+        "open": 0,
+        "closed": 33
+      },
+      "2023-07": {
+        "total": 32,
+        "open": 0,
+        "closed": 32
+      },
+      "2023-06": {
+        "total": 31,
+        "open": 0,
+        "closed": 31
+      },
+      "2023-05": {
+        "total": 42,
+        "open": 0,
+        "closed": 42
+      },
+      "2023-04": {
+        "total": 56,
+        "open": 0,
+        "closed": 56
+      },
+      "2023-03": {
+        "total": 32,
+        "open": 0,
+        "closed": 32
+      },
+      "2023-02": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      },
+      "2023-01": {
+        "total": 8,
+        "open": 0,
+        "closed": 8
+      },
+      "2022-12": {
+        "total": 15,
+        "open": 0,
+        "closed": 15
+      },
+      "2022-11": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      },
+      "2022-10": {
+        "total": 19,
+        "open": 0,
+        "closed": 19
+      },
+      "2022-09": {
+        "total": 42,
+        "open": 0,
+        "closed": 42
+      },
+      "2022-08": {
+        "total": 12,
+        "open": 0,
+        "closed": 12
+      },
+      "2022-07": {
+        "total": 2,
+        "open": 0,
+        "closed": 2
+      },
+      "2022-06": {
+        "total": 3,
+        "open": 0,
+        "closed": 3
+      },
+      "2022-05": {
+        "total": 3,
+        "open": 0,
+        "closed": 3
+      },
+      "2022-04": {
+        "total": 5,
+        "open": 0,
+        "closed": 5
+      },
+      "2022-03": {
+        "total": 3,
+        "open": 0,
+        "closed": 3
+      },
+      "2022-02": {
+        "total": 3,
+        "open": 0,
+        "closed": 3
+      },
+      "2022-01": {
+        "total": 9,
+        "open": 0,
+        "closed": 9
+      },
+      "2021-12": {
+        "total": 4,
+        "open": 0,
+        "closed": 4
+      },
+      "2021-11": {
+        "total": 5,
+        "open": 0,
+        "closed": 5
+      },
+      "2021-10": {
+        "total": 35,
+        "open": 0,
+        "closed": 35
+      },
+      "2021-09": {
+        "total": 9,
+        "open": 0,
+        "closed": 9
+      },
+      "2021-08": {
+        "total": 4,
+        "open": 0,
+        "closed": 4
+      },
+      "2021-07": {
+        "total": 6,
+        "open": 0,
+        "closed": 6
+      },
+      "2021-06": {
+        "total": 9,
+        "open": 0,
+        "closed": 9
+      },
+      "2021-05": {
+        "total": 5,
+        "open": 0,
+        "closed": 5
+      },
+      "2021-04": {
+        "total": 2,
+        "open": 0,
+        "closed": 2
+      },
+      "2021-03": {
+        "total": 1,
+        "open": 0,
+        "closed": 1
+      },
+      "2021-02": {
+        "total": 7,
+        "open": 0,
+        "closed": 7
+      },
+      "2021-01": {
+        "total": 7,
+        "open": 0,
+        "closed": 7
+      },
+      "2020-12": {
+        "total": 6,
+        "open": 0,
+        "closed": 6
+      },
+      "2020-11": {
+        "total": 4,
+        "open": 0,
+        "closed": 4
+      },
+      "2020-10": {
+        "total": 2,
+        "open": 0,
+        "closed": 2
+      },
+      "2020-09": {
+        "total": 9,
+        "open": 0,
+        "closed": 9
+      },
+      "2020-08": {
+        "total": 7,
+        "open": 0,
+        "closed": 7
+      },
+      "2020-07": {
+        "total": 4,
+        "open": 0,
+        "closed": 4
+      },
+      "2020-06": {
+        "total": 5,
+        "open": 0,
+        "closed": 5
+      },
+      "2020-05": {
+        "total": 18,
+        "open": 0,
+        "closed": 18
+      },
+      "2020-04": {
+        "total": 12,
+        "open": 0,
+        "closed": 12
+      },
+      "2020-03": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      },
+      "2020-02": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      },
+      "2020-01": {
+        "total": 3,
+        "open": 0,
+        "closed": 3
+      },
+      "2019-12": {
+        "total": 1,
+        "open": 0,
+        "closed": 1
+      },
+      "2019-11": {
+        "total": 12,
+        "open": 0,
+        "closed": 12
+      },
+      "2019-10": {
+        "total": 14,
+        "open": 0,
+        "closed": 14
+      },
+      "2019-09": {
+        "total": 13,
+        "open": 0,
+        "closed": 13
+      },
+      "2019-08": {
+        "total": 81,
+        "open": 0,
+        "closed": 81
+      },
+      "2019-07": {
+        "total": 30,
+        "open": 0,
+        "closed": 30
+      },
+      "2019-06": {
+        "total": 20,
+        "open": 0,
+        "closed": 20
+      },
+      "2019-05": {
+        "total": 20,
+        "open": 0,
+        "closed": 20
+      },
+      "2019-04": {
+        "total": 33,
+        "open": 0,
+        "closed": 33
+      },
+      "2019-03": {
+        "total": 38,
+        "open": 0,
+        "closed": 38
+      },
+      "2019-02": {
+        "total": 2,
+        "open": 0,
+        "closed": 2
+      },
+      "2019-01": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      },
+      "2018-12": {
+        "total": 16,
+        "open": 0,
+        "closed": 16
+      },
+      "2018-11": {
+        "total": 11,
+        "open": 0,
+        "closed": 11
+      },
+      "2018-10": {
+        "total": 10,
+        "open": 0,
+        "closed": 10
+      }
+    },
+    "recentAvg": 33.25,
+    "historicalAvg": 17.542857142857144,
+    "realGrowth": "89.5",
+    "peakMonths": [
+      "2025-03",
+      "2025-04"
+    ]
+  },
+  "duplicateAnalysis": {
+    "potentialDuplicates": [
+      {
+        "pattern": "wayland experiment",
+        "count": 11,
+        "examples": [
+          {
+            "id": 792,
+            "title": "wayland experiment",
+            "date": "2023-04-30T14:09:58.000Z"
+          },
+          {
+            "id": 791,
+            "title": "wayland experiment",
+            "date": "2023-04-30T14:05:35.000Z"
+          },
+          {
+            "id": 789,
+            "title": "wayland experiment",
+            "date": "2023-04-30T13:46:18.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "577",
+        "count": 5,
+        "examples": [
+          {
+            "id": 745,
+            "title": "#577",
+            "date": "2023-04-15T05:10:21.000Z"
+          },
+          {
+            "id": 741,
+            "title": "#577",
+            "date": "2023-04-14T11:40:18.000Z"
+          },
+          {
+            "id": 738,
+            "title": "#577",
+            "date": "2023-04-14T06:20:32.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "updated documentation",
+        "count": 5,
+        "examples": [
+          {
+            "id": 1004,
+            "title": "Updated documentation",
+            "date": "2023-10-31T19:15:51.000Z"
+          },
+          {
+            "id": 877,
+            "title": "Updated documentation",
+            "date": "2023-07-02T03:20:19.000Z"
+          },
+          {
+            "id": 820,
+            "title": "Updated documentation",
+            "date": "2023-05-14T05:43:55.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature adding other arch buil",
+        "count": 5,
+        "examples": [
+          {
+            "id": 364,
+            "title": "Feature/adding other arch builds",
+            "date": "2020-05-25T09:14:33.000Z"
+          },
+          {
+            "id": 363,
+            "title": "Feature/adding other arch builds",
+            "date": "2020-05-25T09:04:08.000Z"
+          },
+          {
+            "id": 362,
+            "title": "Feature/adding other arch builds",
+            "date": "2020-05-25T08:58:59.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "",
+        "count": 4,
+        "examples": [
+          {
+            "id": 1769,
+            "title": "[Bug]:",
+            "date": "2025-07-28T11:31:43.000Z"
+          },
+          {
+            "id": 1749,
+            "title": "[Bug]:",
+            "date": "2025-06-27T13:06:48.000Z"
+          },
+          {
+            "id": 1686,
+            "title": "[Bug]:",
+            "date": "2025-04-28T16:21:35.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "cvss 7 4 vulnerability due to ",
+        "count": 4,
+        "examples": [
+          {
+            "id": 249,
+            "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.defaults:4.2.0",
+            "date": "2019-08-23T15:33:21.000Z"
+          },
+          {
+            "id": 248,
+            "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.clonedeep:4.5.0",
+            "date": "2019-08-23T15:33:18.000Z"
+          },
+          {
+            "id": 247,
+            "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.isfunction:3.0.9",
+            "date": "2019-08-23T15:33:15.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature add form report",
+        "count": 3,
+        "examples": [
+          {
+            "id": 1536,
+            "title": "Feature add form report",
+            "date": "2024-12-21T13:47:10.000Z"
+          },
+          {
+            "id": 1535,
+            "title": "Feature add form report",
+            "date": "2024-12-21T13:33:49.000Z"
+          },
+          {
+            "id": 1534,
+            "title": "Feature add form report",
+            "date": "2024-12-21T13:29:04.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "the suid sandbox helper binary",
+        "count": 3,
+        "examples": [
+          {
+            "id": 1481,
+            "title": "\"The SUID sandbox helper binary was found, but is not configured correctly\"",
+            "date": "2024-11-15T07:46:33.000Z"
+          },
+          {
+            "id": 1427,
+            "title": "The SUID sandbox helper binary was found, but is not configured correctly.",
+            "date": "2024-09-30T05:36:34.000Z"
+          },
+          {
+            "id": 450,
+            "title": "The SUID sandbox helper binary was found, but is not configured correctly",
+            "date": "2021-07-27T14:33:03.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "hotfix remove stage packages",
+        "count": 3,
+        "examples": [
+          {
+            "id": 1273,
+            "title": "Hotfix/remove stage packages",
+            "date": "2024-05-28T06:39:16.000Z"
+          },
+          {
+            "id": 1272,
+            "title": "Hotfix/remove stage packages",
+            "date": "2024-05-28T06:25:16.000Z"
+          },
+          {
+            "id": 1271,
+            "title": "Hotfix/remove stage packages",
+            "date": "2024-05-28T06:23:14.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "electron version upgraded to 2",
+        "count": 3,
+        "examples": [
+          {
+            "id": 1091,
+            "title": "Electron version upgraded to 28.2.1",
+            "date": "2024-02-03T07:23:05.000Z"
+          },
+          {
+            "id": 907,
+            "title": "electron version upgraded to 25.3.2",
+            "date": "2023-07-27T18:05:11.000Z"
+          },
+          {
+            "id": 882,
+            "title": "Electron version upgraded to 25.2.0",
+            "date": "2023-07-05T04:49:11.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "snap wayland experiment",
+        "count": 3,
+        "examples": [
+          {
+            "id": 770,
+            "title": "Snap+Wayland experiment",
+            "date": "2023-04-26T18:34:13.000Z"
+          },
+          {
+            "id": 769,
+            "title": "Snap+Wayland experiment",
+            "date": "2023-04-26T18:02:07.000Z"
+          },
+          {
+            "id": 768,
+            "title": "Snap+Wayland experiment",
+            "date": "2023-04-26T17:50:19.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "489",
+        "count": 2,
+        "examples": [
+          {
+            "id": 493,
+            "title": "#489",
+            "date": "2021-10-27T15:42:01.000Z"
+          },
+          {
+            "id": 491,
+            "title": "#489",
+            "date": "2021-10-27T01:56:59.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "520",
+        "count": 2,
+        "examples": [
+          {
+            "id": 550,
+            "title": "#520",
+            "date": "2022-08-10T05:48:50.000Z"
+          },
+          {
+            "id": 549,
+            "title": "#520",
+            "date": "2022-08-10T02:20:05.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "664",
+        "count": 2,
+        "examples": [
+          {
+            "id": 880,
+            "title": "#664",
+            "date": "2023-07-03T16:17:13.000Z"
+          },
+          {
+            "id": 879,
+            "title": "#664",
+            "date": "2023-07-03T14:02:20.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "677",
+        "count": 2,
+        "examples": [
+          {
+            "id": 747,
+            "title": "#677",
+            "date": "2023-04-15T12:42:21.000Z"
+          },
+          {
+            "id": 719,
+            "title": "#677",
+            "date": "2023-03-30T06:17:21.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "705",
+        "count": 2,
+        "examples": [
+          {
+            "id": 709,
+            "title": "#705",
+            "date": "2023-03-21T13:21:50.000Z"
+          },
+          {
+            "id": 708,
+            "title": "#705",
+            "date": "2023-03-21T11:31:35.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "813",
+        "count": 2,
+        "examples": [
+          {
+            "id": 817,
+            "title": "#813",
+            "date": "2023-05-13T12:17:38.000Z"
+          },
+          {
+            "id": 815,
+            "title": "#813",
+            "date": "2023-05-11T14:19:50.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "gtk 2 3 symbols detected using",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1746,
+            "title": "[Bug]: GTK 2/3 symbols detected. Using GTK 2/3 and GTK 4 in the same process is not supported",
+            "date": "2025-06-19T07:00:27.000Z"
+          },
+          {
+            "id": 1744,
+            "title": "[Bug]: GTK 2/3 symbols detected. Using GTK 2/3 and GTK 4 in the same process is not supported",
+            "date": "2025-06-18T08:53:59.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "zoom setting does not persist ",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1710,
+            "title": "[Bug]: Zoom setting does not persist between app restarts",
+            "date": "2025-05-23T06:11:18.000Z"
+          },
+          {
+            "id": 1038,
+            "title": "Zoom setting does not persist between app restarts",
+            "date": "2023-12-07T12:24:33.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "updating the electron version ",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1667,
+            "title": "updating the electron version to 35.2.0",
+            "date": "2025-04-22T13:38:33.000Z"
+          },
+          {
+            "id": 1506,
+            "title": "updating the electron version to 33.2.1",
+            "date": "2024-11-30T09:52:17.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "dynamically set dock icon for ",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1664,
+            "title": "dynamically set Dock icon for macOS",
+            "date": "2025-04-19T17:47:17.000Z"
+          },
+          {
+            "id": 1660,
+            "title": "dynamically set Dock icon for macOS",
+            "date": "2025-04-14T10:39:14.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feat increase electron 35 buil",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1624,
+            "title": "Feat increase electron 35 builder 26",
+            "date": "2025-03-28T14:29:43.000Z"
+          },
+          {
+            "id": 1621,
+            "title": "Feat increase electron 35 builder 26",
+            "date": "2025-03-28T09:27:33.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "update history md",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1486,
+            "title": "Update HISTORY.md",
+            "date": "2024-11-19T09:49:10.000Z"
+          },
+          {
+            "id": 355,
+            "title": "Update HISTORY.md",
+            "date": "2020-05-18T14:27:24.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "white screen",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1485,
+            "title": "white screen",
+            "date": "2024-11-18T17:57:40.000Z"
+          },
+          {
+            "id": 914,
+            "title": "White screen",
+            "date": "2023-08-08T05:08:38.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature add stale github actio",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1452,
+            "title": "Feature/add stale GitHub action",
+            "date": "2024-10-16T08:27:28.000Z"
+          },
+          {
+            "id": 1451,
+            "title": "Feature/add stale GitHub action",
+            "date": "2024-10-16T08:23:03.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "hotfix snap publish failed",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1286,
+            "title": "Hotfix/snap publish failed",
+            "date": "2024-06-06T12:11:04.000Z"
+          },
+          {
+            "id": 1285,
+            "title": "Hotfix/snap publish failed",
+            "date": "2024-06-06T10:45:49.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "crashes on startup",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1261,
+            "title": "Crashes on startup",
+            "date": "2024-05-13T21:12:28.000Z"
+          },
+          {
+            "id": 1016,
+            "title": "Crashes on startup",
+            "date": "2023-11-13T11:35:48.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "classic teams will soon be una",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1168,
+            "title": "Classic Teams will soon be unavailable for use. To use the new Teams, update your browser to meet requirements or contact your IT admin. See requirements - Banner popping up",
+            "date": "2024-04-03T07:37:59.000Z"
+          },
+          {
+            "id": 1156,
+            "title": "\"Classic Teams will soon be unavailable for use\" warning header",
+            "date": "2024-03-26T10:21:53.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "hotfix remove recurring angula",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1154,
+            "title": "Hotfix/remove recurring angular call",
+            "date": "2024-03-23T02:28:03.000Z"
+          },
+          {
+            "id": 1153,
+            "title": "Hotfix/remove recurring angular call",
+            "date": "2024-03-22T22:02:01.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "teams for linux not starting o",
+        "count": 2,
+        "examples": [
+          {
+            "id": 1118,
+            "title": "teams-for-linux not starting on kubuntu 22.04",
+            "date": "2024-02-23T09:48:12.000Z"
+          },
+          {
+            "id": 1011,
+            "title": "Teams-for-linux not starting on Ubuntu 22.04.3 LTS ",
+            "date": "2023-11-09T06:29:13.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "custom video background option",
+        "count": 2,
+        "examples": [
+          {
+            "id": 950,
+            "title": "Custom video background option disappeared",
+            "date": "2023-09-12T06:53:41.000Z"
+          },
+          {
+            "id": 949,
+            "title": "Custom video background option disappeared",
+            "date": "2023-09-12T06:52:30.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "spell check not working",
+        "count": 2,
+        "examples": [
+          {
+            "id": 916,
+            "title": "Spell check not working",
+            "date": "2023-08-08T07:09:11.000Z"
+          },
+          {
+            "id": 677,
+            "title": "Spell check not working",
+            "date": "2023-02-06T08:38:10.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "temporary workaround for scree",
+        "count": 2,
+        "examples": [
+          {
+            "id": 902,
+            "title": "Temporary workaround for screen sharing issue in wayland",
+            "date": "2023-07-20T11:24:12.000Z"
+          },
+          {
+            "id": 901,
+            "title": "Temporary workaround for screensharing in wayland",
+            "date": "2023-07-20T11:15:20.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "updated appdata xml",
+        "count": 2,
+        "examples": [
+          {
+            "id": 885,
+            "title": "Updated appdata.xml",
+            "date": "2023-07-06T10:29:28.000Z"
+          },
+          {
+            "id": 857,
+            "title": "Updated appdata.xml",
+            "date": "2023-06-15T10:20:07.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "option to not show tray icon",
+        "count": 2,
+        "examples": [
+          {
+            "id": 861,
+            "title": "Option to not show tray icon",
+            "date": "2023-06-19T09:58:27.000Z"
+          },
+          {
+            "id": 844,
+            "title": "Option to not show tray icon",
+            "date": "2023-06-02T12:26:29.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature disable notification s",
+        "count": 2,
+        "examples": [
+          {
+            "id": 754,
+            "title": "Feature: Disable Notification Sound if not Available",
+            "date": "2023-04-18T09:47:18.000Z"
+          },
+          {
+            "id": 751,
+            "title": "Feature: Disable Notification Sound if not Available",
+            "date": "2023-04-17T14:55:45.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "issue 613",
+        "count": 2,
+        "examples": [
+          {
+            "id": 731,
+            "title": "Issue 613",
+            "date": "2023-04-11T03:26:56.000Z"
+          },
+          {
+            "id": 617,
+            "title": "Issue 613",
+            "date": "2022-10-07T18:29:43.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "patch support for multiple tea",
+        "count": 2,
+        "examples": [
+          {
+            "id": 690,
+            "title": "Patch: Support for multiple Teams Accounts at the same time",
+            "date": "2023-03-01T21:25:29.000Z"
+          },
+          {
+            "id": 689,
+            "title": "Patch: Support for multiple Teams Accounts at the same time",
+            "date": "2023-03-01T20:31:40.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "remote control",
+        "count": 2,
+        "examples": [
+          {
+            "id": 568,
+            "title": "Remote control",
+            "date": "2022-09-06T19:40:16.000Z"
+          },
+          {
+            "id": 395,
+            "title": "Remote control",
+            "date": "2020-11-22T01:08:42.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "flatpak incomplete termination",
+        "count": 2,
+        "examples": [
+          {
+            "id": 552,
+            "title": "Flatpak incomplete termination",
+            "date": "2022-08-10T13:42:42.000Z"
+          },
+          {
+            "id": 551,
+            "title": "Flatpak incomplete termination",
+            "date": "2022-08-10T06:41:13.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "bump electron from 15 3 0 to 1",
+        "count": 2,
+        "examples": [
+          {
+            "id": 535,
+            "title": "Bump electron from 15.3.0 to 15.5.5",
+            "date": "2022-06-16T23:58:18.000Z"
+          },
+          {
+            "id": 525,
+            "title": "Bump electron from 15.3.0 to 15.3.5",
+            "date": "2022-03-22T20:09:16.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "snap build issue",
+        "count": 2,
+        "examples": [
+          {
+            "id": 485,
+            "title": "Snap build issue",
+            "date": "2021-10-24T05:21:49.000Z"
+          },
+          {
+            "id": 480,
+            "title": "Snap build issue",
+            "date": "2021-10-24T03:11:47.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "isolated snap builds from main",
+        "count": 2,
+        "examples": [
+          {
+            "id": 482,
+            "title": "Isolated snap builds from main build",
+            "date": "2021-10-24T04:01:15.000Z"
+          },
+          {
+            "id": 481,
+            "title": "Isolated snap builds from main build",
+            "date": "2021-10-24T03:48:34.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "issue 473",
+        "count": 2,
+        "examples": [
+          {
+            "id": 477,
+            "title": "Issue 473",
+            "date": "2021-10-23T09:25:23.000Z"
+          },
+          {
+            "id": 476,
+            "title": "Issue 473",
+            "date": "2021-10-23T08:23:43.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature 274 electron dl",
+        "count": 2,
+        "examples": [
+          {
+            "id": 307,
+            "title": "Feature/274 electron dl",
+            "date": "2019-11-16T18:57:28.000Z"
+          },
+          {
+            "id": 295,
+            "title": "Feature/274 electron dl",
+            "date": "2019-10-15T12:51:21.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "master",
+        "count": 2,
+        "examples": [
+          {
+            "id": 300,
+            "title": "Master",
+            "date": "2019-11-01T07:02:26.000Z"
+          },
+          {
+            "id": 236,
+            "title": "Master",
+            "date": "2019-08-18T21:09:32.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "open teams meeting link",
+        "count": 2,
+        "examples": [
+          {
+            "id": 253,
+            "title": "Open teams meeting link",
+            "date": "2019-08-23T17:39:25.000Z"
+          },
+          {
+            "id": 47,
+            "title": "Open teams meeting link",
+            "date": "2019-01-30T15:28:28.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature 107 adding extra logs ",
+        "count": 2,
+        "examples": [
+          {
+            "id": 215,
+            "title": "Feature 107 adding extra logs and checks",
+            "date": "2019-08-09T20:10:13.000Z"
+          },
+          {
+            "id": 213,
+            "title": "Feature 107 adding extra logs and checks",
+            "date": "2019-08-09T09:50:00.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "feature 186 refactor index",
+        "count": 2,
+        "examples": [
+          {
+            "id": 191,
+            "title": "Feature 186 refactor index",
+            "date": "2019-07-31T09:08:29.000Z"
+          },
+          {
+            "id": 189,
+            "title": "Feature 186 refactor index",
+            "date": "2019-07-31T08:03:47.000Z"
+          }
+        ]
+      },
+      {
+        "pattern": "0 1 7",
+        "count": 2,
+        "examples": [
+          {
+            "id": 9,
+            "title": "0.1.7",
+            "date": "2018-10-29T21:44:09.000Z"
+          },
+          {
+            "id": 7,
+            "title": "0.1.7",
+            "date": "2018-10-28T21:43:39.000Z"
+          }
+        ]
+      }
+    ],
+    "commonIssuePatterns": {},
+    "quickSolutionCandidates": []
+  },
+  "commonSolutions": {
+    "solutionPatterns": {
+      "disableGpu": 26,
+      "logs": 469,
+      "restart": 68,
+      "update": 291,
+      "reinstall": 27,
+      "sandbox": 47,
+      "wayland": 138,
+      "flatpak": 369
+    },
+    "issuesNeedingLogs": [
+      {
+        "id": 1730,
+        "title": "initial implemenation of the creation of a release-info.json file with the relevant release information",
+        "comments": 1,
+        "state": "closed"
+      },
+      {
+        "id": 1701,
+        "title": "[Bug]: Windows build not working - teams-for-linux.exe is not valid Win32 application",
+        "comments": 2,
+        "state": "closed"
+      },
+      {
+        "id": 1663,
+        "title": "removing unused and deprecated config options",
+        "comments": 1,
+        "state": "closed"
+      },
+      {
+        "id": 1654,
+        "title": "[Bug]: DM chats history not working.",
+        "comments": 2,
+        "state": "closed"
+      },
+      {
+        "id": 1640,
+        "title": "[Bug]: Error when quitting with \"Quit (Clear Storage)\"",
+        "comments": 1,
+        "state": "closed"
+      }
+    ],
+    "quickFixCandidates": [
+      {
+        "id": 1557,
+        "title": "[Bug]: Meetings freeze after 20 minutes",
+        "potentialSolution": "--disable-gpu"
+      },
+      {
+        "id": 1206,
+        "title": "Teams v2, klicking on Teams channel make app freeze",
+        "potentialSolution": "--disable-gpu"
+      },
+      {
+        "id": 1148,
+        "title": "Trying to download an attachment makes the app freeze",
+        "potentialSolution": "--disable-gpu"
+      },
+      {
+        "id": 1138,
+        "title": "Freezed on the starting splash screen",
+        "potentialSolution": "--disable-gpu"
+      },
+      {
+        "id": 1041,
+        "title": "Ctrl+click to open external link freezes teams main window",
+        "potentialSolution": "--disable-gpu"
+      }
+    ]
+  },
+  "supportBurden": {
+    "totalIssues": 1627,
+    "openIssues": 23,
+    "averageComments": "5.8",
+    "highMaintenanceIssues": [
+      {
+        "id": 1738,
+        "title": "[Bug]: MacOs version terribly slow",
+        "comments": 13,
+        "state": "open"
+      },
+      {
+        "id": 1736,
+        "title": "[Bug]: Window resizing is broken on latest update",
+        "comments": 27,
+        "state": "open"
+      },
+      {
+        "id": 1731,
+        "title": "[Bug]: core dump at start-up, GTK 2-3/4 symbols mix since 2.0.17 on RL9 (MATE)",
+        "comments": 36,
+        "state": "closed"
+      },
+      {
+        "id": 1722,
+        "title": "#1719 Introduce new setting coreSettingsComposeDisableTimestampOnCopy  to re-enable the timestamp on copy",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1719,
+        "title": "[Feat]: Improve Copy&Paste from Chats to Text Windows / Toggle compose.disableTimestampOnCopy (Copy with Names + Timestamps)",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1715,
+        "title": "[Bug]: Can't share screen in recent versions",
+        "comments": 11,
+        "state": "open"
+      },
+      {
+        "id": 1692,
+        "title": "[Bug]: Teams window sharing uses very low resolution",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1691,
+        "title": "[Bug]: Debian package contains a nonsense changelog",
+        "comments": 13,
+        "state": "open"
+      },
+      {
+        "id": 1681,
+        "title": "[Bug]: No tray icon since 2.0.9 (Ubuntu 22.04 with Mate desktop 1.26.0)",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1677,
+        "title": "[Bug]: 2.0.10 in Ubuntu/Gnome creates additional icon in task bar",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1675,
+        "title": "[Bug]: electronCLIFlags are not picked up from config.json",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 1658,
+        "title": "[Bug]: Green bars and bad quality on desktop sharing",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1644,
+        "title": "[Bug]: Status is set to away unless mouse moves over Teams for Linux window.",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1635,
+        "title": "[Bug]: flashing border with version 1.13.2",
+        "comments": 18,
+        "state": "closed"
+      },
+      {
+        "id": 1632,
+        "title": "[Feat]: Add documentation about how to run multiple instances of the app",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 1620,
+        "title": "[Feat]:  camera background  image  can select from files ?",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1611,
+        "title": "[Bug]: screen sharing not working on ubuntu 22.04",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1609,
+        "title": "[Bug]: Hyprand - Teams window never shows again after being closed (hidden)",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1585,
+        "title": "[Bug]: \"Copy Link\" does not work anymore (denied)",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1578,
+        "title": "[Feat]: Skip \"are you sure you want to stay signed in\" screen",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1565,
+        "title": "[Bug]: Teams doesn't connect on Start-Up; won't minimise to tray",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1560,
+        "title": "[Bug]: Clicking Notification does not bring App in Foreground",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1558,
+        "title": "[Bug]: After Logging into Teams for Linux \"Something Went Wrong, please try again\" message appears",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1552,
+        "title": "[Bug]: Fail to launch in Crostini (Chromebook Debian Linux container)",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1543,
+        "title": "[Bug]: Can't login because can't load Symantec's MFA (Content Security Policy violations and JavaScript errors)",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1523,
+        "title": "Mic stopped working on Ubuntu",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1521,
+        "title": "Pass `oauth` token obtained from another machine",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1495,
+        "title": "Crash when clicking sys tray icon to re-\"open\" app on RHEL8",
+        "comments": 23,
+        "state": "closed"
+      },
+      {
+        "id": 1491,
+        "title": "Flatpak: Generic Wayland icon is shown in KDE task switcher",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1487,
+        "title": "Window cannot be resized",
+        "comments": 77,
+        "state": "closed"
+      },
+      {
+        "id": 1483,
+        "title": "Error \"Fetched custom background remote configuration but failed to save ... configJSON is not iterable\" in logs",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1465,
+        "title": "Video from own webcam is low resolution and pixelated",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1463,
+        "title": "Screen sharing not working",
+        "comments": 38,
+        "state": "closed"
+      },
+      {
+        "id": 1444,
+        "title": "Hide Title Bar",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 1426,
+        "title": "setuid_sandbox_host.cc(163)] The SUID sandbox helper binary was found",
+        "comments": 23,
+        "state": "closed"
+      },
+      {
+        "id": 1424,
+        "title": "Custom backgrounds are not working on Teams V2 (configJSON is not iterable)",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1410,
+        "title": "Safelink Meeting links are not 'trapped' within teams-for-linux",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1392,
+        "title": "changing ms teams icons as they are trademarked",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1390,
+        "title": "The left settings, chat etc. window covers the half of the screen and it's not resonsive",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1381,
+        "title": "Failure to reconnect after suspend (permanent black window)",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1379,
+        "title": "offline meetings meet URL in message body is ignored",
+        "comments": 46,
+        "state": "closed"
+      },
+      {
+        "id": 1373,
+        "title": "Teams Link not opening",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 1370,
+        "title": "The meeting invitation are not working as expected",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 1357,
+        "title": "Please sign in again? - Way to keep non-idle? ",
+        "comments": 93,
+        "state": "open"
+      },
+      {
+        "id": 1353,
+        "title": "Execute a command on call join",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1345,
+        "title": "problems with backticks",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1342,
+        "title": "Single window sharing is blurry / low res.",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 1340,
+        "title": "cannot run fcitx5 input method for appimage format ",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1331,
+        "title": "Screen Sharing is Not Working - NOT Wayland",
+        "comments": 55,
+        "state": "closed"
+      },
+      {
+        "id": 1327,
+        "title": "can't share my screen in a meeting",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 1324,
+        "title": "Possible guide to enable HW DEcoding and ENcoding in electron",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 1320,
+        "title": "appIdleTimeout not respected?",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 1313,
+        "title": "Screen share doesn't work since last update (1.7.3)",
+        "comments": 37,
+        "state": "closed"
+      },
+      {
+        "id": 1289,
+        "title": "Teams v2 meeting links are always sent to an external brower rather than captured",
+        "comments": 18,
+        "state": "closed"
+      },
+      {
+        "id": 1280,
+        "title": "Add support for InTune Single-Sign-On",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1279,
+        "title": "1.5.0: generic window icon instead of Teams application icon shown in taskbar and Alt-Tab task switcher window",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1267,
+        "title": "No persisted login",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 1263,
+        "title": "Provide way of disabling the automatic volume adjustment",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1250,
+        "title": "since about 3 weeks i don't get audio in teams-for-linux",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1237,
+        "title": "Application crashes on startup",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 1234,
+        "title": "Meeting notifications not working with \"new teams\"",
+        "comments": 37,
+        "state": "open"
+      },
+      {
+        "id": 1233,
+        "title": "Maximising Window causes application to close on PopOS 22.04 ",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 1220,
+        "title": "Show a startup error dialog in case of invalid syntax of the config.json",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1216,
+        "title": "Teams does not start from time to time",
+        "comments": 20,
+        "state": "closed"
+      },
+      {
+        "id": 1211,
+        "title": "Crash (segfault, SIGILL) when using proxy with user and password",
+        "comments": 30,
+        "state": "closed"
+      },
+      {
+        "id": 1206,
+        "title": "Teams v2, klicking on Teams channel make app freeze",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 1195,
+        "title": "IncomingCallCommand not working for Teams V2",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 1184,
+        "title": "Share Screen not working",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1174,
+        "title": "Automate flathub upload",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 1172,
+        "title": "Teams v2: Broken taskbar notifications icon",
+        "comments": 31,
+        "state": "closed"
+      },
+      {
+        "id": 1169,
+        "title": "Classic Teams stopped working",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1167,
+        "title": "Custom video bgs not working",
+        "comments": 26,
+        "state": "closed"
+      },
+      {
+        "id": 1161,
+        "title": "Feature request: Automatic office/home location",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 1160,
+        "title": "feat: add opt in handling for teams v2",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 1156,
+        "title": "\"Classic Teams will soon be unavailable for use\" warning header",
+        "comments": 101,
+        "state": "closed"
+      },
+      {
+        "id": 1155,
+        "title": "Tray (Notification) icon broken in MATE with snap images",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 1150,
+        "title": "\"View\" and \"More\" buttons not working",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1142,
+        "title": "Tweaks to reduce RAM usage?",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 1135,
+        "title": "Cannot access View settings in a meeting",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 1129,
+        "title": "Dumps core at 4PM every day after eating entire heap",
+        "comments": 23,
+        "state": "closed"
+      },
+      {
+        "id": 1116,
+        "title": "Faulty Calendar View in 1.4.12 (Appimage) and 1.4.10 (flatpak)",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 1113,
+        "title": "Add LanguageTool (a fantastic spelling and grammar checker)",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1108,
+        "title": "Screen sharing in Ubuntu does not work",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 1098,
+        "title": "Meeting Links Not Opening",
+        "comments": 65,
+        "state": "closed"
+      },
+      {
+        "id": 1097,
+        "title": "problem on wayland in new version  1.4.10",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 1081,
+        "title": "Show \"away\" when I lock my screen",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1065,
+        "title": "Facing microphone issues in the latest teams-for-linux version '1.4.1'",
+        "comments": 39,
+        "state": "closed"
+      },
+      {
+        "id": 1057,
+        "title": "Activity isn't functional, moves on its own to Teams",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1045,
+        "title": "Can you please sign in again?",
+        "comments": 26,
+        "state": "closed"
+      },
+      {
+        "id": 1032,
+        "title": "Flatpak package crashes on startup",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 1011,
+        "title": "Teams-for-linux not starting on Ubuntu 22.04.3 LTS ",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 1006,
+        "title": "Whata about teams 2.0 and beyond",
+        "comments": 77,
+        "state": "closed"
+      },
+      {
+        "id": 1001,
+        "title": "Crashes (segfaults) on Wayland",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 999,
+        "title": "Ubuntu 23.04 share screen not working",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 989,
+        "title": "The camera needs permission, but I cannot find the Omnibar",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 986,
+        "title": "Disabled context isolation is a security hole/please enable",
+        "comments": 26,
+        "state": "closed"
+      },
+      {
+        "id": 963,
+        "title": "Need updated build for libwebp vuln",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 961,
+        "title": "Screen share is black on Wayland",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 959,
+        "title": "Allow to disable notification sounds from the UI",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 958,
+        "title": "rpm %postun scriptlet fails",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 957,
+        "title": "Secondary ringing device",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 945,
+        "title": "Fix online check with HTTP proxy",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 943,
+        "title": "Share screen error",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 937,
+        "title": "Taskbar system tray icon",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 933,
+        "title": "Network never detected, app does not start",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 928,
+        "title": "Electron regularly crashing while the app is in background",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 922,
+        "title": "Other party cannot hear me",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 913,
+        "title": "White screen after wakeup from suspend mode",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 912,
+        "title": "Screen sharing proportions (21:9 while sharing 16:9)",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 911,
+        "title": "Share sound from your computer",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 909,
+        "title": "Camera only visible in the preview - not for others",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 896,
+        "title": "Sharing Windows / Apps not working",
+        "comments": 38,
+        "state": "closed"
+      },
+      {
+        "id": 891,
+        "title": "Cannot Launch on Wayland - libwayland: xdg_wm_base@15: error 4",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 890,
+        "title": "Token/auth requests get sent to external browser",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 888,
+        "title": "Trayicon stopped working on Unity",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 886,
+        "title": "Screen sharing leads to crash (wayland)",
+        "comments": 18,
+        "state": "closed"
+      },
+      {
+        "id": 875,
+        "title": "`Payment required` while trying to install apt repository",
+        "comments": 24,
+        "state": "closed"
+      },
+      {
+        "id": 867,
+        "title": "Keep selected spell checker languages after app restart",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 866,
+        "title": "Don't use alt to show the menu",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 865,
+        "title": "The download window doesn't have font (squares instead of charachters)",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 864,
+        "title": "Newly-connected BT audio devices are not noticed",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 855,
+        "title": "File editor customizability",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 843,
+        "title": "Flatpak data and Appstream Metainfo gone",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 839,
+        "title": "White Screen with title \"Checking your credentials...\" if using autostart",
+        "comments": 23,
+        "state": "closed"
+      },
+      {
+        "id": 830,
+        "title": "Teams live event opens in browser",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 827,
+        "title": "External links are not opened correctly when they point to a Teams channel",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 824,
+        "title": "Notification showing but with no audio on KDE",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 813,
+        "title": "Allow custom URLs for loading custom backgrounds.",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 806,
+        "title": "Microphone not being picked up during calls",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 804,
+        "title": "#591 Add forceBackground Option to use a custom meeting background",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 802,
+        "title": "Cannot sign in with security key",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 801,
+        "title": "Personal Package Archive (PPA) for Debian Packages",
+        "comments": 33,
+        "state": "closed"
+      },
+      {
+        "id": 800,
+        "title": "Wrong timezone in calendar after switch from CET to CEST",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 765,
+        "title": "Screen sharing snap package",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 740,
+        "title": "teams refuses to authenticate at all sometimes",
+        "comments": 60,
+        "state": "closed"
+      },
+      {
+        "id": 727,
+        "title": "Phone notification",
+        "comments": 31,
+        "state": "closed"
+      },
+      {
+        "id": 724,
+        "title": "Notifications come from wrong user",
+        "comments": 32,
+        "state": "closed"
+      },
+      {
+        "id": 723,
+        "title": "Teams gets unloaded after suspend",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 711,
+        "title": "Click on link to external meetings is ignored",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 707,
+        "title": "take/request control is missing",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 706,
+        "title": "enableDesktopNotificationsHack Throughs error and hides window on startup",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 704,
+        "title": "App raises window and steals focus on private message",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 699,
+        "title": "\"meeting started\" notifications",
+        "comments": 48,
+        "state": "closed"
+      },
+      {
+        "id": 697,
+        "title": "Calls no longer ring",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 695,
+        "title": "Option for SSO Login Popups for certain Apps",
+        "comments": 20,
+        "state": "closed"
+      },
+      {
+        "id": 687,
+        "title": "Screen sharing on Tumbleweed does not work",
+        "comments": 20,
+        "state": "closed"
+      },
+      {
+        "id": 683,
+        "title": "Icons are not displayed",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 678,
+        "title": "Use CSD and disable desktop window",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 677,
+        "title": "Spell check not working",
+        "comments": 25,
+        "state": "closed"
+      },
+      {
+        "id": 675,
+        "title": "Call for help: No longer able to open meeting invitations in app",
+        "comments": 68,
+        "state": "closed"
+      },
+      {
+        "id": 672,
+        "title": "OpenSUSE Buildservice webhook",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 671,
+        "title": "Electron version upgrade",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 669,
+        "title": "Teams for Linux crashes on screen share",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 664,
+        "title": "Disable mic autogain",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 652,
+        "title": "High CPU usage",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 650,
+        "title": "Right click link -> copy not working",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 646,
+        "title": "restart loop when accessing meetings from browser url ",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 645,
+        "title": "Corporate account authentication with smart-card",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 643,
+        "title": "Incoming call notifications are appearing inside the app, instead of on the desktop",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 629,
+        "title": "Ubuntu 22.04 wayland unable to share screen",
+        "comments": 38,
+        "state": "closed"
+      },
+      {
+        "id": 628,
+        "title": "upgrade to electron 21.0.1 breaks app",
+        "comments": 24,
+        "state": "closed"
+      },
+      {
+        "id": 624,
+        "title": "Unable to use screen sharing on Debian 12 (bookworm) [Snap package]",
+        "comments": 30,
+        "state": "closed"
+      },
+      {
+        "id": 614,
+        "title": "Conflict with slack package",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 613,
+        "title": "Prevent screensaver while in a call",
+        "comments": 38,
+        "state": "closed"
+      },
+      {
+        "id": 606,
+        "title": "Feature Request - Red border when screen sharing",
+        "comments": 26,
+        "state": "closed"
+      },
+      {
+        "id": 591,
+        "title": "Custom background images?",
+        "comments": 45,
+        "state": "closed"
+      },
+      {
+        "id": 590,
+        "title": "Play Incoming Call Notification on second audio device",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 584,
+        "title": "Crash with wayland screensharing and teams-for-linux flatpak version 1.0.36",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 577,
+        "title": "away after a couple minutes",
+        "comments": 53,
+        "state": "closed"
+      },
+      {
+        "id": 565,
+        "title": "No more notification sound (when message, activity, ...)",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 558,
+        "title": "Errors with fresh install after sign in",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 538,
+        "title": "Impossible to submit company login.",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 536,
+        "title": "Tray Icon not displaying unread messages",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 526,
+        "title": "screen share broken on ubuntu 22.04 with snap package.",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 520,
+        "title": "Cannot start teams-for-linux again after quit",
+        "comments": 24,
+        "state": "closed"
+      },
+      {
+        "id": 513,
+        "title": "Wayland flags, bypass streamSelector on wayland",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 508,
+        "title": "Build fail on nodejs 17",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 506,
+        "title": "Tray icon not displaying image",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 503,
+        "title": "Type a message box not in focus",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 488,
+        "title": "Javascript error in main process",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 472,
+        "title": "Couldn't load your calendar. Let's give it another try. ",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 471,
+        "title": "Popup when opening application: Allow snap \"teams-for-linux\" to change \"default-url-scheme-handler\" subproperty \"msteams\" to \"teams-for-linux_teams-for-linux.desktop\"",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 470,
+        "title": "No meeting notifications in KDE",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 461,
+        "title": "Changing password breaks app",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 455,
+        "title": "Screen share: black screen + mouse vs Ubuntu 21.04 + Chrome",
+        "comments": 84,
+        "state": "closed"
+      },
+      {
+        "id": 453,
+        "title": "Open URLs in default browser",
+        "comments": 29,
+        "state": "closed"
+      },
+      {
+        "id": 448,
+        "title": "Login does not persist",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 446,
+        "title": "Click Share Desktop nothing happen",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 438,
+        "title": "Multi-tenant feature",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 432,
+        "title": "screenSharingControlService: unexpected, cannot find the call",
+        "comments": 71,
+        "state": "closed"
+      },
+      {
+        "id": 431,
+        "title": "¿MacOS compilation?",
+        "comments": 19,
+        "state": "closed"
+      },
+      {
+        "id": 406,
+        "title": "Screensharing stopped working",
+        "comments": 55,
+        "state": "closed"
+      },
+      {
+        "id": 405,
+        "title": "Please post arm64 version on snapcraft.io",
+        "comments": 18,
+        "state": "closed"
+      },
+      {
+        "id": 403,
+        "title": "Refresh loop",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 402,
+        "title": "Opening meeting links does not work",
+        "comments": 41,
+        "state": "closed"
+      },
+      {
+        "id": 359,
+        "title": "I made a package for the Raspberry PI 4 but have one small issue",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 354,
+        "title": "Unable to sign-in, please try again - Ubuntu 16 in client and browser.",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 341,
+        "title": "Teams opens meeting link 8 times",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 339,
+        "title": "Blank screen on startup, removing ~/.config/teams-for-linux doesn't help",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 322,
+        "title": "Cannot open msteams link to a meeting",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 318,
+        "title": "teams-for-linux can't open meeting link from command line",
+        "comments": 26,
+        "state": "closed"
+      },
+      {
+        "id": 314,
+        "title": "Blank screen during login",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 286,
+        "title": "We couldn't sign you in. Please try again in loop",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 285,
+        "title": "Teams for Linux snap application will not start",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 281,
+        "title": "Microsoft building a client for Linux",
+        "comments": 56,
+        "state": "closed"
+      },
+      {
+        "id": 274,
+        "title": "Download to ~/Downloads, without file save pop-up",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 270,
+        "title": "Stuck on \"Initialising\" with a blank page - only works if starting with sudo",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 268,
+        "title": "Infinite login loop for work/organization account",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 239,
+        "title": "0.7.0 JavaScript error",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 223,
+        "title": "`CXXABI_1.3.9' not found",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 220,
+        "title": "No spell check occurring for English in 0.6.0 Snap or RPM",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 204,
+        "title": "0.5.0 shows \"nag\" screen",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 199,
+        "title": "0.5.0 AppImage fails to register",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 197,
+        "title": "Could not parse file \"/usr/share/applications/teams-for-linux.desktop\": Key file contains line ? and wraps it as a standalone application using Electron.",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 194,
+        "title": "Screen Sharing No Longer Working",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 173,
+        "title": "0.4.0: Opening meeting links via xdg-open doesn't work using the snap package",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 171,
+        "title": "Can't open Microsoft Teams - blank screen",
+        "comments": 162,
+        "state": "closed"
+      },
+      {
+        "id": 154,
+        "title": "Spellcheck don't work in snap with polish as default os language",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 150,
+        "title": "Join meeting as Guest by using URL",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 125,
+        "title": "Snap unresponsive on Fedora",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 112,
+        "title": "Messages marked as read when window is not focused",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 109,
+        "title": "Clicking on URL preview pictures don't lead to the URL",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 108,
+        "title": "Allow single screen sharing for multi-monitors",
+        "comments": 17,
+        "state": "closed"
+      },
+      {
+        "id": 107,
+        "title": "Unable to use GitHub connector buttons ",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 106,
+        "title": "Desktop sharing isn't supported in your browser...",
+        "comments": 15,
+        "state": "closed"
+      },
+      {
+        "id": 100,
+        "title": "Not able to Screen Share with Audio only (without having a webcam)",
+        "comments": 47,
+        "state": "closed"
+      },
+      {
+        "id": 99,
+        "title": "The snap package installation shows a different cursor in the application",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 98,
+        "title": "Loop when launching",
+        "comments": 39,
+        "state": "closed"
+      },
+      {
+        "id": 93,
+        "title": "Blank page on saml login with self signed certificate",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 91,
+        "title": "apparmor=DENIED messages in syslog",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 89,
+        "title": "Support opening meeting links via xdg-open",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 81,
+        "title": "\"Open\" from the tray menu does not focus the window",
+        "comments": 12,
+        "state": "closed"
+      },
+      {
+        "id": 74,
+        "title": "Automate Snap release with CI/CD ",
+        "comments": 27,
+        "state": "closed"
+      },
+      {
+        "id": 72,
+        "title": "Allow option to use to 2 or more MS Teams accounts in the same window (similar to Slack)",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 66,
+        "title": "Provide snap package on official Snapcraft/Snap Store",
+        "comments": 28,
+        "state": "closed"
+      },
+      {
+        "id": 64,
+        "title": "screen sharing doesn't work on Centos",
+        "comments": 14,
+        "state": "closed"
+      },
+      {
+        "id": 61,
+        "title": "Low quality in screen sharing on 1 to 1 calls",
+        "comments": 80,
+        "state": "closed"
+      },
+      {
+        "id": 47,
+        "title": "Open teams meeting link",
+        "comments": 21,
+        "state": "closed"
+      },
+      {
+        "id": 42,
+        "title": "Notification number/dot in tray icon or dock icon",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 28,
+        "title": "Spell checking",
+        "comments": 22,
+        "state": "closed"
+      },
+      {
+        "id": 23,
+        "title": "GitHub authentication",
+        "comments": 11,
+        "state": "closed"
+      },
+      {
+        "id": 19,
+        "title": "Cannot present/share desktop",
+        "comments": 46,
+        "state": "closed"
+      },
+      {
+        "id": 6,
+        "title": "Have to sign in again on every launch",
+        "comments": 13,
+        "state": "closed"
+      },
+      {
+        "id": 4,
+        "title": "white window on base Debian (live Raizo) distribution",
+        "comments": 16,
+        "state": "closed"
+      },
+      {
+        "id": 3,
+        "title": "0.1.5 not authenticating to O365 properly.",
+        "comments": 18,
+        "state": "closed"
+      }
+    ],
+    "quickCloses": [
+      {
+        "id": 1771,
+        "title": "Fix: Remove deb packaging and update version",
+        "comments": 1
+      },
+      {
+        "id": 1770,
+        "title": "[Bug]: Screen share",
+        "comments": 1
+      },
+      {
+        "id": 1769,
+        "title": "[Bug]:",
+        "comments": 0
+      },
+      {
+        "id": 1766,
+        "title": "revert fix for #1691",
+        "comments": 1
+      },
+      {
+        "id": 1765,
+        "title": "feat: Implement cache management and Debian changelog generation (Issues #1756, #1691)",
+        "comments": 1
+      },
+      {
+        "id": 1764,
+        "title": "[Bug]: Fedora RPM packages are way behind",
+        "comments": 2
+      },
+      {
+        "id": 1761,
+        "title": "Bump form-data from 4.0.2 to 4.0.4 in the npm_and_yarn group across 1 directory",
+        "comments": 1
+      },
+      {
+        "id": 1759,
+        "title": "[Solution] Wayland: fix team scaling on HiDPI + scaling/fractional scaling",
+        "comments": 2
+      },
+      {
+        "id": 1751,
+        "title": "chore: update Electron, @eslint/js, eslint, and globals to latest versions",
+        "comments": 1
+      },
+      {
+        "id": 1748,
+        "title": "[Bug]: Microphone Volume keeps changing",
+        "comments": 2
+      },
+      {
+        "id": 1746,
+        "title": "[Bug]: GTK 2/3 symbols detected. Using GTK 2/3 and GTK 4 in the same process is not supported",
+        "comments": 2
+      },
+      {
+        "id": 1745,
+        "title": "[Bug]: Code shared via chat is not visible to other teamembers.",
+        "comments": 2
+      },
+      {
+        "id": 1739,
+        "title": "[Bug]: DeprecationWarning: fs.Stats constructor is deprecated",
+        "comments": 1
+      },
+      {
+        "id": 1735,
+        "title": "[Bug]: teams-for-linux 2.0.17 does not start",
+        "comments": 1
+      },
+      {
+        "id": 1733,
+        "title": "Feature 1719",
+        "comments": 2
+      },
+      {
+        "id": 1730,
+        "title": "initial implemenation of the creation of a release-info.json file with the relevant release information",
+        "comments": 1
+      },
+      {
+        "id": 1729,
+        "title": "[Bug]: Clearing Storage got rid of my monthly view in Calendar?",
+        "comments": 1
+      },
+      {
+        "id": 1725,
+        "title": "[Bug]: Status-sync appears to not work anymore",
+        "comments": 1
+      },
+      {
+        "id": 1717,
+        "title": "[Bug]: Cannot authenticate in app (trello)",
+        "comments": 2
+      },
+      {
+        "id": 1716,
+        "title": "[Feat]: Disable automatic mic-volume adjustment",
+        "comments": 2
+      },
+      {
+        "id": 1707,
+        "title": "upgrading electron to 35.4.0",
+        "comments": 1
+      },
+      {
+        "id": 1706,
+        "title": "[Bug]: bash: ./teams-for-linux-2.0.12-arm64.AppImage: cannot execute binary file: Exec format error",
+        "comments": 2
+      },
+      {
+        "id": 1701,
+        "title": "[Bug]: Windows build not working - teams-for-linux.exe is not valid Win32 application",
+        "comments": 2
+      },
+      {
+        "id": 1699,
+        "title": "fixing 1681 by only applying those changes to macOS",
+        "comments": 1
+      },
+      {
+        "id": 1698,
+        "title": "[Bug]: Teams for Linux 2.0.11 does not support hardware security keys",
+        "comments": 1
+      },
+      {
+        "id": 1697,
+        "title": "Update node version in CONTRIBUTING.md",
+        "comments": 2
+      },
+      {
+        "id": 1688,
+        "title": "Fix: removing apt update warning \"doesn't support architecture 'i386'\"",
+        "comments": 2
+      },
+      {
+        "id": 1684,
+        "title": "[Bug]: Can't update to 2.0.11-1 - OpenPGP Keys error",
+        "comments": 1
+      },
+      {
+        "id": 1683,
+        "title": "[Feat]: Can make new layer for video camera external of chat microsoft teams",
+        "comments": 1
+      },
+      {
+        "id": 1680,
+        "title": "[Feat]: Alternative Logo",
+        "comments": 2
+      },
+      {
+        "id": 1679,
+        "title": "fix: removing the appTitle setting the name of the app as that breaks the tray icon in linux systems",
+        "comments": 1
+      },
+      {
+        "id": 1678,
+        "title": "[Bug]: Not recognizing @Everyone inthe chat - Ubuntu 24.04 / Teams For Linux 2.0.9",
+        "comments": 1
+      },
+      {
+        "id": 1672,
+        "title": "[Feat]: can be compiled like UWP app for windows phone (1709)?",
+        "comments": 2
+      },
+      {
+        "id": 1671,
+        "title": "[Feat]: Ability to join/transfer an ongoing call from another device",
+        "comments": 2
+      },
+      {
+        "id": 1667,
+        "title": "updating the electron version to 35.2.0",
+        "comments": 1
+      },
+      {
+        "id": 1666,
+        "title": "[Feat]: Automatically mute/unmute in meeting when Teams detects muted/unmuted mic on system side",
+        "comments": 1
+      },
+      {
+        "id": 1665,
+        "title": "[Bug]: Device settings is blocked",
+        "comments": 2
+      },
+      {
+        "id": 1663,
+        "title": "removing unused and deprecated config options",
+        "comments": 1
+      },
+      {
+        "id": 1657,
+        "title": "referencing the full path, instead of a relative path, for the multi instance docs, and bumping electron to 35.1.5",
+        "comments": 1
+      },
+      {
+        "id": 1656,
+        "title": "[Feat]: Support for switching between multiple accounts",
+        "comments": 2
+      },
+      {
+        "id": 1655,
+        "title": "[Feat]: Support for signing in using security key",
+        "comments": 1
+      },
+      {
+        "id": 1654,
+        "title": "[Bug]: DM chats history not working.",
+        "comments": 2
+      },
+      {
+        "id": 1653,
+        "title": "[Bug]: full path is needed for the --user-data-dir",
+        "comments": 2
+      },
+      {
+        "id": 1652,
+        "title": "adding documenttation about how to run multiple instances and improving some documentation",
+        "comments": 1
+      },
+      {
+        "id": 1649,
+        "title": "Fix 1379 allow links offline meetings to open in app",
+        "comments": 1
+      },
+      {
+        "id": 1648,
+        "title": "adding back the teams-v1 meeting link protocol, as it does look it is still used in some meetings",
+        "comments": 1
+      },
+      {
+        "id": 1647,
+        "title": "Fixes issue #1644 for status checking.",
+        "comments": 2
+      },
+      {
+        "id": 1646,
+        "title": "Fix ActivityManager (#1644)",
+        "comments": 2
+      },
+      {
+        "id": 1643,
+        "title": "Fix \"--user-data-dir\" flag references",
+        "comments": 2
+      },
+      {
+        "id": 1642,
+        "title": "fix undefined property in the menu clear storage quit option",
+        "comments": 1
+      },
+      {
+        "id": 1640,
+        "title": "[Bug]: Error when quitting with \"Quit (Clear Storage)\"",
+        "comments": 1
+      },
+      {
+        "id": 1639,
+        "title": "re-wording base readmes and fixing appdata file",
+        "comments": 1
+      },
+      {
+        "id": 1638,
+        "title": "fixing issue #1636 with the desktop file and updating minor versions of dependencies",
+        "comments": 1
+      },
+      {
+        "id": 1636,
+        "title": "[Bug]: teams-for-linux.desktop contains invalid data",
+        "comments": 2
+      },
+      {
+        "id": 1634,
+        "title": "[Bug]: Sign in with HW key does not work",
+        "comments": 1
+      },
+      {
+        "id": 1633,
+        "title": "[Bug]: teams for linux deb app does not show ui",
+        "comments": 1
+      },
+      {
+        "id": 1631,
+        "title": "fix readme config file table",
+        "comments": 1
+      },
+      {
+        "id": 1630,
+        "title": "Feature 1584 remove teams v1 support",
+        "comments": 1
+      },
+      {
+        "id": 1628,
+        "title": "move \"Quit\" above \"Quit (Clear Storage) in appMenu.js",
+        "comments": 2
+      },
+      {
+        "id": 1627,
+        "title": "deprecating clearStorage for clearStorageData and running prettier",
+        "comments": 1
+      },
+      {
+        "id": 1624,
+        "title": "Feat increase electron 35 builder 26",
+        "comments": 1
+      },
+      {
+        "id": 1623,
+        "title": "[Bug]: Hidden chats option not available. No way to restore hidden chats.",
+        "comments": 1
+      },
+      {
+        "id": 1622,
+        "title": "[Feat]: move to electron 35 and electron-builder 26",
+        "comments": 2
+      },
+      {
+        "id": 1621,
+        "title": "Feat increase electron 35 builder 26",
+        "comments": 1
+      },
+      {
+        "id": 1619,
+        "title": "removing permissionCheckHandler and cookie printing",
+        "comments": 1
+      },
+      {
+        "id": 1618,
+        "title": "moving to electron 35 and electron-builder-26",
+        "comments": 1
+      },
+      {
+        "id": 1617,
+        "title": "Increasing the version of electron to fix the window resize, and checking if the settings file is present before trying to restore it",
+        "comments": 1
+      },
+      {
+        "id": 1612,
+        "title": "[Bug]: Command-line option '--help' prints with 80 character fixed text width",
+        "comments": 2
+      },
+      {
+        "id": 1605,
+        "title": "[Feat]: clearSession option in addition to clearStorage option",
+        "comments": 2
+      },
+      {
+        "id": 1602,
+        "title": "[Feat]:Mic volume is automatically turning down while one meet",
+        "comments": 1
+      },
+      {
+        "id": 1599,
+        "title": "[Bug]: Upload/Change Image is showing different language output in Ubuntu OS",
+        "comments": 1
+      },
+      {
+        "id": 1597,
+        "title": "Fixing issues 1590 nand 1585 (or at least trying)",
+        "comments": 1
+      },
+      {
+        "id": 1596,
+        "title": "[Bug]: FATAL:setuid_sandbox_host.cc",
+        "comments": 1
+      },
+      {
+        "id": 1593,
+        "title": "[Feat]: Disable downloads for minimal system",
+        "comments": 1
+      },
+      {
+        "id": 1592,
+        "title": "Installation locaiton '/usr/share/' instead of '/opt'",
+        "comments": 1
+      },
+      {
+        "id": 1589,
+        "title": "[Bug]: Screen Share not working",
+        "comments": 2
+      },
+      {
+        "id": 1588,
+        "title": "restore HISTORY.md file name",
+        "comments": 2
+      },
+      {
+        "id": 1586,
+        "title": "[Bug]: USB Jabra Auto Pick Up and Notification Issue",
+        "comments": 1
+      },
+      {
+        "id": 1584,
+        "title": "[Feat]: Remove teams-v1 support (EOL)",
+        "comments": 1
+      },
+      {
+        "id": 1583,
+        "title": "updating electron to 34.3.0",
+        "comments": 1
+      },
+      {
+        "id": 1582,
+        "title": "[Bug]: Symantec Token Input Broken",
+        "comments": 2
+      },
+      {
+        "id": 1580,
+        "title": "[Bug]: Electron/Chromium window's memory is not freed when the window is closed",
+        "comments": 1
+      },
+      {
+        "id": 1576,
+        "title": "moving electron to 33.4.1, and multiple auth refresh tries",
+        "comments": 1
+      },
+      {
+        "id": 1575,
+        "title": "[Feat]: Choose view (Chats, Teams, ...) to open on startup via config file",
+        "comments": 1
+      },
+      {
+        "id": 1568,
+        "title": "[Bug]: Password not saving & have to sign-in every time",
+        "comments": 2
+      },
+      {
+        "id": 1566,
+        "title": "[Bug]: Sorry, something went wrong, please try again",
+        "comments": 1
+      },
+      {
+        "id": 1562,
+        "title": "[Bug]: Window stays offscreen after unplugging a monitor",
+        "comments": 1
+      },
+      {
+        "id": 1556,
+        "title": "Feature enable background authentication calls",
+        "comments": 2
+      },
+      {
+        "id": 1555,
+        "title": "Enable Background Authentication Calls and handing of undefined on lock resumption",
+        "comments": 1
+      },
+      {
+        "id": 1553,
+        "title": "[Bug]: Account information / status switcher is not shown",
+        "comments": 2
+      },
+      {
+        "id": 1551,
+        "title": "Fix 1444 updating and fix frame option type",
+        "comments": 1
+      },
+      {
+        "id": 1550,
+        "title": "Fixing the frame option type (from string to boolean) and updates",
+        "comments": 1
+      },
+      {
+        "id": 1549,
+        "title": "[Bug]: After sign-in, window flashes with Teams logo a few time and then get \"Sorry, something went wrong, please try again\"",
+        "comments": 2
+      },
+      {
+        "id": 1548,
+        "title": "[Bug]: Cannot switch back to company account after having temporarily used personal one",
+        "comments": 1
+      },
+      {
+        "id": 1546,
+        "title": "[Bug]: Passkey Login broken",
+        "comments": 1
+      },
+      {
+        "id": 1542,
+        "title": "[Feat]: Some way to open a meeting with only id/key",
+        "comments": 2
+      },
+      {
+        "id": 1541,
+        "title": "[Bug]: Cannot use fcitx to change input method in teams-for-linux",
+        "comments": 1
+      },
+      {
+        "id": 1540,
+        "title": "abandoned",
+        "comments": 1
+      },
+      {
+        "id": 1539,
+        "title": "Change configs",
+        "comments": 1
+      },
+      {
+        "id": 1536,
+        "title": "Feature add form report",
+        "comments": 1
+      },
+      {
+        "id": 1535,
+        "title": "Feature add form report",
+        "comments": 1
+      },
+      {
+        "id": 1534,
+        "title": "Feature add form report",
+        "comments": 1
+      },
+      {
+        "id": 1533,
+        "title": "adding initial version of the form to collect bugs ",
+        "comments": 1
+      },
+      {
+        "id": 1530,
+        "title": "Connection with 2FA Microsoft not possible",
+        "comments": 2
+      },
+      {
+        "id": 1526,
+        "title": "use console.warn instead of console.warning",
+        "comments": 1
+      },
+      {
+        "id": 1517,
+        "title": "Support for YubiKey",
+        "comments": 2
+      },
+      {
+        "id": 1516,
+        "title": "updating electron to version 33.3.0 and changing log message to warning from error",
+        "comments": 1
+      },
+      {
+        "id": 1514,
+        "title": "Not working.",
+        "comments": 1
+      },
+      {
+        "id": 1506,
+        "title": "updating the electron version to 33.2.1",
+        "comments": 1
+      },
+      {
+        "id": 1505,
+        "title": "How to call a secondary ringer script?",
+        "comments": 1
+      },
+      {
+        "id": 1498,
+        "title": "Issues on Share Screen",
+        "comments": 1
+      },
+      {
+        "id": 1492,
+        "title": "Adding contentIsolation to the loginForm and removing the already deprecated/automated onlineCheckMethod config option",
+        "comments": 1
+      },
+      {
+        "id": 1488,
+        "title": "Link handling from Firefox?",
+        "comments": 1
+      },
+      {
+        "id": 1486,
+        "title": "Update HISTORY.md",
+        "comments": 1
+      },
+      {
+        "id": 1484,
+        "title": "Characters not loaded",
+        "comments": 1
+      },
+      {
+        "id": 1482,
+        "title": "Flatpak received no update since 1.11.2",
+        "comments": 1
+      },
+      {
+        "id": 1481,
+        "title": "\"The SUID sandbox helper binary was found, but is not configured correctly\"",
+        "comments": 2
+      },
+      {
+        "id": 1480,
+        "title": "Mirror Appearance is not working in camera settings",
+        "comments": 1
+      },
+      {
+        "id": 1479,
+        "title": "streamSelector improvements",
+        "comments": 1
+      },
+      {
+        "id": 1478,
+        "title": "Use of native file picker",
+        "comments": 2
+      },
+      {
+        "id": 1476,
+        "title": "Is it technically possible to manage breakout rooms in teams-for-linux?",
+        "comments": 1
+      },
+      {
+        "id": 1474,
+        "title": "change the default value of frame to be true and update electron to 33.2.0",
+        "comments": 1
+      },
+      {
+        "id": 1467,
+        "title": "Correct markup for icons hyperlink",
+        "comments": 2
+      },
+      {
+        "id": 1460,
+        "title": "updating dependencies, removing the electron-is-dev dependency and moving to electron 33.0.2",
+        "comments": 1
+      },
+      {
+        "id": 1456,
+        "title": "chrome-sandbox has wrong permissions in last 2 updates",
+        "comments": 2
+      },
+      {
+        "id": 1452,
+        "title": "Feature/add stale GitHub action",
+        "comments": 1
+      },
+      {
+        "id": 1451,
+        "title": "Feature/add stale GitHub action",
+        "comments": 1
+      },
+      {
+        "id": 1450,
+        "title": "adding the stale action to the repo",
+        "comments": 1
+      },
+      {
+        "id": 1449,
+        "title": "Feature/modify menu fix some sonar issues and debug log cookie expiration info",
+        "comments": 1
+      },
+      {
+        "id": 1448,
+        "title": "Share screen isn't working",
+        "comments": 1
+      },
+      {
+        "id": 1445,
+        "title": "No small meeting settings window shows up when joining via \"Meet now\" button",
+        "comments": 2
+      },
+      {
+        "id": 1442,
+        "title": "Links to meetings open in browser instead of teams-for-linux",
+        "comments": 1
+      },
+      {
+        "id": 1432,
+        "title": "Don't change icon",
+        "comments": 1
+      },
+      {
+        "id": 1431,
+        "title": "deprecate onlineCheckMethod and change log level to console.info",
+        "comments": 1
+      },
+      {
+        "id": 1430,
+        "title": "GPG for teams??",
+        "comments": 1
+      },
+      {
+        "id": 1421,
+        "title": "Screen Share doesn't work on first time (blurry picture), but it works on second time",
+        "comments": 2
+      },
+      {
+        "id": 1419,
+        "title": "When attempting to join a Microsoft Teams meeting, I get the following error: \"...Make sure you're connected to the internet...\"",
+        "comments": 2
+      },
+      {
+        "id": 1418,
+        "title": "Custom Background Not Available",
+        "comments": 2
+      },
+      {
+        "id": 1416,
+        "title": "Increase electron to 32.1.2 and electron-build to 25.0.5",
+        "comments": 1
+      },
+      {
+        "id": 1415,
+        "title": "Feature/move notification number bottom right",
+        "comments": 1
+      },
+      {
+        "id": 1413,
+        "title": "red/wrong systray icon",
+        "comments": 2
+      },
+      {
+        "id": 1404,
+        "title": "Setting for disabling automatic mic sensitivty adjustment",
+        "comments": 2
+      },
+      {
+        "id": 1402,
+        "title": "Unable to open multiple windows",
+        "comments": 1
+      },
+      {
+        "id": 1399,
+        "title": "fix the appdata file not to have an &",
+        "comments": 1
+      },
+      {
+        "id": 1397,
+        "title": "The organizational structure is displayed abnormally",
+        "comments": 2
+      },
+      {
+        "id": 1394,
+        "title": "Teams crash on download of a zip file",
+        "comments": 1
+      },
+      {
+        "id": 1391,
+        "title": "Set Platform String in Config.json",
+        "comments": 1
+      },
+      {
+        "id": 1387,
+        "title": "Emulate Windows Hosting System",
+        "comments": 2
+      },
+      {
+        "id": 1386,
+        "title": "Feature Request: Add Logfile option",
+        "comments": 1
+      },
+      {
+        "id": 1384,
+        "title": "Deep links not opening correctly",
+        "comments": 2
+      },
+      {
+        "id": 1380,
+        "title": "fix the code scanning security advisory 2 and adding more info on the render-process-gone",
+        "comments": 1
+      },
+      {
+        "id": 1378,
+        "title": "handle teams v2 meeting invites differently than v1 invites. making the default logger electron-log, as the config options seeem to be broken",
+        "comments": 1
+      },
+      {
+        "id": 1376,
+        "title": "reverting changes from default url to use teams v1 and updating libraries (electron to 30.4.0)",
+        "comments": 1
+      },
+      {
+        "id": 1374,
+        "title": "We are having trouble loading your messages. Try refreshing",
+        "comments": 2
+      },
+      {
+        "id": 1371,
+        "title": "adding disableHardwareAcceleration on the back of disableGpu",
+        "comments": 1
+      },
+      {
+        "id": 1366,
+        "title": "How to turn off DEBUG messages that are rapidly filling up syslog",
+        "comments": 1
+      },
+      {
+        "id": 1365,
+        "title": "Calendar does not load ",
+        "comments": 1
+      },
+      {
+        "id": 1364,
+        "title": "[Snyk] Upgrade electron-log from 5.1.6 to 5.1.7",
+        "comments": 1
+      },
+      {
+        "id": 1360,
+        "title": "other sign in methods if passkey is enabled",
+        "comments": 0
+      },
+      {
+        "id": 1355,
+        "title": "Update README.md to add required JSON comma",
+        "comments": 1
+      },
+      {
+        "id": 1351,
+        "title": "Could we set the user agent in teams",
+        "comments": 1
+      },
+      {
+        "id": 1348,
+        "title": "Fonts are blurry on 4k monitor in Arch Gnome Wayland Nvidia 555 ",
+        "comments": 2
+      },
+      {
+        "id": 1346,
+        "title": "Feature/move from lucidlog to electron log",
+        "comments": 1
+      },
+      {
+        "id": 1344,
+        "title": "Found some spelling errors after noticing a couple in the 1.8.0 PR",
+        "comments": 1
+      },
+      {
+        "id": 1343,
+        "title": "Please add regular unicode emojis :pray: ",
+        "comments": 1
+      },
+      {
+        "id": 1341,
+        "title": "Video vertical stripes on new Version",
+        "comments": 1
+      },
+      {
+        "id": 1339,
+        "title": "Deal with https://teams.live.com/ URLs",
+        "comments": 1
+      },
+      {
+        "id": 1338,
+        "title": "Fido key + pingID auth not working correctly",
+        "comments": 1
+      },
+      {
+        "id": 1335,
+        "title": "Fix awayOnSystemIdle behaviour when locking the screen: now it shows …",
+        "comments": 2
+      },
+      {
+        "id": 1334,
+        "title": "Add an open meeting link option on tray right click menu",
+        "comments": 1
+      },
+      {
+        "id": 1333,
+        "title": "Feature/upgrade electron version and add context isolation+sandboxing flags",
+        "comments": 1
+      },
+      {
+        "id": 1332,
+        "title": "increase electron to 30.1.2 and adding feature flags for contextIsolation and sandboxing",
+        "comments": 1
+      },
+      {
+        "id": 1330,
+        "title": "CustomCSSLocation not working in FlatPak version",
+        "comments": 1
+      },
+      {
+        "id": 1328,
+        "title": "nautilus displays rectangles instead of text ",
+        "comments": 2
+      },
+      {
+        "id": 1326,
+        "title": "I would add the ability to provide warning messages to users on app start",
+        "comments": 1
+      },
+      {
+        "id": 1325,
+        "title": "Feature/feat 1307 reload config on file change",
+        "comments": 1
+      },
+      {
+        "id": 1322,
+        "title": "Using a smartcard to login",
+        "comments": 1
+      },
+      {
+        "id": 1321,
+        "title": "ERROR: bus.cc(407) Failed to connect to the bus: ...socket /run/dbus/system_bus_socket: no such file or directory (flatpak)",
+        "comments": 1
+      },
+      {
+        "id": 1317,
+        "title": "Can't open Teams ",
+        "comments": 1
+      },
+      {
+        "id": 1312,
+        "title": "Screen sharing option not showing when content sharing policy applied",
+        "comments": 1
+      },
+      {
+        "id": 1311,
+        "title": "Nicer description",
+        "comments": 2
+      },
+      {
+        "id": 1310,
+        "title": "Feature/rename app in flathub",
+        "comments": 1
+      },
+      {
+        "id": 1307,
+        "title": "Reload config data on file change",
+        "comments": 1
+      },
+      {
+        "id": 1305,
+        "title": "apt cannot locate package, but snap can install",
+        "comments": 2
+      },
+      {
+        "id": 1304,
+        "title": "Flathub package not updated",
+        "comments": 2
+      },
+      {
+        "id": 1303,
+        "title": "readding fix for onNewWindow",
+        "comments": 2
+      },
+      {
+        "id": 1302,
+        "title": "warning that inflight module is not supported: Do not use it",
+        "comments": 1
+      },
+      {
+        "id": 1301,
+        "title": "Hotfix/code refactoring from sonarcloud",
+        "comments": 1
+      },
+      {
+        "id": 1300,
+        "title": "Fix: error when opening links",
+        "comments": 2
+      },
+      {
+        "id": 1299,
+        "title": "MS SSO doesn't open the external page to login with company account",
+        "comments": 1
+      },
+      {
+        "id": 1296,
+        "title": "Icon not showing for snap latest/edge 1.7.1",
+        "comments": 2
+      },
+      {
+        "id": 1295,
+        "title": "Cannot build deb package",
+        "comments": 2
+      },
+      {
+        "id": 1294,
+        "title": "Code refactoring, moving to sonarcloud, fixing snap icon and adding the option to disable global shortcuts",
+        "comments": 1
+      },
+      {
+        "id": 1293,
+        "title": "Feature/fix 1289 provide regex config option",
+        "comments": 0
+      },
+      {
+        "id": 1292,
+        "title": "fixed release date.",
+        "comments": 0
+      },
+      {
+        "id": 1291,
+        "title": "Feature/some general refactoring",
+        "comments": 0
+      },
+      {
+        "id": 1290,
+        "title": "refactoring and package version upgrade",
+        "comments": 0
+      },
+      {
+        "id": 1288,
+        "title": "fix the missing icon in alt-tab",
+        "comments": 0
+      },
+      {
+        "id": 1287,
+        "title": "Hide \"waffle menu\"",
+        "comments": 1
+      },
+      {
+        "id": 1286,
+        "title": "Hotfix/snap publish failed",
+        "comments": 0
+      },
+      {
+        "id": 1285,
+        "title": "Hotfix/snap publish failed",
+        "comments": 0
+      },
+      {
+        "id": 1284,
+        "title": "fixing dbus not present and moving from yarn to npm",
+        "comments": 0
+      },
+      {
+        "id": 1278,
+        "title": "Updated unclear background image readme for Teams V2",
+        "comments": 1
+      },
+      {
+        "id": 1276,
+        "title": "adding --rpm-digest=sha256 to fix RPM install on FIPS enabled system",
+        "comments": 0
+      },
+      {
+        "id": 1275,
+        "title": "Feature/1098 try to fix meeting links not opening",
+        "comments": 0
+      },
+      {
+        "id": 1274,
+        "title": "Adding teams.live.com to the URLs evaluated across the app",
+        "comments": 0
+      },
+      {
+        "id": 1273,
+        "title": "Hotfix/remove stage packages",
+        "comments": 0
+      },
+      {
+        "id": 1272,
+        "title": "Hotfix/remove stage packages",
+        "comments": 0
+      },
+      {
+        "id": 1271,
+        "title": "Hotfix/remove stage packages",
+        "comments": 0
+      },
+      {
+        "id": 1265,
+        "title": "Screen share does not work on  Fedora 39",
+        "comments": 2
+      },
+      {
+        "id": 1262,
+        "title": "Improve wording referencing config",
+        "comments": 1
+      },
+      {
+        "id": 1253,
+        "title": "Don't show an error if no config is used at all",
+        "comments": 1
+      },
+      {
+        "id": 1249,
+        "title": "Outlook In Teams",
+        "comments": 1
+      },
+      {
+        "id": 1247,
+        "title": "Fix awayOnSystemIdle flag in Teams V2",
+        "comments": 0
+      },
+      {
+        "id": 1245,
+        "title": "About section is bugged",
+        "comments": 2
+      },
+      {
+        "id": 1241,
+        "title": "Question: how to use \"Apps\" (e.g. Azure Boards) with teams-for-linux",
+        "comments": 2
+      },
+      {
+        "id": 1239,
+        "title": "Fix: #1233",
+        "comments": 0
+      },
+      {
+        "id": 1238,
+        "title": "give some information of the app name in the popup of appdicator",
+        "comments": 2
+      },
+      {
+        "id": 1231,
+        "title": "Multiple instances?",
+        "comments": 1
+      },
+      {
+        "id": 1230,
+        "title": "Updated implementation of Notification.requestPermission()",
+        "comments": 0
+      },
+      {
+        "id": 1228,
+        "title": "Don't build universal Mac app, it is broken on Apple Silicon",
+        "comments": 0
+      },
+      {
+        "id": 1227,
+        "title": "Remove .DS_Store file",
+        "comments": 0
+      },
+      {
+        "id": 1223,
+        "title": "Feature/add custom background flag",
+        "comments": 0
+      },
+      {
+        "id": 1222,
+        "title": "Advantages compared to the PWA version",
+        "comments": 2
+      },
+      {
+        "id": 1219,
+        "title": "enable useMutationTitleLogic by default",
+        "comments": 0
+      },
+      {
+        "id": 1214,
+        "title": "Custom background",
+        "comments": 0
+      },
+      {
+        "id": 1213,
+        "title": "teams-for-linux.desktop Ignored Soft Link",
+        "comments": 2
+      },
+      {
+        "id": 1210,
+        "title": "Chats list panel didn't change size between the small and full size window",
+        "comments": 2
+      },
+      {
+        "id": 1204,
+        "title": "Window Transparency",
+        "comments": 2
+      },
+      {
+        "id": 1202,
+        "title": "electron version upgraded to 30.0.0",
+        "comments": 0
+      },
+      {
+        "id": 1200,
+        "title": "#1199",
+        "comments": 0
+      },
+      {
+        "id": 1194,
+        "title": "Added menu option to choose notification urgency",
+        "comments": 0
+      },
+      {
+        "id": 1193,
+        "title": "Now lets user choose notification method and urgency #1147",
+        "comments": 0
+      },
+      {
+        "id": 1192,
+        "title": "Add support for electron CLI flags in config file",
+        "comments": 0
+      },
+      {
+        "id": 1191,
+        "title": "Debugging support for 1167",
+        "comments": 0
+      },
+      {
+        "id": 1190,
+        "title": "Fix: #1146",
+        "comments": 0
+      },
+      {
+        "id": 1187,
+        "title": "Double notifications sound on the new Teams",
+        "comments": 1
+      },
+      {
+        "id": 1185,
+        "title": "Log of messages",
+        "comments": 2
+      },
+      {
+        "id": 1181,
+        "title": "Electron 29.2.0",
+        "comments": 0
+      },
+      {
+        "id": 1180,
+        "title": "Fixed notification badge count does not clear when none pending",
+        "comments": 0
+      },
+      {
+        "id": 1179,
+        "title": "I'm using v.1.4.19 but Teams asks for browser update and gives a warning",
+        "comments": 1
+      },
+      {
+        "id": 1178,
+        "title": "Feature/teams v2 activityhub changes",
+        "comments": 2
+      },
+      {
+        "id": 1177,
+        "title": "Feature/teams v2 changes theme",
+        "comments": 0
+      },
+      {
+        "id": 1176,
+        "title": "adding how to debug in bug report, moving react logic into its own ha…",
+        "comments": 0
+      },
+      {
+        "id": 1171,
+        "title": "Custom background image doesn't work anymore with Teams v2 (v1.4.17)",
+        "comments": 1
+      },
+      {
+        "id": 1166,
+        "title": "U2C auth does not work",
+        "comments": 1
+      },
+      {
+        "id": 1158,
+        "title": "The \"New Meeting\" calendar dropdown drops up, off the top of the screen",
+        "comments": 2
+      },
+      {
+        "id": 1154,
+        "title": "Hotfix/remove recurring angular call",
+        "comments": 0
+      },
+      {
+        "id": 1153,
+        "title": "Hotfix/remove recurring angular call",
+        "comments": 0
+      },
+      {
+        "id": 1152,
+        "title": "removing the angular recurring call to disable some promotions as I s…",
+        "comments": 0
+      },
+      {
+        "id": 1145,
+        "title": "Missing background settings",
+        "comments": 1
+      },
+      {
+        "id": 1139,
+        "title": "Electron upgrade",
+        "comments": 0
+      },
+      {
+        "id": 1138,
+        "title": "Freezed on the starting splash screen",
+        "comments": 2
+      },
+      {
+        "id": 1136,
+        "title": "Sound volume",
+        "comments": 0
+      },
+      {
+        "id": 1134,
+        "title": "flathub out of date at 1.4.10",
+        "comments": 1
+      },
+      {
+        "id": 1132,
+        "title": "Electron upgrade to 29",
+        "comments": 0
+      },
+      {
+        "id": 1128,
+        "title": "Update app/config/README.md with followSystemTheme flag",
+        "comments": 2
+      },
+      {
+        "id": 1126,
+        "title": "Does not open Security Window when authenticating via security key",
+        "comments": 2
+      },
+      {
+        "id": 1122,
+        "title": "Totally broken on Pop-OS",
+        "comments": 1
+      },
+      {
+        "id": 1121,
+        "title": "Open chat in new window",
+        "comments": 2
+      },
+      {
+        "id": 1119,
+        "title": "Screen sharing stopped working between 1.4.3 and 1.4.11 (KDE, X11)",
+        "comments": 1
+      },
+      {
+        "id": 1117,
+        "title": "Option --appTitle \"MyTeamsWindow\" does not work in Appimage version",
+        "comments": 1
+      },
+      {
+        "id": 1112,
+        "title": "Fixed preload script error",
+        "comments": 0
+      },
+      {
+        "id": 1109,
+        "title": "The New Microsoft Teams",
+        "comments": 1
+      },
+      {
+        "id": 1106,
+        "title": "Wrong time zone set in meeting scheduler",
+        "comments": 1
+      },
+      {
+        "id": 1101,
+        "title": "Mac keyboard shortcut Option (⌥) + Left",
+        "comments": 0
+      },
+      {
+        "id": 1094,
+        "title": "[Feature request] Create code/preformated/Monspaced block with ```",
+        "comments": 1
+      },
+      {
+        "id": 1092,
+        "title": "Added new flag --awayOnSystemIdle",
+        "comments": 0
+      },
+      {
+        "id": 1091,
+        "title": "Electron version upgraded to 28.2.1",
+        "comments": 0
+      },
+      {
+        "id": 1089,
+        "title": "Update snap core to 22",
+        "comments": 0
+      },
+      {
+        "id": 1086,
+        "title": "The font size should be adjustable for HDPI screens",
+        "comments": 2
+      },
+      {
+        "id": 1084,
+        "title": "Fix #1060",
+        "comments": 0
+      },
+      {
+        "id": 1075,
+        "title": "docs(config): add Flatpak config file location",
+        "comments": 1
+      },
+      {
+        "id": 1072,
+        "title": "adding apptitle to the tooltip",
+        "comments": 0
+      },
+      {
+        "id": 1066,
+        "title": "How to change my input device in team-for-linux?",
+        "comments": 2
+      },
+      {
+        "id": 1064,
+        "title": "rework wayland screenshare source selection",
+        "comments": 1
+      },
+      {
+        "id": 1060,
+        "title": "Notifications show the app's icon and not the sender's profile picture",
+        "comments": 2
+      },
+      {
+        "id": 1056,
+        "title": "Desktop Stream wrong size",
+        "comments": 1
+      },
+      {
+        "id": 1055,
+        "title": "Cropped screensharing of windows",
+        "comments": 2
+      },
+      {
+        "id": 1054,
+        "title": "Bug/1053 update ipc handlers for incomming call command",
+        "comments": 2
+      },
+      {
+        "id": 1051,
+        "title": "Electron version upgrade to 28.0.0",
+        "comments": 2
+      },
+      {
+        "id": 1049,
+        "title": "quick suggestion re ubuntu install",
+        "comments": 1
+      },
+      {
+        "id": 1047,
+        "title": "Does not start any more",
+        "comments": 1
+      },
+      {
+        "id": 1046,
+        "title": "CI: update github action versions",
+        "comments": 1
+      },
+      {
+        "id": 1044,
+        "title": "- changed kill singal for \"incomingCallCommand\" from SIGKILL to SIGTE…",
+        "comments": 2
+      },
+      {
+        "id": 1043,
+        "title": "Make sure executable is writable before running fuses in afterpack script",
+        "comments": 1
+      },
+      {
+        "id": 1039,
+        "title": "Exception when running second ringer script",
+        "comments": 2
+      },
+      {
+        "id": 1038,
+        "title": "Zoom setting does not persist between app restarts",
+        "comments": 2
+      },
+      {
+        "id": 1036,
+        "title": "Crash when maximize on Wayland",
+        "comments": 2
+      },
+      {
+        "id": 1033,
+        "title": "Missing \"Meeting started\" notifications",
+        "comments": 0
+      },
+      {
+        "id": 1028,
+        "title": "Allow usage of arbitrary disable-features switch",
+        "comments": 2
+      },
+      {
+        "id": 1027,
+        "title": "Blurry window when using wayland with integer scaling",
+        "comments": 2
+      },
+      {
+        "id": 1020,
+        "title": "increasing the node version in the runners",
+        "comments": 1
+      },
+      {
+        "id": 1016,
+        "title": "Crashes on startup",
+        "comments": 2
+      },
+      {
+        "id": 1012,
+        "title": "MS Teams Avatars support?",
+        "comments": 2
+      },
+      {
+        "id": 1009,
+        "title": "Fix #992",
+        "comments": 0
+      },
+      {
+        "id": 1007,
+        "title": "Teams stop working after last fedora update to 1.3.18",
+        "comments": 1
+      },
+      {
+        "id": 1004,
+        "title": "Updated documentation",
+        "comments": 0
+      },
+      {
+        "id": 1003,
+        "title": "prevent arbitrary command execution via URL when using --defaultURLHandler",
+        "comments": 1
+      },
+      {
+        "id": 996,
+        "title": "Fix default url handler",
+        "comments": 1
+      },
+      {
+        "id": 995,
+        "title": "Option to open new window",
+        "comments": 1
+      },
+      {
+        "id": 992,
+        "title": "Move About menu item to bottom",
+        "comments": 0
+      },
+      {
+        "id": 979,
+        "title": "Electron version upgrade to 27.0.0",
+        "comments": 0
+      },
+      {
+        "id": 976,
+        "title": "[Bug] ? Takes HTML file association",
+        "comments": 2
+      },
+      {
+        "id": 975,
+        "title": "access to microsoft's echo bot",
+        "comments": 2
+      },
+      {
+        "id": 973,
+        "title": "Open chat, teams and meetings in separate windows.",
+        "comments": 2
+      },
+      {
+        "id": 971,
+        "title": "README improvements",
+        "comments": 2
+      },
+      {
+        "id": 970,
+        "title": "How do I add to STARTUP programs?",
+        "comments": 1
+      },
+      {
+        "id": 967,
+        "title": "Actual teams-for-linux-<VERSION>.AppImage doesn't have any update information",
+        "comments": 2
+      },
+      {
+        "id": 965,
+        "title": "Electron version upgrade to 24.8.5",
+        "comments": 0
+      },
+      {
+        "id": 964,
+        "title": "Failure to install flatpak (1.3.5) from flathub",
+        "comments": 2
+      },
+      {
+        "id": 954,
+        "title": "Fix issue with network check waiting loop",
+        "comments": 0
+      },
+      {
+        "id": 952,
+        "title": "Obtain a transcript / record of chat sessions in a file",
+        "comments": 1
+      },
+      {
+        "id": 949,
+        "title": "Custom video background option disappeared",
+        "comments": 1
+      },
+      {
+        "id": 946,
+        "title": "feature: reordering and cleaning up the list of config options",
+        "comments": 0
+      },
+      {
+        "id": 942,
+        "title": "Added about dialog",
+        "comments": 0
+      },
+      {
+        "id": 940,
+        "title": "Network check logic uses HTTP instead of DNS resolve",
+        "comments": 0
+      },
+      {
+        "id": 938,
+        "title": "Teams shortcuts",
+        "comments": 2
+      },
+      {
+        "id": 935,
+        "title": "fix: Movig to snapcraft v2 actions and fixing deployment",
+        "comments": 0
+      },
+      {
+        "id": 930,
+        "title": "Issue 918",
+        "comments": 0
+      },
+      {
+        "id": 927,
+        "title": "Seamless single sign on failed",
+        "comments": 2
+      },
+      {
+        "id": 924,
+        "title": "removed plug gnome-42-2204",
+        "comments": 0
+      },
+      {
+        "id": 923,
+        "title": "More snap plugs are added",
+        "comments": 0
+      },
+      {
+        "id": 921,
+        "title": "Electron version downgraded",
+        "comments": 0
+      },
+      {
+        "id": 918,
+        "title": "Auto refresh app if internet is available",
+        "comments": 2
+      },
+      {
+        "id": 915,
+        "title": "Fix #913",
+        "comments": 0
+      },
+      {
+        "id": 907,
+        "title": "electron version upgraded to 25.3.2",
+        "comments": 0
+      },
+      {
+        "id": 905,
+        "title": "Experimental changes on wayland screensharing issues",
+        "comments": 0
+      },
+      {
+        "id": 902,
+        "title": "Temporary workaround for screen sharing issue in wayland",
+        "comments": 0
+      },
+      {
+        "id": 901,
+        "title": "Temporary workaround for screensharing in wayland",
+        "comments": 0
+      },
+      {
+        "id": 899,
+        "title": "#867",
+        "comments": 0
+      },
+      {
+        "id": 897,
+        "title": "Updated build.yml",
+        "comments": 0
+      },
+      {
+        "id": 895,
+        "title": "it doesn't remember language - spell check",
+        "comments": 1
+      },
+      {
+        "id": 894,
+        "title": "fix: screen sharing on wayland",
+        "comments": 1
+      },
+      {
+        "id": 892,
+        "title": "Bump semver from 6.3.0 to 6.3.1",
+        "comments": 1
+      },
+      {
+        "id": 889,
+        "title": "Issue 808",
+        "comments": 0
+      },
+      {
+        "id": 887,
+        "title": "#871",
+        "comments": 0
+      },
+      {
+        "id": 885,
+        "title": "Updated appdata.xml",
+        "comments": 0
+      },
+      {
+        "id": 884,
+        "title": "Issue 671",
+        "comments": 0
+      },
+      {
+        "id": 882,
+        "title": "Electron version upgraded to 25.2.0",
+        "comments": 0
+      },
+      {
+        "id": 881,
+        "title": "RPM repository not working",
+        "comments": 2
+      },
+      {
+        "id": 880,
+        "title": "#664",
+        "comments": 0
+      },
+      {
+        "id": 879,
+        "title": "#664",
+        "comments": 0
+      },
+      {
+        "id": 877,
+        "title": "Updated documentation",
+        "comments": 0
+      },
+      {
+        "id": 876,
+        "title": "Does Teams for Linux have \"Request/Give control\" feature?",
+        "comments": 1
+      },
+      {
+        "id": 871,
+        "title": "Add \"custom browser for hyperlinks\" option/arguement",
+        "comments": 2
+      },
+      {
+        "id": 869,
+        "title": "Fix: Tray icon missing when --menubar hidden option is used",
+        "comments": 0
+      },
+      {
+        "id": 868,
+        "title": "#866",
+        "comments": 0
+      },
+      {
+        "id": 861,
+        "title": "Option to not show tray icon",
+        "comments": 2
+      },
+      {
+        "id": 857,
+        "title": "Updated appdata.xml",
+        "comments": 0
+      },
+      {
+        "id": 856,
+        "title": "Removed an unwanted piece of code",
+        "comments": 0
+      },
+      {
+        "id": 854,
+        "title": "New flag to disable window flashing on new notification",
+        "comments": 0
+      },
+      {
+        "id": 853,
+        "title": "Additional log for debugging notification issues",
+        "comments": 0
+      },
+      {
+        "id": 852,
+        "title": "File save dialog is opened behind the main window",
+        "comments": 2
+      },
+      {
+        "id": 850,
+        "title": "Endless re-login loop after the app is up for a certain time",
+        "comments": 1
+      },
+      {
+        "id": 848,
+        "title": "Restored appdata.xml",
+        "comments": 0
+      },
+      {
+        "id": 842,
+        "title": "Commit Style and Merges",
+        "comments": 2
+      },
+      {
+        "id": 836,
+        "title": "#824",
+        "comments": 0
+      },
+      {
+        "id": 834,
+        "title": "version check",
+        "comments": 0
+      },
+      {
+        "id": 833,
+        "title": "Feature/add cloudsmith",
+        "comments": 0
+      },
+      {
+        "id": 831,
+        "title": "App badge count update",
+        "comments": 0
+      },
+      {
+        "id": 828,
+        "title": "#827",
+        "comments": 0
+      },
+      {
+        "id": 825,
+        "title": "documentation: snap config file location",
+        "comments": 2
+      },
+      {
+        "id": 823,
+        "title": "Code refactoring",
+        "comments": 0
+      },
+      {
+        "id": 821,
+        "title": "Remove obsolete modules",
+        "comments": 1
+      },
+      {
+        "id": 820,
+        "title": "Updated documentation",
+        "comments": 0
+      },
+      {
+        "id": 819,
+        "title": "Updated documentation",
+        "comments": 0
+      },
+      {
+        "id": 818,
+        "title": "Added new parameters and optimized custom background service",
+        "comments": 1
+      },
+      {
+        "id": 817,
+        "title": "#813",
+        "comments": 0
+      },
+      {
+        "id": 815,
+        "title": "#813",
+        "comments": 0
+      },
+      {
+        "id": 810,
+        "title": "Add windows build - worked right out of the box",
+        "comments": 1
+      },
+      {
+        "id": 807,
+        "title": "#591",
+        "comments": 0
+      },
+      {
+        "id": 798,
+        "title": "Issue 740",
+        "comments": 0
+      },
+      {
+        "id": 797,
+        "title": "CTRL+click for SSO Login",
+        "comments": 0
+      },
+      {
+        "id": 795,
+        "title": "Markdown does not work in private chats",
+        "comments": 2
+      },
+      {
+        "id": 794,
+        "title": "Call notification popup",
+        "comments": 1
+      },
+      {
+        "id": 793,
+        "title": "Restore old files",
+        "comments": 0
+      },
+      {
+        "id": 792,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 791,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 790,
+        "title": "Snap wayland",
+        "comments": 0
+      },
+      {
+        "id": 789,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 788,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 787,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 786,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 785,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 784,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 783,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 782,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 781,
+        "title": "wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 780,
+        "title": "Remove menu bar from popup window",
+        "comments": 0
+      },
+      {
+        "id": 779,
+        "title": "Default chrome user agent set dynamically",
+        "comments": 0
+      },
+      {
+        "id": 778,
+        "title": "#695",
+        "comments": 0
+      },
+      {
+        "id": 776,
+        "title": "#682",
+        "comments": 0
+      },
+      {
+        "id": 775,
+        "title": "remove enableDesktopNotificationsHack flag",
+        "comments": 0
+      },
+      {
+        "id": 773,
+        "title": "snap crashes",
+        "comments": 0
+      },
+      {
+        "id": 771,
+        "title": "#681",
+        "comments": 0
+      },
+      {
+        "id": 770,
+        "title": "Snap+Wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 769,
+        "title": "Snap+Wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 768,
+        "title": "Snap+Wayland experiment",
+        "comments": 0
+      },
+      {
+        "id": 767,
+        "title": "#650",
+        "comments": 0
+      },
+      {
+        "id": 763,
+        "title": "Issue 723",
+        "comments": 1
+      },
+      {
+        "id": 761,
+        "title": "spellcheck features",
+        "comments": 0
+      },
+      {
+        "id": 759,
+        "title": "New flag to disable all notifications",
+        "comments": 0
+      },
+      {
+        "id": 757,
+        "title": "#723",
+        "comments": 0
+      },
+      {
+        "id": 756,
+        "title": "No notification if in chat but out of focus",
+        "comments": 2
+      },
+      {
+        "id": 755,
+        "title": "Large Gallery View",
+        "comments": 2
+      },
+      {
+        "id": 754,
+        "title": "Feature: Disable Notification Sound if not Available",
+        "comments": 2
+      },
+      {
+        "id": 752,
+        "title": "Code cleanup",
+        "comments": 0
+      },
+      {
+        "id": 749,
+        "title": "A build for Windows",
+        "comments": 1
+      },
+      {
+        "id": 748,
+        "title": "Updated documentation",
+        "comments": 0
+      },
+      {
+        "id": 747,
+        "title": "#677",
+        "comments": 0
+      },
+      {
+        "id": 746,
+        "title": "New commandline option to check inactive to active frequently",
+        "comments": 0
+      },
+      {
+        "id": 745,
+        "title": "#577",
+        "comments": 0
+      },
+      {
+        "id": 743,
+        "title": "Added command line option screenLockInhibitionMethod",
+        "comments": 0
+      },
+      {
+        "id": 741,
+        "title": "#577",
+        "comments": 0
+      },
+      {
+        "id": 738,
+        "title": "#577",
+        "comments": 0
+      },
+      {
+        "id": 736,
+        "title": "#577",
+        "comments": 0
+      },
+      {
+        "id": 734,
+        "title": "#577",
+        "comments": 1
+      },
+      {
+        "id": 731,
+        "title": "Issue 613",
+        "comments": 0
+      },
+      {
+        "id": 730,
+        "title": "#613",
+        "comments": 1
+      },
+      {
+        "id": 719,
+        "title": "#677",
+        "comments": 0
+      },
+      {
+        "id": 716,
+        "title": "Making calls grabs multimedia keys",
+        "comments": 1
+      },
+      {
+        "id": 715,
+        "title": "Closes Each time Ubuntu 20.04 is Locked (Winkey+L)",
+        "comments": 2
+      },
+      {
+        "id": 712,
+        "title": "#711 - Update new-window event to use setWindowOpenHandler",
+        "comments": 2
+      },
+      {
+        "id": 710,
+        "title": "#702",
+        "comments": 0
+      },
+      {
+        "id": 709,
+        "title": "#705",
+        "comments": 2
+      },
+      {
+        "id": 708,
+        "title": "#705",
+        "comments": 0
+      },
+      {
+        "id": 703,
+        "title": "Add doc for additional settings",
+        "comments": 1
+      },
+      {
+        "id": 694,
+        "title": "upgrading dependencies",
+        "comments": 0
+      },
+      {
+        "id": 692,
+        "title": "Bump http-cache-semantics from 4.1.0 to 4.1.1",
+        "comments": 0
+      },
+      {
+        "id": 689,
+        "title": "Patch: Support for multiple Teams Accounts at the same time",
+        "comments": 2
+      },
+      {
+        "id": 684,
+        "title": "MacOS Apple Silicon build",
+        "comments": 2
+      },
+      {
+        "id": 674,
+        "title": "Please delete",
+        "comments": 2
+      },
+      {
+        "id": 670,
+        "title": "Bump version",
+        "comments": 0
+      },
+      {
+        "id": 659,
+        "title": "Devices submenu in Settings",
+        "comments": 1
+      },
+      {
+        "id": 642,
+        "title": "cannot seem to get app to recognise speakers. ",
+        "comments": 2
+      },
+      {
+        "id": 641,
+        "title": "Feature/add darkmode support",
+        "comments": 0
+      },
+      {
+        "id": 640,
+        "title": "feature: adding minimal support for dark mode",
+        "comments": 0
+      },
+      {
+        "id": 633,
+        "title": "Device settings only enabled in a call",
+        "comments": 2
+      },
+      {
+        "id": 632,
+        "title": "Cannot place test calls",
+        "comments": 2
+      },
+      {
+        "id": 631,
+        "title": "Bluetooth headset not properly working",
+        "comments": 2
+      },
+      {
+        "id": 623,
+        "title": "#620",
+        "comments": 0
+      },
+      {
+        "id": 619,
+        "title": "Issue 470",
+        "comments": 0
+      },
+      {
+        "id": 617,
+        "title": "Issue 613",
+        "comments": 0
+      },
+      {
+        "id": 616,
+        "title": "update selector to automatically open video calls within app",
+        "comments": 2
+      },
+      {
+        "id": 612,
+        "title": "Basic Authentication Page/Screen Redesign ",
+        "comments": 1
+      },
+      {
+        "id": 609,
+        "title": "New flag to clear storage data on startup",
+        "comments": 0
+      },
+      {
+        "id": 608,
+        "title": "Electron version upgrade to 21.0.x",
+        "comments": 0
+      },
+      {
+        "id": 607,
+        "title": "Upgrade electron version to 21.0.0",
+        "comments": 1
+      },
+      {
+        "id": 604,
+        "title": "Pop out chat functionality",
+        "comments": 2
+      },
+      {
+        "id": 603,
+        "title": "Fix: #602",
+        "comments": 0
+      },
+      {
+        "id": 597,
+        "title": "Howto configure calendar view?",
+        "comments": 0
+      },
+      {
+        "id": 595,
+        "title": "Fixed #594 and upgraded electron version to 20.1.4",
+        "comments": 0
+      },
+      {
+        "id": 593,
+        "title": "Add link to source of statement 'official client will retire'",
+        "comments": 2
+      },
+      {
+        "id": 586,
+        "title": "#571",
+        "comments": 0
+      },
+      {
+        "id": 580,
+        "title": "Issue 569",
+        "comments": 0
+      },
+      {
+        "id": 578,
+        "title": "#569",
+        "comments": 0
+      },
+      {
+        "id": 575,
+        "title": "Allow enable-features on commandline",
+        "comments": 2
+      },
+      {
+        "id": 572,
+        "title": "#570",
+        "comments": 0
+      },
+      {
+        "id": 566,
+        "title": "#565",
+        "comments": 0
+      },
+      {
+        "id": 564,
+        "title": "#560",
+        "comments": 0
+      },
+      {
+        "id": 562,
+        "title": "Fix: #538",
+        "comments": 0
+      },
+      {
+        "id": 557,
+        "title": "Fix: #556",
+        "comments": 0
+      },
+      {
+        "id": 554,
+        "title": "#534",
+        "comments": 0
+      },
+      {
+        "id": 553,
+        "title": "Flatpak version quit failure archlinux",
+        "comments": 0
+      },
+      {
+        "id": 552,
+        "title": "Flatpak incomplete termination",
+        "comments": 0
+      },
+      {
+        "id": 551,
+        "title": "Flatpak incomplete termination",
+        "comments": 0
+      },
+      {
+        "id": 550,
+        "title": "#520",
+        "comments": 0
+      },
+      {
+        "id": 549,
+        "title": "#520",
+        "comments": 0
+      },
+      {
+        "id": 548,
+        "title": "#440",
+        "comments": 0
+      },
+      {
+        "id": 543,
+        "title": "#542",
+        "comments": 0
+      },
+      {
+        "id": 539,
+        "title": "Unknown directory when saving",
+        "comments": 1
+      },
+      {
+        "id": 535,
+        "title": "Bump electron from 15.3.0 to 15.5.5",
+        "comments": 1
+      },
+      {
+        "id": 532,
+        "title": "Electron => 18.2.x, bump other deps",
+        "comments": 2
+      },
+      {
+        "id": 531,
+        "title": "Bump minimist from 1.2.5 to 1.2.6",
+        "comments": 1
+      },
+      {
+        "id": 530,
+        "title": "spellChecker issue / request",
+        "comments": 2
+      },
+      {
+        "id": 527,
+        "title": "Sign-in Error.",
+        "comments": 2
+      },
+      {
+        "id": 525,
+        "title": "Bump electron from 15.3.0 to 15.3.5",
+        "comments": 1
+      },
+      {
+        "id": 518,
+        "title": "Background effects possible in Chrome",
+        "comments": 2
+      },
+      {
+        "id": 517,
+        "title": "Fix: #505 , removed extra logic which filters list of available resolutions",
+        "comments": 1
+      },
+      {
+        "id": 516,
+        "title": "Issue 506",
+        "comments": 1
+      },
+      {
+        "id": 514,
+        "title": "Electron16 update",
+        "comments": 0
+      },
+      {
+        "id": 512,
+        "title": "Wayland: Fix the Wayland specific runtime flags. Fixes #455.",
+        "comments": 1
+      },
+      {
+        "id": 511,
+        "title": "docs(readme): add link to pacstall package",
+        "comments": 0
+      },
+      {
+        "id": 507,
+        "title": "Fix: #506",
+        "comments": 0
+      },
+      {
+        "id": 502,
+        "title": "Remove obsolete code",
+        "comments": 1
+      },
+      {
+        "id": 501,
+        "title": "Issue 447",
+        "comments": 1
+      },
+      {
+        "id": 500,
+        "title": "Fix: issue #488",
+        "comments": 0
+      },
+      {
+        "id": 499,
+        "title": "Restored flathub badge",
+        "comments": 1
+      },
+      {
+        "id": 498,
+        "title": "Issue 497",
+        "comments": 0
+      },
+      {
+        "id": 497,
+        "title": "Flatpak install - Not launching from menu entry",
+        "comments": 0
+      },
+      {
+        "id": 496,
+        "title": "Flatpak manifest update",
+        "comments": 0
+      },
+      {
+        "id": 495,
+        "title": "Fix: issue #492",
+        "comments": 1
+      },
+      {
+        "id": 494,
+        "title": "Fix: #489",
+        "comments": 0
+      },
+      {
+        "id": 493,
+        "title": "#489",
+        "comments": 1
+      },
+      {
+        "id": 491,
+        "title": "#489",
+        "comments": 1
+      },
+      {
+        "id": 490,
+        "title": "Issue 489",
+        "comments": 0
+      },
+      {
+        "id": 486,
+        "title": "Fix: issue #471",
+        "comments": 2
+      },
+      {
+        "id": 485,
+        "title": "Snap build issue",
+        "comments": 0
+      },
+      {
+        "id": 484,
+        "title": "Trying to fix snap release errors",
+        "comments": 0
+      },
+      {
+        "id": 483,
+        "title": "Removed duplicate x64 build for snap",
+        "comments": 0
+      },
+      {
+        "id": 481,
+        "title": "Isolated snap builds from main build",
+        "comments": 0
+      },
+      {
+        "id": 480,
+        "title": "Snap build issue",
+        "comments": 1
+      },
+      {
+        "id": 479,
+        "title": "#478",
+        "comments": 0
+      },
+      {
+        "id": 478,
+        "title": "Build failure w/ latest dependencies",
+        "comments": 1
+      },
+      {
+        "id": 477,
+        "title": "Issue 473",
+        "comments": 1
+      },
+      {
+        "id": 476,
+        "title": "Issue 473",
+        "comments": 0
+      },
+      {
+        "id": 475,
+        "title": "Merge pull request #1 from IsmaelMartinez/develop",
+        "comments": 0
+      },
+      {
+        "id": 474,
+        "title": "Depedencies upgrade",
+        "comments": 0
+      },
+      {
+        "id": 473,
+        "title": "Keep dependencies up to date",
+        "comments": 0
+      },
+      {
+        "id": 469,
+        "title": "Calendar not showing",
+        "comments": 2
+      },
+      {
+        "id": 468,
+        "title": "Bump electron from 13.1.2 to 13.3.0",
+        "comments": 1
+      },
+      {
+        "id": 467,
+        "title": "wrong encoding when download dialog appears",
+        "comments": 2
+      },
+      {
+        "id": 463,
+        "title": "black screen while share screen in wayland base desktops",
+        "comments": 2
+      },
+      {
+        "id": 460,
+        "title": "Issue 455",
+        "comments": 0
+      },
+      {
+        "id": 458,
+        "title": "#455 Fix: screen sharing issue in Wayland",
+        "comments": 1
+      },
+      {
+        "id": 456,
+        "title": "#455 Experimental fix",
+        "comments": 0
+      },
+      {
+        "id": 454,
+        "title": "#453 fix: Urls not opening in default browser",
+        "comments": 0
+      },
+      {
+        "id": 450,
+        "title": "The SUID sandbox helper binary was found, but is not configured correctly",
+        "comments": 1
+      },
+      {
+        "id": 442,
+        "title": "Issue 440",
+        "comments": 2
+      },
+      {
+        "id": 437,
+        "title": "Update build.yml",
+        "comments": 0
+      },
+      {
+        "id": 430,
+        "title": "Install Warnings on Debian",
+        "comments": 2
+      },
+      {
+        "id": 429,
+        "title": "Bump hosted-git-info from 2.8.8 to 2.8.9",
+        "comments": 1
+      },
+      {
+        "id": 428,
+        "title": "Bump lodash from 4.17.19 to 4.17.21",
+        "comments": 1
+      },
+      {
+        "id": 427,
+        "title": "Ability to mute audio of all meetings",
+        "comments": 1
+      },
+      {
+        "id": 417,
+        "title": "Teams not connect Error Code: 50196",
+        "comments": 2
+      },
+      {
+        "id": 416,
+        "title": "The (loud)speakers stays mute within flatpak app com.microsoft.Teams",
+        "comments": 2
+      },
+      {
+        "id": 415,
+        "title": "Running 64 bit of Raspberry Pi OS and wanted to install teams-for-linux",
+        "comments": 1
+      },
+      {
+        "id": 413,
+        "title": "add dokumentation for using podman (docker) to build linux packages",
+        "comments": 0
+      },
+      {
+        "id": 412,
+        "title": "Everything black and only mouse visible in entire screen screen share",
+        "comments": 2
+      },
+      {
+        "id": 411,
+        "title": "building with podman / docker",
+        "comments": 2
+      },
+      {
+        "id": 410,
+        "title": "YATY: Yet Another Thank You",
+        "comments": 1
+      },
+      {
+        "id": 409,
+        "title": "Changing user agent to a lower version and removing now redundant browser settings",
+        "comments": 0
+      },
+      {
+        "id": 404,
+        "title": "Use native file dialog on Qt-based desktop environments",
+        "comments": 2
+      },
+      {
+        "id": 401,
+        "title": "Hi this isn't really issue I have, I just want to say Thank you so much!",
+        "comments": 1
+      },
+      {
+        "id": 400,
+        "title": "Bump ini from 1.3.5 to 1.3.7",
+        "comments": 0
+      },
+      {
+        "id": 398,
+        "title": "question: \"Important, Spoofing\" - zero-click, wormable, cross-platform remote code execution in Microsoft Teams?",
+        "comments": 2
+      },
+      {
+        "id": 396,
+        "title": "Please update - this snap is hopelessly outdated.",
+        "comments": 1
+      },
+      {
+        "id": 395,
+        "title": "Remote control",
+        "comments": 2
+      },
+      {
+        "id": 393,
+        "title": "[Snyk] Security upgrade yargs from 14.0.0 to 16.0.0",
+        "comments": 0
+      },
+      {
+        "id": 391,
+        "title": "Audio not working",
+        "comments": 2
+      },
+      {
+        "id": 390,
+        "title": "removing final references to the word master",
+        "comments": 0
+      },
+      {
+        "id": 389,
+        "title": "Fixing more codacy issues",
+        "comments": 0
+      },
+      {
+        "id": 388,
+        "title": "fixes from codacy recommendations in README and index.js",
+        "comments": 0
+      },
+      {
+        "id": 387,
+        "title": "Fix/missing semicolons in main index",
+        "comments": 0
+      },
+      {
+        "id": 386,
+        "title": "updating the readme to indicate the current project status",
+        "comments": 0
+      },
+      {
+        "id": 380,
+        "title": "Fixes in README.md",
+        "comments": 1
+      },
+      {
+        "id": 378,
+        "title": "Grid/tile view missing",
+        "comments": 2
+      },
+      {
+        "id": 377,
+        "title": "Configure Renovate",
+        "comments": 1
+      },
+      {
+        "id": 374,
+        "title": "No Audio settings ?",
+        "comments": 1
+      },
+      {
+        "id": 373,
+        "title": "Bump lodash from 4.17.15 to 4.17.19",
+        "comments": 0
+      },
+      {
+        "id": 369,
+        "title": "Split snap build in two to try to build arm and amd versions",
+        "comments": 0
+      },
+      {
+        "id": 368,
+        "title": "merging with master",
+        "comments": 0
+      },
+      {
+        "id": 367,
+        "title": "Streams with pred_weight_table unsupported.- trashing logs",
+        "comments": 2
+      },
+      {
+        "id": 366,
+        "title": "No notification sounds",
+        "comments": 1
+      },
+      {
+        "id": 365,
+        "title": "Github app login does not work",
+        "comments": 2
+      },
+      {
+        "id": 364,
+        "title": "Feature/adding other arch builds",
+        "comments": 0
+      },
+      {
+        "id": 363,
+        "title": "Feature/adding other arch builds",
+        "comments": 0
+      },
+      {
+        "id": 362,
+        "title": "Feature/adding other arch builds",
+        "comments": 0
+      },
+      {
+        "id": 361,
+        "title": "Feature/adding other arch builds",
+        "comments": 0
+      },
+      {
+        "id": 360,
+        "title": "Feature/adding other arch builds",
+        "comments": 0
+      },
+      {
+        "id": 358,
+        "title": "Show app window after it was minimized to tray",
+        "comments": 2
+      },
+      {
+        "id": 356,
+        "title": "Video/Cam-Stream Display",
+        "comments": 2
+      },
+      {
+        "id": 355,
+        "title": "Update HISTORY.md",
+        "comments": 1
+      },
+      {
+        "id": 350,
+        "title": "wrong mouse cursor when using snap",
+        "comments": 2
+      },
+      {
+        "id": 349,
+        "title": "fix readme",
+        "comments": 0
+      },
+      {
+        "id": 348,
+        "title": "Test git actions",
+        "comments": 0
+      },
+      {
+        "id": 347,
+        "title": "Not really a bug - more a feature binary request",
+        "comments": 2
+      },
+      {
+        "id": 346,
+        "title": "Feature 322 fix meetings links issue",
+        "comments": 0
+      },
+      {
+        "id": 345,
+        "title": "Trying to share screen results in being dropped from the call",
+        "comments": 1
+      },
+      {
+        "id": 338,
+        "title": "Does not have webcam preview in settings",
+        "comments": 2
+      },
+      {
+        "id": 337,
+        "title": "teams-for-linux fail to open screen for share after already shared",
+        "comments": 2
+      },
+      {
+        "id": 336,
+        "title": "Help Wanted: Is there a way to change user agent?",
+        "comments": 1
+      },
+      {
+        "id": 335,
+        "title": "Timezone is always displayed in UTC",
+        "comments": 1
+      },
+      {
+        "id": 331,
+        "title": "Microsoft Teams for FreeBSD",
+        "comments": 2
+      },
+      {
+        "id": 329,
+        "title": "Bump acorn from 6.3.0 to 6.4.1",
+        "comments": 0
+      },
+      {
+        "id": 328,
+        "title": "100% cpu utilization",
+        "comments": 2
+      },
+      {
+        "id": 327,
+        "title": "Include an example of how to fill the config.json",
+        "comments": 0
+      },
+      {
+        "id": 326,
+        "title": "Microphone audio distorted",
+        "comments": 1
+      },
+      {
+        "id": 325,
+        "title": "How to avoid it starting on every session?",
+        "comments": 2
+      },
+      {
+        "id": 321,
+        "title": "Logs me out of everything in chrome, if I open a link from chat, without having a browser open first.",
+        "comments": 2
+      },
+      {
+        "id": 320,
+        "title": "Open Teams Meeting URL directly in Teams App without clicking \"Open xdg-open\" button",
+        "comments": 2
+      },
+      {
+        "id": 319,
+        "title": "Bump yarn from 1.17.3 to 1.22.0",
+        "comments": 0
+      },
+      {
+        "id": 317,
+        "title": "Microphone not recognized",
+        "comments": 2
+      },
+      {
+        "id": 315,
+        "title": "Support for proxy by url / pac file on linux",
+        "comments": 2
+      },
+      {
+        "id": 312,
+        "title": "Whiteboard feature doesn't work (loading forever)",
+        "comments": 2
+      },
+      {
+        "id": 307,
+        "title": "Feature/274 electron dl",
+        "comments": 1
+      },
+      {
+        "id": 306,
+        "title": "Is it possible to request control?",
+        "comments": 2
+      },
+      {
+        "id": 305,
+        "title": "difference electron client <--> webclient, customizing the electron client",
+        "comments": 1
+      },
+      {
+        "id": 304,
+        "title": "Cannot log in, looping back to authentication.",
+        "comments": 1
+      },
+      {
+        "id": 302,
+        "title": "Blank screen in first login",
+        "comments": 2
+      },
+      {
+        "id": 300,
+        "title": "Master",
+        "comments": 0
+      },
+      {
+        "id": 295,
+        "title": "Feature/274 electron dl",
+        "comments": 1
+      },
+      {
+        "id": 294,
+        "title": "Enabling the right click on url and adding copy URL to that menu option",
+        "comments": 0
+      },
+      {
+        "id": 292,
+        "title": "Feature 269 add proxy server to config options",
+        "comments": 0
+      },
+      {
+        "id": 291,
+        "title": "Adding the 'try-supported-channel-layouts' to the appendSwitch to not…",
+        "comments": 0
+      },
+      {
+        "id": 288,
+        "title": "Feature/fix anylint issues and close #272",
+        "comments": 1
+      },
+      {
+        "id": 287,
+        "title": "Bump eslint-utils from 1.3.1 to 1.4.2",
+        "comments": 1
+      },
+      {
+        "id": 282,
+        "title": "won't run after first launch",
+        "comments": 1
+      },
+      {
+        "id": 280,
+        "title": "snap 1.7.0 doesn't start anymore",
+        "comments": 2
+      },
+      {
+        "id": 276,
+        "title": "The unknown certificate fingerprint",
+        "comments": 2
+      },
+      {
+        "id": 272,
+        "title": "Update Known Issues Documentation to account for Flatpak",
+        "comments": 2
+      },
+      {
+        "id": 271,
+        "title": "Screen Sharing is not working !!",
+        "comments": 2
+      },
+      {
+        "id": 266,
+        "title": "Joining Meetup",
+        "comments": 1
+      },
+      {
+        "id": 264,
+        "title": "Client is stuck on Initialization step.",
+        "comments": 2
+      },
+      {
+        "id": 263,
+        "title": "Unable to login",
+        "comments": 2
+      },
+      {
+        "id": 261,
+        "title": "Set up CI with Azure Pipelines",
+        "comments": 2
+      },
+      {
+        "id": 260,
+        "title": "Feat adding snyk",
+        "comments": 1
+      },
+      {
+        "id": 259,
+        "title": "Replacing depShield for snyk to check vulnerabilities",
+        "comments": 1
+      },
+      {
+        "id": 258,
+        "title": "revert - Fix depshield issues",
+        "comments": 1
+      },
+      {
+        "id": 257,
+        "title": "DepShield encountered errors while building your project",
+        "comments": 1
+      },
+      {
+        "id": 255,
+        "title": "feat: add join meeting via link outside application",
+        "comments": 1
+      },
+      {
+        "id": 254,
+        "title": "UI will not show up upon reopening[ElementaryOS]",
+        "comments": 2
+      },
+      {
+        "id": 252,
+        "title": "Migrate to azure pipelines",
+        "comments": 1
+      },
+      {
+        "id": 251,
+        "title": "Add a legion of bots",
+        "comments": 2
+      },
+      {
+        "id": 250,
+        "title": "[DepShield] (CVSS 7.5) Vulnerability due to usage of debug:2.6.9",
+        "comments": 2
+      },
+      {
+        "id": 249,
+        "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.defaults:4.2.0",
+        "comments": 2
+      },
+      {
+        "id": 248,
+        "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.clonedeep:4.5.0",
+        "comments": 2
+      },
+      {
+        "id": 247,
+        "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.isfunction:3.0.9",
+        "comments": 2
+      },
+      {
+        "id": 246,
+        "title": "[DepShield] (CVSS 7.4) Vulnerability due to usage of lodash.isempty:4.4.0",
+        "comments": 2
+      },
+      {
+        "id": 242,
+        "title": "git conflict tags exist. ",
+        "comments": 2
+      },
+      {
+        "id": 238,
+        "title": "Fix merge issue",
+        "comments": 1
+      },
+      {
+        "id": 237,
+        "title": "Releasing 0.7.0",
+        "comments": 1
+      },
+      {
+        "id": 236,
+        "title": "Master",
+        "comments": 1
+      },
+      {
+        "id": 235,
+        "title": "Screenshot of app?",
+        "comments": 2
+      },
+      {
+        "id": 234,
+        "title": "Fixes issue 220. Electron's getLocale, and Chromium's l10n_util, can …",
+        "comments": 2
+      },
+      {
+        "id": 233,
+        "title": "freezing on startup",
+        "comments": 1
+      },
+      {
+        "id": 232,
+        "title": "Add flatpak to configuration directory list",
+        "comments": 2
+      },
+      {
+        "id": 231,
+        "title": "Increasing the electron-builder to fix #208",
+        "comments": 2
+      },
+      {
+        "id": 229,
+        "title": "On refresh it stopped working",
+        "comments": 1
+      },
+      {
+        "id": 228,
+        "title": "After refresh teams doesnot load",
+        "comments": 1
+      },
+      {
+        "id": 226,
+        "title": "#221: updating readme with a link to AppImageLauncher",
+        "comments": 1
+      },
+      {
+        "id": 224,
+        "title": "Process doesn't start if installed with snap",
+        "comments": 2
+      },
+      {
+        "id": 221,
+        "title": "Support for desktop integration",
+        "comments": 2
+      },
+      {
+        "id": 218,
+        "title": "Fixing #171",
+        "comments": 0
+      },
+      {
+        "id": 217,
+        "title": "updating default user agent string per issue 204",
+        "comments": 1
+      },
+      {
+        "id": 216,
+        "title": "Feature 185 toogle fullscreen f11",
+        "comments": 2
+      },
+      {
+        "id": 215,
+        "title": "Feature 107 adding extra logs and checks",
+        "comments": 1
+      },
+      {
+        "id": 214,
+        "title": "Thanks!",
+        "comments": 1
+      },
+      {
+        "id": 213,
+        "title": "Feature 107 adding extra logs and checks",
+        "comments": 2
+      },
+      {
+        "id": 212,
+        "title": "Adding extra logs and the flushStorageData to see if fixes, or help, …",
+        "comments": 2
+      },
+      {
+        "id": 211,
+        "title": "Stuck on \"Microsoft Teams - Initializing...\"",
+        "comments": 1
+      },
+      {
+        "id": 210,
+        "title": "Update KNOWN_ISSUES to reference cache folder (#171)",
+        "comments": 1
+      },
+      {
+        "id": 209,
+        "title": "Fix 171 adding clear cache to session",
+        "comments": 1
+      },
+      {
+        "id": 207,
+        "title": "0.6.0 stuck on \"initializing...\"",
+        "comments": 2
+      },
+      {
+        "id": 205,
+        "title": "Preparing release 0.6.0 and fix #203",
+        "comments": 1
+      },
+      {
+        "id": 203,
+        "title": "Failed to get the config file",
+        "comments": 1
+      },
+      {
+        "id": 201,
+        "title": "Remove invalid newline in Linux package description",
+        "comments": 1
+      },
+      {
+        "id": 200,
+        "title": "Calls not supported in this browser (flatpak)",
+        "comments": 2
+      },
+      {
+        "id": 198,
+        "title": "Shortcut Missing when searching",
+        "comments": 1
+      },
+      {
+        "id": 196,
+        "title": "Release 0.5.0",
+        "comments": 1
+      },
+      {
+        "id": 192,
+        "title": "Make animated gifs stop moving and collapsable",
+        "comments": 1
+      },
+      {
+        "id": 191,
+        "title": "Feature 186 refactor index",
+        "comments": 0
+      },
+      {
+        "id": 190,
+        "title": "minor tidy up removal of unused files",
+        "comments": 0
+      },
+      {
+        "id": 189,
+        "title": "Feature 186 refactor index",
+        "comments": 0
+      },
+      {
+        "id": 188,
+        "title": "Hangs at initializing, eventually fails.",
+        "comments": 1
+      },
+      {
+        "id": 186,
+        "title": "Refactoring index.js",
+        "comments": 0
+      },
+      {
+        "id": 181,
+        "title": "Force fallback to XWayland",
+        "comments": 1
+      },
+      {
+        "id": 180,
+        "title": "Snap does not run from Wayland Session",
+        "comments": 1
+      },
+      {
+        "id": 179,
+        "title": "Remove productName from package.json to address WM_CLASS issue (#176)",
+        "comments": 0
+      },
+      {
+        "id": 178,
+        "title": "Update known issues with blank page issue",
+        "comments": 1
+      },
+      {
+        "id": 174,
+        "title": "White screen on linux after restart in 0.3.3 and  0.4.0",
+        "comments": 1
+      },
+      {
+        "id": 172,
+        "title": "Feature 109 fix preview images \"about:blank\" issue",
+        "comments": 1
+      },
+      {
+        "id": 170,
+        "title": "Feature/set default prot provider",
+        "comments": 1
+      },
+      {
+        "id": 168,
+        "title": "Feature/update some version packages",
+        "comments": 0
+      },
+      {
+        "id": 165,
+        "title": "Hotfix/setting background for browserviews",
+        "comments": 0
+      },
+      {
+        "id": 164,
+        "title": "Reverting the update of dependencies",
+        "comments": 0
+      },
+      {
+        "id": 163,
+        "title": "Removing the need of oslocale package as we only work on linux",
+        "comments": 1
+      },
+      {
+        "id": 155,
+        "title": "add os-locale package to dependencies to fix spellchecker",
+        "comments": 2
+      },
+      {
+        "id": 152,
+        "title": "Spellchecker related improvements",
+        "comments": 0
+      },
+      {
+        "id": 147,
+        "title": "Unable to share only one screen",
+        "comments": 1
+      },
+      {
+        "id": 146,
+        "title": "Just came here to say thanks :D",
+        "comments": 1
+      },
+      {
+        "id": 145,
+        "title": "node module \"spellchecker\" isn't getting pulled in any more",
+        "comments": 2
+      },
+      {
+        "id": 143,
+        "title": "Never loads organization's sign-in page",
+        "comments": 1
+      },
+      {
+        "id": 140,
+        "title": "0.3.0",
+        "comments": 0
+      },
+      {
+        "id": 136,
+        "title": "Moved webDebug to drop-down menu.",
+        "comments": 2
+      },
+      {
+        "id": 134,
+        "title": "Update icon to new one used by MS Teams",
+        "comments": 0
+      },
+      {
+        "id": 133,
+        "title": "Basic HTTP auth popup dialog cannot be completed",
+        "comments": 2
+      },
+      {
+        "id": 130,
+        "title": "Appreciation Issue",
+        "comments": 2
+      },
+      {
+        "id": 124,
+        "title": "calling does not work when run from source",
+        "comments": 2
+      },
+      {
+        "id": 120,
+        "title": "#74 deploying to snap store",
+        "comments": 0
+      },
+      {
+        "id": 118,
+        "title": "Spell checking issue",
+        "comments": 0
+      },
+      {
+        "id": 116,
+        "title": "Pr v2.x",
+        "comments": 1
+      },
+      {
+        "id": 115,
+        "title": "Account Verification code authentication not possible",
+        "comments": 1
+      },
+      {
+        "id": 114,
+        "title": "Specific versions and snap build polish",
+        "comments": 0
+      },
+      {
+        "id": 105,
+        "title": "Merge pull request #104 from IsmaelMartinez/develop",
+        "comments": 0
+      },
+      {
+        "id": 104,
+        "title": "0.2.0",
+        "comments": 0
+      },
+      {
+        "id": 103,
+        "title": "Docfix for config",
+        "comments": 0
+      },
+      {
+        "id": 102,
+        "title": "Question: connect to Lync?",
+        "comments": 1
+      },
+      {
+        "id": 95,
+        "title": "Created Code of conduct",
+        "comments": 0
+      },
+      {
+        "id": 88,
+        "title": "Fixed a problem where out of focus window wouldn't show when open button is clicked in a tray #81",
+        "comments": 1
+      },
+      {
+        "id": 86,
+        "title": "Initial WIP for adding an extra screen to show what we are sharing #83",
+        "comments": 1
+      },
+      {
+        "id": 85,
+        "title": "Fixing the issue where you need a config.json file. That should not b…",
+        "comments": 0
+      },
+      {
+        "id": 84,
+        "title": "Improve the UI in capture selector screen",
+        "comments": 2
+      },
+      {
+        "id": 83,
+        "title": "Ability to see what is been shared",
+        "comments": 2
+      },
+      {
+        "id": 80,
+        "title": "yargs not picking the config file.",
+        "comments": 1
+      },
+      {
+        "id": 79,
+        "title": "#77 and #80",
+        "comments": 1
+      },
+      {
+        "id": 76,
+        "title": "Removing commented code",
+        "comments": 0
+      },
+      {
+        "id": 73,
+        "title": "error: snap \"teams\" has no plug named \"camera\"",
+        "comments": 2
+      },
+      {
+        "id": 70,
+        "title": "Add local build environment for snaps - Resolves #68",
+        "comments": 0
+      },
+      {
+        "id": 68,
+        "title": "Create Dockerfile for yarn build",
+        "comments": 1
+      },
+      {
+        "id": 67,
+        "title": "re-adding the refreshSettings as it is needed for the one2one desktop…",
+        "comments": 0
+      },
+      {
+        "id": 65,
+        "title": "A bit of refactoring",
+        "comments": 0
+      },
+      {
+        "id": 63,
+        "title": "Implemented reliable tray updates",
+        "comments": 2
+      },
+      {
+        "id": 60,
+        "title": "Huge Huge thank you!",
+        "comments": 2
+      },
+      {
+        "id": 59,
+        "title": "adding back the release --linux as otherwise travis don't publish the…",
+        "comments": 0
+      },
+      {
+        "id": 58,
+        "title": "Adding back the draft release and the mimetypes for sip (to see if th…",
+        "comments": 0
+      },
+      {
+        "id": 57,
+        "title": "0.1.16",
+        "comments": 0
+      },
+      {
+        "id": 56,
+        "title": "Enable share desktop MVPv1",
+        "comments": 0
+      },
+      {
+        "id": 54,
+        "title": "deb package doesn't display banner on systray icon",
+        "comments": 1
+      },
+      {
+        "id": 52,
+        "title": "Limit app to one instance",
+        "comments": 1
+      },
+      {
+        "id": 49,
+        "title": "Event indicator in tray icon",
+        "comments": 1
+      },
+      {
+        "id": 48,
+        "title": "0.1.14",
+        "comments": 1
+      },
+      {
+        "id": 46,
+        "title": "Consider to create Windows Builds",
+        "comments": 1
+      },
+      {
+        "id": 45,
+        "title": "Added camera plug on Snap to allow videocalls",
+        "comments": 1
+      },
+      {
+        "id": 44,
+        "title": "Stuck on purple screen using Chrome user agent option",
+        "comments": 2
+      },
+      {
+        "id": 43,
+        "title": "Not able to use MS Teams using Edge user agent option",
+        "comments": 2
+      },
+      {
+        "id": 40,
+        "title": "0.1.13",
+        "comments": 0
+      },
+      {
+        "id": 38,
+        "title": "Added Node.js dependencies badges from david-dm.org",
+        "comments": 1
+      },
+      {
+        "id": 37,
+        "title": "0.1.12",
+        "comments": 0
+      },
+      {
+        "id": 35,
+        "title": "Strange tray icon image",
+        "comments": 2
+      },
+      {
+        "id": 33,
+        "title": "Electron spellchecker",
+        "comments": 0
+      },
+      {
+        "id": 30,
+        "title": "Added snap/AppImage/mac packaging, fixed some Markdown errors in READMEs",
+        "comments": 1
+      },
+      {
+        "id": 29,
+        "title": "Refactoring",
+        "comments": 0
+      },
+      {
+        "id": 26,
+        "title": "removing the option to open all urls in a new window",
+        "comments": 0
+      },
+      {
+        "id": 25,
+        "title": "Changing the default way links open to address #23",
+        "comments": 0
+      },
+      {
+        "id": 24,
+        "title": "Adding the option to open the url links in a popup",
+        "comments": 0
+      },
+      {
+        "id": 17,
+        "title": "Automatic replacement of Ross to Thomas",
+        "comments": 1
+      },
+      {
+        "id": 14,
+        "title": "0.1.9",
+        "comments": 0
+      },
+      {
+        "id": 12,
+        "title": "drag and drop not working ",
+        "comments": 1
+      },
+      {
+        "id": 11,
+        "title": "0.1.8",
+        "comments": 0
+      },
+      {
+        "id": 10,
+        "title": "@mentions to work with video/edge",
+        "comments": 1
+      },
+      {
+        "id": 9,
+        "title": "0.1.7",
+        "comments": 0
+      },
+      {
+        "id": 8,
+        "title": "0.1.7 - readme update",
+        "comments": 0
+      },
+      {
+        "id": 7,
+        "title": "0.1.7",
+        "comments": 0
+      },
+      {
+        "id": 5,
+        "title": "Reformatted notifications so messages are easier to read in GNOME not…",
+        "comments": 0
+      },
+      {
+        "id": 2,
+        "title": "arguments, asar and not persisting the session by default",
+        "comments": 0
+      },
+      {
+        "id": 1,
+        "title": "Zoomclick",
+        "comments": 0
+      }
+    ],
+    "neverReplied": [
+      {
+        "id": 1775,
+        "title": "[Feat]: Call/Meeting in separate window",
+        "createdAt": "2025-07-31T18:37:47.000Z"
+      },
+      {
+        "id": 1773,
+        "title": "[Feat]: Add a system config.json",
+        "createdAt": "2025-07-29T21:41:15.000Z"
+      }
+    ]
+  },
+  "insights": [
+    {
+      "type": "growth",
+      "severity": "medium",
+      "title": "Moderate Growth in Issue Volume",
+      "finding": "Real growth rate is 89.5%, not the misleading 367.8% from weighted analysis",
+      "recommendation": "Growth is significant but manageable with current processes"
+    },
+    {
+      "type": "duplicates",
+      "severity": "medium",
+      "title": "Significant Duplicate Patterns",
+      "finding": "50 potential duplicate groups found",
+      "recommendation": "Consider issue templates and better duplicate detection"
+    }
+  ]
+}

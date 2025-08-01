@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "repository": "IsmaelMartinez/teams-for-linux",
+  "extracted_at": "2025-07-31T22:05:59.206Z",
+  "last_update": "2025-07-31T22:05:59.206Z",
+  "total_issues": 1627,
+  "extraction_time_ms": 24600,
+  "rate_limit_used": "authenticated",
+  "final_rate_limit": {
+    "remaining": 4970,
+    "resetTime": 1754001659000,
+    "limit": 5000
+  }
+}

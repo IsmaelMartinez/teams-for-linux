@@ -1,0 +1,109 @@
+{
+  "generation": {
+    "timestamp": "2025-08-01T02:13:02.030Z",
+    "totalIssues": 1627,
+    "categoriesGenerated": 10,
+    "filesGenerated": 11
+  },
+  "repository": {
+    "openIssues": 23,
+    "closedIssues": 1604,
+    "pullRequests": 507,
+    "totalReactions": 796,
+    "totalComments": 9425
+  },
+  "categories": {
+    "ui-ux": 223,
+    "installation-updates": 1016,
+    "performance-stability": 33,
+    "configuration": 19,
+    "audio-video": 61,
+    "other": 159,
+    "features": 50,
+    "screen-sharing": 42,
+    "login-authentication": 12,
+    "notifications": 12
+  },
+  "topIssues": [
+    {
+      "number": 281,
+      "title": "Microsoft building a client for Linux",
+      "state": "closed",
+      "reactions": 85,
+      "comments": 56,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/281"
+    },
+    {
+      "number": 1156,
+      "title": "\"Classic Teams will soon be unavailable for use\" warning header",
+      "state": "closed",
+      "reactions": 36,
+      "comments": 101,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1156"
+    },
+    {
+      "number": 171,
+      "title": "Can't open Microsoft Teams - blank screen",
+      "state": "closed",
+      "reactions": 20,
+      "comments": 162,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/171"
+    },
+    {
+      "number": 1313,
+      "title": "Screen share doesn't work since last update (1.7.3)",
+      "state": "closed",
+      "reactions": 18,
+      "comments": 37,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1313"
+    },
+    {
+      "number": 87,
+      "title": "Unfork or continue as it is?",
+      "state": "closed",
+      "reactions": 17,
+      "comments": 4,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/87"
+    },
+    {
+      "number": 406,
+      "title": "Screensharing stopped working",
+      "state": "closed",
+      "reactions": 15,
+      "comments": 55,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/406"
+    },
+    {
+      "number": 725,
+      "title": "Show meeting notification as separate window with \"join\" button",
+      "state": "closed",
+      "reactions": 13,
+      "comments": 8,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/725"
+    },
+    {
+      "number": 438,
+      "title": "Multi-tenant feature",
+      "state": "closed",
+      "reactions": 12,
+      "comments": 28,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/438"
+    },
+    {
+      "number": 194,
+      "title": "Screen Sharing No Longer Working",
+      "state": "closed",
+      "reactions": 12,
+      "comments": 15,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/194"
+    },
+    {
+      "number": 1487,
+      "title": "Window cannot be resized",
+      "state": "closed",
+      "reactions": 11,
+      "comments": 77,
+      "url": "https://github.com/IsmaelMartinez/teams-for-linux/issues/1487"
+    }
+  ]
+}

@@ -7,7 +7,15 @@ This document serves as a comprehensive knowledge base, leveraging insights from
 >
 > We have an automated system for extracting and categorizing GitHub issues. See the [Knowledge Base System Documentation](../scripts/knowledge-base/README.md) for details on using the extraction tools.
 >
-> **Important**: A GitHub Personal Access Token is strongly recommended for full issue extraction (1000+ issues). Without it, extraction will be throttled after ~600 issues.
+> **Important**: A GitHub Personal Access Token is **required** for full issue extraction (1000+ issues). See our [📖 GitHub Token Setup Guide](../docs/github-token-setup.md) for minimum permissions and security best practices.
+
+## Analysis and Validation Tools
+
+The knowledge base system includes advanced analysis and validation tools:
+
+- **[📊 Reality Check Analysis](reality-check-analysis.md)** - Validates analysis results and detects bias artifacts
+- **[📈 Issue Trends Visualization](issue-trends-visualization.md)** - Visual analysis of contributor patterns and growth trends
+- **[🔧 Knowledge Base Improvements](../tasks/knowledge-base-improvements.md)** - Future enhancement tasks and architecture improvements
 
 <!-- toc -->
 
