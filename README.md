@@ -103,6 +103,96 @@ A list of known issues and possible workarounds is available in the
 [`Knowledge Base`](docs/knowledge-base.md) file. Please check it before opening a new
 issue.
 
+## AI Analyst: Knowledge Base System Flow
+
+The Teams for Linux project utilizes an AI Analyst-powered Knowledge Base System to automatically extract, categorize, and analyze GitHub issues, generating comprehensive documentation and insights. This system is built around a series of Node.js scripts that work in a coordinated flow.
+
+### System Flow Diagram
+
+```mermaid
+graph TD
+    subgraph Data Extraction
+        A[GitHub Repository] --> B(extract-issues.js)
+        B --> C{data/issues/raw-issues.json}
+    end
+
+    subgraph Core Knowledge Base Generation
+        C --> D(categorize-issues.js)
+        D --> E{data/issues/categorized.json}
+        E --> F(generate-docs.js)
+        F --> G{docs/knowledge-base-generated/}
+    end
+
+    subgraph Advanced AI Analysis
+        C --> H(advanced-analysis.js)
+        H --> I{docs/knowledge-base-generated/advanced-analysis-report.json & .md}
+        C --> J(issue-trends-visualization.js)
+        J --> K{docs/knowledge-base-generated/issue-trends-analysis.json}
+        C --> L(reality-check-analysis.js)
+        L --> M{docs/knowledge-base-generated/reality-check-analysis.json & .md}
+    end
+
+    subgraph Configuration & Rules
+        N[scripts/knowledge-base/categorization-rules.md] --> D
+        O[scripts/knowledge-base/advanced-analysis-instructions.md] --> H
+    end
+
+    subgraph Orchestration
+        P[scripts/knowledge-base/package.json] --> Q(npm scripts: extract, analyze, generate, build)
+        Q --> B
+        Q --> D
+        Q --> F
+        Q --> H
+        Q --> J
+        Q --> L
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style F fill:#bbf,stroke:#333,stroke-width:2px
+    style H fill:#bbf,stroke:#333,stroke-width:2px
+    style J fill:#bbf,stroke:#333,stroke-width:2px
+    style L fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#ccf,stroke:#333,stroke-width:2px
+    style E fill:#ccf,stroke:#333,stroke-width:2px
+    style G fill:#ccf,stroke:#333,stroke-width:2px
+    style I fill:#ccf,stroke:#333,stroke-width:2px
+    style K fill:#ccf,stroke:#333,stroke-width:2px
+    style M fill:#ccf,stroke:#333,stroke-width:2px
+    style N fill:#fcf,stroke:#333,stroke-width:2px
+    style O fill:#fcf,stroke:#333,stroke-width:2px
+    style P fill:#fcf,stroke:#333,stroke-width:2px
+    style Q fill:#bbf,stroke:#333,stroke-width:2px
+```
+
+### Explanation of the Flow:
+
+1.  **Data Extraction**:
+    *   `extract-issues.js` is the starting point. It pulls raw issue data from the GitHub repository.
+    *   The output is `data/issues/raw-issues.json`.
+
+2.  **Core Knowledge Base Generation**:
+    *   `categorize-issues.js` takes the `raw-issues.json` as input. It uses rules from `categorization-rules.md` to classify issues.
+    *   The output is `data/issues/categorized.json`.
+    *   `generate-docs.js` then uses `categorized.json` to create the structured Markdown documentation in `docs/knowledge-base-generated/`.
+
+3.  **Advanced AI Analysis**:
+    *   These scripts also operate on the `raw-issues.json` (or implicitly, the same data that `extract-issues.js` provides).
+    *   `advanced-analysis.js` performs deep pattern recognition and generates insights, outputting to `docs/knowledge-base-generated/advanced-analysis-report.json` and a summary Markdown file. It's guided by `advanced-analysis-instructions.md`.
+    *   `issue-trends-visualization.js` analyzes issue volume and contributor patterns, saving its findings to `docs/knowledge-base-generated/issue-trends-analysis.json`.
+    *   `reality-check-analysis.js` provides a critical review of trends, generating `docs/knowledge-base-generated/reality-check-analysis.json` and a summary Markdown file.
+
+4.  **Configuration & Rules**:
+    *   `categorization-rules.md` and `advanced-analysis-instructions.md` serve as external configuration/instruction files for their respective scripts.
+
+5.  **Orchestration**:
+    *   The `package.json` defines `npm` scripts (`extract`, `analyze`, `generate`, `build`) that orchestrate the execution of these individual Node.js scripts, making it easy to run the entire pipeline or specific parts.
+
+### Markdown Linting
+
+For ensuring the quality and consistency of our Markdown files, we utilize `markdownlint-cli2`. This tool helps enforce GitHub standards and project-specific rules, ensuring our documentation remains clean and well-formatted.
+
 ## History
 
 Read about the history of this project in the [`HISTORY.md`](HISTORY.md) file.
