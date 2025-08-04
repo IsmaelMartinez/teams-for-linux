@@ -17,7 +17,7 @@
 		<release version="2.1.4" date="2025-08-04">
 			<description>
 				<ul>
-					<li>Add msTeamsProtocols config option to handle v1 and v2 Teams protocol links.</li>
+					<li>Add msTeamsProtocols config option to handle v1 and v2 Teams protocol links, and adding messages</li>
 				</ul>
 			</description>
 		</release>
