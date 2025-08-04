@@ -151,7 +151,7 @@ The cache manager automatically detects your partition configuration and cleans 
 | `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune. |
 | `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO. |
 | `trayIconEnabled` | `boolean` | `true` | Enable tray icon. |
-| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join|channel|chat)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)" }` | Regular expressions for Microsoft Teams protocol links (v1 and v2). |
+| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join|channel|chat|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat|message)" }` | Regular expressions for Microsoft Teams protocol links (v1 and v2). |
 | `url` | `string` | `"https://teams.microsoft.com/v2"` | Microsoft Teams URL. |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title. |
 | `watchConfigFile` | `boolean` | `false` | Watch for changes in the config file and reload the app. |
