@@ -353,6 +353,14 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable tray icon",
         type: "boolean",
       },
+      msTeamsProtocols: {
+        default: {
+          v1: "^msteams:\/l\/(?:meetup-join|channel|chat)",
+          v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)",
+        },
+        describe: "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
+        type: "object",
+      },
       url: {
         default: "https://teams.microsoft.com/v2",
         describe: "Microsoft Teams URL",
