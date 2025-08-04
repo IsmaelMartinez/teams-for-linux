@@ -135,7 +135,11 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       cacheManagement: {
-        default: { enabled: false, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 },
+        default: {
+          enabled: false,
+          maxCacheSizeMB: 300,
+          cacheCheckIntervalMs: 3600000,
+        },
         describe:
           "Cache management configuration to prevent daily logout issues",
         type: "object",
@@ -355,10 +359,11 @@ function extractYargConfig(configObject, appVersion) {
       },
       msTeamsProtocols: {
         default: {
-          v1: "^msteams:\/l\/(?:meetup-join|channel|chat)",
-          v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)",
+          v1: "^msteams:/l/(?:meetup-join|channel|chat|message)",
+          v2: "^msteams://teams.microsoft.com/l/(?:meetup-join|channel|chat|message)",
         },
-        describe: "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
+        describe:
+          "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
         type: "object",
       },
       url: {
