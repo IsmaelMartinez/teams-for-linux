@@ -36,7 +36,7 @@ exports = module.exports = (Menus) => ({
       label: "About",
       click: () => Menus.about(),
     },
-    getHelpMenu(),
+    getHelpMenu(Menus),
     ...(Menus.configGroup.startupConfig.videoMenu ? [
       {
         type: "separator",
@@ -149,10 +149,17 @@ function getNotificationsMenu(Menus) {
   };
 }
 
-function getHelpMenu() {
+function getHelpMenu(Menus) {
   return {
     label: "Help",
     submenu: [
+      {
+        label: "In-App UI",
+        click: () => Menus.openInAppUI(),
+      },
+      {
+        type: "separator",
+      },
       {
         label: "Online Documentation",
         click: () =>

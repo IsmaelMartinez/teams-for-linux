@@ -1,0 +1,32 @@
+/* Custom styles for In-App UI */
+body {
+    background-color: #f8f9fa; /* Light background, similar to Bootstrap's light theme */
+    color: #212529; /* Dark text color */
+}
+
+.title-bar {
+    background-color: #e9ecef; /* Light gray background for title bar */
+    border-bottom: 1px solid #dee2e6;
+}
+
+#close-button {
+    color: #6c757d; /* Muted color for close button */
+}
+
+#close-button:hover {
+    color: #343a40; /* Darker on hover */
+}
+
+.content-container {
+    background-color: #ffffff; /* White background for content area */
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+h1 {
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+#app-version {
+    color: #6c757d; /* Muted color for version text */
+}
