@@ -235,10 +235,9 @@ function restoreWindow() {
  */
 function processArgs(args) {
   // Legacy Teams protocol format: msteams:/l/meetup-join/...
-  const v1msTeams = /^msteams:\/l\/(?:meetup-join|channel|chat)/;
+  const v1msTeams = new RegExp(config.msTeamsProtocols.v1);
   // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
-  const v2msTeams =
-    /^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat)/;
+  const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
   console.debug("processArgs:", args);
   for (const arg of args) {
     console.debug(
