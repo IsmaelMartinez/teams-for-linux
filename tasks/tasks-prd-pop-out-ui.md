@@ -56,35 +56,29 @@
 
 ## Tasks
 
-- [x] 2.0 Implement Separate Call Window (Pop-out)
-  - [x] 2.1 **Research Spike: Electron Session Sharing**
-    - [x] 2.1.1 Investigate methods for sharing session/cookies between `BrowserWindow` instances.
-    - [x] 2.1.2 Determine the most robust and secure approach for session persistence.
-  - [x] 2.2 Create a new `BrowserWindow` for the pop-out call window.
-  - [x] 2.3 Implement a "Pop out" icon/button in the main Teams toolbar (requires injecting script into Teams web app).
-  - [x] 2.4 Implement logic to "undock" the meeting into the new window when the "Pop out" button is clicked.
-  - [x] 2.5 **Research Spike: Video Grid/Active Speaker Integration**
-    - [x] 2.5.1 Investigate methods to capture and display the video grid/active speaker from the Teams web app.
-    - [x] 2.5.2 Explore using `desktopCapturer` or direct DOM manipulation via injected scripts.
-  - [ ] 2.6 Implement the basic in-call toolbar (mute/unmute mic, toggle camera, share screen, end call) within the pop-out window.
-  - [x] 2.7 Implement "Always-on-top" setting for the pop-out window.
-  - [x] 2.8 Implement optional "Auto-pop when sharing" feature (requires configuration option).
+- [x] 1.0 Implement Separate Call Window (Pop-out)
+  - [x] 1.1 **Research Spike: Electron Session Sharing**
+    - [x] 1.1.1 Investigate methods for sharing session/cookies between `BrowserWindow` instances.
+    - [x] 1.1.2 Determine the most robust and secure approach for session persistence.
+  - [x] 1.2 Create a new `BrowserWindow` for the pop-out call window.
+  - [x] 1.3 Implement a "Pop out" icon/button in the main Teams toolbar (requires injecting script into Teams web app).
+  - [x] 1.4 Implement logic to "undock" the meeting into the new window when the "Pop out" button is clicked.
+  - [x] 1.5 **Research Spike: Video Grid/Active Speaker Integration**
+    - [x] 1.5.1 Investigate methods to capture and display the video grid/active speaker from the Teams web app.
+    - [x] 1.5.2 Explore using `desktopCapturer` or direct DOM manipulation via injected scripts.
+
+  - [x] 1.6 Implement "Always-on-top" setting for the pop-out window.
+  - [x] 1.7 Implement optional "Auto-pop when sharing" feature (requires configuration option).
+  - [x] 1.8 Implement show what is being shared in the pop-out window (when screen sharing is and not for full screen).
+  - [x] 1.9 Display the actual shared screen content in the pop-out window.
+  - [x] 1.10 Resize the pop-out window to half its current size.
+
 
 ## Future Improvements
 
 This section captures enhancements and non-critical features that could be implemented after the core functionality is complete:
 
-### Priority 2 (Nice-to-Have)
-
-- **Custom CSS/Background Management UI:** A visual interface to manage custom CSS or backgrounds, as mentioned in the PRD.
-- **Real-time Preview of Changes:** For configuration changes, provide a real-time preview where applicable.
-- **Contextual Help System:** Provide searchable, immediately accessible troubleshooting assistance based on the current context within the application.
-
-### Priority 3 (Future Consideration)
-
-- **Advanced Scripting/Automation:** Explore possibilities for advanced scripting or automation capabilities within the UI.
-- **Plugin/Extension System:** Consider a system for third-party additions to the in-app UI.
-- **Advanced Analytics/Usage Tracking:** Implement analytics within the UI to track feature usage and effectiveness (with user consent).
+- **Implement the basic in-call toolbar** (mute/unmute mic, toggle camera, share screen, end call) within the pop-out window.
 
 ### Technical Debt Considerations
 

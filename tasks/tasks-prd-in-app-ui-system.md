@@ -46,8 +46,6 @@
 
 ### Notes
 
-- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory).
-- Use `npx jest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the Jest configuration.
 - Follow established patterns identified in the Pattern Analysis section
 - Address any conflicts noted in the System Analysis before implementation
 
@@ -59,30 +57,19 @@
   - [x] 1.3 Implement keyboard shortcut (e.g., Ctrl+Shift+H) to open the modal.
   - [x] 1.4 Ensure the modal is responsive across different screen sizes.
   - [x] 1.5 Add basic styling to align with the project's aesthetic.
-- [ ] 5.0 Refine User Interface Design and Accessibility
-  - [ ] 5.1 Ensure distinct design that clearly separates from Teams interface.
-  - [ ] 5.2 Provide clear visual hierarchy and intuitive navigation.
-  - [ ] 5.3 Ensure consistent styling across all panels and sections.
-  - [ ] 5.4 Implement dark/light mode preferences.
-  - [ ] 5.5 Provide clear indicators for unsaved changes.
-  - [ ] 5.6 Implement loading states and error handling.
-  - [ ] 5.7 Ensure full keyboard navigation and screen reader compatibility.
+- [ ] 2.0 Refine User Interface Design and Accessibility
+  - [ ] 2.1 Ensure distinct design that clearly separates from Teams interface.
+  - [ ] 2.2 Provide clear visual hierarchy and intuitive navigation.
+  - [ ] 2.3 Ensure consistent styling across all panels and sections.
+  - [ ] 2.4 Implement dark/light mode preferences.
+  - [ ] 2.6 Implement loading states and error handling.
+  - [ ] 2.7 Ensure full keyboard navigation and screen reader compatibility.
 
 ## Future Improvements
 
 This section captures enhancements and non-critical features that could be implemented after the core functionality is complete:
 
-### Priority 2 (Nice-to-Have)
-
-- **Custom CSS/Background Management UI:** A visual interface to manage custom CSS or backgrounds, as mentioned in the PRD.
-- **Real-time Preview of Changes:** For configuration changes, provide a real-time preview where applicable.
-- **Contextual Help System:** Provide searchable, immediately accessible troubleshooting assistance based on the current context within the application.
-
-### Priority 3 (Future Consideration)
-
-- **Advanced Scripting/Automation:** Explore possibilities for advanced scripting or automation capabilities within the UI.
-- **Plugin/Extension System:** Consider a system for third-party additions to the in-app UI.
-- **Advanced Analytics/Usage Tracking:** Implement analytics within the UI to track feature usage and effectiveness (with user consent).
+- **Attach/Detach Functionality:** Allow users to attach or detach the in-app UI from the main Teams window.
 
 ### Technical Debt Considerations
 

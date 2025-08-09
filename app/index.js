@@ -42,6 +42,8 @@ const notificationSounds = [
 
 let userStatus = -1;
 let idleTimeUserStatus = -1;
+let screenSharingActive = false;
+let currentScreenShareSourceId = null;
 
 let player;
 try {
@@ -102,10 +104,27 @@ if (!gotTheLock) {
   ipcMain.handle("create-call-pop-out-window", async () => {
     createCallPopOutWindow(config);
   });
-  ipcMain.on("screen-sharing-started", () => {
+  ipcMain.on("screen-sharing-started", (sourceId) => {
+    screenSharingActive = true;
+    currentScreenShareSourceId = sourceId;
     if (config.autoPopWhenSharing) {
       createCallPopOutWindow(config);
     }
+  });
+  ipcMain.on("screen-sharing-stopped", () => {
+    screenSharingActive = false;
+    currentScreenShareSourceId = null;
+  });
+  ipcMain.handle("get-screen-sharing-status", async () => {
+    return screenSharingActive;
+  });
+  ipcMain.handle("get-screen-share-stream", async () => {
+    return currentScreenShareSourceId;
+  });
+  ipcMain.handle("start-screen-share-display", async () => {
+    // The stream will be obtained in the renderer process of the pop-out window
+    // using the sourceId. This IPC handler just confirms receipt of the sourceId.
+    return true; 
   });
 }
 

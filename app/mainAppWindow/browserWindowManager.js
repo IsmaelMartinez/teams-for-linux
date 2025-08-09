@@ -75,6 +75,7 @@ class BrowserWindowManager {
         contextIsolation: this.config.contextIsolation,
         sandbox: this.config.sandbox,
         spellcheck: true,
+        webviewTag: true,
       },
     });
   }

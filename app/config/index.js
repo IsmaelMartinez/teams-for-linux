@@ -46,7 +46,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "number",
       },
       autoPopWhenSharing: {
-        default: false,
+        default: true,
         describe: "Automatically pop out the call window when sharing screen.",
         type: "boolean",
       },
@@ -77,6 +77,11 @@ function extractYargConfig(configObject, appVersion) {
         default: "Microsoft Teams",
         describe: "A text to be suffixed with page title",
         type: "string",
+      },
+      alwaysOnTop: {
+        default: true,
+        describe: "Keep the pop-out window always on top of other windows.",
+        type: "boolean",
       },
       authServerWhitelist: {
         default: "*",

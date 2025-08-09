@@ -46,37 +46,26 @@
 
 ### Notes
 
-- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory).
-- Use `npx jest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the Jest configuration.
 - Follow established patterns identified in the Pattern Analysis section
 - Address any conflicts noted in the System Analysis before implementation
 
 ## Tasks
 
-- [ ] 4.0 Integrate Knowledge Base Search and Access
-  - [ ] 4.1 Implement full-text search across all documentation content (from `docs/` directory).
-  - [ ] 4.2 Display search results with relevance ranking and content previews.
-  - [ ] 4.3 Organize content by categories (Installation, Audio, Display, Configuration, etc.).
-  - [ ] 4.4 Provide direct links to full documentation pages.
-  - [ ] 4.5 Support filtering search results by content type or category.
-  - [ ] 4.6 Highlight search terms in results and content.
-  - [ ] 4.7 Support markdown rendering for rich content display.
+- [ ] 1.0 Integrate Knowledge Base Search and Access
+  - [ ] 1.1 Support markdown rendering for rich content display.
+  - [ ] 1.2 Provide direct links to full documentation pages.
 
 ## Future Improvements
 
 This section captures enhancements and non-critical features that could be implemented after the core functionality is complete:
 
-### Priority 2 (Nice-to-Have)
+- **Full-Text Search Implementation:**: Implement full search to help users navigate the knowledge base section effectively.
+  - [ ] 2.1 Implement full-text search across all documentation content (from `docs/` directory).
+  - [ ] 2.2 Display search results with relevance ranking and content previews.
+  - [ ] 2.3 Organize content by categories (Installation, Audio, Display, Configuration, etc.).
+  - [ ] 2.4 Support filtering search results by content type or category.
+  - [ ] 2.5 Highlight search terms in results and content.
 
-- **Custom CSS/Background Management UI:** A visual interface to manage custom CSS or backgrounds, as mentioned in the PRD.
-- **Real-time Preview of Changes:** For configuration changes, provide a real-time preview where applicable.
-- **Contextual Help System:** Provide searchable, immediately accessible troubleshooting assistance based on the current context within the application.
-
-### Priority 3 (Future Consideration)
-
-- **Advanced Scripting/Automation:** Explore possibilities for advanced scripting or automation capabilities within the UI.
-- **Plugin/Extension System:** Consider a system for third-party additions to the in-app UI.
-- **Advanced Analytics/Usage Tracking:** Implement analytics within the UI to track feature usage and effectiveness (with user consent).
 
 ### Technical Debt Considerations
 

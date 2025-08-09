@@ -56,11 +56,15 @@ function startStreaming(properties) {
       })
       .then((stream) => {
         properties.resolve(stream);
-        ipcRenderer.send('screen-sharing-started');
+        ipcRenderer.send('screen-sharing-started', stream.getVideoTracks()[0].getSettings().chromeMediaSourceId);
+        stream.getVideoTracks()[0].onended = () => {
+          ipcRenderer.send('screen-sharing-stopped');
+        };
       })
       .catch((e) => {
         console.error(e.message);
         properties.reject(e.message);
+        ipcRenderer.send('screen-sharing-stopped');
       });
   } else {
     properties.reject("Access denied");

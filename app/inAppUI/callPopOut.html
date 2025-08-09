@@ -26,5 +26,56 @@
 <body>
     <h1>Teams for Linux</h1>
     <p>Call Pop-out Window</p>
+    <div id="screen-sharing-status">Loading screen sharing status...</div>
+    <video id="screen-share-video" autoplay style="width: 100%; height: auto;"></video>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            const statusDiv = document.getElementById('screen-sharing-status');
+            const videoElement = document.getElementById('screen-share-video');
+
+            const updateStatusAndStream = async () => {
+                const isActive = await window.electronAPI.getScreenSharingStatus();
+                statusDiv.innerText = isActive ? 'Screen is being shared.' : 'Nothing is being shared.';
+
+                if (isActive) {
+                    try {
+                        const sourceId = await window.electronAPI.getScreenShareStream();
+                        if (sourceId) {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                                audio: false,
+                                video: {
+                                    mandatory: {
+                                        chromeMediaSource: 'desktop',
+                                        chromeMediaSourceId: sourceId,
+                                        minWidth: 1280,
+                                        maxWidth: 1280,
+                                        minHeight: 720,
+                                        maxHeight: 720
+                                    }
+                                }
+                            });
+                            videoElement.srcObject = stream;
+                            videoElement.style.display = 'block';
+                        } else {
+                            videoElement.srcObject = null;
+                            videoElement.style.display = 'none';
+                        }
+                    } catch (error) {
+                        console.error('Error getting screen share stream:', error);
+                        videoElement.srcObject = null;
+                        videoElement.style.display = 'none';
+                    }
+                } else {
+                    videoElement.srcObject = null;
+                    videoElement.style.display = 'none';
+                }
+            };
+            // Initial status and stream update
+            updateStatusAndStream();
+            // Update status and stream every 2 seconds (adjust as needed)
+            setInterval(updateStatusAndStream, 2000);
+        });
+    </script>
 </body>
 </html>

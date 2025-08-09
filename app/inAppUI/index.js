@@ -3,32 +3,61 @@ const path = require('path');
 
 let inAppUIWindow = null;
 
+function createInAppWindow(options) {
+    const { 
+        width, 
+        height, 
+        show, 
+        frame, 
+        preload, 
+        htmlFile, 
+        alwaysOnTop, 
+        partition 
+    } = options;
+
+    const window = new BrowserWindow({
+        width: width || 800,
+        height: height || 600,
+        show: show || false,
+        frame: frame !== undefined ? frame : true,
+        alwaysOnTop: alwaysOnTop || false,
+        webPreferences: {
+            preload: path.join(__dirname, preload),
+            nodeIntegration: false,
+            contextIsolation: true,
+            partition: partition || undefined,
+        },
+    });
+
+    window.loadFile(path.join(__dirname, htmlFile));
+
+    window.once('ready-to-show', () => {
+        window.show();
+    });
+
+    window.on('closed', () => {
+        // Handle window closure, e.g., set inAppUIWindow to null if it was the in-app UI
+        if (htmlFile === 'inAppUI.html') {
+            inAppUIWindow = null;
+        }
+    });
+
+    return window;
+}
+
 function createInAppUIWindow() {
     if (inAppUIWindow) {
         inAppUIWindow.focus();
         return;
     }
 
-    inAppUIWindow = new BrowserWindow({
+    inAppUIWindow = createInAppWindow({
         width: 800,
         height: 600,
         show: false,
         frame: false,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: false,
-            contextIsolation: true,
-        },
-    });
-
-    inAppUIWindow.loadFile(path.join(__dirname, 'inAppUI.html'));
-
-    inAppUIWindow.once('ready-to-show', () => {
-        inAppUIWindow.show();
-    });
-
-    inAppUIWindow.on('closed', () => {
-        inAppUIWindow = null;
+        preload: 'preload.js',
+        htmlFile: 'inAppUI.html',
     });
 }
 
@@ -39,23 +68,14 @@ ipcMain.on('close-in-app-ui-window', () => {
 });
 
 function createCallPopOutWindow(config) {
-    const callPopOutWindow = new BrowserWindow({
-        width: 1000,
-        height: 800,
+    createInAppWindow({
+        width: 500,
+        height: 400,
         show: false,
         alwaysOnTop: config.alwaysOnTop || false,
-        webPreferences: {
-            preload: path.join(__dirname, 'callPopOutPreload.js'),
-            nodeIntegration: false,
-            contextIsolation: true,
-            partition: 'persist:teams-for-linux-session' // Share session
-        },
-    });
-
-    callPopOutWindow.loadFile(path.join(__dirname, 'callPopOut.html'));
-
-    callPopOutWindow.once('ready-to-show', () => {
-        callPopOutWindow.show();
+        preload: 'callPopOutPreload.js',
+        htmlFile: 'callPopOut.html',
+        partition: 'persist:teams-for-linux-session',
     });
 }
 
