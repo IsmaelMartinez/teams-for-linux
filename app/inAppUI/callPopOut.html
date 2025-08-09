@@ -41,6 +41,7 @@
                 if (isActive) {
                     try {
                         const sourceId = await window.electronAPI.getScreenShareStream();
+                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId); // Added log
                         if (sourceId) {
                             const stream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,

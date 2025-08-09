@@ -105,6 +105,7 @@ if (!gotTheLock) {
     createCallPopOutWindow(config);
   });
   ipcMain.on("screen-sharing-started", (event, sourceId) => {
+    console.debug('Screen sharing started with sourceId:', sourceId);
     screenSharingActive = true;
     // Ensure only the string ID is stored, in case sourceId is the full object
     if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
@@ -121,9 +122,11 @@ if (!gotTheLock) {
     currentScreenShareSourceId = null;
   });
   ipcMain.handle("get-screen-sharing-status", async () => {
+    console.debug('get-screen-sharing-status returning:', screenSharingActive);
     return screenSharingActive;
   });
   ipcMain.handle("get-screen-share-stream", async () => {
+    console.debug('get-screen-share-stream returning:', currentScreenShareSourceId);
     return currentScreenShareSourceId;
   });
   ipcMain.handle("start-screen-share-display", async () => {

@@ -56,7 +56,9 @@ function startStreaming(properties) {
       })
       .then((stream) => {
         properties.resolve(stream);
-        ipcRenderer.send('screen-sharing-started', stream.getVideoTracks()[0].getSettings().chromeMediaSourceId);
+        const sourceIdToSend = properties.source.id; // Use the sourceId that was used to create the stream
+        console.debug('Sending screen-sharing-started with sourceId:', sourceIdToSend); // Modified log
+        ipcRenderer.send('screen-sharing-started', sourceIdToSend);
         stream.getVideoTracks()[0].onended = () => {
           ipcRenderer.send('screen-sharing-stopped');
         };
