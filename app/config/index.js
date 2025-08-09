@@ -45,6 +45,11 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
       },
+      autoPopWhenSharing: {
+        default: false,
+        describe: "Automatically pop out the call window when sharing screen.",
+        type: "boolean",
+      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",

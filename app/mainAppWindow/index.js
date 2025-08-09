@@ -209,6 +209,7 @@ function onDidFrameFinishLoad(
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
   customCSS.onDidFrameFinishLoad(wf, config);
+  popOutCall.injectPopOutScript(wf);
 }
 
 function restoreWindow() {

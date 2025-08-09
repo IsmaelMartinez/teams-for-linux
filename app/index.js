@@ -57,6 +57,7 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
+const { createCallPopOutWindow } = require("./inAppUI");
 
 if (isMac) {
   requestMediaAccess();
@@ -95,6 +96,17 @@ if (!gotTheLock) {
   ipcMain.handle("show-notification", showNotification);
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+  ipcMain.handle("get-app-version", async () => {
+    return config.appVersion;
+  });
+  ipcMain.handle("create-call-pop-out-window", async () => {
+    createCallPopOutWindow(config);
+  });
+  ipcMain.on("screen-sharing-started", () => {
+    if (config.autoPopWhenSharing) {
+      createCallPopOutWindow(config);
+    }
+  });
 }
 
 function restartApp() {

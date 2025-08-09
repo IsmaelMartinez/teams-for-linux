@@ -56,6 +56,7 @@ function startStreaming(properties) {
       })
       .then((stream) => {
         properties.resolve(stream);
+        ipcRenderer.send('screen-sharing-started');
       })
       .catch((e) => {
         console.error(e.message);

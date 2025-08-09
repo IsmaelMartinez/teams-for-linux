@@ -38,6 +38,28 @@ ipcMain.on('close-in-app-ui-window', () => {
     }
 });
 
+function createCallPopOutWindow(config) {
+    const callPopOutWindow = new BrowserWindow({
+        width: 1000,
+        height: 800,
+        show: false,
+        alwaysOnTop: config.alwaysOnTop || false,
+        webPreferences: {
+            preload: path.join(__dirname, 'callPopOutPreload.js'),
+            nodeIntegration: false,
+            contextIsolation: true,
+            partition: 'persist:teams-for-linux-session' // Share session
+        },
+    });
+
+    callPopOutWindow.loadFile(path.join(__dirname, 'callPopOut.html'));
+
+    callPopOutWindow.once('ready-to-show', () => {
+        callPopOutWindow.show();
+    });
+}
+
 module.exports = {
     createInAppUIWindow,
+    createCallPopOutWindow,
 };

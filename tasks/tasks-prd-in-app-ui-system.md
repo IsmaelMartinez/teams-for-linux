@@ -29,7 +29,7 @@
 ### Research Spikes Identified
 
 - **Electron Session Sharing:** Investigate the best approach for sharing the Electron session (auth/cookies) between the main window and the new pop-out window. This is critical for the "separate window" feature.
-- **Video Grid/Active Speaker Integration:** Research how to effectively capture and display the video grid or active speaker from the Teams web app within a separate Electron window. This might involve injecting scripts or using Electron's `desktopCapturer` if direct DOM manipulation is not feasible or reliable.
+- **Video Grid/Active Speaker Integration:** Research indicates that capturing video from a webview for display in a separate Electron window is complex due to security isolation. The most promising approach involves using `session.setDisplayMediaRequestHandler` in the main process to obtain a `MediaStream` from the webview's `webContents`, which can then be passed to the renderer process for display in a `<video>` element. This requires careful handling of `webviewTag`, `web-contents-created` events, and secure API exposure via `contextBridge`.
 - **In-call Toolbar Replication:** Determine the feasibility and complexity of replicating the basic in-call toolbar (mute/unmute mic, toggle camera, share screen, end call) within the separate window. This might require reverse-engineering Teams' internal APIs or simulating user interactions.
 
 ## Relevant Files
@@ -39,6 +39,9 @@
 - `app/inAppUI/inAppUI.html`: HTML for the in-app UI modal.
 - `app/inAppUI/inAppUI.css`: Custom styles for the in-app UI modal.
 - `app/inAppUI/preload.js`: Preload script for the in-app UI modal.
+- `app/inAppUI/callPopOut.html`: HTML for the pop-out call window.
+- `app/inAppUI/callPopOutPreload.js`: Preload script for the pop-out call window.
+- `app/browser/tools/popOutCall.js`: Script injected into Teams web app to add pop-out button.
 - `app/index.js`: Main Electron process, will need modifications for IPC handlers and potentially window management.
 - `app/menus/appMenu.js`: Menu definition for adding the "In-App UI" entry.
 - `app/menus/index.js`: Menu handling logic, will need to call the new in-app UI module.
@@ -56,25 +59,25 @@
 
 ## Tasks
 
-- [ ] 1.0 Implement Core In-App UI Modal (About/System Info)
+- [x] 1.0 Implement Core In-App UI Modal (About/System Info)
   - [x] 1.1 Add a close button to the `inAppUI.html` modal
   - [x] 1.2 Implement dismissal of the modal via Escape key and clicking outside.
   - [x] 1.3 Implement keyboard shortcut (e.g., Ctrl+Shift+H) to open the modal.
   - [x] 1.4 Ensure the modal is responsive across different screen sizes.
   - [x] 1.5 Add basic styling to align with the project's aesthetic.
 - [ ] 2.0 Implement Separate Call Window (Pop-out)
-  - [ ] 2.1 **Research Spike: Electron Session Sharing**
-    - [ ] 2.1.1 Investigate methods for sharing session/cookies between `BrowserWindow` instances.
-    - [ ] 2.1.2 Determine the most robust and secure approach for session persistence.
-  - [ ] 2.2 Create a new `BrowserWindow` for the pop-out call window.
-  - [ ] 2.3 Implement a "Pop out" icon/button in the main Teams toolbar (requires injecting script into Teams web app).
-  - [ ] 2.4 Implement logic to "undock" the meeting into the new window when the "Pop out" button is clicked.
-  - [ ] 2.5 **Research Spike: Video Grid/Active Speaker Integration**
-    - [ ] 2.5.1 Investigate methods to capture and display the video grid/active speaker from the Teams web app.
-    - [ ] 2.5.2 Explore using `desktopCapturer` or direct DOM manipulation via injected scripts.
+  - [x] 2.1 **Research Spike: Electron Session Sharing**
+    - [x] 2.1.1 Investigate methods for sharing session/cookies between `BrowserWindow` instances.
+    - [x] 2.1.2 Determine the most robust and secure approach for session persistence.
+  - [x] 2.2 Create a new `BrowserWindow` for the pop-out call window.
+  - [x] 2.3 Implement a "Pop out" icon/button in the main Teams toolbar (requires injecting script into Teams web app).
+  - [x] 2.4 Implement logic to "undock" the meeting into the new window when the "Pop out" button is clicked.
+  - [x] 2.5 **Research Spike: Video Grid/Active Speaker Integration**
+    - [x] 2.5.1 Investigate methods to capture and display the video grid/active speaker from the Teams web app.
+    - [x] 2.5.2 Explore using `desktopCapturer` or direct DOM manipulation via injected scripts.
   - [ ] 2.6 Implement the basic in-call toolbar (mute/unmute mic, toggle camera, share screen, end call) within the pop-out window.
-  - [ ] 2.7 Implement "Always-on-top" setting for the pop-out window.
-  - [ ] 2.8 Implement optional "Auto-pop when sharing" feature (requires configuration option).
+  - [x] 2.7 Implement "Always-on-top" setting for the pop-out window.
+  - [x] 2.8 Implement optional "Auto-pop when sharing" feature (requires configuration option).
 - [ ] 3.0 Integrate Configuration Management Interface
   - [ ] 3.1 Design and implement the UI for displaying all current configuration settings.
   - [ ] 3.2 Implement input controls (text fields, checkboxes, dropdowns, file pickers) for modifying configuration values.
