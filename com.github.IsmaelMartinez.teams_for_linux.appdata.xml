@@ -21,6 +21,19 @@
 				</ul>
 			</description>
 		</release>
+		<release version="2.2.0" date="2025-08-09">
+			<description>
+				<ul>
+					<li>New: Implemented control for in-app UI window visibility via configuration.</li>
+					<li>New: Enhanced screen sharing pop-out window:</li>
+					<li>  • Displays shared screen content.</li>
+					<li>  • Ensures only a single pop-out window instance.</li>
+					<li>  • Closes automatically when screen sharing stops.</li>
+					<li>Internal: Added CLAUDE.md for Claude-specific instructions.</li>
+					<li>Internal: Added new task list files for project management.</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.1.3" date="2025-08-01">
 			<description>
 				<ul>

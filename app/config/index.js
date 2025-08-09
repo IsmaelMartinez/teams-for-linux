@@ -49,7 +49,8 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           enabled: true,
         },
-        describe: "Automatically show a thumbnail window when screen sharing is active.",
+        describe:
+          "Automatically show a thumbnail window when screen sharing is active.",
         type: "object",
       },
       appIcon: {
@@ -148,7 +149,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       cacheManagement: {
         default: {
-          enabled: false,
+          enabled: true,
           maxCacheSizeMB: 300,
           cacheCheckIntervalMs: 3600000,
         },
