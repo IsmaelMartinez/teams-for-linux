@@ -53,20 +53,14 @@
 
 ## Tasks
 
-- [x] 1.0 Implement Core In-App UI Modal (About/System Info)
-  - [x] 1.1 Add a close button to the `inAppUI.html` modal
-  - [x] 1.2 Implement dismissal of the modal via Escape key and clicking outside.
-  - [x] 1.3 Implement keyboard shortcut (e.g., Ctrl+Shift+H) to open the modal.
-  - [x] 1.4 Ensure the modal is responsive across different screen sizes.
-  - [x] 1.5 Add basic styling to align with the project's aesthetic.
-- [ ] 5.0 Refine User Interface Design and Accessibility
-  - [ ] 5.1 Ensure distinct design that clearly separates from Teams interface.
-  - [ ] 5.2 Provide clear visual hierarchy and intuitive navigation.
-  - [ ] 5.3 Ensure consistent styling across all panels and sections.
-  - [ ] 5.4 Implement dark/light mode preferences.
-  - [ ] 5.5 Provide clear indicators for unsaved changes.
-  - [ ] 5.6 Implement loading states and error handling.
-  - [ ] 5.7 Ensure full keyboard navigation and screen reader compatibility.
+- [ ] 4.0 Integrate Knowledge Base Search and Access
+  - [ ] 4.1 Implement full-text search across all documentation content (from `docs/` directory).
+  - [ ] 4.2 Display search results with relevance ranking and content previews.
+  - [ ] 4.3 Organize content by categories (Installation, Audio, Display, Configuration, etc.).
+  - [ ] 4.4 Provide direct links to full documentation pages.
+  - [ ] 4.5 Support filtering search results by content type or category.
+  - [ ] 4.6 Highlight search terms in results and content.
+  - [ ] 4.7 Support markdown rendering for rich content display.
 
 ## Future Improvements
 

@@ -53,20 +53,14 @@
 
 ## Tasks
 
-- [x] 1.0 Implement Core In-App UI Modal (About/System Info)
-  - [x] 1.1 Add a close button to the `inAppUI.html` modal
-  - [x] 1.2 Implement dismissal of the modal via Escape key and clicking outside.
-  - [x] 1.3 Implement keyboard shortcut (e.g., Ctrl+Shift+H) to open the modal.
-  - [x] 1.4 Ensure the modal is responsive across different screen sizes.
-  - [x] 1.5 Add basic styling to align with the project's aesthetic.
-- [ ] 5.0 Refine User Interface Design and Accessibility
-  - [ ] 5.1 Ensure distinct design that clearly separates from Teams interface.
-  - [ ] 5.2 Provide clear visual hierarchy and intuitive navigation.
-  - [ ] 5.3 Ensure consistent styling across all panels and sections.
-  - [ ] 5.4 Implement dark/light mode preferences.
-  - [ ] 5.5 Provide clear indicators for unsaved changes.
-  - [ ] 5.6 Implement loading states and error handling.
-  - [ ] 5.7 Ensure full keyboard navigation and screen reader compatibility.
+- [ ] 3.0 Integrate Configuration Management Interface
+  - [ ] 3.1 Design and implement the UI for displaying all current configuration settings.
+  - [ ] 3.2 Implement input controls (text fields, checkboxes, dropdowns, file pickers) for modifying configuration values.
+  - [ ] 3.3 Implement validation of configuration changes before applying them.
+  - [ ] 3.4 Implement saving changes to the appropriate configuration files.
+  - [ ] 3.5 Implement reset-to-defaults option for each configuration section.
+  - [ ] 3.6 Implement configuration export/import functionality.
+  - [ ] 3.7 Handle configuration reload without requiring application restart where possible.
 
 ## Future Improvements
 
