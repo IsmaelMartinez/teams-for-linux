@@ -120,6 +120,7 @@ if (!gotTheLock) {
   ipcMain.on("screen-sharing-stopped", () => {
     screenSharingActive = false;
     currentScreenShareSourceId = null;
+    ipcMain.emit('close-call-pop-out-window'); // Emit the IPC message to close the pop-out window
   });
   ipcMain.handle("get-screen-sharing-status", async () => {
     console.debug('get-screen-sharing-status returning:', screenSharingActive);

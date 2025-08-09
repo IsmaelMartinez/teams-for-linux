@@ -68,6 +68,12 @@ ipcMain.on('close-in-app-ui-window', () => {
     }
 });
 
+ipcMain.on('close-call-pop-out-window', () => {
+    if (callPopOutWindowInstance && !callPopOutWindowInstance.isDestroyed()) {
+        callPopOutWindowInstance.close();
+    }
+});
+
 function createCallPopOutWindow(config) {
     if (callPopOutWindowInstance && !callPopOutWindowInstance.isDestroyed()) {
         callPopOutWindowInstance.focus();

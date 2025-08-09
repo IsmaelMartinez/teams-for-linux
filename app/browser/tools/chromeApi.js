@@ -59,9 +59,15 @@ function startStreaming(properties) {
         const sourceIdToSend = properties.source.id; // Use the sourceId that was used to create the stream
         console.debug('Sending screen-sharing-started with sourceId:', sourceIdToSend); // Modified log
         ipcRenderer.send('screen-sharing-started', sourceIdToSend);
-        stream.getVideoTracks()[0].onended = () => {
-          ipcRenderer.send('screen-sharing-stopped');
-        };
+        const videoTrack = stream.getVideoTracks()[0];
+        console.debug('Starting polling for video track readyState:', videoTrack);
+        const checkInterval = setInterval(() => {
+            if (videoTrack.readyState === 'ended') {
+                console.debug('Video track readyState is "ended". Sending screen-sharing-stopped.');
+                ipcRenderer.send('screen-sharing-stopped');
+                clearInterval(checkInterval);
+            }
+        }, 500); // Check every 500ms
       })
       .catch((e) => {
         console.error(e.message);
