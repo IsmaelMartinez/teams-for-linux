@@ -59,7 +59,7 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
-const { createCallPopOutWindow } = require("./inAppUI");
+const { createCallPopOutWindow, createInAppUIWindow } = require("./inAppUI");
 
 if (isMac) {
   requestMediaAccess();
@@ -113,7 +113,7 @@ if (!gotTheLock) {
     } else {
       currentScreenShareSourceId = sourceId;
     }
-    if (config.autoPopWhenSharing) {
+    if (config.screenSharingThumbnail.enabled) { // Access the enabled property
       createCallPopOutWindow(config);
     }
   });
@@ -369,6 +369,7 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+  createInAppUIWindow(config); // Pass the config object
 }
 
 async function handleGetSystemIdleState() {

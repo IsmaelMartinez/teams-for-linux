@@ -2,60 +2,95 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Teams for Linux - Call Pop-out</title>
+    <title>Teams for Linux - Screen Share</title>
     <style>
         body {
             font-family: sans-serif;
             margin: 0;
-            padding: 20px;
-            text-align: center;
-            background-color: #f8f9fa;
-            color: #212529;
-            min-height: 100vh;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            overflow: hidden;
             box-sizing: border-box;
         }
-        h1 {
-            color: #0d6efd;
+        
+        
+        #screen-share-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #000;
         }
     </style>
 </head>
 <body>
-    <div id="screen-sharing-status">Loading screen sharing status...</div>
-    <video id="screen-share-video" autoplay style="width: 100%; height: auto;"></video>
+    <video id="screen-share-video" autoplay muted></video>
 
     <script>
         window.addEventListener('DOMContentLoaded', async () => {
-            const statusDiv = document.getElementById('screen-sharing-status');
             const videoElement = document.getElementById('screen-share-video');
 
             const updateStatusAndStream = async () => {
                 const isActive = await window.electronAPI.getScreenSharingStatus();
-                statusDiv.innerText = isActive ? 'Screen is being shared.' : 'Nothing is being shared.';
+                document.title = isActive ? 'Teams for Linux - Screen is being shared' : 'Teams for Linux - Nothing is being shared';
 
                 if (isActive) {
                     try {
                         const sourceId = await window.electronAPI.getScreenShareStream();
-                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId); // Added log
+                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId);
                         if (sourceId) {
                             const stream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,
                                 video: {
                                     mandatory: {
                                         chromeMediaSource: 'desktop',
-                                        chromeMediaSourceId: sourceId,
-                                        minWidth: 1280,
-                                        maxWidth: 1280,
-                                        minHeight: 720,
-                                        maxHeight: 720
+                                        chromeMediaSourceId: sourceId
                                     }
                                 }
                             });
                             videoElement.srcObject = stream;
                             videoElement.style.display = 'block';
+                            
+                            // Wait for video metadata to load to get actual dimensions
+                            videoElement.addEventListener('loadedmetadata', () => {
+                                const videoWidth = videoElement.videoWidth;
+                                const videoHeight = videoElement.videoHeight;
+                                
+                                if (videoWidth && videoHeight) {
+                                    // Calculate thumbnail size while maintaining aspect ratio
+                                    const maxWidth = 400;
+                                    const maxHeight = 300;
+                                    const aspectRatio = videoWidth / videoHeight;
+                                    
+                                    let windowWidth, windowHeight;
+                                    
+                                    // Scale to thumbnail size maintaining aspect ratio
+                                    if (aspectRatio > maxWidth / maxHeight) {
+                                        // Video is wider - fit to max width
+                                        windowWidth = maxWidth;
+                                        windowHeight = maxWidth / aspectRatio;
+                                    } else {
+                                        // Video is taller - fit to max height
+                                        windowHeight = maxHeight;
+                                        windowWidth = maxHeight * aspectRatio;
+                                    }
+                                    
+                                    // Ensure minimum size
+                                    windowWidth = Math.max(windowWidth, 200);
+                                    windowHeight = Math.max(windowHeight, 120);
+                                    
+                                    // Resize window to thumbnail size
+                                    window.electronAPI.resizeWindow({
+                                        width: Math.round(windowWidth),
+                                        height: Math.round(windowHeight)
+                                    });
+                                    
+                                    console.debug('Resizing thumbnail to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
+                                }
+                            }, { once: true });
                         } else {
                             videoElement.srcObject = null;
                             videoElement.style.display = 'none';

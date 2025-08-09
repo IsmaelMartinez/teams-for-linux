@@ -45,10 +45,12 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
       },
-      autoPopWhenSharing: {
-        default: true,
-        describe: "Automatically pop out the call window when sharing screen.",
-        type: "boolean",
+      screenSharingThumbnail: {
+        default: {
+          enabled: true,
+        },
+        describe: "Automatically show a thumbnail window when screen sharing is active.",
+        type: "object",
       },
       appIcon: {
         default: "",
@@ -236,6 +238,11 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
+      },
+      enableInAppUI: {
+        default: false,
+        describe: "Enable the in-app UI window (WIP)",
+        type: "boolean",
       },
       enableIncomingCallToast: {
         default: false,
