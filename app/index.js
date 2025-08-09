@@ -104,9 +104,14 @@ if (!gotTheLock) {
   ipcMain.handle("create-call-pop-out-window", async () => {
     createCallPopOutWindow(config);
   });
-  ipcMain.on("screen-sharing-started", (sourceId) => {
+  ipcMain.on("screen-sharing-started", (event, sourceId) => {
     screenSharingActive = true;
-    currentScreenShareSourceId = sourceId;
+    // Ensure only the string ID is stored, in case sourceId is the full object
+    if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
+      currentScreenShareSourceId = sourceId.id;
+    } else {
+      currentScreenShareSourceId = sourceId;
+    }
     if (config.autoPopWhenSharing) {
       createCallPopOutWindow(config);
     }
