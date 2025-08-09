@@ -2,6 +2,7 @@ const { BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 let inAppUIWindow = null;
+let callPopOutWindowInstance = null;
 
 function createInAppWindow(options) {
     const { 
@@ -68,7 +69,12 @@ ipcMain.on('close-in-app-ui-window', () => {
 });
 
 function createCallPopOutWindow(config) {
-    createInAppWindow({
+    if (callPopOutWindowInstance && !callPopOutWindowInstance.isDestroyed()) {
+        callPopOutWindowInstance.focus();
+        return;
+    }
+
+    callPopOutWindowInstance = createInAppWindow({
         width: 500,
         height: 400,
         show: false,
@@ -76,6 +82,10 @@ function createCallPopOutWindow(config) {
         preload: 'callPopOutPreload.js',
         htmlFile: 'callPopOut.html',
         partition: 'persist:teams-for-linux-session',
+    });
+
+    callPopOutWindowInstance.on('closed', () => {
+        callPopOutWindowInstance = null;
     });
 }
 
