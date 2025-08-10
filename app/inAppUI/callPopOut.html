@@ -107,8 +107,13 @@
             };
             // Initial status and stream update
             updateStatusAndStream();
-            // Update status and stream every 2 seconds (adjust as needed)
-            setInterval(updateStatusAndStream, 2000);
+            
+            // Listen for screen sharing status changes via IPC and update accordingly
+            if (window?.electronAPI?.onScreenSharingStatusChanged) {
+                window.electronAPI.onScreenSharingStatusChanged(() => {
+                    updateStatusAndStream();
+                });
+            }
         });
     </script>
 </body>

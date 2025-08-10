@@ -76,20 +76,30 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   streamSelector = new StreamSelector(window);
 
   // Handle screen sharing requests from renderer process
-  window.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
-    // Check if the request is from the main Teams webContents
-    if (request.url.startsWith("https://teams.microsoft.com")) {
-      streamSelector.show((source) => {
-        if (source) {
-          callback({ video: source });
-        } else {
-          callback({ video: false });
-        }
-      });
-    } else {
-      callback({ video: false }); // Deny other requests
+  window.webContents.session.setDisplayMediaRequestHandler(
+    (request, callback) => {
+      // Check if the request is from the main Teams webContents
+      let allowedHost = "teams.microsoft.com";
+      let reqHost;
+      try {
+        reqHost = new URL(request.url).host;
+      } catch (e) {
+        console.warn(`Failed to parse request URL: ${request.url}`, e);
+        reqHost = "";
+      }
+      if (reqHost === allowedHost) {
+        streamSelector.show((source) => {
+          if (source) {
+            callback({ video: source });
+          } else {
+            callback({ video: false });
+          }
+        });
+      } else {
+        callback({ video: false }); // Deny other requests
+      }
     }
-  });
+  );
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());

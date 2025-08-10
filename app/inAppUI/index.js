@@ -50,7 +50,8 @@ function createInAppWindow(options) {
 }
 
 function createInAppUIWindow(config) {
-  if (!config.enableInAppUI) { // Check the new config option
+  if (!config?.enableInAppUI) {
+    // Check the new config option
     return;
   }
 
@@ -85,11 +86,11 @@ ipcMain.on("resize-call-pop-out-window", (event, { width, height }) => {
   if (callPopOutWindowInstance && !callPopOutWindowInstance.isDestroyed()) {
     const [currentWidth, currentHeight] = callPopOutWindowInstance.getSize();
     const [minWidth, minHeight] = callPopOutWindowInstance.getMinimumSize();
-    
+
     // Ensure we respect minimum sizes and keep window small (thumbnail size)
     const newWidth = Math.max(minWidth, Math.min(width, 480));
     const newHeight = Math.max(minHeight, Math.min(height, 360));
-    
+
     if (newWidth !== currentWidth || newHeight !== currentHeight) {
       callPopOutWindowInstance.setSize(newWidth, newHeight);
       callPopOutWindowInstance.center();

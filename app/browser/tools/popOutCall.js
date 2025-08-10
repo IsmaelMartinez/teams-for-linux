@@ -4,8 +4,8 @@
  *        When clicked, it sends an IPC message to the main process to open a separate call window.
  */
 
-exports.injectPopOutScript = function(webFrame) {
-    const script = `
+exports.injectPopOutScript = function (webFrame) {
+  const script = `
         (function() {
             const POPOUT_BUTTON_ID = 'teams-for-linux-popout-button';
 
@@ -20,7 +20,11 @@ exports.injectPopOutScript = function(webFrame) {
                     popOutButton.title = 'Pop out this call';
 
                     popOutButton.addEventListener('click', () => {
-                        window.electronAPI.createCallPopOutWindow();
+                        if (window.electronAPI && typeof window.electronAPI.createCallPopOutWindow === 'function') {
+                            window.electronAPI.createCallPopOutWindow();
+                        } else {
+                            console.warn('Teams for Linux: electronAPI.createCallPopOutWindow is not available.');
+                        }
                         // Hide the main Teams meeting content
                         const meetingContent = document.querySelector('[data-tid="call-screen"]');
                         if (meetingContent) {
@@ -46,5 +50,5 @@ exports.injectPopOutScript = function(webFrame) {
             injectPopOutButton();
         })();
     `;
-    webFrame.executeJavaScript(script);
+  webFrame.executeJavaScript(script);
 };
