@@ -1,9 +1,3 @@
-/**
- * @file popOutCall.js
- * @brief Injects a "Pop out" button into the Microsoft Teams web app's call toolbar.
- *        When clicked, it sends an IPC message to the main process to open a separate call window.
- */
-
 exports.injectPopOutScript = function (webFrame) {
   const script = `
         (function() {

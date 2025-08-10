@@ -60,7 +60,7 @@ function startStreaming(properties) {
         console.debug(
           "Sending screen-sharing-started with sourceId:",
           sourceIdToSend
-        ); // Modified log
+        );
         ipcRenderer.send("screen-sharing-started", sourceIdToSend);
         const videoTrack = stream.getVideoTracks()[0];
         console.debug(
