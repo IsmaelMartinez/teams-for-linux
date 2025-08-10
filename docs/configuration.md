@@ -30,6 +30,41 @@ Example `config.json`:
 }
 ```
 
+## System-wide Configuration
+
+Teams for Linux supports system-wide configuration files for enterprise and multi-user environments. The system-wide configuration file should be placed at:
+
+```
+/etc/teams-for-linux/config.json
+```
+
+### Configuration Precedence
+
+The application loads configuration in the following order:
+
+1. **System-wide config** (if present): `/etc/teams-for-linux/config.json`
+2. **User config** (if present): User's config directory (e.g., `~/.config/teams-for-linux/config.json`)
+3. **Default values**: Built-in application defaults
+
+User configurations take precedence over system-wide configurations. This allows administrators to set organization-wide defaults while still allowing individual users to customize their settings.
+
+### Example System-wide Config
+
+System administrators can create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
+
+```json
+{
+  "closeAppOnCross": false,
+  "disableNotifications": false,
+  "customCSSName": "compactDark",
+  "trayIconEnabled": true
+}
+```
+
+Users can then override specific settings in their personal config files while inheriting the system-wide defaults for other options.
+
+**Related GitHub Issues:** [Issue #1773](https://github.com/IsmaelMartinez/teams-for-linux/issues/1773)
+
 ## Electron CLI Flags
 
 The configuration file can include Electron CLI flags that will be added when

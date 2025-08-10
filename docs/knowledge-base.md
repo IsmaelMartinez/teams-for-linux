@@ -119,6 +119,36 @@ This knowledge base is organized by common problem categories. Each entry includ
 
 ---
 
+#### Issue: Window decorations stuck in dark mode on GNOME systems
+
+**Description:** On GNOME desktop environments, Teams for Linux window decorations (title bar, borders) remain in dark mode even when the system theme is set to light mode.
+
+**Potential Causes:**
+* Earlier versions of Electron had issues with properly responding to GNOME theme changes
+* System theme detection not working correctly with certain GNOME versions
+
+**Solutions/Workarounds:**
+1. **Update to Latest Version:**
+   * Ensure you're using Teams for Linux v2.2.1 or later, which includes Electron 37.2.6 with upstream fixes for GNOME theme handling
+   
+2. **Temporary Workaround (for older versions):**
+   ```bash
+   xprop -f _GTK_THEME_VARIANT 8u -set _GTK_THEME_VARIANT "light"
+   ```
+   Run this command while Teams for Linux is running to force light window decorations
+
+3. **System Theme Settings:**
+   * Ensure your GNOME theme preference is properly set:
+   ```bash
+   gsettings set org.gnome.desktop.interface color-scheme prefer-light
+   ```
+
+**Status:** Fixed in Teams for Linux v2.2.1+ (Electron 37.2.6)
+
+**Related GitHub Issues:** [Issue #1755](https://github.com/IsmaelMartinez/teams-for-linux/issues/1755)
+
+---
+
 ### Audio and Video Issues
 
 #### Issue: Microphone not working during calls
