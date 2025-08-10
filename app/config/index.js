@@ -8,28 +8,73 @@ function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
 }
 
+function getSystemConfigFilePath() {
+  return "/etc/teams-for-linux/config.json";
+}
+
 function checkConfigFileExistence(configPath) {
   return fs.existsSync(getConfigFilePath(configPath));
+}
+
+function checkSystemConfigFileExistence() {
+  return fs.existsSync(getSystemConfigFilePath());
 }
 
 function getConfigFile(configPath) {
   return require(getConfigFilePath(configPath));
 }
 
+function getSystemConfigFile() {
+  return require(getSystemConfigFilePath());
+}
+
 function populateConfigObjectFromFile(configObject, configPath) {
+  let systemConfig = {};
+  let userConfig = {};
+  let hasUserConfig = false;
+  let hasSystemConfig = false;
+
+  // First, try to load system-wide config
+  if (checkSystemConfigFileExistence()) {
+    try {
+      systemConfig = getSystemConfigFile();
+      hasSystemConfig = true;
+      console.info("System-wide config loaded from /etc/teams-for-linux/config.json");
+    } catch (e) {
+      console.warn(
+        "Error loading system-wide config file, ignoring:\n" + e.message
+      );
+    }
+  }
+
+  // Then, try to load user config (this takes precedence)
   if (checkConfigFileExistence(configPath)) {
     try {
-      configObject.configFile = getConfigFile(configPath);
-      configObject.isConfigFile = true;
+      userConfig = getConfigFile(configPath);
+      hasUserConfig = true;
     } catch (e) {
       configObject.configError = e.message;
       console.warn(
-        "Error in config file, using default values:\n" +
+        "Error in user config file, using system config or defaults:\n" +
           configObject.configError
       );
     }
+  }
+
+  // Merge configs with user config taking precedence over system config
+  if (hasUserConfig || hasSystemConfig) {
+    configObject.configFile = { ...systemConfig, ...userConfig };
+    configObject.isConfigFile = true;
+    
+    if (hasUserConfig && hasSystemConfig) {
+      console.info("Using merged configuration: system-wide config overridden by user config");
+    } else if (hasUserConfig) {
+      console.info("Using user configuration");
+    } else {
+      console.info("Using system-wide configuration (no user config found)");
+    }
   } else {
-    console.warn("No config file found, using default values");
+    console.warn("No config file found (user or system-wide), using default values");
   }
 }
 

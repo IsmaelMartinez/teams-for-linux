@@ -14,6 +14,21 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.2.1" date="2025-08-09">
+			<description>
+				<ul>
+					<li>Improved screen sharing thumbnail window functionality</li>
+					<li>Renamed configuration option from autoPopWhenSharing to screenSharingThumbnail for clarity</li>
+					<li>Made pop-out window thumbnail-sized with dynamic sizing based on shared content</li>
+					<li>Enhanced window title updates and removed overlay text for cleaner view</li>
+					<li>Updated dependencies: electron-log, eslint, and development tools</li>
+					<li>Fixed window decorations staying in dark mode on GNOME systems (Electron 37.2.6)</li>
+					<li>Added system-wide configuration support at /etc/teams-for-linux/config.json for enterprise deployments</li>
+					<li>Added comprehensive CLAUDE.md documentation for future development</li>
+					<li>Updated configuration documentation with new screenSharingThumbnail option</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.1.4" date="2025-08-04">
 			<description>
 				<ul>
