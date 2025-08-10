@@ -369,7 +369,9 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-  createInAppUIWindow(config); // Pass the config object
+  if (config.enableInAppUI) {
+    createInAppUIWindow(config); // Pass the config object
+  }
 }
 
 async function handleGetSystemIdleState() {
