@@ -153,13 +153,13 @@ function getHelpMenu(Menus) {
   return {
     label: "Help",
     submenu: [
-      {
+      ...(Menus.configGroup.startupConfig.enableInAppUI ? [{
         label: "In-App UI",
         click: () => Menus.openInAppUI(),
       },
       {
         type: "separator",
-      },
+      }] : []),
       {
         label: "Online Documentation",
         click: () =>
