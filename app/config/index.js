@@ -39,7 +39,9 @@ function populateConfigObjectFromFile(configObject, configPath) {
     try {
       systemConfig = getSystemConfigFile();
       hasSystemConfig = true;
-      console.info("System-wide config loaded from /etc/teams-for-linux/config.json");
+      console.info(
+        "System-wide config loaded from /etc/teams-for-linux/config.json"
+      );
     } catch (e) {
       console.warn(
         "Error loading system-wide config file, ignoring:\n" + e.message
@@ -65,16 +67,20 @@ function populateConfigObjectFromFile(configObject, configPath) {
   if (hasUserConfig || hasSystemConfig) {
     configObject.configFile = { ...systemConfig, ...userConfig };
     configObject.isConfigFile = true;
-    
+
     if (hasUserConfig && hasSystemConfig) {
-      console.info("Using merged configuration: system-wide config overridden by user config");
+      console.info(
+        "Using merged configuration: system-wide config overridden by user config"
+      );
     } else if (hasUserConfig) {
       console.info("Using user configuration");
     } else {
       console.info("Using system-wide configuration (no user config found)");
     }
   } else {
-    console.warn("No config file found (user or system-wide), using default values");
+    console.warn(
+      "No config file found (user or system-wide), using default values"
+    );
   }
 }
 

@@ -26,6 +26,7 @@
 					<li>Enabling by default the cache management solution implemented in #1765</li>
 					<li>Internal: Added CLAUDE.md for Claude-specific instructions.</li>
 					<li>Internal: Added new task list files for project management.</li>
+					<li>Electron update to version 37.2.4. This might fix issue #1755</li>
 				</ul>
 			</description>
 		</release>
