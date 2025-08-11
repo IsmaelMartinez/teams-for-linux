@@ -17,14 +17,14 @@ The Cache Manager provides automatic cache cleanup to prevent token corruption:
 
 ## Configuration
 
-**The Cache Manager is disabled by default and must be explicitly enabled.**
+**The Cache Manager is enabled by default and must be explicitly disabled.**
 
 Add to your Teams for Linux config:
 
 ```json
 {
   "cacheManagement": {
-    "enabled": false,
+    "enabled": true,
     "maxCacheSizeMB": 300,
     "cacheCheckIntervalMs": 3600000
   }
@@ -32,7 +32,7 @@ Add to your Teams for Linux config:
 ```
 
 **Configuration Options:**
-- `enabled` (boolean): Enable/disable cache management (default: **false**)
+- `enabled` (boolean): Enable/disable cache management (default: **true**)
 - `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
 - `cacheCheckIntervalMs` (number): Check interval in milliseconds (default: 3600000 = 1 hour)
 
