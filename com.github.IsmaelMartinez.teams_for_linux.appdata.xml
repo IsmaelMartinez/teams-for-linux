@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.2.0" date="2025-08-09">
+		<release version="2.2.0" date="2025-08-11">
 			<description>
 				<ul>
 					<li>New: Implemented control for in-app UI window visibility via configuration.</li>
