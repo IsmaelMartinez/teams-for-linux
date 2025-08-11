@@ -37,12 +37,14 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.about(),
     },
     getHelpMenu(Menus),
-    ...(Menus.configGroup.startupConfig.videoMenu ? [
-      {
-        type: "separator",
-      },
-      getVideoMenu(Menus),
-    ]: []),
+    ...(Menus.configGroup.startupConfig.videoMenu
+      ? [
+          {
+            type: "separator",
+          },
+          getVideoMenu(Menus),
+        ]
+      : []),
     {
       type: "separator",
     },
@@ -153,20 +155,17 @@ function getHelpMenu(Menus) {
   return {
     label: "Help",
     submenu: [
-      ...(Menus.configGroup.startupConfig.enableInAppUI ? [{
-        label: "In-App UI",
-        click: () => Menus.openInAppUI(),
-      },
-      {
-        type: "separator",
-      }] : []),
-      {
-        label: "In-App UI",
-        click: () => Menus.openInAppUI(),
-      },
-      {
-        type: "separator",
-      },
+      ...(Menus.configGroup.startupConfig.enableInAppUI
+        ? [
+            {
+              label: "In-App UI",
+              click: () => Menus.openInAppUI(),
+            },
+            {
+              type: "separator",
+            },
+          ]
+        : []),
       {
         label: "Online Documentation",
         click: () =>
@@ -191,17 +190,21 @@ function getHelpMenu(Menus) {
 }
 
 function getVideoMenu(Menus) {
-  return       {
+  return {
     label: "Video",
     submenu: [
       {
         label: "Force enable PiP mode for shared screen",
-        click: () => { Menus.forcePip() }
+        click: () => {
+          Menus.forcePip();
+        },
       },
       {
         label: "Force toggle controls for all video elements",
-        click: () => { Menus.forceVideoControls() }
-      }
-    ]
-  }
+        click: () => {
+          Menus.forceVideoControls();
+        },
+      },
+    ],
+  };
 }
