@@ -109,11 +109,13 @@
             updateStatusAndStream();
             
             // Listen for screen sharing status changes via IPC and update accordingly
-            if (window?.electronAPI?.onScreenSharingStatusChanged) {
-                window.electronAPI.onScreenSharingStatusChanged(() => {
-                    updateStatusAndStream();
-                });
+            if (window?.electronAPI && typeof window.electronAPI.onScreenSharingStatusChanged !== 'function') {
+                // Provide a no-op fallback if not defined
+                window.electronAPI.onScreenSharingStatusChanged = function () {};
             }
+            window.electronAPI?.onScreenSharingStatusChanged(() => {
+                updateStatusAndStream();
+            });
         });
     </script>
 </body>
