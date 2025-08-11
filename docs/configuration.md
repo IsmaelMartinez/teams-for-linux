@@ -110,12 +110,12 @@ This will execute the following on an incoming call.
 
 ## Cache Management Configuration
 
-The cache management feature helps prevent daily logout issues caused by cache overflow. It can be configured in your `config.json`:
+The cache management feature clears cache files that can cause issues due to cache overflow. It can be configured in your `config.json`:
 
 ```json
 {
   "cacheManagement": {
-    "enabled": false,
+    "enabled": true,
     "maxCacheSizeMB": 300,
     "cacheCheckIntervalMs": 3600000
   }
@@ -123,7 +123,7 @@ The cache management feature helps prevent daily logout issues caused by cache o
 ```
 
 **Options:**
-- `enabled` (boolean): Enable/disable automatic cache management (default: false)
+- `enabled` (boolean): Enable/disable automatic cache management (default: **true**)
 - `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
 - `cacheCheckIntervalMs` (number): How often to check cache size in milliseconds (default: 3600000 = 1 hour)
 
@@ -150,7 +150,7 @@ The cache manager automatically detects your partition configuration and cleans 
 | `contextIsolation` | `boolean` | `false` | Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality). |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages in chats. |
 | `class` | `string` | `null` | A custom value for the WM_CLASS property. |
-| `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 }` | Cache management configuration to prevent daily logout issues. |
+| `cacheManagement` | `object` | `{ enabled: true, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 }` | Cache management configuration to prevent daily logout issues. |
 | `clearStorageData` | `boolean` | `null` | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions. |
 | `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format). |
 | `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format). |

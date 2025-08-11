@@ -19,12 +19,12 @@ The Cache Manager provides automatic cache cleanup to prevent token corruption:
 
 The cache management feature helps prevent daily logout issues caused by cache overflow. It can be configured in your `config.json`:
 
-**The Cache Manager is disabled by default and must be explicitly enabled.**
+**The Cache Manager is enabled by default and must be explicitly disabled.**
 
 ```json
 {
   "cacheManagement": {
-    "enabled": false,
+    "enabled": true,
     "maxCacheSizeMB": 300,
     "cacheCheckIntervalMs": 3600000
   }
@@ -32,7 +32,7 @@ The cache management feature helps prevent daily logout issues caused by cache o
 ```
 
 **Options:**
-- `enabled` (boolean): Enable/disable automatic cache management (default: false)
+- `enabled` (boolean): Enable/disable automatic cache management (default: **true**)
 - `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
 - `cacheCheckIntervalMs` (number): How often to check cache size in milliseconds (default: 3600000 = 1 hour)
 

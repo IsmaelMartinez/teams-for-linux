@@ -352,7 +352,6 @@ function handleAppReady() {
   //Just catch the error
   process.stdout.on("error", () => {});
 
-  // Initialize cache manager (addresses issue #1756: Daily logout)
   if (config.cacheManagement?.enabled === true) {
     const cacheManager = new CacheManager({
       maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
