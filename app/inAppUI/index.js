@@ -43,6 +43,8 @@ function createInAppWindow(options) {
     // Handle window closure, e.g., set inAppUIWindow to null if it was the in-app UI
     if (htmlFile === "inAppUI.html") {
       inAppUIWindow = null;
+    } else if (htmlFile === "callPopOut.html") {
+      callPopOutWindowInstance = null;
     }
   });
 

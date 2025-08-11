@@ -79,7 +79,7 @@ function startStreaming(properties) {
       })
       .catch((e) => {
         console.error(e.message);
-        ipcRenderer.send("screen-sharing-stopped");
+        ipcRenderer.send("screen-sharing-stopped", { error: e && (e.message || e.toString()) });
         properties.reject(e.message);
       });
   } else {
