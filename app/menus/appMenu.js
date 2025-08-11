@@ -161,6 +161,13 @@ function getHelpMenu(Menus) {
         type: "separator",
       }] : []),
       {
+        label: "In-App UI",
+        click: () => Menus.openInAppUI(),
+      },
+      {
+        type: "separator",
+      },
+      {
         label: "Online Documentation",
         click: () =>
           shell.openExternal("https://support.office.com/en-us/teams"),

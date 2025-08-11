@@ -65,11 +65,14 @@
   - [ ] 2.6 Implement loading states and error handling.
   - [ ] 2.7 Ensure full keyboard navigation and screen reader compatibility.
 
+
 ## Future Improvements
 
 This section captures enhancements and non-critical features that could be implemented after the core functionality is complete:
 
+
 - **Attach/Detach Functionality:** Allow users to attach or detach the in-app UI from the main Teams window.
+
 
 ### Technical Debt Considerations
 

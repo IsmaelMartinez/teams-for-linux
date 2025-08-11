@@ -65,6 +65,8 @@ System administrators can create `/etc/teams-for-linux/config.json` to set organ
 
 Users can then override specific settings in their personal config files while inheriting the system-wide defaults for other options.
 
+**Related GitHub Issues:** [Issue #1773](https://github.com/IsmaelMartinez/teams-for-linux/issues/1773)
+
 ## Electron CLI Flags
 
 The configuration file can include Electron CLI flags that will be added when

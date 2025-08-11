@@ -10,6 +10,12 @@ graph TD
         A --> H(Protocol Handling)
     end
 
+    subgraph Configuration Sources
+        Q[System Config<br>/etc/teams-for-linux/config.json]
+        R[User Config<br>~/.config/teams-for-linux/config.json]
+        S[Default Values]
+    end
+
     subgraph Renderer Process
         I[Teams PWA] --> J(IPC Renderer Calls)
         I --> K(Browser Tools)
@@ -22,6 +28,10 @@ graph TD
         O(Microsoft Teams Services)
         P(External Browser)
     end
+
+    Q --> B
+    R --> B
+    S --> B
 
     C -- IPC --> J
     J -- IPC --> C
