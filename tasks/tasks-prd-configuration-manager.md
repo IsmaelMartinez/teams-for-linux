@@ -46,33 +46,37 @@
 
 ### Notes
 
+- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory).
+- Use `npx jest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the Jest configuration.
 - Follow established patterns identified in the Pattern Analysis section
 - Address any conflicts noted in the System Analysis before implementation
 
 ## Tasks
 
-- [x] 1.0 Implement Core In-App UI Modal (About/System Info)
-  - [x] 1.1 Add a close button to the `inAppUI.html` modal
-  - [x] 1.2 Implement dismissal of the modal via Escape key and clicking outside.
-  - [x] 1.3 Implement keyboard shortcut (e.g., Ctrl+Shift+H) to open the modal.
-  - [x] 1.4 Ensure the modal is responsive across different screen sizes.
-  - [x] 1.5 Add basic styling to align with the project's aesthetic.
-- [ ] 2.0 Refine User Interface Design and Accessibility
-  - [ ] 2.1 Ensure distinct design that clearly separates from Teams interface.
-  - [ ] 2.2 Provide clear visual hierarchy and intuitive navigation.
-  - [ ] 2.3 Ensure consistent styling across all panels and sections.
-  - [ ] 2.4 Implement dark/light mode preferences.
-  - [ ] 2.6 Implement loading states and error handling.
-  - [ ] 2.7 Ensure full keyboard navigation and screen reader compatibility.
-
+- [ ] 3.0 Integrate Configuration Management Interface
+  - [ ] 3.1 Design and implement the UI for displaying all current configuration settings.
+  - [ ] 3.2 Implement input controls (text fields, checkboxes, dropdowns, file pickers) for modifying configuration values.
+  - [ ] 3.3 Implement validation of configuration changes before applying them.
+  - [ ] 3.4 Implement saving changes to the appropriate configuration files.
+  - [ ] 3.5 Implement reset-to-defaults option for each configuration section.
+  - [ ] 3.6 Implement configuration export/import functionality.
+  - [ ] 3.7 Handle configuration reload without requiring application restart where possible.
 
 ## Future Improvements
 
 This section captures enhancements and non-critical features that could be implemented after the core functionality is complete:
 
+### Priority 2 (Nice-to-Have)
 
-- **Attach/Detach Functionality:** Allow users to attach or detach the in-app UI from the main Teams window.
+- **Custom CSS/Background Management UI:** A visual interface to manage custom CSS or backgrounds, as mentioned in the PRD.
+- **Real-time Preview of Changes:** For configuration changes, provide a real-time preview where applicable.
+- **Contextual Help System:** Provide searchable, immediately accessible troubleshooting assistance based on the current context within the application.
 
+### Priority 3 (Future Consideration)
+
+- **Advanced Scripting/Automation:** Explore possibilities for advanced scripting or automation capabilities within the UI.
+- **Plugin/Extension System:** Consider a system for third-party additions to the in-app UI.
+- **Advanced Analytics/Usage Tracking:** Implement analytics within the UI to track feature usage and effectiveness (with user consent).
 
 ### Technical Debt Considerations
 

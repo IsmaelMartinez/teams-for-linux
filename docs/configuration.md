@@ -56,8 +56,10 @@ System administrators can create `/etc/teams-for-linux/config.json` to set organ
 {
   "closeAppOnCross": false,
   "disableNotifications": false,
-  "customCSSName": "compactDark",
-  "trayIconEnabled": true
+  "screenSharingThumbnail": {
+    "enabled": true
+  },
+  "customCSSName": "compactDark"
 }
 ```
 
@@ -179,6 +181,7 @@ The cache manager automatically detects your partition configuration and cleans 
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition. |
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port. |
 | `sandbox` | `boolean` | `false` | Sandbox for the BrowserWindow (WIP - disabling this might break some functionality). |
+| `screenSharingThumbnail` | `object` | `{ enabled: true }` | Automatically show a thumbnail window when screen sharing is active. |
 | `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method to be used (Electron/WakeLockSentinel). Choices: `Electron`, `WakeLockSentinel`. |
 | `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker (experimental). |
 | `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth. |

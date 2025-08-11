@@ -6,13 +6,17 @@ const {
   dialog,
   webFrameMain,
   nativeImage,
+  desktopCapturer,
+  ipcMain,
 } = require("electron");
+const { StreamSelector } = require("../streamSelector");
 const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
+const popOutCall = require("../browser/tools/popOutCall");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
@@ -29,6 +33,7 @@ let config;
 let window = null;
 let appConfig = null;
 let customBackgroundService = null;
+let streamSelector;
 
 const isMac = os.platform() === "darwin";
 
@@ -68,6 +73,33 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   });
 
   window = await browserWindowManager.createWindow();
+  streamSelector = new StreamSelector(window);
+
+  // Handle screen sharing requests from renderer process
+  window.webContents.session.setDisplayMediaRequestHandler(
+    (request, callback) => {
+      // Check if the request is from the main Teams webContents
+      let allowedHost = "teams.microsoft.com";
+      let reqHost;
+      try {
+        reqHost = new URL(request.url).host;
+      } catch (e) {
+        console.warn(`Failed to parse request URL: ${request.url}`, e);
+        reqHost = "";
+      }
+      if (reqHost === allowedHost) {
+        streamSelector.show((source) => {
+          if (source) {
+            callback({ video: source });
+          } else {
+            callback({ video: false });
+          }
+        });
+      } else {
+        callback({ video: false }); // Deny other requests
+      }
+    }
+  );
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
@@ -209,6 +241,7 @@ function onDidFrameFinishLoad(
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
   customCSS.onDidFrameFinishLoad(wf, config);
+  popOutCall.injectPopOutScript(wf);
 }
 
 function restoreWindow() {

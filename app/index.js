@@ -42,6 +42,8 @@ const notificationSounds = [
 
 let userStatus = -1;
 let idleTimeUserStatus = -1;
+let screenSharingActive = false;
+let currentScreenShareSourceId = null;
 
 let player;
 try {
@@ -57,6 +59,7 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
+const { createCallPopOutWindow, createInAppUIWindow } = require("./inAppUI");
 
 if (isMac) {
   requestMediaAccess();
@@ -95,6 +98,43 @@ if (!gotTheLock) {
   ipcMain.handle("show-notification", showNotification);
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+  ipcMain.handle("get-app-version", async () => {
+    return config.appVersion;
+  });
+  ipcMain.handle("create-call-pop-out-window", async () => {
+    createCallPopOutWindow(config);
+  });
+  ipcMain.on("screen-sharing-started", (event, sourceId) => {
+    console.debug('Screen sharing started with sourceId:', sourceId);
+    screenSharingActive = true;
+    // Ensure only the string ID is stored, in case sourceId is the full object
+    if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
+      currentScreenShareSourceId = sourceId.id;
+    } else {
+      currentScreenShareSourceId = sourceId;
+    }
+    if (config.screenSharingThumbnail.enabled) { // Access the enabled property
+      createCallPopOutWindow(config);
+    }
+  });
+  ipcMain.on("screen-sharing-stopped", () => {
+    screenSharingActive = false;
+    currentScreenShareSourceId = null;
+    ipcMain.emit('close-call-pop-out-window'); // Emit the IPC message to close the pop-out window
+  });
+  ipcMain.handle("get-screen-sharing-status", async () => {
+    console.debug('get-screen-sharing-status returning:', screenSharingActive);
+    return screenSharingActive;
+  });
+  ipcMain.handle("get-screen-share-stream", async () => {
+    console.debug('get-screen-share-stream returning:', currentScreenShareSourceId);
+    return currentScreenShareSourceId;
+  });
+  ipcMain.handle("start-screen-share-display", async () => {
+    // The stream will be obtained in the renderer process of the pop-out window
+    // using the sourceId. This IPC handler just confirms receipt of the sourceId.
+    return true; 
+  });
 }
 
 function restartApp() {
@@ -329,6 +369,9 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+  if (config.enableInAppUI) {
+    createInAppUIWindow(config); // Pass the config object
+  }
 }
 
 async function handleGetSystemIdleState() {
