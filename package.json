@@ -55,7 +55,7 @@
   "devDependencies": {
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.33.0",
-    "electron": "^37.2.4",
+    "electron": "^37.2.6",
     "electron-builder": "^26.0.19",
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
