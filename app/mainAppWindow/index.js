@@ -75,38 +75,13 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
-  // Handle screen sharing requests from renderer process
-  window.webContents.session.setDisplayMediaRequestHandler(
-    (request, callback) => {
-      // Check if the request is from the main Teams webContents
-      let allowedHost = "teams.microsoft.com";
-      let reqHost;
-      try {
-        reqHost = new URL(request.url).host;
-      } catch (e) {
-        console.warn(`Failed to parse request URL: ${request.url}`, e);
-        reqHost = "";
-      }
-      if (reqHost === allowedHost) {
-        streamSelector.show((source) => {
-          if (source) {
-            callback({ video: source });
-          } else {
-            callback({ video: false });
-          }
-        });
-      } else {
-        callback({ video: false }); // Deny other requests
-      }
-    }
-  );
-
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
     m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
   addEventHandlers();
+  addScreenSharingEventHandlers();
 
   login.handleLoginDialogTry(window, {
     ssoBasicAuthUser: config.ssoBasicAuthUser,
@@ -131,6 +106,7 @@ let allowFurtherRequests = true;
 exports.show = function () {
   window.show();
 };
+
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
   console.debug("second-instance started");
@@ -492,4 +468,17 @@ async function removePopupWindowMenu() {
 
 async function sleep(ms) {
   return await new Promise((r) => setTimeout(r, ms));
+}
+
+function addScreenSharingEventHandlers() {
+  // Legacy screen sharing status tracking for tray icon updates
+  ipcMain.on("screen-sharing-started", (event, sourceId) => {
+    console.log('Screen sharing started with source:', sourceId);
+    // Update app state for tray icon/notifications if needed
+  });
+
+  ipcMain.on("screen-sharing-stopped", () => {
+    console.log('Screen sharing stopped');
+    // Update app state for tray icon/notifications if needed
+  });
 }

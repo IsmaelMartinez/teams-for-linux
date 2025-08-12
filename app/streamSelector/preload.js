@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld("api", {
   selectedSource: (args) => {
-    return ipcRenderer.send("selected-source", args);
+    return ipcRenderer.send("select-source", args);
   },
   closeView: () => {
     return ipcRenderer.send("close-view");

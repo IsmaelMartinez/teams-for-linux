@@ -116,6 +116,7 @@ if (!gotTheLock) {
     if (config.screenSharingThumbnail.enabled) { // Access the enabled property
       createCallPopOutWindow(config);
     }
+    
   });
   ipcMain.on("screen-sharing-stopped", () => {
     screenSharingActive = false;

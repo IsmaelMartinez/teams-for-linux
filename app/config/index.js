@@ -104,6 +104,16 @@ function extractYargConfig(configObject, appVersion) {
           "Automatically show a thumbnail window when screen sharing is active.",
         type: "object",
       },
+      screenSharing: {
+        default: {
+          strategy: "auto",
+          enablePreview: true,
+          timeoutMs: 8000,
+        },
+        describe:
+          "Screen sharing configuration: strategy ('auto'|'legacy-override'|'electron-handler'), preview enablement, and timeout settings.",
+        type: "object",
+      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",

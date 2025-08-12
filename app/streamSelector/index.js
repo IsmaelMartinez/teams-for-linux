@@ -77,7 +77,7 @@ class StreamSelector {
     };
 
     this.parent.on("resize", _resize);
-    ipcMain.once("selected-source", _close);
+    ipcMain.once("select-source", _close);
     ipcMain.once("close-view", _close);
   }
 }
@@ -87,7 +87,7 @@ function closeView(properties) {
   properties.view.view.webContents.destroy();
   properties.view.view = null;
   properties.view.parent.removeListener("resize", properties._resize);
-  ipcMain.removeListener("selected-source", properties._close);
+  ipcMain.removeListener("select-source", properties._close);
   ipcMain.removeListener("close-view", properties._close);
   if (properties.view.callback) {
     properties.view.callback(properties.source);

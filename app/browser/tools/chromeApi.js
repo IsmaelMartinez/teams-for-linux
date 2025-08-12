@@ -8,6 +8,10 @@ let _getDisplayMedia;
 
 function init(config) {
   window.addEventListener("DOMContentLoaded", () => {
+    // Since contextIsolation is disabled in this project, we can use the legacy override
+    // This is the only approach that works with contextIsolation: false
+    console.log('Screen sharing: Using legacy override (contextIsolation: false)');
+    
     if (process.env.XDG_SESSION_TYPE === "wayland") {
       _getDisplayMedia = MediaDevices.prototype.getDisplayMedia;
       MediaDevices.prototype.getDisplayMedia = customGetDisplayMediaWayland;
@@ -61,7 +65,9 @@ function startStreaming(properties) {
           "Sending screen-sharing-started with sourceId:",
           sourceIdToSend
         );
+        // Send both old and new event formats for compatibility
         ipcRenderer.send("screen-sharing-started", sourceIdToSend);
+        ipcRenderer.send("screen-share:started", { sourceId: sourceIdToSend, mode: 'unknown' });
         const videoTrack = stream.getVideoTracks()[0];
         console.debug(
           "Starting polling for video track readyState:",
@@ -72,14 +78,18 @@ function startStreaming(properties) {
             console.debug(
               'Video track readyState is "ended". Sending screen-sharing-stopped.'
             );
+            // Send both old and new event formats for compatibility
             ipcRenderer.send("screen-sharing-stopped");
+            ipcRenderer.send("screen-share:stopped");
             clearInterval(checkInterval);
           }
         }, 500); // Check every 500ms
       })
       .catch((e) => {
         console.error(e.message);
+        // Send both old and new event formats for compatibility
         ipcRenderer.send("screen-sharing-stopped");
+        ipcRenderer.send("screen-share:error", { stage: 'starting', code: 'STREAM_ERROR', message: e.message });
         properties.reject(e.message);
       });
   } else {
