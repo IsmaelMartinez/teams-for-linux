@@ -70,10 +70,10 @@ class BrowserWindowManager {
 
       webPreferences: {
         partition: this.config.partition,
-        preload: path.join(__dirname, "..", "browser", "index.js"),
+        preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
-        contextIsolation: this.config.contextIsolation,
-        sandbox: this.config.sandbox,
+        contextIsolation: true,
+        sandbox: true,
         spellcheck: true,
         webviewTag: true,
       },

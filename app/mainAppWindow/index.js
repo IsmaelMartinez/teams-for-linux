@@ -75,29 +75,23 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
-  // Handle screen sharing requests from renderer process
   window.webContents.session.setDisplayMediaRequestHandler(
     (request, callback) => {
-      // Check if the request is from the main Teams webContents
-      let allowedHost = "teams.microsoft.com";
-      let reqHost;
-      try {
-        reqHost = new URL(request.url).host;
-      } catch (e) {
-        console.warn(`Failed to parse request URL: ${request.url}`, e);
-        reqHost = "";
-      }
-      if (reqHost === allowedHost) {
-        streamSelector.show((source) => {
-          if (source) {
-            callback({ video: source });
-          } else {
-            callback({ video: false });
-          }
+      desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async sources => {
+        const sourceNames = sources.map(source => source.name);
+        const { response } = await dialog.showMessageBox(window, {
+          type: 'question',
+          buttons: sourceNames,
+          message: 'Choose a screen to share',
+          cancelId: -1, // No cancel button
         });
-      } else {
-        callback({ video: false }); // Deny other requests
-      }
+
+        if (response >= 0) {
+          callback({ video: sources[response] });
+        } else {
+          callback({ video: null });
+        }
+      });
     }
   );
 

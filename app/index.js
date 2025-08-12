@@ -44,6 +44,7 @@ let userStatus = -1;
 let idleTimeUserStatus = -1;
 let screenSharingActive = false;
 let currentScreenShareSourceId = null;
+let picker = null;
 
 let player;
 try {
@@ -94,6 +95,17 @@ if (!gotTheLock) {
   ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
     desktopCapturer.getSources(opts)
   );
+  ipcMain.handle('choose-desktop-media', async (event, sourceTypes) => {
+    const sources = await desktopCapturer.getSources({ types: sourceTypes });
+    const chosen = await showScreenPicker(sources); // your code
+    return chosen ? chosen.id : null;          // Teams needs the raw Id
+  });
+
+  ipcMain.on('cancel-desktop-media', (_e) => {
+    if (picker) {
+      picker.close();
+    }
+  });
   ipcMain.handle("play-notification-sound", playNotificationSound);
   ipcMain.handle("show-notification", showNotification);
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
@@ -507,5 +519,35 @@ function handleGlobalShortcutDisabledRevert() {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);
     }
+  });
+}
+
+function showScreenPicker(sources) {
+  return new Promise((resolve, reject) => {
+    picker = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        preload: path.join(__dirname, 'screenPicker', 'preload.js')
+      }
+    });
+
+    picker.loadFile(path.join(__dirname, 'screenPicker', 'index.html'));
+
+    picker.webContents.on('did-finish-load', () => {
+      picker.webContents.send('sources-list', sources);
+    });
+
+    ipcMain.once('source-selected', (event, source) => {
+      resolve(source);
+      if (picker) {
+        picker.close();
+      }
+    });
+
+    picker.on('closed', () => {
+      picker = null;
+      resolve(null);
+    });
   });
 }
