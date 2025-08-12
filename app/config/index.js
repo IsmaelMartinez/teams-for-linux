@@ -182,9 +182,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       contextIsolation: {
-        default: false,
+        default: true,
         describe:
-          "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
+          "Use contextIsolation on the main BrowserWindow (recommended for security)",
         type: "boolean",
       },
       disableTimestampOnCopy: {
@@ -331,7 +331,7 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           transports: {
             console: {
-              level: "info",
+              level: "debug",
             },
             file: {
               level: false,
@@ -383,9 +383,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       sandbox: {
-        default: false,
+        default: true,
         describe:
-          "Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)",
+          "Sandbox for the BrowserWindow (disabled for Teams compatibility)",
         type: "boolean",
       },
       screenLockInhibitionMethod: {

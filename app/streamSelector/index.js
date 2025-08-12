@@ -53,16 +53,28 @@ class StreamSelector {
   }
 
   show(callback) {
+    console.log("StreamSelector: show() called");
     let self = this;
     self.callback = callback;
+    self.callbackCalled = false; // Ensure callback is only called once
+
     self.view = new WebContentsView({
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
+        contextIsolation: true,
+        sandbox: true, // Enable sandbox for better security
       },
     });
 
     self.view.webContents.loadFile(path.join(__dirname, "index.html"));
     self.parent.contentView.addChildView(self.view);
+
+    console.log("StreamSelector: View created and added to parent");
+
+    // Add debugging for when the view finishes loading
+    self.view.webContents.once("did-finish-load", () => {
+      console.log("StreamSelector: View finished loading");
+    });
 
     let _resize = () => {
       resizeView(self);
@@ -70,26 +82,63 @@ class StreamSelector {
     resizeView(self);
 
     let _close = (_event, source) => {
-      //'screen:x:0' -> whole screen
-      //'window:x:0' -> small window
-      // show captured source in a new view? Maybe reuse the same view, but make it smaller? probably best a new "file"/view
-      closeView({ view: self, _resize, _close, source });
+      // Close without selecting a source (user cancelled)
+      if (!self.callbackCalled) {
+        self.callbackCalled = true;
+        closeView({
+          view: self,
+          _resize,
+          _close,
+          _sourceSelected,
+          source: null,
+        });
+      }
+    };
+
+    let _sourceSelected = (_event, source) => {
+      // User selected a source
+      console.log(
+        "StreamSelector: Source selected via IPC:",
+        source ? source.id : "null"
+      );
+      if (!self.callbackCalled) {
+        self.callbackCalled = true;
+        closeView({ view: self, _resize, _close, _sourceSelected, source });
+      }
     };
 
     this.parent.on("resize", _resize);
-    ipcMain.once("selected-source", _close);
     ipcMain.once("close-view", _close);
+    ipcMain.once("source-selected", _sourceSelected);
   }
 }
 
 function closeView(properties) {
-  properties.view.parent.setBrowserView(null);
-  properties.view.view.webContents.destroy();
+  // Clean up the view
+  if (properties.view.view && properties.view.view.webContents) {
+    if (!properties.view.view.webContents.isDestroyed()) {
+      properties.view.view.webContents.destroy();
+    }
+  }
+
+  // Remove the view from parent
+  if (properties.view.parent && properties.view.parent.contentView) {
+    properties.view.parent.contentView.removeChildView(properties.view.view);
+  }
+
   properties.view.view = null;
+
+  // Remove event listeners
   properties.view.parent.removeListener("resize", properties._resize);
-  ipcMain.removeListener("selected-source", properties._close);
   ipcMain.removeListener("close-view", properties._close);
+  ipcMain.removeListener("source-selected", properties._sourceSelected);
+
+  // Call the callback with the selected source (or null if cancelled)
   if (properties.view.callback) {
+    console.log(
+      "Calling callback with source:",
+      properties.source ? properties.source.id : "null"
+    );
     properties.view.callback(properties.source);
   }
 }

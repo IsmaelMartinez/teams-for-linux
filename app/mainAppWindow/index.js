@@ -75,31 +75,60 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
-  // Handle screen sharing requests from renderer process
-  window.webContents.session.setDisplayMediaRequestHandler(
-    (request, callback) => {
-      // Check if the request is from the main Teams webContents
-      let allowedHost = "teams.microsoft.com";
-      let reqHost;
-      try {
-        reqHost = new URL(request.url).host;
-      } catch (e) {
-        console.warn(`Failed to parse request URL: ${request.url}`, e);
-        reqHost = "";
-      }
-      if (reqHost === allowedHost) {
-        streamSelector.show((source) => {
-          if (source) {
-            callback({ video: source });
-          } else {
-            callback({ video: false });
+  // Store the active callback to prevent multiple calls
+  let activeScreenShareCallback = null;
+  
+  // Modern screen sharing handler
+  window.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
+    console.log('Screen sharing request details:', {
+      url: request ? request.url : 'no request object',
+      securityOrigin: request ? request.securityOrigin : 'no request object',
+      requestingOrigin: request ? request.requestingOrigin : 'no request object'
+    });
+    
+    // Validate that this is coming from Teams or a valid origin
+    if (request && request.securityOrigin && 
+        (request.securityOrigin.includes('teams.microsoft.com') || 
+         request.securityOrigin.includes('localhost') ||
+         request.securityOrigin === 'file://')) {
+      
+      // Store the callback so we can call it later
+      activeScreenShareCallback = callback;
+      
+      streamSelector.show((source) => {
+        // Only call the callback if we still have an active request
+        if (activeScreenShareCallback) {
+          const callbackToUse = activeScreenShareCallback;
+          activeScreenShareCallback = null; // Clear it so it can only be called once
+          
+          try {
+            if (source && source.id && typeof source === 'object') {
+              console.log('Screen sharing source selected:', source.id, source.name);
+              console.log('Source object type and properties:', typeof source, Object.keys(source));
+              // Send screen sharing started event
+              if (window.webContents && !window.webContents.isDestroyed()) {
+                window.webContents.send("screen-sharing-started", source.id);
+              }
+              // Pass the DesktopCapturerSource object directly
+              console.log('Calling setDisplayMediaRequestHandler callback with source');
+              callbackToUse({ video: source });
+            } else {
+              // User cancelled or no valid source provided
+              console.log('Screen sharing cancelled or invalid source:', source);
+              console.log('Calling setDisplayMediaRequestHandler callback with no arguments (cancelled)');
+              callbackToUse();
+            }
+          } catch (error) {
+            console.error('Error in setDisplayMediaRequestHandler callback:', error);
+            // Don't try to call the callback again, it's already been attempted
           }
-        });
-      } else {
-        callback({ video: false }); // Deny other requests
-      }
+        }
+      });
+    } else {
+      console.log('Screen sharing request denied - invalid origin');
+      callback();
     }
-  );
+  });
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());

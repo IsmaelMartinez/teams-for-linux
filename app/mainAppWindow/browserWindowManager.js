@@ -81,7 +81,6 @@ class BrowserWindowManager {
   }
 
   assignEventHandlers() {
-    ipcMain.on("select-source", this.assignSelectSourceHandler());
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
@@ -89,15 +88,6 @@ class BrowserWindowManager {
     ipcMain.handle("incoming-call-ended", this.assignOnIncomingCallEndedHandler());
     ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
     ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
-  }
-
-  assignSelectSourceHandler() {
-    return (event) => {
-      const streamSelector = new StreamSelector(this.window);
-      streamSelector.show((source) => {
-        event.reply("select-source", source);
-      });
-    };
   }
 
   disableScreenLockElectron() {
