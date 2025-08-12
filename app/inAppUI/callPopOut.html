@@ -40,14 +40,19 @@
                 if (isActive) {
                     try {
                         const sourceId = await window.electronAPI.getScreenShareStream();
-                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId);
+                        const screenSize = await window.electronAPI.getScreenShareScreen();
+                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
                         if (sourceId) {
                             const stream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,
                                 video: {
                                     mandatory: {
                                         chromeMediaSource: 'desktop',
-                                        chromeMediaSourceId: sourceId
+                                        chromeMediaSourceId: sourceId,
+                                        minWidth: screenSize.width,
+                                        maxWidth: screenSize.width,
+                                        minHeight: screenSize.height,
+                                        maxHeight: screenSize.height
                                     }
                                 }
                             });

@@ -17,8 +17,10 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 const popOutCall = require("../browser/tools/popOutCall");
+const { createCallPopOutWindow } = require("../inAppUI");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
+const { setScreenSharingActive, setCurrentScreenShareSourceId, setCurrentScreenShareScreen } = require("../index");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("os");
 
@@ -77,19 +79,23 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
   window.webContents.session.setDisplayMediaRequestHandler(
     (request, callback) => {
-      desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async sources => {
-        const sourceNames = sources.map(source => source.name);
-        const { response } = await dialog.showMessageBox(window, {
-          type: 'question',
-          buttons: sourceNames,
-          message: 'Choose a screen to share',
-          cancelId: -1, // No cancel button
-        });
-
-        if (response >= 0) {
-          callback({ video: sources[response] });
+      streamSelector.show((source) => {
+        if (source) {
+          desktopCapturer.getSources({ types: ['window', 'screen'] }).then(sources => {
+            const selectedSource = sources.find(s => s.id === source.id);
+            if (selectedSource) {
+              setScreenSharingActive(true);
+              setCurrentScreenShareSourceId(selectedSource.id);
+              setCurrentScreenShareScreen(source.screen);
+              createCallPopOutWindow(config);
+            }
+            console.log('Request:', request);
+            console.log('Selected source:', selectedSource);
+            console.log('Share audio:', source.shareAudio);
+            callback({ video: selectedSource, audio: source.shareAudio ? request.frame : false });
+          });
         } else {
-          callback({ video: null });
+          callback({ video: null, audio: false });
         }
       });
     }

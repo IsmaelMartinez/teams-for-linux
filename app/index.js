@@ -44,7 +44,20 @@ let userStatus = -1;
 let idleTimeUserStatus = -1;
 let screenSharingActive = false;
 let currentScreenShareSourceId = null;
+let currentScreenShareScreen = null;
 let picker = null;
+
+exports.setScreenSharingActive = (value) => {
+  screenSharingActive = value;
+};
+
+exports.setCurrentScreenShareSourceId = (value) => {
+  currentScreenShareSourceId = value;
+};
+
+exports.setCurrentScreenShareScreen = (value) => {
+  currentScreenShareScreen = value;
+};
 
 let player;
 try {
@@ -141,6 +154,10 @@ if (!gotTheLock) {
   ipcMain.handle("get-screen-share-stream", async () => {
     console.debug('get-screen-share-stream returning:', currentScreenShareSourceId);
     return currentScreenShareSourceId;
+  });
+  ipcMain.handle("get-screen-share-screen", async () => {
+    console.debug('get-screen-share-screen returning:', currentScreenShareScreen);
+    return currentScreenShareScreen;
   });
   ipcMain.handle("start-screen-share-display", async () => {
     // The stream will be obtained in the renderer process of the pop-out window
