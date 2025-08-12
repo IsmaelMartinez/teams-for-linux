@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.2.1" date="2025-08-12">
+			<description>
+				<ul>
+					<li>Update: Electron upgraded to 37.2.6 (may fix issue #1755)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.2.0" date="2025-08-11">
 			<description>
 				<ul>
@@ -26,7 +33,6 @@
 					<li>Enabling by default the cache management solution implemented in #1765</li>
 					<li>Internal: Added CLAUDE.md for Claude-specific instructions.</li>
 					<li>Internal: Added new task list files for project management.</li>
-					<li>Electron update to version 37.2.4. This might fix issue #1755</li>
 				</ul>
 			</description>
 		</release>
