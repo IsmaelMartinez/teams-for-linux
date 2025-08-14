@@ -120,24 +120,22 @@ function createCallPopOutWindow(config) {
   });
 
   callPopOutWindowInstance.on("closed", () => {
-    console.debug('🔍 [POPUP DEBUG] Popup window closed event triggered');
     // Send IPC event to indicate screen sharing has ended
     try {
       const { ipcMain } = require("electron");
       ipcMain.emit('popup-window-closed');
     } catch (error) {
-      console.error('🔍 [POPUP DEBUG] Error sending popup-window-closed event:', error);
+      console.error('Error sending popup-window-closed event:', error);
     }
     callPopOutWindowInstance = null;
   });
 
   callPopOutWindowInstance.once('ready-to-show', () => {
-    console.debug('🔍 [POPUP DEBUG] Popup window ready to show - screen sharing started');
     try {
       const { ipcMain } = require("electron");
       ipcMain.emit('popup-window-opened');
     } catch (error) {
-      console.error('🔍 [POPUP DEBUG] Error sending popup-window-opened event:', error);
+      console.error('Error sending popup-window-opened event:', error);
     }
   });
 }

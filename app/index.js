@@ -128,80 +128,53 @@ if (!gotTheLock) {
     return config.appVersion;
   });
   ipcMain.handle("create-call-pop-out-window", async () => {
-    console.debug('🔍 [MAIN DEBUG] 📤 create-call-pop-out-window called');
-    console.debug('🔍 [MAIN DEBUG] Creating popup window (not setting screen sharing active yet)');
-    // Don't automatically set screenSharingActive here - let the stream detection handle it
+    console.debug('Creating popup window for screen sharing');
     createCallPopOutWindow(config);
     return true;
   });
   ipcMain.on("active-screen-share-stream", (event, stream) => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received active-screen-share-stream IPC event');
     activeScreenShareStream = stream;
   });
 
   ipcMain.on("screen-sharing-started", (event, sourceId) => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received screen-sharing-started IPC event');
-    console.debug('🔍 [MAIN DEBUG] sourceId:', sourceId);
-    console.debug('🔍 [MAIN DEBUG] Current screenSharingActive before:', screenSharingActive);
-    console.debug('🔍 [MAIN DEBUG] config.screenSharingThumbnail.enabled:', config.screenSharingThumbnail.enabled);
+    console.debug('Screen sharing started:', sourceId);
     
     screenSharingActive = true;
-    console.debug('🔍 [MAIN DEBUG] Set screenSharingActive to true');
     
     // Ensure only the string ID is stored, in case sourceId is the full object
     if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
       currentScreenShareSourceId = sourceId.id;
-      console.debug('🔍 [MAIN DEBUG] Extracted sourceId from object:', sourceId.id);
     } else {
       currentScreenShareSourceId = sourceId;
-      console.debug('🔍 [MAIN DEBUG] Using sourceId directly:', sourceId);
     }
     
     if (config.screenSharingThumbnail.enabled) {
-      console.debug('🔍 [MAIN DEBUG] 🎯 Creating call popout window');
       try {
         createCallPopOutWindow(config);
-        console.debug('🔍 [MAIN DEBUG] ✅ Call popout window creation completed');
       } catch (error) {
-        console.error('🔍 [MAIN DEBUG] ❌ Error creating call popout window:', error);
+        console.error('Error creating call popout window:', error);
       }
-    } else {
-      console.debug('🔍 [MAIN DEBUG] ⚠️ Screen sharing thumbnail is disabled, not creating popout window');
     }
   });
 
   ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received stop-screen-sharing-from-thumbnail IPC event');
+    console.debug('Stop screen sharing requested from thumbnail');
     if (activeScreenShareStream) {
-      console.debug('🔍 [MAIN DEBUG] 🛑 Stopping stream from thumbnail click');
       try {
         if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
           activeScreenShareStream.getTracks().forEach(track => track.stop());
-          console.debug('🔍 [MAIN DEBUG] ✅ Stopped active screen share stream tracks');
-        } else {
-          console.debug('🔍 [MAIN DEBUG] ⚠️ Stream object not proper MediaStream, skipping track stopping');
         }
         activeScreenShareStream = null;
       } catch (error) {
-        console.error('🔍 [MAIN DEBUG] ❌ Error stopping stream from thumbnail:', error);
+        console.error('Error stopping stream from thumbnail:', error);
         activeScreenShareStream = null;
       }
     }
-    closeCallPopOutWindow(); // This closes the streamSelectorWindow
-    console.debug('🔍 [MAIN DEBUG] ✅ Closed call popout window');
-  });
-  
-  ipcMain.on("active-screen-share-stream", (event, stream) => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received active-screen-share-stream IPC event');
-    activeScreenShareStream = stream;
-    console.debug('🔍 [MAIN DEBUG] ✅ Stored active screen share stream');
+    closeCallPopOutWindow();
   });
 
   ipcMain.on("screen-sharing-stopped", () => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received screen-sharing-stopped IPC event');
-    console.debug('🔍 [MAIN DEBUG] Current screenSharingActive before:', screenSharingActive);
-    console.debug('🔍 [MAIN DEBUG] Current currentScreenShareSourceId before:', currentScreenShareSourceId);
-    console.debug('🔍 [MAIN DEBUG] Current currentScreenShareScreen before:', currentScreenShareScreen);
+    console.debug('Screen sharing stopped');
     
     screenSharingActive = false;
     currentScreenShareSourceId = null;
@@ -209,89 +182,64 @@ if (!gotTheLock) {
     
     // Stop the active stream if it exists
     if (activeScreenShareStream) {
-      console.debug('🔍 [MAIN DEBUG] 🛑 Stopping active screen share stream tracks');
-      console.debug('🔍 [MAIN DEBUG] Stream object type:', typeof activeScreenShareStream);
-      console.debug('🔍 [MAIN DEBUG] Stream object keys:', Object.keys(activeScreenShareStream || {}));
       try {
         // Check if it's a proper MediaStream with getTracks method
         if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
-          activeScreenShareStream.getTracks().forEach(track => {
-            console.debug('🔍 [MAIN DEBUG] Stopping track:', track.kind, track.readyState);
-            track.stop();
-          });
-          console.debug('🔍 [MAIN DEBUG] ✅ Successfully stopped all stream tracks');
-        } else {
-          console.debug('🔍 [MAIN DEBUG] ⚠️ Stream object is not a proper MediaStream, skipping track stopping');
+          activeScreenShareStream.getTracks().forEach(track => track.stop());
         }
         activeScreenShareStream = null;
       } catch (error) {
-        console.error('🔍 [MAIN DEBUG] ❌ Error stopping stream tracks:', error);
+        console.error('Error stopping stream tracks:', error);
         activeScreenShareStream = null;
       }
     }
     
-    console.debug('🔍 [MAIN DEBUG] Set all screen sharing state to null/false');
-    console.debug('🔍 [MAIN DEBUG] 🎯 Calling closeCallPopOutWindow()');
-    
     try {
       closeCallPopOutWindow();
-      console.debug('🔍 [MAIN DEBUG] ✅ closeCallPopOutWindow() completed successfully');
     } catch (error) {
-      console.error('🔍 [MAIN DEBUG] ❌ Error in closeCallPopOutWindow():', error);
+      console.error('Error in closeCallPopOutWindow:', error);
     }
   });
 
 
-  // Listen for popup window lifecycle events (for logging only, don't auto-manage state)
+  // Listen for popup window lifecycle events
   ipcMain.on('popup-window-opened', () => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received popup-window-opened event (not auto-setting screen sharing state)');
-    // Don't automatically set screen sharing state - let stream detection handle it
+    console.debug('Popup window opened');
   });
 
   ipcMain.on('popup-window-closed', () => {
-    console.debug('🔍 [MAIN DEBUG] 📤 Received popup-window-closed event');
-    console.debug('🔍 [MAIN DEBUG] Popup window closed - checking if screen sharing should end');
+    console.debug('Popup window closed');
     
     // Only end screen sharing if it was actually active
     if (screenSharingActive) {
-      console.debug('🔍 [MAIN DEBUG] Screen sharing was active - ending it due to popup close');
       screenSharingActive = false;
       currentScreenShareSourceId = null;
       currentScreenShareScreen = null;
       
       // Stop any active streams
       if (activeScreenShareStream) {
-        console.debug('🔍 [MAIN DEBUG] 🛑 Stopping active screen share stream due to popup close');
         try {
           if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
             activeScreenShareStream.getTracks().forEach(track => {
               track.stop();
             });
-            console.debug('🔍 [MAIN DEBUG] ✅ Stopped stream tracks on popup close');
-          } else {
-            console.debug('🔍 [MAIN DEBUG] ⚠️ Stream object not proper MediaStream on popup close');
           }
           activeScreenShareStream = null;
         } catch (error) {
-          console.error('🔍 [MAIN DEBUG] ❌ Error stopping stream on popup close:', error);
+          console.error('Error stopping stream on popup close:', error);
           activeScreenShareStream = null;
         }
       }
-    } else {
-      console.debug('🔍 [MAIN DEBUG] Screen sharing was not active - popup close ignored');
     }
   });
 
   ipcMain.handle("get-screen-sharing-status", async () => {
-    console.debug('get-screen-sharing-status returning:', screenSharingActive);
     return screenSharingActive;
   });
   ipcMain.handle("get-screen-share-stream", async () => {
-    console.debug('get-screen-share-stream returning:', currentScreenShareSourceId);
     return currentScreenShareSourceId;
   });
   ipcMain.handle("get-screen-share-screen", async () => {
-    console.debug('get-screen-share-screen returning:', currentScreenShareScreen);
     return currentScreenShareScreen;
   });
   ipcMain.handle("start-screen-share-display", async () => {

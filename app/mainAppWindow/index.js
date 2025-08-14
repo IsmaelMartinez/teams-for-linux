@@ -267,15 +267,13 @@ function injectScreenSharingLogic() {
             );
             
             if (isScreenShare) {
-              console.debug('🔍 [DEBUG] ✅ Screen sharing stream detected via getUserMedia!');
+              console.debug('Screen sharing stream detected');
               handleScreenShareStream(stream, 'getUserMedia');
-            } else {
-              console.debug('🔍 [DEBUG] ➡️ Not a screen sharing stream, ignoring');
             }
             
             return stream;
           }).catch(error => {
-            console.error('🔍 [DEBUG] ❌ getUserMedia error:', error);
+            console.error('getUserMedia error:', error);
             throw error;
           });
         };
@@ -283,21 +281,14 @@ function injectScreenSharingLogic() {
       
       // Centralized handler for screen sharing streams
       function handleScreenShareStream(stream, source) {
-        console.debug('🔍 [DEBUG] 🎯 handleScreenShareStream called from:', source);
-        console.debug('🔍 [DEBUG] Stream details:', {
-          id: stream.id,
-          active: stream.active,
-          trackCount: stream.getTracks().length
-        });
+        console.debug('Screen sharing stream started from:', source);
         
         const electronAPI = window.electronAPI;
         
-        // Check electronAPI availability
         if (!electronAPI) {
-          console.error('🔍 [DEBUG] ❌ electronAPI not available');
+          console.error('electronAPI not available');
           return;
         }
-        console.debug('🔍 [DEBUG] ✅ electronAPI available');
         
         isScreenSharing = true;
         activeStreams.push(stream);
@@ -305,91 +296,49 @@ function injectScreenSharingLogic() {
         // Send screen sharing started event
         if (electronAPI.sendScreenSharingStarted) {
           const sourceId = 'screen-share-' + Date.now(); // Generate a sourceId
-          console.debug('🔍 [DEBUG] Sending screen-sharing-started with sourceId:', sourceId);
           electronAPI.sendScreenSharingStarted(sourceId);
-          console.debug('🔍 [DEBUG] Sending active-screen-share-stream IPC with stream:', stream);
           electronAPI.send("active-screen-share-stream", stream);
         } else {
-          console.error('🔍 [DEBUG] ❌ sendScreenSharingStarted not available');
+          console.error('sendScreenSharingStarted not available');
         }
         
         // Start monitoring for stop sharing UI changes
         startUIMonitoring();
         
-        // Monitor video tracks for end
+        // Track stream and tracks for reference, but don't auto-close popup based on their state
+        // Popup window should only close when manually closed or screen sharing explicitly stopped
         const videoTracks = stream.getVideoTracks();
-        console.debug('🔍 [DEBUG] Found video tracks:', videoTracks.length);
+        activeMediaTracks.push(...videoTracks);
         
+        // Optional: Log when tracks end (for debugging, doesn't affect popup)
         videoTracks.forEach((track, index) => {
-          console.debug('🔍 [DEBUG] Monitoring video track', index, ':', track);
-          activeMediaTracks.push(track);
-          
-          // DISABLED: Track ending monitoring was causing premature popup closure
-          // The popup should stay open even if individual tracks end, as Teams may recreate them
-          console.debug('🔍 [DEBUG] ⚠️ Track monitoring disabled - popup will stay open until manually closed');
-          
-          // Listen for track ending (for logging only, don't close popup)
           track.addEventListener('ended', () => {
-            console.debug('🔍 [DEBUG] ℹ️ Video track ended naturally (popup will remain open)');
-          });
-          
-          // Also poll track state as fallback (for logging only)
-          const checkInterval = setInterval(() => {
-            if (track.readyState === 'ended') {
-              console.debug('🔍 [DEBUG] ℹ️ Video track readyState is "ended" (popup will remain open)');
-              clearInterval(checkInterval);
-            }
-          }, 1000);
-          
-          // Clean up interval when track ends
-          track.addEventListener('ended', () => {
-            clearInterval(checkInterval);
+            console.debug('Video track', index, 'ended (popup remains open)');
           });
         });
-        
-        // DISABLED: Stream monitoring was causing premature popup closure
-        // Monitor the stream itself (for logging only, don't close popup)
-        stream.addEventListener('removetrack', () => {
-          console.debug('🔍 [DEBUG] ℹ️ Stream removetrack event (popup will remain open)');
-        });
-        
-        // Monitor stream active state (for logging only, don't close popup)
-        const streamCheckInterval = setInterval(() => {
-          if (!stream.active) {
-            console.debug('🔍 [DEBUG] ℹ️ Stream became inactive (popup will remain open)');
-            clearInterval(streamCheckInterval);
-          }
-        }, 1000);
       }
       
-      // Centralized function to handle stream ending
+      // Function to handle stream ending (currently only used for manual UI detection)
       function handleStreamEnd(reason) {
-        console.debug('🔍 [DEBUG] 🔴 handleStreamEnd called, reason:', reason);
-        console.debug('🔍 [DEBUG] Current isScreenSharing state:', isScreenSharing);
+        console.debug('Stream ending detected, reason:', reason);
         
         if (isScreenSharing) {
           isScreenSharing = false;
-          console.debug('🔍 [DEBUG] Setting isScreenSharing to false');
           
           const electronAPI = window.electronAPI;
           if (electronAPI && electronAPI.sendScreenSharingStopped) {
-            console.debug('🔍 [DEBUG] 📤 Sending screen-sharing-stopped IPC event');
             electronAPI.sendScreenSharingStopped();
-          } else {
-            console.error('🔍 [DEBUG] ❌ Cannot send screen-sharing-stopped - electronAPI or method not available');
           }
           
           // Clear active streams and tracks
           activeStreams = [];
           activeMediaTracks = [];
-        } else {
-          console.debug('🔍 [DEBUG] ⚠️ handleStreamEnd called but isScreenSharing was already false');
         }
       }
       
       // Monitor Teams UI for stop sharing actions
       function startUIMonitoring() {
-        console.debug('🔍 [DEBUG] 🎯 Starting UI monitoring for screen sharing controls');
+        console.debug('Starting UI monitoring for screen sharing controls');
         
         // Monitor Teams internal state changes
         setupTeamsStateMonitoring();
@@ -405,83 +354,56 @@ function injectScreenSharingLogic() {
           '[data-tid="desktop-share-stop-button"]',
           '.ts-calling-screen-share-stop-button',
           'button[data-testid*="stop-sharing"]',
-          // Add more generic selectors
           '[data-tid*="share"] button',
           '.share-stop-button',
           '[aria-label*="share"]',
           '[title*="share"]',
-          // Teams calling controls
           '[data-tid*="hangup"]',
           '[data-tid*="call-end"]',
           'button[data-tid="call-hangup"]'
         ];
         
-        console.debug('🔍 [DEBUG] Using selectors:', stopSharingSelectors);
-        
         // Monitor for clicks on stop sharing buttons
         function addStopSharingListeners() {
-          console.debug('🔍 [DEBUG] 🔍 Scanning for stop sharing buttons...');
           let foundButtons = 0;
           
           stopSharingSelectors.forEach(selector => {
             const elements = document.querySelectorAll(selector);
-            console.debug('🔍 [DEBUG] Selector "' + selector + '" found', elements.length, 'elements');
             
             elements.forEach(element => {
               if (!element.hasAttribute('data-screen-share-monitored')) {
                 foundButtons++;
                 element.setAttribute('data-screen-share-monitored', 'true');
                 element.addEventListener('click', handleStopSharing);
-                console.debug('🔍 [DEBUG] ✅ Added stop sharing listener to element:', element);
-                console.debug('🔍 [DEBUG] Element details:', {
-                  tagName: element.tagName,
-                  className: element.className,
-                  id: element.id,
-                  textContent: element.textContent,
-                  title: element.title,
-                  ariaLabel: element.getAttribute('aria-label')
-                });
               }
             });
           });
           
-          console.debug('🔍 [DEBUG] Total buttons found and monitored:', foundButtons);
+          if (foundButtons > 0) {
+            console.debug('Added stop sharing listeners to', foundButtons, 'buttons');
+          }
         }
         
         // Handle stop sharing button clicks
         function handleStopSharing(event) {
-          console.debug('🔍 [DEBUG] 🔴 Stop sharing button clicked!');
-          console.debug('🔍 [DEBUG] Event target:', event.target);
-          console.debug('🔍 [DEBUG] Current isScreenSharing state:', isScreenSharing);
-          console.debug('🔍 [DEBUG] Active streams count:', activeStreams.length);
-          console.debug('🔍 [DEBUG] Active media tracks count:', activeMediaTracks.length);
+          console.debug('Stop sharing button clicked');
           
           if (isScreenSharing) {
-            console.debug('🔍 [DEBUG] ✅ Screen sharing is active, processing stop request');
-            
             // Force stop all active media tracks
-            console.debug('🔍 [DEBUG] 🛑 Force stopping all active media tracks');
-            activeMediaTracks.forEach((track, index) => {
-              console.debug('🔍 [DEBUG] Stopping track', index, ':', track);
+            activeMediaTracks.forEach((track) => {
               track.stop();
             });
             
             // Force stop all active streams
-            activeStreams.forEach((stream, index) => {
-              console.debug('🔍 [DEBUG] Stopping stream', index, ':', stream);
+            activeStreams.forEach((stream) => {
               stream.getTracks().forEach(track => {
-                console.debug('🔍 [DEBUG] Stopping stream track:', track);
                 track.stop();
               });
             });
             
-            const electronAPI = window.electronAPI;
             setTimeout(() => {
-              console.debug('🔍 [DEBUG] 📤 Sending screen-sharing-stopped after UI click (with delay)');
               handleStreamEnd('ui-button-click');
             }, 500); // Small delay to let Teams process the stop action
-          } else {
-            console.debug('🔍 [DEBUG] ⚠️ Stop sharing button clicked but isScreenSharing is false');
           }
         }
         
@@ -495,13 +417,11 @@ function injectScreenSharingLogic() {
           });
           
           if (shouldCheckForButtons) {
-            console.debug('🔍 [DEBUG] DOM changed, re-checking for buttons');
             addStopSharingListeners();
           }
         });
         
         // Start observing
-        console.debug('🔍 [DEBUG] Starting MutationObserver for DOM changes');
         observer.observe(document.body, {
           childList: true,
           subtree: true
@@ -667,17 +587,8 @@ function injectScreenSharingLogic() {
           return;
         }
         
-        // TEMPORARILY DISABLED: UI-based popup monitoring was causing conflicts
-        // The popup window should only be closed when the actual stream ends or user manually closes
-        console.debug('🔍 [DEBUG] ⚠️ UI-based popup monitoring disabled to prevent conflicts');
-        
-        // TODO: Re-implement UI monitoring with better detection logic once stream handling is stable
-        const popupStatusCheck = null; // Disabled
-        
-        // Clean up interval when page unloads
-        window.addEventListener('beforeunload', () => {
-          clearInterval(popupStatusCheck);
-        });
+        // UI-based popup monitoring disabled to prevent conflicts
+        // Popup window will only be closed when manually closed or stream explicitly stopped
       }
       
     })();
