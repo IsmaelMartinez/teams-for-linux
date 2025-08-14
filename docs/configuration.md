@@ -194,7 +194,6 @@ rm -f ~/.config/teams-for-linux/Cookies-journal
 | `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross. |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications (low/normal/critical). Choices: `low`, `normal`, `critical`. |
 | `defaultURLHandler` | `string` | `""` | Default application to be used to open the HTTP URLs. |
-| `disableAutogain` | `boolean` | `false` | A flag indicates whether to disable mic auto gain or not. |
 | `disableGpu` | `boolean` | `false` | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank). |
 | `disableNotifications` | `boolean` | `false` | A flag to disable all notifications. |
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound. |

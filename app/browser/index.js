@@ -60,7 +60,6 @@
 function initializeModules(config, ipcRenderer) {
   require("./tools/zoom").init(config);
   require("./tools/shortcuts").init(config);
-  // NOTE: chromeApi removed - screen sharing now handled by mainAppWindow injection
   require("./tools/mutationTitle").init(config);
   if (config.trayIconEnabled) {
     console.debug("tray icon is enabled");

@@ -7,7 +7,6 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
-  ipcMain,
 } = require("electron");
 const { StreamSelector } = require("../streamSelector");
 const login = require("../login");
@@ -16,11 +15,8 @@ const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
-const popOutCall = require("../browser/tools/popOutCall");
-const { createCallPopOutWindow } = require("../inAppUI");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
-const { setScreenSharingActive, setCurrentScreenShareSourceId, setCurrentScreenShareScreen } = require("../index");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("os");
 
@@ -81,16 +77,16 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     (request, callback) => {
       streamSelector.show((source) => {
         if (source) {
-          desktopCapturer.getSources({ types: ['window', 'screen'] }).then(sources => {
-            const selectedSource = sources.find(s => s.id === source.id);
-            if (selectedSource) {
-              setScreenSharingActive(true);
-              setCurrentScreenShareSourceId(selectedSource.id);
-              setCurrentScreenShareScreen(source.screen);
-              createCallPopOutWindow(config);
-            }
-            callback({ video: selectedSource });
-          });
+          desktopCapturer
+            .getSources({ types: ["window", "screen"] })
+            .then((sources) => {
+              const selectedSource = sources.find((s) => s.id === source.id);
+              if (selectedSource) {
+                // Store the source ID globally for access by screen sharing manager
+                global.selectedScreenShareSource = selectedSource;
+              }
+              callback({ video: selectedSource });
+            });
         } else {
           callback({ video: null, audio: false });
         }
@@ -203,13 +199,11 @@ function onDidFinishLoad() {
 			tryAgainLink = document.getElementById('try-again-link');
 			tryAgainLink && tryAgainLink.click()
 		`);
-  
+
   // Inject browser functionality
-  console.debug('🔍 [MAIN DEBUG] Attempting to inject screen sharing logic...');
   injectScreenSharingLogic();
-  console.debug('🔍 [MAIN DEBUG] Screen sharing logic injection initiated.');
   injectNotificationLogic();
-  
+
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
 }
@@ -217,29 +211,23 @@ function onDidFinishLoad() {
 function injectScreenSharingLogic() {
   const screenSharingScript = `
     (function() {
-      console.debug('🔍 [DEBUG] Injecting screen sharing detection logic');
       let isScreenSharing = false;
       let activeStreams = [];
       let activeMediaTracks = [];
       
       // Monitor for screen sharing streams and detect when they stop
       function monitorScreenSharing() {
-        console.debug('🔍 [DEBUG] Setting up screen sharing monitoring (getDisplayMedia + getUserMedia)');
         
         // Hook into getDisplayMedia for screen sharing
         const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
         
         navigator.mediaDevices.getDisplayMedia = function(constraints) {
-          console.debug('🔍 [DEBUG] ✨ getDisplayMedia called with constraints:', JSON.stringify(constraints, null, 2));
-          
           return originalGetDisplayMedia(constraints).then(stream => {
-            console.debug('🔍 [DEBUG] ✨ getDisplayMedia resolved with stream:', stream);
-            console.debug('🔍 [DEBUG] ✅ Screen sharing stream detected via getDisplayMedia!');
-            
+            console.debug('Screen sharing stream detected via getDisplayMedia');
             handleScreenShareStream(stream, 'getDisplayMedia');
             return stream;
           }).catch(error => {
-            console.error('🔍 [DEBUG] ❌ getDisplayMedia error:', error);
+            console.error('getDisplayMedia error:', error);
             throw error;
           });
         };
@@ -248,10 +236,7 @@ function injectScreenSharingLogic() {
         const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
         
         navigator.mediaDevices.getUserMedia = function(constraints) {
-          console.debug('🔍 [DEBUG] getUserMedia called with constraints:', JSON.stringify(constraints, null, 2));
-          
           return originalGetUserMedia(constraints).then(stream => {
-            console.debug('🔍 [DEBUG] getUserMedia resolved with stream:', stream);
             
             // Check if this is a screen sharing stream - handle multiple constraint formats
             const isScreenShare = constraints && constraints.video && (
@@ -295,11 +280,9 @@ function injectScreenSharingLogic() {
         
         // Send screen sharing started event
         if (electronAPI.sendScreenSharingStarted) {
-          const sourceId = 'screen-share-' + Date.now(); // Generate a sourceId
+          const sourceId = 'screen-share-' + Date.now();
           electronAPI.sendScreenSharingStarted(sourceId);
           electronAPI.send("active-screen-share-stream", stream);
-        } else {
-          console.error('sendScreenSharingStarted not available');
         }
         
         // Start UI monitoring for stop sharing buttons
@@ -425,64 +408,45 @@ function injectScreenSharingLogic() {
         });
         
         // Initial check
-        console.debug('🔍 [DEBUG] Performing initial button scan');
         addStopSharingListeners();
         
-        // Periodic check as fallback
-        console.debug('🔍 [DEBUG] Setting up periodic button scanning (every 2s)');
+        // Periodic check as fallback  
         const checkInterval = setInterval(() => {
           if (isScreenSharing) {
-            console.debug('🔍 [DEBUG] Periodic scan: still screen sharing, checking for new buttons');
             addStopSharingListeners();
           } else {
-            console.debug('🔍 [DEBUG] Periodic scan: screen sharing stopped, clearing interval');
             clearInterval(checkInterval);
           }
         }, 2000);
       }
       
-      // Manual test trigger - Ctrl+Shift+X to force close popout window
+      // Manual test trigger - Ctrl+Shift+X to force close screen sharing
       function addManualTestTrigger() {
-        console.debug('🔍 [DEBUG] 🎯 Adding manual test trigger (Ctrl+Shift+X)');
-        
         document.addEventListener('keydown', function(event) {
           if (event.ctrlKey && event.shiftKey && event.key === 'X') {
-            console.debug('🔍 [DEBUG] 🔧 Manual test trigger activated!');
-            console.debug('🔍 [DEBUG] Current state:');
-            console.debug('🔍 [DEBUG] - isScreenSharing:', isScreenSharing);
-            console.debug('🔍 [DEBUG] - activeStreams:', activeStreams.length);
-            console.debug('🔍 [DEBUG] - activeMediaTracks:', activeMediaTracks.length);
-            
             const electronAPI = window.electronAPI;
             if (electronAPI && electronAPI.sendScreenSharingStopped) {
-              console.debug('🔍 [DEBUG] 🔧 Forcing screen-sharing-stopped via manual trigger');
               handleStreamEnd('manual-test-trigger');
-            } else {
-              console.error('🔍 [DEBUG] ❌ Cannot send manual test - electronAPI not available');
             }
-            
             event.preventDefault();
           }
         });
       }
       
       // Initialize monitoring
-      console.debug('🔍 [DEBUG] Initializing screen sharing monitoring');
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-          console.debug('🔍 [DEBUG] DOM loaded, starting monitoring');
           monitorScreenSharing();
           addManualTestTrigger();
         });
       } else {
-        console.debug('🔍 [DEBUG] DOM already loaded, starting monitoring immediately');
         monitorScreenSharing();
         addManualTestTrigger();
       }
       
     })();
   `;
-  
+
   window.webContents.executeJavaScript(screenSharingScript);
 }
 
@@ -545,7 +509,7 @@ function injectNotificationLogic() {
       window.Notification = CustomNotification;
     })();
   `;
-  
+
   window.webContents.executeJavaScript(notificationScript);
 }
 
@@ -580,7 +544,6 @@ function onDidFrameFinishLoad(
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
   customCSS.onDidFrameFinishLoad(wf, config);
-  popOutCall.injectPopOutScript(wf);
 }
 
 function restoreWindow() {

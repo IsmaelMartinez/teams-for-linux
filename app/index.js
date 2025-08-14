@@ -1,5 +1,6 @@
 const {
   app,
+  BrowserWindow,
   dialog,
   ipcMain,
   desktopCapturer,
@@ -42,23 +43,7 @@ const notificationSounds = [
 
 let userStatus = -1;
 let idleTimeUserStatus = -1;
-let screenSharingActive = false;
-let currentScreenShareSourceId = null;
-let currentScreenShareScreen = null;
 let picker = null;
-let activeScreenShareStream = null;
-
-exports.setScreenSharingActive = (value) => {
-  screenSharingActive = value;
-};
-
-exports.setCurrentScreenShareSourceId = (value) => {
-  currentScreenShareSourceId = value;
-};
-
-exports.setCurrentScreenShareScreen = (value) => {
-  currentScreenShareScreen = value;
-};
 
 let player;
 try {
@@ -72,9 +57,13 @@ try {
 
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
+const ScreenSharingManager = require("./screenSharing");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
-const { createCallPopOutWindow, createInAppUIWindow, closeCallPopOutWindow } = require("./inAppUI");
+const { createInAppUIWindow } = require("./inAppUI");
+
+// Initialize screen sharing manager
+let screenSharingManager = null;
 
 if (isMac) {
   requestMediaAccess();
@@ -95,7 +84,12 @@ if (!gotTheLock) {
   app.on("ready", handleAppReady);
   app.on("quit", () => console.debug("quit"));
   app.on("render-process-gone", onRenderProcessGone);
-  app.on("will-quit", () => console.debug("will-quit"));
+  app.on("will-quit", () => {
+    console.debug("will-quit");
+    if (screenSharingManager) {
+      screenSharingManager.cleanup();
+    }
+  });
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
@@ -115,7 +109,7 @@ if (!gotTheLock) {
     return chosen ? chosen.id : null;          // Teams needs the raw Id
   });
 
-  ipcMain.on('cancel-desktop-media', (_e) => {
+  ipcMain.on('cancel-desktop-media', () => {
     if (picker) {
       picker.close();
     }
@@ -126,120 +120,6 @@ if (!gotTheLock) {
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
-  });
-  ipcMain.handle("create-call-pop-out-window", async () => {
-    console.debug('Creating popup window for screen sharing');
-    createCallPopOutWindow(config);
-    return true;
-  });
-  ipcMain.on("active-screen-share-stream", (event, stream) => {
-    activeScreenShareStream = stream;
-  });
-
-  ipcMain.on("screen-sharing-started", (event, sourceId) => {
-    console.debug('Screen sharing started:', sourceId);
-    
-    screenSharingActive = true;
-    
-    // Ensure only the string ID is stored, in case sourceId is the full object
-    if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
-      currentScreenShareSourceId = sourceId.id;
-    } else {
-      currentScreenShareSourceId = sourceId;
-    }
-    
-    // Don't create popup window here - it's already created by the IPC handler
-  });
-
-  ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    console.debug('Stop screen sharing requested from thumbnail');
-    if (activeScreenShareStream) {
-      try {
-        if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
-          activeScreenShareStream.getTracks().forEach(track => track.stop());
-        }
-        activeScreenShareStream = null;
-      } catch (error) {
-        console.error('Error stopping stream from thumbnail:', error);
-        activeScreenShareStream = null;
-      }
-    }
-    closeCallPopOutWindow();
-  });
-
-  ipcMain.on("screen-sharing-stopped", () => {
-    console.debug('Screen sharing stopped');
-    
-    screenSharingActive = false;
-    currentScreenShareSourceId = null;
-    currentScreenShareScreen = null;
-    
-    // Stop the active stream if it exists
-    if (activeScreenShareStream) {
-      try {
-        // Check if it's a proper MediaStream with getTracks method
-        if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
-          activeScreenShareStream.getTracks().forEach(track => track.stop());
-        }
-        activeScreenShareStream = null;
-      } catch (error) {
-        console.error('Error stopping stream tracks:', error);
-        activeScreenShareStream = null;
-      }
-    }
-    
-    try {
-      closeCallPopOutWindow();
-    } catch (error) {
-      console.error('Error in closeCallPopOutWindow:', error);
-    }
-  });
-
-
-  // Listen for popup window lifecycle events
-  ipcMain.on('popup-window-opened', () => {
-    console.debug('Popup window opened');
-  });
-
-  ipcMain.on('popup-window-closed', () => {
-    console.debug('Popup window closed');
-    
-    // Only end screen sharing if it was actually active
-    if (screenSharingActive) {
-      screenSharingActive = false;
-      currentScreenShareSourceId = null;
-      currentScreenShareScreen = null;
-      
-      // Stop any active streams
-      if (activeScreenShareStream) {
-        try {
-          if (activeScreenShareStream && typeof activeScreenShareStream.getTracks === 'function') {
-            activeScreenShareStream.getTracks().forEach(track => {
-              track.stop();
-            });
-          }
-          activeScreenShareStream = null;
-        } catch (error) {
-          console.error('Error stopping stream on popup close:', error);
-          activeScreenShareStream = null;
-        }
-      }
-    }
-  });
-
-  ipcMain.handle("get-screen-sharing-status", async () => {
-    return screenSharingActive;
-  });
-  ipcMain.handle("get-screen-share-stream", async () => {
-    return currentScreenShareSourceId;
-  });
-  ipcMain.handle("get-screen-share-screen", async () => {
-    return currentScreenShareScreen;
-  });
-  ipcMain.handle("start-screen-share-display", async () => {
-    // The stream will be obtained in the renderer process of the pop-out window
-    // using the sourceId. This IPC handler just confirms receipt of the sourceId.
-    return true; 
   });
 }
 
@@ -473,6 +353,9 @@ function handleAppReady() {
     });
   }
 
+  // Initialize screen sharing manager
+  screenSharingManager = new ScreenSharingManager(config);
+
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
   if (config.enableInAppUI) {
     createInAppUIWindow(config); // Pass the config object
@@ -617,7 +500,7 @@ function handleGlobalShortcutDisabledRevert() {
 }
 
 function showScreenPicker(sources) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     picker = new BrowserWindow({
       width: 800,
       height: 600,

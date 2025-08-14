@@ -72,8 +72,6 @@ class BrowserWindowManager {
         partition: this.config.partition,
         preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
-        contextIsolation: true,
-        sandbox: true,
         spellcheck: true,
         webviewTag: true,
       },

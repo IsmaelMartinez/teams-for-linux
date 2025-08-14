@@ -122,10 +122,10 @@ const sources = await ipcRenderer.invoke('desktop-capturer-get-sources', {
 
 #### `screen-sharing-started`
 **Type**: `ipcMain.on`  
-**Purpose**: Handles screen sharing start events and creates popup window  
+**Purpose**: Handles screen sharing start events and creates preview window  
 **Parameters**: 
 - `sourceId`: `string` - Selected screen source ID from desktopCapturer
-**Returns**: None (creates popup window and sets sharing state)  
+**Returns**: None (creates preview window and sets sharing state)  
 **Example Usage**:
 ```javascript
 ipcRenderer.send('screen-sharing-started', 'screen:1:0');
@@ -135,25 +135,48 @@ ipcRenderer.send('screen-sharing-started', 'screen:1:0');
 **Type**: `ipcMain.on`  
 **Purpose**: Handles screen sharing stop events and cleanup  
 **Parameters**: None  
-**Returns**: None (closes popout window and resets state)  
+**Returns**: None (closes preview window and resets state)  
 **Example Usage**:
 ```javascript
 ipcRenderer.send('screen-sharing-stopped');
 ```
 
-#### `popup-window-opened`
+#### `screen-share-preview-opened`
 **Type**: `ipcMain.on`  
-**Purpose**: Emitted when screen sharing popup window is created  
+**Purpose**: Emitted when screen sharing preview window is created  
 **Parameters**: None  
 **Returns**: None (notification event)  
-**Usage**: Automatically sent by popup window creation process
+**Usage**: Automatically sent by preview window creation process
 
-#### `popup-window-closed`
+#### `screen-share-preview-closed`
 **Type**: `ipcMain.on`  
-**Purpose**: Emitted when screen sharing popup window is closed  
+**Purpose**: Emitted when screen sharing preview window is closed  
 **Parameters**: None  
 **Returns**: None (triggers screen sharing cleanup)  
-**Usage**: Automatically sent when popup window closes
+**Usage**: Automatically sent when preview window closes
+
+#### `resize-preview-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Resizes the screen sharing preview window with size constraints  
+**Parameters**: 
+- `data`: `Object` with properties:
+  - `width`: `number` - Desired window width
+  - `height`: `number` - Desired window height
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('resize-preview-window', { width: 400, height: 300 });
+```
+
+#### `close-preview-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Closes the screen sharing preview window  
+**Parameters**: None  
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('close-preview-window');
+```
 
 #### `get-screen-sharing-status`
 **Type**: `ipcMain.handle`  
@@ -419,7 +442,7 @@ ipcMain.once('channel-name', (event, ...args) => {
 - All IPC channels are available only within the application context
 - Sensitive data should be validated in main process handlers
 - Avoid exposing raw file system access through IPC
-- Use `contextIsolation: true` in renderer process security settings
+- Do not disable `contextIsolation` in renderer process
 
 ## Debugging IPC Communication
 

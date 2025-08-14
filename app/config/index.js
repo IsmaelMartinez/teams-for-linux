@@ -99,9 +99,10 @@ function extractYargConfig(configObject, appVersion) {
       screenSharingThumbnail: {
         default: {
           enabled: true,
+          alwaysOnTop: true,
         },
         describe:
-          "Automatically show a thumbnail window when screen sharing is active.",
+          "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
         type: "object",
       },
       appIcon: {
@@ -182,7 +183,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       contextIsolation: {
-        default: false,
+        default: true,
+        deprecated:
+          "Enabled by default and not configurable anymore. Please remove it from your configuration",
         describe:
           "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
         type: "boolean",
@@ -244,6 +247,8 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableAutogain: {
         default: false,
+        deprecated:
+          "This feature is not available anymore. In theory you should not needed with the new screensharing. Report back if this causes any issues for you. Thanks!",
         describe: "A flag indicates whether to disable mic auto gain or not",
         type: "boolean",
       },
@@ -331,7 +336,7 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           transports: {
             console: {
-              level: "info",
+              level: "debug",
             },
             file: {
               level: false,
@@ -383,7 +388,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       sandbox: {
-        default: false,
+        default: true,
+        deprecated:
+          "Enabled by default and not configurable anymore. Please remove it from your configuration",
         describe:
           "Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)",
         type: "boolean",

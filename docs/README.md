@@ -50,9 +50,9 @@ graph TD
     
     subgraph Screen Sharing System
         T --> V[Stream Selector<br>app/streamSelector/]
-        T --> W[Popup Window Manager<br>app/inAppUI/]
+        T --> W[Screen Sharing Manager<br>app/screenSharing/]
         V --> X[Desktop Capturer<br>Source Selection]
-        W --> Y[Thumbnail Preview<br>Window]
+        W --> Y[Preview Window<br>Real-time Thumbnail]
     end
 
     subgraph External Systems

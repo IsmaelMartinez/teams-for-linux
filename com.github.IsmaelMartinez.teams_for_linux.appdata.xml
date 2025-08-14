@@ -19,7 +19,7 @@
 				<ul>
 					<li>New: Improved screen sharing with enhanced contextIsolation and sandbox support</li>
 					<li>Improvement: Comprehensive documentation restructuring and simplification</li>
-					<li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox)</li>
+					<li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox, disableAutogain)</li>
 				</ul>
 			</description>
 		</release>

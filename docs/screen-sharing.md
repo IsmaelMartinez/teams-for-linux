@@ -16,10 +16,10 @@ flowchart TD
     F --> G{User action}
     
     G -->|Click stop in Teams| H[Screen sharing ends]
-    G -->|Close popup window| I[Screen sharing stops]
+    G -->|Close preview window| I[Screen sharing stops]
     G -->|End Teams call| J[Screen sharing stops]
     
-    H --> K[Popup window closes]
+    H --> K[Preview window closes]
     I --> K
     J --> K
     K --> L[Back to normal state]
@@ -36,7 +36,7 @@ flowchart TD
    - Open application windows
    - Preview thumbnails of each option
 
-2. **Popup Thumbnail Window**: Once sharing begins, a small floating window appears showing:
+2. **Preview Window**: Once sharing begins, a small floating window appears showing:
    - Live preview of what you're sharing
    - Always stays on top (configurable)
    - Resizable but maintains aspect ratio
@@ -58,15 +58,15 @@ graph TD
         E[setDisplayMediaRequestHandler] --> F[Stream Selector]
         F --> G[Desktop Capturer]
         G --> H[Source Selection]
-        H --> I[createCallPopOutWindow]
+        H --> I[ScreenSharingManager]
         D --> I
-        I --> J[Popup Window Instance]
+        I --> J[Preview Window Instance]
     end
     
     subgraph "UI Detection (Renderer)"
         K[Button Monitoring] --> L[Stop Sharing Detected]
         L --> M[IPC: screen-sharing-stopped]
-        M --> N[Cleanup & Close Popup]
+        M --> N[Cleanup & Close Preview]
     end
     
     style C fill:#e3f2fd
@@ -83,7 +83,7 @@ sequenceDiagram
     participant I as Injection Script
     participant M as Main Process
     participant S as Stream Selector
-    participant P as Popup Window
+    participant P as Preview Window
     
     U->>T: Click "Share screen"
     T->>T: Call getDisplayMedia()
@@ -103,7 +103,7 @@ sequenceDiagram
         M->>M: Store screen sharing state
     end
     
-    M->>P: Create popup window
+    M->>P: Create preview window
     P->>U: Show thumbnail preview
     
     Note over U,P: Screen sharing active
@@ -112,14 +112,14 @@ sequenceDiagram
         U->>T: Click "Stop sharing"
         I->>I: Detect stop button click
         I->>M: screen-sharing-stopped
-    else User closes popup
+    else User closes preview
         U->>P: Close window
-        P->>M: popup-window-closed
+        P->>M: screen-share-preview-closed
     end
     
     M->>M: Cleanup sharing state
-    M->>P: Close popup window
-    P->>U: Popup disappears
+    M->>P: Close preview window
+    P->>U: Preview disappears
 ```
 
 ## Configuration
@@ -135,12 +135,12 @@ sequenceDiagram
 }
 ```
 
-- `enabled`: Whether to show the popup thumbnail window (default: `true`)
-- `alwaysOnTop`: Keep popup window above other windows (default: `false`)
+- `enabled`: Whether to show the preview thumbnail window (default: `true`)
+- `alwaysOnTop`: Keep preview window above other windows (default: `true`)
 
 ## Window Lifecycle Management
 
-### Popup Window States
+### Preview Window States
 
 ```mermaid
 stateDiagram-v2
@@ -160,10 +160,10 @@ stateDiagram-v2
 
 ### Automatic Cleanup Scenarios
 
-The popup window automatically closes when:
+The preview window automatically closes when:
 
 1. **User stops sharing via Teams**: Stop button click detected
-2. **User closes popup manually**: Window close event
+2. **User closes preview manually**: Window close event
 3. **Teams call ends**: Session termination detected
 4. **Application shutdown**: Process cleanup
 
@@ -171,8 +171,8 @@ The popup window automatically closes when:
 
 ### Common Issues
 
-#### Popup Window Doesn't Appear
-**Symptoms**: Screen sharing works but no thumbnail popup shows
+#### Preview Window Doesn't Appear
+**Symptoms**: Screen sharing works but no thumbnail preview shows
 **Causes**:
 - `screenSharingThumbnail.enabled` is `false`
 - Window creation failed due to system restrictions
@@ -186,12 +186,12 @@ The popup window automatically closes when:
 }
 ```
 
-#### Popup Window Won't Close
-**Symptoms**: Popup remains open after sharing stops
+#### Preview Window Won't Close
+**Symptoms**: Preview remains open after sharing stops
 **Causes**: IPC communication issues between renderer and main process
 
 **Solutions**:
-1. Manually close the popup window
+1. Manually close the preview window
 2. Restart Teams for Linux
 3. Check system logs for IPC errors
 
@@ -204,8 +204,8 @@ The popup window automatically closes when:
 2. Verify no conflicting screen capture software
 3. Monitor system resources
 
-#### Multiple Popup Windows
-**Symptoms**: Several popup windows appear for one sharing session
+#### Multiple Preview Windows
+**Symptoms**: Several preview windows appear for one sharing session
 **Causes**: Duplicate window creation (should be fixed in current version)
 
 **Solutions**: 
@@ -232,9 +232,9 @@ To troubleshoot screen sharing issues:
 
 2. **Check IPC events**: Look for these debug messages:
    - `Screen sharing started`
-   - `Creating popup window for screen sharing`
+   - `Creating preview window for screen sharing`
    - `Screen sharing stopped`
-   - `Popup window closed`
+   - `Preview window closed`
 
 3. **System information**: Note your platform (X11/Wayland/macOS) as different code paths are used
 
@@ -283,10 +283,10 @@ electronAPI.stopSharing();
 
 The screen sharing system exposes several IPC channels for custom integration:
 
-- `create-call-pop-out-window`: Create popup thumbnail
+- `create-call-pop-out-window`: Create preview thumbnail
 - `screen-sharing-started`: Notification when sharing begins
 - `screen-sharing-stopped`: Notification when sharing ends
-- `popup-window-opened`/`popup-window-closed`: Window lifecycle events
+- `screen-share-preview-opened`/`screen-share-preview-closed`: Window lifecycle events
 
 See [`ipc-api.md`](ipc-api.md) for complete API documentation.
 
