@@ -1,6 +1,6 @@
-# Release Info Integration
+# Release Automation
 
-This document explains how release information is automatically generated and bundled with the Teams for Linux application using electron-builder.
+Technical documentation for maintainers on the automated release process and info generation.
 
 ## Overview
 

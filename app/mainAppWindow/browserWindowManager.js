@@ -85,10 +85,16 @@ class BrowserWindowManager {
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
-    ipcMain.handle("incoming-call-created", this.assignOnIncomingCallCreatedHandler());
-    ipcMain.handle("incoming-call-ended", this.assignOnIncomingCallEndedHandler());
-    ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
-    ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
+    ipcMain.handle(
+      "incoming-call-created",
+      this.assignOnIncomingCallCreatedHandler()
+    );
+    ipcMain.handle(
+      "incoming-call-ended",
+      this.assignOnIncomingCallEndedHandler()
+    );
+    ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
+    ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
   }
 
   assignSelectSourceHandler() {
@@ -149,13 +155,21 @@ class BrowserWindowManager {
     return async (e, data) => {
       if (this.config.incomingCallCommand) {
         this.handleOnIncomingCallEnded();
-        const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
-        this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+        const commandArgs = [
+          ...this.config.incomingCallCommandArgs,
+          data.caller,
+          data.text,
+          data.image,
+        ];
+        this.incomingCallCommandProcess = spawn(
+          this.config.incomingCallCommand,
+          commandArgs
+        );
       }
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);
       }
-    }
+    };
   }
 
   assignOnIncomingCallEndedHandler() {
@@ -166,7 +180,7 @@ class BrowserWindowManager {
 
   handleOnIncomingCallEnded() {
     if (this.incomingCallCommandProcess) {
-      this.incomingCallCommandProcess.kill('SIGTERM');
+      this.incomingCallCommandProcess.kill("SIGTERM");
       this.incomingCallCommandProcess = null;
     }
     if (this.config.enableIncomingCallToast) {
@@ -177,17 +191,20 @@ class BrowserWindowManager {
   assignOnCallConnectedHandler() {
     return async (e) => {
       this.isOnCall = true;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.disableScreenLockElectron()
+        : this.disableScreenLockWakeLockSentinel();
     };
   }
 
   assignOnCallDisconnectedHandler() {
     return async (e) => {
       this.isOnCall = false;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.enableScreenLockElectron()
+        : this.enableScreenLockWakeLockSentinel();
     };
   }
-
 }
 
 module.exports = BrowserWindowManager;

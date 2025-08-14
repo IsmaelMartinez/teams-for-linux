@@ -99,8 +99,7 @@ function playPreview(properties) {
     closePreviews();
     window.api.selectedSource({
       id: properties.source.id,
-      screen: properties.screens[properties.sscontainer.value],
-      shareAudio: document.getElementById('share-audio').checked
+      screen: properties.screens[properties.sscontainer.value]
     });
   };
   properties.videoElement.onloadedmetadata = () =>

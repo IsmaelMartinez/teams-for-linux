@@ -118,7 +118,47 @@ const sources = await ipcRenderer.invoke('desktop-capturer-get-sources', {
 **Type**: `ipcMain.on`  
 **Purpose**: Handles screen sharing source selection (triggers stream selector UI)  
 **Parameters**: Event data (handled internally)  
-**Returns**: None (replies with selected source via `event.reply`)  
+**Returns**: None (replies with selected source via `event.reply`)
+
+#### `screen-sharing-stopped`
+**Type**: `ipcMain.on`  
+**Purpose**: Handles screen sharing stop events and cleanup  
+**Parameters**: None  
+**Returns**: None (closes popout window and resets state)  
+**Example Usage**:
+```javascript
+ipcRenderer.send('screen-sharing-stopped');
+```
+
+#### `get-screen-sharing-status`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen sharing status  
+**Parameters**: None  
+**Returns**: `boolean` - Whether screen sharing is currently active  
+**Example Usage**:
+```javascript
+const isSharing = await ipcRenderer.invoke('get-screen-sharing-status');
+```
+
+#### `get-screen-share-stream`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen share source ID  
+**Parameters**: None  
+**Returns**: `string|null` - Current screen share source ID or null if not sharing  
+**Example Usage**:
+```javascript
+const sourceId = await ipcRenderer.invoke('get-screen-share-stream');
+```
+
+#### `get-screen-share-screen`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen share screen settings  
+**Parameters**: None  
+**Returns**: `Object|null` - Screen share configuration object or null if not sharing  
+**Example Usage**:
+```javascript
+const screenConfig = await ipcRenderer.invoke('get-screen-share-screen');
+```  
 
 ### Notifications
 
@@ -184,6 +224,39 @@ await ipcRenderer.invoke('set-badge-count', 5);
 **Returns**: None (closes login window on success)  
 
 ### Call Management (`app/mainAppWindow/browserWindowManager.js`)
+
+#### `create-call-pop-out-window`
+**Type**: `ipcMain.handle`  
+**Purpose**: Creates a popout window for the active call/screen sharing  
+**Parameters**: None  
+**Returns**: `void`  
+**Example Usage**:
+```javascript
+await ipcRenderer.invoke('create-call-pop-out-window');
+```
+
+#### `close-call-pop-out-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Closes the call popout window  
+**Parameters**: None  
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('close-call-pop-out-window');
+```
+
+#### `resize-call-pop-out-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Resizes the call popout window with size constraints  
+**Parameters**: 
+- `data`: `Object` with properties:
+  - `width`: `number` - Desired window width
+  - `height`: `number` - Desired window height
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('resize-call-pop-out-window', { width: 400, height: 300 });
+```
 
 #### `incoming-call-created`
 **Type**: `ipcMain.handle`  

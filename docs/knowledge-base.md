@@ -1,23 +1,17 @@
-# Knowledge Base
+# Troubleshooting Guide
 
-This document serves as a comprehensive knowledge base, leveraging insights from GitHub issues to provide solutions and workarounds for common problems encountered with Teams for Linux.
+This guide provides solutions to common problems encountered with Teams for Linux, organized by category for quick reference.
 
-<!-- toc -->
+> [!TIP]
+> For configuration options, see [`configuration.md`](configuration.md). For development information, see [`ipc-api.md`](ipc-api.md).
 
-## How to Use This Document
+## Quick Reference
 
-This knowledge base is organized by common problem categories. Each entry includes a description of the issue, its potential causes, and one or more solutions or workarounds. Where applicable, references to relevant GitHub issues are provided for further context.
-
-## Categories
-
-*   Installation and Updates
-*   User Interface (UI) and User Experience (UX)
-*   Audio and Video Issues
-*   Performance and Stability
-*   Screen Sharing
-*   Login and Authentication
-*   Notifications
-*   Other
+- **Cache Issues**: Clear cache directories (see [Cache Management](configuration.md#cache-management))
+- **Login Problems**: Clear stored data and cache
+- **Notification Issues**: Check `notificationMethod` in config
+- **Audio/Video**: Verify device selection in Teams settings
+- **Installation**: Use clean install and clear previous data
 
 ---
 
@@ -246,7 +240,7 @@ This knowledge base is organized by common problem categories. Each entry includ
 *   Incorrect notification settings.
 
 **Solutions/Workarounds:**
-1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](../configuration.md) for more information.
+1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
 
 **Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md]
 

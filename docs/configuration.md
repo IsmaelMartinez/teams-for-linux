@@ -103,14 +103,17 @@ This will execute the following on an incoming call.
 
 `/home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER`
 
-> Note: Only the property incomingCallCommand is necessary, 
+> Note: Only the property incomingCallCommand is necessary,
 > incomingCallCommandArgs is completely optional.
-> Note: This feature has no connection to the incoming call toast feature. 
+> Note: This feature has no connection to the incoming call toast feature.
 > These two features can be use separately.
 
-## Cache Management Configuration
+## Cache Management
 
-The cache management feature clears cache files that can cause issues due to cache overflow. It can be configured in your `config.json`:
+> [!IMPORTANT]
+> The Cache Manager is **enabled by default** and prevents daily issues caused by cache overflow (issue #1756).
+
+The cache management feature automatically cleans cache files when they grow too large and cause token corruption:
 
 ```json
 {
@@ -122,12 +125,47 @@ The cache management feature clears cache files that can cause issues due to cac
 }
 ```
 
-**Options:**
-- `enabled` (boolean): Enable/disable automatic cache management (default: **true**)
-- `maxCacheSizeMB` (number): Maximum cache size in MB before cleanup (default: 300)
-- `cacheCheckIntervalMs` (number): How often to check cache size in milliseconds (default: 3600000 = 1 hour)
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `true` | Enable/disable automatic cache management |
+| `maxCacheSizeMB` | `number` | `300` | Maximum cache size in MB before cleanup |
+| `cacheCheckIntervalMs` | `number` | `3600000` | How often to check cache size in milliseconds (1 hour) |
 
-The cache manager automatically detects your partition configuration and cleans the appropriate directories while preserving authentication data.
+### What Gets Cleaned vs Preserved
+
+**Cleaned:**
+- Cache directories (main cache, GPU cache, code cache)
+- Partition-specific cached data 
+- Temporary WAL files that cause token corruption
+- Non-essential IndexedDB and WebStorage data
+
+**Preserved:**
+- Authentication tokens and login credentials
+- User preferences and settings
+- Essential persistent storage
+
+### Monitoring and Manual Cleanup
+
+Enable debug logging to monitor cache activities:
+```bash
+teams-for-linux --logConfig='{"level":"debug"}'
+```
+
+For manual cache cleanup:
+```bash
+# Stop Teams for Linux first
+pkill -f "teams-for-linux"
+
+# Remove cache directories
+rm -rf ~/.config/teams-for-linux/Cache/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/Cache/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/IndexedDB/*
+
+# Remove problematic temporary files
+rm -f ~/.config/teams-for-linux/DIPS-wal
+rm -f ~/.config/teams-for-linux/SharedStorage-wal
+rm -f ~/.config/teams-for-linux/Cookies-journal
+```
 
 ## General Options
 
@@ -147,7 +185,6 @@ The cache manager automatically detects your partition configuration and cleans 
 | `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate. |
 | `customCSSName` | `string` | `""` | Custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight". |
 | `customCSSLocation` | `string` | `""` | Custom CSS styles file location. |
-| `contextIsolation` | `boolean` | `false` | Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality). |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages in chats. |
 | `class` | `string` | `null` | A custom value for the WM_CLASS property. |
 | `cacheManagement` | `object` | `{ enabled: true, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 }` | Cache management configuration to prevent daily logout issues. |
@@ -180,7 +217,6 @@ The cache manager automatically detects your partition configuration and cleans 
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of the default browser. |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition. |
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port. |
-| `sandbox` | `boolean` | `false` | Sandbox for the BrowserWindow (WIP - disabling this might break some functionality). |
 | `screenSharingThumbnail` | `object` | `{ enabled: true }` | Automatically show a thumbnail window when screen sharing is active. |
 | `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method to be used (Electron/WakeLockSentinel). Choices: `Electron`, `WakeLockSentinel`. |
 | `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker (experimental). |

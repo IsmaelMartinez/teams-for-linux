@@ -1,12 +1,9 @@
-# Certificate
+# Certificate Management
 
-This folder contains the handlers for certificate.
+Configure custom CA certificates for corporate environments and self-signed certificates.
 
-You can define the valid certificates by providing the customCACertsFingerprints
-config option.
-
-Further information about config options can be found in the
-[Configuration Documentation](configuration.md).
+> [!NOTE]
+> See [Configuration Documentation](configuration.md) for all available options.
 
 ## Getting custom CA Certs fingerprints
 

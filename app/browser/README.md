@@ -1,17 +1,17 @@
-# Browser
+# Browser Module
 
-The files in here handle the code that talks with the browser page.
+Handles browser-side code injection and communication with the Teams web interface.
 
-The [index.js](index.js) is the entry point.
+## Structure
 
-The notifications folder contains the
-[activityManager.js](notifications/activityManager.js) listens for changes in
-the chatListService and bellNotificationsService to update the unread count.
+- **[index.js](index.js)**: Entry point for browser integration
+- **[notifications/](notifications/)**: Activity monitoring and unread count management
+- **[tools/](tools/)**: Client-side scripts injected into Teams interface
+- **[preload.js](preload.js)**: Preload script for secure IPC communication
 
-The tools folder contains a lot of files that should be self descriptive.
+## Key Features
 
-The desktopShare folder contains the logic to add basic destop sharing
-capabilities to the app.
-
-It also generates a new icon with the notifications count. This can be use later
-by the tray or app to modify the app icon.
+- Notification count tracking and tray icon updates
+- Custom CSS injection
+- Browser API patching for enhanced functionality
+- Activity monitoring for status updates

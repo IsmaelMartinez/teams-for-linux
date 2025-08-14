@@ -1,8 +1,9 @@
-# Custom backgrounds
+# Custom Backgrounds
 
-We have added a feature to load custom background images during video calls. For
-a complete example of this feature, please see the
-[example README](../app/customBackground/example/README.md).
+Load custom background images during video calls from your own web server.
+
+> [!TIP]
+> See the [example README](../app/customBackground/example/README.md) for a complete implementation example.
 
 ## Important Considerations
 

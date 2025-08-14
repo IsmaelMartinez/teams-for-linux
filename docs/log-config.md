@@ -1,9 +1,6 @@
-# LogConfig
+# Logging Configuration
 
-Starting in version 1.9.0, the application allows you to control logging
-behavior. You can choose to log messages to the console (default), use
-[electron-log](https://www.npmjs.com/package/electron-log) as your log manager,
-or disable logging entirely.
+Control logging behavior with console logging, [electron-log](https://www.npmjs.com/package/electron-log) integration, or disable logging entirely (since v1.9.0).
 
 This behavior is controlled by the `logConfig` option, which accepts the
 following values:

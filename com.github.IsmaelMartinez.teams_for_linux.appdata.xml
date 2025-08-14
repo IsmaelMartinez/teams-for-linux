@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.3.0" date="2025-08-13">
+			<description>
+				<ul>
+					<li>New: Improved screen sharing with enhanced contextIsolation and sandbox support</li>
+					<li>Improvement: Comprehensive documentation restructuring and simplification</li>
+					<li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.2.1" date="2025-08-12">
 			<description>
 				<ul>

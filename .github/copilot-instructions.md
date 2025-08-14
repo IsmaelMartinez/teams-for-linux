@@ -27,7 +27,7 @@ When contributing, please align your changes with these goals.
 
 ### Key Documentation
 
-- **Architecture Diagrams**: See `docs/architecture/` for visual overviews of the system.
+- **Architecture Diagrams**: See `docs/README.md` for visual overviews of the system.
 - **Configuration Details**: See `docs/configuration.md`.
 - **IPC API**: See `docs/ipc-api.md` for a list of all IPC channels.
 - **Module-specific READMEs**: Each subdirectory in `app/` should have a `README.md` explaining its purpose and interactions.

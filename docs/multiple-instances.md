@@ -1,8 +1,6 @@
-# Running Multiple Instances (Profiles) of Teams for Linux
+# Multiple Instances (Profiles)
 
-You can run multiple isolated instances of the app — useful for switching
-between personal and work Teams accounts. Each profile can have its own icon,
-session, and window behavior.
+Run separate isolated instances of Teams for Linux — perfect for work and personal accounts. Each profile maintains its own icon, session data, and window behavior.
 
 ## Example
 
