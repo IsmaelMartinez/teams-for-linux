@@ -302,7 +302,7 @@ function injectScreenSharingLogic() {
           console.error('sendScreenSharingStarted not available');
         }
         
-        // Start monitoring for stop sharing UI changes
+        // Start UI monitoring for stop sharing buttons
         startUIMonitoring();
         
         // Track stream and tracks for reference, but don't auto-close popup based on their state
@@ -318,7 +318,7 @@ function injectScreenSharingLogic() {
         });
       }
       
-      // Function to handle stream ending (currently only used for manual UI detection)
+      // Function to handle stream ending - used by UI button detection
       function handleStreamEnd(reason) {
         console.debug('Stream ending detected, reason:', reason);
         
@@ -339,9 +339,6 @@ function injectScreenSharingLogic() {
       // Monitor Teams UI for stop sharing actions
       function startUIMonitoring() {
         console.debug('Starting UI monitoring for screen sharing controls');
-        
-        // Monitor Teams internal state changes
-        setupTeamsStateMonitoring();
         
         // Look for common screen sharing control selectors
         const stopSharingSelectors = [
@@ -476,119 +473,11 @@ function injectScreenSharingLogic() {
           console.debug('🔍 [DEBUG] DOM loaded, starting monitoring');
           monitorScreenSharing();
           addManualTestTrigger();
-          setupPopupWindowMonitoring();
         });
       } else {
         console.debug('🔍 [DEBUG] DOM already loaded, starting monitoring immediately');
         monitorScreenSharing();
         addManualTestTrigger();
-        setupPopupWindowMonitoring();
-      }
-      
-      // Setup monitoring for Teams internal state changes
-      function setupTeamsStateMonitoring() {
-        console.debug('🔍 [DEBUG] 🎯 Setting up Teams internal state monitoring');
-        
-        // Monitor for window/page changes that indicate screen sharing has ended
-        let originalPushState = history.pushState;
-        let originalReplaceState = history.replaceState;
-        
-        history.pushState = function() {
-          console.debug('🔍 [DEBUG] History pushState detected');
-          checkForScreenSharingEnd();
-          return originalPushState.apply(history, arguments);
-        };
-        
-        history.replaceState = function() {
-          console.debug('🔍 [DEBUG] History replaceState detected');
-          checkForScreenSharingEnd();
-          return originalReplaceState.apply(history, arguments);
-        };
-        
-        // Monitor for URL changes
-        window.addEventListener('popstate', () => {
-          console.debug('🔍 [DEBUG] Popstate event detected');
-          checkForScreenSharingEnd();
-        });
-        
-        // Monitor for Teams-specific events
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'hidden') {
-            console.debug('🔍 [DEBUG] Page became hidden - checking for screen sharing end');
-            setTimeout(checkForScreenSharingEnd, 1000);
-          }
-        });
-        
-        // Monitor window unload/beforeunload
-        window.addEventListener('beforeunload', () => {
-          console.debug('🔍 [DEBUG] Window beforeunload - screen sharing likely ended');
-          if (isScreenSharing) {
-            handleStreamEnd('window-beforeunload');
-          }
-        });
-        
-        // Check for screen sharing indicators in DOM
-        function checkForScreenSharingEnd() {
-          if (!isScreenSharing) return;
-          
-          // Look for Teams indicators that screen sharing is active
-          const screenSharingIndicators = [
-            '[data-tid*="screen-share"].active',
-            '.sharing-indicator',
-            '[aria-label*="sharing screen"]',
-            '[title*="sharing screen"]'
-          ];
-          
-          let hasIndicator = false;
-          screenSharingIndicators.forEach(selector => {
-            if (document.querySelector(selector)) {
-              hasIndicator = true;
-            }
-          });
-          
-          // If we were sharing but no indicators are found, sharing might have ended
-          if (!hasIndicator) {
-            console.debug('🔍 [DEBUG] No screen sharing indicators found - checking if sharing ended');
-            setTimeout(() => {
-              // Double-check after a delay
-              let stillHasIndicator = false;
-              screenSharingIndicators.forEach(selector => {
-                if (document.querySelector(selector)) {
-                  stillHasIndicator = true;
-                }
-              });
-              if (!stillHasIndicator && isScreenSharing) {
-                console.debug('🔍 [DEBUG] 🔴 Screen sharing indicators disappeared - ending sharing');
-                handleStreamEnd('ui-indicators-disappeared');
-              }
-            }, 2000);
-          }
-        }
-        
-        // DISABLED: Periodic stream checking was causing premature popup closure
-        // Periodic check for screen sharing state (disabled)
-        console.debug('🔍 [DEBUG] ⚠️ Periodic stream checking disabled - popup will stay open until manually closed');
-        
-        // The popup window should only be closed when:
-        // 1. User manually closes the popup window
-        // 2. User explicitly stops screen sharing through Teams UI
-        // 3. Teams session/call ends
-        
-        const stateCheckInterval = null; // Disabled
-      }
-      
-      // Setup monitoring for popup window state
-      function setupPopupWindowMonitoring() {
-        console.debug('🔍 [DEBUG] 🎯 Setting up popup window monitoring');
-        
-        const electronAPI = window.electronAPI;
-        if (!electronAPI) {
-          console.error('🔍 [DEBUG] ❌ electronAPI not available for popup monitoring');
-          return;
-        }
-        
-        // UI-based popup monitoring disabled to prevent conflicts
-        // Popup window will only be closed when manually closed or stream explicitly stopped
       }
       
     })();

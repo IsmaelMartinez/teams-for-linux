@@ -148,13 +148,7 @@ if (!gotTheLock) {
       currentScreenShareSourceId = sourceId;
     }
     
-    if (config.screenSharingThumbnail.enabled) {
-      try {
-        createCallPopOutWindow(config);
-      } catch (error) {
-        console.error('Error creating call popout window:', error);
-      }
-    }
+    // Don't create popup window here - it's already created by the IPC handler
   });
 
   ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
