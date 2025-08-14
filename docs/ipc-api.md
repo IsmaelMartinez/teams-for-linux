@@ -120,6 +120,17 @@ const sources = await ipcRenderer.invoke('desktop-capturer-get-sources', {
 **Parameters**: Event data (handled internally)  
 **Returns**: None (replies with selected source via `event.reply`)
 
+#### `screen-sharing-started`
+**Type**: `ipcMain.on`  
+**Purpose**: Handles screen sharing start events and creates popup window  
+**Parameters**: 
+- `sourceId`: `string` - Selected screen source ID from desktopCapturer
+**Returns**: None (creates popup window and sets sharing state)  
+**Example Usage**:
+```javascript
+ipcRenderer.send('screen-sharing-started', 'screen:1:0');
+```
+
 #### `screen-sharing-stopped`
 **Type**: `ipcMain.on`  
 **Purpose**: Handles screen sharing stop events and cleanup  
@@ -129,6 +140,20 @@ const sources = await ipcRenderer.invoke('desktop-capturer-get-sources', {
 ```javascript
 ipcRenderer.send('screen-sharing-stopped');
 ```
+
+#### `popup-window-opened`
+**Type**: `ipcMain.on`  
+**Purpose**: Emitted when screen sharing popup window is created  
+**Parameters**: None  
+**Returns**: None (notification event)  
+**Usage**: Automatically sent by popup window creation process
+
+#### `popup-window-closed`
+**Type**: `ipcMain.on`  
+**Purpose**: Emitted when screen sharing popup window is closed  
+**Parameters**: None  
+**Returns**: None (triggers screen sharing cleanup)  
+**Usage**: Automatically sent when popup window closes
 
 #### `get-screen-sharing-status`
 **Type**: `ipcMain.handle`  

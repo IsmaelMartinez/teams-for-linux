@@ -10,6 +10,7 @@ This directory contains documentation for Teams for Linux, organized for both us
 - **[Multiple Instances](multiple-instances.md)** - Running separate profiles (work/personal)
 
 ### Features
+- **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
 - **[Custom Backgrounds](custom-backgrounds.md)** - Setting up custom video call backgrounds
 - **[Certificate Management](certificate.md)** - Custom CA certificate handling
 - **[Logging Configuration](log-config.md)** - Customizing application logging
@@ -30,6 +31,7 @@ graph TD
         A --> F(Cache Management)
         A --> G(Menu Management)
         A --> H(Protocol Handling)
+        A --> T(Screen Sharing Core)
     end
 
     subgraph Configuration Sources
@@ -43,12 +45,21 @@ graph TD
         I --> K(Browser Tools)
         I --> L(Notifications)
         I --> M(Custom CSS/Backgrounds)
+        K --> U(Screen Share Detection)
+    end
+    
+    subgraph Screen Sharing System
+        T --> V[Stream Selector<br>app/streamSelector/]
+        T --> W[Popup Window Manager<br>app/inAppUI/]
+        V --> X[Desktop Capturer<br>Source Selection]
+        W --> Y[Thumbnail Preview<br>Window]
     end
 
     subgraph External Systems
         N(Operating System)
         O(Microsoft Teams Services)
         P(External Browser)
+        Z(Desktop Capture APIs<br>X11/Wayland/DWM)
     end
 
     Q --> B
@@ -60,6 +71,7 @@ graph TD
 
     D -- Controls --> I
     I -- Renders --> D
+    D -- Manages --> Y
 
     E -- Interacts with --> N
     H -- Opens links in --> P
@@ -69,6 +81,15 @@ graph TD
 
     F -- Manages --> N
     M -- Modifies --> I
+    
+    U -- Triggers --> T
+    T -- Uses --> Z
+    X -- Queries --> Z
+    
+    style T fill:#e3f2fd
+    style V fill:#e8f5e8
+    style W fill:#fff3e0
+    style U fill:#f3e5f5
 ```
 
 ## Quick Start
