@@ -8,7 +8,7 @@ const {
 const path = require("path");
 const { spawn } = require("child_process");
 const windowStateKeeper = require("electron-window-state");
-const { StreamSelector } = require("../streamSelector");
+const { StreamSelector } = require("../screenSharing");
 const IncomingCallToast = require("../incomingCallToast");
 
 class BrowserWindowManager {
@@ -70,10 +70,8 @@ class BrowserWindowManager {
 
       webPreferences: {
         partition: this.config.partition,
-        preload: path.join(__dirname, "..", "browser", "index.js"),
+        preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
-        contextIsolation: this.config.contextIsolation,
-        sandbox: this.config.sandbox,
         spellcheck: true,
         webviewTag: true,
       },
@@ -85,10 +83,16 @@ class BrowserWindowManager {
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
-    ipcMain.handle("incoming-call-created", this.assignOnIncomingCallCreatedHandler());
-    ipcMain.handle("incoming-call-ended", this.assignOnIncomingCallEndedHandler());
-    ipcMain.handle('call-connected', this.assignOnCallConnectedHandler());
-    ipcMain.handle('call-disconnected', this.assignOnCallDisconnectedHandler());
+    ipcMain.handle(
+      "incoming-call-created",
+      this.assignOnIncomingCallCreatedHandler()
+    );
+    ipcMain.handle(
+      "incoming-call-ended",
+      this.assignOnIncomingCallEndedHandler()
+    );
+    ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
+    ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
   }
 
   assignSelectSourceHandler() {
@@ -149,13 +153,21 @@ class BrowserWindowManager {
     return async (e, data) => {
       if (this.config.incomingCallCommand) {
         this.handleOnIncomingCallEnded();
-        const commandArgs = [...this.config.incomingCallCommandArgs, data.caller, data.text, data.image];
-        this.incomingCallCommandProcess = spawn(this.config.incomingCallCommand, commandArgs);
+        const commandArgs = [
+          ...this.config.incomingCallCommandArgs,
+          data.caller,
+          data.text,
+          data.image,
+        ];
+        this.incomingCallCommandProcess = spawn(
+          this.config.incomingCallCommand,
+          commandArgs
+        );
       }
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);
       }
-    }
+    };
   }
 
   assignOnIncomingCallEndedHandler() {
@@ -166,7 +178,7 @@ class BrowserWindowManager {
 
   handleOnIncomingCallEnded() {
     if (this.incomingCallCommandProcess) {
-      this.incomingCallCommandProcess.kill('SIGTERM');
+      this.incomingCallCommandProcess.kill("SIGTERM");
       this.incomingCallCommandProcess = null;
     }
     if (this.config.enableIncomingCallToast) {
@@ -177,17 +189,20 @@ class BrowserWindowManager {
   assignOnCallConnectedHandler() {
     return async (e) => {
       this.isOnCall = true;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.disableScreenLockElectron() : this.disableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.disableScreenLockElectron()
+        : this.disableScreenLockWakeLockSentinel();
     };
   }
 
   assignOnCallDisconnectedHandler() {
     return async (e) => {
       this.isOnCall = false;
-      return this.config.screenLockInhibitionMethod === 'Electron' ? this.enableScreenLockElectron() : this.enableScreenLockWakeLockSentinel();
+      return this.config.screenLockInhibitionMethod === "Electron"
+        ? this.enableScreenLockElectron()
+        : this.enableScreenLockWakeLockSentinel();
     };
   }
-
 }
 
 module.exports = BrowserWindowManager;

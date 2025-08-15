@@ -118,7 +118,82 @@ const sources = await ipcRenderer.invoke('desktop-capturer-get-sources', {
 **Type**: `ipcMain.on`  
 **Purpose**: Handles screen sharing source selection (triggers stream selector UI)  
 **Parameters**: Event data (handled internally)  
-**Returns**: None (replies with selected source via `event.reply`)  
+**Returns**: None (replies with selected source via `event.reply`)
+
+#### `screen-sharing-started`
+**Type**: `ipcMain.on`  
+**Purpose**: Handles screen sharing start events and creates preview window  
+**Parameters**: 
+- `sourceId`: `string` - Selected screen source ID from desktopCapturer
+**Returns**: None (creates preview window and sets sharing state)  
+**Example Usage**:
+```javascript
+ipcRenderer.send('screen-sharing-started', 'screen:1:0');
+```
+
+#### `screen-sharing-stopped`
+**Type**: `ipcMain.on`  
+**Purpose**: Handles screen sharing stop events and cleanup  
+**Parameters**: None  
+**Returns**: None (closes preview window and resets state)  
+**Example Usage**:
+```javascript
+ipcRenderer.send('screen-sharing-stopped');
+```
+
+#### `resize-preview-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Resizes the screen sharing preview window with size constraints  
+**Parameters**: 
+- `data`: `Object` with properties:
+  - `width`: `number` - Desired window width
+  - `height`: `number` - Desired window height
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('resize-preview-window', { width: 400, height: 300 });
+```
+
+#### `get-screen-sharing-status`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen sharing status  
+**Parameters**: None  
+**Returns**: `boolean` - Whether screen sharing is currently active  
+**Example Usage**:
+```javascript
+const isSharing = await ipcRenderer.invoke('get-screen-sharing-status');
+```
+
+#### `get-screen-share-stream`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen share source ID  
+**Parameters**: None  
+**Returns**: `string|null` - Current screen share source ID or null if not sharing  
+**Example Usage**:
+```javascript
+const sourceId = await ipcRenderer.invoke('get-screen-share-stream');
+```
+
+#### `get-screen-share-screen`
+**Type**: `ipcMain.handle`  
+**Purpose**: Retrieves current screen share screen settings  
+**Parameters**: None  
+**Returns**: `Object|null` - Screen share configuration object or null if not sharing  
+**Example Usage**:
+```javascript
+const screenConfig = await ipcRenderer.invoke('get-screen-share-screen');
+```
+
+#### `stop-screen-sharing-from-thumbnail`
+**Type**: `ipcMain.on`  
+**Purpose**: Stops screen sharing when requested from the preview thumbnail window  
+**Parameters**: None  
+**Returns**: None (triggers screen sharing cleanup)  
+**Usage**: Called when user clicks stop sharing in the preview window  
+**Example Usage**:
+```javascript
+ipcRenderer.send('stop-screen-sharing-from-thumbnail');
+```
 
 ### Notifications
 
@@ -184,6 +259,29 @@ await ipcRenderer.invoke('set-badge-count', 5);
 **Returns**: None (closes login window on success)  
 
 ### Call Management (`app/mainAppWindow/browserWindowManager.js`)
+
+#### `close-call-pop-out-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Closes the call popout window  
+**Parameters**: None  
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('close-call-pop-out-window');
+```
+
+#### `resize-call-pop-out-window`
+**Type**: `ipcMain.on`  
+**Purpose**: Resizes the call popout window with size constraints  
+**Parameters**: 
+- `data`: `Object` with properties:
+  - `width`: `number` - Desired window width
+  - `height`: `number` - Desired window height
+**Returns**: None  
+**Example Usage**:
+```javascript
+ipcRenderer.send('resize-call-pop-out-window', { width: 400, height: 300 });
+```
 
 #### `incoming-call-created`
 **Type**: `ipcMain.handle`  
@@ -321,7 +419,7 @@ ipcMain.once('channel-name', (event, ...args) => {
 - All IPC channels are available only within the application context
 - Sensitive data should be validated in main process handlers
 - Avoid exposing raw file system access through IPC
-- Use `contextIsolation: true` in renderer process security settings
+- Do not disable `contextIsolation` in renderer process
 
 ## Debugging IPC Communication
 

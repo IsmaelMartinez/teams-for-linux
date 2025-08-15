@@ -7,20 +7,24 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
-  ipcMain,
 } = require("electron");
-const { StreamSelector } = require("../streamSelector");
+const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
-const popOutCall = require("../browser/tools/popOutCall");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("os");
+
+// Default configuration for the screen sharing thumbnail preview (avoid magic values)
+const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
+  enabled: true,
+  alwaysOnTop: true,
+};
 
 let iconChooser;
 let intune;
@@ -36,6 +40,58 @@ let customBackgroundService = null;
 let streamSelector;
 
 const isMac = os.platform() === "darwin";
+
+function createScreenSharePreviewWindow() {
+  const path = require("path");
+
+  // Get configuration - use the module-level config variable
+  let thumbnailConfig =
+    config?.screenSharingThumbnail?.default ??
+    config?.screenSharingThumbnail ??
+    DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
+
+  if (!thumbnailConfig.enabled) {
+    return;
+  }
+
+  // Don't create duplicate windows
+  if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+    global.previewWindow.focus();
+    return;
+  }
+
+  global.previewWindow = new BrowserWindow({
+    width: 320,
+    height: 180,
+    minWidth: 200,
+    minHeight: 120,
+    show: false,
+    resizable: true,
+    alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
+    webPreferences: {
+      preload: path.join(
+        __dirname,
+        "..",
+        "screenSharing",
+        "previewWindowPreload.js"
+      ),
+      partition: "persist:teams-for-linux-session",
+    },
+  });
+
+  global.previewWindow.loadFile(
+    path.join(__dirname, "..", "screenSharing", "previewWindow.html")
+  );
+
+  global.previewWindow.once("ready-to-show", () => {
+    global.previewWindow.show();
+  });
+
+  global.previewWindow.on("closed", () => {
+    global.previewWindow = null;
+    global.selectedScreenShareSource = null;
+  });
+}
 
 exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   appConfig = configGroup;
@@ -75,31 +131,41 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
-  // Handle screen sharing requests from renderer process
   window.webContents.session.setDisplayMediaRequestHandler(
-    (request, callback) => {
-      // Check if the request is from the main Teams webContents
-      let allowedHost = "teams.microsoft.com";
-      let reqHost;
-      try {
-        reqHost = new URL(request.url).host;
-      } catch (e) {
-        console.warn(`Failed to parse request URL: ${request.url}`, e);
-        reqHost = "";
-      }
-      if (reqHost === allowedHost) {
-        streamSelector.show((source) => {
-          if (source) {
-            callback({ video: source });
-          } else {
-            callback({ video: false });
-          }
-        });
-      } else {
-        callback({ video: false }); // Deny other requests
-      }
+    (_request, callback) => {
+      streamSelector.show((source) => {
+        if (source) {
+          handleScreenSourceSelection(source, callback);
+        } else {
+          callback({ video: null, audio: false });
+        }
+      });
     }
   );
+
+  function handleScreenSourceSelection(source, callback) {
+    desktopCapturer
+      .getSources({ types: ["window", "screen"] })
+      .then((sources) => {
+        const selectedSource = findSelectedSource(sources, source);
+        if (selectedSource) {
+          setupScreenSharing(selectedSource);
+        }
+        callback({ video: selectedSource });
+      });
+  }
+
+  function findSelectedSource(sources, source) {
+    return sources.find((s) => s.id === source.id);
+  }
+
+  function setupScreenSharing(selectedSource) {
+    // Store the source ID globally for access by screen sharing manager
+    global.selectedScreenShareSource = selectedSource;
+
+    // Create preview window for screen sharing
+    createScreenSharePreviewWindow();
+  }
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
@@ -206,8 +272,48 @@ function onDidFinishLoad() {
 			tryAgainLink = document.getElementById('try-again-link');
 			tryAgainLink && tryAgainLink.click()
 		`);
+
+  // Inject browser functionality
+  injectScreenSharingLogic();
+  injectNotificationLogic();
+
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
+}
+
+function injectScreenSharingLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "screenSharing",
+    "injectedScreenSharing.js"
+  );
+  try {
+    const script = fs.readFileSync(scriptPath, "utf8");
+    window.webContents.executeJavaScript(script);
+  } catch (err) {
+    console.error("Failed to load injected screen sharing script:", err);
+  }
+}
+
+function injectNotificationLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "browser",
+    "notifications",
+    "injectedNotification.js"
+  );
+  try {
+    const script = fs.readFileSync(scriptPath, "utf8");
+    window.webContents.executeJavaScript(script);
+  } catch (err) {
+    console.error("Failed to load injected notification script:", err);
+  }
 }
 
 function initSystemThemeFollow(config) {
@@ -241,7 +347,6 @@ function onDidFrameFinishLoad(
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
   customCSS.onDidFrameFinishLoad(wf, config);
-  popOutCall.injectPopOutScript(wf);
 }
 
 function restoreWindow() {

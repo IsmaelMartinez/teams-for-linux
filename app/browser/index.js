@@ -60,7 +60,6 @@
 function initializeModules(config, ipcRenderer) {
   require("./tools/zoom").init(config);
   require("./tools/shortcuts").init(config);
-  require("./tools/chromeApi")(config);
   require("./tools/mutationTitle").init(config);
   if (config.trayIconEnabled) {
     console.debug("tray icon is enabled");

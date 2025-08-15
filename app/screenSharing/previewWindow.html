@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teams for Linux - Screen Share</title>
+    <title>Teams for Linux - Screen Share Preview</title>
     <style>
         body {
             font-family: sans-serif;
@@ -17,40 +17,64 @@
             box-sizing: border-box;
         }
         
-        
         #screen-share-video {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background-color: #000;
         }
+
+        .status-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            text-align: center;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
+    <div class="status-overlay">Screen Share Preview</div>
     <video id="screen-share-video" autoplay muted></video>
 
     <script>
         window.addEventListener('DOMContentLoaded', async () => {
             const videoElement = document.getElementById('screen-share-video');
+            const statusOverlay = document.querySelector('.status-overlay');
 
             const updateStatusAndStream = async () => {
-                const isActive = await window.electronAPI.getScreenSharingStatus();
-                document.title = isActive ? 'Teams for Linux - Screen is being shared' : 'Teams for Linux - Nothing is being shared';
+                try {
+                    const isActive = await window.electronAPI.getScreenSharingStatus();
+                    
+                    if (isActive) {
+                        statusOverlay.textContent = 'Screen Share Active';
+                        document.title = 'Teams for Linux - Screen is being shared';
 
-                if (isActive) {
-                    try {
                         const sourceId = await window.electronAPI.getScreenShareStream();
-                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId);
+                        const screenSize = await window.electronAPI.getScreenShareScreen();
+                        
+                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
+                        
                         if (sourceId) {
                             const stream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,
                                 video: {
                                     mandatory: {
                                         chromeMediaSource: 'desktop',
-                                        chromeMediaSourceId: sourceId
+                                        chromeMediaSourceId: sourceId,
+                                        minWidth: screenSize?.width || 1920,
+                                        maxWidth: screenSize?.width || 1920,
+                                        minHeight: screenSize?.height || 1080,
+                                        maxHeight: screenSize?.height || 1080
                                     }
                                 }
                             });
+                            
                             videoElement.srcObject = stream;
                             videoElement.style.display = 'block';
                             
@@ -82,40 +106,48 @@
                                     windowWidth = Math.max(windowWidth, 200);
                                     windowHeight = Math.max(windowHeight, 120);
                                     
-                                    // Resize window to thumbnail size
-                                    window.electronAPI.resizeWindow({
-                                        width: Math.round(windowWidth),
-                                        height: Math.round(windowHeight)
-                                    });
+                                    // Add space for status overlay
+                                    windowHeight += 20;
                                     
-                                    console.debug('Resizing thumbnail to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
+                                    // Resize window to thumbnail size
+                                    if (window.electronAPI.resizeWindow) {
+                                        window.electronAPI.resizeWindow({
+                                            width: Math.round(windowWidth),
+                                            height: Math.round(windowHeight)
+                                        });
+                                    }
+                                    
+                                    console.debug('Resizing preview to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
                                 }
                             }, { once: true });
                         } else {
                             videoElement.srcObject = null;
                             videoElement.style.display = 'none';
+                            statusOverlay.textContent = 'No Screen Share Source';
                         }
-                    } catch (error) {
-                        console.error('Error getting screen share stream:', error);
+                    } else {
+                        statusOverlay.textContent = 'Screen Share Inactive';
+                        document.title = 'Teams for Linux - Nothing is being shared';
                         videoElement.srcObject = null;
                         videoElement.style.display = 'none';
                     }
-                } else {
+                } catch (error) {
+                    console.error('Error updating screen share preview:', error);
+                    statusOverlay.textContent = 'Error: ' + error.message;
                     videoElement.srcObject = null;
                     videoElement.style.display = 'none';
                 }
             };
+
             // Initial status and stream update
             updateStatusAndStream();
             
-            // Listen for screen sharing status changes via IPC and update accordingly
-            if (window?.electronAPI && typeof window.electronAPI.onScreenSharingStatusChanged !== 'function') {
-                // Provide a no-op fallback if not defined
-                window.electronAPI.onScreenSharingStatusChanged = function () {};
+            // Listen for screen sharing status changes
+            if (window?.electronAPI?.onScreenSharingStatusChanged) {
+                window.electronAPI.onScreenSharingStatusChanged(() => {
+                    updateStatusAndStream();
+                });
             }
-            window.electronAPI?.onScreenSharingStatusChanged(() => {
-                updateStatusAndStream();
-            });
         });
     </script>
 </body>

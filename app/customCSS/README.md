@@ -1,21 +1,18 @@
-# Custom CSS
+# Custom CSS Module
 
-This folder contains all the handlers and helpers to be able to provide custom
-css to teams-for-linux
+Provides custom styling capabilities for the Teams interface.
 
-This is applied using config options.
+## Configuration Options
 
-You can currently either use customCSSLocation or customCSSName.
+- **`customCSSLocation`**: Path to custom CSS file
+- **`customCSSName`**: Built-in theme name
 
-The customCSSLocation will load the css from that location. This should be a
-full path.
+## Available Themes
 
-The current options for customCSSName are "compactDark", "compactLight",
-"tweaks", "condensedDark" and "condensedLight". Those have been pick up from
-[https://userstyles.org](https://userstyles.org)
+- `compactDark`, `compactLight`: Compact interface variants
+- `condensedDark`, `condensedLight`: Condensed layout variants
+- `tweaks`: General UI improvements
 
-Check [#77](https://github.com/IsmaelMartinez/teams-for-linux/issues/77) for
-more information about it and how to integrate further styles.
+Themes sourced from [userstyles.org](https://userstyles.org). See [issue #77](https://github.com/IsmaelMartinez/teams-for-linux/issues/77) for adding new themes.
 
-Further information about config options can be found in the
-[Configuration Documentation](../../docs/configuration.md).
+Configuration details: [`../../docs/configuration.md`](../../docs/configuration.md)

@@ -99,7 +99,7 @@ function playPreview(properties) {
     closePreviews();
     window.api.selectedSource({
       id: properties.source.id,
-      screen: properties.screens[properties.sscontainer.value],
+      screen: properties.screens[properties.sscontainer.value]
     });
   };
   properties.videoElement.onloadedmetadata = () =>

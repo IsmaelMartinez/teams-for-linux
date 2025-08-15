@@ -1,5 +1,6 @@
 const {
   app,
+  BrowserWindow,
   dialog,
   ipcMain,
   desktopCapturer,
@@ -42,8 +43,7 @@ const notificationSounds = [
 
 let userStatus = -1;
 let idleTimeUserStatus = -1;
-let screenSharingActive = false;
-let currentScreenShareSourceId = null;
+let picker = null;
 
 let player;
 try {
@@ -59,7 +59,6 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
-const { createCallPopOutWindow, createInAppUIWindow } = require("./inAppUI");
 
 if (isMac) {
   requestMediaAccess();
@@ -80,7 +79,9 @@ if (!gotTheLock) {
   app.on("ready", handleAppReady);
   app.on("quit", () => console.debug("quit"));
   app.on("render-process-gone", onRenderProcessGone);
-  app.on("will-quit", () => console.debug("will-quit"));
+  app.on("will-quit", () => {
+    console.debug("will-quit");
+  });
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
@@ -94,6 +95,17 @@ if (!gotTheLock) {
   ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
     desktopCapturer.getSources(opts)
   );
+  ipcMain.handle("choose-desktop-media", async (_event, sourceTypes) => {
+    const sources = await desktopCapturer.getSources({ types: sourceTypes });
+    const chosen = await showScreenPicker(sources);
+    return chosen ? chosen.id : null;
+  });
+
+  ipcMain.on("cancel-desktop-media", () => {
+    if (picker) {
+      picker.close();
+    }
+  });
   ipcMain.handle("play-notification-sound", playNotificationSound);
   ipcMain.handle("show-notification", showNotification);
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
@@ -101,39 +113,65 @@ if (!gotTheLock) {
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
   });
-  ipcMain.handle("create-call-pop-out-window", async () => {
-    createCallPopOutWindow(config);
-  });
-  ipcMain.on("screen-sharing-started", (event, sourceId) => {
-    console.debug('Screen sharing started with sourceId:', sourceId);
-    screenSharingActive = true;
-    // Ensure only the string ID is stored, in case sourceId is the full object
-    if (typeof sourceId === 'object' && sourceId !== null && sourceId.id) {
-      currentScreenShareSourceId = sourceId.id;
-    } else {
-      currentScreenShareSourceId = sourceId;
-    }
-    if (config.screenSharingThumbnail.enabled) { // Access the enabled property
-      createCallPopOutWindow(config);
-    }
-  });
+
+  // Screen sharing IPC handlers
   ipcMain.on("screen-sharing-stopped", () => {
-    screenSharingActive = false;
-    currentScreenShareSourceId = null;
-    ipcMain.emit('close-call-pop-out-window'); // Emit the IPC message to close the pop-out window
+    global.selectedScreenShareSource = null;
+
+    // Close preview window when screen sharing stops
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.close();
+    }
   });
-  ipcMain.handle("get-screen-sharing-status", async () => {
-    console.debug('get-screen-sharing-status returning:', screenSharingActive);
-    return screenSharingActive;
+
+  // Preview window management IPC handlers
+  ipcMain.handle("get-screen-sharing-status", () => {
+    return global.selectedScreenShareSource !== null;
   });
-  ipcMain.handle("get-screen-share-stream", async () => {
-    console.debug('get-screen-share-stream returning:', currentScreenShareSourceId);
-    return currentScreenShareSourceId;
+
+  ipcMain.handle("get-screen-share-stream", () => {
+    // Return the source ID - handle both string and object formats
+    if (typeof global.selectedScreenShareSource === "string") {
+      return global.selectedScreenShareSource;
+    } else if (global.selectedScreenShareSource?.id) {
+      return global.selectedScreenShareSource.id;
+    }
+    return null;
   });
-  ipcMain.handle("start-screen-share-display", async () => {
-    // The stream will be obtained in the renderer process of the pop-out window
-    // using the sourceId. This IPC handler just confirms receipt of the sourceId.
-    return true; 
+
+  ipcMain.handle("get-screen-share-screen", () => {
+    // Return screen dimensions if available from StreamSelector, otherwise default
+    if (
+      global.selectedScreenShareSource &&
+      typeof global.selectedScreenShareSource === "object"
+    ) {
+      const { screen } = require("electron");
+      const displays = screen.getAllDisplays();
+
+      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
+        const display = displays[0] || { size: { width: 1920, height: 1080 } };
+        return { width: display.size.width, height: display.size.height };
+      }
+    }
+
+    return { width: 1920, height: 1080 };
+  });
+
+  ipcMain.on("resize-preview-window", (event, { width, height }) => {
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      const [minWidth, minHeight] = global.previewWindow.getMinimumSize();
+      const newWidth = Math.max(minWidth, Math.min(width, 480));
+      const newHeight = Math.max(minHeight, Math.min(height, 360));
+      global.previewWindow.setSize(newWidth, newHeight);
+      global.previewWindow.center();
+    }
+  });
+
+  ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
+    global.selectedScreenShareSource = null;
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.webContents.send("screen-sharing-status-changed");
+    }
   });
 }
 
@@ -368,9 +406,6 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-  if (config.enableInAppUI) {
-    createInAppUIWindow(config); // Pass the config object
-  }
 }
 
 async function handleGetSystemIdleState() {
@@ -507,5 +542,35 @@ function handleGlobalShortcutDisabledRevert() {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);
     }
+  });
+}
+
+function showScreenPicker(sources) {
+  return new Promise((resolve) => {
+    picker = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        preload: path.join(__dirname, "screenPicker", "preload.js"),
+      },
+    });
+
+    picker.loadFile(path.join(__dirname, "screenPicker", "index.html"));
+
+    picker.webContents.on("did-finish-load", () => {
+      picker.webContents.send("sources-list", sources);
+    });
+
+    ipcMain.once("source-selected", (event, source) => {
+      resolve(source);
+      if (picker) {
+        picker.close();
+      }
+    });
+
+    picker.on("closed", () => {
+      picker = null;
+      resolve(null);
+    });
   });
 }

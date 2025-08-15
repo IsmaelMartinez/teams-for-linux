@@ -1,121 +1,79 @@
-# Contributing
+# Contributing to Teams for Linux
 
-First of all, thank you for considering contributing to this project. We
-appreciate your interest and would like to provide some guidelines to help you
-get started. If you have any questions, please feel free to open a discussion
-and we will be happy to assist you.
+Thank you for considering contributing! This guide will help you get started with development.
 
-## Development
+> [!TIP]
+> New to Electron? This project is a great starting point for learning!
 
-This is a fairly small project, making it ideal for getting started with
-Electron.
+## Quick Start
 
-To contribute, fork the repository and make your changes. The starting point of
-the application is `app/index.js`.
+1. **Fork** the repository
+2. **Clone** your fork and create a feature branch
+3. **Make changes** (entry point: `app/index.js`)
+4. **Test** your changes with `npm start`
+5. **Submit** a pull request to `main` branch
 
-After making your changes, submit a pull request to the `main` branch.
+Each `app/` subfolder contains a README explaining its purpose.
 
-Each subfolder contains a `README.md` file that provides additional information
-and explains the purpose of the folder.
+## Development Setup
 
-## Pre-requisites
-
-To run this application from source, you will need npm installed.
-
-Please refer to the
-[npm installation page](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-
-## Run from source
-
-To run the application from source:
+**Prerequisites:** Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
 
 ```bash
-npm run start
+# Clone and setup
+git clone https://github.com/your-username/teams-for-linux.git
+cd teams-for-linux
+npm install
+
+# Run from source
+npm start
+
+# Lint code (required before commits)
+npm run lint
 ```
 
-## Build for Linux
+## Building
 
-We are using [electron-build](https://www.electron.build/) in combination with
-GitHub Actions to create our build files.
-
-If you want to generate the build locally, you can run the following command:
-
+### Local Linux Build
 ```bash
-npm run dist:linux
+npm run dist:linux    # Creates deb, rpm, snap, AppImage, tar.gz
+npm run pack          # Development build without packaging
 ```
 
-## Building for other systems
-
-The package is also build for other systems. Check the `package.json` file for
-the available build commands.
-
-### Using a node container and podman (or docker)
-
-If you want to use a node container to create your packages, use this command:
-(docker user should replace podman by docker)
-
+### Docker/Podman Build
 ```bash
-podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:20 /bin/bash -c "apt update && apt install -y rpm && npm ci && npm run dist:linux"
+podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:20 /bin/bash -c \
+  "apt update && apt install -y rpm && npm ci && npm run dist:linux"
 ```
 
-This will build an deb, rpm, snap, AppImage and tar.gz files in the dist folder.
-This files can be run in most popular Linux distributions.
-
-### Snap build
-
-Is possible to specify the snap build type using running this:
-
+### Snap-specific Build
 ```bash
 npm run dist:linux:snap
+cd dist && sudo snap install teams-for-linux_*.snap --dangerous
 ```
 
-This will build the snap into the `dist/` directory.
+## Release Process
 
-#### Install using locally built snap file
 
-To install the snap file using the generated file use this command.
+1. **Update version** in `package.json`:
+   - Patches: `1.0.0` → `1.0.1` 
+   - Features: `1.0.0` → `1.1.0`
+   - Major: Reserved
 
-```bash
-cd dist
-sudo snap install teams-for-linux_VERSION_amd64.snap --dangerous
-```
+2. **Update dependencies**: `npm install`
 
-#### Install using snap from store
+3. **Add release notes** in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
+   ```xml
+   <release version="2.0.17" date="2025-06-15">
+     <description>
+       <ul>
+         <li>New feature description</li>
+         <li>Bug fix description</li>
+       </ul>
+     </description>
+   </release>
+   ```
 
-```bash
-sudo snap install teams-for-linux
-```
+4. **Commit and push** your changes, then open a pull request.
 
-## Release process
-
-## Adding Release Notes
-
-To add release notes and prepare a new release, follow these steps:
-
-1. **Update the version** in `package.json` according to the versioning rules:
-  - Increment the last number for patches or minor changes (e.g., `1.0.0` → `1.0.1`)
-  - Increment the middle number for breaking changes (e.g., `1.0.0` → `1.1.0`)
-  - The first number is reserved
-
-2. **Run** `npm install` to update `package-lock.json`.
-
-3. **Update** `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
-  - Add a new `<release>` entry with the new version and date, and a summary of changes. For example:
-
-  ```xml
-  <release version="2.0.17" date="2025-06-15">
-    <description>
-     <ul>
-      <li>New feature description</li>
-      <li>Bug fix description</li>
-      <li>Performance improvement</li>
-     </ul>
-    </description>
-  </release>
-  ```
-
-5. **Commit and push** your changes, then open a pull request.
-
-The release process is mostly automated using GitHub Actions and is triggered by merging to `main`.
-
-For more details on how the release info is generated, see the [Release Info](docs/RELEASE_INFO.md) documentation.
+See [`docs/RELEASE_INFO.md`](docs/RELEASE_INFO.md) for technical details on release automation.

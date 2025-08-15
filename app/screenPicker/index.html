@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en">
+<head>
+  <title>Screen Picker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .source {
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .source:hover {
+      background-color: #eee;
+    }
+    .source img {
+      width: 200px;
+      height: 150px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <h1>Select a source</h1>
+  <div class="container" id="sources-container"></div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
