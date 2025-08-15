@@ -147,17 +147,11 @@
     function addStopSharingListeners() {
       let foundButtons = 0;
 
-      stopSharingSelectors.forEach((selector) => {
-        const elements = document.querySelectorAll(selector);
-
-        elements.forEach((element) => {
-          if (!element.hasAttribute("data-screen-share-monitored")) {
-            foundButtons++;
-            element.setAttribute("data-screen-share-monitored", "true");
-            element.addEventListener("click", handleStopSharing);
-          }
-        });
-      });
+      foundButtons = monitorScreenSharingButtons(
+        stopSharingSelectors,
+        foundButtons,
+        handleStopSharing
+      );
 
       if (foundButtons > 0) {
         console.debug(
@@ -218,6 +212,25 @@
     });
   } else {
     monitorScreenSharing();
+  }
+
+  function monitorScreenSharingButtons(
+    stopSharingSelectors,
+    foundButtons,
+    handleStopSharing
+  ) {
+    stopSharingSelectors.forEach((selector) => {
+      const elements = document.querySelectorAll(selector);
+
+      elements.forEach((element) => {
+        if (!element.hasAttribute("data-screen-share-monitored")) {
+          foundButtons++;
+          element.setAttribute("data-screen-share-monitored", "true");
+          element.addEventListener("click", handleStopSharing);
+        }
+      });
+    });
+    return foundButtons;
   }
 
   function terminateActiveStreams() {
