@@ -1,151 +1,206 @@
-# Screen Sharing Module
+# Stream Selector Module
 
-This module provides comprehensive screen sharing functionality for Teams for Linux, including source selection, preview window management, and user interface integration.
+The Stream Selector module provides the native screen/window selection interface for screen sharing in Teams for Linux. It creates a modal dialog that allows users to choose which screen or application window to share during Teams meetings.
 
 ## Overview
 
-The Screen Sharing module coordinates between Teams' web-based screen sharing requests and native desktop capture capabilities. It manages the complete screen sharing lifecycle from source selection through cleanup.
+This module bridges the gap between Teams' web-based screen sharing requests and the native desktop capture capabilities provided by Electron's `desktopCapturer` API. It ensures a smooth user experience while maintaining security through proper permission handling.
 
-## Components
-
-### Core Files
-
-- **[index.js](index.js)** - Main `ScreenSharingManager` class handling all screen sharing logic
-- **[previewWindow.html](previewWindow.html)** - HTML interface for the screen share preview window
-- **[previewWindowPreload.js](previewWindowPreload.js)** - Context bridge for preview window IPC communication
-
-### ScreenSharingManager Class
-
-Central coordinator for all screen sharing functionality:
-
-```javascript
-const ScreenSharingManager = require('./screenSharing');
-
-const screenSharing = new ScreenSharingManager(config);
-
-// Check status
-const status = screenSharing.getStatus();
-// { isActive: false, sourceId: null, screenConfig: null }
-
-// Update configuration
-screenSharing.updateConfig(newConfig);
-
-// Cleanup on shutdown
-screenSharing.cleanup();
-```
-
-## Features
-
-### Preview Window Management
-
-- **Smart Sizing**: Automatically scales preview to thumbnail size while maintaining aspect ratio
-- **Always On Top**: Configurable via `screenSharingThumbnail.alwaysOnTop` setting
-- **Live Preview**: Shows real-time preview of shared screen/window
-- **Status Overlay**: Visual indicator of sharing state
-- **Resizable**: User can adjust window size within constraints
-
-### Configuration Options
-
-```json
-{
-  "screenSharingThumbnail": {
-    "enabled": true,
-    "alwaysOnTop": true
-  }
-}
-```
-
-- `enabled`: Whether to show preview window (default: `true`)
-- `alwaysOnTop`: Keep preview window above other windows (default: `true`)
-
-### IPC Event Handling
-
-The module manages these IPC channels:
-
-#### Incoming Events
-- `screen-sharing-started`: Initiates screen sharing with source ID
-- `screen-sharing-stopped`: Stops sharing and cleanup
-- `stop-screen-sharing-from-thumbnail`: Stop request from preview window
-- `create-call-pop-out-window`: Creates preview window
-- `resize-preview-window`: Resizes preview window
-- `close-preview-window`: Closes preview window
-
-#### Outgoing Events  
-- `preview-window-opened`: Emitted when preview window opens
-- `preview-window-closed`: Emitted when preview window closes
-
-#### Request Handlers
-- `get-screen-sharing-status`: Returns current sharing status
-- `get-screen-share-stream`: Returns current source ID
-- `get-screen-share-screen`: Returns screen configuration
-
-## Integration
-
-### With Main Process
-
-```javascript
-const ScreenSharingManager = require('./screenSharing');
-
-const screenSharing = new ScreenSharingManager(config);
-
-// Screen sharing is now fully managed by the module
-```
-
-### With Stream Selector
-
-The screen sharing module works with the existing Stream Selector for source selection:
-
-1. User initiates screen sharing in Teams
-2. Stream Selector shows available sources  
-3. User selects source
-4. `screen-sharing-started` event triggers preview window creation
-5. Preview window displays live stream of selected source
-
-### With Browser Scripts
-
-Browser injection scripts send IPC events that the module handles:
-
-```javascript
-// From injection scripts
-window.electronAPI.sendScreenSharingStarted(sourceId);
-window.electronAPI.sendScreenSharingStopped();
-```
-
-## Security
-
-- **Context Isolation**: All renderer processes use context isolation
-- **No Node Integration**: Renderer processes run without Node.js access
-- **Sandboxed**: Compatible with Electron sandbox mode
-- **Preload Scripts**: Secure IPC communication via `contextBridge`
-
-## Window Lifecycle
+## Architecture
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Inactive: Module initialized
-    Inactive --> Creating: screen-sharing-started
-    Creating --> Active: Preview window ready
-    Active --> Closing: screen-sharing-stopped
-    Active --> Closing: User closes window
-    Closing --> Inactive: Cleanup complete
+flowchart TD
+    subgraph "Main Process"
+        A[setDisplayMediaRequestHandler] --> B[StreamSelector.show()]
+        B --> C[BrowserWindow Creation]
+        C --> D[Load Selection UI]
+        D --> E[desktopCapturer.getSources()]
+        E --> F[Display Sources to User]
+    end
     
-    Creating --> Error: Window creation failed
-    Error --> Inactive: Fallback
+    subgraph "Stream Selector Window"
+        F --> G[User Interface]
+        G --> H[Source Thumbnails]
+        H --> I[User Selection]
+        I --> J[IPC: source-selected]
+    end
+    
+    subgraph "Callback Flow"
+        J --> K[Callback Resolution]
+        K --> L[Window Cleanup]
+        L --> M[Return to Teams]
+    end
+    
+    style G fill:#e3f2fd
+    style I fill:#c8e6c9
+    style L fill:#ffcdd2
 ```
+
+## Key Components
+
+### Files Structure
+
+- **[index.js](index.js)** - Main StreamSelector class and window management
+- **[browser.js](browser.js)** - Renderer process logic for UI interactions  
+- **[preload.js](preload.js)** - Context bridge for secure IPC communication
+- **[index.html](index.html)** - User interface template with source grid
+- **[index.css](index.css)** - Styling for the selection interface
+
+### StreamSelector Class
+
+The main class provides a simple interface for displaying the source selection dialog:
+
+```javascript
+const streamSelector = new StreamSelector(parentWindow);
+
+// Show source selector and get user choice
+streamSelector.show((selectedSource) => {
+  if (selectedSource) {
+    console.log('User selected:', selectedSource.name);
+    // Use selectedSource.id for screen capture
+  } else {
+    console.log('User cancelled selection');
+  }
+});
+```
+
+### Window Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant M as Main Process
+    participant S as StreamSelector
+    participant W as Selector Window
+    participant U as User
+    
+    M->>S: show(callback)
+    S->>S: Create BrowserWindow
+    S->>W: Load index.html
+    W->>W: Get desktop sources
+    W->>U: Display source grid
+    
+    alt User selects source
+        U->>W: Click on source
+        W->>S: IPC: source-selected
+        S->>S: Execute callback(source)
+    else User cancels
+        U->>W: Close window/Cancel
+        W->>S: IPC: source-selected (null)
+        S->>S: Execute callback(null)
+    end
+    
+    S->>W: Close window
+    W->>W: Cleanup resources
+```
+
+## Implementation Details
+
+### Security Features
+
+- **Context Isolation**: Enabled for renderer security
+- **Node Integration**: Disabled in renderer process  
+- **Preload Script**: Secure IPC bridge using `contextBridge`
+- **Sandboxing**: Compatible with Electron sandbox mode
+
+### Desktop Source Detection
+
+The module uses Electron's `desktopCapturer.getSources()` to enumerate available sources:
+
+```javascript
+// Get all available screens and windows
+const sources = await desktopCapturer.getSources({
+  types: ['window', 'screen'],
+  thumbnailSize: { width: 300, height: 200 }
+});
+```
+
+Source types include:
+- **Screen**: Full desktop/monitor capture
+- **Window**: Individual application window capture
+
+### User Interface Features
+
+- **Live Thumbnails**: Preview of each available source
+- **Source Information**: Display name and type for each option
+- **Responsive Grid**: Adapts to different numbers of sources
+- **Keyboard Navigation**: Arrow keys and Enter/Escape support
+- **Click Selection**: Mouse interaction for source selection
+
+### IPC Communication Pattern
+
+```mermaid
+flowchart LR
+    subgraph "Renderer Process"
+        A[User Interaction] --> B[Preload Script]
+        B --> C[contextBridge API]
+    end
+    
+    subgraph "Main Process"
+        C --> D[IPC Handler]
+        D --> E[StreamSelector Class]
+        E --> F[Callback Execution]
+    end
+    
+    style C fill:#e8f5e8
+    style E fill:#e3f2fd
+```
+
+## Integration with Screen Sharing
+
+The StreamSelector integrates with the broader screen sharing system through:
+
+1. **Trigger**: `setDisplayMediaRequestHandler` in main window manager
+2. **Selection**: StreamSelector handles user choice
+3. **Result**: Selected source passed to screen sharing pipeline
+4. **Cleanup**: Window closes and resources are freed
+
+### Relationship to Other Modules
+
+- **Main App Window**: Registers the display media request handler
+- **Screen Sharing Logic**: Consumes the selected source for capture
+- **Popup Window**: Created after source selection for thumbnail display
+- **IPC System**: Facilitates secure communication between processes
+
+## Configuration
+
+No direct configuration options, but behavior is influenced by:
+
+- **Screen sharing settings**: Whether thumbnails are enabled
+- **System permissions**: Desktop capture access
+- **Display settings**: Available screens and resolution
 
 ## Error Handling
 
-- **Window Creation Failures**: Graceful degradation without preview
-- **Stream Access Errors**: Clear error messages in preview window  
-- **IPC Communication Issues**: Robust error handling and logging
-- **Configuration Errors**: Fallback to default settings
+### Common Scenarios
 
-## Platform Support
+- **No sources available**: Shows appropriate message to user
+- **Permission denied**: Handles desktop capture permission errors  
+- **Window creation failure**: Graceful fallback to callback with null
+- **User cancellation**: Properly cleans up and reports null selection
 
-- **Linux**: X11 and Wayland desktop capture
-- **macOS**: Screen Recording permission handling
-- **Windows**: Desktop Window Manager integration
+### Debug Information
+
+Enable debug logging to see StreamSelector activity:
+```javascript
+console.debug('StreamSelector: Creating selection window');
+console.debug('StreamSelector: Found N sources');  
+console.debug('StreamSelector: User selected source:', source.name);
+```
+
+## Platform Differences
+
+### Linux
+- **X11**: Direct screen capture support
+- **Wayland**: Uses PipeWire portal for desktop capture
+
+### macOS  
+- **Screen Recording Permission**: Required for desktop capture
+- **Retina Displays**: High-DPI thumbnail generation
+
+### Windows
+- **DWM Integration**: Desktop Window Manager compatibility
+- **Multi-monitor**: Proper handling of multiple displays
 
 ---
 
-For complete implementation details, see the [Screen Sharing Documentation](../../docs/screen-sharing.md).
+For more information about the complete screen sharing implementation, see [Screen Sharing Documentation](../../docs/screen-sharing.md).

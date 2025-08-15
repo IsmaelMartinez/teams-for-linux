@@ -1,200 +1,109 @@
-const { BrowserWindow, ipcMain } = require("electron");
+const { ipcMain, WebContentsView } = require("electron");
 const path = require("path");
 
-class ScreenSharingManager {
-  constructor(config) {
-    this.config = config;
-    this.isActive = false;
-    this.currentSourceId = null;
-    this.currentScreenConfig = null;
-    this.previewWindow = null;
-
-    this.#setupIpcHandlers();
+let _StreamSelector_parent = new WeakMap();
+let _StreamSelector_window = new WeakMap();
+let _StreamSelector_selectedSource = new WeakMap();
+let _StreamSelector_callback = new WeakMap();
+class StreamSelector {
+  /**
+   * @param {BrowserWindow} parent
+   */
+  constructor(parent) {
+    _StreamSelector_parent.set(this, parent);
+    _StreamSelector_window.set(this, null);
+    _StreamSelector_selectedSource.set(this, null);
+    _StreamSelector_callback.set(this, null);
   }
 
-  #setupIpcHandlers() {
-    // Screen sharing lifecycle handlers
-    ipcMain.on("screen-sharing-started", (event, sourceId) => {
-      this.isActive = true;
-      
-      // Use the real source ID from the stream selector if available
-      if (global.selectedScreenShareSource) {
-        this.currentSourceId = global.selectedScreenShareSource.id;
-        this.currentScreenConfig = {
-          width: global.selectedScreenShareSource.thumbnail?.getSize()?.width || 1920,
-          height: global.selectedScreenShareSource.thumbnail?.getSize()?.height || 1080
-        };
-      } else {
-        this.currentSourceId = sourceId;
-        this.currentScreenConfig = { width: 1920, height: 1080 };
-      }
-
-      this.#createPreviewWindow();
-    });
-
-    ipcMain.on("screen-sharing-stopped", () => {
-      this.#stopSharing();
-    });
-
-    ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-      this.#stopSharing();
-    });
-
-    // Window lifecycle handlers
-    ipcMain.on("screen-share-preview-opened", () => {
-      // Preview window opened
-    });
-
-    ipcMain.on("screen-share-preview-closed", () => {
-      if (this.isActive) {
-        this.#stopSharing();
-      }
-    });
-
-    // Status handlers
-    ipcMain.handle("get-screen-sharing-status", async () => {
-      return this.isActive;
-    });
-
-    ipcMain.handle("get-screen-share-stream", async () => {
-      return this.currentSourceId;
-    });
-
-    ipcMain.handle("get-screen-share-screen", async () => {
-      return this.currentScreenConfig;
-    });
-
-    // Main preview window creation handler
-    ipcMain.handle("create-call-pop-out-window", async () => {
-      this.#createPreviewWindow();
-    });
+  /**
+   * @type {BrowserWindow}
+   */
+  get parent() {
+    return _StreamSelector_parent.get(this);
   }
 
-  #createPreviewWindow() {
-    if (this.previewWindow && !this.previewWindow.isDestroyed()) {
-      this.previewWindow.focus();
-      return;
+  /**
+   * @type {WebContentsView}
+   */
+  get view() {
+    return _StreamSelector_window.get(this);
+  }
+
+  set view(value) {
+    _StreamSelector_window.set(this, value);
+  }
+
+  get selectedSource() {
+    return _StreamSelector_selectedSource.get(this);
+  }
+
+  set selectedSource(value) {
+    _StreamSelector_selectedSource.set(this, value);
+  }
+
+  get callback() {
+    return _StreamSelector_callback.get(this);
+  }
+
+  set callback(value) {
+    if (typeof value == "function") {
+      _StreamSelector_callback.set(this, value);
     }
+  }
 
-    const thumbnailConfig = this.config.screenSharingThumbnail || {};
-
-    if (thumbnailConfig.enabled === false) {
-      return;
-    }
-
-    this.previewWindow = new BrowserWindow({
-      width: 320,
-      height: 180,
-      minWidth: 200,
-      minHeight: 120,
-      show: false,
-      resizable: true,
-      alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
-      frame: true,
-      title: "Teams Screen Share Preview",
+  show(callback) {
+    let self = this;
+    self.callback = callback;
+    self.view = new WebContentsView({
       webPreferences: {
-        preload: path.join(__dirname, "previewWindowPreload.js"),
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        partition: "persist:teams-for-linux-session",
+        preload: path.join(__dirname, "preload.js"),
       },
     });
 
-    this.previewWindow.loadFile(path.join(__dirname, "previewWindow.html"));
+    self.view.webContents.loadFile(path.join(__dirname, "index.html"));
+    self.parent.contentView.addChildView(self.view);
 
-    this.previewWindow.once("ready-to-show", () => {
-      this.previewWindow.show();
-      try {
-        ipcMain.emit("screen-share-preview-opened");
-      } catch (error) {
-        console.error(
-          "Error sending screen-share-preview-opened event:",
-          error
-        );
-      }
-    });
-
-    this.previewWindow.on("closed", () => {
-      try {
-        ipcMain.emit("screen-share-preview-closed");
-      } catch (error) {
-        console.error(
-          "Error sending screen-share-preview-closed event:",
-          error
-        );
-      }
-      this.previewWindow = null;
-    });
-
-    // Handle window resize
-    ipcMain.on("resize-preview-window", (event, { width, height }) => {
-      if (this.previewWindow && !this.previewWindow.isDestroyed()) {
-        const [currentWidth, currentHeight] = this.previewWindow.getSize();
-        const [minWidth, minHeight] = this.previewWindow.getMinimumSize();
-
-        // Ensure we respect minimum sizes and keep window small (thumbnail size)
-        const newWidth = Math.max(minWidth, Math.min(width, 480));
-        const newHeight = Math.max(minHeight, Math.min(height, 360));
-
-        if (newWidth !== currentWidth || newHeight !== currentHeight) {
-          this.previewWindow.setSize(newWidth, newHeight);
-          this.previewWindow.center();
-        }
-      }
-    });
-
-    // Handle window close
-    ipcMain.on("close-preview-window", () => {
-      if (this.previewWindow && !this.previewWindow.isDestroyed()) {
-        this.previewWindow.close();
-      }
-    });
-  }
-
-  #stopSharing() {
-    this.isActive = false;
-    this.currentSourceId = null;
-    this.currentScreenConfig = null;
-
-    // Close preview window
-    if (this.previewWindow && !this.previewWindow.isDestroyed()) {
-      this.previewWindow.close();
-      this.previewWindow = null;
-    }
-  }
-
-  // Public methods
-  getStatus() {
-    return {
-      isActive: this.isActive,
-      sourceId: this.currentSourceId,
-      screenConfig: this.currentScreenConfig,
+    let _resize = () => {
+      resizeView(self);
     };
-  }
+    resizeView(self);
 
-  updateConfig(newConfig) {
-    this.config = newConfig;
+    let _close = (_event, source) => {
+      //'screen:x:0' -> whole screen
+      //'window:x:0' -> small window
+      // show captured source in a new view? Maybe reuse the same view, but make it smaller? probably best a new "file"/view
+      closeView({ view: self, _resize, _close, source });
+    };
 
-    // Update existing preview window if alwaysOnTop setting changed
-    if (this.previewWindow && !this.previewWindow.isDestroyed()) {
-      const thumbnailConfig = this.config.screenSharingThumbnail || {};
-      this.previewWindow.setAlwaysOnTop(thumbnailConfig.alwaysOnTop || false);
-    }
-  }
-
-  cleanup() {
-    this.#stopSharing();
-
-    // Remove IPC handlers
-    ipcMain.removeAllListeners("screen-sharing-started");
-    ipcMain.removeAllListeners("screen-sharing-stopped");
-    ipcMain.removeAllListeners("stop-screen-sharing-from-thumbnail");
-    ipcMain.removeAllListeners("screen-share-preview-opened");
-    ipcMain.removeAllListeners("screen-share-preview-closed");
-    ipcMain.removeAllListeners("resize-preview-window");
-    ipcMain.removeAllListeners("close-preview-window");
+    this.parent.on("resize", _resize);
+    ipcMain.once("selected-source", _close);
+    ipcMain.once("close-view", _close);
   }
 }
 
-module.exports = ScreenSharingManager;
+function closeView(properties) {
+  properties.view.parent.setBrowserView(null);
+  properties.view.view.webContents.destroy();
+  properties.view.view = null;
+  properties.view.parent.removeListener("resize", properties._resize);
+  ipcMain.removeListener("selected-source", properties._close);
+  ipcMain.removeListener("close-view", properties._close);
+  if (properties.view.callback) {
+    properties.view.callback(properties.source);
+  }
+}
+
+function resizeView(view) {
+  setTimeout(() => {
+    const pbounds = view.parent.getBounds();
+    view.view.setBounds({
+      x: 0,
+      y: pbounds.height - 180,
+      width: pbounds.width,
+      height: 180,
+    });
+  }, 0);
+}
+
+module.exports = { StreamSelector };

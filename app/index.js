@@ -57,13 +57,10 @@ try {
 
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
-const ScreenSharingManager = require("./screenSharing");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
 const { createInAppUIWindow } = require("./inAppUI");
 
-// Initialize screen sharing manager
-let screenSharingManager = null;
 
 if (isMac) {
   requestMediaAccess();
@@ -86,9 +83,6 @@ if (!gotTheLock) {
   app.on("render-process-gone", onRenderProcessGone);
   app.on("will-quit", () => {
     console.debug("will-quit");
-    if (screenSharingManager) {
-      screenSharingManager.cleanup();
-    }
   });
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
@@ -120,6 +114,123 @@ if (!gotTheLock) {
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
+  });
+
+  // Screen sharing IPC handlers
+  ipcMain.on("screen-sharing-started", async (event, sourceId) => {
+    console.debug("Screen sharing started via browser detection:", sourceId);
+    // Note: sourceId from browser detection is synthetic and not usable for getUserMedia
+    // Preview window will be created through StreamSelector flow instead
+  });
+
+  ipcMain.on("screen-sharing-stopped", () => {
+    console.debug("Screen sharing stopped");
+    global.selectedScreenShareSource = null;
+    
+    // Close preview window when screen sharing stops
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.close();
+    }
+  });
+
+  ipcMain.handle("create-call-pop-out-window", async () => {
+    const { BrowserWindow } = require("electron");
+    const path = require("path");
+    
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.focus();
+      return;
+    }
+
+    const thumbnailConfig = config.screenSharingThumbnail?.default || { enabled: true, alwaysOnTop: false };
+    
+    global.previewWindow = new BrowserWindow({
+      width: 320,
+      height: 180,
+      minWidth: 200,
+      minHeight: 120,
+      show: false,
+      resizable: true,
+      alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
+      webPreferences: {
+        preload: path.join(__dirname, "screenSharing", "previewWindowPreload.js"),
+        partition: "persist:teams-for-linux-session",
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+
+    global.previewWindow.loadFile(path.join(__dirname, "screenSharing", "previewWindow.html"));
+    
+    global.previewWindow.once("ready-to-show", () => {
+      global.previewWindow.show();
+    });
+
+    global.previewWindow.on("closed", () => {
+      global.previewWindow = null;
+    });
+  });
+
+  // Preview window management IPC handlers
+  ipcMain.handle("get-screen-sharing-status", () => {
+    return global.selectedScreenShareSource !== null;
+  });
+
+  ipcMain.handle("get-screen-share-stream", () => {
+    // Return the source ID - handle both string and object formats
+    console.debug("get-screen-share-stream called, selectedScreenShareSource:", global.selectedScreenShareSource);
+    
+    if (typeof global.selectedScreenShareSource === 'string') {
+      console.debug("Returning string source ID:", global.selectedScreenShareSource);
+      return global.selectedScreenShareSource;
+    } else if (global.selectedScreenShareSource && global.selectedScreenShareSource.id) {
+      console.debug("Returning object source ID:", global.selectedScreenShareSource.id);
+      return global.selectedScreenShareSource.id;
+    }
+    console.debug("No valid source found, returning null");
+    return null;
+  });
+
+  ipcMain.handle("get-screen-share-screen", () => {
+    // Return screen dimensions if available from StreamSelector, otherwise default
+    if (global.selectedScreenShareSource && typeof global.selectedScreenShareSource === 'object') {
+      // StreamSelector provides more detailed source info
+      const { screen } = require('electron');
+      const displays = screen.getAllDisplays();
+      
+      if (global.selectedScreenShareSource.id && global.selectedScreenShareSource.id.startsWith('screen:')) {
+        // For screen sources, try to get actual display size
+        const display = displays[0] || { size: { width: 1920, height: 1080 } };
+        return { width: display.size.width, height: display.size.height };
+      }
+    }
+    
+    // Default fallback
+    return { width: 1920, height: 1080 };
+  });
+
+  ipcMain.on("resize-preview-window", (event, { width, height }) => {
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      const [minWidth, minHeight] = global.previewWindow.getMinimumSize();
+      const newWidth = Math.max(minWidth, Math.min(width, 480));
+      const newHeight = Math.max(minHeight, Math.min(height, 360));
+      global.previewWindow.setSize(newWidth, newHeight);
+      global.previewWindow.center();
+    }
+  });
+
+  ipcMain.on("close-preview-window", () => {
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.close();
+    }
+  });
+
+  ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
+    console.debug("Stop screen sharing requested from thumbnail");
+    global.selectedScreenShareSource = null;
+    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      global.previewWindow.webContents.send('screen-sharing-status-changed');
+    }
   });
 }
 
@@ -352,9 +463,6 @@ function handleAppReady() {
       cacheManager.stop();
     });
   }
-
-  // Initialize screen sharing manager
-  screenSharingManager = new ScreenSharingManager(config);
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
   if (config.enableInAppUI) {

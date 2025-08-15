@@ -8,7 +8,7 @@ const {
 const path = require("path");
 const { spawn } = require("child_process");
 const windowStateKeeper = require("electron-window-state");
-const { StreamSelector } = require("../streamSelector");
+const { StreamSelector } = require("../screenSharing");
 const IncomingCallToast = require("../incomingCallToast");
 
 class BrowserWindowManager {

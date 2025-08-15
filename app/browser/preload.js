@@ -25,8 +25,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   
-  // Call popout window
-  createCallPopOutWindow: () => ipcRenderer.invoke('create-call-pop-out-window'),
   
   // Configuration
   getConfig: () => ipcRenderer.invoke('get-config'),
