@@ -170,7 +170,7 @@
 
     // Handle stop sharing button clicks
     function handleStopSharing(event) {
-      console.debug("Stop sharing button clicked");
+      console.debug("Stop sharing button clicked", event);
 
       if (isScreenSharing) {
         // Force stop all active media tracks
@@ -224,27 +224,12 @@
     }, 2000);
   }
 
-  // Manual test trigger - Ctrl+Shift+X to force close screen sharing
-  function addManualTestTrigger() {
-    document.addEventListener("keydown", function (event) {
-      if (event.ctrlKey && event.shiftKey && event.key === "X") {
-        const electronAPI = window.electronAPI;
-        if (electronAPI && electronAPI.sendScreenSharingStopped) {
-          handleStreamEnd("manual-test-trigger");
-        }
-        event.preventDefault();
-      }
-    });
-  }
-
   // Initialize monitoring
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       monitorScreenSharing();
-      addManualTestTrigger();
     });
   } else {
     monitorScreenSharing();
-    addManualTestTrigger();
   }
 })();
