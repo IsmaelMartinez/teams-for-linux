@@ -78,13 +78,9 @@
     // Send screen sharing started event
     if (electronAPI.sendScreenSharingStarted) {
       // Prefer the MediaStream's own id when available to avoid collisions
-      const sourceId =
-        stream && stream.id
-          ? stream.id
-          : "screen-share-" +
-            Math.random().toString(36).slice(2, 10) +
-            "-" +
-            Date.now();
+      const sourceId = stream?.id
+        ? stream.id
+        : `screen-share-${crypto.randomUUID()}`;
       electronAPI.sendScreenSharingStarted(sourceId);
       electronAPI.send("active-screen-share-stream", stream);
     }
@@ -113,7 +109,7 @@
       isScreenSharing = false;
 
       const electronAPI = window.electronAPI;
-      if (electronAPI && electronAPI.sendScreenSharingStopped) {
+      if (electronAPI?.sendScreenSharingStopped) {
         electronAPI.sendScreenSharingStopped();
       }
 
@@ -173,7 +169,7 @@
     }
 
     // Handle stop sharing button clicks
-    function handleStopSharing() {
+    function handleStopSharing(event) {
       console.debug("Stop sharing button clicked");
 
       if (isScreenSharing) {

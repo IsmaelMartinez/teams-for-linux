@@ -7,7 +7,8 @@
     constructor(title, options) {
       const electronAPI = window.electronAPI;
       if (!electronAPI) {
-        return new classicNotification(title, options);
+        const fallbackNotification = new classicNotification(title, options);
+        Object.assign(this, fallbackNotification);
       }
 
       options = options || {};
@@ -40,7 +41,9 @@
         }
       });
 
-      return { onclick: null, onclose: null, onerror: null };
+      this.onclick = null;
+      this.onclose = null;
+      this.onerror = null;
     }
 
     static async requestPermission() {
