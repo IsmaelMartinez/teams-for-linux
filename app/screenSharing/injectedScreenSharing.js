@@ -174,20 +174,7 @@
 
       if (isScreenSharing) {
         // Force stop all active media tracks
-        activeMediaTracks.forEach((track) => {
-          track.stop();
-        });
-
-        // Force stop all active streams
-        activeStreams.forEach((stream) => {
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
-        });
-
-        setTimeout(() => {
-          handleStreamEnd("ui-button-click");
-        }, 500); // Small delay to let Teams process the stop action
+        terminateActiveStreams(); // Small delay to let Teams process the stop action
       }
     }
 
@@ -231,5 +218,22 @@
     });
   } else {
     monitorScreenSharing();
+  }
+
+  function terminateActiveStreams() {
+    activeMediaTracks.forEach((track) => {
+      track.stop();
+    });
+
+    // Force stop all active streams
+    activeStreams.forEach((stream) => {
+      stream.getTracks().forEach((track) => {
+        track.stop();
+      });
+    });
+
+    setTimeout(() => {
+      handleStreamEnd("ui-button-click");
+    }, 500);
   }
 })();

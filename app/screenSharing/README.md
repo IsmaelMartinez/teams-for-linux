@@ -178,15 +178,6 @@ No direct configuration options, but behavior is influenced by:
 - **Window creation failure**: Graceful fallback to callback with null
 - **User cancellation**: Properly cleans up and reports null selection
 
-### Debug Information
-
-Enable debug logging to see StreamSelector activity:
-```javascript
-console.debug('StreamSelector: Creating selection window');
-console.debug('StreamSelector: Found N sources');  
-console.debug('StreamSelector: User selected source:', source.name);
-```
-
 ## Platform Differences
 
 ### Linux
