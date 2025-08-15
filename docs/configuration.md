@@ -216,7 +216,7 @@ rm -f ~/.config/teams-for-linux/Cookies-journal
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of the default browser. |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition. |
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port. |
-| `screenSharingThumbnail` | `object` | `{ enabled: true }` | Automatically show a thumbnail window when screen sharing is active. |
+| `screenSharingThumbnail` | `object` | `{ enabled: true, alwaysOnTop: true }` | Automatically show a thumbnail window when screen sharing is active. |
 | `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method to be used (Electron/WakeLockSentinel). Choices: `Electron`, `WakeLockSentinel`. |
 | `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker (experimental). |
 | `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth. |
