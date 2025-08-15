@@ -129,28 +129,40 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   streamSelector = new StreamSelector(window);
 
   window.webContents.session.setDisplayMediaRequestHandler(
-    (request, callback) => {
+    (_request, callback) => {
       streamSelector.show((source) => {
         if (source) {
-          desktopCapturer
-            .getSources({ types: ["window", "screen"] })
-            .then((sources) => {
-              const selectedSource = sources.find((s) => s.id === source.id);
-              if (selectedSource) {
-                // Store the source ID globally for access by screen sharing manager
-                global.selectedScreenShareSource = selectedSource;
-
-                // Create preview window for screen sharing
-                createScreenSharePreviewWindow(selectedSource);
-              }
-              callback({ video: selectedSource });
-            });
+          handleScreenSourceSelection(source, callback);
         } else {
           callback({ video: null, audio: false });
         }
       });
     }
   );
+
+  function handleScreenSourceSelection(source, callback) {
+    desktopCapturer
+      .getSources({ types: ["window", "screen"] })
+      .then((sources) => {
+        const selectedSource = findSelectedSource(sources, source);
+        if (selectedSource) {
+          setupScreenSharing(selectedSource);
+        }
+        callback({ video: selectedSource });
+      });
+  }
+
+  function findSelectedSource(sources, source) {
+    return sources.find((s) => s.id === source.id);
+  }
+
+  function setupScreenSharing(selectedSource) {
+    // Store the source ID globally for access by screen sharing manager
+    global.selectedScreenShareSource = selectedSource;
+
+    // Create preview window for screen sharing
+    createScreenSharePreviewWindow(selectedSource);
+  }
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());

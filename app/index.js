@@ -133,10 +133,7 @@ if (!gotTheLock) {
     // Return the source ID - handle both string and object formats
     if (typeof global.selectedScreenShareSource === "string") {
       return global.selectedScreenShareSource;
-    } else if (
-      global.selectedScreenShareSource &&
-      global.selectedScreenShareSource.id
-    ) {
+    } else if (global.selectedScreenShareSource?.id) {
       return global.selectedScreenShareSource.id;
     }
     return null;
@@ -151,10 +148,7 @@ if (!gotTheLock) {
       const { screen } = require("electron");
       const displays = screen.getAllDisplays();
 
-      if (
-        global.selectedScreenShareSource.id &&
-        global.selectedScreenShareSource.id.startsWith("screen:")
-      ) {
+      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
