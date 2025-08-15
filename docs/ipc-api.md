@@ -141,20 +141,6 @@ ipcRenderer.send('screen-sharing-started', 'screen:1:0');
 ipcRenderer.send('screen-sharing-stopped');
 ```
 
-#### `screen-share-preview-opened`
-**Type**: `ipcMain.on`  
-**Purpose**: Emitted when screen sharing preview window is created  
-**Parameters**: None  
-**Returns**: None (notification event)  
-**Usage**: Automatically sent by preview window creation process
-
-#### `screen-share-preview-closed`
-**Type**: `ipcMain.on`  
-**Purpose**: Emitted when screen sharing preview window is closed  
-**Parameters**: None  
-**Returns**: None (triggers screen sharing cleanup)  
-**Usage**: Automatically sent when preview window closes
-
 #### `resize-preview-window`
 **Type**: `ipcMain.on`  
 **Purpose**: Resizes the screen sharing preview window with size constraints  
@@ -166,16 +152,6 @@ ipcRenderer.send('screen-sharing-stopped');
 **Example Usage**:
 ```javascript
 ipcRenderer.send('resize-preview-window', { width: 400, height: 300 });
-```
-
-#### `close-preview-window`
-**Type**: `ipcMain.on`  
-**Purpose**: Closes the screen sharing preview window  
-**Parameters**: None  
-**Returns**: None  
-**Example Usage**:
-```javascript
-ipcRenderer.send('close-preview-window');
 ```
 
 #### `get-screen-sharing-status`
@@ -206,7 +182,18 @@ const sourceId = await ipcRenderer.invoke('get-screen-share-stream');
 **Example Usage**:
 ```javascript
 const screenConfig = await ipcRenderer.invoke('get-screen-share-screen');
-```  
+```
+
+#### `stop-screen-sharing-from-thumbnail`
+**Type**: `ipcMain.on`  
+**Purpose**: Stops screen sharing when requested from the preview thumbnail window  
+**Parameters**: None  
+**Returns**: None (triggers screen sharing cleanup)  
+**Usage**: Called when user clicks stop sharing in the preview window  
+**Example Usage**:
+```javascript
+ipcRenderer.send('stop-screen-sharing-from-thumbnail');
+```
 
 ### Notifications
 
@@ -272,16 +259,6 @@ await ipcRenderer.invoke('set-badge-count', 5);
 **Returns**: None (closes login window on success)  
 
 ### Call Management (`app/mainAppWindow/browserWindowManager.js`)
-
-#### `create-call-pop-out-window`
-**Type**: `ipcMain.handle`  
-**Purpose**: Creates a popout window for the active call/screen sharing  
-**Parameters**: None  
-**Returns**: `void`  
-**Example Usage**:
-```javascript
-await ipcRenderer.invoke('create-call-pop-out-window');
-```
 
 #### `close-call-pop-out-window`
 **Type**: `ipcMain.on`  

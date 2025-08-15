@@ -59,8 +59,6 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
-const { createInAppUIWindow } = require("./inAppUI");
-
 
 if (isMac) {
   requestMediaAccess();
@@ -97,13 +95,13 @@ if (!gotTheLock) {
   ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
     desktopCapturer.getSources(opts)
   );
-  ipcMain.handle('choose-desktop-media', async (event, sourceTypes) => {
+  ipcMain.handle("choose-desktop-media", async (_event, sourceTypes) => {
     const sources = await desktopCapturer.getSources({ types: sourceTypes });
-    const chosen = await showScreenPicker(sources); // your code
-    return chosen ? chosen.id : null;          // Teams needs the raw Id
+    const chosen = await showScreenPicker(sources);
+    return chosen ? chosen.id : null;
   });
 
-  ipcMain.on('cancel-desktop-media', () => {
+  ipcMain.on("cancel-desktop-media", () => {
     if (picker) {
       picker.close();
     }
@@ -117,58 +115,13 @@ if (!gotTheLock) {
   });
 
   // Screen sharing IPC handlers
-  ipcMain.on("screen-sharing-started", async (event, sourceId) => {
-    console.debug("Screen sharing started via browser detection:", sourceId);
-    // Note: sourceId from browser detection is synthetic and not usable for getUserMedia
-    // Preview window will be created through StreamSelector flow instead
-  });
-
   ipcMain.on("screen-sharing-stopped", () => {
-    console.debug("Screen sharing stopped");
     global.selectedScreenShareSource = null;
-    
+
     // Close preview window when screen sharing stops
     if (global.previewWindow && !global.previewWindow.isDestroyed()) {
       global.previewWindow.close();
     }
-  });
-
-  ipcMain.handle("create-call-pop-out-window", async () => {
-    const { BrowserWindow } = require("electron");
-    const path = require("path");
-    
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.focus();
-      return;
-    }
-
-    const thumbnailConfig = config.screenSharingThumbnail?.default || { enabled: true, alwaysOnTop: false };
-    
-    global.previewWindow = new BrowserWindow({
-      width: 320,
-      height: 180,
-      minWidth: 200,
-      minHeight: 120,
-      show: false,
-      resizable: true,
-      alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
-      webPreferences: {
-        preload: path.join(__dirname, "screenSharing", "previewWindowPreload.js"),
-        partition: "persist:teams-for-linux-session",
-        contextIsolation: true,
-        sandbox: true,
-      },
-    });
-
-    global.previewWindow.loadFile(path.join(__dirname, "screenSharing", "previewWindow.html"));
-    
-    global.previewWindow.once("ready-to-show", () => {
-      global.previewWindow.show();
-    });
-
-    global.previewWindow.on("closed", () => {
-      global.previewWindow = null;
-    });
   });
 
   // Preview window management IPC handlers
@@ -178,34 +131,35 @@ if (!gotTheLock) {
 
   ipcMain.handle("get-screen-share-stream", () => {
     // Return the source ID - handle both string and object formats
-    console.debug("get-screen-share-stream called, selectedScreenShareSource:", global.selectedScreenShareSource);
-    
-    if (typeof global.selectedScreenShareSource === 'string') {
-      console.debug("Returning string source ID:", global.selectedScreenShareSource);
+    if (typeof global.selectedScreenShareSource === "string") {
       return global.selectedScreenShareSource;
-    } else if (global.selectedScreenShareSource && global.selectedScreenShareSource.id) {
-      console.debug("Returning object source ID:", global.selectedScreenShareSource.id);
+    } else if (
+      global.selectedScreenShareSource &&
+      global.selectedScreenShareSource.id
+    ) {
       return global.selectedScreenShareSource.id;
     }
-    console.debug("No valid source found, returning null");
     return null;
   });
 
   ipcMain.handle("get-screen-share-screen", () => {
     // Return screen dimensions if available from StreamSelector, otherwise default
-    if (global.selectedScreenShareSource && typeof global.selectedScreenShareSource === 'object') {
-      // StreamSelector provides more detailed source info
-      const { screen } = require('electron');
+    if (
+      global.selectedScreenShareSource &&
+      typeof global.selectedScreenShareSource === "object"
+    ) {
+      const { screen } = require("electron");
       const displays = screen.getAllDisplays();
-      
-      if (global.selectedScreenShareSource.id && global.selectedScreenShareSource.id.startsWith('screen:')) {
-        // For screen sources, try to get actual display size
+
+      if (
+        global.selectedScreenShareSource.id &&
+        global.selectedScreenShareSource.id.startsWith("screen:")
+      ) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
     }
-    
-    // Default fallback
+
     return { width: 1920, height: 1080 };
   });
 
@@ -219,17 +173,10 @@ if (!gotTheLock) {
     }
   });
 
-  ipcMain.on("close-preview-window", () => {
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.close();
-    }
-  });
-
   ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    console.debug("Stop screen sharing requested from thumbnail");
     global.selectedScreenShareSource = null;
     if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.webContents.send('screen-sharing-status-changed');
+      global.previewWindow.webContents.send("screen-sharing-status-changed");
     }
   });
 }
@@ -465,9 +412,6 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-  if (config.enableInAppUI) {
-    createInAppUIWindow(config); // Pass the config object
-  }
 }
 
 async function handleGetSystemIdleState() {
@@ -613,24 +557,24 @@ function showScreenPicker(sources) {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: path.join(__dirname, 'screenPicker', 'preload.js')
-      }
+        preload: path.join(__dirname, "screenPicker", "preload.js"),
+      },
     });
 
-    picker.loadFile(path.join(__dirname, 'screenPicker', 'index.html'));
+    picker.loadFile(path.join(__dirname, "screenPicker", "index.html"));
 
-    picker.webContents.on('did-finish-load', () => {
-      picker.webContents.send('sources-list', sources);
+    picker.webContents.on("did-finish-load", () => {
+      picker.webContents.send("sources-list", sources);
     });
 
-    ipcMain.once('source-selected', (event, source) => {
+    ipcMain.once("source-selected", (event, source) => {
       resolve(source);
       if (picker) {
         picker.close();
       }
     });
 
-    picker.on('closed', () => {
+    picker.on("closed", () => {
       picker = null;
       resolve(null);
     });

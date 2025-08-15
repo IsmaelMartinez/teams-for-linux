@@ -99,7 +99,7 @@ function extractYargConfig(configObject, appVersion) {
       screenSharingThumbnail: {
         default: {
           enabled: true,
-          alwaysOnTop: true,
+          alwaysOnTop: false,
         },
         describe:
           "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
@@ -295,11 +295,6 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
-      },
-      enableInAppUI: {
-        default: false,
-        describe: "Enable the in-app UI window (WIP)",
-        type: "boolean",
       },
       enableIncomingCallToast: {
         default: false,

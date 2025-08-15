@@ -37,14 +37,20 @@ const isMac = os.platform() === "darwin";
 
 function createScreenSharePreviewWindow(selectedSource) {
   const path = require("path");
-  
+
   // Get configuration - use the module-level config variable
-  const thumbnailConfig = config?.screenSharingThumbnail?.default || { enabled: true, alwaysOnTop: false };
-  
+  let thumbnailConfig = config?.screenSharingThumbnail?.default;
+  if (!thumbnailConfig) {
+    thumbnailConfig = config?.screenSharingThumbnail;
+  }
+  if (!thumbnailConfig) {
+    thumbnailConfig = { enabled: true, alwaysOnTop: true };
+  }
+
   if (!thumbnailConfig.enabled) {
     return;
   }
-  
+
   // Don't create duplicate windows
   if (global.previewWindow && !global.previewWindow.isDestroyed()) {
     global.previewWindow.focus();
@@ -60,15 +66,20 @@ function createScreenSharePreviewWindow(selectedSource) {
     resizable: true,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
     webPreferences: {
-      preload: path.join(__dirname, "..", "screenSharing", "previewWindowPreload.js"),
+      preload: path.join(
+        __dirname,
+        "..",
+        "screenSharing",
+        "previewWindowPreload.js"
+      ),
       partition: "persist:teams-for-linux-session",
-      contextIsolation: true,
-      sandbox: true,
     },
   });
 
-  global.previewWindow.loadFile(path.join(__dirname, "..", "screenSharing", "previewWindow.html"));
-  
+  global.previewWindow.loadFile(
+    path.join(__dirname, "..", "screenSharing", "previewWindow.html")
+  );
+
   global.previewWindow.once("ready-to-show", () => {
     global.previewWindow.show();
   });
@@ -77,8 +88,6 @@ function createScreenSharePreviewWindow(selectedSource) {
     global.previewWindow = null;
     global.selectedScreenShareSource = null;
   });
-  
-  console.debug("Created preview window for source:", selectedSource.id);
 }
 
 exports.onAppReady = async function onAppReady(configGroup, customBackground) {
@@ -130,7 +139,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
               if (selectedSource) {
                 // Store the source ID globally for access by screen sharing manager
                 global.selectedScreenShareSource = selectedSource;
-                
+
                 // Create preview window for screen sharing
                 createScreenSharePreviewWindow(selectedSource);
               }

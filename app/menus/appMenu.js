@@ -36,7 +36,7 @@ exports = module.exports = (Menus) => ({
       label: "About",
       click: () => Menus.about(),
     },
-    getHelpMenu(Menus),
+    getHelpMenu(),
     ...(Menus.configGroup.startupConfig.videoMenu
       ? [
           {
@@ -151,21 +151,10 @@ function getNotificationsMenu(Menus) {
   };
 }
 
-function getHelpMenu(Menus) {
+function getHelpMenu() {
   return {
     label: "Help",
     submenu: [
-      ...(Menus.configGroup.startupConfig.enableInAppUI
-        ? [
-            {
-              label: "In-App UI",
-              click: () => Menus.openInAppUI(),
-            },
-            {
-              type: "separator",
-            },
-          ]
-        : []),
       {
         label: "Online Documentation",
         click: () =>

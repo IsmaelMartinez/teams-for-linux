@@ -20,6 +20,7 @@
 					<li>New: Improved screen sharing with enhanced contextIsolation and sandbox support</li>
 					<li>Improvement: Comprehensive documentation restructuring and simplification</li>
 					<li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox, disableAutogain)</li>
+					<li>Remove the inAppUi as it is not needed at the moment</li>
 				</ul>
 			</description>
 		</release>

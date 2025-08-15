@@ -104,11 +104,6 @@ class Menus {
     });
   }
 
-  openInAppUI() {
-    const { createInAppUIWindow } = require("../inAppUI");
-    createInAppUIWindow();
-  }
-
   reload(show = true) {
     if (show) {
       this.window.show();

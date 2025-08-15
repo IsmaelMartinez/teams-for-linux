@@ -51,7 +51,6 @@ graph TD
     subgraph "Teams Web App (Renderer)"
         A[Teams PWA] --> B[getDisplayMedia Call]
         B --> C[Injection Script Hook]
-        C --> D[IPC: create-call-pop-out-window]
     end
     
     subgraph "Main Process"
@@ -97,12 +96,7 @@ sequenceDiagram
     U->>S: Select source
     S->>M: Return selected source
     
-    par IPC from injection
-        I->>M: create-call-pop-out-window
-    and Stream handler
-        M->>M: Store screen sharing state
-    end
-    
+    M->>M: Store screen sharing state
     M->>P: Create preview window
     P->>U: Show thumbnail preview
     
@@ -114,7 +108,7 @@ sequenceDiagram
         I->>M: screen-sharing-stopped
     else User closes preview
         U->>P: Close window
-        P->>M: screen-share-preview-closed
+        P->>P: Window cleanup
     end
     
     M->>M: Cleanup sharing state
@@ -283,10 +277,8 @@ electronAPI.stopSharing();
 
 The screen sharing system exposes several IPC channels for custom integration:
 
-- `create-call-pop-out-window`: Create preview thumbnail
 - `screen-sharing-started`: Notification when sharing begins
 - `screen-sharing-stopped`: Notification when sharing ends
-- `screen-share-preview-opened`/`screen-share-preview-closed`: Window lifecycle events
 
 See [`ipc-api.md`](ipc-api.md) for complete API documentation.
 
