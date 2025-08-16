@@ -81,3 +81,4 @@ The project currently lacks comprehensive test coverage. When contributing:
 - Browser scripts must be defensive as Teams DOM can change without notice
 - Follow single responsibility principle for new modules
 - Update module-specific README.md files when making changes
+- .github/copilot-instructions.md helps decide "what hat to wear"

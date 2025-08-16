@@ -1,0 +1,259 @@
+asyncapi: 3.0.0
+info:
+  title: Teams for Linux IPC Events
+  version: 1.0.0
+  description: |
+    Inter-Process Communication (IPC) events for Teams for Linux Electron application.
+    This specification documents the communication channels between the main process
+    and renderer processes for configuration, notifications, screen sharing, and other features.
+  contact:
+    name: Teams for Linux Project
+    url: https://github.com/IsmaelMartinez/teams-for-linux
+  license:
+    name: GPL-3.0-or-later
+    url: https://github.com/IsmaelMartinez/teams-for-linux/blob/main/LICENSE
+
+servers:
+  electron-ipc:
+    host: 'localhost'
+    protocol: 'electron-ipc'
+    description: Electron IPC communication channel between main and renderer processes
+
+channels:
+  'get-config':
+    description: Retrieve the complete application configuration object
+    messages:
+      getConfigRequest:
+        $ref: '#/components/messages/GetConfigRequest'
+      getConfigResponse:
+        $ref: '#/components/messages/GetConfigResponse'
+
+  'config-file-changed':
+    description: Notify main process that configuration file has changed (triggers app restart)
+    messages:
+      configFileChanged:
+        $ref: '#/components/messages/ConfigFileChanged'
+
+  'get-system-idle-state':
+    description: Retrieve current system idle state and user status information
+    messages:
+      getSystemIdleStateRequest:
+        $ref: '#/components/messages/GetSystemIdleStateRequest'
+      getSystemIdleStateResponse:
+        $ref: '#/components/messages/GetSystemIdleStateResponse'
+
+  'user-status-changed':
+    description: Update the global user status when Teams status changes
+    messages:
+      userStatusChanged:
+        $ref: '#/components/messages/UserStatusChanged'
+
+  'show-notification':
+    description: Display system notification using Electron's Notification API
+    messages:
+      showNotification:
+        $ref: '#/components/messages/ShowNotification'
+
+  'desktop-capturer-get-sources':
+    description: Retrieve available screen/window sources for screen sharing
+    messages:
+      getSourcesRequest:
+        $ref: '#/components/messages/GetSourcesRequest'
+      getSourcesResponse:
+        $ref: '#/components/messages/GetSourcesResponse'
+
+  'screen-sharing-started':
+    description: Handle screen sharing start events and create preview window
+    messages:
+      screenSharingStarted:
+        $ref: '#/components/messages/ScreenSharingStarted'
+
+  'screen-sharing-stopped':
+    description: Handle screen sharing stop events and cleanup
+    messages:
+      screenSharingStopped:
+        $ref: '#/components/messages/ScreenSharingStopped'
+
+components:
+  messages:
+    GetConfigRequest:
+      description: Request to get application configuration
+      payload:
+        type: object
+        properties: {}
+        description: Empty payload for configuration request
+
+    GetConfigResponse:
+      description: Response containing complete application configuration
+      payload:
+        $ref: '#/components/schemas/AppConfiguration'
+
+    ConfigFileChanged:
+      description: Notification that configuration file has changed
+      payload:
+        type: object
+        properties: {}
+        description: Empty payload, triggers app restart
+
+    GetSystemIdleStateRequest:
+      description: Request to get system idle state
+      payload:
+        type: object
+        properties: {}
+
+    GetSystemIdleStateResponse:
+      description: Response with system idle state information
+      payload:
+        $ref: '#/components/schemas/SystemIdleState'
+
+    UserStatusChanged:
+      description: User status change event
+      payload:
+        $ref: '#/components/schemas/UserStatusChangeEvent'
+
+    ShowNotification:
+      description: System notification display request
+      payload:
+        $ref: '#/components/schemas/NotificationOptions'
+
+    GetSourcesRequest:
+      description: Request for screen/window sources
+      payload:
+        $ref: '#/components/schemas/DesktopCapturerOptions'
+
+    GetSourcesResponse:
+      description: Response with available sources
+      payload:
+        type: array
+        items:
+          $ref: '#/components/schemas/DesktopCapturerSource'
+
+    ScreenSharingStarted:
+      description: Screen sharing session started event
+      payload:
+        $ref: '#/components/schemas/ScreenSharingEvent'
+
+    ScreenSharingStopped:
+      description: Screen sharing session stopped event
+      payload:
+        type: object
+        properties: {}
+
+  schemas:
+    AppConfiguration:
+      type: object
+      description: Complete application configuration object
+      properties:
+        url:
+          type: string
+          description: Teams URL to load
+        screenSharingThumbnail:
+          type: object
+          description: Screen sharing thumbnail configuration
+        partition:
+          type: string
+          description: Electron session partition
+        customCSSName:
+          type: string
+          description: Custom CSS file name
+      additionalProperties: true
+
+    SystemIdleState:
+      type: object
+      required: [system, userIdle, userCurrent]
+      properties:
+        system:
+          type: string
+          enum: [active, idle, locked, unknown]
+          description: Current system idle state
+        userIdle:
+          type: integer
+          description: User status when idle was detected (-1 if not idle)
+        userCurrent:
+          type: integer
+          description: Current user status
+
+    UserStatusChangeEvent:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: integer
+              enum: [-1, 1, 2, 3, 4, 5]
+              description: |
+                User status codes:
+                -1: Unknown
+                1: Available
+                2: Busy
+                3: Do Not Disturb
+                4: Away
+                5: Be Right Back
+
+    NotificationOptions:
+      type: object
+      required: [title, body]
+      properties:
+        icon:
+          type: string
+          description: Base64 data URL of notification icon
+        title:
+          type: string
+          description: Notification title
+        body:
+          type: string
+          description: Notification body text
+        type:
+          type: string
+          description: Notification type for sound selection
+
+    DesktopCapturerOptions:
+      type: object
+      properties:
+        types:
+          type: array
+          items:
+            type: string
+            enum: [screen, window]
+          description: Source types to capture
+        thumbnailSize:
+          type: object
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+          description: Thumbnail dimensions
+        fetchWindowIcons:
+          type: boolean
+          description: Whether to fetch window icons
+
+    DesktopCapturerSource:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          description: Unique source identifier
+        name:
+          type: string
+          description: Source display name
+        thumbnail:
+          type: object
+          description: Source thumbnail image
+
+    ScreenSharingEvent:
+      type: object
+      required: [sourceId]
+      properties:
+        sourceId:
+          type: string
+          pattern: '^(screen|window):\d+:\d+$'
+          description: Screen source ID from desktop capturer
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp

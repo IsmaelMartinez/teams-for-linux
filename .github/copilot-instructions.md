@@ -48,7 +48,13 @@ When contributing, please align your changes with these goals.
 ### Event Communication (IPC)
 
 - **Current State:** IPC is handled via `ipcMain.on` and `ipcMain.handle` calls, primarily in `app/index.js`.
-- **Future Direction:** We are moving towards a centralized event bus or IPC abstraction layer to improve structure and maintainability. New IPC channels should be well-documented in `docs/ipc-api.md`.
+- **Centralization Approach:** We use a simplified approach for IPC organization (see ADR-001):
+  - Keep existing JavaScript patterns (`ipcMain.handle`/`ipcMain.on`)
+  - Organize handlers into modules under `app/ipc/`
+  - Use AsyncAPI for documentation generation only (no code generation)
+  - Maintain Electron sandbox security (avoid libraries requiring `sandbox: false`)
+- **Documentation:** AsyncAPI schema in `docs/asyncapi/teams-for-linux-ipc.yaml` generates HTML docs
+- **New IPC Channels:** Follow existing patterns, update AsyncAPI schema for documentation
 
 ### Modern JavaScript Practices
 
