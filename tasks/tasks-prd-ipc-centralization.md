@@ -59,6 +59,9 @@ Generated from: `tasks/prd-ipc-centralization.md`
 - `docs/research/asyncapi-electron-ipc-research.md` - Research findings on AsyncAPI toolchain compatibility with Electron IPC patterns
 - `docs/adr/001-simplified-ipc-centralization.md` - Architecture Decision Record documenting the simplified approach
 - `scripts/generate-asyncapi-docs.js` - Custom script for generating AsyncAPI HTML documentation
+- `app/ipc/README.md` - Comprehensive technical documentation for the IPC organization system
+- `docs/ipc-organization-guide.md` - Developer guide with practical usage patterns and examples
+- `docs/ipc-migration-checklist.md` - Step-by-step migration checklist for developers
 
 ### Core IPC Infrastructure (Implemented)
 - `app/ipc/index.js` - Main IPC module entry point with unified interface

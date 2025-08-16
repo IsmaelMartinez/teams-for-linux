@@ -16,8 +16,15 @@ This directory contains documentation for Teams for Linux, organized for both us
 - **[Logging Configuration](log-config.md)** - Customizing application logging
 
 ## Developer Documentation
-- **[IPC API Reference](ipc-api.md)** - Inter-process communication channels
+
+### Core Systems
+- **[IPC API Reference](ipc-api.md)** - Legacy inter-process communication channels (being migrated)
+- **[IPC Organization Guide](ipc-organization-guide.md)** - New structured IPC system for developers
+- **[IPC System README](../app/ipc/README.md)** - Technical architecture and components
+
+### Research and Analysis
 - **[AI Research](ai-research/)** - Strategic analysis and research documents
+- **[Architecture Decision Records](adr/)** - Key architectural decisions and rationale
 
 ## Architecture Overview
 
