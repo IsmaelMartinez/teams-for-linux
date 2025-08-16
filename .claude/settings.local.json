@@ -6,7 +6,8 @@
       "WebSearch",
       "Bash(npm install:*)",
       "Bash(asyncapi generate:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []
