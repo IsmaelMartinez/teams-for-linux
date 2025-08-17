@@ -303,9 +303,10 @@ function createScreenSharingHandlers(dependencies) {
       maxWidth: 480,
       maxHeight: 360,
       show: false,
-      frame: false,
+      frame: true,
+      title: "Screen Share Preview",
       alwaysOnTop: config.screenSharingThumbnail?.alwaysOnTop || true,
-      skipTaskbar: true,
+      skipTaskbar: false,
       resizable: true,
       webPreferences: {
         preload: path.join(appPath, "screenSharing", "previewWindowPreload.js"),

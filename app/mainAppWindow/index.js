@@ -129,17 +129,81 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
   window = await browserWindowManager.createWindow();
 
-  // window.webContents.session.setDisplayMediaRequestHandler(
-  //   (_request, callback) => {
-  //     streamSelector.show((source) => {
-  //       if (source) {
-  //         handleScreenSourceSelection(source, callback);
-  //       } else {
-  //         callback({ video: null, audio: false });
-  //       }
-  //     });
-  //   }
-  // );
+  // Set up display media request handler for screen sharing  
+  window.webContents.session.setDisplayMediaRequestHandler(
+    async (request, callback) => {
+      console.debug('Display media request received:', request);
+      
+      try {
+        // Get available sources
+        const sources = await desktopCapturer.getSources({
+          types: ['window', 'screen'],
+          thumbnailSize: { width: 150, height: 150 },
+          fetchWindowIcons: true
+        });
+        
+        console.debug('Available sources:', sources.length);
+        
+        // Show screen picker for user to choose
+        const selectedSource = await showScreenPicker(sources);
+        
+        if (selectedSource) {
+          console.debug('User selected source:', selectedSource.name);
+          
+          // Notify IPC system that screen sharing started
+          global.selectedScreenShareSource = selectedSource.id;
+          
+          // Emit screen-sharing-started event
+          const { ipcMain } = require('electron');
+          ipcMain.emit('screen-sharing-started', null, selectedSource.id);
+          
+          callback({ video: selectedSource });
+        } else {
+          console.debug('User cancelled source selection');
+          callback({});
+        }
+      } catch (error) {
+        console.error('Error handling display media request:', error);
+        callback({});
+      }
+    }
+  );
+
+  function showScreenPicker(sources) {
+    return new Promise((resolve) => {
+      const { BrowserWindow, ipcMain } = require("electron");
+      const path = require("path");
+      
+      console.debug('Creating screen picker window with', sources.length, 'sources');
+      
+      const picker = new BrowserWindow({
+        width: 800,
+        height: 600,
+        modal: true,
+        parent: window,
+        webPreferences: {
+          preload: path.join(__dirname, "..", "screenPicker", "preload.js"),
+        },
+      });
+
+      picker.loadFile(path.join(__dirname, "..", "screenPicker", "index.html"));
+
+      picker.webContents.on("did-finish-load", () => {
+        picker.webContents.send("sources-list", sources);
+      });
+
+      ipcMain.once("source-selected", (event, source) => {
+        console.debug('Source selected from picker:', source?.name);
+        picker.close();
+        resolve(source);
+      });
+
+      picker.on("closed", () => {
+        console.debug('Screen picker window closed');
+        resolve(null);
+      });
+    });
+  }
 
   function handleScreenSourceSelection(source, callback) {
     desktopCapturer
