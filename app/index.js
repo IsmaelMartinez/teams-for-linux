@@ -98,7 +98,8 @@ function initializeOrganizedIPC() {
         screen: require('electron').screen,
         globals: global,
         appPath: config.appPath,
-        ipcMain
+        ipcMain,
+        config
       },
       calls: {
         config,

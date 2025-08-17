@@ -19,7 +19,7 @@ const path = require('path');
  * @param {Object} dependencies.ipcMain - Electron ipcMain instance for screen picker
  */
 function createScreenSharingHandlers(dependencies) {
-  const { desktopCapturer, screen, globals, appPath } = dependencies;
+  const { desktopCapturer, screen, globals, appPath, config } = dependencies;
 
   // Internal state for screen picker
   let picker = null;
@@ -186,6 +186,31 @@ function createScreenSharingHandlers(dependencies) {
           globals.previewWindow.webContents.send("screen-sharing-status-changed");
         }
       }
+    },
+
+    'screen-sharing-started': {
+      type: 'on',
+      handler: (event, sourceId) => {
+        console.info('[ScreenSharing] Screen sharing started with source:', sourceId);
+        
+        globals.selectedScreenShareSource = sourceId;
+        
+        // Create preview window if enabled
+        if (config.screenSharingThumbnail?.enabled) {
+          createPreviewWindow(sourceId);
+        }
+      },
+      options: { logArgs: true }
+    },
+
+    'select-source': {
+      type: 'on', 
+      handler: (event) => {
+        console.debug('[ScreenSharing] Source selection requested');
+        
+        // Get available sources and show screen picker
+        event.reply('select-source', globals.selectedScreenShareSource);
+      }
     }
   };
 
@@ -256,6 +281,53 @@ function createScreenSharingHandlers(dependencies) {
       return selectedSource.name;
     }
     return null;
+  }
+
+  /**
+   * Create preview window for screen sharing
+   */
+  function createPreviewWindow(sourceId) {
+    console.debug('[ScreenSharing] Creating preview window for source:', sourceId);
+    
+    // Don't create if preview already exists
+    if (globals.previewWindow && !globals.previewWindow.isDestroyed()) {
+      console.debug('[ScreenSharing] Preview window already exists');
+      return;
+    }
+    
+    globals.previewWindow = new BrowserWindow({
+      width: 320,
+      height: 240,
+      minWidth: 200,
+      minHeight: 150,
+      maxWidth: 480,
+      maxHeight: 360,
+      show: false,
+      frame: false,
+      alwaysOnTop: config.screenSharingThumbnail?.alwaysOnTop || true,
+      skipTaskbar: true,
+      resizable: true,
+      webPreferences: {
+        preload: path.join(appPath, "screenSharing", "previewWindowPreload.js"),
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    });
+
+    globals.previewWindow.loadFile(
+      path.join(appPath, "screenSharing", "previewWindow.html")
+    );
+
+    globals.previewWindow.once("ready-to-show", () => {
+      console.debug('[ScreenSharing] Preview window ready, showing');
+      globals.previewWindow.show();
+    });
+
+    globals.previewWindow.on("closed", () => {
+      console.debug('[ScreenSharing] Preview window closed');
+      globals.previewWindow = null;
+      globals.selectedScreenShareSource = null;
+    });
   }
 
   return handlers;

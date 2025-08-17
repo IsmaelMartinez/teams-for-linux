@@ -308,11 +308,6 @@ function createCallHandlers(dependencies) {
     }
   }
 
-  // Export utility function for external use
-  handlers._utils = {
-    enableWakeLockOnWindowRestore
-  };
-
   return handlers;
 }
 
