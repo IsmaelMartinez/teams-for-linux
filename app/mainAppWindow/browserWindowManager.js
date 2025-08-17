@@ -8,7 +8,6 @@ const {
 const path = require("path");
 const { spawn } = require("child_process");
 const windowStateKeeper = require("electron-window-state");
-const { StreamSelector } = require("../screenSharing");
 const IncomingCallToast = require("../incomingCallToast");
 
 class BrowserWindowManager {
@@ -79,30 +78,11 @@ class BrowserWindowManager {
   }
 
   assignEventHandlers() {
-    ipcMain.on("select-source", this.assignSelectSourceHandler());
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
-    ipcMain.handle(
-      "incoming-call-created",
-      this.assignOnIncomingCallCreatedHandler()
-    );
-    ipcMain.handle(
-      "incoming-call-ended",
-      this.assignOnIncomingCallEndedHandler()
-    );
-    ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
-    ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
   }
 
-  assignSelectSourceHandler() {
-    return (event) => {
-      const streamSelector = new StreamSelector(this.window);
-      streamSelector.show((source) => {
-        event.reply("select-source", source);
-      });
-    };
-  }
 
   disableScreenLockElectron() {
     if (this.blockerId == null) {
@@ -149,32 +129,6 @@ class BrowserWindowManager {
     }
   }
 
-  assignOnIncomingCallCreatedHandler() {
-    return async (e, data) => {
-      if (this.config.incomingCallCommand) {
-        this.handleOnIncomingCallEnded();
-        const commandArgs = [
-          ...this.config.incomingCallCommandArgs,
-          data.caller,
-          data.text,
-          data.image,
-        ];
-        this.incomingCallCommandProcess = spawn(
-          this.config.incomingCallCommand,
-          commandArgs
-        );
-      }
-      if (this.config.enableIncomingCallToast) {
-        this.incomingCallToast.show(data);
-      }
-    };
-  }
-
-  assignOnIncomingCallEndedHandler() {
-    return async (e) => {
-      this.handleOnIncomingCallEnded();
-    };
-  }
 
   handleOnIncomingCallEnded() {
     if (this.incomingCallCommandProcess) {
@@ -186,23 +140,6 @@ class BrowserWindowManager {
     }
   }
 
-  assignOnCallConnectedHandler() {
-    return async (e) => {
-      this.isOnCall = true;
-      return this.config.screenLockInhibitionMethod === "Electron"
-        ? this.disableScreenLockElectron()
-        : this.disableScreenLockWakeLockSentinel();
-    };
-  }
-
-  assignOnCallDisconnectedHandler() {
-    return async (e) => {
-      this.isOnCall = false;
-      return this.config.screenLockInhibitionMethod === "Electron"
-        ? this.enableScreenLockElectron()
-        : this.enableScreenLockWakeLockSentinel();
-    };
-  }
 }
 
 module.exports = BrowserWindowManager;

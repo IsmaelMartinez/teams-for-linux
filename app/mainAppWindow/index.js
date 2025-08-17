@@ -8,7 +8,6 @@ const {
   nativeImage,
   desktopCapturer,
 } = require("electron");
-const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
@@ -129,19 +128,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   });
 
   window = await browserWindowManager.createWindow();
-  streamSelector = new StreamSelector(window);
 
-  window.webContents.session.setDisplayMediaRequestHandler(
-    (_request, callback) => {
-      streamSelector.show((source) => {
-        if (source) {
-          handleScreenSourceSelection(source, callback);
-        } else {
-          callback({ video: null, audio: false });
-        }
-      });
-    }
-  );
+  // window.webContents.session.setDisplayMediaRequestHandler(
+  //   (_request, callback) => {
+  //     streamSelector.show((source) => {
+  //       if (source) {
+  //         handleScreenSourceSelection(source, callback);
+  //       } else {
+  //         callback({ video: null, audio: false });
+  //       }
+  //     });
+  //   }
+  // );
 
   function handleScreenSourceSelection(source, callback) {
     desktopCapturer

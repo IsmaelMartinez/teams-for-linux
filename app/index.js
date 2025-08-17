@@ -85,95 +85,72 @@ if (!gotTheLock) {
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
-  ipcMain.on("config-file-changed", restartApp);
-  ipcMain.handle("get-config", async () => {
-    return config;
-  });
-  ipcMain.handle("get-system-idle-state", handleGetSystemIdleState);
-  ipcMain.handle("get-zoom-level", handleGetZoomLevel);
-  ipcMain.handle("save-zoom-level", handleSaveZoomLevel);
-  ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
-    desktopCapturer.getSources(opts)
-  );
-  ipcMain.handle("choose-desktop-media", async (_event, sourceTypes) => {
-    const sources = await desktopCapturer.getSources({ types: sourceTypes });
-    const chosen = await showScreenPicker(sources);
-    return chosen ? chosen.id : null;
-  });
-
-  ipcMain.on("cancel-desktop-media", () => {
-    if (picker) {
-      picker.close();
-    }
-  });
-  ipcMain.handle("play-notification-sound", playNotificationSound);
-  ipcMain.handle("show-notification", showNotification);
-  ipcMain.handle("user-status-changed", userStatusChangedHandler);
-  ipcMain.handle("set-badge-count", setBadgeCountHandler);
-  ipcMain.handle("get-app-version", async () => {
-    return config.appVersion;
-  });
-
-  // Screen sharing IPC handlers
-  ipcMain.on("screen-sharing-stopped", () => {
-    global.selectedScreenShareSource = null;
-
-    // Close preview window when screen sharing stops
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.close();
-    }
-  });
-
-  // Preview window management IPC handlers
-  ipcMain.handle("get-screen-sharing-status", () => {
-    return global.selectedScreenShareSource !== null;
-  });
-
-  ipcMain.handle("get-screen-share-stream", () => {
-    // Return the source ID - handle both string and object formats
-    if (typeof global.selectedScreenShareSource === "string") {
-      return global.selectedScreenShareSource;
-    } else if (global.selectedScreenShareSource?.id) {
-      return global.selectedScreenShareSource.id;
-    }
-    return null;
-  });
-
-  ipcMain.handle("get-screen-share-screen", () => {
-    // Return screen dimensions if available from StreamSelector, otherwise default
-    if (
-      global.selectedScreenShareSource &&
-      typeof global.selectedScreenShareSource === "object"
-    ) {
-      const { screen } = require("electron");
-      const displays = screen.getAllDisplays();
-
-      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
-        const display = displays[0] || { size: { width: 1920, height: 1080 } };
-        return { width: display.size.width, height: display.size.height };
-      }
-    }
-
-    return { width: 1920, height: 1080 };
-  });
-
-  ipcMain.on("resize-preview-window", (event, { width, height }) => {
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      const [minWidth, minHeight] = global.previewWindow.getMinimumSize();
-      const newWidth = Math.max(minWidth, Math.min(width, 480));
-      const newHeight = Math.max(minHeight, Math.min(height, 360));
-      global.previewWindow.setSize(newWidth, newHeight);
-      global.previewWindow.center();
-    }
-  });
-
-  ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    global.selectedScreenShareSource = null;
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.webContents.send("screen-sharing-status-changed");
-    }
-  });
+  
+  console.info("Initializing IPC system");
+  initializeOrganizedIPC();
 }
+
+function initializeOrganizedIPC() {
+  try {
+    const ipc = require('./ipc/index.js');
+    
+    const dependencies = {
+      screenSharing: {
+        desktopCapturer,
+        screen: require('electron').screen,
+        globals: global,
+        appPath: config.appPath,
+        ipcMain
+      },
+      calls: {
+        config,
+        powerSaveBlocker: require('electron').powerSaveBlocker,
+        incomingCallToast: null,
+        window: null,
+        globals: global
+      },
+      configuration: {
+        config,
+        restartApp,
+        getPartition: () => ({}),
+        savePartition: () => {}
+      },
+      system: {
+        powerMonitor,
+        globals: global
+      },
+      notifications: {
+        app,
+        notificationSounds,
+        config,
+        player
+      }
+    };
+    
+    ipc.initialize();
+    
+    const { createConfigurationHandlers } = require('./ipc/core/configuration');
+    const { createSystemHandlers } = require('./ipc/core/system');
+    const { createNotificationHandlers } = require('./ipc/core/notifications');
+    const { createScreenSharingHandlers } = require('./ipc/features/screenSharing');
+    const { createCallHandlers } = require('./ipc/features/calls');
+    
+    ipc.registerModule('configuration', createConfigurationHandlers(dependencies.configuration));
+    ipc.registerModule('system', createSystemHandlers(dependencies.system));
+    ipc.registerModule('notifications', createNotificationHandlers(dependencies.notifications));
+    ipc.registerModule('screenSharing', createScreenSharingHandlers(dependencies.screenSharing));
+    ipc.registerModule('calls', createCallHandlers(dependencies.calls));
+    
+    console.info("IPC system initialized successfully");
+    
+  } catch (error) {
+    console.error("Failed to initialize IPC system:", error);
+    console.error("Error details:", error.message);
+    console.error("Stack trace:", error.stack);
+    throw new Error(`IPC initialization failed: ${error.message}`);
+  }
+}
+
 
 function restartApp() {
   console.info("Restarting app...");

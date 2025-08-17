@@ -2,13 +2,11 @@
 
 This document provides a comprehensive reference for all Inter-Process Communication (IPC) channels in Teams for Linux. IPC enables communication between the main Electron process and renderer processes (web content).
 
-## Migration Status
+## IPC Architecture
 
-**⚠️ This documentation reflects the legacy scattered IPC handlers. See [IPC Organization Guide](ipc-organization-guide.md) for the new organized system.**
+Teams for Linux uses an organized IPC system with modular handlers grouped by functionality:
 
-### Core Handlers (✅ Migrated)
-The following handlers have been migrated to the organized IPC system:
-
+### Core Handlers
 - **Configuration Handlers** (`app/ipc/core/configuration.js`)
   - `get-config` - Retrieve application configuration
   - `get-app-version` - Get application version
@@ -28,9 +26,7 @@ The following handlers have been migrated to the organized IPC system:
   - `get-badge-count` - Get current badge count
   - `clear-badge-count` - Clear application badge count
 
-### Feature Handlers (✅ Migrated)
-The following handlers have been migrated to the organized IPC system:
-
+### Feature Handlers
 - **Screen Sharing Handlers** (`app/ipc/features/screenSharing.js`)
   - `desktop-capturer-get-sources` - Get available screen/window sources
   - `choose-desktop-media` - Show screen picker for source selection
@@ -487,10 +483,10 @@ Common debugging steps:
 3. Ensure handlers are registered before use
 4. Use `console.debug` in handlers for troubleshooting
 
-## Migration Notes
+## Development Notes
 
-When refactoring IPC handlers:
+When working with IPC handlers:
 1. Update this documentation alongside code changes
-2. Maintain backward compatibility when possible
-3. Consider grouping related handlers into modules
-4. Use consistent naming conventions for new channels
+2. Follow the organized module structure in `app/ipc/`
+3. Use consistent naming conventions for new channels
+4. Include appropriate security validation for new handlers

@@ -5,6 +5,7 @@ const Positioner = require('electron-positioner');
 class IncomingCallToast {
 
     constructor(actionListener) {
+        this.actionListener = actionListener;
         this.toast = new BrowserWindow({
             alwaysOnTop: true,
             autoHideMenuBar: true,
@@ -24,24 +25,23 @@ class IncomingCallToast {
         });
         this.toast.loadFile(path.join(__dirname, 'incomingCallToast.html'));
         this.positioner = new Positioner(this.toast);
-        ipcMain.on('incoming-call-action', (event, action) => {
-            this.hide();
-            if (actionListener && typeof actionListener == 'function') {
-                actionListener(action);
-            }
-        });
     }
 
     show(data) {
-        ipcMain.once('incoming-call-toast-ready', () => {
-            this.positioner.move('bottomRight');
-            this.toast.show();
-        });
         this.toast.webContents.send('incoming-call-toast-init', data);
+        this.positioner.move('bottomRight');
+        this.toast.show();
     }
 
     hide() {
         this.toast.hide();
+    }
+    
+    handleAction(action) {
+        this.hide();
+        if (this.actionListener && typeof this.actionListener == 'function') {
+            this.actionListener(action);
+        }
     }
 
 }

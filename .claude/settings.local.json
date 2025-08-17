@@ -8,7 +8,12 @@
       "Bash(asyncapi generate:*)",
       "Bash(npx:*)",
       "Bash(sed:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git push:*)",
+      "Bash(grep:*)",
+      "Bash(timeout 10s npm start:*)",
+      "Bash(timeout:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

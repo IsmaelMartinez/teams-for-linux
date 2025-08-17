@@ -59,17 +59,11 @@ Global state is managed through specific modules:
 - Changes via AppConfiguration methods only
 
 ### IPC Communication
-
-**New Organized System (Recommended):**
 - Use `app/ipc` module for structured handler registration
 - Group related handlers into modules (e.g., `app/ipc/features/screenSharing.js`)
-- Follow patterns in `docs/ipc-organization-guide.md`
-- Update AsyncAPI schema for documentation
-
-**Legacy Patterns (Being Migrated):**
 - Use `ipcMain.handle` for request-response patterns
 - Use `ipcMain.on` for fire-and-forget notifications  
-- Document all channels in `docs/ipc-api.md`
+- Document all new IPC channels in `docs/ipc-api.md`
 
 ### Error Handling
 - Robust error handling with try-catch in async functions

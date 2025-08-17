@@ -18,8 +18,8 @@ This directory contains documentation for Teams for Linux, organized for both us
 ## Developer Documentation
 
 ### Core Systems
-- **[IPC API Reference](ipc-api.md)** - Legacy inter-process communication channels (being migrated)
-- **[IPC Organization Guide](ipc-organization-guide.md)** - New structured IPC system for developers
+- **[IPC API Reference](ipc-api.md)** - Inter-process communication channels and usage
+- **[IPC Organization Guide](ipc-organization-guide.md)** - Structured IPC system for developers
 - **[IPC System README](../app/ipc/README.md)** - Technical architecture and components
 
 ### Research and Analysis
