@@ -1,13 +1,11 @@
 const {
   app,
-  BrowserWindow,
   dialog,
   ipcMain,
   desktopCapturer,
   globalShortcut,
   systemPreferences,
   powerMonitor,
-  Notification,
   nativeImage,
 } = require("electron");
 const path = require("path");
@@ -41,9 +39,9 @@ const notificationSounds = [
   },
 ];
 
-let userStatus = -1;
-let idleTimeUserStatus = -1;
-let picker = null;
+// Global state variables used by IPC system
+global.userStatus = -1;
+global.idleTimeUserStatus = -1;
 
 let player;
 try {
@@ -253,59 +251,7 @@ function addElectronCLIFlagsFromConfig() {
   }
 }
 
-//TODO: Refator this area (move up or group)
-async function showNotification(_event, options) {
-  console.debug("Showing notification using electron API");
 
-  playNotificationSound(null, {
-    type: options.type,
-    audio: "default",
-    title: options.title,
-    body: options.body,
-  });
-
-  const notification = new Notification({
-    icon: nativeImage.createFromDataURL(options.icon),
-    title: options.title,
-    body: options.body,
-    urgency: config.defaultNotificationUrgency,
-  });
-
-  notification.on("click", mainAppWindow.show);
-
-  notification.show();
-}
-
-async function playNotificationSound(_event, options) {
-  console.debug(
-    `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
-  );
-  // Player failed to load or notification sound disabled in config
-  if (!player || config.disableNotificationSound) {
-    console.debug("Notification sounds are disabled");
-    return;
-  }
-  // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
-  if (
-    config.disableNotificationSoundIfNotAvailable &&
-    userStatus !== 1 &&
-    userStatus !== -1
-  ) {
-    console.debug("Notification sounds are disabled when user is not active");
-    return;
-  }
-  const sound = notificationSounds.filter((ns) => {
-    return ns.type === options.type;
-  })[0];
-
-  if (sound) {
-    console.debug(`Playing file: ${sound.file}`);
-    await player.play(sound.file);
-    return;
-  }
-
-  console.debug("No notification sound played", player, options);
-}
 
 /**
  * Handles the 'render-process-gone' event.
@@ -385,65 +331,13 @@ function handleAppReady() {
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
 }
 
-async function handleGetSystemIdleState() {
-  const systemIdleState = powerMonitor.getSystemIdleState(
-    config.appIdleTimeout
-  );
 
-  if (systemIdleState !== "active" && idleTimeUserStatus == -1) {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = userStatus;
-  }
-
-  const state = {
-    ...{
-      system: systemIdleState,
-      userIdle: idleTimeUserStatus,
-      userCurrent: userStatus,
-    },
-  };
-
-  if (systemIdleState === "active") {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = -1;
-  }
-
-  return state;
-}
-
-//TODO:Consider moving partitions to another module (maybe with the handle zooom level)
-async function handleGetZoomLevel(_, name) {
-  const partition = getPartition(name) || {};
-  return partition.zoomLevel ? partition.zoomLevel : 0;
-}
-
-async function handleSaveZoomLevel(_, args) {
-  let partition = getPartition(args.partition) || {};
-  partition.name = args.partition;
-  partition.zoomLevel = args.zoomLevel;
-  savePartition(partition);
-}
 
 function getPartitions() {
   return appConfig.settingsStore.get("app.partitions") || [];
 }
 
+// eslint-disable-next-line no-unused-vars
 function getPartition(name) {
   const partitions = getPartitions();
   return partitions.filter((p) => {
@@ -451,6 +345,7 @@ function getPartition(name) {
   })[0];
 }
 
+// eslint-disable-next-line no-unused-vars
 function savePartition(arg) {
   const partitions = getPartitions();
   const partitionIndex = partitions.findIndex((p) => {
@@ -493,15 +388,6 @@ async function requestMediaAccess() {
   });
 }
 
-async function userStatusChangedHandler(_event, options) {
-  userStatus = options.data.status;
-  console.debug(`User status changed to '${userStatus}'`);
-}
-
-async function setBadgeCountHandler(_event, count) {
-  console.debug(`Badge count set to '${count}'`);
-  app.setBadgeCount(count);
-}
 
 function handleGlobalShortcutDisabled() {
   config.disableGlobalShortcuts.map((shortcut) => {
@@ -522,32 +408,3 @@ function handleGlobalShortcutDisabledRevert() {
   });
 }
 
-function showScreenPicker(sources) {
-  return new Promise((resolve) => {
-    picker = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        preload: path.join(__dirname, "screenPicker", "preload.js"),
-      },
-    });
-
-    picker.loadFile(path.join(__dirname, "screenPicker", "index.html"));
-
-    picker.webContents.on("did-finish-load", () => {
-      picker.webContents.send("sources-list", sources);
-    });
-
-    ipcMain.once("source-selected", (event, source) => {
-      resolve(source);
-      if (picker) {
-        picker.close();
-      }
-    });
-
-    picker.on("closed", () => {
-      picker = null;
-      resolve(null);
-    });
-  });
-}
