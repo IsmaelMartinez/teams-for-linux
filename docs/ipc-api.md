@@ -2,6 +2,55 @@
 
 This document provides a comprehensive reference for all Inter-Process Communication (IPC) channels in Teams for Linux. IPC enables communication between the main Electron process and renderer processes (web content).
 
+## Migration Status
+
+**⚠️ This documentation reflects the legacy scattered IPC handlers. See [IPC Organization Guide](ipc-organization-guide.md) for the new organized system.**
+
+### Core Handlers (✅ Migrated)
+The following handlers have been migrated to the organized IPC system:
+
+- **Configuration Handlers** (`app/ipc/core/configuration.js`)
+  - `get-config` - Retrieve application configuration
+  - `get-app-version` - Get application version
+  - `get-zoom-level` - Get zoom level for partition
+  - `save-zoom-level` - Save zoom level for partition
+  - `config-file-changed` - Handle configuration file changes
+
+- **System State Handlers** (`app/ipc/core/system.js`)
+  - `get-system-idle-state` - Check system idle state
+  - `user-status-changed` - Handle user status changes
+  - `get-user-status` - Get current user status
+
+- **Notification Handlers** (`app/ipc/core/notifications.js`)
+  - `show-notification` - Display notifications
+  - `play-notification-sound` - Play notification sounds
+  - `set-badge-count` - Set application badge count
+  - `get-badge-count` - Get current badge count
+  - `clear-badge-count` - Clear application badge count
+
+### Feature Handlers (✅ Migrated)
+The following handlers have been migrated to the organized IPC system:
+
+- **Screen Sharing Handlers** (`app/ipc/features/screenSharing.js`)
+  - `desktop-capturer-get-sources` - Get available screen/window sources
+  - `choose-desktop-media` - Show screen picker for source selection
+  - `cancel-desktop-media` - Cancel screen picker dialog
+  - `get-screen-sharing-status` - Get current sharing status
+  - `get-screen-share-stream` - Get active stream source ID
+  - `get-screen-share-screen` - Get screen dimensions
+  - `screen-sharing-stopped` - Handle sharing stop events
+  - `resize-preview-window` - Resize preview window
+  - `stop-screen-sharing-from-thumbnail` - Stop sharing from thumbnail
+
+- **Call Management Handlers** (`app/ipc/features/calls.js`)
+  - `incoming-call-created` - Handle incoming call events
+  - `incoming-call-ended` - Handle call end cleanup
+  - `call-connected` - Disable screen lock during calls
+  - `call-disconnected` - Restore screen lock after calls
+  - `get-call-status` - Get current call state
+  - `incoming-call-action` - Handle call action buttons
+  - `incoming-call-toast-ready` - Handle toast ready events
+
 ## Overview
 
 Teams for Linux uses two types of IPC channels:

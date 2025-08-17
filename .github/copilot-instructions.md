@@ -47,14 +47,18 @@ When contributing, please align your changes with these goals.
 
 ### Event Communication (IPC)
 
-- **Current State:** IPC is handled via `ipcMain.on` and `ipcMain.handle` calls, primarily in `app/index.js`.
-- **Centralization Approach:** We use a simplified approach for IPC organization (see ADR-001):
-  - Keep existing JavaScript patterns (`ipcMain.handle`/`ipcMain.on`)
-  - Organize handlers into modules under `app/ipc/`
-  - Use AsyncAPI for documentation generation only (no code generation)
-  - Maintain Electron sandbox security (avoid libraries requiring `sandbox: false`)
-- **Documentation:** AsyncAPI schema in `docs/asyncapi/teams-for-linux-ipc.yaml` generates HTML docs
-- **New IPC Channels:** Follow existing patterns, update AsyncAPI schema for documentation
+- **Architecture:** IPC uses organized handler system in `app/ipc/` (see ADR-001 and ADR-002):
+  - **Core Handlers:** `app/ipc/core/` - Configuration, system, and notification handlers
+  - **Feature Handlers:** `app/ipc/features/` - Screen sharing and call management handlers
+  - **Unified Interface:** `app/ipc/index.js` provides centralized IPC management
+  - **Security:** AJV validation for critical handlers, maintains Electron sandbox security
+- **Implementation Patterns:**
+  - Use `ipcMain.handle` for request-response patterns (returns data)
+  - Use `ipcMain.on` for fire-and-forget notifications
+  - Follow dependency injection pattern for handler modules
+  - Use console logging with prefixes (e.g., `[IPC-Manager]`, `[ScreenSharing]`)
+- **Documentation:** Complete technical docs in `app/ipc/README.md` and `docs/ipc-organization-guide.md`
+- **New IPC Channels:** Add to appropriate module in `app/ipc/core/` or `app/ipc/features/`
 
 ### Modern JavaScript Practices
 
@@ -111,6 +115,25 @@ npm run pack          # Development build without packaging
 - **Security**: Snyk and CodeQL for vulnerability scanning.
 - **CI/CD**: GitHub Actions for build validation and releases.
 - **Unit & Integration Testing**: The project currently lacks sufficient test coverage. A key goal is to introduce a testing framework (e.g., Jest) and build out a comprehensive test suite. Contributions in this area are highly encouraged.
+
+## Task Completion Protocol
+
+When completing major implementation work (following `.github/instructions/process-tasks-list.instructions.md`):
+
+1. **Run Quality Checks**: Execute full test suite, linting (`npm run lint`), and build verification (`npm run pack`)
+2. **Stage Implementation**: Stage all implementation changes (`git add .`)
+3. **Update Documentation**: Before committing implementation:
+   - Update relevant README files and module documentation
+   - Create or update ADR documents in `docs/adr/` for architectural decisions
+   - Update `.github/copilot-instructions.md` with new patterns or constraints
+   - Update configuration documentation for new settings
+   - Stage documentation changes (`git add docs/ .github/`)
+4. **Commit Implementation**: Use conventional commit format with descriptive messages
+5. **Push Implementation**: Push changes to remote repository
+6. **Handle Task Artifacts**: 
+   - Stage and commit task lists and PRDs for historical reference
+   - Remove task/PRD files after committing (preserved in git history)
+   - Update project documentation to reflect completed work
 
 ## Common Patterns
 

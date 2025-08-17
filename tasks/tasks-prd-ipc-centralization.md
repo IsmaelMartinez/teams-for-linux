@@ -116,28 +116,51 @@ Generated from: `tasks/prd-ipc-centralization.md`
   - [x] 2.4 Maintain full backward compatibility with existing ipcMain handlers
   - [x] 2.5 Create unit tests for IPC manager basic functionality
   - [x] 2.6 Performance benchmark: Establish baseline metrics before migration
-- [ ] 3.0 Optional Validation System (Minimal)
-  - [ ] 3.1 Add optional AJV dependency for schema validation
-  - [ ] 3.2 Create simple validation utility for critical IPC events only
-  - [ ] 3.3 Integrate validation with AsyncAPI schemas where beneficial
-  - [ ] 3.4 Add validation tests for critical handlers
-- [ ] 4.0 Core Handler Migration (JavaScript Patterns)
-  - [ ] 4.1 Extract and organize configuration handlers from app/index.js (get-config, config-file-changed)
-  - [ ] 4.2 Extract and organize system state handlers (get-system-idle-state, user-status-changed)
-  - [ ] 4.3 Extract and organize notification handlers (show-notification, play-notification-sound, set-badge-count)
-  - [ ] 4.4 Extract and organize zoom level handlers (get-zoom-level, save-zoom-level)
-  - [ ] 4.5 Update AsyncAPI specification with migrated handler schemas
-  - [ ] 4.6 Create integration tests verifying handler compatibility
-  - [ ] 4.7 Ensure existing renderer processes continue working unchanged
-- [ ] 5.0 Feature Handler Migration (Screen Sharing, Calls)
-  - [ ] 5.1 Extract and organize screen sharing handlers from app/screenSharing/index.js
-  - [ ] 5.2 Extract and organize call management handlers from app/mainAppWindow/browserWindowManager.js
-  - [ ] 5.3 Extract and organize call toast handlers from app/incomingCallToast/index.js
-  - [ ] 5.4 Organize remaining scattered handlers (tray-update, custom-bg-list, etc.)
-  - [ ] 5.5 Update AsyncAPI specification with all organized handler schemas
-  - [ ] 5.6 Create integration tests for feature handlers
-  - [ ] 5.7 Performance testing: Verify no regression in screen sharing and call performance
-  - [ ] 5.8 Update documentation and complete organization cleanup
+- [x] 2.1 AsyncAPI Integration Investigation
+  - [x] 2.1.1 Conduct MQTT integration spike to validate external integration benefits
+  - [x] 2.1.2 Conduct webhook integration spike to validate delivery system benefits  
+  - [x] 2.1.3 Analyze AsyncAPI value proposition vs. simpler alternatives
+  - [x] 2.1.4 Create ADR-002 documenting decision to NOT adopt AsyncAPI
+  - [x] 2.1.5 Remove AsyncAPI infrastructure and update task priorities
+- [x] 3.0 IPC Event Validation System (Security & Performance)
+  - [x] 3.1 Implement AJV-based validation system for security-critical IPC events
+  - [x] 3.2 Create JSON schemas for critical handlers (configuration, file operations, authentication)
+  - [x] 3.3 Implement input sanitization and path traversal protection
+  - [x] 3.4 Add comprehensive validation tests and security testing
+  - [x] 3.5 Create validation middleware with configurable security policies
+  - [x] 3.6 Document security validation system and usage patterns
+- [x] 4.0 Core Handler Migration (Configuration, System, Notifications)
+  - [x] 4.1 Extract and organize configuration handlers from app/index.js (get-config, get-app-version, zoom levels, config-file-changed)
+  - [x] 4.2 Extract and organize system state handlers (get-system-idle-state, user-status-changed, get-user-status)
+  - [x] 4.3 Extract and organize notification handlers (show-notification, play-notification-sound, badge count management)
+  - [x] 4.4 Implement dependency injection pattern for all core handlers
+  - [x] 4.5 Create comprehensive unit tests for all core handler modules
+  - [x] 4.6 Ensure full backward compatibility with existing renderer processes
+  - [x] 4.7 Document core handler organization and usage patterns
+- [x] 5.0 Feature Handler Migration (Screen Sharing, Calls)
+  - [x] 5.1 Extract and organize screen sharing handlers from app/index.js (desktop capturer, source selection, preview)
+  - [x] 5.2 Extract and organize call management handlers from app/mainAppWindow/browserWindowManager.js (power management, state)
+  - [x] 5.3 Extract and organize call toast handlers from app/incomingCallToast/index.js (incoming calls, actions)
+  - [x] 5.4 Create comprehensive handler modules with dependency injection
+  - [x] 5.5 Update markdown documentation with all organized handler schemas
+  - [x] 5.6 Create integration tests for feature handlers
+  - [x] 5.7 Validation testing: Verify handler functionality and error handling
+  - [x] 5.8 Update documentation and complete organization cleanup
+- [x] 6.0 Performance Baseline & Benchmarking System
+  - [x] 6.1 Implement comprehensive IPC performance monitoring system
+  - [x] 6.2 Create baseline measurement tools for handler execution timing
+  - [x] 6.3 Add performance metrics collection and analysis utilities
+  - [x] 6.4 Create benchmarking infrastructure for regression testing
+  - [x] 6.5 Implement performance comparison tools and reporting
+  - [x] 6.6 Document performance monitoring system and usage guidelines
+- [x] 7.0 Comprehensive Documentation & Migration Guide
+  - [x] 7.1 Create technical architecture documentation (app/ipc/README.md)
+  - [x] 7.2 Create developer usage guide (docs/ipc-organization-guide.md)
+  - [x] 7.3 Create step-by-step migration checklist (docs/ipc-migration-checklist.md)
+  - [x] 7.4 Create security review and integration guidelines (docs/security-review.md)
+  - [x] 7.5 Document all organized handler APIs and dependency requirements
+  - [x] 7.6 Create comprehensive testing documentation and validation scripts
+  - [x] 7.7 Update project documentation with IPC organization system overview
 
 ## Future Improvements
 

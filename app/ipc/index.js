@@ -9,6 +9,7 @@ const ipcManager = require('./manager');
 const ipcRegistry = require('./registry');
 const ipcCompatibility = require('./compatibility');
 const ipcBenchmark = require('./benchmark');
+const ipcValidation = require('./validation');
 
 /**
  * Initialize the IPC system
@@ -52,6 +53,10 @@ function getSystemStatus() {
     benchmark: {
       channelCount: ipcBenchmark.getAllMetrics().length,
       summary: ipcBenchmark.getSummary()
+    },
+    validation: {
+      enabled: ipcValidation.getStats().enabled,
+      schemas: ipcValidation.getStats().registeredSchemas
     }
   };
 }
@@ -77,6 +82,7 @@ module.exports = {
   registry: ipcRegistry,
   compatibility: ipcCompatibility,
   benchmark: ipcBenchmark,
+  validation: ipcValidation,
   
   // System management
   initialize: initializeIPC,
@@ -92,5 +98,10 @@ module.exports = {
   // Performance monitoring
   wrapHandler: (channel, handler) => ipcBenchmark.wrapHandler(channel, handler),
   getMetrics: () => ipcBenchmark.getAllMetrics(),
-  saveBaseline: (name) => ipcBenchmark.saveBaseline(name)
+  saveBaseline: (name) => ipcBenchmark.saveBaseline(name),
+  
+  // Validation utilities
+  validateHandler: (channel, handler) => ipcValidation.wrapHandler(channel, handler),
+  registerValidationSchema: (channel, schema) => ipcValidation.registerSchema(channel, schema),
+  setValidationEnabled: (enabled) => ipcValidation.setValidationEnabled(enabled)
 };
