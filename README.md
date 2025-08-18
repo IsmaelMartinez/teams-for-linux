@@ -62,6 +62,9 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 
 ## Documentation
 
+> [!NOTE]
+> The documentation is currently undergoing a major enhancement and will be migrated to Docusaurus for an improved user experience.
+
 📖 **[Complete Documentation](https://ismaelmartinez.github.io/teams-for-linux/)** — Full documentation available online
 
 | Topic | Description |

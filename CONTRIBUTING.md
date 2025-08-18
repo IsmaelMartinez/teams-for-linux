@@ -54,23 +54,16 @@ cd dist && sudo snap install teams-for-linux_*.snap --dangerous
 
 ## Documentation
 
-### Updating Documentation
+Project documentation is being migrated to Docusaurus for an enhanced user experience and will be deployed to GitHub Pages via GitHub Actions.
 
-Project documentation is located in the `/docs` folder and automatically deployed to **[GitHub Pages](https://ismaelmartinez.github.io/teams-for-linux/)**.
+### Contributing to Documentation
 
-**To update documentation:**
-1. Edit markdown files in `/docs` folder
-2. Push changes to main branch
-3. GitHub Pages automatically rebuilds within 1-5 minutes
+Once the migration is complete, contributions to the documentation will involve:
+1.  Editing Markdown/MDX files within the Docusaurus project structure.
+2.  Building the Docusaurus site locally to preview changes.
+3.  Submitting pull requests, which will trigger automated builds and deployments via GitHub Actions.
 
-**Documentation Structure:**
-- `docs/README.md` - Homepage with navigation
-- `docs/configuration.md` - Complete configuration guide  
-- `docs/knowledge-base.md` - Troubleshooting and FAQ
-- `docs/screen-sharing.md` - Screen sharing implementation
-- Additional guides for specific features
-
-**Note:** When adding new features, update relevant documentation and add links to `docs/README.md` navigation.
+Further details on the Docusaurus project structure and contribution guidelines will be provided upon completion of the migration.
 
 ## Release Process
 
