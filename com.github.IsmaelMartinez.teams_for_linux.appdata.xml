@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.4.0" date="2025-08-18">
+			<description>
+				<ul>
+					<li>New: GitHub Pages documentation deployment - documentation now available online</li>
+					<li>Update: Electron upgraded to 37.3.0</li>
+					<li>Improvement: Enhanced contributor documentation with GitHub Pages workflow</li>
+					<li>Enhancement: Added comprehensive documentation links throughout project</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.3.0" date="2025-08-13">
 			<description>
 				<ul>
