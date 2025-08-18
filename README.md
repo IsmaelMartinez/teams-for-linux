@@ -62,17 +62,16 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 
 ## Documentation
 
-> [!NOTE]
-> The documentation is currently undergoing a major enhancement and will be migrated to Docusaurus for an improved user experience.
-
-📖 **[Complete Documentation](https://ismaelmartinez.github.io/teams-for-linux/)** — Full documentation available online
+📖 **[Complete Documentation](https://ismaelmartinez.github.io/teams-for-linux/)** — Enhanced documentation with search, mobile optimization, and comprehensive guides
 
 | Topic | Description |
 |-------|-------------|
-| **[Configuration Guide](docs/configuration.md)** | Complete setup and configuration options |
-| **[Troubleshooting](docs/knowledge-base.md)** | Common issues and solutions |
-| **[Multiple Profiles](docs/multiple-instances.md)** | Running work & personal accounts |
-| **[Custom Backgrounds](docs/custom-backgrounds.md)** | Video call backgrounds setup |
+| **[Installation Guide](https://ismaelmartinez.github.io/teams-for-linux/installation)** | Package repositories and installation methods |
+| **[Configuration Guide](https://ismaelmartinez.github.io/teams-for-linux/configuration)** | Complete setup and configuration options |
+| **[Troubleshooting](https://ismaelmartinez.github.io/teams-for-linux/troubleshooting)** | Common issues and solutions |
+| **[Multiple Profiles](https://ismaelmartinez.github.io/teams-for-linux/multiple-instances)** | Running work & personal accounts |
+| **[Custom Backgrounds](https://ismaelmartinez.github.io/teams-for-linux/custom-backgrounds)** | Video call backgrounds setup |
+| **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/contributing)** | Development setup and contribution guidelines |
 
 ## Support & Community
 

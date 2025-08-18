@@ -9,6 +9,8 @@ const {
   powerMonitor,
   Notification,
   nativeImage,
+  Menu,
+  session,
 } = require("electron");
 const path = require("path");
 const CustomBackground = require("./customBackground");
@@ -406,7 +408,121 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+
+  // Build a small debug menu with cache reset and token tracing toggles
+  try {
+    buildDebugMenu();
+  } catch (e) {
+    console.debug("Could not build debug menu", e);
+  }
 }
+
+// --- Diagnostics helpers ---
+let tokenTracingInstalled = false;
+
+async function resetTeamsOrigin() {
+  try {
+    const s = session.fromPartition(config.partition) || session.defaultSession;
+    await s.clearStorageData({
+      origin: "https://teams.microsoft.com",
+      storages: [
+        "appcache",
+        "cookies",
+        "localstorage",
+        "indexdb",
+        "filesystem",
+        "shadercache",
+        "serviceworkers",
+        "cachestorage",
+        "websql",
+      ],
+    });
+    await s.clearCache();
+    console.log("🔧 Cleared storage/cache for https://teams.microsoft.com");
+  } catch (err) {
+    console.error("Failed to clear Teams origin storage:", err);
+  }
+}
+
+function installTokenTracing() {
+  if (tokenTracingInstalled) return;
+  const s = session.fromPartition(config.partition) || session.defaultSession;
+  const filter = {
+    urls: [
+      "https://login.microsoftonline.com/*/oauth2/v2.0/token*",
+      "https://login.microsoftonline.com/*/oauth2/token*",
+    ],
+  };
+
+  try {
+    s.webRequest.onBeforeRequest(filter, (details, cb) => {
+      console.log(
+        "🔎 [MSAL] token request about to fire:",
+        details.method,
+        details.url
+      );
+      cb({ cancel: false });
+    });
+
+    s.webRequest.onCompleted(filter, (details) => {
+      console.log(
+        "✅ [MSAL] token request completed:",
+        details.statusCode,
+        details.url
+      );
+    });
+
+    s.webRequest.onErrorOccurred(filter, (details) => {
+      console.log(
+        "❌ [MSAL] token request failed:",
+        details.error,
+        details.url
+      );
+    });
+
+    tokenTracingInstalled = true;
+    console.log("Token tracing installed");
+  } catch (err) {
+    console.error("Failed to install token tracing:", err);
+  }
+}
+
+function buildDebugMenu() {
+  const template = [
+    {
+      label: "Debug",
+      submenu: [
+        {
+          label: "Reset Teams Cache",
+          click: async () => {
+            await resetTeamsOrigin();
+          },
+        },
+        {
+          label: "Toggle Token Tracing",
+          type: "checkbox",
+          click: (item) => {
+            if (item.checked) installTokenTracing();
+            else
+              console.log("Token tracing cannot be disabled in this session");
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+// Listen for renderer-side unhandled errors/rejections forwarded from preload
+ipcMain.on("unhandled-rejection", (_event, payload) => {
+  console.error("[RENDERER UNHANDLED REJECTION]", payload);
+});
+
+ipcMain.on("window-error", (_event, payload) => {
+  console.error("[RENDERER WINDOW ERROR]", payload);
+});
 
 async function handleGetSystemIdleState() {
   const systemIdleState = powerMonitor.getSystemIdleState(

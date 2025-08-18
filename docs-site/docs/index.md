@@ -1,26 +1,43 @@
+---
+id: index
+title: Teams for Linux Documentation
+slug: /
+---
+
 # Teams for Linux Documentation
 
-This directory contains documentation for Teams for Linux, organized for both users and developers.
+**Unofficial Microsoft Teams client for Linux** — a native desktop app that wraps the Teams web version with enhanced Linux integration.
 
-> [!NOTE]
-> Documentation is now available online at: https://ismaelmartinez.github.io/teams-for-linux/
+✅ **System notifications**  
+✅ **System tray integration**  
+✅ **Custom backgrounds & themes**  
+✅ **Screen sharing support**  
+✅ **Multiple account profiles**
 
-## User Documentation
+:::info Project Status
+This is an independent project, not affiliated with Microsoft. Some features are limited by the Teams web app capabilities.
+:::
 
-### Getting Started
+## Getting Started
+
+### Installation
+- **[Installation Guide](installation.md)** - Package repositories, distribution packages, and manual installation
 - **[Configuration Guide](configuration.md)** - Complete configuration options and settings
-- **[Troubleshooting Guide](knowledge-base.md)** - Common issues and solutions
 - **[Multiple Instances](multiple-instances.md)** - Running separate profiles (work/personal)
 
 ### Features
 - **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
 - **[Custom Backgrounds](custom-backgrounds.md)** - Setting up custom video call backgrounds
-- **[Certificate Management](certificate.md)** - Custom CA certificate handling
-- **[Logging Configuration](log-config.md)** - Customizing application logging
+- **[Certificate Management](certificate.md)** - Custom CA certificate handling for corporate environments
 
 ## Developer Documentation
-- **[IPC API Reference](ipc-api.md)** - Inter-process communication channels
-- **[AI Research](ai-research/)** - Strategic analysis and research documents
+- **[Contributing Guide](contributing.md)** - Development setup, code standards, and contribution guidelines
+- **[IPC API Reference](ipc-api.md)** - Inter-process communication channels and developer integration
+- **[Logging Configuration](log-config.md)** - Customizing application logging and debugging
+- **[Release Automation](release-info.md)** - Release process and automation for maintainers
+
+## Research & Analysis
+- **[AI Research Documentation](ai-research/index.md)** - Strategic analysis and research documents
 
 ## Architecture Overview
 
@@ -99,12 +116,14 @@ graph TD
 
 1. **Basic Usage**: Launch with `teams-for-linux`
 2. **Configuration**: Create `~/.config/teams-for-linux/config.json` with your settings
-3. **Troubleshooting**: Check the [Troubleshooting Guide](knowledge-base.md) for common issues
+3. **Troubleshooting**: Check the [Troubleshooting Guide](troubleshooting.md) for common issues
 4. **Multiple Profiles**: Use `--user-data-dir` and `--class` flags for separate instances
 
-## Getting Help
+## Support & Community
 
-- Review the troubleshooting guide for common issues
-- Check configuration options for customization needs
-- For development questions, see the IPC API documentation
-- Report bugs at https://github.com/IsmaelMartinez/teams-for-linux/issues
+- **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
+- **[Installation Guide](installation.md)** - Setup and installation help
+- **[Contributing Guide](contributing.md)** - How to contribute to the project
+- 💬 **Chat**: [Matrix room](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)
+- 🤝 **Discussions**: [GitHub Discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions)

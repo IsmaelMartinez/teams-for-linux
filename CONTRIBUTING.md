@@ -54,16 +54,22 @@ cd dist && sudo snap install teams-for-linux_*.snap --dangerous
 
 ## Documentation
 
-Project documentation is being migrated to Docusaurus for an enhanced user experience and will be deployed to GitHub Pages via GitHub Actions.
+Project documentation has been migrated to Docusaurus and is deployed to GitHub Pages via GitHub Actions at https://ismaelmartinez.github.io/teams-for-linux/.
 
 ### Contributing to Documentation
 
-Once the migration is complete, contributions to the documentation will involve:
-1.  Editing Markdown/MDX files within the Docusaurus project structure.
-2.  Building the Docusaurus site locally to preview changes.
-3.  Submitting pull requests, which will trigger automated builds and deployments via GitHub Actions.
+Documentation contributions involve:
+1. **Edit Markdown/MDX files** in the `docs-site/docs/` directory
+2. **Build locally to preview changes**:
+   ```bash
+   cd docs-site
+   npm install
+   npm run start
+   ```
+3. **Update navigation** in `docs-site/sidebars.ts` if adding new pages
+4. **Submit pull requests** which trigger automated builds and deployments
 
-Further details on the Docusaurus project structure and contribution guidelines will be provided upon completion of the migration.
+See the [Documentation Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/contributing#documentation) for detailed instructions.
 
 ## Release Process
 
@@ -89,4 +95,4 @@ Further details on the Docusaurus project structure and contribution guidelines 
 
 4. **Commit and push** your changes, then open a pull request.
 
-See [`docs/RELEASE_INFO.md`](docs/RELEASE_INFO.md) for technical details on release automation.
+See the [Release Automation Guide](https://ismaelmartinez.github.io/teams-for-linux/release-info) for technical details on release automation.

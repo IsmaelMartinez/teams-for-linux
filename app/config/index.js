@@ -331,7 +331,7 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           transports: {
             console: {
-              level: "debug",
+              level: "info",
             },
             file: {
               level: false,

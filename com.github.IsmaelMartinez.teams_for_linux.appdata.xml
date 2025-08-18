@@ -14,6 +14,22 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.0" date="2025-08-18">
+			<description>
+				<ul>
+					<li>Major: Complete documentation platform enhancement with Docusaurus</li>
+					<li>New: Enhanced documentation site with client-side search functionality</li>
+					<li>New: Mobile-first responsive documentation design with Teams branding</li>
+					<li>New: Comprehensive installation guide covering all distribution methods</li>
+					<li>New: Complete contributing guide for developers and contributors</li>
+					<li>Enhancement: All documentation migrated to modern Docusaurus platform</li>
+					<li>Enhancement: Added Mermaid diagram support for technical documentation</li>
+					<li>Enhancement: WCAG 2.1 AA accessibility compliance for documentation</li>
+					<li>Improvement: GitHub Actions automated deployment for documentation</li>
+					<li>Improvement: Enhanced cross-references and navigation throughout docs</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.4.0" date="2025-08-18">
 			<description>
 				<ul>

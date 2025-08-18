@@ -1,0 +1,85 @@
+name: Test Deploy Docusaurus (Development)
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      branch:
+        description: 'Target branch for test deployment'
+        required: false
+        default: 'docs-test-deploy'
+        type: string
+
+defaults:
+  run:
+    shell: bash
+    working-directory: docs-site
+
+jobs:
+  test-deploy:
+    name: Test Deploy to Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+
+      - name: Deploy to test branch
+        run: |
+          # Create/switch to test branch
+          git checkout -B ${{ inputs.branch || 'docs-test-deploy' }}
+          
+          # Copy built files to root (GitHub Pages style)
+          cp -r build/* .
+          
+          # Add .nojekyll to prevent Jekyll processing
+          touch .nojekyll
+          
+          # Add all files
+          git add .
+          
+          # Commit if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Test deploy: $(date)"
+            git push origin ${{ inputs.branch || 'docs-test-deploy' }} --force
+            echo "✅ Test deployment successful to branch: ${{ inputs.branch || 'docs-test-deploy' }}"
+            echo "📋 View at: https://ismaelmartinez.github.io/teams-for-linux/ (if GitHub Pages is configured for this branch)"
+          else
+            echo "ℹ️ No changes to deploy"
+          fi
+
+  validate-deployment:
+    name: Validate Test Deployment
+    needs: test-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Check deployment accessibility
+        run: |
+          # This is a basic check - in a real scenario, you might check if the branch is accessible
+          # For now, we'll just validate that the workflow completed successfully
+          echo "✅ Test deployment workflow completed"
+          echo "📋 Manual verification needed:"
+          echo "   1. Check that branch ${{ inputs.branch || 'docs-test-deploy' }} was created/updated"
+          echo "   2. Verify GitHub Pages configuration if needed for testing"
+          echo "   3. Check that build artifacts are properly structured"
