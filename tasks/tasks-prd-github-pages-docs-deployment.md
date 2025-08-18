@@ -48,6 +48,7 @@
 - `docs/ai-research/*.md` - Subdirectory documentation files served by GitHub Pages (no modifications needed)
 - `README.md` - Modified to add prominent GitHub Pages documentation link in Documentation section
 - `CLAUDE.md` - Modified to add Documentation Deployment section with GitHub Pages information
+- `CONTRIBUTING.md` - Modified to add Documentation section with GitHub Pages workflow for contributors
 - Repository Settings (GitHub UI) - Configured GitHub Pages to deploy from /docs folder on main branch
 - `tasks/prd-github-pages-docs-deployment.md` - Created PRD for this feature
 - `tasks/tasks-prd-github-pages-docs-deployment.md` - Created task list for implementation
