@@ -62,6 +62,8 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 
 ## Documentation
 
+📖 **[Complete Documentation](https://ismaelmartinez.github.io/teams-for-linux/)** — Full documentation available online
+
 | Topic | Description |
 |-------|-------------|
 | **[Configuration Guide](docs/configuration.md)** | Complete setup and configuration options |

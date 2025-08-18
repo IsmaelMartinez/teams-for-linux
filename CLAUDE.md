@@ -74,6 +74,26 @@ The project currently lacks comprehensive test coverage. When contributing:
 - Consider adding tests using a framework like Jest
 - Ensure cross-platform compatibility (Linux primary, Windows/macOS supported)
 
+## Documentation Deployment
+
+The project documentation is automatically deployed to GitHub Pages from the `/docs` folder:
+
+- **Live Documentation**: https://ismaelmartinez.github.io/teams-for-linux/
+- **Source**: `/docs` folder on main branch
+- **Deployment**: Automatic on every push to main branch
+- **Theme**: GitHub's default Jekyll theme
+
+### Updating Documentation
+- Edit markdown files in `/docs` folder
+- Push changes to main branch
+- GitHub Pages automatically rebuilds and deploys within 1-5 minutes
+- No manual deployment steps required
+
+### Known Limitations
+- Mermaid diagrams display as raw code (acceptable degradation)
+- GitHub alert syntax (`[!NOTE]`, `[!TIP]`) may not render (displays as text)
+- Jekyll uses basic theme with limited customization
+
 ## Important Notes
 
 - The project is undergoing active refactoring to improve modularity

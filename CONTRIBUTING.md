@@ -52,6 +52,26 @@ npm run dist:linux:snap
 cd dist && sudo snap install teams-for-linux_*.snap --dangerous
 ```
 
+## Documentation
+
+### Updating Documentation
+
+Project documentation is located in the `/docs` folder and automatically deployed to **[GitHub Pages](https://ismaelmartinez.github.io/teams-for-linux/)**.
+
+**To update documentation:**
+1. Edit markdown files in `/docs` folder
+2. Push changes to main branch
+3. GitHub Pages automatically rebuilds within 1-5 minutes
+
+**Documentation Structure:**
+- `docs/README.md` - Homepage with navigation
+- `docs/configuration.md` - Complete configuration guide  
+- `docs/knowledge-base.md` - Troubleshooting and FAQ
+- `docs/screen-sharing.md` - Screen sharing implementation
+- Additional guides for specific features
+
+**Note:** When adding new features, update relevant documentation and add links to `docs/README.md` navigation.
+
 ## Release Process
 
 
