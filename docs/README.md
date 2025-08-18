@@ -2,6 +2,9 @@
 
 This directory contains documentation for Teams for Linux, organized for both users and developers.
 
+> [!NOTE]
+> Documentation is now available online at: https://ismaelmartinez.github.io/teams-for-linux/
+
 ## User Documentation
 
 ### Getting Started
