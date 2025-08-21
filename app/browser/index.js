@@ -23,22 +23,11 @@
   // createCustomNotification implementation.
   try {
     const common = require("./notifications/injectedNotification");
-    // If the injected module didn't initialize (because it expects the
-    // renderer API), call createCustomNotification directly.
-    if (common && typeof common.createCustomNotification === "function") {
+    if (common?.createCustomNotification) {
       common.createCustomNotification(window, rendererAPI, config);
     }
-  } catch {
-    // Fall back to attempting direct initialization via require path
-    try {
-      require("./notifications/injectedNotification").createCustomNotification(
-        window,
-        rendererAPI,
-        config
-      );
-    } catch (err) {
-      console.debug("Could not initialize notification module", err);
-    }
+  } catch (err) {
+    console.debug("Could not initialize notification module:", err);
   }
 })();
 

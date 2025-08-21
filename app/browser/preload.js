@@ -14,9 +14,19 @@ try {
 
       const logger = new msal.Logger(
         (level, message, containsPii) => {
-          // Forward MSAL logs to the Electron renderer console
+          // Forward MSAL logs to the Electron renderer console with filtered content
           try {
-            console.debug(`[MSAL ${level}] ${message} (pii:${containsPii})`);
+            // Extract action type from message without logging sensitive data
+            const getActionType = (message) => {
+              const lower = message.toLowerCase();
+              if (lower.includes('token') || lower.includes('acquire')) return 'token';
+              if (lower.includes('refresh') || lower.includes('renewal')) return 'refresh'; 
+              if (lower.includes('logout') || lower.includes('clear')) return 'logout';
+              if (lower.includes('error') || lower.includes('failed')) return 'error';
+              return 'operation';
+            };
+            
+            console.debug(`[MSAL ${level}] MSAL ${getActionType(message)} (contains_pii:${containsPii})`);
           } catch (err) {
             console.debug("MSAL log forward failed", err);
           }
@@ -31,10 +41,7 @@ try {
       if (msal.PublicClientApplication) {
         const OldPCA = msal.PublicClientApplication;
         msal.PublicClientApplication = function () {
-          const app = new (Function.prototype.bind.apply(
-            OldPCA,
-            [null].concat(Array.prototype.slice.call(arguments))
-          ))();
+          const app = new OldPCA(...arguments);
           try {
             if (typeof app.setLogger === "function") app.setLogger(logger);
           } catch (err) {
@@ -45,7 +52,8 @@ try {
       }
 
       return true;
-    } catch {
+    } catch (err) {
+      console.debug("MSAL logger attachment failed:", err);
       return false;
     }
   };
@@ -54,8 +62,8 @@ try {
   contextBridge.exposeInMainWorld("msalHelper", {
     attachLogger: () => attachMsalLogger(window),
   });
-} catch {
-  // noop
+} catch (err) {
+  console.debug("MSAL helper initialization failed:", err);
 }
 
 // Expose APIs needed by browser scripts with contextIsolation
@@ -130,7 +138,8 @@ try {
         // Keep the raw reason only when it's a plain object to avoid huge payloads
         reason: typeof reason === "object" && reason !== null ? reason : null,
       });
-    } catch {
+    } catch (err) {
+      console.debug("Unhandled rejection forwarding failed:", err);
       // Best-effort forwarding, never throw from preload
     }
   });
@@ -145,10 +154,10 @@ try {
         errorStack:
           event && event.error && event.error.stack ? event.error.stack : null,
       });
-    } catch {
-      // noop
+    } catch (err) {
+      console.debug("Window error forwarding failed:", err);
     }
   });
-} catch {
-  // noop
+} catch (err) {
+  console.debug("Error handler setup failed:", err);
 }

@@ -15,14 +15,13 @@
     class CustomNotification {
       constructor(title, options) {
         options = options || {};
-        options.icon = options.icon ? options.icon : ICON_BASE64;
-        options.title = options.title ? options.title : title;
-        options.type = options.type ? options.type : "new-message";
+        options.icon = options.icon || ICON_BASE64;
+        options.title = options.title || title;
+        options.type = options.type || "new-message";
         options.requireInteraction = false;
 
         const handleConfig = (config) => {
-          if (!config) return;
-          if (config.disableNotifications) return;
+          if (config?.disableNotifications) return;
 
           if (config.notificationMethod === "web") {
             const notifSound = {
@@ -41,7 +40,8 @@
             if (classicNotification) {
               try {
                 return new classicNotification(title, options);
-              } catch {
+              } catch (err) {
+                console.debug("Could not create native notification:", err);
                 // ignore; still set noop handlers below
               }
             }
