@@ -10,7 +10,7 @@ const electron = require("electron");
  * This module provides automatic cache cleanup to prevent OAuth token corruption
  * caused by Electron/Chromium cache growing too large (typically >500MB).
  * 
- * IMPORTANT: Preserves IndexedDB and WebStorage to maintain MSAL authentication
+ * IMPORTANT: Preserves IndexedDB and WebStorage to maintain Teams authentication
  * tokens and prevent 24-hour forced re-authentication cycles.
  */
 
@@ -142,7 +142,7 @@ class CacheManager {
         this.partitionName,
         "Code Cache"
       ),
-      // ✅ EXCLUDED: IndexedDB and WebStorage preserve MSAL authentication tokens
+      // ✅ EXCLUDED: IndexedDB and WebStorage preserve Teams authentication tokens
       // Removing these directories was causing 24-hour re-authentication cycles
       // path.join(this.userDataPath, "Partitions", this.partitionName, "IndexedDB"),
       // path.join(this.userDataPath, "Partitions", this.partitionName, "WebStorage"),

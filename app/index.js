@@ -418,7 +418,6 @@ function handleAppReady() {
 }
 
 // --- Diagnostics helpers ---
-let tokenTracingInstalled = false;
 
 async function resetTeamsOrigin() {
   try {
@@ -444,48 +443,6 @@ async function resetTeamsOrigin() {
   }
 }
 
-function installTokenTracing() {
-  if (tokenTracingInstalled) return;
-  const s = session.fromPartition(config.partition) || session.defaultSession;
-  const filter = {
-    urls: [
-      "https://login.microsoftonline.com/*/oauth2/v2.0/token*",
-      "https://login.microsoftonline.com/*/oauth2/token*",
-    ],
-  };
-
-  try {
-    s.webRequest.onBeforeRequest(filter, (details, cb) => {
-      console.log(
-        "🔎 [MSAL] token request about to fire:",
-        details.method,
-        details.url
-      );
-      cb({ cancel: false });
-    });
-
-    s.webRequest.onCompleted(filter, (details) => {
-      console.log(
-        "✅ [MSAL] token request completed:",
-        details.statusCode,
-        details.url
-      );
-    });
-
-    s.webRequest.onErrorOccurred(filter, (details) => {
-      console.log(
-        "❌ [MSAL] token request failed:",
-        details.error,
-        details.url
-      );
-    });
-
-    tokenTracingInstalled = true;
-    console.log("Token tracing installed");
-  } catch (err) {
-    console.error("Failed to install token tracing:", err);
-  }
-}
 
 function buildDebugMenu() {
   const template = [
@@ -496,15 +453,6 @@ function buildDebugMenu() {
           label: "Reset Teams Cache",
           click: async () => {
             await resetTeamsOrigin();
-          },
-        },
-        {
-          label: "Toggle Token Tracing",
-          type: "checkbox",
-          click: (item) => {
-            if (item.checked) installTokenTracing();
-            else
-              console.log("Token tracing cannot be disabled in this session");
           },
         },
       ],
