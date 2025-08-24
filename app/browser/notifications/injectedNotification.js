@@ -20,6 +20,33 @@
         options.type = options.type || "new-message";
         options.requireInteraction = false;
 
+        const handleWebNotification = (notifSound) => {
+          if (api && typeof api.playNotificationSound === "function") {
+            try {
+              api.playNotificationSound(notifSound);
+            } catch (e) {
+              console.debug("playNotificationSound failed", e);
+            }
+          }
+          if (classicNotification) {
+            try {
+              return new classicNotification(title, options);
+            } catch (err) {
+              console.debug("Could not create native notification:", err);
+            }
+          }
+        };
+
+        const handleElectronNotification = () => {
+          if (api && typeof api.showNotification === "function") {
+            try {
+              api.showNotification(options);
+            } catch (e) {
+              console.debug("showNotification failed", e);
+            }
+          }
+        };
+
         const handleConfig = (config) => {
           if (config?.disableNotifications) return;
 
@@ -30,29 +57,9 @@
               title: title,
               body: options.body,
             };
-            if (api && typeof api.playNotificationSound === "function") {
-              try {
-                api.playNotificationSound(notifSound);
-              } catch (e) {
-                console.debug("playNotificationSound failed", e);
-              }
-            }
-            if (classicNotification) {
-              try {
-                return new classicNotification(title, options);
-              } catch (err) {
-                console.debug("Could not create native notification:", err);
-                // ignore; still set noop handlers below
-              }
-            }
+            handleWebNotification(notifSound);
           } else {
-            if (api && typeof api.showNotification === "function") {
-              try {
-                api.showNotification(options);
-              } catch (e) {
-                console.debug("showNotification failed", e);
-              }
-            }
+            handleElectronNotification();
           }
         };
 
