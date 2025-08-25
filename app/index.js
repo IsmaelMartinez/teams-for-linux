@@ -9,8 +9,6 @@ const {
   powerMonitor,
   Notification,
   nativeImage,
-  Menu,
-  session,
 } = require("electron");
 const path = require("path");
 const CustomBackground = require("./customBackground");
@@ -408,69 +406,7 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-
-  // Build a small debug menu with cache reset and token tracing toggles
-  try {
-    buildDebugMenu();
-  } catch (e) {
-    console.debug("Could not build debug menu", e);
-  }
 }
-
-// --- Diagnostics helpers ---
-
-async function resetTeamsOrigin() {
-  try {
-    const s = session.fromPartition(config.partition) || session.defaultSession;
-    await s.clearStorageData({
-      origin: "https://teams.microsoft.com",
-      storages: [
-        "appcache",
-        "cookies",
-        "localstorage",
-        "indexdb",
-        "filesystem",
-        "shadercache",
-        "serviceworkers",
-        "cachestorage",
-        "websql",
-      ],
-    });
-    await s.clearCache();
-    console.log("🔧 Cleared storage/cache for https://teams.microsoft.com");
-  } catch (err) {
-    console.error("Failed to clear Teams origin storage:", err);
-  }
-}
-
-
-function buildDebugMenu() {
-  const template = [
-    {
-      label: "Debug",
-      submenu: [
-        {
-          label: "Reset Teams Cache",
-          click: async () => {
-            await resetTeamsOrigin();
-          },
-        },
-      ],
-    },
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-}
-
-// Listen for renderer-side unhandled errors/rejections forwarded from preload
-ipcMain.on("unhandled-rejection", (_event, payload) => {
-  console.error("[RENDERER UNHANDLED REJECTION]", payload);
-});
-
-ipcMain.on("window-error", (_event, payload) => {
-  console.error("[RENDERER WINDOW ERROR]", payload);
-});
 
 async function handleGetSystemIdleState() {
   const systemIdleState = powerMonitor.getSystemIdleState(
