@@ -1,10 +1,6 @@
 # Release Automation
 
-Technical documentation for maintainers on the automated release process and info generation.
-
-:::info For Maintainers
-This documentation is intended for project maintainers managing the release process. Regular users should refer to the [installation guide](index.md) for standard usage.
-:::
+Technical documentation on the automated release process and info generation.
 
 ## Overview
 
