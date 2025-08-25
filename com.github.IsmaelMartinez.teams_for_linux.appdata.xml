@@ -18,10 +18,9 @@
 			<description>
 				<ul>
 					<li>Major: Complete documentation platform migration to Docusaurus with modern search and mobile-first design</li>
-					<li>Security: Improved error handling across application modules with proper logging</li>
-					<li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles</li>
+					<li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles. Might fix #1357</li>
 					<li>Fix: macOS dock icon now displays correctly with proper 128x128 minimum size requirement and fallback resizing</li>
-					<li>Fix: preload browser scripts now correctly handle context isolation</li>
+					<li>Fix: preload browser scripts now correctly handle context isolation. Might fix #1789 and #1795</li>
 				</ul>
 			</description>
 		</release>
