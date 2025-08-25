@@ -28,4 +28,4 @@ class MutationObserverTitle {
   }
 }
 
-exports = module.exports = new MutationObserverTitle();
+module.exports = new MutationObserverTitle();

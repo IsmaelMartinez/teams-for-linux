@@ -31,7 +31,13 @@ class TrayIconRenderer {
       canvas.height = 140;
       canvas.width = 140;
       const image = new Image();
-      image.src = this.baseIcon.toDataURL("image/png");
+      
+      // Add error handling for image loading
+      image.onerror = () => {
+        console.error("Failed to load base icon for tray rendering");
+        resolve(this.baseIcon.toDataURL("image/png")); // Fallback to base icon
+      };
+      
       image.onload = () =>
         this._addRedCircleNotification(
           canvas,
@@ -39,6 +45,15 @@ class TrayIconRenderer {
           newActivityCount,
           resolve,
         );
+      
+      const dataURL = this.baseIcon.toDataURL("image/png");
+      if (!dataURL || dataURL === "data:,") {
+        console.error("Base icon toDataURL returned invalid data");
+        resolve(this.baseIcon.toDataURL("image/png")); // Fallback
+        return;
+      }
+      
+      image.src = dataURL;
     });
   }
 
@@ -82,4 +97,4 @@ class TrayIconRenderer {
   }
 }
 
-module.exports = exports = new TrayIconRenderer();
+module.exports = new TrayIconRenderer();

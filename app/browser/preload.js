@@ -61,6 +61,91 @@ contextBridge.exposeInMainWorld("electronAPI", {
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 });
 
+// Initialize browser modules after DOM is loaded
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log("Preload: DOMContentLoaded, initializing browser modules...");
+  try {
+    const config = await ipcRenderer.invoke("get-config");
+    console.log("Preload: Got config:", { 
+      trayIconEnabled: config?.trayIconEnabled, 
+      useMutationTitleLogic: config?.useMutationTitleLogic 
+    });
+    
+    // Initialize title monitoring directly in preload
+    if (config.useMutationTitleLogic) {
+      console.debug("Preload: MutationObserverTitle enabled");
+      const observer = new MutationObserver(() => {
+        console.debug(`title changed to ${document.title}`);
+        const regex = /^\((\d+)\)/;
+        const match = regex.exec(document.title);
+        const number = match ? parseInt(match[1]) : 0;
+        const event = new CustomEvent("unread-count", {
+          detail: { number: number },
+        });
+        window.dispatchEvent(event);
+      });
+      observer.observe(document.querySelector("title"), {
+        childList: true,
+      });
+    }
+    
+    // Initialize tray icon functionality directly in preload  
+    if (config.trayIconEnabled) {
+      console.debug("Preload: tray icon is enabled");
+      window.addEventListener("unread-count", (event) => {
+        const count = event.detail.number;
+        console.debug("sending tray-update");
+        ipcRenderer.send("tray-update", {
+          icon: null, // Let main process handle icon rendering
+          flash: count > 0 && !config.disableNotificationWindowFlash,
+          count: count
+        });
+        ipcRenderer.invoke("set-badge-count", count);
+      });
+    }
+    
+    console.log("Preload: Essential tray modules initialized successfully");
+    
+    // Initialize other modules safely
+    const modules = [
+      { name: "zoom", path: "./tools/zoom" },
+      { name: "shortcuts", path: "./tools/shortcuts" },
+      { name: "settings", path: "./tools/settings" },
+      { name: "theme", path: "./tools/theme" },
+      { name: "emulatePlatform", path: "./tools/emulatePlatform" },
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" }
+    ];
+    
+    let successCount = 0;
+    modules.forEach(module => {
+      try {
+        const moduleInstance = require(module.path);
+        if (module.name === "settings" || module.name === "theme") {
+          moduleInstance.init(config, ipcRenderer);
+        } else {
+          moduleInstance.init(config);
+        }
+        successCount++;
+      } catch (err) {
+        console.error(`Preload: Failed to load ${module.name}:`, err.message);
+      }
+    });
+    
+    console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+    
+    // Initialize ActivityManager
+    try {
+      const ActivityManager = require("./notifications/activityManager");
+      new ActivityManager(ipcRenderer, config).start();
+    } catch (err) {
+      console.error("Preload: ActivityManager failed to initialize:", err.message);
+    }
+    
+  } catch (error) {
+    console.error("Preload: Failed to initialize browser modules:", error);
+  }
+});
+
 // Forward unhandled promise rejections and window errors to main for diagnostics
 try {
   window.addEventListener("unhandledrejection", (event) => {
