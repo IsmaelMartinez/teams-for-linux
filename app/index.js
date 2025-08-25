@@ -12,6 +12,7 @@ const {
 } = require("electron");
 const path = require("path");
 const CustomBackground = require("./customBackground");
+const { MQTTClient } = require("./mqtt");
 const os = require("os");
 const isMac = os.platform() === "darwin";
 
@@ -44,6 +45,7 @@ const notificationSounds = [
 let userStatus = -1;
 let idleTimeUserStatus = -1;
 let picker = null;
+let mqttClient = null;
 
 let player;
 try {
@@ -79,8 +81,11 @@ if (!gotTheLock) {
   app.on("ready", handleAppReady);
   app.on("quit", () => console.debug("quit"));
   app.on("render-process-gone", onRenderProcessGone);
-  app.on("will-quit", () => {
+  app.on("will-quit", async () => {
     console.debug("will-quit");
+    if (mqttClient) {
+      await mqttClient.disconnect();
+    }
   });
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
@@ -133,7 +138,7 @@ if (!gotTheLock) {
     // Return the source ID - handle both string and object formats
     if (typeof global.selectedScreenShareSource === "string") {
       return global.selectedScreenShareSource;
-    } else if (global.selectedScreenShareSource?.id) {
+    } else if (global.selectedScreenShareSource && global.selectedScreenShareSource.id) {
       return global.selectedScreenShareSource.id;
     }
     return null;
@@ -148,7 +153,7 @@ if (!gotTheLock) {
       const { screen } = require("electron");
       const displays = screen.getAllDisplays();
 
-      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
+      if (global.selectedScreenShareSource && global.selectedScreenShareSource.id && global.selectedScreenShareSource.id.startsWith("screen:")) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
@@ -390,11 +395,11 @@ function handleAppReady() {
   //Just catch the error
   process.stdout.on("error", () => {});
 
-  if (config.cacheManagement?.enabled === true) {
+  if (config.cacheManagement && config.cacheManagement.enabled === true) {
     const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
+      maxCacheSizeMB: config.cacheManagement.maxCacheSizeMB || 300,
       cacheCheckIntervalMs:
-        config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
+        config.cacheManagement.cacheCheckIntervalMs || 60 * 60 * 1000,
       partition: config.partition, // Pass partition config for dynamic cache paths
     });
     cacheManager.start();
@@ -403,6 +408,12 @@ function handleAppReady() {
     app.on("before-quit", () => {
       cacheManager.stop();
     });
+  }
+
+  // Initialize MQTT client
+  if (config.mqtt && config.mqtt.enabled) {
+    mqttClient = new MQTTClient(config);
+    mqttClient.initialize();
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
@@ -426,13 +437,11 @@ async function handleGetSystemIdleState() {
     idleTimeUserStatus = userStatus;
   }
 
-  const state = {
-    ...{
-      system: systemIdleState,
-      userIdle: idleTimeUserStatus,
-      userCurrent: userStatus,
-    },
-  };
+  const state = Object.assign({}, {
+    system: systemIdleState,
+    userIdle: idleTimeUserStatus,
+    userCurrent: userStatus,
+  });
 
   if (systemIdleState === "active") {
     console.debug(
@@ -519,6 +528,11 @@ async function requestMediaAccess() {
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
   console.debug(`User status changed to '${userStatus}'`);
+  
+  // Publish status to MQTT if enabled
+  if (mqttClient) {
+    await mqttClient.publishStatus(userStatus);
+  }
 }
 
 async function setBadgeCountHandler(_event, count) {

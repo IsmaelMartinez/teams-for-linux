@@ -167,6 +167,122 @@ rm -f ~/.config/teams-for-linux/SharedStorage-wal
 rm -f ~/.config/teams-for-linux/Cookies-journal
 ```
 
+## MQTT Integration
+
+> [!TIP]
+> The MQTT integration allows Teams for Linux to publish your Teams status to an MQTT broker for home automation systems like Home Assistant, openHAB, or custom IoT projects.
+
+Teams for Linux can publish your Microsoft Teams status changes to an MQTT broker in real-time. This enables integration with smart home systems, status lights, notification systems, and other automation workflows.
+
+### Configuration
+
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://your-mqtt-broker:1883",
+    "username": "your-username",
+    "password": "your-password",
+    "clientId": "teams-for-linux",
+    "topicPrefix": "teams",
+    "statusTopic": "status"
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `false` | Enable/disable MQTT status publishing |
+| `brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://192.168.1.100:1883`, `mqtts://broker.hivemq.com:8883`) |
+| `username` | `string` | `""` | MQTT broker username (optional) |
+| `password` | `string` | `""` | MQTT broker password (optional) |
+| `clientId` | `string` | `"teams-for-linux"` | Unique identifier for this MQTT client |
+| `topicPrefix` | `string` | `"teams"` | MQTT topic prefix |
+| `statusTopic` | `string` | `"status"` | MQTT topic name for status messages |
+
+### Published Messages
+
+Status updates are published to `{topicPrefix}/{statusTopic}` (e.g., `teams/status`) as JSON messages:
+
+```json
+{
+  "status": "available",
+  "statusCode": 1,
+  "timestamp": "2025-08-25T15:30:45.123Z",
+  "clientId": "teams-for-linux"
+}
+```
+
+**Status Values:**
+- `available` (code: 1) - Available/Online
+- `busy` (code: 2) - Busy/In a call/In a meeting
+- `do_not_disturb` (code: 3) - Do Not Disturb/Focusing
+- `away` (code: 4) - Away/Inactive
+- `be_right_back` (code: 5) - Be Right Back
+
+### Home Assistant Integration Example
+
+```yaml
+# configuration.yaml
+mqtt:
+  sensor:
+    - name: "Teams Status"
+      state_topic: "teams/status"
+      value_template: "{{ value_json.status }}"
+      json_attributes_topic: "teams/status"
+      json_attributes_template: "{{ value_json | tojson }}"
+      icon: mdi:microsoft-teams
+
+automation:
+  - alias: "Teams Status Light"
+    trigger:
+      platform: mqtt
+      topic: teams/status
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.office_status
+        data:
+          color_name: >
+            {% if trigger.payload_json.status == 'available' %}
+              green
+            {% elif trigger.payload_json.status == 'busy' %}
+              red
+            {% elif trigger.payload_json.status == 'away' %}
+              yellow
+            {% else %}
+              blue
+            {% endif %}
+```
+
+### Security Considerations
+
+- Use strong authentication (username/password) for your MQTT broker
+- Consider using MQTTS (MQTT over TLS) with `mqtts://` URLs for encrypted communication
+- Configure your MQTT broker to restrict client permissions appropriately
+- Keep your MQTT credentials secure and avoid committing them to version control
+
+### Troubleshooting
+
+**Connection Issues:**
+- Verify MQTT broker URL and port are correct
+- Check username/password if authentication is required
+- Ensure firewall allows connections to MQTT broker port
+
+**No Status Updates:**
+- Verify Teams status is changing (check Teams interface)
+- Enable debug logging: `teams-for-linux --logConfig='{"level":"debug"}'`
+- Check MQTT broker logs for connection and publishing activity
+
+**Testing MQTT Connection:**
+```bash
+# Subscribe to status messages (requires mosquitto-clients)
+mosquitto_sub -h your-broker-ip -p 1883 -u username -P password -t "teams/status" -v
+
+# Test publishing (for verification)
+mosquitto_pub -h your-broker-ip -p 1883 -u username -P password -t "teams/status" -m '{"status":"test","statusCode":0}'
+```
+
 ## General Options
 
 | Option Name | Type | Default Value | Description |
@@ -212,6 +328,7 @@ rm -f ~/.config/teams-for-linux/Cookies-journal
 | `meetupJoinRegEx` | `string` | `^https://teams.(microsoft|live).com/.*(?:meetup-join|channel|chat)` | Meetup-join and channel regular expression. |
 | `menubar` | `string` | `"auto"` | A value controls the menu bar behaviour. Choices: `auto`, `visible`, `hidden`. |
 | `minimized` | `boolean` | `false` | Start the application minimized. |
+| `mqtt` | `object` | `{ enabled: false, brokerUrl: "", username: "", password: "", clientId: "teams-for-linux", topicPrefix: "teams", statusTopic: "status" }` | MQTT integration configuration for publishing Teams status updates to an MQTT broker. See MQTT Integration section for details. |
 | `notificationMethod` | `string` | `"web"` | Notification method to be used by the application (web/electron). Choices: `web`, `electron`. |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of the default browser. |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition. |
