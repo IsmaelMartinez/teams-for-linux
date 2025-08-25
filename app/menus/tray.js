@@ -16,13 +16,20 @@ class ApplicationTray {
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
 
-    ipcMain.on("tray-update", (_event, { icon, flash }) =>
-      this.updateTrayImage(icon, flash)
-    );
+    ipcMain.on("tray-update", (_event, data) => {
+      // Handle both old format { icon, flash } and new format { icon, flash, count }
+      const { icon, flash, count } = data;
+      this.updateTrayImage(icon, flash, count);
+    });
   }
 
   getIconImage(iconPath) {
-    let image = nativeImage.createFromDataURL(iconPath);
+    let image;
+    if (iconPath.startsWith("data:")) {
+      image = nativeImage.createFromDataURL(iconPath);
+    } else {
+      image = nativeImage.createFromPath(iconPath);
+    }
     if (isMac) {
       image = image.resize({ width: 16, height: 16 });
     }
@@ -38,12 +45,19 @@ class ApplicationTray {
     this.window.focus();
   }
 
-  updateTrayImage(iconUrl, flash) {
+  updateTrayImage(iconUrl, flash, count) {
     if (this.tray && !this.tray.isDestroyed()) {
-      const image = this.getIconImage(iconUrl);
+      // Use original icon path if iconUrl is null/undefined
+      const effectiveIconPath = iconUrl || this.iconPath;
+      const image = this.getIconImage(effectiveIconPath);
 
       this.tray.setImage(image);
       this.window.flashFrame(flash);
+      
+      // Update tooltip to show unread count
+      const baseTitle = this.config.appTitle;
+      const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
+      this.tray.setToolTip(tooltip);
     }
   }
 

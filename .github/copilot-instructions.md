@@ -70,6 +70,15 @@ When contributing, please align your changes with these goals.
 - **Code Comments:** Add comments sparingly. Focus on the _why_ behind complex, non-obvious, or unusual code, not the _what_. Use JSDoc for public APIs.
 - **Central Docs:** For changes affecting configuration, IPC, or overall architecture, update the corresponding documents in the `/docs` directory.
 
+## Documentation Strategy
+
+The project is transitioning its documentation platform to Docusaurus. This involves:
+- Migrating existing Markdown content to a Docusaurus project structure.
+- Utilizing Docusaurus's built-in features for search, navigation, versioning, and internationalization.
+- Implementing a GitHub Actions workflow for automated build and deployment of the Docusaurus site to GitHub Pages.
+- This shift aims to provide a more robust, feature-rich, and maintainable documentation experience.
+- **Rationale for Docusaurus (vs. MkDocs) for In-App Documentation:** While both generate static sites, Docusaurus's JavaScript/React foundation aligns seamlessly with the project's existing Electron (Node.js/JavaScript) stack. This provides a more cohesive and extensible ecosystem for future development, customization, and potential interaction between the app and its bundled documentation.
+
 ## Markdown Standards
 
 When creating or updating documentation, leverage existing markdown library features instead of building custom solutions:

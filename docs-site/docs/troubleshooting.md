@@ -2,8 +2,9 @@
 
 This guide provides solutions to common problems encountered with Teams for Linux, organized by category for quick reference.
 
-> [!TIP]
-> For configuration options, see [`configuration.md`](configuration.md). For development information, see [`ipc-api.md`](ipc-api.md).
+:::tip
+For configuration options, see [Configuration](configuration.md). For development information, see the IPC API documentation *(coming soon)*.
+:::
 
 ## Quick Reference
 
@@ -29,10 +30,12 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Incomplete update process.
 
 **Solutions/Workarounds:**
+
 1.  **Clear Application Cache:**
     *   Navigate to `~/.config/teams-for-linux/` (Linux) or `%APPDATA%\teams-for-linux\` (Windows).
     *   Delete the `Cache` and `Code Cache` directories.
     *   Restart the application.
+
 2.  **Reinstall the Application:**
     *   Completely uninstall the current version.
     *   Download the latest installer from the official GitHub releases page.
@@ -49,6 +52,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Incompatible cached data from previous versions.
 
 **Solutions/Workarounds:**
+
 1.  **Remove Stored Data:** Removing the stored data in the configuration directory usually resolves the problem.
 
     **Configuration Folder Locations:**
@@ -71,7 +75,9 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Cost associated with Apple Developer Program for distributing signed binaries.
 
 **Solutions/Workarounds:**
+
 1.  **Use Intel Build:** The Intel build works on Apple Silicon via emulation (albeit slowly).
+
 2.  **Build Your Own:** You can build an Apple Silicon version from source, signing it with your own developer keys. This process is free, but the keys will only work on your Mac.
 
     **Steps to Build Your Own:**
@@ -101,6 +107,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Corrupted fontconfig cache.
 
 **Solutions/Workarounds:**
+
 1.  **Clear Fontconfig Cache:**
     ```bash
     sudo rm /var/cache/fontconfig/*
@@ -122,6 +129,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 * System theme detection not working correctly with certain GNOME versions
 
 **Solutions/Workarounds:**
+
 1. **Update to Latest Version:**
    * Ensure you're using Teams for Linux v2.2.1 or later, which includes Electron 37.2.6 with upstream fixes for GNOME theme handling
    
@@ -155,14 +163,17 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   PulseAudio/PipeWire configuration issues (Linux).
 
 **Solutions/Workarounds:**
+
 1.  **Check Teams Settings:**
     *   Go to Teams Settings -> Devices.
     *   Ensure the correct microphone is selected under "Microphone".
     *   Test the microphone using the "Make a test call" feature.
+
 2.  **Verify System Audio Settings:**
     *   Open your operating system's sound settings.
     *   Ensure the microphone is enabled, not muted, and its volume is adequately set.
     *   Check application-specific permissions for Teams to access the microphone.
+
 3.  **Restart PulseAudio (Linux):**
     *   Open a terminal and run: `pulseaudio -k && pulseaudio --start`
     *   Restart Teams for Linux.
@@ -183,11 +194,13 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Browser cache issues within the Electron app.
 
 **Solutions/Workarounds:**
+
 1.  **Clear Teams Cache and Data:**
     *   Close Teams for Linux completely.
     *   Navigate to `~/.config/teams-for-linux/` (Linux) or `%APPDATA%\teams-for-linux\` (Windows).
     *   Delete the entire `Cache`, `Code Cache`, and `Local Storage` directories.
     *   Restart the application and attempt to log in again.
+
 2.  **Check Network and Proxy Settings:**
     *   Ensure your internet connection is stable.
     *   If you are behind a corporate proxy, ensure it is correctly configured in your system settings and that Teams for Linux can access the internet through it.
@@ -203,6 +216,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Security restrictions of OAuth providers.
 
 **Solutions/Workarounds:**
+
 1.  **Use Ctrl+Click:** If you need to open a link within an Electron window, use the `Ctrl+Click` combination.
 
 **Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md]
@@ -216,8 +230,10 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Issues with rendering the login page.
 
 **Solutions/Workarounds:**
+
 1.  **Refresh the Window:**
     *   Right-click the Microsoft Teams tray icon and select Refresh (or use Ctrl+R).
+
 2.  **Clear Application Cache:**
     *   Close the application and delete the cache folder:
         *   For a Vanilla install: `~/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`
@@ -240,6 +256,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Incorrect notification settings.
 
 **Solutions/Workarounds:**
+
 1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
 
 **Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md]
@@ -256,6 +273,7 @@ This guide provides solutions to common problems encountered with Teams for Linu
 *   Limited dictionary support in the default spellchecker.
 
 **Solutions/Workarounds:**
-1.  **Enable Local Dictionaries:** Enable the use of local dictionaries by installing Hunspell along with your locale’s dictionary. See the instructions at [Atom's spell-check README](https://github.com/atom/spell-check#debian-ubuntu-and-mint).
+
+1.  **Enable Local Dictionaries:** Enable the use of local dictionaries by installing Hunspell along with your locale's dictionary. See the instructions at [Atom's spell-check README](https://github.com/atom/spell-check#debian-ubuntu-and-mint).
 
 **Related GitHub Issues:** [Issue #28](https://github.com/IsmaelMartinez/teams-for-linux/issues/28), [Issue #154](https://github.com/IsmaelMartinez/teams-for-linux/issues/154)

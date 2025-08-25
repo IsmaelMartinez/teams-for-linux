@@ -1,6 +1,6 @@
 # Configuration Options
 
-This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory (e.g., `~/.config/teams-for-linux/config.json` on Linux).
+This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory.
 
 ## Example Usage
 
@@ -13,10 +13,9 @@ teams-for-linux --partition nopersist
 Alternatively, you can use a `config.json` file with your configuration options.
 Place this file in the appropriate location based on your installation type:
 
-- Vanilla: `~/.config/teams-for-linux/config.json`
-- Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
-- Flatpak:
-  `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
+- **Vanilla**: `~/.config/teams-for-linux/config.json`
+- **Snap**: `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
+- **Flatpak**: `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
 
 [yargs](https://www.npmjs.com/package/yargs) supports multiple configuration
 methods—refer to their documentation if you prefer using a configuration file
@@ -83,9 +82,11 @@ Example:
 }
 ```
 
-> Note: For options that require a value, provide them as an array where the
-> first element is the flag and the second is its value. If no value is needed,
-> you can use a simple string.
+:::note
+For options that require a value, provide them as an array where the
+first element is the flag and the second is its value. If no value is needed,
+you can use a simple string.
+:::
 
 ## Incoming Call Command
 
@@ -99,19 +100,23 @@ Example:
   "incomingCallCommandArgs": ["-f", "1234"]
 }
 ```
-This will execute the following on an incoming call.
 
-`/home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER`
+This will execute the following on an incoming call:
 
-> Note: Only the property incomingCallCommand is necessary,
-> incomingCallCommandArgs is completely optional.
-> Note: This feature has no connection to the incoming call toast feature.
-> These two features can be use separately.
+```bash
+/home/user/incomingCallScript.sh -f 1234 NAME_OF_CALLER SUBTEXT IMAGE_OF_CALLER
+```
+
+:::note
+- Only the property `incomingCallCommand` is necessary, `incomingCallCommandArgs` is completely optional.
+- This feature has no connection to the incoming call toast feature. These two features can be used separately.
+:::
 
 ## Cache Management
 
-> [!IMPORTANT]
-> The Cache Manager is **enabled by default** and prevents daily issues caused by cache overflow (issue #1756).
+:::danger Important
+The Cache Manager is **enabled by default** and prevents daily issues caused by cache overflow (issue #1756).
+:::
 
 The cache management feature automatically cleans cache files when they grow too large and cause token corruption:
 
@@ -134,38 +139,63 @@ The cache management feature automatically cleans cache files when they grow too
 ### What Gets Cleaned vs Preserved
 
 **Cleaned:**
-- Cache directories (main cache, GPU cache, code cache)
-- Partition-specific cached data 
-- Temporary WAL files that cause token corruption
-- Non-essential IndexedDB and WebStorage data
+- Cache directories (main Cache, GPUCache, Code Cache)
+- Partition-specific cached data for your configured partition (e.g. `Partitions/teams-4-linux/{Cache,GPUCache,Code Cache}`)
+- Temporary WAL/journal files that are known to cause token corruption
 
 **Preserved:**
+- IndexedDB and WebStorage for the Teams partition (these contain authentication tokens and session state)
 - Authentication tokens and login credentials
 - User preferences and settings
-- Essential persistent storage
+- Other essential persistent storage
 
 ### Monitoring and Manual Cleanup
 
 Enable debug logging to monitor cache activities:
+
 ```bash
 teams-for-linux --logConfig='{"level":"debug"}'
 ```
 
-For manual cache cleanup:
+There are two options depending on your goal:
+
+1) Safe cleanup (won’t sign you out)
+
+This mirrors what the app’s automatic cleaner does. It removes caches only and leaves IndexedDB/WebStorage intact so you stay signed in.
+
 ```bash
 # Stop Teams for Linux first
 pkill -f "teams-for-linux"
 
-# Remove cache directories
+# Remove top-level caches
 rm -rf ~/.config/teams-for-linux/Cache/*
+rm -rf ~/.config/teams-for-linux/GPUCache/*
+rm -rf ~/.config/teams-for-linux/"Code Cache"/*
+
+# Remove partition-specific caches (default partition name is teams-4-linux)
 rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/Cache/*
-rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/IndexedDB/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/GPUCache/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/"Code Cache"/*
 
 # Remove problematic temporary files
 rm -f ~/.config/teams-for-linux/DIPS-wal
 rm -f ~/.config/teams-for-linux/SharedStorage-wal
 rm -f ~/.config/teams-for-linux/Cookies-journal
 ```
+
+2) Full reset for Teams origin (will sign you out)
+
+Use the in-app menu to clear storage for just the Teams website origin. This is the recommended way to perform a full reset:
+
+- Open the app menu → Debug → Reset Teams Cache
+
+What it does:
+- Clears cookies, localStorage, IndexedDB, cacheStorage, service workers, and HTTP cache for `https://teams.microsoft.com` in the current partition.
+
+Impact:
+- You’ll be logged out and will need to sign in again. Use this only if you suspect corrupted site data or repeated auth failures.
+
+Note: If you’re using Snap or Flatpak, your config/cache paths differ. Adjust the paths accordingly (see the configuration paths at the top of this document).
 
 ## General Options
 
@@ -209,7 +239,7 @@ rm -f ~/.config/teams-for-linux/Cookies-journal
 | `incomingCallCommandArgs` | `array` | `[]` | Arguments for the incoming call command. |
 | `isCustomBackgroundEnabled` | `boolean` | `false` | A flag indicates whether to enable custom background or not. |
 | `logConfig` | `object` | `{ transports: { console: { level: "info" }, file: { level: false } } }` | Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value. |
-| `meetupJoinRegEx` | `string` | `^https://teams.(microsoft|live).com/.*(?:meetup-join|channel|chat)` | Meetup-join and channel regular expression. |
+| `meetupJoinRegEx` | `string` | `^https://teams.(microsoft\|live).com/.*(?:meetup-join\|channel\|chat)` | Meetup-join and channel regular expression. |
 | `menubar` | `string` | `"auto"` | A value controls the menu bar behaviour. Choices: `auto`, `visible`, `hidden`. |
 | `minimized` | `boolean` | `false` | Start the application minimized. |
 | `notificationMethod` | `string` | `"web"` | Notification method to be used by the application (web/electron). Choices: `web`, `electron`. |
@@ -224,7 +254,7 @@ rm -f ~/.config/teams-for-linux/Cookies-journal
 | `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune. |
 | `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO. |
 | `trayIconEnabled` | `boolean` | `true` | Enable tray icon. |
-| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join|channel|chat|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join|channel|chat|message)" }` | Regular expressions for Microsoft Teams protocol links (v1 and v2). |
+| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links (v1 and v2). |
 | `url` | `string` | `"https://teams.microsoft.com/v2"` | Microsoft Teams URL. |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title. |
 | `watchConfigFile` | `boolean` | `false` | Watch for changes in the config file and reload the app. |
