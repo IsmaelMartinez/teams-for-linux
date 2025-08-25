@@ -58,7 +58,7 @@ makepkg -si
 
 ```bash
 # Install Pacstall first (if not already installed)
-bash -c "$(curl -fsSL https://git.io/JUdL6)"
+sudo bash -c "$(curl -fsSL https://pacstall.dev/q/install)"
 
 # Install Teams for Linux
 pacstall -I teams-for-linux-deb
@@ -182,9 +182,6 @@ See the [Configuration Guide](configuration.md) for all available options.
 # Standard launch
 teams-for-linux
 
-# Launch minimized to tray
-teams-for-linux --hidden
-
 # Use custom config directory
 teams-for-linux --user-data-dir=/path/to/custom/profile
 ```
@@ -208,40 +205,8 @@ See [Multiple Instances](multiple-instances.md) for detailed setup.
 teams-for-linux --logConfig='{"level":"debug"}'
 
 # Show developer tools
-teams-for-linux --debug
+teams-for-linux --webDebug
 ```
-
-## System Requirements
-
-### Minimum Requirements
-
-- **Linux** kernel 3.10 or later
-- **glibc** 2.17 or later
-- **GTK 3** or **GTK 4**
-- **64-bit architecture** (amd64/x86_64)
-
-### Recommended
-
-- **4 GB RAM** or more
-- **Hardware acceleration** for video calls
-- **PulseAudio** or **PipeWire** for audio
-- **X11** or **Wayland** display server
-
-### Audio Requirements
-
-Teams for Linux requires a working audio system:
-
-- **PulseAudio** (most common)
-- **PipeWire** (modern alternative)
-- **ALSA** (with PulseAudio compatibility layer)
-
-### Video Requirements
-
-For video calls and screen sharing:
-
-- **Webcam** support via V4L2
-- **Hardware acceleration** (recommended)
-- **Graphics drivers** properly installed
 
 ## Troubleshooting Installation
 

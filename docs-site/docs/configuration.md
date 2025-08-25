@@ -139,15 +139,15 @@ The cache management feature automatically cleans cache files when they grow too
 ### What Gets Cleaned vs Preserved
 
 **Cleaned:**
-- Cache directories (main cache, GPU cache, code cache)
-- Partition-specific cached data 
-- Temporary WAL files that cause token corruption
-- Non-essential IndexedDB and WebStorage data
+- Cache directories (main Cache, GPUCache, Code Cache)
+- Partition-specific cached data for your configured partition (e.g. `Partitions/teams-4-linux/{Cache,GPUCache,Code Cache}`)
+- Temporary WAL/journal files that are known to cause token corruption
 
 **Preserved:**
+- IndexedDB and WebStorage for the Teams partition (these contain authentication tokens and session state)
 - Authentication tokens and login credentials
 - User preferences and settings
-- Essential persistent storage
+- Other essential persistent storage
 
 ### Monitoring and Manual Cleanup
 
@@ -157,22 +157,45 @@ Enable debug logging to monitor cache activities:
 teams-for-linux --logConfig='{"level":"debug"}'
 ```
 
-For manual cache cleanup:
+There are two options depending on your goal:
+
+1) Safe cleanup (won’t sign you out)
+
+This mirrors what the app’s automatic cleaner does. It removes caches only and leaves IndexedDB/WebStorage intact so you stay signed in.
 
 ```bash
 # Stop Teams for Linux first
 pkill -f "teams-for-linux"
 
-# Remove cache directories
+# Remove top-level caches
 rm -rf ~/.config/teams-for-linux/Cache/*
+rm -rf ~/.config/teams-for-linux/GPUCache/*
+rm -rf ~/.config/teams-for-linux/"Code Cache"/*
+
+# Remove partition-specific caches (default partition name is teams-4-linux)
 rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/Cache/*
-rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/IndexedDB/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/GPUCache/*
+rm -rf ~/.config/teams-for-linux/Partitions/teams-4-linux/"Code Cache"/*
 
 # Remove problematic temporary files
 rm -f ~/.config/teams-for-linux/DIPS-wal
 rm -f ~/.config/teams-for-linux/SharedStorage-wal
 rm -f ~/.config/teams-for-linux/Cookies-journal
 ```
+
+2) Full reset for Teams origin (will sign you out)
+
+Use the in-app menu to clear storage for just the Teams website origin. This is the recommended way to perform a full reset:
+
+- Open the app menu → Debug → Reset Teams Cache
+
+What it does:
+- Clears cookies, localStorage, IndexedDB, cacheStorage, service workers, and HTTP cache for `https://teams.microsoft.com` in the current partition.
+
+Impact:
+- You’ll be logged out and will need to sign in again. Use this only if you suspect corrupted site data or repeated auth failures.
+
+Note: If you’re using Snap or Flatpak, your config/cache paths differ. Adjust the paths accordingly (see the configuration paths at the top of this document).
 
 ## General Options
 

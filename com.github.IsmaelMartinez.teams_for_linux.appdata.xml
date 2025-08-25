@@ -19,9 +19,7 @@
 				<ul>
 					<li>Major: Complete documentation platform migration to Docusaurus with modern search and mobile-first design</li>
 					<li>Security: Improved error handling across application modules with proper logging</li>
-					<li>Fix: Cache manager now preserves authentication tokens to prevent 24-hour forced re-authentication cycles</li>
-					<li>Enhancement: Added debug functionality and development tools for better maintainability</li>
-					<li>Improvement: Code modernization using optional chaining and contemporary JavaScript patterns</li>
+					<li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles</li>
 				</ul>
 			</description>
 		</release>

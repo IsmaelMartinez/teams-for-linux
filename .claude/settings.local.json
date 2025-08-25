@@ -3,7 +3,14 @@
     "allow": [
       "Bash(npm run lint)",
       "Bash(npm run pack:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(git add app/browser/index.js app/browser/notifications/injectedNotification.js app/browser/preload.js)",
+      "Bash(git commit -m *",
+      "Bash(npm start)",
+      "Bash(grep:*)",
+      "WebSearch",
+      "WebSearch",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

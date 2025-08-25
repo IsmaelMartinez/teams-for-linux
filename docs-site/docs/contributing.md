@@ -238,12 +238,10 @@ Examples:
 
 ## Release Process
 
-### For Maintainers
-
 1. **Update version** in `package.json`:
    - Patches: `1.0.0` → `1.0.1` 
    - Features: `1.0.0` → `1.1.0`
-   - Major: Reserved for breaking changes
+   - Major: Reserved
 
 2. **Update dependencies**: `npm install`
 
