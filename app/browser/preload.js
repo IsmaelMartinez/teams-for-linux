@@ -73,6 +73,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Preload: Got config:", {
       trayIconEnabled: config?.trayIconEnabled,
       useMutationTitleLogic: config?.useMutationTitleLogic,
+      emulateWinChromiumPlatform: config?.emulateWinChromiumPlatform,
+      followSystemTheme: config?.followSystemTheme,
     });
 
     // Initialize title monitoring directly in preload
