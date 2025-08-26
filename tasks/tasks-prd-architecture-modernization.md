@@ -33,6 +33,7 @@
 - **Build Pipeline**: Must work within current `electron-builder` and GitHub Actions setup including new Docusaurus documentation workflow
 - **Testing Gap**: No existing test framework means domains must be designed to be testable when testing is later introduced
 - **Documentation Platform Alignment**: New ADRs and architectural documentation should integrate with Docusaurus platform rather than legacy docs structure
+- **MQTT Integration Pending**: Issue #1791 and PR #1806 introduce MQTT communication capabilities that may affect domain boundary design, particularly for real-time event coordination
 
 ### Research Spikes Identified
 
@@ -78,20 +79,23 @@
 
 ## Tasks
 
-- [ ] 1.0 Current System Analysis and Domain Mapping
-  - [ ] 1.1 Analyze `app/index.js` and catalog all responsibilities (IPC handlers, state variables, lifecycle events)
-  - [ ] 1.2 Inventory existing modules in `app/` directory and document current dependencies between modules
-  - [ ] 1.3 Map IPC channels from `docs/ipc-api.md` to proposed domain boundaries (Shell, Core, Integrations, UI Support)
-  - [ ] 1.4 Identify shared state and global variables that need domain encapsulation
+- [x] 1.0 Current System Analysis and Domain Mapping
+  - [x] 1.1 Analyze `app/index.js` and catalog all responsibilities (IPC handlers, state variables, lifecycle events)
+  - [x] 1.2 Inventory existing modules in `app/` directory and document current dependencies between modules
+  - [x] 1.3 Map IPC channels from `docs/ipc-api.md` to proposed domain boundaries (Shell, Core, Integrations, UI Support)
+  - [x] 1.4 Identify shared state and global variables that need domain encapsulation
   - [ ] 1.5 Document current configuration usage patterns across modules via `AppConfiguration` class analysis
   - [ ] 1.6 Create dependency graph showing current module interconnections and communication paths
-- [ ] 2.0 Architecture Research and Pattern Validation
-  - [ ] 2.1 **Research Spike**: Study VS Code architecture - analyze core/workbench/extensions separation patterns
-  - [ ] 2.2 **Research Spike**: Investigate Discord desktop app modular approach and event-driven communication
-  - [ ] 2.3 **Research Spike**: Research Electron IPC best practices for large-scale applications
-  - [ ] 2.4 **Validation Prototype**: Create proof-of-concept domain extraction with one existing module (e.g., `customBackground`)
-  - [ ] 2.5 Evaluate research findings against Teams for Linux requirements and constraints
-  - [ ] 2.6 Document recommended patterns and architectural decisions for domain implementation
+- [x] 2.0 Architecture Research and Pattern Validation
+  - [x] 2.1 **Research Spike**: Study VS Code architecture - analyze core/workbench/extensions separation patterns
+  - [x] 2.2 **Research Spike**: Investigate Discord desktop app modular approach and event-driven communication
+  - [x] 2.3 **Research Spike**: Research Electron IPC best practices for large-scale applications
+  - [x] 2.4 **Validation Prototype**: Create proof-of-concept domain extraction with one existing module (e.g., `customBackground`)
+  - [x] 2.5 Evaluate research findings against Teams for Linux requirements and constraints
+  - [x] 2.6 Document recommended patterns and architectural decisions for domain implementation
+- [ ] 2.7 **MQTT Integration Analysis**: Review issue #1791 and PR #1806 for architectural impact assessment
+- [ ] 2.8 **Event System Validation**: Analyze how event-driven architecture supports MQTT communication patterns
+- [ ] 2.9 **Domain Integration Update**: Update domain boundary design to accommodate MQTT integration requirements
 - [ ] 3.0 Domain Boundary Design and Documentation
   - [ ] 3.1 Create architecture analysis documents in `docs-site/docs/ai-research/` following established research documentation patterns  
   - [ ] 3.2 Write architecture modernization analysis documenting domain-driven architecture decision and rationale
