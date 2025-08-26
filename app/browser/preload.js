@@ -62,15 +62,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 });
 
 // Initialize browser modules after DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");
-    console.log("Preload: Got config:", { 
-      trayIconEnabled: config?.trayIconEnabled, 
-      useMutationTitleLogic: config?.useMutationTitleLogic 
+    console.log("Preload: Got config:", {
+      trayIconEnabled: config?.trayIconEnabled,
+      useMutationTitleLogic: config?.useMutationTitleLogic,
     });
-    
+
     // Initialize title monitoring directly in preload
     if (config.useMutationTitleLogic) {
       console.debug("Preload: MutationObserverTitle enabled");
@@ -88,8 +88,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         childList: true,
       });
     }
-    
-    // Initialize tray icon functionality directly in preload  
+
+    // Initialize tray icon functionality directly in preload
     if (config.trayIconEnabled) {
       console.debug("Preload: tray icon is enabled");
       window.addEventListener("unread-count", (event) => {
@@ -98,26 +98,77 @@ document.addEventListener('DOMContentLoaded', async () => {
         ipcRenderer.send("tray-update", {
           icon: null, // Let main process handle icon rendering
           flash: count > 0 && !config.disableNotificationWindowFlash,
-          count: count
+          count: count,
         });
         ipcRenderer.invoke("set-badge-count", count);
       });
     }
-    
+
     console.log("Preload: Essential tray modules initialized successfully");
-    
+
+    // Initialize platform emulation inline
+    if (config.emulateWinChromiumPlatform) {
+      console.debug(
+        "Preload: Platform emulation enabled, setting up Windows emulation"
+      );
+      try {
+        // Update platform property in navigator
+        const win32Str = "Win32";
+        const windowsStr = "Windows";
+        Object.defineProperty(Navigator.prototype, "platform", {
+          get: () => {
+            return win32Str;
+          },
+        });
+
+        // Update userAgentData object
+        let originalUserAgentData = navigator.userAgentData;
+        let customUserAgentData = JSON.parse(
+          JSON.stringify(originalUserAgentData)
+        );
+        customUserAgentData = {
+          ...customUserAgentData,
+          platform: windowsStr,
+          getHighEntropyValues: async function (input) {
+            let highEntropyValue =
+              await originalUserAgentData.getHighEntropyValues(input);
+            if (highEntropyValue["platform"]) {
+              highEntropyValue["platform"] = windowsStr;
+            }
+            return highEntropyValue;
+          },
+        };
+        Object.defineProperty(Navigator.prototype, "userAgentData", {
+          get: () => {
+            return customUserAgentData;
+          },
+        });
+
+        console.debug(
+          "Preload: Platform emulation configured successfully - navigator.platform:",
+          navigator.platform
+        );
+      } catch (err) {
+        console.error(
+          "Preload: Failed to initialize platform emulation:",
+          err.message
+        );
+      }
+    } else {
+      console.debug("Preload: Platform emulation disabled in configuration");
+    }
+
     // Initialize other modules safely
     const modules = [
       { name: "zoom", path: "./tools/zoom" },
       { name: "shortcuts", path: "./tools/shortcuts" },
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
-      { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" }
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
     ];
-    
+
     let successCount = 0;
-    modules.forEach(module => {
+    modules.forEach((module) => {
       try {
         const moduleInstance = require(module.path);
         if (module.name === "settings" || module.name === "theme") {
@@ -130,17 +181,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(`Preload: Failed to load ${module.name}:`, err.message);
       }
     });
-    
-    console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
-    
+
+    console.log(
+      `Preload: ${successCount}/${modules.length} browser modules initialized successfully`
+    );
+
     // Initialize ActivityManager
     try {
       const ActivityManager = require("./notifications/activityManager");
       new ActivityManager(ipcRenderer, config).start();
     } catch (err) {
-      console.error("Preload: ActivityManager failed to initialize:", err.message);
+      console.error(
+        "Preload: ActivityManager failed to initialize:",
+        err.message
+      );
     }
-    
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }

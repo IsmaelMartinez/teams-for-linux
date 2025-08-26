@@ -59,19 +59,43 @@
 - Follow existing IPC patterns using `ipcRenderer.invoke` and `ipcRenderer.on`
 - Preserve debug logging patterns for troubleshooting
 
+### **[TEST BOTH STATES]** Methodology
+
+For features controlled by configuration flags, each implementation must be tested in BOTH states to ensure no regressions:
+
+1. **Feature ENABLED Testing**: 
+   - Temporarily enable the feature flag in configuration
+   - Verify functionality works as expected
+   - Check console logs for successful initialization
+   - Test actual feature behavior (e.g., platform detection, zoom controls, theme switching)
+
+2. **Feature DISABLED Testing**:
+   - Disable the feature flag in configuration  
+   - Verify feature is properly bypassed without errors
+   - Ensure no console errors or unexpected behavior
+   - Confirm application works normally without the feature
+
+3. **Configuration Preservation**:
+   - Test that existing user configurations continue to work
+   - Verify default values are respected
+   - Ensure no breaking changes to configuration behavior
+
+This dual-testing approach ensures we don't break existing functionality while adding new inline implementations.
+
 ## Tasks
 
-- [ ] 1.0 Research and Analysis Phase
-  - [ ] 1.1 **[SPIKE]** Analyze current preload.js implementation to understand existing inline functionality patterns
-  - [ ] 1.2 **[SPIKE]** Map all configuration dependencies used by browser tools to ensure preservation requirements
-  - [ ] 1.3 **[SPIKE]** Verify IPC channel availability in preload context for zoom, theme, and settings functionality
-  - [ ] 1.4 **[SPIKE]** Document ReactHandler dependencies and Teams React integration patterns
+- [x] 1.0 Research and Analysis Phase
+  - [x] 1.1 **[SPIKE]** Analyze current preload.js implementation to understand existing inline functionality patterns
+  - [x] 1.2 **[SPIKE]** Map all configuration dependencies used by browser tools to ensure preservation requirements
+  - [x] 1.3 **[SPIKE]** Verify IPC channel availability in preload context for zoom, theme, and settings functionality
+  - [x] 1.4 **[SPIKE]** Document ReactHandler dependencies and Teams React integration patterns
 
 - [ ] 2.0 Inline Simple Browser Tools (No External Dependencies)
-  - [ ] 2.1 Inline platform emulation functionality from `emulatePlatform.js` into preload.js
-  - [ ] 2.2 Add comprehensive debug logging for platform emulation initialization
-  - [ ] 2.3 Verify platform emulation works with `config.emulateWinChromiumPlatform` setting
-  - [ ] 2.4 Test platform emulation manually by checking navigator.platform and userAgentData modifications
+  - [x] 2.1 Inline platform emulation functionality from `emulatePlatform.js` into preload.js
+  - [x] 2.2 Add comprehensive debug logging for platform emulation initialization
+  - [ ] 2.3 **[TEST BOTH STATES]** Verify platform emulation works with `config.emulateWinChromiumPlatform = true`
+  - [ ] 2.4 **[TEST BOTH STATES]** Verify platform emulation is properly disabled with `config.emulateWinChromiumPlatform = false`
+  - [ ] 2.5 Test platform emulation manually by checking navigator.platform and userAgentData modifications
 
 - [ ] 3.0 Inline Core Zoom Functionality
   - [ ] 3.1 Extract zoom control logic from `zoom.js` and implement inline in preload.js
@@ -89,9 +113,10 @@
 - [ ] 5.0 Inline Theme Management
   - [ ] 5.1 Extract theme management logic from `theme.js` and implement inline using ReactHandler
   - [ ] 5.2 Preserve "system-theme-changed" IPC listener functionality
-  - [ ] 5.3 Maintain `config.followSystemTheme` configuration support
-  - [ ] 5.4 Add debug logging for theme initialization and system theme changes
-  - [ ] 5.5 Test theme switching manually to verify Teams interface responds correctly
+  - [ ] 5.3 **[TEST BOTH STATES]** Maintain `config.followSystemTheme = true` configuration support and verify theme sync
+  - [ ] 5.4 **[TEST BOTH STATES]** Verify theme management is disabled when `config.followSystemTheme = false`
+  - [ ] 5.5 Add debug logging for theme initialization and system theme changes
+  - [ ] 5.6 Test theme switching manually to verify Teams interface responds correctly
 
 - [ ] 6.0 Inline Keyboard Shortcuts
   - [ ] 6.1 Extract keyboard shortcut handling from `shortcuts.js` and implement inline
