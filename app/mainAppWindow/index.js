@@ -162,7 +162,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         if (selectedSource) {
           setupScreenSharing(selectedSource);
         }
-        callback({ video: selectedSource });
+        callback({ video: selectedSource, audio: false });
       });
   }
 
