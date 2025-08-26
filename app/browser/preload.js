@@ -370,9 +370,110 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.debug("Preload: Theme management disabled in configuration");
     }
 
+    // Initialize keyboard shortcuts functionality inline
+    console.debug("Preload: Initializing keyboard shortcuts functionality inline");
+    try {
+      // Platform detection for shortcuts
+      const isMac = navigator.platform.toLowerCase().includes('mac');
+      console.debug("Preload: Platform detected for shortcuts:", isMac ? "Mac" : "Non-Mac");
+
+      // Key mappings with zoom integration
+      const keyMaps = {
+        "CTRL_+": () => window.zoomControls?.increaseZoomLevel(),
+        "CTRL_=": () => window.zoomControls?.increaseZoomLevel(),
+        "CTRL_-": () => window.zoomControls?.decreaseZoomLevel(),
+        "CTRL__": () => window.zoomControls?.decreaseZoomLevel(),
+        "CTRL_0": () => window.zoomControls?.resetZoomLevel(),
+        // Alt (Option) Left / Right is used to jump words in Mac, so disabling the history navigation for Mac
+        ...(!isMac
+          ? {
+              "ALT_ArrowLeft": () => {
+                console.debug("Preload: Navigating back");
+                window.history.back();
+              },
+              "ALT_ArrowRight": () => {
+                console.debug("Preload: Navigating forward");
+                window.history.forward();
+              },
+            }
+          : {}),
+      };
+
+      // Event handlers
+      function keyDownEventHandler(event) {
+        const keyName = event.key;
+        if (keyName === "Control" || keyName === "Alt") {
+          return;
+        }
+        fireEvent(event, keyName);
+      }
+
+      function wheelEventHandler(event) {
+        if (event.ctrlKey) {
+          event.preventDefault();
+          console.debug("Preload: Ctrl+scroll zoom detected, deltaY:", event.deltaY);
+          if (event.deltaY > 0) {
+            window.zoomControls?.decreaseZoomLevel();
+          } else if (event.deltaY < 0) {
+            window.zoomControls?.increaseZoomLevel();
+          }
+        }
+      }
+
+      function getKeyName(event, keyName) {
+        return `${event.ctrlKey ? "CTRL_" : ""}${event.altKey ? "ALT_" : ""}${keyName}`;
+      }
+
+      function fireEvent(event, keyName) {
+        const handler = keyMaps[getKeyName(event, keyName)];
+        if (typeof handler === "function") {
+          console.debug("Preload: Firing keyboard shortcut:", getKeyName(event, keyName));
+          event.preventDefault();
+          handler();
+        }
+      }
+
+      // Add event listeners to window
+      function addEventListeners() {
+        console.debug("Preload: Adding keyboard shortcuts event listeners");
+        window.addEventListener("keydown", keyDownEventHandler, false);
+        window.addEventListener("wheel", wheelEventHandler, { passive: false });
+        
+        // Also add listeners to iframe when it's ready
+        whenIframeReady((iframe) => {
+          console.debug("Preload: Adding keyboard shortcuts to Teams iframe");
+          iframe.contentDocument.addEventListener("keydown", keyDownEventHandler, false);
+          iframe.contentDocument.addEventListener("wheel", wheelEventHandler, { passive: false });
+        });
+      }
+
+      function whenIframeReady(callback) {
+        const iframe = window.document.getElementsByTagName("iframe")[0];
+        if (iframe) {
+          callback(iframe);
+        } else {
+          setTimeout(() => whenIframeReady(callback), 1000);
+        }
+      }
+
+      function whenWindowReady(callback) {
+        if (window) {
+          callback();
+        } else {
+          setTimeout(() => whenWindowReady(callback), 1000);
+        }
+      }
+
+      // Initialize shortcuts when window is ready
+      whenWindowReady(addEventListeners);
+      
+      console.debug("Preload: Keyboard shortcuts functionality initialized successfully");
+    } catch (err) {
+      console.error("Preload: Failed to initialize keyboard shortcuts:", err.message);
+    }
+
     // Initialize other modules safely
     const modules = [
-      { name: "shortcuts", path: "./tools/shortcuts" },
       { name: "settings", path: "./tools/settings" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
     ];
