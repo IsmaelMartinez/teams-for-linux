@@ -236,6 +236,93 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Preload: Failed to initialize zoom functionality:", err.message);
     }
 
+    // Initialize ReactHandler functionality inline
+    console.debug("Preload: Initializing ReactHandler functionality inline");
+    try {
+      // ReactHandler class functionality for Teams React integration
+      const reactHandler = {
+        getCommandChangeReportingService() {
+          try {
+            const teams2CoreServices = this._getTeams2CoreServices();
+            return teams2CoreServices?.commandChangeReportingService;
+          } catch (err) {
+            console.error("Preload: Failed to get CommandChangeReportingService:", err.message);
+            return null;
+          }
+        },
+
+        getTeams2IdleTracker() {
+          try {
+            const teams2CoreServices = this._getTeams2CoreServices();
+            return teams2CoreServices?.clientState?._idleTracker;
+          } catch (err) {
+            console.error("Preload: Failed to get Teams2IdleTracker:", err.message);
+            return null;
+          }
+        },
+
+        getTeams2ClientPreferences() {
+          try {
+            const teams2CoreServices = this._getTeams2CoreServices();
+            return teams2CoreServices?.clientPreferences?.clientPreferences;
+          } catch (err) {
+            console.error("Preload: Failed to get Teams2ClientPreferences:", err.message);
+            return null;
+          }
+        },
+
+        _getTeams2ReactElement() {
+          try {
+            const element = document.getElementById("app");
+            if (!element) {
+              console.debug("Preload: Teams app element not found");
+              return null;
+            }
+            return element;
+          } catch (err) {
+            console.error("Preload: Failed to get Teams2ReactElement:", err.message);
+            return null;
+          }
+        },
+
+        _getTeams2CoreServices() {
+          try {
+            const reactElement = this._getTeams2ReactElement();
+            if (!reactElement) {
+              return null;
+            }
+
+            const internalRoot =
+              reactElement._reactRootContainer?._internalRoot ||
+              reactElement._reactRootContainer;
+            
+            if (!internalRoot) {
+              console.debug("Preload: React internal root not found");
+              return null;
+            }
+
+            const coreServices = internalRoot.current?.updateQueue?.baseState?.element?.props?.coreServices;
+            if (!coreServices) {
+              console.debug("Preload: Teams core services not available");
+              return null;
+            }
+
+            return coreServices;
+          } catch (err) {
+            console.error("Preload: Failed to access Teams2CoreServices:", err.message);
+            return null;
+          }
+        }
+      };
+
+      // Expose ReactHandler globally for access by other scripts
+      window.reactHandler = reactHandler;
+      
+      console.debug("Preload: ReactHandler functionality initialized successfully");
+    } catch (err) {
+      console.error("Preload: Failed to initialize ReactHandler functionality:", err.message);
+    }
+
     // Initialize other modules safely
     const modules = [
       { name: "shortcuts", path: "./tools/shortcuts" },
