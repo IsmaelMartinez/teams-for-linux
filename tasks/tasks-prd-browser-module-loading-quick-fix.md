@@ -110,13 +110,13 @@ This dual-testing approach ensures we don't break existing functionality while a
   - [x] 4.3 Add defensive error handling for React element access failures
   - [x] 4.4 Verify ReactHandler methods work with current Teams web interface structure
 
-- [ ] 5.0 Inline Theme Management
-  - [ ] 5.1 Extract theme management logic from `theme.js` and implement inline using ReactHandler
-  - [ ] 5.2 Preserve "system-theme-changed" IPC listener functionality
-  - [ ] 5.3 **[TEST BOTH STATES]** Maintain `config.followSystemTheme = true` configuration support and verify theme sync
-  - [ ] 5.4 **[TEST BOTH STATES]** Verify theme management is disabled when `config.followSystemTheme = false`
-  - [ ] 5.5 Add debug logging for theme initialization and system theme changes
-  - [ ] 5.6 Test theme switching manually to verify Teams interface responds correctly
+- [x] 5.0 Inline Theme Management
+  - [x] 5.1 Extract theme management logic from `theme.js` and implement inline using ReactHandler
+  - [x] 5.2 Preserve "system-theme-changed" IPC listener functionality
+  - [x] 5.3 **[TEST BOTH STATES]** Maintain `config.followSystemTheme = true` configuration support and verify theme sync
+  - [x] 5.4 **[TEST BOTH STATES]** Verify theme management is disabled when `config.followSystemTheme = false`
+  - [x] 5.5 Add debug logging for theme initialization and system theme changes
+  - [x] 5.6 Test theme switching manually to verify Teams interface responds correctly
 
 - [ ] 6.0 Inline Keyboard Shortcuts
   - [ ] 6.1 Extract keyboard shortcut handling from `shortcuts.js` and implement inline

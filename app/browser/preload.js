@@ -323,11 +323,57 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Preload: Failed to initialize ReactHandler functionality:", err.message);
     }
 
+    // Initialize theme management functionality inline
+    if (config.followSystemTheme) {
+      console.debug("Preload: Theme management enabled, initializing system theme sync");
+      try {
+        // Apply theme function
+        async function applyTheme(isDark) {
+          try {
+            const theme = isDark ? "dark" : "default";
+            console.debug(`Preload: Applying theme: ${theme}`);
+            
+            const clientPreferences = window.reactHandler?.getTeams2ClientPreferences();
+            if (clientPreferences) {
+              console.debug("Preload: Using React to set the theme");
+              clientPreferences.theme.userTheme = theme;
+              console.debug(`Preload: Theme changed to ${theme}`);
+            } else {
+              console.debug("Preload: Teams client preferences not available for theme setting");
+            }
+          } catch (err) {
+            console.error("Preload: Failed to apply theme:", err.message);
+          }
+        }
+
+        // Set initial theme preference using ReactHandler
+        const clientPreferences = window.reactHandler?.getTeams2ClientPreferences();
+        if (clientPreferences) {
+          console.debug("Preload: Using React to set the follow system theme preference");
+          clientPreferences.theme.followOsTheme = config.followSystemTheme;
+          console.debug("Preload: Follow system theme preference set to:", config.followSystemTheme);
+        } else {
+          console.debug("Preload: Teams client preferences not available, will retry when DOM is ready");
+        }
+
+        // Listen for system theme changes
+        ipcRenderer.on("system-theme-changed", (event, isDark) => {
+          console.debug("Preload: System theme changed, isDark:", isDark);
+          applyTheme(isDark);
+        });
+
+        console.debug("Preload: Theme management initialized successfully");
+      } catch (err) {
+        console.error("Preload: Failed to initialize theme management:", err.message);
+      }
+    } else {
+      console.debug("Preload: Theme management disabled in configuration");
+    }
+
     // Initialize other modules safely
     const modules = [
       { name: "shortcuts", path: "./tools/shortcuts" },
       { name: "settings", path: "./tools/settings" },
-      { name: "theme", path: "./tools/theme" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
     ];
 
