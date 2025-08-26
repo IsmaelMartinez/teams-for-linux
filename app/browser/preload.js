@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webFrame } = require("electron");
 
 // Expose APIs needed by browser scripts with contextIsolation
 contextBridge.exposeInMainWorld("electronAPI", {
@@ -56,6 +56,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Zoom
   getZoomLevel: (partition) => ipcRenderer.invoke("get-zoom-level", partition),
   saveZoomLevel: (data) => ipcRenderer.invoke("save-zoom-level", data),
+  webFrame: {
+    setZoomLevel: (level) => webFrame.setZoomLevel(level),
+    getZoomLevel: () => webFrame.getZoomLevel(),
+  },
 
   // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
@@ -158,9 +162,82 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.debug("Preload: Platform emulation disabled in configuration");
     }
 
+    // Initialize zoom functionality inline
+    console.debug("Preload: Initializing zoom functionality inline");
+    try {
+      // Zoom configuration constants
+      const zoomFactor = 0.25;
+      const zoomMin = -7.5; // -7.5 * 20% = -150% or 50% of original
+      const zoomMax = 7.5; // 7.5 * 20% = +200% or 300% of original
+      const zoomOffsets = {
+        "+": 1,
+        "-": -1,
+        0: 0,
+      };
+
+      // Restore saved zoom level
+      async function restoreZoomLevel() {
+        try {
+          console.debug("Preload: Restoring zoom level from storage");
+          const zoomLevel = await ipcRenderer.invoke("get-zoom-level", config.partition);
+          webFrame.setZoomLevel(zoomLevel);
+          console.debug(`Preload: Zoom level restored to ${zoomLevel}`);
+        } catch (err) {
+          console.error("Preload: Failed to restore zoom level:", err.message);
+        }
+      }
+
+      // Set zoom level with bounds checking and persistence
+      function setNextZoomLevel(keyName) {
+        try {
+          const zoomOffset = zoomOffsets[keyName];
+          let zoomLevel = webFrame.getZoomLevel();
+          console.debug(`Preload: Current zoom level: ${zoomLevel}`);
+          
+          if (typeof zoomOffset !== "number") {
+            console.debug("Preload: Invalid zoom offset:", keyName);
+            return;
+          }
+
+          zoomLevel = zoomOffset === 0 ? 0 : zoomLevel + zoomOffset * zoomFactor;
+          if (zoomLevel < zoomMin || zoomLevel > zoomMax) {
+            console.debug(`Preload: Zoom level ${zoomLevel} outside bounds [${zoomMin}, ${zoomMax}]`);
+            return;
+          }
+          
+          webFrame.setZoomLevel(zoomLevel);
+          console.debug(`Preload: Zoom level set to ${zoomLevel}`);
+          
+          // Save zoom level
+          ipcRenderer.invoke("save-zoom-level", {
+            partition: config.partition,
+            zoomLevel: webFrame.getZoomLevel(),
+          }).catch(err => {
+            console.error("Preload: Failed to save zoom level:", err.message);
+          });
+        } catch (err) {
+          console.error("Preload: Failed to set zoom level:", err.message);
+        }
+      }
+
+      // Expose zoom functions globally for access by other scripts
+      window.zoomControls = {
+        restoreZoomLevel,
+        resetZoomLevel: () => setNextZoomLevel("0"),
+        increaseZoomLevel: () => setNextZoomLevel("+"),
+        decreaseZoomLevel: () => setNextZoomLevel("-"),
+      };
+
+      // Restore zoom level on initialization
+      await restoreZoomLevel();
+      
+      console.debug("Preload: Zoom functionality initialized successfully");
+    } catch (err) {
+      console.error("Preload: Failed to initialize zoom functionality:", err.message);
+    }
+
     // Initialize other modules safely
     const modules = [
-      { name: "zoom", path: "./tools/zoom" },
       { name: "shortcuts", path: "./tools/shortcuts" },
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
