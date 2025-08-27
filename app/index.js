@@ -138,7 +138,7 @@ if (!gotTheLock) {
     // Return the source ID - handle both string and object formats
     if (typeof global.selectedScreenShareSource === "string") {
       return global.selectedScreenShareSource;
-    } else if (global.selectedScreenShareSource && global.selectedScreenShareSource.id) {
+    } else if (global.selectedScreenShareSource?.id) {
       return global.selectedScreenShareSource.id;
     }
     return null;
@@ -153,7 +153,7 @@ if (!gotTheLock) {
       const { screen } = require("electron");
       const displays = screen.getAllDisplays();
 
-      if (global.selectedScreenShareSource && global.selectedScreenShareSource.id && global.selectedScreenShareSource.id.startsWith("screen:")) {
+      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
@@ -395,11 +395,11 @@ function handleAppReady() {
   //Just catch the error
   process.stdout.on("error", () => {});
 
-  if (config.cacheManagement && config.cacheManagement.enabled === true) {
+  if (config.cacheManagement?.enabled === true) {
     const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement.maxCacheSizeMB || 300,
+      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
       cacheCheckIntervalMs:
-        config.cacheManagement.cacheCheckIntervalMs || 60 * 60 * 1000,
+        config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
       partition: config.partition, // Pass partition config for dynamic cache paths
     });
     cacheManager.start();
@@ -411,7 +411,7 @@ function handleAppReady() {
   }
 
   // Initialize MQTT client
-  if (config.mqtt && config.mqtt.enabled) {
+  if (config.mqtt?.enabled) {
     mqttClient = new MQTTClient(config);
     mqttClient.initialize();
   }

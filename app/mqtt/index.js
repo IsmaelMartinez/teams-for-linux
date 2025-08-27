@@ -1,5 +1,4 @@
 const mqtt = require('mqtt');
-const logger = require('electron-log');
 
 /**
  * MQTT Client for Teams Status Publishing
@@ -26,7 +25,7 @@ class MQTTClient {
 	 */
 	async initialize() {
 		if (!this.config.enabled || !this.config.brokerUrl) {
-			logger.debug('MQTT disabled or no broker URL configured');
+			console.debug('MQTT disabled or no broker URL configured');
 			return;
 		}
 
@@ -40,31 +39,31 @@ class MQTTClient {
 				options.password = this.config.password;
 			}
 
-			logger.info(`Connecting to MQTT broker: ${this.config.brokerUrl}`);
+			console.info(`Connecting to MQTT broker: ${this.config.brokerUrl}`);
 			
 			this.client = mqtt.connect(this.config.brokerUrl, options);
 
 			this.client.on('connect', () => {
 				this.isConnected = true;
-				logger.info('Successfully connected to MQTT broker');
+				console.info('Successfully connected to MQTT broker');
 			});
 
 			this.client.on('error', (error) => {
-				logger.error('MQTT connection error:', error);
+				console.error('MQTT connection error:', error);
 				this.isConnected = false;
 			});
 
 			this.client.on('close', () => {
 				this.isConnected = false;
-				logger.debug('MQTT connection closed');
+				console.debug('MQTT connection closed');
 			});
 
 			this.client.on('reconnect', () => {
-				logger.debug('Reconnecting to MQTT broker');
+				console.debug('Reconnecting to MQTT broker');
 			});
 
 		} catch (error) {
-			logger.error('Failed to initialize MQTT client:', error);
+			console.error('Failed to initialize MQTT client:', error);
 		}
 	}
 
@@ -74,7 +73,7 @@ class MQTTClient {
 	 */
 	async publishStatus(status) {
 		if (!this.isConnected || !this.client) {
-			logger.debug('MQTT not connected, skipping status publish');
+			console.debug('MQTT not connected, skipping status publish');
 			return;
 		}
 
@@ -105,10 +104,10 @@ class MQTTClient {
 			});
 
 			this.lastPublishedStatus = statusString;
-			logger.debug(`Published Teams status to MQTT: ${statusString} (${status}) on topic: ${topic}`);
+			console.debug(`Published Teams status to MQTT: ${statusString} (${status}) on topic: ${topic}`);
 
 		} catch (error) {
-			logger.error('Failed to publish status to MQTT:', error);
+			console.error('Failed to publish status to MQTT:', error);
 		}
 	}
 
@@ -117,7 +116,7 @@ class MQTTClient {
 	 */
 	async disconnect() {
 		if (this.client) {
-			logger.debug('Disconnecting from MQTT broker');
+			console.debug('Disconnecting from MQTT broker');
 			await new Promise((resolve) => {
 				this.client.end(false, resolve);
 			});

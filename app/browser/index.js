@@ -69,8 +69,4 @@ function initializeModules(config, ipcRenderer) {
   require("./tools/theme").init(config, ipcRenderer);
   require("./tools/emulatePlatform").init(config);
   require("./tools/timestampCopyOverride").init(config);
-  if (config.mqtt && config.mqtt.enabled) {
-    console.debug("MQTT status monitoring enabled");
-    require("./tools/statusMonitor").init(config, ipcRenderer);
-  }
 }
