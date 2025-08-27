@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.2" date="2025-08-27">
+			<description>
+				<ul>
+					<li>Fix: Restore browser functionality lost when enabling contextIsolation security feature</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.1" date="2025-08-26">
 			<description>
 				<ul>
