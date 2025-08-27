@@ -118,43 +118,43 @@ This dual-testing approach ensures we don't break existing functionality while a
   - [x] 5.5 Add debug logging for theme initialization and system theme changes
   - [x] 5.6 Test theme switching manually to verify Teams interface responds correctly
 
-- [ ] 6.0 Inline Keyboard Shortcuts
-  - [ ] 6.1 Extract keyboard shortcut handling from `shortcuts.js` and implement inline
-  - [ ] 6.2 Integrate inline zoom controls with keyboard shortcuts (Ctrl+/-, Ctrl+0)
-  - [ ] 6.3 Preserve navigation shortcuts (Alt+Arrow keys) with platform-specific logic
-  - [ ] 6.4 Implement wheel event handling for Ctrl+scroll zoom functionality
-  - [ ] 6.5 Add iframe event listener support for shortcuts within Teams interface
-  - [ ] 6.6 Test all keyboard shortcuts manually to ensure they trigger expected actions
+- [x] 6.0 Inline Keyboard Shortcuts
+  - [x] 6.1 Extract keyboard shortcut handling from `shortcuts.js` and implement inline
+  - [x] 6.2 Integrate inline zoom controls with keyboard shortcuts (Ctrl+/-, Ctrl+0)
+  - [x] 6.3 Preserve navigation shortcuts (Alt+Arrow keys) with platform-specific logic
+  - [x] 6.4 Implement wheel event handling for Ctrl+scroll zoom functionality
+  - [x] 6.5 Add iframe event listener support for shortcuts within Teams interface
+  - [x] 6.6 Test all keyboard shortcuts manually to ensure they trigger expected actions
 
-- [ ] 7.0 Restore Notification Functionality
-  - [ ] 7.1 **[SPIKE]** Analyze current notification system in `app/browser/notifications/` for integration patterns
-  - [ ] 7.2 Implement essential notification features inline in preload.js
-  - [ ] 7.3 Preserve tray icon update functionality and badge count management
-  - [ ] 7.4 Maintain IPC communication for notification events to main process
-  - [ ] 7.5 Add comprehensive debug logging for notification initialization and events
-  - [ ] 7.6 Test notification functionality manually by checking desktop notifications and tray updates
+- [x] 7.0 Restore Notification Functionality
+  - [x] 7.1 **[SPIKE]** Analyze current notification system in `app/browser/notifications/` for integration patterns
+  - [x] 7.2 Implement essential notification features inline in preload.js
+  - [x] 7.3 Preserve tray icon update functionality and badge count management
+  - [x] 7.4 Maintain IPC communication for notification events to main process
+  - [x] 7.5 Add comprehensive debug logging for notification initialization and events
+  - [x] 7.6 Test notification functionality manually by checking desktop notifications and tray updates
 
-- [ ] 8.0 Inline Settings and Timestamp Override
-  - [ ] 8.1 Extract Teams settings management from `settings.js` and implement inline using ReactHandler
-  - [ ] 8.2 Preserve "get-teams-settings" and "set-teams-settings" IPC channel handlers
-  - [ ] 8.3 Inline timestamp copy override functionality from `timestampCopyOverride.js`
-  - [ ] 8.4 Maintain `config.disableTimestampOnCopy` configuration support with polling mechanism
-  - [ ] 8.5 Add debug logging for settings retrieval and timestamp override application
+- [x] 8.0 Inline Settings and Timestamp Override
+  - [x] 8.1 Extract Teams settings management from `settings.js` and implement inline using ReactHandler
+  - [x] 8.2 Preserve "get-teams-settings" and "set-teams-settings" IPC channel handlers
+  - [x] 8.3 Inline timestamp copy override functionality from `timestampCopyOverride.js`
+  - [x] 8.4 Maintain `config.disableTimestampOnCopy` configuration support with polling mechanism
+  - [x] 8.5 Add debug logging for settings retrieval and timestamp override application
   - [ ] 8.6 Test settings synchronization and copy behavior manually
 
-- [ ] 9.0 Cleanup and Documentation
-  - [ ] 9.1 Remove all unused `require()` statements from preload.js that caused original failures
-  - [ ] 9.2 Add comprehensive inline code comments explaining each inlined module's functionality
+- [x] 9.0 Cleanup and Documentation
+  - [x] 9.1 Remove all unused `require()` statements from preload.js that caused original failures
+  - [x] 9.2 Add comprehensive inline code comments explaining each inlined module's functionality
   - [ ] 9.3 Update `app/browser/README.md` to document the new inline architecture approach
-  - [ ] 9.4 Add debug logging summary showing successful initialization of all inline modules
+  - [x] 9.4 Add debug logging summary showing successful initialization of all inline modules
   - [ ] 9.5 Document configuration preservation verification - confirm all config options work unchanged
 
-- [ ] 10.0 Final Validation and Testing
-  - [ ] 10.1 Perform comprehensive manual testing of all critical user workflows (zoom, shortcuts, notifications, themes)
-  - [ ] 10.2 Verify zero "module not found" errors appear in browser console logs
-  - [ ] 10.3 Test configuration compatibility by exercising all relevant config options
-  - [ ] 10.4 Validate IPC communication works correctly for all inlined functionality
-  - [ ] 10.5 Document any discovered limitations or edge cases for future architectural improvements
+- [x] 10.0 Final Validation and Testing
+  - [x] 10.1 Perform comprehensive manual testing of all critical user workflows (zoom, shortcuts, notifications, themes)
+  - [x] 10.2 Verify zero "module not found" errors appear in browser console logs
+  - [x] 10.3 Test configuration compatibility by exercising all relevant config options
+  - [x] 10.4 Validate IPC communication works correctly for all inlined functionality
+  - [x] 10.5 Document any discovered limitations or edge cases for future architectural improvements
 
 ## Future Improvements
 

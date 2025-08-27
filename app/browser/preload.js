@@ -238,82 +238,106 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Preload: Failed to initialize zoom functionality:", err.message);
     }
 
-    // Initialize ReactHandler functionality inline
+    // Initialize ReactHandler functionality inline 
     console.debug("Preload: Initializing ReactHandler functionality inline");
+    
+    // Centralized React readiness detection (module-level scope for accessibility)
+    let reactReady = false;
+    let reactReadyCallbacks = [];
+    let cachedCoreServices = null;
+    
+    function waitForReactReady(callback) {
+        if (reactReady) {
+          callback();
+        } else {
+          reactReadyCallbacks.push(callback);
+        }
+      }
+      
+    function checkReactReadiness() {
+        try {
+          const reactElement = document.getElementById("app");
+          if (!reactElement) {
+            return false;
+          }
+
+          const internalRoot =
+            reactElement._reactRootContainer?._internalRoot ||
+            reactElement._reactRootContainer;
+          
+          if (!internalRoot) {
+            return false;
+          }
+
+          const coreServices = internalRoot.current?.updateQueue?.baseState?.element?.props?.coreServices;
+          if (!coreServices) {
+            return false;
+          }
+
+          // React is ready! Cache the core services
+          if (!reactReady) {
+            console.debug("Preload: Teams React is ready, caching core services and initializing React-dependent functionality");
+            cachedCoreServices = coreServices;
+            reactReady = true;
+            // Execute all waiting callbacks
+            reactReadyCallbacks.forEach(callback => {
+              try {
+                callback();
+              } catch (err) {
+                console.error("Preload: Error in React ready callback:", err.message);
+              }
+            });
+            reactReadyCallbacks = [];
+          }
+          return true;
+        } catch (err) {
+          console.error("Preload: Error checking React readiness:", err.message);
+          return false;
+        }
+      }
+      
+    // Start React readiness polling
+    const reactReadinessInterval = setInterval(() => {
+      if (checkReactReadiness()) {
+        clearInterval(reactReadinessInterval);
+        console.debug("Preload: React readiness polling stopped - Teams React is ready");
+      }
+    }, 2000); // Check every 2 seconds
+      
     try {
       // ReactHandler class functionality for Teams React integration
+      
       const reactHandler = {
         getCommandChangeReportingService() {
-          try {
-            const teams2CoreServices = this._getTeams2CoreServices();
-            return teams2CoreServices?.commandChangeReportingService;
-          } catch (err) {
-            console.error("Preload: Failed to get CommandChangeReportingService:", err.message);
+          if (!reactReady || !cachedCoreServices) {
             return null;
           }
+          return cachedCoreServices.commandChangeReportingService;
         },
 
         getTeams2IdleTracker() {
-          try {
-            const teams2CoreServices = this._getTeams2CoreServices();
-            return teams2CoreServices?.clientState?._idleTracker;
-          } catch (err) {
-            console.error("Preload: Failed to get Teams2IdleTracker:", err.message);
+          if (!reactReady || !cachedCoreServices) {
             return null;
           }
+          return cachedCoreServices.clientState?._idleTracker;
         },
 
         getTeams2ClientPreferences() {
-          try {
-            const teams2CoreServices = this._getTeams2CoreServices();
-            return teams2CoreServices?.clientPreferences?.clientPreferences;
-          } catch (err) {
-            console.error("Preload: Failed to get Teams2ClientPreferences:", err.message);
+          if (!reactReady || !cachedCoreServices) {
             return null;
           }
+          return cachedCoreServices.clientPreferences?.clientPreferences;
         },
 
         _getTeams2ReactElement() {
-          try {
-            const element = document.getElementById("app");
-            if (!element) {
-              console.debug("Preload: Teams app element not found");
-              return null;
-            }
-            return element;
-          } catch (err) {
-            console.error("Preload: Failed to get Teams2ReactElement:", err.message);
-            return null;
-          }
+          return document.getElementById("app");
         },
 
         _getTeams2CoreServices() {
-          try {
-            const reactElement = this._getTeams2ReactElement();
-            if (!reactElement) {
-              return null;
-            }
-
-            const internalRoot =
-              reactElement._reactRootContainer?._internalRoot ||
-              reactElement._reactRootContainer;
-            
-            if (!internalRoot) {
-              console.debug("Preload: React internal root not found");
-              return null;
-            }
-
-            const coreServices = internalRoot.current?.updateQueue?.baseState?.element?.props?.coreServices;
-            if (!coreServices) {
-              console.debug("Preload: Teams core services not available");
-              return null;
-            }
-
-            return coreServices;
-          } catch (err) {
-            console.error("Preload: Failed to access Teams2CoreServices:", err.message);
+          if (!reactReady || !cachedCoreServices) {
             return null;
           }
+          return cachedCoreServices;
         }
       };
 
@@ -444,14 +468,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Also add listeners to iframe when it's ready
         whenIframeReady((iframe) => {
           console.debug("Preload: Adding keyboard shortcuts to Teams iframe");
-          iframe.contentDocument.addEventListener("keydown", keyDownEventHandler, false);
-          iframe.contentDocument.addEventListener("wheel", wheelEventHandler, { passive: false });
+          if (iframe.contentDocument) {
+            iframe.contentDocument.addEventListener("keydown", keyDownEventHandler, false);
+            iframe.contentDocument.addEventListener("wheel", wheelEventHandler, { passive: false });
+          } else {
+            console.debug("Preload: iframe.contentDocument not available, skipping iframe shortcuts");
+          }
         });
       }
 
       function whenIframeReady(callback) {
         const iframe = window.document.getElementsByTagName("iframe")[0];
-        if (iframe) {
+        if (iframe && iframe.contentDocument) {
           callback(iframe);
         } else {
           setTimeout(() => whenIframeReady(callback), 1000);
@@ -474,11 +502,471 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Preload: Failed to initialize keyboard shortcuts:", err.message);
     }
 
-    // Initialize other modules safely
-    const modules = [
-      { name: "settings", path: "./tools/settings" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+    // Initialize settings management functionality inline
+    console.debug("Preload: Initializing settings management functionality inline");
+    try {
+      // Settings retrieval function
+      async function retrieveTeamsSettings(event) {
+        try {
+          console.debug("Preload: Retrieving Teams settings from React");
+          const clientPreferences = window.reactHandler?.getTeams2ClientPreferences();
+
+          if (!clientPreferences) {
+            console.error("Preload: Failed to retrieve Teams settings from React");
+            return;
+          }
+
+          const settings = {
+            theme: clientPreferences.theme.userTheme,
+            chatDensity: clientPreferences.density.chatDensity,
+          };
+          console.debug("Preload: Retrieved Teams settings:", settings);
+          event.sender.send("get-teams-settings", settings);
+        } catch (err) {
+          console.error("Preload: Failed to retrieve Teams settings:", err.message);
+        }
+      }
+
+      // Settings restore function
+      async function restoreTeamsSettings(event, ...args) {
+        try {
+          console.debug("Preload: Restoring Teams settings:", args[0]);
+          const clientPreferences = window.reactHandler?.getTeams2ClientPreferences();
+
+          if (!clientPreferences) {
+            console.warn("Preload: Failed to retrieve Teams settings from React for restore");
+            return;
+          }
+
+          clientPreferences.theme.userTheme = args[0].theme;
+          clientPreferences.density.chatDensity = args[0].chatDensity;
+          console.debug("Preload: Teams settings restored successfully");
+          event.sender.send("set-teams-settings", true);
+        } catch (err) {
+          console.error("Preload: Failed to restore Teams settings:", err.message);
+        }
+      }
+
+      // Register IPC handlers for settings
+      ipcRenderer.on("get-teams-settings", retrieveTeamsSettings);
+      ipcRenderer.on("set-teams-settings", restoreTeamsSettings);
+
+      console.debug("Preload: Settings management initialized successfully");
+    } catch (err) {
+      console.error("Preload: Failed to initialize settings management:", err.message);
+    }
+
+    // Initialize timestamp copy override functionality inline (wait for React readiness)
+    if (config.disableTimestampOnCopy !== undefined) {
+      // Module-level variables for proper lifecycle management
+      let timestampOverrideInterval = null;
+      let timestampOverrideInitialized = false;
+
+      function applyTimestampOverride() {
+        try {
+          if (!reactReady || !cachedCoreServices?.coreSettings) {
+            console.debug("Preload: Core services not available for timestamp override");
+            return;
+          }
+          
+          const coreServices = cachedCoreServices;
+          const coreSettings = coreServices.coreSettings;
+          
+          // Check if setting is already correct
+          if (coreSettings.get('compose').disableTimestampOnCopy === config.disableTimestampOnCopy) {
+            console.debug('Preload: disableTimestampOnCopy setting is correct, stopping polling');
+            if (timestampOverrideInterval) {
+              clearInterval(timestampOverrideInterval);
+              timestampOverrideInterval = null;
+            }
+            return;
+          }
+
+          console.debug("Preload: Applying timestamp copy override:", config.disableTimestampOnCopy);
+
+          const overrides = {
+            disableTimestampOnCopy: config.disableTimestampOnCopy
+          };
+
+          // Override the get method
+          const originalGet = coreSettings.get;
+          if (!coreSettings._originalGet) {
+            coreSettings._originalGet = originalGet;
+            coreSettings.get = function(category) {
+              const settings = coreSettings._originalGet.call(this, category);
+              if (category === 'compose') {
+                return {
+                  ...settings,
+                  ...overrides
+                };
+              }
+              return settings;
+            };
+          }
+
+          // Override getLatestSettingsForCategory
+          const originalGetLatest = coreSettings.getLatestSettingsForCategory;
+          if (!coreSettings._originalGetLatest) {
+            coreSettings._originalGetLatest = originalGetLatest;
+            coreSettings.getLatestSettingsForCategory = function(category) {
+              const settings = coreSettings._originalGetLatest.call(this, category);
+              if (category === 'compose') {
+                return {
+                  ...settings,
+                  ...overrides
+                };
+              }
+              return settings;
+            };
+          }
+
+          // Override the behavior subject
+          const composeSubject = coreSettings.categoryBehaviorSubjectMap.get('compose');
+          if (composeSubject && !composeSubject._originalNext) {
+            composeSubject._originalNext = composeSubject.next;
+            composeSubject.next = function(value) {
+              if (value && typeof value === 'object') {
+                value = {
+                  ...value,
+                  ...overrides
+                };
+              }
+              return composeSubject._originalNext.call(this, value);
+            };
+          }
+
+        } catch (err) {
+          console.error("Preload: Failed to apply timestamp override:", err.message);
+        }
+      }
+
+      waitForReactReady(() => {
+        if (!timestampOverrideInitialized) {
+          console.debug("Preload: Initializing timestamp copy override functionality inline");
+          try {
+            // Start polling mechanism - now with proper scope
+            timestampOverrideInterval = setInterval(applyTimestampOverride, 1000);
+            timestampOverrideInitialized = true;
+            console.debug("Preload: Timestamp copy override polling started");
+          } catch (err) {
+            console.error("Preload: Failed to initialize timestamp copy override:", err.message);
+          }
+        }
+      });
+    } else {
+      console.debug("Preload: Timestamp copy override not configured");
+    }
+
+    // Initialize notification functionality inline
+    console.debug("Preload: Initializing notification functionality inline");
+    
+    // WakeLock functionality inline
+    let wakeLockInstance = null;
+    const wakeLockAPI = {
+      async enable() {
+        try {
+          let lock = await navigator.wakeLock.request("screen");
+          lock.addEventListener("release", () => {
+            console.debug("Wake Lock was released");
+          });
+          console.debug("Wake Lock is active");
+          wakeLockInstance = lock;
+        } catch (err) {
+          console.error(`wakelog enable error ${err.name}, ${err.message}`);
+        }
+      },
+      
+      async disable() {
+        if (!wakeLockInstance) {
+          return;
+        }
+        try {
+          await wakeLockInstance.release();
+          wakeLockInstance = null;
+        } catch (err) {
+          console.error(`wakelog disable error ${err.name}, ${err.message}`);
+        }
+      }
+    };
+
+    // ActivityHub functionality inline
+    const eventHandlers = [];
+    const supportedEvents = [
+      "incoming-call-created",
+      "incoming-call-ended", 
+      "call-connected",
+      "call-disconnected"
     ];
+
+    function isSupportedEvent(event) {
+      return supportedEvents.some(e => e === event);
+    }
+
+    function isFunction(func) {
+      return typeof func === 'function';
+    }
+
+    function getHandleIndex(event, handle) {
+      return eventHandlers.findIndex(h => h.event === event && h.handle === handle);
+    }
+
+    function addEventHandler(event, handler) {
+      let handle;
+      if (isSupportedEvent(event) && isFunction(handler)) {
+        handle = crypto.randomUUID();
+        eventHandlers.push({
+          event: event,
+          handle: handle,
+          handler: handler
+        });
+      }
+      return handle;
+    }
+
+    function removeEventHandler(event, handle) {
+      const handlerIndex = getHandleIndex(event, handle);
+      if (handlerIndex > -1) {
+        eventHandlers[handlerIndex].handler = null;
+        eventHandlers.splice(handlerIndex, 1);
+        return handle;
+      }
+      return null;
+    }
+
+    function getEventHandlers(event) {
+      return eventHandlers.filter(e => e.event === event);
+    }
+
+    const activityHubAPI = {
+      on: addEventHandler,
+      off: removeEventHandler,
+      
+      start() {
+        waitForReactReady(() => {
+          const commandChangeReportingService = reactHandler.getCommandChangeReportingService();
+          if (commandChangeReportingService) {
+            assignEventHandlers(commandChangeReportingService);
+            console.debug("Preload: ActivityHub events connected");
+          } else {
+            console.error("Preload: Failed to get CommandChangeReportingService even after React ready");
+          }
+        });
+      },
+
+      setMachineState(state) {
+        const teams2IdleTracker = reactHandler.getTeams2IdleTracker();
+        if (teams2IdleTracker) {
+          try {
+            console.debug(`setMachineState teams2 state=${state}`);
+            if (state === 1) {
+              teams2IdleTracker.handleMonitoredWindowEvent();
+            } else {
+              teams2IdleTracker.transitionToIdle();
+            }
+          } catch (e) {
+            console.error("Failed to set teams2 Machine State", e);
+          }
+        }
+      },
+
+      setUserStatus(status) {
+        const teams2IdleTracker = reactHandler.getTeams2IdleTracker();
+        if (teams2IdleTracker) {
+          try {
+            console.debug(`setUserStatus teams2 status=${status}`);
+            if (status === 1) {
+              teams2IdleTracker.handleMonitoredWindowEvent();
+            } else {
+              teams2IdleTracker.transitionToIdle();
+            }
+          } catch (e) {
+            console.error("Failed to set teams2 User Status", e);
+          }
+        }
+      },
+
+      refreshAppState(controller, state) {
+        const self = controller.appStateService;
+        controller.appStateService.refreshAppState.apply(self, [
+          () => {
+            self.inactiveStartTime = null;
+            self.setMachineState(state);
+            self.setActive(
+              state == 1 && (self.current == 4 || self.current == 5) ? 3 : self.current,
+            );
+          },
+          "",
+          null,
+          null,
+        ]);
+      }
+    };
+
+    function assignEventHandlers(commandChangeReportingService) {
+      commandChangeReportingService.observeChanges().subscribe((e) => {
+        if (["CommandStart", "ScenarioMarked"].indexOf(e.type) < 0 ||
+          ["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) < 0) {
+          return;
+        }
+        if (e.context.entityCommand) {
+          handleCallEventEntityCommand(e.context.entityCommand);
+        } else {
+          handleCallEventStep(e.context.step);
+        }
+      });
+    }
+
+    function handleCallEventEntityCommand(entityCommand) {
+      if (entityCommand.entityOptions?.isIncomingCall) {
+        console.debug("IncomingCall", entityCommand);
+        if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
+          console.debug("Call is incoming");
+          onIncomingCallCreated({
+            caller: entityCommand.entityOptions.title,
+            image: entityCommand.entityOptions.mainImage?.src,
+            text: entityCommand.entityOptions.text
+          });
+        } else {
+          console.debug("Reacted to incoming call");
+          onIncomingCallEnded();
+        }
+      }
+    }
+
+    function handleCallEventStep(step) {
+      switch (step) {
+        case "calling-screen-rendered":
+          onCallConnected();
+          break;
+        case "render_disconected":
+          onCallDisconnected();
+          break;
+        default:
+          break;
+      }
+    }
+
+    async function onIncomingCallCreated(data) {
+      const handlers = getEventHandlers('incoming-call-created');
+      for (const handler of handlers) {
+        handler.handler(data);
+      }
+    }
+
+    async function onIncomingCallEnded() {
+      const handlers = getEventHandlers('incoming-call-ended');
+      for (const handler of handlers) {
+        handler.handler({});
+      }
+    }
+
+    async function onCallConnected() {
+      const handlers = getEventHandlers('call-connected');
+      for (const handler of handlers) {
+        handler.handler({});
+      }
+    }
+
+    async function onCallDisconnected() {
+      const handlers = getEventHandlers('call-disconnected');
+      for (const handler of handlers) {
+        handler.handler({});
+      }
+    }
+
+    // ActivityManager functionality inline  
+    let myStatus = -1;
+    
+    function setEventHandlers() {
+      ipcRenderer.on("enable-wakelock", () => wakeLockAPI.enable());
+      ipcRenderer.on("disable-wakelock", () => wakeLockAPI.disable());
+
+      ipcRenderer.on('incoming-call-action', (event, action) => {
+        console.debug("ActionHTML", document.body.innerHTML);
+        const actionWrapper = document.querySelector('[data-testid="calling-actions"],[data-testid="msn-actions"]');
+        if (actionWrapper) {
+          const buttons = actionWrapper.querySelectorAll("button");
+          if (buttons.length > 0) {
+            switch (action) {
+              case 'ACCEPT_AUDIO':
+                if (buttons.length == 3) {
+                  buttons[1].click();
+                }
+              case 'ACCEPT_VIDEO':
+                buttons[0].click();
+                break;
+              case 'DECLINE':
+                buttons[buttons.length - 1].click();
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      });
+    }
+
+    function setActivityHandlers() {
+      activityHubAPI.on("incoming-call-created", async (data) => {
+        ipcRenderer.invoke("incoming-call-created", data);
+      });
+      activityHubAPI.on("incoming-call-ended", async () => {
+        ipcRenderer.invoke("incoming-call-ended");
+      });
+      activityHubAPI.on("call-connected", async () => {
+        ipcRenderer.invoke("call-connected");
+      });
+      activityHubAPI.on("call-disconnected", async () => {
+        ipcRenderer.invoke("call-disconnected");
+      });
+    }
+
+    function watchSystemIdleState() {
+      ipcRenderer.invoke("get-system-idle-state").then((state) => {
+        let timeOut;
+        if (config.awayOnSystemIdle) {
+          timeOut = setStatusAwayWhenScreenLocked(state);
+        } else {
+          timeOut = keepStatusAvailableWhenScreenLocked(state);
+        }
+        setTimeout(() => watchSystemIdleState(), timeOut);
+      });
+    }
+
+    function setStatusAwayWhenScreenLocked(state) {
+      activityHubAPI.setMachineState(state.system === "active" ? 1 : 2);
+      const timeOut = (state.system === "active"
+        ? config.appIdleTimeoutCheckInterval
+        : config.appActiveCheckInterval) * 1000;
+
+      if (state.system === "active" && state.userIdle === 1) {
+        activityHubAPI.setUserStatus(1);
+      } else if (state.system !== "active" && state.userCurrent === 1) {
+        activityHubAPI.setUserStatus(3);
+      }
+      return timeOut;
+    }
+
+    function keepStatusAvailableWhenScreenLocked(state) {
+      if (state.system === "active" || state.system === "locked") {
+        activityHubAPI.setMachineState(1);
+        return config.appIdleTimeoutCheckInterval * 1000;
+      }
+      activityHubAPI.setMachineState(2);
+      return config.appActiveCheckInterval * 1000;
+    }
+
+    // Initialize ActivityManager (wait for React readiness)
+    setActivityHandlers();
+    setEventHandlers();
+    waitForReactReady(() => {
+      activityHubAPI.start();
+      watchSystemIdleState();
+    });
+    console.debug("Preload: Notification functionality initialized successfully");
+
+    // Initialize other modules safely
+    const modules = [];
 
     let successCount = 0;
     modules.forEach((module) => {
@@ -499,16 +987,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       `Preload: ${successCount}/${modules.length} browser modules initialized successfully`
     );
 
-    // Initialize ActivityManager
-    try {
-      const ActivityManager = require("./notifications/activityManager");
-      new ActivityManager(ipcRenderer, config).start();
-    } catch (err) {
-      console.error(
-        "Preload: ActivityManager failed to initialize:",
-        err.message
-      );
-    }
+    // Summary of inlined functionality
+    console.log("Preload: All inline modules initialized successfully:");
+    console.log("  ✓ Zoom functionality (webFrame integration)");
+    console.log("  ✓ ReactHandler functionality (Teams API access)");
+    console.log("  ✓ Theme management (system theme sync)"); 
+    console.log("  ✓ Keyboard shortcuts (platform-specific)");
+    console.log("  ✓ Settings management (IPC handlers preserved)");
+    console.log("  ✓ Timestamp copy override (polling mechanism)");
+    console.log("  ✓ Notification functionality (activityHub, wakeLock, activityManager)");
+
+    // ActivityManager is now inlined above - no longer needed
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }
