@@ -437,11 +437,11 @@ async function handleGetSystemIdleState() {
     idleTimeUserStatus = userStatus;
   }
 
-  const state = Object.assign({}, {
+  const state = {
     system: systemIdleState,
     userIdle: idleTimeUserStatus,
     userCurrent: userStatus,
-  });
+  };
 
   if (systemIdleState === "active") {
     console.debug(
