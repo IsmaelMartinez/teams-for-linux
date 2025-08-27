@@ -13,6 +13,7 @@ For configuration options, see [Configuration](configuration.md). For developmen
 - **Notification Issues**: Check `notificationMethod` in config
 - **Audio/Video**: Verify device selection in Teams settings
 - **Installation**: Use clean install and clear previous data
+- **Debug Logging**: Use `ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'` for detailed logs
 
 ---
 
@@ -277,3 +278,17 @@ For configuration options, see [Configuration](configuration.md). For developmen
 1.  **Enable Local Dictionaries:** Enable the use of local dictionaries by installing Hunspell along with your locale's dictionary. See the instructions at [Atom's spell-check README](https://github.com/atom/spell-check#debian-ubuntu-and-mint).
 
 **Related GitHub Issues:** [Issue #28](https://github.com/IsmaelMartinez/teams-for-linux/issues/28), [Issue #154](https://github.com/IsmaelMartinez/teams-for-linux/issues/154)
+
+---
+
+## Debug Logging
+
+### Collecting Debug Information
+
+When reporting bugs or troubleshooting issues, detailed logs help identify the root cause:
+
+```bash
+ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'
+```
+
+This command enables both frontend (renderer) and backend (main process) logging, providing comprehensive debug information for troubleshooting.

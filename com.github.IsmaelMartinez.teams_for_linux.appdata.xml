@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Fix: Restore browser functionality lost when enabling contextIsolation security feature</li>
+					<li>Update: Enhanced debug logging command with ELECTRON_ENABLE_LOGGING for comprehensive troubleshooting</li>
 				</ul>
 			</description>
 		</release>

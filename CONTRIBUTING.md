@@ -28,6 +28,9 @@ npm install
 # Run from source
 npm start
 
+# Run with debug logging (for troubleshooting)
+ELECTRON_ENABLE_LOGGING=true npm start -- --logConfig='{}'
+
 # Lint code (required before commits)
 npm run lint
 ```

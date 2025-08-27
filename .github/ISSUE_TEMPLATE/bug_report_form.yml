@@ -77,10 +77,10 @@ body:
     id: debug
     attributes:
       label: Debug
-      description: "When possible, please run the application from the terminal using `--webDebug` and try to reproduce the error."
+      description: "When possible, please run the application from the terminal using `ELECTRON_ENABLE_LOGGING=true` and try to reproduce the error."
       value: |
         ```bash
-        teams-for-linux --webDebug --logConfig='{}'
+        ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'
         ```
       render: markdown
   - type: textarea
