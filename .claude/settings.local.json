@@ -9,13 +9,17 @@
       "Bash(grep:*)",
       "WebSearch",
       "Bash(git add:*)",
-      "Bash(npm outdated)"
+      "Bash(npm outdated)",
+      "Bash(git commit:*)",
+      "Bash(ELECTRON_ENABLE_LOGGING=true npm start -- --*)",
+      "Bash(npm install)",
+      "Bash(npm run generate-release-info:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

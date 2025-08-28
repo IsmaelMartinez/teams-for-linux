@@ -110,17 +110,17 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     if (isMac) {
       console.log("Setting Dock icon for macOS");
       let dockIconPath;
-      
+
       // Use custom icon if specified, otherwise use default 256x256 icon for dock
       if (config.appIcon && config.appIcon.trim() !== "") {
         dockIconPath = config.appIcon;
       } else {
         dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
       }
-      
+
       const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
-      
+
       if (iconSize.width < 128) {
         console.warn(
           `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
@@ -143,27 +143,209 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   streamSelector = new StreamSelector(window);
 
   window.webContents.session.setDisplayMediaRequestHandler(
-    (_request, callback) => {
+    (request, callback) => {
+      console.debug('[Screen Sharing] Display media request initiated:', {
+        requestId: crypto.randomUUID(),
+        requestedAudio: request.audio,
+        requestedVideo: request.video,
+        timestamp: new Date().toISOString()
+      });
+      
       streamSelector.show((source) => {
         if (source) {
-          handleScreenSourceSelection(source, callback);
+          console.debug('[Screen Sharing] Source selected by user:', {
+            sourceId: source.id,
+            sourceName: source.name || 'Unknown',
+            sourceType: source.id.startsWith('screen:') ? 'screen' : 'window',
+            timestamp: new Date().toISOString()
+          });
+          handleScreenSourceSelection(source, callback, request);
         } else {
+          console.debug('[Screen Sharing] User cancelled source selection, callback with null');
           callback({ video: null, audio: false });
         }
       });
     }
   );
 
-  function handleScreenSourceSelection(source, callback) {
+  function handleScreenSourceSelection(source, callback, request) {
+    console.debug('[Screen Sharing] Handling screen source selection:', {
+      sourceId: source.id,
+      originalRequest: {
+        audio: request?.audio,
+        video: request?.video
+      },
+      timestamp: new Date().toISOString()
+    });
+    
+    // Detect PipeWire/Wayland environment for specialized audio handling
+    const isPipeWireEnvironment = detectPipeWireEnvironment();
+    if (isPipeWireEnvironment) {
+      console.debug('[Screen Sharing] PipeWire environment detected - applying specialized audio handling');
+    }
+    
     desktopCapturer
       .getSources({ types: ["window", "screen"] })
       .then((sources) => {
+        console.debug('[Screen Sharing] Desktop capturer sources retrieved:', {
+          totalSources: sources.length,
+          screenSources: sources.filter(s => s.id.startsWith('screen:')).length,
+          windowSources: sources.filter(s => !s.id.startsWith('screen:')).length,
+          requestedSourceId: source.id
+        });
+        
         const selectedSource = findSelectedSource(sources, source);
         if (selectedSource) {
+          console.debug('[Screen Sharing] Selected source found in desktop capturer:', {
+            sourceId: selectedSource.id,
+            sourceName: selectedSource.name,
+            sourceDisplayId: selectedSource.display_id,
+            thumbnailSize: selectedSource.thumbnail ? 
+              `${selectedSource.thumbnail.getSize().width}x${selectedSource.thumbnail.getSize().height}` : 'N/A'
+          });
           setupScreenSharing(selectedSource);
+        } else {
+          console.warn('[Screen Sharing] Selected source not found in desktop capturer sources!', {
+            requestedId: source.id,
+            availableIds: sources.map(s => s.id)
+          });
         }
-        callback({ video: selectedSource, audio: false });
+        
+        // Current callback implementation - this is where audio handling matters
+        // RESEARCH NOTES: The previous fix tried { video: selectedSource, audio: false } but failed
+        // and may have caused issue #1809. Alternative approaches to consider:
+        // 1. Stream-based filtering: Remove audio tracks from stream before callback
+        // 2. Constraint-based prevention: Modify getUserMedia constraints to exclude audio
+        // 3. Environment-specific handling: Detect PipeWire/Wayland and handle differently
+        // 4. Audio context manipulation: Use Web Audio API for routing
+        
+        const callbackData = { video: selectedSource };
+        console.debug('[Screen Sharing] Calling Teams callback with:', {
+          video: selectedSource ? {
+            id: selectedSource.id,
+            name: selectedSource.name
+          } : null,
+          audio: 'NOT SPECIFIED (undefined) - THIS MAY CAUSE ECHO ON PIPEWIRE',
+          possibleSolutions: [
+            'Explicit audio: false (previously failed)',
+            'Stream audio track removal',
+            'PipeWire-specific constraints',
+            'Environment detection with conditional handling'
+          ],
+          callbackData: JSON.stringify(callbackData, (key, value) => {
+            if (key === 'thumbnail') return '[NativeImage]';
+            return value;
+          }),
+          timestamp: new Date().toISOString()
+        });
+        
+        // Apply PipeWire-specific audio handling if detected
+        if (isPipeWireEnvironment) {
+          applyPipeWireAudioFix(callbackData, selectedSource);
+        }
+        
+        callback(callbackData);
+      })
+      .catch(error => {
+        console.error('[Screen Sharing] Error getting desktop sources:', error);
+        callback({ video: null, audio: false });
       });
+  }
+
+  function detectPipeWireEnvironment() {
+    try {
+      // Multiple detection methods for PipeWire/Wayland environment
+      const waylandDisplay = process.env.WAYLAND_DISPLAY;
+      const sessionType = process.env.XDG_SESSION_TYPE;
+      const pipewireRuntime = process.env.PIPEWIRE_RUNTIME_DIR;
+      
+      const isWayland = waylandDisplay || sessionType === 'wayland';
+      const hasPipeWire = !!pipewireRuntime || process.env.PULSE_RUNTIME_PATH?.includes('pipewire');
+      
+      console.debug('[Screen Sharing] Environment detection:', {
+        waylandDisplay,
+        sessionType,
+        pipewireRuntime: !!pipewireRuntime,
+        pulseRuntimePath: process.env.PULSE_RUNTIME_PATH,
+        isWayland,
+        hasPipeWire,
+        detectedPipeWire: isWayland || hasPipeWire
+      });
+      
+      return isWayland || hasPipeWire;
+    } catch (error) {
+      console.error('[Screen Sharing] Error detecting PipeWire environment:', error);
+      return false;
+    }
+  }
+
+  function applyPipeWireAudioFix(callbackData, selectedSource) {
+    console.debug('[Screen Sharing] Applying PipeWire-specific audio handling');
+    
+    // Alternative approaches to prevent audio echo on PipeWire systems
+    // Note: The simple { audio: false } approach failed previously and caused issue #1809
+    // Try more sophisticated audio constraint handling
+    
+    try {
+      // Get experimental audio fix approach from config (default to approach 1)
+      const audioFixApproach = config?.screenSharingAudioFix?.approach || 1;
+      
+      const alternativeApproaches = {
+        // Approach 1: null instead of false - may be interpreted differently by PipeWire
+        1: { video: selectedSource, audio: null },
+        
+        // Approach 2: Empty optional constraints - signals no audio preference
+        2: { video: selectedSource, audio: { optional: [] } },
+        
+        // Approach 3: Explicit empty constraints - clear intention of no audio
+        3: { video: selectedSource, audio: { mandatory: {}, optional: [] } },
+        
+        // Approach 4: Undefined (omit audio property entirely)
+        4: { video: selectedSource },
+        
+        // Approach 5: Advanced constraint with disabled tracks
+        5: { 
+          video: selectedSource, 
+          audio: { 
+            mandatory: { 
+              googEchoCancellation: false,
+              googAutoGainControl: false,
+              googNoiseSuppression: false,
+              googHighpassFilter: false
+            }
+          }
+        }
+      };
+      
+      const experimentalAudioFix = alternativeApproaches[audioFixApproach] || alternativeApproaches[1];
+      
+      console.debug('[Screen Sharing] PipeWire experimental fix applied:', {
+        originalCallback: JSON.stringify(callbackData),
+        experimentalCallback: JSON.stringify(experimentalAudioFix),
+        approachUsed: audioFixApproach,
+        approachDescription: getApproachDescription(audioFixApproach),
+        configNote: 'Can be configured via screenSharingAudioFix.approach in config',
+        availableApproaches: Object.keys(alternativeApproaches)
+      });
+      
+      // Apply the experimental fix
+      Object.assign(callbackData, experimentalAudioFix);
+      
+    } catch (error) {
+      console.error('[Screen Sharing] Error applying PipeWire audio fix:', error);
+      // Fall back to original callback data
+    }
+  }
+
+  function getApproachDescription(approach) {
+    const descriptions = {
+      1: 'audio: null (null instead of false)',
+      2: 'audio: { optional: [] } (empty optional constraints)',
+      3: 'audio: { mandatory: {}, optional: [] } (explicit empty constraints)',
+      4: 'Undefined (omit audio property)',
+      5: 'Advanced audio constraints (disable echo cancellation etc.)'
+    };
+    return descriptions[approach] || 'Unknown approach';
   }
 
   function findSelectedSource(sources, source) {
@@ -171,6 +353,13 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   }
 
   function setupScreenSharing(selectedSource) {
+    console.debug('[Screen Sharing] Setting up screen sharing:', {
+      sourceId: selectedSource.id,
+      sourceName: selectedSource.name,
+      sourceType: selectedSource.id.startsWith('screen:') ? 'screen' : 'window',
+      timestamp: new Date().toISOString()
+    });
+    
     // Store the source ID globally for access by screen sharing manager
     global.selectedScreenShareSource = selectedSource;
 

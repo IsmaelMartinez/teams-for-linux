@@ -29,33 +29,53 @@
     );
 
     navigator.mediaDevices.getUserMedia = function (constraints) {
+      // Enhanced logging for audio echo debugging
+      const isScreenShare =
+        constraints &&
+        constraints.video &&
+        // Electron format
+        (constraints.video.chromeMediaSource === "desktop" ||
+          constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+          // Teams format
+          constraints.video.chromeMediaSourceId ||
+          constraints.video.mandatory?.chromeMediaSourceId ||
+          // Generic desktop capture
+          (typeof constraints.video === "object" &&
+            constraints.video.deviceId &&
+            typeof constraints.video.deviceId === "object" &&
+            constraints.video.deviceId.exact));
+
+      if (isScreenShare) {
+        console.debug("[Screen Share Audio Debug] getUserMedia called for screen sharing:", {
+          audioRequested: !!constraints.audio,
+          audioConstraints: constraints.audio,
+          videoRequested: !!constraints.video,
+          videoConstraints: {
+            chromeMediaSource: constraints.video?.chromeMediaSource || constraints.video?.mandatory?.chromeMediaSource,
+            chromeMediaSourceId: constraints.video?.chromeMediaSourceId || constraints.video?.mandatory?.chromeMediaSourceId,
+            deviceId: constraints.video?.deviceId,
+            mandatory: constraints.video?.mandatory
+          },
+          allConstraints: JSON.stringify(constraints, null, 2),
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       return originalGetUserMedia(constraints)
         .then((stream) => {
-          // Check if this is a screen sharing stream - handle multiple constraint formats
-          const isScreenShare =
-            constraints &&
-            constraints.video &&
-            // Electron format
-            (constraints.video.chromeMediaSource === "desktop" ||
-              constraints.video.mandatory?.chromeMediaSource === "desktop" ||
-              // Teams format
-              constraints.video.chromeMediaSourceId ||
-              constraints.video.mandatory?.chromeMediaSourceId ||
-              // Generic desktop capture
-              (typeof constraints.video === "object" &&
-                constraints.video.deviceId &&
-                typeof constraints.video.deviceId === "object" &&
-                constraints.video.deviceId.exact));
-
           if (isScreenShare) {
-            console.debug("Screen sharing stream detected");
+            console.debug("[Screen Share Audio Debug] Screen sharing stream received from getUserMedia");
             handleScreenShareStream(stream, "getUserMedia");
           }
 
           return stream;
         })
         .catch((error) => {
-          console.error("getUserMedia error:", error);
+          if (isScreenShare) {
+            console.error("[Screen Share Audio Debug] getUserMedia error for screen sharing:", error);
+          } else {
+            console.error("getUserMedia error:", error);
+          }
           throw error;
         });
     };
@@ -63,7 +83,35 @@
 
   // Centralized handler for screen sharing streams
   function handleScreenShareStream(stream, source) {
-    console.debug("Screen sharing stream started from:", source);
+    console.debug("[Screen Share Audio Debug] Stream started from:", source);
+    
+    // Log detailed stream information for audio echo debugging
+    const audioTracks = stream.getAudioTracks();
+    const videoTracks = stream.getVideoTracks();
+    
+    console.debug("[Screen Share Audio Debug] Stream details:", {
+      streamId: stream.id,
+      source: source,
+      audioTracks: audioTracks.length,
+      videoTracks: videoTracks.length,
+      audioTrackDetails: audioTracks.map(track => ({
+        id: track.id,
+        kind: track.kind,
+        label: track.label,
+        enabled: track.enabled,
+        muted: track.muted,
+        readyState: track.readyState
+      })),
+      videoTrackDetails: videoTracks.map(track => ({
+        id: track.id,
+        kind: track.kind,
+        label: track.label,
+        enabled: track.enabled,
+        muted: track.muted,
+        readyState: track.readyState
+      })),
+      timestamp: new Date().toISOString()
+    });
 
     const electronAPI = window.electronAPI;
 
@@ -81,6 +129,10 @@
       const sourceId = stream?.id
         ? stream.id
         : `screen-share-${crypto.randomUUID()}`;
+      console.debug("[Screen Share Audio Debug] Sending screen sharing started event:", {
+        sourceId: sourceId,
+        originalStreamId: stream.id
+      });
       electronAPI.sendScreenSharingStarted(sourceId);
       electronAPI.send("active-screen-share-stream", stream);
     }
@@ -91,14 +143,76 @@
     // Track stream and tracks for reference, but don't auto-close popup based on their state
     // Popup window should only close when manually closed or screen sharing explicitly stopped
     const videoTracks = stream.getVideoTracks();
+    const audioTracks = stream.getAudioTracks();
+    
     activeMediaTracks.push(...videoTracks);
+    activeMediaTracks.push(...audioTracks);
 
-    // Optional: Log when tracks end (for debugging, doesn't affect popup)
+    // Enhanced logging for track monitoring (especially audio for echo debugging)
     videoTracks.forEach((track, index) => {
+      console.debug("[Screen Share Audio Debug] Video track added:", {
+        index: index,
+        trackId: track.id,
+        label: track.label,
+        enabled: track.enabled
+      });
+      
       track.addEventListener("ended", () => {
-        console.debug("Video track", index, "ended (popup remains open)");
+        console.debug("[Screen Share Audio Debug] Video track ended:", {
+          index: index,
+          trackId: track.id,
+          reason: "track ended event"
+        });
+      });
+      
+      track.addEventListener("mute", () => {
+        console.debug("[Screen Share Audio Debug] Video track muted:", track.id);
+      });
+      
+      track.addEventListener("unmute", () => {
+        console.debug("[Screen Share Audio Debug] Video track unmuted:", track.id);
       });
     });
+
+    // Audio track monitoring - critical for echo debugging
+    audioTracks.forEach((track, index) => {
+      console.debug("[Screen Share Audio Debug] Audio track detected (potential echo source):", {
+        index: index,
+        trackId: track.id,
+        label: track.label,
+        enabled: track.enabled,
+        muted: track.muted,
+        kind: track.kind,
+        readyState: track.readyState,
+        warning: "Audio track in screen share may cause echo!"
+      });
+      
+      track.addEventListener("ended", () => {
+        console.debug("[Screen Share Audio Debug] Audio track ended:", {
+          index: index,
+          trackId: track.id,
+          reason: "track ended event"
+        });
+      });
+      
+      track.addEventListener("mute", () => {
+        console.warn("[Screen Share Audio Debug] Audio track muted (may reduce echo):", track.id);
+      });
+      
+      track.addEventListener("unmute", () => {
+        console.warn("[Screen Share Audio Debug] Audio track unmuted (may cause echo):", track.id);
+      });
+    });
+    
+    // Log if audio tracks are present - this is a key indicator for echo potential
+    if (audioTracks.length > 0) {
+      console.warn("[Screen Share Audio Debug] WARNING: Screen sharing stream contains audio tracks!", {
+        audioTrackCount: audioTracks.length,
+        message: "This may cause audio echo in Teams calls",
+        recommendation: "Consider implementing audio track filtering",
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   // Function to handle stream ending - used by UI button detection

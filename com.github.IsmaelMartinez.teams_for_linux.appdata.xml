@@ -19,6 +19,7 @@
 				<ul>
 					<li>Fix: Restore browser functionality lost when enabling contextIsolation security feature</li>
 					<li>Update: Enhanced debug logging command with ELECTRON_ENABLE_LOGGING for comprehensive troubleshooting</li>
+					<li>Enhancement: Advanced screen sharing audio logging and PipeWire-specific fixes with configurable approaches via screenSharingAudioFix.approach setting</li>
 				</ul>
 			</description>
 		</release>
