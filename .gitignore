@@ -10,3 +10,4 @@ flatpak-build/
 release-info.json
 debian-changelog
 .mcp.json
+CONTEXT_RESUME.md
