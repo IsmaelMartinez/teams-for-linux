@@ -145,10 +145,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   window.webContents.session.setDisplayMediaRequestHandler(
     (request, callback) => {
       console.debug('[Screen Sharing] Display media request initiated:', {
-        requestId: crypto.randomUUID(),
         requestedAudio: request.audio,
         requestedVideo: request.video,
-        timestamp: new Date().toISOString()
       });
       
       streamSelector.show((source) => {
