@@ -73,7 +73,7 @@
           if (isScreenShare) {
             console.error("[Screen Share Audio Debug] getUserMedia error for screen sharing:", error);
           } else {
-            console.error("getUserMedia error:", error);
+            console.error("[Screen Share Audio Debug] getUserMedia error:", error);
           }
           throw error;
         });
