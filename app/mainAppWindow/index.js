@@ -177,7 +177,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     // Detect PipeWire/Wayland environment for specialized audio handling
     const isPipeWireEnvironment = detectPipeWireEnvironment();
     if (isPipeWireEnvironment) {
-      console.debug('[Screen Sharing] PipeWire environment detected - applying specialized audio handling');
+      console.debug('[Screen Sharing] PipeWire environment detected');
     }
     
     desktopCapturer
