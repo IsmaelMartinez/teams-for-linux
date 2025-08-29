@@ -57,7 +57,6 @@
             mandatory: constraints.video?.mandatory
           },
           allConstraints: JSON.stringify(constraints, null, 2),
-          timestamp: new Date().toISOString()
         });
       }
       
