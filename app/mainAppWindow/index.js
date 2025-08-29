@@ -155,7 +155,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
             sourceId: source.id,
             sourceName: source.name || 'Unknown',
             sourceType: source.id.startsWith('screen:') ? 'screen' : 'window',
-            timestamp: new Date().toISOString()
           });
           handleScreenSourceSelection(source, callback, request);
         } else {
