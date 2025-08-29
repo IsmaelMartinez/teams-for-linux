@@ -160,7 +160,6 @@
         console.debug("[Screen Share Audio Debug] Video track ended:", {
           index: index,
           trackId: track.id,
-          reason: "track ended event"
         });
       });
       
