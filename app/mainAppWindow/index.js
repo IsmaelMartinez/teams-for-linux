@@ -221,18 +221,10 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
             id: selectedSource.id,
             name: selectedSource.name
           } : null,
-          audio: 'NOT SPECIFIED (undefined) - THIS MAY CAUSE ECHO ON PIPEWIRE',
-          possibleSolutions: [
-            'Explicit audio: false (previously failed)',
-            'Stream audio track removal',
-            'PipeWire-specific constraints',
-            'Environment detection with conditional handling'
-          ],
           callbackData: JSON.stringify(callbackData, (key, value) => {
             if (key === 'thumbnail') return '[NativeImage]';
             return value;
           }),
-          timestamp: new Date().toISOString()
         });
         
         // Apply PipeWire-specific audio handling if detected
