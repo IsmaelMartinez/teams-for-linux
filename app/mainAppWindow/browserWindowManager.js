@@ -74,6 +74,8 @@ class BrowserWindowManager {
         plugins: true,
         spellcheck: true,
         webviewTag: true,
+        contextIsolation: false, // Disable to allow browser module loading
+        sandbox: false, // Disable to allow require() in browser modules
       },
     });
   }
