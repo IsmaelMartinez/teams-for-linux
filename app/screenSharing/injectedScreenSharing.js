@@ -109,7 +109,6 @@
         muted: track.muted,
         readyState: track.readyState
       })),
-      timestamp: new Date().toISOString()
     });
 
     const electronAPI = window.electronAPI;
