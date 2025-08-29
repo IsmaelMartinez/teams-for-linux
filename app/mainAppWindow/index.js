@@ -172,7 +172,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         audio: request?.audio,
         video: request?.video
       },
-      timestamp: new Date().toISOString()
     });
     
     // Detect PipeWire/Wayland environment for specialized audio handling
