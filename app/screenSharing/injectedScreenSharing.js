@@ -206,8 +206,6 @@
       console.warn("[Screen Share Audio Debug] WARNING: Screen sharing stream contains audio tracks!", {
         audioTrackCount: audioTracks.length,
         message: "This may cause audio echo in Teams calls",
-        recommendation: "Consider implementing audio track filtering",
-        timestamp: new Date().toISOString()
       });
     }
   }
