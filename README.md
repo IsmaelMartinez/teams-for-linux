@@ -84,7 +84,7 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 <details>
 <summary><strong>Running in Firejail</strong></summary>
 
-Use this [firejail script](https://codeberg.org/lars_uffmann/teams-for-linux-jailed) to sandbox Teams for Linux. The app is already using electron's `contextIsolation` and `sandbox`.
+Use this [firejail script](https://codeberg.org/lars_uffmann/teams-for-linux-jailed) to sandbox Teams for Linux. **Note**: As of v2.6+, contextIsolation and sandbox have been disabled to enable Teams DOM access functionality.
 </details>
 
 ## History

@@ -231,7 +231,7 @@ ipcMain.handle('my-new-handler', async (event, param1, param2) => {
 
 1. **Handler not found**: Ensure the handler is registered in the main process
 2. **Type errors**: Verify parameter types match the expected interface
-3. **Security errors**: Check that contextIsolation is properly configured
+3. **Security errors**: Note that as of v2.6+, contextIsolation has been disabled for Teams DOM access
 4. **Async issues**: Use proper async/await syntax for handle-type IPC
 
 ### Debug Tips

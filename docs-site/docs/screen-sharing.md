@@ -1,6 +1,6 @@
 # Screen Sharing in Teams for Linux
 
-Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface while maintaining the security benefits of Electron's contextIsolation and sandbox features.
+Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface. **Note**: As of v2.6+, contextIsolation and sandbox have been disabled to enable Teams DOM access functionality.
 
 ## How It Works
 
