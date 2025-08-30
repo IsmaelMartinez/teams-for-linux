@@ -74,6 +74,12 @@ class BrowserWindowManager {
         plugins: true,
         spellcheck: true,
         webviewTag: true,
+        // SECURITY CONFIGURATION: Required for Teams DOM access
+        // CRITICAL: Disabling these security features to enable ReactHandler functionality
+        // This is temporary until API fallback is available (v3.0) before React 19 breaks DOM access (Q4 2025)
+        contextIsolation: false,  // DISABLED: Required for DOM access to Teams React internals
+        nodeIntegration: true,    // ENABLED: Required for browser tools functionality  
+        sandbox: false,           // DISABLED: Required for direct system API access
       },
     });
   }

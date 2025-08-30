@@ -1,7 +1,8 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { ipcRenderer } = require("electron");
 
-// Expose APIs needed by browser scripts with contextIsolation
-contextBridge.exposeInMainWorld("electronAPI", {
+// Note: contextBridge not used since contextIsolation is disabled
+// APIs are now directly available to the renderer process via window object
+window.electronAPI = {
   desktopCapture: {
     chooseDesktopMedia: (sources, cb) => {
       ipcRenderer
@@ -59,7 +60,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
-});
+};
+
+// Direct Node.js access for browser tools (requires contextIsolation: false)
+window.nodeRequire = require;
+window.nodeProcess = process;
 
 // Initialize browser modules after DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
