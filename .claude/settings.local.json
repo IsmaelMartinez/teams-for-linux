@@ -1,21 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run lint)",
-      "Bash(npm run pack:*)",
-      "Bash(npm run build)",
-      "Bash(git commit -m *",
-      "Bash(npm start)",
-      "Bash(grep:*)",
       "WebSearch",
-      "Bash(git add:*)",
-      "Bash(npm outdated)"
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
