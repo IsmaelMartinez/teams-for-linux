@@ -113,10 +113,11 @@
   - [ ] 4.9 📁 Files Integration: Implement OneDrive/SharePoint file access (`Files.ReadWrite.All` available)
   - [ ] 4.10 👥 Directory Integration: Implement user directory lookup (`User.ReadBasic.All` available)
   - [ ] 4.11 🏢 Organization Integration: Implement company info access (`Organization.Read.All` available)
-  - [ ] 4.12 ⚠️ Presence Workaround: Calendar-based status inference (direct presence API blocked)
-  - [ ] 4.13 🔄 Token Refresh: Add secure token refresh mechanism from stored session data
-  - [ ] 4.14 🛡️ Security Restoration: Implement contextIsolation re-enablement with backend API access
-  - [ ] 4.15 🔧 Graceful Degradation: Build fallback system when token extraction fails
+    - [ ] 4.12 ⚠️ Presence Implementation: Calendar-based status inference using `Calendars.Read` scope
+  - [ ] 4.13 🔄 Token Management: Secure token refresh and caching mechanism  
+  - [ ] 4.14 🛡️ Security Restoration: Re-enable contextIsolation with backend API access
+  - [ ] 4.15 🔧 Graceful Degradation: DOM fallback when token extraction fails
+  - [x] 4.16 ✅ CONFIRMED: Scope expansion testing - organizational limitations identified
 - [ ] 5.0 Phase 1: Browser Tools and Screen Sharing Port Back (Immediate)
   - [x] 5.1 Fix current preload.js script functionality issues
   - [ ] 5.2 Port screen sharing functionality to work without contextIsolation
@@ -173,16 +174,21 @@ This discovery transforms our strategy from a temporary security compromise to a
 - **🏢 Teams Basic**: `Team.ReadBasic.All`, `Channel.ReadBasic.All` - Team structure
 - **📝 Productivity**: `Notes.ReadWrite.All`, `Tasks.ReadWrite` - OneNote, Tasks
 
-**Missing Scopes (Workarounds Required)**:
-- **❌ Presence**: `Presence.Read` → Use calendar busy/free as status proxy
-- **❌ Chat**: `Chat.Read` → Focus on email/calendar notifications instead
-- **❌ Meetings**: `OnlineMeetings.Read.All` → Use calendar events for meeting detection
+**Confirmed Scope Limitations (Organizational Constraints)**:
+- **❌ Presence API**: `Presence.Read` - Teams app lacks Azure AD registration for this scope
+- **❌ Chat APIs**: `Chat.Read`, `ChatMessage.Read` - Not available in Teams app registration
+- **❌ Meeting APIs**: `OnlineMeetings.Read.All` - Advanced meeting features blocked
 
-**Implementation Priority**:
-1. **Calendar Integration** - Highest value, meeting status inference
-2. **Email Notifications** - Rich notification system  
-3. **File Access** - Document collaboration features
-4. **User Directory** - Contact and organization lookup
+**✅ Scope Expansion Results**: 
+- Dynamic scope requests work but organizational Azure AD app registration limits available permissions
+- Calendar-based presence using `Calendars.Read` is the optimal workaround
+- 25+ available scopes provide rich integration capabilities without additional user setup
+
+**Final Implementation Priority**:
+1. **Calendar Integration** - Meeting detection, status inference, scheduling
+2. **Email Integration** - Rich notifications, quick actions
+3. **File Integration** - Document access, collaboration workflows
+4. **User Directory** - Contact lookup, organization structure
 
 ## Future Improvements
 

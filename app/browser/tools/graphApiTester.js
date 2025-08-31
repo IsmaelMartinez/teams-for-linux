@@ -260,6 +260,50 @@ class GraphApiTester {
   }
 
   /**
+   * Test presence API with expanded scope token
+   */
+  async testPresenceWithExpandedToken() {
+    try {
+      console.log('GraphApiTester: Testing presence with expanded scope token...');
+      
+      // Try to get token with presence scope
+      const token = await this.acquireTokenWithScopes(['https://graph.microsoft.com/Presence.Read']);
+      
+      if (!token) {
+        return { success: false, error: 'Could not acquire token with Presence.Read scope' };
+      }
+      
+      // Test the presence endpoint with the new token
+      const response = await fetch('https://graph.microsoft.com/v1.0/me/presence', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.error('GraphApiTester: Presence with expanded token failed:', response.status, response.statusText);
+        return { success: false, status: response.status, statusText: response.statusText };
+      }
+
+      const presenceData = await response.json();
+      console.log('GraphApiTester: SUCCESS! Presence with expanded token:', {
+        availability: presenceData.availability,
+        activity: presenceData.activity,
+        timestamp: new Date().toISOString()
+      });
+
+      return { success: true, data: presenceData };
+      
+    } catch (error) {
+      console.error('GraphApiTester: Error testing presence with expanded token:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Attempt to acquire token with additional scopes
    */
   async acquireTokenWithScopes(additionalScopes = []) {
@@ -281,16 +325,62 @@ class GraphApiTester {
       const authProvider = coreServices.authenticationService._coreAuthService._authProvider;
       const correlation = coreServices.correlation;
 
-      // Try requesting token with specific scopes
+      // Try multiple approaches to scope expansion
+      let tokenResponse = null;
       const scopesToRequest = ['https://graph.microsoft.com/User.Read', ...additionalScopes];
       
-      const tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
-        correlation: correlation,
-        forceRenew: true, // Force refresh
-        scopes: scopesToRequest, // Try to request specific scopes
-        scope: scopesToRequest.join(' '), // Alternative scope format
-        resource: "https://graph.microsoft.com"
-      });
+      // Approach 1: Standard scopes array
+      console.log('GraphApiTester: Trying approach 1 - scopes array');
+      try {
+        tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
+          correlation: correlation,
+          forceRenew: true,
+          scopes: scopesToRequest
+        });
+        if (tokenResponse) console.log('GraphApiTester: Approach 1 succeeded');
+      } catch (error) {
+        console.log('GraphApiTester: Approach 1 failed:', error.message);
+      }
+      
+      // Approach 2: Space-separated scope string
+      if (!tokenResponse) {
+        console.log('GraphApiTester: Trying approach 2 - scope string');
+        try {
+          tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
+            correlation: correlation,
+            forceRenew: true,
+            scope: scopesToRequest.join(' ')
+          });
+          if (tokenResponse) console.log('GraphApiTester: Approach 2 succeeded');
+        } catch (error) {
+          console.log('GraphApiTester: Approach 2 failed:', error.message);
+        }
+      }
+      
+      // Approach 3: Different resource + scopes
+      if (!tokenResponse) {
+        console.log('GraphApiTester: Trying approach 3 - alternative parameters');
+        try {
+          tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
+            correlation: correlation,
+            forceRenew: true,
+            resource: "https://graph.microsoft.com",
+            extraScopesToConsent: additionalScopes
+          });
+          if (tokenResponse) console.log('GraphApiTester: Approach 3 succeeded');
+        } catch (error) {
+          console.log('GraphApiTester: Approach 3 failed:', error.message);
+        }
+      }
+      
+      // Fallback: Just get a fresh token without scope expansion
+      if (!tokenResponse) {
+        console.log('GraphApiTester: All scope expansion approaches failed, getting fresh token');
+        tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
+          correlation: correlation,
+          forceRenew: true
+        });
+      }
 
       if (tokenResponse) {
         console.log('GraphApiTester: Got token response with scopes request');

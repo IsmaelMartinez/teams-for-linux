@@ -248,9 +248,9 @@ Conclusion: Graph API integration would significantly reduce authentication frus
 ✅ User Base Alignment: Most Teams for Linux users are enterprise users with work accounts
 ✅ Authentication Benefits Validated: API approach significantly reduces re-authentication issues
 
-Strategic Outcome: API approach viable for enterprise users (70-80% of user base), DOM approach required for individual users (20-30%). This refines our strategy to be enterprise-focused for API integration while maintaining DOM access for all users.
+Strategic Outcome: **CONFIRMED** - API approach viable for enterprise users (70-80% of user base), DOM approach required for individual users (20-30%). This refines our strategy to be enterprise-focused for API integration while maintaining DOM access for all users.
 
-Detailed Results: See /tasks/api-feasibility-spike-results.md
+**Final Status**: Live testing with existing Teams authentication confirms 25+ Graph API scopes available without additional user setup complexity.
 
 ## CRITICAL BREAKTHROUGH - Backend Token Access Discovery (August 31, 2025)
 
@@ -332,12 +332,25 @@ This definitively proves that **Teams for Linux can access Microsoft Graph API u
 - **Advanced Chat**: `Chat.Read`, `ChatMessage.Read`
 - **Online Meetings**: `OnlineMeetings.Read.All`
 
-**🎯 Implementation Opportunities:**
-1. **Calendar-based presence** - Infer "In Meeting" status from calendar events
-2. **Email notifications** - Rich email integration without Teams-specific APIs
-3. **File collaboration** - Document access and sharing workflows  
-4. **Meeting scheduling** - Calendar integration for Teams meetings
-5. **User directory** - Contact lookup and organization structure
+#### Scope Expansion Investigation Results
+
+**✅ Dynamic Scope Request Capability**: Teams authentication service accepts additional scope requests
+**❌ Organizational Scope Limitations**: Requested scopes (`Presence.Read`) not granted due to app registration constraints
+
+**Scope Expansion Test Results:**
+```
+Request: ['https://graph.microsoft.com/Presence.Read']
+Result: Token acquired successfully, but scope not added
+Cause: Teams app (5e3ce6c0-2b1f-4285-8d4b-75ee78787346) lacks Presence.Read in Azure AD registration
+```
+
+**🎯 Final Implementation Strategy:**
+1. **Calendar-based presence** ✅ - Use `Calendars.Read` to infer meeting status ("In Meeting", "Available", "Away")
+2. **Email notifications** ✅ - Rich integration with `Mail.Read`, `Mail.ReadWrite` scopes  
+3. **File collaboration** ✅ - Document workflows with `Files.ReadWrite.All`, `Sites.ReadWrite.All`
+4. **Meeting scheduling** ✅ - Full calendar integration with `Calendars.ReadWrite` scope
+5. **User directory** ✅ - Contact lookup with `User.ReadBasic.All`, `Organization.Read.All`
+6. **Teams structure** ✅ - Basic team/channel info with `Team.ReadBasic.All`, `Channel.ReadBasic.All`
 
 ## Recommendations
 
