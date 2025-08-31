@@ -56,12 +56,17 @@ class GraphApiTester {
       }
 
       const userData = await response.json();
-      console.debug('GraphApiTester: /me endpoint successful:', {
-        id: userData.id,
-        displayName: userData.displayName,
-        userPrincipalName: userData.userPrincipalName,
-        mail: userData.mail
-      });
+      
+      // Privacy-safe logging - redact PII
+      const safeUserData = {
+        id: userData.id ? '[REDACTED-USER-ID]' : null,
+        displayName: userData.displayName ? '[REDACTED-USER-NAME]' : null,
+        userPrincipalName: userData.userPrincipalName ? '[REDACTED]@[REDACTED-DOMAIN]' : null,
+        mail: userData.mail ? '[REDACTED]@[REDACTED-DOMAIN]' : null,
+        hasValidData: !!(userData.id && userData.displayName && userData.userPrincipalName)
+      };
+      
+      console.debug('GraphApiTester: /me endpoint successful:', safeUserData);
 
       return userData;
 
@@ -207,16 +212,28 @@ class GraphApiTester {
         const tokenParts = accessToken.split('.');
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
-          console.debug('GraphApiTester: Token scopes and info:', {
-            scopes: payload.scp || payload.scope || 'No scopes found',
+          console.log('GraphApiTester: TOKEN SCOPE ANALYSIS:', {
+            scopes: payload.scp || payload.scope || payload.roles || 'No scopes found',
             audience: payload.aud,
             issuer: payload.iss,
-            appId: payload.appid,
-            expires: new Date(payload.exp * 1000).toISOString()
+            appId: payload.appid || payload.azp || payload.client_id,
+            expires: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'No expiry',
+            allClaims: Object.keys(payload).filter(key => 
+              key.includes('scp') || 
+              key.includes('scope') || 
+              key.includes('role') || 
+              key.includes('perm')
+            )
           });
+          
+          // Log full payload for detailed analysis (be careful with PII)
+          console.log('GraphApiTester: Full token payload keys:', Object.keys(payload));
+        } else {
+          console.log('GraphApiTester: Token is not a standard JWT format');
         }
       } catch (error) {
-        console.debug('GraphApiTester: Could not decode token:', error.message);
+        console.log('GraphApiTester: Could not decode token:', error.message);
+        console.log('GraphApiTester: Token starts with:', accessToken.substring(0, 50) + '...');
       }
 
       console.debug('GraphApiTester: Successfully acquired Graph API token');
@@ -239,7 +256,94 @@ class GraphApiTester {
   clearTokenCache() {
     this._lastTokenCache = null;
     this._tokenCacheTime = 0;
-    console.debug('GraphApiTester: Token cache cleared');
+    console.log('GraphApiTester: Token cache cleared - next request will acquire new token');
+  }
+
+  /**
+   * Attempt to acquire token with additional scopes
+   */
+  async acquireTokenWithScopes(additionalScopes = []) {
+    try {
+      const reactHandler = require('./reactHandler');
+      if (!reactHandler._validateTeamsEnvironment()) {
+        console.warn('GraphApiTester: Teams environment not valid');
+        return null;
+      }
+
+      const coreServices = reactHandler._getTeams2CoreServices();
+      if (!coreServices?.authenticationService?._coreAuthService?._authProvider) {
+        console.warn('GraphApiTester: Teams authentication service not available');
+        return null;
+      }
+
+      console.log('GraphApiTester: Attempting to acquire token with additional scopes:', additionalScopes);
+      
+      const authProvider = coreServices.authenticationService._coreAuthService._authProvider;
+      const correlation = coreServices.correlation;
+
+      // Try requesting token with specific scopes
+      const scopesToRequest = ['https://graph.microsoft.com/User.Read', ...additionalScopes];
+      
+      const tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
+        correlation: correlation,
+        forceRenew: true, // Force refresh
+        scopes: scopesToRequest, // Try to request specific scopes
+        scope: scopesToRequest.join(' '), // Alternative scope format
+        resource: "https://graph.microsoft.com"
+      });
+
+      if (tokenResponse) {
+        console.log('GraphApiTester: Got token response with scopes request');
+        return this._analyzeToken(tokenResponse);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('GraphApiTester: Error acquiring token with scopes:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Analyze token structure and scopes
+   */
+  _analyzeToken(tokenResponse) {
+    const accessToken = tokenResponse.accessToken || 
+                       tokenResponse.token || 
+                       tokenResponse.access_token ||
+                       tokenResponse.idToken;
+
+    if (!accessToken) {
+      console.log('GraphApiTester: No access token in response');
+      return null;
+    }
+
+    // Decode and analyze token
+    try {
+      const tokenParts = accessToken.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        console.log('GraphApiTester: TOKEN SCOPE ANALYSIS:', {
+          scopes: payload.scp || payload.scope || payload.roles || 'No scopes found',
+          audience: payload.aud,
+          issuer: payload.iss,
+          appId: payload.appid || payload.azp || payload.client_id,
+          expires: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'No expiry',
+          allScopeKeys: Object.keys(payload).filter(key => 
+            key.toLowerCase().includes('scp') || 
+            key.toLowerCase().includes('scope') || 
+            key.toLowerCase().includes('role') || 
+            key.toLowerCase().includes('perm')
+          )
+        });
+        
+        console.log('GraphApiTester: All token payload keys:', Object.keys(payload));
+      }
+    } catch (error) {
+      console.log('GraphApiTester: Could not decode token:', error.message);
+    }
+
+    return accessToken;
   }
 
   /**
