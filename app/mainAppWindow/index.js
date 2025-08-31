@@ -38,6 +38,7 @@ let config;
 let window = null;
 let appConfig = null;
 let customBackgroundService = null;
+let browserWindowManager = null;
 let streamSelector;
 
 const isMac = os.platform() === "darwin";
@@ -134,7 +135,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     }
   }
 
-  const browserWindowManager = new BrowserWindowManager({
+  browserWindowManager = new BrowserWindowManager({
     config: config,
     iconChooser: iconChooser,
   });
@@ -593,4 +594,19 @@ async function sleep(ms) {
 
 exports.getWebContents = function () {
   return window ? window.webContents : null;
+};
+
+exports.cleanup = function () {
+  console.debug('MainAppWindow: Starting cleanup...');
+  
+  if (browserWindowManager) {
+    try {
+      browserWindowManager.cleanupTokenExtraction();
+      console.debug('MainAppWindow: Token extraction cleanup completed');
+    } catch (error) {
+      console.error('MainAppWindow: Error during token extraction cleanup:', error);
+    }
+  }
+  
+  console.debug('MainAppWindow: Cleanup completed');
 };

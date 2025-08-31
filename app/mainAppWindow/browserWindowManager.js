@@ -10,6 +10,7 @@ const { spawn } = require("child_process");
 const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../screenSharing");
 const IncomingCallToast = require("../incomingCallToast");
+const SecureTokenExtractor = require("../secureTokenExtractor");
 
 class BrowserWindowManager {
   constructor(properties) {
@@ -20,6 +21,9 @@ class BrowserWindowManager {
     this.window = null;
     this.incomingCallCommandProcess = null;
     this.incomingCallToast = null;
+    
+    // Initialize secure token extractor for Graph API access
+    this.tokenExtractor = new SecureTokenExtractor(this.config.partition);
   }
 
   async createWindow() {
@@ -51,6 +55,11 @@ class BrowserWindowManager {
 
     this.incomingCallToast = new IncomingCallToast((action) => {
       this.window.webContents.send("incoming-call-action", action);
+    });
+
+    // Initialize secure token extraction after window is ready
+    this.window.webContents.once('dom-ready', () => {
+      this.initializeSecureTokenExtraction();
     });
 
     return this.window;
@@ -146,6 +155,13 @@ class BrowserWindowManager {
     );
     ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
     ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
+    
+    // Graph API handlers for secure backend integration
+    ipcMain.handle("graph-api-request", this.assignGraphApiHandler());
+    ipcMain.handle("graph-test-connection", this.assignGraphTestHandler());
+    ipcMain.handle("graph-calendar-events", this.assignGraphCalendarHandler());
+    ipcMain.handle("graph-mail-messages", this.assignGraphMailHandler());
+    ipcMain.handle("graph-token-status", this.assignGraphTokenStatusHandler());
   }
 
   assignSelectSourceHandler() {
@@ -255,6 +271,159 @@ class BrowserWindowManager {
         ? this.enableScreenLockElectron()
         : this.enableScreenLockWakeLockSentinel();
     };
+  }
+
+  // ============== SECURE TOKEN EXTRACTION & GRAPH API METHODS ==============
+
+  /**
+   * Initialize secure token extraction system
+   * This runs in the main process without requiring DOM access
+   */
+  async initializeSecureTokenExtraction() {
+    try {
+      console.log('BrowserWindowManager: Initializing secure token extraction...');
+      
+      // Start periodic token refresh
+      this.tokenExtractor.startTokenRefresh(5); // Every 5 minutes
+      
+      // Test initial token extraction
+      setTimeout(async () => {
+        const testResult = await this.tokenExtractor.testGraphConnection();
+        if (testResult) {
+          console.log('BrowserWindowManager: ✅ Secure Graph API access established');
+          
+          // Notify renderer that backend API is available
+          this.window.webContents.send('graph-api-ready', {
+            available: true,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          console.log('BrowserWindowManager: ⚠️  Graph API access not available, using DOM fallback');
+          
+          // Notify renderer to continue with DOM-based approach
+          this.window.webContents.send('graph-api-ready', {
+            available: false,
+            fallbackToDom: true,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }, 3000); // Wait 3 seconds for Teams to load
+      
+    } catch (error) {
+      console.error('BrowserWindowManager: Error initializing token extraction:', error);
+    }
+  }
+
+  /**
+   * Handle Graph API requests from renderer
+   */
+  assignGraphApiHandler() {
+    return async (event, endpoint, options = {}) => {
+      try {
+        console.debug(`BrowserWindowManager: Graph API request: ${endpoint}`);
+        const result = await this.tokenExtractor.makeGraphApiRequest(endpoint, options);
+        return result;
+      } catch (error) {
+        console.error('BrowserWindowManager: Graph API request error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    };
+  }
+
+  /**
+   * Handle Graph API connection test requests
+   */
+  assignGraphTestHandler() {
+    return async (event) => {
+      try {
+        console.debug('BrowserWindowManager: Testing Graph API connection...');
+        const result = await this.tokenExtractor.testGraphConnection();
+        return {
+          success: result,
+          timestamp: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error('BrowserWindowManager: Graph test error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    };
+  }
+
+  /**
+   * Handle calendar events requests
+   */
+  assignGraphCalendarHandler() {
+    return async (event, daysAhead = 1) => {
+      try {
+        console.debug(`BrowserWindowManager: Getting calendar events for next ${daysAhead} days`);
+        const result = await this.tokenExtractor.getUserCalendarEvents(daysAhead);
+        return result;
+      } catch (error) {
+        console.error('BrowserWindowManager: Calendar request error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    };
+  }
+
+  /**
+   * Handle mail messages requests
+   */
+  assignGraphMailHandler() {
+    return async (event, maxResults = 10) => {
+      try {
+        console.debug(`BrowserWindowManager: Getting ${maxResults} mail messages`);
+        const result = await this.tokenExtractor.getUserMailMessages(maxResults);
+        return result;
+      } catch (error) {
+        console.error('BrowserWindowManager: Mail request error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    };
+  }
+
+  /**
+   * Handle token status requests
+   */
+  assignGraphTokenStatusHandler() {
+    return async (event) => {
+      try {
+        console.debug('BrowserWindowManager: Getting token status');
+        const status = this.tokenExtractor.getStatus();
+        return {
+          success: true,
+          status: status
+        };
+      } catch (error) {
+        console.error('BrowserWindowManager: Token status error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    };
+  }
+
+  /**
+   * Clean up token extraction resources
+   */
+  cleanupTokenExtraction() {
+    if (this.tokenExtractor) {
+      this.tokenExtractor.stopTokenRefresh();
+      this.tokenExtractor.clearTokenCache();
+      console.debug('BrowserWindowManager: Token extraction resources cleaned up');
+    }
   }
 }
 

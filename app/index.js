@@ -478,6 +478,12 @@ function handleAppReady() {
     // Stop cache manager on app termination
     app.on("before-quit", () => {
       cacheManager.stop();
+      // Cleanup token extraction resources
+      try {
+        mainAppWindow.cleanup();
+      } catch (error) {
+        console.error('App: Error during mainAppWindow cleanup:', error);
+      }
     });
   }
 
