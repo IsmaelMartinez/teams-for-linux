@@ -95,10 +95,10 @@
 - [ ] 3.0 Phase 1: Emergency DOM Access Restoration (Immediate - 0-2 months)
   - [x] 3.1 Modify webPreferences in browserWindowManager.js to disable contextIsolation and sandbox
   - [x] 3.2 Remove contextBridge usage from preload.js and enable direct Node.js access
-  - [ ] 3.3 Update screen sharing windows to use disabled security settings
-  - [ ] 3.4 Implement Content Security Policy headers as compensating control
-  - [ ] 3.5 Add input validation for DOM interactions in browser tools
-  - [ ] 3.6 Create secure IPC patterns for renderer-to-main communication
+  - [x] 3.3 Update screen sharing windows to use disabled security settings (SKIPPED - keeping secure as they don't need DOM access)
+  - [x] 3.4 Implement Content Security Policy headers as compensating control
+  - [x] 3.5 Add input validation for DOM interactions in browser tools
+  - [x] 3.6 Create secure IPC patterns for renderer-to-main communication
   - [x] 3.7 Update configuration documentation with new security settings
   - [ ] 3.8 Add React version monitoring and breaking change detection
 - [ ] 4.0 Phase 2: API Fallback System Development (Critical - 2-8 months)
@@ -132,6 +132,7 @@
 - Hybrid API/DOM approach for maximum functionality with reduced security risk
 - Caching strategy implementation based on investigation findings
 - Performance monitoring for API vs DOM approaches
+- **Visual tray icon overlay for Cinnamon desktop environment** - Create dynamic tray icons with notification count overlaid on icon image for Cinnamon users (currently only tooltip shows count)
 
 ### Priority 3 (Future Consideration)
 

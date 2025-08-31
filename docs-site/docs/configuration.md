@@ -253,10 +253,33 @@ Note: If you’re using Snap or Flatpak, your config/cache paths differ. Adjust 
 | `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth. |
 | `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune. |
 | `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO. |
-| `trayIconEnabled` | `boolean` | `true` | Enable tray icon. |
+| `trayIconEnabled` | `boolean` | `true` | Enable tray icon. **Note**: Badge/bubble notifications vary by desktop environment - Unity/KDE show visual badges, Cinnamon shows count in tooltip only. |
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links (v1 and v2). |
 | `url` | `string` | `"https://teams.microsoft.com/v2"` | Microsoft Teams URL. |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title. |
 | `watchConfigFile` | `boolean` | `false` | Watch for changes in the config file and reload the app. |
 | `webDebug` | `boolean` | `false` | Enable debug at start. |
 | `videoMenu` | `boolean` | `false` | Enable menu entry for controlling video elements. |
+
+## Tray Icon Behavior by Desktop Environment
+
+The tray icon functionality varies depending on your Linux desktop environment:
+
+### Visual Badge Support
+- **Unity (Ubuntu 12.04-18.04)**: ✅ Shows visual launcher badges with unread count
+- **KDE Plasma**: ✅ Shows taskbar badge overlays with unread count
+- **GNOME**: ✅ Limited support via extensions
+- **Cinnamon/MATE**: ❌ No visual badges - **unread count shown in tooltip only**
+- **XFCE**: ❌ Limited badge support
+- **macOS**: ✅ Dock badges (full support)
+- **Windows**: ✅ Taskbar overlay badges (full support)
+
+### Cinnamon Users
+If you're using Linux Mint Cinnamon or other Cinnamon-based distributions:
+- **Hover over the tray icon** to see unread count in tooltip: "Teams for Linux (5)"
+- **Click the tray icon** to show/focus the Teams window
+- **Window flashing** indicates new notifications
+- **Right-click** for context menu options
+
+### Future Enhancement
+A visual icon overlay solution for Cinnamon is planned to draw notification counts directly on the tray icon image.

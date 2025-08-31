@@ -11,7 +11,7 @@
 **Unofficial Microsoft Teams client for Linux** — a native desktop app that wraps the Teams web version with enhanced Linux integration.
 
 ✅ **System notifications**  
-✅ **System tray integration**  
+✅ **System tray integration** (badge support varies by desktop environment)  
 ✅ **Custom backgrounds & themes**  
 ✅ **Screen sharing support**  
 ✅ **Multiple account profiles**  
