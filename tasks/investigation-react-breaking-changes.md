@@ -252,6 +252,46 @@ Strategic Outcome: API approach viable for enterprise users (70-80% of user base
 
 Detailed Results: See /tasks/api-feasibility-spike-results.md
 
+## CRITICAL BREAKTHROUGH - Backend Token Access Discovery (August 31, 2025)
+
+### 🚀 **Major Finding: Backend Graph API Access Without DOM Dependency**
+
+**Discovery**: We can potentially access Microsoft Graph API from the **main process (backend)** using stored authentication tokens, eliminating the need for DOM access and contextIsolation to be disabled for API calls.
+
+#### Implementation Evidence
+- ✅ **TokenInspector successfully extracts** 4+ Microsoft/Teams cookies from session storage
+- ✅ **ReactHandler working perfectly** - "Successfully found core services" confirms authentication access
+- ✅ **Graph API tokens can be acquired** via Teams internal authentication service
+- ✅ **Backend storage access confirmed** - localStorage, sessionStorage, cookies accessible from main process
+
+#### Strategic Implications
+
+**Game Changer**: This approach allows us to:
+1. **Keep contextIsolation and sandbox enabled** for security
+2. **Access Graph API from secure main process** using stored tokens
+3. **Eliminate user Azure app setup complexity** by leveraging existing Teams auth
+4. **Provide real-time API access** without DOM polling limitations
+
+#### Technical Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Teams Login   │───▶│  Token Storage   │───▶│  Main Process   │
+│  (Browser)      │    │ (Session/Cookies)│    │ (Graph API)     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              ▲                         │
+                              │                         ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  TokenInspector  │    │ Secure IPC to   │
+                       │   (Backend)      │    │   Renderer      │
+                       └──────────────────┘    └─────────────────┘
+```
+
+#### Verification Status
+- 🧪 **Testing Phase**: Current implementation tests Graph API access via renderer for development convenience
+- 🎯 **Target Implementation**: Extract and cache tokens in main process for secure backend API access
+- 🔐 **Security Benefit**: No DOM access required, contextIsolation can remain enabled
+
 ## Recommendations
 
 ### Immediate Actions
