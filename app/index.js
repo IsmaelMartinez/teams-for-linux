@@ -144,6 +144,8 @@ if (!gotTheLock) {
       const result = await webContents.executeJavaScript(`
         (async () => {
           try {
+            const endpoint = ${JSON.stringify(endpoint)};
+            
             if (!window.graphApiTester) {
               return { success: false, error: 'Graph API tester not available' };
             }
