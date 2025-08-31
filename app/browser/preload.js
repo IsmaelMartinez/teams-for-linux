@@ -11,7 +11,8 @@ function createSecureIPCPattern() {
       'user-status-changed',
       'get-zoom-level',
       'save-zoom-level',
-      'choose-desktop-media'
+      'choose-desktop-media',
+      'test-graph-api'
     ],
     send: [
       'cancel-desktop-media',
@@ -183,6 +184,14 @@ window.electronAPI = {
 
   // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
+
+  // Graph API testing (development/testing only)
+  testGraphApi: (endpoint = 'me') => {
+    if (typeof endpoint !== 'string' || endpoint.length > 50) {
+      return Promise.reject(new Error('Invalid Graph API endpoint'));
+    }
+    return secureIPC.invoke('test-graph-api', endpoint);
+  }
 };
 
 // Direct Node.js access for browser tools (requires contextIsolation: false)
@@ -272,7 +281,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" }
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+      { name: "graphApiTester", path: "./tools/graphApiTester" }
     ];
     
     let successCount = 0;
@@ -291,6 +301,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+    
+    // Make Graph API tester available globally for console testing
+    try {
+      window.graphApiTester = require("./tools/graphApiTester");
+      console.debug('Preload: Graph API tester available at window.graphApiTester');
+    } catch (err) {
+      console.error("Preload: Failed to expose Graph API tester:", err.message);
+    }
     
     // Initialize ActivityManager
     try {

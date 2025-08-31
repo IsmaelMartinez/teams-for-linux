@@ -101,6 +101,46 @@ if (!gotTheLock) {
     return chosen ? chosen.id : null;
   });
 
+  // Graph API testing (development/testing purposes)
+  ipcMain.handle("test-graph-api", async (_event, endpoint = 'me') => {
+    try {
+      logger.info('GraphApiTest: Testing Graph API endpoint:', endpoint);
+      
+      // Send command to renderer to test Graph API
+      const result = await mainAppWindow.webContents.executeJavaScript(`
+        (async () => {
+          try {
+            if (!window.graphApiTester) {
+              return { success: false, error: 'Graph API tester not available' };
+            }
+            
+            if (endpoint === 'me') {
+              const userData = await window.graphApiTester.testMeEndpoint();
+              return { success: !!userData, data: userData, endpoint: 'me' };
+            } else if (endpoint === 'presence') {
+              const presenceData = await window.graphApiTester.testPresenceEndpoint();
+              return { success: !!presenceData, data: presenceData, endpoint: 'presence' };
+            } else if (endpoint === 'all') {
+              const allResults = await window.graphApiTester.runAllTests();
+              return { success: allResults.success, data: allResults, endpoint: 'all' };
+            } else {
+              return { success: false, error: 'Unsupported endpoint: ' + endpoint };
+            }
+          } catch (error) {
+            return { success: false, error: error.message };
+          }
+        })()
+      `);
+      
+      logger.info('GraphApiTest: Result:', { success: result.success, endpoint: result.endpoint });
+      return result;
+      
+    } catch (error) {
+      logger.error('GraphApiTest: IPC handler error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.on("cancel-desktop-media", () => {
     if (picker) {
       picker.close();
