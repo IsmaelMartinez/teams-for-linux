@@ -292,7 +292,8 @@ Detailed Results: See /tasks/api-feasibility-spike-results.md
 - ✅ **Real User Data Retrieved**: Successfully retrieved user profile with valid enterprise account
 - ✅ **Token Acquisition Working**: Teams auth service providing valid Microsoft Graph tokens
 - ✅ **Token Caching Functional**: 1-hour caching mechanism working correctly
-- ⚠️ **Scope Limitations Identified**: `/me/presence` returns 403 - scope/permission issue
+- ✅ **Token Scope Analysis Complete**: 25+ Graph API scopes identified and analyzed
+- ⚠️ **Scope Limitations Identified**: `/me/presence` returns 403 - missing `Presence.Read` scope
 - 🎯 **Next Phase**: Extract and implement in main process for secure backend API access
 - 🔐 **Security Benefit Confirmed**: No DOM access required for token extraction, contextIsolation can remain enabled
 
@@ -311,6 +312,32 @@ Detailed Results: See /tasks/api-feasibility-spike-results.md
 ```
 
 This definitively proves that **Teams for Linux can access Microsoft Graph API using existing Teams authentication** without requiring users to set up Azure applications.
+
+#### Available Graph API Scopes Analysis
+
+**Teams App ID**: `5e3ce6c0-2b1f-4285-8d4b-75ee78787346`
+**Token Audience**: `https://graph.microsoft.com`
+**Available Permissions**: 25+ scopes confirmed
+
+**✅ High-Value Features Available:**
+- **User & Directory**: `User.ReadBasic.All`, `Organization.Read.All` 
+- **Calendar Integration**: `Calendars.Read`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`
+- **Mail Integration**: `Mail.Read`, `Mail.ReadWrite`, `MailboxSettings.ReadWrite`
+- **Files & SharePoint**: `Files.ReadWrite.All`, `Sites.ReadWrite.All`
+- **Teams Basic**: `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `TeamsTab.Create`
+- **Notes & Tasks**: `Notes.ReadWrite.All`, `Tasks.ReadWrite`
+
+**❌ Missing Critical Scopes:**
+- **Presence**: `Presence.Read` (explains `/me/presence` 403 error)
+- **Advanced Chat**: `Chat.Read`, `ChatMessage.Read`
+- **Online Meetings**: `OnlineMeetings.Read.All`
+
+**🎯 Implementation Opportunities:**
+1. **Calendar-based presence** - Infer "In Meeting" status from calendar events
+2. **Email notifications** - Rich email integration without Teams-specific APIs
+3. **File collaboration** - Document access and sharing workflows  
+4. **Meeting scheduling** - Calendar integration for Teams meetings
+5. **User directory** - Contact lookup and organization structure
 
 ## Recommendations
 

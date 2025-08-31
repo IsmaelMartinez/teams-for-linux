@@ -101,20 +101,22 @@
   - [x] 3.6 Create secure IPC patterns for renderer-to-main communication
   - [x] 3.7 Update configuration documentation with new security settings
   - [x] 3.8 Add React version monitoring and breaking change detection
-- [ ] 4.0 Phase 2: Backend API Integration System (UPDATED STRATEGY - Critical - 2-8 months)
+- [ ] 4.0 Phase 2: Backend API Integration System (CONFIRMED STRATEGY - Critical - 2-8 months)
   - [x] 4.1 ✅ BREAKTHROUGH: Verify backend token extraction capability (TokenInspector implemented)
   - [x] 4.2 ✅ BREAKTHROUGH: Confirm Graph API access with existing Teams auth (Testing framework implemented)
-  - [ ] 4.3 🚀 NEW: Implement secure token extraction in main process (No DOM access required)
-  - [ ] 4.4 🚀 NEW: Create backend Graph API client using extracted tokens
-  - [ ] 4.5 🚀 NEW: Add token refresh mechanism from stored session data
-  - [ ] 4.6 Implement presence API integration for user status tracking (Backend-only)
-  - [ ] 4.7 Add meeting events API integration for call status (Backend-only)
-  - [ ] 4.8 Implement message notification API integration (Backend-only)
-  - [ ] 4.9 Add API response caching layer with secure token management
-  - [ ] 4.10 Create hybrid system: DOM access for UI interactions + Backend API for data
-  - [ ] 4.11 Implement contextIsolation re-enablement with backend API access
-  - [ ] 4.12 Build graceful degradation when token extraction fails
-  - [ ] 4.13 OPTIONAL: Fallback to user-provided Azure credentials if needed
+  - [x] 4.3 ✅ BREAKTHROUGH: Token scope analysis complete - 25+ scopes identified
+  - [x] 4.4 ✅ BREAKTHROUGH: Live API validation successful - real user data retrieved
+  - [ ] 4.5 🚀 HIGH-PRIORITY: Implement secure token extraction in main process (No DOM access required)
+  - [ ] 4.6 🚀 HIGH-PRIORITY: Create backend Graph API client using extracted tokens
+  - [ ] 4.7 📅 Calendar Integration: Implement calendar events API for meeting status (`Calendars.Read` available)
+  - [ ] 4.8 📧 Email Integration: Implement mail notifications API (`Mail.Read`, `Mail.ReadWrite` available)
+  - [ ] 4.9 📁 Files Integration: Implement OneDrive/SharePoint file access (`Files.ReadWrite.All` available)
+  - [ ] 4.10 👥 Directory Integration: Implement user directory lookup (`User.ReadBasic.All` available)
+  - [ ] 4.11 🏢 Organization Integration: Implement company info access (`Organization.Read.All` available)
+  - [ ] 4.12 ⚠️ Presence Workaround: Calendar-based status inference (direct presence API blocked)
+  - [ ] 4.13 🔄 Token Refresh: Add secure token refresh mechanism from stored session data
+  - [ ] 4.14 🛡️ Security Restoration: Implement contextIsolation re-enablement with backend API access
+  - [ ] 4.15 🔧 Graceful Degradation: Build fallback system when token extraction fails
 - [ ] 5.0 Phase 1: Browser Tools and Screen Sharing Port Back (Immediate)
   - [x] 5.1 Fix current preload.js script functionality issues
   - [ ] 5.2 Port screen sharing functionality to work without contextIsolation
@@ -137,6 +139,8 @@
 - ✅ **ReactHandler Enhancement**: Enhanced React 18+ detection now working - "Successfully found core services"
 - ✅ **Graph API Testing Framework**: Built comprehensive testing system for `/me` and `/me/presence` endpoints
 - ✅ **Backend Storage Access**: Confirmed localStorage, sessionStorage, cookies accessible from main process
+- ✅ **Token Scope Analysis**: 25+ Graph API scopes identified including Calendar, Mail, Files, Teams basic features
+- ✅ **Live API Validation**: Successfully retrieved real user data via Graph API `/me` endpoint
 
 #### Strategic Implications
 
@@ -158,6 +162,27 @@
 - 📋 **Timeline**: Backend integration can be implemented alongside current DOM approach
 
 This discovery transforms our strategy from a temporary security compromise to a sustainable, secure solution that leverages existing Teams authentication while maintaining Electron security best practices.
+
+#### 🎯 **Confirmed API Integration Capabilities**
+
+**Available Graph API Scopes (25+ confirmed)**:
+- **📅 Calendar**: `Calendars.Read`, `Calendars.ReadWrite` - Meeting status, scheduling
+- **📧 Email**: `Mail.Read`, `Mail.ReadWrite` - Notifications, quick actions  
+- **📁 Files**: `Files.ReadWrite.All`, `Sites.ReadWrite.All` - Document collaboration
+- **👥 Directory**: `User.ReadBasic.All`, `Organization.Read.All` - Contact lookup
+- **🏢 Teams Basic**: `Team.ReadBasic.All`, `Channel.ReadBasic.All` - Team structure
+- **📝 Productivity**: `Notes.ReadWrite.All`, `Tasks.ReadWrite` - OneNote, Tasks
+
+**Missing Scopes (Workarounds Required)**:
+- **❌ Presence**: `Presence.Read` → Use calendar busy/free as status proxy
+- **❌ Chat**: `Chat.Read` → Focus on email/calendar notifications instead
+- **❌ Meetings**: `OnlineMeetings.Read.All` → Use calendar events for meeting detection
+
+**Implementation Priority**:
+1. **Calendar Integration** - Highest value, meeting status inference
+2. **Email Notifications** - Rich notification system  
+3. **File Access** - Document collaboration features
+4. **User Directory** - Contact and organization lookup
 
 ## Future Improvements
 
