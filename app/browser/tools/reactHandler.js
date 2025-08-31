@@ -52,9 +52,36 @@ class ReactHandler {
         return false;
       }
 
-      // Basic React structure validation
-      if (!appElement._reactRootContainer && !appElement._reactInternalInstance) {
-        console.warn('ReactHandler: React structure not detected');
+      // Enhanced React structure validation for different React versions
+      const hasReactContainer = appElement._reactRootContainer;
+      const hasReactInstance = appElement._reactInternalInstance;
+      const hasReactFiber = appElement._reactInternalFiber;
+      const hasReactRoot = appElement.__reactInternalInstance;
+      
+      // Check for React 18+ createRoot API
+      const hasCreateRoot = appElement.__reactContainer$randomKey || 
+                           appElement._reactRootContainer || 
+                           Object.keys(appElement).some(key => key.startsWith('__reactContainer'));
+      
+      // Check for any React Fiber node properties
+      const hasFiberNode = Object.keys(appElement).some(key => 
+        key.startsWith('__reactInternalFiber') || 
+        key.startsWith('__reactFiber') ||
+        key.startsWith('_reactInternalFiber')
+      );
+      
+      const hasReactStructure = hasReactContainer || hasReactInstance || hasReactFiber || hasReactRoot || hasCreateRoot || hasFiberNode;
+      
+      if (!hasReactStructure) {
+        console.debug('ReactHandler: Detailed React structure check:', {
+          _reactRootContainer: !!appElement._reactRootContainer,
+          _reactInternalInstance: !!appElement._reactInternalInstance,
+          _reactInternalFiber: !!appElement._reactInternalFiber,
+          __reactInternalInstance: !!appElement.__reactInternalInstance,
+          elementKeys: Object.keys(appElement).filter(k => k.includes('react')),
+          totalKeys: Object.keys(appElement).length
+        });
+        console.warn('ReactHandler: No React structure detected in app element');
         this._validationEnabled = false;
         return false;
       }
@@ -151,18 +178,99 @@ class ReactHandler {
     if (!reactElement) return null;
 
     try {
-      const internalRoot =
-        reactElement?._reactRootContainer?._internalRoot ||
-        reactElement?._reactRootContainer;
+      // Try multiple React internal structure patterns
+      let internalRoot = null;
       
-      const coreServices = internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
+      // React 16-17 pattern
+      if (reactElement._reactRootContainer) {
+        internalRoot = reactElement._reactRootContainer._internalRoot || 
+                      reactElement._reactRootContainer;
+      }
+      
+      // React 18+ patterns - try different possible structures
+      if (!internalRoot) {
+        // Look for createRoot API container
+        const containerKeys = Object.keys(reactElement).filter(key => 
+          key.startsWith('__reactContainer') || 
+          key.startsWith('_reactRootContainer')
+        );
+        
+        if (containerKeys.length > 0) {
+          const container = reactElement[containerKeys[0]];
+          internalRoot = container?._internalRoot || container?.current || container;
+        }
+      }
+      
+      // Try React Fiber node patterns
+      if (!internalRoot) {
+        const fiberKeys = Object.keys(reactElement).filter(key => 
+          key.includes('reactInternalFiber') || 
+          key.includes('__reactFiber')
+        );
+        
+        if (fiberKeys.length > 0) {
+          internalRoot = reactElement[fiberKeys[0]];
+        }
+      }
+      
+      if (!internalRoot) {
+        console.debug('ReactHandler: Could not find React internal root structure');
+        return null;
+      }
+      
+      // Try different paths to core services
+      let coreServices = null;
+      
+      // Original React 16-17 path
+      coreServices = internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
+      
+      // Alternative paths for different React versions
+      if (!coreServices) {
+        coreServices = internalRoot?.current?.child?.memoizedProps?.coreServices ||
+                      internalRoot?.current?.child?.pendingProps?.coreServices ||
+                      internalRoot?.current?.memoizedProps?.coreServices ||
+                      internalRoot?.current?.pendingProps?.coreServices;
+      }
+      
+      // Try traversing the Fiber tree to find coreServices
+      if (!coreServices && internalRoot?.current) {
+        const findCoreServices = (fiber, depth = 0) => {
+          if (depth > 10) return null; // Prevent infinite loops
+          
+          if (fiber?.memoizedProps?.coreServices) {
+            return fiber.memoizedProps.coreServices;
+          }
+          if (fiber?.pendingProps?.coreServices) {
+            return fiber.pendingProps.coreServices;
+          }
+          
+          // Check child nodes
+          if (fiber?.child) {
+            const result = findCoreServices(fiber.child, depth + 1);
+            if (result) return result;
+          }
+          
+          // Check sibling nodes
+          if (fiber?.sibling) {
+            const result = findCoreServices(fiber.sibling, depth + 1);
+            if (result) return result;
+          }
+          
+          return null;
+        };
+        
+        coreServices = findCoreServices(internalRoot.current);
+      }
       
       // Additional validation that we have legitimate core services
       if (coreServices && typeof coreServices === 'object') {
+        console.debug('ReactHandler: Successfully found core services');
         return coreServices;
       }
       
+      console.debug('ReactHandler: Core services not found in React structure');
       return null;
+      
     } catch (error) {
       console.error('ReactHandler: Error accessing core services:', error);
       return null;
