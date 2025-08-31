@@ -108,7 +108,11 @@ if (!gotTheLock) {
       const inspector = new TokenInspector(config.partition);
       
       console.log('TokenAnalysis: Starting token analysis...');
-      const analysis = await inspector.analyzeStoredTokens(mainAppWindow.webContents);
+      const webContents = mainAppWindow.getWebContents();
+      if (!webContents) {
+        throw new Error('Main window not available');
+      }
+      const analysis = await inspector.analyzeStoredTokens(webContents);
       
       console.log('TokenAnalysis: Completed', {
         cookieCount: analysis.cookies ? 
@@ -131,8 +135,13 @@ if (!gotTheLock) {
     try {
       console.log('GraphApiTest: Testing Graph API endpoint:', endpoint);
       
+      const webContents = mainAppWindow.getWebContents();
+      if (!webContents) {
+        throw new Error('Main window not available');
+      }
+      
       // Send command to renderer to test Graph API
-      const result = await mainAppWindow.webContents.executeJavaScript(`
+      const result = await webContents.executeJavaScript(`
         (async () => {
           try {
             if (!window.graphApiTester) {

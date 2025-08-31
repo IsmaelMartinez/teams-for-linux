@@ -590,3 +590,7 @@ async function removePopupWindowMenu() {
 async function sleep(ms) {
   return await new Promise((r) => setTimeout(r, ms));
 }
+
+exports.getWebContents = function () {
+  return window ? window.webContents : null;
+};
