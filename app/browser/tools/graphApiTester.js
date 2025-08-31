@@ -146,23 +146,86 @@ class GraphApiTester {
       const authProvider = coreServices.authenticationService._coreAuthService._authProvider;
       const correlation = coreServices.correlation;
 
-      const tokenResponse = await authProvider.acquireToken("https://graph.microsoft.com", {
-        correlation: correlation,
-        forceRenew: false // Try cached token first
+      // Try Graph API token acquisition with different resource identifiers
+      let tokenResponse = null;
+      const resourceUrls = [
+        "https://graph.microsoft.com",
+        "https://graph.microsoft.com/",
+        "00000003-0000-0000-c000-000000000000", // Microsoft Graph App ID
+        "https://graph.windows.net",
+        "https://outlook.office365.com"
+      ];
+
+      for (const resource of resourceUrls) {
+        try {
+          console.debug('GraphApiTester: Trying resource:', resource);
+          
+          tokenResponse = await authProvider.acquireToken(resource, {
+            correlation: correlation,
+            forceRenew: false
+          });
+
+          if (tokenResponse && (tokenResponse.accessToken || tokenResponse.token || tokenResponse.access_token)) {
+            console.debug('GraphApiTester: Successfully got token for resource:', resource);
+            break;
+          } else {
+            console.debug('GraphApiTester: No valid token for resource:', resource);
+          }
+        } catch (error) {
+          console.debug('GraphApiTester: Failed to get token for resource:', resource, error.message);
+        }
+      }
+
+      // Debug the token response structure
+      console.debug('GraphApiTester: Token response structure:', {
+        hasResponse: !!tokenResponse,
+        responseType: typeof tokenResponse,
+        responseKeys: tokenResponse ? Object.keys(tokenResponse) : [],
+        accessTokenExists: !!(tokenResponse?.accessToken),
+        tokenExists: !!(tokenResponse?.token),
+        idTokenExists: !!(tokenResponse?.idToken)
       });
 
-      if (!tokenResponse || !tokenResponse.accessToken) {
-        console.warn('GraphApiTester: No access token in response');
+      if (!tokenResponse) {
+        console.warn('GraphApiTester: No token response received');
         return null;
+      }
+
+      // Try different possible token properties
+      const accessToken = tokenResponse.accessToken || 
+                         tokenResponse.token || 
+                         tokenResponse.access_token ||
+                         tokenResponse.idToken;
+
+      if (!accessToken) {
+        console.warn('GraphApiTester: No access token found in response properties:', Object.keys(tokenResponse));
+        return null;
+      }
+
+      // Decode token to see scopes (JWT token has 3 parts: header.payload.signature)
+      try {
+        const tokenParts = accessToken.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.debug('GraphApiTester: Token scopes and info:', {
+            scopes: payload.scp || payload.scope || 'No scopes found',
+            audience: payload.aud,
+            issuer: payload.iss,
+            appId: payload.appid,
+            expires: new Date(payload.exp * 1000).toISOString()
+          });
+        }
+      } catch (error) {
+        console.debug('GraphApiTester: Could not decode token:', error.message);
       }
 
       console.debug('GraphApiTester: Successfully acquired Graph API token');
       
       // Cache the token
-      this._lastTokenCache = tokenResponse.accessToken;
+      this._lastTokenCache = accessToken;
       this._tokenCacheTime = now;
 
-      return tokenResponse.accessToken;
+      return accessToken;
 
     } catch (error) {
       console.error('GraphApiTester: Error acquiring Graph API token:', error);
