@@ -81,7 +81,7 @@ class ReactHandler {
           elementKeys: Object.keys(appElement).filter(k => k.includes('react')),
           totalKeys: Object.keys(appElement).length
         });
-        console.warn('ReactHandler: No React structure detected in app element');
+        console.debug('ReactHandler: Teams React structure not yet loaded - this is normal during initial page load');
         this._validationEnabled = false;
         return false;
       }
@@ -95,8 +95,9 @@ class ReactHandler {
       this._validationEnabled = true;
       this._lastValidationTime = now;
       
-      // Log React version once when validation succeeds
+      // Log React version once when validation succeeds  
       if (!this._reactVersionLogged) {
+        console.debug('ReactHandler: Teams React structure successfully detected and validated');
         this._detectAndLogReactVersion();
         this._reactVersionLogged = true;
       }
