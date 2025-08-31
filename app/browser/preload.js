@@ -12,7 +12,8 @@ function createSecureIPCPattern() {
       'get-zoom-level',
       'save-zoom-level',
       'choose-desktop-media',
-      'test-graph-api'
+      'test-graph-api',
+      'analyze-stored-tokens'
     ],
     send: [
       'cancel-desktop-media',
@@ -191,6 +192,11 @@ window.electronAPI = {
       return Promise.reject(new Error('Invalid Graph API endpoint'));
     }
     return secureIPC.invoke('test-graph-api', endpoint);
+  },
+
+  // Token storage analysis (development/testing only)
+  analyzeStoredTokens: () => {
+    return secureIPC.invoke('analyze-stored-tokens');
   }
 };
 

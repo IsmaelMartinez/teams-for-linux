@@ -101,10 +101,35 @@ if (!gotTheLock) {
     return chosen ? chosen.id : null;
   });
 
-  // Graph API testing (development/testing purposes)
-  ipcMain.handle("test-graph-api", async (_event, endpoint = 'me') => {
+  // Token storage analysis (development/testing purposes)
+  ipcMain.handle("analyze-stored-tokens", async () => {
     try {
-      logger.info('GraphApiTest: Testing Graph API endpoint:', endpoint);
+      const TokenInspector = require('./tokenInspector');
+      const inspector = new TokenInspector(config.partition);
+      
+      console.log('TokenAnalysis: Starting token analysis...');
+      const analysis = await inspector.analyzeStoredTokens(mainAppWindow.webContents);
+      
+      console.log('TokenAnalysis: Completed', {
+        cookieCount: analysis.cookies ? 
+          (analysis.cookies.microsoft?.length || 0) + 
+          (analysis.cookies.teams?.length || 0) + 
+          (analysis.cookies.live?.length || 0) : 0,
+        hasRendererTokens: !!analysis.rendererTokens,
+        hasStorageInfo: !!analysis.storageInfo
+      });
+      
+      return analysis;
+    } catch (error) {
+      console.error('TokenAnalysis: Error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Graph API testing (development/testing purposes)
+  ipcMain.handle("test-graph-api", async (_, endpoint = 'me') => {
+    try {
+      console.log('GraphApiTest: Testing Graph API endpoint:', endpoint);
       
       // Send command to renderer to test Graph API
       const result = await mainAppWindow.webContents.executeJavaScript(`
@@ -132,11 +157,11 @@ if (!gotTheLock) {
         })()
       `);
       
-      logger.info('GraphApiTest: Result:', { success: result.success, endpoint: result.endpoint });
+      console.log('GraphApiTest: Result:', { success: result.success, endpoint: result.endpoint });
       return result;
       
     } catch (error) {
-      logger.error('GraphApiTest: IPC handler error:', error);
+      console.error('GraphApiTest: IPC handler error:', error);
       return { success: false, error: error.message };
     }
   });
