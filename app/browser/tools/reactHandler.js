@@ -34,8 +34,7 @@ class ReactHandler {
 
     try {
       // Validate we're in a Teams domain context
-      const isTeamsDomain = window.location.hostname.includes('teams.microsoft.com') || 
-                           window.location.hostname.includes('teams.live.com');
+      const isTeamsDomain = this._isAllowedTeamsDomain(window.location.hostname);
       
       // Validate document and basic DOM structure
       if (!document || typeof document.getElementById !== 'function') {
@@ -132,6 +131,29 @@ class ReactHandler {
     } catch (error) {
       console.debug('ReactHandler: Could not detect React version:', error.message);
     }
+  }
+
+  /**
+   * Returns true if hostname is exactly allowed, or an immediate subdomain.
+   * Prevents subdomain hijacking attacks by validating domain endings properly.
+   * @param {string} hostname - The hostname to validate
+   * @returns {boolean} - True if hostname is a legitimate Teams domain
+   */
+  _isAllowedTeamsDomain(hostname) {
+    // List of valid Teams domains
+    const allowedDomains = [
+      'teams.microsoft.com',
+      'teams.live.com'
+    ];
+    
+    for (const domain of allowedDomains) {
+      // Exact match
+      if (hostname === domain) return true;
+      // Immediate subdomain match (prevents evil.com.teams.microsoft.com attacks)
+      if (hostname.endsWith('.' + domain)) return true;
+    }
+    
+    return false;
   }
 
   _getTeams2ReactElement() {

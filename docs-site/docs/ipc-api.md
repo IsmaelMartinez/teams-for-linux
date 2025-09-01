@@ -8,6 +8,17 @@ Teams for Linux uses two types of IPC channels:
 - **`ipcMain.on`**: One-way communication from renderer to main process (fire-and-forget)
 - **`ipcMain.handle`**: Two-way communication with return values (request-response pattern)
 
+### Security Configuration (v2.5.2+)
+
+As of version 2.5.2, Teams for Linux implements IPC security validation as a compensating control for disabled contextIsolation and sandbox features:
+
+- **Channel Allowlisting**: Only pre-approved IPC channels are permitted
+- **Payload Sanitization**: Automatic removal of dangerous properties (`__proto__`, `constructor`, etc.)
+- **Request Logging**: Blocked channels are logged for security monitoring
+- **Domain Validation**: Enhanced Teams domain validation prevents subdomain hijacking
+
+Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthorized IPC channel" errors, verify the channel name is in the official allowlist.
+
 ## Core Application IPC Handlers
 
 ### Configuration Management
@@ -231,7 +242,7 @@ ipcMain.handle('my-new-handler', async (event, param1, param2) => {
 
 1. **Handler not found**: Ensure the handler is registered in the main process
 2. **Type errors**: Verify parameter types match the expected interface
-3. **Security errors**: Note that as of v2.6+, contextIsolation has been disabled for Teams DOM access
+3. **Security errors**: Note that as of v2.5.2+, contextIsolation has been disabled for Teams DOM access with IPC validation as compensating control
 4. **Async issues**: Use proper async/await syntax for handle-type IPC
 
 ### Debug Tips
