@@ -12,7 +12,7 @@ const {
 } = require("electron");
 const path = require("path");
 const CustomBackground = require("./customBackground");
-const ipcValidator = require("./security/ipcValidator");
+const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const os = require("os");
 const isMac = os.platform() === "darwin";
 
@@ -93,7 +93,7 @@ if (!gotTheLock) {
 
   ipcMain.handle = (channel, handler) => {
     return originalIpcHandle(channel, (event, ...args) => {
-      if (!ipcValidator.validateChannel(channel, args.length > 0 ? args[0] : null)) {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected handle request for channel: ${channel}`);
         return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
       }
@@ -103,7 +103,7 @@ if (!gotTheLock) {
 
   ipcMain.on = (channel, handler) => {
     return originalIpcOn(channel, (event, ...args) => {
-      if (!ipcValidator.validateChannel(channel, args.length > 0 ? args[0] : null)) {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected event for channel: ${channel}`);
         return;
       }
@@ -435,7 +435,7 @@ function handleAppReady() {
   
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Validation enabled with channel allowlisting');
-  console.log(`🔒 IPC Security: ${ipcValidator.allowedChannels.size} channels allowlisted`);
+  console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
 }
 
 async function handleGetSystemIdleState() {
