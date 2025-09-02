@@ -73,7 +73,7 @@ function validateIpcChannel(channel, payload = null) {
     // Use Object.getOwnPropertyDescriptor to safely check and delete dangerous properties
     const dangerousProps = ['__proto__', 'constructor', 'prototype'];
     dangerousProps.forEach(prop => {
-      if (Object.prototype.hasOwnProperty.call(payload, prop)) {
+      if (Object.hasOwn(payload, prop)) {
         delete payload[prop];
       }
     });

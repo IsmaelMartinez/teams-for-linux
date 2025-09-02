@@ -33,47 +33,13 @@ class ReactHandler {
     }
 
     try {
-      // Validate we're in a Teams domain context
-      const isTeamsDomain = this._isAllowedTeamsDomain(window.location.hostname);
-      
-      // Validate document and basic DOM structure
-      if (!document || typeof document.getElementById !== 'function') {
-        console.warn('ReactHandler: Invalid document context');
+      const validationResult = this._performEnvironmentValidation();
+      if (validationResult) {
+        this._onValidationSuccess(now);
+      } else {
         this._validationEnabled = false;
-        return false;
       }
-
-      // Validate we have the expected Teams app element
-      const appElement = document.getElementById("app");
-      if (!appElement) {
-        console.warn('ReactHandler: Teams app element not found');
-        this._validationEnabled = false;
-        return false;
-      }
-
-      // Basic React structure validation
-      if (!appElement._reactRootContainer && !appElement._reactInternalInstance) {
-        console.warn('ReactHandler: React structure not detected');
-        this._validationEnabled = false;
-        return false;
-      }
-
-      if (!isTeamsDomain) {
-        console.warn('ReactHandler: Not in Teams domain context');
-        this._validationEnabled = false;
-        return false;
-      }
-
-      this._validationEnabled = true;
-      this._lastValidationTime = now;
-      
-      // Log React version once when validation succeeds
-      if (!this._reactVersionLogged) {
-        this._detectAndLogReactVersion();
-        this._reactVersionLogged = true;
-      }
-      
-      return true;
+      return validationResult;
       
     } catch (error) {
       console.error('ReactHandler: Validation error:', error);
@@ -82,55 +48,112 @@ class ReactHandler {
     }
   }
 
+  _performEnvironmentValidation() {
+    return this._validateDomain() && 
+           this._validateDocument() && 
+           this._validateAppElement() && 
+           this._validateReactStructure();
+  }
+
+  _validateDomain() {
+    const isTeamsDomain = this._isAllowedTeamsDomain(window.location.hostname);
+    if (!isTeamsDomain) {
+      console.warn('ReactHandler: Not in Teams domain context');
+      return false;
+    }
+    return true;
+  }
+
+  _validateDocument() {
+    if (!document || typeof document.getElementById !== 'function') {
+      console.warn('ReactHandler: Invalid document context');
+      return false;
+    }
+    return true;
+  }
+
+  _validateAppElement() {
+    const appElement = document.getElementById("app");
+    if (!appElement) {
+      console.warn('ReactHandler: Teams app element not found');
+      return false;
+    }
+    return true;
+  }
+
+  _validateReactStructure() {
+    const appElement = document.getElementById("app");
+    if (!appElement._reactRootContainer && !appElement._reactInternalInstance) {
+      console.warn('ReactHandler: React structure not detected');
+      return false;
+    }
+    return true;
+  }
+
+  _onValidationSuccess(now) {
+    this._validationEnabled = true;
+    this._lastValidationTime = now;
+    
+    // Log React version once when validation succeeds
+    if (!this._reactVersionLogged) {
+      this._detectAndLogReactVersion();
+      this._reactVersionLogged = true;
+    }
+  }
+
   _detectAndLogReactVersion() {
     try {
-      let reactVersion = 'unknown';
-      let detectionMethod = 'unknown';
-      
-      // Method 1: Check React DevTools Global Hook
-      if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-        const reactDevTools = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-        if (reactDevTools.renderers && reactDevTools.renderers.size > 0) {
-          const renderer = reactDevTools.renderers.values().next().value;
-          if (renderer && renderer.version) {
-            reactVersion = renderer.version;
-            detectionMethod = 'DevTools Hook';
-          }
-        }
-      }
-      
-      // Method 2: Check React package version from window.React if available
-      if (reactVersion === 'unknown' && window.React && window.React.version) {
-        reactVersion = window.React.version;
-        detectionMethod = 'window.React';
-      }
-      
-      // Method 3: Try to detect from Fiber node version
-      if (reactVersion === 'unknown') {
-        const appElement = document.getElementById("app");
-        if (appElement && appElement._reactRootContainer) {
-          const container = appElement._reactRootContainer;
-          if (container._internalRoot && container._internalRoot.current) {
-            const fiber = container._internalRoot.current;
-            // React 18+ Fiber nodes have different structure indicators
-            if (fiber.mode !== undefined) {
-              if (fiber.mode & 16) { // ConcurrentMode flag in React 18+
-                reactVersion = '18+';
-                detectionMethod = 'Fiber ConcurrentMode';
-              } else {
-                reactVersion = '16-17';
-                detectionMethod = 'Fiber Legacy';
-              }
-            }
-          }
-        }
-      }
-      
-      console.debug(`ReactHandler: React version detected: ${reactVersion} (via ${detectionMethod})`);
-      
+      const { version, method } = this._detectReactVersion();
+      console.debug(`ReactHandler: React version detected: ${version} (via ${method})`);
     } catch (error) {
       console.debug('ReactHandler: Could not detect React version:', error.message);
     }
+  }
+
+  _detectReactVersion() {
+    // Try multiple detection methods in order of reliability
+    return this._tryDevToolsHook() || 
+           this._tryWindowReact() || 
+           this._tryFiberDetection() ||
+           { version: 'unknown', method: 'unknown' };
+  }
+
+  _tryDevToolsHook() {
+    if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) return null;
+    
+    const reactDevTools = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (!reactDevTools.renderers || reactDevTools.renderers.size === 0) return null;
+    
+    const renderer = reactDevTools.renderers.values().next().value;
+    if (renderer && renderer.version) {
+      return { version: renderer.version, method: 'DevTools Hook' };
+    }
+    return null;
+  }
+
+  _tryWindowReact() {
+    if (window.React && window.React.version) {
+      return { version: window.React.version, method: 'window.React' };
+    }
+    return null;
+  }
+
+  _tryFiberDetection() {
+    const appElement = document.getElementById("app");
+    if (!appElement || !appElement._reactRootContainer) return null;
+    
+    const container = appElement._reactRootContainer;
+    if (!container._internalRoot || !container._internalRoot.current) return null;
+    
+    const fiber = container._internalRoot.current;
+    if (fiber.mode !== undefined) {
+      if (fiber.mode & 16) { // ConcurrentMode flag in React 18+
+        return { version: '18+', method: 'Fiber ConcurrentMode' };
+      } else {
+        return { version: '16-17', method: 'Fiber Legacy' };
+      }
+    }
+    return null;
   }
 
   /**
