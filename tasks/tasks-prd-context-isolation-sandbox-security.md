@@ -101,19 +101,22 @@
   - [x] 3.6 Create secure IPC patterns for renderer-to-main communication
   - [x] 3.7 Update configuration documentation with new security settings
   - [x] 3.8 Add React version monitoring and breaking change detection
-- [ ] 4.0 Phase 2: API Fallback System Development (Critical - 2-8 months)
+- [ ] 4.0 Phase 2: Hybrid API + DOM System Development (Critical - 2-8 months)
+  - **STRATEGY**: Build API layer ON TOP of existing DOM implementation
+  - **APPROACH**: API-first with DOM fallback for unsupported features
+  - **BENEFIT**: Enhanced functionality without losing existing capabilities
   - [ ] 4.1 Create user configuration system for API credentials (config.json options)
   - [ ] 4.2 Implement Microsoft Graph API client with user-provided credentials
   - [ ] 4.3 Create setup documentation for Azure app registration and token generation
   - [ ] 4.4 Add credential validation and API connectivity testing
-  - [ ] 4.5 Implement presence API integration for user status tracking
-  - [ ] 4.6 Add meeting events API integration for call status
-  - [ ] 4.7 Implement message notification API integration
+  - [ ] 4.5 Implement presence API integration for user status tracking with DOM fallback
+  - [ ] 4.6 Add meeting events API integration for call status with DOM fallback
+  - [ ] 4.7 Implement message notification API integration with DOM fallback
   - [ ] 4.8 Add API response caching layer (basic implementation)
-  - [ ] 4.9 Create automatic fallback when React internals break
+  - [ ] 4.9 Create intelligent API/DOM switching based on availability and feature support
   - [ ] 4.10 Implement efficient polling strategies with rate limit management
-  - [ ] 4.11 Build feature parity mapping between DOM and API capabilities
-  - [ ] 4.12 Create user notification system for DOM→API migration
+  - [ ] 4.11 Build feature enhancement mapping (API capabilities beyond DOM)
+  - [ ] 4.12 Create user notification system for API availability and benefits
 - [ ] 5.0 Phase 1: Browser Tools and Screen Sharing Port Back (Immediate)
   - [x] 5.1 Fix current preload.js script functionality issues
   - [ ] 5.2 Port screen sharing functionality to work without contextIsolation
@@ -125,20 +128,61 @@
   - [ ] 5.8 Ensure all browser tools maintain functionality after security changes
   - [x] 5.9 Update IPC API documentation for security configuration changes
 
+## Security Recommendations
+
+### System-Level Sandboxing (Recommended Approach)
+
+Instead of re-enabling Electron's contextIsolation and sandbox features (which would break functionality), users should utilize system-level sandboxing:
+
+**Flatpak**:
+- Built-in application isolation
+- Limited filesystem access
+- Network restrictions
+- Available through Flathub
+
+**Snap packages**:
+- Application confinement
+- Controlled interface access
+- Auto-updating with security patches
+
+**AppArmor/SELinux**:
+- Most modern Linux distributions include these by default
+- Provide process-level security policies
+- Can be configured for additional Teams for Linux restrictions
+
+**Manual sandboxing**:
+- `firejail --private --net=none teams-for-linux` (for offline usage)
+- `bubblewrap` for custom sandbox configurations
+
+### Why System-Level > Application-Level
+
+1. **Functionality preservation**: DOM access remains intact
+2. **Better isolation**: OS-level controls more robust than Electron sandbox
+3. **User choice**: Users can select appropriate security level
+4. **Maintenance**: No application code changes required
+5. **Future-proof**: Works regardless of Teams/React changes
+
 ## Future Improvements
+
+### Priority 1 (High Impact - Post v2.5.2)
+
+- **Hybrid API + DOM System**: Build API layer on top of existing DOM implementation
+- **Enhanced Authentication**: Reduce re-login issues for enterprise users via API
+- **API-first Fallback**: Use APIs when available, fall back to DOM when needed
+- **Feature Enhancement**: Leverage API capabilities beyond what DOM can provide
 
 ### Priority 2 (Nice-to-Have)
 
-- Hybrid API/DOM approach for maximum functionality with reduced security risk
-- Caching strategy implementation based on investigation findings
-- Performance monitoring for API vs DOM approaches
+- Documentation for system-level sandboxing setup
 - **Visual tray icon overlay for Cinnamon desktop environment** - Create dynamic tray icons with notification count overlaid on icon image for Cinnamon users (currently only tooltip shows count)
+- Performance monitoring for hybrid API/DOM approaches
+- Intelligent switching between API and DOM based on feature availability
 
 ### Priority 3 (Future Consideration)
 
-- Migration to Teams SDK when more mature
-- API response optimization
-- Enterprise security requirements compliance based on investigation
+- Migration to pure API approach when Teams SDK matures
+- Integration with Linux security frameworks
+- Automated security policy generation
 
 ### Technical Debt Considerations
 

@@ -434,7 +434,7 @@ function handleAppReady() {
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
   
   // Log IPC Security configuration status
-  console.log('🔒 IPC Security: Validation enabled with channel allowlisting');
+  console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
 }
 

@@ -1,98 +1,10 @@
 const { ipcRenderer } = require("electron");
 
-// Secure IPC validation patterns as compensating control for disabled contextIsolation
-function createSecureIPCPattern() {
-  const allowedChannels = {
-    invoke: [
-      'get-config',
-      'show-notification', 
-      'play-notification-sound',
-      'set-badge-count',
-      'user-status-changed',
-      'get-zoom-level',
-      'save-zoom-level',
-      'choose-desktop-media'
-    ],
-    send: [
-      'cancel-desktop-media',
-      'screen-sharing-started',
-      'screen-sharing-stopped', 
-      'stop-screen-sharing-from-thumbnail',
-      'select-source',
-      'active-screen-share-stream',
-      'tray-update',
-      'unhandled-rejection',
-      'window-error'
-    ]
-  };
-
-  function validateChannel(method, channel) {
-    const allowed = allowedChannels[method] || [];
-    if (!allowed.includes(channel)) {
-      console.error(`SecureIPC: Blocked unauthorized ${method} to channel: ${channel}`);
-      return false;
-    }
-    return true;
-  }
-
-  function validateArgs(args) {
-    // Basic validation to prevent dangerous payloads
-    try {
-      JSON.stringify(args); // Ensure serializable
-      const totalSize = JSON.stringify(args).length;
-      if (totalSize > 100000) { // 100KB limit
-        console.error('SecureIPC: Payload too large:', totalSize);
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error('SecureIPC: Invalid arguments:', error);
-      return false;
-    }
-  }
-
-  return {
-    invoke: (channel, ...args) => {
-      if (!validateChannel('invoke', channel) || !validateArgs(args)) {
-        return Promise.reject(new Error('IPC validation failed'));
-      }
-      return ipcRenderer.invoke(channel, ...args);
-    },
-    send: (channel, ...args) => {
-      if (!validateChannel('send', channel) || !validateArgs(args)) {
-        console.error('SecureIPC: Send blocked');
-        return;
-      }
-      return ipcRenderer.send(channel, ...args);
-    },
-    on: (channel, callback) => {
-      // Only allow specific channels for listening
-      const allowedListenChannels = ['system-theme-changed', 'select-source', 'incoming-call-action'];
-      if (!allowedListenChannels.includes(channel)) {
-        console.error('SecureIPC: Listen blocked for channel:', channel);
-        return;
-      }
-      return ipcRenderer.on(channel, callback);
-    },
-    once: (channel, callback) => {
-      const allowedOnceChannels = ['select-source'];
-      if (!allowedOnceChannels.includes(channel)) {
-        console.error('SecureIPC: Once blocked for channel:', channel);
-        return;
-      }
-      return ipcRenderer.once(channel, callback);
-    }
-  };
-}
-
-const secureIPC = createSecureIPCPattern();
-
-// Note: contextBridge not used since contextIsolation is disabled
-// APIs are now directly available to the renderer process via window object with secure IPC patterns
+// Note: IPC validation handled by main process, no need for duplicate validation here
 window.electronAPI = {
   desktopCapture: {
     chooseDesktopMedia: (sources, cb) => {
-      secureIPC
+      ipcRenderer
         .invoke("choose-desktop-media", sources)
         .then((streamId) => cb(streamId))
         .catch(err => {
@@ -101,39 +13,38 @@ window.electronAPI = {
         });
       return Date.now();
     },
-    cancelChooseDesktopMedia: () => secureIPC.send("cancel-desktop-media"),
+    cancelChooseDesktopMedia: () => ipcRenderer.send("cancel-desktop-media"),
   },
-  // Screen sharing events with secure IPC
+  // Screen sharing events
   sendScreenSharingStarted: (sourceId) => {
     if (typeof sourceId === 'string' && sourceId.length < 100) {
-      return secureIPC.send("screen-sharing-started", sourceId);
+      return ipcRenderer.send("screen-sharing-started", sourceId);
     }
     console.error('Invalid sourceId for screen sharing');
   },
-  sendScreenSharingStopped: () => secureIPC.send("screen-sharing-stopped"),
-  stopSharing: () => secureIPC.send("stop-screen-sharing-from-thumbnail"),
-  sendSelectSource: () => secureIPC.send("select-source"),
-  onSelectSource: (callback) => secureIPC.once("select-source", callback),
+  sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
+  stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
+  sendSelectSource: () => ipcRenderer.send("select-source"),
+  onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
   send: (channel, ...args) => {
-    // Use secure IPC for allowed channels only
-    return secureIPC.send(channel, ...args);
+    return ipcRenderer.send(channel, ...args);
   },
 
   // Configuration
-  getConfig: () => secureIPC.invoke("get-config"),
+  getConfig: () => ipcRenderer.invoke("get-config"),
 
   // Notifications with input validation
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
       return Promise.reject(new Error('Invalid notification options'));
     }
-    return secureIPC.invoke("show-notification", options);
+    return ipcRenderer.invoke("show-notification", options);
   },
   playNotificationSound: (options) => {
     if (options && typeof options !== 'object') {
       return Promise.reject(new Error('Invalid sound options'));
     }
-    return secureIPC.invoke("play-notification-sound", options);
+    return ipcRenderer.invoke("play-notification-sound", options);
   },
 
   // Badge count with validation
@@ -142,12 +53,12 @@ window.electronAPI = {
       console.error('Invalid badge count:', count);
       return Promise.reject(new Error('Invalid badge count'));
     }
-    return secureIPC.invoke("set-badge-count", count);
+    return ipcRenderer.invoke("set-badge-count", count);
   },
 
   // Tray icon with validation
   updateTray: (icon, flash) => {
-    return secureIPC.send("tray-update", { icon, flash });
+    return ipcRenderer.send("tray-update", { icon, flash });
   },
 
   // Theme events
@@ -156,7 +67,7 @@ window.electronAPI = {
       console.error('Invalid callback for theme changed');
       return;
     }
-    return secureIPC.on("system-theme-changed", callback);
+    return ipcRenderer.on("system-theme-changed", callback);
   },
 
   // User status with validation
@@ -164,7 +75,7 @@ window.electronAPI = {
     if (!data || typeof data !== 'object') {
       return Promise.reject(new Error('Invalid user status data'));
     }
-    return secureIPC.invoke("user-status-changed", data);
+    return ipcRenderer.invoke("user-status-changed", data);
   },
 
   // Zoom with validation
@@ -172,13 +83,13 @@ window.electronAPI = {
     if (typeof partition !== 'string' || partition.length > 100) {
       return Promise.reject(new Error('Invalid partition'));
     }
-    return secureIPC.invoke("get-zoom-level", partition);
+    return ipcRenderer.invoke("get-zoom-level", partition);
   },
   saveZoomLevel: (data) => {
     if (!data || typeof data !== 'object' || typeof data.level !== 'number') {
       return Promise.reject(new Error('Invalid zoom data'));
     }
-    return secureIPC.invoke("save-zoom-level", data);
+    return ipcRenderer.invoke("save-zoom-level", data);
   },
 
   // System information (safe to expose)
@@ -193,7 +104,7 @@ window.nodeProcess = process;
 document.addEventListener('DOMContentLoaded', async () => {
   console.log("Preload: DOMContentLoaded, initializing browser modules...");
   try {
-    const config = await secureIPC.invoke("get-config");
+    const config = await ipcRenderer.invoke("get-config");
     console.log("Preload: Got config:", { 
       trayIconEnabled: config?.trayIconEnabled, 
       useMutationTitleLogic: config?.useMutationTitleLogic 
@@ -249,12 +160,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           
           console.debug("sending tray-update");
-          secureIPC.send("tray-update", {
+          ipcRenderer.send("tray-update", {
             icon: null, // Let main process handle icon rendering
             flash: count > 0 && !config.disableNotificationWindowFlash,
             count: count
           });
-          secureIPC.invoke("set-badge-count", count).catch(err => {
+          ipcRenderer.invoke("set-badge-count", count).catch(err => {
             console.error('Failed to set badge count:', err);
           });
         } catch (error) {
@@ -318,7 +229,7 @@ try {
         reason: typeof reason === "object" && reason !== null ? reason : null,
       };
       
-      secureIPC.send("unhandled-rejection", errorData);
+      ipcRenderer.send("unhandled-rejection", errorData);
     } catch (err) {
       console.debug("Unhandled rejection forwarding failed:", err);
       // Best-effort forwarding, never throw from preload
@@ -336,7 +247,7 @@ try {
         errorStack: event && event.error && event.error.stack ? String(event.error.stack).substring(0, 5000) : null,
       };
       
-      secureIPC.send("window-error", errorData);
+      ipcRenderer.send("window-error", errorData);
     } catch (err) {
       console.debug("Window error forwarding failed:", err);
     }
