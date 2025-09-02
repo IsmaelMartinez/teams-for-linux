@@ -35,6 +35,9 @@ class BrowserWindowManager {
       await defSession.clearStorageData(this.config.clearStorageData);
     }
 
+    // Apply Content Security Policy as compensating control for disabled security features
+    this.setupContentSecurityPolicy();
+
     // Create the window
     this.window = this.createNewBrowserWindow(windowState);
     this.assignEventHandlers();
@@ -51,6 +54,51 @@ class BrowserWindowManager {
     });
 
     return this.window;
+  }
+
+  setupContentSecurityPolicy() {
+    // Content Security Policy as compensating control for disabled contextIsolation/sandbox
+    // This helps mitigate some security risks while maintaining Teams DOM access functionality
+    const webSession = session.fromPartition(this.config.partition);
+    
+    webSession.webRequest.onHeadersReceived((details, callback) => {
+      // Only apply CSP to Teams domains, not to all requests
+      const teamsOrigins = [
+        'https://teams.microsoft.com',
+        'https://teams.live.com',
+        'https://outlook.office.com',
+        'https://login.microsoftonline.com'
+      ];
+      
+      const isTeamsDomain = teamsOrigins.some(origin => details.url.startsWith(origin));
+      
+      if (isTeamsDomain) {
+        const responseHeaders = {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            [
+              "default-src 'self' https://teams.microsoft.com https://teams.live.com https://outlook.office.com https://login.microsoftonline.com https://*.office.com https://*.sharepoint.com https://*.microsoftonline.com;",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.microsoft.com https://teams.live.com https://*.office.com https://*.microsoftonline.com;",
+              "style-src 'self' 'unsafe-inline' https://teams.microsoft.com https://teams.live.com https://*.office.com;",
+              "img-src 'self' data: blob: https: http:;",
+              "media-src 'self' blob: https: mediastream:;",
+              "connect-src 'self' wss: https: blob:;",
+              "font-src 'self' data: https://teams.microsoft.com https://*.office.com;",
+              "object-src 'none';",
+              "base-uri 'self';",
+              "form-action 'self' https://login.microsoftonline.com https://*.office.com;",
+              "frame-ancestors 'none';"
+            ].join(' ')
+          ]
+        };
+        
+        callback({ responseHeaders });
+      } else {
+        callback({});
+      }
+    });
+    
+    console.debug("Content Security Policy configured as compensating control for disabled security features");
   }
 
   createNewBrowserWindow(windowState) {
@@ -74,6 +122,10 @@ class BrowserWindowManager {
         plugins: true,
         spellcheck: true,
         webviewTag: true,
+        // SECURITY: Disabled for Teams DOM access, compensated by CSP + IPC validation
+        contextIsolation: false,  // Required for ReactHandler DOM access
+        nodeIntegration: false,   // Secure: preload scripts don't need this  
+        sandbox: false,           // Required for system API access
       },
     });
   }

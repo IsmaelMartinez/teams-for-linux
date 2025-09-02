@@ -204,8 +204,8 @@ See [Multiple Instances](multiple-instances.md) for detailed setup.
 # Enable debug logging
 teams-for-linux --logConfig='{"level":"debug"}'
 
-# Show developer tools
-teams-for-linux --webDebug
+# Show developer tools with Electron logging
+ELECTRON_ENABLE_LOGGING=true teams-for-linux
 ```
 
 ## Troubleshooting Installation

@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.2" date="2025-09-02">
+			<description>
+				<ul>
+					<li>Fix: Restore DOM access functionality by disabling contextIsolation and sandbox for Teams browser integration</li>
+					<li>Security: Implement comprehensive compensating controls including Content Security Policy headers and IPC channel validation</li>
+					<li>Enhancement: Add React version detection to monitor for breaking changes in React 19+ timeline</li>
+					<li>Changed from --webDebug --logConfig='{}' to ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'</li>
+					<li>Fix: Revert audio channel disabling in screen sharing as it doesn't resolve echo issues</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.1" date="2025-08-26">
 			<description>
 				<ul>

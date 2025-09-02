@@ -11,7 +11,7 @@
 **Unofficial Microsoft Teams client for Linux** — a native desktop app that wraps the Teams web version with enhanced Linux integration.
 
 ✅ **System notifications**  
-✅ **System tray integration**  
+✅ **System tray integration** (badge support varies by desktop environment)  
 ✅ **Custom backgrounds & themes**  
 ✅ **Screen sharing support**  
 ✅ **Multiple account profiles**  
@@ -82,9 +82,17 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 ## Advanced Usage
 
 <details>
-<summary><strong>Running in Firejail</strong></summary>
+<summary><strong>Security & Sandboxing</strong></summary>
 
-Use this [firejail script](https://codeberg.org/lars_uffmann/teams-for-linux-jailed) to sandbox Teams for Linux. The app is already using electron's `contextIsolation` and `sandbox`.
+As of v2.5.2+, Electron's contextIsolation and sandbox features are disabled to enable Teams DOM access functionality. For enhanced security, use system-level sandboxing:
+
+**Available options**:
+- **Flatpak**: Built-in isolation via Flathub
+- **Snap packages**: Application confinement with auto-updates
+- **Firejail**: Use this [script](https://codeberg.org/lars_uffmann/teams-for-linux-jailed) for manual sandboxing
+- **AppArmor/SELinux**: Most Linux distributions include these by default
+
+System-level sandboxing provides better isolation than Electron's built-in features while preserving full functionality.
 </details>
 
 ## History
