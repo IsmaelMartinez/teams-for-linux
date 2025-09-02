@@ -22,6 +22,8 @@ const allowedChannels = new Set([
   'choose-desktop-media',
   'cancel-desktop-media',
   'select-source',
+  'selected-source',
+  'close-view',
   'get-screen-sharing-status',
   'get-screen-share-stream',
   'get-screen-share-screen',
