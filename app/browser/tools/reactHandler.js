@@ -219,21 +219,29 @@ class ReactHandler {
     
     for (const key of reactRootKeys) {
       const reactData = appElement[key];
-      if (reactData && typeof reactData === 'object') {
-        // Check for React 18+ concurrent features
-        if (reactData.concurrent !== undefined) {
-          return { version: '18+', method: 'Root Properties (concurrent)' };
-        }
-        // Check for fiber structure in the property
-        if (reactData.current && reactData.current.mode !== undefined) {
-          if (reactData.current.mode & 16) {
-            return { version: '18+', method: 'Root Properties (fiber mode)' };
-          }
-          return { version: '16-17', method: 'Root Properties (legacy fiber)' };
-        }
-      }
+      if (!reactData || typeof reactData !== 'object') continue;
+      
+      const versionInfo = this._extractVersionFromReactData(reactData);
+      if (versionInfo) return versionInfo;
     }
     return null;
+  }
+
+  _extractVersionFromReactData(reactData) {
+    // Check for React 18+ concurrent features
+    if (reactData.concurrent !== undefined) {
+      return { version: '18+', method: 'Root Properties (concurrent)' };
+    }
+    
+    // Check for fiber structure in the property
+    if (!reactData.current || reactData.current.mode === undefined) {
+      return null;
+    }
+    
+    if (reactData.current.mode & 16) {
+      return { version: '18+', method: 'Root Properties (fiber mode)' };
+    }
+    return { version: '16-17', method: 'Root Properties (legacy fiber)' };
   }
 
   _tryReactPackageInfo() {
@@ -248,7 +256,7 @@ class ReactHandler {
           }
         }
       } catch (error) {
-        // Continue to other methods
+        console.debug('ReactHandler: Error accessing webpack cache:', error.message);
       }
     }
 
