@@ -180,7 +180,7 @@ _detectAndLogReactVersion() {
 
 ## References
 
-- [DOM-ACCESS-RESTORATION-PLAN.md](../../DOM-ACCESS-RESTORATION-PLAN.md)
+- DOM-ACCESS-RESTORATION-PLAN.md (historical planning document)
 - [Security IPC Validator](../../../app/security/ipcValidator.js)  
 - [ReactHandler Implementation](../../../app/browser/tools/reactHandler.js)
 - [Browser Window Security Config](../../../app/mainAppWindow/browserWindowManager.js)

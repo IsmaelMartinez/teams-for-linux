@@ -20,7 +20,6 @@
 					<li>Fix: Restore DOM access functionality by disabling contextIsolation and sandbox for Teams browser integration</li>
 					<li>Security: Implement comprehensive compensating controls including Content Security Policy headers and IPC channel validation</li>
 					<li>Enhancement: Add React version detection to monitor for breaking changes in React 19+ timeline</li>
-					<li>Quality: Address SonarQube issues - reduce cognitive complexity and modernize code patterns</li>
 					<li>Fix: Revert audio channel disabling in screen sharing as it doesn't resolve echo issues</li>
 				</ul>
 			</description>

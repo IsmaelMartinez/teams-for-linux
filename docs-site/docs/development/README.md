@@ -21,7 +21,7 @@ When working on Teams for Linux:
 
 ## Documentation Standards
 
-Follow the project's [Copilot Instructions](../../.github/copilot-instructions.md) for documentation standards, including:
+Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) for documentation standards, including:
 - Use GitHub's alert syntax for callouts (`> [!NOTE]`, `> [!WARNING]`)  
 - Include table of contents with `<!-- toc -->`
 - Use proper markdown standards and syntax highlighting

@@ -191,7 +191,7 @@ Best long-term value with full control and perfect integration, despite higher i
 - **Content Coverage**: 80%+ of recurring issue types documented with solutions
 - **Solution Accuracy**: 90%+ positive feedback on solution effectiveness
 - **Developer Time Savings**: 5-10 hours per week reduction in support time
-- **Documentation Quality**: Clear categorization with <3 clicks to find relevant solutions
+- **Documentation Quality**: Clear categorization with less than 3 clicks to find relevant solutions
 
 ### Analytics Implementation
 - GitHub Pages analytics for usage tracking

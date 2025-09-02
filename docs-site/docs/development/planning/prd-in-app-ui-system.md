@@ -169,7 +169,7 @@ Apply Configuration → Update Files → Refresh Application State
 
 ### Technical Metrics
 - **Performance**: UI opens and responds within 500ms on typical systems
-- **Reliability**: <1% error rate in configuration operations
+- **Reliability**: Less than 1% error rate in configuration operations
 - **Accessibility**: Full keyboard navigation and screen reader compatibility
 - **Compatibility**: Works across all supported Electron versions and platforms
 
