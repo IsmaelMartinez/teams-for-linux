@@ -25,8 +25,24 @@ class ActivityHub {
         assignEventHandlers(commandChangeReportingService);
         console.debug("Events connected");
         clearInterval(setup);
+        
+        // v2.5.3: Start periodic authentication state logging for #1357 
+        this._startAuthenticationMonitoring();
       }
     }, 10000);
+  }
+
+  // v2.5.3: Monitor authentication state for token refresh issues
+  _startAuthenticationMonitoring() {
+    // Log authentication state immediately
+    ReactHandler.logAuthenticationState();
+    
+    // Then log every 5 minutes to track token lifecycle
+    this._authMonitorInterval = setInterval(() => {
+      ReactHandler.logAuthenticationState();
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    console.debug("[AUTH_DIAG] Authentication monitoring started - logging every 5 minutes");
   }
 
   setMachineState(state) {

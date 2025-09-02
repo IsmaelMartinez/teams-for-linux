@@ -25,6 +25,186 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
+  // v2.5.3: Add authentication service access with enhanced logging for #1357
+  logAuthenticationState() {
+    if (!this._validateTeamsEnvironment()) {
+      console.debug(`[AUTH_DIAG] Teams environment not validated`);
+      return;
+    }
+    
+    try {
+      const teams2CoreServices = this._getTeams2CoreServices();
+      const authService = teams2CoreServices?.authenticationService;
+      
+      console.debug(`[AUTH_DIAG] === Authentication State Check ===`);
+      console.debug(`[AUTH_DIAG] Auth service available: ${!!authService}`);
+      
+      if (authService) {
+        const coreAuthService = authService._coreAuthService;
+        const authProvider = coreAuthService?._authProvider;
+        
+        console.debug(`[AUTH_DIAG] Core auth service: ${!!coreAuthService}`);
+        console.debug(`[AUTH_DIAG] Auth provider: ${!!authProvider}`);
+        
+        // Enhanced token analysis
+        if (authProvider) {
+          this._analyzeTokenStorage();
+          this._analyzeAuthProvider(authProvider);
+        }
+      }
+      
+      console.debug(`[AUTH_DIAG] Check timestamp: ${new Date().toISOString()}`);
+      console.debug(`[AUTH_DIAG] === End Authentication State ===`);
+    } catch (error) {
+      console.error(`[AUTH_DIAG] Error checking auth state:`, error);
+    }
+  }
+
+  // v2.5.3: Deep analysis of token storage for refresh token investigation
+  _analyzeTokenStorage() {
+    try {
+      // Check localStorage/sessionStorage for token-related keys
+      const storageKeys = Object.keys(localStorage).filter(key => 
+        key.toLowerCase().includes('token') || 
+        key.toLowerCase().includes('auth') ||
+        key.toLowerCase().includes('session') ||
+        key.toLowerCase().includes('refresh')
+      );
+      console.debug(`[AUTH_DIAG] LocalStorage auth-related keys: ${storageKeys.length} found`);
+      
+      // Log specific refresh token related keys
+      const refreshKeys = storageKeys.filter(key => 
+        key.toLowerCase().includes('refresh') ||
+        key.toLowerCase().includes('rt') ||
+        key.toLowerCase().includes('renew')
+      );
+      console.debug(`[AUTH_DIAG] LocalStorage refresh-related keys: ${refreshKeys.length} found`);
+      
+      // Log key names (without values for security)
+      if (refreshKeys.length > 0) {
+        console.debug(`[AUTH_DIAG] Refresh token key names: ${refreshKeys.map(k => k.substring(0, 20) + '...').join(', ')}`);
+      }
+      
+      const sessionKeys = Object.keys(sessionStorage).filter(key => 
+        key.toLowerCase().includes('token') || 
+        key.toLowerCase().includes('auth') ||
+        key.toLowerCase().includes('session') ||
+        key.toLowerCase().includes('refresh')
+      );
+      console.debug(`[AUTH_DIAG] SessionStorage auth-related keys: ${sessionKeys.length} found`);
+      
+      // Check for token expiration info
+      const expiryKeys = storageKeys.filter(key => 
+        key.toLowerCase().includes('expir') ||
+        key.toLowerCase().includes('exp') ||
+        key.toLowerCase().includes('timeout')
+      );
+      console.debug(`[AUTH_DIAG] Token expiry-related keys: ${expiryKeys.length} found`);
+      
+    } catch (error) {
+      console.error(`[AUTH_DIAG] Error analyzing token storage:`, error);
+    }
+  }
+
+  // v2.5.3: Analyze auth provider for token information
+  _analyzeAuthProvider(authProvider) {
+    try {
+      console.debug(`[AUTH_DIAG] Auth provider type: ${authProvider.constructor?.name || 'unknown'}`);
+      
+      // Deep dive into token cache issue
+      console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
+      
+      // Check if auth provider has token cache/storage
+      if (authProvider._tokenCache) {
+        console.debug(`[AUTH_DIAG] Token cache available: true`);
+        console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
+      } else {
+        console.debug(`[AUTH_DIAG] Token cache available: false - INVESTIGATING WHY`);
+        
+        // Try to initialize or find token cache
+        this._investigateTokenCacheIssue(authProvider);
+      }
+      
+      // Check for common auth provider properties
+      const authProps = ['_tokenCache', '_cache', '_storage', 'cache', 'tokenStorage', 'tokenStore', '_tokenStore'];
+      authProps.forEach(prop => {
+        if (authProvider[prop]) {
+          console.debug(`[AUTH_DIAG] Auth provider has ${prop}: true (type: ${authProvider[prop].constructor?.name || 'unknown'})`);
+        }
+      });
+      
+      // List all properties on auth provider to see what's available
+      const allProps = Object.getOwnPropertyNames(authProvider);
+      const cacheRelatedProps = allProps.filter(prop => 
+        prop.toLowerCase().includes('cache') || 
+        prop.toLowerCase().includes('token') ||
+        prop.toLowerCase().includes('store')
+      );
+      console.debug(`[AUTH_DIAG] Cache/token related properties: ${cacheRelatedProps.join(', ')}`);
+      
+      // Try to get current user context
+      if (authProvider.getAccount) {
+        try {
+          const account = authProvider.getAccount();
+          console.debug(`[AUTH_DIAG] Current account available: ${!!account}`);
+          if (account) {
+            console.debug(`[AUTH_DIAG] Account type: ${account.accountType || 'unknown'}`);
+          }
+        } catch (error) {
+          console.debug(`[AUTH_DIAG] Could not get account info: ${error.message}`);
+        }
+      }
+      
+      // Check for token acquisition methods
+      const tokenMethods = ['acquireToken', 'acquireTokenSilent', 'getTokenSilent', 'acquireTokenQuiet'];
+      tokenMethods.forEach(method => {
+        if (typeof authProvider[method] === 'function') {
+          console.debug(`[AUTH_DIAG] Auth provider has ${method}: true`);
+        }
+      });
+      
+      console.debug(`[AUTH_DIAG] === End Token Cache Investigation ===`);
+      
+    } catch (error) {
+      console.error(`[AUTH_DIAG] Error analyzing auth provider:`, error);
+    }
+  }
+
+  // v2.5.3: Investigate why token cache is unavailable (diagnostic only)
+  _investigateTokenCacheIssue(authProvider) {
+    try {
+      console.debug(`[AUTH_DIAG] CACHE_FIX: Investigating token cache unavailability...`);
+      
+      // Check if cache exists but under different property name
+      const potentialCacheProps = ['cache', 'tokenStorage', '_tokenStorage', '_storage', '_internalCache'];
+      let foundAlternativeCache = false;
+      
+      for (const prop of potentialCacheProps) {
+        if (authProvider[prop]) {
+          console.debug(`[AUTH_DIAG] CACHE_FIX: Found potential cache at ${prop}: ${authProvider[prop].constructor?.name || 'unknown'}`);
+          foundAlternativeCache = true;
+        }
+      }
+      
+      if (!foundAlternativeCache) {
+        console.debug(`[AUTH_DIAG] CACHE_FIX: No existing cache found, checking if we can create one...`);
+        
+        // Check for cache creation methods (diagnostic only - don't actually call them)
+        const creationMethods = ['createTokenCache', 'initialize'];
+        creationMethods.forEach(method => {
+          if (typeof authProvider[method] === 'function') {
+            console.debug(`[AUTH_DIAG] CACHE_FIX: Found ${method} method - could potentially create cache`);
+          }
+        });
+      }
+      
+      console.debug(`[AUTH_DIAG] CACHE_FIX: ❌ Token cache still unavailable - this is the root cause of refresh failures`);
+      
+    } catch (error) {
+      console.error(`[AUTH_DIAG] CACHE_FIX: Error investigating cache issue:`, error);
+    }
+  }
+
   _validateTeamsEnvironment() {
     // Cache validation to avoid excessive DOM checks
     const now = Date.now();

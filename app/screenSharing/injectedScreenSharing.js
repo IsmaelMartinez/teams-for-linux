@@ -64,6 +64,20 @@
   // Centralized handler for screen sharing streams
   function handleScreenShareStream(stream, source) {
     console.debug("Screen sharing stream started from:", source);
+    
+    // v2.5.3: Enhanced logging for audio duplication diagnosis
+    console.debug(`[SCREEN_SHARE_DIAG] Stream created - ID: ${stream.id}, Source: ${source}`);
+    console.debug(`[SCREEN_SHARE_DIAG] Current active streams count: ${activeStreams.length}`);
+    console.debug(`[SCREEN_SHARE_DIAG] isScreenSharing state: ${isScreenSharing}`);
+    
+    // Check for audio tracks that might cause echo
+    const audioTracks = stream.getAudioTracks();
+    const videoTracks = stream.getVideoTracks();
+    console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
+    
+    audioTracks.forEach((track, index) => {
+      console.debug(`[SCREEN_SHARE_DIAG] Audio track ${index}: ${track.id}, enabled: ${track.enabled}, muted: ${track.muted}`);
+    });
 
     const electronAPI = window.electronAPI;
 
@@ -72,8 +86,16 @@
       return;
     }
 
+    // Check if we're creating a duplicate session
+    if (isScreenSharing) {
+      console.warn(`[SCREEN_SHARE_DIAG] WARNING: Screen sharing already active! This might create duplicate sessions.`);
+      console.debug(`[SCREEN_SHARE_DIAG] Previous active streams: ${activeStreams.map(s => s.id).join(', ')}`);
+    }
+
     isScreenSharing = true;
     activeStreams.push(stream);
+    
+    console.debug(`[SCREEN_SHARE_DIAG] Stream added to activeStreams. New count: ${activeStreams.length}`);
 
     // Send screen sharing started event
     if (electronAPI.sendScreenSharingStarted) {
@@ -104,9 +126,16 @@
   // Function to handle stream ending - used by UI button detection
   function handleStreamEnd(reason) {
     console.debug("Stream ending detected, reason:", reason);
+    
+    // v2.5.3: Enhanced logging for stream ending diagnosis
+    console.debug(`[SCREEN_SHARE_DIAG] Stream ending - Reason: ${reason}`);
+    console.debug(`[SCREEN_SHARE_DIAG] Active streams before cleanup: ${activeStreams.length}`);
+    console.debug(`[SCREEN_SHARE_DIAG] Active streams IDs: ${activeStreams.map(s => s.id).join(', ')}`);
+    console.debug(`[SCREEN_SHARE_DIAG] Active media tracks: ${activeMediaTracks.length}`);
 
     if (isScreenSharing) {
       isScreenSharing = false;
+      console.debug(`[SCREEN_SHARE_DIAG] Screen sharing state set to false`);
 
       const electronAPI = window.electronAPI;
       if (electronAPI?.sendScreenSharingStopped) {
