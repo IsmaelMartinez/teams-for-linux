@@ -121,7 +121,7 @@ Instead of relying solely on Electron security features, users should adopt **sy
 
 #### Available Options
 
-**Flatpak (Recommended)**
+**Flatpak**
 - Built-in application isolation
 - Available via Flathub
 - Automatic permission management
@@ -150,38 +150,6 @@ Instead of relying solely on Electron security features, users should adopt **sy
 4. **Future-Proof**: Works regardless of Teams/React changes
 5. **Defense in Depth**: Additional security layer independent of application
 
-### Security Recommendations by Environment
-
-#### Enterprise Environments
-```json
-{
-  "deployment": "system-wide-config",
-  "sandboxing": "AppArmor/SELinux + Snap",
-  "monitoring": "corporate-security-tools",
-  "updates": "managed-updates"
-}
-```
-
-#### Individual Users
-```json
-{
-  "deployment": "flatpak-preferred",
-  "sandboxing": "flatpak-native",
-  "monitoring": "system-logs",
-  "updates": "automatic"
-}
-```
-
-#### High-Security Environments
-```json
-{
-  "deployment": "manual-build",
-  "sandboxing": "firejail + AppArmor",
-  "monitoring": "comprehensive-logging", 
-  "network": "restricted-egress"
-}
-```
-
 ## Security Monitoring & Maintenance
 
 ### React Version Monitoring
@@ -197,28 +165,6 @@ _detectAndLogReactVersion() {
 
 **Purpose**: Monitor Teams React version updates that could break DOM access functionality.
 
-### Security Audit Trail
-
-**Logging Locations**:
-- IPC validation failures: `app/security/ipcValidator.js:67`
-- Domain validation warnings: `app/browser/tools/reactHandler.js:62` 
-- CSP policy enforcement: Browser developer tools
-- React version changes: Application debug logs
-
-### Regular Security Review
-
-**Quarterly Reviews**:
-1. **Threat Model Updates**: Assess new attack vectors
-2. **Dependency Audits**: Review third-party package security
-3. **Permission Reviews**: Validate IPC channel allowlists
-4. **User Education**: Update security recommendations
-
-**Incident Response**:
-1. **Security Issue Reporting**: GitHub security advisories
-2. **Rapid Patching**: Emergency release process
-3. **User Notification**: Security advisory distribution
-4. **Mitigation Guidance**: Temporary protection measures
-
 ## Future Security Enhancements
 
 ### Phase 2: API Integration Security
@@ -229,7 +175,7 @@ _detectAndLogReactVersion() {
 - **Permission Scoping**: Minimal required API permissions
 - **Rate Limiting**: API abuse prevention
 
-**Timeline**: Planned for implementation before React 19 migration (Q4 2025)
+**Timeline**: Planned for implementation next
 
 ### Long-term Security Goals
 
@@ -262,14 +208,11 @@ The current security posture represents an acceptable risk because:
 
 1. **Compensating Controls**: Multiple security layers implemented
 2. **User Choice**: System-level sandboxing available
-3. **Temporary State**: API migration planned for 2025
-4. **Community Benefit**: Preserves functionality for thousands of users
-5. **Open Source**: Transparent implementation for security review
+3. **Community Benefit**: Preserves functionality for thousands of users
+4. **Open Source**: Transparent implementation for security review
 
 ## Security Contact & Reporting
 
 **Security Issues**: Report via GitHub Security Advisories  
 **Security Questions**: GitHub Discussions security category  
 **Emergency Contact**: Project maintainer via GitHub
-
-**Disclosure Policy**: Responsible disclosure with 90-day window for non-critical issues, immediate patching for critical vulnerabilities.

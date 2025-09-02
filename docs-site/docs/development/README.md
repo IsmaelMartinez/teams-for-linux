@@ -8,9 +8,6 @@ This directory contains technical documentation for Teams for Linux developers a
 - **[dom-access-investigation.md](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls documentation
 
-### Planning Archive
-- **[planning/](planning/)** - Historical PRDs, spikes, and planning documents that informed development decisions
-
 ## For Contributors
 
 When working on Teams for Linux:
