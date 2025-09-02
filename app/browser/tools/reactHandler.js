@@ -83,10 +83,21 @@ class ReactHandler {
 
   _validateReactStructure() {
     const appElement = document.getElementById("app");
-    if (!appElement._reactRootContainer && !appElement._reactInternalInstance) {
-      console.warn('ReactHandler: React structure not detected');
+    
+    // Check for traditional React mount structures
+    const hasLegacyReact = appElement._reactRootContainer || appElement._reactInternalInstance;
+    
+    // Check for React 18+ createRoot structure (keys starting with __react)
+    const reactKeys = Object.getOwnPropertyNames(appElement).filter(key => 
+      key.startsWith('__react') || key.startsWith('_react')
+    );
+    const hasModernReact = reactKeys.length > 0;
+    
+    if (!hasLegacyReact && !hasModernReact) {
+      console.warn('ReactHandler: No React structure detected (legacy or modern)');
       return false;
     }
+    
     return true;
   }
 
@@ -103,10 +114,49 @@ class ReactHandler {
 
   _detectAndLogReactVersion() {
     try {
-      const { version, method } = this._detectReactVersion();
-      console.debug(`ReactHandler: React version detected: ${version} (via ${method})`);
+      const result = this._detectReactVersion();
+      console.debug(`ReactHandler: React version detected: ${result.version} (via ${result.method})`);
+      
+      // Additional debugging information
+      if (result.version === 'unknown') {
+        this._logReactDetectionDebugInfo();
+      }
     } catch (error) {
       console.debug('ReactHandler: Could not detect React version:', error.message);
+    }
+  }
+
+  _logReactDetectionDebugInfo() {
+    console.debug('ReactHandler: Debug info for failed React detection:');
+    
+    // Check app element structure
+    const appElement = document.getElementById("app");
+    if (appElement) {
+      const reactKeys = Object.getOwnPropertyNames(appElement).filter(key => 
+        key.includes('react') || key.includes('React')
+      );
+      console.debug('  - React-related keys on app element:', reactKeys);
+      console.debug('  - Has _reactRootContainer:', !!appElement._reactRootContainer);
+      console.debug('  - Has _reactInternalInstance:', !!appElement._reactInternalInstance);
+    } else {
+      console.debug('  - App element not found');
+    }
+
+    // Check global React references
+    console.debug('  - window.React exists:', !!window.React);
+    console.debug('  - window.ReactDOM exists:', !!window.ReactDOM);
+    console.debug('  - DevTools hook exists:', !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
+    
+    if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+      const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      console.debug('  - DevTools renderers count:', hook.renderers ? hook.renderers.size : 0);
+    }
+
+    // Check webpack cache
+    console.debug('  - Webpack require exists:', !!window.__webpack_require__);
+    if (window.__webpack_require__ && window.__webpack_require__.cache) {
+      const moduleCount = Object.keys(window.__webpack_require__.cache).length;
+      console.debug('  - Webpack cached modules:', moduleCount);
     }
   }
 
@@ -115,6 +165,8 @@ class ReactHandler {
     return this._tryDevToolsHook() || 
            this._tryWindowReact() || 
            this._tryFiberDetection() ||
+           this._tryReactRootProperties() ||
+           this._tryReactPackageInfo() ||
            { version: 'unknown', method: 'unknown' };
   }
 
@@ -153,6 +205,71 @@ class ReactHandler {
         return { version: '16-17', method: 'Fiber Legacy' };
       }
     }
+    return null;
+  }
+
+  _tryReactRootProperties() {
+    const appElement = document.getElementById("app");
+    if (!appElement) return null;
+
+    // Check for React 18+ createRoot structure
+    const reactRootKeys = Object.getOwnPropertyNames(appElement).filter(key => 
+      key.startsWith('__react') || key.startsWith('_react')
+    );
+    
+    for (const key of reactRootKeys) {
+      const reactData = appElement[key];
+      if (reactData && typeof reactData === 'object') {
+        // Check for React 18+ concurrent features
+        if (reactData.concurrent !== undefined) {
+          return { version: '18+', method: 'Root Properties (concurrent)' };
+        }
+        // Check for fiber structure in the property
+        if (reactData.current && reactData.current.mode !== undefined) {
+          if (reactData.current.mode & 16) {
+            return { version: '18+', method: 'Root Properties (fiber mode)' };
+          }
+          return { version: '16-17', method: 'Root Properties (legacy fiber)' };
+        }
+      }
+    }
+    return null;
+  }
+
+  _tryReactPackageInfo() {
+    // Try to detect React version from bundled modules or webpack chunks
+    if (window.__webpack_require__ && window.__webpack_require__.cache) {
+      try {
+        const modules = Object.values(window.__webpack_require__.cache);
+        for (const module of modules) {
+          if (module.exports && module.exports.version && 
+              (module.exports.createElement || module.exports.Component)) {
+            return { version: module.exports.version, method: 'Webpack Module Cache' };
+          }
+        }
+      } catch (error) {
+        // Continue to other methods
+      }
+    }
+
+    // Check for React version in global variables or exposed modules
+    const possibleReactRefs = [
+      'window.__REACT__',
+      'window.ReactDOM', 
+      'window.React'
+    ];
+
+    for (const ref of possibleReactRefs) {
+      try {
+        const reactObj = eval(ref);
+        if (reactObj && reactObj.version) {
+          return { version: reactObj.version, method: `Global Reference (${ref})` };
+        }
+      } catch (error) {
+        // Continue checking other references
+      }
+    }
+
     return null;
   }
 
