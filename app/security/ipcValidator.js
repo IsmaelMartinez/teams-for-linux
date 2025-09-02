@@ -70,9 +70,13 @@ function validateIpcChannel(channel, payload = null) {
   
   // Basic payload sanitization to prevent prototype pollution
   if (payload && typeof payload === 'object') {
-    delete payload.__proto__;
-    delete payload.constructor;
-    delete payload.prototype;
+    // Use Object.getOwnPropertyDescriptor to safely check and delete dangerous properties
+    const dangerousProps = ['__proto__', 'constructor', 'prototype'];
+    dangerousProps.forEach(prop => {
+      if (Object.prototype.hasOwnProperty.call(payload, prop)) {
+        delete payload[prop];
+      }
+    });
   }
   
   return true;
