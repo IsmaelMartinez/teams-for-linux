@@ -10,6 +10,7 @@ These documents capture AI-generated analysis and strategic insights that inform
 
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
+- **[Token Cache Investigation](token-cache-authentication-investigation.md)** - Root cause analysis and solution approach for persistent authentication issues (#1357)
 
 ## Purpose
 
