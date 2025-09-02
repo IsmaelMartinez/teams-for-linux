@@ -110,42 +110,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       useMutationTitleLogic: config?.useMutationTitleLogic 
     });
     
-    // Initialize title monitoring directly in preload with validation
+    // Initialize title monitoring using existing module
     if (config.useMutationTitleLogic) {
-      console.debug("Preload: MutationObserverTitle enabled");
-      const observer = new MutationObserver(() => {
-        try {
-          const title = document.title;
-          if (typeof title !== 'string') return;
-          
-          const sanitizedTitle = title.substring(0, 200); // Limit title length
-          console.debug(`title changed to ${sanitizedTitle}`);
-          
-          const regex = /^\((\d+)\)/;
-          const match = regex.exec(sanitizedTitle);
-          const number = match ? parseInt(match[1], 10) : 0;
-          
-          // Validate extracted number
-          if (isNaN(number) || number < 0 || number > 9999) {
-            console.warn('Invalid unread count extracted:', number);
-            return;
-          }
-          
-          const event = new CustomEvent("unread-count", {
-            detail: { number: number },
-          });
-          window.dispatchEvent(event);
-        } catch (error) {
-          console.error('Error in title observer:', error);
-        }
-      });
-      
-      const titleElement = document.querySelector("title");
-      if (titleElement) {
-        observer.observe(titleElement, {
-          childList: true,
-        });
-      }
+      const mutationTitle = require("./tools/mutationTitle");
+      mutationTitle.init(config);
     }
     
     // Initialize tray icon functionality directly in preload with secure IPC

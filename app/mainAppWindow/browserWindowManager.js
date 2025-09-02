@@ -76,18 +76,19 @@ class BrowserWindowManager {
         const responseHeaders = {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            // Allow Teams functionality while restricting dangerous operations
-            "default-src 'self' https://teams.microsoft.com https://teams.live.com https://outlook.office.com https://login.microsoftonline.com https://*.office.com https://*.sharepoint.com https://*.microsoftonline.com; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.microsoft.com https://teams.live.com https://*.office.com https://*.microsoftonline.com; " +
-            "style-src 'self' 'unsafe-inline' https://teams.microsoft.com https://teams.live.com https://*.office.com; " +
-            "img-src 'self' data: blob: https: http:; " +
-            "media-src 'self' blob: https: mediastream:; " +
-            "connect-src 'self' wss: https: blob:; " +
-            "font-src 'self' data: https://teams.microsoft.com https://*.office.com; " +
-            "object-src 'none'; " +
-            "base-uri 'self'; " +
-            "form-action 'self' https://login.microsoftonline.com https://*.office.com; " +
-            "frame-ancestors 'none';"
+            [
+              "default-src 'self' https://teams.microsoft.com https://teams.live.com https://outlook.office.com https://login.microsoftonline.com https://*.office.com https://*.sharepoint.com https://*.microsoftonline.com;",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.microsoft.com https://teams.live.com https://*.office.com https://*.microsoftonline.com;",
+              "style-src 'self' 'unsafe-inline' https://teams.microsoft.com https://teams.live.com https://*.office.com;",
+              "img-src 'self' data: blob: https: http:;",
+              "media-src 'self' blob: https: mediastream:;",
+              "connect-src 'self' wss: https: blob:;",
+              "font-src 'self' data: https://teams.microsoft.com https://*.office.com;",
+              "object-src 'none';",
+              "base-uri 'self';",
+              "form-action 'self' https://login.microsoftonline.com https://*.office.com;",
+              "frame-ancestors 'none';"
+            ].join(' ')
           ]
         };
         

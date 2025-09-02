@@ -97,10 +97,10 @@ async function restore(event, ...args) {
     }
 
     // Only set validated values
-    if (args[0].theme) {
+    if ('theme' in args[0]) {
       clientPreferences.theme.userTheme = args[0].theme;
     }
-    if (args[0].chatDensity) {
+    if ('chatDensity' in args[0]) {
       clientPreferences.density.chatDensity = args[0].chatDensity;
     }
     
