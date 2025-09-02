@@ -253,20 +253,16 @@ class ReactHandler {
     }
 
     // Check for React version in global variables or exposed modules
-    const possibleReactRefs = [
-      'window.__REACT__',
-      'window.ReactDOM', 
-      'window.React'
+    // Use bracket notation to safely access potentially undefined properties
+    const globalRefs = [
+      { obj: window['__REACT__'], name: 'window.__REACT__' },
+      { obj: window['ReactDOM'], name: 'window.ReactDOM' }, 
+      { obj: window['React'], name: 'window.React' }
     ];
 
-    for (const ref of possibleReactRefs) {
-      try {
-        const reactObj = eval(ref);
-        if (reactObj && reactObj.version) {
-          return { version: reactObj.version, method: `Global Reference (${ref})` };
-        }
-      } catch (error) {
-        // Continue checking other references
+    for (const { obj, name } of globalRefs) {
+      if (obj && obj.version) {
+        return { version: obj.version, method: `Global Reference (${name})` };
       }
     }
 
