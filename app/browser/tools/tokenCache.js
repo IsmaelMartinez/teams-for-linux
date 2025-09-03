@@ -1,5 +1,5 @@
 // Teams Token Cache Bridge
-// v2.5.4: Implement localStorage-compatible token cache interface for Teams authentication provider
+// v2.5.3: Implement localStorage-compatible token cache interface for Teams authentication provider
 // Addresses issue #1357 - Authentication refresh fails due to missing _tokenCache interface
 
 /**
