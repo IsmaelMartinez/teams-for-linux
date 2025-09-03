@@ -72,6 +72,10 @@ async function createPreview(properties) {
 }
 
 async function createPreviewStream(properties, videoElement) {
+  // v2.5.3: Enhanced logging for preview stream creation - potential cause of audio duplication
+  console.debug(`[SCREEN_SHARE_DIAG] Creating preview stream for source: ${properties.source.id}`);
+  console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: false, dimensions: 192x108`);
+  
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: {
@@ -85,6 +89,10 @@ async function createPreviewStream(properties, videoElement) {
       },
     },
   });
+  
+  console.debug(`[SCREEN_SHARE_DIAG] Preview stream created successfully - ID: ${stream.id}`);
+  console.debug(`[SCREEN_SHARE_DIAG] Preview stream tracks - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
+  
   videoElement.srcObject = stream;
   playPreview({
     videoElement,
@@ -121,11 +129,26 @@ function createEventHandlers(properties) {
 }
 
 function closePreviews() {
+  // v2.5.3: Enhanced logging for preview cleanup - tracking potential stream leaks
   const vidElements = document.getElementsByTagName("video");
+  console.debug(`[SCREEN_SHARE_DIAG] Closing ${vidElements.length} preview streams`);
+  
   for (const vidElement of vidElements) {
-    vidElement.pause();
-    vidElement.srcObject.getVideoTracks()[0].stop();
+    if (vidElement.srcObject) {
+      const stream = vidElement.srcObject;
+      console.debug(`[SCREEN_SHARE_DIAG] Closing preview stream: ${stream.id}`);
+      console.debug(`[SCREEN_SHARE_DIAG] Stream tracks before cleanup - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
+      
+      vidElement.pause();
+      vidElement.srcObject.getVideoTracks().forEach(track => track.stop());
+      
+      console.debug(`[SCREEN_SHARE_DIAG] Preview stream ${stream.id} cleaned up`);
+    } else {
+      console.debug(`[SCREEN_SHARE_DIAG] Video element has no srcObject to clean up`);
+    }
   }
+  
+  console.debug(`[SCREEN_SHARE_DIAG] All preview streams closed`);
 }
 
 function toggleSources(e) {

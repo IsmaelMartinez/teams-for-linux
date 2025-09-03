@@ -25,8 +25,48 @@ class ActivityHub {
         assignEventHandlers(commandChangeReportingService);
         console.debug("Events connected");
         clearInterval(setup);
+        
+        // v2.5.3: Start periodic authentication state logging for #1357 
+        this._startAuthenticationMonitoring();
       }
     }, 10000);
+  }
+
+  // v2.5.4: Monitor authentication state and initialize token cache for #1357
+  _startAuthenticationMonitoring() {
+    // Log authentication state immediately (this will trigger token cache injection if needed)
+    ReactHandler.logAuthenticationState();
+    
+    // Give Teams a moment to fully initialize, then try manual injection if auto-injection failed
+    setTimeout(() => {
+      const status = ReactHandler.getTokenCacheStatus();
+      if (!status.injected && status.canRetry) {
+        console.debug("[TOKEN_CACHE] Auto-injection may have failed, attempting manual injection");
+        ReactHandler.injectTokenCache();
+      }
+    }, 15000); // 15 seconds after initial monitoring starts
+    
+    // Then log every 5 minutes to track token lifecycle and cache health
+    this._authMonitorInterval = setInterval(() => {
+      ReactHandler.logAuthenticationState();
+      
+      // Periodically check token cache status
+      const status = ReactHandler.getTokenCacheStatus();
+      if (!status.injected && status.canRetry) {
+        console.debug("[TOKEN_CACHE] Periodic check: Token cache not injected, retrying");
+        ReactHandler.injectTokenCache();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    console.debug("[AUTH_DIAG] Authentication monitoring started - logging every 5 minutes with token cache management");
+  }
+
+  stop() {
+    if (this._authMonitorInterval) {
+      clearInterval(this._authMonitorInterval);
+      this._authMonitorInterval = null;
+      console.debug("[AUTH_DIAG] Authentication monitoring stopped");
+    }
   }
 
   setMachineState(state) {

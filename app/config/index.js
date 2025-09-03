@@ -99,7 +99,7 @@ function extractYargConfig(configObject, appVersion) {
       screenSharingThumbnail: {
         default: {
           enabled: true,
-          alwaysOnTop: false,
+          alwaysOnTop: true,
         },
         describe:
           "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
