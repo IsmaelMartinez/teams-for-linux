@@ -221,7 +221,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.4: Attempt to inject token cache into Teams authentication provider
+  // v2.5.3: Attempt to inject token cache into Teams authentication provider
   _attemptTokenCacheInjection(authProvider) {
     try {
       if (this._tokenCacheInjected) {
