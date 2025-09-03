@@ -14,11 +14,10 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.5.3" date="2025-09-02">
+		<release version="2.5.3" date="2025-09-03">
 			<description>
 				<ul>
-					<li>Enhancement: Add comprehensive diagnostic logging for authentication refresh issues to help diagnose persistent "Please sign in again" problems</li>
-					<li>Enhancement: Add detailed screen sharing audio duplication logging to identify echo issues and multiple session creation</li>
+					<li>Fix: Implement token cache bridge to resolve authentication refresh issues - provides missing _tokenCache interface to Teams authentication provider</li>
 				</ul>
 			</description>
 		</release>
