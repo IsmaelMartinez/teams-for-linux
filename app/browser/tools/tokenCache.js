@@ -131,7 +131,7 @@ class TeamsTokenCache {
         try {
           this.removeItem(key);
         } catch (error) {
-          console.warn(`[TOKEN_CACHE] Failed to remove key during clear: ${this._sanitizeKey(key)}`);
+          console.warn(`[TOKEN_CACHE] Failed to remove key during clear: ${this._sanitizeKey(key)}`, error.message);
         }
       });
 
@@ -207,6 +207,7 @@ class TeamsTokenCache {
         return true;
       } catch (parseError) {
         // If not JSON or unparseable, assume valid (could be non-JSON token)
+        console.debug(`[TOKEN_CACHE] Token parse error for key ${this._sanitizeKey(key)}: ${parseError.message}`);
         return true;
       }
     } catch (error) {
@@ -483,7 +484,7 @@ class TeamsTokenCache {
           this.removeItem(key);
           cleanedCount++;
         } catch (error) {
-          console.warn(`[TOKEN_CACHE] Failed to clean expired token: ${this._sanitizeKey(key)}`);
+          console.warn(`[TOKEN_CACHE] Failed to clean expired token: ${this._sanitizeKey(key)}`, error.message);
         }
       }
     });
@@ -533,7 +534,8 @@ class TeamsTokenCache {
       ...metadata
     };
 
-    console.debug(`[TOKEN_CACHE] ${operation}: ${sanitizedKey}${sanitizedValue ? ` => ${sanitizedValue}` : ''}`);
+    const valueText = sanitizedValue ? ` => ${sanitizedValue}` : '';
+    console.debug(`[TOKEN_CACHE] ${operation}: ${sanitizedKey}${valueText}`);
 
     // Add to audit log with size limit
     this._addToAuditLog(logEntry);
