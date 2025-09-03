@@ -57,7 +57,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.4: Get token cache injection status for monitoring
+  // v2.5.3: Get token cache injection status for monitoring
   getTokenCacheStatus() {
     return {
       injected: this._tokenCacheInjected,
