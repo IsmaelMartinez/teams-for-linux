@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(ELECTRON_ENABLE_LOGGING=true npm start)"
     ],
     "deny": [],
     "ask": []
