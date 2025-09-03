@@ -73,6 +73,19 @@
     const audioTracks = stream.getAudioTracks();
     const videoTracks = stream.getVideoTracks();
     console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
+    
+    // v2.5.4: Prevent audio echo by disabling audio tracks after stream creation
+    // This maintains stream compatibility while preventing feedback loops
+    if (audioTracks.length > 0) {
+      console.debug(`[SCREEN_SHARE_ECHO] Disabling ${audioTracks.length} audio tracks to prevent echo`);
+      audioTracks.forEach((track, index) => {
+        console.debug(`[SCREEN_SHARE_ECHO] Disabling audio track ${index}: ${track.label}`);
+        track.enabled = false; // Disable rather than stop to maintain stream structure
+      });
+      console.debug(`[SCREEN_SHARE_ECHO] Audio tracks disabled - echo prevention active`);
+    } else {
+      console.debug(`[SCREEN_SHARE_ECHO] No audio tracks to disable`);
+    }
 
     const electronAPI = window.electronAPI;
 

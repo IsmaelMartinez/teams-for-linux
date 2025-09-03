@@ -6,7 +6,9 @@
       "Bash(ELECTRON_ENABLE_LOGGING=true npm start)",
       "Bash(npm start)",
       "mcp__github__search_issues",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "mcp__github__get_pull_request_comments",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
