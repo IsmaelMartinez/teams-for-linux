@@ -297,7 +297,7 @@ function extractYargConfig(configObject, appVersion) {
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
       enableIncomingCallToast: {
-        default: true,
+        default: false,
         describe: "Enable incoming call toast",
         type: "boolean",
       },
