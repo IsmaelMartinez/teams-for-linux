@@ -11,7 +11,14 @@
     );
 
     navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      return originalGetDisplayMedia(constraints)
+      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
+      const modifiedConstraints = { ...constraints };
+      if (modifiedConstraints.audio !== false) {
+        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getDisplayMedia to prevent echo");
+        modifiedConstraints.audio = false;
+      }
+      
+      return originalGetDisplayMedia(modifiedConstraints)
         .then((stream) => {
           console.debug("Screen sharing stream detected via getDisplayMedia");
           handleScreenShareStream(stream, "getDisplayMedia");
@@ -29,24 +36,31 @@
     );
 
     navigator.mediaDevices.getUserMedia = function (constraints) {
-      return originalGetUserMedia(constraints)
-        .then((stream) => {
-          // Check if this is a screen sharing stream - handle multiple constraint formats
-          const isScreenShare =
-            constraints &&
-            constraints.video &&
-            // Electron format
-            (constraints.video.chromeMediaSource === "desktop" ||
-              constraints.video.mandatory?.chromeMediaSource === "desktop" ||
-              // Teams format
-              constraints.video.chromeMediaSourceId ||
-              constraints.video.mandatory?.chromeMediaSourceId ||
-              // Generic desktop capture
-              (typeof constraints.video === "object" &&
-                constraints.video.deviceId &&
-                typeof constraints.video.deviceId === "object" &&
-                constraints.video.deviceId.exact));
+      // Check if this is a screen sharing stream - handle multiple constraint formats
+      const isScreenShare =
+        constraints &&
+        constraints.video &&
+        // Electron format
+        (constraints.video.chromeMediaSource === "desktop" ||
+          constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+          // Teams format
+          constraints.video.chromeMediaSourceId ||
+          constraints.video.mandatory?.chromeMediaSourceId ||
+          // Generic desktop capture
+          (typeof constraints.video === "object" &&
+            constraints.video.deviceId &&
+            typeof constraints.video.deviceId === "object" &&
+            constraints.video.deviceId.exact));
 
+      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
+      const modifiedConstraints = { ...constraints };
+      if (isScreenShare && modifiedConstraints.audio !== false) {
+        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getUserMedia screen share to prevent echo");
+        modifiedConstraints.audio = false;
+      }
+
+      return originalGetUserMedia(modifiedConstraints)
+        .then((stream) => {
           if (isScreenShare) {
             console.debug("Screen sharing stream detected");
             handleScreenShareStream(stream, "getUserMedia");
@@ -76,10 +90,11 @@
     console.debug(`[SCREEN_SHARE_ECHO] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
     
     if (audioTracks.length > 0) {
-      console.warn(`[SCREEN_SHARE_ECHO] POTENTIAL ECHO SOURCE: Audio tracks detected in screen share stream!`, {
+      console.warn(`[SCREEN_SHARE_ECHO] UNEXPECTED: Audio tracks still present despite audio blocking!`, {
         audioTrackCount: audioTracks.length,
         streamSource: source,
-        streamId: stream.id
+        streamId: stream.id,
+        note: 'This suggests the audio blocking may not be working correctly'
       });
       
       audioTracks.forEach((track, index) => {
@@ -96,11 +111,11 @@
         
         // Check if this audio track might cause echo
         if (track.enabled && !track.muted && track.readyState === 'live') {
-          console.warn(`[SCREEN_SHARE_ECHO] HIGH ECHO RISK: Active audio track detected!`, trackInfo);
+          console.error(`[SCREEN_SHARE_ECHO] CRITICAL: Active audio track still present despite blocking!`, trackInfo);
         }
       });
     } else {
-      console.debug(`[SCREEN_SHARE_ECHO] No audio tracks - echo risk minimal`);
+      console.debug(`[SCREEN_SHARE_ECHO] SUCCESS: No audio tracks detected - echo prevention working`);
     }
 
     const electronAPI = window.electronAPI;
