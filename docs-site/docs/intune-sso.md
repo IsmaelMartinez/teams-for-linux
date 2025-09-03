@@ -85,4 +85,4 @@ To verify Intune integration is working:
 2. Look for `[INTUNE_DIAG] InTune SSO account configured successfully`
 3. Navigate to `https://login.microsoftonline.com/` - should automatically authenticate
 
-For configuration options related to Intune SSO, please refer to the [Configuration Documentation](../../docs-site/docs/configuration.md).
+For configuration options related to Intune SSO, please refer to the [Configuration Documentation](../../docs/configuration.md).
