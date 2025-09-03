@@ -29,24 +29,24 @@
     );
 
     navigator.mediaDevices.getUserMedia = function (constraints) {
+      // Check if this is a screen sharing stream - handle multiple constraint formats
+      const isScreenShare =
+        constraints &&
+        constraints.video &&
+        // Electron format
+        (constraints.video.chromeMediaSource === "desktop" ||
+          constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+          // Teams format
+          constraints.video.chromeMediaSourceId ||
+          constraints.video.mandatory?.chromeMediaSourceId ||
+          // Generic desktop capture
+          (typeof constraints.video === "object" &&
+            constraints.video.deviceId &&
+            typeof constraints.video.deviceId === "object" &&
+            constraints.video.deviceId.exact));
+
       return originalGetUserMedia(constraints)
         .then((stream) => {
-          // Check if this is a screen sharing stream - handle multiple constraint formats
-          const isScreenShare =
-            constraints &&
-            constraints.video &&
-            // Electron format
-            (constraints.video.chromeMediaSource === "desktop" ||
-              constraints.video.mandatory?.chromeMediaSource === "desktop" ||
-              // Teams format
-              constraints.video.chromeMediaSourceId ||
-              constraints.video.mandatory?.chromeMediaSourceId ||
-              // Generic desktop capture
-              (typeof constraints.video === "object" &&
-                constraints.video.deviceId &&
-                typeof constraints.video.deviceId === "object" &&
-                constraints.video.deviceId.exact));
-
           if (isScreenShare) {
             console.debug("Screen sharing stream detected");
             handleScreenShareStream(stream, "getUserMedia");
@@ -70,14 +70,22 @@
     console.debug(`[SCREEN_SHARE_DIAG] Current active streams count: ${activeStreams.length}`);
     console.debug(`[SCREEN_SHARE_DIAG] isScreenSharing state: ${isScreenSharing}`);
     
-    // Check for audio tracks that might cause echo
     const audioTracks = stream.getAudioTracks();
     const videoTracks = stream.getVideoTracks();
     console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
     
-    audioTracks.forEach((track, index) => {
-      console.debug(`[SCREEN_SHARE_DIAG] Audio track ${index}: ${track.id}, enabled: ${track.enabled}, muted: ${track.muted}`);
-    });
+    // v2.5.4: Prevent audio echo by disabling audio tracks after stream creation
+    // This maintains stream compatibility while preventing feedback loops
+    if (audioTracks.length > 0) {
+      console.debug(`[SCREEN_SHARE_ECHO] Disabling ${audioTracks.length} audio tracks to prevent echo`);
+      audioTracks.forEach((track, index) => {
+        console.debug(`[SCREEN_SHARE_ECHO] Disabling audio track ${index}: ${track.label}`);
+        track.enabled = false; // Disable rather than stop to maintain stream structure
+      });
+      console.debug(`[SCREEN_SHARE_ECHO] Audio tracks disabled - echo prevention active`);
+    } else {
+      console.debug(`[SCREEN_SHARE_ECHO] No audio tracks to disable`);
+    }
 
     const electronAPI = window.electronAPI;
 
