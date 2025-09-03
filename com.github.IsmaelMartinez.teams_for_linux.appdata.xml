@@ -18,6 +18,8 @@
 			<description>
 				<ul>
 					<li>Fix: Implement token cache bridge to resolve authentication refresh issues - provides missing _tokenCache interface to Teams authentication provider</li>
+					<li>Enhancement: Add comprehensive diagnostic logging for authentication refresh issues to help diagnose persistent "Please sign in again" problems</li>
+					<li>Enhancement: Add detailed screen sharing audio duplication logging to identify echo issues and multiple session creation</li>
 				</ul>
 			</description>
 		</release>
