@@ -31,7 +31,7 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
-  // v2.5.4: Public method to manually trigger token cache injection
+  // v2.5.3: Public method to manually trigger token cache injection
   injectTokenCache() {
     if (!this._validateTeamsEnvironment()) {
       console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot inject token cache`);
