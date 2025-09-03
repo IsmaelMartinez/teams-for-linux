@@ -1,3 +1,6 @@
+// v2.5.4: Import token cache for authentication provider integration
+const TokenCache = require('./tokenCache');
+
 class ReactHandler {
 
   constructor() {
@@ -5,6 +8,9 @@ class ReactHandler {
     this._lastValidationTime = 0;
     this._validationCacheMs = 1000; // Cache validation results for 1 second
     this._reactVersionLogged = false; // Ensure version is logged only once
+    this._tokenCacheInjected = false; // Track token cache injection status
+    this._tokenCacheInjectionRetries = 0; // Track retry attempts
+    this._maxTokenCacheRetries = 5; // Maximum retry attempts
   }
 
   getCommandChangeReportingService() {
@@ -23,6 +29,42 @@ class ReactHandler {
     if (!this._validateTeamsEnvironment()) return null;
     const teams2CoreServices = this._getTeams2CoreServices();
     return teams2CoreServices?.clientPreferences?.clientPreferences;
+  }
+
+  // v2.5.4: Public method to manually trigger token cache injection
+  injectTokenCache() {
+    if (!this._validateTeamsEnvironment()) {
+      console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot inject token cache`);
+      return false;
+    }
+
+    try {
+      const teams2CoreServices = this._getTeams2CoreServices();
+      const authService = teams2CoreServices?.authenticationService;
+      const authProvider = authService?._coreAuthService?._authProvider;
+
+      if (!authProvider) {
+        console.warn(`[TOKEN_CACHE] Auth provider not available, cannot inject token cache`);
+        return false;
+      }
+
+      console.debug(`[TOKEN_CACHE] MANUAL_INJECTION: Manually triggering token cache injection`);
+      return this._attemptTokenCacheInjection(authProvider);
+
+    } catch (error) {
+      console.error(`[TOKEN_CACHE] Error in manual token cache injection:`, error);
+      return false;
+    }
+  }
+
+  // v2.5.4: Get token cache injection status for monitoring
+  getTokenCacheStatus() {
+    return {
+      injected: this._tokenCacheInjected,
+      retries: this._tokenCacheInjectionRetries,
+      maxRetries: this._maxTokenCacheRetries,
+      canRetry: this._tokenCacheInjectionRetries < this._maxTokenCacheRetries
+    };
   }
 
   // v2.5.3: Add authentication service access with enhanced logging for #1357
@@ -72,7 +114,14 @@ class ReactHandler {
       );
       console.debug(`[AUTH_DIAG] LocalStorage auth-related keys: ${storageKeys.length} found`);
       
-      // Log specific refresh token related keys
+      // Basic token categorization for debugging
+      const authKeys = storageKeys.filter(k => k.startsWith('tmp.auth.v1.'));
+      const refreshKeys = storageKeys.filter(k => k.includes('refresh_token'));
+      const msalKeys = storageKeys.filter(k => k.startsWith('msal.'));
+      
+      console.debug(`[AUTH_DIAG] Token breakdown: ${authKeys.length} auth keys, ${refreshKeys.length} refresh tokens, ${msalKeys.length} MSAL keys`);
+      
+      // Original refresh token analysis
       const refreshKeys = storageKeys.filter(key => 
         key.toLowerCase().includes('refresh') ||
         key.toLowerCase().includes('rt') ||
@@ -106,6 +155,7 @@ class ReactHandler {
     }
   }
 
+
   // v2.5.3: Analyze auth provider for token information
   _analyzeAuthProvider(authProvider) {
     try {
@@ -114,15 +164,16 @@ class ReactHandler {
       // Deep dive into token cache issue
       console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
       
-      // Check if auth provider has token cache/storage
+      // v2.5.4: Token cache analysis and injection for #1357 fix
       if (authProvider._tokenCache) {
         console.debug(`[AUTH_DIAG] Token cache available: true`);
         console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
+        this._validateTokenCacheInterface(authProvider._tokenCache);
       } else {
-        console.debug(`[AUTH_DIAG] Token cache available: false - INVESTIGATING WHY`);
+        console.debug(`[AUTH_DIAG] Token cache unavailable - attempting injection`);
         
-        // Try to initialize or find token cache
-        this._investigateTokenCacheIssue(authProvider);
+        // Attempt to inject token cache instead of just investigating
+        this._attemptTokenCacheInjection(authProvider);
       }
       
       // Check for common auth provider properties
@@ -170,38 +221,197 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Investigate why token cache is unavailable (diagnostic only)
-  _investigateTokenCacheIssue(authProvider) {
+  // v2.5.4: Attempt to inject token cache into Teams authentication provider
+  _attemptTokenCacheInjection(authProvider) {
     try {
-      console.debug(`[AUTH_DIAG] CACHE_FIX: Investigating token cache unavailability...`);
+      if (this._tokenCacheInjected) {
+        console.debug(`[TOKEN_CACHE] Already injected, validating existing cache`);
+        this._validateTokenCacheInterface(authProvider._tokenCache);
+        return true;
+      }
+
+      if (this._tokenCacheInjectionRetries >= this._maxTokenCacheRetries) {
+        console.warn(`[TOKEN_CACHE] Maximum injection attempts reached (${this._maxTokenCacheRetries}), giving up`);
+        return false;
+      }
+
+      this._tokenCacheInjectionRetries++;
+      console.debug(`[TOKEN_CACHE] INJECTION_ATTEMPT ${this._tokenCacheInjectionRetries}: Starting token cache injection`);
+
+      // Validate that we have a valid auth provider
+      if (!authProvider || typeof authProvider !== 'object') {
+        console.error(`[TOKEN_CACHE] Invalid auth provider for injection`);
+        return false;
+      }
+
+      // Validate TokenCache is available and working
+      if (!TokenCache || typeof TokenCache.getItem !== 'function') {
+        console.error(`[TOKEN_CACHE] TokenCache module not properly loaded`);
+        return false;
+      }
+
+      // Test TokenCache functionality before injection
+      const cacheStats = TokenCache.getCacheStats();
+      console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, cacheStats);
+
+      if (cacheStats.totalKeys === 0) {
+        console.warn(`[TOKEN_CACHE] No tokens in cache, injection may not be immediately beneficial`);
+      }
+
+      // Perform the injection
+      console.debug(`[TOKEN_CACHE] Injecting TokenCache into authProvider._tokenCache`);
+      authProvider._tokenCache = TokenCache;
+
+      // Verify injection success
+      const injectionSuccess = this._validateTokenCacheInjection(authProvider);
       
-      // Check if cache exists but under different property name
-      const potentialCacheProps = ['cache', 'tokenStorage', '_tokenStorage', '_storage', '_internalCache'];
-      let foundAlternativeCache = false;
+      if (injectionSuccess) {
+        this._tokenCacheInjected = true;
+        console.debug(`[TOKEN_CACHE] INJECTION_SUCCESS: Token cache successfully injected and validated`);
+        
+        // Log enhanced diagnostic information
+        console.debug(`[TOKEN_CACHE] Injection details:`, {
+          attempts: this._tokenCacheInjectionRetries,
+          cacheType: TokenCache.constructor.name,
+          storageType: cacheStats.storageType,
+          tokenCount: cacheStats.authKeysCount,
+          refreshTokens: cacheStats.refreshTokenCount
+        });
+
+        return true;
+      } else {
+        console.error(`[TOKEN_CACHE] INJECTION_FAILED: Validation failed after injection`);
+        
+        // Clean up failed injection
+        try {
+          delete authProvider._tokenCache;
+        } catch (cleanupError) {
+          console.warn(`[TOKEN_CACHE] Failed to cleanup after injection failure:`, cleanupError.message);
+        }
+        
+        // Schedule retry with exponential backoff
+        if (this._tokenCacheInjectionRetries < this._maxTokenCacheRetries) {
+          const retryDelay = Math.pow(2, this._tokenCacheInjectionRetries) * 1000; // 2s, 4s, 8s, 16s, 32s
+          console.debug(`[TOKEN_CACHE] Scheduling retry in ${retryDelay}ms`);
+          
+          setTimeout(() => {
+            console.debug(`[TOKEN_CACHE] RETRY_SCHEDULED: Retrying token cache injection`);
+            this._attemptTokenCacheInjection(authProvider);
+          }, retryDelay);
+        }
+        
+        return false;
+      }
+
+    } catch (error) {
+      console.error(`[TOKEN_CACHE] INJECTION_ERROR: Error during token cache injection:`, error);
+      return false;
+    }
+  }
+
+  // v2.5.4: Validate token cache injection was successful
+  _validateTokenCacheInjection(authProvider) {
+    try {
+      const tokenCache = authProvider._tokenCache;
       
-      for (const prop of potentialCacheProps) {
-        if (authProvider[prop]) {
-          console.debug(`[AUTH_DIAG] CACHE_FIX: Found potential cache at ${prop}: ${authProvider[prop].constructor?.name || 'unknown'}`);
-          foundAlternativeCache = true;
+      // Basic presence check
+      if (!tokenCache) {
+        console.error(`[TOKEN_CACHE] VALIDATION_FAILED: _tokenCache property is null/undefined`);
+        return false;
+      }
+
+      // Interface validation - check for required methods
+      const requiredMethods = ['getItem', 'setItem', 'removeItem', 'clear'];
+      for (const method of requiredMethods) {
+        if (typeof tokenCache[method] !== 'function') {
+          console.error(`[TOKEN_CACHE] VALIDATION_FAILED: Missing required method ${method}`);
+          return false;
         }
       }
-      
-      if (!foundAlternativeCache) {
-        console.debug(`[AUTH_DIAG] CACHE_FIX: No existing cache found, checking if we can create one...`);
+
+      // Functional validation - test basic operations
+      try {
+        // Test get operation (should not throw)
+        const testResult = tokenCache.getItem('__validation_test__');
+        if (testResult !== null && testResult !== undefined) {
+          console.warn(`[TOKEN_CACHE] Unexpected test key found during validation`);
+        }
+
+        // Test stats operation
+        const stats = tokenCache.getCacheStats();
+        if (!stats || typeof stats !== 'object') {
+          console.error(`[TOKEN_CACHE] VALIDATION_FAILED: getCacheStats() returned invalid result`);
+          return false;
+        }
+
+        console.debug(`[TOKEN_CACHE] VALIDATION_SUCCESS: All interface and functional tests passed`);
+        console.debug(`[TOKEN_CACHE] Validated cache stats:`, stats);
         
-        // Check for cache creation methods (diagnostic only - don't actually call them)
-        const creationMethods = ['createTokenCache', 'initialize'];
-        creationMethods.forEach(method => {
-          if (typeof authProvider[method] === 'function') {
-            console.debug(`[AUTH_DIAG] CACHE_FIX: Found ${method} method - could potentially create cache`);
-          }
-        });
+        return true;
+
+      } catch (functionalError) {
+        console.error(`[TOKEN_CACHE] VALIDATION_FAILED: Functional test error:`, functionalError.message);
+        return false;
       }
-      
-      console.debug(`[AUTH_DIAG] CACHE_FIX: ❌ Token cache still unavailable - this is the root cause of refresh failures`);
-      
+
     } catch (error) {
-      console.error(`[AUTH_DIAG] CACHE_FIX: Error investigating cache issue:`, error);
+      console.error(`[TOKEN_CACHE] VALIDATION_ERROR: Error during validation:`, error);
+      return false;
+    }
+  }
+
+  // v2.5.4: Validate existing token cache interface
+  _validateTokenCacheInterface(tokenCache) {
+    try {
+      if (!tokenCache) {
+        console.warn(`[TOKEN_CACHE] Cannot validate null/undefined token cache`);
+        return false;
+      }
+
+      console.debug(`[TOKEN_CACHE] Validating existing token cache interface`);
+      console.debug(`[TOKEN_CACHE] Existing cache type: ${tokenCache.constructor?.name || 'unknown'}`);
+
+      // Check if it's our injected cache
+      if (tokenCache === TokenCache) {
+        console.debug(`[TOKEN_CACHE] Found our injected TokenCache instance`);
+        this._tokenCacheInjected = true;
+        return true;
+      }
+
+      // Check if it's a different implementation with compatible interface
+      const hasGetItem = typeof tokenCache.getItem === 'function';
+      const hasSetItem = typeof tokenCache.setItem === 'function';
+      const hasRemoveItem = typeof tokenCache.removeItem === 'function';
+      const hasClear = typeof tokenCache.clear === 'function';
+
+      console.debug(`[TOKEN_CACHE] Interface compatibility:`, {
+        getItem: hasGetItem,
+        setItem: hasSetItem,
+        removeItem: hasRemoveItem,
+        clear: hasClear,
+        compatible: hasGetItem && hasSetItem && hasRemoveItem && hasClear
+      });
+
+      return hasGetItem && hasSetItem && hasRemoveItem && hasClear;
+
+    } catch (error) {
+      console.error(`[TOKEN_CACHE] Error validating token cache interface:`, error);
+      return false;
+    }
+  }
+
+  // v2.5.3: Legacy diagnostic method - kept for fallback debugging
+  _investigateTokenCacheIssue(authProvider) {
+    console.debug(`[AUTH_DIAG] CACHE_FIX: Token cache unavailable - injection should have been attempted`);
+    
+    // Simple diagnostic - check for alternative cache properties
+    const cacheProps = ['cache', '_cache', '_storage', 'tokenStorage'];
+    const foundProps = cacheProps.filter(prop => authProvider[prop]);
+    
+    if (foundProps.length > 0) {
+      console.debug(`[AUTH_DIAG] CACHE_FIX: Found alternative cache properties:`, foundProps);
+    } else {
+      console.debug(`[AUTH_DIAG] CACHE_FIX: No cache properties found - injection needed`);
     }
   }
 
