@@ -11,14 +11,7 @@
     );
 
     navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
-      const modifiedConstraints = { ...constraints };
-      if (modifiedConstraints.audio !== false) {
-        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getDisplayMedia to prevent echo");
-        modifiedConstraints.audio = false;
-      }
-      
-      return originalGetDisplayMedia(modifiedConstraints)
+      return originalGetDisplayMedia(constraints)
         .then((stream) => {
           console.debug("Screen sharing stream detected via getDisplayMedia");
           handleScreenShareStream(stream, "getDisplayMedia");
@@ -52,14 +45,7 @@
             typeof constraints.video.deviceId === "object" &&
             constraints.video.deviceId.exact));
 
-      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
-      const modifiedConstraints = { ...constraints };
-      if (isScreenShare && modifiedConstraints.audio !== false) {
-        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getUserMedia screen share to prevent echo");
-        modifiedConstraints.audio = false;
-      }
-
-      return originalGetUserMedia(modifiedConstraints)
+      return originalGetUserMedia(constraints)
         .then((stream) => {
           if (isScreenShare) {
             console.debug("Screen sharing stream detected");
@@ -84,39 +70,9 @@
     console.debug(`[SCREEN_SHARE_DIAG] Current active streams count: ${activeStreams.length}`);
     console.debug(`[SCREEN_SHARE_DIAG] isScreenSharing state: ${isScreenSharing}`);
     
-    // v2.5.4: Enhanced audio track analysis for echo diagnosis (#1800)
     const audioTracks = stream.getAudioTracks();
     const videoTracks = stream.getVideoTracks();
-    console.debug(`[SCREEN_SHARE_ECHO] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
-    
-    if (audioTracks.length > 0) {
-      console.warn(`[SCREEN_SHARE_ECHO] UNEXPECTED: Audio tracks still present despite audio blocking!`, {
-        audioTrackCount: audioTracks.length,
-        streamSource: source,
-        streamId: stream.id,
-        note: 'This suggests the audio blocking may not be working correctly'
-      });
-      
-      audioTracks.forEach((track, index) => {
-        const trackInfo = {
-          index: index,
-          trackId: track.id,
-          enabled: track.enabled,
-          muted: track.muted,
-          readyState: track.readyState,
-          kind: track.kind,
-          label: track.label
-        };
-        console.debug(`[SCREEN_SHARE_ECHO] Audio track ${index} details:`, trackInfo);
-        
-        // Check if this audio track might cause echo
-        if (track.enabled && !track.muted && track.readyState === 'live') {
-          console.error(`[SCREEN_SHARE_ECHO] CRITICAL: Active audio track still present despite blocking!`, trackInfo);
-        }
-      });
-    } else {
-      console.debug(`[SCREEN_SHARE_ECHO] SUCCESS: No audio tracks detected - echo prevention working`);
-    }
+    console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
 
     const electronAPI = window.electronAPI;
 

@@ -17,12 +17,12 @@
 		<release version="2.5.4" date="2025-09-03">
 			<description>
 				<ul>
-					<li>Fix: Resolve screen sharing echo by preventing audio track capture in screen share streams - eliminates audio feedback loop</li>
 					<li>Fix: Resolve missing screen-sharing-started IPC handler that could cause screen sharing session tracking issues</li>
 					<li>Enhancement: Add comprehensive diagnostic logging for tray icon notification timing to help troubleshoot notification display issues</li>
-					<li>Enhancement: Add detailed screen sharing echo diagnostics with audio track analysis and duplicate session detection</li>
+					<li>Enhancement: Add detailed screen sharing diagnostics with session tracking and duplicate detection capabilities</li>
 					<li>Enhancement: Add extensive Intune SSO diagnostic logging with troubleshooting guidance for D-Bus and Identity Broker issues</li>
 					<li>Documentation: Update RPM installation instructions to use modern dnf commands with proper sudo usage</li>
+					<li>Documentation: Add comprehensive Intune SSO troubleshooting guide with system requirements and common solutions</li>
 					<li>Update: Electron updated to 37.4.0 and electron-builder to 26.0.20 with latest security patches</li>
 				</ul>
 			</description>
