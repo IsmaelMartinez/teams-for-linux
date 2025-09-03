@@ -1,4 +1,4 @@
-// v2.5.4: Import token cache for authentication provider integration
+// v2.5.3: Import token cache for authentication provider integration
 const TokenCache = require('./tokenCache');
 
 class ReactHandler {
