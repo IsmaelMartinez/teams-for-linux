@@ -141,11 +141,11 @@ Combine both solutions:
 ## Implementation Tasks & Spikes
 
 ### Phase 1: Token Cache Bridge (Quick Win)
-- [ ] **SPIKE**: Analyze exact cache interface expected by Teams auth provider
-- [ ] **TASK**: Implement localStorage-backed cache bridge
-- [ ] **TASK**: Inject cache bridge into auth provider at runtime
-- [ ] **TASK**: Test silent token refresh functionality
-- [ ] **TASK**: Add comprehensive logging for cache operations
+- [x] **SPIKE**: Analyze exact cache interface expected by Teams auth provider
+- [x] **TASK**: Implement localStorage-backed cache bridge
+- [x] **TASK**: Inject cache bridge into auth provider at runtime
+- [x] **TASK**: Test silent token refresh functionality
+- [x] **TASK**: Add comprehensive logging for cache operations
 
 ### Phase 2: Secure Storage Integration (Long-term)
 - [ ] **SPIKE**: Compare keytar vs Electron safeStorage vs node-keyv
