@@ -141,7 +141,44 @@ if (!gotTheLock) {
   });
 
   // Screen sharing IPC handlers
+  // v2.5.4: Add missing screen-sharing-started event handler for #1800 echo issue diagnosis
+  ipcMain.on("screen-sharing-started", (event, sourceId) => {
+    try {
+      console.debug(`[SCREEN_SHARE_ECHO] Screen sharing started event received`, {
+        sourceId: sourceId,
+        timestamp: new Date().toISOString(),
+        currentSource: global.selectedScreenShareSource,
+        hasPreviewWindow: global.previewWindow && !global.previewWindow.isDestroyed()
+      });
+
+      // Check for potential duplicate sessions that could cause echo
+      if (global.selectedScreenShareSource !== null) {
+        console.warn(`[SCREEN_SHARE_ECHO] WARNING: Screen sharing already active!`, {
+          previousSource: global.selectedScreenShareSource,
+          newSource: sourceId,
+          potentialEcho: true
+        });
+      }
+
+      global.selectedScreenShareSource = sourceId;
+      
+      console.debug(`[SCREEN_SHARE_ECHO] Screen sharing source set:`, {
+        sourceId: sourceId,
+        sourceType: sourceId?.startsWith?.('screen:') ? 'screen' : 'window'
+      });
+
+    } catch (error) {
+      console.error(`[SCREEN_SHARE_ECHO] Error handling screen-sharing-started event:`, error);
+    }
+  });
+
   ipcMain.on("screen-sharing-stopped", () => {
+    console.debug(`[SCREEN_SHARE_ECHO] Screen sharing stopped event received`, {
+      timestamp: new Date().toISOString(),
+      previousSource: global.selectedScreenShareSource,
+      hasPreviewWindow: global.previewWindow && !global.previewWindow.isDestroyed()
+    });
+
     global.selectedScreenShareSource = null;
 
     // Close preview window when screen sharing stops

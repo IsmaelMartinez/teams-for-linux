@@ -483,10 +483,40 @@ class ReactHandler {
     );
     const hasModernReact = reactKeys.length > 0;
     
+    // v2.5.4: Enhanced debugging for tray icon timing issue (#1795)
     if (!hasLegacyReact && !hasModernReact) {
-      console.warn('ReactHandler: No React structure detected (legacy or modern)');
+      // Log additional timing information to help debug when Teams React loads
+      const currentTime = Date.now();
+      const timeSincePageLoad = currentTime - (window.performance?.timing?.navigationStart || 0);
+      
+      console.warn('ReactHandler: No React structure detected (legacy or modern)', {
+        timeSincePageLoad: timeSincePageLoad,
+        appElementExists: !!appElement,
+        appElementKeys: appElement ? Object.getOwnPropertyNames(appElement).length : 0,
+        documentReadyState: document.readyState,
+        teamsUrlPath: window.location.pathname
+      });
+      
+      // Check if Teams is still loading
+      const teamsLoadingIndicators = [
+        document.querySelector('[data-testid="loading-indicator"]'),
+        document.querySelector('.app-loading'),
+        document.querySelector('[aria-label*="loading"]'),
+        document.querySelector('[aria-label*="Loading"]')
+      ].filter(Boolean);
+      
+      if (teamsLoadingIndicators.length > 0) {
+        console.debug('ReactHandler: Teams appears to be still loading, React structure may not be ready yet');
+      }
+      
       return false;
     }
+    
+    console.debug('ReactHandler: React structure validation successful', {
+      hasLegacyReact,
+      hasModernReact,
+      reactKeyCount: reactKeys.length
+    });
     
     return true;
   }

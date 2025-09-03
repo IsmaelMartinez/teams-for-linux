@@ -25,6 +25,13 @@ class MutationObserverTitle {
         return;
       }
       
+      // v2.5.4: Enhanced debugging for tray icon timing issue (#1795)
+      console.debug("MutationTitle: Initial setup", {
+        currentTitle: window.document.title,
+        titleElementExists: !!titleElement,
+        documentReadyState: document.readyState
+      });
+      
       const observer = new window.MutationObserver(() => {
         try {
           // Validate and sanitize document title
@@ -36,12 +43,20 @@ class MutationObserverTitle {
           
           // Limit title length for security
           const sanitizedTitle = title.substring(0, 200);
-          console.debug(`title changed to ${sanitizedTitle}`);
+          console.debug(`MutationTitle: Title changed to "${sanitizedTitle}"`);
           
           // Safely extract number from title with input validation
           const regex = /^\((\d+)\)/;
           const match = regex.exec(sanitizedTitle);
           const number = match ? parseInt(match[1], 10) : 0;
+          
+          // v2.5.4: Enhanced debugging for unread count extraction
+          console.debug("MutationTitle: Extracting unread count", {
+            title: sanitizedTitle,
+            regexMatch: match,
+            extractedNumber: number,
+            regexPattern: regex.toString()
+          });
           
           // Validate extracted number
           if (isNaN(number) || number < 0 || number > 9999) {
@@ -52,6 +67,8 @@ class MutationObserverTitle {
           const event = new CustomEvent("unread-count", {
             detail: { number: number },
           });
+          
+          console.debug(`MutationTitle: Dispatching unread-count event with number: ${number}`);
           window.dispatchEvent(event);
         } catch (error) {
           console.error("MutationTitle: Error in observer callback:", error);
@@ -61,7 +78,7 @@ class MutationObserverTitle {
       observer.observe(titleElement, {
         childList: true,
       });
-      console.debug("MutationObserverTitle logic applied");
+      console.debug("MutationTitle: Observer successfully attached to title element");
     } catch (error) {
       console.error("MutationTitle: Error setting up mutation observer:", error);
     }

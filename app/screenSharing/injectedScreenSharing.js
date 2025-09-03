@@ -70,14 +70,38 @@
     console.debug(`[SCREEN_SHARE_DIAG] Current active streams count: ${activeStreams.length}`);
     console.debug(`[SCREEN_SHARE_DIAG] isScreenSharing state: ${isScreenSharing}`);
     
-    // Check for audio tracks that might cause echo
+    // v2.5.4: Enhanced audio track analysis for echo diagnosis (#1800)
     const audioTracks = stream.getAudioTracks();
     const videoTracks = stream.getVideoTracks();
-    console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
+    console.debug(`[SCREEN_SHARE_ECHO] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
     
-    audioTracks.forEach((track, index) => {
-      console.debug(`[SCREEN_SHARE_DIAG] Audio track ${index}: ${track.id}, enabled: ${track.enabled}, muted: ${track.muted}`);
-    });
+    if (audioTracks.length > 0) {
+      console.warn(`[SCREEN_SHARE_ECHO] POTENTIAL ECHO SOURCE: Audio tracks detected in screen share stream!`, {
+        audioTrackCount: audioTracks.length,
+        streamSource: source,
+        streamId: stream.id
+      });
+      
+      audioTracks.forEach((track, index) => {
+        const trackInfo = {
+          index: index,
+          trackId: track.id,
+          enabled: track.enabled,
+          muted: track.muted,
+          readyState: track.readyState,
+          kind: track.kind,
+          label: track.label
+        };
+        console.debug(`[SCREEN_SHARE_ECHO] Audio track ${index} details:`, trackInfo);
+        
+        // Check if this audio track might cause echo
+        if (track.enabled && !track.muted && track.readyState === 'live') {
+          console.warn(`[SCREEN_SHARE_ECHO] HIGH ECHO RISK: Active audio track detected!`, trackInfo);
+        }
+      });
+    } else {
+      console.debug(`[SCREEN_SHARE_ECHO] No audio tracks - echo risk minimal`);
+    }
 
     const electronAPI = window.electronAPI;
 
