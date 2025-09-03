@@ -7,8 +7,7 @@
       "Bash(npm start)",
       "mcp__github__search_issues",
       "Bash(npm run lint)",
-      "mcp__github__get_pull_request_comments",
-      "Bash(curl:*)"
+      "mcp__github__get_pull_request_comments"
     ],
     "deny": [],
     "ask": []
