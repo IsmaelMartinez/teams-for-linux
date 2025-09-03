@@ -309,7 +309,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.4: Validate token cache injection was successful
+  // v2.5.3: Validate token cache injection was successful
   _validateTokenCacheInjection(authProvider) {
     try {
       const tokenCache = authProvider._tokenCache;
