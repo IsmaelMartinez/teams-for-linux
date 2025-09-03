@@ -61,6 +61,14 @@ class ActivityHub {
     console.debug("[AUTH_DIAG] Authentication monitoring started - logging every 5 minutes with token cache management");
   }
 
+  stop() {
+    if (this._authMonitorInterval) {
+      clearInterval(this._authMonitorInterval);
+      this._authMonitorInterval = null;
+      console.debug("[AUTH_DIAG] Authentication monitoring stopped");
+    }
+  }
+
   setMachineState(state) {
     const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
     if (teams2IdleTracker) {

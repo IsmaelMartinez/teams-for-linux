@@ -122,16 +122,16 @@ class ReactHandler {
       console.debug(`[AUTH_DIAG] Token breakdown: ${authKeys.length} auth keys, ${refreshKeys.length} refresh tokens, ${msalKeys.length} MSAL keys`);
       
       // Original refresh token analysis
-      const refreshKeys = storageKeys.filter(key => 
+      const detailedRefreshKeys = storageKeys.filter(key => 
         key.toLowerCase().includes('refresh') ||
         key.toLowerCase().includes('rt') ||
         key.toLowerCase().includes('renew')
       );
-      console.debug(`[AUTH_DIAG] LocalStorage refresh-related keys: ${refreshKeys.length} found`);
+      console.debug(`[AUTH_DIAG] LocalStorage refresh-related keys: ${detailedRefreshKeys.length} found`);
       
       // Log key names (without values for security)
-      if (refreshKeys.length > 0) {
-        console.debug(`[AUTH_DIAG] Refresh token key names: ${refreshKeys.map(k => k.substring(0, 20) + '...').join(', ')}`);
+      if (detailedRefreshKeys.length > 0) {
+        console.debug(`[AUTH_DIAG] Refresh token key names: ${detailedRefreshKeys.map(k => k.substring(0, 20) + '...').join(', ')}`);
       }
       
       const sessionKeys = Object.keys(sessionStorage).filter(key => 

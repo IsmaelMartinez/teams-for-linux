@@ -112,11 +112,11 @@
 
     // Track stream and tracks for reference, but don't auto-close popup based on their state
     // Popup window should only close when manually closed or screen sharing explicitly stopped
-    const videoTracks = stream.getVideoTracks();
-    activeMediaTracks.push(...videoTracks);
+    const trackingVideoTracks = stream.getVideoTracks();
+    activeMediaTracks.push(...trackingVideoTracks);
 
     // Optional: Log when tracks end (for debugging, doesn't affect popup)
-    videoTracks.forEach((track, index) => {
+    trackingVideoTracks.forEach((track, index) => {
       track.addEventListener("ended", () => {
         console.debug("Video track", index, "ended (popup remains open)");
       });

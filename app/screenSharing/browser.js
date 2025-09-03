@@ -140,7 +140,7 @@ function closePreviews() {
       console.debug(`[SCREEN_SHARE_DIAG] Stream tracks before cleanup - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
       
       vidElement.pause();
-      vidElement.srcObject.getVideoTracks()[0].stop();
+      vidElement.srcObject.getVideoTracks().forEach(track => track.stop());
       
       console.debug(`[SCREEN_SHARE_DIAG] Preview stream ${stream.id} cleaned up`);
     } else {
