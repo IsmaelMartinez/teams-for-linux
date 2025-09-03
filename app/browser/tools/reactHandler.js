@@ -360,7 +360,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.4: Validate existing token cache interface
+  // v2.5.3: Validate existing token cache interface
   _validateTokenCacheInterface(tokenCache) {
     try {
       if (!tokenCache) {
