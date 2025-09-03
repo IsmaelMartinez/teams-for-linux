@@ -1,88 +1,62 @@
-# Intune Integration
+# Intune Integration Module
 
 This module provides integration with Microsoft Intune for Single Sign-On (SSO) and enterprise management features. It handles authentication flow and ensures compliance with Intune policies.
 
-## Prerequisites
+## Architecture
 
-Before enabling Intune SSO, ensure the following components are installed and configured:
+The module consists of the following key components:
 
-### System Requirements
+- **initSso()**: Initializes Intune SSO by connecting to Microsoft Identity Broker via D-Bus
+- **setupUrlFilter()**: Configures URL filtering to intercept Microsoft authentication requests
+- **isSsoUrl()**: Determines if a URL should be handled by Intune SSO
+- **addSsoCookie()**: Injects SSO credentials into authentication requests
 
-1. **Microsoft Identity Broker**: The `microsoft-identity-broker` service must be installed and running
-   - Usually provided by Microsoft Intune Company Portal or similar enterprise software
-   - Communicates via D-Bus interface `com.microsoft.identity.broker1`
+## Technical Implementation
 
-2. **D-Bus System**: Linux D-Bus system bus must be available and functioning
-   - Most Linux distributions have this by default
-   - Required for communication with the Identity Broker
+### D-Bus Integration
 
-3. **Valid Intune Account**: At least one Intune-managed account must be configured
-   - Account must have valid Primary Refresh Token (PRT)
-   - Account should have appropriate Teams/Office 365 licenses
+The module communicates with Microsoft Identity Broker using D-Bus interface `com.microsoft.identity.broker1`:
 
-### Configuration
-
-Enable Intune SSO in your configuration file. You can place the configuration in either:
-
-**User-specific**: `~/.config/teams-for-linux/config.json`
-```json
-{
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com"
-}
+```javascript
+const brokerService = dbus
+  .sessionBus()
+  .getService("com.microsoft.identity.broker1");
 ```
 
-**System-wide** (common in enterprise environments): `/etc/teams-for-linux/config.json`
-```json
-{
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com"
-}
-```
+### Authentication Flow
 
-**Configuration Options:**
-- `ssoInTuneEnabled`: Enable/disable Intune SSO integration (default: false)
-- `ssoInTuneAuthUser`: Specific user account to use (default: "" - uses first available account)
+1. **Account Discovery**: Retrieves available Intune accounts from Identity Broker
+2. **Account Selection**: Uses configured user or selects first available account
+3. **PRT Token Acquisition**: Acquires Primary Refresh Token (PRT) for SSO
+4. **Request Injection**: Adds SSO credentials to Microsoft authentication requests
 
-## Troubleshooting
+### Configuration Integration
 
-### Common Issues
+The module integrates with the main configuration system to read:
+- `ssoInTuneEnabled`: Enable/disable Intune SSO integration
+- `ssoInTuneAuthUser`: Specific user account to use for authentication
 
-**1. "Failed to find microsoft-identity-broker DBus interface"**
-- Ensure Microsoft Identity Broker is installed and running
-- Check if the broker service is accessible: `busctl list | grep microsoft.identity`
+## Diagnostic Logging
 
-**2. "No InTune accounts found"**
-- Configure accounts in Microsoft Intune Company Portal
-- Verify accounts are properly enrolled and have valid tokens
+The module provides comprehensive diagnostic logging with `[INTUNE_DIAG]` prefixes:
+- SSO initialization status and errors
+- Available account enumeration
+- PRT token acquisition details
+- Authentication request processing
 
-**3. "Failed to find matching InTune account"**
-- Check if `ssoInTuneAuthUser` matches an available account exactly
-- Use `[INTUNE_DIAG]` logs to see available accounts
+## Error Handling
 
-**4. "Failed to retrieve Intune SSO cookie"**
-- Account may need reauthentication in Company Portal
-- Check if Primary Refresh Token (PRT) is valid
+Robust error handling includes:
+- D-Bus connection failures
+- Missing Identity Broker service
+- Account authentication failures
+- PRT token acquisition errors
 
-### Debug Logging
+## Dependencies
 
-Enable debug logging to see detailed Intune diagnostics:
+- `@homebridge/dbus-native`: D-Bus communication with Microsoft Identity Broker
+- Microsoft Identity Broker service (system dependency)
 
-```bash
-DEBUG=* teams-for-linux
-```
+## User Documentation
 
-Look for `[INTUNE_DIAG]` prefixed messages that provide detailed information about:
-- SSO initialization status
-- Available accounts
-- Authentication flow
-- Error details and suggestions
-
-### Verification
-
-To verify Intune integration is working:
-1. Start teams-for-linux with debug logging enabled
-2. Look for `[INTUNE_DIAG] InTune SSO account configured successfully`
-3. Navigate to `https://login.microsoftonline.com/` - should automatically authenticate
-
-For configuration options related to Intune SSO, please refer to the [Configuration Documentation](../../docs-site/docs/configuration.md).
+For end-user configuration and troubleshooting, see [docs-site/docs/intune-sso.md](../../docs-site/docs/intune-sso.md).
