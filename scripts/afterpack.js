@@ -1,4 +1,5 @@
-const { flipFuses, FuseVersion, FuseV1Options } = require("@electron/fuses");
+// Note: @electron/fuses is now an ES module, imported dynamically
+let flipFuses, FuseVersion, FuseV1Options;
 const { chmod } = require("fs/promises");
 const path = require("path");
 const { generateReleaseInfo } = require("./generateReleaseInfo");
@@ -23,6 +24,12 @@ function getAppFileName(context) {
 
 exports.default = async function afterPack(context) {
   try {
+    // Dynamically import @electron/fuses ES module
+    const fuses = await import("@electron/fuses");
+    flipFuses = fuses.flipFuses;
+    FuseVersion = fuses.FuseVersion;
+    FuseV1Options = fuses.FuseV1Options;
+
     // Ensure release info is generated for Linux publishing
     if (context.electronPlatformName === "linux") {
       await generateReleaseInfoForLinux();

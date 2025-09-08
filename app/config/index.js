@@ -462,6 +462,19 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable menu entry for controlling video elements",
         type: "boolean",
       },
+      mqtt: {
+        default: {
+          enabled: false,
+          brokerUrl: "",
+          username: "",
+          password: "",
+          clientId: "teams-for-linux",
+          topicPrefix: "teams",
+          statusTopic: "status",
+        },
+        describe: "MQTT configuration for publishing Teams status updates",
+        type: "object",
+      },
     })
     .help()
     .parse(process.argv.slice(1));

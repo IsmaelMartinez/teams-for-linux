@@ -286,6 +286,8 @@ function onDidFinishLoad() {
 
   // Inject browser functionality
   injectScreenSharingLogic();
+  injectNotificationLogic();
+  injectBrowserLogic();
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
@@ -305,6 +307,41 @@ function injectScreenSharingLogic() {
     window.webContents.executeJavaScript(script);
   } catch (err) {
     console.error("Failed to load injected screen sharing script:", err);
+  }
+}
+
+function injectNotificationLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "browser",
+    "notifications",
+    "injectedNotification.js"
+  );
+  try {
+    const script = fs.readFileSync(scriptPath, "utf8");
+    window.webContents.executeJavaScript(script);
+  } catch (err) {
+    console.error("Failed to load injected notification script:", err);
+  }
+}
+
+function injectBrowserLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "browser",
+    "injectedBrowser.js"
+  );
+  try {
+    const script = fs.readFileSync(scriptPath, "utf8");
+    window.webContents.executeJavaScript(script);
+  } catch (err) {
+    console.error("Failed to load injected browser script:", err);
   }
 }
 
