@@ -59,7 +59,6 @@ class StatusMonitor {
                 lastStatus = status;
                 
                 // Send status change to main process via IPC
-                // Main process handles MQTT publishing through userStatusChangedHandler
                 this.ipcRenderer.invoke('user-status-changed', {
                     data: { status: status }
                 });

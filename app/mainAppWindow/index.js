@@ -329,85 +329,19 @@ function injectNotificationLogic() {
 }
 
 function injectBrowserLogic() {
-  const script = `
-    (function() {
-      console.debug('Starting simplified MQTT status monitoring');
-      
-      window.electronAPI.getConfig().then((config) => {
-        if (!config.mqtt?.enabled) {
-          console.debug('MQTT disabled, skipping status monitoring');
-          return;
-        }
-        
-        console.debug('MQTT enabled - starting minimal status detection');
-        
-        let lastStatus = null;
-        
-        // Simplified status detection - minimal DOM checking
-        function detectStatus() {
-          try {
-            // Look for user's own status indicator - be very specific to avoid false positives
-            const statusElements = document.querySelectorAll('[data-tid="presence-status"], .presence-status, [aria-label*="status"], .status-message');
-            
-            for (const element of statusElements) {
-              const text = (element.textContent || '').toLowerCase();
-              const ariaLabel = (element.getAttribute('aria-label') || '').toLowerCase();
-              const className = (element.className || '').toLowerCase();
-              
-              // Be more specific about status detection
-              let detectedStatus = null;
-              
-              if (text.includes('available') || ariaLabel.includes('available') || className.includes('available')) {
-                detectedStatus = 1;
-              } else if (text.includes('busy') || ariaLabel.includes('busy') || className.includes('busy')) {
-                detectedStatus = 2;
-              } else if (text.includes('do not disturb') || ariaLabel.includes('do not disturb') || text.includes('dnd')) {
-                detectedStatus = 3;
-              } else if (text.includes('away') || ariaLabel.includes('away')) {
-                detectedStatus = 4;
-              } else if (text.includes('be right back') || text.includes('brb')) {
-                detectedStatus = 5;
-              }
-              
-              if (detectedStatus && detectedStatus !== lastStatus) {
-                console.debug('Real Teams status change detected:', lastStatus, '->', detectedStatus);
-                lastStatus = detectedStatus;
-                window.electronAPI.setUserStatus({ data: { status: detectedStatus } });
-                return; // Found and processed, stop looking
-              }
-            }
-            
-          } catch (error) {
-            console.debug('Status detection error:', error.message);
-          }
-        }
-        
-        // Check for status changes every 10 seconds (less aggressive)
-        const statusInterval = setInterval(detectStatus, 10000);
-        
-        // Also check on visibility change (when user comes back to app)
-        document.addEventListener('visibilitychange', () => {
-          if (!document.hidden) {
-            setTimeout(detectStatus, 1000); // Check after 1 second when visible
-          }
-        });
-        
-        // Initial status check after Teams loads
-        setTimeout(detectStatus, 5000);
-        
-        console.debug('Minimal MQTT status monitoring initialized');
-        
-      }).catch(error => {
-        console.error('Failed to initialize MQTT status monitoring:', error);
-      });
-    })();
-  `;
-  
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "browser",
+    "injectedBrowser.js"
+  );
   try {
+    const script = fs.readFileSync(scriptPath, "utf8");
     window.webContents.executeJavaScript(script);
-    console.debug("Minimal browser script injected for MQTT");
   } catch (err) {
-    console.error("Failed to inject browser script:", err);
+    console.error("Failed to load injected browser script:", err);
   }
 }
 
