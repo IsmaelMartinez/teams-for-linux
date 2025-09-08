@@ -19,6 +19,7 @@ require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("os");
+const path = require("path");
 
 // Default configuration for the screen sharing thumbnail preview (avoid magic values)
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
@@ -108,15 +109,25 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
     if (isMac) {
       console.log("Setting Dock icon for macOS");
-      const icon = nativeImage.createFromPath(iconChooser.getFile());
+      let dockIconPath;
+      
+      // Use custom icon if specified, otherwise use default 256x256 icon for dock
+      if (config.appIcon && config.appIcon.trim() !== "") {
+        dockIconPath = config.appIcon;
+      } else {
+        dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
+      }
+      
+      const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
+      
       if (iconSize.width < 128) {
         console.warn(
-          "unable to set dock icon for macOS, icon size is less than 128x128, current size " +
-            iconSize.width +
-            "x" +
-            iconSize.height
+          `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
         );
+        // Resize the icon to meet macOS dock requirements
+        const resizedIcon = icon.resize({ width: 128, height: 128 });
+        app.dock.setIcon(resizedIcon);
       } else {
         app.dock.setIcon(icon);
       }
@@ -137,7 +148,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         if (source) {
           handleScreenSourceSelection(source, callback);
         } else {
-          callback({ video: null, audio: false });
+          callback({ video: null });
         }
       });
     }

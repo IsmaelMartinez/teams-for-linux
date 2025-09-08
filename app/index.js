@@ -13,6 +13,7 @@ const {
 const path = require("path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
+const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const os = require("os");
 const isMac = os.platform() === "darwin";
 
@@ -90,6 +91,31 @@ if (!gotTheLock) {
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
+
+  // IPC Security: Add validation wrappers for all IPC handlers
+  const originalIpcHandle = ipcMain.handle.bind(ipcMain);
+  const originalIpcOn = ipcMain.on.bind(ipcMain);
+
+  ipcMain.handle = (channel, handler) => {
+    return originalIpcHandle(channel, (event, ...args) => {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+        console.error(`[IPC Security] Rejected handle request for channel: ${channel}`);
+        return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
+      }
+      return handler(event, ...args);
+    });
+  };
+
+  ipcMain.on = (channel, handler) => {
+    return originalIpcOn(channel, (event, ...args) => {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+        console.error(`[IPC Security] Rejected event for channel: ${channel}`);
+        return;
+      }
+      return handler(event, ...args);
+    });
+  };
+
   ipcMain.on("config-file-changed", restartApp);
   ipcMain.handle("get-config", async () => {
     return config;
@@ -417,6 +443,10 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+  
+  // Log IPC Security configuration status
+  console.log('🔒 IPC Security: Channel allowlisting enabled');
+  console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
 }
 
 async function handleGetSystemIdleState() {

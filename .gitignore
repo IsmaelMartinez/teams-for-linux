@@ -9,3 +9,4 @@ flatpak-build/
 .DS_Store
 release-info.json
 debian-changelog
+.mcp.json

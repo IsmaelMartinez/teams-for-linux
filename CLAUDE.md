@@ -76,23 +76,11 @@ The project currently lacks comprehensive test coverage. When contributing:
 
 ## Documentation Deployment
 
-The project documentation is automatically deployed to GitHub Pages from the `/docs` folder:
+The project documentation is currently undergoing a major enhancement and migration to Docusaurus. Once complete, it will be deployed to GitHub Pages via GitHub Actions.
 
-- **Live Documentation**: https://ismaelmartinez.github.io/teams-for-linux/
-- **Source**: `/docs` folder on main branch
-- **Deployment**: Automatic on every push to main branch
-- **Theme**: GitHub's default Jekyll theme
-
-### Updating Documentation
-- Edit markdown files in `/docs` folder
-- Push changes to main branch
-- GitHub Pages automatically rebuilds and deploys within 1-5 minutes
-- No manual deployment steps required
-
-### Known Limitations
-- Mermaid diagrams display as raw code (acceptable degradation)
-- GitHub alert syntax (`[!NOTE]`, `[!TIP]`) may not render (displays as text)
-- Jekyll uses basic theme with limited customization
+- **Future Platform**: Docusaurus
+- **Deployment Method**: GitHub Actions to GitHub Pages
+- **Benefits**: Enhanced search, improved navigation, rich content support (including Mermaid diagrams), and a mobile-first design.
 
 ## Important Notes
 

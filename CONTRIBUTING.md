@@ -54,23 +54,22 @@ cd dist && sudo snap install teams-for-linux_*.snap --dangerous
 
 ## Documentation
 
-### Updating Documentation
+Project documentation has been migrated to Docusaurus and is deployed to GitHub Pages via GitHub Actions at https://ismaelmartinez.github.io/teams-for-linux/.
 
-Project documentation is located in the `/docs` folder and automatically deployed to **[GitHub Pages](https://ismaelmartinez.github.io/teams-for-linux/)**.
+### Contributing to Documentation
 
-**To update documentation:**
-1. Edit markdown files in `/docs` folder
-2. Push changes to main branch
-3. GitHub Pages automatically rebuilds within 1-5 minutes
+Documentation contributions involve:
+1. **Edit Markdown/MDX files** in the `docs-site/docs/` directory
+2. **Build locally to preview changes**:
+   ```bash
+   cd docs-site
+   npm install
+   npm run start
+   ```
+3. **Update navigation** in `docs-site/sidebars.ts` if adding new pages
+4. **Submit pull requests** which trigger automated builds and deployments
 
-**Documentation Structure:**
-- `docs/README.md` - Homepage with navigation
-- `docs/configuration.md` - Complete configuration guide  
-- `docs/knowledge-base.md` - Troubleshooting and FAQ
-- `docs/screen-sharing.md` - Screen sharing implementation
-- Additional guides for specific features
-
-**Note:** When adding new features, update relevant documentation and add links to `docs/README.md` navigation.
+See the [Documentation Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/contributing#documentation) for detailed instructions.
 
 ## Release Process
 
@@ -96,4 +95,4 @@ Project documentation is located in the `/docs` folder and automatically deploye
 
 4. **Commit and push** your changes, then open a pull request.
 
-See [`docs/RELEASE_INFO.md`](docs/RELEASE_INFO.md) for technical details on release automation.
+See the [Release Automation Guide](https://ismaelmartinez.github.io/teams-for-linux/release-info) for technical details on release automation.

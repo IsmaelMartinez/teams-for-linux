@@ -97,10 +97,11 @@ sequenceDiagram
 
 ### Security Features
 
-- **Context Isolation**: Enabled for renderer security
-- **Node Integration**: Disabled in renderer process  
-- **Preload Script**: Secure IPC bridge using `contextBridge`
-- **Sandboxing**: Compatible with Electron sandbox mode
+⚠️ **Note**: As of v2.6+, security configuration has been modified for Teams DOM access:
+- **Context Isolation**: **Disabled** to enable Teams DOM access functionality
+- **Node Integration**: **Enabled** for browser tools functionality
+- **Preload Script**: Direct window object exposure (no contextBridge)
+- **Sandboxing**: **Disabled** to enable system API access
 
 ### Desktop Source Detection
 

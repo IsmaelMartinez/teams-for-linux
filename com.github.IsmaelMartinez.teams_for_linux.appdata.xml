@@ -14,6 +14,45 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.3" date="2025-09-03">
+			<description>
+				<ul>
+					<li>Fix: Implement token cache bridge to resolve authentication refresh issues - provides missing _tokenCache interface to Teams authentication provider</li>
+					<li>Enhancement: Add comprehensive diagnostic logging for authentication refresh issues to help diagnose persistent "Please sign in again" problems</li>
+					<li>Enhancement: Add detailed screen sharing audio duplication logging to identify echo issues and multiple session creation</li>
+				</ul>
+			</description>
+		</release>
+		<release version="2.5.2" date="2025-09-02">
+			<description>
+				<ul>
+					<li>Fix: Restore DOM access functionality by disabling contextIsolation and sandbox for Teams browser integration</li>
+					<li>Security: Implement comprehensive compensating controls including Content Security Policy headers and IPC channel validation</li>
+					<li>Enhancement: Add React version detection to monitor for breaking changes in React 19+ timeline</li>
+					<li>Changed from --webDebug --logConfig='{}' to ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'</li>
+					<li>Fix: Revert audio channel disabling in screen sharing as it doesn't resolve echo issues</li>
+				</ul>
+			</description>
+		</release>
+		<release version="2.5.1" date="2025-08-26">
+			<description>
+				<ul>
+					<li>Fix: Attempt to address screen sharing audio echo by preventing audio channel creation during screen sharing</li>
+					<li>Update: Electron updated to 37.3.1 with latest security patches</li>
+					<li>Update: ESLint and related dependencies updated to latest versions</li>
+				</ul>
+			</description>
+		</release>
+		<release version="2.5.0" date="2025-08-18">
+			<description>
+				<ul>
+					<li>Major: Complete documentation platform migration to Docusaurus with modern search and mobile-first design</li>
+					<li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles. Might fix #1357</li>
+					<li>Fix: macOS dock icon now displays correctly with proper 128x128 minimum size requirement and fallback resizing</li>
+					<li>Fix: preload browser scripts now correctly handle context isolation. Might fix #1789 and #1795</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.4.0" date="2025-08-18">
 			<description>
 				<ul>
@@ -21,6 +60,7 @@
 					<li>Update: Electron upgraded to 37.3.0</li>
 					<li>Improvement: Enhanced contributor documentation with GitHub Pages workflow</li>
 					<li>Enhancement: Added comprehensive documentation links throughout project</li>
+					<li>Fix: Remove duplicate instantiation of the notifications object</li>
 				</ul>
 			</description>
 		</release>
