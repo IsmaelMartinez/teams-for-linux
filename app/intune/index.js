@@ -37,35 +37,65 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
   }
 }
 
-exports.initSso = function initIntuneSso(ssoInTuneAuthUser) {
-  console.debug("Initializing InTune SSO");
-  brokerService.getInterface(
-    "/com/microsoft/identity/broker1",
-    "com.microsoft.identity.Broker1",
-    function (err, broker) {
-      if (err) {
-        console.warn("Failed to find microsoft-identity-broker DBus interface");
-        return;
-      }
-      broker.getAccounts(
-        "0.0",
-        "",
-        JSON.stringify({
-          clientId: "88200948-af09-45a1-9c03-53cdcc75c183",
-          redirectUri: "urn:ietf:oob",
-        }),
-        function (err, resp) {
-          if (err) {
-            console.warn(
-              "Failed to communicate with microsoft-identity-broker",
-            );
-            return;
+function waitForBrokerInterfaceAsync(retries, delay) {
+  return new Promise((resolve, reject) => {
+    function attempt(remaining) {
+      brokerService.getInterface(
+        "/com/microsoft/identity/broker1",
+        "com.microsoft.identity.Broker1",
+        function (err, broker) {
+          if (!err && broker) {
+            console.debug("microsoft-identity-broker DBus interface is ready");
+            return resolve(broker);
           }
-          processInTuneAccounts(resp, ssoInTuneAuthUser);
-        },
+
+          if (err?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
+            return reject(new Error("not found, ensure it's installed"));
+          }
+
+          if (remaining > 0) {
+            console.debug(
+              `microsoft-identity-broker interface not ready, retrying in ${delay}ms (${remaining} attempts left)`
+            );
+            setTimeout(() => attempt(remaining - 1), delay);
+          } else {
+            return reject(err || new Error("Interface not ready"));
+          }
+        }
       );
-    },
-  );
+    }
+
+    attempt(retries);
+  });
+}
+
+function getBrokerAccountsAsync(broker) {
+  return new Promise((resolve, reject) => {
+    broker.getAccounts(
+      "0.0",
+      "",
+      JSON.stringify({
+        clientId: "88200948-af09-45a1-9c03-53cdcc75c183",
+        redirectUri: "urn:ietf:oob",
+      }),
+      (err, resp) => {
+        if (err) return reject(err);
+        resolve(resp);
+      }
+    );
+  });
+}
+
+exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
+  console.debug("Initializing InTune SSO");
+
+  try {
+    const broker = await waitForBrokerInterfaceAsync(10, 500);
+    const resp = await getBrokerAccountsAsync(broker);
+    processInTuneAccounts(resp, ssoInTuneAuthUser);
+  } catch (err) {
+    console.warn(`Broker ${err.message}, cannot initialize SSO`);
+  }
 };
 
 exports.setupUrlFilter = function setupUrlFilter(filter) {
