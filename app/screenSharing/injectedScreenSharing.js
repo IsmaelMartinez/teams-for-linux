@@ -10,55 +10,72 @@
       navigator.mediaDevices
     );
 
-    navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      return originalGetDisplayMedia(constraints)
-        .then((stream) => {
-          console.debug("Screen sharing stream detected via getDisplayMedia");
-          handleScreenShareStream(stream, "getDisplayMedia");
-          return stream;
-        })
-        .catch((error) => {
-          console.error("getDisplayMedia error:", error);
-          throw error;
-        });
-    };
+    navigator.mediaDevices.getDisplayMedia = new Proxy(originalGetDisplayMedia, {
+      apply: (target, thisArg, args) => {
+        let constraints = args[0] || {};
+        if (constraints.video) {
+          console.debug("[SCREEN_SHARE_ECHO] Forcing audio to false in getDisplayMedia constraints");
+          constraints = { ...constraints, audio: false };
+        }
+        return Reflect.apply(target, thisArg, [constraints])
+          .then((stream) => {
+            console.debug("Screen sharing stream detected via getDisplayMedia");
+            handleScreenShareStream(stream, "getDisplayMedia");
+            return stream;
+          })
+          .catch((error) => {
+            console.error("getDisplayMedia error:", error);
+            throw error;
+          });
+      }
+    });
 
     // Also hook into getUserMedia for fallback detection
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
       navigator.mediaDevices
     );
 
-    navigator.mediaDevices.getUserMedia = function (constraints) {
-      // Check if this is a screen sharing stream - handle multiple constraint formats
-      const isScreenShare =
-        constraints &&
-        constraints.video &&
-        // Electron format
-        (constraints.video.chromeMediaSource === "desktop" ||
-          constraints.video.mandatory?.chromeMediaSource === "desktop" ||
-          // Teams format
-          constraints.video.chromeMediaSourceId ||
-          constraints.video.mandatory?.chromeMediaSourceId ||
-          // Generic desktop capture
-          (typeof constraints.video === "object" &&
-            constraints.video.deviceId &&
-            typeof constraints.video.deviceId === "object" &&
-            constraints.video.deviceId.exact));
+    navigator.mediaDevices.getUserMedia = new Proxy(originalGetUserMedia, {
+      apply: (target, thisArg, args) => {
+        let constraints = args[0] || {};
+        
+        // Check if this is a screen sharing stream - handle multiple constraint formats
+        const isScreenShare =
+          constraints &&
+          constraints.video &&
+          // Electron format
+          (constraints.video.chromeMediaSource === "desktop" ||
+            constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+            // Teams format
+            constraints.video.chromeMediaSourceId ||
+            constraints.video.mandatory?.chromeMediaSourceId ||
+            // Generic desktop capture
+            (typeof constraints.video === "object" &&
+              constraints.video.deviceId &&
+              typeof constraints.video.deviceId === "object" &&
+              constraints.video.deviceId.exact));
 
-      return originalGetUserMedia(constraints)
-        .then((stream) => {
-          if (isScreenShare) {
-            console.debug("Screen sharing stream detected");
-            handleScreenShareStream(stream, "getUserMedia");
-          }
+        // Force audio to false for screen sharing streams
+        if (isScreenShare && constraints.audio !== false) {
+          console.debug("[SCREEN_SHARE_ECHO] Forcing audio to false in getUserMedia screen share constraints");
+          constraints = { ...constraints, audio: false };
+        }
 
-          return stream;
-        })
-        .catch((error) => {
-          console.error("getUserMedia error:", error);
-          throw error;
-        });
-    };
+        return Reflect.apply(target, thisArg, [constraints])
+          .then((stream) => {
+            if (isScreenShare) {
+              console.debug("Screen sharing stream detected");
+              handleScreenShareStream(stream, "getUserMedia");
+            }
+
+            return stream;
+          })
+          .catch((error) => {
+            console.error("getUserMedia error:", error);
+            throw error;
+          });
+      }
+    });
   }
 
   // Centralized handler for screen sharing streams
@@ -74,17 +91,17 @@
     const videoTracks = stream.getVideoTracks();
     console.debug(`[SCREEN_SHARE_DIAG] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
     
-    // v2.5.4: Prevent audio echo by disabling audio tracks after stream creation
-    // This maintains stream compatibility while preventing feedback loops
+    // v2.5.4: Audio echo prevention now handled by forcing audio: false in constraints
+    // This should result in no audio tracks being present in the stream
     if (audioTracks.length > 0) {
-      console.debug(`[SCREEN_SHARE_ECHO] Disabling ${audioTracks.length} audio tracks to prevent echo`);
+      console.warn(`[SCREEN_SHARE_ECHO] WARNING: Audio tracks still present despite constraint blocking!`);
+      console.debug(`[SCREEN_SHARE_ECHO] Disabling ${audioTracks.length} unexpected audio tracks as fallback`);
       audioTracks.forEach((track, index) => {
-        console.debug(`[SCREEN_SHARE_ECHO] Disabling audio track ${index}: ${track.label}`);
-        track.enabled = false; // Disable rather than stop to maintain stream structure
+        console.debug(`[SCREEN_SHARE_ECHO] Disabling fallback audio track ${index}: ${track.label}`);
+        track.enabled = false;
       });
-      console.debug(`[SCREEN_SHARE_ECHO] Audio tracks disabled - echo prevention active`);
     } else {
-      console.debug(`[SCREEN_SHARE_ECHO] No audio tracks to disable`);
+      console.debug(`[SCREEN_SHARE_ECHO] SUCCESS: No audio tracks present - echo prevention working`);
     }
 
     const electronAPI = window.electronAPI;
