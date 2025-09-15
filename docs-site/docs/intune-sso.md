@@ -69,7 +69,7 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 Enable debug logging to see detailed Intune diagnostics:
 
 ```bash
-DEBUG=* teams-for-linux
+ELECTRON_ENABLE_LOGGING=true teams-for-linux
 ```
 
 Look for `[INTUNE_DIAG]` prefixed messages that provide detailed information about:
