@@ -11,21 +11,30 @@
     );
 
     navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
-      const modifiedConstraints = { ...constraints };
-      if (modifiedConstraints.audio !== false) {
-        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getDisplayMedia to prevent echo");
-        modifiedConstraints.audio = false;
-      }
+      console.debug("[SCREEN_SHARE_DIAG] getDisplayMedia call intercepted", {
+        hasAudioConstraint: !!constraints?.audio,
+        hasVideoConstraint: !!constraints?.video,
+        timestamp: new Date().toISOString(),
+        activeStreamsCount: activeStreams.length
+      });
       
-      return originalGetDisplayMedia(modifiedConstraints)
+      return originalGetDisplayMedia(constraints)
         .then((stream) => {
-          console.debug("Screen sharing stream detected via getDisplayMedia");
+          console.debug("[SCREEN_SHARE_DIAG] Screen sharing stream created via getDisplayMedia", {
+            streamId: stream.id,
+            audioTracks: stream.getAudioTracks().length,
+            videoTracks: stream.getVideoTracks().length,
+            totalActiveStreams: activeStreams.length
+          });
           handleScreenShareStream(stream, "getDisplayMedia");
           return stream;
         })
         .catch((error) => {
-          console.error("getDisplayMedia error:", error);
+          console.error("[SCREEN_SHARE_DIAG] getDisplayMedia failed", {
+            error: error.message,
+            errorName: error.name,
+            constraints: constraints
+          });
           throw error;
         });
     };
@@ -52,24 +61,38 @@
             typeof constraints.video.deviceId === "object" &&
             constraints.video.deviceId.exact));
 
-      // v2.5.4: Prevent audio echo by disabling audio in screen sharing constraints
-      const modifiedConstraints = { ...constraints };
-      if (isScreenShare && modifiedConstraints.audio !== false) {
-        console.debug("[SCREEN_SHARE_ECHO] Disabling audio in getUserMedia screen share to prevent echo");
-        modifiedConstraints.audio = false;
+      if (isScreenShare) {
+        console.debug("[SCREEN_SHARE_DIAG] getUserMedia call for screen sharing detected", {
+          hasAudioConstraint: !!constraints?.audio,
+          videoConstraintType: typeof constraints.video,
+          chromeMediaSource: constraints.video?.chromeMediaSource,
+          chromeMediaSourceId: !!constraints.video?.chromeMediaSourceId,
+          activeStreamsCount: activeStreams.length,
+          currentScreenSharingState: isScreenSharing
+        });
       }
 
-      return originalGetUserMedia(modifiedConstraints)
+      return originalGetUserMedia(constraints)
         .then((stream) => {
           if (isScreenShare) {
-            console.debug("Screen sharing stream detected");
+            console.debug("[SCREEN_SHARE_DIAG] Screen sharing stream created via getUserMedia", {
+              streamId: stream.id,
+              audioTracks: stream.getAudioTracks().length,
+              videoTracks: stream.getVideoTracks().length
+            });
             handleScreenShareStream(stream, "getUserMedia");
           }
 
           return stream;
         })
         .catch((error) => {
-          console.error("getUserMedia error:", error);
+          if (isScreenShare) {
+            console.error("[SCREEN_SHARE_DIAG] getUserMedia screen sharing failed", {
+              error: error.message,
+              errorName: error.name,
+              constraints: constraints
+            });
+          }
           throw error;
         });
     };
@@ -77,64 +100,39 @@
 
   // Centralized handler for screen sharing streams
   function handleScreenShareStream(stream, source) {
-    console.debug("Screen sharing stream started from:", source);
-    
-    // v2.5.3: Enhanced logging for audio duplication diagnosis
-    console.debug(`[SCREEN_SHARE_DIAG] Stream created - ID: ${stream.id}, Source: ${source}`);
-    console.debug(`[SCREEN_SHARE_DIAG] Current active streams count: ${activeStreams.length}`);
-    console.debug(`[SCREEN_SHARE_DIAG] isScreenSharing state: ${isScreenSharing}`);
-    
-    // v2.5.4: Enhanced audio track analysis for echo diagnosis (#1800)
-    const audioTracks = stream.getAudioTracks();
-    const videoTracks = stream.getVideoTracks();
-    console.debug(`[SCREEN_SHARE_ECHO] Stream tracks - Audio: ${audioTracks.length}, Video: ${videoTracks.length}`);
-    
-    if (audioTracks.length > 0) {
-      console.warn(`[SCREEN_SHARE_ECHO] UNEXPECTED: Audio tracks still present despite audio blocking!`, {
-        audioTrackCount: audioTracks.length,
-        streamSource: source,
-        streamId: stream.id,
-        note: 'This suggests the audio blocking may not be working correctly'
-      });
-      
-      audioTracks.forEach((track, index) => {
-        const trackInfo = {
-          index: index,
-          trackId: track.id,
-          enabled: track.enabled,
-          muted: track.muted,
-          readyState: track.readyState,
-          kind: track.kind,
-          label: track.label
-        };
-        console.debug(`[SCREEN_SHARE_ECHO] Audio track ${index} details:`, trackInfo);
-        
-        // Check if this audio track might cause echo
-        if (track.enabled && !track.muted && track.readyState === 'live') {
-          console.error(`[SCREEN_SHARE_ECHO] CRITICAL: Active audio track still present despite blocking!`, trackInfo);
-        }
-      });
-    } else {
-      console.debug(`[SCREEN_SHARE_ECHO] SUCCESS: No audio tracks detected - echo prevention working`);
-    }
+    console.debug("[SCREEN_SHARE_DIAG] Processing new screen sharing stream", {
+      streamId: stream.id,
+      source: source,
+      currentlyScreenSharing: isScreenSharing,
+      existingActiveStreams: activeStreams.length,
+      existingStreamIds: activeStreams.map(s => s.id)
+    });
 
     const electronAPI = window.electronAPI;
 
     if (!electronAPI) {
-      console.error("electronAPI not available");
+      console.error("[SCREEN_SHARE_DIAG] electronAPI not available - cannot notify main process");
       return;
     }
 
-    // Check if we're creating a duplicate session
+    // Check if we're creating a duplicate session - this could cause issues
     if (isScreenSharing) {
-      console.warn(`[SCREEN_SHARE_DIAG] WARNING: Screen sharing already active! This might create duplicate sessions.`);
-      console.debug(`[SCREEN_SHARE_DIAG] Previous active streams: ${activeStreams.map(s => s.id).join(', ')}`);
+      console.warn("[SCREEN_SHARE_DIAG] Multiple screen sharing sessions detected", {
+        riskLevel: "HIGH - may cause preview window conflicts or audio issues",
+        newStreamId: stream.id,
+        existingStreamIds: activeStreams.map(s => s.id),
+        totalStreams: activeStreams.length + 1
+      });
     }
 
     isScreenSharing = true;
     activeStreams.push(stream);
     
-    console.debug(`[SCREEN_SHARE_DIAG] Stream added to activeStreams. New count: ${activeStreams.length}`);
+    console.debug("[SCREEN_SHARE_DIAG] Stream registered in active list", {
+      streamId: stream.id,
+      totalActiveStreams: activeStreams.length,
+      isFirstStream: activeStreams.length === 1
+    });
 
     // Send screen sharing started event
     if (electronAPI.sendScreenSharingStarted) {
@@ -142,6 +140,13 @@
       const sourceId = stream?.id
         ? stream.id
         : `screen-share-${crypto.randomUUID()}`;
+      
+      console.debug("[SCREEN_SHARE_DIAG] Sending screen-sharing-started event", {
+        sourceId: sourceId,
+        streamId: stream.id,
+        willTriggerPreviewWindow: true
+      });
+      
       electronAPI.sendScreenSharingStarted(sourceId);
       electronAPI.send("active-screen-share-stream", stream);
     }
@@ -152,169 +157,118 @@
     // Track stream and tracks for reference, but don't auto-close popup based on their state
     // Popup window should only close when manually closed or screen sharing explicitly stopped
     const trackingVideoTracks = stream.getVideoTracks();
-    activeMediaTracks.push(...trackingVideoTracks);
-
-    // Optional: Log when tracks end (for debugging, doesn't affect popup)
     trackingVideoTracks.forEach((track, index) => {
+      activeMediaTracks.push(track);
+      
       track.addEventListener("ended", () => {
-        console.debug("Video track", index, "ended (popup remains open)");
+        console.debug("[SCREEN_SHARE_DIAG] Video track ended", {
+          trackIndex: index,
+          trackId: track.id,
+          streamId: stream.id,
+          note: "Popup remains open - this is expected behavior"
+        });
       });
     });
   }
 
   // Function to handle stream ending - used by UI button detection
   function handleStreamEnd(reason) {
-    console.debug("Stream ending detected, reason:", reason);
-    
-    // v2.5.3: Enhanced logging for stream ending diagnosis
-    console.debug(`[SCREEN_SHARE_DIAG] Stream ending - Reason: ${reason}`);
-    console.debug(`[SCREEN_SHARE_DIAG] Active streams before cleanup: ${activeStreams.length}`);
-    console.debug(`[SCREEN_SHARE_DIAG] Active streams IDs: ${activeStreams.map(s => s.id).join(', ')}`);
-    console.debug(`[SCREEN_SHARE_DIAG] Active media tracks: ${activeMediaTracks.length}`);
+    console.debug("[SCREEN_SHARE_DIAG] Stream ending detected", {
+      reason: reason,
+      activeStreamsBefore: activeStreams.length,
+      activeStreamIds: activeStreams.map(s => s.id),
+      activeMediaTracks: activeMediaTracks.length
+    });
 
     if (isScreenSharing) {
       isScreenSharing = false;
-      console.debug(`[SCREEN_SHARE_DIAG] Screen sharing state set to false`);
+      console.debug("[SCREEN_SHARE_DIAG] Screen sharing state changed to inactive");
 
       const electronAPI = window.electronAPI;
       if (electronAPI?.sendScreenSharingStopped) {
+        console.debug("[SCREEN_SHARE_DIAG] Sending screen-sharing-stopped event", {
+          reason: reason,
+          willClosePreviewWindow: true
+        });
         electronAPI.sendScreenSharingStopped();
       }
 
       // Clear active streams and tracks
       activeStreams = [];
       activeMediaTracks = [];
+      
+      console.debug("[SCREEN_SHARE_DIAG] Cleared all active streams and tracks", {
+        reason: reason
+      });
     }
   }
 
-  // Monitor Teams UI for stop sharing actions
+  // Start monitoring UI for "Stop sharing" buttons
   function startUIMonitoring() {
-    console.debug("Starting UI monitoring for screen sharing controls");
+    console.debug("[SCREEN_SHARE_DIAG] Starting UI monitoring for stop sharing buttons");
+    
+    const observer = new MutationObserver(() => {
+      // Look for various "Stop sharing" button patterns
+      const stopButtons = [
+        ...document.querySelectorAll('[data-tid="stop-sharing-button"]'),
+        ...document.querySelectorAll('button[title*="Stop sharing"]'),
+        ...document.querySelectorAll('button[aria-label*="Stop sharing"]'),
+        ...document.querySelectorAll('button:has-text("Stop sharing")'),
+        // More generic patterns
+        ...document.querySelectorAll('button[class*="stop-sharing"]'),
+        ...document.querySelectorAll('[id*="stop-sharing"]'),
+      ];
 
-    // Look for common screen sharing control selectors
-    const stopSharingSelectors = [
-      '[data-tid*="stop-share"]',
-      '[data-tid*="stopShare"]',
-      '[data-tid*="screen-share"][data-tid*="stop"]',
-      'button[title*="Stop sharing"]',
-      'button[aria-label*="Stop sharing"]',
-      '[data-tid="call-screen-share-stop-button"]',
-      '[data-tid="desktop-share-stop-button"]',
-      ".ts-calling-screen-share-stop-button",
-      'button[data-testid*="stop-sharing"]',
-      '[data-tid*="share"] button',
-      ".share-stop-button",
-      '[aria-label*="share"]',
-      '[title*="share"]',
-      '[data-tid*="hangup"]',
-      '[data-tid*="call-end"]',
-      'button[data-tid="call-hangup"]',
-    ];
-
-    // Monitor for clicks on stop sharing buttons
-    function addStopSharingListeners() {
-      let foundButtons = 0;
-
-      foundButtons = monitorScreenSharingButtons(
-        stopSharingSelectors,
-        foundButtons,
-        handleStopSharing
-      );
-
-      if (foundButtons > 0) {
-        console.debug(
-          "Added stop sharing listeners to",
-          foundButtons,
-          "buttons"
-        );
-      }
-    }
-
-    // Handle stop sharing button clicks
-    function handleStopSharing(event) {
-      console.debug("Stop sharing button clicked", event);
-
-      if (isScreenSharing) {
-        // Force stop all active media tracks
-        terminateActiveStreams(); // Small delay to let Teams process the stop action
-      }
-    }
-
-    // Monitor for DOM changes and add listeners to new buttons
-    const observer = new MutationObserver((mutations) => {
-      let shouldCheckForButtons = false;
-      mutations.forEach((mutation) => {
-        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-          shouldCheckForButtons = true;
+      stopButtons.forEach((button) => {
+        if (!button.dataset.teamsMonitored) {
+          button.dataset.teamsMonitored = "true";
+          console.debug("[SCREEN_SHARE_DIAG] Found and monitoring stop sharing button", {
+            buttonText: button.textContent?.trim(),
+            buttonTitle: button.title,
+            buttonId: button.id,
+            buttonClass: button.className
+          });
+          
+          button.addEventListener("click", () => {
+            console.debug("[SCREEN_SHARE_DIAG] Stop sharing button clicked", {
+              buttonText: button.textContent?.trim(),
+              triggeredBy: "user interaction"
+            });
+            
+            setTimeout(() => {
+              console.debug("[SCREEN_SHARE_DIAG] Processing stop sharing after delay");
+              handleStreamEnd("stop_button_clicked");
+            }, 100);
+          });
         }
       });
-
-      if (shouldCheckForButtons) {
-        addStopSharingListeners();
-      }
     });
 
-    // Start observing
-    observer.observe(document.body, {
-      childList: true,
+    observer.observe(document.body, { 
+      childList: true, 
       subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'data-tid', 'title', 'aria-label']
     });
-
-    // Initial check
-    addStopSharingListeners();
-
-    // Periodic check as fallback
-    const checkInterval = setInterval(() => {
-      if (isScreenSharing) {
-        addStopSharingListeners();
-      } else {
-        clearInterval(checkInterval);
-      }
-    }, 2000);
+    
+    console.debug("[SCREEN_SHARE_DIAG] UI mutation observer started for stop button detection");
   }
 
-  // Initialize monitoring
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
+  // Initialize monitoring when the page is ready
+  function initializeScreenSharingMonitoring() {
+    console.debug("[SCREEN_SHARE_DIAG] Initializing screen sharing monitoring", {
+      userAgent: navigator.userAgent,
+      hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
+      hasGetUserMedia: !!navigator.mediaDevices?.getUserMedia,
+      timestamp: new Date().toISOString()
+    });
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", monitorScreenSharing);
+    } else {
       monitorScreenSharing();
-    });
-  } else {
-    monitorScreenSharing();
+    }
   }
 
-  function monitorScreenSharingButtons(
-    stopSharingSelectors,
-    foundButtons,
-    handleStopSharing
-  ) {
-    stopSharingSelectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-
-      elements.forEach((element) => {
-        if (!element.hasAttribute("data-screen-share-monitored")) {
-          foundButtons++;
-          element.setAttribute("data-screen-share-monitored", "true");
-          element.addEventListener("click", handleStopSharing);
-        }
-      });
-    });
-    return foundButtons;
-  }
-
-  function terminateActiveStreams() {
-    activeMediaTracks.forEach((track) => {
-      track.stop();
-    });
-
-    // Force stop all active streams
-    activeStreams.forEach((stream) => {
-      stream.getTracks().forEach((track) => {
-        track.stop();
-      });
-    });
-
-    setTimeout(() => {
-      handleStreamEnd("ui-button-click");
-    }, 500);
-  }
+  initializeScreenSharingMonitoring();
 })();

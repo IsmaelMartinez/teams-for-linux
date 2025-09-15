@@ -15,14 +15,45 @@ class TrayIconRenderer {
 
   updateActivityCount(event) {
     const count = event.detail.number;
+    const startTime = Date.now();
+    
+    console.debug("[TRAY_NOTIF] Activity count update initiated", {
+      newCount: count,
+      previousCount: this.lastActivityCount || 0,
+      timestamp: new Date().toISOString(),
+      willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+    });
+    
     this.render(count).then((icon) => {
-      console.debug("sending tray-update");
+      const renderTime = Date.now() - startTime;
+      console.debug("[TRAY_NOTIF] Icon render completed, sending tray update", {
+        count: count,
+        renderTimeMs: renderTime,
+        iconDataLength: icon?.length || 0,
+        willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+      });
+      
+      const ipcStartTime = Date.now();
       this.ipcRenderer.send("tray-update", {
         icon: icon,
         flash: count > 0 && !this.config.disableNotificationWindowFlash,
       });
+      
+      console.debug("[TRAY_NOTIF] Tray update IPC sent", {
+        count: count,
+        totalTimeMs: Date.now() - startTime,
+        ipcCallTimeMs: Date.now() - ipcStartTime
+      });
+    }).catch((error) => {
+      console.error("[TRAY_NOTIF] Icon render failed", {
+        error: error.message,
+        count: count,
+        elapsedMs: Date.now() - startTime
+      });
     });
+    
     this.ipcRenderer.invoke("set-badge-count", count);
+    this.lastActivityCount = count;
   }
 
   render(newActivityCount) {

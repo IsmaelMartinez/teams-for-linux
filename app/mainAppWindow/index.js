@@ -44,6 +44,7 @@ const isMac = os.platform() === "darwin";
 
 function createScreenSharePreviewWindow() {
   const path = require("path");
+  const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
   let thumbnailConfig =
@@ -51,15 +52,35 @@ function createScreenSharePreviewWindow() {
     config?.screenSharingThumbnail ??
     DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
+  console.debug("[SCREEN_SHARE_DIAG] Preview window creation requested", {
+    enabled: thumbnailConfig.enabled,
+    alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
+    existingWindow: global.previewWindow && !global.previewWindow.isDestroyed(),
+    activeSource: global.selectedScreenShareSource,
+    timestamp: new Date().toISOString()
+  });
+
   if (!thumbnailConfig.enabled) {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window disabled in configuration");
     return;
   }
 
-  // Don't create duplicate windows
+  // Don't create duplicate windows - this is critical for preventing echo
   if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+    console.warn("[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing", {
+      riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
+      action: "focusing existing window instead of creating new",
+      windowId: global.previewWindow.id
+    });
     global.previewWindow.focus();
     return;
   }
+
+  console.debug("[SCREEN_SHARE_DIAG] Creating new preview window", {
+    dimensions: "320x180",
+    alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
+    partition: "persist:teams-for-linux-session"
+  });
 
   global.previewWindow = new BrowserWindow({
     width: 320,
@@ -80,15 +101,47 @@ function createScreenSharePreviewWindow() {
     },
   });
 
+  const windowId = global.previewWindow.id;
+  console.debug("[SCREEN_SHARE_DIAG] Preview BrowserWindow created", {
+    windowId: windowId,
+    creationTimeMs: Date.now() - startTime,
+    alwaysOnTop: thumbnailConfig.alwaysOnTop || false
+  });
+
   global.previewWindow.loadFile(
     path.join(__dirname, "..", "screenSharing", "previewWindow.html")
   );
 
   global.previewWindow.once("ready-to-show", () => {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window ready, showing now", {
+      windowId: windowId,
+      totalCreationTimeMs: Date.now() - startTime,
+      focused: global.previewWindow.isFocused(),
+      visible: global.previewWindow.isVisible()
+    });
     global.previewWindow.show();
   });
 
+  // Add focus/blur event handlers to detect when preview window gets focus
+  global.previewWindow.on("focus", () => {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window gained focus", {
+      windowId: windowId,
+      potentialIssue: "Focus on preview might interfere with main Teams window"
+    });
+  });
+
+  global.previewWindow.on("blur", () => {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window lost focus", {
+      windowId: windowId
+    });
+  });
+
   global.previewWindow.on("closed", () => {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window closed", {
+      windowId: windowId,
+      hadActiveSource: !!global.selectedScreenShareSource,
+      closedSource: global.selectedScreenShareSource
+    });
     global.previewWindow = null;
     global.selectedScreenShareSource = null;
   });

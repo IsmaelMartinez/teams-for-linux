@@ -141,49 +141,63 @@ if (!gotTheLock) {
   });
 
   // Screen sharing IPC handlers
-  // v2.5.4: Add missing screen-sharing-started event handler for #1800 echo issue diagnosis
   ipcMain.on("screen-sharing-started", (event, sourceId) => {
     try {
-      console.debug(`[SCREEN_SHARE_ECHO] Screen sharing started event received`, {
+      console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
         sourceId: sourceId,
         timestamp: new Date().toISOString(),
-        currentSource: global.selectedScreenShareSource,
-        hasPreviewWindow: global.previewWindow && !global.previewWindow.isDestroyed()
+        previousSource: global.selectedScreenShareSource,
+        hasExistingPreview: global.previewWindow && !global.previewWindow.isDestroyed(),
+        mainWindowVisible: mainAppWindow?.isVisible?.() || false,
+        mainWindowFocused: mainAppWindow?.isFocused?.() || false
       });
 
-      // Check for potential duplicate sessions that could cause echo
+      // Check for potential duplicate sessions - this could cause echo issues
       if (global.selectedScreenShareSource !== null) {
-        console.warn(`[SCREEN_SHARE_ECHO] WARNING: Screen sharing already active!`, {
+        console.warn("[SCREEN_SHARE_DIAG] Multiple screen sharing sessions detected", {
           previousSource: global.selectedScreenShareSource,
           newSource: sourceId,
-          potentialEcho: true
+          riskLevel: "HIGH - may cause audio feedback or duplicate windows",
+          previewWindowState: global.previewWindow?.isDestroyed?.() ? "destroyed" : "active"
         });
       }
 
       global.selectedScreenShareSource = sourceId;
       
-      console.debug(`[SCREEN_SHARE_ECHO] Screen sharing source set:`, {
+      console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
         sourceId: sourceId,
-        sourceType: sourceId?.startsWith?.('screen:') ? 'screen' : 'window'
+        sourceType: sourceId?.startsWith?.('screen:') ? 'screen' : 'window',
+        willCreatePreview: true
       });
 
     } catch (error) {
-      console.error(`[SCREEN_SHARE_ECHO] Error handling screen-sharing-started event:`, error);
+      console.error("[SCREEN_SHARE_DIAG] Error handling screen-sharing-started event", {
+        error: error.message,
+        sourceId: sourceId,
+        stack: error.stack
+      });
     }
   });
 
   ipcMain.on("screen-sharing-stopped", () => {
-    console.debug(`[SCREEN_SHARE_ECHO] Screen sharing stopped event received`, {
+    console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
       timestamp: new Date().toISOString(),
-      previousSource: global.selectedScreenShareSource,
-      hasPreviewWindow: global.previewWindow && !global.previewWindow.isDestroyed()
+      stoppedSource: global.selectedScreenShareSource,
+      previewWindowExists: global.previewWindow && !global.previewWindow.isDestroyed(),
+      mainWindowState: {
+        visible: mainAppWindow?.isVisible?.() || false,
+        focused: mainAppWindow?.isFocused?.() || false
+      }
     });
 
     global.selectedScreenShareSource = null;
 
     // Close preview window when screen sharing stops
     if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+      console.debug("[SCREEN_SHARE_DIAG] Closing preview window after screen sharing stopped");
       global.previewWindow.close();
+    } else {
+      console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
     }
   });
 
@@ -341,25 +355,51 @@ function addElectronCLIFlagsFromConfig() {
 
 //TODO: Refator this area (move up or group)
 async function showNotification(_event, options) {
-  console.debug("Showing notification using electron API");
-
-  playNotificationSound(null, {
+  const startTime = Date.now();
+  console.debug("[TRAY_NOTIF] Native notification request received", {
+    title: options.title,
+    bodyLength: options.body?.length || 0,
+    hasIcon: !!options.icon,
     type: options.type,
-    audio: "default",
-    title: options.title,
-    body: options.body,
-  });
-
-  const notification = new Notification({
-    icon: nativeImage.createFromDataURL(options.icon),
-    title: options.title,
-    body: options.body,
     urgency: config.defaultNotificationUrgency,
+    timestamp: new Date().toISOString()
   });
+  
+  try {
+    playNotificationSound(null, {
+      type: options.type,
+      audio: "default",
+      title: options.title,
+      body: options.body,
+    });
 
-  notification.on("click", mainAppWindow.show);
+    const notification = new Notification({
+      icon: nativeImage.createFromDataURL(options.icon),
+      title: options.title,
+      body: options.body,
+      urgency: config.defaultNotificationUrgency,
+    });
 
-  notification.show();
+    notification.on("click", () => {
+      console.debug("[TRAY_NOTIF] Notification clicked, showing main window");
+      mainAppWindow.show();
+    });
+
+    notification.show();
+    
+    console.debug("[TRAY_NOTIF] Native notification displayed successfully", {
+      title: options.title,
+      totalTimeMs: Date.now() - startTime,
+      urgency: config.defaultNotificationUrgency
+    });
+    
+  } catch (error) {
+    console.error("[TRAY_NOTIF] Failed to show native notification", {
+      error: error.message,
+      title: options.title,
+      elapsedMs: Date.now() - startTime
+    });
+  }
 }
 
 async function playNotificationSound(_event, options) {
