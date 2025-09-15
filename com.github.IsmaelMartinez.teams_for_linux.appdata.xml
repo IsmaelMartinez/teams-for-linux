@@ -28,6 +28,13 @@
 				</ul>
 			</description>
 		</release>
+		<release version="2.5.4" date="2025-09-06">
+			<description>
+				<ul>
+					<li>Fix: Reactions bar no longer shows an unintended set of reactions above the bar due to GPU composition on Wayland systems.</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.3" date="2025-09-03">
 			<description>
 				<ul>

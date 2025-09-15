@@ -287,7 +287,8 @@ function addCommandLineSwitchesAfterConfigLoad() {
   // Wayland-specific optimization for Linux desktop environments
   // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
-    console.info("Running under Wayland, switching to PipeWire...");
+    console.info("Running under Wayland, disabling GPU composition and switching to PipeWire...");
+    config.disableGpu = true;
 
     const features = app.commandLine.hasSwitch("enable-features")
       ? app.commandLine.getSwitchValue("enable-features").split(",")
