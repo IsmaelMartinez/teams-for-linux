@@ -6,7 +6,7 @@ const brokerService = dbus
   .getService("com.microsoft.identity.broker1");
 
 function processInTuneAccounts(resp, ssoInTuneAuthUser) {
-  // v2.5.4: Enhanced account processing with detailed logging
+  // v2.5.5: Enhanced account processing with detailed logging
   try {
     const response = JSON.parse(resp);
     
@@ -76,7 +76,7 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 }
 
 exports.initSso = function initIntuneSso(ssoInTuneAuthUser) {
-  // v2.5.4: Enhanced Intune SSO initialization logging for better diagnostics
+  // v2.5.5: Enhanced Intune SSO initialization logging for better diagnostics
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
     configuredUser: ssoInTuneAuthUser || "(none - will use first available)",
     timestamp: new Date().toISOString()
@@ -141,7 +141,7 @@ exports.isSsoUrl = function isSsoUrl(url) {
 };
 
 function processPrtResponse(resp, detail) {
-  // v2.5.4: Enhanced PRT response processing with detailed logging
+  // v2.5.5: Enhanced PRT response processing with detailed logging
   try {
     const response = JSON.parse(resp);
     if ("error" in response) {
@@ -170,7 +170,7 @@ function processPrtResponse(resp, detail) {
 }
 
 exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
-  // v2.5.4: Enhanced SSO cookie retrieval with comprehensive logging
+  // v2.5.5: Enhanced SSO cookie retrieval with comprehensive logging
   console.debug("[INTUNE_DIAG] Retrieving InTune SSO cookie", {
     url: detail.url,
     hasAccount: !!inTuneAccount,

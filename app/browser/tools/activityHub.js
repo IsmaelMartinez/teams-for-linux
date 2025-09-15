@@ -25,7 +25,7 @@ class ActivityHub {
     const setup = setInterval(() => {
       attemptCount++;
       
-      // v2.5.4: Enhanced logging for tray icon timing issue (#1795)
+      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
       console.debug(`ActivityHub: Connection attempt ${attemptCount}/${maxAttempts}`);
       
       const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
@@ -58,7 +58,7 @@ class ActivityHub {
     }, 10000);
   }
 
-  // v2.5.4: Monitor authentication state and initialize token cache for #1357
+  // v2.5.5: Monitor authentication state and initialize token cache for #1357
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
     ReactHandler.logAuthenticationState();

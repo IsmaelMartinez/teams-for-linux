@@ -164,7 +164,7 @@ class ReactHandler {
       // Deep dive into token cache issue
       console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
       
-      // v2.5.4: Token cache analysis and injection for #1357 fix
+      // v2.5.5: Token cache analysis and injection for #1357 fix
       if (authProvider._tokenCache) {
         console.debug(`[AUTH_DIAG] Token cache available: true`);
         console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
@@ -501,7 +501,7 @@ class ReactHandler {
     );
     const hasModernReact = reactKeys.length > 0;
     
-    // v2.5.4: Enhanced debugging for tray icon timing issue (#1795)
+    // v2.5.5: Enhanced debugging for tray icon timing issue (#1795)
     if (!hasLegacyReact && !hasModernReact) {
       // Log additional timing information to help debug when Teams React loads
       const currentTime = Date.now();

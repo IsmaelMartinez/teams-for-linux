@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (config.trayIconEnabled) {
       console.debug("Preload: tray icon is enabled");
       
-      // v2.5.4: Enhanced logging for tray icon timing issue (#1795)
+      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
       window.addEventListener("unread-count", (event) => {
         try {
           const count = event.detail?.number;

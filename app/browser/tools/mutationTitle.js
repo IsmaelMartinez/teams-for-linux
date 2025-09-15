@@ -25,7 +25,7 @@ class MutationObserverTitle {
         return;
       }
       
-      // v2.5.4: Enhanced debugging for tray icon timing issue (#1795)
+      // v2.5.5: Enhanced debugging for tray icon timing issue (#1795)
       console.debug("MutationTitle: Initial setup", {
         currentTitle: window.document.title,
         titleElementExists: !!titleElement,
@@ -50,7 +50,7 @@ class MutationObserverTitle {
           const match = regex.exec(sanitizedTitle);
           const number = match ? parseInt(match[1], 10) : 0;
           
-          // v2.5.4: Enhanced debugging for unread count extraction
+          // v2.5.5: Enhanced debugging for unread count extraction
           console.debug("MutationTitle: Extracting unread count", {
             title: sanitizedTitle,
             regexMatch: match,
