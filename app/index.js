@@ -356,13 +356,14 @@ function addElectronCLIFlagsFromConfig() {
 //TODO: Refator this area (move up or group)
 async function showNotification(_event, options) {
   const startTime = Date.now();
-  console.debug("[TRAY_NOTIF] Native notification request received", {
+  console.debug("[TRAY_DIAG] Native notification request received", {
     title: options.title,
     bodyLength: options.body?.length || 0,
     hasIcon: !!options.icon,
     type: options.type,
     urgency: config.defaultNotificationUrgency,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    suggestion: "Monitor totalTimeMs for notification display delays"
   });
   
   try {
@@ -381,23 +382,26 @@ async function showNotification(_event, options) {
     });
 
     notification.on("click", () => {
-      console.debug("[TRAY_NOTIF] Notification clicked, showing main window");
+      console.debug("[TRAY_DIAG] Notification clicked, showing main window");
       mainAppWindow.show();
     });
 
     notification.show();
     
-    console.debug("[TRAY_NOTIF] Native notification displayed successfully", {
+    const totalTime = Date.now() - startTime;
+    console.debug("[TRAY_DIAG] Native notification displayed successfully", {
       title: options.title,
-      totalTimeMs: Date.now() - startTime,
-      urgency: config.defaultNotificationUrgency
+      totalTimeMs: totalTime,
+      urgency: config.defaultNotificationUrgency,
+      performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
     });
     
   } catch (error) {
-    console.error("[TRAY_NOTIF] Failed to show native notification", {
+    console.error("[TRAY_DIAG] Failed to show native notification", {
       error: error.message,
       title: options.title,
-      elapsedMs: Date.now() - startTime
+      elapsedMs: Date.now() - startTime,
+      suggestion: "Check if notification permissions are granted or icon data is valid"
     });
   }
 }

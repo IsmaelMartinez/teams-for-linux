@@ -18,7 +18,7 @@
 			<description>
 				<ul>
 					<li>Fix: Resolve missing screen-sharing-started IPC handler that could cause screen sharing session tracking issues</li>
-					<li>Enhancement: Add comprehensive diagnostic logging for tray icon notification timing to help troubleshoot notification display issues</li>
+					<li>Enhancement: Add comprehensive tray icon diagnostic logging with [TRAY_DIAG] tags to help troubleshoot notification timing and performance issues</li>
 					<li>Enhancement: Add detailed screen sharing echo diagnostics with audio track analysis and duplicate session detection</li>
 					<li>Enhancement: Add extensive Intune SSO diagnostic logging with troubleshooting guidance for D-Bus and Identity Broker issues</li>
 					<li>Documentation: Add comprehensive Intune SSO documentation with troubleshooting guidance for enterprise environments</li>

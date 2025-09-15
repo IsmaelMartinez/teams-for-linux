@@ -17,20 +17,22 @@ class TrayIconRenderer {
     const count = event.detail.number;
     const startTime = Date.now();
     
-    console.debug("[TRAY_NOTIF] Activity count update initiated", {
+    console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
       previousCount: this.lastActivityCount || 0,
       timestamp: new Date().toISOString(),
-      willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+      willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
+      suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
     });
     
     this.render(count).then((icon) => {
       const renderTime = Date.now() - startTime;
-      console.debug("[TRAY_NOTIF] Icon render completed, sending tray update", {
+      console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
         count: count,
         renderTimeMs: renderTime,
         iconDataLength: icon?.length || 0,
-        willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+        willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
+        performanceNote: renderTime > 100 ? "Slow icon rendering detected" : "Normal rendering speed"
       });
       
       const ipcStartTime = Date.now();
@@ -39,16 +41,18 @@ class TrayIconRenderer {
         flash: count > 0 && !this.config.disableNotificationWindowFlash,
       });
       
-      console.debug("[TRAY_NOTIF] Tray update IPC sent", {
+      console.debug("[TRAY_DIAG] Tray update IPC sent", {
         count: count,
         totalTimeMs: Date.now() - startTime,
-        ipcCallTimeMs: Date.now() - ipcStartTime
+        ipcCallTimeMs: Date.now() - ipcStartTime,
+        performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
       });
     }).catch((error) => {
-      console.error("[TRAY_NOTIF] Icon render failed", {
+      console.error("[TRAY_DIAG] Icon render failed", {
         error: error.message,
         count: count,
-        elapsedMs: Date.now() - startTime
+        elapsedMs: Date.now() - startTime,
+        suggestion: "Check canvas creation and image loading in render method"
       });
     });
     
