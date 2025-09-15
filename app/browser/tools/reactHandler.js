@@ -255,6 +255,7 @@ class ReactHandler {
       try {
         console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, JSON.stringify(cacheStats, null, 2));
       } catch (stringifyError) {
+        console.warn(`[TOKEN_CACHE] Failed to stringify cache stats:`, stringifyError.message);
         console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats: (circular reference avoided)`, {
           totalKeys: cacheStats.totalKeys,
           authKeysCount: cacheStats.authKeysCount,
@@ -357,6 +358,7 @@ class ReactHandler {
         try {
           console.debug(`[TOKEN_CACHE] Validated cache stats:`, JSON.stringify(stats, null, 2));
         } catch (stringifyError) {
+          console.warn(`[TOKEN_CACHE] Failed to stringify validated stats:`, stringifyError.message);
           console.debug(`[TOKEN_CACHE] Validated cache stats: (circular reference avoided)`, {
             totalKeys: stats.totalKeys,
             authKeysCount: stats.authKeysCount,
