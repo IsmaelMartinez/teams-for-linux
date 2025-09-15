@@ -238,7 +238,6 @@
       ...document.querySelectorAll('[data-tid="stop-sharing-button"]'),
       ...document.querySelectorAll('button[title*="Stop sharing"]'),
       ...document.querySelectorAll('button[aria-label*="Stop sharing"]'),
-      ...document.querySelectorAll('button:has-text("Stop sharing")'),
       // More generic patterns
       ...document.querySelectorAll('button[class*="stop-sharing"]'),
       ...document.querySelectorAll('[id*="stop-sharing"]'),
