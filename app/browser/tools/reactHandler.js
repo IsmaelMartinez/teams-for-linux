@@ -252,7 +252,16 @@ class ReactHandler {
 
       // Test TokenCache functionality before injection
       const cacheStats = TokenCache.getCacheStats();
-      console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, cacheStats);
+      try {
+        console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, JSON.stringify(cacheStats, null, 2));
+      } catch (stringifyError) {
+        console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats: (circular reference avoided)`, {
+          totalKeys: cacheStats.totalKeys,
+          authKeysCount: cacheStats.authKeysCount,
+          refreshTokenCount: cacheStats.refreshTokenCount,
+          storageType: cacheStats.storageType
+        });
+      }
 
       if (cacheStats.totalKeys === 0) {
         console.warn(`[TOKEN_CACHE] No tokens in cache, injection may not be immediately beneficial`);
@@ -345,7 +354,16 @@ class ReactHandler {
         }
 
         console.debug(`[TOKEN_CACHE] VALIDATION_SUCCESS: All interface and functional tests passed`);
-        console.debug(`[TOKEN_CACHE] Validated cache stats:`, stats);
+        try {
+          console.debug(`[TOKEN_CACHE] Validated cache stats:`, JSON.stringify(stats, null, 2));
+        } catch (stringifyError) {
+          console.debug(`[TOKEN_CACHE] Validated cache stats: (circular reference avoided)`, {
+            totalKeys: stats.totalKeys,
+            authKeysCount: stats.authKeysCount,
+            refreshTokenCount: stats.refreshTokenCount,
+            storageType: stats.storageType
+          });
+        }
         
         return true;
 
@@ -513,8 +531,8 @@ class ReactHandler {
     }
     
     console.debug('ReactHandler: React structure validation successful', {
-      hasLegacyReact,
-      hasModernReact,
+      hasLegacyReact: !!hasLegacyReact,
+      hasModernReact: !!hasModernReact,
       reactKeyCount: reactKeys.length
     });
     
