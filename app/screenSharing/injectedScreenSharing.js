@@ -203,46 +203,55 @@
     }
   }
 
+  // Handle stop sharing button click
+  function handleStopButtonClick(button) {
+    console.debug("[SCREEN_SHARE_DIAG] Stop sharing button clicked", {
+      buttonText: button.textContent?.trim(),
+      triggeredBy: "user interaction"
+    });
+    
+    setTimeout(() => {
+      console.debug("[SCREEN_SHARE_DIAG] Processing stop sharing after delay");
+      handleStreamEnd("stop_button_clicked");
+    }, 100);
+  }
+
+  // Set up monitoring for a single stop button
+  function setupStopButtonMonitoring(button) {
+    if (!button.dataset.teamsMonitored) {
+      button.dataset.teamsMonitored = "true";
+      console.debug("[SCREEN_SHARE_DIAG] Found and monitoring stop sharing button", {
+        buttonText: button.textContent?.trim(),
+        buttonTitle: button.title,
+        buttonId: button.id,
+        buttonClass: button.className
+      });
+      
+      button.addEventListener("click", () => handleStopButtonClick(button));
+    }
+  }
+
+  // Process discovered stop sharing buttons
+  function processStopSharingButtons() {
+    // Look for various "Stop sharing" button patterns
+    const stopButtons = [
+      ...document.querySelectorAll('[data-tid="stop-sharing-button"]'),
+      ...document.querySelectorAll('button[title*="Stop sharing"]'),
+      ...document.querySelectorAll('button[aria-label*="Stop sharing"]'),
+      ...document.querySelectorAll('button:has-text("Stop sharing")'),
+      // More generic patterns
+      ...document.querySelectorAll('button[class*="stop-sharing"]'),
+      ...document.querySelectorAll('[id*="stop-sharing"]'),
+    ];
+
+    stopButtons.forEach(setupStopButtonMonitoring);
+  }
+
   // Start monitoring UI for "Stop sharing" buttons
   function startUIMonitoring() {
     console.debug("[SCREEN_SHARE_DIAG] Starting UI monitoring for stop sharing buttons");
     
-    const observer = new MutationObserver(() => {
-      // Look for various "Stop sharing" button patterns
-      const stopButtons = [
-        ...document.querySelectorAll('[data-tid="stop-sharing-button"]'),
-        ...document.querySelectorAll('button[title*="Stop sharing"]'),
-        ...document.querySelectorAll('button[aria-label*="Stop sharing"]'),
-        ...document.querySelectorAll('button:has-text("Stop sharing")'),
-        // More generic patterns
-        ...document.querySelectorAll('button[class*="stop-sharing"]'),
-        ...document.querySelectorAll('[id*="stop-sharing"]'),
-      ];
-
-      stopButtons.forEach((button) => {
-        if (!button.dataset.teamsMonitored) {
-          button.dataset.teamsMonitored = "true";
-          console.debug("[SCREEN_SHARE_DIAG] Found and monitoring stop sharing button", {
-            buttonText: button.textContent?.trim(),
-            buttonTitle: button.title,
-            buttonId: button.id,
-            buttonClass: button.className
-          });
-          
-          button.addEventListener("click", () => {
-            console.debug("[SCREEN_SHARE_DIAG] Stop sharing button clicked", {
-              buttonText: button.textContent?.trim(),
-              triggeredBy: "user interaction"
-            });
-            
-            setTimeout(() => {
-              console.debug("[SCREEN_SHARE_DIAG] Processing stop sharing after delay");
-              handleStreamEnd("stop_button_clicked");
-            }, 100);
-          });
-        }
-      });
-    });
+    const observer = new MutationObserver(processStopSharingButtons);
 
     observer.observe(document.body, { 
       childList: true, 
