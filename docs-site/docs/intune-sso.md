@@ -83,6 +83,6 @@ Look for `[INTUNE_DIAG]` prefixed messages that provide detailed information abo
 To verify Intune integration is working:
 1. Start teams-for-linux with debug logging enabled
 2. Look for `[INTUNE_DIAG] InTune SSO account configured successfully`
-3. Navigate to `https://login.microsoftonline.com/` - should automatically authenticate
+3. The app should automatically authenticate
 
 For configuration options related to Intune SSO, please refer to the [Configuration Documentation](./configuration.md).
