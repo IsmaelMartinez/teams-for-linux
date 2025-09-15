@@ -30,9 +30,9 @@ sudo apt update && sudo apt install teams-for-linux
 
 ```bash
 curl -1sLf -o /tmp/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
-rpm --import /tmp/teams-for-linux.asc
-curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforlinux.de/rpm/teams-for-linux.repo
-yum update && yum install teams-for-linux
+sudo rpm --import /tmp/teams-for-linux.asc
+sudo curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforlinux.de/rpm/teams-for-linux.repo
+sudo dnf install teams-for-linux
 ```
 
 ## Distribution-Specific Packages

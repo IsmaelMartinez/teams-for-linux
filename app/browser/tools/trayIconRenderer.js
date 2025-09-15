@@ -15,14 +15,49 @@ class TrayIconRenderer {
 
   updateActivityCount(event) {
     const count = event.detail.number;
+    const startTime = Date.now();
+    
+    console.debug("[TRAY_DIAG] Activity count update initiated", {
+      newCount: count,
+      previousCount: this.lastActivityCount || 0,
+      timestamp: new Date().toISOString(),
+      willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
+      suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
+    });
+    
     this.render(count).then((icon) => {
-      console.debug("sending tray-update");
+      const renderTime = Date.now() - startTime;
+      console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
+        count: count,
+        renderTimeMs: renderTime,
+        iconDataLength: icon?.length || 0,
+        willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
+        performanceNote: renderTime > 100 ? "Slow icon rendering detected" : "Normal rendering speed"
+      });
+      
+      const ipcStartTime = Date.now();
       this.ipcRenderer.send("tray-update", {
         icon: icon,
         flash: count > 0 && !this.config.disableNotificationWindowFlash,
       });
+      
+      console.debug("[TRAY_DIAG] Tray update IPC sent", {
+        count: count,
+        totalTimeMs: Date.now() - startTime,
+        ipcCallTimeMs: Date.now() - ipcStartTime,
+        performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
+      });
+    }).catch((error) => {
+      console.error("[TRAY_DIAG] Icon render failed", {
+        error: error.message,
+        count: count,
+        elapsedMs: Date.now() - startTime,
+        suggestion: "Check canvas creation and image loading in render method"
+      });
     });
+    
     this.ipcRenderer.invoke("set-badge-count", count);
+    this.lastActivityCount = count;
   }
 
   render(newActivityCount) {

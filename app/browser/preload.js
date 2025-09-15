@@ -119,27 +119,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize tray icon functionality directly in preload with secure IPC
     if (config.trayIconEnabled) {
       console.debug("Preload: tray icon is enabled");
+      
+      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
       window.addEventListener("unread-count", (event) => {
         try {
           const count = event.detail?.number;
+          console.debug("Preload: Received unread-count event", {
+            count: count,
+            eventDetail: event.detail,
+            timestamp: new Date().toISOString()
+          });
+          
           if (typeof count !== 'number' || count < 0 || count > 9999) {
-            console.warn('Invalid unread count:', count);
+            console.warn('Preload: Invalid unread count received:', count);
             return;
           }
           
-          console.debug("sending tray-update");
+          console.debug("Preload: Sending tray-update to main process", {
+            count: count,
+            flash: count > 0 && !config.disableNotificationWindowFlash
+          });
+          
           ipcRenderer.send("tray-update", {
             icon: null, // Let main process handle icon rendering
             flash: count > 0 && !config.disableNotificationWindowFlash,
             count: count
           });
+          
           ipcRenderer.invoke("set-badge-count", count).catch(err => {
-            console.error('Failed to set badge count:', err);
+            console.error('Preload: Failed to set badge count:', err);
           });
         } catch (error) {
-          console.error('Error in tray update:', error);
+          console.error('Preload: Error in tray update handler:', error);
         }
       });
+      
+      console.debug("Preload: Tray icon unread-count event listener registered");
     }
     
     console.log("Preload: Essential tray modules initialized successfully");

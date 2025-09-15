@@ -164,7 +164,7 @@ class ReactHandler {
       // Deep dive into token cache issue
       console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
       
-      // v2.5.4: Token cache analysis and injection for #1357 fix
+      // v2.5.5: Token cache analysis and injection for #1357 fix
       if (authProvider._tokenCache) {
         console.debug(`[AUTH_DIAG] Token cache available: true`);
         console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
@@ -252,7 +252,17 @@ class ReactHandler {
 
       // Test TokenCache functionality before injection
       const cacheStats = TokenCache.getCacheStats();
-      console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, cacheStats);
+      try {
+        console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats:`, JSON.stringify(cacheStats, null, 2));
+      } catch (stringifyError) {
+        console.warn(`[TOKEN_CACHE] Failed to stringify cache stats:`, stringifyError.message);
+        console.debug(`[TOKEN_CACHE] TokenCache pre-injection stats: (circular reference avoided)`, {
+          totalKeys: cacheStats.totalKeys,
+          authKeysCount: cacheStats.authKeysCount,
+          refreshTokenCount: cacheStats.refreshTokenCount,
+          storageType: cacheStats.storageType
+        });
+      }
 
       if (cacheStats.totalKeys === 0) {
         console.warn(`[TOKEN_CACHE] No tokens in cache, injection may not be immediately beneficial`);
@@ -345,7 +355,17 @@ class ReactHandler {
         }
 
         console.debug(`[TOKEN_CACHE] VALIDATION_SUCCESS: All interface and functional tests passed`);
-        console.debug(`[TOKEN_CACHE] Validated cache stats:`, stats);
+        try {
+          console.debug(`[TOKEN_CACHE] Validated cache stats:`, JSON.stringify(stats, null, 2));
+        } catch (stringifyError) {
+          console.warn(`[TOKEN_CACHE] Failed to stringify validated stats:`, stringifyError.message);
+          console.debug(`[TOKEN_CACHE] Validated cache stats: (circular reference avoided)`, {
+            totalKeys: stats.totalKeys,
+            authKeysCount: stats.authKeysCount,
+            refreshTokenCount: stats.refreshTokenCount,
+            storageType: stats.storageType
+          });
+        }
         
         return true;
 
@@ -483,10 +503,40 @@ class ReactHandler {
     );
     const hasModernReact = reactKeys.length > 0;
     
+    // v2.5.5: Enhanced debugging for tray icon timing issue (#1795)
     if (!hasLegacyReact && !hasModernReact) {
-      console.warn('ReactHandler: No React structure detected (legacy or modern)');
+      // Log additional timing information to help debug when Teams React loads
+      const currentTime = Date.now();
+      const timeSincePageLoad = currentTime - (window.performance?.timing?.navigationStart || 0);
+      
+      console.warn('ReactHandler: No React structure detected (legacy or modern)', {
+        timeSincePageLoad: timeSincePageLoad,
+        appElementExists: !!appElement,
+        appElementKeys: appElement ? Object.getOwnPropertyNames(appElement).length : 0,
+        documentReadyState: document.readyState,
+        teamsUrlPath: window.location.pathname
+      });
+      
+      // Check if Teams is still loading
+      const teamsLoadingIndicators = [
+        document.querySelector('[data-testid="loading-indicator"]'),
+        document.querySelector('.app-loading'),
+        document.querySelector('[aria-label*="loading"]'),
+        document.querySelector('[aria-label*="Loading"]')
+      ].filter(Boolean);
+      
+      if (teamsLoadingIndicators.length > 0) {
+        console.debug('ReactHandler: Teams appears to be still loading, React structure may not be ready yet');
+      }
+      
       return false;
     }
+    
+    console.debug('ReactHandler: React structure validation successful', {
+      hasLegacyReact: !!hasLegacyReact,
+      hasModernReact: !!hasModernReact,
+      reactKeyCount: reactKeys.length
+    });
     
     return true;
   }

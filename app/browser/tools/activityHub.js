@@ -19,20 +19,46 @@ class ActivityHub {
   }
 
   start() {
+    let attemptCount = 0;
+    const maxAttempts = 12; // Try for up to 2 minutes
+    
     const setup = setInterval(() => {
+      attemptCount++;
+      
+      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
+      console.debug(`ActivityHub: Connection attempt ${attemptCount}/${maxAttempts}`);
+      
       const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
       if (commandChangeReportingService) {
         assignEventHandlers(commandChangeReportingService);
-        console.debug("Events connected");
+        console.debug("ActivityHub: Events connected successfully", {
+          attempt: attemptCount,
+          timeElapsed: attemptCount * 10000
+        });
         clearInterval(setup);
         
         // v2.5.3: Start periodic authentication state logging for #1357 
         this._startAuthenticationMonitoring();
+      } else {
+        // Log more details about why connection failed
+        console.debug(`ActivityHub: Connection attempt ${attemptCount} failed - ReactHandler validation unsuccessful`);
+        
+        if (attemptCount >= maxAttempts) {
+          console.warn('ActivityHub: Maximum connection attempts reached. Teams internal events may not be available.', {
+            attempts: attemptCount,
+            timeElapsed: attemptCount * 10000,
+            note: 'Tray notifications via title mutation should still work'
+          });
+          clearInterval(setup);
+          
+          // Still start authentication monitoring even if React connection failed
+          this._startAuthenticationMonitoring();
+        }
       }
     }, 10000);
   }
 
-  // v2.5.4: Monitor authentication state and initialize token cache for #1357
+  // v2.5.5: Monitor authentication state and initialize token cache for #1357
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
     ReactHandler.logAuthenticationState();

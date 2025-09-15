@@ -3,7 +3,12 @@
     "allow": [
       "WebSearch",
       "Bash(git commit:*)",
-      "Bash(ELECTRON_ENABLE_LOGGING=true npm start)"
+      "Bash(ELECTRON_ENABLE_LOGGING=true npm start)",
+      "Bash(npm start)",
+      "mcp__github__search_issues",
+      "Bash(npm run lint)",
+      "mcp__github__get_pull_request_comments",
+      "mcp__github__get_pull_request"
     ],
     "deny": [],
     "ask": []
