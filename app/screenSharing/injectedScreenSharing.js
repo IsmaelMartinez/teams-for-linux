@@ -2,6 +2,7 @@
   let isScreenSharing = false;
   let activeStreams = [];
   let activeMediaTracks = [];
+  let mainScreenSharingStream = null;
 
   // Monitor for screen sharing streams and detect when they stop
   function monitorScreenSharing() {
@@ -20,12 +21,17 @@
       
       return originalGetDisplayMedia(constraints)
         .then((stream) => {
-          console.debug("[SCREEN_SHARE_DIAG] Screen sharing stream created via getDisplayMedia", {
+          console.debug("[SCREEN_SHARE_DIAG] MAIN screen sharing stream created via getDisplayMedia", {
             streamId: stream.id,
             audioTracks: stream.getAudioTracks().length,
             videoTracks: stream.getVideoTracks().length,
-            totalActiveStreams: activeStreams.length
+            totalActiveStreams: activeStreams.length,
+            isMainStream: true
           });
+          
+          // Store the main stream for preview window reuse
+          mainScreenSharingStream = stream;
+          
           handleScreenShareStream(stream, "getDisplayMedia");
           return stream;
         })
@@ -148,7 +154,18 @@
       });
       
       electronAPI.sendScreenSharingStarted(sourceId);
-      electronAPI.send("active-screen-share-stream", stream);
+      
+      // Send the main stream to main process for preview window reuse
+      if (mainScreenSharingStream && stream.id === mainScreenSharingStream.id) {
+        console.debug("[SCREEN_SHARE_DIAG] Sending main stream to main process for preview reuse", {
+          streamId: stream.id,
+          hasAudio: stream.getAudioTracks().length > 0,
+          hasVideo: stream.getVideoTracks().length > 0
+        });
+        electronAPI.send("main-screen-share-stream", stream);
+      } else {
+        electronAPI.send("active-screen-share-stream", stream);
+      }
     }
 
     // Start UI monitoring for stop sharing buttons
@@ -196,8 +213,9 @@
       // Clear active streams and tracks
       activeStreams = [];
       activeMediaTracks = [];
+      mainScreenSharingStream = null;
       
-      console.debug("[SCREEN_SHARE_DIAG] Cleared all active streams and tracks", {
+      console.debug("[SCREEN_SHARE_DIAG] Cleared all active streams, tracks, and main stream reference", {
         reason: reason
       });
     }

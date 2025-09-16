@@ -191,6 +191,7 @@ if (!gotTheLock) {
     });
 
     global.selectedScreenShareSource = null;
+    global.mainScreenSharingStream = null;
 
     // Close preview window when screen sharing stops
     if (global.previewWindow && !global.previewWindow.isDestroyed()) {
@@ -198,6 +199,29 @@ if (!gotTheLock) {
       global.previewWindow.close();
     } else {
       console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
+    }
+  });
+
+  // Main screen sharing stream handler - stores stream for preview window reuse
+  ipcMain.on("main-screen-share-stream", (event, stream) => {
+    try {
+      console.debug("[SCREEN_SHARE_DIAG] Received main screen sharing stream for preview reuse", {
+        streamId: stream?.id || "unknown",
+        hasAudio: stream?.getAudioTracks?.()?.length > 0,
+        hasVideo: stream?.getVideoTracks?.()?.length > 0,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Store the main stream globally for preview window access
+      global.mainScreenSharingStream = stream;
+      
+      console.debug("[SCREEN_SHARE_DIAG] Main stream stored globally for preview window reuse");
+      
+    } catch (error) {
+      console.error("[SCREEN_SHARE_DIAG] Error handling main-screen-share-stream event", {
+        error: error.message,
+        stack: error.stack
+      });
     }
   });
 
@@ -232,6 +256,14 @@ if (!gotTheLock) {
     }
 
     return { width: 1920, height: 1080 };
+  });
+
+  ipcMain.handle("get-main-screen-share-stream", () => {
+    console.debug("[SCREEN_SHARE_DIAG] Preview window requesting main stream", {
+      hasMainStream: !!global.mainScreenSharingStream,
+      streamId: global.mainScreenSharingStream?.id || "none"
+    });
+    return global.mainScreenSharingStream;
   });
 
   ipcMain.on("resize-preview-window", (event, { width, height }) => {

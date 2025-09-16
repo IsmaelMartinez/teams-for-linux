@@ -27,6 +27,8 @@ const allowedChannels = new Set([
   'get-screen-sharing-status',
   'get-screen-share-stream',
   'get-screen-share-screen',
+  'get-main-screen-share-stream',
+  'main-screen-share-stream',
   'screen-sharing-started',
   'screen-sharing-stopped',
   'resize-preview-window',
