@@ -144,7 +144,6 @@ function createScreenSharePreviewWindow() {
     });
     global.previewWindow = null;
     global.selectedScreenShareSource = null;
-    global.mainScreenSharingStream = null;
   });
 }
 

@@ -5,7 +5,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getScreenSharingStatus: () => ipcRenderer.invoke("get-screen-sharing-status"),
   getScreenShareStream: () => ipcRenderer.invoke("get-screen-share-stream"),
   getScreenShareScreen: () => ipcRenderer.invoke("get-screen-share-screen"),
-  getMainScreenShareStream: () => ipcRenderer.invoke("get-main-screen-share-stream"),
 
   // Window management
   resizeWindow: (dimensions) =>
