@@ -75,56 +75,75 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
   }
 }
 
-exports.initSso = function initIntuneSso(ssoInTuneAuthUser) {
+function waitForBrokerInterfaceAsync(retries, delay) {
+  return new Promise((resolve, reject) => {
+    function attempt(remaining) {
+      brokerService.getInterface(
+        "/com/microsoft/identity/broker1",
+        "com.microsoft.identity.Broker1",
+        function (err, broker) {
+          if (!err && broker) {
+            console.debug("[INTUNE_DIAG] microsoft-identity-broker DBus interface is ready");
+            return resolve(broker);
+          }
+
+          if (err?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
+            return reject(new Error("Broker not found, ensure it's installed"));
+          }
+
+          if (remaining > 0) {
+            console.debug(
+              `[INTUNE_DIAG] microsoft-identity-broker interface not ready`, {
+                attemptsRemaining: remaining,
+                delay: `${delay}ms`
+              }
+            );
+            setTimeout(() => attempt(remaining - 1), delay);
+          } else {
+            return reject(err || new Error("Broker DBUS Interface not ready"));
+          }
+        }
+      );
+    }
+
+    attempt(retries);
+  });
+}
+
+function getBrokerAccountsAsync(broker) {
+  return new Promise((resolve, reject) => {
+    broker.getAccounts(
+      "0.0",
+      "",
+      JSON.stringify({
+        clientId: "88200948-af09-45a1-9c03-53cdcc75c183",
+        redirectUri: "urn:ietf:oob",
+      }),
+      (err, resp) => {
+        if (err) return reject(err);
+        resolve(resp);
+      }
+    );
+  });
+}
+
+exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
   // v2.5.5: Enhanced Intune SSO initialization logging for better diagnostics
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
     configuredUser: ssoInTuneAuthUser || "(none - will use first available)",
     timestamp: new Date().toISOString()
   });
 
-  // Check if the D-Bus system is available
   try {
-    brokerService.getInterface(
-      "/com/microsoft/identity/broker1",
-      "com.microsoft.identity.Broker1",
-      function (err, broker) {
-        if (err) {
-          console.warn("[INTUNE_DIAG] Failed to find microsoft-identity-broker DBus interface", {
-            error: err.message || err,
-            suggestion: "Ensure Microsoft Identity Broker is installed and running on this system"
-          });
-          return;
-        }
-
-        console.debug("[INTUNE_DIAG] Successfully connected to Microsoft Identity Broker D-Bus interface");
-
-        broker.getAccounts(
-          "0.0",
-          "",
-          JSON.stringify({
-            clientId: "88200948-af09-45a1-9c03-53cdcc75c183",
-            redirectUri: "urn:ietf:oob",
-          }),
-          function (err, resp) {
-            if (err) {
-              console.warn("[INTUNE_DIAG] Failed to communicate with microsoft-identity-broker", {
-                error: err.message || err,
-                suggestion: "Check if the Identity Broker service is responding correctly"
-              });
-              return;
-            }
-            
-            console.debug("[INTUNE_DIAG] Successfully retrieved accounts from Identity Broker");
-            processInTuneAccounts(resp, ssoInTuneAuthUser);
-          },
-        );
-      },
-    );
-  } catch (error) {
-    console.error("[INTUNE_DIAG] Unexpected error during InTune SSO initialization:", {
-      error: error.message,
-      stack: error.stack,
-      suggestion: "This may indicate a system-level D-Bus or Identity Broker issue"
+    // Check if the D-Bus system is available
+    const broker = await waitForBrokerInterfaceAsync(10, 500);
+    // Get accounts if available
+    const resp = await getBrokerAccountsAsync(broker);
+    processInTuneAccounts(resp, ssoInTuneAuthUser);
+  } catch (err) {
+    console.warn("[INTUNE_DIAG] Broker cannot initialize SSO", {
+      error: err.message || err,
+      suggestion: "Ensure Microsoft Identity Broker is installed and running on this system"
     });
   }
 };

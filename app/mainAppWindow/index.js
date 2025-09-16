@@ -154,7 +154,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
   if (config.ssoInTuneEnabled) {
     intune = require("../intune");
-    intune.initSso(config.ssoInTuneAuthUser);
+    await intune.initSso(config.ssoInTuneAuthUser);
   }
 
   if (config.trayIconEnabled) {
