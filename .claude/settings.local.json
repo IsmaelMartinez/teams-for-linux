@@ -8,7 +8,8 @@
       "mcp__github__search_issues",
       "Bash(npm run lint)",
       "mcp__github__get_pull_request_comments",
-      "mcp__github__get_pull_request"
+      "mcp__github__get_pull_request",
+      "mcp__github__get_issue"
     ],
     "deny": [],
     "ask": []
