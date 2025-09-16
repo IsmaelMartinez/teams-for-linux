@@ -327,7 +327,7 @@ function applySpellCheckerConfiguration(languages, window) {
 }
 
 function onDidFinishLoad() {
-  console.debug("did-finish-load");
+  console.debug("MAIN_WINDOW: did-finish-load event fired - starting injections");
   window.webContents.executeJavaScript(`
 			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
@@ -337,8 +337,10 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`);
 
-  // Inject browser functionality
+  // Inject browser API interception scripts into Teams webpage context
+  // These must run early to override native APIs before Teams initializes
   injectScreenSharingLogic();
+  injectNotificationLogic();
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
@@ -358,6 +360,31 @@ function injectScreenSharingLogic() {
     window.webContents.executeJavaScript(script);
   } catch (err) {
     console.error("Failed to load injected screen sharing script:", err);
+  }
+}
+
+/**
+ * Injects notification interception script into Teams webpage context.
+ * This script overrides window.Notification to redirect Teams' notification
+ * calls to Electron's notification system, enabling tray icon badge updates.
+ * 
+ * Critical: Must run after page load but before Teams initializes notifications.
+ */
+function injectNotificationLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  const scriptPath = path.join(
+    __dirname,
+    "..",
+    "notifications",
+    "injectedNotification.js"
+  );
+  try {
+    const script = fs.readFileSync(scriptPath, "utf8");
+    window.webContents.executeJavaScript(script);
+    console.debug("NOTIFICATION_INJECTION: Script injected successfully");
+  } catch (err) {
+    console.error("Failed to load injected notification script:", err);
   }
 }
 
@@ -384,9 +411,13 @@ function onDidFrameFinishLoad(
   frameProcessId,
   frameRoutingId
 ) {
-  console.debug("did-frame-finish-load", event, isMainFrame);
+  console.debug("FRAME_LOAD: did-frame-finish-load", { isMainFrame });
 
   if (isMainFrame) {
+    console.debug("FRAME_LOAD: Main frame finished loading - triggering injections as fallback");
+    // Fallback: If did-finish-load doesn't fire, inject here for main frame
+    injectScreenSharingLogic();
+    injectNotificationLogic();
     return; // We want to insert CSS only into the Teams V2 content iframe
   }
 
@@ -547,6 +578,15 @@ function addEventHandlers() {
   );
   window.webContents.on("did-finish-load", onDidFinishLoad);
   window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
+  
+  // Debug: Log page loading events
+  window.webContents.on("did-start-loading", () => {
+    console.debug("MAIN_WINDOW: did-start-loading event fired");
+  });
+  
+  window.webContents.on("dom-ready", () => {
+    console.debug("MAIN_WINDOW: dom-ready event fired");
+  });
   window.on("closed", onWindowClosed);
   window.webContents.addListener("before-input-event", onBeforeInput);
 }

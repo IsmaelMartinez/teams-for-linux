@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize ActivityManager
     try {
-      const ActivityManager = require("./notifications/activityManager");
+      const ActivityManager = require("../notifications/activityManager");
       new ActivityManager(ipcRenderer, config).start();
     } catch (err) {
       console.error("Preload: ActivityManager failed to initialize:", err.message);

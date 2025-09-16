@@ -1,5 +1,5 @@
-const activityHub = require("../tools/activityHub");
-const wakeLock = require("../tools/wakeLock");
+const activityHub = require("../browser/tools/activityHub");
+const wakeLock = require("../browser/tools/wakeLock");
 
 class ActivityManager {
   constructor(ipcRenderer, config) {
