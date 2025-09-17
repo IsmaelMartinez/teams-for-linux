@@ -2,18 +2,10 @@ class MutationObserverTitle {
   init(config) {
     if (config.useMutationTitleLogic) {
       console.debug("MutationObserverTitle enabled");
-      
-      // Check if DOM is already loaded
-      if (document.readyState === 'loading') {
-        // DOM is still loading, wait for DOMContentLoaded
-        window.addEventListener(
-          "DOMContentLoaded",
-          this._applyMutationToTitleLogic,
-        );
-      } else {
-        // DOM is already loaded, apply logic immediately
-        this._applyMutationToTitleLogic();
-      }
+      window.addEventListener(
+        "DOMContentLoaded",
+        this._applyMutationToTitleLogic,
+      );
     }
   }
 

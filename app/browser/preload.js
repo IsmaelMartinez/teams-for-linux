@@ -166,15 +166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
-      { name: "trayIconRenderer", path: "./tools/trayIconRenderer" }
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" }
     ];
     
     let successCount = 0;
     modules.forEach(module => {
       try {
         const moduleInstance = require(module.path);
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+        if (module.name === "settings" || module.name === "theme") {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);
