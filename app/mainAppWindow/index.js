@@ -327,7 +327,7 @@ function applySpellCheckerConfiguration(languages, window) {
 }
 
 function onDidFinishLoad() {
-  console.debug("MAIN_WINDOW: did-finish-load event fired - starting injections");
+  console.debug("MAIN_WINDOW: did-finish-load event fired");
   window.webContents.executeJavaScript(`
 			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
@@ -340,7 +340,6 @@ function onDidFinishLoad() {
   // Inject browser API interception scripts into Teams webpage context
   // These must run early to override native APIs before Teams initializes
   injectScreenSharingLogic();
-  injectNotificationLogic();
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
@@ -363,30 +362,6 @@ function injectScreenSharingLogic() {
   }
 }
 
-/**
- * Injects notification interception script into Teams webpage context.
- * This script overrides window.Notification to redirect Teams' notification
- * calls to Electron's notification system, enabling tray icon badge updates.
- * 
- * Critical: Must run after page load but before Teams initializes notifications.
- */
-function injectNotificationLogic() {
-  const fs = require("fs");
-  const path = require("path");
-  const scriptPath = path.join(
-    __dirname,
-    "..",
-    "notifications",
-    "injectedNotification.js"
-  );
-  try {
-    const script = fs.readFileSync(scriptPath, "utf8");
-    window.webContents.executeJavaScript(script);
-    console.debug("NOTIFICATION_INJECTION: Script injected successfully");
-  } catch (err) {
-    console.error("Failed to load injected notification script:", err);
-  }
-}
 
 function initSystemThemeFollow(config) {
   if (config.followSystemTheme) {
@@ -417,8 +392,7 @@ function onDidFrameFinishLoad(
     console.debug("FRAME_LOAD: Main frame finished loading - triggering injections as fallback");
     // Fallback: If did-finish-load doesn't fire, inject here for main frame
     injectScreenSharingLogic();
-    injectNotificationLogic();
-    return; // We want to insert CSS only into the Teams V2 content iframe
+      return; // We want to insert CSS only into the Teams V2 content iframe
   }
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
