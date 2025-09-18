@@ -33,8 +33,14 @@ This is an independent project, not affiliated with Microsoft. Some features are
 ## Developer Documentation
 - **[Contributing Guide](contributing.md)** - Development setup, code standards, and contribution guidelines
 - **[IPC API Reference](ipc-api.md)** - Inter-process communication channels and developer integration
+- **[Development Guide](development/README.md)** - Architecture patterns, security guidelines, and development practices
+- **[Token Cache Architecture](development/token-cache-architecture.md)** - Authentication persistence and secure storage implementation  
+- **[Security Architecture](development/security-architecture.md)** - Security model, threat analysis, and compensating controls
 - **[Logging Configuration](log-config.md)** - Customizing application logging and debugging
 - **[Release Automation](release-info.md)** - Release process and automation for maintainers
+
+## Architecture Decisions
+- **[ADR-001: Token Cache Secure Storage](adr/001-token-cache-secure-storage.md)** - Decision to implement OS-level secure storage for authentication tokens
 
 ## Research & Analysis
 - **[AI Research Documentation](ai-research/index.md)** - Strategic analysis and research documents

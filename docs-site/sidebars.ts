@@ -43,6 +43,25 @@ const sidebars: SidebarsConfig = {
         'ipc-api',
         'log-config',
         'release-info',
+        {
+          type: 'category',
+          label: 'Architecture',
+          items: [
+            'development/README',
+            'development/token-cache-architecture',
+            'development/security-architecture',
+            'development/secure-storage-research',
+            'development/token-cache-research',
+            'development/dom-access-investigation',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Architecture Decisions',
+          items: [
+            'adr/001-token-cache-secure-storage',
+          ],
+        },
       ],
     },
     {
