@@ -36,6 +36,7 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 - **Tray Integration:** System tray with status indicators
 - **Cache Management:** Application cache handling
 - **Authentication:** SSO login support
+- **Audio Control:** Microphone auto-gain control disabling for professional audio setups
 
 ### State Management
 
