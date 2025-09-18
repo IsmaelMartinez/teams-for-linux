@@ -1,6 +1,7 @@
 // Teams Token Cache Bridge
-// v2.5.3: Implement localStorage-compatible token cache interface for Teams authentication provider
+// v2.5.6: Enhanced with secure storage backend using Electron safeStorage API
 // Addresses issue #1357 - Authentication refresh fails due to missing _tokenCache interface
+// Phase 2: OS-backed secure token storage with localStorage fallback
 
 /**
  * TeamsTokenCache - localStorage-compatible token cache bridge for Teams authentication
@@ -24,12 +25,22 @@ class TeamsTokenCache {
     this._useMemoryFallback = false;
     this._auditLog = [];
     
-    // Initialize with current localStorage state validation
-    this._validateInitialState();
+    // Initialize secure storage components
+    this._secureStorage = null;
+    this._tokenMigration = null;
+    this._useSecureStorage = false;
+    this._migrationCompleted = false;
+    
+    // Initialize storage backend (async)
+    this._initializeStorageBackend().catch(error => {
+      console.error('[TOKEN_CACHE] Storage backend initialization failed:', error.message);
+    });
     
     console.debug('[TOKEN_CACHE] TokenCache initialized', {
       available: this._isAvailable,
       memoryFallback: this._useMemoryFallback,
+      secureStorage: this._useSecureStorage,
+      migrationCompleted: this._migrationCompleted,
       initialStats: this._getCacheStats()
     });
   }
@@ -43,7 +54,7 @@ class TeamsTokenCache {
    * @param {string} key - The cache key
    * @returns {string|null} The cached value or null if not found
    */
-  getItem(key) {
+  async getItem(key) {
     try {
       if (typeof key !== 'string') {
         this._logOperation('GET_ERROR', '[INVALID_KEY_TYPE]', null, { error: 'Non-string key' });
@@ -51,13 +62,28 @@ class TeamsTokenCache {
       }
 
       let value;
+      
+      // Try secure storage first if available
+      if (this._useSecureStorage && this._secureStorage) {
+        try {
+          value = await this._secureStorage.getItem(key);
+          if (value) {
+            this._logOperation('GET_SECURE', key, value);
+            return value;
+          }
+        } catch (secureError) {
+          console.warn(`[TOKEN_CACHE] Secure storage getItem failed: ${secureError.message}`);
+        }
+      }
+      
+      // Fallback to localStorage or memory
       if (this._useMemoryFallback) {
         value = this._memoryFallback.get(key) || null;
       } else {
         value = localStorage.getItem(key);
       }
 
-      this._logOperation('GET', key, value);
+      this._logOperation('GET_FALLBACK', key, value);
       return value;
     } catch (error) {
       this._handleStorageError(error, 'getItem', key);
@@ -70,7 +96,7 @@ class TeamsTokenCache {
    * @param {string} key - The cache key
    * @param {string} value - The value to store
    */
-  setItem(key, value) {
+  async setItem(key, value) {
     try {
       if (typeof key !== 'string' || typeof value !== 'string') {
         const error = new TypeError('Key and value must be strings');
@@ -78,13 +104,29 @@ class TeamsTokenCache {
         throw error;
       }
 
-      if (this._useMemoryFallback) {
-        this._memoryFallback.set(key, value);
-      } else {
-        localStorage.setItem(key, value);
+      let storedSecurely = false;
+      
+      // Try secure storage first if available
+      if (this._useSecureStorage && this._secureStorage) {
+        try {
+          await this._secureStorage.setItem(key, value);
+          storedSecurely = true;
+          this._logOperation('SET_SECURE', key, value);
+        } catch (secureError) {
+          console.warn(`[TOKEN_CACHE] Secure storage setItem failed: ${secureError.message}`);
+        }
+      }
+      
+      // Fallback to localStorage/memory if secure storage failed or unavailable
+      if (!storedSecurely) {
+        if (this._useMemoryFallback) {
+          this._memoryFallback.set(key, value);
+        } else {
+          localStorage.setItem(key, value);
+        }
+        this._logOperation('SET_FALLBACK', key, value);
       }
 
-      this._logOperation('SET', key, value);
     } catch (error) {
       if (error.name === 'QuotaExceededError') {
         this._handleQuotaError(key, value);
@@ -99,20 +141,31 @@ class TeamsTokenCache {
    * Remove item from cache
    * @param {string} key - The cache key to remove
    */
-  removeItem(key) {
+  async removeItem(key) {
     try {
       if (typeof key !== 'string') {
         this._logOperation('REMOVE_ERROR', '[INVALID_KEY_TYPE]');
         return;
       }
 
+      // Remove from secure storage if available
+      if (this._useSecureStorage && this._secureStorage) {
+        try {
+          await this._secureStorage.removeItem(key);
+          this._logOperation('REMOVE_SECURE', key);
+        } catch (secureError) {
+          console.warn(`[TOKEN_CACHE] Secure storage removeItem failed: ${secureError.message}`);
+        }
+      }
+      
+      // Also remove from localStorage/memory (migration cleanup)
       if (this._useMemoryFallback) {
         this._memoryFallback.delete(key);
       } else {
         localStorage.removeItem(key);
       }
 
-      this._logOperation('REMOVE', key);
+      this._logOperation('REMOVE_FALLBACK', key);
     } catch (error) {
       this._handleStorageError(error, 'removeItem', key);
     }
@@ -122,18 +175,18 @@ class TeamsTokenCache {
    * Clear authentication-related cache entries (selective clearing)
    * NOTE: Only clears auth-related keys, not entire localStorage
    */
-  clear() {
+  async clear() {
     try {
-      const authKeys = this._getAuthRelatedKeys();
+      const authKeys = await this._getAuthRelatedKeys();
       this._logOperation('CLEAR_START', `${authKeys.length} keys`);
 
-      authKeys.forEach(key => {
+      for (const key of authKeys) {
         try {
-          this.removeItem(key);
+          await this.removeItem(key);
         } catch (error) {
           console.warn(`[TOKEN_CACHE] Failed to remove key during clear: ${this._sanitizeKey(key)}`, error.message);
         }
-      });
+      }
 
       this._logOperation('CLEAR_COMPLETE', `${authKeys.length} keys`);
     } catch (error) {
@@ -187,9 +240,9 @@ class TeamsTokenCache {
    * @param {string} key - The token key
    * @returns {boolean} True if token is valid
    */
-  isTokenValid(key) {
+  async isTokenValid(key) {
     try {
-      const value = this.getItem(key);
+      const value = await this.getItem(key);
       if (!value) return false;
 
       // Try to parse token data for expiry
@@ -221,9 +274,9 @@ class TeamsTokenCache {
    * @param {string} key - The token key
    * @returns {number|null} Expiry timestamp or null if not available
    */
-  getTokenExpiry(key) {
+  async getTokenExpiry(key) {
     try {
-      const value = this.getItem(key);
+      const value = await this.getItem(key);
       if (!value) return null;
 
       try {
@@ -243,9 +296,9 @@ class TeamsTokenCache {
    * @param {string} uuid - The user UUID
    * @returns {string[]} Array of token keys for the user
    */
-  getUserTokens(uuid) {
+  async getUserTokens(uuid) {
     try {
-      const allKeys = this._getAllKeys();
+      const allKeys = await this._getAllKeys();
       return allKeys.filter(key => 
         key.startsWith(`tmp.auth.v1.${uuid}.`) || 
         key.startsWith(`${uuid}.`)
@@ -260,9 +313,9 @@ class TeamsTokenCache {
    * Get all global authentication tokens
    * @returns {string[]} Array of global token keys
    */
-  getGlobalTokens() {
+  async getGlobalTokens() {
     try {
-      const allKeys = this._getAllKeys();
+      const allKeys = await this._getAllKeys();
       return allKeys.filter(key => key.startsWith('tmp.auth.v1.GLOBAL.'));
     } catch (error) {
       this._logError(error, 'getGlobalTokens');
@@ -274,9 +327,9 @@ class TeamsTokenCache {
    * Get all refresh tokens
    * @returns {string[]} Array of refresh token keys
    */
-  getRefreshTokens() {
+  async getRefreshTokens() {
     try {
-      const allKeys = this._getAllKeys();
+      const allKeys = await this._getAllKeys();
       return allKeys.filter(key => key.includes('.refresh_token'));
     } catch (error) {
       this._logError(error, 'getRefreshTokens');
@@ -288,18 +341,20 @@ class TeamsTokenCache {
    * Validate cache integrity and health
    * @returns {boolean} True if cache is healthy
    */
-  validateCache() {
+  async validateCache() {
     try {
-      const stats = this._getCacheStats();
+      const stats = await this._getCacheStats();
       const hasAuthTokens = stats.authKeysCount > 0;
       const hasRefreshTokens = stats.refreshTokenCount > 0;
-      const storageAccessible = this._isAvailable && !this._useMemoryFallback;
+      const storageAccessible = (this._useSecureStorage && this._secureStorage) || 
+                                (this._isAvailable && !this._useMemoryFallback);
 
       this._logOperation('VALIDATE', 'cache health', null, {
         healthy: hasAuthTokens && storageAccessible,
         authTokens: hasAuthTokens,
         refreshTokens: hasRefreshTokens,
-        storageAccessible
+        storageAccessible,
+        secureStorage: this._useSecureStorage
       });
 
       return hasAuthTokens && storageAccessible;
@@ -313,13 +368,110 @@ class TeamsTokenCache {
    * Get cache statistics for monitoring and debugging
    * @returns {Object} Cache statistics
    */
-  getCacheStats() {
-    return this._getCacheStats();
+  async getCacheStats() {
+    return await this._getCacheStats();
+  }
+
+  /**
+   * Get storage backend information
+   * @returns {Object} Storage backend details
+   */
+  getStorageInfo() {
+    const info = {
+      localStorage: this._isAvailable,
+      memoryFallback: this._useMemoryFallback,
+      secureStorage: this._useSecureStorage,
+      migrationCompleted: this._migrationCompleted
+    };
+    
+    if (this._secureStorage) {
+      Object.assign(info, this._secureStorage.getStorageInfo());
+    }
+    
+    return info;
+  }
+
+  /**
+   * Trigger migration to secure storage if needed
+   * @returns {Object} Migration results
+   */
+  async triggerMigration() {
+    try {
+      if (!this._tokenMigration) {
+        throw new Error('Migration module not available');
+      }
+      
+      const migrationNeeded = await this._tokenMigration.isMigrationNeeded();
+      if (!migrationNeeded) {
+        return { status: 'not_needed', message: 'Migration not required' };
+      }
+      
+      const results = await this._tokenMigration.performMigration();
+      
+      // Update our state after successful migration
+      if (results.status === 'completed') {
+        this._migrationCompleted = true;
+        this._useSecureStorage = true;
+      }
+      
+      return results;
+    } catch (error) {
+      this._logError(error, 'triggerMigration');
+      throw error;
+    }
   }
 
   //
   // Private Implementation Methods
   //
+
+  /**
+   * Initialize storage backend (secure storage + migration)
+   * @private
+   */
+  async _initializeStorageBackend() {
+    try {
+      // Initialize secure storage
+      this._secureStorage = require('./secureTokenStorage');
+      this._tokenMigration = require('./tokenMigration');
+      
+      // Check if secure storage is available
+      this._useSecureStorage = this._secureStorage.isSecureStorageAvailable();
+      
+      // Check migration status
+      this._migrationCompleted = this._tokenMigration.isMigrationComplete();
+      
+      // Perform migration if needed
+      if (this._useSecureStorage && !this._migrationCompleted) {
+        const migrationNeeded = await this._tokenMigration.isMigrationNeeded();
+        if (migrationNeeded) {
+          console.log('[TOKEN_CACHE] Performing automatic migration to secure storage...');
+          try {
+            const migrationResults = await this._tokenMigration.performMigration();
+            if (migrationResults.status === 'completed') {
+              this._migrationCompleted = true;
+              console.log('[TOKEN_CACHE] Migration completed successfully');
+            }
+          } catch (migrationError) {
+            console.error('[TOKEN_CACHE] Migration failed:', migrationError.message);
+            // Continue with localStorage fallback
+          }
+        }
+      }
+      
+      console.debug('[TOKEN_CACHE] Storage backend initialized', {
+        secureStorage: this._useSecureStorage,
+        migrationCompleted: this._migrationCompleted
+      });
+      
+    } catch (error) {
+      console.warn('[TOKEN_CACHE] Failed to initialize secure storage:', error.message);
+      this._useSecureStorage = false;
+    }
+    
+    // Initialize with current localStorage state validation
+    this._validateInitialState();
+  }
 
   /**
    * Check localStorage availability
@@ -364,8 +516,8 @@ class TeamsTokenCache {
    * @returns {string[]} Array of auth-related keys
    * @private
    */
-  _getAuthRelatedKeys() {
-    const allKeys = this._getAllKeys();
+  async _getAuthRelatedKeys() {
+    const allKeys = await this._getAllKeys();
     const authPatterns = [
       /^tmp\.auth\.v1\./,              // Teams auth v1
       /^[0-9a-f-]{36}\..*\.refresh_token/, // Refresh tokens
@@ -383,11 +535,24 @@ class TeamsTokenCache {
    * @returns {string[]} Array of all keys
    * @private
    */
-  _getAllKeys() {
-    if (this._useMemoryFallback) {
-      return Array.from(this._memoryFallback.keys());
+  async _getAllKeys() {
+    let allKeys = [];
+    
+    // Get keys from secure storage if available
+    if (this._useSecureStorage && this._secureStorage) {
+      // Note: For now, secure storage doesn't expose all keys directly
+      // This is a limitation we'll address in future versions
+      // For now, we'll combine localStorage keys (for migration scenarios)
     }
-    return Object.keys(localStorage);
+    
+    // Get keys from localStorage or memory fallback
+    if (this._useMemoryFallback) {
+      allKeys = Array.from(this._memoryFallback.keys());
+    } else {
+      allKeys = Object.keys(localStorage);
+    }
+    
+    return allKeys;
   }
 
   /**
@@ -395,11 +560,13 @@ class TeamsTokenCache {
    * @returns {Object} Detailed cache statistics
    * @private
    */
-  _getCacheStats() {
+  async _getCacheStats() {
     const stats = {
       timestamp: new Date().toISOString(),
-      storageType: this._useMemoryFallback ? 'memory' : 'localStorage',
+      storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
       available: this._isAvailable,
+      secureStorageAvailable: this._useSecureStorage,
+      migrationCompleted: this._migrationCompleted,
       totalKeys: 0,
       authKeysCount: 0,
       refreshTokenCount: 0,
@@ -411,7 +578,7 @@ class TeamsTokenCache {
     };
 
     try {
-      const allKeys = this._getAllKeys();
+      const allKeys = await this._getAllKeys();
       stats.totalKeys = allKeys.length;
 
       let totalKeyLength = 0;
@@ -436,6 +603,14 @@ class TeamsTokenCache {
       });
 
       stats.averageKeyLength = allKeys.length > 0 ? Math.round(totalKeyLength / allKeys.length) : 0;
+      
+      // Add secure storage specific stats if available
+      if (this._secureStorage) {
+        const secureInfo = this._secureStorage.getStorageInfo();
+        stats.secureBackend = secureInfo.backend;
+        stats.encryptionQuality = secureInfo.encryptionQuality;
+      }
+      
     } catch (error) {
       console.warn('[TOKEN_CACHE] Error calculating stats:', error.message);
     }
@@ -449,14 +624,25 @@ class TeamsTokenCache {
    * @param {string} value - The value being stored
    * @private
    */
-  _handleQuotaError(key, value) {
+  async _handleQuotaError(key, value) {
     console.warn('[TOKEN_CACHE] Storage quota exceeded, attempting cleanup');
     
     try {
       // Clean expired tokens first
-      this._cleanExpiredTokens();
+      await this._cleanExpiredTokens();
       
-      // Retry the operation once
+      // If using secure storage, try that first
+      if (this._useSecureStorage && this._secureStorage) {
+        try {
+          await this._secureStorage.setItem(key, value);
+          this._logOperation('QUOTA_RETRY_SECURE_SUCCESS', key, value);
+          return;
+        } catch (secureError) {
+          console.warn('[TOKEN_CACHE] Secure storage also failed during quota retry');
+        }
+      }
+      
+      // Retry localStorage operation once
       localStorage.setItem(key, value);
       this._logOperation('QUOTA_RETRY_SUCCESS', key, value);
     } catch (retryError) {
@@ -474,20 +660,21 @@ class TeamsTokenCache {
    * Clean expired tokens to free storage space
    * @private
    */
-  _cleanExpiredTokens() {
-    const authKeys = this._getAuthRelatedKeys();
+  async _cleanExpiredTokens() {
+    const authKeys = await this._getAuthRelatedKeys();
     let cleanedCount = 0;
 
-    authKeys.forEach(key => {
-      if (!this.isTokenValid(key)) {
-        try {
-          this.removeItem(key);
+    for (const key of authKeys) {
+      try {
+        const isValid = await this.isTokenValid(key);
+        if (!isValid) {
+          await this.removeItem(key);
           cleanedCount++;
-        } catch (error) {
-          console.warn(`[TOKEN_CACHE] Failed to clean expired token: ${this._sanitizeKey(key)}`, error.message);
         }
+      } catch (error) {
+        console.warn(`[TOKEN_CACHE] Failed to clean expired token: ${this._sanitizeKey(key)}`, error.message);
       }
-    });
+    }
 
     console.debug(`[TOKEN_CACHE] Cleaned ${cleanedCount} expired tokens`);
   }
