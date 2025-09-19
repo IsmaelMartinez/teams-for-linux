@@ -77,6 +77,7 @@ We will implement a **two-phase token cache solution**:
 2. **Migration Complexity**: One-time migration adds temporary complexity (removable in future versions)
 3. **Async Interface**: Teams cache interface needed to be made async-compatible
 4. **Storage Size Limitation**: Encrypted tokens stored in localStorage, subject to quota limits
+5. **Security Trade-off**: Application requires disabled Electron isolation (`contextIsolation: false`, `sandbox: false`) for DOM access functionality
 
 ### Risks and Mitigations
 
