@@ -6,7 +6,6 @@
  * automatic gain adjustment, providing users with manual control over microphone levels.
  * 
  * Originally created by Joey Watts
- * Restored for teams-for-linux v2.5.8+
  */
 
 let disableAutogain = function () {
