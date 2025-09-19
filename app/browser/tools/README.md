@@ -25,7 +25,7 @@ Manages application settings and configuration synchronization between main and 
 ### Media & Communication
 
 #### [disableAutogain.js](disableAutogain.js)
-**New in v2.5.8** - Disables microphone auto-gain control by intercepting `getUserMedia` calls and modifying audio constraints. Supports both modern (`autoGainControl`) and legacy (`googAutoGainControl`) MediaStream APIs.
+Disables microphone auto-gain control by intercepting `getUserMedia` calls and modifying audio constraints. Supports both modern (`autoGainControl`) and legacy (`googAutoGainControl`) MediaStream APIs.
 
 **Configuration**: `disableAutogain: true`  
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
