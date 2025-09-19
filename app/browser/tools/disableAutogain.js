@@ -8,7 +8,7 @@
  * Originally created by Joey Watts
  */
 
-let disableAutogain = function () {
+const applyDisableAutogainPatch = function () {
   function setLegacyChromeConstraint(constraint, name, value) {
     if (constraint.mandatory && name in constraint.mandatory) {
       constraint.mandatory[name] = value;
