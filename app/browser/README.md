@@ -15,3 +15,6 @@ Handles browser-side code injection and communication with the Teams web interfa
 - Custom CSS injection
 - Browser API patching for enhanced functionality
 - Activity monitoring for status updates
+- Microphone auto-gain control disabling
+- Screen sharing stream management
+- Keyboard shortcuts and zoom controls

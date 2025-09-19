@@ -100,6 +100,7 @@ Place your `config.json` file in the appropriate location based on your installa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
 | `screenSharingThumbnail` | `object` | `{ enabled: true, alwaysOnTop: true }` | Automatically show thumbnail window when screen sharing |
 | `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
 | `videoMenu` | `boolean` | `false` | Enable menu entry for controlling video elements |
@@ -171,6 +172,16 @@ Place your `config.json` file in the appropriate location based on your installa
   "proxyServer": "proxy.company.com:8080"
 }
 ```
+
+#### Professional Audio Setup
+```json
+{
+  "disableAutogain": true
+}
+```
+
+> [!NOTE]
+> The `disableAutogain` option prevents Teams from automatically adjusting your microphone volume. This is particularly useful for users with professional audio equipment, external mixers, or specific hardware configurations where manual gain control is preferred.
 
 ### System-wide Configuration
 
