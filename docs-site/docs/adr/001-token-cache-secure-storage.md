@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted** - Implementation completed as of v2.5.6
+**Accepted** - Implementation completed as of v2.5.9
 
 ## Context
 
