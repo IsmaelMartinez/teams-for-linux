@@ -176,9 +176,7 @@ Place your `config.json` file in the appropriate location based on your installa
 #### Professional Audio Setup
 ```json
 {
-  "disableAutogain": true,
-  "disableNotificationSound": false,
-  "customCSSName": "compactDark"
+  "disableAutogain": true
 }
 ```
 
