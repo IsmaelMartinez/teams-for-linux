@@ -167,7 +167,7 @@ class TeamsTokenCache {
       }
       return localStorage.length;
     } catch (error) {
-      console.warn('TokenCache: Failed to get storage length:', error.message);
+      console.warn('[TOKEN_CACHE] Failed to get storage length:', error.message);
       return 0;
     }
   }
@@ -180,7 +180,7 @@ class TeamsTokenCache {
       }
       return localStorage.key(index);
     } catch (error) {
-      console.warn('TokenCache: Failed to get key at index', index, ':', error.message);
+      console.warn('[TOKEN_CACHE] Failed to get key at index', index, ':', error.message);
       return null;
     }
   }
@@ -212,7 +212,7 @@ class TeamsTokenCache {
         return true; // Non-JSON token, assume valid
       }
     } catch (error) {
-      console.warn('TokenCache: Failed to validate token:', error.message);
+      console.warn('[TOKEN_CACHE] Failed to validate token:', error.message);
       return false;
     }
   }
