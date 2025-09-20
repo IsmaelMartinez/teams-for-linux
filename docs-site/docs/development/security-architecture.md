@@ -167,7 +167,7 @@ _detectAndLogReactVersion() {
 
 ## Future Security Enhancements
 
-### Token Storage Security (Implemented v2.5.6)
+### Token Storage Security (Implemented v2.5.9)
 
 **Token Cache Secure Storage Implementation**:
 - **OS-Level Encryption**: Authentication tokens encrypted using Electron `safeStorage` API

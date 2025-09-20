@@ -1,5 +1,5 @@
 // Teams Token Cache Bridge
-// v2.5.6: Simplified secure storage implementation using Electron safeStorage API
+// v2.5.9: Simplified secure storage implementation using Electron safeStorage API
 // Addresses issue #1357 - Authentication refresh fails due to missing _tokenCache interface
 
 const { safeStorage } = require('electron');
