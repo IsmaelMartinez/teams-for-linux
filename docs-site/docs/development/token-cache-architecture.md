@@ -53,10 +53,6 @@ graph TB
         F --> G[OS-Specific Secure Storage]
     end
     
-    subgraph "Migration System"
-        J[One-time Migration] --> C
-        J --> K[localStorage Cleanup]
-    end
 ```
 
 ## Implementation Details
@@ -102,11 +98,11 @@ The implementation uses Electron's `safeStorage` API which automatically handles
 - **Memory Fallback**: Temporary storage for quota exceeded scenarios
 - **PII Protection**: All logging sanitizes personally identifiable information
 
-#### 3. Migration Safety
+#### 3. Natural Transition
 
-- **One-time Migration**: Automatic migration from localStorage to secure storage
-- **No Data Loss**: Migration preserves all existing tokens
-- **Error Recovery**: Graceful handling of migration failures
+- **Gradual Security**: New tokens automatically use secure storage
+- **Existing Compatibility**: Old tokens continue working via fallback
+- **Token Refresh**: Natural security improvement as tokens refresh
 
 ## Token Storage Format
 
@@ -136,7 +132,7 @@ The system recognizes and handles multiple token formats:
 The token cache system requires no user configuration and works automatically:
 
 1. **Availability Detection**: Automatically detects secure storage availability
-2. **Migration Trigger**: Performs one-time migration if needed
+2. **Storage Selection**: Chooses secure storage for new tokens when available
 3. **Fallback Selection**: Selects appropriate storage backend based on availability
 
 ### Runtime Information
@@ -148,7 +144,6 @@ Diagnostic information available via `getStorageInfo()`:
   localStorage: true,
   memoryFallback: false,
   secureStorage: true,
-  migrationComplete: true,
   platform: "darwin",
   secureBackend: "electron-safeStorage"
 }
@@ -162,9 +157,9 @@ Diagnostic information available via `getStorageInfo()`:
 - **Security Errors**: Graceful degradation to localStorage
 - **Encryption Errors**: Fallback to unencrypted storage
 
-### Migration Errors
+### Storage Fallback
 
-- **Partial Migration**: Continues with successfully migrated tokens
+- **Graceful Degradation**: Falls back to localStorage when secure storage unavailable
 - **Complete Failure**: Leaves tokens in localStorage
 - **Recovery**: No data loss in any failure scenario
 
@@ -173,7 +168,7 @@ Diagnostic information available via `getStorageInfo()`:
 ### Optimization Strategies
 
 1. **Lazy Initialization**: Secure storage initialized only when needed
-2. **Simple Migration**: Minimal overhead one-time migration
+2. **No Migration**: Zero overhead natural transition
 3. **Efficient Fallback**: Fast detection and switching between backends
 4. **Minimal Logging**: Reduced logging overhead compared to complex systems
 
@@ -183,7 +178,6 @@ Diagnostic information available via `getStorageInfo()`:
 |-----------|----------------|--------------|--------|
 | getItem | ~2ms | ~1ms | ~0.1ms |
 | setItem | ~3ms | ~1ms | ~0.1ms |
-| Migration | ~50ms/token | N/A | N/A |
 
 ## Troubleshooting
 
@@ -195,7 +189,7 @@ Diagnostic information available via `getStorageInfo()`:
 **Cause**: Secure storage unavailable (check `safeStorage.isEncryptionAvailable()`)
 **Resolution**: Automatic fallback to localStorage, no user action needed
 
-#### 2. Migration Failures
+#### 2. Storage Availability
 
 **Symptoms**: Some tokens not migrated to secure storage
 **Cause**: Individual token encryption failures
@@ -220,14 +214,14 @@ DEBUG=token-cache npm start
 ```
 [TOKEN_CACHE] TokenCache initialized { localStorage: true, secureStorage: true, migrated: true }
 [TOKEN_CACHE] Migrating 15 tokens to secure storage...
-[TOKEN_CACHE] Migration complete: 15/15 tokens migrated
+[TOKEN_CACHE] Secure storage available and ready
 ```
 
 ## Future Enhancements
 
 ### Planned Improvements
 
-- **Migration Removal**: Remove migration code in future versions once adoption complete
+- **Simplified Architecture**: No migration complexity to maintain
 - **Performance Optimization**: Further reduce encryption/decryption overhead
 - **Advanced Diagnostics**: Enhanced monitoring for enterprise environments
 
