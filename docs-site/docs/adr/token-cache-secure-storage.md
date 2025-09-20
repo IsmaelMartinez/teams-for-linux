@@ -131,7 +131,7 @@ graph TB
 
 ### 4. **No Secure Storage**
 - localStorage only implementation
-- **Rejected**: Security concerns for authentication tokens
+- **Rejected**: Security concerns for authentication tokens. It is ok but we can do better
 
 ## Monitoring and Success Metrics
 
