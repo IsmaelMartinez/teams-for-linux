@@ -11,7 +11,7 @@ teams-for-linux --help
 
 ## Configuration
 
-See [`../../docs/configuration.md`](../../docs/configuration.md) for complete configuration documentation including:
+See [`../../docs-site/docs/configuration.md`](../../docs-site/docs/configuration.md) for complete configuration documentation including:
 
 - Configuration file locations and precedence
 - All available options with defaults

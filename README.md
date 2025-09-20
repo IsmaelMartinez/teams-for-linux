@@ -79,12 +79,9 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 - 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)
 - 🤝 **Contributing**: See [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
-## Advanced Usage
+## Security & Sandboxing
 
-<details>
-<summary><strong>Security & Sandboxing</strong></summary>
-
-As of v2.5.2+, Electron's contextIsolation and sandbox features are disabled to enable Teams DOM access functionality. For enhanced security, use system-level sandboxing:
+Electron's contextIsolation and sandbox features are disabled to enable Teams DOM access functionality. For enhanced security, use system-level sandboxing:
 
 **Available options**:
 - **Flatpak**: Built-in isolation via Flathub
@@ -93,7 +90,8 @@ As of v2.5.2+, Electron's contextIsolation and sandbox features are disabled to 
 - **AppArmor/SELinux**: Most Linux distributions include these by default
 
 System-level sandboxing provides better isolation than Electron's built-in features while preserving full functionality.
-</details>
+
+## Advanced Usage
 
 ## History
 

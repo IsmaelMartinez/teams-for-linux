@@ -195,4 +195,4 @@ No direct configuration options, but behavior is influenced by:
 
 ---
 
-For more information about the complete screen sharing implementation, see [Screen Sharing Documentation](../../docs/screen-sharing.md).
+For more information about the complete screen sharing implementation, see [Screen Sharing Documentation](../../docs-site/docs/screen-sharing.md).

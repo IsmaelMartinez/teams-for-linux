@@ -15,4 +15,4 @@ Provides custom styling capabilities for the Teams interface.
 
 Themes sourced from [userstyles.org](https://userstyles.org). See [issue #77](https://github.com/IsmaelMartinez/teams-for-linux/issues/77) for adding new themes.
 
-Configuration details: [`../../docs/configuration.md`](../../docs/configuration.md)
+Configuration details: [`../../docs-site/docs/configuration.md`](../../docs-site/docs/configuration.md)
