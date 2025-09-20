@@ -164,13 +164,7 @@ graph TB
 - Graceful fallback mechanisms
 
 ### Version 2.x (Future Enhancements)
-- **Performance Optimization**: Reduce encryption overhead
-- **Enterprise Features**: Advanced diagnostics, audit logging
-
-### Version 3.x (Long-term Vision)
-- **Multi-User Support**: Handle multiple Teams accounts
-- **Cloud Synchronization**: Optional secure cloud backup
-- **Advanced Security**: Hardware security module integration
+- **Hardware Security Module Integration**: Leverage HSM for enterprise-grade key management and cryptographic operations
 
 ## Decision Record Metadata
 
