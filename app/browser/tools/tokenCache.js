@@ -13,7 +13,7 @@ const { safeStorage } = require('electron');
  * Key Features:
  * - Direct localStorage compatibility (getItem, setItem, removeItem, clear)
  * - Optional OS-level encryption using Electron safeStorage
- * - Automatic one-time migration from localStorage to secure storage
+ * - Natural transition: new tokens use secure storage, existing via fallback
  * - Graceful fallback to localStorage if secure storage unavailable
  * - Teams token pattern recognition and validation
  * - Simple error handling with memory fallback
@@ -27,16 +27,13 @@ class TeamsTokenCache {
     
     // Secure storage setup
     this._useSecureStorage = false;
-    this._migrationComplete = false;
     this._securePrefix = 'secure_teams_';
-    this._migrationKey = 'teams_secure_migration_v1';
     
     this._initializeSecureStorage();
     
     console.debug('[TOKEN_CACHE] TokenCache initialized', {
       localStorage: this._isAvailable,
-      secureStorage: this._useSecureStorage,
-      migrated: this._migrationComplete
+      secureStorage: this._useSecureStorage
     });
   }
 
@@ -225,7 +222,6 @@ class TeamsTokenCache {
       localStorage: this._isAvailable,
       memoryFallback: this._useMemoryFallback,
       secureStorage: this._useSecureStorage,
-      migrationComplete: this._migrationComplete,
       platform: process.platform,
       secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
     };
@@ -249,13 +245,7 @@ class TeamsTokenCache {
         return;
       }
 
-      // Check migration status
-      this._migrationComplete = localStorage.getItem(this._migrationKey) === 'true';
-      
-      // Perform one-time migration if needed
-      if (!this._migrationComplete) {
-        this._performMigration();
-      }
+      console.debug('[TOKEN_CACHE] Secure storage available');
       
     } catch (error) {
       console.warn('[TOKEN_CACHE] Secure storage initialization failed:', error.message);
@@ -263,49 +253,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Perform simple one-time migration
-   * @private
-   */
-  _performMigration() {
-    try {
-      const authKeys = this._getAuthRelatedKeys();
-      if (authKeys.length === 0) {
-        // No tokens to migrate
-        localStorage.setItem(this._migrationKey, 'true');
-        this._migrationComplete = true;
-        return;
-      }
-
-      console.log(`[TOKEN_CACHE] Migrating ${authKeys.length} tokens to secure storage...`);
-      let migratedCount = 0;
-
-      authKeys.forEach(key => {
-        try {
-          const value = localStorage.getItem(key);
-          if (value) {
-            // Store in secure storage
-            const encrypted = safeStorage.encryptString(value);
-            localStorage.setItem(this._securePrefix + key, encrypted.toString('base64'));
-            
-            // Remove from localStorage
-            localStorage.removeItem(key);
-            migratedCount++;
-          }
-        } catch (error) {
-          console.warn(`[TOKEN_CACHE] Failed to migrate key ${this._sanitizeKey(key)}: ${error.message}`);
-        }
-      });
-
-      localStorage.setItem(this._migrationKey, 'true');
-      this._migrationComplete = true;
-      
-      console.log(`[TOKEN_CACHE] Migration complete: ${migratedCount}/${authKeys.length} tokens migrated`);
-      
-    } catch (error) {
-      console.error('[TOKEN_CACHE] Migration failed:', error.message);
-    }
-  }
 
   /**
    * Get item from secure storage
