@@ -18,4 +18,4 @@ Preserves essential data:
 - User preferences  
 - Persistent storage
 
-For configuration details, see [`../../docs/configuration.md`](../../docs/configuration.md#cache-management).
+For configuration details, see [`../../docs-site/docs/configuration.md`](../../docs-site/docs/configuration.md#cache-management).

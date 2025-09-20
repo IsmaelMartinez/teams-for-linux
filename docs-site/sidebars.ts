@@ -59,7 +59,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture Decisions',
           items: [
-            'adr/001-token-cache-secure-storage',
+            'adr/token-cache-secure-storage',
           ],
         },
       ],
