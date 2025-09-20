@@ -393,8 +393,6 @@ class TeamsTokenCache {
     }
   }
 
-  // Platform-specific backend detection removed - Electron safeStorage abstracts OS details
-
   /**
    * Sanitize key for logging (remove PII)
    * @private
