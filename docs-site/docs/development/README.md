@@ -18,7 +18,7 @@ When working on Teams for Linux:
 1. **Review token cache architecture** for authentication and secure storage patterns
 2. **Read the security architecture** to understand security trade-offs and requirements
 3. **Review DOM access investigation** for context on current implementation choices  
-4. **Check ADR documents** (`../adr/`) for architecture decisions and rationale
+4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
 
 ### Key Development Patterns
@@ -48,7 +48,7 @@ Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) fo
 - [Configuration Options](../configuration.md) - User-facing configuration documentation
 - [IPC API](../ipc-api.md) - Inter-process communication reference
 - [Contributing Guidelines](../contributing.md) - General contribution guidelines
-- [Architecture Decision Records](../adr/) - Technical decisions and rationale
+- [Architecture Decision Records](#adr-index) - Technical decisions and rationale
 
 ### ADR Index
 - [ADR-001: Token Cache Secure Storage](../adr/token-cache-secure-storage.md) - Decision to implement OS-level secure storage for authentication tokens
