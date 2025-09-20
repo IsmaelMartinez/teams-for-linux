@@ -50,9 +50,7 @@ graph TB
     
     subgraph "Secure Storage Layer"
         C --> F[Electron safeStorage]
-        F --> G[macOS Keychain]
-        F --> H[Windows DPAPI]
-        F --> I[Linux kwallet/gnome]
+        F --> G[OS-Specific Secure Storage]
     end
     
     subgraph "Migration System"
@@ -88,13 +86,7 @@ if (authProvider && !authProvider._tokenCache) {
 
 #### 3. Cross-Platform Secure Storage
 
-The implementation uses Electron's `safeStorage` API which provides platform-specific encryption:
-
-| Platform | Backend | Security Level | Notes |
-|----------|---------|----------------|-------|
-| macOS | Keychain | High | App-specific keychain isolation |
-| Windows | DPAPI | Medium | User-level protection |
-| Linux | kwallet/gnome | Variable | Depends on desktop environment |
+The implementation uses Electron's `safeStorage` API which automatically handles platform-specific encryption backends (macOS Keychain, Windows DPAPI, Linux Secret Service). The application only needs to check `safeStorage.isEncryptionAvailable()` - Electron abstracts all OS-specific details.
 
 ### Security Considerations
 
@@ -158,7 +150,7 @@ Diagnostic information available via `getStorageInfo()`:
   secureStorage: true,
   migrationComplete: true,
   platform: "darwin",
-  secureBackend: "keychain"
+  secureBackend: "electron-safeStorage"
 }
 ```
 
@@ -200,7 +192,7 @@ Diagnostic information available via `getStorageInfo()`:
 #### 1. Secure Storage Unavailable
 
 **Symptoms**: Logs show "Secure storage not available"
-**Cause**: Platform doesn't support secure storage or user permissions
+**Cause**: Secure storage unavailable (check `safeStorage.isEncryptionAvailable()`)
 **Resolution**: Automatic fallback to localStorage, no user action needed
 
 #### 2. Migration Failures
@@ -300,14 +292,14 @@ This will cause the system to fall back to localStorage on next startup.
 ### For Users
 
 - **Keep OS Updated**: Ensure operating system security updates are current
-- **Use Supported Platforms**: Secure storage works best on supported desktop environments
+- **Check Availability**: Use `safeStorage.isEncryptionAvailable()` to verify secure storage support
 - **Monitor Logs**: Watch for security warnings in application logs
 
 ### For Developers
 
 - **PII Protection**: Never log actual token values or user identifiers
 - **Error Handling**: Always provide fallback mechanisms for storage failures
-- **Platform Testing**: Test across all supported platforms and desktop environments
+- **Availability Testing**: Test both with and without secure storage availability
 - **Migration Testing**: Verify migration works with various token configurations
 
 ---

@@ -227,7 +227,7 @@ class TeamsTokenCache {
       secureStorage: this._useSecureStorage,
       migrationComplete: this._migrationComplete,
       platform: process.platform,
-      secureBackend: this._useSecureStorage ? this._detectSecureBackend() : 'none'
+      secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
     };
   }
 
@@ -393,23 +393,7 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Detect secure storage backend
-   * @private
-   */
-  _detectSecureBackend() {
-    switch (process.platform) {
-      case 'darwin': return 'keychain';
-      case 'win32': return 'dpapi';
-      case 'linux': 
-        try {
-          return safeStorage.getSelectedStorageBackend ? safeStorage.getSelectedStorageBackend() : 'linux-generic';
-        } catch {
-          return 'linux-generic';
-        }
-      default: return 'unknown';
-    }
-  }
+  // Platform-specific backend detection removed - Electron safeStorage abstracts OS details
 
   /**
    * Sanitize key for logging (remove PII)
