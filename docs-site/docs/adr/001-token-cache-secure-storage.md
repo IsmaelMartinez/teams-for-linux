@@ -34,7 +34,7 @@ We will implement a **two-phase token cache solution**:
 
 ### Phase 2: Secure Storage with Electron safeStorage
 - Integrate Electron's `safeStorage` API for OS-level encryption
-- Implement automatic migration from localStorage to secure storage
+- Use natural transition approach (new tokens secure, existing tokens via fallback)
 - Maintain backward compatibility with graceful fallback mechanisms
 - Use platform-native secure storage (Keychain/DPAPI/kwallet)
 
@@ -50,10 +50,10 @@ We will implement a **two-phase token cache solution**:
 - **Rejected**: External libraries (keytar, node-keychain)
 - **Rationale**: Native Electron support, no external dependencies, cross-platform compatibility
 
-#### 3. **Migration Strategy**
-- **Chosen**: Simple one-time migration during initialization
-- **Rejected**: Complex backup/rollback system with validation
-- **Rationale**: Sufficient for user base, reduces complexity, migration is temporary feature
+#### 3. **Transition Strategy**
+- **Chosen**: Natural transition (new tokens secure, existing via fallback)
+- **Rejected**: Complex migration system with backup/rollback
+- **Rationale**: Eliminates migration complexity, zero risk, tokens refresh naturally
 
 #### 4. **Fallback Mechanisms**
 - **Chosen**: Graceful degradation (secure storage → localStorage → memory)
@@ -74,7 +74,7 @@ We will implement a **two-phase token cache solution**:
 ### Negative
 
 1. **Platform Dependencies**: Secure storage quality varies by platform (Linux has variable security)
-2. **Migration Complexity**: One-time migration adds temporary complexity (removable in future versions)
+2. **Gradual Security**: Security improves gradually as tokens refresh naturally
 3. **Async Interface**: Teams cache interface needed to be made async-compatible
 4. **Storage Size Limitation**: Encrypted tokens stored in localStorage, subject to quota limits
 5. **Security Trade-off**: Application requires disabled Electron isolation (`contextIsolation: false`, `sandbox: false`) for DOM access functionality
@@ -84,7 +84,7 @@ We will implement a **two-phase token cache solution**:
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Secure storage unavailable | Medium | Automatic fallback to localStorage |
-| Migration failures | Low | Tokens remain in localStorage, authentication continues |
+| Storage unavailable | Low | Automatic fallback to localStorage, no disruption |
 | Teams interface changes | Medium | Defensive coding, regular testing |
 | Platform-specific issues | Medium | Extensive cross-platform testing |
 
@@ -121,7 +121,6 @@ graph TB
 
 - **Initialization**: <50ms for secure storage setup
 - **Token Operations**: <5ms for encrypt/decrypt operations  
-- **Migration**: ~50ms per token (one-time only)
 - **Memory Usage**: Minimal overhead, no token caching in memory
 
 ## Alternatives Considered
@@ -165,7 +164,6 @@ graph TB
 - Graceful fallback mechanisms
 
 ### Version 2.x (Future Enhancements)
-- **Migration Removal**: Remove migration code once user base upgraded
 - **Performance Optimization**: Reduce encryption overhead
 - **Enterprise Features**: Advanced diagnostics, audit logging
 
@@ -190,4 +188,4 @@ graph TB
 > This ADR documents the complete decision process for implementing secure token storage in Teams for Linux. The simplified architecture achieved the same security and functionality goals with significantly reduced complexity.
 
 > [!IMPORTANT]
-> The migration system is intentionally temporary and should be considered for removal in future major versions once the user base has transitioned to secure storage.
+> The natural transition approach eliminates migration complexity while providing security benefits without user disruption.

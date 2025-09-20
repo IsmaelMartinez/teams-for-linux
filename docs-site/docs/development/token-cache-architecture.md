@@ -266,26 +266,20 @@ The class implements the full Web Storage API for Teams compatibility:
 - `length: number` - Number of stored items
 - `key(index: number): string | null` - Get key at index
 
-## Migration Guide
+## Upgrade Guide
 
 ### From Previous Versions
 
-Users upgrading from versions without secure storage will experience automatic migration:
+Users upgrading from versions without secure storage will experience seamless transition:
 
-1. **Detection**: System detects existing localStorage tokens
-2. **Migration**: Tokens automatically moved to secure storage
-3. **Cleanup**: Original localStorage tokens removed after successful encryption
-4. **Verification**: Migration status tracked to prevent re-migration
+1. **Immediate Compatibility**: Existing tokens continue working via localStorage fallback
+2. **Automatic Security**: New tokens use secure storage when available  
+3. **Natural Transition**: Security improves as tokens refresh (typically within hours)
+4. **Zero Downtime**: No authentication interruption during upgrade
 
-### Rollback Procedures
+### No Migration Required
 
-If issues arise, tokens can be manually restored by removing the migration flag:
-
-```javascript
-localStorage.removeItem('teams_secure_migration_v1');
-```
-
-This will cause the system to fall back to localStorage on next startup.
+The implementation eliminates migration complexity by using a dual-storage approach where new tokens automatically use secure storage while existing tokens remain functional through fallback mechanisms.
 
 ## Security Best Practices
 
@@ -300,12 +294,10 @@ This will cause the system to fall back to localStorage on next startup.
 - **PII Protection**: Never log actual token values or user identifiers
 - **Error Handling**: Always provide fallback mechanisms for storage failures
 - **Availability Testing**: Test both with and without secure storage availability
-- **Migration Testing**: Verify migration works with various token configurations
+- **Fallback Testing**: Verify graceful degradation when secure storage unavailable
 
 ---
 
 > [!NOTE]
-> This implementation provides enterprise-grade security while maintaining simplicity and reliability. The automatic fallback mechanisms ensure authentication works regardless of platform capabilities.
+> This implementation provides enterprise-grade security while maintaining simplicity and reliability. The natural transition approach eliminates migration complexity while ensuring authentication works regardless of platform capabilities.
 
-> [!IMPORTANT]
-> The migration system is designed for transitional use and may be removed in future versions once the user base has migrated to secure storage.

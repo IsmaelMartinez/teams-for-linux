@@ -369,29 +369,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Get authentication-related keys from localStorage
-   * @private
-   */
-  _getAuthRelatedKeys() {
-    try {
-      const allKeys = Object.keys(localStorage);
-      const authPatterns = [
-        /^tmp\.auth\.v1\./,              // Teams auth v1
-        /^[0-9a-f-]{36}\..*\.refresh_token/, // Refresh tokens
-        /^[0-9a-f-]{36}\..*\.idtoken/,   // ID tokens  
-        /^msal\./                        // MSAL tokens
-      ];
-
-      return allKeys.filter(key => 
-        !key.startsWith(this._securePrefix) && // Exclude already migrated keys
-        authPatterns.some(pattern => pattern.test(key))
-      );
-    } catch (error) {
-      console.warn('[TOKEN_CACHE] Failed to get auth keys:', error.message);
-      return [];
-    }
-  }
 
   /**
    * Sanitize key for logging (remove PII)
