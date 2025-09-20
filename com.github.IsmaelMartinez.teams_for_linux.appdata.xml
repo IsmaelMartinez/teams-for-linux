@@ -18,8 +18,6 @@
 			<description>
 				<ul>
 					<li>Feature: Implement secure token cache storage using Electron safeStorage API - tokens are now encrypted using OS-level security (Keychain/DPAPI/kwallet) instead of plain localStorage</li>
-					<li>Enhancement: Add automatic migration from localStorage to secure storage with fallback protection for older systems</li>
-					<li>Security: Improve authentication persistence security while maintaining compatibility across platforms</li>
 				</ul>
 			</description>
 		</release>
