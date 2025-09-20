@@ -51,4 +51,4 @@ Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) fo
 - [Architecture Decision Records](../adr/) - Technical decisions and rationale
 
 ### ADR Index
-- [ADR-001: Token Cache Secure Storage](../adr/001-token-cache-secure-storage.md) - Decision to implement OS-level secure storage for authentication tokens
+- [ADR-001: Token Cache Secure Storage](../adr/token-cache-secure-storage.md) - Decision to implement OS-level secure storage for authentication tokens

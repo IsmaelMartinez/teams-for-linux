@@ -110,8 +110,8 @@ graph TB
 
 ### Performance Characteristics
 
-- **Initialization**: <50ms for secure storage setup
-- **Token Operations**: <5ms for encrypt/decrypt operations  
+- **Initialization**: Less than 50ms for secure storage setup
+- **Token Operations**: Less than 5ms for encrypt/decrypt operations  
 - **Memory Usage**: Minimal overhead, no token caching in memory
 
 ## Alternatives Considered
@@ -139,7 +139,7 @@ graph TB
 - ✅ Zero re-authentication for 48+ hours continuous use
 - ✅ 100% authentication retention after system sleep cycles
 - ✅ 100% authentication persistence across application restarts
-- ✅ <100ms performance overhead for token operations
+- ✅ Less than 100ms performance overhead for token operations
 
 ### Monitoring Indicators
 - Authentication failure rate reduction

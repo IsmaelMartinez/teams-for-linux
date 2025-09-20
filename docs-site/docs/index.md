@@ -40,7 +40,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[Release Automation](release-info.md)** - Release process and automation for maintainers
 
 ## Architecture Decisions
-- **[ADR-001: Token Cache Secure Storage](adr/001-token-cache-secure-storage.md)** - Decision to implement OS-level secure storage for authentication tokens
+- **[ADR-001: Token Cache Secure Storage](adr/token-cache-secure-storage.md)** - Decision to implement OS-level secure storage for authentication tokens
 
 ## Research & Analysis
 - **[AI Research Documentation](ai-research/index.md)** - Strategic analysis and research documents
