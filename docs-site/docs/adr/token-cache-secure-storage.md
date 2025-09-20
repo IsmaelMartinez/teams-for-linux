@@ -99,12 +99,6 @@ graph TB
         C -->|No| E[localStorage Fallback]
         E -->|Quota Error| F[Memory Fallback]
     end
-    
-    subgraph "Platform Security"
-        D --> G[macOS Keychain]
-        D --> H[Windows DPAPI]  
-        D --> I[Linux kwallet/gnome]
-    end
 ```
 
 ### Security Model
