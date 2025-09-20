@@ -166,7 +166,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" }
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+      { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
+      { name: "disableAutogain", path: "./tools/disableAutogain" }
     ];
     
     let successCount = 0;

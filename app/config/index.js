@@ -247,9 +247,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableAutogain: {
         default: false,
-        deprecated:
-          "This feature is not available anymore. In theory you should not needed with the new screensharing. Report back if this causes any issues for you. Thanks!",
-        describe: "A flag indicates whether to disable mic auto gain or not",
+        describe: "A flag indicates whether to disable microphone auto gain control or not",
         type: "boolean",
       },
       disableGpu: {
