@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     modules.forEach(module => {
       try {
         const moduleInstance = require(module.path);
-        if (module.name === "settings" || module.name === "theme") {
+        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);
