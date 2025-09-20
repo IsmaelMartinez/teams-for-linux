@@ -175,9 +175,9 @@ graph TB
 ## Decision Record Metadata
 
 - **Authors**: Teams for Linux Development Team
-- **Decision Date**: September 2024
-- **Implementation Date**: September 2024  
-- **Review Date**: December 2024 (planned)
+- **Decision Date**: September 2025
+- **Implementation Date**: September 2025  
+- **Review Date**: December 2025 (planned)
 - **Status**: Implemented and Active
 - **Related Issues**: #1357 (Authentication refresh failures)
 - **Related ADRs**: None (first ADR in project)
