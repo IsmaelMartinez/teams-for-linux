@@ -203,17 +203,17 @@ Diagnostic information available via `getStorageInfo()`:
 
 ### Debug Information
 
-Enable detailed logging by setting debug mode:
+Token cache uses console logging with `[TOKEN_CACHE]` prefixes. Run the application normally and check the console for debugging information:
 
 ```bash
-DEBUG=token-cache npm start
+npm start
 ```
 
 ### Log Patterns
 
 ```
-[TOKEN_CACHE] TokenCache initialized { localStorage: true, secureStorage: true, migrated: true }
-[TOKEN_CACHE] Migrating 15 tokens to secure storage...
+[TOKEN_CACHE] TokenCache initialized { localStorage: true, secureStorage: true }
+[TOKEN_CACHE] Secure storage available
 [TOKEN_CACHE] Secure storage available and ready
 ```
 
