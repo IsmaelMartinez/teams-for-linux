@@ -85,9 +85,6 @@ We will implement a **two-phase token cache solution**:
 |------|--------|------------|
 | Secure storage unavailable | Medium | Automatic fallback to localStorage |
 | Storage unavailable | Low | Automatic fallback to localStorage, no disruption |
-| Teams interface changes | Medium | Defensive coding, regular testing |
-| Platform-specific issues | Medium | Extensive cross-platform testing |
-
 ## Implementation Details
 
 ### Core Architecture
