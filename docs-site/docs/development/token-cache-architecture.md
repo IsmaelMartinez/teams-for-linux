@@ -203,10 +203,10 @@ Diagnostic information available via `getStorageInfo()`:
 
 ### Debug Information
 
-Token cache uses console logging with `[TOKEN_CACHE]` prefixes. Run the application normally and check the console for debugging information:
+Token cache uses console logging with `[TOKEN_CACHE]` prefixes. Enable detailed logging to see debug output:
 
 ```bash
-npm start
+ELECTRON_DEBUG_LOGGING=true npm start
 ```
 
 ### Log Patterns
