@@ -8,9 +8,15 @@ These documents capture AI-generated analysis and strategic insights that inform
 
 ## Contents
 
+### Core Research & Investigation
+- **[Token Cache Authentication Investigation](token-cache-authentication-investigation.md)** - Root cause analysis and solution approach for persistent authentication issues (#1357)
+- **[Token Cache Research](token-cache-research.md)** - Initial research and analysis of token cache requirements and implementation approaches
+- **[Secure Storage Research](secure-storage-research.md)** - Research on secure storage options, platform capabilities, and implementation considerations
+- **[DOM Access Investigation](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
+
+### Strategic Analysis
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
-- **[Token Cache Investigation](token-cache-authentication-investigation.md)** - Root cause analysis and solution approach for persistent authentication issues (#1357)
 
 ## Purpose
 
