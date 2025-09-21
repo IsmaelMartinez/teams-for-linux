@@ -227,6 +227,36 @@ class TeamsTokenCache {
     };
   }
 
+  /**
+   * Get cache statistics for diagnostics and injection validation
+   */
+  getCacheStats() {
+    try {
+      const authKeys = this._getAuthRelatedKeys();
+      const refreshTokens = authKeys.filter(key => key.includes('refresh_token'));
+      const msalKeys = authKeys.filter(key => key.includes('msal.token'));
+      
+      return {
+        totalKeys: authKeys.length,
+        authKeysCount: authKeys.length,
+        refreshTokenCount: refreshTokens.length,
+        msalTokenCount: msalKeys.length,
+        storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
+        storageInfo: this.getStorageInfo()
+      };
+    } catch (error) {
+      console.warn('[TOKEN_CACHE] Failed to get cache stats:', error.message);
+      return {
+        totalKeys: 0,
+        authKeysCount: 0,
+        refreshTokenCount: 0,
+        msalTokenCount: 0,
+        storageType: 'unknown',
+        error: error.message
+      };
+    }
+  }
+
   //
   // Private Implementation Methods
   //
@@ -316,6 +346,62 @@ class TeamsTokenCache {
     }
   }
 
+
+  /**
+   * Get authentication-related keys from storage
+   * @private
+   */
+  _getAuthRelatedKeys() {
+    const authKeys = [];
+    
+    try {
+      if (this._useMemoryFallback) {
+        // Memory fallback: iterate through memory cache
+        for (const key of this._memoryFallback.keys()) {
+          if (this._isAuthRelatedKey(key)) {
+            authKeys.push(key);
+          }
+        }
+      } else {
+        // localStorage: iterate through all keys
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && this._isAuthRelatedKey(key)) {
+            authKeys.push(key);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[TOKEN_CACHE] Failed to get auth keys:', error.message);
+    }
+    
+    return authKeys;
+  }
+
+  /**
+   * Check if a key is authentication-related
+   * @private
+   */
+  _isAuthRelatedKey(key) {
+    if (typeof key !== 'string') return false;
+    
+    // Teams authentication patterns from research
+    const authPatterns = [
+      'tmp.auth.v1.',
+      'refresh_token',
+      'msal.token',
+      'EncryptionKey',
+      'authSessionId',
+      'LogoutState',
+      'accessToken',
+      'idtoken',
+      'Account',
+      'Authority',
+      'ClientInfo'
+    ];
+    
+    return authPatterns.some(pattern => key.includes(pattern));
+  }
 
   /**
    * Sanitize key for logging (remove PII)
