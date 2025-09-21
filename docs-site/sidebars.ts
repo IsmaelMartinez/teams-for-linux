@@ -50,9 +50,6 @@ const sidebars: SidebarsConfig = {
             'development/README',
             'development/token-cache-architecture',
             'development/security-architecture',
-            'development/secure-storage-research',
-            'development/token-cache-research',
-            'development/dom-access-investigation',
           ],
         },
         {
@@ -69,6 +66,10 @@ const sidebars: SidebarsConfig = {
       label: 'Research',
       items: [
         'ai-research/index',
+        'ai-research/token-cache-authentication-investigation',
+        'ai-research/token-cache-research',
+        'ai-research/secure-storage-research',
+        'ai-research/dom-access-investigation',
         'ai-research/documentation-health-analysis',
         'ai-research/ui-system-strategic-analysis',
       ],
