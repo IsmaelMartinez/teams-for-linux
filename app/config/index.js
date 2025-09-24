@@ -421,6 +421,15 @@ function extractYargConfig(configObject, appVersion) {
         describe: "User (e-mail) to use for InTune SSO.",
         type: "string",
       },
+      tokenRefresh: {
+        default: {
+          enabled: true,
+          refreshIntervalHours: 1,
+        },
+        describe:
+          "Configurable token refresh settings to prevent authentication expiry",
+        type: "object",
+      },
       trayIconEnabled: {
         default: true,
         describe: "Enable tray icon",

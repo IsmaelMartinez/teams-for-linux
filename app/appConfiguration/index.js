@@ -55,6 +55,20 @@ class AppConfiguration {
   get settingsStore() {
     return _AppConfiguration_settingsStore.get(this);
   }
+
+  /**
+   * Get token refresh configuration
+   * @returns {object} Token refresh configuration with defaults
+   */
+  getTokenRefreshConfig() {
+    const startupConfig = _AppConfiguration_startupConfig.get(this);
+    const tokenRefresh = startupConfig?.tokenRefresh || {};
+
+    return {
+      enabled: tokenRefresh.enabled !== undefined ? tokenRefresh.enabled : true,
+      refreshIntervalHours: tokenRefresh.refreshIntervalHours || 1
+    };
+  }
 }
 
 module.exports = { AppConfiguration };

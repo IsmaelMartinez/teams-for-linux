@@ -29,11 +29,18 @@ class TeamsTokenCache {
     this._useSecureStorage = false;
     this._securePrefix = 'secure_teams_';
     
+    // Refresh scheduling setup
+    this._refreshTimer = null;
+    this._refreshInterval = 60 * 60 * 1000; // Default 1 hour
+    this._refreshEnabled = false;
+    
     this._initializeSecureStorage();
     
     console.debug('[TOKEN_CACHE] TokenCache initialized', {
       localStorage: this._isAvailable,
-      secureStorage: this._useSecureStorage
+      secureStorage: this._useSecureStorage,
+      refreshEnabled: this._refreshEnabled,
+      refreshInterval: this._refreshInterval / 1000 / 60 + ' minutes'
     });
   }
 
@@ -154,6 +161,80 @@ class TeamsTokenCache {
   }
 
   //
+  // Token Refresh Scheduling
+  //
+
+  /**
+   * Start the token refresh scheduler
+   * @param {Function} refreshCallback - Function to call for token refresh
+   * @param {number} intervalHours - Refresh interval in hours (1-24)
+   */
+  startRefreshScheduler(refreshCallback, intervalHours = 1) {
+    try {
+      // Validate parameters
+      if (typeof refreshCallback !== 'function') {
+        throw new TypeError('refreshCallback must be a function');
+      }
+
+      if (typeof intervalHours !== 'number' || intervalHours < 1 || intervalHours > 24) {
+        throw new RangeError('intervalHours must be between 1 and 24');
+      }
+
+      // Stop existing scheduler if running
+      this.stopRefreshScheduler();
+
+      // Calculate interval in milliseconds
+      this._refreshInterval = intervalHours * 60 * 60 * 1000;
+      this._refreshEnabled = true;
+
+      console.debug(`[TOKEN_CACHE] Starting refresh scheduler (${intervalHours} hours)`);
+
+      // Set up the interval timer
+      this._refreshTimer = setInterval(async () => {
+        try {
+          console.debug('[TOKEN_CACHE] Scheduled token refresh triggered');
+          await refreshCallback();
+        } catch (error) {
+          console.error('[TOKEN_CACHE] Scheduled token refresh failed:', error);
+        }
+      }, this._refreshInterval);
+
+      return true;
+
+    } catch (error) {
+      console.error('[TOKEN_CACHE] Failed to start refresh scheduler:', error);
+      this._refreshEnabled = false;
+      return false;
+    }
+  }
+
+  /**
+   * Stop the token refresh scheduler and clean up timers
+   */
+  stopRefreshScheduler() {
+    if (this._refreshTimer) {
+      clearInterval(this._refreshTimer);
+      this._refreshTimer = null;
+      console.debug('[TOKEN_CACHE] Refresh scheduler stopped');
+    }
+    this._refreshEnabled = false;
+  }
+
+  /**
+   * Get refresh scheduler status
+   * @returns {object} Current scheduler status
+   */
+  getRefreshSchedulerStatus() {
+    return {
+      enabled: this._refreshEnabled,
+      intervalMs: this._refreshInterval,
+      intervalHours: this._refreshInterval / (60 * 60 * 1000),
+      isRunning: this._refreshTimer !== null
+    };
+  }
+
+
+  //
   // Teams-Specific Token Management
   //
 
@@ -172,13 +253,7 @@ class TeamsTokenCache {
         refreshTokenCount: refreshTokens.length,
         msalTokenCount: msalKeys.length,
         storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
-        storageInfo: {
-          localStorage: this._isAvailable,
-          memoryFallback: this._useMemoryFallback,
-          secureStorage: this._useSecureStorage,
-          platform: process.platform,
-          secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
-        }
+        refreshScheduler: this.getRefreshSchedulerStatus()
       };
     } catch (error) {
       console.warn('[TOKEN_CACHE] Failed to get cache stats:', error.message);
@@ -188,6 +263,7 @@ class TeamsTokenCache {
         refreshTokenCount: 0,
         msalTokenCount: 0,
         storageType: 'unknown',
+        refreshScheduler: { enabled: false, isRunning: false },
         error: error.message
       };
     }
@@ -196,6 +272,7 @@ class TeamsTokenCache {
   //
   // Private Implementation Methods
   //
+
 
   /**
    * Initialize secure storage
