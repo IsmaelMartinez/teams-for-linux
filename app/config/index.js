@@ -204,7 +204,7 @@ function extractYargConfig(configObject, appVersion) {
       cacheManagement: {
         default: {
           enabled: true,
-          maxCacheSizeMB: 300,
+          maxCacheSizeMB: 600,
           cacheCheckIntervalMs: 3600000,
         },
         describe:

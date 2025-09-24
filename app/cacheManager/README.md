@@ -11,7 +11,7 @@ Prevents cache corruption issues by automatically cleaning cache when it grows t
 
 ## Implementation
 
-The cache manager automatically detects the configured partition and cleans appropriate directories when cache exceeds the threshold (default: 300MB).
+The cache manager automatically detects the configured partition and cleans appropriate directories when cache exceeds the threshold (default: 600MB).
 
 Preserves essential data:
 - Authentication tokens

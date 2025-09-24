@@ -18,7 +18,7 @@ class CacheManager {
   constructor(config) {
     this.config = config;
     this.userDataPath = electron.app.getPath("userData");
-    this.maxCacheSize = config.maxCacheSizeMB || 300; // MB
+    this.maxCacheSize = config.maxCacheSizeMB || 600; // MB
     this.checkIntervalMs = config.cacheCheckIntervalMs || 60 * 60 * 1000; // 1 hour
     this.isRunning = false;
 

@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Feature: Implement secure token cache storage using Electron safeStorage API - tokens are now encrypted using OS-level security (Keychain/DPAPI/kwallet) instead of plain localStorage</li>
+					<li>Enhancement: Increase default cache size limit from 300MB to 600MB to reduce frequency of automatic cache cleanup</li>
 				</ul>
 			</description>
 		</release>

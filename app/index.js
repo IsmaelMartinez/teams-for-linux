@@ -500,7 +500,7 @@ function handleAppReady() {
 
   if (config.cacheManagement?.enabled === true) {
     const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
+      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
       cacheCheckIntervalMs:
         config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
       partition: config.partition, // Pass partition config for dynamic cache paths
