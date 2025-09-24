@@ -43,6 +43,22 @@ const sidebars: SidebarsConfig = {
         'ipc-api',
         'log-config',
         'release-info',
+        {
+          type: 'category',
+          label: 'Architecture',
+          items: [
+            'development/README',
+            'development/token-cache-architecture',
+            'development/security-architecture',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Architecture Decisions',
+          items: [
+            'adr/token-cache-secure-storage',
+          ],
+        },
       ],
     },
     {
@@ -50,6 +66,10 @@ const sidebars: SidebarsConfig = {
       label: 'Research',
       items: [
         'ai-research/index',
+        'ai-research/token-cache-authentication-investigation',
+        'ai-research/token-cache-research',
+        'ai-research/secure-storage-research',
+        'ai-research/dom-access-investigation',
         'ai-research/documentation-health-analysis',
         'ai-research/ui-system-strategic-analysis',
       ],
