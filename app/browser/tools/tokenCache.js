@@ -154,78 +154,8 @@ class TeamsTokenCache {
   }
 
   //
-  // Storage Interface Compatibility Properties
-  //
-
-  get length() {
-    try {
-      if (this._useMemoryFallback) {
-        return this._memoryFallback.size;
-      }
-      return localStorage.length;
-    } catch (error) {
-      console.warn('[TOKEN_CACHE] Failed to get storage length:', error.message);
-      return 0;
-    }
-  }
-
-  key(index) {
-    try {
-      if (this._useMemoryFallback) {
-        const keys = Array.from(this._memoryFallback.keys());
-        return keys[index] || null;
-      }
-      return localStorage.key(index);
-    } catch (error) {
-      console.warn('[TOKEN_CACHE] Failed to get key at index', index, ':', error.message);
-      return null;
-    }
-  }
-
-  //
   // Teams-Specific Token Management
   //
-
-  /**
-   * Check if a token is valid (not expired)
-   */
-  async isTokenValid(key) {
-    try {
-      const value = await this.getItem(key);
-      if (!value) return false;
-
-      try {
-        const tokenData = JSON.parse(value);
-        const expiryTime = tokenData.expiresOn || tokenData.expires_on || tokenData.exp;
-        
-        if (expiryTime) {
-          const now = Date.now() / 1000;
-          const expiry = typeof expiryTime === 'string' ? parseInt(expiryTime) : expiryTime;
-          return expiry > now;
-        }
-        
-        return true; // No expiry data, assume valid
-      } catch {
-        return true; // Non-JSON token, assume valid
-      }
-    } catch (error) {
-      console.warn('[TOKEN_CACHE] Failed to validate token:', error.message);
-      return false;
-    }
-  }
-
-  /**
-   * Get storage information for diagnostics
-   */
-  getStorageInfo() {
-    return {
-      localStorage: this._isAvailable,
-      memoryFallback: this._useMemoryFallback,
-      secureStorage: this._useSecureStorage,
-      platform: process.platform,
-      secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
-    };
-  }
 
   /**
    * Get cache statistics for diagnostics and injection validation
@@ -242,7 +172,13 @@ class TeamsTokenCache {
         refreshTokenCount: refreshTokens.length,
         msalTokenCount: msalKeys.length,
         storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
-        storageInfo: this.getStorageInfo()
+        storageInfo: {
+          localStorage: this._isAvailable,
+          memoryFallback: this._useMemoryFallback,
+          secureStorage: this._useSecureStorage,
+          platform: process.platform,
+          secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
+        }
       };
     } catch (error) {
       console.warn('[TOKEN_CACHE] Failed to get cache stats:', error.message);
@@ -262,20 +198,13 @@ class TeamsTokenCache {
   //
 
   /**
-   * Initialize secure storage and perform migration if needed
+   * Initialize secure storage
    * @private
    */
   _initializeSecureStorage() {
     try {
-      // Check if secure storage is available
       this._useSecureStorage = safeStorage && safeStorage.isEncryptionAvailable();
-      
-      if (!this._useSecureStorage) {
-        console.debug('[TOKEN_CACHE] Secure storage not available');
-        return;
-      }
-
-      console.debug('[TOKEN_CACHE] Secure storage available');
+      console.debug('[TOKEN_CACHE] Secure storage', this._useSecureStorage ? 'available' : 'not available');
       
     } catch (error) {
       console.warn('[TOKEN_CACHE] Secure storage initialization failed:', error.message);
