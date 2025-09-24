@@ -67,6 +67,76 @@ class ReactHandler {
     };
   }
 
+  // Essential token refresh mechanism extracted from debug implementation
+  async refreshToken(resource = 'https://ic3.teams.office.com') {
+    try {
+      if (!this._validateTeamsEnvironment()) {
+        console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot refresh token`);
+        return { success: false, error: 'Teams environment not validated' };
+      }
+
+      const teams2CoreServices = this._getTeams2CoreServices();
+      const authService = teams2CoreServices?.authenticationService;
+      const authProvider = authService?._coreAuthService?._authProvider;
+
+      if (!authProvider) {
+        console.warn(`[TOKEN_CACHE] Auth provider not available for token refresh`);
+        return { success: false, error: 'Auth provider not found' };
+      }
+
+      if (typeof authProvider.acquireToken !== 'function') {
+        console.error(`[TOKEN_CACHE] acquireToken method not available on auth provider`);
+        return { success: false, error: 'acquireToken method not found' };
+      }
+
+      // Get correlation from core services - required for forced refresh
+      const correlation = teams2CoreServices?.correlation;
+      if (!correlation) {
+        console.warn(`[TOKEN_CACHE] Correlation not available, cannot force refresh`);
+        return { success: false, error: 'Correlation required for forced refresh' };
+      }
+
+      // Use proven working refresh options with correlation and force flags
+      const refreshOptions = {
+        correlation: correlation,
+        forceRenew: true,
+        forceRefresh: true,
+        skipCache: true,
+        prompt: 'none'
+      };
+
+      console.debug(`[TOKEN_CACHE] Attempting token refresh for resource: ${resource}`);
+      const result = await authProvider.acquireToken(resource, refreshOptions);
+      
+      if (result) {
+        console.debug(`[TOKEN_CACHE] Token refresh successful`, {
+          hasToken: !!result?.token,
+          fromCache: result?.fromCache,
+          expiry: result?.expiresOn || result?.expires_on
+        });
+
+        return {
+          success: true,
+          result: result,
+          fromCache: result?.fromCache,
+          expiry: result?.expiresOn || result?.expires_on,
+          timestamp: Date.now()
+        };
+      } else {
+        console.warn(`[TOKEN_CACHE] Token refresh returned no result`);
+        return { success: false, error: 'No result from token refresh' };
+      }
+
+    } catch (error) {
+      console.error(`[TOKEN_CACHE] Token refresh failed:`, error);
+      return {
+        success: false,
+        error: error.message || error.toString(),
+        timestamp: Date.now()
+      };
+    }
+  }
+
   // v2.5.3: Add authentication service access with enhanced logging for #1357
   logAuthenticationState() {
     if (!this._validateTeamsEnvironment()) {
@@ -775,8 +845,7 @@ class ReactHandler {
     }
   }
 }
-//document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices
 
-module.exports = new ReactHandler();
+const reactHandlerInstance = new ReactHandler();
 
-// await document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.authenticationService._coreAuthService._authProvider.acquireToken("https://graph.microsoft.com", { correlation: document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.correlation, forceRenew: true} )
+module.exports = reactHandlerInstance;

@@ -64,13 +64,13 @@
 ### Critical Path Implementation (Ordered by Priority and Dependencies)
 
 - [ ] 1.0 Clean Up Current Implementation
-  - [ ] 1.1 Remove debug functionality from reactHandler.js (window.teamsDebug exposure and browser console methods)  
+  - [x] 1.1 Remove debug functionality from reactHandler.js (window.teamsDebug exposure and browser console methods)  
   - [ ] 1.2 Clean up console debugging statements while preserving production logging with [TOKEN_CACHE] prefix
 
 - [ ] 2.0 Create Feature Branch and Extract Refresh Logic
-  - [ ] 2.1 Create feature branch from main after current work is merged (pull latest changes first)
+  - [x] 2.1 Create feature branch from main after current work is merged (pull latest changes first)
   - [x] 2.2 Document working refresh implementation in ADR (correlation + force options)
-  - [ ] 2.3 Extract essential refresh mechanism (correlation-based acquireToken call) from debug implementation
+  - [x] 2.3 Extract essential refresh mechanism (correlation-based acquireToken call) from debug implementation
 
 - [ ] 3.0 Extend TeamsTokenCache with Refresh Scheduling  
   - [ ] 3.1 **Research spike**: Explore overwriting MS Teams' native refresh calls vs. running alongside (prefer overwrite if simple)
