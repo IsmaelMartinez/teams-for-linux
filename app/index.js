@@ -334,7 +334,7 @@ function addElectronCLIFlagsFromConfig() {
         console.debug(`Adding electron CLI flag '${flag}'`);
         app.commandLine.appendSwitch(flag);
       } else if (Array.isArray(flag) && typeof flag[0] === "string") {
-        const hasValidValue = typeof flag[1] !== "undefined" &&
+        const hasValidValue = flag[1] !== undefined &&
                                typeof flag[1] !== "object" &&
                                typeof flag[1] !== "function";
         if (hasValidValue) {
@@ -536,11 +536,9 @@ async function handleGetSystemIdleState() {
   }
 
   const state = {
-    ...{
-      system: systemIdleState,
-      userIdle: idleTimeUserStatus,
-      userCurrent: userStatus,
-    },
+    system: systemIdleState,
+    userIdle: idleTimeUserStatus,
+    userCurrent: userStatus,
   };
 
   if (systemIdleState === "active") {
