@@ -67,6 +67,81 @@ class ReactHandler {
     };
   }
 
+  // Manual token refresh for testing and validation
+  async triggerTokenRefresh(resource = 'https://ic3.teams.office.com') {
+    try {
+      console.debug(`[TOKEN_REFRESH] Starting manual token refresh for resource: ${resource}`);
+      
+      const teams2CoreServices = this._getTeams2CoreServices();
+      console.debug(`[TOKEN_REFRESH] teams2CoreServices:`, !!teams2CoreServices);
+      
+      const authService = teams2CoreServices?.authenticationService;
+      console.debug(`[TOKEN_REFRESH] authService:`, !!authService);
+      
+      const authProvider = authService?._coreAuthService?._authProvider;
+      console.debug(`[TOKEN_REFRESH] authProvider:`, !!authProvider);
+
+      if (!authProvider) {
+        console.warn(`[TOKEN_REFRESH] Auth provider not available`);
+        return { success: false, error: 'Auth provider not found' };
+      }
+
+      if (typeof authProvider.acquireToken !== 'function') {
+        console.warn(`[TOKEN_REFRESH] acquireToken method not available, type:`, typeof authProvider.acquireToken);
+        console.debug(`[TOKEN_REFRESH] Available authProvider methods:`, Object.getOwnPropertyNames(authProvider));
+        return { success: false, error: 'acquireToken method not found' };
+      }
+
+      console.debug(`[TOKEN_REFRESH] Auth provider found, attempting token refresh...`);
+
+      // Get correlation from core services
+      const correlation = teams2CoreServices?.correlation;
+      console.debug(`[TOKEN_REFRESH] Correlation available:`, !!correlation);
+
+      // Use the proven working format: correlation with force refresh options
+      if (!correlation) {
+        console.warn(`[TOKEN_REFRESH] Correlation not available, cannot force refresh`);
+        return { success: false, error: 'Correlation required for forced refresh' };
+      }
+
+      const refreshOptions = {
+        correlation: correlation,
+        forceRenew: true,
+        forceRefresh: true,
+        skipCache: true,
+        prompt: 'none'
+      };
+
+      console.debug(`[TOKEN_REFRESH] Using proven refresh options:`, refreshOptions);
+
+      const result = await authProvider.acquireToken(resource, refreshOptions);
+      
+      console.debug(`[TOKEN_REFRESH] SUCCESS:`, {
+        success: !!result,
+        hasToken: !!result?.token,
+        fromCache: result?.fromCache,
+        expiry: result?.expiresOn || result?.expires_on
+      });
+
+      return {
+        success: true,
+        result: result,
+        fromCache: result?.fromCache,
+        expiry: result?.expiresOn || result?.expires_on,
+        timestamp: Date.now()
+      };
+
+    } catch (error) {
+      console.error(`[TOKEN_REFRESH] Manual refresh failed:`, error);
+      return {
+        success: false,
+        error: error.message || error.toString(),
+        errorObject: error,
+        timestamp: Date.now()
+      };
+    }
+  }
+
   // v2.5.3: Add authentication service access with enhanced logging for #1357
   logAuthenticationState() {
     if (!this._validateTeamsEnvironment()) {
@@ -777,6 +852,70 @@ class ReactHandler {
 }
 //document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices
 
-module.exports = new ReactHandler();
+const reactHandlerInstance = new ReactHandler();
+
+// Expose token refresh functionality for testing (development/debugging only)
+if (typeof window !== 'undefined') {
+  window.teamsDebug = window.teamsDebug || {};
+  window.teamsDebug.triggerTokenRefresh = (resource) => reactHandlerInstance.triggerTokenRefresh(resource);
+  window.teamsDebug.getTokenCacheStatus = () => reactHandlerInstance.getTokenCacheStatus();
+  window.teamsDebug.inspectAuthProvider = () => {
+    try {
+      const teams2CoreServices = reactHandlerInstance._getTeams2CoreServices();
+      const authService = teams2CoreServices?.authenticationService;
+      const authProvider = authService?._coreAuthService?._authProvider;
+      
+      console.log('[DEBUG] teams2CoreServices:', teams2CoreServices);
+      console.log('[DEBUG] authService:', authService);
+      console.log('[DEBUG] authProvider:', authProvider);
+      console.log('[DEBUG] authProvider methods:', authProvider ? Object.getOwnPropertyNames(authProvider) : 'N/A');
+      console.log('[DEBUG] acquireToken type:', authProvider ? typeof authProvider.acquireToken : 'N/A');
+      
+      return {
+        hasTeams2CoreServices: !!teams2CoreServices,
+        hasAuthService: !!authService,
+        hasAuthProvider: !!authProvider,
+        hasAcquireToken: !!(authProvider?.acquireToken),
+        acquireTokenType: authProvider ? typeof authProvider.acquireToken : null,
+        authProviderMethods: authProvider ? Object.getOwnPropertyNames(authProvider) : null
+      };
+    } catch (error) {
+      console.error('[DEBUG] Error inspecting auth provider:', error);
+      return { error: error.message };
+    }
+  };
+  
+  window.teamsDebug.inspectCorrelation = () => {
+    try {
+      const teams2CoreServices = reactHandlerInstance._getTeams2CoreServices();
+      
+      console.log('[CORRELATION] teams2CoreServices keys:', teams2CoreServices ? Object.keys(teams2CoreServices) : 'N/A');
+      console.log('[CORRELATION] correlation:', teams2CoreServices?.correlation);
+      console.log('[CORRELATION] correlation type:', typeof teams2CoreServices?.correlation);
+      
+      // Try different ways to get correlation
+      const correlationSources = {
+        direct: teams2CoreServices?.correlation,
+        fromAuthService: teams2CoreServices?.authenticationService?.correlation,
+        fromConfig: teams2CoreServices?.config?.correlation,
+        fromContext: teams2CoreServices?.context?.correlation
+      };
+      
+      console.log('[CORRELATION] All sources:', correlationSources);
+      
+      return {
+        hasTeams2CoreServices: !!teams2CoreServices,
+        coreServicesKeys: teams2CoreServices ? Object.keys(teams2CoreServices) : null,
+        correlationSources: correlationSources,
+        hasCorrelation: Object.values(correlationSources).some(c => c !== undefined)
+      };
+    } catch (error) {
+      console.error('[CORRELATION] Error:', error);
+      return { error: error.message };
+    }
+  };
+}
+
+module.exports = reactHandlerInstance;
 
 // await document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.authenticationService._coreAuthService._authProvider.acquireToken("https://graph.microsoft.com", { correlation: document.getElementById('app')._reactRootContainer.current.updateQueue.baseState.element.props.coreServices.correlation, forceRenew: true} )
