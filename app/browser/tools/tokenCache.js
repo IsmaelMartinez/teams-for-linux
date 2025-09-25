@@ -166,12 +166,21 @@ class TeamsTokenCache {
       const refreshTokens = authKeys.filter(key => key.includes('refresh_token'));
       const msalKeys = authKeys.filter(key => key.includes('msal.token'));
       
+      let storageType;
+      if (this._useSecureStorage) {
+        storageType = 'secure';
+      } else if (this._useMemoryFallback) {
+        storageType = 'memory';
+      } else {
+        storageType = 'localStorage';
+      }
+
       return {
         totalKeys: authKeys.length,
         authKeysCount: authKeys.length,
         refreshTokenCount: refreshTokens.length,
         msalTokenCount: msalKeys.length,
-        storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
+        storageType: storageType,
         storageInfo: {
           localStorage: this._isAvailable,
           memoryFallback: this._useMemoryFallback,
@@ -340,7 +349,7 @@ class TeamsTokenCache {
     if (typeof key !== 'string') return '[INVALID_KEY]';
     
     // Hide UUIDs
-    return key.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 
+    return key.replaceAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 
       (match) => `${match.substr(0, 8)}...`);
   }
 }

@@ -10,10 +10,10 @@ const {
   Notification,
   nativeImage,
 } = require("electron");
-const path = require("path");
+const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
-const os = require("os");
+const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
 // This must be executed before loading the config file.
