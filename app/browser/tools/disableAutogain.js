@@ -121,7 +121,7 @@ function init(config) {
   }
 
   try {
-    disableAutogain();
+    applyDisableAutogainPatch();
     console.info("[DISABLE_AUTOGAIN] Microphone auto gain control has been disabled");
   } catch (error) {
     console.error("[DISABLE_AUTOGAIN] Failed to initialize:", error);

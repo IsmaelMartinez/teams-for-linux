@@ -1,6 +1,6 @@
 const yargs = require("yargs");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
 
@@ -204,7 +204,7 @@ function extractYargConfig(configObject, appVersion) {
       cacheManagement: {
         default: {
           enabled: true,
-          maxCacheSizeMB: 300,
+          maxCacheSizeMB: 600,
           cacheCheckIntervalMs: 3600000,
         },
         describe:

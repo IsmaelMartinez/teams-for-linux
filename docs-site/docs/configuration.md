@@ -140,7 +140,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
-| `cacheManagement` | `object` | `{ enabled: true, maxCacheSizeMB: 300, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
+| `cacheManagement` | `object` | `{ enabled: true, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
 
 ## Usage Examples & Guides
 
@@ -262,7 +262,7 @@ The cache management feature automatically cleans cache files when they grow too
 {
   "cacheManagement": {
     "enabled": true,
-    "maxCacheSizeMB": 300,
+    "maxCacheSizeMB": 600,
     "cacheCheckIntervalMs": 3600000
   }
 }
@@ -271,7 +271,7 @@ The cache management feature automatically cleans cache files when they grow too
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | Enable/disable automatic cache management |
-| `maxCacheSizeMB` | `number` | `300` | Maximum cache size in MB before cleanup |
+| `maxCacheSizeMB` | `number` | `600` | Maximum cache size in MB before cleanup |
 | `cacheCheckIntervalMs` | `number` | `3600000` | How often to check cache size in milliseconds (1 hour) |
 
 #### What Gets Cleaned vs Preserved

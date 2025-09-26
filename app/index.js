@@ -10,10 +10,10 @@ const {
   Notification,
   nativeImage,
 } = require("electron");
-const path = require("path");
+const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
-const os = require("os");
+const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
 // This must be executed before loading the config file.
@@ -27,7 +27,7 @@ const appConfig = new AppConfiguration(
 );
 
 const config = appConfig.startupConfig;
-config.appPath = path.join(__dirname, !app.isPackaged ? "" : "../../");
+config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 addCommandLineSwitchesAfterConfigLoad();
 
@@ -72,10 +72,7 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
 
 app.allowRendererProcessReuse = false;
 
-if (!gotTheLock) {
-  console.info("App already running");
-  app.quit();
-} else {
+if (gotTheLock) {
   app.on("second-instance", mainAppWindow.onAppSecondInstance);
   app.on("ready", handleAppReady);
   app.on("quit", () => console.debug("quit"));
@@ -146,23 +143,23 @@ if (!gotTheLock) {
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
         sourceId: sourceId,
         timestamp: new Date().toISOString(),
-        previousSource: global.selectedScreenShareSource,
-        hasExistingPreview: global.previewWindow && !global.previewWindow.isDestroyed(),
+        previousSource: globalThis.selectedScreenShareSource,
+        hasExistingPreview: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
         mainWindowVisible: mainAppWindow?.isVisible?.() || false,
         mainWindowFocused: mainAppWindow?.isFocused?.() || false
       });
 
       // Check for potential duplicate sessions - this could cause echo issues
-      if (global.selectedScreenShareSource !== null) {
+      if (globalThis.selectedScreenShareSource !== null) {
         console.warn("[SCREEN_SHARE_DIAG] Multiple screen sharing sessions detected", {
-          previousSource: global.selectedScreenShareSource,
+          previousSource: globalThis.selectedScreenShareSource,
           newSource: sourceId,
           riskLevel: "HIGH - may cause audio feedback or duplicate windows",
-          previewWindowState: global.previewWindow?.isDestroyed?.() ? "destroyed" : "active"
+          previewWindowState: globalThis.previewWindow?.isDestroyed?.() ? "destroyed" : "active"
         });
       }
 
-      global.selectedScreenShareSource = sourceId;
+      globalThis.selectedScreenShareSource = sourceId;
       
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
         sourceId: sourceId,
@@ -182,20 +179,20 @@ if (!gotTheLock) {
   ipcMain.on("screen-sharing-stopped", () => {
     console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
       timestamp: new Date().toISOString(),
-      stoppedSource: global.selectedScreenShareSource,
-      previewWindowExists: global.previewWindow && !global.previewWindow.isDestroyed(),
+      stoppedSource: globalThis.selectedScreenShareSource,
+      previewWindowExists: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
       mainWindowState: {
         visible: mainAppWindow?.isVisible?.() || false,
         focused: mainAppWindow?.isFocused?.() || false
       }
     });
 
-    global.selectedScreenShareSource = null;
+    globalThis.selectedScreenShareSource = null;
 
     // Close preview window when screen sharing stops
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
       console.debug("[SCREEN_SHARE_DIAG] Closing preview window after screen sharing stopped");
-      global.previewWindow.close();
+      globalThis.previewWindow.close();
     } else {
       console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
     }
@@ -203,15 +200,15 @@ if (!gotTheLock) {
 
   // Preview window management IPC handlers
   ipcMain.handle("get-screen-sharing-status", () => {
-    return global.selectedScreenShareSource !== null;
+    return globalThis.selectedScreenShareSource !== null;
   });
 
   ipcMain.handle("get-screen-share-stream", () => {
     // Return the source ID - handle both string and object formats
-    if (typeof global.selectedScreenShareSource === "string") {
-      return global.selectedScreenShareSource;
-    } else if (global.selectedScreenShareSource?.id) {
-      return global.selectedScreenShareSource.id;
+    if (typeof globalThis.selectedScreenShareSource === "string") {
+      return globalThis.selectedScreenShareSource;
+    } else if (globalThis.selectedScreenShareSource?.id) {
+      return globalThis.selectedScreenShareSource.id;
     }
     return null;
   });
@@ -219,13 +216,13 @@ if (!gotTheLock) {
   ipcMain.handle("get-screen-share-screen", () => {
     // Return screen dimensions if available from StreamSelector, otherwise default
     if (
-      global.selectedScreenShareSource &&
-      typeof global.selectedScreenShareSource === "object"
+      globalThis.selectedScreenShareSource &&
+      typeof globalThis.selectedScreenShareSource === "object"
     ) {
       const { screen } = require("electron");
       const displays = screen.getAllDisplays();
 
-      if (global.selectedScreenShareSource?.id?.startsWith("screen:")) {
+      if (globalThis.selectedScreenShareSource?.id?.startsWith("screen:")) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
@@ -235,21 +232,24 @@ if (!gotTheLock) {
   });
 
   ipcMain.on("resize-preview-window", (event, { width, height }) => {
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      const [minWidth, minHeight] = global.previewWindow.getMinimumSize();
+    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
+      const [minWidth, minHeight] = globalThis.previewWindow.getMinimumSize();
       const newWidth = Math.max(minWidth, Math.min(width, 480));
       const newHeight = Math.max(minHeight, Math.min(height, 360));
-      global.previewWindow.setSize(newWidth, newHeight);
-      global.previewWindow.center();
+      globalThis.previewWindow.setSize(newWidth, newHeight);
+      globalThis.previewWindow.center();
     }
   });
 
   ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    global.selectedScreenShareSource = null;
-    if (global.previewWindow && !global.previewWindow.isDestroyed()) {
-      global.previewWindow.webContents.send("screen-sharing-status-changed");
+    globalThis.selectedScreenShareSource = null;
+    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
+      globalThis.previewWindow.webContents.send("screen-sharing-status-changed");
     }
   });
+} else {
+  console.info("App already running");
+  app.quit();
 }
 
 function restartApp() {
@@ -334,13 +334,10 @@ function addElectronCLIFlagsFromConfig() {
         console.debug(`Adding electron CLI flag '${flag}'`);
         app.commandLine.appendSwitch(flag);
       } else if (Array.isArray(flag) && typeof flag[0] === "string") {
-        if (
-          !(
-            typeof flag[1] === "undefined" ||
-            typeof flag[1] === "object" ||
-            typeof flag[1] === "function"
-          )
-        ) {
+        const hasValidValue = flag[1] !== undefined &&
+                               typeof flag[1] !== "object" &&
+                               typeof flag[1] !== "function";
+        if (hasValidValue) {
           console.debug(
             `Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`
           );
@@ -425,9 +422,9 @@ async function playNotificationSound(_event, options) {
     console.debug("Notification sounds are disabled when user is not active");
     return;
   }
-  const sound = notificationSounds.filter((ns) => {
+  const sound = notificationSounds.find((ns) => {
     return ns.type === options.type;
-  })[0];
+  });
 
   if (sound) {
     console.debug(`Playing file: ${sound.file}`);
@@ -500,7 +497,7 @@ function handleAppReady() {
 
   if (config.cacheManagement?.enabled === true) {
     const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 300,
+      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
       cacheCheckIntervalMs:
         config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
       partition: config.partition, // Pass partition config for dynamic cache paths
@@ -539,11 +536,9 @@ async function handleGetSystemIdleState() {
   }
 
   const state = {
-    ...{
-      system: systemIdleState,
-      userIdle: idleTimeUserStatus,
-      userCurrent: userStatus,
-    },
+    system: systemIdleState,
+    userIdle: idleTimeUserStatus,
+    userCurrent: userStatus,
   };
 
   if (systemIdleState === "active") {
@@ -581,9 +576,9 @@ function getPartitions() {
 
 function getPartition(name) {
   const partitions = getPartitions();
-  return partitions.filter((p) => {
+  return partitions.find((p) => {
     return p.name === name;
-  })[0];
+  });
 }
 
 function savePartition(arg) {
@@ -614,7 +609,7 @@ function handleCertificateError() {
 }
 
 async function requestMediaAccess() {
-  ["camera", "microphone"].forEach(async (permission) => {
+  for (const permission of ["camera", "microphone"]) {
     const status = await systemPreferences
       .askForMediaAccess(permission)
       .catch((err) => {
@@ -625,7 +620,7 @@ async function requestMediaAccess() {
     console.debug(
       `mac permission ${permission} asked current status ${status}`
     );
-  });
+  }
 }
 
 async function userStatusChangedHandler(_event, options) {
