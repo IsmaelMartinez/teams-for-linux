@@ -644,4 +644,9 @@ class ReactHandler {
 
 const reactHandlerInstance = new ReactHandler();
 
+// Make available for browser injection
+if (typeof window !== 'undefined') {
+  window.teamsForLinuxReactHandler = reactHandlerInstance;
+}
+
 module.exports = reactHandlerInstance;

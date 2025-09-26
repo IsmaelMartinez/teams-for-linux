@@ -80,6 +80,56 @@ Place your `config.json` file in the appropriate location based on your installa
 | `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
 | `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO |
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `tokenRefresh` | `object` | See below | Configurable token refresh settings to prevent authentication expiry |
+
+#### Token Refresh Configuration
+
+The `tokenRefresh` option prevents authentication expiry by automatically refreshing tokens at configurable intervals:
+
+```json
+{
+  "tokenRefresh": {
+    "enabled": true,
+    "refreshIntervalHours": 2
+  }
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable/disable automatic token refresh |
+| `refreshIntervalHours` | `number` | `1` | Refresh interval in hours (1-24) |
+
+**Examples:**
+```json
+// Refresh every 4 hours
+{
+  "tokenRefresh": {
+    "enabled": true,
+    "refreshIntervalHours": 4
+  }
+}
+
+// Disable automatic refresh
+{
+  "tokenRefresh": {
+    "enabled": false
+  }
+}
+
+// Use maximum interval (24 hours)
+{
+  "tokenRefresh": {
+    "enabled": true,
+    "refreshIntervalHours": 24
+  }
+}
+```
+
+**Notes:**
+- Refresh intervals are automatically bounded between 1-24 hours
+- The feature works alongside Teams' native refresh mechanism without conflicts
+- Disabled by default in some configurations - explicitly enable if needed
 
 ### Notifications & UI
 

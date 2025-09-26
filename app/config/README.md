@@ -15,5 +15,5 @@ See [`../../docs-site/docs/configuration.md`](../../docs-site/docs/configuration
 
 - Configuration file locations and precedence
 - All available options with defaults
-- Feature-specific settings (custom backgrounds, certificates, cache management, etc.)
+- Feature-specific settings (custom backgrounds, certificates, cache management, token refresh, etc.)
 - Command-line argument examples

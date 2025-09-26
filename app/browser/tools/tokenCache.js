@@ -423,4 +423,11 @@ class TeamsTokenCache {
 }
 
 // Export singleton instance following established pattern
-module.exports = new TeamsTokenCache();
+const tokenCacheInstance = new TeamsTokenCache();
+
+// Make available for browser injection
+if (typeof window !== 'undefined') {
+  window.teamsForLinuxTokenCache = tokenCacheInstance;
+}
+
+module.exports = tokenCacheInstance;

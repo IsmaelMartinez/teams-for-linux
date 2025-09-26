@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development:**
 - `npm start` - Run application in development mode with trace warnings
+- `ELECTRON_DEBUG_LOGGING=true npm start` - Run application with debug logging enabled (shows TOKEN_REFRESH logs)
 - `npm run lint` - Run ESLint validation (mandatory before commits)
 
 **Building:**

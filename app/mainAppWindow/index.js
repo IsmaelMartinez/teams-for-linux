@@ -339,6 +339,7 @@ function onDidFinishLoad() {
 
   // Inject browser functionality
   injectScreenSharingLogic();
+  injectTokenRefreshLogic();
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
@@ -358,6 +359,40 @@ function injectScreenSharingLogic() {
     window.webContents.executeJavaScript(script);
   } catch (err) {
     console.error("Failed to load injected screen sharing script:", err);
+  }
+}
+
+function injectTokenRefreshLogic() {
+  const fs = require("fs");
+  const path = require("path");
+  
+  try {
+    // Inject complete token refresh system
+    const tokenRefreshPath = path.join(__dirname, "..", "browser", "tokenRefreshComplete.js");
+    const tokenRefreshScript = fs.readFileSync(tokenRefreshPath, "utf8");
+    window.webContents.executeJavaScript(tokenRefreshScript);
+    
+    // Wait a moment for script to initialize, then configure
+    setTimeout(() => {
+      const tokenRefreshConfig = appConfig.getTokenRefreshConfig();
+      console.debug('[TOKEN_REFRESH] Configuring with settings:', tokenRefreshConfig);
+      
+      // Send configuration to browser context
+      window.webContents.executeJavaScript(`
+        if (window.teamsForLinuxTokenRefresh && window.teamsForLinuxTokenRefresh.configure) {
+          window.teamsForLinuxTokenRefresh.configure(${JSON.stringify(tokenRefreshConfig)});
+        } else {
+          console.warn('[TOKEN_REFRESH] Token refresh system not ready for configuration');
+        }
+      `).catch(err => {
+        console.error('[TOKEN_REFRESH] Error configuring token refresh:', err);
+      });
+    }, 100);
+    
+    console.debug('[TOKEN_REFRESH] Token refresh logic injected successfully');
+    
+  } catch (err) {
+    console.error("Failed to inject token refresh logic:", err);
   }
 }
 

@@ -84,6 +84,42 @@ if (authProvider && !authProvider._tokenCache) {
 
 The implementation uses Electron's `safeStorage` API which automatically handles platform-specific encryption backends (macOS Keychain, Windows DPAPI, Linux Secret Service). The application only needs to check `safeStorage.isEncryptionAvailable()` - Electron abstracts all OS-specific details.
 
+#### 4. Configurable Token Refresh Scheduling
+
+The token cache includes built-in refresh scheduling to prevent authentication expiry:
+
+```javascript
+// Refresh Scheduling Interface
+startRefreshScheduler(refreshCallback, intervalHours)  // Start scheduled refresh
+stopRefreshScheduler()                                // Stop and cleanup
+getRefreshSchedulerStatus()                          // Get current status
+```
+
+**Configuration Options:**
+- **Enabled/Disabled**: Toggle refresh functionality via `tokenRefresh.enabled`
+- **Interval**: 1-24 hours (configurable via `tokenRefresh.refreshIntervalHours`)
+- **Automatic Cleanup**: Prevents memory leaks with proper timer management
+
+**Integration with Teams:**
+- Uses existing Teams authentication provider
+- Calls `acquireToken` with correlation and force refresh flags
+- Runs alongside Teams' native refresh (no conflicts)
+- Preserves all existing authentication functionality
+
+**Usage Example:**
+```javascript
+// Start refresh scheduler with 2-hour intervals
+tokenCache.startRefreshScheduler(
+  () => reactHandler.refreshToken(), 
+  2 // hours
+);
+
+// Check status
+const status = tokenCache.getRefreshSchedulerStatus();
+console.log('Refresh enabled:', status.enabled);
+console.log('Next refresh in:', status.intervalHours, 'hours');
+```
+
 ### Security Considerations
 
 #### 1. Encryption at Rest

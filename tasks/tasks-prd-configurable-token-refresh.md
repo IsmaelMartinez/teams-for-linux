@@ -94,11 +94,11 @@
   - [x] 5.4 Remove correlation inspection and auth provider debugging methods not needed for production
   - [x] 5.5 Verify no debug code remains accessible from browser console or external access
 
-- [ ] 6.0 Update Documentation and Architecture Guides
-  - [ ] 6.1 Update docs-site/docs/development/token-cache-architecture.md to include refresh scheduling architecture
-  - [ ] 6.2 Add tokenRefresh configuration section to docs-site/docs/configuration.md with examples and validation rules
-  - [ ] 6.3 Update app/config/README.md to mention token refresh in feature list
-  - [ ] 6.4 Document refresh implementation findings and timing strategies in ADR
+- [x] 6.0 Update Documentation and Architecture Guides
+  - [x] 6.1 Update docs-site/docs/development/token-cache-architecture.md to include refresh scheduling architecture
+  - [x] 6.2 Add tokenRefresh configuration section to docs-site/docs/configuration.md with examples and validation rules
+  - [x] 6.3 Update app/config/README.md to mention token refresh in feature list
+  - [x] 6.4 Document refresh implementation findings and timing strategies in ADR
 
 ## Research Questions
 
