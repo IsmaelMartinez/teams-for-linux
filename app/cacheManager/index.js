@@ -1,6 +1,6 @@
-const fs = require("fs");
-const fsp = require("fs").promises;
-const path = require("path");
+const fs = require("node:fs");
+const fsp = require("node:fs").promises;
+const path = require("node:path");
 const electron = require("electron");
 
 /**

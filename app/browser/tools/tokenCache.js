@@ -253,7 +253,14 @@ class TeamsTokenCache {
         refreshTokenCount: refreshTokens.length,
         msalTokenCount: msalKeys.length,
         storageType: this._useSecureStorage ? 'secure' : (this._useMemoryFallback ? 'memory' : 'localStorage'),
-        refreshScheduler: this.getRefreshSchedulerStatus()
+        refreshScheduler: this.getRefreshSchedulerStatus(),
+        storageInfo: {
+          localStorage: this._isAvailable,
+          memoryFallback: this._useMemoryFallback,
+          secureStorage: this._useSecureStorage,
+          platform: process.platform,
+          secureBackend: this._useSecureStorage ? 'electron-safeStorage' : 'none'
+        }
       };
     } catch (error) {
       console.warn('[TOKEN_CACHE] Failed to get cache stats:', error.message);
@@ -273,6 +280,68 @@ class TeamsTokenCache {
   // Private Implementation Methods
   //
 
+
+  /**
+   * Initialize secure storage
+   * @private
+   */
+  _initializeSecureStorage() {
+    try {
+      this._useSecureStorage = safeStorage && safeStorage.isEncryptionAvailable();
+      console.debug('[TOKEN_CACHE] Secure storage', this._useSecureStorage ? 'available' : 'not available');
+      
+    } catch (error) {
+      console.warn('[TOKEN_CACHE] Secure storage initialization failed:', error.message);
+      this._useSecureStorage = false;
+    }
+  }
+
+
+  /**
+   * Get item from secure storage
+   * @private
+   */
+  async _getSecureItem(key) {
+    try {
+      const encryptedData = localStorage.getItem(this._securePrefix + key);
+      if (!encryptedData) {
+        return null;
+      }
+      
+      const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+      return safeStorage.decryptString(encryptedBuffer);
+    } catch (error) {
+      console.warn(`[TOKEN_CACHE] Secure getItem failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Set item in secure storage
+   * @private
+   */
+  async _setSecureItem(key, value) {
+    try {
+      const encrypted = safeStorage.encryptString(value);
+      localStorage.setItem(this._securePrefix + key, encrypted.toString('base64'));
+      return true;
+    } catch (error) {
+      console.warn(`[TOKEN_CACHE] Secure setItem failed: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Remove item from secure storage
+   * @private
+   */
+  async _removeSecureItem(key) {
+    try {
+      localStorage.removeItem(this._securePrefix + key);
+    } catch (error) {
+      console.warn(`[TOKEN_CACHE] Secure removeItem failed: ${error.message}`);
+    }
+  }
 
   /**
    * Initialize secure storage

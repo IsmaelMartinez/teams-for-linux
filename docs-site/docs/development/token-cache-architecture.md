@@ -84,6 +84,7 @@ if (authProvider && !authProvider._tokenCache) {
 
 The implementation uses Electron's `safeStorage` API which automatically handles platform-specific encryption backends (macOS Keychain, Windows DPAPI, Linux Secret Service). The application only needs to check `safeStorage.isEncryptionAvailable()` - Electron abstracts all OS-specific details.
 
+<<<<<<< HEAD
 #### 4. Configurable Token Refresh Scheduling
 
 The token cache includes built-in refresh scheduling to prevent authentication expiry:
@@ -119,7 +120,6 @@ const status = tokenCache.getRefreshSchedulerStatus();
 console.log('Refresh enabled:', status.enabled);
 console.log('Next refresh in:', status.intervalHours, 'hours');
 ```
-
 ### Security Considerations
 
 #### 1. Encryption at Rest
