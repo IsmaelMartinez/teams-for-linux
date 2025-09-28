@@ -59,6 +59,9 @@
             expiry: result?.expiresOn || result?.expires_on
           });
 
+          // CRITICAL: Store the fresh token to replace expired cached tokens
+          await this._storeRefreshedToken(result, resource);
+
           return {
             success: true,
             result: result,
@@ -134,34 +137,135 @@
         return null;
       }
     }
+
+    /**
+     * Store refreshed token to replace expired cached tokens
+     * This ensures Teams actually uses the fresh tokens we retrieved
+     */
+    async _storeRefreshedToken(tokenResult, resource) {
+      try {
+        console.debug(`[TOKEN_CACHE] Storing refreshed token for resource: ${resource}`);
+
+        // Extract token data from the result
+        const token = tokenResult?.token || tokenResult?.accessToken;
+        const expiresOn = tokenResult?.expiresOn || tokenResult?.expires_on;
+        const accountInfo = tokenResult?.account;
+
+        if (!token) {
+          console.warn(`[TOKEN_CACHE] No token found in result, cannot store`);
+          return false;
+        }
+
+        // Store token using multiple strategies to ensure Teams finds it
+
+        // Strategy 1: Store in MSAL format (most common for Teams)
+        const msalKey = `msal.token.${resource}`;
+        const msalTokenData = {
+          token: token,
+          expiresOn: expiresOn,
+          accessToken: token,
+          expires_on: expiresOn,
+          resource: resource,
+          refreshed: true,
+          refreshTimestamp: Date.now()
+        };
+        
+        localStorage.setItem(msalKey, JSON.stringify(msalTokenData));
+        console.debug(`[TOKEN_CACHE] Stored token in MSAL format: ${msalKey}`);
+
+        // Strategy 2: Store in generic auth format
+        const authKey = `auth.token.${resource}`;
+        localStorage.setItem(authKey, JSON.stringify(msalTokenData));
+        console.debug(`[TOKEN_CACHE] Stored token in auth format: ${authKey}`);
+
+        // Strategy 3: Store raw token for fallback
+        const tokenKey = `token.${resource}`;
+        localStorage.setItem(tokenKey, token);
+        console.debug(`[TOKEN_CACHE] Stored raw token: ${tokenKey}`);
+
+        // Strategy 4: Clear any expired tokens with old expiry dates
+        await this._clearExpiredTokens();
+
+        console.debug(`[TOKEN_CACHE] Token storage completed successfully`);
+        return true;
+
+      } catch (error) {
+        console.error(`[TOKEN_CACHE] Failed to store refreshed token:`, error);
+        return false;
+      }
+    }
+
+    /**
+     * Clear expired tokens from localStorage to prevent conflicts
+     */
+    async _clearExpiredTokens() {
+      try {
+        const now = Date.now() / 1000; // Convert to seconds for comparison
+        let clearedCount = 0;
+
+        // Iterate through localStorage to find and clear expired tokens
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+
+          // Check if this is a token-related key
+          if (key.includes('token') || key.includes('msal') || key.includes('auth')) {
+            try {
+              const value = localStorage.getItem(key);
+              if (!value) continue;
+
+              // Try to parse as JSON and check expiry
+              const tokenData = JSON.parse(value);
+              const expiryTime = tokenData?.expiresOn || tokenData?.expires_on;
+
+              if (expiryTime && expiryTime < now) {
+                localStorage.removeItem(key);
+                clearedCount++;
+                console.debug(`[TOKEN_CACHE] Cleared expired token: ${key}`);
+              }
+            } catch (parseError) {
+              // Not JSON or malformed, skip
+              continue;
+            }
+          }
+        }
+
+        if (clearedCount > 0) {
+          console.debug(`[TOKEN_CACHE] Cleared ${clearedCount} expired tokens`);
+        }
+
+      } catch (error) {
+        console.error(`[TOKEN_CACHE] Error clearing expired tokens:`, error);
+      }
+    }
   }
 
   // Simple Token Refresh Scheduler
   class SimpleTokenRefreshScheduler {
     constructor() {
       this._refreshTimer = null;
-      this._refreshInterval = 60 * 60 * 1000; // Default 1 hour
+      this._refreshInterval = 5 * 60 * 1000; // Default 5 minutes
       this._refreshEnabled = false;
     }
 
-    startRefreshScheduler(refreshCallback, intervalHours = 1) {
+    startRefreshScheduler(refreshCallback, intervalMinutes = 5) {
       try {
         if (typeof refreshCallback !== 'function') {
           throw new TypeError('refreshCallback must be a function');
         }
 
-        if (typeof intervalHours !== 'number' || intervalHours < 1 || intervalHours > 24) {
-          throw new RangeError('intervalHours must be between 1 and 24');
+        if (typeof intervalMinutes !== 'number' || intervalMinutes < 1 || intervalMinutes > 1440) {
+          throw new RangeError('intervalMinutes must be between 1 and 1440 (24 hours)');
         }
 
         // Stop existing scheduler if running
         this.stopRefreshScheduler();
 
         // Calculate interval in milliseconds
-        this._refreshInterval = intervalHours * 60 * 60 * 1000;
+        this._refreshInterval = intervalMinutes * 60 * 1000;
         this._refreshEnabled = true;
 
-        console.debug(`[TOKEN_CACHE] Starting refresh scheduler (${intervalHours} hours)`);
+        console.debug(`[TOKEN_CACHE] Starting refresh scheduler (${intervalMinutes} minutes)`);
 
         // Set up the interval timer
         this._refreshTimer = setInterval(async () => {
@@ -195,7 +299,7 @@
       return {
         enabled: this._refreshEnabled,
         intervalMs: this._refreshInterval,
-        intervalHours: this._refreshInterval / (60 * 60 * 1000),
+        intervalMinutes: this._refreshInterval / (60 * 1000),
         isRunning: this._refreshTimer !== null
       };
     }
@@ -215,10 +319,12 @@
         return;
       }
 
-      // Validate interval
-      const intervalHours = Math.max(1, Math.min(24, config.refreshIntervalHours || 1));
+      // Validate interval - convert hours to minutes if needed
+      const intervalMinutes = config.refreshIntervalMinutes || 
+                             (config.refreshIntervalHours ? config.refreshIntervalHours * 60 : 5);
+      const validIntervalMinutes = Math.max(1, Math.min(1440, intervalMinutes));
       
-      console.debug(`[TOKEN_REFRESH] Starting scheduler with ${intervalHours} hour interval`);
+      console.debug(`[TOKEN_REFRESH] Starting scheduler with ${validIntervalMinutes} minute interval`);
       
       // Start the refresh scheduler
       const success = scheduler.startRefreshScheduler(
@@ -231,7 +337,7 @@
             console.warn('[TOKEN_REFRESH] Scheduled refresh failed:', result.error);
           }
         },
-        intervalHours
+        validIntervalMinutes
       );
 
       if (success) {
