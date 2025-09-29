@@ -17,7 +17,7 @@
 		<release version="2.5.10" date="2025-09-30">
 			<description>
 				<ul>
-					<li>Fix: Disable all audio in screen sharing to try to fix issue #1800</li>
+					<li>Attempt: Disable all audio in screen sharing to try to fix issue #1800 - might fix audio echo on Wayland/Pipewire</li>
 				</ul>
 			</description>
 		</release>
