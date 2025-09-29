@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", () => {
+globalThis.addEventListener("DOMContentLoaded", () => {
   const screens = [
     {
       width: 1280,
@@ -32,7 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let windowsIndex = 0;
   const sscontainer = document.getElementById("screen-size");
   createEventHandlers({ screens, sscontainer });
-  window.api
+  globalThis.api
     .desktopCapturerGetSources({ types: ["window", "screen"] })
     .then(async (sources) => {
       const rowElement = document.querySelector(".container-fluid .row");
@@ -58,7 +58,7 @@ async function createPreview(properties) {
   videoContainerElement.className = "video-container";
   // Video
   let videoElement = document.createElement("video");
-  videoElement.setAttribute("data-id", properties.source.id);
+  videoElement.dataset.id = properties.source.id;
   videoElement.title = properties.source.name;
   videoContainerElement.appendChild(videoElement);
   // Label
@@ -106,7 +106,7 @@ function playPreview(properties) {
   properties.videoElement.onclick = () => {
     console.debug(`[SCREEN_SHARE_DIAG] User selected source: ${properties.source.id}, cleaning up all previews immediately`);
     closePreviews(); // Clean up all preview streams immediately to prevent ongoing capture
-    window.api.selectedSource({
+    globalThis.api.selectedSource({
       id: properties.source.id,
       screen: properties.screens[properties.sscontainer.value]
     });
@@ -125,7 +125,7 @@ function createEventHandlers(properties) {
     .addEventListener("click", toggleSources);
   document.querySelector("#btn-close").addEventListener("click", () => {
     closePreviews();
-    window.api.closeView();
+    globalThis.api.closeView();
   });
 }
 
@@ -146,10 +146,10 @@ function closePreviews() {
       vidElement.pause();
       
       // Stop all tracks to immediately release desktop capture
-      stream.getTracks().forEach(track => {
+      for (const track of stream.getTracks()) {
         console.debug(`[SCREEN_SHARE_DIAG] Stopping track: ${track.kind} - ${track.id}`);
         track.stop();
-      });
+      }
       
       // Clear the srcObject reference
       vidElement.srcObject = null;
@@ -164,22 +164,22 @@ function closePreviews() {
 }
 
 function toggleSources(e) {
-  document.querySelectorAll("button").forEach((b) => {
+  for (const b of document.querySelectorAll("button")) {
     b.classList.toggle("btn-primary");
     b.classList.toggle("btn-secondary");
-  });
+  }
   document
     .querySelector(".container-fluid")
-    .setAttribute("data-view", e.target.getAttribute("data-view"));
+    .dataset.view = e.target.dataset.view;
 }
 
 function createQualitySelector(properties) {
-  properties.screens.forEach((s, i) => {
+  for (const [i, s] of properties.screens.entries()) {
     const opt = document.createElement("option");
     opt.appendChild(document.createTextNode(s.name));
     opt.value = i;
     properties.sscontainer.appendChild(opt);
-  });
+  }
   let defaultSelection = properties.screens.findIndex((s) => {
     return s.default;
   });

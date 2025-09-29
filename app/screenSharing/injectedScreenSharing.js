@@ -90,7 +90,7 @@
   function handleScreenShareStream(stream, source) {
     console.debug(`[SCREEN_SHARE_DIAG] Processing stream from ${source} (${activeStreams.length} active)`);
 
-    const electronAPI = window.electronAPI;
+    const electronAPI = globalThis.electronAPI;
 
     if (!electronAPI) {
       console.error("[SCREEN_SHARE_DIAG] electronAPI not available - cannot notify main process");
@@ -126,13 +126,13 @@
     // Track stream and tracks for reference, but don't auto-close popup based on their state
     // Popup window should only close when manually closed or screen sharing explicitly stopped
     const trackingVideoTracks = stream.getVideoTracks();
-    trackingVideoTracks.forEach((track, index) => {
+    for (const [index, track] of trackingVideoTracks.entries()) {
       activeMediaTracks.push(track);
       
       track.addEventListener("ended", () => {
         console.debug(`[SCREEN_SHARE_DIAG] Video track ${index} ended (popup remains open)`);
       });
-    });
+    }
   }
 
   // Function to handle stream ending - used by UI button detection
@@ -143,7 +143,7 @@
       isScreenSharing = false;
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing stopped");
 
-      const electronAPI = window.electronAPI;
+      const electronAPI = globalThis.electronAPI;
       if (electronAPI?.sendScreenSharingStopped) {
         console.debug(`[SCREEN_SHARE_DIAG] Sending screen-sharing-stopped event (${reason})`);
         electronAPI.sendScreenSharingStopped();
@@ -187,7 +187,9 @@
       ...document.querySelectorAll('[id*="stop-sharing"]'),
     ];
 
-    stopButtons.forEach(setupStopButtonMonitoring);
+    for (const button of stopButtons) {
+      setupStopButtonMonitoring(button);
+    }
   }
 
   // Start monitoring UI for "Stop sharing" buttons
