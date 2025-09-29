@@ -361,7 +361,6 @@ function injectScreenSharingLogic() {
   }
 }
 
-
 function initSystemThemeFollow(config) {
   if (config.followSystemTheme) {
     nativeTheme.on("updated", () => {

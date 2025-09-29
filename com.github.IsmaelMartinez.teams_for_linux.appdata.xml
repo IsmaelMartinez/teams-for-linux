@@ -14,6 +14,22 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.9" date="2025-09-19">
+			<description>
+				<ul>
+					<li>Feature: Implement secure token cache storage using Electron safeStorage API - tokens are now encrypted using OS-level security (Keychain/DPAPI/kwallet) instead of plain localStorage</li>
+					<li>Enhancement: Increase default cache size limit from 300MB to 600MB to reduce frequency of automatic cache cleanup</li>
+					<li>Fix: Resolve disableAutogain initialization failure that prevented microphone auto-gain control from being disabled properly</li>
+				</ul>
+			</description>
+		</release>
+		<release version="2.5.8" date="2025-09-19">
+			<description>
+				<ul>
+					<li>Restore: Re-enable disableAutogain functionality that was removed in v2.3.0 - allows manual control over microphone auto-gain for professional audio setups</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.7" date="2025-09-18">
 			<description>
 				<ul>
