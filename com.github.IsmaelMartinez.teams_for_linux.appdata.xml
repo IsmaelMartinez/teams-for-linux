@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Attempt: Disable all audio in screen sharing to try to fix issue #1800 - might fix audio echo on Wayland/Pipewire</li>
+					<li>Update: Electron updated to 37.6.0, ESLint to 9.36.0 for latest security patches and bug fixes</li>
 				</ul>
 			</description>
 		</release>
