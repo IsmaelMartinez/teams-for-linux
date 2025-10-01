@@ -36,6 +36,9 @@ class Menus {
 
   async quit(clearStorage = false) {
     this.allowQuit = true;
+    
+    // Stop clipboard monitoring when quitting
+    this.stopClipboardMonitoring();
 
     clearStorage =
       clearStorage &&
@@ -149,6 +152,8 @@ class Menus {
   onBeforeQuit() {
     console.debug("before-quit");
     this.allowQuit = true;
+    // Stop clipboard monitoring before quitting
+    this.stopClipboardMonitoring();
   }
 
   onClose(event) {
@@ -157,6 +162,8 @@ class Menus {
       event.preventDefault();
       this.hide();
     } else {
+      // Stop clipboard monitoring when closing
+      this.stopClipboardMonitoring();
       this.tray.close();
       this.window.webContents.session.flushStorageData();
     }
@@ -247,6 +254,90 @@ class Menus {
   forceVideoControls() {
     const script = `document.querySelectorAll('video').forEach(v => {v.removeAttribute("disablepictureinpicture"); v.toggleAttribute("controls");})`;
     this.window.webContents.executeJavaScript(script, true);
+  }
+
+  joinMeeting() {
+    try {
+      const clipboardText = clipboard.readText();
+      if (this.isValidTeamsMeetingUrl(clipboardText)) {
+        this.joinMeetingWithUrl(clipboardText);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking clipboard:', error);
+    }
+    
+    this.startClipboardMonitoring();
+  }
+
+  startClipboardMonitoring() {
+    this.clipboardMonitoring = {
+      interval: null,
+      lastUrl: null
+    };
+
+    this.clipboardMonitoring.interval = setInterval(() => {
+      this.checkClipboardForMeetingUrl();
+    }, 500);
+
+    this.showWaitingForUrlDialog();
+  }
+
+  checkClipboardForMeetingUrl() {
+    try {
+      const clipboardText = clipboard.readText();
+      const isValidUrl = this.isValidTeamsMeetingUrl(clipboardText);
+      
+      if (isValidUrl && clipboardText !== this.clipboardMonitoring.lastUrl) {
+        this.clipboardMonitoring.lastUrl = clipboardText;
+        this.joinMeetingWithUrl(clipboardText);
+        this.stopClipboardMonitoring();
+      }
+    } catch (error) {
+      console.error('Error checking clipboard:', error);
+    }
+  }
+
+  isValidTeamsMeetingUrl(text) {
+    return text && 
+           typeof text === 'string' && 
+           text.includes("teams.microsoft.com") && 
+           text.includes("meetup-join");
+  }
+
+  showWaitingForUrlDialog() {
+    dialog.showMessageBox(this.window, {
+      type: 'info',
+      title: 'Waiting for Teams Meeting URL',
+      message: 'Copy a Teams meeting URL to your clipboard',
+      detail: 'The app is monitoring your clipboard for a valid Teams meeting URL. Once you copy one, it will open automatically.',
+      buttons: ['Cancel'],
+      defaultId: 0,
+      cancelId: 0
+    }).then((response) => {
+      if (response.response === 0) {
+        this.stopClipboardMonitoring();
+      }
+    });
+  }
+
+  joinMeetingWithUrl(meetingUrl) {
+    try {
+      this.window.webContents.loadURL(meetingUrl);
+      this.window.show();
+      this.window.focus();
+    } catch (error) {
+      console.error('Error loading meeting URL:', error);
+      dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
+    }
+  }
+
+  stopClipboardMonitoring() {
+    if (this.clipboardMonitoring && this.clipboardMonitoring.interval) {
+      clearInterval(this.clipboardMonitoring.interval);
+      this.clipboardMonitoring.interval = null;
+      this.clipboardMonitoring.lastUrl = null;
+    }
   }
 }
 
