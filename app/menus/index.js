@@ -36,9 +36,6 @@ class Menus {
 
   async quit(clearStorage = false) {
     this.allowQuit = true;
-    
-    // Stop clipboard monitoring when quitting
-    this.stopClipboardMonitoring();
 
     clearStorage =
       clearStorage &&
@@ -152,7 +149,6 @@ class Menus {
   onBeforeQuit() {
     console.debug("before-quit");
     this.allowQuit = true;
-    // Stop clipboard monitoring before quitting
     this.stopClipboardMonitoring();
   }
 
@@ -162,8 +158,6 @@ class Menus {
       event.preventDefault();
       this.hide();
     } else {
-      // Stop clipboard monitoring when closing
-      this.stopClipboardMonitoring();
       this.tray.close();
       this.window.webContents.session.flushStorageData();
     }
@@ -271,6 +265,10 @@ class Menus {
   }
 
   startClipboardMonitoring() {
+    if (this.clipboardMonitoring?.interval) {
+      return; // Already monitoring
+    }
+
     this.clipboardMonitoring = {
       interval: null,
       lastUrl: null
@@ -278,7 +276,7 @@ class Menus {
 
     this.clipboardMonitoring.interval = setInterval(() => {
       this.checkClipboardForMeetingUrl();
-    }, 500);
+    }, 1000);
 
     this.showWaitingForUrlDialog();
   }
@@ -299,10 +297,11 @@ class Menus {
   }
 
   isValidTeamsMeetingUrl(text) {
-    return text && 
-           typeof text === 'string' && 
-           text.includes("teams.microsoft.com") && 
-           text.includes("meetup-join");
+    if (typeof text !== 'string') {
+      return false;
+    }
+    const teamsUrlPattern = /^https:\/\/teams\.microsoft\.com\/l\/meetup-join\//;
+    return teamsUrlPattern.test(text);
   }
 
   showWaitingForUrlDialog() {
