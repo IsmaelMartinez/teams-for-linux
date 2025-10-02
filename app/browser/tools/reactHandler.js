@@ -1,4 +1,4 @@
-// v2.5.3: Import token cache for authentication provider integration
+// Import token cache for authentication provider integration
 const TokenCache = require('./tokenCache');
 
 class ReactHandler {
@@ -31,7 +31,7 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
-  // v2.5.3: Public method to manually trigger token cache injection
+  // Public method to manually trigger token cache injection
   injectTokenCache() {
     if (!this._validateTeamsEnvironment()) {
       console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot inject token cache`);
@@ -57,7 +57,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Get token cache injection status for monitoring
+  // Get token cache injection status for monitoring
   getTokenCacheStatus() {
     return {
       injected: this._tokenCacheInjected,
@@ -142,7 +142,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Add authentication service access with enhanced logging for #1357
+  // Add authentication service access with enhanced logging for #1357
   logAuthenticationState() {
     if (!this._validateTeamsEnvironment()) {
       console.debug(`[AUTH_DIAG] Teams environment not validated`);
@@ -177,7 +177,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Deep analysis of token storage for refresh token investigation
+  // Deep analysis of token storage for refresh token investigation
   _analyzeTokenStorage() {
     try {
       // Check localStorage/sessionStorage for token-related keys
@@ -231,7 +231,7 @@ class ReactHandler {
   }
 
 
-  // v2.5.3: Analyze auth provider for token information
+  // Analyze auth provider for token information
   _analyzeAuthProvider(authProvider) {
     try {
       console.debug(`[AUTH_DIAG] Auth provider type: ${authProvider.constructor?.name || 'unknown'}`);
@@ -239,7 +239,7 @@ class ReactHandler {
       // Deep dive into token cache issue
       console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
       
-      // v2.5.5: Token cache analysis and injection for #1357 fix
+      // Token cache analysis and injection for #1357 fix
       if (authProvider._tokenCache) {
         console.debug(`[AUTH_DIAG] Token cache available: true`);
         console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
@@ -296,7 +296,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Attempt to inject token cache into Teams authentication provider
+  // Attempt to inject token cache into Teams authentication provider
   _attemptTokenCacheInjection(authProvider) {
     try {
       if (this._tokenCacheInjected) {
@@ -394,7 +394,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Validate token cache injection was successful
+  // Validate token cache injection was successful
   _validateTokenCacheInjection(authProvider) {
     try {
       const tokenCache = authProvider._tokenCache;
@@ -455,7 +455,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Validate existing token cache interface
+  // Validate existing token cache interface
   _validateTokenCacheInterface(tokenCache) {
     try {
       if (!tokenCache) {
@@ -495,7 +495,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Legacy diagnostic method - kept for fallback debugging
+  // Legacy diagnostic method - kept for fallback debugging
   _investigateTokenCacheIssue(authProvider) {
     console.debug(`[AUTH_DIAG] CACHE_FIX: Token cache unavailable - injection should have been attempted`);
     
@@ -578,7 +578,7 @@ class ReactHandler {
     );
     const hasModernReact = reactKeys.length > 0;
     
-    // v2.5.5: Enhanced debugging for tray icon timing issue (#1795)
+    // Enhanced debugging for tray icon timing issue (#1795)
     if (!hasLegacyReact && !hasModernReact) {
       // Log additional timing information to help debug when Teams React loads
       const currentTime = Date.now();

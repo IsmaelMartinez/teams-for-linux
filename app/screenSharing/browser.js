@@ -72,7 +72,7 @@ async function createPreview(properties) {
 }
 
 async function createPreviewStream(properties, videoElement) {
-  // v2.5.6: Disable audio in preview streams to prevent echo during screen sharing
+  // Disable audio in preview streams to prevent echo during screen sharing
   console.debug(`[SCREEN_SHARE_DIAG] Creating preview stream for source: ${properties.source.id}`);
   console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: DISABLED, dimensions: 192x108 (echo prevention)`);
   
@@ -130,7 +130,7 @@ function createEventHandlers(properties) {
 }
 
 function closePreviews() {
-  // v2.5.6: Enhanced logging for preview cleanup - prevents audio echo
+  // Enhanced logging for preview cleanup - prevents audio echo
   const vidElements = document.getElementsByTagName("video");
   console.debug(`[SCREEN_SHARE_DIAG] Closing ${vidElements.length} preview streams to prevent echo`);
   
