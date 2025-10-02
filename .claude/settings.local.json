@@ -12,7 +12,6 @@
       "mcp__github__get_issue",
       "Bash(git worktree:*)",
       "Bash(grep:*)",
-      "Bash(sed:*)",
       "Bash(find:*)"
     ],
     "deny": [],
