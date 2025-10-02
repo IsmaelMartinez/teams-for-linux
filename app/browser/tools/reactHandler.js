@@ -1,17 +1,15 @@
-// v2.5.3: Import token cache for authentication provider integration
+// Import token cache for authentication provider integration
 const TokenCache = require('./tokenCache');
 
 class ReactHandler {
+  _validationEnabled = true;
+  _lastValidationTime = 0;
+  _validationCacheMs = 1000; // Cache validation results for 1 second
+  _reactVersionLogged = false; // Ensure version is logged only once
+  _tokenCacheInjected = false; // Track token cache injection status
+  _tokenCacheInjectionRetries = 0; // Track retry attempts
+  _maxTokenCacheRetries = 5; // Maximum retry attempts
 
-  constructor() {
-    this._validationEnabled = true;
-    this._lastValidationTime = 0;
-    this._validationCacheMs = 1000; // Cache validation results for 1 second
-    this._reactVersionLogged = false; // Ensure version is logged only once
-    this._tokenCacheInjected = false; // Track token cache injection status
-    this._tokenCacheInjectionRetries = 0; // Track retry attempts
-    this._maxTokenCacheRetries = 5; // Maximum retry attempts
-  }
 
   getCommandChangeReportingService() {
     if (!this._validateTeamsEnvironment()) return null;
@@ -31,7 +29,7 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
-  // v2.5.3: Public method to manually trigger token cache injection
+  // Public method to manually trigger token cache injection
   injectTokenCache() {
     if (!this._validateTeamsEnvironment()) {
       console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot inject token cache`);
@@ -57,7 +55,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Get token cache injection status for monitoring
+  // Get token cache injection status for monitoring
   getTokenCacheStatus() {
     return {
       injected: this._tokenCacheInjected,
@@ -142,7 +140,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Add authentication service access with enhanced logging for #1357
+  // Add authentication service access with enhanced logging for #1357
   logAuthenticationState() {
     if (!this._validateTeamsEnvironment()) {
       console.debug(`[AUTH_DIAG] Teams environment not validated`);
@@ -177,7 +175,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Deep analysis of token storage for refresh token investigation
+  // Deep analysis of token storage for refresh token investigation
   _analyzeTokenStorage() {
     try {
       // Check localStorage/sessionStorage for token-related keys
@@ -231,7 +229,7 @@ class ReactHandler {
   }
 
 
-  // v2.5.3: Analyze auth provider for token information
+  // Analyze auth provider for token information
   _analyzeAuthProvider(authProvider) {
     try {
       console.debug(`[AUTH_DIAG] Auth provider type: ${authProvider.constructor?.name || 'unknown'}`);
@@ -239,7 +237,7 @@ class ReactHandler {
       // Deep dive into token cache issue
       console.debug(`[AUTH_DIAG] === Token Cache Investigation ===`);
       
-      // v2.5.5: Token cache analysis and injection for #1357 fix
+      // Token cache analysis and injection for #1357 fix
       if (authProvider._tokenCache) {
         console.debug(`[AUTH_DIAG] Token cache available: true`);
         console.debug(`[AUTH_DIAG] Token cache type: ${authProvider._tokenCache.constructor?.name || 'unknown'}`);
@@ -253,11 +251,11 @@ class ReactHandler {
       
       // Check for common auth provider properties
       const authProps = ['_tokenCache', '_cache', '_storage', 'cache', 'tokenStorage', 'tokenStore', '_tokenStore'];
-      authProps.forEach(prop => {
+      for (const prop of authProps) {
         if (authProvider[prop]) {
           console.debug(`[AUTH_DIAG] Auth provider has ${prop}: true (type: ${authProvider[prop].constructor?.name || 'unknown'})`);
         }
-      });
+      }
       
       // List all properties on auth provider to see what's available
       const allProps = Object.getOwnPropertyNames(authProvider);
@@ -283,11 +281,11 @@ class ReactHandler {
       
       // Check for token acquisition methods
       const tokenMethods = ['acquireToken', 'acquireTokenSilent', 'getTokenSilent', 'acquireTokenQuiet'];
-      tokenMethods.forEach(method => {
+      for (const method of tokenMethods) {
         if (typeof authProvider[method] === 'function') {
           console.debug(`[AUTH_DIAG] Auth provider has ${method}: true`);
         }
-      });
+      }
       
       console.debug(`[AUTH_DIAG] === End Token Cache Investigation ===`);
       
@@ -296,7 +294,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Attempt to inject token cache into Teams authentication provider
+  // Attempt to inject token cache into Teams authentication provider
   _attemptTokenCacheInjection(authProvider) {
     try {
       if (this._tokenCacheInjected) {
@@ -394,7 +392,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Validate token cache injection was successful
+  // Validate token cache injection was successful
   _validateTokenCacheInjection(authProvider) {
     try {
       const tokenCache = authProvider._tokenCache;
@@ -455,7 +453,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Validate existing token cache interface
+  // Validate existing token cache interface
   _validateTokenCacheInterface(tokenCache) {
     try {
       if (!tokenCache) {
@@ -495,7 +493,7 @@ class ReactHandler {
     }
   }
 
-  // v2.5.3: Legacy diagnostic method - kept for fallback debugging
+  // Legacy diagnostic method - kept for fallback debugging
   _investigateTokenCacheIssue(authProvider) {
     console.debug(`[AUTH_DIAG] CACHE_FIX: Token cache unavailable - injection should have been attempted`);
     
@@ -541,7 +539,7 @@ class ReactHandler {
   }
 
   _validateDomain() {
-    const isTeamsDomain = this._isAllowedTeamsDomain(window.location.hostname);
+    const isTeamsDomain = this._isAllowedTeamsDomain(globalThis.location.hostname);
     if (!isTeamsDomain) {
       console.warn('ReactHandler: Not in Teams domain context');
       return false;
@@ -578,18 +576,18 @@ class ReactHandler {
     );
     const hasModernReact = reactKeys.length > 0;
     
-    // v2.5.5: Enhanced debugging for tray icon timing issue (#1795)
+    // Enhanced debugging for tray icon timing issue (#1795)
     if (!hasLegacyReact && !hasModernReact) {
       // Log additional timing information to help debug when Teams React loads
       const currentTime = Date.now();
-      const timeSincePageLoad = currentTime - (window.performance?.timing?.navigationStart || 0);
+      const timeSincePageLoad = currentTime - (globalThis.performance?.timing?.navigationStart || 0);
       
       console.warn('ReactHandler: No React structure detected (legacy or modern)', {
         timeSincePageLoad: timeSincePageLoad,
         appElementExists: !!appElement,
         appElementKeys: appElement ? Object.getOwnPropertyNames(appElement).length : 0,
         documentReadyState: document.readyState,
-        teamsUrlPath: window.location.pathname
+        teamsUrlPath: globalThis.location.pathname
       });
       
       // Check if Teams is still loading
@@ -658,19 +656,19 @@ class ReactHandler {
     }
 
     // Check global React references
-    console.debug('  - window.React exists:', !!window.React);
-    console.debug('  - window.ReactDOM exists:', !!window.ReactDOM);
-    console.debug('  - DevTools hook exists:', !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
+    console.debug('  - globalThis.React exists:', !!globalThis.React);
+    console.debug('  - globalThis.ReactDOM exists:', !!globalThis.ReactDOM);
+    console.debug('  - DevTools hook exists:', !!globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__);
     
-    if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-      const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+      const hook = globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__;
       console.debug('  - DevTools renderers count:', hook.renderers ? hook.renderers.size : 0);
     }
 
     // Check webpack cache
-    console.debug('  - Webpack require exists:', !!window.__webpack_require__);
-    if (window.__webpack_require__ && window.__webpack_require__.cache) {
-      const moduleCount = Object.keys(window.__webpack_require__.cache).length;
+    console.debug('  - Webpack require exists:', !!globalThis.__webpack_require__);
+    if (globalThis.__webpack_require__ && globalThis.__webpack_require__.cache) {
+      const moduleCount = Object.keys(globalThis.__webpack_require__.cache).length;
       console.debug('  - Webpack cached modules:', moduleCount);
     }
   }
@@ -686,9 +684,9 @@ class ReactHandler {
   }
 
   _tryDevToolsHook() {
-    if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) return null;
+    if (!globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__) return null;
     
-    const reactDevTools = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    const reactDevTools = globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__;
     if (!reactDevTools.renderers || reactDevTools.renderers.size === 0) return null;
     
     const renderer = reactDevTools.renderers.values().next().value;
@@ -699,8 +697,8 @@ class ReactHandler {
   }
 
   _tryWindowReact() {
-    if (window.React && window.React.version) {
-      return { version: window.React.version, method: 'window.React' };
+    if (globalThis.React && globalThis.React.version) {
+      return { version: globalThis.React.version, method: 'globalThis.React' };
     }
     return null;
   }
@@ -761,9 +759,9 @@ class ReactHandler {
 
   _tryReactPackageInfo() {
     // Try to detect React version from bundled modules or webpack chunks
-    if (window.__webpack_require__ && window.__webpack_require__.cache) {
+    if (globalThis.__webpack_require__ && globalThis.__webpack_require__.cache) {
       try {
-        const modules = Object.values(window.__webpack_require__.cache);
+        const modules = Object.values(globalThis.__webpack_require__.cache);
         for (const module of modules) {
           if (module.exports && module.exports.version && 
               (module.exports.createElement || module.exports.Component)) {
@@ -778,9 +776,9 @@ class ReactHandler {
     // Check for React version in global variables or exposed modules
     // Use bracket notation to safely access potentially undefined properties
     const globalRefs = [
-      { obj: window['__REACT__'], name: 'window.__REACT__' },
-      { obj: window['ReactDOM'], name: 'window.ReactDOM' }, 
-      { obj: window['React'], name: 'window.React' }
+      { obj: globalThis['__REACT__'], name: 'globalThis.__REACT__' },
+      { obj: globalThis['ReactDOM'], name: 'globalThis.ReactDOM' }, 
+      { obj: globalThis['React'], name: 'globalThis.React' }
     ];
 
     for (const { obj, name } of globalRefs) {
@@ -855,11 +853,11 @@ class ReactHandler {
 const reactHandlerInstance = new ReactHandler();
 
 // Expose token refresh functionality for testing (development/debugging only)
-if (typeof window !== 'undefined') {
-  window.teamsDebug = window.teamsDebug || {};
-  window.teamsDebug.triggerTokenRefresh = (resource) => reactHandlerInstance.triggerTokenRefresh(resource);
-  window.teamsDebug.getTokenCacheStatus = () => reactHandlerInstance.getTokenCacheStatus();
-  window.teamsDebug.inspectAuthProvider = () => {
+if (typeof globalThis !== 'undefined') {
+  globalThis.teamsDebug = globalThis.teamsDebug || {};
+  globalThis.teamsDebug.triggerTokenRefresh = (resource) => reactHandlerInstance.triggerTokenRefresh(resource);
+  globalThis.teamsDebug.getTokenCacheStatus = () => reactHandlerInstance.getTokenCacheStatus();
+  globalThis.teamsDebug.inspectAuthProvider = () => {
     try {
       const teams2CoreServices = reactHandlerInstance._getTeams2CoreServices();
       const authService = teams2CoreServices?.authenticationService;
@@ -885,7 +883,7 @@ if (typeof window !== 'undefined') {
     }
   };
   
-  window.teamsDebug.inspectCorrelation = () => {
+  globalThis.teamsDebug.inspectCorrelation = () => {
     try {
       const teams2CoreServices = reactHandlerInstance._getTeams2CoreServices();
       

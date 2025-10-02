@@ -1,12 +1,12 @@
 const ReactHandler = require("./reactHandler");
 const eventHandlers = [];
 // Supported events
-const supportedEvents = [
+const supportedEvents = new Set([
   "incoming-call-created",
   "incoming-call-ended",
   "call-connected",
   "call-disconnected"
-];
+]);
 
 class ActivityHub {
 
@@ -25,7 +25,7 @@ class ActivityHub {
     const setup = setInterval(() => {
       attemptCount++;
       
-      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
+      // Enhanced logging for tray icon timing issue (#1795)
       console.debug(`ActivityHub: Connection attempt ${attemptCount}/${maxAttempts}`);
       
       const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
@@ -37,7 +37,7 @@ class ActivityHub {
         });
         clearInterval(setup);
         
-        // v2.5.3: Start periodic authentication state logging for #1357 
+        // Start periodic authentication state logging for #1357 
         this._startAuthenticationMonitoring();
       } else {
         // Log more details about why connection failed
@@ -58,7 +58,7 @@ class ActivityHub {
     }, 10000);
   }
 
-  // v2.5.5: Monitor authentication state and initialize token cache for #1357
+  // Monitor authentication state and initialize token cache for #1357
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
     ReactHandler.logAuthenticationState();
@@ -147,9 +147,7 @@ class ActivityHub {
 }
 
 function isSupportedEvent(event) {
-  return supportedEvents.some(e => {
-    return e === event;
-  });
+  return supportedEvents.has(event);
 }
 
 function isFunction(func) {
@@ -196,8 +194,8 @@ function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
     // Only Handle events that are from type ["CommandStart", "ScenarioMarked"]
     // and have a context target of ["internal-command-handler", "use-command-reporting-callbacks"]
-    if (["CommandStart", "ScenarioMarked"].indexOf(e.type) < 0 ||
-      ["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) < 0) {
+    if (!["CommandStart", "ScenarioMarked"].includes(e.type) ||
+      !["internal-command-handler", "use-command-reporting-callbacks"].includes(e.context.target)) {
       return;
     }
     if (e.context.entityCommand) {

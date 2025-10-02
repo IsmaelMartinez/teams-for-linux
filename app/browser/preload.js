@@ -1,7 +1,7 @@
 const { ipcRenderer } = require("electron");
 
 // Note: IPC validation handled by main process, no need for duplicate validation here
-window.electronAPI = {
+globalThis.electronAPI = {
   desktopCapture: {
     chooseDesktopMedia: (sources, cb) => {
       ipcRenderer
@@ -97,8 +97,8 @@ window.electronAPI = {
 };
 
 // Direct Node.js access for browser tools (requires contextIsolation: false)
-window.nodeRequire = require;
-window.nodeProcess = process;
+globalThis.nodeRequire = require;
+globalThis.nodeProcess = process;
 
 // Initialize browser modules after DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (config.trayIconEnabled) {
       console.debug("Preload: tray icon is enabled");
       
-      // v2.5.5: Enhanced logging for tray icon timing issue (#1795)
-      window.addEventListener("unread-count", (event) => {
+      // Enhanced logging for tray icon timing issue (#1795)
+      globalThis.addEventListener("unread-count", (event) => {
         try {
           const count = event.detail?.number;
           console.debug("Preload: Received unread-count event", {
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
     
     let successCount = 0;
-    modules.forEach(module => {
+    for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
         if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (err) {
         console.error(`Preload: Failed to load ${module.name}:`, err.message);
       }
-    });
+    }
     
     console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
     
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Forward unhandled promise rejections and window errors to main for diagnostics with secure IPC
 try {
-  window.addEventListener("unhandledrejection", (event) => {
+  globalThis.addEventListener("unhandledrejection", (event) => {
     try {
       const reason = event && event.reason;
       const errorData = {
@@ -221,7 +221,7 @@ try {
     }
   });
 
-  window.addEventListener("error", (event) => {
+  globalThis.addEventListener("error", (event) => {
     try {
       const errorData = {
         message: event && event.message ? String(event.message).substring(0, 1000) : '',

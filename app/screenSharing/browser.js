@@ -1,4 +1,4 @@
-window.addEventListener("DOMContentLoaded", () => {
+globalThis.addEventListener("DOMContentLoaded", () => {
   const screens = [
     {
       width: 1280,
@@ -32,7 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
   let windowsIndex = 0;
   const sscontainer = document.getElementById("screen-size");
   createEventHandlers({ screens, sscontainer });
-  window.api
+  globalThis.api
     .desktopCapturerGetSources({ types: ["window", "screen"] })
     .then(async (sources) => {
       const rowElement = document.querySelector(".container-fluid .row");
@@ -58,7 +58,7 @@ async function createPreview(properties) {
   videoContainerElement.className = "video-container";
   // Video
   let videoElement = document.createElement("video");
-  videoElement.setAttribute("data-id", properties.source.id);
+  videoElement.dataset.id = properties.source.id;
   videoElement.title = properties.source.name;
   videoContainerElement.appendChild(videoElement);
   // Label
@@ -72,12 +72,12 @@ async function createPreview(properties) {
 }
 
 async function createPreviewStream(properties, videoElement) {
-  // v2.5.3: Enhanced logging for preview stream creation - potential cause of audio duplication
+  // Disable audio in preview streams to prevent echo during screen sharing
   console.debug(`[SCREEN_SHARE_DIAG] Creating preview stream for source: ${properties.source.id}`);
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: false, dimensions: 192x108`);
+  console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: DISABLED, dimensions: 192x108 (echo prevention)`);
   
   const stream = await navigator.mediaDevices.getUserMedia({
-    audio: false,
+    audio: false, // CRITICAL: No audio to prevent duplicate capture sessions causing echo
     video: {
       mandatory: {
         chromeMediaSource: "desktop",
@@ -104,8 +104,9 @@ async function createPreviewStream(properties, videoElement) {
 
 function playPreview(properties) {
   properties.videoElement.onclick = () => {
-    closePreviews();
-    window.api.selectedSource({
+    console.debug(`[SCREEN_SHARE_DIAG] User selected source: ${properties.source.id}, cleaning up all previews immediately`);
+    closePreviews(); // Clean up all preview streams immediately to prevent ongoing capture
+    globalThis.api.selectedSource({
       id: properties.source.id,
       screen: properties.screens[properties.sscontainer.value]
     });
@@ -124,50 +125,61 @@ function createEventHandlers(properties) {
     .addEventListener("click", toggleSources);
   document.querySelector("#btn-close").addEventListener("click", () => {
     closePreviews();
-    window.api.closeView();
+    globalThis.api.closeView();
   });
 }
 
 function closePreviews() {
-  // v2.5.3: Enhanced logging for preview cleanup - tracking potential stream leaks
+  // Enhanced logging for preview cleanup - prevents audio echo
   const vidElements = document.getElementsByTagName("video");
-  console.debug(`[SCREEN_SHARE_DIAG] Closing ${vidElements.length} preview streams`);
+  console.debug(`[SCREEN_SHARE_DIAG] Closing ${vidElements.length} preview streams to prevent echo`);
   
   for (const vidElement of vidElements) {
     if (vidElement.srcObject) {
       const stream = vidElement.srcObject;
-      console.debug(`[SCREEN_SHARE_DIAG] Closing preview stream: ${stream.id}`);
-      console.debug(`[SCREEN_SHARE_DIAG] Stream tracks before cleanup - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
+      console.debug(`[SCREEN_SHARE_DIAG] Closing preview stream: ${stream.id}`, {
+        audioTracks: stream.getAudioTracks().length,
+        videoTracks: stream.getVideoTracks().length,
+        hasAudio: stream.getAudioTracks().length > 0
+      });
       
       vidElement.pause();
-      vidElement.srcObject.getVideoTracks().forEach(track => track.stop());
       
-      console.debug(`[SCREEN_SHARE_DIAG] Preview stream ${stream.id} cleaned up`);
+      // Stop all tracks to immediately release desktop capture
+      for (const track of stream.getTracks()) {
+        console.debug(`[SCREEN_SHARE_DIAG] Stopping track: ${track.kind} - ${track.id}`);
+        track.stop();
+      }
+      
+      // Clear the srcObject reference
+      vidElement.srcObject = null;
+      
+      console.debug(`[SCREEN_SHARE_DIAG] Preview stream ${stream.id} cleaned up - desktop capture released`);
     } else {
       console.debug(`[SCREEN_SHARE_DIAG] Video element has no srcObject to clean up`);
     }
   }
   
-  console.debug(`[SCREEN_SHARE_DIAG] All preview streams closed`);
+  console.debug(`[SCREEN_SHARE_DIAG] All preview streams closed - echo prevention complete`);
 }
 
 function toggleSources(e) {
-  document.querySelectorAll("button").forEach((b) => {
+  for (const b of document.querySelectorAll("button")) {
     b.classList.toggle("btn-primary");
     b.classList.toggle("btn-secondary");
-  });
+  }
   document
     .querySelector(".container-fluid")
-    .setAttribute("data-view", e.target.getAttribute("data-view"));
+    .dataset.view = e.target.dataset.view;
 }
 
 function createQualitySelector(properties) {
-  properties.screens.forEach((s, i) => {
+  for (const [i, s] of properties.screens.entries()) {
     const opt = document.createElement("option");
     opt.appendChild(document.createTextNode(s.name));
     opt.value = i;
     properties.sscontainer.appendChild(opt);
-  });
+  }
   let defaultSelection = properties.screens.findIndex((s) => {
     return s.default;
   });
