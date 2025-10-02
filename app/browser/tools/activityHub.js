@@ -1,12 +1,12 @@
 const ReactHandler = require("./reactHandler");
 const eventHandlers = [];
 // Supported events
-const supportedEvents = [
+const supportedEvents = new Set([
   "incoming-call-created",
   "incoming-call-ended",
   "call-connected",
   "call-disconnected"
-];
+]);
 
 class ActivityHub {
 
@@ -147,7 +147,7 @@ class ActivityHub {
 }
 
 function isSupportedEvent(event) {
-  return supportedEvents.includes(event);
+  return supportedEvents.has(event);
 }
 
 function isFunction(func) {

@@ -10,9 +10,6 @@ class ReactHandler {
   _tokenCacheInjectionRetries = 0; // Track retry attempts
   _maxTokenCacheRetries = 5; // Maximum retry attempts
 
-  constructor() {
-    // Class fields are initialized above
-  }
 
   getCommandChangeReportingService() {
     if (!this._validateTeamsEnvironment()) return null;
