@@ -66,9 +66,7 @@ class AppConfiguration {
 
     return {
       enabled: tokenRefresh.enabled !== undefined ? tokenRefresh.enabled : true,
-      refreshIntervalMinutes: tokenRefresh.refreshIntervalMinutes || 5,
-      // Keep backwards compatibility
-      refreshIntervalHours: tokenRefresh.refreshIntervalHours || (tokenRefresh.refreshIntervalMinutes ? tokenRefresh.refreshIntervalMinutes / 60 : 1)
+      refreshIntervalMinutes: tokenRefresh.refreshIntervalMinutes || 15
     };
   }
 }

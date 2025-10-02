@@ -12,12 +12,21 @@
       this._validationCacheMs = 1000;
     }
 
-    async refreshToken(resource = 'https://ic3.teams.office.com') {
+    async refreshToken(resources = null) {
       try {
         if (!this._validateTeamsEnvironment()) {
-          console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot refresh token`);
+          console.warn(`[TOKEN_CACHE] Teams environment not validated, cannot refresh tokens`);
           return { success: false, error: 'Teams environment not validated' };
         }
+
+        // Define critical authentication tokens (main session tokens)
+        const criticalTokens = resources || [
+          'https://graph.microsoft.com',           // Microsoft Graph API - Core authentication
+          'https://outlook.office365.com',        // Office 365 services
+          'https://graph.windows.net',            // Azure AD Graph
+          'https://substrate.office.com',         // Office Substrate services
+          'https://ic3.teams.office.com'          // Teams chat/messaging (keep as fallback)
+        ];
 
         const teams2CoreServices = this._getTeams2CoreServices();
         const authService = teams2CoreServices?.authenticationService;
@@ -49,30 +58,66 @@
           prompt: 'none'
         };
 
-        console.debug(`[TOKEN_CACHE] Attempting token refresh for resource: ${resource}`);
-        const result = await authProvider.acquireToken(resource, refreshOptions);
-        
-        if (result) {
-          console.debug(`[TOKEN_CACHE] Token refresh successful`, {
-            hasToken: !!result?.token,
-            fromCache: result?.fromCache,
-            expiry: result?.expiresOn || result?.expires_on
-          });
+        const results = [];
+        let successCount = 0;
+        let errorCount = 0;
 
-          // CRITICAL: Store the fresh token to replace expired cached tokens
-          await this._storeRefreshedToken(result, resource);
+        console.debug(`[TOKEN_CACHE] Starting multi-token refresh for ${criticalTokens.length} resources`);
 
-          return {
-            success: true,
-            result: result,
-            fromCache: result?.fromCache,
-            expiry: result?.expiresOn || result?.expires_on,
-            timestamp: Date.now()
-          };
-        } else {
-          console.warn(`[TOKEN_CACHE] Token refresh returned no result`);
-          return { success: false, error: 'No result from token refresh' };
+        // Refresh each critical token
+        for (const resource of criticalTokens) {
+          try {
+            console.debug(`[TOKEN_CACHE] Attempting token refresh for resource: ${resource}`);
+            const result = await authProvider.acquireToken(resource, refreshOptions);
+            
+            if (result) {
+              console.debug(`[TOKEN_CACHE] Token refresh successful for ${resource}`, {
+                hasToken: !!result?.token,
+                fromCache: result?.fromCache,
+                expiry: result?.expiresOn || result?.expires_on
+              });
+
+              // CRITICAL: Store the fresh token to replace expired cached tokens
+              await this._storeRefreshedToken(result, resource);
+
+              results.push({
+                resource: resource,
+                success: true,
+                result: result,
+                fromCache: result?.fromCache,
+                expiry: result?.expiresOn || result?.expires_on
+              });
+              successCount++;
+            } else {
+              console.warn(`[TOKEN_CACHE] Token refresh returned no result for ${resource}`);
+              results.push({
+                resource: resource,
+                success: false,
+                error: 'No result from token refresh'
+              });
+              errorCount++;
+            }
+          } catch (error) {
+            console.error(`[TOKEN_CACHE] Token refresh failed for ${resource}:`, error);
+            results.push({
+              resource: resource,
+              success: false,
+              error: error.message || error.toString()
+            });
+            errorCount++;
+          }
         }
+
+        console.debug(`[TOKEN_CACHE] Multi-token refresh completed: ${successCount} successful, ${errorCount} failed`);
+
+        return {
+          success: successCount > 0,
+          totalTokens: criticalTokens.length,
+          successCount: successCount,
+          errorCount: errorCount,
+          results: results,
+          timestamp: Date.now()
+        };
 
       } catch (error) {
         console.error(`[TOKEN_CACHE] Token refresh failed:`, error);
@@ -319,9 +364,8 @@
         return;
       }
 
-      // Validate interval - convert hours to minutes if needed
-      const intervalMinutes = config.refreshIntervalMinutes || 
-                             (config.refreshIntervalHours ? config.refreshIntervalHours * 60 : 5);
+      // Validate interval
+      const intervalMinutes = config.refreshIntervalMinutes || 15;
       const validIntervalMinutes = Math.max(1, Math.min(1440, intervalMinutes));
       
       console.debug(`[TOKEN_REFRESH] Starting scheduler with ${validIntervalMinutes} minute interval`);
@@ -329,12 +373,15 @@
       // Start the refresh scheduler
       const success = scheduler.startRefreshScheduler(
         async () => {
-          console.debug('[TOKEN_REFRESH] Executing scheduled refresh...');
+          console.debug('[TOKEN_REFRESH] Executing scheduled multi-token refresh...');
           const result = await reactHandler.refreshToken();
           if (result.success) {
-            console.debug('[TOKEN_REFRESH] Scheduled refresh completed successfully');
+            console.debug(`[TOKEN_REFRESH] Scheduled refresh completed: ${result.successCount}/${result.totalTokens} tokens refreshed successfully`);
+            if (result.errorCount > 0) {
+              console.warn(`[TOKEN_REFRESH] ${result.errorCount} tokens failed to refresh during scheduled refresh`);
+            }
           } else {
-            console.warn('[TOKEN_REFRESH] Scheduled refresh failed:', result.error);
+            console.warn('[TOKEN_REFRESH] Scheduled refresh failed:', result.error || 'All token refreshes failed');
           }
         },
         validIntervalMinutes

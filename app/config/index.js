@@ -424,7 +424,7 @@ function extractYargConfig(configObject, appVersion) {
       tokenRefresh: {
         default: {
           enabled: true,
-          refreshIntervalMinutes: 5,
+          refreshIntervalMinutes: 15,
         },
         describe:
           "Configurable token refresh settings to prevent authentication expiry",

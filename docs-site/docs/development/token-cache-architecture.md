@@ -98,7 +98,7 @@ getRefreshSchedulerStatus()                          // Get current status
 
 **Configuration Options:**
 - **Enabled/Disabled**: Toggle refresh functionality via `tokenRefresh.enabled`
-- **Interval**: 1-24 hours (configurable via `tokenRefresh.refreshIntervalHours`)
+- **Interval**: 1-1440 minutes (configurable via `tokenRefresh.refreshIntervalMinutes`, default 15)
 - **Automatic Cleanup**: Prevents memory leaks with proper timer management
 
 **Integration with Teams:**

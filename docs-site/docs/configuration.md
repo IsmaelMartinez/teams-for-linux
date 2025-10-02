@@ -90,7 +90,7 @@ The `tokenRefresh` option prevents authentication expiry by automatically refres
 {
   "tokenRefresh": {
     "enabled": true,
-    "refreshIntervalHours": 2
+    "refreshIntervalMinutes": 30
   }
 }
 ```
@@ -98,15 +98,15 @@ The `tokenRefresh` option prevents authentication expiry by automatically refres
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | Enable/disable automatic token refresh |
-| `refreshIntervalHours` | `number` | `1` | Refresh interval in hours (1-24) |
+| `refreshIntervalMinutes` | `number` | `15` | Refresh interval in minutes (1-1440) |
 
 **Examples:**
 ```json
-// Refresh every 4 hours
+// Refresh every 30 minutes
 {
   "tokenRefresh": {
     "enabled": true,
-    "refreshIntervalHours": 4
+    "refreshIntervalMinutes": 30
   }
 }
 
@@ -117,19 +117,19 @@ The `tokenRefresh` option prevents authentication expiry by automatically refres
   }
 }
 
-// Use maximum interval (24 hours)
+// Use maximum interval (24 hours = 1440 minutes)
 {
   "tokenRefresh": {
     "enabled": true,
-    "refreshIntervalHours": 24
+    "refreshIntervalMinutes": 1440
   }
 }
 ```
 
 **Notes:**
-- Refresh intervals are automatically bounded between 1-24 hours
+- Refresh intervals are automatically bounded between 1-1440 minutes (1 minute to 24 hours)
 - The feature works alongside Teams' native refresh mechanism without conflicts
-- Disabled by default in some configurations - explicitly enable if needed
+- Enabled by default with 15-minute interval
 
 ### Notifications & UI
 

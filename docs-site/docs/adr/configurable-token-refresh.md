@@ -61,7 +61,7 @@ class TeamsTokenCache {
 tokenRefresh: {
   default: {
     enabled: true,
-    refreshIntervalHours: 1
+    refreshIntervalMinutes: 15
   }
 }
 
@@ -70,7 +70,7 @@ getTokenRefreshConfig() {
   const tokenRefresh = startupConfig?.tokenRefresh || {};
   return {
     enabled: tokenRefresh.enabled !== undefined ? tokenRefresh.enabled : true,
-    refreshIntervalHours: tokenRefresh.refreshIntervalHours || 1
+    refreshIntervalMinutes: tokenRefresh.refreshIntervalMinutes || 15
   };
 }
 ```
@@ -105,7 +105,7 @@ getTokenRefreshConfig() {
 ### 2. Complex Configuration Validation
 **Rejected**: Over-engineered for simple use case
 - Initially implemented extensive validation system
-- Simplified to basic bounds checking (1-24 hours)
+- Simplified to basic bounds checking (1-1440 minutes)
 - Removed complex error handling in favor of safe defaults
 
 ### 3. WeakMap-based Private Fields
@@ -120,15 +120,15 @@ getTokenRefreshConfig() {
 ```json
 {
   "tokenRefresh": {
-    "enabled": true,           // Enable/disable automatic refresh
-    "refreshIntervalHours": 2  // Refresh interval (1-24 hours)
+    "enabled": true,              // Enable/disable automatic refresh
+    "refreshIntervalMinutes": 30  // Refresh interval (1-1440 minutes)
   }
 }
 ```
 
 ### Validation Rules
 - `enabled`: Must be boolean, defaults to `true`
-- `refreshIntervalHours`: Must be number between 1-24, defaults to `1`
+- `refreshIntervalMinutes`: Must be number between 1-1440, defaults to `15`
 - Invalid values fall back to safe defaults with warning logs
 
 ## Benefits

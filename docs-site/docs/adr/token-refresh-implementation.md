@@ -72,15 +72,15 @@ Through systematic testing, we identified the **minimal required parameters** fo
 1. **Use proven refresh parameters** documented above for all token refresh operations
 2. **Implement `setInterval`-based scheduling** for refresh timing
 3. **Integrate with TeamsTokenCache class** from ADR-001 (extend, don't replace)
-4. **Default to enabled with 1-hour interval** - simple, effective configuration
+4. **Default to enabled with 15-minute interval** - simple, effective configuration
 
 ### Configuration Design
 
 ```javascript
 {
   tokenRefresh: {
-    enabled: true,                   // true/false to enable/disable feature
-    refreshIntervalHours: 1          // 1-24 hour range
+    enabled: true,                     // true/false to enable/disable feature
+    refreshIntervalMinutes: 15         // 1-1440 minute range (1 min to 24 hours)
   }
 }
 ```
