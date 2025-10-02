@@ -5,7 +5,7 @@ class MutationObserverTitle {
       // Check if DOM is already loaded
       if (document.readyState === 'loading') {
         // DOM is still loading, wait for DOMContentLoaded
-        window.addEventListener(
+        globalThis.addEventListener(
           "DOMContentLoaded",
           this._applyMutationToTitleLogic,
         );
@@ -21,12 +21,12 @@ class MutationObserverTitle {
     
     try {
       // Validate DOM environment
-      if (!window.document || !window.MutationObserver) {
+      if (!globalThis.document || !globalThis.MutationObserver) {
         console.error("MutationTitle: Invalid DOM environment");
         return;
       }
       
-      const titleElement = window.document.querySelector("title");
+      const titleElement = globalThis.document.querySelector("title");
       if (!titleElement) {
         console.error("MutationTitle: Title element not found");
         return;
@@ -34,15 +34,15 @@ class MutationObserverTitle {
       
       // Enhanced debugging for tray icon timing issue (#1795)
       console.debug("MutationTitle: Initial setup", {
-        currentTitle: window.document.title,
+        currentTitle: globalThis.document.title,
         titleElementExists: !!titleElement,
         documentReadyState: document.readyState
       });
       
-      const observer = new window.MutationObserver(() => {
+      const observer = new globalThis.MutationObserver(() => {
         try {
           // Validate and sanitize document title
-          const title = window.document.title;
+          const title = globalThis.document.title;
           if (typeof title !== 'string') {
             console.warn("MutationTitle: Invalid title type");
             return;
@@ -55,7 +55,7 @@ class MutationObserverTitle {
           // Safely extract number from title with input validation
           const regex = /^\((\d+)\)/;
           const match = regex.exec(sanitizedTitle);
-          const number = match ? parseInt(match[1], 10) : 0;
+          const number = match ? Number.parseInt(match[1], 10) : 0;
           
           // Enhanced debugging for unread count extraction
           console.debug("MutationTitle: Extracting unread count", {
@@ -66,7 +66,7 @@ class MutationObserverTitle {
           });
           
           // Validate extracted number
-          if (isNaN(number) || number < 0 || number > 9999) {
+          if (Number.isNaN(number) || number < 0 || number > 9999) {
             console.warn("MutationTitle: Invalid unread count extracted:", number);
             return;
           }
@@ -76,7 +76,7 @@ class MutationObserverTitle {
           });
           
           console.debug(`MutationTitle: Dispatching unread-count event with number: ${number}`);
-          window.dispatchEvent(event);
+          globalThis.dispatchEvent(event);
         } catch (error) {
           console.error("MutationTitle: Error in observer callback:", error);
         }

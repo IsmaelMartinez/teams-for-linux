@@ -147,9 +147,7 @@ class ActivityHub {
 }
 
 function isSupportedEvent(event) {
-  return supportedEvents.some(e => {
-    return e === event;
-  });
+  return supportedEvents.includes(event);
 }
 
 function isFunction(func) {
@@ -196,8 +194,8 @@ function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
     // Only Handle events that are from type ["CommandStart", "ScenarioMarked"]
     // and have a context target of ["internal-command-handler", "use-command-reporting-callbacks"]
-    if (["CommandStart", "ScenarioMarked"].indexOf(e.type) < 0 ||
-      ["internal-command-handler", "use-command-reporting-callbacks"].indexOf(e.context.target) < 0) {
+    if (!["CommandStart", "ScenarioMarked"].includes(e.type) ||
+      !["internal-command-handler", "use-command-reporting-callbacks"].includes(e.context.target)) {
       return;
     }
     if (e.context.entityCommand) {
