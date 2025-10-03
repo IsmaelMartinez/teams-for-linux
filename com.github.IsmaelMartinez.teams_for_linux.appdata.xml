@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.10" date="2025-10-02">
+			<description>
+				<ul>
+					<li>Attempt: Disable all audio in screen sharing to try to fix issue #1800 - might fix audio echo on Wayland/Pipewire</li>
+					<li>Update: Electron updated to 37.6.0, ESLint to 9.36.0 for latest security patches and bug fixes</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.9" date="2025-09-19">
 			<description>
 				<ul>
