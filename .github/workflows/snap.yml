@@ -58,7 +58,7 @@ jobs:
         run: npm run dist:linux:snap:armv7l -- --publish always
 
   snap-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -66,6 +66,9 @@ jobs:
     steps:
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v2
+      
+      - name: Install and initialize LXD
+        uses: canonical/setup-lxd@main
 
       - name: Check out Git repository
         uses: actions/checkout@v4
