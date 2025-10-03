@@ -56,3 +56,30 @@ jobs:
       - name: Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap:armv7l -- --publish always
+
+  snap-arm64:
+    runs-on: ubuntu-latest
+
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+    steps:
+      - name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v2
+
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        run: npm ci
+
+      - name: Release
+        if: contains(github.ref, 'main')
+        run: npm run dist:linux:snap:armv64 -- --publish always
+
+
