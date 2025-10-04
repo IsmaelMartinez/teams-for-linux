@@ -9,6 +9,11 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.open(),
     },
     {
+      label: "Join Meeting",
+      accelerator: "ctrl+J",
+      click: () => Menus.joinMeeting(),
+    },
+    {
       label: "Refresh",
       accelerator: "ctrl+R",
       click: () => Menus.reload(),
