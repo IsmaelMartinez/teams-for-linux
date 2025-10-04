@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.11" date="2025-10-03">
+			<description>
+				<ul>
+					<li>Feature: Add a new tray menu entry to join a teams meeting from a copied URL in the clipboard</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.10" date="2025-10-02">
 			<description>
 				<ul>
