@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.5.11",
+  "version": "2.5.12",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -50,7 +50,6 @@
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.21",
-    "n": "^10.2.0",
     "node-sound": "^0.0.8",
     "yargs": "^17.7.2"
   },
