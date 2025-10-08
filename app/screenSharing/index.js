@@ -1,109 +1,83 @@
-const { ipcMain, WebContentsView } = require("electron");
+const { ipcMain, BrowserWindow } = require("electron");
 const path = require("path");
 
-let _StreamSelector_parent = new WeakMap();
-let _StreamSelector_window = new WeakMap();
-let _StreamSelector_selectedSource = new WeakMap();
-let _StreamSelector_callback = new WeakMap();
 class StreamSelector {
-  /**
-   * @param {BrowserWindow} parent
-   */
+  #parent;
+  #window = null;
+  #callback = null;
+  #isClosing = false;
+
   constructor(parent) {
-    _StreamSelector_parent.set(this, parent);
-    _StreamSelector_window.set(this, null);
-    _StreamSelector_selectedSource.set(this, null);
-    _StreamSelector_callback.set(this, null);
-  }
-
-  /**
-   * @type {BrowserWindow}
-   */
-  get parent() {
-    return _StreamSelector_parent.get(this);
-  }
-
-  /**
-   * @type {WebContentsView}
-   */
-  get view() {
-    return _StreamSelector_window.get(this);
-  }
-
-  set view(value) {
-    _StreamSelector_window.set(this, value);
-  }
-
-  get selectedSource() {
-    return _StreamSelector_selectedSource.get(this);
-  }
-
-  set selectedSource(value) {
-    _StreamSelector_selectedSource.set(this, value);
-  }
-
-  get callback() {
-    return _StreamSelector_callback.get(this);
-  }
-
-  set callback(value) {
-    if (typeof value == "function") {
-      _StreamSelector_callback.set(this, value);
-    }
+    this.#parent = parent;
   }
 
   show(callback) {
-    let self = this;
-    self.callback = callback;
-    self.view = new WebContentsView({
+    this.#callback = callback;
+    this.#isClosing = false;
+
+    this.#window = new BrowserWindow({
+      parent: this.#parent,
+      modal: true,
+      show: false,
+      width: 1000,
+      height: 300,
+      minWidth: 800,
+      minHeight: 250,
+      maxHeight: 400,
+      frame: true,
+      autoHideMenuBar: true,
+      resizable: true,
+      minimizable: false,
+      maximizable: false,
+      skipTaskbar: true,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false,
       },
     });
 
-    self.view.webContents.loadFile(path.join(__dirname, "index.html"));
-    self.parent.contentView.addChildView(self.view);
+    this.#window.loadFile(path.join(__dirname, "index.html"));
 
-    let _resize = () => {
-      resizeView(self);
-    };
-    resizeView(self);
-
-    let _close = (_event, source) => {
-      //'screen:x:0' -> whole screen
-      //'window:x:0' -> small window
-      // show captured source in a new view? Maybe reuse the same view, but make it smaller? probably best a new "file"/view
-      closeView({ view: self, _resize, _close, source });
-    };
-
-    this.parent.on("resize", _resize);
-    ipcMain.once("selected-source", _close);
-    ipcMain.once("close-view", _close);
-  }
-}
-
-function closeView(properties) {
-  properties.view.parent.setBrowserView(null);
-  properties.view.view.webContents.destroy();
-  properties.view.view = null;
-  properties.view.parent.removeListener("resize", properties._resize);
-  ipcMain.removeListener("selected-source", properties._close);
-  ipcMain.removeListener("close-view", properties._close);
-  if (properties.view.callback) {
-    properties.view.callback(properties.source);
-  }
-}
-
-function resizeView(view) {
-  setTimeout(() => {
-    const pbounds = view.parent.getBounds();
-    view.view.setBounds({
-      x: 0,
-      y: pbounds.height - 180,
-      width: pbounds.width,
-      height: 180,
+    this.#window.once("ready-to-show", () => {
+      this.#window?.show();
     });
-  }, 0);
+
+    this.#window.once("closed", () => {
+      this.#close(null);
+    });
+
+    ipcMain.once("selected-source", (_event, source) => {
+      this.#close(source);
+    });
+
+    ipcMain.once("close-view", () => {
+      this.#close(null);
+    });
+  }
+
+  #close(source) {
+    // Guard against double-execution
+    if (this.#isClosing) return;
+    this.#isClosing = true;
+
+    // Cleanup IPC listeners
+    ipcMain.removeAllListeners("selected-source");
+    ipcMain.removeAllListeners("close-view");
+
+    // Execute callback
+    if (this.#callback) {
+      this.#callback(source);
+      this.#callback = null;
+    }
+
+    // Cleanup window
+    if (this.#window && !this.#window.isDestroyed()) {
+      this.#window.destroy();
+    }
+    this.#window = null;
+  }
 }
 
 module.exports = { StreamSelector };

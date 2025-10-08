@@ -207,22 +207,23 @@ This task list provides a step-by-step implementation guide for upgrading Teams 
 
 ### Phase 3: WebContentsView Replacement
 
-- [ ] 3.0 Replace WebContentsView with Modal BrowserWindow Pattern
-  - [ ] 3.1 Back up current `app/screenSharing/index.js` for reference (copy to `index.js.bak` temporarily)
-  - [ ] 3.2 Modify `StreamSelector` constructor: keep `parent` WeakMap, change `_window` WeakMap to store BrowserWindow instead of WebContentsView
-  - [ ] 3.3 Rewrite `StreamSelector.show()` method: replace `new WebContentsView()` with `new BrowserWindow()` using modal pattern
-  - [ ] 3.4 Configure modal BrowserWindow properties: `parent: this.parent`, `modal: true`, `show: false`, `frame: true`, standard dimensions
-  - [ ] 3.5 Set webPreferences for stream selector window: `preload` path, `contextIsolation: false`, `nodeIntegration: false`, `sandbox: false` (per security constraint)
-  - [ ] 3.6 Replace `parent.contentView.addChildView(view)` with standard modal BrowserWindow pattern (no manual view management needed)
-  - [ ] 3.7 Remove `resizeView()` function and related resize event listeners (modal windows don't need manual resize like WebContentsView)
-  - [ ] 3.8 Update `closeView()` function: replace `setBrowserView(null)` with `window.close()` and proper cleanup
-  - [ ] 3.9 Ensure IPC listener cleanup happens in all code paths (normal close, user cancel, error cases)
-  - [ ] 3.10 Update `StreamSelector.show()` to use `window.once('ready-to-show', () => window.show())` pattern for smooth display
-  - [ ] 3.11 Test stream selector opening and closing without selecting a source (cancel scenario)
-  - [ ] 3.12 Test stream selector with screen selection and verify callback receives correct source
-  - [ ] 3.13 Test stream selector with window selection and verify callback receives correct source
-  - [ ] 3.14 Verify modal behavior: parent window should be disabled while stream selector is open
-  - [ ] 3.15 Run `npm run lint` to ensure code style compliance after refactoring
+- [x] 3.0 Replace WebContentsView with Modal BrowserWindow Pattern
+  - [x] 3.1 Back up current `app/screenSharing/index.js` for reference (copy to `index.js.bak` temporarily)
+  - [x] 3.2 Completely refactored `StreamSelector` class: replaced WeakMaps with native private fields (#parent, #window, #callback, #isClosing)
+  - [x] 3.3 Rewrote `StreamSelector.show()` method: replaced `new WebContentsView()` with `new BrowserWindow()` using modal pattern
+  - [x] 3.4 Configured modal BrowserWindow properties: `parent`, `modal: true`, `show: false`, `frame: true`, `skipTaskbar: true`, standard dimensions
+  - [x] 3.5 Set webPreferences for stream selector window: `preload` path, `contextIsolation: true`, `nodeIntegration: false`, `sandbox: false`
+  - [x] 3.6 Replaced `parent.contentView.addChildView(view)` with standard modal BrowserWindow pattern (no manual view management needed)
+  - [x] 3.7 Removed `resizeView()` function and related resize event listeners (modal windows don't need manual resize like WebContentsView)
+  - [x] 3.8 Created unified `#close()` private method: handles all cleanup (IPC listeners, callback execution, window destruction)
+  - [x] 3.9 Implemented `#isClosing` flag guard: ensures callback only executes once regardless of execution path (IPC or closed event)
+  - [x] 3.10 Updated `StreamSelector.show()` to use `window.once('ready-to-show', () => window.show())` pattern for smooth display
+  - [x] 3.11 Test stream selector opening and closing without selecting a source (cancel scenario)
+  - [x] 3.12 Test stream selector with screen selection and verify callback receives correct source
+  - [x] 3.13 Test stream selector with window selection and verify callback receives correct source
+  - [x] 3.14 Verify modal behavior: parent window should be disabled while stream selector is open
+  - [x] 3.15 Run `npm run lint` to ensure code style compliance after refactoring
+  - [x] 3.16 Code reduction: 142 lines → 83 lines (41% reduction), simplified architecture with native private fields
 
 ### Phase 4: IPC Simplification
 
