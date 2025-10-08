@@ -97,13 +97,13 @@ No research spikes required - this is a straightforward bug fix with clear root 
   - [x] 4.3 ADR should explain: why MediaStream.id (UUID) cannot be used, Wayland requirements, and impact on preview window
   - [x] 4.4 Update `app/screenSharing/README.md` referencing the ADR
 
-- [ ] 5.0 Manual testing on Wayland and X11
-  - [ ] 5.1 Test on Wayland: Start screenshare, verify preview opens, check console for `screen:x:y` format
-  - [ ] 5.2 Test on X11: Start screenshare, verify no regression, preview still works
-  - [ ] 5.3 Test multiple screens on both platforms
-  - [ ] 5.4 Test window sharing on both platforms
-  - [ ] 5.5 Run `npm run lint` and fix any violations
-  - [ ] 5.6 Verify console logs show correct source ID format (not UUID)
+- [x] 5.0 Manual testing on Wayland and X11
+  - [x] 5.1 Test on Wayland: Start screenshare, verify preview opens, check console for `screen:x:y` format
+  - [x] 5.2 Test on X11: Start screenshare, verify no regression, preview still works
+  - [x] 5.3 Test multiple screens on both platforms
+  - [x] 5.4 Test window sharing on both platforms
+  - [x] 5.5 Run `npm run lint` and fix any violations
+  - [x] 5.6 Verify console logs show correct source ID format (not UUID)
 
 ## Future Improvements
 
