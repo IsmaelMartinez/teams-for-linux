@@ -7,11 +7,23 @@ class StreamSelector {
   #callback = null;
   #isClosing = false;
 
+  /**
+   * @param {BrowserWindow} parent - The parent window for the modal dialog
+   */
   constructor(parent) {
     this.#parent = parent;
   }
 
+  /**
+   * Display the stream selector modal dialog
+   * @param {(source: object|null) => void} callback - Called with selected source or null if cancelled
+   */
   show(callback) {
+    // Guard: prevent opening multiple windows
+    if (this.#window && !this.#window.isDestroyed()) {
+      return;
+    }
+
     this.#callback = callback;
     this.#isClosing = false;
 
