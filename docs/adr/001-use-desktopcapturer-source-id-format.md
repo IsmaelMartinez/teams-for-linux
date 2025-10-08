@@ -97,7 +97,7 @@ On X11, the system is more permissive and accepts various formats, which masked 
 ## Notes
 
 - Bug reported in [teams-for-linux Issue #1853](https://github.com/IsmaelMartinez/teams-for-linux/issues/1853)
-- Fix implemented in v2.6.0
+- Fix implemented in v2.5.13
 - The StreamSelector module (app/screenSharing/index.js:73-74) already expected this format
 - Console logging with `[SCREEN_SHARE_DIAG]` prefix helps verify correct format
 
