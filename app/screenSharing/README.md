@@ -184,14 +184,23 @@ No direct configuration options, but behavior is influenced by:
 ### Linux
 - **X11**: Direct screen capture support
 - **Wayland**: Uses PipeWire portal for desktop capture
+  - **Important**: Wayland requires source IDs in `screen:x:y` or `window:x:y` format (from desktopCapturer)
+  - MediaStream UUIDs will cause preview window failures on Wayland
+  - See [ADR 001](../../docs/adr/001-use-desktopcapturer-source-id-format.md) for technical details
 
-### macOS  
+### macOS
 - **Screen Recording Permission**: Required for desktop capture
 - **Retina Displays**: High-DPI thumbnail generation
 
 ### Windows
 - **DWM Integration**: Desktop Window Manager compatibility
 - **Multi-monitor**: Proper handling of multiple displays
+
+## Architecture Decisions
+
+For important technical decisions regarding screen sharing implementation:
+
+- [ADR 001: Use desktopCapturer Source ID Format](../../docs/adr/001-use-desktopcapturer-source-id-format.md) - Why we use `screen:x:y` format instead of MediaStream UUIDs
 
 ---
 

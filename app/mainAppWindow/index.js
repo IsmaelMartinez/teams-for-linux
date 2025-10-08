@@ -90,6 +90,7 @@ function createScreenSharePreviewWindow() {
     show: false,
     resizable: true,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(
         __dirname,
