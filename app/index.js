@@ -150,7 +150,7 @@ if (gotTheLock) {
       });
 
       // Only update if we received a valid source ID
-      if (sourceId !== null && sourceId !== undefined) {
+      if (sourceId != null) {
         // Validate format - must be screen:x:y or window:x:y (not UUID)
         const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
 
