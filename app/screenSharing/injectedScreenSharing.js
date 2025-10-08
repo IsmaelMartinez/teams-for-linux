@@ -109,14 +109,10 @@
 
     // Send screen sharing started event
     if (electronAPI.sendScreenSharingStarted) {
-      // Prefer the MediaStream's own id when available to avoid collisions
-      const sourceId = stream?.id
-        ? stream.id
-        : `screen-share-${crypto.randomUUID()}`;
-      
       console.debug(`[SCREEN_SHARE_DIAG] Sending screen-sharing-started event (preview window will open)`);
-      
-      electronAPI.sendScreenSharingStarted(sourceId);
+      console.debug(`[SCREEN_SHARE_DIAG] Not sending stream.id to preserve desktopCapturer source ID`);
+
+      electronAPI.sendScreenSharingStarted(null);
       electronAPI.send("active-screen-share-stream", stream);
     }
 

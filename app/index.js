@@ -141,29 +141,44 @@ if (gotTheLock) {
   ipcMain.on("screen-sharing-started", (event, sourceId) => {
     try {
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
-        sourceId: sourceId,
+        receivedSourceId: sourceId,
+        existingSourceId: globalThis.selectedScreenShareSource,
         timestamp: new Date().toISOString(),
-        previousSource: globalThis.selectedScreenShareSource,
         hasExistingPreview: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
         mainWindowVisible: mainAppWindow?.isVisible?.() || false,
         mainWindowFocused: mainAppWindow?.isFocused?.() || false
       });
 
-      // Check for potential duplicate sessions - this could cause echo issues
-      if (globalThis.selectedScreenShareSource !== null) {
-        console.warn("[SCREEN_SHARE_DIAG] Multiple screen sharing sessions detected", {
-          previousSource: globalThis.selectedScreenShareSource,
-          newSource: sourceId,
-          riskLevel: "HIGH - may cause audio feedback or duplicate windows",
-          previewWindowState: globalThis.previewWindow?.isDestroyed?.() ? "destroyed" : "active"
+      // Only update if we received a valid source ID
+      if (sourceId !== null && sourceId !== undefined) {
+        // Validate format - must be screen:x:y or window:x:y (not UUID)
+        const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
+
+        if (isValidFormat) {
+          console.debug("[SCREEN_SHARE_DIAG] Received valid source ID format, updating", {
+            sourceId: sourceId,
+            sourceType: sourceId.startsWith('screen:') ? 'screen' : 'window'
+          });
+          globalThis.selectedScreenShareSource = sourceId;
+        } else {
+          // UUID format detected - this is the bug we're fixing
+          console.warn("[SCREEN_SHARE_DIAG] Received invalid source ID format (UUID?), keeping existing", {
+            received: sourceId,
+            existing: globalThis.selectedScreenShareSource,
+            note: "MediaStream.id (UUID) cannot be used for preview window - see ADR"
+          });
+          // Keep existing value, don't overwrite
+        }
+      } else {
+        console.debug("[SCREEN_SHARE_DIAG] No source ID received (null), keeping existing", {
+          existing: globalThis.selectedScreenShareSource,
+          note: "Source ID was already set correctly by setupScreenSharing()"
         });
       }
 
-      globalThis.selectedScreenShareSource = sourceId;
-      
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
-        sourceId: sourceId,
-        sourceType: sourceId?.startsWith?.('screen:') ? 'screen' : 'window',
+        sourceId: globalThis.selectedScreenShareSource,
+        sourceType: globalThis.selectedScreenShareSource?.startsWith?.('screen:') ? 'screen' : 'window',
         willCreatePreview: true
       });
 
