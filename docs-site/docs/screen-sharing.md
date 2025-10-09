@@ -1,6 +1,6 @@
 # Screen Sharing in Teams for Linux
 
-Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface. **Note**: As of v2.6+, contextIsolation and sandbox have been disabled to enable Teams DOM access functionality.
+Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface. As of v2.6+, the stream selector uses modern Electron security practices with context isolation enabled for secure IPC communication.
 
 ## How It Works
 

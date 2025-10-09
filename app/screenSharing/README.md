@@ -97,11 +97,14 @@ sequenceDiagram
 
 ### Security Features
 
-⚠️ **Note**: As of v2.6+, security configuration has been modified for Teams DOM access:
-- **Context Isolation**: **Disabled** to enable Teams DOM access functionality
-- **Node Integration**: **Enabled** for browser tools functionality
-- **Preload Script**: Direct window object exposure (no contextBridge)
-- **Sandboxing**: **Disabled** to enable system API access
+✅ **Note**: As of v2.6+, the **stream selector window** (not the main app window) uses modern Electron security best practices:
+- **Context Isolation**: **Enabled** (`contextIsolation: true`) with contextBridge for secure IPC
+- **Node Integration**: **Disabled** (`nodeIntegration: false`) for renderer process isolation
+- **Preload Script**: Uses contextBridge API for secure communication
+- **Sandboxing**: **Disabled** (`sandbox: false`) to enable desktop capture API access
+- **Modal Window**: Parent window is disabled while selector is active for focused UX
+
+The main app window requires `contextIsolation: false` for Teams DOM access functionality (notifications, etc.).
 
 ### Desktop Source Detection
 
@@ -129,22 +132,31 @@ Source types include:
 
 ### IPC Communication Pattern
 
+The stream selector uses secure IPC communication via contextBridge:
+
 ```mermaid
 flowchart LR
     subgraph "Renderer Process"
-        A[User Interaction] --> B[Preload Script]
-        B --> C[contextBridge API]
+        A[User Interaction] --> B[browser.js]
+        B --> C[window.electronAPI]
+        C --> D[contextBridge]
     end
-    
+
     subgraph "Main Process"
-        C --> D[IPC Handler]
-        D --> E[StreamSelector Class]
-        E --> F[Callback Execution]
+        D --> E[ipcMain.once Handler]
+        E --> F[StreamSelector #close]
+        F --> G[Callback Execution]
     end
-    
-    style C fill:#e8f5e8
-    style E fill:#e3f2fd
+
+    style D fill:#e8f5e8
+    style F fill:#e3f2fd
 ```
+
+**Key IPC Channels:**
+- `selected-source` - User selected a screen/window source
+- `close-view` - User cancelled or closed the selector
+
+Both use `ipcMain.once()` pattern for single-use event handlers with automatic cleanup.
 
 ## Integration with Screen Sharing
 
