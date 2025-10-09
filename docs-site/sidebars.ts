@@ -65,13 +65,40 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Research',
       items: [
-        'ai-research/index',
-        'ai-research/token-cache-authentication-investigation',
-        'ai-research/token-cache-research',
-        'ai-research/secure-storage-research',
-        'ai-research/dom-access-investigation',
-        'ai-research/documentation-health-analysis',
-        'ai-research/ui-system-strategic-analysis',
+        'research/README',
+        {
+          type: 'category',
+          label: 'Authentication & Security',
+          items: [
+            'research/token-cache-authentication-investigation',
+            'research/token-cache-research',
+            'research/secure-storage-research',
+            'research/dom-access-investigation',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Testing & Development',
+          items: [
+            'research/automated-testing-strategy',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Electron & Framework',
+          items: [
+            'research/electron-38-migration-analysis',
+            'research/usesystempicker-investigation',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Strategic Analysis',
+          items: [
+            'research/documentation-health-analysis',
+            'research/ui-system-strategic-analysis',
+          ],
+        },
       ],
     },
   ],
