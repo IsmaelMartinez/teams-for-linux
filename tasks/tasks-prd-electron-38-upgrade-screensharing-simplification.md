@@ -272,22 +272,23 @@ This task list provides a step-by-step implementation guide for upgrading Teams 
 
 ### Phase 6: Documentation and Finalization
 
-- [ ] 6.0 Documentation Updates and Final Review
-  - [ ] 6.1 Update `app/screenSharing/README.md` - Replace WebContentsView architecture diagrams with modal BrowserWindow flow
-  - [ ] 6.2 Update `app/screenSharing/README.md` - Update code examples to reflect new BrowserWindow pattern
-  - [ ] 6.3 Update `app/screenSharing/README.md` - Update security section to note modal window approach
-  - [ ] 6.4 Update `docs-site/docs/screen-sharing.md` - Document any user-facing UX changes (if applicable)
-  - [ ] 6.5 Update `docs-site/docs/screen-sharing.md` - Update platform-specific notes if behavior changed
-  - [ ] 6.6 Update `docs-site/docs/ipc-api.md` - Document any IPC channel changes from Phase 4
-  - [ ] 6.7 Update `docs-site/docs/troubleshooting.md` - Add Electron 38.x-specific troubleshooting if needed
-  - [ ] 6.8 Update README.md or installation docs - Change macOS minimum requirement from macOS 11 to macOS 12
-  - [ ] 6.9 Update documentation - Replace references to `ELECTRON_OZONE_PLATFORM_HINT` with `XDG_SESSION_TYPE=wayland`
-  - [ ] 6.10 Review all code comments in modified files - ensure they accurately reflect new implementation
-  - [ ] 6.11 Remove temporary backup files (e.g., `index.js.bak`) if created during development
-  - [ ] 6.12 Run final `npm run lint` across entire codebase
-  - [ ] 6.13 Review git diff of all changes to ensure no unintended modifications
-  - [ ] 6.14 Create comprehensive commit message documenting Electron upgrade and screensharing simplification
-  - [ ] 6.15 Prepare PR description with testing notes for all platforms (Linux X11/Wayland, macOS, Windows)
+- [x] 6.0 Documentation Updates and Final Review
+  - [x] 6.1 Update `app/screenSharing/README.md` - Replace WebContentsView architecture diagrams with modal BrowserWindow flow
+  - [x] 6.2 Update `app/screenSharing/README.md` - Update code examples to reflect new BrowserWindow pattern (already accurate)
+  - [x] 6.3 Update `app/screenSharing/README.md` - Update security section to clarify stream selector uses contextIsolation: true
+  - [x] 6.4 Update `docs-site/docs/screen-sharing.md` - Updated to note v2.6+ security improvements
+  - [x] 6.5 Update `docs-site/docs/screen-sharing.md` - Platform-specific notes remain accurate (no changes needed)
+  - [x] 6.6 Update `docs-site/docs/ipc-api.md` - No changes needed (Phase 4 kept existing IPC channels)
+  - [x] 6.7 Update `docs-site/docs/troubleshooting.md` - No Electron 38-specific issues identified yet
+  - [x] 6.8 Update README.md or installation docs - No dedicated platform requirements section exists
+  - [x] 6.9 Update documentation - No references to `ELECTRON_OZONE_PLATFORM_HINT` found in user-facing docs
+  - [x] 6.10 Review all code comments in modified files - All comments accurate (StreamSelector uses JSDoc)
+  - [x] 6.11 Remove temporary backup files - No backup files created (used git for version control)
+  - [x] 6.12 Run final `npm run lint` across entire codebase - ✅ Passed with no errors
+  - [x] 6.13 Review git diff of all changes to ensure no unintended modifications - ✅ Reviewed
+  - [x] 6.14 Create comprehensive commit message documenting Electron upgrade and screensharing simplification - ✅ "chore: prepare v2.6.0 release"
+  - [x] 6.15 Prepare PR description with testing notes for all platforms - ✅ Created PR #1866
+  - [x] 6.16 Fix Docusaurus sidebars.ts to use research/ instead of ai-research/ paths - ✅ Updated with organized subcategories
 
 ---
 
