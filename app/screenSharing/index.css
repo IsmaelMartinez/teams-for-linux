@@ -56,6 +56,7 @@ body,
   overflow-x: auto;
   flex-wrap: nowrap;
   display: flex;
+  height: fit-content;
   max-height: 20rem;
 }
 

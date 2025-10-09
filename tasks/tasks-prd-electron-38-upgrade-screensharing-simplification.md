@@ -298,7 +298,6 @@ This section captures enhancements and non-critical features that could be imple
 ### Priority 2 (Nice-to-Have)
 
 - **Modernize to `#private` fields** - ✅ COMPLETED in Phase 3 - StreamSelector now uses native private fields
-- **Add TypeScript definitions** - Create `.d.ts` files for better IDE support and type safety
 - **Automated testing** - See comprehensive research in `docs-site/docs/research/automated-testing-strategy.md`
   - Recommended: Playwright for E2E + Vitest for unit/integration tests
   - Strategy for handling MS authentication via storage state reuse
@@ -306,13 +305,13 @@ This section captures enhancements and non-critical features that could be imple
 - **Stream selector keyboard navigation** - Enhance UX with arrow key navigation and Enter/Escape shortcuts in stream selector
 - **Stream selector search/filter** - Add search box to filter windows by name when many windows are open
 
-### Priority 3 (Future Consideration)
+### Priority 3 (Rejected / Not Viable)
 
-- **Native system picker integration** - Investigate `useSystemPicker: true` option for Electron 38.x on Linux/macOS to reduce custom UI maintenance
-- **Thumbnail preview optimization** - Lazy load thumbnails or use lower resolution to improve stream selector performance
-- **Screensharing analytics** - Track screensharing usage patterns to inform future UX improvements
-- **Multi-source sharing** - Investigate Electron API support for sharing multiple screens/windows simultaneously
-- **Custom stream selector themes** - Allow users to customize stream selector appearance to match system theme
+- **Native system picker (`useSystemPicker`)** - ❌ REJECTED - See research in `docs-site/docs/research/usesystempicker-investigation.md`
+  - Not supported on Linux Wayland/PipeWire (primary target platform)
+  - macOS has known toggle-hang bugs
+  - Complexity not justified given Linux blocker
+  - Custom picker works reliably across all platforms
 
 ### Technical Debt Considerations
 
