@@ -29,7 +29,35 @@ jobs:
           git remote add ${{ vars.UPSTREAM_NAME }} ${{ vars.UPSTREAM_URL }}
 
           git fetch ${{ vars.UPSTREAM_NAME }}
-          git rebase ${{ vars.UPSTREAM_NAME }}/main
+          git rebase ${{ vars.UPSTREAM_NAME }}/main -X theirs || true
+
+          # Loop while the rebase directory exists
+          while [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; do
+
+            # Get list of unmerged (conflicting) files
+            CONFLICTS=$(git diff --name-only --diff-filter=U)
+
+            if [ -n "$CONFLICTS" ]; then
+              echo "Resolving conflicts by deleting files:"
+              echo "$CONFLICTS"
+
+              # Loop through conflicting files and 'git rm' them
+              for FILE in $CONFLICTS; do
+                git rm "$FILE"
+              done
+
+              # Continue the rebase
+              echo "Continuing rebase..."
+              git -c core.editor=true rebase --continue || true
+            else
+              # No conflicts detected, but rebase is paused
+              # This can happen (e.g., empty commit). Skip it.
+              echo "Rebase paused, no U-state files. Skipping."
+              git rebase --skip || true
+            fi
+          done
+
+          echo "Rebase completed successfully."
 
           # This authenticates with secrets.ACTIONS_PAT, because it was
           # used with the checkout action
