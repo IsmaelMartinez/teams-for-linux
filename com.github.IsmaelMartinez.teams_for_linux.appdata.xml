@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.0" date="2025-10-09">
+			<description>
+				<ul>
+					<li>Major: Upgrade Electron from 37.6.0 to 38.2.1 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
+					<li>Enhancement: Modernize screen sharing architecture with modal BrowserWindow pattern, native private fields, 41% code reduction (142→83 lines)</li>
+					<li>Documentation: Consolidate research documents from ai-research to research folder, add automated testing strategy and useSystemPicker investigation</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.13" date="2025-10-08">
 			<description>
 				<ul>
