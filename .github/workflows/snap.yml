@@ -56,3 +56,33 @@ jobs:
       - name: Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap:armv7l -- --publish always
+
+  snap-arm64:
+    runs-on: ubuntu-24.04-arm
+
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+    steps:
+      - name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v2
+      
+      - name: Install and initialize LXD
+        uses: canonical/setup-lxd@main
+
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        run: npm ci
+
+      - name: Release
+        if: contains(github.ref, 'main')
+        run: npm run dist:linux:snap:arm64 -- --publish always
+
+
