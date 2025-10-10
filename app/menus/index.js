@@ -300,7 +300,7 @@ class Menus {
     if (typeof text !== 'string') {
       return false;
     }
-    const teamsUrlPattern = /^https:\/\/teams\.microsoft\.com\/l\/meetup-join\//;
+    const teamsUrlPattern = /^https:\/\/teams\.microsoft\.com\/(?:l\/meetup-join|meet)\//;
     return teamsUrlPattern.test(text);
   }
 
