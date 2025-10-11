@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.5.14" date="2025-10-10">
+			<description>
+				<ul>
+					<li>Feat: Support short form teams join urls</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.5.13" date="2025-10-08">
 			<description>
 				<ul>
