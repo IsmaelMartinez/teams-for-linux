@@ -441,11 +441,11 @@ function processArgs(args) {
   console.debug("processArgs:", args);
   for (const arg of args) {
     console.debug(
-      `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
+      `testing RegExp processArgs ${new RegExp(config.allTeamsLinksRegEx).test(
         arg
       )}`
     );
-    if (new RegExp(config.meetupJoinRegEx).test(arg)) {
+    if (new RegExp(config.allTeamsLinksRegEx).test(arg)) {
       console.debug("A url argument received with https protocol");
       window.show();
       return arg;
