@@ -24,6 +24,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[Installation Guide](installation.md)** - Package repositories, distribution packages, and manual installation
 - **[Configuration Guide](configuration.md)** - Complete configuration options and settings
 - **[Multiple Instances](multiple-instances.md)** - Running separate profiles (work/personal)
+- **[Intune SSO Integration](intune-sso.md)** - Microsoft Intune Single Sign-On for enterprise environments
 
 ### Features
 - **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
@@ -43,7 +44,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[ADR-001: Token Cache Secure Storage](adr/token-cache-secure-storage.md)** - Decision to implement OS-level secure storage for authentication tokens
 
 ## Research & Analysis
-- **[AI Research Documentation](ai-research/index.md)** - Strategic analysis and research documents
+- **[AI Research Documentation](research/index.md)** - Strategic analysis and research documents
 
 ## Architecture Overview
 

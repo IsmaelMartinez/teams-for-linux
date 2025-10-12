@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
         'installation',
         'configuration',
         'multiple-instances',
+        'intune-sso',
       ],
     },
     {

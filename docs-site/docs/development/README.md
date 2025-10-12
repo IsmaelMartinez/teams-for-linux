@@ -6,10 +6,10 @@ This directory contains technical documentation for Teams for Linux developers a
 
 ### Active Development Docs
 - **[token-cache-architecture.md](token-cache-architecture.md)** - Token cache implementation, secure storage architecture, and authentication persistence
-- **[dom-access-investigation.md](../ai-research/dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
+- **[dom-access-investigation.md](../research/dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls documentation
-- **[secure-storage-research.md](../ai-research/secure-storage-research.md)** - Research on secure storage options and implementation considerations
-- **[token-cache-research.md](../ai-research/token-cache-research.md)** - Initial research and analysis of token cache requirements
+- **[secure-storage-research.md](../research/secure-storage-research.md)** - Research on secure storage options and implementation considerations
+- **[token-cache-research.md](../research/token-cache-research.md)** - Initial research and analysis of token cache requirements
 
 ## For Contributors
 
@@ -17,7 +17,7 @@ When working on Teams for Linux:
 
 1. **Review token cache architecture** for authentication and secure storage patterns
 2. **Read the security architecture** to understand security trade-offs and requirements
-3. **Review DOM access investigation** ([ai-research](../ai-research/dom-access-investigation.md)) for context on current implementation choices  
+3. **Review DOM access investigation** ([research](../research/dom-access-investigation.md)) for context on current implementation choices
 4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
 
