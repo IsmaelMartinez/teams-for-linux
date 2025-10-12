@@ -97,14 +97,11 @@ sequenceDiagram
 
 ### Security Features
 
-✅ **Note**: As of v2.6+, the **stream selector window** (not the main app window) uses modern Electron security best practices:
-- **Context Isolation**: **Enabled** (`contextIsolation: true`) with contextBridge for secure IPC
-- **Node Integration**: **Disabled** (`nodeIntegration: false`) for renderer process isolation
-- **Preload Script**: Uses contextBridge API for secure communication
-- **Sandboxing**: **Disabled** (`sandbox: false`) to enable desktop capture API access
-- **Modal Window**: Parent window is disabled while selector is active for focused UX
-
-The main app window requires `contextIsolation: false` for Teams DOM access functionality (notifications, etc.).
+⚠️ **Note**: As of v2.6+, security configuration has been modified for Teams DOM access:
+- **Context Isolation**: **Disabled** to enable Teams DOM access functionality
+- **Node Integration**: **Enabled** for browser tools functionality
+- **Preload Script**: Direct window object exposure (no contextBridge)
+- **Sandboxing**: **Disabled** to enable system API access
 
 ### Desktop Source Detection
 
