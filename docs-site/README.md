@@ -71,7 +71,7 @@ The site is configured to deploy to GitHub Pages with:
 
 - ✅ Mobile-first responsive design
 - ✅ Dark/light theme support
-- ✅ Search functionality (when configured)
+- ✅ Local search functionality with [@easyops-cn/docusaurus-search-local](https://github.com/easyops-cn/docusaurus-search-local)
 - ✅ Accessibility features
 - ✅ Microsoft Teams-inspired branding
 - ✅ Mermaid diagram support

@@ -26,7 +26,6 @@ const config: Config = {
   projectName: 'teams-for-linux', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -70,6 +69,10 @@ const config: Config = {
         highlightSearchTermsOnTargetPage: true,
         // Explode search terms for better matching
         explicitSearchResultPath: true,
+        // Route base path must match docs route
+        docsRouteBasePath: '/',
+        // Hash search index for better caching
+        hashed: true,
       },
     ],
   ],
@@ -77,6 +80,9 @@ const config: Config = {
   // Enable Mermaid support
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
 
   themes: ['@docusaurus/theme-mermaid'],
