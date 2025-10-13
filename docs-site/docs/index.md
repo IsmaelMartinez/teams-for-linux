@@ -52,7 +52,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[ADR-003: Token Refresh Implementation](development/adr/003-token-refresh-implementation.md)** - Token refresh strategy and implementation
 
 ## Research & Analysis
-- **[Research Documentation](development/research/index.md)** - Strategic analysis and research documents
+- **[Research Documentation](development/research/README.md)** - Strategic analysis and research documents
 
 ## Architecture Overview
 
