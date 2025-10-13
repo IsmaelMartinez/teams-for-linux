@@ -12,7 +12,13 @@ slug: /
 ✅ **System tray integration**  
 ✅ **Custom backgrounds & themes**  
 ✅ **Screen sharing support**  
-✅ **Multiple account profiles**
+✅ **Multiple account profiles**  
+✅ **Certificate management**  
+✅ **Proxy server support**  
+✅ **Microsoft Intune SSO integration**  
+✅ **Secure token storage**  
+✅ **Protocol handler support**  
+✅ **Advanced logging & debugging**
 
 :::info Project Status
 This is an independent project, not affiliated with Microsoft. Some features are limited by the Teams web app capabilities.

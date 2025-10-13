@@ -85,17 +85,7 @@ The project documentation has been migrated to Docusaurus and is deployed to Git
 - **Search**: Client-side local search using [@easyops-cn/docusaurus-search-local](https://github.com/easyops-cn/docusaurus-search-local)
 - **Features**: Enhanced search, improved navigation, rich content support (including Mermaid diagrams), mobile-first design, and dark/light theme support
 
-### Working with Documentation
-
-Documentation source files are in `docs-site/docs/`. To work with the documentation locally:
-
-```bash
-cd docs-site
-npm install
-npm start        # Development server with hot reload
-npm run build    # Production build with search index generation
-npm run serve    # Test production build locally
-```
+For detailed documentation development instructions, see [docs-site/README.md](docs-site/README.md).
 
 ## Important Notes
 

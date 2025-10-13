@@ -59,12 +59,8 @@ const config: Config = {
     [
       require.resolve('@easyops-cn/docusaurus-search-local'),
       {
-        // Whether to index docs pages
-        indexDocs: true,
         // Whether to index blog pages (we have blog disabled)
         indexBlog: false,
-        // Language
-        language: ['en'],
         // Enable highlighting of search terms in results
         highlightSearchTermsOnTargetPage: true,
         // Explode search terms for better matching
@@ -81,7 +77,7 @@ const config: Config = {
   markdown: {
     mermaid: true,
     hooks: {
-      onBrokenMarkdownLinks: 'warn',
+      onBrokenMarkdownLinks: 'throw',
     },
   },
 

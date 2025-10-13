@@ -2,6 +2,10 @@
 
 Load custom background images during video calls from your own web server.
 
+:::warning Future Changes
+Microsoft Teams now supports custom backgrounds natively in the browser. This workaround may be **removed in future releases** to reduce application complexity. Consider using the native Teams custom background feature when possible.
+:::
+
 :::tip
 See the [example README](https://github.com/IsmaelMartinez/teams-for-linux/tree/main/app/customBackground/example/README.md) for a complete implementation example.
 :::

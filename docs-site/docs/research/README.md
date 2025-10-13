@@ -9,8 +9,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ## Contents
 
 ### Authentication & Security Research
-- **[Token Cache Authentication Investigation](token-cache-authentication-investigation.md)** - Root cause analysis and solution approach for persistent authentication issues (#1357)
-- **[Token Cache Research](token-cache-research.md)** - Initial research and analysis of token cache requirements and implementation approaches
+- **[Token Cache Authentication Research](token-cache-authentication-research.md)** - Comprehensive research from problem analysis through implementation and validation of token cache authentication solution (#1357)
 - **[Secure Storage Research](secure-storage-research.md)** - Research on secure storage options, platform capabilities, and implementation considerations
 - **[DOM Access Investigation](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
 

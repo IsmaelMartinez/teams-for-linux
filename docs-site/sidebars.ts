@@ -71,8 +71,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Authentication & Security',
           items: [
-            'research/token-cache-authentication-investigation',
-            'research/token-cache-research',
+            'research/token-cache-authentication-research',
             'research/secure-storage-research',
             'research/dom-access-investigation',
           ],

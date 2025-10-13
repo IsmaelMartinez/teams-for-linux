@@ -101,7 +101,7 @@ graph TD
 
 ## Code Standards
 
-### Style Guidelines
+### Style Guidelines (some WIP)
 
 - **ES6+ JavaScript** - Use modern JavaScript features
 - **No `var`** - Use `const` by default, `let` for reassignment

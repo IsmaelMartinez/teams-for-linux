@@ -9,7 +9,7 @@ This directory contains technical documentation for Teams for Linux developers a
 - **[dom-access-investigation.md](../research/dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls documentation
 - **[secure-storage-research.md](../research/secure-storage-research.md)** - Research on secure storage options and implementation considerations
-- **[token-cache-research.md](../research/token-cache-research.md)** - Initial research and analysis of token cache requirements
+- **[token-cache-authentication-research.md](../research/token-cache-authentication-research.md)** - Comprehensive research from problem analysis through implementation validation
 
 ## For Contributors
 
