@@ -164,5 +164,5 @@ The documentation improvements from PROJECT_IMPROVEMENTS.md have successfully cr
 
 ## Related Documentation
 
-- [Configuration Options](../configuration.md) - Application configuration reference
+- [Configuration Options](../../configuration.md) - Application configuration reference
 - [UI System Strategic Analysis](ui-system-strategic-analysis.md) - Related strategic analysis

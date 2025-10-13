@@ -1,4 +1,8 @@
-# ADR-001: Token Cache Secure Storage Implementation
+---
+id: 002-token-cache-secure-storage
+---
+
+# ADR-002: Token Cache Secure Storage Implementation
 
 ## Status
 

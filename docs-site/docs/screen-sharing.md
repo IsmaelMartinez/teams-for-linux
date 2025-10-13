@@ -1,6 +1,6 @@
 # Screen Sharing in Teams for Linux
 
-Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface. **Note**: As of v2.6+, contextIsolation and sandbox have been disabled to enable Teams DOM access functionality.
+Teams for Linux provides robust screen sharing capabilities that integrate seamlessly with the Microsoft Teams web interface. As of v2.6+, the stream selector uses modern Electron security practices with context isolation enabled for secure IPC communication.
 
 ## How It Works
 
@@ -151,7 +151,7 @@ Screen sharing uses several IPC channels for communication between the main and 
 - `screen-sharing-started`: Notifies when sharing begins
 - `screen-sharing-stopped`: Notifies when sharing ends
 
-For detailed IPC documentation, see [IPC API Reference](ipc-api.md).
+For detailed IPC documentation, see [IPC API Reference](development/ipc-api.md).
 
 ### Code Organization
 
@@ -179,5 +179,5 @@ app/
 ## Related Documentation
 
 - [Configuration Options](configuration.md) - General application configuration
-- [IPC API Reference](ipc-api.md) - Inter-process communication details
+- [IPC API Reference](development/ipc-api.md) - Inter-process communication details
 - [Troubleshooting](troubleshooting.md) - General troubleshooting guide

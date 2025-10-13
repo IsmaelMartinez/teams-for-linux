@@ -12,29 +12,29 @@ Teams for Linux requires DOM access to Microsoft Teams' React components for fea
 
 ## Critical React Breaking Changes Investigation
 
-**Status**: 🚨 CRITICAL - IMMEDIATE ACTION REQUIRED  
+**Status**: ⚠️ MONITORING - FUTURE COMPATIBILITY RISK  
 **Date**: August 30, 2025
 
 ### Key Findings
 
-**CRITICAL DISCOVERY**: The current ReactHandler implementation uses deprecated React APIs that were removed in React 18+ and will completely break when Microsoft Teams updates to React 19 (expected Q4 2025).
+**FUTURE COMPATIBILITY CONCERN**: The current ReactHandler implementation uses internal React APIs that may be deprecated or removed when Microsoft Teams eventually updates to React 18+ and React 19. Teams is currently running on an older React version, but future updates pose a compatibility risk.
 
 #### Current System
 - **Electron Version**: 37.3.1
 - **Chromium**: 128.0.6613.186
 - **ReactHandler Location**: `app/browser/tools/reactHandler.js`
 
-#### Vulnerable Code Patterns
-The current implementation relies on deprecated internal React APIs:
-- `_reactRootContainer` - Deprecated in React 18
-- `_internalRoot` - Internal API subject to removal
-- Direct DOM tree traversal of React internals
+#### Potentially Vulnerable Code Patterns
+The current implementation relies on internal React APIs that may become incompatible:
+- `_reactRootContainer` - May be deprecated in future React versions
+- `_internalRoot` - Internal API subject to change/removal
+- Direct DOM tree traversal of React internals - Dependent on React internal structure
 
 #### Risk Assessment
-- **Probability**: HIGH - Microsoft Teams will eventually update to React 19
-- **Timeline**: Q4 2025 (React 19 release target)
-- **Impact**: CRITICAL - Complete feature breakdown
-- **User Impact**: Loss of core functionality
+- **Probability**: MEDIUM - Microsoft Teams will eventually update to React 18+/19
+- **Timeline**: UNKNOWN - Teams update timeline to newer React versions not confirmed
+- **Impact**: HIGH - Potential feature breakdown when Teams upgrades React
+- **Current Status**: STABLE - Teams currently running on older React version compatible with our implementation
 
 ### Solution Implemented (v2.5.2)
 
@@ -181,6 +181,6 @@ _detectAndLogReactVersion() {
 ## References
 
 - DOM-ACCESS-RESTORATION-PLAN.md (historical planning document)
-- [Security IPC Validator](../../../app/security/ipcValidator.js)  
-- [ReactHandler Implementation](../../../app/browser/tools/reactHandler.js)
-- [Browser Window Security Config](../../../app/mainAppWindow/browserWindowManager.js)
+- Security IPC Validator - `app/security/ipcValidator.js`
+- ReactHandler Implementation - `app/browser/tools/reactHandler.js`
+- Browser Window Security Config - `app/mainAppWindow/browserWindowManager.js`

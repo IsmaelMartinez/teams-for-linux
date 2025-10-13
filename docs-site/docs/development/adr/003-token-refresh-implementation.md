@@ -1,4 +1,8 @@
-# ADR-002: Token Refresh Implementation Strategy
+---
+id: 003-token-refresh-implementation
+---
+
+# ADR-003: Token Refresh Implementation Strategy
 
 **Status**: Accepted  
 **Date**: 2025-09-22  

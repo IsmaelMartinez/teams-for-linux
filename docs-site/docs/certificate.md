@@ -14,7 +14,7 @@ If you have access to the nodejs console, the fingerprint of the CA that cannot
 be validated will be printed out. You can then start teams-for-linux again with
 
 ```bash
-teams-for-linux --customCACertsFingerprints sha256//L/iiGIG9ysnWTyLBwKX4S12ntEO15MHBagJjv/BTRc= [--customCACertsFingerprints otherfingerprint]
+teams-for-linux --customCACertsFingerprints sha256/YOUR-CERTIFICATE-FINGERPRINT [--customCACertsFingerprints ANOTHER-FINGERPRINT-IF-NEEDED]
 ```
 
 If you already have the certificate in a file locally, you can calculate the
@@ -30,8 +30,8 @@ To have your custom certs recognized on every run, add them to your
 ```json
 {
   "customCACertsFingerprints": [
-    "sha256//L/iiGIG9ysnWTyLBwKX4S12ntEO15MHBagJjv/BTRc=",
-    "sha256/QNUEPU40JDSrRcW9CSWsPKJ5llVjGcc1AnsIkCF9KV4="
+    "sha256/YOUR-CERTIFICATE-FINGERPRINT-HERE",
+    "sha256/ANOTHER-CERTIFICATE-FINGERPRINT-IF-NEEDED"
   ]
 }
 ```
@@ -53,7 +53,7 @@ Many corporate environments use proxy servers with custom certificates:
 ```json
 {
   "customCACertsFingerprints": [
-    "sha256//your-corporate-proxy-cert-fingerprint"
+    "sha256/YOUR-CORPORATE-PROXY-CERT-FINGERPRINT"
   ],
   "proxyServer": "proxy.company.com:8080"
 }
@@ -66,9 +66,9 @@ For environments with multiple custom CAs:
 ```json
 {
   "customCACertsFingerprints": [
-    "sha256//root-ca-fingerprint",
-    "sha256//intermediate-ca-fingerprint",
-    "sha256//proxy-ca-fingerprint"
+    "sha256/YOUR-ROOT-CA-FINGERPRINT",
+    "sha256/YOUR-INTERMEDIATE-CA-FINGERPRINT",
+    "sha256/YOUR-PROXY-CA-FINGERPRINT"
   ]
 }
 ```
@@ -95,7 +95,7 @@ Error: certificate verify failed: unable to get local issuer certificate
 
 1. **Enable debug logging** to see certificate details:
    ```bash
-   teams-for-linux --logConfig='{"level":"debug"}'
+   ELECTRON_ENABLE_LOGGING=true teams-for-linux
    ```
 
 2. **Check the certificate chain** with openssl:
