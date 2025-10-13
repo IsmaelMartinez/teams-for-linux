@@ -64,7 +64,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
     | --user installed flatpak | `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` | `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` |
     | From source | `~/.config/Electron/` | `rm -rf ~/.config/Electron/` |
 
-**Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md, but related to general Electron updates]
 
 #### Issue: No Apple Silicon Mac build
 
@@ -219,8 +218,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 1.  **Use Ctrl+Click:** If you need to open a link within an Electron window, use the `Ctrl+Click` combination.
 
-**Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md]
-
 #### Issue: Blank Page at Login
 
 **Description:** Some users report a blank page at login (titled "Microsoft Teams - initializing").
@@ -258,8 +255,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
 **Solutions/Workarounds:**
 
 1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
-
-**Related GitHub Issues:** [No specific issue mentioned in KNOWN_ISSUES.md]
 
 ---
 

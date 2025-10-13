@@ -195,4 +195,4 @@ teams-for-linux --logConfig='{"level":"debug"}' --isCustomBackgroundEnabled=true
 ## Related Documentation
 
 - [Configuration Options](configuration.md) - Complete configuration reference
-- [IPC API](ipc-api.md) - Background management IPC channels
+- [IPC API](development/ipc-api.md) - Background management IPC channels

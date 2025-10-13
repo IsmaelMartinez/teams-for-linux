@@ -151,7 +151,7 @@ Screen sharing uses several IPC channels for communication between the main and 
 - `screen-sharing-started`: Notifies when sharing begins
 - `screen-sharing-stopped`: Notifies when sharing ends
 
-For detailed IPC documentation, see [IPC API Reference](ipc-api.md).
+For detailed IPC documentation, see [IPC API Reference](development/ipc-api.md).
 
 ### Code Organization
 
@@ -179,5 +179,5 @@ app/
 ## Related Documentation
 
 - [Configuration Options](configuration.md) - General application configuration
-- [IPC API Reference](ipc-api.md) - Inter-process communication details
+- [IPC API Reference](development/ipc-api.md) - Inter-process communication details
 - [Troubleshooting](troubleshooting.md) - General troubleshooting guide

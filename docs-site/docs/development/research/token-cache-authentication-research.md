@@ -830,10 +830,10 @@ Electron-specific authentication provider limitations.
 
 ### Related Project Documentation
 
-- [Token Cache Architecture](../development/token-cache-architecture.md) - Implementation architecture
-- [Security Architecture](../development/security-architecture.md) - Security model and threat analysis
+- [Token Cache Architecture](../token-cache-architecture.md) - Implementation architecture
+- [Security Architecture](../security-architecture.md) - Security model and threat analysis
 - [Secure Storage Research](secure-storage-research.md) - OS-level secure storage investigation
-- [ADR: Token Cache Secure Storage](../adr/token-cache-secure-storage.md) - Architectural decision record
+- [ADR: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md) - Architectural decision record
 
 ## Appendix
 

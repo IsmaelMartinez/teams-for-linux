@@ -86,6 +86,6 @@ Research documents should include:
 
 ## Related Documentation
 
-- [Configuration Options](../configuration.md) - Application configuration reference
+- [Configuration Options](../../configuration.md) - Application configuration reference
 - [IPC API](../ipc-api.md) - Developer integration documentation
-- [Architecture Decision Records](../adr/) - Formal architectural decisions
+- [Architecture Decision Records](../README.md#adr-index) - Formal architectural decisions
