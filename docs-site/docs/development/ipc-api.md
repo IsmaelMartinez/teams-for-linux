@@ -21,7 +21,7 @@ Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthor
 
 ## Core Application IPC Handlers
 
-// TODO: Propertly document all IPC handler calls.
+// TODO: Properly document all IPC handler calls.
 
 ### Configuration Management
 
