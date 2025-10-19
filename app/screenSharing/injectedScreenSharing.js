@@ -176,6 +176,9 @@
     }
   }
 
+  // Track whether stop button exists in current UI state
+  let stopButtonExists = false;
+
   // Process discovered stop sharing buttons
   function processStopSharingButtons() {
     // Look for various "Stop sharing" button patterns
@@ -188,6 +191,17 @@
       ...document.querySelectorAll('[id*="stop-sharing"]'),
     ];
 
+    const hadStopButton = stopButtonExists;
+    stopButtonExists = stopButtons.length > 0;
+
+    // If stop button was present but now disappeared while screen sharing is active,
+    // the meeting likely ended - trigger cleanup
+    if (hadStopButton && !stopButtonExists && isScreenSharing) {
+      console.debug("[SCREEN_SHARE_DIAG] Stop sharing button disappeared - meeting likely ended");
+      handleStreamEnd("meeting_ended_button_removed");
+      return;
+    }
+
     for (const button of stopButtons) {
       setupStopButtonMonitoring(button);
     }
@@ -196,15 +210,18 @@
   // Start monitoring UI for "Stop sharing" buttons
   function startUIMonitoring() {
     console.debug("[SCREEN_SHARE_DIAG] Starting UI monitoring for stop buttons");
-    
+
     const observer = new MutationObserver(processStopSharingButtons);
 
-    observer.observe(document.body, { 
-      childList: true, 
+    observer.observe(document.body, {
+      childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['class', 'data-tid', 'title', 'aria-label']
     });
+
+    // Initial check to detect current button state
+    processStopSharingButtons();
   }
 
   // Initialize monitoring when the page is ready
