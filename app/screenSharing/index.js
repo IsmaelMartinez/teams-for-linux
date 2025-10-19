@@ -1,31 +1,31 @@
-const { ipcMain, BrowserWindow } = require("electron");
+const { ipcMain, WebContentsView } = require("electron");
 const path = require("path");
 
 class StreamSelector {
   #parent;
-  #window = null;
+  #view = null;
   #callback = null;
   #isClosing = false;
   #sourceHandler = null;
   #closeHandler = null;
   #selectedSource = null;
+  #resizeHandler = null;
 
   /**
-   * @param {BrowserWindow} parent - The parent window for the modal dialog
+   * @param {BrowserWindow} parent
    */
   constructor(parent) {
     this.#parent = parent;
   }
 
   /**
-   * Display the stream selector modal dialog
+   * Display the stream selector view
    * @param {(source: object|null) => void} callback - Called with selected source or null if cancelled
    */
   show(callback) {
-    // Guard: prevent opening multiple windows
-    if (this.#window && !this.#window.isDestroyed()) {
-      console.warn('[StreamSelector] Window already open, ignoring duplicate show() call');
-      this.#window.focus();
+    // Guard: prevent opening multiple views
+    if (this.#view) {
+      console.warn('[StreamSelector] View already open, ignoring duplicate show() call');
       return;
     }
 
@@ -33,43 +33,22 @@ class StreamSelector {
     this.#isClosing = false;
     this.#selectedSource = null;
 
-    this.#window = new BrowserWindow({
-      parent: this.#parent,
-      modal: true,
-      show: false,
-      width: 1000,
-      height: 300,
-      minWidth: 800,
-      minHeight: 250,
-      maxHeight: 400,
-      frame: true,
-      autoHideMenuBar: true,
-      resizable: true,
-      minimizable: false,
-      maximizable: false,
-      skipTaskbar: true,
+    this.#view = new WebContentsView({
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
-        contextIsolation: true,
-        nodeIntegration: false,
-        // sandbox: false required for desktopCapturer.getSources() access
-        // Security compensated by contextIsolation + nodeIntegration: false
-        sandbox: false,
       },
     });
 
-    this.#window.loadFile(path.join(__dirname, "index.html"));
+    this.#view.webContents.loadFile(path.join(__dirname, "index.html"));
+    this.#parent.contentView.addChildView(this.#view);
 
-    this.#window.once("ready-to-show", () => {
-      this.#window.show();
-    });
-
-    this.#window.once("closed", () => {
-      this.#close();
-    });
+    this.#resizeHandler = () => {
+      this.#resizeView();
+    };
+    this.#resizeView();
 
     this.#sourceHandler = (_event, source) => {
-      // Store source immediately to avoid race condition with window close
+      // Store source immediately to avoid race condition with close
       this.#selectedSource = source;
       this.#close();
     };
@@ -78,14 +57,36 @@ class StreamSelector {
       this.#close();
     };
 
+    this.#parent.on("resize", this.#resizeHandler);
     ipcMain.once("selected-source", this.#sourceHandler);
     ipcMain.once("close-view", this.#closeHandler);
+  }
+
+  #resizeView() {
+    if (!this.#view) return;
+
+    setTimeout(() => {
+      if (!this.#view) return;
+      const pbounds = this.#parent.getBounds();
+      this.#view.setBounds({
+        x: 0,
+        y: pbounds.height - 180,
+        width: pbounds.width,
+        height: 180,
+      });
+    }, 0);
   }
 
   #close() {
     // Guard against double-execution
     if (this.#isClosing) return;
     this.#isClosing = true;
+
+    // Cleanup resize listener
+    if (this.#resizeHandler) {
+      this.#parent.removeListener("resize", this.#resizeHandler);
+      this.#resizeHandler = null;
+    }
 
     // Cleanup IPC listeners - remove only this instance's handlers
     if (this.#sourceHandler) {
@@ -103,11 +104,13 @@ class StreamSelector {
       this.#callback = null;
     }
 
-    // Cleanup window
-    if (this.#window && !this.#window.isDestroyed()) {
-      this.#window.destroy();
+    // Cleanup view
+    if (this.#view) {
+      this.#parent.contentView.removeChildView(this.#view);
+      this.#view.webContents.destroy();
+      this.#view = null;
     }
-    this.#window = null;
+
     this.#selectedSource = null;
   }
 }

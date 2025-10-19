@@ -154,18 +154,57 @@ session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
 
 ### 2. **API Modernization**
 
-#### Replace Legacy Patterns:
-```javascript path=null start=null
-// OLD: WebContentsView with setBrowserView
-window.setBrowserView(view)
+#### Current Implementation: WebContentsView (Retained)
+The application currently uses `WebContentsView` for the stream selector overlay, which displays at the bottom of the main window. This approach was retained because:
 
-// NEW: Use proper child windows or dialogs
+- **Better UX:** Overlay appears inline without disrupting the main Teams window
+- **Simpler workflow:** Users stay in the same window context
+- **Modern API:** `WebContentsView` is the recommended approach for embedded content in Electron 38.x
+- **Backward compatible:** Works with existing resize handlers and window management
+
+```javascript path=app/screenSharing/index.js start=36
+this.#view = new WebContentsView({
+  webPreferences: {
+    preload: path.join(__dirname, "preload.js"),
+  },
+});
+
+this.#view.webContents.loadFile(path.join(__dirname, "index.html"));
+this.#parent.contentView.addChildView(this.#view);
+```
+
+#### Alternative Approach: Modal BrowserWindow (Future Option)
+A modal dialog approach could be considered as a future enhancement if a more traditional dialog experience is preferred:
+
+```javascript path=null start=null
+// Alternative: Modal BrowserWindow approach
 const picker = new BrowserWindow({
   parent: mainWindow,
   modal: true,
-  // ... modern options
+  width: 1000,
+  height: 300,
+  frame: true,
+  autoHideMenuBar: true,
+  resizable: true,
+  minimizable: false,
+  maximizable: false,
+  skipTaskbar: true,
+  webPreferences: {
+    preload: path.join(__dirname, "preload.js"),
+    contextIsolation: true,
+    nodeIntegration: false,
+  }
 })
 ```
+
+**Considerations for modal approach:**
+- ✅ More traditional dialog UX
+- ✅ No resize handler needed (OS manages positioning)
+- ✅ Clearer separation from main window
+- ⚠️ Disrupts workflow by popping up over main window
+- ⚠️ May not look as integrated with Teams interface
+
+**Decision:** Retained `WebContentsView` for current implementation. The modal approach remains available as a future option if user feedback indicates preference for traditional dialogs.
 
 ### 3. **Security Enhancements**
 
