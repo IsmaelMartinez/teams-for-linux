@@ -14,11 +14,11 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.6.0" date="2025-10-09">
+		<release version="2.6.0" date="2025-10-19">
 			<description>
 				<ul>
 					<li>Major: Upgrade Electron from 37.6.0 to 38.2.1 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
-					<li>Enhancement: Modernize screen sharing architecture with modal BrowserWindow pattern, native private fields, 41% code reduction (142→83 lines)</li>
+					<li>Enhancement: Modernize screen sharing with native private fields, fix IPC listener memory leak and race conditions - improves reliability</li>
 					<li>Documentation: Overall review of the documentation to add missing links and re-ordering of some areas</li>
 					<li>Documentation: Upgrade Docusaurus dependencies and fix search functionality for improved documentation experience</li>
 				</ul>
