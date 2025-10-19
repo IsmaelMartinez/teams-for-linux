@@ -6,6 +6,9 @@ class StreamSelector {
   #window = null;
   #callback = null;
   #isClosing = false;
+  #sourceHandler = null;
+  #closeHandler = null;
+  #selectedSource = null;
 
   /**
    * @param {BrowserWindow} parent - The parent window for the modal dialog
@@ -21,11 +24,14 @@ class StreamSelector {
   show(callback) {
     // Guard: prevent opening multiple windows
     if (this.#window && !this.#window.isDestroyed()) {
+      console.warn('[StreamSelector] Window already open, ignoring duplicate show() call');
+      this.#window.focus();
       return;
     }
 
     this.#callback = callback;
     this.#isClosing = false;
+    this.#selectedSource = null;
 
     this.#window = new BrowserWindow({
       parent: this.#parent,
@@ -46,6 +52,8 @@ class StreamSelector {
         preload: path.join(__dirname, "preload.js"),
         contextIsolation: true,
         nodeIntegration: false,
+        // sandbox: false required for desktopCapturer.getSources() access
+        // Security compensated by contextIsolation + nodeIntegration: false
         sandbox: false,
       },
     });
@@ -53,34 +61,45 @@ class StreamSelector {
     this.#window.loadFile(path.join(__dirname, "index.html"));
 
     this.#window.once("ready-to-show", () => {
-      this.#window?.show();
+      this.#window.show();
     });
 
     this.#window.once("closed", () => {
-      this.#close(null);
+      this.#close();
     });
 
-    ipcMain.once("selected-source", (_event, source) => {
-      this.#close(source);
-    });
+    this.#sourceHandler = (_event, source) => {
+      // Store source immediately to avoid race condition with window close
+      this.#selectedSource = source;
+      this.#close();
+    };
 
-    ipcMain.once("close-view", () => {
-      this.#close(null);
-    });
+    this.#closeHandler = () => {
+      this.#close();
+    };
+
+    ipcMain.once("selected-source", this.#sourceHandler);
+    ipcMain.once("close-view", this.#closeHandler);
   }
 
-  #close(source) {
+  #close() {
     // Guard against double-execution
     if (this.#isClosing) return;
     this.#isClosing = true;
 
-    // Cleanup IPC listeners
-    ipcMain.removeAllListeners("selected-source");
-    ipcMain.removeAllListeners("close-view");
+    // Cleanup IPC listeners - remove only this instance's handlers
+    if (this.#sourceHandler) {
+      ipcMain.removeListener("selected-source", this.#sourceHandler);
+      this.#sourceHandler = null;
+    }
+    if (this.#closeHandler) {
+      ipcMain.removeListener("close-view", this.#closeHandler);
+      this.#closeHandler = null;
+    }
 
-    // Execute callback
+    // Execute callback with stored source (prioritizes user selection over cancellation)
     if (this.#callback) {
-      this.#callback(source);
+      this.#callback(this.#selectedSource);
       this.#callback = null;
     }
 
@@ -89,6 +108,7 @@ class StreamSelector {
       this.#window.destroy();
     }
     this.#window = null;
+    this.#selectedSource = null;
   }
 }
 
