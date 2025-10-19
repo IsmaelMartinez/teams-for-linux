@@ -77,11 +77,15 @@ The project currently lacks comprehensive test coverage. When contributing:
 
 ## Documentation Deployment
 
-The project documentation is currently undergoing a major enhancement and migration to Docusaurus. Once complete, it will be deployed to GitHub Pages via GitHub Actions.
+The project documentation has been migrated to Docusaurus and is deployed to GitHub Pages via GitHub Actions.
 
-- **Future Platform**: Docusaurus
+- **Platform**: Docusaurus 3.9.1
+- **URL**: https://ismaelmartinez.github.io/teams-for-linux/
 - **Deployment Method**: GitHub Actions to GitHub Pages
-- **Benefits**: Enhanced search, improved navigation, rich content support (including Mermaid diagrams), and a mobile-first design.
+- **Search**: Client-side local search using [@easyops-cn/docusaurus-search-local](https://github.com/easyops-cn/docusaurus-search-local)
+- **Features**: Enhanced search, improved navigation, rich content support (including Mermaid diagrams), mobile-first design, and dark/light theme support
+
+For detailed documentation development instructions, see [docs-site/README.md](docs-site/README.md).
 
 ## Important Notes
 

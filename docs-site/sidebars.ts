@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
         'installation',
         'configuration',
         'multiple-instances',
+        'intune-sso',
       ],
     },
     {
@@ -37,17 +38,23 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Developer',
+      label: 'Developer Documentation',
       items: [
-        'contributing',
-        'ipc-api',
-        'log-config',
-        'release-info',
+        'development/README',
+        'development/contributing',
+        {
+          type: 'category',
+          label: 'Development Guides',
+          items: [
+            'development/ipc-api',
+            'development/log-config',
+            'development/release-info',
+          ],
+        },
         {
           type: 'category',
           label: 'Architecture',
           items: [
-            'development/README',
             'development/token-cache-architecture',
             'development/security-architecture',
           ],
@@ -56,22 +63,50 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture Decisions',
           items: [
-            'adr/token-cache-secure-storage',
+            'development/adr/001-desktopcapturer-source-id-format',
+            'development/adr/002-token-cache-secure-storage',
+            'development/adr/003-token-refresh-implementation',
           ],
         },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Research',
-      items: [
-        'ai-research/index',
-        'ai-research/token-cache-authentication-investigation',
-        'ai-research/token-cache-research',
-        'ai-research/secure-storage-research',
-        'ai-research/dom-access-investigation',
-        'ai-research/documentation-health-analysis',
-        'ai-research/ui-system-strategic-analysis',
+        {
+          type: 'category',
+          label: 'Research & Analysis',
+          items: [
+            'development/research/README',
+            {
+              type: 'category',
+              label: 'Authentication & Security',
+              items: [
+                'development/research/token-cache-authentication-research',
+                'development/research/secure-storage-research',
+                'development/research/dom-access-investigation',
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Testing & Development',
+              items: [
+                'development/research/automated-testing-strategy',
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Electron & Framework',
+              items: [
+                'development/research/electron-38-migration-analysis',
+                'development/research/usesystempicker-investigation',
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Strategic Analysis',
+              items: [
+                'development/research/documentation-health-analysis',
+                'development/research/ui-system-strategic-analysis',
+              ],
+            },
+          ],
+        },
       ],
     },
   ],

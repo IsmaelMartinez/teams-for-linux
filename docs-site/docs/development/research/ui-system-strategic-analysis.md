@@ -261,5 +261,5 @@ The in-app UI system proposal demonstrates:
 
 ## Related Documentation
 
-- [Configuration Options](../configuration.md) - Application configuration reference
+- [Configuration Options](../../configuration.md) - Application configuration reference
 - [Documentation Health Analysis](documentation-health-analysis.md) - Related documentation analysis

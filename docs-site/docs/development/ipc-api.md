@@ -21,6 +21,8 @@ Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthor
 
 ## Core Application IPC Handlers
 
+// TODO: Properly document all IPC handler calls.
+
 ### Configuration Management
 
 #### `get-config`
@@ -68,12 +70,6 @@ This documentation is automatically generated from the IPC handler definitions i
 
 ### Stream Selection
 
-#### `get-desktop-capturer-sources`
-**Type**: `ipcMain.handle`  
-**Purpose**: Retrieves available desktop sources for screen sharing  
-**Parameters**: `Object` with options for source filtering  
-**Returns**: `Array` - List of available desktop capture sources  
-
 #### `screen-sharing-started`
 **Type**: `ipcMain.on`  
 **Purpose**: Notifies main process that screen sharing has started  
@@ -92,74 +88,6 @@ This documentation is automatically generated from the IPC handler definitions i
 **Type**: `ipcMain.on`  
 **Purpose**: Displays system notification  
 **Parameters**: `Object` with notification options  
-
-#### `notification-clicked`
-**Type**: `ipcMain.on`  
-**Purpose**: Handles notification click events  
-**Parameters**: `Object` with click event data  
-
-## Window Management
-
-### Window Controls
-
-#### `toggle-full-screen`
-**Type**: `ipcMain.on`  
-**Purpose**: Toggles full screen mode for the main window  
-**Parameters**: None  
-
-#### `minimize-window`
-**Type**: `ipcMain.on`  
-**Purpose**: Minimizes the main application window  
-**Parameters**: None  
-
-#### `close-window`
-**Type**: `ipcMain.on`  
-**Purpose**: Closes the main application window  
-**Parameters**: None  
-
-## Cache Management
-
-### Cache Operations
-
-#### `clear-cache`
-**Type**: `ipcMain.on`  
-**Purpose**: Clears application cache data  
-**Parameters**: None  
-
-#### `get-cache-size`
-**Type**: `ipcMain.handle`  
-**Purpose**: Retrieves current cache size information  
-**Parameters**: None  
-**Returns**: `Object` with cache size data  
-
-## Custom Background Management
-
-### Background Operations
-
-#### `get-background-list`
-**Type**: `ipcMain.handle`  
-**Purpose**: Retrieves list of available custom backgrounds  
-**Parameters**: None  
-**Returns**: `Array` - List of background image paths  
-
-#### `refresh-backgrounds`
-**Type**: `ipcMain.on`  
-**Purpose**: Refreshes the custom background list  
-**Parameters**: None  
-
-## Development and Debugging
-
-### Debug Operations
-
-#### `toggle-dev-tools`
-**Type**: `ipcMain.on`  
-**Purpose**: Toggles developer tools for the renderer process  
-**Parameters**: None  
-
-#### `reload-window`
-**Type**: `ipcMain.on`  
-**Purpose**: Reloads the renderer window content  
-**Parameters**: None  
 
 ## Usage Examples
 
