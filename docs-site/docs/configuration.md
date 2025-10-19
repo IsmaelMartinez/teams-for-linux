@@ -140,7 +140,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
-| `cacheManagement` | `object` | `{ enabled: true, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
+| `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
 
 ## Usage Examples & Guides
 
@@ -253,15 +253,15 @@ This will execute the following on an incoming call:
 
 ### Cache Management
 
-> [!IMPORTANT]
-> The Cache Manager is **enabled by default** and prevents daily issues caused by cache overflow (issue #1756).
+> [!NOTE]
+> As of version 2.6.1, the Cache Manager is **disabled by default**. While it was designed to prevent daily logout issues caused by cache overflow (issue #1756), user feedback (issues #1868, #1840) indicated it caused more problems than it solved for most users. You can enable it if you experience cache-related authentication issues.
 
 The cache management feature automatically cleans cache files when they grow too large and cause token corruption:
 
 ```json
 {
   "cacheManagement": {
-    "enabled": true,
+    "enabled": false,
     "maxCacheSizeMB": 600,
     "cacheCheckIntervalMs": 3600000
   }
@@ -270,7 +270,7 @@ The cache management feature automatically cleans cache files when they grow too
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `enabled` | `boolean` | `true` | Enable/disable automatic cache management |
+| `enabled` | `boolean` | `false` | Enable/disable automatic cache management |
 | `maxCacheSizeMB` | `number` | `600` | Maximum cache size in MB before cleanup |
 | `cacheCheckIntervalMs` | `number` | `3600000` | How often to check cache size in milliseconds (1 hour) |
 

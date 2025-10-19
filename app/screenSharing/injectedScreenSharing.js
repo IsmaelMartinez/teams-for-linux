@@ -119,14 +119,19 @@
     // Start UI monitoring for stop sharing buttons
     startUIMonitoring();
 
-    // Track stream and tracks for reference, but don't auto-close popup based on their state
-    // Popup window should only close when manually closed or screen sharing explicitly stopped
+    // Track stream and tracks for cleanup when they end
     const trackingVideoTracks = stream.getVideoTracks();
     for (const [index, track] of trackingVideoTracks.entries()) {
       activeMediaTracks.push(track);
-      
+
       track.addEventListener("ended", () => {
-        console.debug(`[SCREEN_SHARE_DIAG] Video track ${index} ended (popup remains open)`);
+        console.debug(`[SCREEN_SHARE_DIAG] Video track ${index} ended`);
+        // Check if all tracks have ended to trigger cleanup
+        const allTracksEnded = activeMediaTracks.every(t => t.readyState === "ended");
+        if (allTracksEnded && isScreenSharing) {
+          console.debug("[SCREEN_SHARE_DIAG] All video tracks ended, stopping screen sharing");
+          handleStreamEnd("video_track_ended");
+        }
       });
     }
   }

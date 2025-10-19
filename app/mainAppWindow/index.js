@@ -202,7 +202,17 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         if (source) {
           handleScreenSourceSelection(source, callback);
         } else {
-          callback({ video: null });
+          // User canceled - call callback synchronously in next tick to allow reopening
+          // Using setImmediate ensures Electron can handle the next request
+          setImmediate(() => {
+            try {
+              // This should fail but allow the handler to be called again
+              callback({});
+            } catch {
+              // Ignore the error - this is expected when canceling
+              console.debug("[SCREEN_SHARE] User canceled screen selection");
+            }
+          });
         }
       });
     }
@@ -215,8 +225,17 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         const selectedSource = findSelectedSource(sources, source);
         if (selectedSource) {
           setupScreenSharing(selectedSource);
+          callback({ video: selectedSource });
+        } else {
+          // Source not found - use setImmediate and try-catch to allow retry
+          setImmediate(() => {
+            try {
+              callback({});
+            } catch {
+              console.debug("[SCREEN_SHARE] Selected source not found");
+            }
+          });
         }
-        callback({ video: selectedSource });
       });
   }
 
@@ -526,6 +545,15 @@ function onPageTitleUpdated(_event, title) {
 
 function onWindowClosed() {
   console.debug("window closed");
+
+  // Close preview window before quitting to prevent race conditions
+  if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+    console.debug("[SCREEN_SHARE_DIAG] Closing preview window before app quit");
+    global.previewWindow.close();
+    global.previewWindow = null;
+    global.selectedScreenShareSource = null;
+  }
+
   window = null;
   app.quit();
 }
