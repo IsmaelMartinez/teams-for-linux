@@ -55,10 +55,10 @@
   },
   "devDependencies": {
     "@electron/fuses": "^2.0.0",
-    "@eslint/js": "^9.36.0",
-    "electron": "^38.2.1",
-    "electron-builder": "^26.0.20",
-    "eslint": "^9.36.0",
+    "@eslint/js": "^9.38.0",
+    "electron": "^38.3.0",
+    "electron-builder": "^26.1.0",
+    "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"

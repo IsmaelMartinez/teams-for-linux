@@ -17,8 +17,9 @@
 		<release version="2.6.0" date="2025-10-19">
 			<description>
 				<ul>
-					<li>Major: Upgrade Electron from 37.6.0 to 38.2.1 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
+					<li>Major: Upgrade Electron from 37.6.0 to 38.3.0 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
 					<li>Enhancement: Modernize screen sharing with native private fields, fix IPC listener memory leak and race conditions - improves reliability</li>
+					<li>Update: ESLint upgraded to 9.38.0 and electron-builder to 26.1.0 for latest bug fixes and improvements</li>
 					<li>Documentation: Overall review of the documentation to add missing links and re-ordering of some areas</li>
 					<li>Documentation: Upgrade Docusaurus dependencies and fix search functionality for improved documentation experience</li>
 				</ul>
