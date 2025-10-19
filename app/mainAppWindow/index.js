@@ -55,8 +55,8 @@ function createScreenSharePreviewWindow() {
   console.debug("[SCREEN_SHARE_DIAG] Preview window creation requested", {
     enabled: thumbnailConfig.enabled,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
-    existingWindow: global.previewWindow && !global.previewWindow.isDestroyed(),
-    activeSource: global.selectedScreenShareSource,
+    existingWindow: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
+    activeSource: globalThis.selectedScreenShareSource,
     timestamp: new Date().toISOString()
   });
 
@@ -66,13 +66,13 @@ function createScreenSharePreviewWindow() {
   }
 
   // Don't create duplicate windows - this is critical for preventing echo
-  if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+  if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
     console.warn("[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing", {
       riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
       action: "focusing existing window instead of creating new",
-      windowId: global.previewWindow.id
+      windowId: globalThis.previewWindow.id
     });
-    global.previewWindow.focus();
+    globalThis.previewWindow.focus();
     return;
   }
 
@@ -82,7 +82,7 @@ function createScreenSharePreviewWindow() {
     partition: "persist:teams-for-linux-session"
   });
 
-  global.previewWindow = new BrowserWindow({
+  globalThis.previewWindow = new BrowserWindow({
     width: 320,
     height: 180,
     minWidth: 200,
@@ -102,49 +102,49 @@ function createScreenSharePreviewWindow() {
     },
   });
 
-  const windowId = global.previewWindow.id;
+  const windowId = globalThis.previewWindow.id;
   console.debug("[SCREEN_SHARE_DIAG] Preview BrowserWindow created", {
     windowId: windowId,
     creationTimeMs: Date.now() - startTime,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false
   });
 
-  global.previewWindow.loadFile(
+  globalThis.previewWindow.loadFile(
     path.join(__dirname, "..", "screenSharing", "previewWindow.html")
   );
 
-  global.previewWindow.once("ready-to-show", () => {
+  globalThis.previewWindow.once("ready-to-show", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window ready, showing now", {
       windowId: windowId,
       totalCreationTimeMs: Date.now() - startTime,
-      focused: global.previewWindow.isFocused(),
-      visible: global.previewWindow.isVisible()
+      focused: globalThis.previewWindow.isFocused(),
+      visible: globalThis.previewWindow.isVisible()
     });
-    global.previewWindow.show();
+    globalThis.previewWindow.show();
   });
 
   // Add focus/blur event handlers to detect when preview window gets focus
-  global.previewWindow.on("focus", () => {
+  globalThis.previewWindow.on("focus", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window gained focus", {
       windowId: windowId,
       potentialIssue: "Focus on preview might interfere with main Teams window"
     });
   });
 
-  global.previewWindow.on("blur", () => {
+  globalThis.previewWindow.on("blur", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window lost focus", {
       windowId: windowId
     });
   });
 
-  global.previewWindow.on("closed", () => {
+  globalThis.previewWindow.on("closed", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window closed", {
       windowId: windowId,
-      hadActiveSource: !!global.selectedScreenShareSource,
-      closedSource: global.selectedScreenShareSource
+      hadActiveSource: !!globalThis.selectedScreenShareSource,
+      closedSource: globalThis.selectedScreenShareSource
     });
-    global.previewWindow = null;
-    global.selectedScreenShareSource = null;
+    globalThis.previewWindow = null;
+    globalThis.selectedScreenShareSource = null;
   });
 }
 
@@ -245,7 +245,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
 
   function setupScreenSharing(selectedSource) {
     // Store the source ID globally for access by screen sharing manager
-    global.selectedScreenShareSource = selectedSource;
+    globalThis.selectedScreenShareSource = selectedSource;
 
     // Create preview window for screen sharing
     createScreenSharePreviewWindow();
@@ -547,11 +547,11 @@ function onWindowClosed() {
   console.debug("window closed");
 
   // Close preview window before quitting to prevent race conditions
-  if (global.previewWindow && !global.previewWindow.isDestroyed()) {
+  if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
     console.debug("[SCREEN_SHARE_DIAG] Closing preview window before app quit");
-    global.previewWindow.close();
-    global.previewWindow = null;
-    global.selectedScreenShareSource = null;
+    globalThis.previewWindow.close();
+    globalThis.previewWindow = null;
+    globalThis.selectedScreenShareSource = null;
   }
 
   window = null;
