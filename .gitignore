@@ -10,3 +10,8 @@ flatpak-build/
 release-info.json
 debian-changelog
 .mcp.json
+
+# Playwright test results
+test-results/
+playwright-report/
+.auth/
