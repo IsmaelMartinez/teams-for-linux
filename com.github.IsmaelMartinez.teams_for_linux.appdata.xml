@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.1" date="2025-10-20">
+			<description>
+				<ul>
+					<li>Fix: Cache management now disabled by default based on user feedback - can still be manually enabled if needed (issues #1868, #1840)</li>
+					<li>Fix: Screen sharing selector X button no longer shows TypeError when canceling - graceful error handling implemented (issue #1870)</li>
+					<li>Fix: Preview window now closes automatically when meeting ends - detects when stop sharing button disappears from DOM (issue #1870)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.0" date="2025-10-19">
 			<description>
 				<ul>
