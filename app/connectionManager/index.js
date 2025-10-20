@@ -3,6 +3,11 @@ const { ipcMain, net, powerMonitor } = require("electron");
 let _ConnectionManager_window = new WeakMap();
 let _ConnectionManager_config = new WeakMap();
 let _ConnectionManager_currentUrl = new WeakMap();
+let _ConnectionManager_isRefreshing = new WeakMap();
+let _ConnectionManager_refreshTimeout = new WeakMap();
+let _ConnectionManager_boundRefresh = new WeakMap();
+let _ConnectionManager_boundDidFailLoad = new WeakMap();
+
 class ConnectionManager {
   get window() {
     return _ConnectionManager_window.get(this);
@@ -20,13 +25,60 @@ class ConnectionManager {
     _ConnectionManager_window.set(this, options.window);
     _ConnectionManager_config.set(this, options.config);
     _ConnectionManager_currentUrl.set(this, url || this.config.url);
-    ipcMain.on("offline-retry", this.refresh);
-    powerMonitor.on("resume", this.refresh);
-    this.window.webContents.on(
-      "did-fail-load",
-      assignOnDidFailLoadEventHandler(this)
-    );
+    _ConnectionManager_isRefreshing.set(this, false);
+    _ConnectionManager_refreshTimeout.set(this, null);
+
+    // Cleanup existing listeners before adding new ones
+    this.cleanup();
+
+    // Bind methods to preserve 'this' context
+    const boundRefresh = this.debouncedRefresh.bind(this);
+    const boundDidFailLoad = assignOnDidFailLoadEventHandler(this);
+    _ConnectionManager_boundRefresh.set(this, boundRefresh);
+    _ConnectionManager_boundDidFailLoad.set(this, boundDidFailLoad);
+
+    ipcMain.on("offline-retry", boundRefresh);
+    powerMonitor.on("resume", boundRefresh);
+    this.window.webContents.on("did-fail-load", boundDidFailLoad);
+
     this.refresh();
+  }
+
+  cleanup() {
+    const boundRefresh = _ConnectionManager_boundRefresh.get(this);
+    const boundDidFailLoad = _ConnectionManager_boundDidFailLoad.get(this);
+
+    if (boundRefresh) {
+      ipcMain.removeListener("offline-retry", boundRefresh);
+      powerMonitor.removeListener("resume", boundRefresh);
+    }
+
+    if (boundDidFailLoad && this.window?.webContents) {
+      this.window.webContents.removeListener("did-fail-load", boundDidFailLoad);
+    }
+
+    // Clear any pending debounce timeout
+    const timeout = _ConnectionManager_refreshTimeout.get(this);
+    if (timeout) {
+      clearTimeout(timeout);
+      _ConnectionManager_refreshTimeout.set(this, null);
+    }
+  }
+
+  debouncedRefresh() {
+    // Clear any existing timeout
+    const existingTimeout = _ConnectionManager_refreshTimeout.get(this);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set a new timeout to debounce rapid network change events
+    const timeout = setTimeout(() => {
+      _ConnectionManager_refreshTimeout.set(this, null);
+      this.refresh();
+    }, 1000); // Wait 1 second before actually refreshing
+
+    _ConnectionManager_refreshTimeout.set(this, timeout);
   }
 
   async refresh() {
@@ -34,24 +86,38 @@ class ConnectionManager {
       console.warn("Window is not available. Cannot refresh.");
       return;
     }
-    const currentUrl = this.window?.webContents?.getURL() || "";
-    const hasUrl = currentUrl?.startsWith("https://");
-    this.window?.setTitle("Waiting for network...");
-    console.debug("Waiting for network...");
-    const connected = await this.isOnline();
-    if (connected) {
-      if (hasUrl) {
-        console.debug("Reloading current page...");
-        this.window.reload();
+
+    // Prevent concurrent refresh operations
+    const isRefreshing = _ConnectionManager_isRefreshing.get(this);
+    if (isRefreshing) {
+      console.debug("Refresh already in progress, skipping...");
+      return;
+    }
+
+    try {
+      _ConnectionManager_isRefreshing.set(this, true);
+
+      const currentUrl = this.window?.webContents?.getURL() || "";
+      const hasUrl = currentUrl?.startsWith("https://");
+      this.window?.setTitle("Waiting for network...");
+      console.debug("Waiting for network...");
+      const connected = await this.isOnline();
+      if (connected) {
+        if (hasUrl) {
+          console.debug("Reloading current page...");
+          this.window.reload();
+        } else {
+          console.debug("Loading initial URL...");
+          this.window.loadURL(this.currentUrl, {
+            userAgent: this.config.chromeUserAgent,
+          });
+        }
       } else {
-        console.debug("Loading initial URL...");
-        this.window.loadURL(this.currentUrl, {
-          userAgent: this.config.chromeUserAgent,
-        });
+        this.window.setTitle("No internet connection");
+        console.error("No internet connection");
       }
-    } else {
-      this.window.setTitle("No internet connection");
-      console.error("No internet connection");
+    } finally {
+      _ConnectionManager_isRefreshing.set(this, false);
     }
   }
 
@@ -131,7 +197,8 @@ function assignOnDidFailLoadEventHandler(cm) {
       description === "ERR_INTERNET_DISCONNECTED" ||
       description === "ERR_NETWORK_CHANGED"
     ) {
-      cm.refresh();
+      console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
+      cm.debouncedRefresh();
     }
   };
 }
