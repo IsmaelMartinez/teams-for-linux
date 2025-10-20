@@ -22,14 +22,15 @@ class ConnectionManager {
   }
 
   start(url, options) {
+    // Cleanup existing listeners before updating properties
+    // This ensures we clean up the old window's listeners, not the new one's
+    this.cleanup();
+
     _ConnectionManager_window.set(this, options.window);
     _ConnectionManager_config.set(this, options.config);
     _ConnectionManager_currentUrl.set(this, url || this.config.url);
     _ConnectionManager_isRefreshing.set(this, false);
     _ConnectionManager_refreshTimeout.set(this, null);
-
-    // Cleanup existing listeners before adding new ones
-    this.cleanup();
 
     // Bind methods to preserve 'this' context
     const boundRefresh = this.debouncedRefresh.bind(this);
