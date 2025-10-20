@@ -13,7 +13,11 @@ test('app launches and redirects to Microsoft login', async () => {
     userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-'));
 
     electronApp = await electron.launch({
-      args: ['./app/index.js'],
+      args: [
+        './app/index.js',
+        // Disable sandbox in CI environments (required for GitHub Actions)
+        ...(process.env.CI ? ['--no-sandbox'] : [])
+      ],
       env: {
         ...process.env,
         E2E_USER_DATA_DIR: userDataDir
