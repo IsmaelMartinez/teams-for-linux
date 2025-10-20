@@ -14,6 +14,14 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.1" date="2025-01-20">
+			<description>
+				<ul>
+					<li>Feature: Add automated E2E testing infrastructure using Playwright - smoke tests validate app launch and Microsoft login redirect</li>
+					<li>CI/CD: Integrate E2E tests into GitHub Actions workflow - all builds now depend on tests passing</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.0" date="2025-10-19">
 			<description>
 				<ul>
