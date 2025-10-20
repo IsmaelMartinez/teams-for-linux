@@ -55,11 +55,17 @@ test('app launches and redirects to Microsoft login', async () => {
 
     // Since we're starting with a clean state, the app will redirect to login
     // Wait for the redirect to Microsoft login page
-    await mainWindow.waitForURL(/login\.microsoftonline\.com/, { timeout: 30000 });
+    await mainWindow.waitForURL(url => {
+      try {
+        return new URL(url).hostname === 'login.microsoftonline.com';
+      } catch {
+        return false;
+      }
+    }, { timeout: 30000 });
 
     // Verify we reached the login page
     const url = mainWindow.url();
-    expect(url).toContain('login.microsoftonline.com');
+    expect(new URL(url).hostname).toBe('login.microsoftonline.com');
 
     // Wait for the login page to be fully loaded
     await mainWindow.waitForLoadState('networkidle', { timeout: 30000 });
