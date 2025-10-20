@@ -26,10 +26,10 @@ test('app launches and redirects to Microsoft login', async () => {
     });
 
     // Wait for windows to be created
-    const firstWindow = await electronApp.firstWindow({ timeout: 30000 });
+    await electronApp.firstWindow({ timeout: 30000 });
 
     // Give the app a moment to create all windows and start loading
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Get all windows and find the main Teams window
     const windows = electronApp.windows();
@@ -66,8 +66,9 @@ test('app launches and redirects to Microsoft login', async () => {
         electronApp.process().kill('SIGTERM');
         // Wait a moment for the process to fully terminate
         await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (e) {
-        // Ignore errors during cleanup
+      } catch (error) {
+        // Process may have already exited, which is fine
+        console.debug('Process cleanup:', error.message);
       }
     }
 
