@@ -38,9 +38,14 @@ test('app launches and redirects to Microsoft login', async () => {
     // Find the main window (not the toast window)
     const mainWindow = windows.find(w => {
       const url = w.url();
-      return url.includes('teams.microsoft.com') ||
-             url.includes('teams.live.com') ||
-             url.includes('login.microsoftonline.com');
+      try {
+        const hostname = new URL(url).hostname;
+        return hostname === 'teams.microsoft.com' ||
+               hostname === 'teams.live.com' ||
+               hostname === 'login.microsoftonline.com';
+      } catch (e) {
+        return false;
+      }
     });
 
     expect(mainWindow).toBeTruthy();
