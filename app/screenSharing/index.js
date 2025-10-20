@@ -1,109 +1,118 @@
 const { ipcMain, WebContentsView } = require("electron");
 const path = require("path");
 
-let _StreamSelector_parent = new WeakMap();
-let _StreamSelector_window = new WeakMap();
-let _StreamSelector_selectedSource = new WeakMap();
-let _StreamSelector_callback = new WeakMap();
 class StreamSelector {
+  #parent;
+  #view = null;
+  #callback = null;
+  #isClosing = false;
+  #sourceHandler = null;
+  #closeHandler = null;
+  #selectedSource = null;
+  #resizeHandler = null;
+
   /**
    * @param {BrowserWindow} parent
    */
   constructor(parent) {
-    _StreamSelector_parent.set(this, parent);
-    _StreamSelector_window.set(this, null);
-    _StreamSelector_selectedSource.set(this, null);
-    _StreamSelector_callback.set(this, null);
+    this.#parent = parent;
   }
 
   /**
-   * @type {BrowserWindow}
+   * Display the stream selector view
+   * @param {(source: object|null) => void} callback - Called with selected source or null if cancelled
    */
-  get parent() {
-    return _StreamSelector_parent.get(this);
-  }
-
-  /**
-   * @type {WebContentsView}
-   */
-  get view() {
-    return _StreamSelector_window.get(this);
-  }
-
-  set view(value) {
-    _StreamSelector_window.set(this, value);
-  }
-
-  get selectedSource() {
-    return _StreamSelector_selectedSource.get(this);
-  }
-
-  set selectedSource(value) {
-    _StreamSelector_selectedSource.set(this, value);
-  }
-
-  get callback() {
-    return _StreamSelector_callback.get(this);
-  }
-
-  set callback(value) {
-    if (typeof value == "function") {
-      _StreamSelector_callback.set(this, value);
-    }
-  }
-
   show(callback) {
-    let self = this;
-    self.callback = callback;
-    self.view = new WebContentsView({
+    // Guard: prevent opening multiple views
+    if (this.#view) {
+      console.warn('[StreamSelector] View already open, ignoring duplicate show() call');
+      return;
+    }
+
+    this.#callback = callback;
+    this.#isClosing = false;
+    this.#selectedSource = null;
+
+    this.#view = new WebContentsView({
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
       },
     });
 
-    self.view.webContents.loadFile(path.join(__dirname, "index.html"));
-    self.parent.contentView.addChildView(self.view);
+    this.#view.webContents.loadFile(path.join(__dirname, "index.html"));
+    this.#parent.contentView.addChildView(this.#view);
 
-    let _resize = () => {
-      resizeView(self);
+    this.#resizeHandler = () => {
+      this.#resizeView();
     };
-    resizeView(self);
+    this.#resizeView();
 
-    let _close = (_event, source) => {
-      //'screen:x:0' -> whole screen
-      //'window:x:0' -> small window
-      // show captured source in a new view? Maybe reuse the same view, but make it smaller? probably best a new "file"/view
-      closeView({ view: self, _resize, _close, source });
+    this.#sourceHandler = (_event, source) => {
+      // Store source immediately to avoid race condition with close
+      this.#selectedSource = source;
+      this.#close();
     };
 
-    this.parent.on("resize", _resize);
-    ipcMain.once("selected-source", _close);
-    ipcMain.once("close-view", _close);
-  }
-}
+    this.#closeHandler = () => {
+      this.#close();
+    };
 
-function closeView(properties) {
-  properties.view.parent.setBrowserView(null);
-  properties.view.view.webContents.destroy();
-  properties.view.view = null;
-  properties.view.parent.removeListener("resize", properties._resize);
-  ipcMain.removeListener("selected-source", properties._close);
-  ipcMain.removeListener("close-view", properties._close);
-  if (properties.view.callback) {
-    properties.view.callback(properties.source);
+    this.#parent.on("resize", this.#resizeHandler);
+    ipcMain.once("selected-source", this.#sourceHandler);
+    ipcMain.once("close-view", this.#closeHandler);
   }
-}
 
-function resizeView(view) {
-  setTimeout(() => {
-    const pbounds = view.parent.getBounds();
-    view.view.setBounds({
-      x: 0,
-      y: pbounds.height - 180,
-      width: pbounds.width,
-      height: 180,
-    });
-  }, 0);
+  #resizeView() {
+    if (!this.#view) return;
+
+    setTimeout(() => {
+      if (!this.#view) return;
+      const pbounds = this.#parent.getBounds();
+      this.#view.setBounds({
+        x: 0,
+        y: pbounds.height - 180,
+        width: pbounds.width,
+        height: 180,
+      });
+    }, 0);
+  }
+
+  #close() {
+    // Guard against double-execution
+    if (this.#isClosing) return;
+    this.#isClosing = true;
+
+    // Cleanup resize listener
+    if (this.#resizeHandler) {
+      this.#parent.removeListener("resize", this.#resizeHandler);
+      this.#resizeHandler = null;
+    }
+
+    // Cleanup IPC listeners - remove only this instance's handlers
+    if (this.#sourceHandler) {
+      ipcMain.removeListener("selected-source", this.#sourceHandler);
+      this.#sourceHandler = null;
+    }
+    if (this.#closeHandler) {
+      ipcMain.removeListener("close-view", this.#closeHandler);
+      this.#closeHandler = null;
+    }
+
+    // Execute callback with stored source (prioritizes user selection over cancellation)
+    if (this.#callback) {
+      this.#callback(this.#selectedSource);
+      this.#callback = null;
+    }
+
+    // Cleanup view
+    if (this.#view) {
+      this.#parent.contentView.removeChildView(this.#view);
+      this.#view.webContents.destroy();
+      this.#view = null;
+    }
+
+    this.#selectedSource = null;
+  }
 }
 
 module.exports = { StreamSelector };

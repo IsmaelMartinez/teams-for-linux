@@ -26,7 +26,6 @@ const config: Config = {
   projectName: 'teams-for-linux', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -60,16 +59,16 @@ const config: Config = {
     [
       require.resolve('@easyops-cn/docusaurus-search-local'),
       {
-        // Whether to index docs pages
-        indexDocs: true,
         // Whether to index blog pages (we have blog disabled)
         indexBlog: false,
-        // Language
-        language: ['en'],
         // Enable highlighting of search terms in results
         highlightSearchTermsOnTargetPage: true,
         // Explode search terms for better matching
         explicitSearchResultPath: true,
+        // Route base path must match docs route
+        docsRouteBasePath: '/',
+        // Hash search index for better caching
+        hashed: true,
       },
     ],
   ],
@@ -77,6 +76,9 @@ const config: Config = {
   // Enable Mermaid support
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
   },
 
   themes: ['@docusaurus/theme-mermaid'],

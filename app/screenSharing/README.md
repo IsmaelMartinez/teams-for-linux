@@ -129,22 +129,31 @@ Source types include:
 
 ### IPC Communication Pattern
 
+The stream selector uses secure IPC communication via contextBridge:
+
 ```mermaid
 flowchart LR
     subgraph "Renderer Process"
-        A[User Interaction] --> B[Preload Script]
-        B --> C[contextBridge API]
+        A[User Interaction] --> B[browser.js]
+        B --> C[window.electronAPI]
+        C --> D[contextBridge]
     end
-    
+
     subgraph "Main Process"
-        C --> D[IPC Handler]
-        D --> E[StreamSelector Class]
-        E --> F[Callback Execution]
+        D --> E[ipcMain.once Handler]
+        E --> F[StreamSelector #close]
+        F --> G[Callback Execution]
     end
-    
-    style C fill:#e8f5e8
-    style E fill:#e3f2fd
+
+    style D fill:#e8f5e8
+    style F fill:#e3f2fd
 ```
+
+**Key IPC Channels:**
+- `selected-source` - User selected a screen/window source
+- `close-view` - User cancelled or closed the selector
+
+Both use `ipcMain.once()` pattern for single-use event handlers with automatic cleanup.
 
 ## Integration with Screen Sharing
 

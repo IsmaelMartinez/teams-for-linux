@@ -12,7 +12,13 @@ slug: /
 ✅ **System tray integration**  
 ✅ **Custom backgrounds & themes**  
 ✅ **Screen sharing support**  
-✅ **Multiple account profiles**
+✅ **Multiple account profiles**  
+✅ **Certificate management**  
+✅ **Proxy server support**  
+✅ **Microsoft Intune SSO integration**  
+✅ **Secure token storage**  
+✅ **Protocol handler support**  
+✅ **Advanced logging & debugging**
 
 :::info Project Status
 This is an independent project, not affiliated with Microsoft. Some features are limited by the Teams web app capabilities.
@@ -24,6 +30,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[Installation Guide](installation.md)** - Package repositories, distribution packages, and manual installation
 - **[Configuration Guide](configuration.md)** - Complete configuration options and settings
 - **[Multiple Instances](multiple-instances.md)** - Running separate profiles (work/personal)
+- **[Intune SSO Integration](intune-sso.md)** - Microsoft Intune Single Sign-On for enterprise environments
 
 ### Features
 - **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
@@ -31,19 +38,21 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[Certificate Management](certificate.md)** - Custom CA certificate handling for corporate environments
 
 ## Developer Documentation
-- **[Contributing Guide](contributing.md)** - Development setup, code standards, and contribution guidelines
-- **[IPC API Reference](ipc-api.md)** - Inter-process communication channels and developer integration
+- **[Contributing Guide](development/contributing.md)** - Development setup, code standards, and contribution guidelines
+- **[IPC API Reference](development/ipc-api.md)** - Inter-process communication channels and developer integration
 - **[Development Guide](development/README.md)** - Architecture patterns, security guidelines, and development practices
-- **[Token Cache Architecture](development/token-cache-architecture.md)** - Authentication persistence and secure storage implementation  
+- **[Token Cache Architecture](development/token-cache-architecture.md)** - Authentication persistence and secure storage implementation
 - **[Security Architecture](development/security-architecture.md)** - Security model, threat analysis, and compensating controls
-- **[Logging Configuration](log-config.md)** - Customizing application logging and debugging
-- **[Release Automation](release-info.md)** - Release process and automation for maintainers
+- **[Logging Configuration](development/log-config.md)** - Customizing application logging and debugging
+- **[Release Automation](development/release-info.md)** - Release process and automation for maintainers
 
 ## Architecture Decisions
-- **[ADR-001: Token Cache Secure Storage](adr/token-cache-secure-storage.md)** - Decision to implement OS-level secure storage for authentication tokens
+- **[ADR-001: DesktopCapturer Source ID Format](development/adr/001-desktopcapturer-source-id-format.md)** - Screen sharing source identification
+- **[ADR-002: Token Cache Secure Storage](development/adr/002-token-cache-secure-storage.md)** - OS-level secure storage for authentication tokens
+- **[ADR-003: Token Refresh Implementation](development/adr/003-token-refresh-implementation.md)** - Token refresh strategy and implementation
 
 ## Research & Analysis
-- **[AI Research Documentation](ai-research/index.md)** - Strategic analysis and research documents
+- **[Research Documentation](development/research/README.md)** - Strategic analysis and research documents
 
 ## Architecture Overview
 
@@ -129,6 +138,6 @@ graph TD
 
 - **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
 - **[Installation Guide](installation.md)** - Setup and installation help
-- **[Contributing Guide](contributing.md)** - How to contribute to the project
+- **[Contributing Guide](development/contributing.md)** - How to contribute to the project
 - 💬 **Chat**: [Matrix room](https://matrix.to/#/#teams-for-linux_community:gitter.im)
 - 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)
