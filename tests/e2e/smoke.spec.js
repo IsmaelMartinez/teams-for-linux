@@ -29,7 +29,7 @@ test('app launches and redirects to Microsoft login', async () => {
     await electronApp.firstWindow({ timeout: 30000 });
 
     // Give the app a moment to create all windows and start loading
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 4000));
 
     // Get all windows and find the main Teams window
     const windows = electronApp.windows();
@@ -43,7 +43,9 @@ test('app launches and redirects to Microsoft login', async () => {
         return hostname === 'teams.microsoft.com' ||
                hostname === 'teams.live.com' ||
                hostname === 'login.microsoftonline.com';
-      } catch (e) {
+      } catch (error) {
+        // Invalid URL format, skip this window
+        console.debug('Invalid URL in window:', url, error.message);
         return false;
       }
     });
