@@ -153,7 +153,7 @@ This ADR establishes the foundation for tasks 3.0-6.0 in `tasks-prd-configurable
 ---
 
 **References:**
-- ADR-001: Token Cache Secure Storage Implementation  
+- ADR-002: Token Cache Secure Storage Implementation  
 - POC Implementation: `app/browser/tools/reactHandler.js` (triggerTokenRefresh method)
 - Configuration Patterns: `app/appConfiguration/index.js`
 - Task List: `tasks/tasks-prd-configurable-token-refresh.md`
