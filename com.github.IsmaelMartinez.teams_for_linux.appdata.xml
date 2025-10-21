@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.3" date="2025-10-20">
+			<description>
+				<ul>
+					<li>Fix: Prevent infinite loop on rapid network changes from Docker - resolves critical system freeze issue caused by Docker container restarts</li>
+					<li>Fix: Implement debouncing mechanism (1s delay) for network refresh operations to handle rapid network change events gracefully</li>
+					<li>Fix: Add concurrent refresh prevention flag to avoid overlapping network test operations that could saturate system resources</li>
+					<li>Fix: Proper event listener cleanup to prevent memory leaks when ConnectionManager is restarted</li>
+					<li>Enhancement: Add start:dev npm script with --no-sandbox flag for easier development testing</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.2" date="2025-01-21">
 			<description>
 				<ul>
