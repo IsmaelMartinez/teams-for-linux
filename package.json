@@ -129,6 +129,9 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core24",
+      "stagePackages": [
+        "libpcre3"
+      ],
       "environment": {
         "DISABLE_WAYLAND": 1
       },
