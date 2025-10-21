@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.3" date="2025-10-21">
+			<description>
+				<ul>
+					<li>Fix: Revert to core22 and Electron 37.7.0 for snap compatibility - electron-builder doesn't support core24 yet (issue #8548)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.2" date="2025-01-21">
 			<description>
 				<ul>
