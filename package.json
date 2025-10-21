@@ -24,6 +24,7 @@
     "test:e2e": "playwright test",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
+    "start:dev": "electron ./app --trace-warnings --no-sandbox",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
