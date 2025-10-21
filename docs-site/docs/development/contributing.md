@@ -181,6 +181,84 @@ npm run build
 
 ## Testing
 
+### End-to-End (E2E) Tests
+
+Teams for Linux uses Playwright for automated end-to-end testing. These tests ensure the application launches correctly and validates core functionality.
+
+#### Running E2E Tests
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run tests in headed mode (visible browser)
+npx playwright test --headed
+
+# Run tests in debug mode
+npx playwright test --debug
+```
+
+:::tip Clean State Testing
+Each E2E test runs with a clean slate using a temporary user data directory. This ensures tests don't interfere with each other and are reproducible. The test harness uses the `E2E_USER_DATA_DIR` environment variable to provide isolated storage for each test run.
+:::
+
+#### What E2E Tests Validate
+
+Current E2E test coverage includes:
+
+- **Application Launch**: Verifies the app starts successfully
+- **Window Creation**: Ensures main window is created
+- **Microsoft Login Redirect**: Validates initial redirect to Microsoft authentication
+
+#### Writing New E2E Tests
+
+When contributing new features, consider adding E2E tests. Tests are located in `tests/e2e/` and follow Playwright conventions.
+
+Example test structure:
+
+```javascript
+import { test, expect } from '@playwright/test';
+import { _electron as electron } from 'playwright';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+test('your feature test', async () => {
+  let electronApp;
+  let userDataDir;
+
+  try {
+    // Create clean state
+    userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-'));
+
+    electronApp = await electron.launch({
+      args: ['./app/index.js'],
+      env: {
+        ...process.env,
+        E2E_USER_DATA_DIR: userDataDir
+      }
+    });
+
+    const mainWindow = await electronApp.firstWindow();
+
+    // Your test logic here
+
+  } finally {
+    // Cleanup
+    if (electronApp) {
+      electronApp.process().kill('SIGTERM');
+    }
+    if (userDataDir) {
+      rmSync(userDataDir, { recursive: true, force: true });
+    }
+  }
+});
+```
+
+:::info Testing Strategy
+For detailed information about the testing strategy, architecture decisions, and advanced testing patterns, see the [Automated Testing Strategy](research/automated-testing-strategy.md) documentation.
+:::
+
 ### Manual Testing
 
 ```bash
@@ -209,6 +287,7 @@ teams-for-linux
 
 - [ ] Code follows style guidelines
 - [ ] `npm run lint` passes without errors
+- [ ] `npm run test:e2e` passes (E2E tests)
 - [ ] Manual testing completed
 - [ ] Documentation updated if needed
 - [ ] Commit messages are descriptive

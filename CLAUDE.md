@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Development:**
 - `npm start` - Run application in development mode with trace warnings
 - `npm run lint` - Run ESLint validation (mandatory before commits)
+- `npm run test:e2e` - Run end-to-end tests with Playwright
 
 **Building:**
 - `npm run pack` - Development build without packaging
@@ -70,9 +71,25 @@ Global state is managed through specific modules:
 
 ## Testing and Quality
 
-The project currently lacks comprehensive test coverage. When contributing:
+### Automated Testing
+
+The project uses Playwright for end-to-end testing:
+- **Framework**: Playwright with Electron support
+- **Test Location**: `tests/e2e/`
+- **Run Tests**: `npm run test:e2e`
+- **Clean State**: Tests use temporary userData directories for isolation
+
+**E2E Testing Patterns:**
+- Each test creates a unique temp directory via `E2E_USER_DATA_DIR`
+- Tests start with completely clean state (no cookies, cache, storage)
+- Validates complete app launch flow and Microsoft login redirect
+- See `docs-site/docs/development/research/automated-testing-strategy.md` for full strategy
+
+### Quality Checks
+
+When contributing:
 - Run `npm run lint` before commits (ESLint with custom config)
-- Consider adding tests using a framework like Jest
+- Run `npm run test:e2e` to verify E2E tests pass
 - Ensure cross-platform compatibility (Linux primary, Windows/macOS supported)
 
 ## Documentation Deployment

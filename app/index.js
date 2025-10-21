@@ -16,6 +16,11 @@ const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+// Support for E2E testing: use temporary userData directory for clean state
+if (process.env.E2E_USER_DATA_DIR) {
+  app.setPath("userData", process.env.E2E_USER_DATA_DIR);
+}
+
 // This must be executed before loading the config file.
 addCommandLineSwitchesBeforeConfigLoad();
 
