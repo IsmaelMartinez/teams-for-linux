@@ -129,6 +129,11 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core24",
+      "platforms": {
+        "amd64": {},
+        "arm64": {},
+        "armhf": {}
+      },
       "environment": {
         "DISABLE_WAYLAND": 1
       },
