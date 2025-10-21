@@ -58,7 +58,7 @@
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.38.0",
     "@playwright/test": "^1.56.1",
-    "electron": "^38.3.0",
+    "electron": "^37.7.0",
     "electron-builder": "^26.1.0",
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
@@ -128,12 +128,12 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
-      "base": "core24",
-      "platforms": {
-        "amd64": {},
-        "arm64": {},
-        "armhf": {}
-      },
+      "base": "core22",
+      "architectures": [
+        "amd64",
+        "arm64",
+        "armhf"
+      ],
       "environment": {
         "DISABLE_WAYLAND": 1
       },
