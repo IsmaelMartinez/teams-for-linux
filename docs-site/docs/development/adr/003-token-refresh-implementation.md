@@ -7,11 +7,11 @@ id: 003-token-refresh-implementation
 **Status**: Accepted  
 **Date**: 2025-09-22  
 **Authors**: Development Team  
-**Related**: ADR-001 (Token Cache Secure Storage Implementation)
+**Related**: ADR-002 (Token Cache Secure Storage Implementation)
 
 ## Context
 
-Following the successful implementation of secure token cache storage (ADR-001), we needed to develop a mechanism for proactive token refresh to prevent authentication interruptions. Through proof-of-concept development, we identified the working parameters and implementation approach for forcing Microsoft Teams authentication token refresh.
+Following the successful implementation of secure token cache storage (ADR-002), we needed to develop a mechanism for proactive token refresh to prevent authentication interruptions. Through proof-of-concept development, we identified the working parameters and implementation approach for forcing Microsoft Teams authentication token refresh.
 
 ## Problem
 
@@ -19,7 +19,7 @@ Microsoft Teams tokens have a 24-hour lifespan and are typically refreshed by th
 
 1. **Proactively refresh tokens** at configurable intervals (not just before expiry)
 2. **Force fresh token retrieval** (bypass cached tokens when needed)
-3. **Integrate with secure storage** from ADR-001 implementation
+3. **Integrate with secure storage** from ADR-002 implementation
 4. **Avoid authentication interruptions** during extended usage sessions
 
 ## Investigation Findings
@@ -153,7 +153,7 @@ This ADR establishes the foundation for tasks 3.0-6.0 in `tasks-prd-configurable
 ---
 
 **References:**
-- ADR-001: Token Cache Secure Storage Implementation  
+- ADR-002: Token Cache Secure Storage Implementation  
 - POC Implementation: `app/browser/tools/reactHandler.js` (triggerTokenRefresh method)
 - Configuration Patterns: `app/appConfiguration/index.js`
 - Task List: `tasks/tasks-prd-configurable-token-refresh.md`
