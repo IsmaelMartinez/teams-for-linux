@@ -46,6 +46,8 @@ flowchart TD
 
 ### Screen Sharing Thumbnail Settings
 
+To find your config file [see the “Configuration” section](configuration#configuration-locations)
+
 ```json
 {
   "screenSharingThumbnail": {
