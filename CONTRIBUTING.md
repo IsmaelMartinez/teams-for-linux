@@ -69,7 +69,7 @@ Documentation contributions involve:
 3. **Update navigation** in `docs-site/sidebars.ts` if adding new pages
 4. **Submit pull requests** which trigger automated builds and deployments
 
-See the [Documentation Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/contributing#documentation) for detailed instructions.
+See the [Documentation Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing) for detailed instructions.
 
 ## Release Process
 
