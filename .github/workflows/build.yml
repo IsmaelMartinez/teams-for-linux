@@ -10,7 +10,37 @@ defaults:
     shell: bash
 
 jobs:
+  e2e_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npm run test:e2e
+
+      - name: Upload Playwright test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
+
   linux_x64:
+    needs: e2e_tests
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +63,7 @@ jobs:
         run: npm run dist:linux:x64 -- --publish always
 
   linux_arm64:
+    needs: e2e_tests
     runs-on: ubuntu-latest
 
     steps:
@@ -55,6 +86,7 @@ jobs:
         run: npm run dist:linux:arm64 -- --publish always
 
   linux_arm:
+    needs: e2e_tests
     runs-on: ubuntu-latest
 
     steps:
@@ -77,6 +109,7 @@ jobs:
         run: npm run dist:linux:arm -- --publish always
 
   dmg:
+    needs: e2e_tests
     runs-on: macos-latest
 
     steps:
@@ -99,6 +132,7 @@ jobs:
         run: npm run dist:mac:x64 -- --publish always
 
   exe:
+    needs: e2e_tests
     runs-on: windows-latest
 
     steps:

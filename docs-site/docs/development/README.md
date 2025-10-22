@@ -20,6 +20,7 @@ When working on Teams for Linux:
 3. **Review DOM access investigation** ([research](research/dom-access-investigation.md)) for context on current implementation choices
 4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
+6. **Run E2E tests** before submitting PRs with `npm run test:e2e`
 
 ### Key Development Patterns
 
@@ -49,6 +50,31 @@ Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) fo
 - [IPC API](ipc-api.md) - Inter-process communication reference
 - [Contributing Guidelines](contributing.md) - General contribution guidelines
 - [Architecture Decision Records](#adr-index) - Technical decisions and rationale
+
+### Testing
+
+Teams for Linux uses automated end-to-end testing with Playwright to ensure application stability and prevent regressions.
+
+#### Running Tests
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run in debug mode
+npx playwright test --debug
+```
+
+#### Testing Strategy
+
+The project uses a multi-layered testing approach:
+- **E2E Tests (Playwright)**: Full application testing with real Electron runtime
+- **Clean State Testing**: Each test runs with isolated temporary userData directory
+- **Microsoft Authentication**: Tests validate redirect to login without requiring credentials
+
+For comprehensive testing documentation, see:
+- [Contributing Guide - Testing Section](contributing.md#testing)
+- [Automated Testing Strategy](research/automated-testing-strategy.md)
 
 ### ADR Index
 - [ADR-001: DesktopCapturer Source ID Format](adr/001-desktopcapturer-source-id-format.md) - Decision on screen sharing source identification format
