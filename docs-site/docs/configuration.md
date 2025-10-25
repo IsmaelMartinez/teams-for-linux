@@ -254,7 +254,7 @@ This will execute the following on an incoming call:
 ### Cache Management
 
 > [!NOTE]
-> As of version 2.6.1, the Cache Manager is **disabled by default**. While it was designed to prevent daily logout issues caused by cache overflow (issue #1756), user feedback (issues #1868, #1840) indicated it caused more problems than it solved for most users. You can enable it if you experience cache-related authentication issues.
+> As of version 2.6.4, the Cache Manager is **disabled by default**. While it was designed to prevent daily logout issues caused by cache overflow (issue #1756), user feedback (issues #1868, #1840 and others) indicated it caused more problems than it solved for most users. You can enable it if you experience cache-related authentication issues.
 
 The cache management feature automatically cleans cache files when they grow too large and cause token corruption:
 
