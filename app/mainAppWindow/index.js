@@ -202,14 +202,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
         if (source) {
           handleScreenSourceSelection(source, callback);
         } else {
-          // User canceled - call callback synchronously in next tick to allow reopening
-          // Using setImmediate ensures Electron can handle the next request
+          // User canceled - use setImmediate and try-catch to allow retry
           setImmediate(() => {
             try {
-              // This should fail but allow the handler to be called again
               callback({});
             } catch {
-              // Ignore the error - this is expected when canceling
               console.debug("[SCREEN_SHARE] User canceled screen selection");
             }
           });
