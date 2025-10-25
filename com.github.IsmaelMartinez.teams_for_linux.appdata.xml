@@ -20,6 +20,7 @@
 					<li>Fix: Cache management now disabled by default based on user feedback - can still be manually enabled if needed (issues #1868, #1840)</li>
 					<li>Fix: Screen sharing selector X button no longer shows TypeError when canceling - graceful error handling implemented (issue #1889)</li>
 					<li>Fix: Preview window now closes automatically when meeting ends - detects when stop sharing button disappears from DOM (issue #1870)</li>
+					<li>Docs: Add Recall.ai sponsorship section to README</li>
 				</ul>
 			</description>
 		</release>
