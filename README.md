@@ -16,8 +16,15 @@
 ✅ **Screen sharing support**  
 ✅ **Multiple account profiles**  
 
-> [!NOTE]  
+> [!NOTE]
 > This is an independent project, not affiliated with Microsoft. Some features are limited by the Teams web app.
+
+## Sponsor
+
+### Recall.ai — API for Meeting Recording and Transcription
+> If you're looking for a meeting recording API, consider checking out [Recall.ai](https://www.recall.ai/product/microsoft-teams-recording-api?utm_source=github&utm_medium=sponsorship&utm_campaign=ismaelmartinez-teams-for-linux), an API that records and transcribes Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
+
+_This sponsorship helps support the ongoing development of teams-for-linux._
 
 ## Installation
 
