@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://ismaelmartinez.github.io; script-src 'self' 'unsafe-inline' https://ismaelmartinez.github.io; style-src 'self' 'unsafe-inline' https://ismaelmartinez.github.io; img-src 'self' data: https:; font-src 'self' data: https:;">
+    <title>Teams for Linux - Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #docs-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #666;
+            text-align: center;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <h2>Loading Documentation...</h2>
+        <p>Please wait while we load the Teams for Linux documentation.</p>
+    </div>
+    <iframe
+        id="docs-frame"
+        src="https://ismaelmartinez.github.io/teams-for-linux/"
+        title="Teams for Linux Documentation"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+    ></iframe>
+
+    <script>
+        const iframe = document.getElementById('docs-frame');
+        const loading = document.getElementById('loading');
+
+        iframe.addEventListener('load', () => {
+            loading.classList.add('hidden');
+        });
+
+        iframe.addEventListener('error', () => {
+            loading.innerHTML = '<h2>Error Loading Documentation</h2><p>Unable to load the documentation. Please check your internet connection.</p>';
+        });
+    </script>
+</body>
+</html>
