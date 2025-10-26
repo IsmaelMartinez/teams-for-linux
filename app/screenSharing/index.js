@@ -112,6 +112,9 @@ class StreamSelector {
     }
 
     this.#selectedSource = null;
+
+    // Reset closing flag to allow reopening
+    this.#isClosing = false;
   }
 }
 
