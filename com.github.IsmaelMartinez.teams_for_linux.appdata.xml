@@ -14,6 +14,17 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.5" date="2025-10-26">
+			<description>
+				<ul>
+					<li>Update: Electron upgraded to 37.7.1 for latest security patches and bug fixes</li>
+					<li>Update: Dependencies updated to latest compatible versions</li>
+					<li>CI/CD: Parallelize E2E tests with builds for ~40% faster CI/CD pipeline execution</li>
+					<li>Security: Pin all GitHub Actions to commit SHAs to prevent supply chain attacks</li>
+					<li>Maintenance: Update actions to latest versions (checkout v4.3.0, setup-node v4.4.0, upload-artifact v4.6.2)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.4" date="2025-10-22">
 			<description>
 				<ul>
