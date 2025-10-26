@@ -22,6 +22,7 @@
 					<li>CI/CD: Parallelize E2E tests with builds for ~40% faster CI/CD pipeline execution</li>
 					<li>Security: Pin all GitHub Actions to commit SHAs to prevent supply chain attacks</li>
 					<li>Maintenance: Update actions to latest versions (checkout v4.3.0, setup-node v4.4.0, upload-artifact v4.6.2)</li>
+					<li>Code Cleanup: Removed ~70 lines of debug/test code from reactHandler.js - removed React version detection, globalThis debug exposure, and verbose logging</li>
 				</ul>
 			</description>
 		</release>
