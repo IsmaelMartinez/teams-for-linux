@@ -14,6 +14,16 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.5" date="2025-10-26">
+			<description>
+				<ul>
+					<li>Update: Electron upgraded to 37.7.1 for latest security patches and bug fixes</li>
+					<li>CI/CD: Parallelize E2E tests with builds for ~40% faster CI/CD pipeline execution</li>
+					<li>Security: Pin all GitHub Actions to commit SHAs to prevent supply chain attacks and update actions to latest versions</li>
+					<li>Code Cleanup: Removed ~70 lines of debug/test code from reactHandler.js - removed React version detection, globalThis debug exposure, and verbose logging</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.4" date="2025-10-22">
 			<description>
 				<ul>
