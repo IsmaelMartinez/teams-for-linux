@@ -3,7 +3,7 @@ const TokenCache = require('./tokenCache');
 
 class ReactHandler {
   _validationEnabled = true;
-  _tokenCacheInjected = false; // Track token cache injection status
+  _tokenCacheInjected = false;
 
 
   getCommandChangeReportingService() {
