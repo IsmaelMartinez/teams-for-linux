@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.6" date="2025-10-26">
+			<description>
+				<ul>
+					<li>Feature: Add in-app documentation viewer accessible from Help menu (F1 shortcut)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.5" date="2025-10-26">
 			<description>
 				<ul>
