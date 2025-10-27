@@ -104,6 +104,31 @@ The project documentation has been migrated to Docusaurus and is deployed to Git
 
 For detailed documentation development instructions, see [docs-site/README.md](docs-site/README.md).
 
+## Critical Module Initialization Requirements
+
+### TrayIconRenderer IPC Initialization (Issue #1902)
+
+**CRITICAL: DO NOT REMOVE** - The `trayIconRenderer` module **MUST** be included in the list of modules that receive `ipcRenderer` during initialization in `app/browser/preload.js`.
+
+```javascript
+// REQUIRED: trayIconRenderer needs ipcRenderer for IPC communication
+if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+  moduleInstance.init(config, ipcRenderer);
+}
+```
+
+**Why this is critical:**
+- The trayIconRenderer module requires `ipcRenderer` to communicate with the main process for tray icon updates
+- Without it, tray icon functionality breaks completely (badge counts, notifications, etc.)
+- This fix has been accidentally removed multiple times in git history, causing recurring issues
+- Most recently addressed in issue #1902
+
+**When modifying preload.js:**
+- Always verify `trayIconRenderer` is in the condition that passes `ipcRenderer` to `init()`
+- Do NOT remove this module from the list, even if it seems redundant
+- Test tray icon functionality thoroughly after any changes to module initialization
+- Reference this documentation if unclear why this module needs special handling
+
 ## Important Notes
 
 - The project is undergoing active refactoring to improve modularity

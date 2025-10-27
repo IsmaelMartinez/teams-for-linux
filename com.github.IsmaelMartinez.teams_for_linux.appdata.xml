@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Feature: Add in-app documentation viewer accessible from Help menu (F1 shortcut)</li>
+					<li>Fix: Restore trayIconRenderer ipcRenderer initialization that was accidentally reverted (issue #1902)</li>
 				</ul>
 			</description>
 		</release>
