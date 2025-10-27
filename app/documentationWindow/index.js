@@ -1,10 +1,8 @@
 const { BrowserWindow } = require('electron');
-const path = require('path');
+const path = require('node:path');
 
 class DocumentationWindow {
-  constructor() {
-    this.window = null;
-  }
+  window = null;
 
   show() {
     // If window already exists, just show and focus it
