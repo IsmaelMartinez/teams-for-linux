@@ -41,7 +41,7 @@ exports = module.exports = (Menus) => ({
       label: "About",
       click: () => Menus.about(),
     },
-    getHelpMenu(),
+    getHelpMenu(Menus),
     ...(Menus.configGroup.startupConfig.videoMenu
       ? [
           {
@@ -156,10 +156,17 @@ function getNotificationsMenu(Menus) {
   };
 }
 
-function getHelpMenu() {
+function getHelpMenu(Menus) {
   return {
     label: "Help",
     submenu: [
+      {
+        label: "Teams for Linux Documentation",
+        click: () => Menus.showDocumentation(),
+      },
+      {
+        type: "separator",
+      },
       {
         label: "Online Documentation",
         click: () =>

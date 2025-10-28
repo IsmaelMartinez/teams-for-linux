@@ -46,24 +46,24 @@
 
     navigator.mediaDevices.getUserMedia = function (constraints) {
       // Check if this is a screen sharing stream - handle multiple constraint formats
+      // IMPORTANT: Only match actual desktop capture, not regular video calls with deviceId
       const isScreenShare =
         constraints &&
         constraints.video &&
-        // Electron format
+        // Electron format - explicit desktop capture
         (constraints.video.chromeMediaSource === "desktop" ||
           constraints.video.mandatory?.chromeMediaSource === "desktop" ||
-          // Teams format
+          // Teams format - explicit screen share source ID
           constraints.video.chromeMediaSourceId ||
-          constraints.video.mandatory?.chromeMediaSourceId ||
-          // Generic desktop capture
-          (typeof constraints.video === "object" &&
-            constraints.video.deviceId &&
-            typeof constraints.video.deviceId === "object" &&
-            constraints.video.deviceId.exact));
+          constraints.video.mandatory?.chromeMediaSourceId);
+
+      // NOTE: Removed generic deviceId.exact check - it was too broad and matched
+      // regular video calls where Teams specifies which camera to use, causing
+      // audio to be disabled incorrectly (issues #1871, #1896)
 
       if (isScreenShare) {
         console.debug("[SCREEN_SHARE_DIAG] Screen sharing getUserMedia detected, disabling audio");
-        
+
         // Force disable audio for screen sharing streams to prevent echo
         disableAudioInConstraints(constraints, "getUserMedia screen sharing");
       }

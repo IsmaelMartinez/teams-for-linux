@@ -13,6 +13,7 @@ const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const connectionManager = require("../connectionManager");
+const DocumentationWindow = require("../documentationWindow");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -21,6 +22,7 @@ class Menus {
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.allowQuit = false;
+    this.documentationWindow = new DocumentationWindow();
     this.initialize();
   }
 
@@ -337,6 +339,10 @@ class Menus {
       this.clipboardMonitoring.interval = null;
       this.clipboardMonitoring.lastUrl = null;
     }
+  }
+
+  showDocumentation() {
+    this.documentationWindow.show();
   }
 }
 
