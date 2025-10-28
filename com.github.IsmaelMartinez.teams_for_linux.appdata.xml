@@ -19,7 +19,7 @@
 				<ul>
 					<li>Feature: Add in-app documentation viewer accessible from Help menu</li>
 					<li>Fix: Restore trayIconRenderer ipcRenderer initialization that was accidentally reverted (issue #1902)</li>
-					<li>Fix: Narrow screen share detection to prevent audio being disabled in regular calls - fixes mute/unmute workaround requirement (issues #1871, #1896)</li>
+					<li>Fix: Narrow screen share detection to prevent audio being disabled in regular calls - fixes mute/unmute workaround requirement (issues #1896, #1871)</li>
 				</ul>
 			</description>
 		</release>
