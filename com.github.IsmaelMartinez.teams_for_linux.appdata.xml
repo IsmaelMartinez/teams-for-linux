@@ -17,7 +17,7 @@
 		<release version="2.6.6" date="2025-10-26">
 			<description>
 				<ul>
-					<li>Feature: Add in-app documentation viewer accessible from Help menu (F1 shortcut)</li>
+					<li>Feature: Add in-app documentation viewer accessible from Help menu</li>
 					<li>Fix: Restore trayIconRenderer ipcRenderer initialization that was accidentally reverted (issue #1902)</li>
 					<li>Fix: Narrow screen share detection to prevent audio being disabled in regular calls - fixes mute/unmute workaround requirement (issues #1871, #1896)</li>
 				</ul>

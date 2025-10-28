@@ -162,7 +162,6 @@ function getHelpMenu(Menus) {
     submenu: [
       {
         label: "Teams for Linux Documentation",
-        accelerator: "F1",
         click: () => Menus.showDocumentation(),
       },
       {
