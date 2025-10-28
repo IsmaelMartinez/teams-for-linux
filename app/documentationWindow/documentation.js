@@ -8,7 +8,7 @@ iframe.addEventListener('load', () => {
 iframe.addEventListener('error', () => {
     // Clear existing content safely
     while (loading.firstChild) {
-        loading.removeChild(loading.firstChild);
+        loading.firstChild.remove();
     }
 
     // Create error message elements safely
