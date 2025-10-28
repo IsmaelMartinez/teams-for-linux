@@ -8,7 +8,7 @@ The Documentation Window module provides in-app access to the Teams for Linux do
 
 - Opens documentation in a separate window with an iframe
 - Singleton pattern - only one documentation window can be open at a time
-- Accessible via the Help menu (F1 keyboard shortcut)
+- Accessible via the Help menu
 - Secure iframe implementation with proper sandboxing
 - Loading indicator while documentation loads
 - Cross-platform compatible
@@ -18,7 +18,6 @@ The Documentation Window module provides in-app access to the Teams for Linux do
 The documentation window is automatically initialized when the Menus class is instantiated. Users can access it via:
 
 1. **Menu**: Help > Teams for Linux Documentation
-2. **Keyboard**: Press F1 from anywhere in the application
 
 ## Implementation Details
 
