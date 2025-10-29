@@ -505,6 +505,11 @@ function argv(configPath, appVersion) {
     });
   }
 
+  // Track whether disableGpu was explicitly set in config file
+  // This allows Wayland detection to use smart defaults while respecting user preferences
+  config.disableGpuExplicitlySet = configObject.configFile &&
+                                     "disableGpu" in configObject.configFile;
+
   logger.init(config.logConfig);
 
   console.info("configPath:", configPath);

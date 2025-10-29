@@ -307,9 +307,17 @@ function addCommandLineSwitchesAfterConfigLoad() {
   // Wayland-specific optimization for Linux desktop environments
   // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
-    console.info("Running under Wayland, disabling GPU composition and switching to PipeWire...");
-    config.disableGpu = true;
+    // Disable GPU by default on Wayland unless user explicitly configured it
+    // This prevents blank window issues while allowing power users to override
+    if (!config.disableGpuExplicitlySet) {
+      console.info("Running under Wayland, disabling GPU composition (default behavior)...");
+      config.disableGpu = true;
+    } else {
+      console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
+    }
 
+    // Enable PipeWire for screen sharing on Wayland
+    console.info("Enabling PipeWire for screen sharing...");
     const features = app.commandLine.hasSwitch("enable-features")
       ? app.commandLine.getSwitchValue("enable-features").split(",")
       : [];

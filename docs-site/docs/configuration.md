@@ -142,6 +142,18 @@ Place your `config.json` file in the appropriate location based on your installa
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
 | `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
 
+:::note Wayland GPU Handling
+When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, explicitly set `disableGpu: false` in your configuration file:
+
+```json
+{
+  "disableGpu": false
+}
+```
+
+If you don't set this option at all, GPU will be disabled automatically on Wayland. This smart default ensures the app works out of the box while allowing power users to optimize performance.
+:::
+
 ## Usage Examples & Guides
 
 ### Basic Setup Examples
