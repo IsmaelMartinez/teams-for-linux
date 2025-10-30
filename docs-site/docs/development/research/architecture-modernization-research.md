@@ -7,7 +7,7 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux is a mature Electron application with 23 modules wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
+Teams for Linux is a mature Electron application with 31 modules (16 main process modules + 14 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
 
 ### Key Findings
 1. **Existing Strengths**: The project already implements many industry best practices including secure IPC patterns, context isolation planning, comprehensive research documentation, and modular organization.
@@ -46,39 +46,65 @@ teams-for-linux/
 │   ├── appConfiguration/ (configuration management)
 │   ├── mainAppWindow/ (BrowserWindow management)
 │   ├── browser/
-│   │   ├── tools/ (DOM injection scripts)
+│   │   ├── tools/ (14 renderer process tools)
+│   │   ├── notifications/ (notification management)
 │   │   └── preload.js (renderer bridge)
-│   └── [23 feature modules]/
+│   ├── security/ (IPC validation)
+│   └── [16 main process modules]/
 ├── docs-site/ (Docusaurus documentation)
 └── tests/e2e/ (Playwright tests)
 ```
 
-### Module Inventory (23 Modules)
+### Module Inventory (31 Modules Total)
+
+#### Main Process Modules (16)
 **Configuration & Shell:**
 - appConfiguration - Centralized config using AppConfiguration class
+- config - Logger and configuration utilities
 - mainAppWindow - Primary BrowserWindow wrapper
+- menus - Application menu management
 
-**Teams Integration:**
-- reactHandler - DOM injection for React internals access
-- tokenCacheBridge - Authentication token management
-- notifications - System notification integration
-- screenSharing - Desktop capture and stream selection
+**Authentication & Security:**
+- certificate - Certificate handling
+- login - SSO login window
+- intune - Microsoft Intune integration
+- security - IPC validation (ipcValidator)
 
 **Features:**
-- customBGWindow - Custom background images
-- zoomLevel - Display scaling
-- customCSSWindow - Style injection
-- customUserAgent - User-agent spoofing
-- autoGainControl - Audio control for professional setups
-- spellChecker - Spell checking integration
-- activityHandler - User activity tracking
-- idleHandler - Idle state detection
+- customBackground - Custom background images
+- customCSS - Style injection
+- documentationWindow - In-app documentation viewer
+- incomingCallToast - Toast notifications for incoming calls
+- screenSharing - Desktop capture and stream selection
+- spellCheckProvider - Spell checking integration
 
 **Infrastructure:**
-- onlineOffline - Network status monitoring
-- cache - Cache management
-- loginWindow - SSO login window
-- trayIconRenderer - System tray integration
+- cacheManager - Cache management
+- connectionManager - Network/connection status monitoring
+- helpers - Utility functions
+
+#### Browser/Renderer Process Tools (14)
+**Teams Integration:**
+- reactHandler - DOM injection for React internals access
+- tokenCache - Authentication token management
+- settings - Settings synchronization
+- activityHub - User activity tracking
+
+**UI Enhancements:**
+- theme - Theme management and switching
+- trayIconRenderer - System tray icon updates
+- trayIconChooser - Tray icon selection logic
+- mutationTitle - Title bar modification
+- zoom - Display scaling
+
+**Audio/Video:**
+- disableAutogain - Audio control for professional setups
+- wakeLock - Prevent system sleep during calls
+
+**Utilities:**
+- emulatePlatform - Platform emulation
+- shortcuts - Keyboard shortcuts
+- timestampCopyOverride - Timestamp copy behavior
 
 ### Current State Management Patterns
 
@@ -390,7 +416,7 @@ interface PluginAPI {
 ### Migration Phases
 
 **Phase 1: Internal Plugin System (Weeks 1-4)**
-- Convert existing 23 modules to plugin structure
+- Convert existing 31 modules to plugin structure
 - Implement PluginManager and BasePlugin
 - Define plugin API surface
 - No external plugin support
@@ -633,11 +659,10 @@ class TeamsIntegrationDomain {
 - **Risk**: Medium - validates plugin architecture
 
 **Phase 7: Bulk Plugin Migration (Week 8)**
-- Convert remaining 22 modules to plugins:
-  - screen-sharing, custom-background
-  - spell-checker, custom-css, zoom-level
-  - activity-handler, idle-handler
-  - auto-gain-control, custom-user-agent
+- Convert remaining 30 modules to plugins (after notifications in Phase 6):
+  - Main process: screen-sharing, custom-background, spell-checker, custom-css, documentation-window, incoming-call-toast, menus
+  - Browser tools: activity-hub, disable-autogain, theme, tray-icon-renderer, zoom, settings, shortcuts, wake-lock, emulate-platform, mutation-title, timestamp-copy-override, tray-icon-chooser
+  - Plus remaining infrastructure modules
 - **Deliverable**: All modules as plugins
 - **Tests**: Per-plugin tests
 - **Risk**: Medium - large volume, parallelizable work
@@ -807,7 +832,7 @@ class TeamsIntegrationDomain {
 4. Define plugin API interface
 
 ### Success Criteria
-- All 23 modules converted to plugins
+- All 31 modules converted to plugins
 - `index.js` reduced to <100 lines
 - DOM access preserved and tested
 - E2E tests pass
