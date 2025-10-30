@@ -112,4 +112,9 @@
   } catch (err) {
     console.debug("Could not initialize injected CustomNotification", err);
   }
+
+  // Export for Node.js module system (used by preload.js)
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { createCustomNotification };
+  }
 })();
