@@ -291,7 +291,7 @@ Challenges:
   "id": "notifications",
   "name": "System Notifications",
   "version": "1.0.0",
-  "requires": { "teams-for-linux": "^2.5.0" },
+  "requires": { "teams-for-linux": "^3.0.0" },
   "permissions": ["notifications", "ipc", "audio"],
   "main": "./index.js",
   "preload": "./preload.js"
@@ -433,7 +433,7 @@ class PluginAPI {
 - Allow users to control which features are active
 - Still no external plugins
 
-**Phase 3: External Plugins (Future, Post-v2.5)**
+**Phase 3: External Plugins (Future, Post-v3.0)**
 - Define stable external plugin API
 - Implement plugin marketplace/registry
 - Add plugin signing and verification
@@ -613,6 +613,25 @@ class TeamsIntegrationDomain {
 
 ## Migration Roadmap
 
+### Parallel Development Strategy
+
+**Main Branch (2.6.x)**: Continue normal development
+- Bug fixes and small features released as 2.6.8, 2.6.9, etc.
+- No disruption to current users
+- Maintain stable release cadence
+
+**Feature Branch (3.0.0)**: Architecture modernization
+- All refactoring work happens on `feature/architecture-modernization-1799`
+- Periodically merge `main` → feature branch to stay current
+- Independent testing and validation
+- When complete, merge to main and release as 3.0.0
+
+**Benefits**:
+- No blocking of urgent fixes or features
+- Reduced merge conflicts (periodic syncs)
+- Lower risk (can abandon if needed)
+- Community continues to get updates
+
 ### 10-Week Phased Migration
 
 **Phase 1: Foundation (Weeks 1-2)**
@@ -698,9 +717,10 @@ class TeamsIntegrationDomain {
 **Phase 10: Release Preparation**
 - Create release notes
 - Update CHANGELOG.md
-- Tag v2.5.0
+- Tag v3.0.0
 - Deploy documentation site updates
-- **Deliverable**: Release v2.5.0
+- Merge feature branch to main
+- **Deliverable**: Release v3.0.0
 - **Risk**: Low - release mechanics
 
 ### Testing Strategy
@@ -855,7 +875,7 @@ class TeamsIntegrationDomain {
 - Plugin API schema validation
 
 **Future Consideration:**
-- After v2.5.0 stabilizes, evaluate incremental TypeScript adoption
+- After v3.0.0 stabilizes, evaluate incremental TypeScript adoption
 - Start with new plugins or domains if desired
 - Not required for architecture modernization goals
 
@@ -939,10 +959,10 @@ class TeamsIntegrationDomain {
 - **Impact**: Timeline extends beyond 10 weeks
 - **Mitigation**:
   - Strict adherence to phased plan
-  - Defer non-critical improvements to v2.6
+  - Defer non-critical improvements to v3.1
   - Weekly progress reviews
   - Clear definition of "done" for each phase
-- **Contingency**: Release with subset of plugins, complete remainder in v2.5.1
+- **Contingency**: Release with subset of plugins, complete remainder in v3.0.1
 
 ### Low Risks
 
@@ -1004,7 +1024,7 @@ class TeamsIntegrationDomain {
 - DOM access preserved and tested
 - E2E tests pass
 - Documentation complete
-- Release v2.5.0
+- Release v3.0.0
 
 ---
 
