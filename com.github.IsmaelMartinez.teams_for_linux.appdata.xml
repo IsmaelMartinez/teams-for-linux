@@ -17,7 +17,7 @@
 		<release version="2.6.7" date="2025-10-29">
 			<description>
 				<ul>
-					<li>Feature: Respect user's disableGpu configuration on Wayland - users can now explicitly enable GPU acceleration by setting disableGpu: false (issue #1890)</li>
+					<li>Feature: Respect user's disableGpu configuration on Wayland - users can now explicitly enable GPU acceleration via config file or CLI argument (issue #1890)</li>
 				</ul>
 			</description>
 		</release>
