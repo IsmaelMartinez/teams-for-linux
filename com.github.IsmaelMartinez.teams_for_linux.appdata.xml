@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.7" date="2025-10-29">
+			<description>
+				<ul>
+					<li>Feature: Respect user's disableGpu configuration on Wayland - users can now explicitly enable GPU acceleration by setting disableGpu: false (issue #1890)</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.6" date="2025-10-26">
 			<description>
 				<ul>
