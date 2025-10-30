@@ -143,15 +143,21 @@ Place your `config.json` file in the appropriate location based on your installa
 | `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
 
 :::note Wayland GPU Handling
-When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, explicitly set `disableGpu: false` in your configuration file:
+When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, you can explicitly override this behavior using either:
 
+**Configuration file** (`config.json`):
 ```json
 {
   "disableGpu": false
 }
 ```
 
-If you don't set this option at all, GPU will be disabled automatically on Wayland. This smart default ensures the app works out of the box while allowing power users to optimize performance.
+**Command-line argument**:
+```bash
+teams-for-linux --disableGpu=false
+```
+
+If you don't set this option at all (via config file or CLI), GPU will be disabled automatically on Wayland. This smart default ensures the app works out of the box while allowing power users to optimize performance.
 :::
 
 ## Usage Examples & Guides
