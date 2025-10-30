@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.6.8" date="2025-10-30">
+		<release version="2.6.8" date="2025-10-31">
 			<description>
 				<ul>
 					<li>Fix: Restore notification auto-close behavior on Ubuntu by re-integrating CustomNotification wrapper that sets requireInteraction: false (issue #1888)</li>
