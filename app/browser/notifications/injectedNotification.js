@@ -100,21 +100,22 @@
     }
   }
 
-  // Attempt to initialize if running in injected context. If require isn't
-  // available, this will be a no-op and the renderer should initialize.
-  try {
-    if (typeof window !== "undefined" && window.electronAPI) {
-      // If nothing else initialized it yet, call createCustomNotification.
-      if (!window.__customNotificationInitialized__) {
-        createCustomNotification(window, window.electronAPI);
-      }
-    }
-  } catch (err) {
-    console.debug("Could not initialize injected CustomNotification", err);
-  }
-
   // Export for Node.js module system (used by preload.js)
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { createCustomNotification };
+  } else {
+    // Attempt to initialize if running in injected context (not as a module).
+    // This ensures self-initialization only occurs when the file is loaded
+    // directly, not when required as a CommonJS module.
+    try {
+      if (typeof window !== "undefined" && window.electronAPI) {
+        // If nothing else initialized it yet, call createCustomNotification.
+        if (!window.__customNotificationInitialized__) {
+          createCustomNotification(window, window.electronAPI);
+        }
+      }
+    } catch (err) {
+      console.debug("Could not initialize injected CustomNotification", err);
+    }
   }
 })();
