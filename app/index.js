@@ -309,11 +309,11 @@ function addCommandLineSwitchesAfterConfigLoad() {
   if (process.env.XDG_SESSION_TYPE === "wayland") {
     // Disable GPU by default on Wayland unless user explicitly configured it
     // This prevents blank window issues while allowing power users to override
-    if (!config.disableGpuExplicitlySet) {
+    if (config.disableGpuExplicitlySet) {
+      console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
+    } else {
       console.info("Running under Wayland, disabling GPU composition (default behavior)...");
       config.disableGpu = true;
-    } else {
-      console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
     }
 
     // Enable PipeWire for screen sharing on Wayland
