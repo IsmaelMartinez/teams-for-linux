@@ -849,9 +849,9 @@ class TeamsIntegrationDomain {
 - Tests can run in any order
 
 **Fast Feedback:**
-- Unit tests should run in <10ms each
-- Integration tests <500ms each
-- E2E tests <5s each (use existing Playwright patterns)
+- Unit tests should run in less than 10ms each
+- Integration tests less than 500ms each
+- E2E tests less than 5s each (use existing Playwright patterns)
 
 **When Tests Fail:**
 - Fix the code or update the test (don't disable)
@@ -882,18 +882,18 @@ class TeamsIntegrationDomain {
 ### Success Metrics
 
 **Code Quality:**
-- `index.js` reduced from 711 lines to <100 lines
-- Unit test coverage increased from current to >70%
+- `index.js` reduced from 711 lines to less than 100 lines
+- Unit test coverage increased from current to over 70%
 - Cyclomatic complexity reduced by 40%
 
 **Maintainability:**
-- New feature development in isolated plugin (<500 lines)
+- New feature development in isolated plugin (less than 500 lines)
 - Domain boundaries prevent cross-cutting changes
 - Plugin API enables community contributions
 
 **Performance:**
-- Startup time unchanged (<5% variance)
-- Memory usage unchanged (<10MB variance)
+- Startup time unchanged (less than 5% variance)
+- Memory usage unchanged (less than 10MB variance)
 - No regression in E2E tests
 
 **Risk Mitigation:**
@@ -1020,7 +1020,7 @@ class TeamsIntegrationDomain {
 
 ### Success Criteria
 - All 31 modules converted to plugins
-- `index.js` reduced to <100 lines
+- `index.js` reduced to less than 100 lines
 - DOM access preserved and tested
 - E2E tests pass
 - Documentation complete
@@ -1031,7 +1031,7 @@ class TeamsIntegrationDomain {
 ## References
 
 ### Internal Documentation
-- [IPC API Documentation](../../ipc-api.md)
+- [IPC API Documentation](../ipc-api.md)
 - [DOM Access Investigation](./dom-access-investigation.md)
 - [Token Cache Authentication Research](./token-cache-authentication-research.md)
 - [Automated Testing Strategy](./automated-testing-strategy.md)
