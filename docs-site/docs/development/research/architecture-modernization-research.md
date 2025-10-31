@@ -1031,7 +1031,7 @@ class TeamsIntegrationDomain {
 ## References
 
 ### Internal Documentation
-- [IPC API Documentation](../../ipc-api.md)
+- [IPC API Documentation](../ipc-api.md)
 - [DOM Access Investigation](./dom-access-investigation.md)
 - [Token Cache Authentication Research](./token-cache-authentication-research.md)
 - [Automated Testing Strategy](./automated-testing-strategy.md)
