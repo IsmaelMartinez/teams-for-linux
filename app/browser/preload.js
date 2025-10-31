@@ -1,5 +1,9 @@
 const { ipcRenderer } = require("electron");
 
+// Initialize CustomNotification to intercept Teams notifications
+// This sets requireInteraction: false for Ubuntu auto-close behavior
+const { createCustomNotification } = require('./notifications/injectedNotification');
+
 // Note: IPC validation handled by main process, no need for duplicate validation here
 globalThis.electronAPI = {
   desktopCapture: {
@@ -99,6 +103,9 @@ globalThis.electronAPI = {
 // Direct Node.js access for browser tools (requires contextIsolation: false)
 globalThis.nodeRequire = require;
 globalThis.nodeProcess = process;
+
+// Override window.Notification before Teams loads
+createCustomNotification(globalThis, globalThis.electronAPI);
 
 // Initialize browser modules after DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
