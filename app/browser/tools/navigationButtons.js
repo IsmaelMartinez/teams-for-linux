@@ -4,65 +4,39 @@
  * similar to the Microsoft official Teams app.
  */
 
-let _NavigationButtons_config = new WeakMap();
-let _NavigationButtons_initialized = new WeakMap();
-
 class NavigationButtons {
-  constructor() {
-    _NavigationButtons_initialized.set(this, false);
-  }
+  #config;
+  #initialized = false;
 
   init(config) {
-    if (this.initialized) {
+    if (this.#initialized) {
       return;
     }
 
-    _NavigationButtons_config.set(this, config);
-    _NavigationButtons_initialized.set(this, true);
+    this.#config = config;
+    this.#initialized = true;
 
-    // Wait for Teams to fully load before injecting buttons
-    this.waitForTeamsAndInject();
-  }
-
-  waitForTeamsAndInject() {
-    // Try to inject immediately
-    const injected = this.injectNavigationButtons();
-
-    if (!injected) {
-      // If injection failed, wait a bit and try again
-      setTimeout(() => {
-        const retryInjected = this.injectNavigationButtons();
-
-        if (!retryInjected) {
-          // If still failing, set up a MutationObserver to watch for DOM changes
-          this.observeForTeamsUI();
-        }
-      }, 2000);
+    // Wait for DOM to be ready before injecting buttons
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.waitForTeamsAndInject());
+    } else {
+      this.waitForTeamsAndInject();
     }
   }
 
-  observeForTeamsUI() {
-    const observer = new MutationObserver(() => {
-      if (this.injectNavigationButtons()) {
-        observer.disconnect();
+  waitForTeamsAndInject() {
+    const maxRetries = 3;
+    let retries = 0;
+
+    const tryInject = () => {
+      if (this.injectNavigationButtons() || retries >= maxRetries) {
+        return;
       }
-    });
+      retries++;
+      setTimeout(tryInject, 1000 * retries);
+    };
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    // Stop observing after 30 seconds
-    setTimeout(() => observer.disconnect(), 30000);
-  }
-
-  get config() {
-    return _NavigationButtons_config.get(this);
-  }
-
-  get initialized() {
-    return _NavigationButtons_initialized.get(this);
+    tryInject();
   }
 
   createNavigationButton(id, label, svgPath) {
