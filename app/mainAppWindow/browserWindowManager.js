@@ -44,7 +44,7 @@ class BrowserWindowManager {
 
     windowState.manage(this.window);
 
-    this.window.eval = global.eval = function () {
+    this.window.eval = globalThis.eval = function () {
       // eslint-disable-line no-eval
       throw new Error("Sorry, this app does not support window.eval().");
     };
