@@ -136,7 +136,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
 | `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |
 | `logConfig` | `object` | `{ transports: { console: { level: "info" }, file: { level: false } } }` | Electron-log configuration |
-| `allTeamsLinksRegEx` | `string` | `^https://teams\\.(microsoft|live)\\.com/.*/(?:meetup-join|channel|chat|meet)` | All Teams-related links regular expression |
+| `meetupJoinRegEx` | `string` | `^https://teams\\.(microsoft|live)\\.com/.*/(?:meetup-join|channel|chat|meet)` | Regex for Teams meetup-join and related links |
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
