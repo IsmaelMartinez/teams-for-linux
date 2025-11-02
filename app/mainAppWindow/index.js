@@ -54,6 +54,27 @@ function setupScreenSharing(selectedSource) {
   createScreenSharePreviewWindow();
 }
 
+function handleScreenSourceSelection(source, callback) {
+  desktopCapturer
+    .getSources({ types: ["window", "screen"] })
+    .then((sources) => {
+      const selectedSource = findSelectedSource(sources, source);
+      if (selectedSource) {
+        setupScreenSharing(selectedSource);
+        callback({ video: selectedSource });
+      } else {
+        // Source not found - use setImmediate and try-catch to allow retry
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] Selected source not found");
+          }
+        });
+      }
+    });
+}
+
 function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
@@ -225,27 +246,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
       });
     }
   );
-
-  function handleScreenSourceSelection(source, callback) {
-    desktopCapturer
-      .getSources({ types: ["window", "screen"] })
-      .then((sources) => {
-        const selectedSource = findSelectedSource(sources, source);
-        if (selectedSource) {
-          setupScreenSharing(selectedSource);
-          callback({ video: selectedSource });
-        } else {
-          // Source not found - use setImmediate and try-catch to allow retry
-          setImmediate(() => {
-            try {
-              callback({});
-            } catch {
-              console.debug("[SCREEN_SHARE] Selected source not found");
-            }
-          });
-        }
-      });
-  }
 
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
