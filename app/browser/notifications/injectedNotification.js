@@ -90,13 +90,13 @@
       }
     }
 
-    if (!window.__classicNotification__)
-      window.__classicNotification__ = classicNotification;
+    if (!globalThis.__classicNotification__)
+      globalThis.__classicNotification__ = classicNotification;
     // Only initialize once. If another context already initialized the
     // custom Notification (for example the browser/renderer), do not overwrite it.
-    if (!window.__customNotificationInitialized__) {
-      window.Notification = CustomNotification;
-      window.__customNotificationInitialized__ = true;
+    if (!globalThis.__customNotificationInitialized__) {
+      globalThis.Notification = CustomNotification;
+      globalThis.__customNotificationInitialized__ = true;
     }
   }
 
@@ -108,10 +108,10 @@
     // This ensures self-initialization only occurs when the file is loaded
     // directly, not when required as a CommonJS module.
     try {
-      if (typeof window !== "undefined" && window.electronAPI) {
+      if (typeof globalThis.window !== "undefined" && globalThis.electronAPI) {
         // If nothing else initialized it yet, call createCustomNotification.
-        if (!window.__customNotificationInitialized__) {
-          createCustomNotification(window, window.electronAPI);
+        if (!globalThis.__customNotificationInitialized__) {
+          createCustomNotification(globalThis, globalThis.electronAPI);
         }
       }
     } catch (err) {

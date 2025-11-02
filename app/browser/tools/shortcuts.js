@@ -1,4 +1,4 @@
-const os = require("os");
+const os = require("node:os");
 const zoom = require("./zoom");
 
 let _Shortcuts_config = new WeakMap();
@@ -36,8 +36,8 @@ const KEY_MAPS = {
   // Alt (Option) Left / Right is used to jump words in Mac, so diabling the history navigation for Mac here
   ...(!isMac
     ? {
-        ALT_ArrowLeft: () => window.history.back(),
-        ALT_ArrowRight: () => window.history.forward(),
+        ALT_ArrowLeft: () => globalThis.history.back(),
+        ALT_ArrowRight: () => globalThis.history.forward(),
       }
     : {}),
 };
@@ -47,7 +47,7 @@ function initInternal() {
 }
 
 function whenWindowReady(callback) {
-  if (window) {
+  if (globalThis.window) {
     callback();
   } else {
     setTimeout(() => whenWindowReady(callback), 1000);
@@ -55,8 +55,8 @@ function whenWindowReady(callback) {
 }
 
 function addEventListeners() {
-  window.addEventListener("keydown", keyDownEventHandler, false);
-  window.addEventListener("wheel", wheelEventHandler, { passive: false });
+  globalThis.addEventListener("keydown", keyDownEventHandler, false);
+  globalThis.addEventListener("wheel", wheelEventHandler, { passive: false });
   whenIframeReady((iframe) => {
     iframe.contentDocument.addEventListener(
       "keydown",
@@ -70,7 +70,7 @@ function addEventListeners() {
 }
 
 function whenIframeReady(callback) {
-  const iframe = window.document.getElementsByTagName("iframe")[0];
+  const iframe = globalThis.document.getElementsByTagName("iframe")[0];
   if (iframe) {
     callback(iframe);
   } else {

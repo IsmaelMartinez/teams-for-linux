@@ -1,5 +1,5 @@
 const { BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
+const path = require('node:path');
 const Positioner = require('electron-positioner');
 
 class IncomingCallToast {

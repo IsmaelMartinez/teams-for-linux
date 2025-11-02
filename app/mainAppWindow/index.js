@@ -13,13 +13,13 @@ const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
-const { execFile } = require("child_process");
+const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
-const os = require("os");
-const path = require("path");
+const os = require("node:os");
+const path = require("node:path");
 
 // Default configuration for the screen sharing thumbnail preview (avoid magic values)
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
@@ -43,7 +43,6 @@ let streamSelector;
 const isMac = os.platform() === "darwin";
 
 function createScreenSharePreviewWindow() {
-  const path = require("path");
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
@@ -362,8 +361,7 @@ function onDidFinishLoad() {
 }
 
 function injectScreenSharingLogic() {
-  const fs = require("fs");
-  const path = require("path");
+  const fs = require("node:fs");
   const scriptPath = path.join(
     __dirname,
     "..",

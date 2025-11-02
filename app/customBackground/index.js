@@ -1,7 +1,7 @@
 const httpHelper = require("../helpers");
 const { ipcMain } = require("electron");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 let customBGServiceUrl;
 

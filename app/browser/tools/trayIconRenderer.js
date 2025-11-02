@@ -7,7 +7,7 @@ class TrayIconRenderer {
     const iconChooser = new TrayIconChooser(config);
     this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
     this.iconSize = this.baseIcon.getSize();
-    window.addEventListener(
+    globalThis.addEventListener(
       "unread-count",
       this.updateActivityCount.bind(this),
     );

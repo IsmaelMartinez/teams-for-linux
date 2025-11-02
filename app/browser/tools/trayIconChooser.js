@@ -1,5 +1,5 @@
-const os = require("os");
-const path = require("path");
+const os = require("node:os");
+const path = require("node:path");
 const iconFolder = path.join(__dirname, "../..", "assets/icons");
 const isMac = os.platform() === "darwin";
 

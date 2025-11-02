@@ -1,6 +1,6 @@
 const { app, ipcMain, BrowserWindow } = require("electron");
-const { execSync } = require("child_process");
-const path = require("path");
+const { execSync } = require("node:child_process");
+const path = require("node:path");
 
 let isFirstLoginTry = true;
 

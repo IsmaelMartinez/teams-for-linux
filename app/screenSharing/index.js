@@ -1,5 +1,5 @@
 const { ipcMain, WebContentsView } = require("electron");
-const path = require("path");
+const path = require("node:path");
 
 class StreamSelector {
   #parent;
