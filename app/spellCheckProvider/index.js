@@ -67,13 +67,11 @@ function init(intance, window) {
 }
 
 function listContains(list, text) {
-  return list.some((l) => {
-    return l === text;
-  });
+  return list.includes(text);
 }
 
 function addLanguageToGroup(groupedList, key, language) {
-  const group = groupedList.filter((f) => f.key === key)[0];
+  const group = groupedList.find((f) => f.key === key);
   if (group) {
     group.list.push(language);
   } else {

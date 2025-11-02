@@ -43,20 +43,20 @@
     <video id="screen-share-video" autoplay muted></video>
 
     <script>
-        window.addEventListener('DOMContentLoaded', async () => {
+        globalThis.addEventListener('DOMContentLoaded', async () => {
             const videoElement = document.getElementById('screen-share-video');
             const statusOverlay = document.querySelector('.status-overlay');
 
             const updateStatusAndStream = async () => {
                 try {
-                    const isActive = await window.electronAPI.getScreenSharingStatus();
-                    
+                    const isActive = await globalThis.electronAPI.getScreenSharingStatus();
+
                     if (isActive) {
                         statusOverlay.textContent = 'Screen Share Active';
                         document.title = 'Teams for Linux - Screen is being shared';
 
-                        const sourceId = await window.electronAPI.getScreenShareStream();
-                        const screenSize = await window.electronAPI.getScreenShareScreen();
+                        const sourceId = await globalThis.electronAPI.getScreenShareStream();
+                        const screenSize = await globalThis.electronAPI.getScreenShareScreen();
                         
                         console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
                         
@@ -110,8 +110,8 @@
                                     windowHeight += 20;
                                     
                                     // Resize window to thumbnail size
-                                    if (window.electronAPI.resizeWindow) {
-                                        window.electronAPI.resizeWindow({
+                                    if (globalThis.electronAPI.resizeWindow) {
+                                        globalThis.electronAPI.resizeWindow({
                                             width: Math.round(windowWidth),
                                             height: Math.round(windowHeight)
                                         });
@@ -143,8 +143,8 @@
             updateStatusAndStream();
             
             // Listen for screen sharing status changes
-            if (window?.electronAPI?.onScreenSharingStatusChanged) {
-                window.electronAPI.onScreenSharingStatusChanged(() => {
+            if (globalThis?.electronAPI?.onScreenSharingStatusChanged) {
+                globalThis.electronAPI.onScreenSharingStatusChanged(() => {
                     updateStatusAndStream();
                 });
             }

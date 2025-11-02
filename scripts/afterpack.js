@@ -1,6 +1,6 @@
 const { flipFuses, FuseVersion, FuseV1Options } = require("@electron/fuses");
-const { chmod } = require("fs/promises");
-const path = require("path");
+const { chmod } = require("node:fs/promises");
+const path = require("node:path");
 const { generateReleaseInfo } = require("./generateReleaseInfo");
 const { generateDebianChangelog } = require("./generateDebianChangelog");
 
