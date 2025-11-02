@@ -302,7 +302,7 @@ class Menus {
     if (typeof text !== 'string') {
       return false;
     }
-    const teamsUrlPattern = /^https:\/\/teams\.microsoft\.com\/l\/meetup-join\//;
+    const teamsUrlPattern = new RegExp(this.configGroup.startupConfig.meetupJoinRegEx);
     return teamsUrlPattern.test(text);
   }
 

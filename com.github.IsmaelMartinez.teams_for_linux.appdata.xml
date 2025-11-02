@@ -17,6 +17,7 @@
 		<release version="2.6.9" date="2025-11-02">
 			<description>
 				<ul>
+					<li>Feature: Support short form Teams URLs (e.g., /meet/) with simplified single regex configuration</li>
 					<li>Feature: Add back/forward navigation buttons to Teams UI - browser-style navigation controls positioned in titlebar</li>
 				</ul>
 			</description>

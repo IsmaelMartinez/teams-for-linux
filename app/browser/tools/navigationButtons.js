@@ -5,7 +5,6 @@
  */
 
 class NavigationButtons {
-  #config;
   #initialized = false;
   #backButton = null;
   #forwardButton = null;
@@ -15,7 +14,8 @@ class NavigationButtons {
       return;
     }
 
-    this.#config = config;
+    // Note: config parameter kept for API consistency with other modules
+    // but not currently used by navigation buttons functionality
     this.#initialized = true;
 
     // Inject buttons with retry logic for Teams UI elements
