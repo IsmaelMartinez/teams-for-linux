@@ -267,6 +267,31 @@ if (gotTheLock) {
       globalThis.previewWindow.webContents.send("screen-sharing-status-changed");
     }
   });
+
+  // Navigation IPC handlers
+  ipcMain.on("navigate-back", (event) => {
+    const webContents = event.sender;
+    if (webContents?.navigationHistory?.canGoBack()) {
+      console.debug("Navigating back");
+      webContents.navigationHistory.goBack();
+    }
+  });
+
+  ipcMain.on("navigate-forward", (event) => {
+    const webContents = event.sender;
+    if (webContents?.navigationHistory?.canGoForward()) {
+      console.debug("Navigating forward");
+      webContents.navigationHistory.goForward();
+    }
+  });
+
+  ipcMain.handle("get-navigation-state", (event) => {
+    const webContents = event.sender;
+    return {
+      canGoBack: webContents?.navigationHistory?.canGoBack() || false,
+      canGoForward: webContents?.navigationHistory?.canGoForward() || false,
+    };
+  });
 } else {
   console.info("App already running");
   app.quit();

@@ -540,6 +540,14 @@ function onPageTitleUpdated(_event, title) {
   window.webContents.send("page-title", title);
 }
 
+function onNavigationChanged() {
+  if (window?.webContents?.navigationHistory) {
+    const canGoBack = window.webContents.navigationHistory.canGoBack();
+    const canGoForward = window.webContents.navigationHistory.canGoForward();
+    window.webContents.send("navigation-state-changed", canGoBack, canGoForward);
+  }
+}
+
 function onWindowClosed() {
   console.debug("window closed");
 
@@ -575,6 +583,10 @@ function addEventHandlers() {
   window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
   window.on("closed", onWindowClosed);
   window.webContents.addListener("before-input-event", onBeforeInput);
+
+  // Navigation state change handlers
+  window.webContents.on("did-navigate", onNavigationChanged);
+  window.webContents.on("did-navigate-in-page", onNavigationChanged);
 }
 
 function getWebRequestFilterFromURL() {
