@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.9" date="2025-11-02">
+			<description>
+				<ul>
+					<li>Feature: Add back/forward navigation buttons to Teams UI - browser-style navigation controls positioned in titlebar</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.8" date="2025-10-31">
 			<description>
 				<ul>
