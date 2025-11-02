@@ -89,6 +89,59 @@ This documentation is automatically generated from the IPC handler definitions i
 **Purpose**: Displays system notification  
 **Parameters**: `Object` with notification options  
 
+## Navigation IPC Handlers
+
+### Navigation Control
+
+#### `navigate-back`
+**Type**: `ipcMain.on`
+**Purpose**: Navigates back in the browser history
+**Parameters**: None
+**Returns**: None
+**Example Usage**:
+```javascript
+ipcRenderer.send('navigate-back');
+```
+
+#### `navigate-forward`
+**Type**: `ipcMain.on`
+**Purpose**: Navigates forward in the browser history
+**Parameters**: None
+**Returns**: None
+**Example Usage**:
+```javascript
+ipcRenderer.send('navigate-forward');
+```
+
+#### `get-navigation-state`
+**Type**: `ipcMain.handle`
+**Purpose**: Retrieves current navigation state (whether back/forward navigation is available)
+**Parameters**: None
+**Returns**: `Object` with properties:
+- `canGoBack`: `boolean` - Whether back navigation is available
+- `canGoForward`: `boolean` - Whether forward navigation is available
+
+**Example Usage**:
+```javascript
+const state = await ipcRenderer.invoke('get-navigation-state');
+// state = { canGoBack: true, canGoForward: false }
+```
+
+#### `navigation-state-changed`
+**Type**: Event (main to renderer)
+**Purpose**: Notifies renderer when navigation state changes (fired after navigation events)
+**Parameters**:
+- `event`: `IpcRendererEvent`
+- `canGoBack`: `boolean` - Whether back navigation is available
+- `canGoForward`: `boolean` - Whether forward navigation is available
+
+**Example Usage**:
+```javascript
+ipcRenderer.on('navigation-state-changed', (event, canGoBack, canGoForward) => {
+  console.log(`Can go back: ${canGoBack}, Can go forward: ${canGoForward}`);
+});
+```
+
 ## Usage Examples
 
 ### Basic Configuration Retrieval

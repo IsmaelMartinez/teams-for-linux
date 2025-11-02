@@ -53,7 +53,13 @@ const allowedChannels = new Set([
   'get-custom-bg-list',
   
   // Connection management
-  'offline-retry'
+  'offline-retry',
+
+  // Navigation controls
+  'navigate-back',
+  'navigate-forward',
+  'get-navigation-state',
+  'navigation-state-changed'
 ]);
 
 /**

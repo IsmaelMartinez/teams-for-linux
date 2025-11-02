@@ -7,7 +7,7 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux is a mature Electron application with 31 modules (16 main process modules + 14 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
+Teams for Linux is a mature Electron application with 32 modules (16 main process modules + 15 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
 
 ### Key Findings
 1. **Existing Strengths**: The project already implements many industry best practices including secure IPC patterns, context isolation planning, comprehensive research documentation, and modular organization.
@@ -55,7 +55,7 @@ teams-for-linux/
 └── tests/e2e/ (Playwright tests)
 ```
 
-### Module Inventory (31 Modules Total)
+### Module Inventory (32 Modules Total)
 
 #### Main Process Modules (16)
 **Configuration & Shell:**
@@ -83,7 +83,7 @@ teams-for-linux/
 - connectionManager - Network/connection status monitoring
 - helpers - Utility functions
 
-#### Browser/Renderer Process Tools (14)
+#### Browser/Renderer Process Tools (15)
 **Teams Integration:**
 - reactHandler - DOM injection for React internals access
 - tokenCache - Authentication token management
@@ -103,6 +103,7 @@ teams-for-linux/
 
 **Utilities:**
 - emulatePlatform - Platform emulation
+- navigationButtons - Back/forward navigation buttons in Teams UI
 - shortcuts - Keyboard shortcuts
 - timestampCopyOverride - Timestamp copy behavior
 
@@ -422,7 +423,7 @@ class PluginAPI {
 ### Migration Phases
 
 **Phase 1: Internal Plugin System (Weeks 1-4)**
-- Convert existing 31 modules to plugin structure
+- Convert existing 32 modules to plugin structure
 - Implement PluginManager and BasePlugin
 - Define plugin API surface
 - No external plugin support
@@ -684,14 +685,14 @@ class TeamsIntegrationDomain {
 - **Risk**: Medium - validates plugin architecture
 
 **Phase 7: Bulk Plugin Migration (Weeks 7-8)**
-- Convert remaining 30 modules to plugins (after notifications in Phase 6)
+- Convert remaining 31 modules to plugins (after notifications in Phase 6)
 - **Week 7**: Main process modules (15 modules)
   - screen-sharing, custom-background, spell-checker, custom-css
   - documentation-window, incoming-call-toast, menus
   - certificate, login, intune, connection-manager, cache-manager, helpers
-- **Week 8**: Browser tools (15 modules)
+- **Week 8**: Browser tools (16 modules)
   - activity-hub, disable-autogain, theme, tray-icon-renderer, tray-icon-chooser
-  - zoom, settings, shortcuts, wake-lock
+  - zoom, settings, shortcuts, wake-lock, navigation-buttons
   - emulate-platform, mutation-title, timestamp-copy-override, react-handler, token-cache
 - **Deliverable**: All modules as plugins
 - **Tests**: Per-plugin unit tests, integration tests for critical plugins
@@ -1019,7 +1020,7 @@ class TeamsIntegrationDomain {
 4. Define plugin API interface
 
 ### Success Criteria
-- All 31 modules converted to plugins
+- All 32 modules converted to plugins
 - `index.js` reduced to less than 100 lines
 - DOM access preserved and tested
 - E2E tests pass

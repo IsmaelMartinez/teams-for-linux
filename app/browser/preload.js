@@ -96,6 +96,18 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("save-zoom-level", data);
   },
 
+  // Navigation
+  navigateBack: () => ipcRenderer.send("navigate-back"),
+  navigateForward: () => ipcRenderer.send("navigate-forward"),
+  getNavigationState: () => ipcRenderer.invoke("get-navigation-state"),
+  onNavigationStateChanged: (callback) => {
+    if (typeof callback !== 'function') {
+      console.error('Invalid callback for navigation state changed');
+      return;
+    }
+    return ipcRenderer.on("navigation-state-changed", callback);
+  },
+
   // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
@@ -175,7 +187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
-      { name: "disableAutogain", path: "./tools/disableAutogain" }
+      { name: "disableAutogain", path: "./tools/disableAutogain" },
+      { name: "navigationButtons", path: "./tools/navigationButtons" }
     ];
     
     let successCount = 0;
