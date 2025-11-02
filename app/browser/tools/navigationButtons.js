@@ -18,15 +18,13 @@ class NavigationButtons {
     this.#config = config;
     this.#initialized = true;
 
-    // Wait for DOM to be ready before injecting buttons
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.waitForTeamsAndInject());
-    } else {
-      this.waitForTeamsAndInject();
-    }
+    // Inject buttons with retry logic for Teams UI elements
+    // Note: DOM is already ready (preload.js waits for DOMContentLoaded)
+    // but Teams-specific elements may not be rendered yet
+    this.#waitForTeamsAndInject();
   }
 
-  waitForTeamsAndInject() {
+  #waitForTeamsAndInject() {
     const maxRetries = 3;
     let retries = 0;
 
