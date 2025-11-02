@@ -53,7 +53,7 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
       return;
     }
 
-    data = data.replace(/`/g, "\\u0060");
+    data = data.replaceAll("`", String.raw`\u0060`);
 
     webFrame.executeJavaScript(`
 			if(!document.getElementById("${customCssId}")) {

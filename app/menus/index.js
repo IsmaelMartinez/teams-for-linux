@@ -508,7 +508,7 @@ function createLanguageMenuItem(language, activeLanguages, menus) {
     label: language.language,
     type: "checkbox",
     id: language.code,
-    checked: activeLanguages.some((c) => language.code === c),
+    checked: activeLanguages.includes(language.code),
     click: (menuItem) => chooseLanguage(menuItem, menus),
   });
 }

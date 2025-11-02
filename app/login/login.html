@@ -43,7 +43,7 @@
     <script>
       function sendForm(event) {
         event.preventDefault();
-        window.api.submitForm({
+        globalThis.api.submitForm({
           username: document.getElementById("username").value,
           password: document.getElementById("password").value,
         });
