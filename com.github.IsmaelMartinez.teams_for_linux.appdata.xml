@@ -14,6 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.10" date="2025-11-02">
+			<description>
+				<ul>
+					<li>Fix: Resolve SonarQube code quality issues</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.9" date="2025-11-02">
 			<description>
 				<ul>
