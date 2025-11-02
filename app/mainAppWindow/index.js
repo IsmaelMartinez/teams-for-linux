@@ -42,6 +42,18 @@ let streamSelector;
 
 const isMac = os.platform() === "darwin";
 
+function findSelectedSource(sources, source) {
+  return sources.find((s) => s.id === source.id);
+}
+
+function setupScreenSharing(selectedSource) {
+  // Store the source ID globally for access by screen sharing manager
+  globalThis.selectedScreenShareSource = selectedSource;
+
+  // Create preview window for screen sharing
+  createScreenSharePreviewWindow();
+}
+
 function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
@@ -235,18 +247,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
       });
   }
 
-  function findSelectedSource(sources, source) {
-    return sources.find((s) => s.id === source.id);
-  }
-
-  function setupScreenSharing(selectedSource) {
-    // Store the source ID globally for access by screen sharing manager
-    globalThis.selectedScreenShareSource = selectedSource;
-
-    // Create preview window for screen sharing
-    createScreenSharePreviewWindow();
-  }
-
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
     m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
@@ -299,7 +299,7 @@ function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
   if (
-    typeof config.clientCertPath !== "undefined" &&
+    config.clientCertPath !== undefined &&
     config.clientCertPath !== ""
   ) {
     app.importCertificate(
@@ -630,14 +630,14 @@ function secureOpenLink(details) {
 }
 
 function openInBrowser(details) {
-  if (config.defaultURLHandler.trim() !== "") {
+  if (config.defaultURLHandler.trim() === "") {
+    shell.openExternal(details.url);
+  } else {
     execFile(
       config.defaultURLHandler.trim(),
       [details.url],
       openInBrowserErrorHandler
     );
-  } else {
-    shell.openExternal(details.url);
   }
 }
 
