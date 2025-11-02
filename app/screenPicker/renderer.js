@@ -1,11 +1,11 @@
-window.electron.ipcRenderer.on('sources-list', (sources) => {
+globalThis.electron.ipcRenderer.on('sources-list', (sources) => {
   const container = document.getElementById('sources-container');
   container.innerHTML = '';
-  sources.forEach(source => {
+  for (const source of sources) {
     const div = document.createElement('div');
     div.className = 'source';
     div.onclick = () => {
-      window.electron.ipcRenderer.send('source-selected', source);
+      globalThis.electron.ipcRenderer.send('source-selected', source);
     };
 
     const img = document.createElement('img');
@@ -17,5 +17,5 @@ window.electron.ipcRenderer.on('sources-list', (sources) => {
     div.appendChild(p);
 
     container.appendChild(div);
-  });
+  }
 });

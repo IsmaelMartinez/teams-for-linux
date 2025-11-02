@@ -5,8 +5,8 @@
  * This addresses issue #1691: Debian package contains a nonsense changelog
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const xml2js = require("xml2js");
 
 async function generateDebianChangelog(projectRoot = null) {
@@ -38,7 +38,7 @@ async function generateDebianChangelog(projectRoot = null) {
   // Generate changelog entries
   let changelogContent = "";
 
-  releases.forEach((release) => {
+  for (const release of releases) {
     const version = release.$.version;
     const date = release.$.date;
 
@@ -62,7 +62,7 @@ async function generateDebianChangelog(projectRoot = null) {
     changelogContent += `teams-for-linux (${version}) stable; urgency=medium\n\n`;
     changelogContent += `${releaseNotes}\n\n`;
     changelogContent += ` -- Ismael Martinez <ismaelmartinez@gmail.com>  ${debianDate}\n\n`;
-  });
+  }
 
   return changelogContent;
 }

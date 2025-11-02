@@ -68,6 +68,7 @@ function setEventHandlers(self) {
             if (buttons.length == 3) {
               buttons[1].click();
             }
+            break;
 
           case 'ACCEPT_VIDEO':
             buttons[0].click();

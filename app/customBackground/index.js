@@ -1,7 +1,7 @@
 const httpHelper = require("../helpers");
 const { ipcMain } = require("electron");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 let customBGServiceUrl;
 
@@ -51,10 +51,10 @@ class CustomBackground {
       this.app.getPath("userData"),
       "custom_bg_remote.json",
     );
-    if (!fs.existsSync(file)) {
-      return [];
-    } else {
+    if (fs.existsSync(file)) {
       return JSON.parse(fs.readFileSync(file));
+    } else {
+      return [];
     }
   }
 
@@ -186,7 +186,7 @@ function setPath(cfg) {
 
 function setConnectSrcSecurityPolicy(policies) {
   const connectsrcIndex = policies.findIndex(
-    (f) => f.indexOf("connect-src") >= 0,
+    (f) => f.includes("connect-src"),
   );
   if (connectsrcIndex >= 0) {
     policies[connectsrcIndex] =
@@ -195,7 +195,7 @@ function setConnectSrcSecurityPolicy(policies) {
 }
 
 function setImgSrcSecurityPolicy(policies) {
-  const imgsrcIndex = policies.findIndex((f) => f.indexOf("img-src") >= 0);
+  const imgsrcIndex = policies.findIndex((f) => f.includes("img-src"));
   if (imgsrcIndex >= 0) {
     policies[imgsrcIndex] =
       policies[imgsrcIndex] + ` ${customBGServiceUrl.origin}`;

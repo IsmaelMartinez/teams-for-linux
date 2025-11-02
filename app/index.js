@@ -404,7 +404,6 @@ function addElectronCLIFlagsFromConfig() {
   }
 }
 
-//TODO: Refator this area (move up or group)
 async function showNotification(_event, options) {
   const startTime = Date.now();
   console.debug("[TRAY_DIAG] Native notification request received", {
@@ -548,7 +547,7 @@ function handleAppReady() {
   //Just catch the error
   process.stdout.on("error", () => {});
 
-  if (config.cacheManagement?.enabled === true) {
+  if (config.cacheManagement?.enabled) {
     const cacheManager = new CacheManager({
       maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
       cacheCheckIntervalMs:
@@ -610,7 +609,6 @@ async function handleGetSystemIdleState() {
   return state;
 }
 
-//TODO:Consider moving partitions to another module (maybe with the handle zooom level)
 async function handleGetZoomLevel(_, name) {
   const partition = getPartition(name) || {};
   return partition.zoomLevel ? partition.zoomLevel : 0;

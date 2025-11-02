@@ -7,8 +7,8 @@
  * ReleaseInfo interface: https://www.electron.build/app-builder-lib.interface.releaseinfo
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const xml2js = require("xml2js");
 
 async function generateReleaseInfo(projectRoot = null) {

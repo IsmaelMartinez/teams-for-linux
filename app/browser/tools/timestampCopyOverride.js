@@ -1,9 +1,7 @@
 const ReactHandler = require("./reactHandler");
 
 class TimestampCopyOverride {
-    constructor() {
-        this.overrideInterval = null;
-    }
+    overrideInterval = null;
 
     init(config) {
         this.config = config;

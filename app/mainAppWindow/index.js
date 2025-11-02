@@ -13,13 +13,13 @@ const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
-const { execFile } = require("child_process");
+const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
 const connMgr = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
-const os = require("os");
-const path = require("path");
+const os = require("node:os");
+const path = require("node:path");
 
 // Default configuration for the screen sharing thumbnail preview (avoid magic values)
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
@@ -42,8 +42,40 @@ let streamSelector;
 
 const isMac = os.platform() === "darwin";
 
+function findSelectedSource(sources, source) {
+  return sources.find((s) => s.id === source.id);
+}
+
+function setupScreenSharing(selectedSource) {
+  // Store the source ID globally for access by screen sharing manager
+  globalThis.selectedScreenShareSource = selectedSource;
+
+  // Create preview window for screen sharing
+  createScreenSharePreviewWindow();
+}
+
+function handleScreenSourceSelection(source, callback) {
+  desktopCapturer
+    .getSources({ types: ["window", "screen"] })
+    .then((sources) => {
+      const selectedSource = findSelectedSource(sources, source);
+      if (selectedSource) {
+        setupScreenSharing(selectedSource);
+        callback({ video: selectedSource });
+      } else {
+        // Source not found - use setImmediate and try-catch to allow retry
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] Selected source not found");
+          }
+        });
+      }
+    });
+}
+
 function createScreenSharePreviewWindow() {
-  const path = require("path");
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
@@ -215,39 +247,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     }
   );
 
-  function handleScreenSourceSelection(source, callback) {
-    desktopCapturer
-      .getSources({ types: ["window", "screen"] })
-      .then((sources) => {
-        const selectedSource = findSelectedSource(sources, source);
-        if (selectedSource) {
-          setupScreenSharing(selectedSource);
-          callback({ video: selectedSource });
-        } else {
-          // Source not found - use setImmediate and try-catch to allow retry
-          setImmediate(() => {
-            try {
-              callback({});
-            } catch {
-              console.debug("[SCREEN_SHARE] Selected source not found");
-            }
-          });
-        }
-      });
-  }
-
-  function findSelectedSource(sources, source) {
-    return sources.find((s) => s.id === source.id);
-  }
-
-  function setupScreenSharing(selectedSource) {
-    // Store the source ID globally for access by screen sharing manager
-    globalThis.selectedScreenShareSource = selectedSource;
-
-    // Create preview window for screen sharing
-    createScreenSharePreviewWindow();
-  }
-
   if (iconChooser) {
     const m = new Menus(window, configGroup, iconChooser.getFile());
     m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
@@ -300,7 +299,7 @@ function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
   if (
-    typeof config.clientCertPath !== "undefined" &&
+    config.clientCertPath !== undefined &&
     config.clientCertPath !== ""
   ) {
     app.importCertificate(
@@ -362,8 +361,7 @@ function onDidFinishLoad() {
 }
 
 function injectScreenSharingLogic() {
-  const fs = require("fs");
-  const path = require("path");
+  const fs = require("node:fs");
   const scriptPath = path.join(
     __dirname,
     "..",
@@ -632,14 +630,14 @@ function secureOpenLink(details) {
 }
 
 function openInBrowser(details) {
-  if (config.defaultURLHandler.trim() !== "") {
+  if (config.defaultURLHandler.trim() === "") {
+    shell.openExternal(details.url);
+  } else {
     execFile(
       config.defaultURLHandler.trim(),
       [details.url],
       openInBrowserErrorHandler
     );
-  } else {
-    shell.openExternal(details.url);
   }
 }
 

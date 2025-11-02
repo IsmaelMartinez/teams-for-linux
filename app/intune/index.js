@@ -77,37 +77,39 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 
 function waitForBrokerInterfaceAsync(retries, delay) {
   return new Promise((resolve, reject) => {
-    function attempt(remaining) {
-      brokerService.getInterface(
-        "/com/microsoft/identity/broker1",
-        "com.microsoft.identity.Broker1",
-        function (err, broker) {
-          if (!err && broker) {
-            console.debug("[INTUNE_DIAG] microsoft-identity-broker DBus interface is ready");
-            return resolve(broker);
-          }
-
-          if (err?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
-            return reject(new Error("Broker not found, ensure it's installed"));
-          }
-
-          if (remaining > 0) {
-            console.debug(
-              `[INTUNE_DIAG] microsoft-identity-broker interface not ready`, {
-                attemptsRemaining: remaining,
-                delay: `${delay}ms`
-              }
-            );
-            setTimeout(() => attempt(remaining - 1), delay);
-          } else {
-            return reject(err || new Error("Broker DBUS Interface not ready"));
-          }
-        }
-      );
-    }
-
-    attempt(retries);
+    attemptBrokerConnection(retries, delay, resolve, reject);
   });
+}
+
+function attemptBrokerConnection(remaining, delay, resolve, reject) {
+  brokerService.getInterface(
+    "/com/microsoft/identity/broker1",
+    "com.microsoft.identity.Broker1",
+    (err, broker) => handleBrokerInterfaceResponse(err, broker, remaining, delay, resolve, reject)
+  );
+}
+
+function handleBrokerInterfaceResponse(err, broker, remaining, delay, resolve, reject) {
+  if (!err && broker) {
+    console.debug("[INTUNE_DIAG] microsoft-identity-broker DBus interface is ready");
+    return resolve(broker);
+  }
+
+  if (err?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
+    return reject(new Error("Broker not found, ensure it's installed"));
+  }
+
+  if (remaining > 0) {
+    console.debug(
+      `[INTUNE_DIAG] microsoft-identity-broker interface not ready`, {
+        attemptsRemaining: remaining,
+        delay: `${delay}ms`
+      }
+    );
+    setTimeout(() => attemptBrokerConnection(remaining - 1, delay, resolve, reject), delay);
+  } else {
+    return reject(err || new Error("Broker DBUS Interface not ready"));
+  }
 }
 
 function getBrokerAccountsAsync(broker) {
@@ -188,6 +190,61 @@ function processPrtResponse(resp, detail) {
   }
 }
 
+function handlePrtSsoCookieResponse(err, resp, detail, callback) {
+  if (err) {
+    console.warn("[INTUNE_DIAG] Failed to acquire PRT SSO cookie", {
+      error: err.message || err,
+      url: detail.url,
+      account: inTuneAccount.username
+    });
+  } else {
+    console.debug("[INTUNE_DIAG] PRT SSO cookie request completed", {
+      url: detail.url,
+      hasResponse: !!resp
+    });
+  }
+
+  processPrtResponse(resp, detail);
+  callback({
+    requestHeaders: detail.requestHeaders,
+  });
+}
+
+function acquirePrtSsoCookieFromBroker(broker, detail, callback) {
+  console.debug("[INTUNE_DIAG] Acquiring PRT SSO cookie from broker", {
+    url: detail.url,
+    account: inTuneAccount.username
+  });
+
+  broker.acquirePrtSsoCookie(
+    "0.0",
+    "",
+    JSON.stringify({
+      ssoUrl: detail.url,
+      account: inTuneAccount,
+      authParameters: {
+        authority: "https://login.microsoftonline.com/common/",
+      },
+    }),
+    (err, resp) => handlePrtSsoCookieResponse(err, resp, detail, callback)
+  );
+}
+
+function handleBrokerInterfaceForSsoCookie(err, broker, detail, callback) {
+  if (err) {
+    console.warn("[INTUNE_DIAG] Failed to get broker interface for SSO cookie", {
+      error: err.message || err,
+      url: detail.url
+    });
+    callback({
+      requestHeaders: detail.requestHeaders,
+    });
+    return;
+  }
+
+  acquirePrtSsoCookieFromBroker(broker, detail, callback);
+}
+
 exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
   // Enhanced SSO cookie retrieval with comprehensive logging
   console.debug("[INTUNE_DIAG] Retrieving InTune SSO cookie", {
@@ -211,54 +268,7 @@ exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
     brokerService.getInterface(
       "/com/microsoft/identity/broker1",
       "com.microsoft.identity.Broker1",
-      function (err, broker) {
-        if (err) {
-          console.warn("[INTUNE_DIAG] Failed to get broker interface for SSO cookie", {
-            error: err.message || err,
-            url: detail.url
-          });
-          callback({
-            requestHeaders: detail.requestHeaders,
-          });
-          return;
-        }
-
-        console.debug("[INTUNE_DIAG] Acquiring PRT SSO cookie from broker", {
-          url: detail.url,
-          account: inTuneAccount.username
-        });
-
-        broker.acquirePrtSsoCookie(
-          "0.0",
-          "",
-          JSON.stringify({
-            ssoUrl: detail.url,
-            account: inTuneAccount,
-            authParameters: {
-              authority: "https://login.microsoftonline.com/common/",
-            },
-          }),
-          function (err, resp) {
-            if (err) {
-              console.warn("[INTUNE_DIAG] Failed to acquire PRT SSO cookie", {
-                error: err.message || err,
-                url: detail.url,
-                account: inTuneAccount.username
-              });
-            } else {
-              console.debug("[INTUNE_DIAG] PRT SSO cookie request completed", {
-                url: detail.url,
-                hasResponse: !!resp
-              });
-            }
-            
-            processPrtResponse(resp, detail);
-            callback({
-              requestHeaders: detail.requestHeaders,
-            });
-          },
-        );
-      },
+      (err, broker) => handleBrokerInterfaceForSsoCookie(err, broker, detail, callback)
     );
   } catch (error) {
     console.error("[INTUNE_DIAG] Unexpected error during SSO cookie retrieval", {

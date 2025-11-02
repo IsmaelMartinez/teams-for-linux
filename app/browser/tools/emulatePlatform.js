@@ -16,7 +16,7 @@ class PlatformEmulator {
 
     //update userAgentData object
     let originalUserAgentData = navigator.userAgentData;
-    let customUserAgentData = JSON.parse(JSON.stringify(originalUserAgentData));
+    let customUserAgentData = structuredClone(originalUserAgentData);
     customUserAgentData = {
       ...customUserAgentData,
       platform: windowsStr,

@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
   const customCssLocation = getCustomCssLocation(config);
@@ -53,7 +53,7 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
       return;
     }
 
-    data = data.replace(/`/g, "\\u0060");
+    data = data.replaceAll("`", String.raw`\u0060`);
 
     webFrame.executeJavaScript(`
 			if(!document.getElementById("${customCssId}")) {

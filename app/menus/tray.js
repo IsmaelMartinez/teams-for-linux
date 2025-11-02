@@ -1,5 +1,5 @@
 const { Tray, Menu, ipcMain, nativeImage } = require("electron");
-const os = require("os");
+const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
 class ApplicationTray {

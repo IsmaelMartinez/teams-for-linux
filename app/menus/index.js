@@ -7,8 +7,8 @@ const {
   session,
   ipcMain,
 } = require("electron");
-const fs = require("fs"),
-  path = require("path");
+const fs = require("node:fs"),
+  path = require("node:path");
 const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
@@ -508,7 +508,7 @@ function createLanguageMenuItem(language, activeLanguages, menus) {
     label: language.language,
     type: "checkbox",
     id: language.code,
-    checked: activeLanguages.some((c) => language.code === c),
+    checked: activeLanguages.includes(language.code),
     click: (menuItem) => chooseLanguage(menuItem, menus),
   });
 }
