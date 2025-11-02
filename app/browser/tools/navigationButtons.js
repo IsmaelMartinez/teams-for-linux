@@ -7,6 +7,8 @@
 class NavigationButtons {
   #config;
   #initialized = false;
+  #backButton = null;
+  #forwardButton = null;
 
   init(config) {
     if (this.#initialized) {
@@ -122,11 +124,12 @@ class NavigationButtons {
   }
 
   setupEventListeners() {
-    const backButton = document.getElementById('tfl-nav-back');
-    const forwardButton = document.getElementById('tfl-nav-forward');
+    // Cache button elements to avoid repeated DOM queries
+    this.#backButton = document.getElementById('tfl-nav-back');
+    this.#forwardButton = document.getElementById('tfl-nav-forward');
 
-    if (backButton) {
-      backButton.addEventListener('click', () => {
+    if (this.#backButton) {
+      this.#backButton.addEventListener('click', () => {
         console.debug('Back button clicked');
         if (globalThis.electronAPI?.navigateBack) {
           globalThis.electronAPI.navigateBack();
@@ -134,8 +137,8 @@ class NavigationButtons {
       });
     }
 
-    if (forwardButton) {
-      forwardButton.addEventListener('click', () => {
+    if (this.#forwardButton) {
+      this.#forwardButton.addEventListener('click', () => {
         console.debug('Forward button clicked');
         if (globalThis.electronAPI?.navigateForward) {
           globalThis.electronAPI.navigateForward();
@@ -155,9 +158,6 @@ class NavigationButtons {
   }
 
   updateButtonStates(canGoBack, canGoForward) {
-    const backButton = document.getElementById('tfl-nav-back');
-    const forwardButton = document.getElementById('tfl-nav-forward');
-
     // If states not provided, request them
     if (canGoBack === undefined || canGoForward === undefined) {
       if (globalThis.electronAPI?.getNavigationState) {
@@ -168,14 +168,15 @@ class NavigationButtons {
       return;
     }
 
-    if (backButton) {
-      backButton.disabled = !canGoBack;
-      backButton.classList.toggle('disabled', !canGoBack);
+    // Use cached button references for better performance
+    if (this.#backButton) {
+      this.#backButton.disabled = !canGoBack;
+      this.#backButton.classList.toggle('disabled', !canGoBack);
     }
 
-    if (forwardButton) {
-      forwardButton.disabled = !canGoForward;
-      forwardButton.classList.toggle('disabled', !canGoForward);
+    if (this.#forwardButton) {
+      this.#forwardButton.disabled = !canGoForward;
+      this.#forwardButton.classList.toggle('disabled', !canGoForward);
     }
   }
 

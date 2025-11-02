@@ -128,9 +128,10 @@ const state = await ipcRenderer.invoke('get-navigation-state');
 ```
 
 #### `navigation-state-changed`
-**Type**: `ipcMain.on` (listener in renderer)
+**Type**: Event (main to renderer)
 **Purpose**: Notifies renderer when navigation state changes (fired after navigation events)
 **Parameters**:
+- `event`: `IpcRendererEvent`
 - `canGoBack`: `boolean` - Whether back navigation is available
 - `canGoForward`: `boolean` - Whether forward navigation is available
 
