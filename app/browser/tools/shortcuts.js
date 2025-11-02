@@ -34,12 +34,12 @@ const KEY_MAPS = {
   CTRL__: () => zoom.decreaseZoomLevel(),
   CTRL_0: () => zoom.resetZoomLevel(),
   // Alt (Option) Left / Right is used to jump words in Mac, so diabling the history navigation for Mac here
-  ...(!isMac
-    ? {
+  ...(isMac
+    ? {}
+    : {
         ALT_ArrowLeft: () => globalThis.history.back(),
         ALT_ArrowRight: () => globalThis.history.forward(),
-      }
-    : {}),
+      }),
 };
 
 function initInternal() {

@@ -14,9 +14,9 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
   if (arg.error === "net::ERR_CERT_AUTHORITY_INVALID") {
     let unknownIssuerCert = getCertIssuer(arg.certificate);
     if (
-      arg.config.customCACertsFingerprints.indexOf(
+      arg.config.customCACertsFingerprints.includes(
         unknownIssuerCert.fingerprint
-      ) !== -1
+      )
     ) {
       arg.event.preventDefault();
       arg.callback(true);
@@ -44,7 +44,10 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
  * @returns {Electron.Certificate} The root issuer certificate
  */
 function getCertIssuer(cert) {
-  if ("issuerCert" in cert && cert.issuerCert !== cert) {
+  if ("issuerCert" in cert && cert.issuerCert === cert) {
+    return cert;
+  }
+  if ("issuerCert" in cert) {
     return getCertIssuer(cert.issuerCert);
   }
   return cert;

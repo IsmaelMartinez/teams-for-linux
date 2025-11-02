@@ -1,44 +1,45 @@
 /**
  * DisableAutogain Browser Tool
- * 
+ *
  * Automatically disables microphone auto gain control in Microsoft Teams web interface.
  * This tool intercepts getUserMedia calls and modifies audio constraints to prevent
  * automatic gain adjustment, providing users with manual control over microphone levels.
- * 
+ *
  * Originally created by Joey Watts
  */
 
-const applyDisableAutogainPatch = function () {
-  function setLegacyChromeConstraint(constraint, name, value) {
-    if (constraint.mandatory && name in constraint.mandatory) {
-      constraint.mandatory[name] = value;
+function setLegacyChromeConstraint(constraint, name, value) {
+  if (constraint.mandatory && name in constraint.mandatory) {
+    constraint.mandatory[name] = value;
+    return;
+  }
+  if (constraint.optional) {
+    const element = constraint.optional.find((opt) => name in opt);
+    if (element) {
+      element[name] = value;
       return;
     }
-    if (constraint.optional) {
-      const element = constraint.optional.find((opt) => name in opt);
-      if (element) {
-        element[name] = value;
-        return;
-      }
-    }
-    // `mandatory` options throw errors for unknown keys, so avoid that by
-    // setting it under optional.
-    if (!constraint.optional) {
-      constraint.optional = [];
-    }
-    constraint.optional.push({ [name]: value });
   }
+  // `mandatory` options throw errors for unknown keys, so avoid that by
+  // setting it under optional.
+  if (!constraint.optional) {
+    constraint.optional = [];
+  }
+  constraint.optional.push({ [name]: value });
+}
 
-  function setConstraint(constraint, name, value) {
-    if (constraint.advanced) {
-      const element = constraint.advanced.find((opt) => name in opt);
-      if (element) {
-        element[name] = value;
-        return;
-      }
+function setConstraint(constraint, name, value) {
+  if (constraint.advanced) {
+    const element = constraint.advanced.find((opt) => name in opt);
+    if (element) {
+      element[name] = value;
+      return;
     }
-    constraint[name] = value;
   }
+  constraint[name] = value;
+}
+
+const applyDisableAutogainPatch = function () {
 
   function disableAutogain(constraints) {
     console.debug("[DISABLE_AUTOGAIN] Automatically disabling auto gain control", constraints);

@@ -108,7 +108,7 @@
     // This ensures self-initialization only occurs when the file is loaded
     // directly, not when required as a CommonJS module.
     try {
-      if (typeof globalThis.window !== "undefined" && globalThis.electronAPI) {
+      if (globalThis.window !== undefined && globalThis.electronAPI) {
         // If nothing else initialized it yet, call createCustomNotification.
         if (!globalThis.__customNotificationInitialized__) {
           createCustomNotification(globalThis, globalThis.electronAPI);
