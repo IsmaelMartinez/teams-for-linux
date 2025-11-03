@@ -317,8 +317,8 @@ The architecture research document (`architecture-modernization-research.md`) al
 - [x] 1.0 Setup Feature Branch and Worktree ✅ **COMPLETE**
 - [x] 2.0 Implement Core Architecture Foundation (Phase 1) ✅ **COMPLETE** (97.81% coverage, 85 tests)
 - [x] 3.0 Migrate Infrastructure Domain (Phase 2) ✅ **COMPLETE** (89 tests passing: InfrastructureDomain + Logger + NetworkMonitor)
-- [x] 4.0 Migrate Configuration Domain (Phase 3) ✅ **COMPLETE** (101 tests passing: ConfigurationDomain + StateManager + ConfigMigration)
-- [ ] 5.0 Migrate Shell Domain (Phase 4)
+- [x] 4.0 Migrate Configuration Domain (Phase 3) ✅ **COMPLETE** (61 tests passing: ConfigurationDomain + StateManager + ConfigMigration, simplified)
+- [x] 5.0 Migrate Shell Domain (Phase 4) ✅ **COMPLETE** (190 tests passing: ShellDomain + WindowManager + TrayManager + WindowState)
 - [ ] 6.0 Migrate Teams Integration Domain (Phase 5)
 - [ ] 7.0 Implement First Plugin (Phase 6)
 - [ ] 8.0 Configure Branch-Specific CI/CD
