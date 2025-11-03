@@ -14,10 +14,11 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.6.10" date="2025-11-02">
+		<release version="2.6.10" date="2025-11-04">
 			<description>
 				<ul>
 					<li>Fix: Resolve SonarQube code quality issues</li>
+					<li>Feature: Expand regex for Teams URLs to include most formats of MS Teams URLs</li>
 				</ul>
 			</description>
 		</release>
