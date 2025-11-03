@@ -22,32 +22,13 @@ const EventBus = require('../../core/EventBus');
  */
 class StateManager {
   constructor() {
-    // WeakMap pattern for private fields
-    this._state = new WeakMap();
-
-    const stateData = {
-      // User presence state
-      userStatus: -1, // -1 = unknown
-      idleTimeUserStatus: -1,
-
-      // Screen sharing state
-      screenSharingActive: false,
-      currentScreenShareSourceId: null,
-
-      // Custom state (for extensions)
-      customState: new Map()
-    };
-
-    this._state.set(this, stateData);
+    // Direct property access for better performance
+    this._userStatus = -1; // -1 = unknown
+    this._idleTimeUserStatus = -1;
+    this._screenSharingActive = false;
+    this._currentScreenShareSourceId = null;
+    this._customState = new Map();
     this._eventBus = EventBus.getInstance();
-  }
-
-  /**
-   * Get state data
-   * @private
-   */
-  _getState() {
-    return this._state.get(this);
   }
 
   /**
@@ -69,8 +50,7 @@ class StateManager {
    * @returns {number} User status (-1 = unknown, 0-4 = Teams status)
    */
   getUserStatus() {
-    const state = this._getState();
-    return state.userStatus;
+    return this._userStatus;
   }
 
   /**
@@ -79,11 +59,10 @@ class StateManager {
    * @fires state.user.statusChanged
    */
   setUserStatus(status) {
-    const state = this._getState();
-    const oldStatus = state.userStatus;
+    const oldStatus = this._userStatus;
 
     if (oldStatus !== status) {
-      state.userStatus = status;
+      this._userStatus = status;
       this._emitChange('state.user.statusChanged', {
         oldStatus,
         newStatus: status,
@@ -97,8 +76,7 @@ class StateManager {
    * @returns {number} Saved status before idle
    */
   getIdleTimeUserStatus() {
-    const state = this._getState();
-    return state.idleTimeUserStatus;
+    return this._idleTimeUserStatus;
   }
 
   /**
@@ -107,11 +85,10 @@ class StateManager {
    * @fires state.user.idleStatusChanged
    */
   setIdleTimeUserStatus(status) {
-    const state = this._getState();
-    const oldStatus = state.idleTimeUserStatus;
+    const oldStatus = this._idleTimeUserStatus;
 
     if (oldStatus !== status) {
-      state.idleTimeUserStatus = status;
+      this._idleTimeUserStatus = status;
       this._emitChange('state.user.idleStatusChanged', {
         oldStatus,
         newStatus: status,
@@ -129,8 +106,7 @@ class StateManager {
    * @returns {boolean} True if screen sharing is active
    */
   isScreenSharingActive() {
-    const state = this._getState();
-    return state.screenSharingActive;
+    return this._screenSharingActive;
   }
 
   /**
@@ -139,14 +115,13 @@ class StateManager {
    * @fires state.screenshare.activeChanged
    */
   setScreenSharingActive(active) {
-    const state = this._getState();
-    const oldActive = state.screenSharingActive;
+    const oldActive = this._screenSharingActive;
 
     if (oldActive !== active) {
-      state.screenSharingActive = active;
+      this._screenSharingActive = active;
       this._emitChange('state.screenshare.activeChanged', {
         active,
-        sourceId: state.currentScreenShareSourceId,
+        sourceId: this._currentScreenShareSourceId,
         timestamp: Date.now()
       });
     }
@@ -157,8 +132,7 @@ class StateManager {
    * @returns {string|null} Screen share source ID or null
    */
   getCurrentScreenShareSourceId() {
-    const state = this._getState();
-    return state.currentScreenShareSourceId;
+    return this._currentScreenShareSourceId;
   }
 
   /**
@@ -167,15 +141,14 @@ class StateManager {
    * @fires state.screenshare.sourceChanged
    */
   setCurrentScreenShareSourceId(sourceId) {
-    const state = this._getState();
-    const oldSourceId = state.currentScreenShareSourceId;
+    const oldSourceId = this._currentScreenShareSourceId;
 
     if (oldSourceId !== sourceId) {
-      state.currentScreenShareSourceId = sourceId;
+      this._currentScreenShareSourceId = sourceId;
       this._emitChange('state.screenshare.sourceChanged', {
         oldSourceId,
         newSourceId: sourceId,
-        active: state.screenSharingActive,
+        active: this._screenSharingActive,
         timestamp: Date.now()
       });
     }
@@ -192,9 +165,8 @@ class StateManager {
    * @returns {*} State value or default
    */
   getCustomState(key, defaultValue = undefined) {
-    const state = this._getState();
-    return state.customState.has(key)
-      ? state.customState.get(key)
+    return this._customState.has(key)
+      ? this._customState.get(key)
       : defaultValue;
   }
 
@@ -205,10 +177,9 @@ class StateManager {
    * @fires state.custom.changed
    */
   setCustomState(key, value) {
-    const state = this._getState();
-    const oldValue = state.customState.get(key);
+    const oldValue = this._customState.get(key);
 
-    state.customState.set(key, value);
+    this._customState.set(key, value);
 
     this._emitChange('state.custom.changed', {
       key,
@@ -225,12 +196,11 @@ class StateManager {
    * @fires state.custom.deleted
    */
   deleteCustomState(key) {
-    const state = this._getState();
-    const existed = state.customState.has(key);
-    const oldValue = state.customState.get(key);
+    const existed = this._customState.has(key);
+    const oldValue = this._customState.get(key);
 
     if (existed) {
-      state.customState.delete(key);
+      this._customState.delete(key);
       this._emitChange('state.custom.deleted', {
         key,
         oldValue,
@@ -246,10 +216,9 @@ class StateManager {
    * @fires state.custom.cleared
    */
   clearCustomState() {
-    const state = this._getState();
-    const count = state.customState.size;
+    const count = this._customState.size;
 
-    state.customState.clear();
+    this._customState.clear();
 
     this._emitChange('state.custom.cleared', {
       count,
@@ -266,14 +235,12 @@ class StateManager {
    * @returns {Object} Current state snapshot
    */
   getSnapshot() {
-    const state = this._getState();
-
     return {
-      userStatus: state.userStatus,
-      idleTimeUserStatus: state.idleTimeUserStatus,
-      screenSharingActive: state.screenSharingActive,
-      currentScreenShareSourceId: state.currentScreenShareSourceId,
-      customState: Object.fromEntries(state.customState)
+      userStatus: this._userStatus,
+      idleTimeUserStatus: this._idleTimeUserStatus,
+      screenSharingActive: this._screenSharingActive,
+      currentScreenShareSourceId: this._currentScreenShareSourceId,
+      customState: Object.fromEntries(this._customState)
     };
   }
 
@@ -305,10 +272,9 @@ class StateManager {
 
     // Restore custom state
     if (snapshot.customState && typeof snapshot.customState === 'object') {
-      const state = this._getState();
-      state.customState.clear();
+      this._customState.clear();
       for (const [key, value] of Object.entries(snapshot.customState)) {
-        state.customState.set(key, value);
+        this._customState.set(key, value);
       }
     }
   }
@@ -318,13 +284,11 @@ class StateManager {
    * @fires state.reset
    */
   reset() {
-    const state = this._getState();
-
-    state.userStatus = -1;
-    state.idleTimeUserStatus = -1;
-    state.screenSharingActive = false;
-    state.currentScreenShareSourceId = null;
-    state.customState.clear();
+    this._userStatus = -1;
+    this._idleTimeUserStatus = -1;
+    this._screenSharingActive = false;
+    this._currentScreenShareSourceId = null;
+    this._customState.clear();
 
     this._emitChange('state.reset', {
       timestamp: Date.now()
@@ -336,14 +300,12 @@ class StateManager {
    * @returns {Object} Statistics about current state
    */
   getStats() {
-    const state = this._getState();
-
     return {
-      userStatus: state.userStatus,
-      idleTimeUserStatus: state.idleTimeUserStatus,
-      screenSharingActive: state.screenSharingActive,
-      hasScreenShareSource: state.currentScreenShareSourceId !== null,
-      customStateCount: state.customState.size
+      userStatus: this._userStatus,
+      idleTimeUserStatus: this._idleTimeUserStatus,
+      screenSharingActive: this._screenSharingActive,
+      hasScreenShareSource: this._currentScreenShareSourceId !== null,
+      customStateCount: this._customState.size
     };
   }
 }

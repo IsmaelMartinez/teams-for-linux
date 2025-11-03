@@ -24,20 +24,8 @@ class ConfigurationDomain extends BasePlugin {
     super(id, manifest, api);
 
     // Service instances (initialized during activation)
-    this._services = new WeakMap();
-    this._servicesData = {
-      appConfiguration: null,
-      stateManager: null
-    };
-    this._services.set(this, this._servicesData);
-  }
-
-  /**
-   * Get services data from WeakMap
-   * @private
-   */
-  _getServices() {
-    return this._services.get(this);
+    this._appConfiguration = null;
+    this._stateManager = null;
   }
 
   /**
@@ -46,8 +34,6 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Promise<void>}
    */
   async onActivate() {
-    const services = this._getServices();
-
     try {
       // Import service modules
       const { AppConfiguration } = require('../../appConfiguration');
@@ -60,7 +46,7 @@ class ConfigurationDomain extends BasePlugin {
       // Initialize AppConfiguration
       const configPath = app.getPath('userData');
       const appVersion = app.getVersion();
-      services.appConfiguration = new AppConfiguration(configPath, appVersion);
+      this._appConfiguration = new AppConfiguration(configPath, appVersion);
 
       // Get logger from Infrastructure domain if available
       let logger = console;
@@ -79,7 +65,7 @@ class ConfigurationDomain extends BasePlugin {
       });
 
       // Initialize StateManager
-      services.stateManager = new StateManager();
+      this._stateManager = new StateManager();
       logger.info('StateManager initialized');
 
       // Emit domain activation event
@@ -105,8 +91,6 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Promise<void>}
    */
   async onDeactivate() {
-    const services = this._getServices();
-
     // Get logger
     let logger = console;
     try {
@@ -122,14 +106,14 @@ class ConfigurationDomain extends BasePlugin {
       logger.info('Configuration Domain deactivating...');
 
       // Save state snapshot before deactivation
-      if (services.stateManager) {
-        const snapshot = services.stateManager.getSnapshot();
-        const stats = services.stateManager.getStats();
+      if (this._stateManager) {
+        const snapshot = this._stateManager.getSnapshot();
+        const stats = this._stateManager.getStats();
         logger.info('StateManager snapshot captured', stats);
 
         // Optionally persist critical state to electron-store
-        if (services.appConfiguration && snapshot.userStatus !== -1) {
-          services.appConfiguration.settingsStore.set('lastUserStatus', snapshot.userStatus);
+        if (this._appConfiguration && snapshot.userStatus !== -1) {
+          this._appConfiguration.settingsStore.set('lastUserStatus', snapshot.userStatus);
         }
       }
 
@@ -152,20 +136,19 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Promise<void>}
    */
   async onDestroy() {
-    const services = this._getServices();
     const logger = console;
 
     try {
       logger.info('Configuration Domain cleaning up...');
 
       // Reset state manager to defaults
-      if (services.stateManager) {
-        services.stateManager.reset();
+      if (this._stateManager) {
+        this._stateManager.reset();
       }
 
       // Clear service references
-      services.appConfiguration = null;
-      services.stateManager = null;
+      this._appConfiguration = null;
+      this._stateManager = null;
 
       logger.info('Configuration Domain destroyed');
     } catch (error) {
@@ -178,11 +161,10 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Object} AppConfiguration instance
    */
   getAppConfiguration() {
-    const services = this._getServices();
-    if (!services.appConfiguration) {
+    if (!this._appConfiguration) {
       throw new Error('AppConfiguration not initialized. Domain must be activated first.');
     }
-    return services.appConfiguration;
+    return this._appConfiguration;
   }
 
   /**
@@ -190,11 +172,10 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Object} StateManager instance
    */
   getStateManager() {
-    const services = this._getServices();
-    if (!services.stateManager) {
+    if (!this._stateManager) {
       throw new Error('StateManager not initialized. Domain must be activated first.');
     }
-    return services.stateManager;
+    return this._stateManager;
   }
 
   /**
@@ -202,10 +183,9 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Object} Object containing all services
    */
   getServices() {
-    const services = this._getServices();
     return {
-      appConfiguration: services.appConfiguration,
-      stateManager: services.stateManager
+      appConfiguration: this._appConfiguration,
+      stateManager: this._stateManager
     };
   }
 
@@ -214,10 +194,9 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {boolean} True if all services are ready
    */
   isHealthy() {
-    const services = this._getServices();
     return !!(
-      services.appConfiguration &&
-      services.stateManager
+      this._appConfiguration &&
+      this._stateManager
     );
   }
 
@@ -229,15 +208,14 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {*} Configuration value
    */
   getConfig(keyPath, defaultValue = undefined) {
-    const services = this._getServices();
-    if (!services.appConfiguration) {
+    if (!this._appConfiguration) {
       throw new Error('AppConfiguration not initialized');
     }
 
     const keys = keyPath.split('.');
     const store = keys[0] === 'settings'
-      ? services.appConfiguration.settingsStore
-      : services.appConfiguration.legacyConfigStore;
+      ? this._appConfiguration.settingsStore
+      : this._appConfiguration.legacyConfigStore;
 
     const actualKeyPath = keys.length > 1 ? keys.slice(1).join('.') : keys[0];
     return store.get(actualKeyPath, defaultValue);
@@ -250,15 +228,14 @@ class ConfigurationDomain extends BasePlugin {
    * @param {*} value - Value to set
    */
   setConfig(keyPath, value) {
-    const services = this._getServices();
-    if (!services.appConfiguration) {
+    if (!this._appConfiguration) {
       throw new Error('AppConfiguration not initialized');
     }
 
     const keys = keyPath.split('.');
     const store = keys[0] === 'settings'
-      ? services.appConfiguration.settingsStore
-      : services.appConfiguration.legacyConfigStore;
+      ? this._appConfiguration.settingsStore
+      : this._appConfiguration.legacyConfigStore;
 
     const actualKeyPath = keys.length > 1 ? keys.slice(1).join('.') : keys[0];
     store.set(actualKeyPath, value);
@@ -276,11 +253,10 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Object} State snapshot
    */
   getStateSnapshot() {
-    const services = this._getServices();
-    if (!services.stateManager) {
+    if (!this._stateManager) {
       throw new Error('StateManager not initialized');
     }
-    return services.stateManager.getSnapshot();
+    return this._stateManager.getSnapshot();
   }
 
   /**
@@ -288,11 +264,10 @@ class ConfigurationDomain extends BasePlugin {
    * @param {Object} snapshot - State snapshot to restore
    */
   restoreStateSnapshot(snapshot) {
-    const services = this._getServices();
-    if (!services.stateManager) {
+    if (!this._stateManager) {
       throw new Error('StateManager not initialized');
     }
-    services.stateManager.restoreSnapshot(snapshot);
+    this._stateManager.restoreSnapshot(snapshot);
   }
 
   /**
@@ -300,24 +275,22 @@ class ConfigurationDomain extends BasePlugin {
    * @returns {Object} Domain statistics including state and config info
    */
   getStats() {
-    const services = this._getServices();
-
     const stats = {
       healthy: this.isHealthy(),
       services: {
-        appConfiguration: !!services.appConfiguration,
-        stateManager: !!services.stateManager
+        appConfiguration: !!this._appConfiguration,
+        stateManager: !!this._stateManager
       }
     };
 
-    if (services.appConfiguration) {
+    if (this._appConfiguration) {
       stats.config = {
-        configPath: services.appConfiguration.configPath
+        configPath: this._appConfiguration.configPath
       };
     }
 
-    if (services.stateManager) {
-      stats.state = services.stateManager.getStats();
+    if (this._stateManager) {
+      stats.state = this._stateManager.getStats();
     }
 
     return stats;

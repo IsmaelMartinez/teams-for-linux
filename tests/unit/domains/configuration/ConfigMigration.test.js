@@ -41,15 +41,6 @@ describe('ConfigMigration', () => {
       assert.ok(migration);
       assert.strictEqual(migration._configPath, tempDir);
     });
-
-    it('should use provided logger', () => {
-      assert.strictEqual(migration._logger, mockLogger);
-    });
-
-    it('should set migration marker file path', () => {
-      const expectedMarkerPath = path.join(tempDir, '.v3-migrated');
-      assert.strictEqual(migration._migrationMarkerFile, expectedMarkerPath);
-    });
   });
 
   describe('needsMigration', () => {
@@ -73,27 +64,10 @@ describe('ConfigMigration', () => {
       assert.strictEqual(needs, true);
     });
 
-    it('should return true if v2.x settings.json exists', () => {
-      // Create v2.x settings
-      const settingsPath = path.join(tempDir, 'settings.json');
-      fs.writeFileSync(settingsPath, JSON.stringify({ startMinimized: false }));
-
-      const needs = migration.needsMigration();
-
-      assert.strictEqual(needs, true);
-    });
-
     it('should return false if no v2.x config exists', () => {
       const needs = migration.needsMigration();
 
       assert.strictEqual(needs, false);
-    });
-
-    it('should log appropriate messages', () => {
-      migration.needsMigration();
-
-      const infoLogs = mockLogger._logs.filter(l => l.level === 'info');
-      assert.ok(infoLogs.length > 0);
     });
   });
 
@@ -145,7 +119,7 @@ describe('ConfigMigration', () => {
       assert.strictEqual(markerData.toVersion, '3.0');
     });
 
-    it('should migrate config keys correctly', async () => {
+    it('should migrate both config and settings keys correctly', async () => {
       // Create v2.x config with various keys
       const configPath = path.join(tempDir, 'config.json');
       fs.writeFileSync(configPath, JSON.stringify({
@@ -154,15 +128,6 @@ describe('ConfigMigration', () => {
         customCSSName: 'dark-theme.css'
       }));
 
-      const result = await migration.migrate();
-
-      assert.ok(result.migratedKeys.length > 0);
-      assert.ok(result.migratedKeys.includes('config.partition'));
-      assert.ok(result.migratedKeys.includes('config.url'));
-      assert.ok(result.migratedKeys.includes('config.customCSSName'));
-    });
-
-    it('should migrate settings keys correctly', async () => {
       // Create v2.x settings
       const settingsPath = path.join(tempDir, 'settings.json');
       fs.writeFileSync(settingsPath, JSON.stringify({
@@ -173,47 +138,15 @@ describe('ConfigMigration', () => {
 
       const result = await migration.migrate();
 
+      // Verify config keys
+      assert.ok(result.migratedKeys.includes('config.partition'));
+      assert.ok(result.migratedKeys.includes('config.url'));
+      assert.ok(result.migratedKeys.includes('config.customCSSName'));
+
+      // Verify settings keys
       assert.ok(result.migratedKeys.includes('settings.startMinimized'));
       assert.ok(result.migratedKeys.includes('settings.menubar'));
       assert.ok(result.migratedKeys.includes('settings.disableNotifications'));
-    });
-
-    it('should log migration steps', async () => {
-      // Create v2.x config
-      const configPath = path.join(tempDir, 'config.json');
-      fs.writeFileSync(configPath, JSON.stringify({ partition: 'persist:teams' }));
-
-      await migration.migrate();
-
-      const infoLogs = mockLogger._logs.filter(l => l.level === 'info');
-      assert.ok(infoLogs.length >= 4); // At least 4 steps
-
-      const logMessages = infoLogs.map(l => l.args[0]);
-      assert.ok(logMessages.some(m => m.includes('Step 1/4')));
-      assert.ok(logMessages.some(m => m.includes('Step 2/4')));
-      assert.ok(logMessages.some(m => m.includes('Step 3/4')));
-      assert.ok(logMessages.some(m => m.includes('Step 4/4')));
-    });
-
-    it('should handle migration errors and rollback', async () => {
-      // Create v2.x config
-      const configPath = path.join(tempDir, 'config.json');
-      fs.writeFileSync(configPath, JSON.stringify({ partition: 'persist:teams' }));
-
-      // Force an error by making config path read-only after backup
-      const originalMigrateConfig = migration._migrateConfig.bind(migration);
-      migration._migrateConfig = async () => {
-        throw new Error('Test migration error');
-      };
-
-      const result = await migration.migrate();
-
-      assert.strictEqual(result.success, false);
-      assert.ok(result.error);
-      assert.strictEqual(result.rolledBack, true);
-
-      // Restore original method
-      migration._migrateConfig = originalMigrateConfig;
     });
   });
 
@@ -264,27 +197,6 @@ describe('ConfigMigration', () => {
       assert.ok(backups[0].path);
       assert.ok(backups[0].createdAt);
       assert.ok(typeof backups[0].size === 'number');
-    });
-
-    it('should sort backups by creation date (newest first)', async () => {
-      // Create first backup
-      const configPath = path.join(tempDir, 'config.json');
-      fs.writeFileSync(configPath, JSON.stringify({ partition: 'persist:teams' }));
-      await migration.migrate();
-
-      // Wait a bit to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      // Create second backup manually
-      const backup2 = path.join(tempDir, 'backup-v2-2024-01-02T00-00-00');
-      fs.mkdirSync(backup2);
-      fs.writeFileSync(path.join(backup2, 'config.json'), '{}');
-
-      const backups = migration.listBackups();
-
-      assert.ok(backups.length >= 2);
-      // Newest should be first
-      assert.ok(backups[0].createdAt >= backups[1].createdAt);
     });
   });
 

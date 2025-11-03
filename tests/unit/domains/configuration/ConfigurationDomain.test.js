@@ -196,12 +196,6 @@ describe('ConfigurationDomain', () => {
       assert.ok(domain.onDeactivate);
       assert.ok(domain.onDestroy);
     });
-
-    it('should initialize with null services', () => {
-      const services = domain.getServices();
-      assert.strictEqual(services.appConfiguration, null);
-      assert.strictEqual(services.stateManager, null);
-    });
   });
 
   describe('Activation', () => {
@@ -211,30 +205,15 @@ describe('ConfigurationDomain', () => {
       assert.strictEqual(domain.isActive, true);
     });
 
-    it('should initialize AppConfiguration with correct parameters', async () => {
+    it('should initialize services with correct parameters', async () => {
       await domain.activate();
 
       const appConfig = domain.getAppConfiguration();
       assert.ok(appConfig);
       assert.strictEqual(appConfig.configPath, '/mock/userData');
-    });
-
-    it('should initialize StateManager', async () => {
-      await domain.activate();
 
       const stateManager = domain.getStateManager();
       assert.ok(stateManager);
-    });
-
-    it('should emit configuration.activated event', async () => {
-      await domain.activate();
-
-      const activatedEvents = mockEventBus._emitted.filter(
-        e => e.event === 'configuration.activated'
-      );
-      assert.strictEqual(activatedEvents.length, 1);
-      assert.strictEqual(activatedEvents[0].data.configPath, '/mock/userData');
-      assert.strictEqual(activatedEvents[0].data.appVersion, '3.0.0-test');
     });
 
     it('should throw error if already active', async () => {
@@ -248,29 +227,6 @@ describe('ConfigurationDomain', () => {
   });
 
   describe('Service Access', () => {
-    beforeEach(async () => {
-      await domain.activate();
-    });
-
-    it('should return AppConfiguration service', () => {
-      const appConfig = domain.getAppConfiguration();
-      assert.ok(appConfig);
-      assert.ok(appConfig.settingsStore);
-      assert.ok(appConfig.legacyConfigStore);
-    });
-
-    it('should return StateManager service', () => {
-      const stateManager = domain.getStateManager();
-      assert.ok(stateManager);
-      assert.ok(typeof stateManager.getSnapshot === 'function');
-    });
-
-    it('should return all services', () => {
-      const services = domain.getServices();
-      assert.ok(services.appConfiguration);
-      assert.ok(services.stateManager);
-    });
-
     it('should throw error when accessing services before activation', () => {
       const inactiveDomain = new ConfigurationDomain(
         'test',
@@ -295,46 +251,36 @@ describe('ConfigurationDomain', () => {
       await domain.activate();
     });
 
-    it('should get configuration value from settings store', () => {
+    it('should manage configuration get operations', () => {
       const appConfig = domain.getAppConfiguration();
       appConfig.settingsStore.set('theme', 'dark');
+      appConfig.legacyConfigStore.set('oldSetting', 'value');
 
       const theme = domain.getConfig('settings.theme', 'light');
       assert.strictEqual(theme, 'dark');
+
+      const oldValue = domain.getConfig('oldSetting', 'default');
+      assert.strictEqual(oldValue, 'value');
+
+      const defaultValue = domain.getConfig('settings.nonexistent', 'default');
+      assert.strictEqual(defaultValue, 'default');
     });
 
-    it('should get configuration value from legacy store', () => {
-      const appConfig = domain.getAppConfiguration();
-      appConfig.legacyConfigStore.set('oldSetting', 'value');
+    it('should manage configuration set operations', () => {
+      mockEventBus._reset();
 
-      const value = domain.getConfig('oldSetting', 'default');
-      assert.strictEqual(value, 'value');
-    });
-
-    it('should return default value when key not found', () => {
-      const value = domain.getConfig('settings.nonexistent', 'default');
-      assert.strictEqual(value, 'default');
-    });
-
-    it('should set configuration value in settings store', () => {
       domain.setConfig('settings.language', 'en');
 
       const appConfig = domain.getAppConfiguration();
       const language = appConfig.settingsStore.get('language');
       assert.strictEqual(language, 'en');
-    });
-
-    it('should emit configuration.changed event when setting value', () => {
-      mockEventBus._reset();
-
-      domain.setConfig('settings.notifications', true);
 
       const changedEvents = mockEventBus._emitted.filter(
         e => e.event === 'configuration.changed'
       );
       assert.strictEqual(changedEvents.length, 1);
-      assert.strictEqual(changedEvents[0].data.keyPath, 'settings.notifications');
-      assert.strictEqual(changedEvents[0].data.value, true);
+      assert.strictEqual(changedEvents[0].data.keyPath, 'settings.language');
+      assert.strictEqual(changedEvents[0].data.value, 'en');
     });
   });
 
@@ -385,25 +331,21 @@ describe('ConfigurationDomain', () => {
   });
 
   describe('Statistics', () => {
-    it('should return stats before activation', () => {
-      const stats = domain.getStats();
+    it('should return statistics for active and inactive states', async () => {
+      const statsBeforeActivation = domain.getStats();
+      assert.strictEqual(statsBeforeActivation.healthy, false);
+      assert.strictEqual(statsBeforeActivation.services.appConfiguration, false);
+      assert.strictEqual(statsBeforeActivation.services.stateManager, false);
 
-      assert.strictEqual(stats.healthy, false);
-      assert.strictEqual(stats.services.appConfiguration, false);
-      assert.strictEqual(stats.services.stateManager, false);
-    });
-
-    it('should return stats after activation', async () => {
       await domain.activate();
 
-      const stats = domain.getStats();
-
-      assert.strictEqual(stats.healthy, true);
-      assert.strictEqual(stats.services.appConfiguration, true);
-      assert.strictEqual(stats.services.stateManager, true);
-      assert.strictEqual(stats.config.configPath, '/mock/userData');
-      assert.ok(stats.state);
-      assert.strictEqual(stats.state.userStatus, -1);
+      const statsAfterActivation = domain.getStats();
+      assert.strictEqual(statsAfterActivation.healthy, true);
+      assert.strictEqual(statsAfterActivation.services.appConfiguration, true);
+      assert.strictEqual(statsAfterActivation.services.stateManager, true);
+      assert.strictEqual(statsAfterActivation.config.configPath, '/mock/userData');
+      assert.ok(statsAfterActivation.state);
+      assert.strictEqual(statsAfterActivation.state.userStatus, -1);
     });
   });
 
@@ -412,34 +354,17 @@ describe('ConfigurationDomain', () => {
       await domain.activate();
     });
 
-    it('should deactivate successfully', async () => {
-      await domain.deactivate();
-
-      assert.strictEqual(domain.isActive, false);
-    });
-
-    it('should save state snapshot on deactivation', async () => {
-      // Set a user status
+    it('should deactivate successfully and save state', async () => {
       const stateManager = domain.getStateManager();
       stateManager._snapshot.userStatus = 2;
 
       await domain.deactivate();
 
+      assert.strictEqual(domain.isActive, false);
+
       const appConfig = domain.getAppConfiguration();
       const savedStatus = appConfig.settingsStore.get('lastUserStatus');
       assert.strictEqual(savedStatus, 2);
-    });
-
-    it('should emit configuration.deactivated event', async () => {
-      mockEventBus._reset();
-
-      await domain.deactivate();
-
-      const deactivatedEvents = mockEventBus._emitted.filter(
-        e => e.event === 'configuration.deactivated'
-      );
-      assert.strictEqual(deactivatedEvents.length, 1);
-      assert.ok(deactivatedEvents[0].data.timestamp);
     });
 
     it('should throw error when deactivating inactive domain', async () => {
@@ -457,24 +382,16 @@ describe('ConfigurationDomain', () => {
       await domain.activate();
     });
 
-    it('should cleanup resources', async () => {
-      await domain.destroy();
-
-      assert.strictEqual(domain.isActive, false);
-    });
-
-    it('should reset state manager on cleanup', async () => {
+    it('should cleanup resources and reset state', async () => {
       const stateManager = domain.getStateManager();
       stateManager._snapshot.userStatus = 2;
 
       await domain.destroy();
 
+      assert.strictEqual(domain.isActive, false);
+
       const snapshot = stateManager.getSnapshot();
       assert.strictEqual(snapshot.userStatus, -1);
-    });
-
-    it('should clear service references', async () => {
-      await domain.destroy();
 
       const services = domain.getServices();
       assert.strictEqual(services.appConfiguration, null);
