@@ -7,17 +7,20 @@ const PluginManager = require('./PluginManager');
  */
 class Application {
   /**
-   * @param {Object} config - Application configuration
-   * @param {Object} logger - Logger instance
+   * @param {Object} options - Application options
+   * @param {Object} options.config - Application configuration
+   * @param {Object} options.logger - Logger instance
+   * @param {Array<string>} options.domains - Domain IDs to load
    */
-  constructor(config, logger = console) {
-    this._config = config;
-    this._logger = logger;
+  constructor(options = {}) {
+    this._config = options.config;
+    this._logger = options.logger || console;
     this._eventBus = EventBus.getInstance();
     this._pluginManager = null;
     this._initialized = false;
     this._started = false;
     this._domains = new Map();
+    this._domainsToLoad = options.domains || [];
   }
 
   /**
@@ -43,6 +46,9 @@ class Application {
       // Initialize plugin manager
       this._pluginManager = new PluginManager(services);
 
+      // Load and activate domains
+      await this._loadDomains();
+
       // Emit initialization event
       this._eventBus.emit('app.initialized', { services });
 
@@ -51,6 +57,84 @@ class Application {
     } catch (error) {
       this._logger.error('Failed to initialize application:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Load and activate domains
+   * @private
+   * @returns {Promise<void>}
+   */
+  async _loadDomains() {
+    const domainRegistry = {
+      infrastructure: {
+        path: '../domains/infrastructure/InfrastructureDomain',
+        manifest: {
+          name: 'Infrastructure Domain',
+          version: '1.0.0',
+          description: 'Core infrastructure services (logging, monitoring)',
+          permissions: ['*']
+        }
+      },
+      configuration: {
+        path: '../domains/configuration/ConfigurationDomain',
+        manifest: {
+          name: 'Configuration Domain',
+          version: '1.0.0',
+          description: 'Configuration management and state',
+          dependencies: ['domain.infrastructure'],
+          permissions: ['*']
+        }
+      },
+      shell: {
+        path: '../domains/shell/ShellDomain',
+        manifest: {
+          name: 'Shell Domain',
+          version: '1.0.0',
+          description: 'Window and tray management',
+          dependencies: ['domain.configuration'],
+          permissions: ['*']
+        }
+      },
+      'teams-integration': {
+        path: '../domains/teams-integration/TeamsIntegrationDomain',
+        manifest: {
+          name: 'Teams Integration Domain',
+          version: '1.0.0',
+          description: 'Microsoft Teams integration services',
+          dependencies: ['domain.configuration'],
+          permissions: ['*']
+        }
+      }
+    };
+
+    // Load requested domains
+    for (const domainId of this._domainsToLoad) {
+      const domainInfo = domainRegistry[domainId];
+      if (!domainInfo) {
+        this._logger.warn(`Unknown domain: ${domainId}`);
+        continue;
+      }
+
+      try {
+        this._logger.debug(`Loading domain: ${domainId}`);
+        const DomainClass = require(domainInfo.path);
+        const fullId = `domain.${domainId}`;
+
+        // Load plugin
+        await this._pluginManager.loadPlugin(fullId, DomainClass, domainInfo.manifest);
+
+        // Activate plugin
+        await this._pluginManager.activatePlugin(fullId);
+
+        // Store reference
+        this._domains.set(domainId, this._pluginManager.getPlugin(fullId));
+
+        this._logger.info(`Domain loaded: ${domainId}`);
+      } catch (error) {
+        this._logger.error(`Failed to load domain ${domainId}:`, error);
+        // Don't throw - allow app to continue with partial domains
+      }
     }
   }
 
@@ -157,6 +241,31 @@ class Application {
    */
   get isStarted() {
     return this._started;
+  }
+
+  /**
+   * Get domain by ID
+   * @param {string} domainId - Domain identifier
+   * @returns {Object|null} Domain instance
+   */
+  getDomain(domainId) {
+    return this._domains.get(domainId) || null;
+  }
+
+  /**
+   * Get all loaded domains
+   * @returns {Map<string, Object>} Map of domain instances
+   */
+  getDomains() {
+    return this._domains;
+  }
+
+  /**
+   * Get configuration
+   * @returns {Object} Configuration object
+   */
+  get config() {
+    return this._config;
   }
 }
 

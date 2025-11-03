@@ -165,17 +165,117 @@ class PluginManager {
    * @private
    */
   _validateManifest(manifest) {
+    // Validate required fields (minimum for backward compatibility)
     const required = ['name', 'version'];
     const missing = required.filter(field => !manifest[field]);
 
     if (missing.length > 0) {
-      throw new Error(`Invalid manifest: missing fields ${missing.join(', ')}`);
+      throw new Error(`Invalid manifest: missing required fields ${missing.join(', ')}`);
     }
 
-    // Validate version format
+    // Validate version format (semver)
     const versionRegex = /^\d+\.\d+\.\d+$/;
     if (!versionRegex.test(manifest.version)) {
-      throw new Error(`Invalid version format: ${manifest.version}`);
+      throw new Error(`Invalid version format: ${manifest.version}. Expected semver format (e.g., 1.0.0)`);
+    }
+
+    // Validate id format if present (recommended)
+    if (manifest.id !== undefined) {
+      if (typeof manifest.id !== 'string' || manifest.id.length === 0) {
+        throw new Error('Manifest id must be a non-empty string');
+      }
+      // Check for valid id format (alphanumeric, dots, hyphens, underscores)
+      if (!/^[a-zA-Z0-9._-]+$/.test(manifest.id)) {
+        throw new Error(`Invalid id format: ${manifest.id}. Use only alphanumeric characters, dots, hyphens, or underscores`);
+      }
+    }
+
+    // Validate description if present
+    if (manifest.description !== undefined) {
+      if (typeof manifest.description !== 'string' || manifest.description.length === 0) {
+        throw new Error('Manifest description must be a non-empty string');
+      }
+      if (manifest.description.length > 500) {
+        throw new Error('Manifest description too long (max 500 characters)');
+      }
+    }
+
+    // Validate metadata fields if present
+    if (manifest.author !== undefined && typeof manifest.author !== 'string') {
+      throw new Error('Manifest author must be a string');
+    }
+
+    if (manifest.license !== undefined && typeof manifest.license !== 'string') {
+      throw new Error('Manifest license must be a string');
+    }
+
+    if (manifest.repository !== undefined) {
+      if (typeof manifest.repository !== 'string' && typeof manifest.repository !== 'object') {
+        throw new Error('Manifest repository must be a string or object');
+      }
+      if (typeof manifest.repository === 'object' && !manifest.repository.url) {
+        throw new Error('Manifest repository object must contain a url field');
+      }
+    }
+
+    // Validate permissions array
+    if (manifest.permissions !== undefined) {
+      if (!Array.isArray(manifest.permissions)) {
+        throw new Error('Manifest permissions must be an array');
+      }
+
+      manifest.permissions.forEach((permission, index) => {
+        if (typeof permission !== 'string') {
+          throw new Error(`Permission at index ${index} must be a string`);
+        }
+
+        // Validate permission format
+        // Supports: wildcard (*), namespace:action (events:emit), or single-word (logging)
+        if (!/^[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?$/.test(permission) && permission !== '*') {
+          throw new Error(`Invalid permission format: ${permission}. Expected format: "namespace:action" or single word (e.g., "events:emit", "logging")`);
+        }
+      });
+    }
+
+    // Validate dependencies array
+    if (manifest.dependencies !== undefined) {
+      if (!Array.isArray(manifest.dependencies)) {
+        throw new Error('Manifest dependencies must be an array');
+      }
+
+      manifest.dependencies.forEach((dep, index) => {
+        if (typeof dep !== 'string' || dep.length === 0) {
+          throw new Error(`Dependency at index ${index} must be a non-empty string`);
+        }
+      });
+    }
+
+    // Validate entry points
+    if (manifest.entryPoints !== undefined) {
+      if (typeof manifest.entryPoints !== 'object' || manifest.entryPoints === null) {
+        throw new Error('Manifest entryPoints must be an object');
+      }
+
+      const validEntryPoints = ['main', 'preload', 'renderer'];
+      Object.keys(manifest.entryPoints).forEach(key => {
+        if (!validEntryPoints.includes(key)) {
+          throw new Error(`Invalid entry point: ${key}. Valid entry points are: ${validEntryPoints.join(', ')}`);
+        }
+
+        const entryPoint = manifest.entryPoints[key];
+        if (typeof entryPoint !== 'string' || entryPoint.length === 0) {
+          throw new Error(`Entry point "${key}" must be a non-empty string path`);
+        }
+
+        // Validate entry point path format
+        if (!entryPoint.startsWith('./') && !entryPoint.startsWith('../')) {
+          throw new Error(`Entry point "${key}" must be a relative path starting with ./ or ../`);
+        }
+
+        if (!entryPoint.endsWith('.js')) {
+          throw new Error(`Entry point "${key}" must be a JavaScript file (.js)`);
+        }
+      });
     }
   }
 
