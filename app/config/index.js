@@ -341,7 +341,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "object",
       },
       meetupJoinRegEx: {
-        default: String.raw`^https://teams\.(microsoft|live)\.com/.*/(?:meetup-join|channel|chat|meet)`,
+        default: String.raw`^https://teams\.(?:microsoft|live)\.com/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/`,
         describe: "Regex for Teams meetup-join and related links",
         type: "string",
       },
