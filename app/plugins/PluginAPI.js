@@ -99,6 +99,18 @@ class PluginAPI {
   }
 
   /**
+   * Get a loaded domain by ID (for inter-domain communication)
+   * @param {string} domainId - Domain identifier
+   * @returns {Object|null} Domain instance or null if not loaded
+   */
+  getDomain(domainId) {
+    if (!this._services.application) {
+      return null;
+    }
+    return this._services.application.getDomain(domainId);
+  }
+
+  /**
    * Cleanup all subscriptions
    */
   cleanup() {

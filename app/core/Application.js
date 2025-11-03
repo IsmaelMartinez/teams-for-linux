@@ -40,7 +40,8 @@ class Application {
       const services = {
         eventBus: this._eventBus,
         config: this._config,
-        logger: this._logger
+        logger: this._logger,
+        application: this  // Provide access to getDomain() for inter-domain communication
       };
 
       // Initialize plugin manager

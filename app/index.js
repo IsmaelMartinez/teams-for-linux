@@ -59,6 +59,7 @@ addCommandLineSwitchesAfterConfigLoad();
 
 const Application = require("./core/Application");
 const CompatibilityBridge = require("./core/CompatibilityBridge");
+const ConfigAdapter = require("./core/ConfigAdapter");
 
 let application;
 let bridge;
@@ -69,9 +70,12 @@ let bridge;
  */
 async function initializeApplication() {
   try {
+    // Wrap config in adapter to provide get/set methods expected by PluginAPI
+    const configAdapter = new ConfigAdapter(config);
+
     // Create Application instance with domains
     application = new Application({
-      config: config,
+      config: configAdapter,
       logger: console,
       domains: ['infrastructure', 'configuration', 'shell', 'teams-integration']
     });
