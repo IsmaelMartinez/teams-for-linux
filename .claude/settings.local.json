@@ -1,24 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch",
-      "Bash(git commit:*)",
-      "Bash(ELECTRON_ENABLE_LOGGING=true npm start)",
-      "Bash(npm start)",
-      "mcp__github__search_issues",
-      "Bash(npm run lint)",
-      "mcp__github__get_pull_request_comments",
-      "mcp__github__get_pull_request",
-      "mcp__github__get_issue",
-      "Bash(git worktree:*)",
-      "Bash(grep:*)",
-      "Bash(find:*)"
+      "mcp__ruv-swarm",
+      "mcp__claude-flow@alpha",
+      "mcp__flow-nexus"
     ],
-    "deny": [],
-    "ask": []
+    "deny": []
   },
-  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "github"
+    "claude-flow",
+    "ruv-swarm",
+    "claude-flow@alpha",
+    "flow-nexus",
+    "agentic-payments"
   ]
 }
