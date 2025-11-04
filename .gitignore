@@ -16,7 +16,9 @@ test-results/
 playwright-report/
 .auth/
 
-# Claude Flow generated files
+# Claude Code and Claude Flow (local only)
+.claude/
+CLAUDE.md
 .claude/settings.local.json
 .mcp.json
 claude-flow.config.json
