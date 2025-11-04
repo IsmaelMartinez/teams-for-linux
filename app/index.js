@@ -12,6 +12,7 @@ const {
 } = require("electron");
 const path = require("node:path");
 const CustomBackground = require("./customBackground");
+const { MQTTClient } = require("./mqtt");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
@@ -50,6 +51,7 @@ const notificationSounds = [
 let userStatus = -1;
 let idleTimeUserStatus = -1;
 let picker = null;
+let mqttClient = null;
 
 let player;
 try {
@@ -82,8 +84,11 @@ if (gotTheLock) {
   app.on("ready", handleAppReady);
   app.on("quit", () => console.debug("quit"));
   app.on("render-process-gone", onRenderProcessGone);
-  app.on("will-quit", () => {
+  app.on("will-quit", async () => {
     console.debug("will-quit");
+    if (mqttClient) {
+      await mqttClient.disconnect();
+    }
   });
   app.on("certificate-error", handleCertificateError);
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
@@ -562,8 +567,14 @@ function handleAppReady() {
     });
   }
 
+  // Initialize MQTT client if enabled
+  if (config.mqtt?.enabled) {
+    mqttClient = new MQTTClient(config);
+    mqttClient.initialize();
+  }
+
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-  
+
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
@@ -677,6 +688,11 @@ async function requestMediaAccess() {
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
   console.debug(`User status changed to '${userStatus}'`);
+
+  // Publish status to MQTT if enabled
+  if (mqttClient) {
+    await mqttClient.publishStatus(userStatus);
+  }
 }
 
 async function setBadgeCountHandler(_event, count) {
