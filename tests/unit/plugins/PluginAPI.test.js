@@ -25,36 +25,9 @@ describe('PluginAPI', () => {
     };
   });
 
-  describe('Permissions', () => {
-    it('should allow access with correct permission', () => {
-      api = new PluginAPI(mockServices, ['events:subscribe']);
-      assert.doesNotThrow(() => {
-        api.on('test', () => {});
-      });
-    });
-
-    it('should deny access without permission', () => {
-      api = new PluginAPI(mockServices, []);
-      assert.throws(() => {
-        api.on('test', () => {});
-      }, /Permission denied/);
-    });
-
-    it('should allow all access with wildcard permission', () => {
-      api = new PluginAPI(mockServices, ['*']);
-      assert.doesNotThrow(() => {
-        api.on('test', () => {});
-        api.emit('test');
-        api.getConfig('key');
-        api.setConfig('key', 'value');
-        api.log('info', 'message');
-      });
-    });
-  });
-
   describe('Event Operations', () => {
     beforeEach(() => {
-      api = new PluginAPI(mockServices, ['events:subscribe', 'events:emit']);
+      api = new PluginAPI(mockServices);
     });
 
     it('should subscribe to events', () => {
@@ -85,7 +58,7 @@ describe('PluginAPI', () => {
 
   describe('Config Operations', () => {
     beforeEach(() => {
-      api = new PluginAPI(mockServices, ['config:read', 'config:write']);
+      api = new PluginAPI(mockServices);
     });
 
     it('should get config', () => {
@@ -107,7 +80,7 @@ describe('PluginAPI', () => {
 
   describe('Logging', () => {
     beforeEach(() => {
-      api = new PluginAPI(mockServices, ['logging']);
+      api = new PluginAPI(mockServices);
     });
 
     it('should log messages', () => {
@@ -118,7 +91,7 @@ describe('PluginAPI', () => {
     });
 
     it('should fallback to console if logger method not available', () => {
-      api = new PluginAPI({ eventBus: {}, config: {}, logger: {} }, ['logging']);
+      api = new PluginAPI({ eventBus: {}, config: {}, logger: {} });
       assert.doesNotThrow(() => {
         api.log('info', 'test');
       });
@@ -127,7 +100,7 @@ describe('PluginAPI', () => {
 
   describe('Cleanup', () => {
     it('should unsubscribe all event handlers', () => {
-      api = new PluginAPI(mockServices, ['events:subscribe']);
+      api = new PluginAPI(mockServices);
       let unsubscribeCount = 0;
       mockServices.eventBus.on = () => () => { unsubscribeCount++; };
 

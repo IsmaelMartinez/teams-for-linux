@@ -7,13 +7,6 @@
   "main": "index.js",
   "preload": "preload.js",
   "enabled": true,
-  "permissions": [
-    "events:subscribe",
-    "events:emit",
-    "config:read",
-    "config:write",
-    "logging"
-  ],
   "dependencies": [],
   "author": "Teams for Linux",
   "license": "MIT"

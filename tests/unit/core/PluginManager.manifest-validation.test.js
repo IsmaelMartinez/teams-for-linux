@@ -39,8 +39,7 @@ describe('PluginManager - Manifest Validation', () => {
         name: 'Test Plugin',
         version: '1.0.0',
         id: 'core.test',
-        description: 'Test plugin',
-        permissions: ['events:subscribe']
+        description: 'Test plugin'
       };
       await manager.loadPlugin('test', TestPlugin, manifest);
       assert.ok(manager.getPlugin('test'));
@@ -64,16 +63,6 @@ describe('PluginManager - Manifest Validation', () => {
         manager.loadPlugin('test', TestPlugin, manifest),
         /missing required fields version/
       );
-    });
-
-    it('should accept valid permission formats', async () => {
-      const manifest = {
-        name: 'Test',
-        version: '1.0.0',
-        permissions: ['events:subscribe', 'config:read', 'logging']
-      };
-      await manager.loadPlugin('test', TestPlugin, manifest);
-      assert.ok(manager.getPlugin('test'));
     });
 
     it('should validate ID format if provided', async () => {

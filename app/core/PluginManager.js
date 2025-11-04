@@ -31,9 +31,8 @@ class PluginManager {
     // Validate manifest
     this._validateManifest(manifest);
 
-    // Create plugin API with permissions
-    const permissions = manifest.permissions || [];
-    const api = new PluginAPI(this._services, permissions);
+    // Create plugin API (all internal plugins are trusted)
+    const api = new PluginAPI(this._services);
 
     // Instantiate plugin
     const plugin = new PluginClass(id, manifest, api);
@@ -216,25 +215,6 @@ class PluginManager {
       if (typeof manifest.repository === 'object' && !manifest.repository.url) {
         throw new Error('Manifest repository object must contain a url field');
       }
-    }
-
-    // Validate permissions array
-    if (manifest.permissions !== undefined) {
-      if (!Array.isArray(manifest.permissions)) {
-        throw new Error('Manifest permissions must be an array');
-      }
-
-      manifest.permissions.forEach((permission, index) => {
-        if (typeof permission !== 'string') {
-          throw new Error(`Permission at index ${index} must be a string`);
-        }
-
-        // Validate permission format
-        // Supports: wildcard (*), namespace:action (events:emit), or single-word (logging)
-        if (!/^[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?$/.test(permission) && permission !== '*') {
-          throw new Error(`Invalid permission format: ${permission}. Expected format: "namespace:action" or single word (e.g., "events:emit", "logging")`);
-        }
-      });
     }
 
     // Validate dependencies array
