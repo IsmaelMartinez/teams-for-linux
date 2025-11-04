@@ -5,7 +5,7 @@
  * for MQTT publishing to home automation systems.
  *
  * Status Detection Strategy:
- * 1. Uses MutationObserver for real-time DOM changes
+ * 1. Uses MutationObserver for real-time DOM changes (debounced)
  * 2. Polls periodically as fallback (configurable interval)
  * 3. Checks multiple selectors and strategies for robustness
  *
@@ -19,6 +19,16 @@ class MQTTStatusMonitor {
 		this.lastStatus = null;
 		this.observer = null;
 		this.pollInterval = null;
+		this.debounceTimer = null;
+
+		// Status keyword mapping for efficient lookup
+		this.statusKeywords = [
+			{ keywords: ['do not disturb', 'dnd', 'do-not-disturb', 'focus', 'presence-dnd', 'status-dnd'], code: 3 },
+			{ keywords: ['be right back', 'brb', 'berightback', 'presence-berightback', 'status-brb'], code: 5 },
+			{ keywords: ['busy', 'in a call', 'in a meeting', 'red', 'presence-busy', 'status-busy'], code: 2 },
+			{ keywords: ['away', 'inactive', 'yellow', 'presence-away', 'status-away'], code: 4 },
+			{ keywords: ['available', 'online', 'green', 'presence-available', 'status-available'], code: 1 }
+		];
 
 		// Only start monitoring if MQTT is enabled
 		if (!config.mqtt?.enabled) {
@@ -61,10 +71,17 @@ class MQTTStatusMonitor {
 
 	/**
 	 * Set up MutationObserver to watch for DOM changes
+	 * Uses debouncing to avoid excessive checks on rapid DOM changes
 	 */
 	setupMutationObserver() {
 		this.observer = new MutationObserver(() => {
-			this.checkStatusChange();
+			// Debounce: only check status after DOM settles (300ms of no changes)
+			if (this.debounceTimer) {
+				clearTimeout(this.debounceTimer);
+			}
+			this.debounceTimer = setTimeout(() => {
+				this.checkStatusChange();
+			}, 300);
 		});
 
 		// Observe the entire body for changes to status-related attributes
@@ -75,7 +92,7 @@ class MQTTStatusMonitor {
 			attributeFilter: ['class', 'aria-label', 'title', 'data-testid']
 		});
 
-		console.debug('Mutation observer set up for status monitoring');
+		console.debug('Mutation observer set up for status monitoring (with 300ms debounce)');
 	}
 
 	/**
@@ -177,78 +194,31 @@ class MQTTStatusMonitor {
 	 * Extract status from page title
 	 */
 	extractStatusFromPageTitle() {
-		const title = document.title.toLowerCase();
-
-		if (title.includes('busy') || title.includes('in a call')) return 2;
-		if (title.includes('do not disturb') || title.includes('dnd')) return 3;
-		if (title.includes('away')) return 4;
-		if (title.includes('be right back') || title.includes('brb')) return 5;
-		if (title.includes('available')) return 1;
-
-		return null;
+		return this.mapTextToStatusCode(document.title);
 	}
 
 	/**
 	 * Scan entire document for status keywords
 	 */
 	scanForStatusText() {
-		const bodyText = document.body.textContent.toLowerCase();
-
-		// Check in priority order (most specific first)
-		if (bodyText.includes('do not disturb') || bodyText.includes('dnd')) return 3;
-		if (bodyText.includes('be right back') || bodyText.includes('brb')) return 5;
-		if (bodyText.includes('busy') || bodyText.includes('in a call') || bodyText.includes('in a meeting')) return 2;
-		if (bodyText.includes('away')) return 4;
-		if (bodyText.includes('available')) return 1;
-
-		return null;
+		return this.mapTextToStatusCode(document.body.textContent);
 	}
 
 	/**
-	 * Map UI text/attributes to status code
+	 * Map UI text/attributes to status code using keyword lookup
+	 * Checks keywords in priority order (most specific first)
 	 */
 	mapTextToStatusCode(...textSources) {
 		const combinedText = textSources.join(' ').toLowerCase();
 
-		// Check for status indicators in priority order
-		if (combinedText.includes('do not disturb') ||
-		    combinedText.includes('dnd') ||
-		    combinedText.includes('do-not-disturb') ||
-		    combinedText.includes('focus')) {
-			return 3; // Do Not Disturb
+		// Check each status keyword group in priority order
+		for (const statusGroup of this.statusKeywords) {
+			for (const keyword of statusGroup.keywords) {
+				if (combinedText.includes(keyword)) {
+					return statusGroup.code;
+				}
+			}
 		}
-
-		if (combinedText.includes('be right back') ||
-		    combinedText.includes('brb') ||
-		    combinedText.includes('berightback')) {
-			return 5; // Be Right Back
-		}
-
-		if (combinedText.includes('busy') ||
-		    combinedText.includes('in a call') ||
-		    combinedText.includes('in a meeting') ||
-		    combinedText.includes('red')) {
-			return 2; // Busy
-		}
-
-		if (combinedText.includes('away') ||
-		    combinedText.includes('inactive') ||
-		    combinedText.includes('yellow')) {
-			return 4; // Away
-		}
-
-		if (combinedText.includes('available') ||
-		    combinedText.includes('online') ||
-		    combinedText.includes('green')) {
-			return 1; // Available
-		}
-
-		// Check for CSS class-based presence indicators
-		if (combinedText.includes('presence-available') || combinedText.includes('status-available')) return 1;
-		if (combinedText.includes('presence-busy') || combinedText.includes('status-busy')) return 2;
-		if (combinedText.includes('presence-dnd') || combinedText.includes('status-dnd')) return 3;
-		if (combinedText.includes('presence-away') || combinedText.includes('status-away')) return 4;
-		if (combinedText.includes('presence-berightback') || combinedText.includes('status-brb')) return 5;
 
 		return null;
 	}
@@ -265,6 +235,11 @@ class MQTTStatusMonitor {
 		if (this.pollInterval) {
 			clearInterval(this.pollInterval);
 			this.pollInterval = null;
+		}
+
+		if (this.debounceTimer) {
+			clearTimeout(this.debounceTimer);
+			this.debounceTimer = null;
 		}
 
 		console.debug('MQTT status monitoring stopped');
