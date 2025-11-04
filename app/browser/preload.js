@@ -188,14 +188,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
-      { name: "navigationButtons", path: "./tools/navigationButtons" }
+      { name: "navigationButtons", path: "./tools/navigationButtons" },
+      { name: "muteToggle", path: "./tools/muteToggle" }
     ];
-    
+
     let successCount = 0;
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "muteToggle") {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

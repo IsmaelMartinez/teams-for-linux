@@ -563,7 +563,10 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-  
+
+  // Register global mute shortcut
+  registerGlobalMuteShortcut();
+
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
@@ -699,6 +702,42 @@ function handleGlobalShortcutDisabledRevert() {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);
+    }
+  });
+}
+
+function registerGlobalMuteShortcut() {
+  if (!config.globalMuteShortcut) {
+    console.debug("[GLOBAL_MUTE] Global mute shortcut disabled in config");
+    return;
+  }
+
+  try {
+    const registered = globalShortcut.register(config.globalMuteShortcut, () => {
+      console.debug(`[GLOBAL_MUTE] Global mute shortcut triggered: ${config.globalMuteShortcut}`);
+      // Send message to renderer process to toggle mute
+      const window = mainAppWindow.getWindow();
+      if (window && !window.isDestroyed()) {
+        window.webContents.send("toggle-mute");
+      } else {
+        console.warn("[GLOBAL_MUTE] Main window not available");
+      }
+    });
+
+    if (registered) {
+      console.info(`[GLOBAL_MUTE] Global mute shortcut registered: ${config.globalMuteShortcut}`);
+    } else {
+      console.warn(`[GLOBAL_MUTE] Failed to register global mute shortcut: ${config.globalMuteShortcut} (may already be in use)`);
+    }
+  } catch (err) {
+    console.error(`[GLOBAL_MUTE] Error registering global mute shortcut: ${err.message}`);
+  }
+
+  // Unregister on app quit
+  app.on("will-quit", () => {
+    if (config.globalMuteShortcut) {
+      globalShortcut.unregister(config.globalMuteShortcut);
+      console.debug("[GLOBAL_MUTE] Global mute shortcut unregistered");
     }
   });
 }

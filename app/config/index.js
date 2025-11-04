@@ -284,6 +284,12 @@ function extractYargConfig(configObject, appVersion) {
           "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
         type: "array",
       },
+      globalMuteShortcut: {
+        default: "CommandOrControl+Shift+M",
+        describe:
+          "Global shortcut to toggle microphone mute/unmute. Set to empty string to disable. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators",
+        type: "string",
+      },
       electronCLIFlags: {
         default: [],
         describe: "Electron CLI flags",
