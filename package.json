@@ -21,7 +21,13 @@
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint **/*.js",
+    "test": "node --test tests/unit/**/*.test.js tests/integration/**/*.test.js",
+    "test:unit": "node --test tests/unit/**/*.test.js",
+    "test:integration": "node --test tests/integration/**/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage tests/unit/**/*.test.js tests/integration/**/*.test.js",
+    "test:watch": "node --test --watch tests/unit/**/*.test.js tests/integration/**/*.test.js",
     "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",

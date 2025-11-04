@@ -1,16 +1,3 @@
-/**
- * app/index.js - Main entry point for Teams for Linux
- *
- * PHASE 1 MIGRATION: This file now uses the new Application architecture
- * while maintaining full backward compatibility with existing code.
- *
- * STRANGLER FIG PATTERN:
- * - New: Application class initialization with domain orchestration
- * - New: CompatibilityBridge for global state management
- * - Preserved: All existing IPC handlers and functionality
- * - Future: Gradually migrate logic to domains (Phase 2+)
- */
-
 const {
   app,
   BrowserWindow,
@@ -28,10 +15,6 @@ const CustomBackground = require("./customBackground");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
-
-// =============================================================================
-// EARLY INITIALIZATION (Must happen before Application init)
-// =============================================================================
 
 // Support for E2E testing: use temporary userData directory for clean state
 if (process.env.E2E_USER_DATA_DIR) {
@@ -53,58 +36,6 @@ config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 addCommandLineSwitchesAfterConfigLoad();
 
-// =============================================================================
-// NEW ARCHITECTURE: Application & Domain Initialization
-// =============================================================================
-
-const Application = require("./core/Application");
-const CompatibilityBridge = require("./core/CompatibilityBridge");
-const ConfigAdapter = require("./core/ConfigAdapter");
-
-let application;
-let bridge;
-
-/**
- * Initialize the new Application architecture
- * This runs in parallel with legacy code during the transition
- */
-async function initializeApplication() {
-  try {
-    // Wrap config in adapter to provide get/set methods expected by PluginAPI
-    const configAdapter = new ConfigAdapter(config);
-
-    // Create Application instance with domains
-    application = new Application({
-      config: configAdapter,
-      logger: console,
-      domains: ['infrastructure', 'configuration', 'shell', 'teams-integration']
-    });
-
-    // Initialize Application (loads and activates domains)
-    await application.init();
-
-    // Initialize compatibility bridge for global state
-    bridge = new CompatibilityBridge(application, { logger: console });
-    await bridge.init();
-
-    // Store player reference in bridge for backward compatibility
-    if (player) {
-      bridge.setPlayer(player);
-    }
-
-    console.info('✓ New Application architecture initialized');
-    console.info('✓ CompatibilityBridge active - global state managed via StateManager');
-  } catch (error) {
-    console.error('Failed to initialize Application architecture:', error);
-    console.warn('Continuing with legacy code paths only');
-  }
-}
-
-// =============================================================================
-// LEGACY CODE: Notification Sounds & Player Setup
-// TODO (Phase 2): Migrate to NotificationPlugin
-// =============================================================================
-
 const notificationSounds = [
   {
     type: "new-message",
@@ -116,6 +47,10 @@ const notificationSounds = [
   },
 ];
 
+let userStatus = -1;
+let idleTimeUserStatus = -1;
+let picker = null;
+
 let player;
 try {
   const { NodeSound } = require("node-sound");
@@ -125,21 +60,6 @@ try {
     `No audio players found. Audio notifications might not work. ${err}`
   );
 }
-
-// =============================================================================
-// LEGACY CODE: State Variables
-// NOTE: These are now managed by StateManager via CompatibilityBridge
-// Access via globalThis.userStatus, globalThis.idleTimeUserStatus, etc.
-// =============================================================================
-
-let userStatus = -1; // Kept for backward compatibility, bridges to StateManager
-let idleTimeUserStatus = -1; // Kept for backward compatibility
-let picker = null; // Screen picker window
-
-// =============================================================================
-// LEGACY CODE: Certificate & Core Modules
-// TODO (Phase 3): Migrate to InfrastructureDomain
-// =============================================================================
 
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
@@ -156,10 +76,6 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
 }
 
 app.allowRendererProcessReuse = false;
-
-// =============================================================================
-// APP EVENT HANDLERS & IPC SECURITY
-// =============================================================================
 
 if (gotTheLock) {
   app.on("second-instance", mainAppWindow.onAppSecondInstance);
@@ -196,11 +112,6 @@ if (gotTheLock) {
       return handler(event, ...args);
     });
   };
-
-  // =============================================================================
-  // IPC HANDLERS
-  // TODO (Phase 2): Migrate to appropriate domains via IPC bridge pattern
-  // =============================================================================
 
   ipcMain.on("config-file-changed", restartApp);
   ipcMain.handle("get-config", async () => {
@@ -386,11 +297,6 @@ if (gotTheLock) {
   app.quit();
 }
 
-// =============================================================================
-// HELPER FUNCTIONS
-// TODO (Phase 2-3): Migrate to appropriate domains
-// =============================================================================
-
 function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
@@ -509,7 +415,7 @@ async function showNotification(_event, options) {
     timestamp: new Date().toISOString(),
     suggestion: "Monitor totalTimeMs for notification display delays"
   });
-
+  
   try {
     playNotificationSound(null, {
       type: options.type,
@@ -531,7 +437,7 @@ async function showNotification(_event, options) {
     });
 
     notification.show();
-
+    
     const totalTime = Date.now() - startTime;
     console.debug("[TRAY_DIAG] Native notification displayed successfully", {
       title: options.title,
@@ -539,7 +445,7 @@ async function showNotification(_event, options) {
       urgency: config.defaultNotificationUrgency,
       performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
     });
-
+    
   } catch (error) {
     console.error("[TRAY_DIAG] Failed to show native notification", {
       error: error.message,
@@ -613,10 +519,7 @@ function onAppTerminated(signal) {
   }
 }
 
-async function handleAppReady() {
-  // Initialize new Application architecture
-  await initializeApplication();
-
+function handleAppReady() {
   // check for configuration errors
   if (config.error) {
     dialog.showMessageBox({
@@ -660,7 +563,7 @@ async function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
-
+  
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
@@ -774,11 +677,6 @@ async function requestMediaAccess() {
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
   console.debug(`User status changed to '${userStatus}'`);
-
-  // Update StateManager if bridge is available
-  if (bridge) {
-    bridge.getStateManager().setUserStatus(userStatus);
-  }
 }
 
 async function setBadgeCountHandler(_event, count) {
