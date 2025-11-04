@@ -4,6 +4,16 @@
  * Provides functionality to toggle microphone mute/unmute in Microsoft Teams.
  * This tool searches for the mute button in the Teams UI and simulates a click
  * to toggle the microphone state.
+ *
+ * Works as part of the global shortcuts system - receives IPC messages from
+ * the main process when the configured global shortcut is triggered.
+ *
+ * Configuration:
+ * {
+ *   "globalShortcuts": {
+ *     "toggle-mute": "CommandOrControl+Shift+M"
+ *   }
+ * }
  */
 
 let _MuteToggle_config = new WeakMap();

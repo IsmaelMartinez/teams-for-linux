@@ -284,11 +284,13 @@ function extractYargConfig(configObject, appVersion) {
           "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
         type: "array",
       },
-      globalMuteShortcut: {
-        default: "CommandOrControl+Shift+M",
+      globalShortcuts: {
+        default: {
+          "toggle-mute": "CommandOrControl+Shift+M"
+        },
         describe:
-          "Global shortcut to toggle microphone mute/unmute. Set to empty string to disable. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators",
-        type: "string",
+          "Global shortcuts that work system-wide, even when Teams is not focused. Object with action names as keys and keyboard shortcuts as values. Available actions: toggle-mute. Set shortcut to empty string to disable. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators. Future actions: toggle-video, toggle-hand, leave-call, toggle-screen-share, show-window",
+        type: "object",
       },
       electronCLIFlags: {
         default: [],

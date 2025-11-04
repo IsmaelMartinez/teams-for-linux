@@ -564,8 +564,8 @@ function handleAppReady() {
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
 
-  // Register global mute shortcut
-  registerGlobalMuteShortcut();
+  // Register global shortcuts
+  registerGlobalShortcuts();
 
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
@@ -706,40 +706,79 @@ function handleGlobalShortcutDisabledRevert() {
   });
 }
 
-function registerGlobalMuteShortcut() {
-  if (!config.globalMuteShortcut) {
-    console.debug("[GLOBAL_MUTE] Global mute shortcut disabled in config");
+/**
+ * Available global shortcut actions and their IPC channel mappings
+ */
+const GLOBAL_SHORTCUT_ACTIONS = {
+  "toggle-mute": "toggle-mute",
+  // Future actions (not yet implemented):
+  // "toggle-video": "toggle-video",
+  // "toggle-hand": "toggle-hand",
+  // "leave-call": "leave-call",
+  // "toggle-screen-share": "toggle-screen-share",
+  // "show-window": "show-window",
+};
+
+function registerGlobalShortcuts() {
+  if (!config.globalShortcuts || typeof config.globalShortcuts !== "object") {
+    console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
     return;
   }
 
-  try {
-    const registered = globalShortcut.register(config.globalMuteShortcut, () => {
-      console.debug(`[GLOBAL_MUTE] Global mute shortcut triggered: ${config.globalMuteShortcut}`);
-      // Send message to renderer process to toggle mute
-      const window = mainAppWindow.getWindow();
-      if (window && !window.isDestroyed()) {
-        window.webContents.send("toggle-mute");
-      } else {
-        console.warn("[GLOBAL_MUTE] Main window not available");
-      }
-    });
+  const registeredShortcuts = [];
 
-    if (registered) {
-      console.info(`[GLOBAL_MUTE] Global mute shortcut registered: ${config.globalMuteShortcut}`);
-    } else {
-      console.warn(`[GLOBAL_MUTE] Failed to register global mute shortcut: ${config.globalMuteShortcut} (may already be in use)`);
+  for (const [action, shortcut] of Object.entries(config.globalShortcuts)) {
+    // Skip if shortcut is disabled (empty string or falsy)
+    if (!shortcut) {
+      console.debug(`[GLOBAL_SHORTCUTS] Action '${action}' disabled (no shortcut configured)`);
+      continue;
     }
-  } catch (err) {
-    console.error(`[GLOBAL_MUTE] Error registering global mute shortcut: ${err.message}`);
+
+    // Check if action is supported
+    if (!GLOBAL_SHORTCUT_ACTIONS[action]) {
+      console.warn(`[GLOBAL_SHORTCUTS] Unknown action '${action}' - ignoring. Available actions: ${Object.keys(GLOBAL_SHORTCUT_ACTIONS).join(", ")}`);
+      continue;
+    }
+
+    try {
+      const ipcChannel = GLOBAL_SHORTCUT_ACTIONS[action];
+      const registered = globalShortcut.register(shortcut, () => {
+        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${action} (${shortcut})`);
+
+        const window = mainAppWindow.getWindow();
+        if (window && !window.isDestroyed()) {
+          window.webContents.send(ipcChannel);
+        } else {
+          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for action: ${action}`);
+        }
+      });
+
+      if (registered) {
+        console.info(`[GLOBAL_SHORTCUTS] Registered: ${action} → ${shortcut}`);
+        registeredShortcuts.push({ action, shortcut });
+      } else {
+        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${action} → ${shortcut} (may already be in use)`);
+      }
+    } catch (err) {
+      console.error(`[GLOBAL_SHORTCUTS] Error registering ${action}: ${err.message}`);
+    }
   }
 
-  // Unregister on app quit
+  // Unregister all shortcuts on app quit
   app.on("will-quit", () => {
-    if (config.globalMuteShortcut) {
-      globalShortcut.unregister(config.globalMuteShortcut);
-      console.debug("[GLOBAL_MUTE] Global mute shortcut unregistered");
-    }
+    registeredShortcuts.forEach(({ action, shortcut }) => {
+      try {
+        globalShortcut.unregister(shortcut);
+        console.debug(`[GLOBAL_SHORTCUTS] Unregistered: ${action} → ${shortcut}`);
+      } catch (err) {
+        console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${action}: ${err.message}`);
+      }
+    });
   });
+
+  if (registeredShortcuts.length > 0) {
+    console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredShortcuts.length} global shortcut(s)`);
+  }
 }
 
 function showScreenPicker(sources) {

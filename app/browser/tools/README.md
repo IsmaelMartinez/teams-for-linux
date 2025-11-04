@@ -27,8 +27,15 @@ Manages application settings and configuration synchronization between main and 
 #### [disableAutogain.js](disableAutogain.js)
 Disables microphone auto-gain control by intercepting `getUserMedia` calls and modifying audio constraints. Supports both modern (`autoGainControl`) and legacy (`googAutoGainControl`) MediaStream APIs.
 
-**Configuration**: `disableAutogain: true`  
+**Configuration**: `disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
+
+#### [muteToggle.js](muteToggle.js)
+Toggles microphone mute/unmute state in Microsoft Teams by locating and clicking the mute button. Supports both new Teams (v2) and classic Teams interfaces. Works with global shortcuts to enable system-wide mute control.
+
+**Configuration**: Enabled via `globalShortcuts` object
+**Default Shortcut**: `CommandOrControl+Shift+M`
+**Use Case**: Quick mute/unmute without switching to Teams window
 
 #### [wakeLock.js](wakeLock.js)
 Prevents system sleep during meetings and active calls.
@@ -53,7 +60,32 @@ Manages zoom level controls and persistence across sessions.
 Modifies platform detection to improve Teams web compatibility on Linux.
 
 #### [shortcuts.js](shortcuts.js)
-Implements custom keyboard shortcuts and global key bindings.
+Implements custom keyboard shortcuts for in-app actions like zoom control and navigation.
+
+#### Global Shortcuts System
+System-wide keyboard shortcuts that work even when Teams is not focused. Configured via the `globalShortcuts` configuration object in `config.json`.
+
+**Available Actions**:
+- `toggle-mute`: Toggle microphone mute/unmute (default: `CommandOrControl+Shift+M`)
+
+**Planned Actions**:
+- `toggle-video`: Toggle camera on/off
+- `toggle-hand`: Raise/lower hand in meetings
+- `leave-call`: Leave current call
+- `toggle-screen-share`: Start/stop screen sharing
+- `show-window`: Bring Teams window to front
+
+**Configuration Example**:
+```json
+{
+  "globalShortcuts": {
+    "toggle-mute": "CommandOrControl+Shift+M",
+    "toggle-video": ""
+  }
+}
+```
+
+Set a shortcut to empty string to disable it. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
 
 #### [tokenCache.js](tokenCache.js)
 Provides authentication token caching and management for improved login persistence.
