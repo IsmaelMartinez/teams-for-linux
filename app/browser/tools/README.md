@@ -30,13 +30,6 @@ Disables microphone auto-gain control by intercepting `getUserMedia` calls and m
 **Configuration**: `disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
 
-#### [muteToggle.js](muteToggle.js)
-Toggles microphone mute/unmute state in Microsoft Teams by locating and clicking the mute button. Supports both new Teams (v2) and classic Teams interfaces. Works with global shortcuts to enable system-wide mute control.
-
-**Configuration**: Enabled via `globalShortcuts` object
-**Default Shortcut**: `CommandOrControl+Shift+M`
-**Use Case**: Quick mute/unmute without switching to Teams window
-
 #### [wakeLock.js](wakeLock.js)
 Prevents system sleep during meetings and active calls.
 
@@ -62,30 +55,32 @@ Modifies platform detection to improve Teams web compatibility on Linux.
 #### [shortcuts.js](shortcuts.js)
 Implements custom keyboard shortcuts for in-app actions like zoom control and navigation.
 
-#### Global Shortcuts System
-System-wide keyboard shortcuts that work even when Teams is not focused. Configured via the `globalShortcuts` configuration object in `config.json`.
+#### Global Shortcuts System (Main Process)
+System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `globalShortcuts` array in `config.json`.
 
-**Available Actions**:
-- `toggle-mute`: Toggle microphone mute/unmute (default: `CommandOrControl+Shift+M`)
+**How it works**: The main process registers global shortcuts and forwards keyboard events to Teams' window, allowing Teams' native shortcuts to work system-wide without needing to find buttons in the DOM.
 
-**Planned Actions**:
-- `toggle-video`: Toggle camera on/off
-- `toggle-hand`: Raise/lower hand in meetings
-- `leave-call`: Leave current call
-- `toggle-screen-share`: Start/stop screen sharing
-- `show-window`: Bring Teams window to front
+**Common Teams Shortcuts**:
+- `Ctrl+Shift+M` - Toggle mute/unmute
+- `Ctrl+Shift+O` - Toggle video on/off
+- `Ctrl+Shift+K` - Raise/lower hand
+- `Ctrl+Shift+B` - Toggle background blur
+- `Ctrl+Shift+E` - Start/stop screen sharing
+- `Ctrl+Shift+D` - Toggle chat
+- `Ctrl+Shift+C` - Toggle calendar
+- `Ctrl+Shift+/` - Show keyboard shortcuts
 
 **Configuration Example**:
 ```json
 {
-  "globalShortcuts": {
-    "toggle-mute": "CommandOrControl+Shift+M",
-    "toggle-video": ""
-  }
+  "globalShortcuts": [
+    "CommandOrControl+Shift+M",
+    "CommandOrControl+Shift+O"
+  ]
 }
 ```
 
-Set a shortcut to empty string to disable it. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
+Set to empty array `[]` to disable all global shortcuts. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for key combinations and [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for available Teams shortcuts.
 
 #### [tokenCache.js](tokenCache.js)
 Provides authentication token caching and management for improved login persistence.

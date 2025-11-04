@@ -59,10 +59,7 @@ const allowedChannels = new Set([
   'navigate-back',
   'navigate-forward',
   'get-navigation-state',
-  'navigation-state-changed',
-
-  // Microphone controls
-  'toggle-mute'
+  'navigation-state-changed'
 ]);
 
 /**

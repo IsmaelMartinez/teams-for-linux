@@ -707,71 +707,61 @@ function handleGlobalShortcutDisabledRevert() {
 }
 
 /**
- * Available global shortcut actions and their IPC channel mappings
+ * Registers global shortcuts that forward keyboard events to Teams.
+ * This makes Teams' built-in keyboard shortcuts work system-wide.
+ *
+ * Instead of mapping actions to DOM elements, we simply forward the
+ * keyboard event to Teams and let it handle the shortcut natively.
+ * This works with all Teams shortcuts automatically and is more maintainable.
  */
-const GLOBAL_SHORTCUT_ACTIONS = {
-  "toggle-mute": "toggle-mute",
-  // Future actions (not yet implemented):
-  // "toggle-video": "toggle-video",
-  // "toggle-hand": "toggle-hand",
-  // "leave-call": "leave-call",
-  // "toggle-screen-share": "toggle-screen-share",
-  // "show-window": "show-window",
-};
-
 function registerGlobalShortcuts() {
-  if (!config.globalShortcuts || typeof config.globalShortcuts !== "object") {
+  if (!Array.isArray(config.globalShortcuts) || config.globalShortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
     return;
   }
 
   const registeredShortcuts = [];
 
-  for (const [action, shortcut] of Object.entries(config.globalShortcuts)) {
-    // Skip if shortcut is disabled (empty string or falsy)
-    if (!shortcut) {
-      console.debug(`[GLOBAL_SHORTCUTS] Action '${action}' disabled (no shortcut configured)`);
-      continue;
-    }
-
-    // Check if action is supported
-    if (!GLOBAL_SHORTCUT_ACTIONS[action]) {
-      console.warn(`[GLOBAL_SHORTCUTS] Unknown action '${action}' - ignoring. Available actions: ${Object.keys(GLOBAL_SHORTCUT_ACTIONS).join(", ")}`);
+  for (const shortcut of config.globalShortcuts) {
+    // Skip empty or invalid shortcuts
+    if (!shortcut || typeof shortcut !== "string") {
+      console.debug(`[GLOBAL_SHORTCUTS] Skipping invalid shortcut: ${shortcut}`);
       continue;
     }
 
     try {
-      const ipcChannel = GLOBAL_SHORTCUT_ACTIONS[action];
       const registered = globalShortcut.register(shortcut, () => {
-        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${action} (${shortcut})`);
+        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${shortcut}`);
 
         const window = mainAppWindow.getWindow();
         if (window && !window.isDestroyed()) {
-          window.webContents.send(ipcChannel);
+          // Forward the keyboard event to Teams by simulating the key press
+          // Teams will handle it with its built-in keyboard shortcuts
+          sendKeyboardEventToWindow(window, shortcut);
         } else {
-          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for action: ${action}`);
+          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${shortcut}`);
         }
       });
 
       if (registered) {
-        console.info(`[GLOBAL_SHORTCUTS] Registered: ${action} → ${shortcut}`);
-        registeredShortcuts.push({ action, shortcut });
+        console.info(`[GLOBAL_SHORTCUTS] Registered: ${shortcut}`);
+        registeredShortcuts.push(shortcut);
       } else {
-        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${action} → ${shortcut} (may already be in use)`);
+        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${shortcut} (may already be in use by another application)`);
       }
     } catch (err) {
-      console.error(`[GLOBAL_SHORTCUTS] Error registering ${action}: ${err.message}`);
+      console.error(`[GLOBAL_SHORTCUTS] Error registering ${shortcut}: ${err.message}`);
     }
   }
 
   // Unregister all shortcuts on app quit
   app.on("will-quit", () => {
-    registeredShortcuts.forEach(({ action, shortcut }) => {
+    registeredShortcuts.forEach((shortcut) => {
       try {
         globalShortcut.unregister(shortcut);
-        console.debug(`[GLOBAL_SHORTCUTS] Unregistered: ${action} → ${shortcut}`);
+        console.debug(`[GLOBAL_SHORTCUTS] Unregistered: ${shortcut}`);
       } catch (err) {
-        console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${action}: ${err.message}`);
+        console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${shortcut}: ${err.message}`);
       }
     });
   });
@@ -779,6 +769,70 @@ function registerGlobalShortcuts() {
   if (registeredShortcuts.length > 0) {
     console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredShortcuts.length} global shortcut(s)`);
   }
+}
+
+/**
+ * Sends a keyboard event to the window's webContents.
+ * Parses the accelerator string and simulates the corresponding key press.
+ *
+ * @param {BrowserWindow} window - The window to send the event to
+ * @param {string} accelerator - The accelerator string (e.g., "CommandOrControl+Shift+M")
+ */
+function sendKeyboardEventToWindow(window, accelerator) {
+  try {
+    // Parse the accelerator string
+    const parsed = parseAccelerator(accelerator);
+
+    // Send keyDown event
+    window.webContents.sendInputEvent({
+      type: "keyDown",
+      keyCode: parsed.key,
+      modifiers: parsed.modifiers
+    });
+
+    // Send keyUp event
+    window.webContents.sendInputEvent({
+      type: "keyUp",
+      keyCode: parsed.key,
+      modifiers: parsed.modifiers
+    });
+
+    console.debug(`[GLOBAL_SHORTCUTS] Forwarded keyboard event: ${accelerator}`);
+  } catch (err) {
+    console.error(`[GLOBAL_SHORTCUTS] Error sending keyboard event for ${accelerator}: ${err.message}`);
+  }
+}
+
+/**
+ * Parses an Electron accelerator string into key and modifiers.
+ *
+ * @param {string} accelerator - The accelerator string (e.g., "CommandOrControl+Shift+M")
+ * @returns {Object} - Object with key and modifiers array
+ */
+function parseAccelerator(accelerator) {
+  const parts = accelerator.split("+");
+  const modifiers = [];
+  let key = "";
+
+  for (const part of parts) {
+    const lower = part.toLowerCase();
+    if (lower === "commandorcontrol" || lower === "cmdorctrl") {
+      modifiers.push(isMac ? "cmd" : "control");
+    } else if (lower === "command" || lower === "cmd") {
+      modifiers.push("cmd");
+    } else if (lower === "control" || lower === "ctrl") {
+      modifiers.push("control");
+    } else if (lower === "shift") {
+      modifiers.push("shift");
+    } else if (lower === "alt" || lower === "option") {
+      modifiers.push("alt");
+    } else {
+      // This is the key
+      key = part;
+    }
+  }
+
+  return { key, modifiers };
 }
 
 function showScreenPicker(sources) {
