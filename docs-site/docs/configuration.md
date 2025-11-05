@@ -406,7 +406,7 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 - `Ctrl+Shift+D` - Toggle chat
 - `Ctrl+Shift+C` - Toggle calendar
 
-See [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for the full list.
+See [Microsoft Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for the full list.
 
 #### Important Notes
 

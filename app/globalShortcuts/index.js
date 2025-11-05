@@ -91,10 +91,11 @@ function register(config, mainAppWindow, app) {
 
   if (!Array.isArray(config.globalShortcuts) || config.globalShortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
+    isRegistered = true; // Mark as registered even with no shortcuts to maintain guard integrity
     return;
   }
 
-  const registeredShortcuts = [];
+  let registeredCount = 0;
 
   for (const shortcut of config.globalShortcuts) {
     // Skip empty or invalid shortcuts
@@ -111,8 +112,8 @@ function register(config, mainAppWindow, app) {
         if (window && !window.isDestroyed()) {
           // Forward the keyboard event to Teams by simulating the key press
           // Teams will handle it with its built-in keyboard shortcuts
-          // Note: Electron docs suggest window.focus() is required for sendInputEvent,
-          // but we're testing if it works without bringing window to front
+          // Note: In practice, sending keyboard events works reliably without focusing the window.
+          // If issues arise on specific platforms, consider calling window.focus() before sendInputEvent.
           sendKeyboardEventToWindow(window, shortcut);
         } else {
           console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${shortcut}`);
@@ -121,7 +122,7 @@ function register(config, mainAppWindow, app) {
 
       if (registered) {
         console.info(`[GLOBAL_SHORTCUTS] Registered: ${shortcut}`);
-        registeredShortcuts.push(shortcut);
+        registeredCount++;
       } else {
         console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${shortcut} (may already be in use by another application)`);
       }
@@ -132,20 +133,14 @@ function register(config, mainAppWindow, app) {
 
   // Unregister all shortcuts on app quit
   app.on("will-quit", () => {
-    for (const shortcut of registeredShortcuts) {
-      try {
-        globalShortcut.unregister(shortcut);
-        console.debug(`[GLOBAL_SHORTCUTS] Unregistered: ${shortcut}`);
-      } catch (err) {
-        console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${shortcut}: ${err.message}`);
-      }
-    }
+    globalShortcut.unregisterAll();
+    console.debug("[GLOBAL_SHORTCUTS] Unregistered all shortcuts");
     isRegistered = false;
   });
 
-  if (registeredShortcuts.length > 0) {
+  if (registeredCount > 0) {
     isRegistered = true;
-    console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredShortcuts.length} global shortcut(s)`);
+    console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredCount} global shortcut(s)`);
   }
 }
 
