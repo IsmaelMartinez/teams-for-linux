@@ -7,7 +7,7 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux is a mature Electron application with 32 modules (16 main process modules + 15 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
+Teams for Linux is a mature Electron application with 33 modules (17 main process modules + 15 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
 
 ### Key Findings
 1. **Existing Strengths**: The project already implements many industry best practices including secure IPC patterns, context isolation planning, comprehensive research documentation, and modular organization.
@@ -55,9 +55,9 @@ teams-for-linux/
 └── tests/e2e/ (Playwright tests)
 ```
 
-### Module Inventory (32 Modules Total)
+### Module Inventory (33 Modules Total)
 
-#### Main Process Modules (16)
+#### Main Process Modules (17)
 **Configuration & Shell:**
 - appConfiguration - Centralized config using AppConfiguration class
 - config - Logger and configuration utilities
@@ -74,6 +74,7 @@ teams-for-linux/
 - customBackground - Custom background images
 - customCSS - Style injection
 - documentationWindow - In-app documentation viewer
+- gpuInfoWindow - GPU diagnostics window (chrome://gpu)
 - incomingCallToast - Toast notifications for incoming calls
 - screenSharing - Desktop capture and stream selection
 - spellCheckProvider - Spell checking integration
@@ -685,10 +686,10 @@ class TeamsIntegrationDomain {
 - **Risk**: Medium - validates plugin architecture
 
 **Phase 7: Bulk Plugin Migration (Weeks 7-8)**
-- Convert remaining 31 modules to plugins (after notifications in Phase 6)
-- **Week 7**: Main process modules (15 modules)
+- Convert remaining 32 modules to plugins (after notifications in Phase 6)
+- **Week 7**: Main process modules (16 modules)
   - screen-sharing, custom-background, spell-checker, custom-css
-  - documentation-window, incoming-call-toast, menus
+  - documentation-window, gpu-info-window, incoming-call-toast, menus
   - certificate, login, intune, connection-manager, cache-manager, helpers
 - **Week 8**: Browser tools (16 modules)
   - activity-hub, disable-autogain, theme, tray-icon-renderer, tray-icon-chooser
@@ -1020,7 +1021,7 @@ class TeamsIntegrationDomain {
 4. Define plugin API interface
 
 ### Success Criteria
-- All 32 modules converted to plugins
+- All 33 modules converted to plugins
 - `index.js` reduced to less than 100 lines
 - DOM access preserved and tested
 - E2E tests pass
