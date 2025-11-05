@@ -735,10 +735,10 @@ function registerGlobalShortcuts() {
 
         const window = mainAppWindow.getWindow();
         if (window && !window.isDestroyed()) {
-          // Focus window first - required for sendInputEvent to work
-          window.focus();
           // Forward the keyboard event to Teams by simulating the key press
           // Teams will handle it with its built-in keyboard shortcuts
+          // Note: Electron docs suggest window.focus() is required for sendInputEvent,
+          // but we're testing if it works without bringing window to front
           sendKeyboardEventToWindow(window, shortcut);
         } else {
           console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${shortcut}`);
