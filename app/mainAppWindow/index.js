@@ -102,7 +102,7 @@ function createScreenSharePreviewWindow() {
     console.warn("[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing", {
       riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
       action: "focusing existing window instead of creating new",
-      windowId: globalThis.previewWindow.id
+      windowId: globalThis.previewWindow.webContents.id
     });
     globalThis.previewWindow.focus();
     return;
@@ -134,7 +134,7 @@ function createScreenSharePreviewWindow() {
     },
   });
 
-  const windowId = globalThis.previewWindow.id;
+  const windowId = globalThis.previewWindow.webContents.id;
   console.debug("[SCREEN_SHARE_DIAG] Preview BrowserWindow created", {
     windowId: windowId,
     creationTimeMs: Date.now() - startTime,
