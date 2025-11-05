@@ -295,6 +295,129 @@ class ConfigurationDomain extends BasePlugin {
 
     return stats;
   }
+
+  // ============================================================================
+  // COMMAND LINE SWITCHES & ELECTRON FLAGS (Phase 2 Migration)
+  // Static methods - can be called before domain activation
+  // ============================================================================
+
+  /**
+   * Initialize early command line switches (before config load)
+   * These switches must be set before the app is ready
+   * @static
+   * @returns {void}
+   */
+  static initializeEarlyCommandSwitches() {
+    const { app } = require('electron');
+
+    app.commandLine.appendSwitch("try-supported-channel-layouts");
+
+    // Disabled features
+    const disabledFeatures = app.commandLine.hasSwitch("disable-features")
+      ? app.commandLine.getSwitchValue("disable-features").split(",")
+      : ["HardwareMediaKeyHandling"];
+
+    // Prevent hardware media keys from interfering with Teams' built-in media controls
+    // This ensures Teams' own play/pause buttons work correctly instead of conflicting
+    // with system-level media key handling
+    if (!disabledFeatures.includes("HardwareMediaKeyHandling"))
+      disabledFeatures.push("HardwareMediaKeyHandling");
+
+    app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
+  }
+
+  /**
+   * Initialize command line switches after config is loaded
+   * Applies configuration-dependent switches (Wayland, GPU, proxy, etc.)
+   * @static
+   * @param {Object} config - Application configuration
+   * @returns {void}
+   */
+  static initializeCommandSwitches(config) {
+    const { app } = require('electron');
+
+    // Wayland-specific optimization for Linux desktop environments
+    // PipeWire provides better screen sharing and audio capture on Wayland
+    if (process.env.XDG_SESSION_TYPE === "wayland") {
+      // Disable GPU by default on Wayland unless user explicitly configured it
+      // This prevents blank window issues while allowing power users to override
+      if (config.disableGpuExplicitlySet) {
+        console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
+      } else {
+        console.info("Running under Wayland, disabling GPU composition (default behavior)...");
+        config.disableGpu = true;
+      }
+
+      // Enable PipeWire for screen sharing on Wayland
+      console.info("Enabling PipeWire for screen sharing...");
+      const features = app.commandLine.hasSwitch("enable-features")
+        ? app.commandLine.getSwitchValue("enable-features").split(",")
+        : [];
+      if (!features.includes("WebRTCPipeWireCapturer"))
+        features.push("WebRTCPipeWireCapturer");
+
+      app.commandLine.appendSwitch("enable-features", features.join(","));
+      app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
+    }
+
+    // Proxy
+    if (config.proxyServer) {
+      app.commandLine.appendSwitch("proxy-server", config.proxyServer);
+    }
+
+    if (config.class) {
+      console.info("Setting WM_CLASS property to custom value " + config.class);
+      app.setName(config.class);
+    }
+
+    app.commandLine.appendSwitch(
+      "auth-server-whitelist",
+      config.authServerWhitelist
+    );
+
+    // GPU
+    if (config.disableGpu) {
+      console.info("Disabling GPU support...");
+      app.commandLine.appendSwitch("disable-gpu");
+      app.commandLine.appendSwitch("disable-gpu-compositing");
+      app.commandLine.appendSwitch("disable-software-rasterizer");
+      app.disableHardwareAcceleration();
+    }
+
+    ConfigurationDomain.applyElectronFlags(config);
+  }
+
+  /**
+   * Apply custom Electron CLI flags from configuration
+   * @static
+   * @param {Object} config - Application configuration
+   * @returns {void}
+   */
+  static applyElectronFlags(config) {
+    const { app } = require('electron');
+
+    if (Array.isArray(config.electronCLIFlags)) {
+      for (const flag of config.electronCLIFlags) {
+        if (typeof flag === "string") {
+          console.debug(`Adding electron CLI flag '${flag}'`);
+          app.commandLine.appendSwitch(flag);
+        } else if (Array.isArray(flag) && typeof flag[0] === "string") {
+          const hasValidValue = flag[1] !== undefined &&
+                                 typeof flag[1] !== "object" &&
+                                 typeof flag[1] !== "function";
+          if (hasValidValue) {
+            console.debug(
+              `Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`
+            );
+            app.commandLine.appendSwitch(flag[0], flag[1]);
+          } else {
+            console.debug(`Adding electron CLI flag '${flag[0]}'`);
+            app.commandLine.appendSwitch(flag[0]);
+          }
+        }
+      }
+    }
+  }
 }
 
 module.exports = ConfigurationDomain;
