@@ -418,6 +418,83 @@ class ConfigurationDomain extends BasePlugin {
       }
     }
   }
+
+  // ============================================================================
+  // PARTITION MANAGEMENT (Phase 2.2 & 2.3 Migration)
+  // Instance methods - require appConfiguration to be initialized
+  // ============================================================================
+
+  /**
+   * Get all partitions from storage
+   * @returns {Array} Array of partition objects
+   */
+  getPartitions() {
+    if (!this._appConfiguration) {
+      throw new Error('AppConfiguration not initialized');
+    }
+    return this._appConfiguration.settingsStore.get("app.partitions") || [];
+  }
+
+  /**
+   * Get a specific partition by name
+   * @param {string} name - Partition name
+   * @returns {Object|undefined} Partition object or undefined if not found
+   */
+  getPartition(name) {
+    const partitions = this.getPartitions();
+    return partitions.find((p) => p.name === name);
+  }
+
+  /**
+   * Save a partition (create or update)
+   * @param {Object} partition - Partition object with name property
+   */
+  savePartition(partition) {
+    if (!this._appConfiguration) {
+      throw new Error('AppConfiguration not initialized');
+    }
+
+    const partitions = this.getPartitions();
+    const partitionIndex = partitions.findIndex((p) => p.name === partition.name);
+
+    if (partitionIndex >= 0) {
+      partitions[partitionIndex] = partition;
+    } else {
+      partitions.push(partition);
+    }
+
+    this._appConfiguration.settingsStore.set("app.partitions", partitions);
+
+    // Emit event for partition changes
+    this.api.emit('configuration.partition.saved', {
+      partition,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Get zoom level for a partition
+   * @param {string} partitionName - Partition name
+   * @returns {Promise<number>} Zoom level (0 if not set)
+   */
+  async getZoomLevel(partitionName) {
+    const partition = this.getPartition(partitionName) || {};
+    return partition.zoomLevel ? partition.zoomLevel : 0;
+  }
+
+  /**
+   * Save zoom level for a partition
+   * @param {Object} args - Arguments object with partition and zoomLevel
+   * @param {string} args.partition - Partition name
+   * @param {number} args.zoomLevel - Zoom level to save
+   * @returns {Promise<void>}
+   */
+  async saveZoomLevel(args) {
+    let partition = this.getPartition(args.partition) || {};
+    partition.name = args.partition;
+    partition.zoomLevel = args.zoomLevel;
+    this.savePartition(partition);
+  }
 }
 
 module.exports = ConfigurationDomain;

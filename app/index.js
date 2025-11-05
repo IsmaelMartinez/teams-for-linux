@@ -208,8 +208,16 @@ if (gotTheLock) {
     return config;
   });
   ipcMain.handle("get-system-idle-state", handleGetSystemIdleState);
-  ipcMain.handle("get-zoom-level", handleGetZoomLevel);
-  ipcMain.handle("save-zoom-level", handleSaveZoomLevel);
+  ipcMain.handle("get-zoom-level", async (_event, name) => {
+    // Delegate to ConfigurationDomain
+    const configDomain = application.getDomain('configuration');
+    return await configDomain.getZoomLevel(name);
+  });
+  ipcMain.handle("save-zoom-level", async (_event, args) => {
+    // Delegate to ConfigurationDomain
+    const configDomain = application.getDomain('configuration');
+    await configDomain.saveZoomLevel(args);
+  });
   ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
     desktopCapturer.getSources(opts)
   );
@@ -604,43 +612,6 @@ async function handleGetSystemIdleState() {
   }
 
   return state;
-}
-
-async function handleGetZoomLevel(_, name) {
-  const partition = getPartition(name) || {};
-  return partition.zoomLevel ? partition.zoomLevel : 0;
-}
-
-async function handleSaveZoomLevel(_, args) {
-  let partition = getPartition(args.partition) || {};
-  partition.name = args.partition;
-  partition.zoomLevel = args.zoomLevel;
-  savePartition(partition);
-}
-
-function getPartitions() {
-  return appConfig.settingsStore.get("app.partitions") || [];
-}
-
-function getPartition(name) {
-  const partitions = getPartitions();
-  return partitions.find((p) => {
-    return p.name === name;
-  });
-}
-
-function savePartition(arg) {
-  const partitions = getPartitions();
-  const partitionIndex = partitions.findIndex((p) => {
-    return p.name === arg.name;
-  });
-
-  if (partitionIndex >= 0) {
-    partitions[partitionIndex] = arg;
-  } else {
-    partitions.push(arg);
-  }
-  appConfig.settingsStore.set("app.partitions", partitions);
 }
 
 function handleCertificateError() {
