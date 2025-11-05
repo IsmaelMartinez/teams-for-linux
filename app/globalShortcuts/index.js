@@ -9,6 +9,7 @@ const { globalShortcut } = require("electron");
 const os = require("node:os");
 
 const isMac = os.platform() === "darwin";
+let isRegistered = false;
 
 /**
  * Parses an Electron accelerator string into key and modifiers.
@@ -82,6 +83,12 @@ function sendKeyboardEventToWindow(window, accelerator) {
  * @param {Object} app - Electron app instance
  */
 function register(config, mainAppWindow, app) {
+  // Guard against multiple registrations
+  if (isRegistered) {
+    console.debug("[GLOBAL_SHORTCUTS] Already registered, skipping");
+    return;
+  }
+
   if (!Array.isArray(config.globalShortcuts) || config.globalShortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
     return;
@@ -133,9 +140,11 @@ function register(config, mainAppWindow, app) {
         console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${shortcut}: ${err.message}`);
       }
     }
+    isRegistered = false;
   });
 
   if (registeredShortcuts.length > 0) {
+    isRegistered = true;
     console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredShortcuts.length} global shortcut(s)`);
   }
 }

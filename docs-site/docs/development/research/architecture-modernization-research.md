@@ -74,6 +74,7 @@ teams-for-linux/
 - customBackground - Custom background images
 - customCSS - Style injection
 - documentationWindow - In-app documentation viewer
+- globalShortcuts - System-wide keyboard shortcuts
 - incomingCallToast - Toast notifications for incoming calls
 - screenSharing - Desktop capture and stream selection
 - spellCheckProvider - Spell checking integration
