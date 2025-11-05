@@ -287,7 +287,7 @@ function extractYargConfig(configObject, appVersion) {
       globalShortcuts: {
         default: [],
         describe:
-          "Array of keyboard shortcuts that work system-wide, even when Teams is not focused. When triggered, the shortcut is forwarded to Teams which handles it with its built-in shortcuts. Disabled by default - opt-in by adding shortcuts. Example: ['Control+Shift+M', 'Control+Shift+O']. Common Teams shortcuts: Ctrl+Shift+M (mute), Ctrl+Shift+O (video), Ctrl+Shift+K (raise hand), Ctrl+Shift+B (background), Ctrl+Shift+E (share screen). IMPORTANT: Shortcuts are based on QWERTY keyboard layout. On macOS, non-QWERTY layouts (Dvorak, AZERTY, etc.) are not supported due to Electron bug. Teams uses Ctrl (not Cmd) on all platforms. Set to empty array to disable all. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators",
+          "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
         type: "array",
       },
       electronCLIFlags: {

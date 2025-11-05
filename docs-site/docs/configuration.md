@@ -121,6 +121,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appIdleTimeoutCheckInterval` | `number` | `10` | Poll interval in seconds to check if idle timeout is reached |
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
+| `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
 
 ### Advanced Options
 
@@ -375,3 +376,43 @@ If you're using Linux Mint Cinnamon or other Cinnamon-based distributions:
 
 > [!NOTE]
 > A visual icon overlay solution for Cinnamon is planned to draw notification counts directly on the tray icon image.
+
+### Global Shortcuts
+
+:::note Opt-In Feature
+Global shortcuts are **disabled by default**. Add shortcuts to your config to enable this feature.
+:::
+
+System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the shortcut is forwarded to Teams which handles it with its built-in shortcuts.
+
+#### Configuration Example
+
+```json
+{
+  "globalShortcuts": [
+    "Control+Shift+M",
+    "Control+Shift+O"
+  ]
+}
+```
+
+#### Common Teams Shortcuts
+
+- `Ctrl+Shift+M` - Toggle mute/unmute
+- `Ctrl+Shift+O` - Toggle video on/off
+- `Ctrl+Shift+K` - Raise/lower hand
+- `Ctrl+Shift+B` - Toggle background blur
+- `Ctrl+Shift+E` - Start/stop screen sharing
+- `Ctrl+Shift+D` - Toggle chat
+- `Ctrl+Shift+C` - Toggle calendar
+
+See [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for the full list.
+
+#### Important Notes
+
+- **Use `Control` not `CommandOrControl`**: Teams uses Ctrl on all platforms, including macOS
+- **QWERTY keyboard layout only**: Shortcuts are based on physical QWERTY key positions
+- **macOS limitation**: Non-QWERTY layouts (Dvorak, AZERTY, Colemak, etc.) are not supported due to [Electron bug #19747](https://github.com/electron/electron/issues/19747)
+- **Linux/Windows**: Works better but may have issues with layout changes during runtime
+
+See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
