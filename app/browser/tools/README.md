@@ -58,6 +58,8 @@ Implements custom keyboard shortcuts for in-app actions like zoom control and na
 #### Global Shortcuts System (Main Process)
 System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `globalShortcuts` array in `config.json`.
 
+**Disabled by default** - opt-in by adding shortcuts to your config.
+
 **How it works**: The main process registers global shortcuts and forwards keyboard events to Teams' window, allowing Teams' native shortcuts to work system-wide without needing to find buttons in the DOM.
 
 **Common Teams Shortcuts**:
@@ -70,7 +72,7 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 - `Ctrl+Shift+C` - Toggle calendar
 - `Ctrl+Shift+/` - Show keyboard shortcuts
 
-**Configuration Example**:
+**Configuration Example** (add to config.json to enable):
 ```json
 {
   "globalShortcuts": [
@@ -86,7 +88,7 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 - ⚠️ **macOS**: Non-QWERTY layouts (Dvorak, AZERTY, Colemak, etc.) are **not supported** due to [Electron bug #19747](https://github.com/electron/electron/issues/19747)
 - On Linux/Windows: Works better but may have issues with layout changes during runtime
 
-Set to empty array `[]` to disable all global shortcuts. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for key combinations and [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for available Teams shortcuts.
+Set to empty array `[]` or omit from config to disable. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for key combinations and [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for available Teams shortcuts.
 
 #### [tokenCache.js](tokenCache.js)
 Provides authentication token caching and management for improved login persistence.
