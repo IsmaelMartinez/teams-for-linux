@@ -36,5 +36,5 @@ Follow the same pattern as this module:
 
 1. Create similar class with different URL
 2. Add to `app/menus/index.js` constructor
-3. Add menu item in `app/menus/appMenu.js`
-4. Add method in `app/menus/index.js`
+3. Add method in `app/menus/index.js`
+4. Add menu item in `app/menus/appMenu.js`
