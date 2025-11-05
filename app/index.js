@@ -735,6 +735,8 @@ function registerGlobalShortcuts() {
 
         const window = mainAppWindow.getWindow();
         if (window && !window.isDestroyed()) {
+          // Focus window first - required for sendInputEvent to work
+          window.focus();
           // Forward the keyboard event to Teams by simulating the key press
           // Teams will handle it with its built-in keyboard shortcuts
           sendKeyboardEventToWindow(window, shortcut);

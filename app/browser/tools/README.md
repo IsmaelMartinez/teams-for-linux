@@ -80,6 +80,11 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 }
 ```
 
+**Important Limitations**:
+- ⚠️ **QWERTY keyboard layout only**: Shortcuts are based on physical QWERTY key positions
+- ⚠️ **macOS**: Non-QWERTY layouts (Dvorak, AZERTY, Colemak, etc.) are **not supported** due to [Electron bug #19747](https://github.com/electron/electron/issues/19747)
+- On Linux/Windows: Works better but may have issues with layout changes during runtime
+
 Set to empty array `[]` to disable all global shortcuts. See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for key combinations and [Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-microsoft-teams-2e8e2a70-e8d8-4a19-949b-4c36dd5292d2) for available Teams shortcuts.
 
 #### [tokenCache.js](tokenCache.js)
