@@ -758,14 +758,14 @@ function registerGlobalShortcuts() {
 
   // Unregister all shortcuts on app quit
   app.on("will-quit", () => {
-    registeredShortcuts.forEach((shortcut) => {
+    for (const shortcut of registeredShortcuts) {
       try {
         globalShortcut.unregister(shortcut);
         console.debug(`[GLOBAL_SHORTCUTS] Unregistered: ${shortcut}`);
       } catch (err) {
         console.error(`[GLOBAL_SHORTCUTS] Error unregistering ${shortcut}: ${err.message}`);
       }
-    });
+    }
   });
 
   if (registeredShortcuts.length > 0) {
