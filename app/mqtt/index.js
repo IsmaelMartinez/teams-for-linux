@@ -110,10 +110,7 @@ class MQTTClient {
 		if (this.client) {
 			console.debug('Disconnecting from MQTT broker');
 			try {
-				// mqtt.js uses callback-based API, wrap in promise
-				await new Promise((resolve) => {
-					this.client.end(false, () => resolve());
-				});
+				await this.client.end(false);
 			} catch (error) {
 				console.error('Error disconnecting from MQTT broker:', error);
 			}
