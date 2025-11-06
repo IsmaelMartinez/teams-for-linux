@@ -25,8 +25,17 @@ exports = module.exports = (Menus) => ({
     },
     {
       label: "Debug",
-      accelerator: "ctrl+D",
-      click: () => Menus.debug(),
+      submenu: [
+        {
+          label: "Open DevTools",
+          accelerator: "ctrl+D",
+          click: () => Menus.debug(),
+        },
+        {
+          label: "Open GPU Info",
+          click: () => Menus.showGpuInfo(),
+        },
+      ],
     },
     {
       type: "separator",
