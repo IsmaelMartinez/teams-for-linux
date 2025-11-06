@@ -7,7 +7,7 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux is a mature Electron application with 33 modules (17 main process modules + 15 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
+Teams for Linux is a mature Electron application with 35 modules (19 main process modules + 15 browser tools + security module) wrapping Microsoft Teams web interface. The codebase demonstrates strong engineering practices including comprehensive security documentation, IPC validation, and modular structure. However, the 711-line `app/index.js` file has become a maintenance bottleneck, mixing concerns across shell management, application lifecycle, Teams integration, and feature coordination.
 
 ### Key Findings
 1. **Existing Strengths**: The project already implements many industry best practices including secure IPC patterns, context isolation planning, comprehensive research documentation, and modular organization.
@@ -55,9 +55,9 @@ teams-for-linux/
 └── tests/e2e/ (Playwright tests)
 ```
 
-### Module Inventory (33 Modules Total)
+### Module Inventory (35 Modules Total)
 
-#### Main Process Modules (17)
+#### Main Process Modules (19)
 **Configuration & Shell:**
 - appConfiguration - Centralized config using AppConfiguration class
 - config - Logger and configuration utilities
@@ -74,6 +74,7 @@ teams-for-linux/
 - customBackground - Custom background images
 - customCSS - Style injection
 - documentationWindow - In-app documentation viewer
+- globalShortcuts - System-wide keyboard shortcuts
 - gpuInfoWindow - GPU diagnostics window (chrome://gpu)
 - incomingCallToast - Toast notifications for incoming calls
 - screenSharing - Desktop capture and stream selection

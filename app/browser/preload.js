@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" }
     ];
-    
+
     let successCount = 0;
     for (const module of modules) {
       try {
