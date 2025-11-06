@@ -93,16 +93,7 @@ class MQTTClient {
 		});
 
 		try {
-			// mqtt.js uses callback-based API, wrap in promise
-			await new Promise((resolve, reject) => {
-				this.client.publish(topic, payload, { retain: true }, (error) => {
-					if (error) {
-						reject(error);
-					} else {
-						resolve();
-					}
-				});
-			});
+			await this.client.publish(topic, payload, { retain: true });
 
 			this.lastPublishedStatus = statusString;
 			console.debug(`Published Teams status to MQTT: ${statusString} (${status}) on topic: ${topic}`);
@@ -119,10 +110,7 @@ class MQTTClient {
 		if (this.client) {
 			console.debug('Disconnecting from MQTT broker');
 			try {
-				// mqtt.js uses callback-based API, wrap in promise
-				await new Promise((resolve) => {
-					this.client.end(false, () => resolve());
-				});
+				await this.client.end(false);
 			} catch (error) {
 				console.error('Error disconnecting from MQTT broker:', error);
 			}
