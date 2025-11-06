@@ -139,13 +139,27 @@ Enable debug logging to see MQTT activity in the application logs.
 The MQTT module consists of:
 
 - **MQTTClient** (`app/mqtt/index.js`) - Main MQTT client managing connection and publishing
-- **StatusMonitor** (`app/browser/tools/mqttStatusMonitor.js`) - Browser-side status detection
+- **StatusMonitor** (`app/browser/tools/mqttStatusMonitor.js`) - Browser-side status detection using MutationObserver + polling
 - **IPC Integration** - Communication between browser and main process via `user-status-changed` channel
 
 ## Implementation Notes
 
-- Status detection uses DOM polling (configurable interval)
-- Only publishes status changes (not duplicates)
-- Retains last message for persistence
+### Status Detection Strategy
+
+The status monitor uses a dual-layer approach for robust detection:
+
+1. **MutationObserver (Primary)** - Watches for real-time DOM changes with 300ms debouncing
+   - Monitors status-related attributes: `class`, `aria-label`, `title`, `data-testid`
+   - Debounced to prevent excessive checks during UI animations
+   - Provides instant updates when Teams status changes
+
+2. **Polling (Fallback)** - Periodic checks as backup (default: 10 seconds, configurable)
+   - Ensures status is detected even if DOM events are missed
+   - Configurable via `mqtt.statusCheckInterval` in config
+
+### Additional Features
+
+- Only publishes status changes (deduplication prevents MQTT spam)
+- Retains last message for persistence (new subscribers get current status)
 - Automatically reconnects on connection loss
-- Gracefully handles Teams UI changes
+- Gracefully handles Teams UI changes with multiple detection strategies
