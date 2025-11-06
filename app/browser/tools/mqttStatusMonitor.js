@@ -144,7 +144,7 @@ class MQTTStatusMonitor {
 			'[data-testid="presence-status"]',
 			'[data-tid="my-status-button"]',
 			'[aria-label*="status"]',
-			'[title*="status" i]',
+			'[title*="status"]',
 			'.ts-presence',
 			'.presence-button',
 			'button[class*="presence"]',
