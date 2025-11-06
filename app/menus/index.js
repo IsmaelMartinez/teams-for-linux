@@ -14,6 +14,7 @@ const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const connectionManager = require("../connectionManager");
 const DocumentationWindow = require("../documentationWindow");
+const GpuInfoWindow = require("../gpuInfoWindow");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -23,6 +24,7 @@ class Menus {
     this.configGroup = configGroup;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
+    this.gpuInfoWindow = new GpuInfoWindow();
     this.initialize();
   }
 
@@ -343,6 +345,10 @@ class Menus {
 
   showDocumentation() {
     this.documentationWindow.show();
+  }
+
+  showGpuInfo() {
+    this.gpuInfoWindow.show();
   }
 }
 
