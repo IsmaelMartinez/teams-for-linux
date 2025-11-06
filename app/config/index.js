@@ -284,6 +284,12 @@ function extractYargConfig(configObject, appVersion) {
           "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
         type: "array",
       },
+      globalShortcuts: {
+        default: [],
+        describe:
+          "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
+        type: "array",
+      },
       electronCLIFlags: {
         default: [],
         describe: "Electron CLI flags",

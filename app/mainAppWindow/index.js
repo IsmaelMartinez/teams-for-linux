@@ -278,6 +278,10 @@ exports.show = function () {
   window.show();
 };
 
+exports.getWindow = function () {
+  return window;
+};
+
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
   console.debug("second-instance started");
   if (window) {

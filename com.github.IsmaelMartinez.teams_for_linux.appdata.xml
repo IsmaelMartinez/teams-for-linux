@@ -19,6 +19,7 @@
 				<ul>
 					<li>Fix: Revert notification behavior to v2.2.1 pattern to fix "notifications only work once" issue - v2.6.8 async refactoring broke notification return value, preventing Teams from managing notification lifecycle (issue #1921)</li>
 					<li>Feature: Add GPU info debug window accessible from Debug menu - displays chrome://gpu information for diagnosing graphics and hardware acceleration issues</li>
+					<li>Feature: Add configurable global keyboard shortcuts that work system-wide - allows Teams shortcuts to work even when app is not focused (opt-in, disabled by default)</li>
 				</ul>
 			</description>
 		</release>

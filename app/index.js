@@ -14,6 +14,7 @@ const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
+const globalShortcuts = require("./globalShortcuts");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -574,6 +575,9 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+
+  // Register global shortcuts
+  globalShortcuts.register(config, mainAppWindow, app);
 
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
