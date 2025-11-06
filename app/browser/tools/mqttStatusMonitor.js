@@ -185,7 +185,7 @@ class MQTTStatusMonitor {
 		const ariaLabel = element.getAttribute('aria-label') || '';
 		const title = element.getAttribute('title') || '';
 		const textContent = element.textContent || '';
-		const dataTestId = element.getAttribute('data-testid') || '';
+		const dataTestId = element.dataset.testid || '';
 
 		return this.mapTextToStatusCode(classList, ariaLabel, title, textContent, dataTestId);
 	}
