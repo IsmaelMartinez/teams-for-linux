@@ -14,7 +14,7 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.6.11" date="2025-11-05">
+		<release version="2.6.11" date="2025-11-06">
 			<description>
 				<ul>
 					<li>Feature: Add GPU info debug window accessible from Debug menu - displays chrome://gpu information for diagnosing graphics and hardware acceleration issues</li>
