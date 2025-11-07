@@ -291,6 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
+      { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" }
     ];
@@ -299,7 +300,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+        // CRITICAL: mqttStatusMonitor needs ipcRenderer for IPC communication (see CLAUDE.md)
+        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);
