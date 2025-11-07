@@ -316,18 +316,24 @@ function restartApp() {
 function addCommandLineSwitchesBeforeConfigLoad() {
   app.commandLine.appendSwitch("try-supported-channel-layouts");
 
-  // Disabled features
-  const disabledFeatures = app.commandLine.hasSwitch("disable-features")
-    ? app.commandLine.getSwitchValue("disable-features").split(",")
-    : ["HardwareMediaKeyHandling"];
-
-  // Prevent hardware media keys from interfering with Teams' built-in media controls
+  // Disable HardwareMediaKeyHandling to prevent conflicts with Teams' built-in media controls.
   // This ensures Teams' own play/pause buttons work correctly instead of conflicting
-  // with system-level media key handling
-  if (!disabledFeatures.includes("HardwareMediaKeyHandling"))
-    disabledFeatures.push("HardwareMediaKeyHandling");
-
-  app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
+  // with system-level media key handling.
+  // Note: We respect user-provided --disable-features flags and only warn if the required
+  // feature is missing, allowing power users full control.
+  if (app.commandLine.hasSwitch("disable-features")) {
+    // User provided custom disable-features - check if required feature is included
+    const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
+    if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
+      console.warn(
+        "disable-features switch already set without HardwareMediaKeyHandling. " +
+        "Teams media controls may conflict with system media key handling."
+      );
+    }
+  } else {
+    // User hasn't provided custom disable-features, use our default
+    app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
+  }
 }
 
 /**
@@ -347,15 +353,25 @@ function addCommandLineSwitchesAfterConfigLoad() {
       config.disableGpu = true;
     }
 
-    // Enable PipeWire for screen sharing on Wayland
+    // Enable WebRTCPipeWireCapturer for PipeWire-based screen sharing on Wayland.
+    // PipeWire provides better screen sharing and audio capture on Wayland.
+    // Note: We respect user-provided --enable-features flags and only warn if the required
+    // feature is missing, allowing power users full control.
     console.info("Enabling PipeWire for screen sharing...");
-    const features = app.commandLine.hasSwitch("enable-features")
-      ? app.commandLine.getSwitchValue("enable-features").split(",")
-      : [];
-    if (!features.includes("WebRTCPipeWireCapturer"))
-      features.push("WebRTCPipeWireCapturer");
-
-    app.commandLine.appendSwitch("enable-features", features.join(","));
+    if (app.commandLine.hasSwitch("enable-features")) {
+      // User provided custom enable-features - check if required feature is included
+      const features = app.commandLine.getSwitchValue("enable-features").split(",");
+      if (!features.includes("WebRTCPipeWireCapturer")) {
+        console.warn(
+          "enable-features switch already set without WebRTCPipeWireCapturer. " +
+          "Screen sharing on Wayland may not work correctly. " +
+          "Please add WebRTCPipeWireCapturer to your enable-features list."
+        );
+      }
+    } else {
+      // User hasn't provided custom enable-features, use our default
+      app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
+    }
     app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
   }
 
