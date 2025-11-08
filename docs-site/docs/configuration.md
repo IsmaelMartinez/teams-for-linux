@@ -396,6 +396,29 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 }
 ```
 
+#### Using a Prefix Modifier
+
+You can add an optional prefix to all global shortcuts to avoid conflicts with other applications:
+
+```json
+{
+  "globalShortcutPrefix": "Super",
+  "globalShortcuts": [
+    "Control+Shift+M",
+    "Control+Shift+O"
+  ]
+}
+```
+
+With this configuration:
+- The registered shortcuts will be `Super+Control+Shift+M` and `Super+Control+Shift+O`
+- The prefix is prepended to each shortcut automatically
+- Leave `globalShortcutPrefix` empty or omit it to use shortcuts without a prefix
+
+:::warning
+If the prefix is already included in your shortcut (e.g., `globalShortcutPrefix: "Super"` with shortcut `"Super+Control+Shift+M"`), it will be duplicated and the shortcut will not work. Only specify the prefix once.
+:::
+
 #### Common Teams Shortcuts
 
 - `Ctrl+Shift+M` - Toggle mute/unmute

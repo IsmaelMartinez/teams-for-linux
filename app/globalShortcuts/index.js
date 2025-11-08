@@ -96,6 +96,9 @@ function register(config, mainAppWindow, app) {
   }
 
   let registeredCount = 0;
+  const prefix = config.globalShortcutPrefix && config.globalShortcutPrefix.trim()
+    ? config.globalShortcutPrefix.trim()
+    : "";
 
   for (const shortcut of config.globalShortcuts) {
     // Skip empty or invalid shortcuts
@@ -104,9 +107,12 @@ function register(config, mainAppWindow, app) {
       continue;
     }
 
+    // Apply prefix if configured
+    const fullShortcut = prefix ? `${prefix}+${shortcut}` : shortcut;
+
     try {
-      const registered = globalShortcut.register(shortcut, () => {
-        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${shortcut}`);
+      const registered = globalShortcut.register(fullShortcut, () => {
+        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${fullShortcut}`);
 
         const window = mainAppWindow.getWindow();
         if (window && !window.isDestroyed()) {
@@ -114,20 +120,21 @@ function register(config, mainAppWindow, app) {
           // Teams will handle it with its built-in keyboard shortcuts
           // Note: In practice, sending keyboard events works reliably without focusing the window.
           // If issues arise on specific platforms, consider calling window.focus() before sendInputEvent.
+          // We forward the original shortcut (without prefix) to Teams
           sendKeyboardEventToWindow(window, shortcut);
         } else {
-          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${shortcut}`);
+          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${fullShortcut}`);
         }
       });
 
       if (registered) {
-        console.info(`[GLOBAL_SHORTCUTS] Registered: ${shortcut}`);
+        console.info(`[GLOBAL_SHORTCUTS] Registered: ${fullShortcut}`);
         registeredCount++;
       } else {
-        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${shortcut} (may already be in use by another application)`);
+        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${fullShortcut} (may already be in use by another application)`);
       }
     } catch (err) {
-      console.error(`[GLOBAL_SHORTCUTS] Error registering ${shortcut}: ${err.message}`);
+      console.error(`[GLOBAL_SHORTCUTS] Error registering ${fullShortcut}: ${err.message}`);
     }
   }
 
