@@ -78,7 +78,7 @@ Phase 3: Further Improvements (Future)
 
 ## Phase 1: Extract Pure Functions (Weeks 1-4)
 
-**Goal**: Reduce `index.js` from 755 lines to <400 lines with minimal risk.
+**Goal**: Reduce `index.js` from 755 lines to less than 400 lines with minimal risk.
 
 ### Week 1: Command Line Logic
 
@@ -333,7 +333,7 @@ screenSharingService.getSource();
 |--------|--------|-------|--------|
 | index.js LOC | 755 | 381 | **-49%** |
 | IPC in index.js | 27/42 | 7/42 | **-74%** |
-| Extractable LOC | 374 | <50 | **-87%** |
+| Extractable LOC | 374 | less than 50 | **-87%** |
 | Global variables | 10 | 6 | -40% |
 | New modules | 0 | 7 | +7 |
 | Code duplications | 9+ | 6 | -33% |
