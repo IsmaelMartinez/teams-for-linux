@@ -17,6 +17,7 @@
 		<release version="2.6.12" date="2025-11-10">
 			<description>
 				<ul>
+					<li>Update: Electron upgraded to 37.9.0, ESLint to 9.39.1, and globals to 16.5.0 for latest bug fixes and improvements</li>
 					<li>Refactor: Remove excessive comments from feature flag handling functions for improved code clarity</li>
 				</ul>
 			</description>
