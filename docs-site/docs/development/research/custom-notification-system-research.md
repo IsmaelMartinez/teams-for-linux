@@ -847,7 +847,7 @@ app/
 ## 13. Related Documentation
 
 ### Internal References
-- **[IncomingCallToast Implementation](../../incomingCallToast/)** - Pattern we're following
+- **IncomingCallToast Implementation** (`app/incomingCallToast/`) - Source code pattern we're following
 - **[IPC API Documentation](../ipc-api.md)** - IPC channel reference
 - **[Security Architecture](../security-architecture.md)** - Security best practices
 - **[Configuration Reference](../../configuration.md)** - Config options
