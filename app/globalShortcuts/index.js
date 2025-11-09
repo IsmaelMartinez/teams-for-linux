@@ -89,7 +89,18 @@ function register(config, mainAppWindow, app) {
     return;
   }
 
-  if (!Array.isArray(config.globalShortcuts) || config.globalShortcuts.length === 0) {
+  // Support both new and legacy configuration formats
+  // New format: config.shortcuts.enableGlobalShortcuts
+  // Legacy format: config.globalShortcuts
+  const shortcuts = config.shortcuts?.enableGlobalShortcuts?.length > 0
+    ? config.shortcuts.enableGlobalShortcuts
+    : config.globalShortcuts || [];
+
+  const prefix = config.shortcuts?.enabledShortcutPrefix
+    ? config.shortcuts.enabledShortcutPrefix.trim()
+    : (config.globalShortcutPrefix || "").trim();
+
+  if (!Array.isArray(shortcuts) || shortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
     isRegistered = true; // Mark as registered even with no shortcuts to maintain guard integrity
     return;
@@ -97,16 +108,19 @@ function register(config, mainAppWindow, app) {
 
   let registeredCount = 0;
 
-  for (const shortcut of config.globalShortcuts) {
+  for (const shortcut of shortcuts) {
     // Skip empty or invalid shortcuts
     if (!shortcut || typeof shortcut !== "string") {
       console.debug(`[GLOBAL_SHORTCUTS] Skipping invalid shortcut: ${shortcut}`);
       continue;
     }
 
+    // Apply prefix if configured
+    const fullShortcut = prefix ? `${prefix}+${shortcut}` : shortcut;
+
     try {
-      const registered = globalShortcut.register(shortcut, () => {
-        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${shortcut}`);
+      const registered = globalShortcut.register(fullShortcut, () => {
+        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${fullShortcut}`);
 
         const window = mainAppWindow.getWindow();
         if (window && !window.isDestroyed()) {
@@ -114,20 +128,21 @@ function register(config, mainAppWindow, app) {
           // Teams will handle it with its built-in keyboard shortcuts
           // Note: In practice, sending keyboard events works reliably without focusing the window.
           // If issues arise on specific platforms, consider calling window.focus() before sendInputEvent.
+          // We forward the original shortcut (without prefix) to Teams
           sendKeyboardEventToWindow(window, shortcut);
         } else {
-          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${shortcut}`);
+          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${fullShortcut}`);
         }
       });
 
       if (registered) {
-        console.info(`[GLOBAL_SHORTCUTS] Registered: ${shortcut}`);
+        console.info(`[GLOBAL_SHORTCUTS] Registered: ${fullShortcut}`);
         registeredCount++;
       } else {
-        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${shortcut} (may already be in use by another application)`);
+        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${fullShortcut} (may already be in use by another application)`);
       }
     } catch (err) {
-      console.error(`[GLOBAL_SHORTCUTS] Error registering ${shortcut}: ${err.message}`);
+      console.error(`[GLOBAL_SHORTCUTS] Error registering ${fullShortcut}: ${err.message}`);
     }
   }
 

@@ -705,7 +705,12 @@ async function setBadgeCountHandler(_event, count) {
 }
 
 function handleGlobalShortcutDisabled() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  // Support both new and legacy configuration formats
+  const disabledShortcuts = config.shortcuts?.disableGlobalShortcuts?.length > 0
+    ? config.shortcuts.disableGlobalShortcuts
+    : config.disableGlobalShortcuts || [];
+
+  disabledShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
         console.debug(`Global shortcut ${shortcut} disabled`);
@@ -715,7 +720,12 @@ function handleGlobalShortcutDisabled() {
 }
 
 function handleGlobalShortcutDisabledRevert() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  // Support both new and legacy configuration formats
+  const disabledShortcuts = config.shortcuts?.disableGlobalShortcuts?.length > 0
+    ? config.shortcuts.disableGlobalShortcuts
+    : config.disableGlobalShortcuts || [];
+
+  disabledShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);
