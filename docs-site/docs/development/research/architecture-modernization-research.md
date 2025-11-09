@@ -1,8 +1,22 @@
-# Architecture Modernization Research
+# Architecture Modernization Research (DDD+Plugin Approach)
+
+:::danger ARCHIVED - PLAN NOT ADOPTED
+**Status**: Archived - Research complete but plan deemed too complex
+
+**Date Created**: 2025-10-30
+**Date Archived**: 2025-11-08
+**Reason**: After critical analysis, this DDD+Plugin approach was determined to be over-engineered for the actual problems in the codebase. The 10-week big-bang migration introduced significant complexity and risk for uncertain benefits.
+
+**See instead**: [Incremental Refactoring Plan](./incremental-refactoring-plan.md) - The adopted approach that delivers similar benefits with lower risk through incremental extraction.
+
+**Analysis**: [Architecture Modernization Critical Analysis](../../../ARCHITECTURE_MODERNIZATION_CRITICAL_ANALYSIS.md) - Detailed critique explaining why this plan was not implemented.
+
+This document is preserved as reference and for historical context.
+:::
 
 **Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799)
 **Created**: 2025-10-30
-**Status**: Research Phase
+**Status**: ~~Research Phase~~ **ARCHIVED**
 
 ## Executive Summary
 

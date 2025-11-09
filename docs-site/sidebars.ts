@@ -105,6 +105,14 @@ const sidebars: SidebarsConfig = {
                 'development/research/ui-system-strategic-analysis',
               ],
             },
+            {
+              type: 'category',
+              label: 'Architecture & Refactoring',
+              items: [
+                'development/research/incremental-refactoring-plan',
+                'development/research/architecture-modernization-research',
+              ],
+            },
           ],
         },
       ],
