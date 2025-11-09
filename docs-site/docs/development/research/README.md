@@ -31,6 +31,14 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
 
+### Notification System Research
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
+  - Investigation of existing libraries and solutions
+  - Architectural constraints analysis (Electron wrapper vs React app)
+  - Custom BrowserWindow-based implementation plan
+  - Decision: Build custom system following IncomingCallToast pattern
+  - Timeline: 2-3 weeks for MVP implementation
+
 ## Purpose
 
 These documents capture:
