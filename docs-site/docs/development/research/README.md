@@ -28,13 +28,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Platform compatibility matrix and reasoning
 
 ### Strategic Analysis
+- **[Architecture Modernization Research](architecture-modernization-research.md)** - Research on refactoring app/index.js and improving architectural organization
 - **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
   - 53 options analyzed for grouping and naming consistency
   - Three-phase migration plan from flat to nested structure
   - Backward-compatible approach with auto-migration
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
-- **[Architecture Modernization Research](architecture-modernization-research.md)** - Research on refactoring app/index.js and improving architectural organization
 
 ### Architecture & Refactoring
 - **[Incremental Refactoring Plan](incremental-refactoring-plan.md)** ⭐ **ACTIVE PLAN** - Practical 4-8 week plan to modernize architecture through incremental extraction

@@ -89,20 +89,20 @@ ssoBasicAuthUser, ssoBasicAuthPasswordCommand, ssoInTuneEnabled, ssoInTuneAuthUs
 proxyServer
 ```
 
-**Notifications & UI (8 options)**
+**Notifications & UI (10 options)**
 ```javascript
 disableNotifications, disableNotificationSound, disableNotificationSoundIfNotAvailable,
 disableNotificationWindowFlash, notificationMethod, defaultNotificationUrgency,
 enableIncomingCallToast, customCSSName, customCSSLocation, followSystemTheme
 ```
 
-**Screen Sharing & Media (6 options)**
+**Screen Sharing & Media (7 options)**
 ```javascript
 disableAutogain, screenSharingThumbnail, screenLockInhibitionMethod, videoMenu,
 isCustomBackgroundEnabled, customBGServiceBaseUrl, customBGServiceConfigFetchInterval
 ```
 
-**System Integration (9 options)**
+**System Integration (10 options)**
 ```javascript
 trayIconEnabled, appIcon, appIconType, useMutationTitleLogic, awayOnSystemIdle,
 appIdleTimeout, appIdleTimeoutCheckInterval, appActiveCheckInterval,
@@ -449,13 +449,11 @@ defaultNotificationUrgency: "normal",
   appActiveCheckInterval
 
 ### Authentication & SSO
-  #### Basic Authentication
+- **Basic Authentication**
   - authServerWhitelist, ssoBasicAuthUser, ssoBasicAuthPasswordCommand
-
-  #### InTune SSO
+- **InTune SSO**
   - ssoInTuneEnabled, ssoInTuneAuthUser
-
-  #### Certificates
+- **Certificates**
   - clientCertPath, clientCertPassword, customCACertsFingerprints
 
 ### Network & Proxy
@@ -907,7 +905,7 @@ function validateConfig(config) {
 
 ### Internal Documentation
 - [Configuration Options](../../configuration.md) - Current user documentation
-- [MQTT Integration](../../../app/mqtt/README.md) - MQTT module documentation
+- [MQTT Integration](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/mqtt/README.md) - MQTT module documentation
 - [Architecture Modernization Research](./architecture-modernization-research.md) - Related refactoring work
 
 ### Code References
@@ -1110,7 +1108,7 @@ function validateConfig(config) {
 
 | Old Flat Key | New Nested Key | Notes |
 |--------------|----------------|-------|
-| `appTitle` | `app.title` | Renamed |
+| `appTitle` | `app.title` | Moved |
 | `url` | `app.url` | Moved |
 | `partition` | `app.partition` | Moved |
 | `frame` | `window.frame` | Moved |
