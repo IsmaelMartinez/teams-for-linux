@@ -98,7 +98,7 @@ function register(config, mainAppWindow, app) {
 
   const prefix = config.shortcuts?.enabledShortcutPrefix
     ? config.shortcuts.enabledShortcutPrefix.trim()
-    : (config.globalShortcutPrefix || "").trim();
+    : "";
 
   if (!Array.isArray(shortcuts) || shortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");

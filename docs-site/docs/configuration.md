@@ -429,7 +429,6 @@ The old configuration format is still supported but deprecated:
 
 ```json
 {
-  "globalShortcutPrefix": "Super",
   "globalShortcuts": [
     "Control+Shift+M",
     "Control+Shift+O"
@@ -438,7 +437,7 @@ The old configuration format is still supported but deprecated:
 ```
 
 :::info
-Please migrate to the new `shortcuts` object format. The legacy properties will be removed in a future version.
+Please migrate to the new `shortcuts` object format. The legacy `globalShortcuts` property will be removed in a future version.
 :::
 
 #### Common Teams Shortcuts

@@ -98,7 +98,7 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 ```
 This registers `Super+Control+Shift+M` and `Super+Control+Shift+O` system-wide. **Warning**: If the prefix is already in your shortcut, it will be duplicated and won't work.
 
-**Legacy Format** (deprecated): The old `globalShortcuts` and `globalShortcutPrefix` properties are still supported but will be removed in a future version.
+**Legacy Format** (deprecated): The old `globalShortcuts` property is still supported but will be removed in a future version.
 
 **Important Notes**:
 - 🔑 **Use `Control` not `CommandOrControl`**: Teams uses Ctrl on all platforms, including macOS
