@@ -17,7 +17,7 @@
 This document is preserved as reference and for historical context.
 :::
 
-**Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799)
+**Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799) (Closed)
 **Created**: 2025-10-30
 **Status**: ~~Research Phase~~ **ARCHIVED**
 

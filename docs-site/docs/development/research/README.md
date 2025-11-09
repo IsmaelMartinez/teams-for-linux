@@ -36,7 +36,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Reduces index.js by 49% (755 → 381 lines)
   - Low risk, continuous value delivery
   - Adds 20+ automated tests
-  - Adopted approach for #1799
+  - Supersedes closed #1799 (DDD+Plugin approach)
 - **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
   - Preserved as reference and historical context
   - 10-week big-bang migration plan

@@ -1,6 +1,6 @@
 # Incremental Refactoring Plan
 
-**Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799)
+**Supersedes**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799) (Closed - DDD+Plugin approach)
 **Status**: Active Plan
 **Created**: 2025-11-08
 **Type**: Practical Implementation Guide
