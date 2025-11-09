@@ -686,9 +686,7 @@ We're taking the **best insights** (modular organization, testing) and applying 
 
 ## Related Documentation
 
-- [Architecture Modernization Research (Archived)](./architecture-modernization-research.md) - The original DDD+Plugin plan
-- [Critical Analysis](../../../ARCHITECTURE_MODERNIZATION_CRITICAL_ANALYSIS.md) - Why the old plan was abandoned
-- [Research Summary](../../../ARCHITECTURE_RESEARCH_SUMMARY.md) - Executive summary of findings
+- [Architecture Modernization Research (Archived)](./architecture-modernization-research.md) - The original DDD+Plugin plan and why it was deemed too complex
 - [IPC API Documentation](../ipc-api.md) - Current IPC channel reference
 - [Automated Testing Strategy](./automated-testing-strategy.md) - Testing framework selection
 
