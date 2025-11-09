@@ -311,18 +311,11 @@ function restartApp() {
 
 /**
  * Applies critical Electron command line switches that must be set before config loading.
- * These switches affect core Electron behavior and cannot be changed after app initialization.
  */
 function addCommandLineSwitchesBeforeConfigLoad() {
   app.commandLine.appendSwitch("try-supported-channel-layouts");
 
-  // Disable HardwareMediaKeyHandling to prevent conflicts with Teams' built-in media controls.
-  // This ensures Teams' own play/pause buttons work correctly instead of conflicting
-  // with system-level media key handling.
-  // Note: We respect user-provided --disable-features flags and only warn if the required
-  // feature is missing, allowing power users full control.
   if (app.commandLine.hasSwitch("disable-features")) {
-    // User provided custom disable-features - check if required feature is included
     const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
     if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
       console.warn(
@@ -331,21 +324,15 @@ function addCommandLineSwitchesBeforeConfigLoad() {
       );
     }
   } else {
-    // User hasn't provided custom disable-features, use our default
     app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
   }
 }
 
 /**
  * Applies configuration-dependent command line switches after config is loaded.
- * Handles environment-specific optimizations (Wayland) and user preferences.
  */
 function addCommandLineSwitchesAfterConfigLoad() {
-  // Wayland-specific optimization for Linux desktop environments
-  // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
-    // Disable GPU by default on Wayland unless user explicitly configured it
-    // This prevents blank window issues while allowing power users to override
     if (config.disableGpuExplicitlySet) {
       console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
     } else {
@@ -353,13 +340,8 @@ function addCommandLineSwitchesAfterConfigLoad() {
       config.disableGpu = true;
     }
 
-    // Enable WebRTCPipeWireCapturer for PipeWire-based screen sharing on Wayland.
-    // PipeWire provides better screen sharing and audio capture on Wayland.
-    // Note: We respect user-provided --enable-features flags and only warn if the required
-    // feature is missing, allowing power users full control.
     console.info("Enabling PipeWire for screen sharing...");
     if (app.commandLine.hasSwitch("enable-features")) {
-      // User provided custom enable-features - check if required feature is included
       const features = app.commandLine.getSwitchValue("enable-features").split(",");
       if (!features.includes("WebRTCPipeWireCapturer")) {
         console.warn(
@@ -369,7 +351,6 @@ function addCommandLineSwitchesAfterConfigLoad() {
         );
       }
     } else {
-      // User hasn't provided custom enable-features, use our default
       app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
     }
     app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
