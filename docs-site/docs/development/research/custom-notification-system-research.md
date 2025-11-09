@@ -295,6 +295,11 @@ class NotificationCenter {
       this.positionAndShow();
     }
   }
+
+  updateBadge(count) {
+    // Send badge count to renderer for display
+    this.centerWindow.webContents.send('badge-count-update', count);
+  }
 }
 ```
 
@@ -312,8 +317,11 @@ class NotificationCenter {
 
 ```javascript
 // app/notificationSystem/store/notificationStore.js
-class NotificationStore {
+const { EventEmitter } = require('events');
+
+class NotificationStore extends EventEmitter {
   constructor() {
+    super();
     this.db = null;
   }
 
@@ -346,6 +354,13 @@ class NotificationStore {
   async getRecent(limit = 100) {
     const tx = this.db.transaction('notifications', 'readonly');
     return await tx.store.getAll(null, limit);
+  }
+
+  async getUnreadCount() {
+    const tx = this.db.transaction('notifications', 'readonly');
+    const index = tx.store.index('read');
+    const unreadNotifications = await index.getAll(false);
+    return unreadNotifications.length;
   }
 }
 ```
@@ -451,7 +466,7 @@ function CustomNotification(title, options) {
 **Typography:**
 ```css
 font-family: 'Segoe UI', -apple-system, sans-serif;
-font-size: 13px (body), 14px (title), 11px (caption);
+/* Font sizes: 13px (body), 14px (title), 11px (caption) */
 ```
 
 ### 5.2 Notification Actions
@@ -701,7 +716,7 @@ app/
 - ✅ Toast appears within 200ms of notification
 - ✅ Notification center opens within 100ms
 - ✅ No memory leaks with 1000+ notifications
-- ✅ IndexedDB operations <50ms
+- ✅ IndexedDB operations &lt;50ms
 
 **Security:**
 - ✅ All IPC channels validated
