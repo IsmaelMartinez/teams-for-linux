@@ -5,11 +5,14 @@
 
 **Date Created**: 2025-10-30
 **Date Archived**: 2025-11-08
-**Reason**: After critical analysis, this DDD+Plugin approach was determined to be over-engineered for the actual problems in the codebase. The 10-week big-bang migration introduced significant complexity and risk for uncertain benefits.
 
-**See instead**: [Incremental Refactoring Plan](./incremental-refactoring-plan.md) - The adopted approach that delivers similar benefits with lower risk through incremental extraction.
+**Reason**: After critical analysis, this DDD+Plugin approach was determined to be over-engineered for the actual problems in the codebase:
+- 10-week big-bang migration of all 35 modules (too risky)
+- 8+ new abstractions introduced (PluginManager, EventBus, etc.)
+- Over-engineered for actual pain points (374 lines extractable with minimal risk)
+- Implementation paralysis (plan so big, nothing was started)
 
-**Analysis**: [Architecture Modernization Critical Analysis](../../../ARCHITECTURE_MODERNIZATION_CRITICAL_ANALYSIS.md) - Detailed critique explaining why this plan was not implemented.
+**See instead**: [Incremental Refactoring Plan](./incremental-refactoring-plan.md) - The adopted approach that delivers 49% reduction in index.js with lower risk through incremental extraction (4-8 weeks vs 10 weeks, continuous delivery vs all-or-nothing).
 
 This document is preserved as reference and for historical context.
 :::
