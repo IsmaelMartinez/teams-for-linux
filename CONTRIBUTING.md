@@ -5,6 +5,9 @@ Thank you for considering contributing! This guide will help you get started wit
 > [!TIP]
 > New to Electron? This project is a great starting point for learning!
 
+> [!NOTE]
+> **This is a quick reference guide.** For comprehensive developer documentation including architecture, code standards, testing strategy, and detailed guidelines, see the [**Full Contributing Guide**](https://ismaelmartinez.github.io/teams-for-linux/development/contributing).
+
 ## Quick Start
 
 1. **Fork** the repository
@@ -49,69 +52,18 @@ npm start
 
 # Lint code (required before commits)
 npm run lint
+
+# Run E2E tests
+npm run test:e2e
 ```
 
-## Building
+For detailed setup, building, testing, and code standards, see the [**Full Contributing Guide**](https://ismaelmartinez.github.io/teams-for-linux/development/contributing).
 
-### Local Linux Build
-```bash
-npm run dist:linux    # Creates deb, rpm, snap, AppImage, tar.gz
-npm run pack          # Development build without packaging
-```
+## Additional Resources
 
-### Docker/Podman Build
-```bash
-podman run -it --rm --volume .:/var/mnt:z -w /var/mnt/ node:20 /bin/bash -c \
-  "apt update && apt install -y rpm && npm ci && npm run dist:linux"
-```
-
-### Snap-specific Build
-```bash
-npm run dist:linux:snap
-cd dist && sudo snap install teams-for-linux_*.snap --dangerous
-```
-
-## Documentation
-
-Project documentation has been migrated to Docusaurus and is deployed to GitHub Pages via GitHub Actions at https://ismaelmartinez.github.io/teams-for-linux/.
-
-### Contributing to Documentation
-
-Documentation contributions involve:
-1. **Edit Markdown/MDX files** in the `docs-site/docs/` directory
-2. **Build locally to preview changes**:
-   ```bash
-   cd docs-site
-   npm install
-   npm run start
-   ```
-3. **Update navigation** in `docs-site/sidebars.ts` if adding new pages
-4. **Submit pull requests** which trigger automated builds and deployments
-
-See the [Documentation Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing) for detailed instructions.
-
-## Release Process
-
-
-1. **Update version** in `package.json`:
-   - Patches: `1.0.0` → `1.0.1` 
-   - Features: `1.0.0` → `1.1.0`
-   - Major: Reserved
-
-2. **Update dependencies**: `npm install`
-
-3. **Add release notes** in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
-   ```xml
-   <release version="2.0.17" date="2025-06-15">
-     <description>
-       <ul>
-         <li>New feature description</li>
-         <li>Bug fix description</li>
-       </ul>
-     </description>
-   </release>
-   ```
-
-4. **Commit and push** your changes, then open a pull request.
-
-See the [Release Automation Guide](https://ismaelmartinez.github.io/teams-for-linux/release-info) for technical details on release automation.
+- **[Building Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#building)** - Local, Docker, and Snap builds
+- **[Testing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#testing)** - E2E tests with Playwright
+- **[Code Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#code-standards)** - Style guidelines and patterns
+- **[Pull Request Guidelines](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#pull-request-guidelines)** - PR requirements and checklist
+- **[Release Process](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#release-process)** - Version management and release notes
+- **[Documentation](https://ismaelmartinez.github.io/teams-for-linux/)** - Full project documentation
