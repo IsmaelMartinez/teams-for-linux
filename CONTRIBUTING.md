@@ -28,14 +28,11 @@ You can test PR changes without building from source by downloading pre-built ar
 2. **Click the "Checks" tab** at the top of the PR
 3. **Select a completed workflow run** (look for green checkmarks)
 4. **Scroll down to "Artifacts" section** at the bottom of the workflow page
-5. **Download the artifact** for your platform:
-   - `teams-for-linux-linux-x64` - Linux x64 (deb, rpm, tar.gz, AppImage)
-   - `teams-for-linux-linux-arm64` - Linux ARM64 (Raspberry Pi 4/5, ARM servers)
-   - `teams-for-linux-linux-armv7l` - Linux ARMv7l (older Raspberry Pi)
-   - `teams-for-linux-macos-x64` - macOS Intel (DMG)
-   - `teams-for-linux-windows-x64` - Windows (EXE)
+5. **Download the artifact** for your platform (available for Linux, macOS, and Windows)
 
 **Note:** You need to be logged into GitHub to download artifacts. Artifacts are retained for 30 days.
+
+See the [full guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#testing-pull-requests) for more details.
 
 ## Development Setup
 
