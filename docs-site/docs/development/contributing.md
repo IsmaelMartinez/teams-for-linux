@@ -37,6 +37,10 @@ This is particularly useful for:
 - **Testers** validating bug fixes without setting up a development environment
 - **Contributors** verifying their changes work across different platforms
 
+:::note Future Enhancement
+A potential improvement would be adding a bot that automatically posts or updates a comment on PRs with direct links to artifacts.
+:::
+
 ## Development Setup
 
 ### Prerequisites
