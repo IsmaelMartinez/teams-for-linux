@@ -34,39 +34,6 @@ You can test PR changes without building from source by downloading pre-built ar
 
 **Note:** You need to be logged into GitHub to download artifacts. Artifacts are retained for 30 days.
 
-### Installing from Artifacts
-
-**Linux (deb):**
-```bash
-# Extract the downloaded zip
-unzip teams-for-linux-linux-x64.zip
-# Install the deb package
-sudo dpkg -i teams-for-linux_*.deb
-```
-
-**Linux (AppImage):**
-```bash
-# Extract and make executable
-unzip teams-for-linux-linux-x64.zip
-chmod +x teams-for-linux-*.AppImage
-# Run directly
-./teams-for-linux-*.AppImage
-```
-
-**macOS:**
-```bash
-# Extract and open the DMG
-unzip teams-for-linux-macos-x64.zip
-open teams-for-linux-*.dmg
-```
-
-**Windows:**
-```bash
-# Extract and run the installer
-# (Windows will extract the zip automatically)
-# Double-click the .exe to install
-```
-
 ## Development Setup
 
 **Prerequisites:** Node.js and npm ([installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
