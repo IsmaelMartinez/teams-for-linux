@@ -44,27 +44,69 @@ navigator.mediaDevices.getUserMedia = function(constraints) {
 
     // Monitor video tracks (camera state) - regular calls only
     stream.getVideoTracks().forEach(track => {
+      // Event-based monitoring for immediate response
       track.addEventListener('ended', () => publishCameraState(false));
       track.addEventListener('mute', () => publishCameraState(false));
       track.addEventListener('unmute', () => publishCameraState(true));
+
+      // Initial state
       if (track.enabled && track.readyState === 'live') {
         publishCameraState(true);
       }
+
+      // CRITICAL: Poll track.enabled property for programmatic changes
+      // Teams may use track.enabled = false instead of mute events
+      monitorTrackEnabled(track, 'camera');
     });
 
     // Monitor audio tracks (microphone state) - regular calls only
     stream.getAudioTracks().forEach(track => {
+      // Event-based monitoring for immediate response
       track.addEventListener('ended', () => publishMicState(false));
       track.addEventListener('mute', () => publishMicState(false));
       track.addEventListener('unmute', () => publishMicState(true));
+
+      // Initial state
       if (track.enabled && track.readyState === 'live') {
         publishMicState(true);
       }
+
+      // CRITICAL: Poll track.enabled property for programmatic changes
+      // Teams may use track.enabled = false instead of mute events
+      monitorTrackEnabled(track, 'microphone');
     });
 
     publishCallState(true);
     return stream;
   });
+}
+
+// Helper function to monitor track.enabled property changes
+function monitorTrackEnabled(track, type) {
+  let lastEnabledState = track.enabled;
+
+  // Poll every 500ms to detect programmatic enabled changes
+  const intervalId = setInterval(() => {
+    if (track.readyState === 'ended') {
+      clearInterval(intervalId);
+      return;
+    }
+
+    const currentEnabledState = track.enabled && track.readyState === 'live';
+    if (currentEnabledState !== lastEnabledState) {
+      console.debug(`[MQTT_EXTENDED] ${type} track.enabled changed: ${lastEnabledState} -> ${currentEnabledState}`);
+      lastEnabledState = currentEnabledState;
+
+      if (type === 'camera') {
+        publishCameraState(currentEnabledState);
+      } else if (type === 'microphone') {
+        publishMicState(currentEnabledState);
+      }
+    }
+  }, 500);
+
+  // Cleanup when track ends
+  track.addEventListener('ended', () => clearInterval(intervalId));
 }
 ```
 
@@ -75,10 +117,12 @@ navigator.mediaDevices.getUserMedia = function(constraints) {
 - ✅ Proven pattern (`app/browser/tools/disableAutogain.js` uses identical technique)
 - ✅ Captures real device state, not just button states
 - ✅ Works with keyboard shortcuts (monitors actual stream, not UI)
+- ✅ Hybrid monitoring (events + polling) catches all state change methods
 
 **Limitations**:
 - ⚠️ Requires careful MediaStream lifecycle management
 - ⚠️ Need to handle stream replacement scenarios (camera switch)
+- ⚠️ Polling adds minimal overhead (500ms intervals per track)
 
 **Implementation Complexity**: Medium
 **Maintenance Burden**: Low
@@ -232,13 +276,18 @@ MQTT Broker → Home Automation
 **Implementation checklist**:
 - [ ] Create `app/browser/tools/mqttExtendedStatus.js`
 - [ ] Implement getUserMedia interceptor (similar to `disableAutogain.js`)
-- [ ] Add MediaStreamTrack event listeners
+- [ ] Add screen sharing stream detection logic (reuse from `injectedScreenSharing.js`)
+- [ ] Implement hybrid monitoring approach:
+  - [ ] Add MediaStreamTrack event listeners (mute/unmute/ended)
+  - [ ] Add track.enabled polling (500ms interval)
+  - [ ] Add interval cleanup on track end
 - [ ] Add IPC channel for extended status (`mqtt-extended-status-changed`)
 - [ ] Update MQTT publisher to handle extended topics
 - [ ] Add configuration schema and defaults
 - [ ] Update `preload.js` to load new module
 - [ ] Document IPC API in `docs/ipc-api.md`
 - [ ] Add logging with `[MQTT_EXTENDED]` prefix
+- [ ] Test with UI buttons AND keyboard shortcuts
 
 ---
 
@@ -260,6 +309,50 @@ MQTT Broker → Home Automation
 ---
 
 ## Technical Considerations
+
+### Critical: track.enabled vs mute/unmute Events
+
+**Important discovery**: MediaStreamTrack state can be controlled via two different mechanisms:
+
+1. **Event-based**: `track.mute()` / `track.unmute()` → Fires `mute`/`unmute` events
+2. **Property-based**: `track.enabled = false/true` → Does NOT fire events
+
+**The problem**: Web applications (including Teams) commonly use `track.enabled = false` to "mute" tracks programmatically. This is the standard way UI buttons control media state. **This does not fire mute/unmute events.**
+
+**Impact**: Monitoring only `mute`/`unmute` events will miss state changes triggered by UI buttons or keyboard shortcuts that use `track.enabled`.
+
+**Solution: Hybrid Monitoring Approach**
+
+We must use a combination of:
+1. **Event listeners** (for immediate response to explicit mute/unmute calls)
+2. **Polling `track.enabled`** (to catch programmatic property changes)
+
+```javascript
+// Event-based monitoring (immediate)
+track.addEventListener('mute', () => publishState(false));
+track.addEventListener('unmute', () => publishState(true));
+
+// Property-based monitoring (polling at 500ms intervals)
+setInterval(() => {
+  const currentState = track.enabled && track.readyState === 'live';
+  if (currentState !== lastState) {
+    publishState(currentState);
+    lastState = currentState;
+  }
+}, 500);
+```
+
+**Why 500ms polling interval**:
+- Fast enough for human perception (UI button clicks)
+- Low overhead (2 property checks per second per track)
+- Typical call has 2-3 tracks max (1 audio, 1-2 video)
+- Total overhead: ~4-6 checks/second = negligible
+
+**Cleanup**: Stop polling when track ends to prevent memory leaks.
+
+This hybrid approach ensures we catch state changes regardless of how Teams implements mute/unmute controls.
+
+---
 
 ### Interaction with Existing Screen Sharing Code
 
@@ -432,6 +525,9 @@ All state changes logged with `[MQTT_EXTENDED]` prefix for debugging:
 6. **Minimum refresh interval for MQTT publishing?**
    → Recommendation: Debounce rapid state changes (100ms), publish immediately on state change
 
+7. **How to detect state changes when Teams uses track.enabled instead of mute events?**
+   → Recommendation: Hybrid approach - Event listeners for immediate response + polling track.enabled at 500ms intervals. See "Critical: track.enabled vs mute/unmute Events" section for full explanation.
+
 ---
 
 ## References
@@ -442,6 +538,7 @@ All state changes logged with `[MQTT_EXTENDED]` prefix for debugging:
 - **Existing MQTT**: `app/browser/tools/mqttStatusMonitor.js`
 - **MediaStream API**: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_API
 - **MediaStreamTrack events**: https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack
+- **MediaStreamTrack.enabled**: https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/enabled
 
 ---
 
