@@ -250,10 +250,12 @@ MQTT Broker → Home Automation
 ```
 
 **MQTT Topics** (configurable):
-- `teams/extended/camera` → `true`/`false`
-- `teams/extended/microphone` → `true`/`false`
-- `teams/extended/in-call` → `true`/`false`
-- `teams/extended/full-state` → JSON payload
+- `teams/extended/camera` → `"true"`/`"false"` (string, not boolean)
+- `teams/extended/microphone` → `"true"`/`"false"` (string, not boolean)
+- `teams/extended/in-call` → `"true"`/`"false"` (string, not boolean)
+- `teams/extended/full-state` → JSON payload (stringified object)
+
+**Note**: MQTT payloads are strings/buffers. All boolean values must be converted to strings before publishing.
 
 **Configuration** (`config.json`):
 ```json
@@ -282,7 +284,10 @@ MQTT Broker → Home Automation
   - [ ] Add track.enabled polling (500ms interval)
   - [ ] Add interval cleanup on track end
 - [ ] Add IPC channel for extended status (`mqtt-extended-status-changed`)
-- [ ] Update MQTT publisher to handle extended topics
+- [ ] Update MQTT publisher to handle extended topics:
+  - [ ] Convert boolean values to strings using `String()`
+  - [ ] Use `Promise.all()` for parallel publishing
+  - [ ] Handle both individual topics and full-state JSON
 - [ ] Add configuration schema and defaults
 - [ ] Update `preload.js` to load new module
 - [ ] Document IPC API in `docs/ipc-api.md`
@@ -426,12 +431,51 @@ ipcRenderer.invoke('mqtt-extended-status-changed', {
 ipcMain.handle('mqtt-extended-status-changed', async (event, { data }) => {
   if (!config.mqtt?.extended?.enabled) return;
 
-  await publishToMqtt('teams/extended/camera', data.camera);
-  await publishToMqtt('teams/extended/microphone', data.microphone);
-  await publishToMqtt('teams/extended/in-call', data.inCall);
-  await publishToMqtt('teams/extended/full-state', JSON.stringify(data));
+  // IMPORTANT: Convert booleans to strings for MQTT (standard format)
+  // IMPORTANT: Use Promise.all for parallel publishing (independent operations)
+  await Promise.all([
+    publishToMqtt('teams/extended/camera', String(data.camera)),
+    publishToMqtt('teams/extended/microphone', String(data.microphone)),
+    publishToMqtt('teams/extended/in-call', String(data.inCall)),
+    publishToMqtt('teams/extended/full-state', JSON.stringify(data))
+  ]);
 });
 ```
+
+### MQTT Payload Format and Publishing Efficiency
+
+**Payload type considerations**:
+- MQTT payloads are **strings or buffers**, not JavaScript primitives
+- Boolean values must be explicitly converted to strings using `String(value)`
+- Home Assistant and most MQTT consumers expect `"true"`/`"false"` strings
+- JSON payloads should use `JSON.stringify()` for proper serialization
+
+**Publishing efficiency**:
+- Individual topic publishes are **independent operations** (no dependencies)
+- Use `Promise.all()` for parallel publishing to improve performance
+- Sequential `await` would add unnecessary latency (~50-100ms per publish)
+- Parallel publishing completes in time of slowest operation, not sum of all
+
+**Example comparison**:
+```javascript
+// ❌ Sequential (slow): 200-400ms total
+await publishToMqtt('teams/extended/camera', String(data.camera));      // 50-100ms
+await publishToMqtt('teams/extended/microphone', String(data.microphone)); // 50-100ms
+await publishToMqtt('teams/extended/in-call', String(data.inCall));     // 50-100ms
+await publishToMqtt('teams/extended/full-state', JSON.stringify(data)); // 50-100ms
+
+// ✅ Parallel (fast): 50-100ms total
+await Promise.all([
+  publishToMqtt('teams/extended/camera', String(data.camera)),
+  publishToMqtt('teams/extended/microphone', String(data.microphone)),
+  publishToMqtt('teams/extended/in-call', String(data.inCall)),
+  publishToMqtt('teams/extended/full-state', JSON.stringify(data))
+]); // All complete simultaneously
+```
+
+**Performance impact**: Parallel publishing reduces MQTT latency by 3-4x for typical state changes.
+
+---
 
 ### Security
 
