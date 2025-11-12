@@ -38,9 +38,9 @@ Users report that notifications don't work consistently across different platfor
    - Different notification daemons (notify-osd, dunst, GNOME Shell) behave differently
 
 2. **Web vs Electron Notification Mode**
-   - "web" mode: Uses browser's native Notification API
+   - "web" mode: Uses browser's native Notification API (default)
    - "electron" mode: Uses Electron's Notification class
-   - Issue #1921: "Notifications only work once" bug when using async constructors
+   - Past issue (#1921 - now fixed): "Notifications only work once" bug when using async constructors
    - Neither mode provides notification history or actionable notifications
 
 3. **Lack of Advanced Features**
@@ -84,19 +84,19 @@ Teams for Linux is **not a React application**—it's an Electron wrapper around
 
 ### What We CAN Do
 
-✅ **Create separate BrowserWindows** (like `IncomingCallToast`)
-✅ **Intercept browser APIs** in `preload.js` (like `window.Notification`)
-✅ **Use vanilla JavaScript/HTML/CSS** in our windows
-✅ **Communicate via IPC** between windows
-✅ **Use electron-positioner** for multi-monitor support
-✅ **Store data in IndexedDB/localStorage**
+- ✅ **Create separate BrowserWindows** (like `IncomingCallToast`)
+- ✅ **Intercept browser APIs** in `preload.js` (like `window.Notification`)
+- ✅ **Use vanilla JavaScript/HTML/CSS** in our windows
+- ✅ **Communicate via IPC** between windows
+- ✅ **Use electron-positioner** for multi-monitor support
+- ✅ **Store data in IndexedDB/localStorage**
 
 ### What We CANNOT Do
 
-❌ **Add React components** to the Teams interface
-❌ **Use React-based toast libraries** (Sonner, React Hot Toast, etc.)
-❌ **Modify Teams DOM** directly (brittle, breaks with updates)
-❌ **Use npm packages requiring React** in the Teams context
+- ❌ **Add React components** to the Teams interface
+- ❌ **Use React-based toast libraries** (Sonner, React Hot Toast, etc.)
+- ❌ **Modify Teams DOM** directly (brittle, breaks with updates)
+- ❌ **Use npm packages requiring React** in the Teams context
 
 ### Security Constraints
 
@@ -313,7 +313,9 @@ class NotificationCenter {
 
 #### NotificationStore
 
-**Purpose:** Persistent storage using IndexedDB
+**Purpose:** In-memory notification storage for current session
+
+**MVP Approach:** Start with simple in-memory storage. Persistent storage (IndexedDB) can be added in Phase 2 if users need history across restarts.
 
 ```javascript
 // app/notificationSystem/store/notificationStore.js
@@ -322,23 +324,10 @@ const { EventEmitter } = require('events');
 class NotificationStore extends EventEmitter {
   constructor() {
     super();
-    this.db = null;
+    this.notifications = [];  // In-memory array for MVP
   }
 
-  async init() {
-    this.db = await openDB('teams-notifications', 1, {
-      upgrade(db) {
-        const store = db.createObjectStore('notifications', {
-          keyPath: 'id'
-        });
-        store.createIndex('timestamp', 'timestamp');
-        store.createIndex('read', 'read');
-        store.createIndex('type', 'type');
-      }
-    });
-  }
-
-  async add(notification) {
+  add(notification) {
     const item = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),
@@ -346,24 +335,36 @@ class NotificationStore extends EventEmitter {
       read: false
     };
 
-    await this.db.add('notifications', item);
+    this.notifications.unshift(item);  // Add to beginning (newest first)
     this.emit('added', item);
     return item;
   }
 
-  async getRecent(limit = 100) {
-    const tx = this.db.transaction('notifications', 'readonly');
-    return await tx.store.getAll(null, limit);
+  getRecent(limit = 50) {
+    // Return most recent notifications (in-memory)
+    return this.notifications.slice(0, limit);
   }
 
-  async getUnreadCount() {
-    const tx = this.db.transaction('notifications', 'readonly');
-    const index = tx.store.index('read');
-    const unreadNotifications = await index.getAll(false);
-    return unreadNotifications.length;
+  getUnreadCount() {
+    return this.notifications.filter(n => !n.read).length;
+  }
+
+  markRead(id) {
+    const notification = this.notifications.find(n => n.id === id);
+    if (notification) {
+      notification.read = true;
+      this.emit('updated', notification);
+    }
+  }
+
+  clear() {
+    this.notifications = [];
+    this.emit('cleared');
   }
 }
 ```
+
+**Phase 2 Enhancement:** Add IndexedDB persistence if users request history across restarts.
 
 ### 4.3 Data Model
 
@@ -600,82 +601,144 @@ ipcMain.handle('notification-add', async (event, data) => {
 
 ### 6.3 Security Considerations
 
-✅ **Input validation:** All IPC payloads validated
-✅ **Prototype pollution prevention:** Dangerous properties removed
-✅ **contextIsolation:** Enabled on all windows
-✅ **nodeIntegration:** Disabled on all windows
-✅ **contextBridge:** Used for all IPC communication
-✅ **CSP:** Content Security Policy applied
+- ✅ **Input validation:** All IPC payloads validated
+- ✅ **Prototype pollution prevention:** Dangerous properties removed
+- ✅ **contextIsolation:** Enabled on all windows
+- ✅ **nodeIntegration:** Disabled on all windows
+- ✅ **contextBridge:** Used for all IPC communication
+- ✅ **CSP:** Content Security Policy applied
 
 ---
 
 ## 7. Configuration
 
-### 7.1 New Config Options
+### 7.1 Unified Notification Configuration
 
-Add to `app/config/index.js`:
+**Approach:** Align all notification methods under a consistent structure to improve maintainability and user clarity.
+
+**Add to `app/config/index.js`:**
 
 ```javascript
 {
-  customNotificationSystem: {
-    default: false,  // Opt-in initially
-    describe: "Enable custom notification system (toast + center)",
+  // Unified notification method configuration
+  notificationMethod: {
+    default: "web",
+    describe: "Notification method: 'web' (browser native), 'electron' (Electron API), or 'custom' (in-app system)",
+    type: "string",
+    choices: ["web", "electron", "custom"]
+  },
+
+  // Web notification config (existing, kept for compatibility)
+  webNotification: {
+    default: {},
+    describe: "Web notification configuration (deprecated - kept for backward compatibility)",
+    type: "object"
+  },
+
+  // Electron notification config (existing, kept for compatibility)
+  electronNotification: {
+    default: {},
+    describe: "Electron notification configuration (deprecated - kept for backward compatibility)",
+    type: "object"
+  },
+
+  // Custom notification system configuration
+  customNotification: {
+    default: {
+      enabled: false,  // Explicitly set via notificationMethod: "custom"
+      toastDuration: 5000,
+      showHistory: true
+    },
+    describe: "Custom in-app notification system configuration (toast + notification center)",
+    type: "object"
+  },
+
+  // Existing global notification settings (unchanged)
+  disableNotifications: {
+    default: false,
+    describe: "Disable all notifications globally",
     type: "boolean"
   },
 
-  customNotificationToastDuration: {
-    default: 5000,
-    describe: "Toast notification display duration in milliseconds",
-    type: "number"
+  disableNotificationSound: {
+    default: false,
+    describe: "Disable notification sounds",
+    type: "boolean"
   },
 
-  customNotificationMaxVisible: {
-    default: 3,
-    describe: "Maximum number of visible toast notifications",
-    type: "number"
-  },
-
-  customNotificationMaxHistory: {
-    default: 100,
-    describe: "Maximum notifications to keep in history",
-    type: "number"
+  disableNotificationSoundIfNotAvailable: {
+    default: false,
+    describe: "Disable sounds when user status is not Available",
+    type: "boolean"
   }
 }
 ```
 
-### 7.2 Example User Configuration
+### 7.2 Example User Configurations
 
+**Using Custom Notification System (Opt-in):**
 ```json
 {
-  "customNotificationSystem": true,
-  "customNotificationToastDuration": 5000,
-  "customNotificationMaxVisible": 3,
-  "customNotificationMaxHistory": 100,
-
-  // Existing notification configs still work
-  "disableNotifications": false,
-  "disableNotificationSound": false,
-  "notificationMethod": "web"  // Fallback if custom disabled
+  "notificationMethod": "custom",
+  "customNotification": {
+    "enabled": true,
+    "toastDuration": 5000,
+    "showHistory": true
+  },
+  "disableNotificationSound": false
 }
 ```
+
+**Using Default Web Notifications:**
+```json
+{
+  "notificationMethod": "web",
+  "disableNotifications": false,
+  "disableNotificationSound": false
+}
+```
+
+**Using Electron Notifications:**
+```json
+{
+  "notificationMethod": "electron",
+  "disableNotifications": false
+}
+```
+
+### 7.3 Configuration Migration
+
+**Backward Compatibility:**
+- Existing `notificationMethod: "web"` remains default
+- Old config options still work (no breaking changes)
+- Users must explicitly set `notificationMethod: "custom"` to opt-in
+- `customNotification.enabled` is automatically set when method is "custom"
+
+**Documentation Updates Required:**
+- Update configuration.md to document new unified structure
+- Add migration guide for users wanting to try custom system
+- Clarify that web/electron methods remain fully supported
 
 ---
 
 ## 8. Implementation Plan
 
-### 8.1 Timeline: 2-3 Weeks
+### 8.1 Timeline: 2 Weeks (Simplified MVP)
 
 **Week 1: Foundation & Toast System**
-- Days 1-2: Setup, NotificationStore, config
+- Days 1-2: Setup, in-memory NotificationStore, config
 - Days 3-5: NotificationToast implementation & testing
 
-**Week 2: Notification Center**
+**Week 2: Notification Center & Polish**
 - Days 6-7: NotificationCenter UI
-- Days 8-10: Center functionality & integration
+- Days 8-9: Center functionality & integration
+- Day 10: Cross-platform testing & documentation
 
-**Week 3: Polish & Testing**
-- Days 11-12: Cross-platform testing
-- Days 13-14: Documentation & release prep
+**Simplified from original 3-week plan** by:
+- Using in-memory storage (no IndexedDB complexity)
+- No toast queue management (show all toasts)
+- Minimal actions (View, Dismiss only)
+- Session-based history (no persistence)
 
 ### 8.2 File Structure
 
@@ -706,10 +769,9 @@ app/
 
 **Functional:**
 - ✅ Toast notifications appear for all Teams notifications
-- ✅ Notification center shows last 100 notifications
+- ✅ Notification center shows notification history (session-based)
 - ✅ Mark as read/unread works correctly
 - ✅ Badge count updates in real-time
-- ✅ Notifications persist across app restarts
 - ✅ Cross-platform compatibility (Linux, Windows, macOS)
 
 **Performance:**
@@ -783,50 +845,60 @@ app/
 
 ---
 
-## 11. Migration & Rollout Strategy
+## 11. Rollout Strategy
 
-### 11.1 Phase 1: Experimental (v2.7.0)
+### 11.1 Phase 1: Opt-In Alternative (v2.7.0)
 
 **Approach:**
-- Feature flag: `customNotificationSystem: false` (opt-in)
-- Documentation for early adopters
+- New method: `notificationMethod: "custom"` (opt-in)
+- Default remains `notificationMethod: "web"` (no breaking changes)
+- Documentation for users experiencing notification issues
 - Collect feedback via GitHub issues
 
+**Important:** This is an **alternative**, not a replacement. Users who are happy with web/electron notifications can continue using them.
+
 **Success metrics:**
-- 10+ users enable and test
+- 10+ users opt-in and provide feedback
 - No critical bugs reported
-- Positive feedback on notification reliability
+- Positive feedback from users with notification issues
 
-### 11.2 Phase 2: Beta (v2.8.0)
+### 11.2 Phase 2: Stable Alternative (v2.8.0)
 
 **Approach:**
-- Feature flag: `customNotificationSystem: true` (default enabled)
-- Prominent docs on reverting to old system
 - Bug fixes based on Phase 1 feedback
+- Enhanced documentation with troubleshooting guides
+- Feature enhancements based on user requests
+- All three methods remain fully supported
 
 **Success metrics:**
-- 90%+ users keep it enabled
-- Notification reliability improves
-- Feature requests for enhancements
+- Reduced GitHub issues related to notification reliability
+- Users report improved notification experience
+- Feature is stable and well-documented
 
-### 11.3 Phase 3: Stable (v2.9.0)
+### 11.3 Long-Term Support
 
 **Approach:**
-- Remove legacy notification toggle options
-- Full documentation
-- Consider deprecating old system
+- Maintain all three notification methods:
+  - **"web"** - Default, works well for most users
+  - **"electron"** - Alternative for some use cases
+  - **"custom"** - Solution for users with OS notification issues
+- No deprecation of existing methods
+- Users choose based on their needs and preferences
 
-**Success metrics:**
-- No regression bugs
-- Improved user satisfaction
-- Lower support burden for notification issues
+**Rationale:**
+- Different users have different needs and environments
+- What works on one system may not work on another
+- Providing options increases compatibility and user satisfaction
 
 ---
 
 ## 12. Future Enhancements (Post-MVP)
 
 ### Phase 2 Features
-- ⏳ Keyboard shortcut (`Ctrl+Shift+N`)
+- ⏳ **Persistent storage** - IndexedDB for notification history across app restarts
+- ⏳ **Auto-cleanup** - Configurable retention (e.g., keep last 100 or 7 days)
+- ⏳ **Toast queue management** - Limit visible toasts (e.g., max 3)
+- ⏳ Keyboard shortcut (`Ctrl+Shift+N`) to toggle notification center
 - ⏳ Search notifications
 - ⏳ Filter by type (messages, mentions, meetings)
 - ⏳ Reply action
@@ -837,10 +909,17 @@ app/
 ### Phase 3 Features
 - ⏳ Pin important notifications
 - ⏳ Export notification history
-- ⏳ Notification templates
+- ⏳ Notification templates per type
 - ⏳ Custom sounds per notification type
 - ⏳ Notification rules/preferences
 - ⏳ Group notifications by conversation
+- ⏳ Integration with incoming call command system
+
+**Rationale for Phased Approach:**
+- Start simple to validate core functionality
+- Add complexity based on user feedback
+- Avoid over-engineering features that may not be used
+- Storage adds complexity - only implement if users need history persistence
 
 ---
 
@@ -859,7 +938,7 @@ app/
 - **[Microsoft Fluent Design](https://fluent2.microsoft.design/)** - UI design guidelines
 
 ### GitHub Issues
-- **#1921** - "Notifications only work once" bug (fixed with synchronous pattern)
+- **#1921** (closed/fixed) - "Notifications only work once" bug - resolved by using synchronous factory pattern instead of async constructor
 - **#1888** - Ubuntu Unity auto-close issue (requireInteraction: false workaround)
 - **#1902** - TrayIconRenderer IPC initialization (shows importance of careful IPC setup)
 
@@ -867,30 +946,41 @@ app/
 
 ## 14. Conclusion
 
-### Recommendation: Proceed with Custom Implementation
+### Recommendation: Add Custom Notification System as Opt-In Alternative
 
-The custom BrowserWindow-based notification system is the **best solution** for Teams for Linux because:
+The custom BrowserWindow-based notification system provides a **third option** for Teams for Linux users who experience issues with OS-level notifications:
 
-1. **Solves core problem**: Eliminates dependency on unreliable OS notification systems
+**Why proceed with this implementation:**
+
+1. **Solves specific problem**: Alternative for users experiencing OS notification reliability issues (especially Linux)
 2. **Follows proven pattern**: Uses same architecture as successful `IncomingCallToast`
-3. **Provides user value**: Notification history, actions, and management
+3. **Provides value**: In-app notification history and actionable notifications
 4. **Maintainable**: Vanilla JS/HTML/CSS matching codebase style
 5. **Secure**: Follows all security best practices
 6. **Cross-platform**: Consistent experience on Linux, Windows, macOS
-7. **Reasonable timeline**: 2-3 weeks for MVP
-8. **Low risk**: Opt-in initially, can be reverted
+7. **Simplified MVP**: 2 weeks with in-memory storage, basic features only
+8. **No disruption**: Opt-in alternative, existing methods remain default and fully supported
+
+**Key Principles:**
+
+- **Start simple**: In-memory storage, minimal actions, no complex features
+- **Opt-in only**: Users must explicitly choose `notificationMethod: "custom"`
+- **Maintain alternatives**: Keep web/electron methods as viable options
+- **Iterate based on feedback**: Add complexity only if users request it
 
 ### Next Steps
 
-1. ✅ **Approval**: Get maintainer approval on approach
+1. ✅ **Approval**: Get maintainer approval on simplified MVP approach
 2. 📝 **Create feature branch**: `feature/custom-notification-system`
-3. 🏗️ **Phase 1 Implementation**: Foundation + Toast System (Week 1)
-4. 🎨 **Phase 2 Implementation**: Notification Center (Week 2)
-5. ✨ **Phase 3 Implementation**: Polish & Testing (Week 3)
-6. 📦 **Release**: v2.7.0 with opt-in flag
+3. 🏗️ **Week 1 Implementation**: Foundation + Toast System
+4. 🎨 **Week 2 Implementation**: Notification Center + Polish
+5. 📦 **Release**: v2.7.0 as opt-in alternative (`notificationMethod: "custom"`)
+6. 📊 **Collect feedback**: Monitor GitHub issues and user adoption
+7. 🔄 **Iterate**: Add Phase 2 features based on actual user needs
 
 ---
 
-**Document Status:** ✅ Research Complete
-**Next Action:** Begin Phase 1 implementation
+**Document Status:** ✅ Research Complete - Simplified MVP Approach
+**Default Behavior:** No change - `notificationMethod: "web"` remains default
+**Next Action:** Await approval, then begin Week 1 implementation
 **Questions/Feedback:** Open GitHub issue or discussion
