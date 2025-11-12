@@ -282,6 +282,41 @@ The configuration file can include Electron CLI flags that will be added when th
 > [!NOTE]
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
+#### Custom Feature Flags (enable-features / disable-features)
+
+Teams for Linux automatically sets Chromium feature flags for optimal functionality. These defaults are applied only if you don't provide your own flags.
+
+**Default Settings:**
+- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls
+- `--enable-features=WebRTCPipeWireCapturer` - Enables PipeWire screen sharing (Wayland only)
+
+**Using Custom Feature Flags:**
+
+If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them.
+
+```bash
+# Example: Adding your own features on Wayland
+teams-for-linux --enable-features=MyCustomFeature,WebRTCPipeWireCapturer
+
+# Example: Disabling features
+teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
+```
+
+> [!WARNING]
+> When providing custom flags, **you must include the required features** for proper functionality:
+> - **Always include:** `HardwareMediaKeyHandling` in `--disable-features`
+> - **On Wayland:** Also include `WebRTCPipeWireCapturer` in `--enable-features`
+>
+> Missing required features will trigger a warning but won't prevent the app from starting.
+
+**Complete example with custom and required features:**
+
+```bash
+# Wayland users with custom needs
+teams-for-linux --enable-features=MyFeature,WebRTCPipeWireCapturer \
+                --disable-features=HardwareMediaKeyHandling,OtherFeature
+```
+
 ### Incoming Call Command
 
 To use the incoming call command feature, a command or executable needs to be configured.
