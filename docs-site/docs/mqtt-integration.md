@@ -207,7 +207,7 @@ mosquitto_sub -h localhost -t "teams/status" -v
 
 **Solutions**:
 - This may occur if Teams UI structure has changed
-- Increase `statusCheckInterval` for more frequent polling: `"statusCheckInterval": 5000`
+- Decrease `statusCheckInterval` for more frequent polling: `"statusCheckInterval": 5000`
 - Check browser console (DevTools) for JavaScript errors
 - Report the issue on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) with Teams version info
 
