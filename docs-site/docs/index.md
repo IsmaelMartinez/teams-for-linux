@@ -8,16 +8,17 @@ slug: /
 
 **Unofficial Microsoft Teams client for Linux** — a native desktop app that wraps the Teams web version with enhanced Linux integration.
 
-✅ **System notifications**  
-✅ **System tray integration**  
-✅ **Custom backgrounds & themes**  
-✅ **Screen sharing support**  
-✅ **Multiple account profiles**  
-✅ **Certificate management**  
-✅ **Proxy server support**  
-✅ **Microsoft Intune SSO integration**  
-✅ **Secure token storage**  
-✅ **Protocol handler support**  
+✅ **System notifications**
+✅ **System tray integration**
+✅ **Custom backgrounds & themes**
+✅ **Screen sharing support**
+✅ **Multiple account profiles**
+✅ **Certificate management**
+✅ **Proxy server support**
+✅ **Microsoft Intune SSO integration**
+✅ **Secure token storage**
+✅ **Protocol handler support**
+✅ **MQTT integration for home automation**
 ✅ **Advanced logging & debugging**
 
 :::info Project Status
@@ -36,6 +37,7 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
 - **[Custom Backgrounds](custom-backgrounds.md)** - Setting up custom video call backgrounds
 - **[Certificate Management](certificate.md)** - Custom CA certificate handling for corporate environments
+- **[MQTT Integration](mqtt-integration.md)** - Home automation and status publishing via MQTT
 
 ## Developer Documentation
 - **[Contributing Guide](development/contributing.md)** - Development setup, code standards, and contribution guidelines

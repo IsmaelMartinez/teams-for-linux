@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'screen-sharing',
         'custom-backgrounds',
+        'mqtt-integration',
         'certificate',
         'troubleshooting',
       ],
