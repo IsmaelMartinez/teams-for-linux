@@ -186,7 +186,7 @@ mosquitto_sub -h localhost -t "teams/status" -v
 **Solutions**:
 - Verify the MQTT broker is running: `netstat -an | grep 1883`
 - Check firewall rules allow connections to the broker port
-- Test connectivity: `telnet broker-ip 1883`
+- Test connectivity: `telnet <broker_address> 1883`
 - Verify broker URL format (e.g., `mqtt://` not `http://`)
 
 #### Authentication Failed
