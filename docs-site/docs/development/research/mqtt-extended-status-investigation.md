@@ -27,18 +27,39 @@ Current MQTT integration (`mqttStatusMonitor.js`) only publishes Teams presence 
 // Pattern already proven in disableAutogain.js
 navigator.mediaDevices.getUserMedia = function(constraints) {
   return originalGetUserMedia.call(this, constraints).then(stream => {
-    // Monitor video tracks (camera state)
+    // IMPORTANT: Filter out screen sharing streams
+    // Screen sharing streams have audio disabled (see injectedScreenSharing.js)
+    // Only monitor regular call streams for accurate mic/camera state
+    const isScreenShare = constraints?.video && (
+      constraints.video.chromeMediaSource === "desktop" ||
+      constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+      constraints.video.chromeMediaSourceId ||
+      constraints.video.mandatory?.chromeMediaSourceId
+    );
+
+    if (isScreenShare) {
+      // Skip monitoring screen sharing streams
+      return stream;
+    }
+
+    // Monitor video tracks (camera state) - regular calls only
     stream.getVideoTracks().forEach(track => {
       track.addEventListener('ended', () => publishCameraState(false));
       track.addEventListener('mute', () => publishCameraState(false));
       track.addEventListener('unmute', () => publishCameraState(true));
+      if (track.enabled && track.readyState === 'live') {
+        publishCameraState(true);
+      }
     });
 
-    // Monitor audio tracks (microphone state)
+    // Monitor audio tracks (microphone state) - regular calls only
     stream.getAudioTracks().forEach(track => {
       track.addEventListener('ended', () => publishMicState(false));
       track.addEventListener('mute', () => publishMicState(false));
       track.addEventListener('unmute', () => publishMicState(true));
+      if (track.enabled && track.readyState === 'live') {
+        publishMicState(true);
+      }
     });
 
     publishCallState(true);
@@ -240,6 +261,56 @@ MQTT Broker → Home Automation
 
 ## Technical Considerations
 
+### Interaction with Existing Screen Sharing Code
+
+**Critical consideration**: The codebase already intercepts `getUserMedia()` in `app/screenSharing/injectedScreenSharing.js` to prevent audio echo/feedback during screen sharing (issues #1871, #1896).
+
+**How the existing code works**:
+1. Intercepts `getUserMedia()` calls
+2. Detects screen sharing streams by checking for `chromeMediaSource === "desktop"` or `chromeMediaSourceId`
+3. **Forces `audio = false`** in constraints for screen sharing streams only
+4. Regular call streams (camera + microphone) are NOT affected
+
+**Impact on MQTT Extended Status**:
+- ✅ **Regular call streams** have audio tracks → We can monitor microphone state
+- ⚠️ **Screen sharing streams** have no audio tracks → We must skip these
+- ✅ **Screen sharing and regular calls are separate streams** → No conflict
+
+**Solution**: Use the same detection logic to filter out screen sharing streams:
+
+```javascript
+// Reuse the same screen share detection logic from injectedScreenSharing.js
+const isScreenShare = constraints?.video && (
+  constraints.video.chromeMediaSource === "desktop" ||
+  constraints.video.mandatory?.chromeMediaSource === "desktop" ||
+  constraints.video.chromeMediaSourceId ||
+  constraints.video.mandatory?.chromeMediaSourceId
+);
+
+if (isScreenShare) {
+  // Skip monitoring screen sharing streams - they have audio disabled
+  return stream;
+}
+
+// Only monitor regular call streams
+stream.getAudioTracks().forEach(track => {
+  // Monitor microphone state...
+});
+```
+
+**Why this works**:
+- Teams creates **separate getUserMedia calls** for:
+  - Regular call (camera + microphone) → Has audio tracks → We monitor this
+  - Screen sharing (desktop capture) → No audio tracks → We skip this
+- Both interceptors can coexist by checking the same `isScreenShare` condition
+- The screen sharing interceptor runs first (already in place), then ours runs
+- No interference because we're just adding event listeners, not modifying streams
+
+**Execution order**:
+1. `injectedScreenSharing.js` intercepts getUserMedia → Disables audio for screen shares
+2. `mqttExtendedStatus.js` intercepts getUserMedia → Detects screen share → Skips monitoring
+3. For regular calls: `mqttExtendedStatus.js` adds track listeners → Monitors state
+
 ### IPC Communication
 
 **New IPC channel**:
@@ -350,9 +421,15 @@ All state changes logged with `[MQTT_EXTENDED]` prefix for debugging:
    → Recommendation: OR logic (any active stream = device active)
 
 3. **Should we detect screen sharing separately?**
-   → Recommendation: Future enhancement, not MVP (screen sharing already has dedicated monitoring in `screenSharing/`)
+   → Recommendation: Future enhancement, not MVP (screen sharing already has dedicated monitoring in `screenSharing/` with IPC events)
 
-4. **Minimum refresh interval for MQTT publishing?**
+4. **How to handle the interceptor execution order with injectedScreenSharing.js?**
+   → Recommendation: Both interceptors work independently by using the same `isScreenShare` detection logic. No conflicts because we only add listeners, not modify constraints.
+
+5. **What if a user is in a call AND screen sharing?**
+   → Recommendation: Monitor both streams separately - call stream for mic/camera, ignore screen share stream for audio
+
+6. **Minimum refresh interval for MQTT publishing?**
    → Recommendation: Debounce rapid state changes (100ms), publish immediately on state change
 
 ---
