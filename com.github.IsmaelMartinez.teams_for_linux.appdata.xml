@@ -14,11 +14,13 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
-		<release version="2.6.13" date="2025-11-10">
+		<release version="2.6.13" date="2025-11-12">
 			<description>
 				<ul>
 					<li>Update: Electron upgraded to 37.9.0, ESLint to 9.39.1, and globals to 16.5.0 for latest bug fixes and improvements</li>
 					<li>Refactor: Remove excessive comments from feature flag handling functions for improved code clarity</li>
+					<li>Feature: Add automated PR binary artifact uploads for all platforms - contributors and testers can now download pre-built packages directly from GitHub Actions to test PR changes without building from source (closes #1940)</li>
+					<li>Documentation: Streamline CONTRIBUTING.md to be a quick reference guide with links to comprehensive Docusaurus documentation</li>
 				</ul>
 			</description>
 		</release>
