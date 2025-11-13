@@ -57,9 +57,26 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:x64 -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:x64 -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-linux-x64
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
+            dist/*.AppImage
+          retention-days: 30
+          compression-level: 0
 
   linux_arm64:
     runs-on: ubuntu-latest
@@ -79,9 +96,26 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:arm64 -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:arm64 -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-linux-arm64
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
+            dist/*.AppImage
+          retention-days: 30
+          compression-level: 0
 
   linux_arm:
     runs-on: ubuntu-latest
@@ -101,9 +135,26 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:arm -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:arm -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-linux-armv7l
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
+            dist/*.AppImage
+          retention-days: 30
+          compression-level: 0
 
   dmg:
     runs-on: macos-latest
@@ -123,9 +174,22 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:mac:x64 -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:mac:x64 -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-macos-x64
+          path: dist/*.dmg
+          retention-days: 30
+          compression-level: 0
 
   exe:
     runs-on: windows-latest
@@ -145,6 +209,19 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:windows -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:windows -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-windows-x64
+          path: dist/*.exe
+          retention-days: 30
+          compression-level: 0

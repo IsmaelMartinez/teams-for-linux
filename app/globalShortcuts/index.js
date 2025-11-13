@@ -89,7 +89,18 @@ function register(config, mainAppWindow, app) {
     return;
   }
 
-  if (!Array.isArray(config.globalShortcuts) || config.globalShortcuts.length === 0) {
+  // Support both new and legacy configuration formats
+  // New format: config.shortcuts.enableGlobalShortcuts
+  // Legacy format: config.globalShortcuts
+  const shortcuts = config.shortcuts?.enableGlobalShortcuts?.length > 0
+    ? config.shortcuts.enableGlobalShortcuts
+    : config.globalShortcuts || [];
+
+  const prefix = config.shortcuts?.enabledShortcutPrefix
+    ? config.shortcuts.enabledShortcutPrefix.trim()
+    : "";
+
+  if (!Array.isArray(shortcuts) || shortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
     isRegistered = true; // Mark as registered even with no shortcuts to maintain guard integrity
     return;
@@ -100,7 +111,7 @@ function register(config, mainAppWindow, app) {
     ? config.globalShortcutPrefix.trim()
     : "";
 
-  for (const shortcut of config.globalShortcuts) {
+  for (const shortcut of shortcuts) {
     // Skip empty or invalid shortcuts
     if (!shortcut || typeof shortcut !== "string") {
       console.debug(`[GLOBAL_SHORTCUTS] Skipping invalid shortcut: ${shortcut}`);

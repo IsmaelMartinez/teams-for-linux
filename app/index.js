@@ -311,35 +311,28 @@ function restartApp() {
 
 /**
  * Applies critical Electron command line switches that must be set before config loading.
- * These switches affect core Electron behavior and cannot be changed after app initialization.
  */
 function addCommandLineSwitchesBeforeConfigLoad() {
   app.commandLine.appendSwitch("try-supported-channel-layouts");
 
-  // Disabled features
-  const disabledFeatures = app.commandLine.hasSwitch("disable-features")
-    ? app.commandLine.getSwitchValue("disable-features").split(",")
-    : ["HardwareMediaKeyHandling"];
-
-  // Prevent hardware media keys from interfering with Teams' built-in media controls
-  // This ensures Teams' own play/pause buttons work correctly instead of conflicting
-  // with system-level media key handling
-  if (!disabledFeatures.includes("HardwareMediaKeyHandling"))
-    disabledFeatures.push("HardwareMediaKeyHandling");
-
-  app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
+  if (app.commandLine.hasSwitch("disable-features")) {
+    const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
+    if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
+      console.warn(
+        "disable-features switch already set without HardwareMediaKeyHandling. " +
+        "Teams media controls may conflict with system media key handling."
+      );
+    }
+  } else {
+    app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
+  }
 }
 
 /**
  * Applies configuration-dependent command line switches after config is loaded.
- * Handles environment-specific optimizations (Wayland) and user preferences.
  */
 function addCommandLineSwitchesAfterConfigLoad() {
-  // Wayland-specific optimization for Linux desktop environments
-  // PipeWire provides better screen sharing and audio capture on Wayland
   if (process.env.XDG_SESSION_TYPE === "wayland") {
-    // Disable GPU by default on Wayland unless user explicitly configured it
-    // This prevents blank window issues while allowing power users to override
     if (config.disableGpuExplicitlySet) {
       console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
     } else {
@@ -347,15 +340,19 @@ function addCommandLineSwitchesAfterConfigLoad() {
       config.disableGpu = true;
     }
 
-    // Enable PipeWire for screen sharing on Wayland
     console.info("Enabling PipeWire for screen sharing...");
-    const features = app.commandLine.hasSwitch("enable-features")
-      ? app.commandLine.getSwitchValue("enable-features").split(",")
-      : [];
-    if (!features.includes("WebRTCPipeWireCapturer"))
-      features.push("WebRTCPipeWireCapturer");
-
-    app.commandLine.appendSwitch("enable-features", features.join(","));
+    if (app.commandLine.hasSwitch("enable-features")) {
+      const features = app.commandLine.getSwitchValue("enable-features").split(",");
+      if (!features.includes("WebRTCPipeWireCapturer")) {
+        console.warn(
+          "enable-features switch already set without WebRTCPipeWireCapturer. " +
+          "Screen sharing on Wayland may not work correctly. " +
+          "Please add WebRTCPipeWireCapturer to your enable-features list."
+        );
+      }
+    } else {
+      app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
+    }
     app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
   }
 
@@ -705,7 +702,12 @@ async function setBadgeCountHandler(_event, count) {
 }
 
 function handleGlobalShortcutDisabled() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  // Support both new and legacy configuration formats
+  const disabledShortcuts = config.shortcuts?.disableGlobalShortcuts?.length > 0
+    ? config.shortcuts.disableGlobalShortcuts
+    : config.disableGlobalShortcuts || [];
+
+  disabledShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
         console.debug(`Global shortcut ${shortcut} disabled`);
@@ -715,7 +717,12 @@ function handleGlobalShortcutDisabled() {
 }
 
 function handleGlobalShortcutDisabledRevert() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  // Support both new and legacy configuration formats
+  const disabledShortcuts = config.shortcuts?.disableGlobalShortcuts?.length > 0
+    ? config.shortcuts.disableGlobalShortcuts
+    : config.disableGlobalShortcuts || [];
+
+  disabledShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);

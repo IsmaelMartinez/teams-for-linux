@@ -14,6 +14,7 @@ This document details all available configuration options for the Teams for Linu
   - [Notifications & UI](#notifications--ui)
   - [Screen Sharing & Media](#screen-sharing--media)
   - [System Integration](#system-integration)
+  - [MQTT Integration](#mqtt-integration)
   - [Advanced Options](#advanced-options)
 - [Usage Examples & Guides](#usage-examples--guides)
   - [Basic Setup Examples](#basic-setup-examples)
@@ -122,6 +123,38 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
 | `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
+
+### MQTT Integration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mqtt.enabled` | `boolean` | `false` | Enable/disable MQTT status publishing |
+| `mqtt.brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://192.168.1.100:1883` or `mqtts://broker:8883` for TLS) |
+| `mqtt.username` | `string` | `""` | MQTT username for authentication (optional) |
+| `mqtt.password` | `string` | `""` | MQTT password for authentication (optional) |
+| `mqtt.clientId` | `string` | `"teams-for-linux"` | Unique MQTT client identifier |
+| `mqtt.topicPrefix` | `string` | `"teams"` | Topic prefix for all MQTT messages |
+| `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (combined with topicPrefix) |
+| `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
+
+**Example MQTT Configuration:**
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://192.168.1.100:1883",
+    "username": "teams-user",
+    "password": "secret",
+    "clientId": "teams-for-linux",
+    "topicPrefix": "home/office",
+    "statusTopic": "teams/status",
+    "statusCheckInterval": 10000
+  }
+}
+```
+
+> [!NOTE]
+> Messages are published to `{topicPrefix}/{statusTopic}` (e.g., `home/office/teams/status`). See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, home automation examples, and troubleshooting.
 
 ### Advanced Options
 
@@ -248,6 +281,41 @@ The configuration file can include Electron CLI flags that will be added when th
 
 > [!NOTE]
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
+
+#### Custom Feature Flags (enable-features / disable-features)
+
+Teams for Linux automatically sets Chromium feature flags for optimal functionality. These defaults are applied only if you don't provide your own flags.
+
+**Default Settings:**
+- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls
+- `--enable-features=WebRTCPipeWireCapturer` - Enables PipeWire screen sharing (Wayland only)
+
+**Using Custom Feature Flags:**
+
+If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them.
+
+```bash
+# Example: Adding your own features on Wayland
+teams-for-linux --enable-features=MyCustomFeature,WebRTCPipeWireCapturer
+
+# Example: Disabling features
+teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
+```
+
+> [!WARNING]
+> When providing custom flags, **you must include the required features** for proper functionality:
+> - **Always include:** `HardwareMediaKeyHandling` in `--disable-features`
+> - **On Wayland:** Also include `WebRTCPipeWireCapturer` in `--enable-features`
+>
+> Missing required features will trigger a warning but won't prevent the app from starting.
+
+**Complete example with custom and required features:**
+
+```bash
+# Wayland users with custom needs
+teams-for-linux --enable-features=MyFeature,WebRTCPipeWireCapturer \
+                --disable-features=HardwareMediaKeyHandling,OtherFeature
+```
 
 ### Incoming Call Command
 
@@ -389,10 +457,12 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 
 ```json
 {
-  "globalShortcuts": [
-    "Control+Shift+M",
-    "Control+Shift+O"
-  ]
+  "shortcuts": {
+    "enableGlobalShortcuts": [
+      "Control+Shift+M",
+      "Control+Shift+O"
+    ]
+  }
 }
 ```
 
@@ -402,7 +472,31 @@ You can add an optional prefix to all global shortcuts to avoid conflicts with o
 
 ```json
 {
-  "globalShortcutPrefix": "Super",
+  "shortcuts": {
+    "enabledShortcutPrefix": "Super",
+    "enableGlobalShortcuts": [
+      "Control+Shift+M",
+      "Control+Shift+O"
+    ]
+  }
+}
+```
+
+With this configuration:
+- The registered shortcuts will be `Super+Control+Shift+M` and `Super+Control+Shift+O`
+- The prefix is prepended to each shortcut automatically
+- Leave `enabledShortcutPrefix` empty or omit it to use shortcuts without a prefix
+
+:::warning
+If the prefix is already included in your shortcut (e.g., `enabledShortcutPrefix: "Super"` with shortcut `"Super+Control+Shift+M"`), it will be duplicated and the shortcut will not work. Only specify the prefix once.
+:::
+
+#### Legacy Configuration (Deprecated)
+
+The old configuration format is still supported but deprecated:
+
+```json
+{
   "globalShortcuts": [
     "Control+Shift+M",
     "Control+Shift+O"
@@ -410,13 +504,8 @@ You can add an optional prefix to all global shortcuts to avoid conflicts with o
 }
 ```
 
-With this configuration:
-- The registered shortcuts will be `Super+Control+Shift+M` and `Super+Control+Shift+O`
-- The prefix is prepended to each shortcut automatically
-- Leave `globalShortcutPrefix` empty or omit it to use shortcuts without a prefix
-
-:::warning
-If the prefix is already included in your shortcut (e.g., `globalShortcutPrefix: "Super"` with shortcut `"Super+Control+Shift+M"`), it will be duplicated and the shortcut will not work. Only specify the prefix once.
+:::info
+Please migrate to the new `shortcuts` object format. The legacy `globalShortcuts` property will be removed in a future version.
 :::
 
 #### Common Teams Shortcuts

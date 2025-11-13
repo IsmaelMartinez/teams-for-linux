@@ -278,14 +278,28 @@ function extractYargConfig(configObject, appVersion) {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
       },
+      shortcuts: {
+        default: {
+          disableGlobalShortcuts: [],
+          enableGlobalShortcuts: [],
+          enabledShortcutPrefix: "",
+        },
+        describe:
+          "Keyboard shortcuts configuration including global shortcuts and prefix settings",
+        type: "object",
+      },
       disableGlobalShortcuts: {
         default: [],
+        deprecated:
+          "Use 'shortcuts.disableGlobalShortcuts' instead. This property will be removed in a future version",
         describe:
           "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
         type: "array",
       },
       globalShortcuts: {
         default: [],
+        deprecated:
+          "Use 'shortcuts.enableGlobalShortcuts' instead. This property will be removed in a future version",
         describe:
           "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
         type: "array",
