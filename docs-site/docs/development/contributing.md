@@ -10,7 +10,7 @@ This project is a great starting point for learning Electron development!
 
 1. **Fork** the repository
 2. **Clone** your fork and create a feature branch
-3. **Make changes** (entry point: `app/index.js`)
+3. **Make changes** (see architecture below)
 4. **Test** your changes with `npm start`
 5. **Submit** a pull request to `main` branch
 
@@ -118,7 +118,8 @@ graph TD
 
 ### Key Components
 
-- **Main Process** (`app/index.js`) - Application entry point
+- **Main Process** (`app/index.js`) - Application entry point (being refactored)
+- **Startup** (`app/startup/`) - Command line switches and initialization
 - **Configuration** (`app/appConfiguration/`) - Settings management
 - **IPC System** (`app/` + browser scripts) - Process communication
 - **Browser Integration** (`app/browser/`) - Teams web app enhancements

@@ -1,23 +1,7 @@
 const { app } = require("electron");
 
-/**
- * CommandLineManager
- *
- * Manages Electron command line switches and flags that must be set during
- * application startup. Some switches must be applied before config loading,
- * others after.
- *
- * This module was extracted from app/index.js as part of the incremental
- * refactoring plan (Week 1).
- */
 class CommandLineManager {
-  /**
-   * Add critical command line switches before config is loaded.
-   * Must be called before app.getPath('userData').
-   *
-   * These switches are critical for media handling and must be set early
-   * in the application lifecycle.
-   */
+  // Must be called before app.getPath('userData')
   static addSwitchesBeforeConfigLoad() {
     app.commandLine.appendSwitch("try-supported-channel-layouts");
 
@@ -34,19 +18,6 @@ class CommandLineManager {
     }
   }
 
-  /**
-   * Add configuration-dependent command line switches after config is loaded.
-   *
-   * This includes:
-   * - Wayland/X11 specific settings
-   * - GPU acceleration settings
-   * - Proxy configuration
-   * - Authentication server whitelist
-   * - Custom WM_CLASS (Linux)
-   * - User-defined Electron CLI flags
-   *
-   * @param {Object} config - Application configuration object
-   */
   static addSwitchesAfterConfigLoad(config) {
     // Wayland-specific configuration
     if (process.env.XDG_SESSION_TYPE === "wayland") {
@@ -99,20 +70,9 @@ class CommandLineManager {
       app.disableHardwareAcceleration();
     }
 
-    // Apply user-defined Electron CLI flags from config
     this.addElectronCLIFlags(config);
   }
 
-  /**
-   * Add user-defined Electron CLI flags from configuration.
-   *
-   * Supports both string flags and [key, value] array format:
-   * - String: "flag-name" -> adds switch without value
-   * - Array: ["flag-name", "value"] -> adds switch with value
-   *
-   * @param {Object} config - Application configuration object
-   * @private
-   */
   static addElectronCLIFlags(config) {
     if (Array.isArray(config.electronCLIFlags)) {
       for (const flag of config.electronCLIFlags) {
