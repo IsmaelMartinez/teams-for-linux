@@ -16,6 +16,23 @@ This project is a great starting point for learning Electron development!
 
 Each `app/` subfolder contains a README explaining its purpose.
 
+## Testing Pull Requests
+
+You can test PR changes without building from source by downloading pre-built artifacts from GitHub Actions.
+
+### How to Download PR Artifacts
+
+A bot automatically posts a comment on each PR with direct download links to all build artifacts.
+
+Alternatively:
+1. Go to the PR's "Checks" tab
+2. Select a workflow run
+3. Scroll to "Artifacts" section and download
+
+:::info
+Artifacts require GitHub login and are retained for 30 days.
+:::
+
 ## Development Setup
 
 ### Prerequisites
