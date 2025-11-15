@@ -25,18 +25,33 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const { data: pullRequests } = await github.rest.pulls.list({
+            const branchName = context.payload.workflow_run.head_branch;
+
+            // Try finding PR from same repo first (branch name only)
+            let { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              head: `${context.repo.owner}:${branchName}`,
               state: 'open'
             });
+
+            // If not found, try without owner prefix (for non-fork PRs)
+            if (pullRequests.length === 0) {
+              console.log(`No PR found with head ${context.repo.owner}:${branchName}, trying without owner prefix`);
+              const response = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+              pullRequests = response.data.filter(pr => pr.head.ref === branchName);
+            }
 
             if (pullRequests.length === 0) {
               console.log('No open PR found for this branch');
               return null;
             }
 
+            console.log(`Found PR #${pullRequests[0].number} for branch ${branchName}`);
             return pullRequests[0].number;
 
       - name: List artifacts
