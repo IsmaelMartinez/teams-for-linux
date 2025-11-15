@@ -23,14 +23,10 @@ This directory contains automated workflows for the Teams for Linux project.
 - **Other branches/PRs**: Creates artifacts for testing (retained for 30 days)
 
 **Artifact Compression**:
-- Set to `compression-level: 0` (no additional compression)
-- This is intentional because the artifacts themselves are already compressed formats:
-  - `.deb`, `.rpm` - already use internal compression
-  - `.tar.gz` - gzipped archives
-  - `.AppImage` - compressed filesystem
-  - `.dmg` - compressed disk images
-  - `.exe` - NSIS installers with compression
-- Adding additional zip compression would be redundant and could actually increase total size due to double compression overhead
+- Set to `compression-level: 6` (default compression)
+- Even though the build artifacts (`.deb`, `.rpm`, `.tar.gz`, `.AppImage`, `.dmg`, `.exe`) are already compressed formats, GitHub Actions re-compresses them into a zip archive for download
+- Using compression level 6 significantly reduces the artifact download size (approximately 4x smaller) without excessive CPU overhead
+- This makes it faster and more convenient for reviewers and testers to download PR artifacts
 
 ### pr-artifacts-comment.yml - PR Artifacts Comment Bot
 
