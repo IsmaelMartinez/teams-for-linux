@@ -1,0 +1,34 @@
+name: Test Commit Permissions (Spike 2)
+
+on:
+  workflow_dispatch:  # Manual trigger for testing
+
+jobs:
+  test-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create test file
+        run: |
+          mkdir -p .changelog-test
+          echo "Test commit from GitHub Actions" > .changelog-test/test-$(date +%s).txt
+          echo "Spike 2: Testing if Actions can commit to branch"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .changelog-test/
+          git commit -m "test: spike 2 - verify Actions can commit"
+          git push
+
+      - name: Verify success
+        run: |
+          echo "✅ Spike 2 PASSED: GitHub Actions can commit to branch"
+          echo "File created and committed successfully"
