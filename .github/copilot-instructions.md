@@ -1,11 +1,14 @@
 # GitHub Copilot Instructions for Teams for Linux
 
 > [!NOTE]
-> **This is a quick reference for GitHub Copilot.** For comprehensive developer documentation including architecture, code standards, testing strategy, and detailed guidelines, see:
-> - **Full Documentation**: [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/)
-> - **Development Guide**: [Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)
+> **This is a quick reference for GitHub Copilot.** For comprehensive developer documentation including architecture, code standards, testing strategy, and detailed guidelines:
+> - **Local Documentation**: See markdown files in `docs-site/docs/` directory (these are the source files)
+> - **Web Documentation**: [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/) (for human reference)
+> - **Development Guide**: `docs-site/docs/development/contributing.md` ([web](https://ismaelmartinez.github.io/teams-for-linux/development/contributing))
 > - **Claude Code Instructions**: See `CLAUDE.md` in the root directory for detailed code patterns and AI agent workflows
-> - **Markdown Standards**: [Contributing Guide - Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)
+> - **Markdown Standards**: `docs-site/docs/development/contributing.md` (Markdown Standards section)
+>
+> **Important**: Read documentation from local markdown files in `docs-site/docs/` rather than fetching from the web.
 
 ## Project Overview
 
@@ -71,8 +74,8 @@ graph TD
 ```
 
 **For detailed architecture documentation**, see:
-- [Architecture Overview](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#architecture-overview)
-- [IPC API Documentation](https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api)
+- Architecture Overview: `docs-site/docs/development/contributing.md` (Architecture Overview section)
+- IPC API Documentation: `docs-site/docs/development/ipc-api.md`
 - Module-specific READMEs in `app/` subdirectories
 
 ## Development Patterns
@@ -82,7 +85,7 @@ graph TD
 - All configuration managed through `AppConfiguration` class
 - Treat config as **immutable after startup**
 - Changes via AppConfiguration methods only
-- See [Configuration Guide](https://ismaelmartinez.github.io/teams-for-linux/configuration) for details
+- See `docs-site/docs/configuration.md` for details
 
 ### Error Handling & Logging
 
@@ -110,7 +113,7 @@ graph TD
 - **Manual Testing**: Use `npm start` for development testing
 - **CI/CD**: GitHub Actions validates all PRs
 
-For testing strategy details, see [Testing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#testing)
+For testing strategy details, see `docs-site/docs/development/contributing.md` (Testing section)
 
 ## Documentation
 
@@ -128,10 +131,11 @@ For testing strategy details, see [Testing Guide](https://ismaelmartinez.github.
 ### Documentation Platform
 
 The project uses **Docusaurus** for documentation:
+- **Source Files**: All documentation is in `docs-site/docs/` directory
 - **Local Development**: `cd docs-site && npm run start`
 - **Deployment**: Automated via GitHub Actions to GitHub Pages
 - **Search**: Client-side search using @easyops-cn/docusaurus-search-local
-- **Standards**: See [Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)
+- **Standards**: See `docs-site/docs/development/contributing.md` (Markdown Standards section)
 
 ## External Dependencies
 
@@ -142,10 +146,15 @@ The project uses **Docusaurus** for documentation:
 
 ## Additional Resources
 
-- **Full Contributing Guide**: https://ismaelmartinez.github.io/teams-for-linux/development/contributing
-- **Configuration Reference**: https://ismaelmartinez.github.io/teams-for-linux/configuration
-- **Troubleshooting**: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
+**Local documentation files:**
+- **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
+- **Configuration Reference**: `docs-site/docs/configuration.md`
+- **Troubleshooting**: `docs-site/docs/troubleshooting.md`
+- **IPC API**: `docs-site/docs/development/ipc-api.md`
+
+**Community:**
 - **Matrix Chat**: [#teams-for-linux_community:gitter.im](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- **Documentation Site**: https://ismaelmartinez.github.io/teams-for-linux/ (web version for humans)
 
 ---
 

@@ -64,7 +64,7 @@ Assume the primary reader of the PRD is a **junior developer**. Therefore, requi
 
 ## Markdown Standards
 
-For comprehensive markdown standards, see the [Contributing Guide - Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards) section in the project documentation.
+For comprehensive markdown standards, see the Markdown Standards section in `docs-site/docs/development/contributing.md` (the source file for the [web documentation](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)).
 
 ## Final instructions
 

@@ -3,7 +3,9 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > [!NOTE]
-> **For comprehensive documentation**, see the [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/). This file contains essential quick reference information and critical warnings specific to Claude Code workflows.
+> **For comprehensive documentation**, see the markdown files in `docs-site/docs/` directory. These files are the source for the [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/). This file contains essential quick reference information and critical warnings specific to Claude Code workflows.
+>
+> **Important for AI agents**: Always read documentation from the local markdown files in `docs-site/docs/` rather than fetching from the web. The URLs are provided for human reference only.
 
 ## Essential Commands
 
@@ -31,9 +33,13 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 - **Browser Tools:** `app/browser/tools/` - Client-side scripts injected into Teams interface
 
 **For detailed architecture information**, see:
-- [Architecture Overview](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#architecture-overview)
-- [IPC API Documentation](https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api)
+- Architecture Overview: `docs-site/docs/development/contributing.md` (Architecture Overview section)
+- IPC API Documentation: `docs-site/docs/development/ipc-api.md`
 - Module-specific README.md files in `app/` subdirectories
+
+**Web references (for humans):**
+- https://ismaelmartinez.github.io/teams-for-linux/development/contributing#architecture-overview
+- https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api
 
 ## Development Patterns
 
@@ -58,7 +64,7 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 - Graceful degradation with clear user feedback
 - Use `electron-log` for structured logging
 
-**For complete development patterns and guidelines**, see the [Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing).
+**For complete development patterns and guidelines**, see `docs-site/docs/development/contributing.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)).
 
 ## Testing and Quality
 
@@ -75,7 +81,7 @@ The project uses Playwright for end-to-end testing:
 - Tests start with completely clean state (no cookies, cache, storage)
 - Validates complete app launch flow and Microsoft login redirect
 
-**For full testing strategy**, see [Automated Testing Strategy](https://ismaelmartinez.github.io/teams-for-linux/development/research/automated-testing-strategy).
+**For full testing strategy**, see `docs-site/docs/development/research/automated-testing-strategy.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/research/automated-testing-strategy)).
 
 ### Quality Checks
 
@@ -99,7 +105,7 @@ The project documentation is built with Docusaurus and deployed to GitHub Pages:
 ### Markdown Standards
 
 **All markdown files in this project** should follow the project's markdown standards:
-- See [Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards) for comprehensive guidelines
+- See `docs-site/docs/development/contributing.md` (Markdown Standards section) for comprehensive guidelines ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards))
 - Applies to documentation, README files, task lists, PRDs, and all markdown content
 
 ### Documentation Updates
@@ -154,7 +160,14 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 
 ## Additional Resources
 
-- **Full Contributing Guide**: https://ismaelmartinez.github.io/teams-for-linux/development/contributing
-- **Configuration Reference**: https://ismaelmartinez.github.io/teams-for-linux/configuration
-- **Troubleshooting Guide**: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
-- **IPC API Documentation**: https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api
+**Local documentation files (read these):**
+- **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
+- **Configuration Reference**: `docs-site/docs/configuration.md`
+- **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
+- **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
+
+**Web versions (for human reference):**
+- https://ismaelmartinez.github.io/teams-for-linux/development/contributing
+- https://ismaelmartinez.github.io/teams-for-linux/configuration
+- https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
+- https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api
