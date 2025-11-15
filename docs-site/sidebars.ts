@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'screen-sharing',
         'custom-backgrounds',
+        'mqtt-integration',
         'certificate',
         'troubleshooting',
       ],
@@ -103,6 +104,14 @@ const sidebars: SidebarsConfig = {
               items: [
                 'development/research/documentation-health-analysis',
                 'development/research/ui-system-strategic-analysis',
+              ],
+            },
+            {
+              type: 'category',
+              label: 'Architecture & Refactoring',
+              items: [
+                'development/research/incremental-refactoring-plan',
+                'development/research/architecture-modernization-research',
               ],
             },
           ],

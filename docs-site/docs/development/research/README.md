@@ -31,13 +31,25 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
 
+### Architecture & Refactoring
+- **[Incremental Refactoring Plan](incremental-refactoring-plan.md)** ⭐ **ACTIVE PLAN** - Practical 4-8 week plan to modernize architecture through incremental extraction
+  - Reduces index.js by 49% (755 → 381 lines)
+  - Low risk, continuous value delivery
+  - Adds 20+ automated tests
+  - Supersedes closed #1799 (DDD+Plugin approach)
+- **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
+  - Preserved as reference and historical context
+  - 10-week big-bang migration plan
+  - Excellent research but over-engineered for actual needs
+  - See Critical Analysis for why this was not adopted
+
 ### Notification System Research
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
   - Investigation of existing libraries and solutions
   - Architectural constraints analysis (Electron wrapper vs React app)
   - Custom BrowserWindow-based implementation plan
   - Decision: Build custom system following IncomingCallToast pattern
-  - Timeline: 2-3 weeks for MVP implementation
+  - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
 
 ## Purpose
 
