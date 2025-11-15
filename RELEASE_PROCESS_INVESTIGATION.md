@@ -380,7 +380,7 @@ async function updateAppdata() {
   // Parse CHANGELOG.md
   const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
   const versionMatch = changelog.match(
-    new RegExp(`## ${version.replace('.', '\\.')}\\s+([\\s\\S]*?)(?=##|$)`)
+    new RegExp(`## ${version.replace(/\./g, '\\.')}\s+([\s\S]*?)(?=##|$)`)
   );
 
   if (!versionMatch) {
