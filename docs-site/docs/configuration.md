@@ -14,6 +14,7 @@ This document details all available configuration options for the Teams for Linu
   - [Notifications & UI](#notifications--ui)
   - [Screen Sharing & Media](#screen-sharing--media)
   - [System Integration](#system-integration)
+  - [MQTT Integration](#mqtt-integration)
   - [Advanced Options](#advanced-options)
 - [Usage Examples & Guides](#usage-examples--guides)
   - [Basic Setup Examples](#basic-setup-examples)
@@ -122,6 +123,38 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
 | `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
+
+### MQTT Integration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mqtt.enabled` | `boolean` | `false` | Enable/disable MQTT status publishing |
+| `mqtt.brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://192.168.1.100:1883` or `mqtts://broker:8883` for TLS) |
+| `mqtt.username` | `string` | `""` | MQTT username for authentication (optional) |
+| `mqtt.password` | `string` | `""` | MQTT password for authentication (optional) |
+| `mqtt.clientId` | `string` | `"teams-for-linux"` | Unique MQTT client identifier |
+| `mqtt.topicPrefix` | `string` | `"teams"` | Topic prefix for all MQTT messages |
+| `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (combined with topicPrefix) |
+| `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
+
+**Example MQTT Configuration:**
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://192.168.1.100:1883",
+    "username": "teams-user",
+    "password": "secret",
+    "clientId": "teams-for-linux",
+    "topicPrefix": "home/office",
+    "statusTopic": "teams/status",
+    "statusCheckInterval": 10000
+  }
+}
+```
+
+> [!NOTE]
+> Messages are published to `{topicPrefix}/{statusTopic}` (e.g., `home/office/teams/status`). See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, home automation examples, and troubleshooting.
 
 ### Advanced Options
 

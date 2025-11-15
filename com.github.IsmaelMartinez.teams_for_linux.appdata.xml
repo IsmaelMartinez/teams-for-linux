@@ -21,6 +21,7 @@
 					<li>Refactor: Remove excessive comments from feature flag handling functions for improved code clarity</li>
 					<li>Feature: Add automated PR binary artifact uploads for all platforms - contributors and testers can now download pre-built packages directly from GitHub Actions to test PR changes without building from source (closes #1940)</li>
 					<li>Documentation: Streamline CONTRIBUTING.md to be a quick reference guide with links to comprehensive Docusaurus documentation</li>
+					<li>Research: Complete architecture modernization analysis - comprehensive research revealing that the codebase is well-structured with 49% of index.js extractable through low-risk incremental refactoring instead of large-scale architectural overhaul (supersedes #1799 DDD+Plugin approach)</li>
 				</ul>
 			</description>
 		</release>
@@ -108,6 +109,7 @@
 					<li>Fix: Proper event listener cleanup to prevent memory leaks when ConnectionManager is restarted</li>
 					<li>Enhancement: Add start:dev npm script with --no-sandbox flag for easier development testing</li>
 					<li>Fix: Revert to core22 and Electron 37.7.0 for snap compatibility - electron-builder doesn't support core24 yet (issue #8548)</li>
+					<li>Documentation: Add comprehensive MQTT integration documentation with configuration guide, troubleshooting, and home automation examples</li>
 				</ul>
 			</description>
 		</release>
