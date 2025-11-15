@@ -95,13 +95,14 @@ jobs:
     GH_TOKEN: ${{ github.token }}
   run: |
     VERSION=$(jq -r '.version' package.json)
+    TAG_NAME="v$VERSION"
 
-    # Find draft release with this version
-    RELEASE_ID=$(gh release list --limit 100 | grep "v$VERSION" | grep "Draft" | awk '{print $3}')
+    # Find draft release with this version using JSON output for robustness
+    RELEASE_ID=$(gh release list --json tagName,isDraft,id | jq -r ".[] | select(.tagName == \"$TAG_NAME\" and .isDraft) | .id")
 
     if [ -n "$RELEASE_ID" ]; then
-      gh release delete "v$VERSION" --yes
-      echo "Deleted existing draft v$VERSION"
+      gh release delete "$TAG_NAME" --yes
+      echo "Deleted existing draft $TAG_NAME"
     fi
 
 - name: Build and publish
