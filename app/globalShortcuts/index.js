@@ -96,9 +96,15 @@ function register(config, mainAppWindow, app) {
     ? config.shortcuts.enableGlobalShortcuts
     : config.globalShortcuts || [];
 
-  const prefix = config.shortcuts?.enabledShortcutPrefix
+  // Support both new and legacy prefix configuration formats
+  // New format: config.shortcuts.enabledShortcutPrefix
+  // Legacy format: config.globalShortcutPrefix
+  // Use !== undefined to allow explicit empty string "" (no prefix)
+  const prefix = config.shortcuts?.enabledShortcutPrefix !== undefined
     ? config.shortcuts.enabledShortcutPrefix.trim()
-    : "";
+    : (config.globalShortcutPrefix && config.globalShortcutPrefix.trim()
+      ? config.globalShortcutPrefix.trim()
+      : "");
 
   if (!Array.isArray(shortcuts) || shortcuts.length === 0) {
     console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
@@ -107,9 +113,6 @@ function register(config, mainAppWindow, app) {
   }
 
   let registeredCount = 0;
-  const prefix = config.globalShortcutPrefix && config.globalShortcutPrefix.trim()
-    ? config.globalShortcutPrefix.trim()
-    : "";
 
   for (const shortcut of shortcuts) {
     // Skip empty or invalid shortcuts
