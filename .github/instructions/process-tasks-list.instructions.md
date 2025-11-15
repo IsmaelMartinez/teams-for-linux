@@ -70,14 +70,7 @@ Guidelines for managing task lists in markdown files to track progress on comple
 
 ## Markdown Standards
 
-When updating task lists, leverage existing markdown library features instead of building custom solutions:
-
-- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task progress tracking
-- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for important status updates or warnings
-- **Code Blocks:** Use proper syntax highlighting for commands, file paths, and code snippets
-- **Tables:** Use standard markdown tables for structured status reporting or file listings
-- **Links:** Use relative paths for internal documentation and absolute URLs for external resources
-- **Collapsible Sections:** Use GitHub's `<details>` elements for optional or lengthy information
+For comprehensive markdown standards, see the [Contributing Guide - Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards) section in the project documentation.
 
 ## AI Instructions
 

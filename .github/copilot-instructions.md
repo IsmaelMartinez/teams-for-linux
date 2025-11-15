@@ -1,125 +1,137 @@
 # GitHub Copilot Instructions for Teams for Linux
 
+> [!NOTE]
+> **This is a quick reference for GitHub Copilot.** For comprehensive developer documentation including architecture, code standards, testing strategy, and detailed guidelines, see:
+> - **Full Documentation**: [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/)
+> - **Development Guide**: [Contributing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)
+> - **Claude Code Instructions**: See `CLAUDE.md` in the root directory for detailed code patterns and AI agent workflows
+> - **Markdown Standards**: [Contributing Guide - Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)
+
 ## Project Overview
 
-Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app, providing a native desktop experience for Linux users. The app enhances the web version with features like custom CSS, custom backgrounds, system notifications, and deep integration with the desktop environment.
+Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app, providing a native desktop experience for Linux users with enhanced features like custom CSS, system notifications, and deep desktop integration.
 
-## Project Vision & Refactoring Goals
+## Quick Reference
 
-The project is currently undergoing a strategic effort to improve its architecture, maintainability, and developer experience. Key goals include:
+### Essential Commands
 
-- **Increased Modularity:** Refactoring the monolithic `app/index.js` into smaller, single-responsibility modules (e.g., for IPC handling, command-line parsing, notification management).
-- **Modernization:** Adopting modern JavaScript features (`async/await`, `const`/`let`) and simplifying patterns (e.g., class private fields).
-- **Robustness:** Implementing comprehensive error handling, structured logging, and centralized state management.
-- **Testability:** Introducing a formal testing framework to build a suite of unit and integration tests.
-- **Clarity:** Enhancing documentation across all levels of the project.
+```bash
+npm start              # Development mode with trace warnings
+npm run lint          # ESLint validation (mandatory before commits)
+npm run test:e2e      # End-to-end tests with Playwright
+npm run pack          # Development build without packaging
+npm run dist:linux    # Build Linux packages (AppImage, deb, rpm, snap)
+```
 
-When contributing, please align your changes with these goals.
+### Key File Locations
 
-## Architecture & Key Components
+- **Entry Point**: `app/index.js` - Main Electron process (being refactored - avoid adding new code here)
+- **Configuration**: `app/appConfiguration/` - Centralized configuration management
+- **Main Window**: `app/mainAppWindow/` - BrowserWindow and Teams wrapper
+- **Browser Scripts**: `app/browser/tools/` - Client-side injected scripts
+- **Documentation**: `docs-site/docs/` - Docusaurus documentation site
 
-### Main Application Structure
+### Code Standards Quick List
 
-- **Entry Point**: `app/index.js` - Main Electron process. **Note:** This file is being actively refactored. New functionalities should be placed in separate, dedicated modules rather than being added here directly.
-- **Configuration**: `app/appConfiguration/` - Centralized configuration management. See `docs/configuration.md` for a detailed breakdown of all options.
-- **Main Window**: `app/mainAppWindow/` - Manages the main `BrowserWindow` and the Teams web app wrapper.
-- **Browser Tools**: `app/browser/tools/` - Client-side scripts injected into the Teams web interface.
+- ❌ **NO `var`** - Use `const` by default, `let` for reassignment only
+- ✅ **Use `async/await`** instead of promise chains
+- ✅ **Private fields** - Use JavaScript `#property` syntax for class members
+- ✅ **Arrow functions** for concise callbacks
+- ✅ **Run `npm run lint`** before all commits (mandatory)
 
-### Key Documentation
+### Critical Warnings
 
-- **Architecture Diagrams**: See `docs/README.md` for visual overviews of the system.
-- **Configuration Details**: See `docs/configuration.md`.
-- **IPC API**: See `docs/ipc-api.md` for a list of all IPC channels.
-- **Module-specific READMEs**: Each subdirectory in `app/` should have a `README.md` explaining its purpose and interactions.
+> [!IMPORTANT]
+> **TrayIconRenderer IPC Initialization** - The `trayIconRenderer` module MUST be included in the IPC initialization list in `app/browser/preload.js`. This has been accidentally removed multiple times in git history. See issue #1902 and CLAUDE.md for details.
+
+```javascript
+// REQUIRED in app/browser/preload.js
+if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+  moduleInstance.init(config, ipcRenderer);
+}
+```
+
+## Project Architecture
+
+```mermaid
+graph TD
+    A[app/index.js] --> B[Configuration System]
+    A --> C[Window Management]
+    A --> D[IPC Handlers]
+    A --> E[System Integration]
+
+    B --> F[config.json Files]
+    C --> G[Browser Window]
+    D --> H[Renderer Process]
+    E --> I[OS Features]
+
+    G --> J[Teams Web App]
+    H --> K[Browser Scripts]
+    I --> L[Notifications, Tray, etc.]
+```
+
+**For detailed architecture documentation**, see:
+- [Architecture Overview](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#architecture-overview)
+- [IPC API Documentation](https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api)
+- Module-specific READMEs in `app/` subdirectories
 
 ## Development Patterns
 
 ### Configuration Management
 
-- All configuration is managed through the `AppConfiguration` class.
-- **Guiding Principle:** Treat the configuration object as immutable after startup. Changes should be managed via methods within `AppConfiguration` to ensure consistency.
-- For class properties, prefer standard JavaScript private fields (`#property`) over `WeakMap` for simplicity and readability.
-
-### State Management
-
-- Avoid using global variables.
-- For state shared between modules (e.g., `userStatus`, `aboutBlankRequestCount`), create or use a dedicated state management module to provide controlled access and modification methods.
-
-### Event Communication (IPC)
-
-- **Current State:** IPC is handled via `ipcMain.on` and `ipcMain.handle` calls, primarily in `app/index.js`.
-- **Future Direction:** We are moving towards a centralized event bus or IPC abstraction layer to improve structure and maintainability. New IPC channels should be well-documented in `docs/ipc-api.md`.
-
-### Modern JavaScript Practices
-
-- **`var` is disallowed.** Use `const` by default and `let` only when a variable must be reassigned.
-- Use `async/await` for all asynchronous operations instead of promise chains (`.then()`).
-- Use arrow functions for concise callbacks.
+- All configuration managed through `AppConfiguration` class
+- Treat config as **immutable after startup**
+- Changes via AppConfiguration methods only
+- See [Configuration Guide](https://ismaelmartinez.github.io/teams-for-linux/configuration) for details
 
 ### Error Handling & Logging
 
-- Implement a robust error handling strategy using `try-catch` blocks in `async` functions.
-- Aim for graceful degradation and provide clear user feedback for errors.
-- Use `electron-log` for structured logging. Ensure log levels are used consistently and avoid logging sensitive information.
+- Use try-catch blocks in async functions
+- Aim for graceful degradation
+- Use `electron-log` for structured logging
+- Avoid logging sensitive information
 
-## Documentation
+### IPC Communication
 
-- **A Core Responsibility:** Documentation is not an afterthought; it is a core part of the development process.
-- **Update as You Go:** When you make a code change, update the relevant documentation in the same pull request.
-- **Module READMEs:** Ensure the `README.md` in the module you are working on is up-to-date.
-- **Code Comments:** Add comments sparingly. Focus on the _why_ behind complex, non-obvious, or unusual code, not the _what_. Use JSDoc for public APIs.
-- **Central Docs:** For changes affecting configuration, IPC, or overall architecture, update the corresponding documents in the `/docs` directory.
+- Use `ipcMain.handle` for request-response patterns
+- Use `ipcMain.on` for fire-and-forget notifications
+- Document all new IPC channels in `docs-site/docs/development/ipc-api.md`
 
-## Documentation Strategy
+### Defensive Coding
 
-The project is transitioning its documentation platform to Docusaurus. This involves:
-- Migrating existing Markdown content to a Docusaurus project structure.
-- Utilizing Docusaurus's built-in features for search, navigation, versioning, and internationalization.
-- Implementing a GitHub Actions workflow for automated build and deployment of the Docusaurus site to GitHub Pages.
-- This shift aims to provide a more robust, feature-rich, and maintainable documentation experience.
-- **Rationale for Docusaurus (vs. MkDocs) for In-App Documentation:** While both generate static sites, Docusaurus's JavaScript/React foundation aligns seamlessly with the project's existing Electron (Node.js/JavaScript) stack. This provides a more cohesive and extensible ecosystem for future development, customization, and potential interaction between the app and its bundled documentation.
-
-## Markdown Standards
-
-When creating or updating documentation, leverage existing markdown library features instead of building custom solutions:
-
-- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation instead of manual lists
-- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for important information, warnings, and critical notes
-- **Code Blocks:** Use proper syntax highlighting with language identifiers (e.g., `javascript, `bash)
-- **Tables:** Use standard markdown tables with proper alignment for structured data
-- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking and checklists
-- **Links:** Use relative paths for internal documentation links and absolute URLs for external resources
-- **Collapsible Sections:** Use GitHub's `<details>` and `<summary>` elements for optional or lengthy information
-- **Diagrams:** Consider GitHub's Mermaid support for flowcharts, sequence diagrams, and architecture diagrams when applicable
-
-## Build & Development
-
-### Key Commands
-
-```bash
-npm start              # Development mode with trace warnings
-npm run lint          # ESLint validation
-npm run dist:linux    # Build Linux packages (AppImage, deb, rpm, snap)
-npm run pack          # Development build without packaging
-```
-
-### Build Configuration
-
-- **electron-builder** config in `package.json` under the `"build"` section.
-- Release process is automated via GitHub Actions (`.github/workflows/build.yml`).
+- Browser scripts must be defensive - Teams DOM can change without notice
+- Implement proper null checks and error handling
+- Test across different platforms when possible
 
 ## Testing & Quality
 
-- **Linting**: ESLint with custom config (`eslint.config.mjs`) is mandatory.
-- **Security**: Snyk and CodeQL for vulnerability scanning.
-- **CI/CD**: GitHub Actions for build validation and releases.
-- **Unit & Integration Testing**: The project currently lacks sufficient test coverage. A key goal is to introduce a testing framework (e.g., Jest) and build out a comprehensive test suite. Contributions in this area are highly encouraged.
+- **Linting**: Run `npm run lint` before commits (mandatory)
+- **E2E Tests**: Run `npm run test:e2e` - each test uses clean state
+- **Manual Testing**: Use `npm start` for development testing
+- **CI/CD**: GitHub Actions validates all PRs
 
-## Common Patterns
+For testing strategy details, see [Testing Guide](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#testing)
 
-- **Single Instance**: The app uses `app.requestSingleInstanceLock()` to ensure only one instance is running.
-- **Command Line Switches**: The app processes various command-line switches. Logic for this is being centralized from `app/index.js` into a dedicated module.
-- **Defensive Coding:** Browser scripts should be written defensively, as the Teams web app DOM can change without notice.
+## Documentation
+
+> [!IMPORTANT]
+> **Documentation is a core responsibility** - update relevant documentation in the same PR as code changes.
+
+### What to Update
+
+- **Module READMEs**: Update when changing module functionality
+- **IPC Documentation**: Document new IPC channels in `docs-site/docs/development/ipc-api.md`
+- **Architecture Docs**: Update for architectural changes
+- **Configuration**: Document new config options in `docs-site/docs/configuration.md`
+- **ADRs**: Create Architecture Decision Records for significant technical decisions in `docs-site/docs/development/adr/`
+
+### Documentation Platform
+
+The project uses **Docusaurus** for documentation:
+- **Local Development**: `cd docs-site && npm run start`
+- **Deployment**: Automated via GitHub Actions to GitHub Pages
+- **Search**: Client-side search using @easyops-cn/docusaurus-search-local
+- **Standards**: See [Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)
 
 ## External Dependencies
 
@@ -128,4 +140,13 @@ npm run pack          # Development build without packaging
 - **Storage**: electron-store (persistent configuration)
 - **Audio**: node-sound (optional, for notification sounds)
 
-When working on this codebase, always consider cross-platform compatibility and the fact that the Teams web interface can change independently of this application.
+## Additional Resources
+
+- **Full Contributing Guide**: https://ismaelmartinez.github.io/teams-for-linux/development/contributing
+- **Configuration Reference**: https://ismaelmartinez.github.io/teams-for-linux/configuration
+- **Troubleshooting**: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
+- **Matrix Chat**: [#teams-for-linux_community:gitter.im](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+
+---
+
+**Remember**: Always consider cross-platform compatibility and that the Teams web interface can change independently of this application.

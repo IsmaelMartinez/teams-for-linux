@@ -204,6 +204,66 @@ npm run build
 - Add **cross-references** to related documentation
 - Use **Mermaid diagrams** for architecture visualization
 
+### Markdown Standards
+
+When creating or updating any markdown documentation in this project (including documentation files, README files, task lists, and PRDs), leverage existing markdown library features instead of building custom solutions:
+
+#### Content Structure
+
+- **Table of Contents**: Use GitHub's `<!-- toc -->` element or Docusaurus auto-TOC for automatic table of contents generation instead of manual lists
+- **Collapsible Sections**: Use GitHub's `<details>` and `<summary>` elements for optional or lengthy information
+
+#### Callouts and Alerts
+
+- **Callouts**: Use GitHub's alert syntax for important information, warnings, and critical notes:
+  - `> [!NOTE]` - For neutral informational notes
+  - `> [!TIP]` - For helpful tips and best practices
+  - `> [!IMPORTANT]` - For critical information users must know
+  - `> [!WARNING]` - For warnings about potential issues
+  - `> [!CAUTION]` - For dangerous actions or critical warnings
+- **Docusaurus**: In Docusaurus files, use admonitions: `:::note`, `:::tip`, `:::warning`, `:::danger`, `:::info`
+
+#### Code and Technical Content
+
+- **Code Blocks**: Use proper syntax highlighting with language identifiers (e.g., ` ```javascript`, ` ```bash`, ` ```json`)
+- **Inline Code**: Use backticks for inline code, commands, file paths, and variable names
+- **Commands**: Show shell commands with appropriate prompts and syntax highlighting
+
+#### Data Presentation
+
+- **Tables**: Use standard markdown tables with proper alignment for structured data
+- **Checkboxes**: Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking and checklists
+
+#### Links and References
+
+- **Internal Links**: Use relative paths for internal documentation links (e.g., `[Configuration](../configuration.md)`)
+- **External Links**: Use absolute URLs for external resources
+- **Issue/PR References**: Use GitHub's `#123` syntax for issue and pull request references
+
+#### Diagrams and Visuals
+
+- **Mermaid Diagrams**: Use GitHub's Mermaid support for flowcharts, sequence diagrams, and architecture diagrams when applicable
+- **Supported Types**: flowchart, sequence, class, state, ER, gantt, pie, git graph
+- **Example**:
+  ````markdown
+  ```mermaid
+  graph TD
+      A[Start] --> B[Process]
+      B --> C[End]
+  ```
+  ````
+
+:::tip Single Source of Truth
+These markdown standards apply to ALL markdown files in the project:
+- Documentation site (`docs-site/docs/`)
+- Root-level documentation (README, CONTRIBUTING, CLAUDE.md)
+- Task management files (`tasks/`)
+- AI agent instruction files (`.github/instructions/`)
+- Module READMEs in `app/` directories
+
+When updating standards, update this section only. All other files should reference these standards.
+:::
+
 ## Testing
 
 ### End-to-End (E2E) Tests

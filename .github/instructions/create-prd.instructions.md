@@ -64,14 +64,7 @@ Assume the primary reader of the PRD is a **junior developer**. Therefore, requi
 
 ## Markdown Standards
 
-When creating PRDs, leverage existing markdown library features instead of building custom solutions:
-
-- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation instead of manual lists
-- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, etc.) for important information
-- **Code Blocks:** Use proper syntax highlighting with language identifiers
-- **Tables:** Use standard markdown tables with proper alignment
-- **Links:** Use relative paths for internal documentation links
-- **Diagrams:** Consider GitHub's Mermaid support for flowcharts and diagrams when applicable
+For comprehensive markdown standards, see the [Contributing Guide - Markdown Standards](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards) section in the project documentation.
 
 ## Final instructions
 
