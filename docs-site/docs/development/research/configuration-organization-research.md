@@ -7,11 +7,13 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux has **53 distinct configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, some features (MQTT) exist in code but are undocumented, deprecated options still clutter the config, and naming conventions are inconsistent.
+Teams for Linux has **53 distinct configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, deprecated options still clutter the config, and naming conventions are inconsistent.
+
+**Note**: MQTT documentation was added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939) after this research began, addressing one of the initial findings.
 
 ### Key Findings
 
-1. **Missing Documentation**: MQTT configuration exists in code (app/config/index.js:468-481) but is completely absent from the main configuration documentation.
+1. **~~Missing Documentation~~ ✅ RESOLVED**: MQTT configuration documentation was added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939), including configuration reference and integration guide.
 
 2. **Poor Grouping**: Related options controlling single features are scattered:
    - Idle detection (4 options) spread across categories
@@ -30,7 +32,7 @@ Teams for Linux has **53 distinct configuration options** managed through a flat
 ### Recommended Approach
 **Three-Phase Gradual Migration** with backward compatibility:
 
-**Phase 1 (v2.x)**: Documentation reorganization + MQTT docs + deprecation of old flat keys
+**Phase 1 (v2.x)**: Documentation reorganization + ~~MQTT docs~~ ✅ + deprecation of old flat keys
 **Phase 2 (v2.x)**: Introduce nested structure with auto-migration
 **Phase 3 (v3.0)**: Remove deprecated flat keys (breaking change)
 
@@ -129,9 +131,18 @@ contextIsolation, sandbox  // Should be removed
 
 ### Problem Analysis
 
-#### Problem 1: Missing MQTT Documentation
+#### ~~Problem 1: Missing MQTT Documentation~~ ✅ RESOLVED
 
-**Evidence:**
+**Status**: Fixed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939) (merged after research began)
+
+**Solution Implemented:**
+- Added MQTT section to docs-site/docs/configuration.md with configuration reference table
+- Created comprehensive docs-site/docs/mqtt-integration.md guide
+- Includes examples for Home Assistant integration
+- Added to documentation navigation sidebar
+- Users can now discover and configure the MQTT feature
+
+**Original Issue** (now resolved):
 ```javascript
 // app/config/index.js:468-481
 mqtt: {
@@ -150,17 +161,7 @@ mqtt: {
 }
 ```
 
-**Impact:**
-- Users can't discover the feature
-- No examples or usage guidance
-- Integration exists (app/mqtt/README.md) but not linked from main docs
-- Recent feature (#1926, #1931) shipped without user-facing documentation
-
-**Fix Required:**
-Add MQTT section to docs-site/docs/configuration.md with:
-- Configuration reference table
-- Basic usage example
-- Link to detailed MQTT integration guide
+This feature was in code but undocumented, making it impossible for users to discover.
 
 #### Problem 2: Scattered Related Options
 
@@ -416,7 +417,7 @@ defaultNotificationUrgency: "normal",
 **Goal:** Improve discoverability without code changes
 
 **Changes:**
-1. Add MQTT to configuration.md
+1. ~~Add MQTT to configuration.md~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 2. Reorganize documentation categories
 3. Document deprecated options
 4. Add migration guide section
@@ -476,8 +477,8 @@ defaultNotificationUrgency: "normal",
 ### Keyboard Shortcuts
 - disableGlobalShortcuts, globalShortcuts
 
-### MQTT Integration (NEW)
-- mqtt configuration object
+### MQTT Integration ✅ DOCUMENTED
+- mqtt configuration object (see [MQTT Integration Guide](https://ismaelmartinez.github.io/teams-for-linux/mqtt-integration))
 
 ### Performance & Hardware
 - disableGpu, electronCLIFlags
@@ -499,9 +500,9 @@ defaultNotificationUrgency: "normal",
 
 **Deliverables:**
 - Updated docs-site/docs/configuration.md
-- New MQTT configuration section with examples
+- ~~New MQTT configuration section with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - Deprecated options migration guide
-- Estimated Effort: 4-6 hours
+- **Remaining Effort: 2-4 hours** (reduced from 4-6 hours due to MQTT completion)
 
 ### Phase 2: Introduce Nested Structure (v2.x) - Backward Compatible
 
@@ -746,7 +747,7 @@ function validateConfig(config) {
 ### Phase 1: Documentation (2.x - Next Release)
 
 **Week 1:**
-- [ ] Add MQTT configuration section to docs
+- [x] ~~Add MQTT configuration section to docs~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - [ ] Reorganize configuration.md categories
 - [ ] Add deprecation section for contextIsolation/sandbox
 - [ ] Create initial migration guide
@@ -825,7 +826,7 @@ function validateConfig(config) {
 ## Success Metrics
 
 ### Phase 1 Success Criteria
-- [ ] MQTT configuration documented with examples
+- [x] ~~MQTT configuration documented with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - [ ] All 53 options organized into logical categories
 - [ ] Zero breaking changes
 - [ ] Documentation builds and deploys successfully
@@ -916,6 +917,7 @@ function validateConfig(config) {
 ### Related Issues
 - Configuration improvements investigation (current)
 - MQTT integration: [#1926](https://github.com/IsmaelMartinez/teams-for-linux/pull/1926), [#1931](https://github.com/IsmaelMartinez/teams-for-linux/pull/1931)
+- MQTT documentation: [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939) ✅ **MERGED**
 - System-wide config: [#1773](https://github.com/IsmaelMartinez/teams-for-linux/issues/1773)
 
 ### External References
@@ -1180,11 +1182,13 @@ function validateConfig(config) {
 
 The proposed three-phase approach provides a balanced path forward:
 
-1. **Phase 1** delivers immediate value (better docs, MQTT) with zero risk
+1. **Phase 1** delivers immediate value (better docs, ~~MQTT~~ ✅) with zero risk
 2. **Phase 2** introduces modern structure while maintaining compatibility
 3. **Phase 3** completes the transformation after users have time to migrate
 
-This research recommends **proceeding with Phase 1 immediately** (low effort, high value, zero risk) and planning Phase 2 for a future release cycle.
+**Phase 1 Status Update**: MQTT documentation (one of the main Phase 1 deliverables) was completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939). Remaining Phase 1 work includes documentation reorganization and deprecated option migration guide.
+
+This research recommends **proceeding with remaining Phase 1 tasks** (low effort, high value, zero risk) and planning Phase 2 for a future release cycle.
 
 The nested configuration structure will:
 - Make related options easier to discover and configure
@@ -1194,8 +1198,9 @@ The nested configuration structure will:
 - Create better user experience with logical grouping
 
 **Next Steps:**
-1. Review and approve this research document
-2. Create GitHub issue for Phase 1 implementation
-3. Update docs-site/docs/configuration.md
-4. Add MQTT configuration documentation
-5. Plan Phase 2 for future release
+1. ~~Review and approve this research document~~ ✅
+2. Create GitHub issue for remaining Phase 1 implementation
+3. Update docs-site/docs/configuration.md with reorganized categories
+4. ~~Add MQTT configuration documentation~~ ✅ **COMPLETED**
+5. Document deprecated options migration path
+6. Plan Phase 2 for future release
