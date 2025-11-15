@@ -34,6 +34,8 @@ function parseAccelerator(accelerator) {
       modifiers.push("shift");
     } else if (lower === "alt" || lower === "option") {
       modifiers.push("alt");
+    } else if (lower === "super" || lower === "meta") {
+      modifiers.push("super");
     } else {
       // This is the key
       key = part;
@@ -76,6 +78,78 @@ function sendKeyboardEventToWindow(window, accelerator) {
 }
 
 /**
+ * Gets the shortcuts array from config, supporting both new and legacy formats.
+ * @param {Object} config - Application configuration
+ * @returns {Array} Array of shortcuts
+ */
+function getShortcutsFromConfig(config) {
+  // New format: config.shortcuts.enableGlobalShortcuts
+  // Legacy format: config.globalShortcuts
+  if (config.shortcuts?.enableGlobalShortcuts?.length > 0) {
+    return config.shortcuts.enableGlobalShortcuts;
+  }
+  return config.globalShortcuts || [];
+}
+
+/**
+ * Gets the prefix from config, supporting both new and legacy formats.
+ * @param {Object} config - Application configuration
+ * @returns {string} Prefix string (may be empty)
+ */
+function getPrefixFromConfig(config) {
+  // New format: config.shortcuts.enabledShortcutPrefix
+  // Legacy format: config.globalShortcutPrefix
+  // Use !== undefined to allow explicit empty string "" (no prefix)
+  if (config.shortcuts?.enabledShortcutPrefix !== undefined) {
+    return config.shortcuts.enabledShortcutPrefix.trim();
+  }
+
+  const legacyPrefix = config.globalShortcutPrefix;
+  if (legacyPrefix && legacyPrefix.trim()) {
+    return legacyPrefix.trim();
+  }
+
+  return "";
+}
+
+/**
+ * Registers a single global shortcut.
+ * @param {string} shortcut - The shortcut to register
+ * @param {string} prefix - Optional prefix to prepend
+ * @param {Object} mainAppWindow - Main application window module
+ * @returns {boolean} True if registration succeeded
+ */
+function registerSingleShortcut(shortcut, prefix, mainAppWindow) {
+  const fullShortcut = prefix ? `${prefix}+${shortcut}` : shortcut;
+
+  try {
+    const registered = globalShortcut.register(fullShortcut, () => {
+      console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${fullShortcut}`);
+
+      const window = mainAppWindow.getWindow();
+      if (window && !window.isDestroyed()) {
+        // Forward the keyboard event to Teams by simulating the key press
+        // Teams will handle it with its built-in keyboard shortcuts
+        sendKeyboardEventToWindow(window, shortcut);
+      } else {
+        console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${fullShortcut}`);
+      }
+    });
+
+    if (registered) {
+      console.info(`[GLOBAL_SHORTCUTS] Registered: ${fullShortcut}`);
+      return true;
+    }
+
+    console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${fullShortcut} (may already be in use by another application)`);
+    return false;
+  } catch (err) {
+    console.error(`[GLOBAL_SHORTCUTS] Error registering ${fullShortcut}: ${err.message}`);
+    return false;
+  }
+}
+
+/**
  * Registers global shortcuts that forward keyboard events to Teams.
  *
  * @param {Object} config - Application configuration
@@ -89,62 +163,34 @@ function register(config, mainAppWindow, app) {
     return;
   }
 
-  // Support both new and legacy configuration formats
-  // New format: config.shortcuts.enableGlobalShortcuts
-  // Legacy format: config.globalShortcuts
-  const shortcuts = config.shortcuts?.enableGlobalShortcuts?.length > 0
-    ? config.shortcuts.enableGlobalShortcuts
-    : config.globalShortcuts || [];
+  const shortcuts = getShortcutsFromConfig(config);
+  const hasShortcuts = Array.isArray(shortcuts) && shortcuts.length > 0;
 
-  const prefix = config.shortcuts?.enabledShortcutPrefix
-    ? config.shortcuts.enabledShortcutPrefix.trim()
-    : "";
+  if (hasShortcuts) {
+    const prefix = getPrefixFromConfig(config);
+    let registeredCount = 0;
 
-  if (!Array.isArray(shortcuts) || shortcuts.length === 0) {
-    console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
-    isRegistered = true; // Mark as registered even with no shortcuts to maintain guard integrity
-    return;
-  }
-
-  let registeredCount = 0;
-
-  for (const shortcut of shortcuts) {
-    // Skip empty or invalid shortcuts
-    if (!shortcut || typeof shortcut !== "string") {
-      console.debug(`[GLOBAL_SHORTCUTS] Skipping invalid shortcut: ${shortcut}`);
-      continue;
-    }
-
-    // Apply prefix if configured
-    const fullShortcut = prefix ? `${prefix}+${shortcut}` : shortcut;
-
-    try {
-      const registered = globalShortcut.register(fullShortcut, () => {
-        console.debug(`[GLOBAL_SHORTCUTS] Shortcut triggered: ${fullShortcut}`);
-
-        const window = mainAppWindow.getWindow();
-        if (window && !window.isDestroyed()) {
-          // Forward the keyboard event to Teams by simulating the key press
-          // Teams will handle it with its built-in keyboard shortcuts
-          // Note: In practice, sending keyboard events works reliably without focusing the window.
-          // If issues arise on specific platforms, consider calling window.focus() before sendInputEvent.
-          // We forward the original shortcut (without prefix) to Teams
-          sendKeyboardEventToWindow(window, shortcut);
-        } else {
-          console.warn(`[GLOBAL_SHORTCUTS] Main window not available for shortcut: ${fullShortcut}`);
+    for (const shortcut of shortcuts) {
+      // Skip empty or invalid shortcuts
+      if (shortcut && typeof shortcut === "string") {
+        if (registerSingleShortcut(shortcut, prefix, mainAppWindow)) {
+          registeredCount++;
         }
-      });
-
-      if (registered) {
-        console.info(`[GLOBAL_SHORTCUTS] Registered: ${fullShortcut}`);
-        registeredCount++;
       } else {
-        console.warn(`[GLOBAL_SHORTCUTS] Failed to register ${fullShortcut} (may already be in use by another application)`);
+        console.debug(`[GLOBAL_SHORTCUTS] Skipping invalid shortcut: ${shortcut}`);
       }
-    } catch (err) {
-      console.error(`[GLOBAL_SHORTCUTS] Error registering ${fullShortcut}: ${err.message}`);
     }
+
+    if (registeredCount > 0) {
+      isRegistered = true;
+      console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredCount} global shortcut(s)`);
+    }
+  } else {
+    console.debug("[GLOBAL_SHORTCUTS] No global shortcuts configured");
   }
+
+  // Mark as registered even with no shortcuts to maintain guard integrity
+  isRegistered = true;
 
   // Unregister all shortcuts on app quit
   app.on("will-quit", () => {
@@ -152,11 +198,6 @@ function register(config, mainAppWindow, app) {
     console.debug("[GLOBAL_SHORTCUTS] Unregistered all shortcuts");
     isRegistered = false;
   });
-
-  if (registeredCount > 0) {
-    isRegistered = true;
-    console.info(`[GLOBAL_SHORTCUTS] Successfully registered ${registeredCount} global shortcut(s)`);
-  }
 }
 
 module.exports = { register };

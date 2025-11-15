@@ -304,6 +304,12 @@ function extractYargConfig(configObject, appVersion) {
           "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
         type: "array",
       },
+      globalShortcutPrefix: {
+        default: "",
+        describe:
+          "Optional prefix modifier key(s) to prepend to all global shortcuts (e.g., 'Super' to make shortcuts like Super+Control+Shift+M). Leave empty for no prefix",
+        type: "string",
+      },
       electronCLIFlags: {
         default: [],
         describe: "Electron CLI flags",
