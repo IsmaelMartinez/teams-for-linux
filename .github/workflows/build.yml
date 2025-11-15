@@ -76,7 +76,7 @@ jobs:
             dist/*.tar.gz
             dist/*.AppImage
           retention-days: 30
-          compression-level: 0
+          compression-level: 6
 
   linux_arm64:
     runs-on: ubuntu-latest
@@ -115,7 +115,7 @@ jobs:
             dist/*.tar.gz
             dist/*.AppImage
           retention-days: 30
-          compression-level: 0
+          compression-level: 6
 
   linux_arm:
     runs-on: ubuntu-latest
@@ -154,7 +154,7 @@ jobs:
             dist/*.tar.gz
             dist/*.AppImage
           retention-days: 30
-          compression-level: 0
+          compression-level: 6
 
   dmg:
     runs-on: macos-latest
@@ -189,7 +189,7 @@ jobs:
           name: teams-for-linux-macos-x64
           path: dist/*.dmg
           retention-days: 30
-          compression-level: 0
+          compression-level: 6
 
   exe:
     runs-on: windows-latest
@@ -224,4 +224,81 @@ jobs:
           name: teams-for-linux-windows-x64
           path: dist/*.exe
           retention-days: 30
-          compression-level: 0
+          compression-level: 6
+
+  comment-artifacts:
+    runs-on: ubuntu-latest
+    if: "!contains(github.ref, 'main')"
+    needs: [linux_x64, linux_arm64, linux_arm, dmg, exe]
+    permissions:
+      pull-requests: write
+      actions: read
+
+    steps:
+      - name: Comment on PR with artifact links
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            // Find PR for this branch
+            const branchName = context.ref.replace('refs/heads/', '');
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const pr = prs.find(p => p.head.ref === branchName);
+
+            if (!pr) {
+              console.log(`No PR found for branch ${branchName}`);
+              return;
+            }
+
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+
+            const buildArtifacts = artifacts.artifacts.filter(a =>
+              !a.name.includes('test-results') && !a.name.includes('playwright')
+            );
+
+            if (buildArtifacts.length === 0) {
+              console.log('No build artifacts found');
+              return;
+            }
+
+            let body = '## 📦 PR Build Artifacts\n\n✅ **Build successful!** Download artifacts:\n\n';
+
+            buildArtifacts.forEach(artifact => {
+              const sizeMB = (artifact.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `- [${artifact.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${artifact.id}) (${sizeMB} MB)\n`;
+            });
+
+            body += `\n[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('## 📦 PR Build Artifacts')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body
+              });
+            }
