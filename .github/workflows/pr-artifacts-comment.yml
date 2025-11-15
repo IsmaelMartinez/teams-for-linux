@@ -14,10 +14,7 @@ permissions:
 jobs:
   comment:
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.event == 'pull_request' ||
-      (github.event.workflow_run.head_branch != 'main' &&
-       github.event.workflow_run.head_branch != 'master')
+    if: github.event.workflow_run.event == 'pull_request'
 
     steps:
       - name: Get PR number
