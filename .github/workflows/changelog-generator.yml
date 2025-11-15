@@ -1,0 +1,105 @@
+name: Generate Changelog Entry
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  generate-changelog:
+    # Only run if PR was actually merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate summary with Gemini
+        id: gemini
+        run: |
+          # Extract PR info
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # Clean up body (remove quotes, truncate if very long)
+          CLEAN_BODY=$(echo "$PR_BODY" | head -c 1000 | tr '"' "'")
+
+          # Call Gemini API
+          RESPONSE=$(curl -s -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${{ secrets.GEMINI_API_KEY }}" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"contents\": [{
+                \"parts\": [{
+                  \"text\": \"Summarize this PR in ONE concise line suitable for a changelog (max 80 chars):\n\nTitle: ${PR_TITLE}\n\nDescription: ${CLEAN_BODY}\n\nGuidelines:\n- Start with action verb (Add/Fix/Update/Remove)\n- Focus on user-facing impact\n- Max 80 characters\n- Professional tone\n\nExample: 'Add MQTT integration for Teams status publishing'\"
+                }]
+              }],
+              \"generationConfig\": {
+                \"temperature\": 0.3,
+                \"maxOutputTokens\": 50
+              }
+            }")
+
+          # Extract summary from response
+          SUMMARY=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text' | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          if [ -z "$SUMMARY" ] || [ "$SUMMARY" = "null" ]; then
+            echo "⚠️  Gemini API call failed, using PR title as fallback"
+            SUMMARY="$PR_TITLE"
+          fi
+
+          echo "Generated summary: $SUMMARY"
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+      - name: Post-process summary
+        id: final
+        run: |
+          SUMMARY="${{ steps.gemini.outputs.summary }}"
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_NUM="${{ github.event.pull_request.number }}"
+
+          # Add author if not a bot
+          if [[ ! "$AUTHOR" =~ bot ]]; then
+            SUMMARY="$SUMMARY - by @$AUTHOR"
+          fi
+
+          # Add PR number
+          SUMMARY="$SUMMARY (#$PR_NUM)"
+
+          echo "Final: $SUMMARY"
+          echo "final_summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+      - name: Save changelog entry
+        run: |
+          mkdir -p .changelog
+          echo "${{ steps.final.outputs.final_summary }}" > .changelog/pr-${{ github.event.pull_request.number }}.txt
+
+          echo "✅ Created: .changelog/pr-${{ github.event.pull_request.number }}.txt"
+          cat .changelog/pr-${{ github.event.pull_request.number }}.txt
+
+      - name: Commit changelog file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .changelog/
+          git commit -m "chore: add changelog entry for PR #${{ github.event.pull_request.number }}"
+          git push origin main
+
+          echo "✅ Changelog entry committed to main"
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Changelog entry generated:\n\n```\n${{ steps.final.outputs.final_summary }}\n```\n\nStored in `.changelog/pr-${{ github.event.pull_request.number }}.txt`'
+            })
