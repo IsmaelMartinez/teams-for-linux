@@ -16,12 +16,12 @@ This document presents comprehensive research into creating a **custom notificat
 - **Current limitations**: OS-level notifications face significant cross-platform reliability issues, especially on Linux where notification daemons can freeze the application
 - **Recommended approach**: Custom BrowserWindow-based notification system following the proven `IncomingCallToast` pattern
 - **No suitable libraries**: Existing npm packages (electron-notifications, electron-notify) are 5-9 years old and incompatible with modern Electron
-- **Timeline**: 2-3 weeks for MVP implementation
+- **MVP Timeline**: ~1 week for ultra-minimal implementation (toast notifications only)
 - **Design**: Follow Microsoft Teams design language for consistency
 
 ### Decision
 
-**Proceed with custom implementation** using separate BrowserWindows for both toast notifications and a notification center, with IndexedDB for persistence. This approach provides complete control, eliminates OS dependency, and follows existing codebase patterns.
+**Proceed with ultra-minimal MVP implementation**: Toast notifications only (no notification center, no history, no storage). Start ridiculously simple—just show a BrowserWindow toast that auto-dismisses. Add complexity only after validating core functionality and based on actual user feedback. This approach minimizes risk, development time, and maintenance burden.
 
 ---
 
@@ -178,30 +178,20 @@ notification.show();
 
 ### 4.1 Architecture Overview
 
-We'll build a **two-component system** following the `IncomingCallToast` pattern:
+We'll build this **incrementally**, starting with the simplest component:
+
+**Phase 1 (MVP): Toast Notifications Only**
 
 ```
 ┌──────────────────────────────────────────────────┐
 │              Main Process                        │
 │                                                  │
 │  ┌─────────────────────────────────────────┐   │
-│  │   NotificationSystemManager             │   │
-│  │   - Coordinates components              │   │
-│  │   - Manages IPC handlers                │   │
-│  └───────┬─────────────────────┬───────────┘   │
-│          │                     │                │
-│  ┌───────▼────────┐    ┌──────▼──────────┐    │
-│  │ NotificationToast│    │NotificationCenter│    │
-│  │ - Popup windows │    │ - History panel  │    │
-│  │ - Auto-dismiss  │    │ - Drawer UI      │    │
-│  │ - Max 3 visible│    │ - Mark read/unread│   │
-│  └────────────────┘    └─────────────────┘    │
-│                                                  │
-│  ┌─────────────────────────────────────────┐   │
-│  │   NotificationStore (IndexedDB)         │   │
-│  │   - Persistent storage                  │   │
-│  │   - Last 100 notifications              │   │
-│  │   - Auto-cleanup (7 days)               │   │
+│  │   NotificationToast                     │   │
+│  │   - Popup windows (bottom-right)        │   │
+│  │   - Auto-dismiss after 5 seconds        │   │
+│  │   - Click to focus main window          │   │
+│  │   - Teams design language               │   │
 │  └─────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────┘
 
@@ -209,11 +199,19 @@ We'll build a **two-component system** following the `IncomingCallToast` pattern
 │           Renderer Process (Teams)               │
 │                                                  │
 │  preload.js intercepts:                          │
-│  new Notification() → Send to custom system     │
+│  new Notification() → Show custom toast         │
 └──────────────────────────────────────────────────┘
 ```
 
-### 4.2 Component Design
+**Future Phases:**
+- **Phase 2:** Add notification center (drawer) for current session
+- **Phase 3:** Integrate with existing tray icon system
+- **Phase 4:** Integrate with incoming call toast
+- **Phase 5+:** Add persistence, advanced features
+
+**Start Simple Principle:** MVP is just toast notifications. Add complexity only after validating core functionality works.
+
+### 4.2 Component Design (MVP: Toast Only)
 
 #### NotificationToast
 
@@ -222,7 +220,7 @@ We'll build a **two-component system** following the `IncomingCallToast` pattern
 **Follows:** `IncomingCallToast.js` pattern exactly
 
 ```javascript
-// app/notificationSystem/toast/NotificationToast.js
+// app/notificationSystem/NotificationToast.js
 class NotificationToast {
   constructor(data, onClickCallback) {
     this.window = new BrowserWindow({
@@ -245,163 +243,52 @@ class NotificationToast {
     this.positioner = new Positioner(this.window);
   }
 
-  show(position) {
+  show() {
     this.positioner.move('bottomRight');
     this.window.show();
 
     // Auto-dismiss after 5 seconds
     setTimeout(() => this.close(), 5000);
   }
+
+  close() {
+    this.window.close();
+  }
 }
 ```
 
-**Features:**
-- Stack vertically (max 3 visible)
-- Auto-dismiss after configurable duration
-- Click to view or dismiss
-- Action buttons (View, Dismiss)
+**MVP Features:**
+- Auto-dismiss after 5 seconds (configurable)
+- Click anywhere to focus main window
 - Teams design language
+- Bottom-right positioning with multi-monitor support
 
-#### NotificationCenter
+**Future Enhancements (Phase 2+):**
+- Stack multiple toasts vertically
+- Action buttons (View, Dismiss, Reply)
+- Queue management (max visible toasts)
+- Hover to pause auto-dismiss
 
-**Purpose:** Persistent panel for notification history
-
-```javascript
-// app/notificationSystem/center/NotificationCenter.js
-class NotificationCenter {
-  constructor(mainWindow) {
-    this.centerWindow = new BrowserWindow({
-      parent: mainWindow,  // Attached to main window
-      width: 400,
-      height: 600,
-      show: false,
-      frame: false,
-      alwaysOnTop: true,
-      webPreferences: {
-        preload: path.join(__dirname, 'notificationCenterPreload.js'),
-        contextIsolation: true,
-        nodeIntegration: false
-      }
-    });
-
-    this.centerWindow.loadFile('notificationCenter.html');
-  }
-
-  toggle() {
-    if (this.centerWindow.isVisible()) {
-      this.centerWindow.hide();
-    } else {
-      // Position next to main window (slide-in from right)
-      this.positionAndShow();
-    }
-  }
-
-  updateBadge(count) {
-    // Send badge count to renderer for display
-    this.centerWindow.webContents.send('badge-count-update', count);
-  }
-}
-```
-
-**Features:**
-- List of all notifications (newest first)
-- Mark as read/unread
-- Clear all functionality
-- Badge count indicator
-- Slide-in drawer animation
-- Teams design language
-
-#### NotificationStore
-
-**Purpose:** In-memory notification storage for current session
-
-**MVP Approach:** Start with simple in-memory storage. Persistent storage (IndexedDB) can be added in Phase 2 if users need history across restarts.
+### 4.3 Data Model (MVP: Minimal)
 
 ```javascript
-// app/notificationSystem/store/notificationStore.js
-const { EventEmitter } = require('events');
-
-class NotificationStore extends EventEmitter {
-  constructor() {
-    super();
-    this.notifications = [];  // In-memory array for MVP
-  }
-
-  add(notification) {
-    const item = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      ...notification,
-      read: false
-    };
-
-    this.notifications.unshift(item);  // Add to beginning (newest first)
-    this.emit('added', item);
-    return item;
-  }
-
-  getRecent(limit = 50) {
-    // Return most recent notifications (in-memory)
-    return this.notifications.slice(0, limit);
-  }
-
-  getUnreadCount() {
-    return this.notifications.filter(n => !n.read).length;
-  }
-
-  markRead(id) {
-    const notification = this.notifications.find(n => n.id === id);
-    if (notification) {
-      notification.read = true;
-      this.emit('updated', notification);
-    }
-  }
-
-  clear() {
-    this.notifications = [];
-    this.emit('cleared');
-  }
-}
-```
-
-**Phase 2 Enhancement:** Add IndexedDB persistence if users request history across restarts.
-
-### 4.3 Data Model
-
-```javascript
-// Notification object structure
+// Simple notification object for MVP
 {
-  id: 'uuid-v4',                    // Unique identifier
-  timestamp: 1730000000000,         // Unix timestamp (ms)
-  title: 'John Smith',              // Notification title
-  body: 'Hey, can we sync?',        // Notification body
-  icon: 'https://...',              // Avatar URL
-  type: 'message',                  // message|mention|meeting|call|activity
-  read: false,                      // Read status
-  clicked: false,                   // Clicked status
-  actions: [                        // Available actions
-    {
-      id: 'view',
-      title: 'View',
-      action: 'view',
-      primary: true
-    },
-    {
-      id: 'dismiss',
-      title: 'Dismiss',
-      action: 'dismiss',
-      primary: false
-    }
-  ],
-  metadata: {                       // Teams-specific data
-    conversationId: '...',
-    senderId: '...',
-    channelId: '...'
-  }
+  id: 'uuid-v4',              // Unique identifier (generated)
+  timestamp: 1730000000000,   // Unix timestamp (ms)
+  title: 'John Smith',        // Notification title
+  body: 'Hey, can we sync?',  // Notification body
+  icon: 'https://...'         // Avatar URL or base64 icon
 }
 ```
 
-### 4.4 Integration with Existing System
+**Future enhancements** (Phase 2+):
+- `type` field for categorization (message|mention|meeting|call|activity)
+- `read` and `clicked` status tracking
+- `actions` array for interactive buttons
+- `metadata` object for Teams-specific data (conversationId, senderId, etc.)
+
+### 4.4 Integration with Existing System (MVP: Simple)
 
 **Modify `preload.js` CustomNotification function:**
 
@@ -412,34 +299,40 @@ function CustomNotification(title, options) {
     return { onclick: null, onclose: null, onerror: null };
   }
 
-  // NEW: Check if custom notification system enabled
-  if (notificationConfig?.customNotificationSystem?.enabled) {
+  // NEW: Check if custom notification method selected
+  const method = notificationConfig?.notificationMethod || "web";
+
+  if (method === "custom") {
+    // Simple notification data for MVP
     const notificationData = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),
       title: title,
       body: options.body || '',
-      icon: options.icon || ICON_BASE64,
-      type: detectNotificationType(title, options),
-      read: false,
-      actions: generateActions()
+      icon: options.icon || ICON_BASE64
     };
 
-    // Send to custom notification system
-    ipcRenderer.invoke('notification-add', notificationData);
+    // Send to main process to show toast
+    ipcRenderer.send('notification-show-toast', notificationData);
 
-    // Play sound (reuse existing logic)
-    playNotificationSound({ type: options.type, ... });
-
-    // Return stub (handled by custom system)
+    // Return stub (no web notification created)
     return { onclick: null, onclose: null, onerror: null };
   }
 
-  // EXISTING: Fallback to web/electron notifications
-  const method = notificationConfig?.notificationMethod || "web";
-  // ... existing code
+  // EXISTING: web or electron notifications
+  if (method === "web") {
+    return createWebNotification(classicNotification, title, options);
+  }
+
+  return createElectronNotification(options);
 }
 ```
+
+**Key Simplifications:**
+- No type detection (just pass through title/body/icon)
+- No action generation (MVP has no buttons)
+- Direct IPC send (no complex store management)
+- Sound handled by existing system
 
 ---
 
@@ -550,54 +443,51 @@ const soundMap = {
 
 ---
 
-## 6. IPC Security & Channels
+## 6. IPC Security & Channels (MVP: Minimal)
 
 ### 6.1 New IPC Channels
 
 All channels must be added to `app/security/ipcValidator.js`:
 
 ```javascript
-// Notification system channels
-'notification-add',                 // Add new notification
-'notification-show-toast',          // Show toast window
-'notification-toast-clicked',       // Toast clicked
-
-'notification-center-toggle',       // Toggle center
-'notification-load-history',        // Load notification list
-'notification-mark-read',           // Mark as read
-'notification-mark-all-read',       // Mark all as read
-'notification-clear-all',           // Clear all
-
-'notification-badge-update',        // Update badge count
-'notification-action',              // User clicked action button
+// MVP: Single channel for showing toasts
+'notification-show-toast',          // Show toast notification
 ```
 
-### 6.2 IPC Handler Registration
+**Future channels** (Phase 2+):
+- `notification-center-toggle` - Toggle notification center
+- `notification-mark-read` - Mark notification as read
+- `notification-action` - Handle user actions
+
+### 6.2 IPC Handler Registration (MVP)
 
 ```javascript
-// In app/index.js or NotificationSystemManager.js
+// In app/index.js or app/notificationSystem/index.js
 
-ipcMain.handle('notification-add', async (event, data) => {
-  // Validate and sanitize data
-  if (!validateNotificationData(data)) {
-    return { error: 'Invalid notification data' };
+const NotificationToast = require('./notificationSystem/NotificationToast');
+
+ipcMain.on('notification-show-toast', (event, data) => {
+  // Basic validation
+  if (!data || !data.title) {
+    console.warn('[Notification] Invalid notification data');
+    return;
   }
 
-  // Add to store
-  const notification = await notificationStore.add(data);
+  // Create and show toast
+  const toast = new NotificationToast(data, () => {
+    // On click: focus main window
+    mainWindow.focus();
+  });
 
-  // Show toast if enabled
-  if (config.customNotificationSystem?.showToasts) {
-    notificationToastQueue.show(notification);
-  }
-
-  // Update badge count
-  const unreadCount = await notificationStore.getUnreadCount();
-  notificationCenter.updateBadge(unreadCount);
-
-  return { success: true, id: notification.id };
+  toast.show();
 });
 ```
+
+**Key Simplifications:**
+- Single IPC channel (not handle, just one-way send)
+- No store management
+- No badge updates
+- No complex validation (just basic checks)
 
 ### 6.3 Security Considerations
 
@@ -642,14 +532,13 @@ ipcMain.handle('notification-add', async (event, data) => {
     type: "object"
   },
 
-  // Custom notification system configuration
+  // Custom notification system configuration (MVP: toast only)
   customNotification: {
     default: {
       enabled: false,  // Explicitly set via notificationMethod: "custom"
-      toastDuration: 5000,
-      showHistory: true
+      toastDuration: 5000
     },
-    describe: "Custom in-app notification system configuration (toast + notification center)",
+    describe: "Custom in-app notification system configuration (MVP: toast notifications only)",
     type: "object"
   },
 
@@ -676,14 +565,13 @@ ipcMain.handle('notification-add', async (event, data) => {
 
 ### 7.2 Example User Configurations
 
-**Using Custom Notification System (Opt-in):**
+**Using Custom Notification System (Opt-in MVP):**
 ```json
 {
   "notificationMethod": "custom",
   "customNotification": {
     "enabled": true,
-    "toastDuration": 5000,
-    "showHistory": true
+    "toastDuration": 5000
   },
   "disableNotificationSound": false
 }
@@ -723,80 +611,96 @@ ipcMain.handle('notification-add', async (event, data) => {
 
 ## 8. Implementation Plan
 
-### 8.1 Timeline: 2 Weeks (Simplified MVP)
+### 8.1 Timeline: ~1 Week (Ultra-Minimal MVP)
 
-**Week 1: Foundation & Toast System**
-- Days 1-2: Setup, in-memory NotificationStore, config
-- Days 3-5: NotificationToast implementation & testing
+**Days 1-2: Setup & Configuration**
+- Add `notificationMethod: "custom"` to config system
+- Add `customNotification` config object
+- Update `ipcValidator.js` with new channel
+- Create basic module structure
 
-**Week 2: Notification Center & Polish**
-- Days 6-7: NotificationCenter UI
-- Days 8-9: Center functionality & integration
-- Day 10: Cross-platform testing & documentation
+**Days 3-4: Toast Implementation**
+- Create `NotificationToast.js` class (following IncomingCallToast pattern)
+- Create `notificationToast.html` with Teams design
+- Create `notificationToastPreload.js` for IPC communication
+- Implement click-to-focus behavior
 
-**Simplified from original 3-week plan** by:
-- Using in-memory storage (no IndexedDB complexity)
-- No toast queue management (show all toasts)
-- Minimal actions (View, Dismiss only)
-- Session-based history (no persistence)
+**Day 5: Integration & Testing**
+- Update `preload.js` CustomNotification function
+- Add IPC handler in main process
+- Test on Linux, Windows, macOS
+- Update documentation
 
-### 8.2 File Structure
+**Simplified from original 2-3 week plan** by:
+- MVP = toast only (no notification center)
+- No storage system needed
+- No queue management
+- No action buttons
+- Just show notification and dismiss
+
+### 8.2 File Structure (MVP: Minimal)
 
 ```
 app/
 ├── notificationSystem/
-│   ├── index.js                        # Module exports
-│   ├── NotificationSystemManager.js    # Coordinator
-│   │
-│   ├── toast/
-│   │   ├── NotificationToast.js
-│   │   ├── notificationToast.html
-│   │   ├── notificationToastPreload.js
-│   │   └── ToastQueue.js
-│   │
-│   ├── center/
-│   │   ├── NotificationCenter.js
-│   │   ├── notificationCenter.html
-│   │   └── notificationCenterPreload.js
-│   │
-│   ├── store/
-│   │   └── notificationStore.js
-│   │
-│   └── README.md
+│   ├── index.js                      # Module entry point & IPC handlers
+│   ├── NotificationToast.js          # Toast BrowserWindow class
+│   ├── notificationToast.html        # Toast UI (Teams design)
+│   ├── notificationToastPreload.js   # Toast preload script
+│   └── README.md                     # Module documentation
 ```
 
-### 8.3 Success Criteria
+**Future expansion** (Phase 2+):
+```
+app/notificationSystem/
+├── center/
+│   ├── NotificationCenter.js
+│   ├── notificationCenter.html
+│   └── notificationCenterPreload.js
+├── store/
+│   └── NotificationStore.js
+```
+
+### 8.3 Success Criteria (MVP: Toast Only)
 
 **Functional:**
-- ✅ Toast notifications appear for all Teams notifications
-- ✅ Notification center shows notification history (session-based)
-- ✅ Mark as read/unread works correctly
-- ✅ Badge count updates in real-time
+- ✅ Toast notifications appear for Teams notifications
+- ✅ Auto-dismiss after 5 seconds
+- ✅ Click toast to focus main window
+- ✅ Teams design language applied
 - ✅ Cross-platform compatibility (Linux, Windows, macOS)
 
 **Performance:**
 - ✅ Toast appears within 200ms of notification
-- ✅ Notification center opens within 100ms
-- ✅ No memory leaks with 1000+ notifications
-- ✅ IndexedDB operations &lt;50ms
+- ✅ No memory leaks with extended use
+- ✅ BrowserWindow creation is fast (&lt;100ms)
 
 **Security:**
-- ✅ All IPC channels validated
+- ✅ IPC channel validated in ipcValidator.js
 - ✅ contextIsolation enabled
 - ✅ nodeIntegration disabled
 - ✅ No security vulnerabilities
 
+**User Experience:**
+- ✅ Opt-in only (notificationMethod: "custom")
+- ✅ Works as alternative when OS notifications fail
+- ✅ Clear documentation for users
+
 ---
 
-## 9. Risk Assessment
+## 9. Risk Assessment (MVP: Minimal Risks)
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| Teams changes notification format | High | Medium | Defensive detection, fallbacks |
-| IndexedDB quota exceeded | Medium | Low | Auto-cleanup, limits |
-| Multi-monitor positioning issues | Medium | Medium | Use electron-positioner, test |
-| Performance with many notifications | Medium | Low | Pagination, virtual scrolling |
-| User adoption resistance | Low | Low | Opt-in initially, clear benefits |
+| Teams changes notification format | Medium | Medium | Defensive parsing, fallbacks |
+| Multi-monitor positioning issues | Medium | Medium | Use electron-positioner, thorough testing |
+| User adoption resistance | Low | Low | Opt-in only, clear documentation |
+| BrowserWindow performance | Low | Low | Follow IncomingCallToast pattern (proven) |
+
+**Risks eliminated in MVP:**
+- ~~IndexedDB quota exceeded~~ - No persistence in MVP
+- ~~Performance with many notifications~~ - No history/list in MVP
+- ~~Complex UI interactions~~ - Simple toast only
 
 ---
 
@@ -892,34 +796,45 @@ app/
 
 ---
 
-## 12. Future Enhancements (Post-MVP)
+## 12. Future Enhancements (All Deferred from MVP)
 
-### Phase 2 Features
-- ⏳ **Persistent storage** - IndexedDB for notification history across app restarts
-- ⏳ **Auto-cleanup** - Configurable retention (e.g., keep last 100 or 7 days)
+**MVP delivers:** Toast notifications only - show and dismiss.
+
+**Everything else is a future enhancement**, to be added only after MVP validation and based on user feedback:
+
+### Phase 2: Notification Center (Session-Based)
+- ⏳ **Notification center window** - Slide-in drawer showing current session's notifications
+- ⏳ **Mark as read/unread** - Simple status tracking
+- ⏳ **Badge count** - Show unread count
+- ⏳ **Clear all** - Dismiss all notifications
+- ⏳ **In-memory storage** - NotificationStore class (session only)
+
+### Phase 3: Enhanced Toast Features
 - ⏳ **Toast queue management** - Limit visible toasts (e.g., max 3)
-- ⏳ Keyboard shortcut (`Ctrl+Shift+N`) to toggle notification center
-- ⏳ Search notifications
-- ⏳ Filter by type (messages, mentions, meetings)
-- ⏳ Reply action
-- ⏳ Snooze action
-- ⏳ Mark unread action
-- ⏳ DND mode integration
+- ⏳ **Action buttons** - View, Dismiss, Reply buttons on toasts
+- ⏳ **Hover to pause** - Prevent auto-dismiss while hovering
+- ⏳ **Notification stacking** - Vertical arrangement of multiple toasts
 
-### Phase 3 Features
-- ⏳ Pin important notifications
-- ⏳ Export notification history
-- ⏳ Notification templates per type
-- ⏳ Custom sounds per notification type
-- ⏳ Notification rules/preferences
-- ⏳ Group notifications by conversation
-- ⏳ Integration with incoming call command system
+### Phase 4: Integration & Polish
+- ⏳ **Tray integration** - Badge count on tray icon
+- ⏳ **Incoming call toast integration** - Unified notification system
+- ⏳ **DND mode** - Respect user availability status
+- ⏳ **Keyboard shortcut** - Toggle notification center
 
-**Rationale for Phased Approach:**
-- Start simple to validate core functionality
-- Add complexity based on user feedback
-- Avoid over-engineering features that may not be used
-- Storage adds complexity - only implement if users need history persistence
+### Phase 5: Advanced Features (If Requested)
+- ⏳ **Persistent storage** - IndexedDB for cross-session history
+- ⏳ **Search & filter** - Find specific notifications
+- ⏳ **Notification rules** - Custom handling per type
+- ⏳ **Export history** - Save notifications externally
+- ⏳ **Custom sounds** - Different sounds per notification type
+- ⏳ **Reply actions** - Quick reply to messages
+- ⏳ **Snooze** - Remind later functionality
+
+**Critical Philosophy:**
+- **Start with the absolute minimum** - Just toasts
+- **Add features only if users ask** - No speculative development
+- **Validate each phase** - Ensure previous phase is stable before adding more
+- **Maintain simplicity** - Resist feature creep
 
 ---
 
@@ -950,37 +865,45 @@ app/
 
 The custom BrowserWindow-based notification system provides a **third option** for Teams for Linux users who experience issues with OS-level notifications:
 
-**Why proceed with this implementation:**
+**Why proceed with this ultra-minimal MVP:**
 
 1. **Solves specific problem**: Alternative for users experiencing OS notification reliability issues (especially Linux)
 2. **Follows proven pattern**: Uses same architecture as successful `IncomingCallToast`
-3. **Provides value**: In-app notification history and actionable notifications
+3. **Extremely low risk**: Just toast notifications, no complex features
 4. **Maintainable**: Vanilla JS/HTML/CSS matching codebase style
-5. **Secure**: Follows all security best practices
+5. **Secure**: Follows all security best practices (contextIsolation, IPC validation)
 6. **Cross-platform**: Consistent experience on Linux, Windows, macOS
-7. **Simplified MVP**: 2 weeks with in-memory storage, basic features only
+7. **Fast to implement**: ~1 week for MVP (toast only)
 8. **No disruption**: Opt-in alternative, existing methods remain default and fully supported
+
+**MVP Scope (Ultra-Minimal):**
+
+- **What's included:** Toast notifications (show, auto-dismiss, click-to-focus)
+- **What's NOT included:** Notification center, history, storage, actions, queue management
+- **Philosophy:** Start with absolute minimum, add features only if users request them
 
 **Key Principles:**
 
-- **Start simple**: In-memory storage, minimal actions, no complex features
+- **Start ridiculously simple**: Just show a toast and dismiss it
 - **Opt-in only**: Users must explicitly choose `notificationMethod: "custom"`
 - **Maintain alternatives**: Keep web/electron methods as viable options
-- **Iterate based on feedback**: Add complexity only if users request it
+- **Iterate based on feedback**: Add Phase 2+ features only if users actually need them
 
 ### Next Steps
 
-1. ✅ **Approval**: Get maintainer approval on simplified MVP approach
-2. 📝 **Create feature branch**: `feature/custom-notification-system`
-3. 🏗️ **Week 1 Implementation**: Foundation + Toast System
-4. 🎨 **Week 2 Implementation**: Notification Center + Polish
-5. 📦 **Release**: v2.7.0 as opt-in alternative (`notificationMethod: "custom"`)
-6. 📊 **Collect feedback**: Monitor GitHub issues and user adoption
-7. 🔄 **Iterate**: Add Phase 2 features based on actual user needs
+1. ✅ **Approval**: Get maintainer approval on ultra-minimal MVP approach
+2. 📝 **Create feature branch**: `feature/custom-notification-system-mvp`
+3. 🏗️ **Days 1-2**: Configuration setup and module structure
+4. 🎨 **Days 3-4**: Toast implementation (BrowserWindow + HTML)
+5. 🧪 **Day 5**: Integration, testing, documentation
+6. 📦 **Release**: v2.7.0 as opt-in alternative (`notificationMethod: "custom"`)
+7. 📊 **Collect feedback**: Monitor GitHub issues and user adoption
+8. 🔄 **Iterate**: Add Phase 2+ features only if users request them
 
 ---
 
-**Document Status:** ✅ Research Complete - Simplified MVP Approach
+**Document Status:** ✅ Research Complete - Ultra-Minimal MVP Approach
 **Default Behavior:** No change - `notificationMethod: "web"` remains default
-**Next Action:** Await approval, then begin Week 1 implementation
+**MVP Timeline:** ~1 week (toast notifications only)
+**Next Action:** Await approval, then begin implementation
 **Questions/Feedback:** Open GitHub issue or discussion
