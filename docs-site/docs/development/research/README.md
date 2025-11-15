@@ -43,6 +43,14 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Excellent research but over-engineered for actual needs
   - See Critical Analysis for why this was not adopted
 
+### Notification System Research
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
+  - Investigation of existing libraries and solutions
+  - Architectural constraints analysis (Electron wrapper vs React app)
+  - Custom BrowserWindow-based implementation plan
+  - Decision: Build custom system following IncomingCallToast pattern
+  - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
+
 ## Purpose
 
 These documents capture:
