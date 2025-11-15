@@ -1,0 +1,160 @@
+name: PR Artifacts Comment
+
+on:
+  workflow_run:
+    workflows: ["Build & Release"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' ||
+      (github.event.workflow_run.head_branch != 'main' &&
+       github.event.workflow_run.head_branch != 'master')
+
+    steps:
+      - name: Get PR number
+        id: pr
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              state: 'open'
+            });
+
+            if (pullRequests.length === 0) {
+              console.log('No open PR found for this branch');
+              return null;
+            }
+
+            return pullRequests[0].number;
+
+      - name: List artifacts
+        id: artifacts
+        if: steps.pr.outputs.result != 'null'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
+
+            // Filter out test results, only include build artifacts
+            const buildArtifacts = artifacts.artifacts.filter(a =>
+              !a.name.includes('test-results') && !a.name.includes('playwright')
+            );
+
+            return buildArtifacts;
+
+      - name: Create or update comment
+        if: steps.pr.outputs.result != 'null'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prNumber = ${{ steps.pr.outputs.result }};
+            const artifacts = ${{ steps.artifacts.outputs.result }};
+            const runId = context.payload.workflow_run.id;
+            const workflowStatus = context.payload.workflow_run.conclusion;
+
+            if (!prNumber) {
+              console.log('No PR number found, skipping comment');
+              return;
+            }
+
+            // Build the comment body
+            let commentBody = '## 📦 PR Build Artifacts\n\n';
+
+            if (workflowStatus === 'success' && artifacts.length > 0) {
+              commentBody += '✅ **Build successful!** Download the latest artifacts below:\n\n';
+
+              // Group artifacts by platform
+              const platformGroups = {
+                'Linux x64': [],
+                'Linux ARM64': [],
+                'Linux ARMv7': [],
+                'macOS': [],
+                'Windows': []
+              };
+
+              artifacts.forEach(artifact => {
+                const name = artifact.name;
+                if (name.includes('linux-x64')) {
+                  platformGroups['Linux x64'].push(artifact);
+                } else if (name.includes('linux-arm64')) {
+                  platformGroups['Linux ARM64'].push(artifact);
+                } else if (name.includes('armv7l')) {
+                  platformGroups['Linux ARMv7'].push(artifact);
+                } else if (name.includes('macos')) {
+                  platformGroups['macOS'].push(artifact);
+                } else if (name.includes('windows')) {
+                  platformGroups['Windows'].push(artifact);
+                }
+              });
+
+              // Add platform-grouped artifacts
+              for (const [platform, platformArtifacts] of Object.entries(platformGroups)) {
+                if (platformArtifacts.length > 0) {
+                  commentBody += `### ${platform}\n\n`;
+                  platformArtifacts.forEach(artifact => {
+                    const sizeInMB = (artifact.size_in_bytes / 1024 / 1024).toFixed(2);
+                    commentBody += `- 📥 [${artifact.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${artifact.id}) _(${sizeInMB} MB)_\n`;
+                  });
+                  commentBody += '\n';
+                }
+              }
+
+              commentBody += `\n---\n`;
+              commentBody += `🔗 [View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})\n`;
+              commentBody += `⏱️ Updated: ${new Date().toUTCString()}\n`;
+            } else if (workflowStatus === 'failure') {
+              commentBody += '❌ **Build failed!** Please check the workflow logs for details.\n\n';
+              commentBody += `🔗 [View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})\n`;
+            } else {
+              commentBody += '⚠️ **Build completed with status:** `' + workflowStatus + '`\n\n';
+              commentBody += `🔗 [View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})\n`;
+            }
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('## 📦 PR Build Artifacts')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+              console.log('Updated existing comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+              console.log('Created new comment');
+            }

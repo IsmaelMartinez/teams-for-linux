@@ -22,6 +22,10 @@ You can test PR changes without building from source by downloading pre-built ar
 
 ### How to Download PR Artifacts
 
+**Automatic Artifact Links**: Every PR automatically receives a comment with direct links to all build artifacts after the build completes. Simply look for the comment titled "📦 PR Build Artifacts" with download links organized by platform.
+
+**Manual Method** (if needed):
+
 1. **Navigate to the PR** on GitHub
 2. **Click the "Checks" tab** at the top of the PR
 3. **Select a completed workflow run** (look for green checkmarks)
@@ -32,14 +36,18 @@ You can test PR changes without building from source by downloading pre-built ar
 You need to be logged into GitHub to download artifacts. Artifacts are retained for 30 days after the workflow run.
 :::
 
+:::tip Automatic Updates
+The artifact comment is automatically updated each time the PR build runs, so you'll always have links to the latest artifacts. The comment shows:
+- ✅ Build status (success/failure)
+- 📥 Direct download links for each platform
+- 📊 File sizes for each artifact
+- ⏱️ Last update timestamp
+:::
+
 This is particularly useful for:
 - **Reviewers** testing changes before approving PRs
 - **Testers** validating bug fixes without setting up a development environment
 - **Contributors** verifying their changes work across different platforms
-
-:::note Future Enhancement
-A potential improvement would be adding a bot that automatically posts or updates a comment on PRs with direct links to artifacts.
-:::
 
 ## Development Setup
 
