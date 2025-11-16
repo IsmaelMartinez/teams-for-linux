@@ -5,6 +5,14 @@ class ReactHandler {
   _validationEnabled = true;
   _tokenCacheInjected = false;
 
+  /**
+   * Initialize the ReactHandler (for compatibility with preload module loading)
+   * @param {object} config - Application configuration
+   */
+  init(config) {
+    this.config = config;
+    console.debug('[ReactHandler] Initialized');
+  }
 
   getCommandChangeReportingService() {
     if (!this._validateTeamsEnvironment()) return null;
@@ -44,6 +52,78 @@ class ReactHandler {
     } catch (error) {
       console.error(`[TOKEN_CACHE] Error in token cache injection:`, error);
       return false;
+    }
+  }
+
+  /**
+   * Acquire token for a specific resource (e.g., Microsoft Graph API)
+   * @param {string} resource - The resource URL (e.g., 'https://graph.microsoft.com')
+   * @param {object} options - Optional token acquisition options
+   * @returns {Promise<object>} Token acquisition result
+   */
+  async acquireToken(resource = 'https://graph.microsoft.com', options = {}) {
+    try {
+      if (!this._validateTeamsEnvironment()) {
+        console.warn('[GRAPH_API] Teams environment not validated');
+        return { success: false, error: 'Teams environment not validated' };
+      }
+
+      const teams2CoreServices = this._getTeams2CoreServices();
+      const authService = teams2CoreServices?.authenticationService;
+      const authProvider = authService?._coreAuthService?._authProvider;
+
+      if (!authProvider) {
+        console.warn('[GRAPH_API] Auth provider not available');
+        return { success: false, error: 'Auth provider not found' };
+      }
+
+      if (typeof authProvider.acquireToken !== 'function') {
+        console.error('[GRAPH_API] acquireToken method not available');
+        return { success: false, error: 'acquireToken method not found' };
+      }
+
+      // Get correlation from core services if available
+      const correlation = teams2CoreServices?.correlation;
+
+      // Merge default options with provided options
+      const tokenOptions = {
+        correlation: correlation,
+        forceRenew: options.forceRenew || false,
+        forceRefresh: options.forceRefresh || false,
+        skipCache: options.skipCache || false,
+        prompt: options.prompt || 'none',
+        ...options
+      };
+
+      console.debug(`[GRAPH_API] Acquiring token for resource: ${resource}`);
+      const result = await authProvider.acquireToken(resource, tokenOptions);
+
+      if (result && result.token) {
+        console.debug('[GRAPH_API] Token acquired successfully', {
+          hasToken: true,
+          fromCache: result.fromCache,
+          expiry: result.expiresOn || result.expires_on
+        });
+
+        return {
+          success: true,
+          token: result.token,
+          fromCache: result.fromCache,
+          expiry: result.expiresOn || result.expires_on,
+          timestamp: Date.now()
+        };
+      } else {
+        console.warn('[GRAPH_API] Token acquisition returned no result');
+        return { success: false, error: 'No token in result' };
+      }
+
+    } catch (error) {
+      console.error('[GRAPH_API] Token acquisition failed:', error);
+      return {
+        success: false,
+        error: error.message || error.toString(),
+        timestamp: Date.now()
+      };
     }
   }
 
@@ -218,5 +298,10 @@ class ReactHandler {
 }
 
 const reactHandlerInstance = new ReactHandler();
+
+// Make available for browser injection
+if (typeof window !== 'undefined') {
+  window.teamsForLinuxReactHandler = reactHandlerInstance;
+}
 
 module.exports = reactHandlerInstance;

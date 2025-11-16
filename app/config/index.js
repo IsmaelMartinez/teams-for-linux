@@ -479,6 +479,13 @@ function extractYargConfig(configObject, appVersion) {
         describe: "MQTT configuration for publishing Teams status updates",
         type: "object",
       },
+      graphApi: {
+        default: {
+          enabled: false,
+        },
+        describe: "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
+        type: "object",
+      },
     })
     .help()
     .parse(process.argv.slice(1));

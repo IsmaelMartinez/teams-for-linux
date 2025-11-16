@@ -13,6 +13,7 @@ const {
 const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
+const GraphApiClient = require("./graphApi");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const globalShortcuts = require("./globalShortcuts");
 const os = require("node:os");
@@ -53,6 +54,7 @@ let userStatus = -1;
 let idleTimeUserStatus = -1;
 let picker = null;
 let mqttClient = null;
+let graphApiClient = null;
 
 let player;
 try {
@@ -146,6 +148,56 @@ if (gotTheLock) {
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
+  });
+
+  // Graph API IPC handlers
+  ipcMain.handle("graph-api-get-user-profile", async () => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.getUserProfile();
+  });
+
+  ipcMain.handle("graph-api-get-calendar-events", async (_event, options) => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.getCalendarEvents(options);
+  });
+
+  ipcMain.handle("graph-api-get-calendar-view", async (_event, startDateTime, endDateTime, options) => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.getCalendarView(startDateTime, endDateTime, options);
+  });
+
+  ipcMain.handle("graph-api-create-calendar-event", async (_event, event) => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.createCalendarEvent(event);
+  });
+
+  ipcMain.handle("graph-api-get-mail-messages", async (_event, options) => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.getMailMessages(options);
+  });
+
+  ipcMain.handle("graph-api-get-presence", async () => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return await graphApiClient.getPresence();
+  });
+
+  ipcMain.handle("graph-api-get-diagnostics", async () => {
+    if (!graphApiClient) {
+      return { success: false, error: "Graph API not enabled" };
+    }
+    return graphApiClient.getDiagnostics();
   });
 
   // Screen sharing IPC handlers
@@ -575,6 +627,18 @@ function handleAppReady() {
   }
 
   mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+
+  // Initialize Graph API client if enabled (after mainAppWindow is ready)
+  if (config.graphApi?.enabled) {
+    graphApiClient = new GraphApiClient(config);
+    const mainWindow = mainAppWindow.getWindow();
+    if (mainWindow) {
+      graphApiClient.initialize(mainWindow);
+      console.debug("[GRAPH_API] Graph API client initialized with main window");
+    } else {
+      console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
+    }
+  }
 
   // Register global shortcuts
   globalShortcuts.register(config, mainAppWindow, app);
