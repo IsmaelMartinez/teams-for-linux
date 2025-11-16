@@ -510,32 +510,17 @@ ipcMain.on('notification-show-toast', (event, data) => {
 
 ```javascript
 {
-  // Unified notification method configuration
+  // Extend existing notificationMethod to support "custom"
   notificationMethod: {
     default: "web",
     describe: "Notification method: 'web' (browser native), 'electron' (Electron API), or 'custom' (in-app system)",
     type: "string",
-    choices: ["web", "electron", "custom"]
+    choices: ["web", "electron", "custom"]  // Add "custom" to existing choices
   },
 
-  // Web notification config (existing, kept for compatibility)
-  webNotification: {
-    default: {},
-    describe: "Web notification configuration (deprecated - kept for backward compatibility)",
-    type: "object"
-  },
-
-  // Electron notification config (existing, kept for compatibility)
-  electronNotification: {
-    default: {},
-    describe: "Electron notification configuration (deprecated - kept for backward compatibility)",
-    type: "object"
-  },
-
-  // Custom notification system configuration (MVP: toast only)
+  // NEW: Custom notification system configuration (MVP: toast only)
   customNotification: {
     default: {
-      enabled: false,  // Explicitly set via notificationMethod: "custom"
       toastDuration: 5000
     },
     describe: "Custom in-app notification system configuration (MVP: toast notifications only)",
@@ -563,6 +548,8 @@ ipcMain.on('notification-show-toast', (event, data) => {
 }
 ```
 
+**Note:** We're reusing the existing `notificationMethod` config option rather than deprecating/moving configs, as there's an ongoing project to reorganize configuration options that will handle migrations automatically.
+
 ### 7.2 Example User Configurations
 
 **Using Custom Notification System (Opt-in MVP):**
@@ -570,7 +557,6 @@ ipcMain.on('notification-show-toast', (event, data) => {
 {
   "notificationMethod": "custom",
   "customNotification": {
-    "enabled": true,
     "toastDuration": 5000
   },
   "disableNotificationSound": false
@@ -594,18 +580,22 @@ ipcMain.on('notification-show-toast', (event, data) => {
 }
 ```
 
-### 7.3 Configuration Migration
+### 7.3 Configuration Notes
 
 **Backward Compatibility:**
-- Existing `notificationMethod: "web"` remains default
-- Old config options still work (no breaking changes)
+- Existing `notificationMethod: "web"` remains default (no breaking changes)
+- Just extend the existing config with new "custom" choice
+- Add new `customNotification` config object for toast settings
 - Users must explicitly set `notificationMethod: "custom"` to opt-in
-- `customNotification.enabled` is automatically set when method is "custom"
 
 **Documentation Updates Required:**
-- Update configuration.md to document new unified structure
-- Add migration guide for users wanting to try custom system
+- Update configuration.md to document new "custom" method and customNotification options
+- Add usage guide for users wanting to try custom system
 - Clarify that web/electron methods remain fully supported
+
+**Config Organization:**
+- We're reusing existing config structure rather than introducing deprecated options
+- Ongoing config reorganization project will handle any future migrations automatically
 
 ---
 
