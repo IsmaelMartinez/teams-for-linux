@@ -149,8 +149,9 @@ The consolidation was successfully implemented with the following changes:
 - [agents.md Standard](https://agents.md/) - External standard (not adopted)
 - [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code) - Official CLAUDE.md standard
 - [GitHub Copilot Custom Instructions](https://docs.github.com/en/copilot) - Official copilot-instructions.md standard
-- [Instruction Files Consolidation Analysis](../../instruction-files-analysis.md)
 - [Contributing Guide - Markdown Standards](../contributing.md#markdown-standards) - Single source of truth
+
+**Note:** The detailed instruction files consolidation analysis that led to this decision is available in the repository root as `instruction-files-analysis.md`.
 
 ## Future Consideration
 
