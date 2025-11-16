@@ -49,7 +49,7 @@ npm run dist:linux    # Build Linux packages (AppImage, deb, rpm, snap)
 
 ```javascript
 // REQUIRED in app/browser/preload.js
-if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
   moduleInstance.init(config, ipcRenderer);
 }
 ```
