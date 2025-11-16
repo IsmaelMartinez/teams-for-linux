@@ -834,11 +834,40 @@ module.exports = { migrateConfig };
 **Deprecation Timeline with Auto-Fix:**
 
 - **v2.x (Phase 2a)**: Introduce nested options + in-memory migration + optional auto-fix prompt
-- **v2.x+1 (Phase 2b)**: Mark old keys as deprecated in yargs (shows warnings to users who haven't migrated)
-- **v2.x+2 (Phase 2c)**: After 6+ months, old keys become migration-only (no longer in yargs schema)
-- **v3.0 (Phase 3)**: Remove old keys and migration logic entirely
+  - Users can choose "Update Now" or "Ask Me Later"
+  - Old keys still work perfectly via auto-migration
 
-Users who accept the auto-fix prompt immediately update to new format, allowing us to deprecate old keys much sooner.
+- **v2.x+1 (Phase 2b)**: Mark old keys as deprecated in yargs (shows warnings)
+  - Console warnings inform users to migrate
+  - Auto-fix prompt continues to appear if old keys detected
+  - Everything still works
+
+- **v2.x+2 (Phase 2c)**: After 6+ months, remove old keys from yargs schema
+  - Old keys no longer in official schema
+  - Migration logic still runs automatically
+  - Auto-fix prompt still appears
+  - Everything still works
+
+- **v3.0 (Phase 3)**: Automatic migration without prompt
+  - Old keys still supported via migration logic (NOT removed!)
+  - If old keys detected: **automatically write migrated config** (with backup, no prompt)
+  - Show notification: "Your config was automatically updated to v3.0 format. Backup saved to config.json.backup"
+  - This ensures zero breakage even for users who never clicked "Update Now"
+
+- **v4.0+ (Future)**: Keep migration logic indefinitely or until usage drops to near-zero
+  - Migration module stays in codebase as long as needed
+  - Can monitor telemetry/logs to see if anyone still uses old format
+  - Only remove migration logic when confident no users affected
+
+**Why This Approach Works:**
+
+✅ **No One Breaks**: Even users who ignore prompts for years still work fine
+✅ **Gentle Nudge**: Auto-fix prompt encourages voluntary migration in v2.x
+✅ **Automatic Safety Net**: v3.0 migrates automatically for remaining users
+✅ **Long-Term Support**: Migration logic stays until truly unnecessary
+✅ **User Friendly**: No forced upgrades, no breaking changes
+
+Users who accept the auto-fix prompt early get migrated immediately. Users who click "Ask Me Later" forever still get migrated automatically in v3.0 without breaking.
 
 **New Nested Options:**
 
@@ -969,27 +998,28 @@ Auto-migration ensures both work:
 - Updated documentation showing new pattern
 - Estimated Effort: 16-24 hours
 
-### Phase 3: Remove Deprecated Options (v3.0) - BREAKING CHANGE
+### Phase 3: Automatic Migration (v3.0) - NO BREAKING CHANGES
 
-**Goal:** Clean up codebase by removing old flat options
+**Goal:** Automatically migrate remaining users without breaking their systems
 
 **Changes:**
-1. Remove all deprecated flat option definitions from yargs
-2. Remove migration logic
-3. Add validation to error on old keys
-4. Update all examples/tests to use new structure
+1. Remove old flat option definitions from yargs schema (cleanup)
+2. **Keep migration logic** - it still works automatically
+3. **Auto-write migrated config** if old keys detected (no prompt in v3.0)
+4. Show notification about automatic migration
+5. Update all documentation examples to use new format
 
-**Breaking Changes:**
+**No Breaking Changes:**
 
-Users must update their config.json:
+Old configs still work via automatic migration:
 ```json
-// OLD (will error in v3.0)
+// OLD FORMAT (still works in v3.0)
 {
   "disableNotifications": false,
   "closeAppOnCross": true
 }
 
-// NEW (required in v3.0)
+// AUTOMATICALLY MIGRATED TO:
 {
   "notifications": {
     "enabled": true
@@ -998,41 +1028,60 @@ Users must update their config.json:
     "closeOnCross": true
   }
 }
+
+// File written to disk automatically with backup created
 ```
 
-**Validation:**
+**Auto-Migration Logic (v3.0):**
 
 ```javascript
-// Error on old keys
-function validateConfig(config) {
-  const deprecatedKeys = [
-    'disableNotifications',
-    'disableNotificationSound',
-    'closeAppOnCross',
-    // ... all old keys
-  ];
+// app/config/migration.js - v3.0 behavior
+function migrateConfig(config, configPath) {
+  const migrations = [];
 
-  const foundDeprecated = Object.keys(config).filter(k =>
-    deprecatedKeys.includes(k)
-  );
+  // ... perform in-memory migrations as before ...
 
-  if (foundDeprecated.length > 0) {
-    throw new Error(
-      `Deprecated config keys found: ${foundDeprecated.join(', ')}\n` +
-      `Please migrate to v3.0 config format. See migration guide: ` +
-      `https://ismaelmartinez.github.io/teams-for-linux/configuration#migration-to-v3`
-    );
+  // In v3.0: Automatically write migrated config if old keys detected
+  if (migrations.length > 0) {
+    console.info(`[Config Migration v3.0] Old config format detected`);
+    console.info(`[Config Migration v3.0] Automatically updating to new format...`);
+
+    try {
+      const configFilePath = path.join(configPath, 'config.json');
+      writeUpdatedConfig(config, configFilePath, migrations);
+
+      // Show user notification (non-blocking)
+      const { Notification } = require('electron');
+      new Notification({
+        title: 'Config Updated',
+        body: 'Your config.json was automatically updated to v3.0 format. Backup saved to config.json.backup'
+      }).show();
+
+      console.info(`[Config Migration v3.0] Migration complete`);
+    } catch (error) {
+      console.warn(`[Config Migration v3.0] Could not write to disk: ${error.message}`);
+      console.info(`[Config Migration v3.0] In-memory migration successful, app will work normally`);
+    }
   }
+
+  return config;
 }
 ```
 
+**Benefits:**
+- ✅ Zero breakage even for users who never migrated
+- ✅ Automatic upgrade on first v3.0 launch
+- ✅ Backup created automatically
+- ✅ Falls back to in-memory if write fails
+- ✅ Migration logic preserved for safety
+
 **Deliverables:**
-- Remove deprecated options from app/config/index.js
-- Remove migration logic
-- Add strict validation
-- Create v3.0 migration guide
+- Remove old options from yargs schema (cleanup)
+- Update migration module for automatic v3.0 behavior
+- Add notification on auto-migration
 - Update all documentation examples
-- Estimated Effort: 8-12 hours
+- Create v3.0 release notes explaining auto-migration
+- **Estimated Effort: 4-6 hours** (less than originally planned since migration logic stays)
 
 ---
 
@@ -1073,20 +1122,21 @@ function validateConfig(config) {
 
 **Deliverable:** Backward-compatible nested config support
 
-### Phase 3: Breaking Changes (3.0)
+### Phase 3: Automatic Migration (3.0 - NO BREAKING CHANGES)
 
 **Planning Phase:**
-- [ ] Announce v3.0 breaking changes in release notes
-- [ ] Give users 2-3 releases to migrate (6+ months)
+- [ ] Announce v3.0 automatic migration in release notes
+- [ ] Update documentation to show new format as primary
 - [ ] Monitor GitHub issues for migration problems
 
 **Implementation Phase:**
-- [ ] Remove deprecated flat options
-- [ ] Remove migration logic
-- [ ] Add strict validation
-- [ ] Update all tests/examples
+- [ ] Update migration logic to automatically write to disk in v3.0
+- [ ] Add notification about automatic migration with backup location
+- [ ] Remove deprecated flat options from schema
+- [ ] **Keep migration logic** (only remove in v4.0+ when usage near-zero)
+- [ ] Update all tests/examples to use new format
 
-**Deliverable:** Clean config system with consistent structure
+**Deliverable:** Clean config system with zero breakage via automatic migration
 
 ---
 
@@ -1105,14 +1155,17 @@ function validateConfig(config) {
   - *Mitigation:* Clear documentation, deprecation warnings
 
 - **Complexity increase** - Migration logic adds code
-  - *Mitigation:* Well-tested, temporary (removed in v3.0)
+  - *Mitigation:* Well-tested, isolated module, long-term maintenance burden is low
 
-### Phase 3 Risks: MEDIUM-HIGH
-- **Breaking change impact** - Users must update configs
-  - *Mitigation:* Long deprecation period, auto-migration in v2.x, clear migration guide
+### Phase 3 Risks: LOW-MEDIUM
+- **Automatic migration edge cases** - Some configs might not migrate perfectly
+  - *Mitigation:* Extensive testing in v2.x, backup created before migration, user notification
 
-- **Enterprise deployment issues** - System-wide configs need updating
-  - *Mitigation:* Advanced notice, documentation for admins
+- **File write permissions** - Migration might fail in restricted environments
+  - *Mitigation:* Graceful fallback to in-memory migration, clear error messaging
+
+- **Enterprise deployment awareness** - Admins need to know configs will auto-update
+  - *Mitigation:* Clear release notes, advance notice, backup preservation
 
 ---
 
@@ -1133,11 +1186,14 @@ function validateConfig(config) {
 - [ ] E2E tests pass with both old and new config formats
 
 ### Phase 3 Success Criteria
-- [ ] All deprecated options removed
-- [ ] Clean, consistent config structure
-- [ ] Migration guide complete with examples
+- [ ] Automatic migration works across all platforms (vanilla, snap, flatpak)
+- [ ] All configs auto-migrate on first v3.0 launch
+- [ ] Backups created successfully before migration
+- [ ] Clear notification shown to users about auto-migration
+- [ ] Zero breaking changes - all existing configs continue working
+- [ ] Clean, consistent config structure for new installations
 - [ ] No regression in functionality
-- [ ] Positive community feedback on organization
+- [ ] Migration logic kept for long-term compatibility
 
 ---
 
