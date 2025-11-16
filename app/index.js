@@ -150,55 +150,26 @@ if (gotTheLock) {
     return config.appVersion;
   });
 
-  // Graph API IPC handlers
-  ipcMain.handle("graph-api-get-user-profile", async () => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.getUserProfile();
-  });
+  // Graph API IPC handlers - registered via loop to reduce boilerplate
+  const graphApiHandlers = {
+    "graph-api-get-user-profile": (client) => client.getUserProfile(),
+    "graph-api-get-calendar-events": (client, options) => client.getCalendarEvents(options),
+    "graph-api-get-calendar-view": (client, startDateTime, endDateTime, options) =>
+      client.getCalendarView(startDateTime, endDateTime, options),
+    "graph-api-create-calendar-event": (client, event) => client.createCalendarEvent(event),
+    "graph-api-get-mail-messages": (client, options) => client.getMailMessages(options),
+    "graph-api-get-presence": (client) => client.getPresence(),
+    "graph-api-get-diagnostics": (client) => client.getDiagnostics(),
+  };
 
-  ipcMain.handle("graph-api-get-calendar-events", async (_event, options) => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.getCalendarEvents(options);
-  });
-
-  ipcMain.handle("graph-api-get-calendar-view", async (_event, startDateTime, endDateTime, options) => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.getCalendarView(startDateTime, endDateTime, options);
-  });
-
-  ipcMain.handle("graph-api-create-calendar-event", async (_event, event) => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.createCalendarEvent(event);
-  });
-
-  ipcMain.handle("graph-api-get-mail-messages", async (_event, options) => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.getMailMessages(options);
-  });
-
-  ipcMain.handle("graph-api-get-presence", async () => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return await graphApiClient.getPresence();
-  });
-
-  ipcMain.handle("graph-api-get-diagnostics", async () => {
-    if (!graphApiClient) {
-      return { success: false, error: "Graph API not enabled" };
-    }
-    return graphApiClient.getDiagnostics();
-  });
+  for (const [channel, handler] of Object.entries(graphApiHandlers)) {
+    ipcMain.handle(channel, async (_event, ...args) => {
+      if (!graphApiClient) {
+        return { success: false, error: "Graph API not enabled" };
+      }
+      return await handler(graphApiClient, ...args);
+    });
+  }
 
   // Screen sharing IPC handlers
   ipcMain.on("screen-sharing-started", (event, sourceId) => {

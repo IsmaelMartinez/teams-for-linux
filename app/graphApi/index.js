@@ -163,7 +163,27 @@ class GraphApiClient {
 
       // Make the request
       const response = await fetch(url, requestOptions);
-      const data = await response.json();
+
+      // Handle response - check if there's a body before parsing JSON
+      let data = null;
+      const contentType = response.headers.get('content-type');
+      const hasJsonContent = contentType && contentType.includes('application/json');
+
+      // Only try to parse JSON if there's content and it's JSON
+      if (response.status !== 204 && hasJsonContent) {
+        const text = await response.text();
+        if (text && text.length > 0) {
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            logger.warn('[GRAPH_API] Failed to parse response as JSON', {
+              status: response.status,
+              contentType,
+              textPreview: text.substring(0, 100)
+            });
+          }
+        }
+      }
 
       if (response.ok) {
         logger.debug('[GRAPH_API] Request successful', {
@@ -174,11 +194,11 @@ class GraphApiClient {
       } else {
         logger.warn('[GRAPH_API] Request failed', {
           status: response.status,
-          error: data.error
+          error: data?.error
         });
         return {
           success: false,
-          error: data.error?.message || 'API request failed',
+          error: data?.error?.message || `API request failed with status ${response.status}`,
           status: response.status,
           data
         };
@@ -191,6 +211,36 @@ class GraphApiClient {
         error: error.message || error.toString()
       };
     }
+  }
+
+  /**
+   * Build OData query string from options
+   * @private
+   * @param {object} options - Query options
+   * @returns {string} Query string (without leading '?')
+   */
+  _buildODataQuery(options) {
+    const params = new URLSearchParams();
+    const supportedParams = {
+      startDateTime: 'startDateTime',
+      endDateTime: 'endDateTime',
+      top: '$top',
+      select: '$select',
+      filter: '$filter',
+      orderby: '$orderby',
+      skip: '$skip',
+      count: '$count',
+      search: '$search',
+      expand: '$expand'
+    };
+
+    for (const [key, value] of Object.entries(options)) {
+      if (supportedParams[key] && value !== undefined && value !== null) {
+        params.append(supportedParams[key], value);
+      }
+    }
+
+    return params.toString();
   }
 
   /**
@@ -210,15 +260,7 @@ class GraphApiClient {
   async getCalendarEvents(options = {}) {
     logger.debug('[GRAPH_API] Getting calendar events', options);
 
-    const params = new URLSearchParams();
-    if (options.startDateTime) params.append('startDateTime', options.startDateTime);
-    if (options.endDateTime) params.append('endDateTime', options.endDateTime);
-    if (options.top) params.append('$top', options.top);
-    if (options.select) params.append('$select', options.select);
-    if (options.filter) params.append('$filter', options.filter);
-    if (options.orderby) params.append('$orderby', options.orderby);
-
-    const queryString = params.toString();
+    const queryString = this._buildODataQuery(options);
     const endpoint = queryString ? `/me/calendar/events?${queryString}` : '/me/calendar/events';
 
     return await this.makeRequest(endpoint);
@@ -234,16 +276,14 @@ class GraphApiClient {
   async getCalendarView(startDateTime, endDateTime, options = {}) {
     logger.debug('[GRAPH_API] Getting calendar view', { startDateTime, endDateTime });
 
-    const params = new URLSearchParams({
+    const queryOptions = {
       startDateTime,
-      endDateTime
-    });
+      endDateTime,
+      ...options
+    };
+    const queryString = this._buildODataQuery(queryOptions);
+    const endpoint = `/me/calendar/calendarView?${queryString}`;
 
-    if (options.top) params.append('$top', options.top);
-    if (options.select) params.append('$select', options.select);
-    if (options.orderby) params.append('$orderby', options.orderby);
-
-    const endpoint = `/me/calendar/calendarView?${params.toString()}`;
     return await this.makeRequest(endpoint);
   }
 
@@ -297,13 +337,7 @@ class GraphApiClient {
   async getMailMessages(options = {}) {
     logger.debug('[GRAPH_API] Getting mail messages', options);
 
-    const params = new URLSearchParams();
-    if (options.top) params.append('$top', options.top);
-    if (options.select) params.append('$select', options.select);
-    if (options.filter) params.append('$filter', options.filter);
-    if (options.orderby) params.append('$orderby', options.orderby);
-
-    const queryString = params.toString();
+    const queryString = this._buildODataQuery(options);
     const endpoint = queryString ? `/me/messages?${queryString}` : '/me/messages';
 
     return await this.makeRequest(endpoint);
