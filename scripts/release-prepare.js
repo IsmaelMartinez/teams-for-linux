@@ -168,11 +168,17 @@ async function main() {
   // Update package-lock.json via npm install
   console.log('   ⏳ Running npm install...');
   // Use only safe system directories in PATH to prevent command injection
-  const safePath = '/usr/bin:/bin';
+  // Do not spread process.env to avoid inheriting potentially unsafe PATH
+  const safeEnv = {
+    HOME: process.env.HOME || '',
+    USER: process.env.USER || '',
+    PATH: '/usr/bin:/bin',  // Only fixed, unwriteable system directories
+    NODE_ENV: process.env.NODE_ENV || 'production'
+  };
   execSync('npm install', {
     stdio: 'ignore',
-    env: { ...process.env, PATH: safePath },
-    shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh'
+    env: safeEnv,
+    shell: '/bin/sh'
   });
   console.log('   ✅ Updated package-lock.json');
 
