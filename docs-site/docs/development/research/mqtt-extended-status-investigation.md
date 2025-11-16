@@ -224,14 +224,283 @@ automation:
 
 ## Future Expansion Opportunities
 
-If needed in the future, this foundation enables:
+The semantic category pattern scales to many future use cases. This section documents potential categories users have requested.
 
-- **Microsoft Graph API integration** (Issue #1832): Add meeting context (subject, organizer, scheduled time) from Graph Calendar API
-- **Additional topics**: Screen sharing state, participant count, meeting duration
-- **Confidence scoring**: Cross-validate WebRTC state with Graph Presence API
-- **Home automation enhancements**: "About to join meeting" notifications (5 min before scheduled start)
+### Messages & Notifications
 
-These enhancements can be added **later without changing the core implementation**. Start simple, expand if users request it.
+**User requests**: Unread message count, new message notifications, @mentions
+
+```json
+{
+  "mqtt": {
+    "messageCount": {
+      "enabled": false,
+      "topic": "messages/unread"
+    },
+    "newMessage": {
+      "enabled": false,
+      "topic": "messages/new",
+      "includeContent": false  // Privacy option
+    },
+    "mentions": {
+      "enabled": false,
+      "topic": "messages/mentions"
+    }
+  }
+}
+```
+
+**Detection strategy**: DOM monitoring (title bar badge count: "Teams (3)")
+- Existing `mutationTitle.js` already detects this!
+- Just needs wiring to MQTT
+
+**Potential topics**:
+- `teams/messages/unread` → `"5"`
+- `teams/messages/new` → JSON with sender, timestamp (if enabled)
+- `teams/messages/mentions` → `"true"` when @mentioned
+
+**Implementation priority**: High (already detected, easy win)
+
+---
+
+### Calendar & Meetings
+
+**User requests**: Next meeting info, meeting starting soon alerts
+
+```json
+{
+  "mqtt": {
+    "nextMeeting": {
+      "enabled": false,
+      "topic": "calendar/next"
+    },
+    "meetingStarting": {
+      "enabled": false,
+      "topic": "calendar/starting-soon",
+      "minutesBefore": 5
+    }
+  }
+}
+```
+
+**Detection strategy**:
+- **Option 1**: Microsoft Graph API Calendar (wait for Issue #1832)
+- **Option 2**: DOM scraping of calendar panel (fragile)
+
+**Potential topics**:
+- `teams/calendar/next` → JSON: `{ "subject": "Sprint Planning", "startTime": "2025-11-16T14:00:00Z" }`
+- `teams/calendar/starting-soon` → `"true"` (5 minutes before)
+
+**Use case**: Pre-warm RGB LEDs before meeting starts (e.g., blue = meeting in 5 min)
+
+**Implementation priority**: Medium (wait for Graph API #1832)
+
+---
+
+### Screen Sharing
+
+**User requests**: Screen sharing state for automation
+
+```json
+{
+  "mqtt": {
+    "screenSharing": {
+      "enabled": false,
+      "topic": "screen-sharing"
+    }
+  }
+}
+```
+
+**Detection strategy**: Already implemented!
+- IPC events: `screen-sharing-started`, `screen-sharing-stopped`
+- See `app/screenSharing/injectedScreenSharing.js`
+- Just needs wiring to MQTT
+
+**Potential topics**:
+- `teams/screen-sharing` → `"true"`/`"false"`
+
+**Implementation priority**: High (easy win - already detected)
+
+---
+
+### Recording & Privacy Indicators
+
+**User requests**: Privacy indicator when call is being recorded
+
+```json
+{
+  "mqtt": {
+    "recording": {
+      "enabled": false,
+      "topic": "recording"
+    },
+    "transcription": {
+      "enabled": false,
+      "topic": "transcription"
+    }
+  }
+}
+```
+
+**Detection strategy**: DOM monitoring (recording indicator banner)
+
+**Potential topics**:
+- `teams/recording` → `"true"`/`"false"`
+- `teams/transcription` → `"true"`/`"false"`
+
+**Use case**: Privacy indicator (LED turns purple when recording active)
+
+**Implementation priority**: Medium (privacy use case)
+
+---
+
+### Reactions & Engagement
+
+**User requests**: Hand raised state, reactions
+
+```json
+{
+  "mqtt": {
+    "handRaised": {
+      "enabled": false,
+      "topic": "hand-raised"
+    },
+    "reactions": {
+      "enabled": false,
+      "topic": "reactions/latest"
+    }
+  }
+}
+```
+
+**Detection strategy**: DOM monitoring of reaction UI elements
+
+**Potential topics**:
+- `teams/hand-raised` → `"true"`/`"false"`
+- `teams/reactions/latest` → `"thumbsup"`, `"heart"`, etc.
+
+**Implementation priority**: Low (wait for user requests)
+
+---
+
+### Participant Count
+
+**User requests**: Number of participants for room capacity automation
+
+```json
+{
+  "mqtt": {
+    "participantCount": {
+      "enabled": false,
+      "topic": "participants/count"
+    }
+  }
+}
+```
+
+**Detection strategy**: DOM monitoring of participant roster panel
+
+**Potential topics**:
+- `teams/participants/count` → `"8"`
+
+**Implementation priority**: Low (wait for user requests)
+
+---
+
+### Why Semantic Categories Scale
+
+**Every category is what it represents:**
+- `camera` = camera state (not "extended field 1")
+- `messageCount` = message count (not "notification type A")
+- `nextMeeting` = next meeting (not "calendar data")
+
+**Not grouped by:**
+- ❌ Technical implementation ("dom-based", "webrtc-based")
+- ❌ Temporal classification ("extended", "new", "v2")
+- ❌ Feature grouping ("notifications", "media")
+
+**Configuration pattern** (consistent for all categories):
+```json
+{
+  "categoryName": {
+    "enabled": false,
+    "topic": "path/to/topic",
+    // Optional category-specific settings
+  }
+}
+```
+
+**Benefits**:
+- Self-documenting (category name explains what it does)
+- Independently configurable (enable only what you need)
+- Consistent pattern (easy to understand)
+- Privacy-friendly (opt-in per category)
+
+---
+
+### Detection Strategy Preference
+
+| Category | Detection Method | Complexity | Fragility | Priority |
+|----------|-----------------|------------|-----------|----------|
+| **Camera/Mic/Call** | WebRTC streams | Medium | Low ✅ | Current |
+| **Screen sharing** | IPC events | Low | Low ✅ | High |
+| **Message count** | DOM (title) | Low | Medium | High |
+| **Calendar** | Graph API | Medium | Low ✅ | Medium |
+| **Recording** | DOM (banner) | Low | High ⚠️ | Medium |
+| **Hand raised** | DOM (button) | Low | High ⚠️ | Low |
+| **Reactions** | DOM (elements) | Low | High ⚠️ | Low |
+| **Participants** | DOM (roster) | Medium | High ⚠️ | Low |
+
+**Preferred order**:
+1. **Stable APIs first**: WebRTC, IPC, Graph API
+2. **DOM-based second**: Only if users request and accept fragility
+
+---
+
+### Implementation Strategy (YAGNI)
+
+**Phase 1**: Current implementation (camera, microphone, call)
+
+**Phase 2**: Easy wins (already detected)
+- Screen sharing (IPC events exist)
+- Message count (title monitoring exists)
+
+**Phase 3**: Wait for Graph API (#1832)
+- Calendar integration
+- Enhanced presence
+
+**Phase 4**: Only if users request (fragile DOM scraping)
+- Recording indicators
+- Hand raised
+- Participant count
+
+**Key principle**: Add features **only when users request them**, starting with stable APIs before fragile DOM scraping.
+
+---
+
+### Generic `publish()` Supports Everything
+
+The generic `publish()` method handles all current and future categories:
+
+```javascript
+// Current - camera/mic/call
+await mqttClient.publish('teams/camera', 'true');
+
+// Future - messages
+await mqttClient.publish('teams/messages/unread', '5');
+
+// Future - calendar
+await mqttClient.publish('teams/calendar/next', JSON.stringify({
+  subject: "Sprint Planning",
+  startTime: "2025-11-16T14:00:00Z"
+}));
+
+// Future - screen sharing
+await mqttClient.publish('teams/screen-sharing', 'true');
+```
+
+**One method, infinite use cases** - no refactoring needed when adding new categories.
 
 ---
 
