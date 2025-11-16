@@ -73,7 +73,7 @@ System Config → User Config → CLI Args → Defaults
 - Immutable config pattern via AppConfiguration class
 
 **Problem Areas:**
-- All 53 options defined in single 484-line yargs config block
+- All 51 active options defined in single ~395-line yargs config block
 - No programmatic grouping (only documentation grouping)
 - Mixed patterns (flat vs nested) without clear logic
 
@@ -404,9 +404,8 @@ defaultNotificationUrgency: "normal",
 
 **Changes:**
 1. ~~Add MQTT to configuration.md~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-2. Reorganize documentation categories
-3. Document deprecated options
-4. Add migration guide section
+2. ~~Remove deprecated options~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
+3. Reorganize documentation categories into logical groupings
 
 **New Documentation Categories:**
 
@@ -496,37 +495,66 @@ defaultNotificationUrgency: "normal",
 
 **Implementation Strategy:**
 
-1. **Add new nested options in parallel** with old flat options
-2. **Auto-migration logic** in config loader
-3. **Deprecation warnings** for old keys
-4. **Documentation** shows new pattern, mentions old for reference
+1. **Incremental area-by-area migration** - Start with one area (e.g., notifications during upcoming refactoring)
+2. **Add new nested options in parallel** with old flat options
+3. **Use yargs' built-in `deprecated` field** - Displays warnings to users, guiding migration
+4. **Auto-migration logic** in config loader to convert old keys to new structure
+5. **Documentation** shows new pattern, mentions old for reference
 
-**Example Migration Logic:**
+**Area-by-Area Approach:**
+Phase 2 can be implemented incrementally by area, aligning with feature work:
+- **Notifications**: When notification refactoring happens, migrate to `notifications` object
+- **Window behavior**: Migrate to `window` object when window features are updated
+- **Authentication**: Migrate to `auth` object during SSO improvements
+- etc.
+
+This allows each migration to be tested thoroughly and aligned with related feature work.
+
+**Example: Using Yargs Deprecated Field:**
+
+```javascript
+// In app/config/index.js - yargs options definition
+// Add deprecated field to old options while keeping them functional
+
+disableNotifications: {
+  default: false,
+  deprecated: "Use notifications.enabled instead (with inverted logic)",
+  describe: "Disable all notifications",
+  type: "boolean",
+}
+
+// Add new nested option in parallel
+notifications: {
+  default: {
+    enabled: true,
+    sound: { enabled: true, onlyWhenAvailable: false },
+    windowFlash: true,
+    method: "web",
+    urgency: "normal"
+  },
+  describe: "Notification system configuration",
+  type: "object"
+}
+```
+
+**Example Auto-Migration Logic:**
 
 ```javascript
 // In app/config/index.js - after yargs parsing
+// Auto-migrate old flat keys to new nested structure
 
 function migrateConfig(config) {
-  const warnings = [];
-
-  // Migrate notifications
-  if ('disableNotifications' in config) {
-    warnings.push('disableNotifications is deprecated, use notifications.enabled instead');
+  // Migrate notifications if using old keys
+  if ('disableNotifications' in config && !('notifications' in config)) {
     if (!config.notifications) config.notifications = {};
     config.notifications.enabled = !config.disableNotifications;
   }
 
   if ('disableNotificationSound' in config) {
-    warnings.push('disableNotificationSound is deprecated, use notifications.sound.enabled');
     if (!config.notifications) config.notifications = {};
     if (!config.notifications.sound) config.notifications.sound = {};
     config.notifications.sound.enabled = !config.disableNotificationSound;
   }
-
-  // ... more migrations
-
-  // Log all warnings
-  warnings.forEach(w => console.warn(`[Config Migration] ${w}`));
 
   return config;
 }
