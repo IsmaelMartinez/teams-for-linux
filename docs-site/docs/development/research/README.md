@@ -29,6 +29,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Analysis
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
+- **[Documentation Improvement Recommendations](documentation-improvement-recommendations.md)** - Actionable plan for optimizing documentation for both LLM and human consumption
+  - Based on expert reviews from 3 specialized perspectives
+  - Week 1 implementation (12-15 hours): Quick Reference, Module Index, ADR Index
+  - 80% value with 60% less effort than comprehensive overhaul
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
 
 ### Architecture & Refactoring
