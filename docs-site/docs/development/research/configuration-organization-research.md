@@ -741,8 +741,8 @@ function promptUserForAutoFix(config, configPath, migrations) {
     detail: `Teams for Linux can automatically update your config.json to the new format.\n\n` +
             `Areas to migrate: ${migrations.join(', ')}\n\n` +
             `Your current config will be backed up to config.json.backup\n\n` +
-            `Choose "Update Now" to migrate, or "Keep Current" to use in-memory migration only.`,
-    buttons: ['Update Now', 'Keep Current', 'Ask Me Later'],
+            `Choose "Update Now" to migrate automatically, or "Ask Me Later" to continue with in-memory migration.`,
+    buttons: ['Update Now', 'Ask Me Later'],
     defaultId: 0,
     cancelId: 1
   });
@@ -754,11 +754,8 @@ function promptUserForAutoFix(config, configPath, migrations) {
     // User chose "Update Now"
     writeUpdatedConfig(config, configFilePath, migrations);
     fs.writeFileSync(markerPath, new Date().toISOString());
-  } else if (result === 1) {
-    // User chose "Keep Current" - don't ask again
-    fs.writeFileSync(markerPath, 'declined-' + new Date().toISOString());
   }
-  // result === 2: "Ask Me Later" - don't create marker, will ask next time
+  // result === 1: "Ask Me Later" - don't create marker, will ask next time
 }
 
 function writeUpdatedConfig(config, configFilePath, migrations) {
@@ -831,7 +828,7 @@ module.exports = { migrateConfig };
 2. **Reduced Maintenance**: Less code to support legacy options long-term
 3. **User Control**: Users explicitly opt-in to file changes
 4. **Safe Migration**: Automatic backup before any changes
-5. **One-Time Prompt**: Won't nag users who decline
+5. **Encourages Migration**: Two-option dialog (Update Now / Ask Later) guides users toward modern format without being pushy
 6. **Works Cross-Platform**: Snap/Flatpak user config directories are writable
 
 **Deprecation Timeline with Auto-Fix:**
