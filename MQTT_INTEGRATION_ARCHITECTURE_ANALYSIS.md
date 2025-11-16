@@ -197,7 +197,7 @@ await mqttClient.publishStatus(1); // Still works!
 }
 ```
 
-### Option 2: ✅ Nested (RECOMMENDED - KISS + Organized)
+### Option 2: ✅ Semantic Categories (RECOMMENDED - KISS + Clear)
 ```json
 {
   "mqtt": {
@@ -211,23 +211,31 @@ await mqttClient.publishStatus(1); // Still works!
       "checkInterval": 10000
     },
 
-    "extendedStatus": {
+    "camera": {
       "enabled": false,
-      "topics": {
-        "camera": "camera",
-        "microphone": "microphone",
-        "inCall": "in-call"
-      }
+      "topic": "camera"
+    },
+
+    "microphone": {
+      "enabled": false,
+      "topic": "microphone"
+    },
+
+    "call": {
+      "enabled": false,
+      "topic": "in-call"
     }
   }
 }
 ```
 
 **Benefits**:
-- ✅ Clear separation of concerns
-- ✅ Easy to add new categories later
-- ✅ Backward compatible (can default `presence.enabled` from `mqtt.enabled`)
-- ✅ User can disable extended status independently
+- ✅ Each category is what it represents (not "extended")
+- ✅ Clear, semantic naming (camera, microphone, call, presence)
+- ✅ Users can enable/disable each independently
+- ✅ Easy to understand what each setting controls
+- ✅ Backward compatible (can default from `mqtt.enabled`)
+- ✅ Flat structure (simpler than nested groupings)
 
 ---
 
@@ -250,24 +258,51 @@ ipcMain.handle('user-status-changed', async (event, { data }) => {
   await mqttClient.publishStatus(userStatus);
 });
 
-// Extended status (new)
-ipcMain.handle('mqtt-extended-status-changed', async (event, { data }) => {
-  if (!config.mqtt?.extendedStatus?.enabled) return;
-
+// Media/call status (new - single IPC for all stream-related data)
+ipcMain.handle('mqtt-media-status-changed', async (event, { data }) => {
   const topicPrefix = config.mqtt.topicPrefix || 'teams';
-  const topics = config.mqtt.extendedStatus.topics;
 
-  await mqttClient.publish(`${topicPrefix}/${topics.camera}`, String(data.camera), { retain: true });
-  await mqttClient.publish(`${topicPrefix}/${topics.microphone}`, String(data.microphone), { retain: true });
-  await mqttClient.publish(`${topicPrefix}/${topics.inCall}`, String(data.inCall), { retain: true });
+  // Publish camera state if enabled
+  if (config.mqtt?.camera?.enabled && data.camera !== undefined) {
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.camera.topic}`,
+      String(data.camera),
+      { retain: true }
+    );
+  }
+
+  // Publish microphone state if enabled
+  if (config.mqtt?.microphone?.enabled && data.microphone !== undefined) {
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.microphone.topic}`,
+      String(data.microphone),
+      { retain: true }
+    );
+  }
+
+  // Publish call state if enabled
+  if (config.mqtt?.call?.enabled && data.inCall !== undefined) {
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.call.topic}`,
+      String(data.inCall),
+      { retain: true }
+    );
+  }
 });
 ```
 
 **Benefits**:
-- ✅ Clear separation (each channel has one purpose)
+- ✅ Clear separation (presence vs media/call)
+- ✅ Single IPC message (efficient - all data from same getUserMedia stream)
+- ✅ Each topic independently configurable
 - ✅ Easy to understand/maintain
-- ✅ No conditional logic in handlers
 - ✅ Follows existing pattern
+
+**Why one IPC channel for camera/mic/call?**
+- They all come from the same WebRTC stream monitoring
+- Detected simultaneously (not separate events)
+- Efficient to send once rather than 3 IPC calls
+- Handler can selectively publish based on config
 
 ---
 
@@ -338,26 +373,45 @@ async publish(topic, payload, options = {}) {
 **What to test**:
 ```javascript
 // In app/index.js
-ipcMain.handle('mqtt-extended-status-spike', async (event, { data }) => {
-  console.log('[MQTT_INTEGRATION_SPIKE] Received extended status:', data);
+ipcMain.handle('mqtt-media-status-spike', async (event, { data }) => {
+  console.log('[MQTT_INTEGRATION_SPIKE] Received media status:', data);
 
-  if (!mqttClient || !config.mqtt?.extendedStatus?.enabled) {
-    console.log('[MQTT_INTEGRATION_SPIKE] MQTT extended status disabled');
+  if (!mqttClient) {
+    console.log('[MQTT_INTEGRATION_SPIKE] MQTT client not available');
     return;
   }
 
   const topicPrefix = config.mqtt.topicPrefix || 'teams';
-  const topics = config.mqtt.extendedStatus.topics;
 
-  // Test individual publishes
-  console.log('[MQTT_INTEGRATION_SPIKE] Publishing camera state...');
-  await mqttClient.publish(`${topicPrefix}/${topics.camera}`, String(data.camera), { retain: true });
+  // Test camera publish (if enabled in config)
+  if (config.mqtt?.camera?.enabled && data.camera !== undefined) {
+    console.log('[MQTT_INTEGRATION_SPIKE] Publishing camera state...');
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.camera.topic}`,
+      String(data.camera),
+      { retain: true }
+    );
+  }
 
-  console.log('[MQTT_INTEGRATION_SPIKE] Publishing microphone state...');
-  await mqttClient.publish(`${topicPrefix}/${topics.microphone}`, String(data.microphone), { retain: true });
+  // Test microphone publish (if enabled in config)
+  if (config.mqtt?.microphone?.enabled && data.microphone !== undefined) {
+    console.log('[MQTT_INTEGRATION_SPIKE] Publishing microphone state...');
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.microphone.topic}`,
+      String(data.microphone),
+      { retain: true }
+    );
+  }
 
-  console.log('[MQTT_INTEGRATION_SPIKE] Publishing in-call state...');
-  await mqttClient.publish(`${topicPrefix}/${topics.inCall}`, String(data.inCall), { retain: true });
+  // Test call publish (if enabled in config)
+  if (config.mqtt?.call?.enabled && data.inCall !== undefined) {
+    console.log('[MQTT_INTEGRATION_SPIKE] Publishing call state...');
+    await mqttClient.publish(
+      `${topicPrefix}/${config.mqtt.call.topic}`,
+      String(data.inCall),
+      { retain: true }
+    );
+  }
 
   console.log('[MQTT_INTEGRATION_SPIKE] All publishes complete');
 });
@@ -366,7 +420,7 @@ ipcMain.handle('mqtt-extended-status-spike', async (event, { data }) => {
 **Trigger from browser spike**:
 ```javascript
 // In mqttExtendedStatusSpike.js
-ipcRenderer.invoke('mqtt-extended-status-spike', {
+ipcRenderer.invoke('mqtt-media-status-spike', {
   data: {
     camera: true,
     microphone: false,
@@ -396,9 +450,9 @@ ipcRenderer.invoke('mqtt-extended-status-spike', {
 function migrateMqttConfig(config) {
   if (!config.mqtt) return config;
 
-  // If old flat structure, migrate to nested
+  // Migrate old flat structure to semantic categories
   if (config.mqtt.statusTopic && !config.mqtt.presence) {
-    console.log('[CONFIG_SPIKE] Migrating MQTT config to nested structure');
+    console.log('[CONFIG_SPIKE] Migrating MQTT config to semantic structure');
     config.mqtt.presence = {
       enabled: config.mqtt.enabled,
       topic: config.mqtt.statusTopic,
@@ -406,15 +460,27 @@ function migrateMqttConfig(config) {
     };
   }
 
-  // Add extendedStatus defaults if missing
-  if (!config.mqtt.extendedStatus) {
-    config.mqtt.extendedStatus = {
+  // Add camera defaults if missing
+  if (!config.mqtt.camera) {
+    config.mqtt.camera = {
       enabled: false,
-      topics: {
-        camera: 'camera',
-        microphone: 'microphone',
-        inCall: 'in-call'
-      }
+      topic: 'camera'
+    };
+  }
+
+  // Add microphone defaults if missing
+  if (!config.mqtt.microphone) {
+    config.mqtt.microphone = {
+      enabled: false,
+      topic: 'microphone'
+    };
+  }
+
+  // Add call defaults if missing
+  if (!config.mqtt.call) {
+    config.mqtt.call = {
+      enabled: false,
+      topic: 'in-call'
     };
   }
 
@@ -458,20 +524,24 @@ function migrateMqttConfig(config) {
 
 **What we'll implement**:
 1. ✅ Generic `publish(topic, payload, options)` method - simple, reusable
-2. ✅ Separate IPC channel `mqtt-extended-status-changed` - clean separation
-3. ✅ Nested config with backward compatibility - organized, future-proof
-4. ✅ No abstraction layers - just direct calls (KISS)
+2. ✅ Separate IPC channel `mqtt-media-status-changed` - clean separation
+3. ✅ Semantic config categories (presence, camera, microphone, call) - clear, self-documenting
+4. ✅ Each category independently configurable - flexible
+5. ✅ Backward compatible config migration - no breaking changes
+6. ✅ No abstraction layers - just direct calls (KISS)
 
 **What we WON'T implement** (YAGNI):
 - ❌ Event publisher pattern/adapter layers
 - ❌ Plugin architecture for MQTT events
 - ❌ Complex routing/middleware
 - ❌ Specialized methods for each event type
+- ❌ Generic "extended" or "media" groupings (use semantic names)
 
 **Expansion path** (if needed later):
-- Add more topics under `extendedStatus.topics`
-- Add new top-level categories (e.g., `meetings`, `calendar`)
+- Add new semantic categories (e.g., `screen`, `recording`, `reactions`)
+- Each category gets its own config section
 - Generic `publish()` supports all future use cases
+- Users enable only what they need
 
 ---
 

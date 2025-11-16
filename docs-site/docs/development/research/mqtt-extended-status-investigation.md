@@ -141,21 +141,37 @@ Three simple topics (configurable in `config.json`):
 
 ### Configuration
 
+Each category is independently configurable with semantic naming:
+
 ```json
 {
   "mqtt": {
     "enabled": true,
-    "extendedStatus": {
+    "topicPrefix": "teams",
+
+    "camera": {
       "enabled": true,
-      "topics": {
-        "camera": "teams/camera",
-        "microphone": "teams/microphone",
-        "inCall": "teams/in-call"
-      }
+      "topic": "camera"
+    },
+
+    "microphone": {
+      "enabled": true,
+      "topic": "microphone"
+    },
+
+    "call": {
+      "enabled": true,
+      "topic": "in-call"
     }
   }
 }
 ```
+
+**Benefits**:
+- Each category clearly named (camera, microphone, call)
+- Enable/disable each independently
+- Customize topic names per category
+- Self-documenting configuration
 
 ### Home Assistant Example
 
