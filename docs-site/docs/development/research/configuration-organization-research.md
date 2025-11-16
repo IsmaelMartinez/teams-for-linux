@@ -537,28 +537,165 @@ notifications: {
 }
 ```
 
-**Example Auto-Migration Logic:**
+**Example Auto-Migration Module:**
+
+Create a dedicated migration module at `app/config/migration.js`:
 
 ```javascript
-// In app/config/index.js - after yargs parsing
-// Auto-migrate old flat keys to new nested structure
+// app/config/migration.js
+// Configuration migration module - automatically converts old config keys to new structure
+// This runs transparently for users, fixing their config without manual intervention
 
+/**
+ * Migrates old flat configuration keys to new nested structure
+ * @param {Object} config - Parsed yargs config object
+ * @returns {Object} - Migrated config
+ */
 function migrateConfig(config) {
-  // Migrate notifications if using old keys
-  if ('disableNotifications' in config && !('notifications' in config)) {
-    if (!config.notifications) config.notifications = {};
-    config.notifications.enabled = !config.disableNotifications;
+  const migrations = [];
+
+  // Notifications migration
+  if (hasOldNotificationKeys(config)) {
+    migrateNotifications(config);
+    migrations.push('notifications');
   }
 
-  if ('disableNotificationSound' in config) {
-    if (!config.notifications) config.notifications = {};
-    if (!config.notifications.sound) config.notifications.sound = {};
-    config.notifications.sound.enabled = !config.disableNotificationSound;
+  // Window migration
+  if (hasOldWindowKeys(config)) {
+    migrateWindow(config);
+    migrations.push('window');
+  }
+
+  // Authentication migration
+  if (hasOldAuthKeys(config)) {
+    migrateAuth(config);
+    migrations.push('auth');
+  }
+
+  // Log what was migrated (user feedback)
+  if (migrations.length > 0) {
+    console.info(`[Config Migration] Auto-migrated: ${migrations.join(', ')}`);
+    console.info('[Config Migration] Your old config still works, but consider updating to new format');
+    console.info('[Config Migration] See: https://ismaelmartinez.github.io/teams-for-linux/configuration');
   }
 
   return config;
 }
+
+function hasOldNotificationKeys(config) {
+  return 'disableNotifications' in config ||
+         'disableNotificationSound' in config ||
+         'disableNotificationSoundIfNotAvailable' in config ||
+         'disableNotificationWindowFlash' in config;
+}
+
+function migrateNotifications(config) {
+  // Only auto-migrate if user hasn't set new format
+  if (!config.notifications) {
+    config.notifications = {
+      enabled: true,
+      sound: { enabled: true, onlyWhenAvailable: false },
+      windowFlash: true,
+      method: config.notificationMethod || 'web',
+      urgency: config.defaultNotificationUrgency || 'normal'
+    };
+  }
+
+  // Map old keys to new structure
+  if ('disableNotifications' in config) {
+    config.notifications.enabled = !config.disableNotifications;
+  }
+
+  if ('disableNotificationSound' in config) {
+    config.notifications.sound.enabled = !config.disableNotificationSound;
+  }
+
+  if ('disableNotificationSoundIfNotAvailable' in config) {
+    config.notifications.sound.onlyWhenAvailable = config.disableNotificationSoundIfNotAvailable;
+  }
+
+  if ('disableNotificationWindowFlash' in config) {
+    config.notifications.windowFlash = !config.disableNotificationWindowFlash;
+  }
+}
+
+function hasOldWindowKeys(config) {
+  return 'frame' in config || 'menubar' in config || 'minimized' in config ||
+         'closeAppOnCross' in config || 'alwaysOnTop' in config;
+}
+
+function migrateWindow(config) {
+  if (!config.window) {
+    config.window = {
+      frame: config.frame ?? true,
+      menubar: config.menubar || 'auto',
+      minimized: config.minimized || false,
+      closeOnCross: config.closeAppOnCross || false,
+      alwaysOnTop: config.alwaysOnTop || false,
+      class: config.class || null
+    };
+  }
+}
+
+function hasOldAuthKeys(config) {
+  return 'ssoBasicAuthUser' in config || 'ssoInTuneEnabled' in config ||
+         'clientCertPath' in config;
+}
+
+function migrateAuth(config) {
+  if (!config.auth) {
+    config.auth = {
+      serverWhitelist: config.authServerWhitelist || '*',
+      basic: {
+        user: config.ssoBasicAuthUser || '',
+        passwordCommand: config.ssoBasicAuthPasswordCommand || ''
+      },
+      intune: {
+        enabled: config.ssoInTuneEnabled || false,
+        user: config.ssoInTuneAuthUser || ''
+      },
+      certificate: {
+        path: config.clientCertPath || '',
+        password: config.clientCertPassword || ''
+      }
+    };
+  }
+}
+
+module.exports = { migrateConfig };
 ```
+
+Then use it in `app/config/index.js`:
+
+```javascript
+// app/config/index.js
+const { migrateConfig } = require('./migration');
+
+function argv(configPath, appVersion) {
+  // ... existing config loading ...
+
+  let config = extractYargConfig(configObject, appVersion);
+
+  // Auto-migrate old config to new structure
+  config = migrateConfig(config);
+
+  // ... rest of function ...
+}
+```
+
+**Cross-Platform Compatibility:**
+
+This approach works seamlessly across all installation methods:
+- **Vanilla**: Reads from `~/.config/teams-for-linux/config.json`
+- **Snap**: Reads from `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
+- **Flatpak**: Reads from `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
+
+The migration logic runs **in-memory only** - it doesn't modify the user's `config.json` file. This means:
+- ✅ No write permission issues with snap/flatpak sandboxing
+- ✅ User's original config.json remains untouched
+- ✅ Migration happens transparently every time the app starts
+- ✅ Users can update to new format at their own pace
+- ✅ Works the same way on all platforms
 
 **New Nested Options:**
 
