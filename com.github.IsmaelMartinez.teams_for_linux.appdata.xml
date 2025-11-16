@@ -18,6 +18,7 @@
 			<description>
 				<ul>
 					<li>Refactor: Extract command line switch management into dedicated startup module - reduces app/index.js by 96 lines (12.8%) with improved code organization (Week 1 of incremental refactoring plan)</li>
+					<li>Feature: Enable PR artifact downloads - pre-built binaries now automatically uploaded to pull requests for easier testing without building from source (#1952)</li>
 				</ul>
 			</description>
 		</release>
