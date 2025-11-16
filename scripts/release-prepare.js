@@ -167,7 +167,14 @@ async function main() {
 
   // Update package-lock.json via npm install
   console.log('   ⏳ Running npm install...');
-  execSync('npm install', { stdio: 'ignore' });
+  // Use safe PATH to prevent command injection via PATH manipulation
+  const safePath = process.platform === 'win32'
+    ? 'C:\\Windows\\System32;C:\\Program Files\\nodejs'
+    : '/usr/local/bin:/usr/bin:/bin';
+  execSync('npm install', {
+    stdio: 'ignore',
+    env: { ...process.env, PATH: safePath }
+  });
   console.log('   ✅ Updated package-lock.json');
 
   // Update appdata.xml
