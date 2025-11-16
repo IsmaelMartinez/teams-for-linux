@@ -690,12 +690,158 @@ This approach works seamlessly across all installation methods:
 - **Snap**: Reads from `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`
 - **Flatpak**: Reads from `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
 
-The migration logic runs **in-memory only** - it doesn't modify the user's `config.json` file. This means:
+The migration logic runs **in-memory by default** - it doesn't modify the user's `config.json` file. This means:
 - ✅ No write permission issues with snap/flatpak sandboxing
 - ✅ User's original config.json remains untouched
 - ✅ Migration happens transparently every time the app starts
 - ✅ Users can update to new format at their own pace
 - ✅ Works the same way on all platforms
+
+**Optional: Auto-Fix Config File with User Consent**
+
+To accelerate deprecation of old keys, the migration module can optionally offer to update the user's `config.json` file:
+
+```javascript
+// app/config/migration.js - Extended version
+
+const fs = require('fs');
+const path = require('path');
+
+function migrateConfig(config, configPath) {
+  const migrations = [];
+
+  // ... perform in-memory migrations ...
+
+  // Offer to write migrated config back to disk
+  if (migrations.length > 0 && shouldOfferAutoFix(configPath)) {
+    promptUserForAutoFix(config, configPath, migrations);
+  }
+
+  return config;
+}
+
+function shouldOfferAutoFix(configPath) {
+  const autoFixMarkerPath = path.join(configPath, '.config-auto-fix-offered');
+
+  // Only offer once - create marker file after first prompt
+  if (fs.existsSync(autoFixMarkerPath)) {
+    return false;
+  }
+
+  return true;
+}
+
+function promptUserForAutoFix(config, configPath, migrations) {
+  const { dialog } = require('electron');
+
+  const result = dialog.showMessageBoxSync({
+    type: 'question',
+    title: 'Config Migration Available',
+    message: 'Your config.json uses old format',
+    detail: `Teams for Linux can automatically update your config.json to the new format.\n\n` +
+            `Areas to migrate: ${migrations.join(', ')}\n\n` +
+            `Your current config will be backed up to config.json.backup\n\n` +
+            `Choose "Update Now" to migrate, or "Keep Current" to use in-memory migration only.`,
+    buttons: ['Update Now', 'Keep Current', 'Ask Me Later'],
+    defaultId: 0,
+    cancelId: 1
+  });
+
+  const configFilePath = path.join(configPath, 'config.json');
+  const markerPath = path.join(configPath, '.config-auto-fix-offered');
+
+  if (result === 0) {
+    // User chose "Update Now"
+    writeUpdatedConfig(config, configFilePath, migrations);
+    fs.writeFileSync(markerPath, new Date().toISOString());
+  } else if (result === 1) {
+    // User chose "Keep Current" - don't ask again
+    fs.writeFileSync(markerPath, 'declined-' + new Date().toISOString());
+  }
+  // result === 2: "Ask Me Later" - don't create marker, will ask next time
+}
+
+function writeUpdatedConfig(config, configFilePath, migrations) {
+  try {
+    // Backup existing config
+    const backupPath = configFilePath + '.backup';
+    fs.copyFileSync(configFilePath, backupPath);
+    console.info(`[Config Migration] Backup created: ${backupPath}`);
+
+    // Build new config with only new keys
+    const newConfig = {};
+
+    // Copy over migrated nested structures
+    if (migrations.includes('notifications') && config.notifications) {
+      newConfig.notifications = config.notifications;
+    }
+    if (migrations.includes('window') && config.window) {
+      newConfig.window = config.window;
+    }
+    if (migrations.includes('auth') && config.auth) {
+      newConfig.auth = config.auth;
+    }
+
+    // Copy over other non-migrated options from original config
+    const originalConfig = JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+    const migratedOldKeys = getMigratedOldKeys(migrations);
+
+    for (const key in originalConfig) {
+      if (!migratedOldKeys.includes(key) && !(key in newConfig)) {
+        newConfig[key] = originalConfig[key];
+      }
+    }
+
+    // Write updated config
+    fs.writeFileSync(configFilePath, JSON.stringify(newConfig, null, 2));
+    console.info(`[Config Migration] Config file updated successfully`);
+    console.info(`[Config Migration] Old keys removed: ${migratedOldKeys.join(', ')}`);
+
+  } catch (error) {
+    console.error('[Config Migration] Failed to write updated config:', error.message);
+    console.info('[Config Migration] Continuing with in-memory migration');
+  }
+}
+
+function getMigratedOldKeys(migrations) {
+  const oldKeys = [];
+
+  if (migrations.includes('notifications')) {
+    oldKeys.push('disableNotifications', 'disableNotificationSound',
+                 'disableNotificationSoundIfNotAvailable', 'disableNotificationWindowFlash',
+                 'notificationMethod', 'defaultNotificationUrgency');
+  }
+  if (migrations.includes('window')) {
+    oldKeys.push('frame', 'menubar', 'minimized', 'closeAppOnCross', 'alwaysOnTop', 'class');
+  }
+  if (migrations.includes('auth')) {
+    oldKeys.push('authServerWhitelist', 'ssoBasicAuthUser', 'ssoBasicAuthPasswordCommand',
+                 'ssoInTuneEnabled', 'ssoInTuneAuthUser', 'clientCertPath', 'clientCertPassword');
+  }
+
+  return oldKeys;
+}
+
+module.exports = { migrateConfig };
+```
+
+**Benefits of Optional Disk Write:**
+
+1. **Faster Deprecation Path**: Old keys can be removed sooner since users are guided to migrate
+2. **Reduced Maintenance**: Less code to support legacy options long-term
+3. **User Control**: Users explicitly opt-in to file changes
+4. **Safe Migration**: Automatic backup before any changes
+5. **One-Time Prompt**: Won't nag users who decline
+6. **Works Cross-Platform**: Snap/Flatpak user config directories are writable
+
+**Deprecation Timeline with Auto-Fix:**
+
+- **v2.x (Phase 2a)**: Introduce nested options + in-memory migration + optional auto-fix prompt
+- **v2.x+1 (Phase 2b)**: Mark old keys as deprecated in yargs (shows warnings to users who haven't migrated)
+- **v2.x+2 (Phase 2c)**: After 6+ months, old keys become migration-only (no longer in yargs schema)
+- **v3.0 (Phase 3)**: Remove old keys and migration logic entirely
+
+Users who accept the auto-fix prompt immediately update to new format, allowing us to deprecate old keys much sooner.
 
 **New Nested Options:**
 
