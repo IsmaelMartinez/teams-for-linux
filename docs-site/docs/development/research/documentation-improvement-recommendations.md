@@ -9,7 +9,7 @@ tags: [documentation, best-practices, llm-optimization, developer-experience]
 authors: ["Teams for Linux Documentation Analysis"]
 related_docs:
   - "../contributing.md"
-  - "../../CLAUDE.md"
+  - "../../../../CLAUDE.md"
   - "../adr/004-agents-md-standard-investigation.md"
 ---
 
