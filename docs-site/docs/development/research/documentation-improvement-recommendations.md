@@ -858,7 +858,7 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 
 ### Related Documentation
 - [Contributing Guide](../contributing.md)
-- [CLAUDE.md](../../../../CLAUDE.md)
+- CLAUDE.md (repository root)
 - [Current ADRs](../adr/)
 - [Current Research Documents](.)
 
