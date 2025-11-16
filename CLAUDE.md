@@ -27,9 +27,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app. The architecture follows a modular pattern with the main process coordinating various specialized modules.
 
 **Key file locations:**
-- **Entry Point:** `app/index.js` - Main Electron process (currently being refactored - avoid adding new code here)
+- **Entry Point:** `app/index.js` - Main Electron process (being refactored incrementally)
+- **Startup:** `app/startup/` - Command line switches and initialization
 - **Configuration:** `app/appConfiguration/` - Centralized configuration management
-- **Main Window:** `app/mainAppWindow/` - Manages the primary BrowserWindow and Teams web wrapper
+- **Main Window:** `app/mainAppWindow/` - Primary BrowserWindow and Teams web wrapper
 - **Browser Tools:** `app/browser/tools/` - Client-side scripts injected into Teams interface
 
 **For detailed architecture information**, see:
