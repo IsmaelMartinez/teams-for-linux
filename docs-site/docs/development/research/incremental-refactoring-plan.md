@@ -657,28 +657,50 @@ We're taking the **best insights** (modular organization, testing) and applying 
 
 ---
 
+## Progress Tracking
+
+### Current Status: Week 1 - Completed ✓
+
+| Week | Task | Status | Lines Removed | Date Completed |
+|------|------|--------|---------------|----------------|
+| Week 1 | Command Line Logic | 🟢 Completed | **96** (Target: 94) | 2025-11-13 |
+| Week 2 | Notification System | ⚪ Not Started | Target: 83 | - |
+| Week 3 | Screen Sharing Handlers | ⚪ Not Started | Target: 124 | - |
+| Week 4 | Partitions & Idle State | ⚪ Not Started | Target: 73 | - |
+| Week 5 | Singleton Refactoring | ⚪ Not Started | N/A | - |
+| Week 6 | IPC Registration Pattern | ⚪ Not Started | N/A | - |
+| Week 7 | Automated Testing | ⚪ Not Started | N/A | - |
+| Week 8 | Documentation Automation | ⚪ Not Started | N/A | - |
+
+**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked
+
+**Current index.js LOC**: 655 (Baseline: 751, Removed: 96)
+
+---
+
 ## Next Steps
 
-### This Week (Week 1)
+### Next Week (Week 2)
 
-1. **Create feature branch**: `feature/incremental-refactoring`
-2. **Extract command line logic**: Create `app/startup/commandLine.js`
-3. **Update index.js**: Replace function calls with module usage
-4. **Test thoroughly**: Manual + E2E
-5. **Commit and deploy**: Ship to production
-6. **Measure impact**: Verify index.js reduced by 94 lines
+1. **Extract notification system**: Create `app/notifications/service.js`
+2. **Move notification functions**: Extract `showNotification()` and `playNotificationSound()`
+3. **Break coupling**: Inject user status dependency instead of global access
+4. **Update index.js**: Replace inline functions with NotificationService
+5. **Add unit tests**: Test notification service with mocked dependencies
+6. **Commit and deploy**: Ship to production
+7. **Measure impact**: Verify index.js reduced by ~83 lines
 
-### Next Month (Weeks 2-4)
+### Upcoming (Weeks 3-4)
 
-- Complete Phase 1 extractions
-- Add 5+ automated tests
+- Week 3: Extract screen sharing handlers (~124 lines)
+- Week 4: Extract partitions & idle state (~73 lines)
+- Add automated tests for each extraction
 - Document learnings
-- Measure actual impact vs predicted
 
-### Next Quarter (Weeks 5-8)
+### Future (Weeks 5-8)
 
-- Evaluate need for Phase 2
-- Add testability improvements if valuable
+- Evaluate need for Phase 2 (testability improvements)
+- Add singleton refactoring if valuable
 - Re-assess architecture needs
 - Decide on Phase 3 scope
 

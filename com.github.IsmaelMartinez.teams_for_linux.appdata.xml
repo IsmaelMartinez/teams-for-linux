@@ -14,6 +14,15 @@
 	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
 	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
 	<releases>
+		<release version="2.6.14" date="2025-11-16">
+			<description>
+				<ul>
+					<li>Refactor: Extract command line switch management into dedicated startup module - reduces app/index.js by 96 lines (12.8%) with improved code organization (Week 1 of incremental refactoring plan)</li>
+					<li>Feature: Enable PR artifact downloads - pre-built binaries now automatically uploaded to pull requests for easier testing without building from source (#1952)</li>
+					<li>Documentation: Consolidate AI agent instruction files - eliminate 28% content duplication by establishing single source of truth for markdown standards and using reference-based approach across CLAUDE.md, copilot-instructions.md, and workflow instruction files</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.6.13" date="2025-11-12">
 			<description>
 				<ul>
