@@ -859,8 +859,8 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 ### Related Documentation
 - [Contributing Guide](../contributing.md)
 - CLAUDE.md (repository root)
-- [Current ADRs](../adr/)
-- [Current Research Documents](.)
+- [Architecture Decision Records](../adr/002-token-cache-secure-storage.md)
+- [Current Research Documents](README.md)
 
 ### External Resources
 - [Docusaurus Documentation](https://docusaurus.io/)
