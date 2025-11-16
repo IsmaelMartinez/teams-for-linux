@@ -15,6 +15,7 @@ const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const globalShortcuts = require("./globalShortcuts");
+const CommandLineManager = require("./startup/commandLine");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -24,7 +25,7 @@ if (process.env.E2E_USER_DATA_DIR) {
 }
 
 // This must be executed before loading the config file.
-addCommandLineSwitchesBeforeConfigLoad();
+CommandLineManager.addSwitchesBeforeConfigLoad();
 
 // Load config file.
 const { AppConfiguration } = require("./appConfiguration");
@@ -36,7 +37,7 @@ const appConfig = new AppConfiguration(
 const config = appConfig.startupConfig;
 config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
-addCommandLineSwitchesAfterConfigLoad();
+CommandLineManager.addSwitchesAfterConfigLoad(config);
 
 const notificationSounds = [
   {
@@ -309,103 +310,6 @@ function restartApp() {
   app.exit();
 }
 
-/**
- * Applies critical Electron command line switches that must be set before config loading.
- */
-function addCommandLineSwitchesBeforeConfigLoad() {
-  app.commandLine.appendSwitch("try-supported-channel-layouts");
-
-  if (app.commandLine.hasSwitch("disable-features")) {
-    const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
-    if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
-      console.warn(
-        "disable-features switch already set without HardwareMediaKeyHandling. " +
-        "Teams media controls may conflict with system media key handling."
-      );
-    }
-  } else {
-    app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
-  }
-}
-
-/**
- * Applies configuration-dependent command line switches after config is loaded.
- */
-function addCommandLineSwitchesAfterConfigLoad() {
-  if (process.env.XDG_SESSION_TYPE === "wayland") {
-    if (config.disableGpuExplicitlySet) {
-      console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
-    } else {
-      console.info("Running under Wayland, disabling GPU composition (default behavior)...");
-      config.disableGpu = true;
-    }
-
-    console.info("Enabling PipeWire for screen sharing...");
-    if (app.commandLine.hasSwitch("enable-features")) {
-      const features = app.commandLine.getSwitchValue("enable-features").split(",");
-      if (!features.includes("WebRTCPipeWireCapturer")) {
-        console.warn(
-          "enable-features switch already set without WebRTCPipeWireCapturer. " +
-          "Screen sharing on Wayland may not work correctly. " +
-          "Please add WebRTCPipeWireCapturer to your enable-features list."
-        );
-      }
-    } else {
-      app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
-    }
-    app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
-  }
-
-  // Proxy
-  if (config.proxyServer) {
-    app.commandLine.appendSwitch("proxy-server", config.proxyServer);
-  }
-
-  if (config.class) {
-    console.info("Setting WM_CLASS property to custom value " + config.class);
-    app.setName(config.class);
-  }
-
-  app.commandLine.appendSwitch(
-    "auth-server-whitelist",
-    config.authServerWhitelist
-  );
-
-  // GPU
-  if (config.disableGpu) {
-    console.info("Disabling GPU support...");
-    app.commandLine.appendSwitch("disable-gpu");
-    app.commandLine.appendSwitch("disable-gpu-compositing");
-    app.commandLine.appendSwitch("disable-software-rasterizer");
-    app.disableHardwareAcceleration();
-  }
-
-  addElectronCLIFlagsFromConfig();
-}
-
-function addElectronCLIFlagsFromConfig() {
-  if (Array.isArray(config.electronCLIFlags)) {
-    for (const flag of config.electronCLIFlags) {
-      if (typeof flag === "string") {
-        console.debug(`Adding electron CLI flag '${flag}'`);
-        app.commandLine.appendSwitch(flag);
-      } else if (Array.isArray(flag) && typeof flag[0] === "string") {
-        const hasValidValue = flag[1] !== undefined &&
-                               typeof flag[1] !== "object" &&
-                               typeof flag[1] !== "function";
-        if (hasValidValue) {
-          console.debug(
-            `Adding electron CLI flag '${flag[0]}' with value '${flag[1]}'`
-          );
-          app.commandLine.appendSwitch(flag[0], flag[1]);
-        } else {
-          console.debug(`Adding electron CLI flag '${flag[0]}'`);
-          app.commandLine.appendSwitch(flag[0]);
-        }
-      }
-    }
-  }
-}
 
 async function showNotification(_event, options) {
   const startTime = Date.now();
