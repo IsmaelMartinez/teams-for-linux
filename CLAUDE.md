@@ -23,9 +23,10 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 
 ### Core Structure
 
-- **Entry Point:** `app/index.js` - Main Electron process (currently being refactored into smaller modules)
-- **Configuration:** `app/appConfiguration/` - Centralized configuration management using AppConfiguration class
-- **Main Window:** `app/mainAppWindow/` - Manages the primary BrowserWindow and Teams web wrapper
+- **Entry Point:** `app/index.js` - Main Electron process (being refactored incrementally)
+- **Startup:** `app/startup/` - Command line switches and initialization
+- **Configuration:** `app/appConfiguration/` - Centralized configuration management
+- **Main Window:** `app/mainAppWindow/` - Primary BrowserWindow and Teams web wrapper
 - **Browser Tools:** `app/browser/tools/` - Client-side scripts injected into Teams interface
 
 ### Key Modules
