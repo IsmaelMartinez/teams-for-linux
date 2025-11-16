@@ -343,5 +343,5 @@ npm install --save-dev glob
 
 ## Related Documents
 
-- [release-info.md](./release-info.md) - Current release process
-- [RELEASE_AUTOMATION_RESEARCH_PLAN.md](/RELEASE_AUTOMATION_RESEARCH_PLAN.md) - Full automation research
+- [Release Info Documentation](../release-info.md) - Current release process
+- Research documents in this directory for automation details
