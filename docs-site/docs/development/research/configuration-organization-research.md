@@ -7,9 +7,11 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux has **53 distinct configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, deprecated options still clutter the config, and naming conventions are inconsistent.
+Teams for Linux has **51 active configuration options** (reduced from 53 after removing deprecated options) managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories and naming conventions are inconsistent.
 
-**Note**: MQTT documentation was added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939) after this research began, addressing one of the initial findings.
+**Recent Improvements**:
+- MQTT documentation added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
+- Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
 
 ### Key Findings
 
@@ -21,7 +23,7 @@ Teams for Linux has **53 distinct configuration options** managed through a flat
    - Window behavior (7 options) scattered across Core, Advanced, and Screen Sharing sections
    - SSO options use inconsistent naming patterns
 
-3. **Technical Debt**: Two deprecated options (`contextIsolation`, `sandbox`) still accept values with warnings instead of being removed.
+3. **~~Technical Debt~~ ✅ RESOLVED**: Deprecated options (`contextIsolation`, `sandbox`) have been removed from the configuration.
 
 4. **Structural Inconsistency**: Mix of flat options and nested objects without clear pattern:
    - Good: `mqtt`, `cacheManagement`, `screenSharingThumbnail` (nested)
@@ -119,15 +121,17 @@ logConfig, meetupJoinRegEx, msTeamsProtocols, onNewWindowOpenMeetupJoinUrlInApp,
 disableTimestampOnCopy, cacheManagement
 ```
 
-**Undocumented (1 option)**
+**~~Undocumented~~ ✅ DOCUMENTED**
 ```javascript
-mqtt  // Exists in code, missing from docs
+mqtt  // Now documented in PR #1939
 ```
 
-**Deprecated (2 options)**
+**~~Deprecated~~ ✅ REMOVED**
 ```javascript
-contextIsolation, sandbox  // Should be removed
+// contextIsolation, sandbox - REMOVED from configuration
 ```
+
+**Total Active Options: 51** (down from 53 after removing deprecated options)
 
 ### Problem Analysis
 
@@ -259,37 +263,19 @@ customBackground: {
 }
 ```
 
-#### Problem 3: Deprecated Options Still Present
+#### ~~Problem 3: Deprecated Options Still Present~~ ✅ RESOLVED
 
-**Evidence:**
-```javascript
-// app/config/index.js:185-192
-contextIsolation: {
-  default: true,
-  deprecated: "Enabled by default and not configurable anymore. Please remove it from your configuration",
-  describe: "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
-  type: "boolean",
-}
+**Status**: Fixed by removing deprecated options from configuration
 
-// app/config/index.js:388-395
-sandbox: {
-  default: true,
-  deprecated: "Enabled by default and not configurable anymore. Please remove it from your configuration",
-  describe: "Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)",
-  type: "boolean",
-}
-```
+**Solution Implemented:**
+- Removed `contextIsolation` option from app/config/index.js (was at lines 185-192)
+- Removed `sandbox` option from app/config/index.js (was at lines 388-395)
+- Both options were never actually used in the code (verified via grep)
+- Users with these in their config.json will simply have them ignored (no breaking change)
+- Total configuration options reduced from 53 to 51
 
-**Issues:**
-- Options still accept values (though they're ignored)
-- Warnings logged but value not rejected
-- Clutters config, confuses users
-- No migration path documented
-
-**Recommendation:**
-- Phase 1: Document migration (just remove from config.json)
-- Phase 2: Add explicit error if present
-- Phase 3 (v3.0): Remove entirely
+**Original Issue** (now resolved):
+These options were deprecated with warnings but still accepted values, cluttering the configuration without providing any functionality. They have now been cleanly removed.
 
 #### Problem 4: Naming Inconsistencies
 
@@ -493,16 +479,16 @@ defaultNotificationUrgency: "normal",
 - chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages,
   disableTimestampOnCopy
 
-### Deprecated Options
-- contextIsolation (remove from config)
-- sandbox (remove from config)
+### ~~Deprecated Options~~ ✅ REMOVED
+- ~~contextIsolation~~ REMOVED from app/config/index.js
+- ~~sandbox~~ REMOVED from app/config/index.js
 ```
 
 **Deliverables:**
-- Updated docs-site/docs/configuration.md
+- Updated docs-site/docs/configuration.md (reorganize categories)
 - ~~New MQTT configuration section with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- Deprecated options migration guide
-- **Remaining Effort: 2-4 hours** (reduced from 4-6 hours due to MQTT completion)
+- ~~Deprecated options removal~~ ✅ **COMPLETED** (removed from config)
+- **Remaining Effort: 1-2 hours** (reduced from 4-6 hours: MQTT done, deprecated options done)
 
 ### Phase 2: Introduce Nested Structure (v2.x) - Backward Compatible
 
@@ -748,9 +734,8 @@ function validateConfig(config) {
 
 **Week 1:**
 - [x] ~~Add MQTT configuration section to docs~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
+- [x] ~~Remove deprecated options (contextIsolation/sandbox)~~ ✅ **COMPLETED** (removed from app/config/index.js)
 - [ ] Reorganize configuration.md categories
-- [ ] Add deprecation section for contextIsolation/sandbox
-- [ ] Create initial migration guide
 
 **Testing:**
 - Documentation builds without errors
@@ -827,7 +812,8 @@ function validateConfig(config) {
 
 ### Phase 1 Success Criteria
 - [x] ~~MQTT configuration documented with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- [ ] All 53 options organized into logical categories
+- [x] ~~Deprecated options removed~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
+- [ ] All 51 options organized into logical categories (reduced from 53)
 - [ ] Zero breaking changes
 - [ ] Documentation builds and deploys successfully
 
@@ -1186,7 +1172,10 @@ The proposed three-phase approach provides a balanced path forward:
 2. **Phase 2** introduces modern structure while maintaining compatibility
 3. **Phase 3** completes the transformation after users have time to migrate
 
-**Phase 1 Status Update**: MQTT documentation (one of the main Phase 1 deliverables) was completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939). Remaining Phase 1 work includes documentation reorganization and deprecated option migration guide.
+**Phase 1 Status Update**:
+- ✅ MQTT documentation completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
+- ✅ Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
+- ⏳ Remaining: Documentation reorganization into logical categories
 
 This research recommends **proceeding with remaining Phase 1 tasks** (low effort, high value, zero risk) and planning Phase 2 for a future release cycle.
 
@@ -1199,8 +1188,8 @@ The nested configuration structure will:
 
 **Next Steps:**
 1. ~~Review and approve this research document~~ ✅
-2. Create GitHub issue for remaining Phase 1 implementation
-3. Update docs-site/docs/configuration.md with reorganized categories
-4. ~~Add MQTT configuration documentation~~ ✅ **COMPLETED**
-5. Document deprecated options migration path
+2. ~~Add MQTT configuration documentation~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
+3. ~~Remove deprecated options~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
+4. Create GitHub issue for remaining Phase 1 implementation
+5. Update docs-site/docs/configuration.md with reorganized categories
 6. Plan Phase 2 for future release
