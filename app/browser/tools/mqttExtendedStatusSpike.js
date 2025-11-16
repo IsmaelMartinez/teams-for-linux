@@ -85,7 +85,8 @@ class MQTTExtendedStatusSpike {
     console.log('[MQTT_SPIKE] Monitoring stream:', stream.id);
 
     // Monitor video tracks (camera)
-    stream.getVideoTracks().forEach((track, index) => {
+    const videoTracks = stream.getVideoTracks();
+    for (const [index, track] of videoTracks.entries()) {
       console.log(`[MQTT_SPIKE] Video Track ${index}:`, {
         id: track.id,
         label: track.label,
@@ -96,10 +97,11 @@ class MQTTExtendedStatusSpike {
       });
 
       this.monitorTrack(track, `camera-${index}`);
-    });
+    }
 
     // Monitor audio tracks (microphone)
-    stream.getAudioTracks().forEach((track, index) => {
+    const audioTracks = stream.getAudioTracks();
+    for (const [index, track] of audioTracks.entries()) {
       console.log(`[MQTT_SPIKE] Audio Track ${index}:`, {
         id: track.id,
         label: track.label,
@@ -110,7 +112,7 @@ class MQTTExtendedStatusSpike {
       });
 
       this.monitorTrack(track, `microphone-${index}`);
-    });
+    }
 
     console.log('[MQTT_SPIKE] ----------------------------------------');
   }
