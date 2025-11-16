@@ -2,11 +2,11 @@
 id: 004-agents-md-standard-investigation
 ---
 
-# ADR 004: Investigate agents.md Standard for AI Agent Instructions
+# ADR 004: agents.md Standard Investigation and Rejection
 
 ## Status
 
-Proposed - Under Investigation
+Rejected
 
 ## Context
 
@@ -25,17 +25,9 @@ The agents.md initiative proposes a standardized format for AI agent instruction
 - Reduce duplication by having a single source of truth
 - Enable cross-tool compatibility
 
-### Current Uncertainty
-
-**We do not have confirmed information about:**
-1. Whether Claude Code currently supports the agents.md standard
-2. Whether GitHub Copilot supports or plans to support agents.md
-3. The maturity and adoption level of the agents.md standard
-4. Whether agents.md would replace or complement existing standards (CLAUDE.md, copilot-instructions.md)
-
 ### Current Duplication Problem
 
-**Markdown Standards** - Currently duplicated identically in 4 files:
+**Markdown Standards** - Duplicated identically in 4 files:
 - `.github/copilot-instructions.md`
 - `.github/instructions/process-tasks-list.instructions.md`
 - `.github/instructions/create-prd.instructions.md`
@@ -47,79 +39,71 @@ The agents.md initiative proposes a standardized format for AI agent instruction
 
 ## Decision
 
-**Deferred** - We will investigate the agents.md standard but NOT adopt it immediately.
+**Rejected** - We will NOT adopt or investigate the agents.md standard.
 
-### Investigation Tasks
+### Rationale
 
-Before adopting agents.md, we need to research:
+1. **Claude Code has its own official standard**: Claude Code uses `CLAUDE.md` as its official instruction file standard, as documented in the Claude Code documentation. This is a verified, supported standard.
 
-1. **Claude Code Support:**
-   - Check Claude Code official documentation for agents.md support
-   - Test if Claude Code reads and uses agents.md files
-   - Determine if agents.md would replace or supplement CLAUDE.md
+2. **No evidence of agents.md support**: There is no indication in Claude Code or GitHub Copilot documentation that either tool supports or plans to support the agents.md standard.
 
-2. **GitHub Copilot Support:**
-   - Check GitHub Copilot documentation for agents.md support
-   - Determine if agents.md would replace or supplement copilot-instructions.md
+3. **Existing standards work well**: Both CLAUDE.md and copilot-instructions.md are tool-specific, officially recognized standards that work reliably.
 
-3. **Standard Maturity:**
-   - Review agents.md specification and versioning
-   - Check adoption by major projects and tools
-   - Assess long-term viability and governance
+4. **Risk of breaking workflows**: Adopting an unsupported standard could break existing AI agent workflows without providing any actual benefit.
 
-4. **Migration Impact:**
-   - Determine if adoption would require breaking changes
-   - Assess effort to migrate existing instructions
-   - Evaluate benefits vs. migration costs
+5. **Duplication already addressed**: The consolidation approach (extracting shared content to documentation and using references) effectively solves the duplication problem without requiring adoption of new standards.
 
-### Interim Solution
+### Solution Implemented
 
-While investigating agents.md, we will reduce duplication through:
+Instead of adopting agents.md, we implemented a consolidation strategy:
 
 1. **Extract shared content to documentation:**
-   - Move Markdown Standards to `docs-site/docs/development/contributing.md`
-   - Reference documentation site instead of duplicating architecture/patterns
+   - Added comprehensive Markdown Standards section to `docs-site/docs/development/contributing.md` as single source of truth
+   - All instruction files now reference this authoritative section
 
 2. **Streamline existing files:**
-   - Keep CLAUDE.md and copilot-instructions.md (verified standards)
-   - Make copilot-instructions.md lean with references to CLAUDE.md and docs
-   - Keep workflow instruction files as-is (may be using Copilot's custom instructions feature)
+   - Kept CLAUDE.md and copilot-instructions.md (verified standards)
+   - Made copilot-instructions.md lean with references to CLAUDE.md and documentation site
+   - Updated all files to reference local markdown files in `docs-site/docs/` instead of web URLs
+   - Kept workflow instruction files (`.github/instructions/*.instructions.md`) with updated references
 
-3. **Document single source of truth:**
-   - Clearly mark authoritative sources for shared content
-   - Add references from instruction files to documentation
+3. **Establish clear documentation hierarchy:**
+   - Local markdown files in `docs-site/docs/` are the source of truth
+   - Web URLs (https://ismaelmartinez.github.io/teams-for-linux/) are for human reference only
+   - AI agents should read local files, not fetch from web
 
 ## Consequences
 
 ### Positive
 
-- ✅ Defers commitment until we have more information
-- ✅ Interim solution addresses immediate duplication problem
-- ✅ Keeps using verified standards (CLAUDE.md, copilot-instructions.md)
-- ✅ Allows time to assess agents.md maturity and adoption
-- ✅ Can migrate to agents.md later if it proves beneficial
+- ✅ Continues using officially supported standards (CLAUDE.md, copilot-instructions.md)
+- ✅ No risk of breaking existing workflows
+- ✅ Eliminates 28% content duplication through reference approach
+- ✅ Single source of truth for shared content in contributing.md
+- ✅ Clear documentation hierarchy established
+- ✅ AI agents read from local files for better performance and reliability
+- ✅ No dependency on external standard that may not be widely adopted
 
 ### Negative
 
-- ⚠️ Requires future work if we decide to adopt agents.md
-- ⚠️ May miss early adoption benefits if agents.md becomes standard
-- ⚠️ Interim solution still maintains multiple instruction files
+- ⚠️ Maintains two tool-specific instruction files instead of one unified file
+- ⚠️ If agents.md becomes widely adopted in the future, migration would require work
 
 ### Risk Mitigation
 
-- Track agents.md standard updates and adoption
-- Revisit this decision in 6 months or when Claude Code/Copilot documentation clarifies support
-- Keep instruction files modular to ease potential future migration
+- Keep instruction files modular and well-referenced to ease any potential future migration
+- Document the decision clearly in this ADR for future reference
+- Consolidation strategy reduces duplication while maintaining flexibility
 
 ## Alternatives Considered
 
 **Alternative 1: Adopt agents.md immediately**
-- ❌ Unknown if Claude Code supports it
+- ❌ Not supported by Claude Code or GitHub Copilot
 - ❌ Risk of breaking existing workflows
-- ❌ May not be widely adopted yet
+- ❌ No verified benefits
 - ❌ Could require reverting if tools don't support it
 
-**Alternative 2: Create custom agents.md without standard**
+**Alternative 2: Create custom agents.md without standard compliance**
 - ❌ Confusing to use non-standard file name
 - ❌ Tools won't automatically recognize it
 - ❌ Doesn't solve the real problem (tool support)
@@ -129,36 +113,51 @@ While investigating agents.md, we will reduce duplication through:
 - ❌ Risk of inconsistency
 - ❌ Already identified as problematic
 
-**Alternative 4: Interim solution (Selected)**
+**Alternative 4: Consolidate via references (Selected)**
 - ✅ Reduces duplication immediately
 - ✅ Uses verified standards
-- ✅ Allows time to research agents.md
 - ✅ Low risk approach
+- ✅ Maintains tool compatibility
+- ✅ Establishes clear documentation hierarchy
 
-## Investigation Timeline
+## Implementation Results
 
-- **Short-term (Now):** Implement interim duplication reduction
-- **Mid-term (Q1 2025):** Research agents.md support and adoption
-- **Long-term (Q2 2025):** Revisit decision with findings
+The consolidation was successfully implemented with the following changes:
+
+1. **Added Markdown Standards to contributing.md** (`docs-site/docs/development/contributing.md:207-265`)
+   - Comprehensive markdown standards section
+   - Covers: content structure, callouts, code blocks, tables, links, diagrams
+   - Clearly states it applies to ALL markdown files in the project
+
+2. **Updated all instruction files** to reference contributing.md instead of duplicating standards
+
+3. **Streamlined copilot-instructions.md** to quick reference with links to full documentation
+
+4. **Updated CLAUDE.md** to reference local documentation files with web URLs for human reference
+
+5. **Clarified documentation reading approach** - AI agents should read local markdown files in `docs-site/docs/`, not fetch from web
 
 ## Notes
 
-- This ADR created during instruction files consolidation analysis (Nov 2024)
+- This ADR created during instruction files consolidation analysis (November 2024)
 - agents.md standard discovered at: https://agents.md/
-- Current duplication analysis documented in `instruction-files-analysis.md`
-- Re-evaluate when Claude Code or GitHub Copilot documentation explicitly mentions agents.md
+- Consolidation reduces duplication from 28% to near-zero through reference strategy
+- Decision based on verified tool support and practical implementation needs
 
 ## References
 
-- [agents.md Standard](https://agents.md/)
-- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
-- [GitHub Copilot Custom Instructions](https://docs.github.com/en/copilot)
-- [Instruction Files Consolidation Analysis](../../instruction-files-analysis.md) (if merged)
+- [agents.md Standard](https://agents.md/) - External standard (not adopted)
+- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code) - Official CLAUDE.md standard
+- [GitHub Copilot Custom Instructions](https://docs.github.com/en/copilot) - Official copilot-instructions.md standard
+- [Instruction Files Consolidation Analysis](../../instruction-files-analysis.md)
+- [Contributing Guide - Markdown Standards](../contributing.md#markdown-standards) - Single source of truth
 
-## Future Actions
+## Future Consideration
 
-1. Monitor Claude Code release notes for agents.md support
-2. Monitor GitHub Copilot documentation updates
-3. Test agents.md compatibility when tool support is confirmed
-4. Update this ADR when new information becomes available
-5. Create implementation plan if agents.md adoption is deemed beneficial
+If Claude Code or GitHub Copilot officially announce support for agents.md in the future:
+1. Re-evaluate this decision based on confirmed tool support
+2. Assess migration effort vs. benefits
+3. Update this ADR with new findings
+4. Create new ADR for adoption decision if warranted
+
+For now, the current approach using official standards with reference-based consolidation is the correct solution.
