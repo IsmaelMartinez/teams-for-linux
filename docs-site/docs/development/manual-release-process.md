@@ -62,15 +62,21 @@ LLM: Reads the files, updates versions, generates XML
 # Review changes
 git diff
 
+# Create release branch
+git checkout -b release/v2.7.0
+
 # Commit
 git add .
 git commit -m "chore: release v2.7.0"
-git push origin main
+
+# Push and create PR
+git push -u origin release/v2.7.0
+gh pr create --title "Release v2.7.0" --body "Release v2.7.0"
 ```
 
 ### 4. Build & Publish
 
-The build workflow detects the version change and:
+After the release PR is merged to main, the build workflow detects the version change and:
 - Builds all platforms
 - Creates GitHub draft release
 - Publishes to Snap edge
@@ -148,13 +154,19 @@ Add new release entry at the top of `<releases>`:
 rm .changelog/*.txt
 ```
 
-### Step 5: Commit & Push
+### Step 5: Create Release Branch & Push
 
 ```bash
+git checkout -b release/v2.7.0
 git add .
 git commit -m "chore: release v2.7.0"
-git push origin main
+git push -u origin release/v2.7.0
+
+# Create PR
+gh pr create --title "Release v2.7.0" --body "Release v2.7.0"
 ```
+
+After the PR is merged to main, the build workflow will trigger.
 
 ---
 
@@ -238,19 +250,26 @@ teams-for-linux/
 └──────────────────────────────────────┘
               ↓
 ┌──────────────────────────────────────┐
-│ 4. Review & Commit                  │
-│    - git diff (check changes)       │
+│ 4. Create Release Branch & PR      │
+│    - git checkout -b release/vX.Y.Z │
 │    - git commit & push              │
+│    - Create PR to main              │
 └──────────────────────────────────────┘
               ↓
 ┌──────────────────────────────────────┐
-│ 5. Build Automatically              │
+│ 5. Merge PR to Main                 │
+│    - Review and merge               │
+│    - Version change triggers build  │
+└──────────────────────────────────────┘
+              ↓
+┌──────────────────────────────────────┐
+│ 6. Build Automatically              │
 │    - GitHub draft release           │
 │    - Snap edge publish              │
 └──────────────────────────────────────┘
               ↓
 ┌──────────────────────────────────────┐
-│ 6. Promote When Ready               │
+│ 7. Promote When Ready               │
 │    - Test Snap edge                 │
 │    - Promote draft → release        │
 │    - Snap edge → stable             │
@@ -370,11 +389,14 @@ npm run release:prepare
 2. Run npm install
 3. Update appdata.xml
 4. Delete .changelog/*.txt
-5. Commit & push
+5. Create release branch & push
+6. Create PR to main
+7. Merge PR
 
 **Prepare release (with LLM):**
 1. Point LLM at .changelog/ directory
 2. Ask it to generate release
-3. Review & commit
+3. Review & create PR to main
+4. Merge PR
 
 That's it!
