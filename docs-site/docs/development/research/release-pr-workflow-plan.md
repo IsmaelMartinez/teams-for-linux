@@ -1,8 +1,10 @@
 # Release PR Workflow - Implementation Plan
 
 **Date:** 2025-11-12
-**Status:** Planning
+**Status:** Future Enhancement (Not Currently Implemented)
 **Approach:** GitHub Action (manual trigger) that creates Release PR
+
+**Note:** Currently using manual process documented in [manual-release-process.md](../manual-release-process.md). This document describes potential future automation.
 
 ---
 
@@ -237,7 +239,7 @@ teams-for-linux/
 │
 ├── scripts/
 │   ├── add-changelog.sh                   # Existing: Manual changelog entry
-│   ├── release-prepare.js                 # EXISTING: Will be refactored
+│   ├── release-prepare.js                 # Existing: Will be refactored
 │   └── create-release-pr.js               # NEW: Core release logic
 │
 └── package.json                           # Add new script
