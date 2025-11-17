@@ -9,14 +9,19 @@ PRs automatically get AI-generated changelog entries in `.changelog/pr-XXX.txt` 
 ### Option A: Using the Script
 
 ```bash
+npm run release:prepare patch  # or minor, major, or 2.6.15
+```
+
+Or without argument to be prompted:
+```bash
 npm run release:prepare
 ```
 
-Follow the prompts to:
+This will:
 - Review changelog entries
-- Choose version bump (patch/minor/major)
-- Auto-update package.json, package-lock.json, appdata.xml
+- Update package.json, package-lock.json, appdata.xml
 - Delete consumed changelog files
+- Show next steps
 
 Then create release PR:
 ```bash

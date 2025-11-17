@@ -17,10 +17,6 @@ import { execSync } from 'node:child_process';
 import readline from 'node:readline';
 import xml2js from 'xml2js';
 
-// Fixed, unwriteable system directories for PATH (security requirement)
-// This constant is hardcoded and never derived from user input or environment
-const SAFE_PATH = '/usr/bin:/bin';
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -39,7 +35,6 @@ async function main() {
 
   if (!fs.existsSync(changelogDir)) {
     console.log('❌ No .changelog/ directory found');
-    console.log('   Nothing to release - merge some PRs first!');
     process.exit(1);
   }
 
@@ -47,7 +42,6 @@ async function main() {
 
   if (files.length === 0) {
     console.log('❌ No changelog entries found in .changelog/');
-    console.log('   Nothing to release - merge some PRs first!');
     process.exit(1);
   }
 
@@ -69,8 +63,14 @@ async function main() {
 
   console.log(`📦 Current version: ${currentVersion}`);
 
-  // 4. Prompt for new version
-  const versionAnswer = await question('\n🔢 Version bump (patch/minor/major or specific version): ');
+  // 4. Get version bump from args or prompt
+  let versionAnswer = process.argv[2];
+
+  if (versionAnswer) {
+    console.log(`🔢 Version bump: ${versionAnswer}`);
+  } else {
+    versionAnswer = await question('\n🔢 Version bump (patch/minor/major or specific version): ');
+  }
 
   let newVersion;
   if (versionAnswer.match(/^\d+\.\d+\.\d+$/)) {
@@ -100,8 +100,6 @@ async function main() {
   console.log(`   New version: ${newVersion}\n`);
 
   // 5. Generate appdata.xml entry
-  console.log('📝 Generating appdata.xml entry...');
-
   const appdataPath = path.join(process.cwd(), 'com.github.IsmaelMartinez.teams_for_linux.appdata.xml');
   const appdataXml = fs.readFileSync(appdataPath, 'utf8');
 
@@ -137,32 +135,7 @@ async function main() {
   const builder = new xml2js.Builder();
   const updatedXml = builder.buildObject(appdata);
 
-  // 6. Show summary
-  console.log('\n╔══════════════════════════════════════════════════════════╗');
-  console.log(`║  Ready to Release v${newVersion.padEnd(43)}║`);
-  console.log('╠══════════════════════════════════════════════════════════╣');
-  console.log('║  Changelog:                                              ║');
-  for (const entry of entries) {
-    const truncated = entry.length > 52 ? entry.substring(0, 49) + '...' : entry;
-    console.log(`║  • ${truncated.padEnd(53)}║`);
-  }
-  console.log('╠══════════════════════════════════════════════════════════╣');
-  console.log('║  Files to be modified:                                   ║');
-  console.log('║    • package.json                                        ║');
-  console.log('║    • package-lock.json                                   ║');
-  console.log('║    • com.github.IsmaelMartinez.teams_for_linux.appdata.xml║');
-  console.log(`║    • .changelog/ (${files.length} files will be deleted)${' '.repeat(Math.max(0, 20 - files.length.toString().length))}║`);
-  console.log('╚══════════════════════════════════════════════════════════╝\n');
-
-  const confirm = await question('Continue? (y/n): ');
-
-  if (confirm.toLowerCase() !== 'y' && confirm.toLowerCase() !== 'yes') {
-    console.log('\n❌ Aborted - no changes made');
-    rl.close();
-    process.exit(0);
-  }
-
-  // 7. Update files
+  // 6. Update files
   console.log('\n📝 Updating files...');
 
   // Update package.json
@@ -172,20 +145,33 @@ async function main() {
 
   // Update package-lock.json via npm install
   console.log('   ⏳ Running npm install...');
+  // Use the npm from the same directory as the current node binary
+  // This works with nvm, system installs, and other node version managers
+  const nodeBinDir = path.dirname(process.execPath);
+  const npmPath = path.join(nodeBinDir, 'npm');
+
   // Use isolated environment to prevent PATH injection attacks
-  // Do not spread process.env to avoid inheriting potentially unsafe PATH
+  // Include only the node bin directory and system directories
   const safeEnv = {
     HOME: process.env.HOME || '',
     USER: process.env.USER || '',
-    PATH: SAFE_PATH,  // Hardcoded constant - only fixed, unwriteable system directories
+    PATH: `${nodeBinDir}:/usr/bin:/bin:/usr/local/bin`,
     NODE_ENV: process.env.NODE_ENV || 'production'
   };
-  execSync('npm install', {
-    stdio: 'ignore',
-    env: safeEnv,
-    shell: '/bin/sh'
-  });
-  console.log('   ✅ Updated package-lock.json');
+
+  try {
+    execSync(`"${npmPath}" install`, {
+      stdio: 'inherit',
+      shell: '/bin/sh',
+      env: safeEnv
+    });
+    console.log('   ✅ Updated package-lock.json');
+  } catch (err) {
+    console.error('   ❌ npm install failed:');
+    console.error('   Exit code:', err.status);
+    console.error('   Signal:', err.signal);
+    throw err;
+  }
 
   // Update appdata.xml
   fs.writeFileSync(appdataPath, updatedXml);
@@ -197,27 +183,19 @@ async function main() {
   }
   console.log(`   ✅ Deleted ${files.length} changelog files`);
 
-  // 8. Final instructions
-  console.log('\n✅ Release prepared successfully!');
+  // 7. Summary
+  console.log('\n✅ Release v' + newVersion + ' prepared!');
+  console.log('\n📝 Changes:');
+  console.log('   • package.json → ' + newVersion);
+  console.log('   • package-lock.json → ' + newVersion);
+  console.log('   • appdata.xml → new release entry');
+  console.log('   • .changelog/ → ' + files.length + ' files deleted');
   console.log('\n📋 Next steps:');
-  console.log('   1. Review the changes:');
-  console.log('      git diff');
-  console.log('');
-  console.log('   2. Create release branch:');
-  console.log(`      git checkout -b release/v${newVersion}`);
-  console.log('');
-  console.log('   3. Commit the release:');
-  console.log(`      git add .`);
-  console.log(`      git commit -m "chore: release v${newVersion}"`);
-  console.log('');
-  console.log('   4. Push and create PR:');
-  console.log(`      git push -u origin release/v${newVersion}`);
-  console.log('      gh pr create --title "Release v' + newVersion + '" --body "Release v' + newVersion + '"');
-  console.log('');
-  console.log('   5. After PR merge to main, version change will trigger build:');
-  console.log('      → GitHub draft release');
-  console.log('      → Snap edge channel');
-  console.log('');
+  console.log(`   git checkout -b release/v${newVersion}`);
+  console.log(`   git add .`);
+  console.log(`   git commit -m "chore: release v${newVersion}"`);
+  console.log(`   git push -u origin release/v${newVersion}`);
+  console.log(`   gh pr create --title "Release v${newVersion}" --body "Release v${newVersion}"`);
 
   rl.close();
 }
