@@ -4,7 +4,6 @@ const {
   ipcMain,
   globalShortcut,
   systemPreferences,
-  powerMonitor,
   nativeImage,
 } = require("electron");
 const path = require("node:path");
@@ -15,6 +14,8 @@ const globalShortcuts = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const ScreenSharingService = require("./screenSharing/service");
+const PartitionsManager = require("./partitions/manager");
+const IdleMonitor = require("./idle/monitor");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -39,7 +40,6 @@ config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 CommandLineManager.addSwitchesAfterConfigLoad(config);
 
 let userStatus = -1;
-let idleTimeUserStatus = -1;
 let mqttClient = null;
 
 let player;
@@ -70,6 +70,12 @@ const notificationService = new NotificationService(
 
 // Initialize screen sharing service with dependencies
 const screenSharingService = new ScreenSharingService(mainAppWindow);
+
+// Initialize partitions manager with dependencies
+const partitionsManager = new PartitionsManager(appConfig.settingsStore);
+
+// Initialize idle monitor with dependencies
+const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 if (isMac) {
   requestMediaAccess();
@@ -125,15 +131,18 @@ if (gotTheLock) {
   ipcMain.handle("get-config", async () => {
     return config;
   });
-  ipcMain.handle("get-system-idle-state", handleGetSystemIdleState);
-  ipcMain.handle("get-zoom-level", handleGetZoomLevel);
-  ipcMain.handle("save-zoom-level", handleSaveZoomLevel);
 
   // Initialize notification service IPC handlers
   notificationService.initialize();
 
   // Initialize screen sharing service IPC handlers
   screenSharingService.initialize();
+
+  // Initialize partitions manager IPC handlers
+  partitionsManager.initialize();
+
+  // Initialize idle monitor IPC handlers
+  idleMonitor.initialize();
 
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
@@ -265,83 +274,6 @@ function handleAppReady() {
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
-}
-
-async function handleGetSystemIdleState() {
-  const systemIdleState = powerMonitor.getSystemIdleState(
-    config.appIdleTimeout
-  );
-
-  if (systemIdleState !== "active" && idleTimeUserStatus == -1) {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = userStatus;
-  }
-
-  const state = {
-    system: systemIdleState,
-    userIdle: idleTimeUserStatus,
-    userCurrent: userStatus,
-  };
-
-  if (systemIdleState === "active") {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = -1;
-  }
-
-  return state;
-}
-
-async function handleGetZoomLevel(_, name) {
-  const partition = getPartition(name) || {};
-  return partition.zoomLevel ? partition.zoomLevel : 0;
-}
-
-async function handleSaveZoomLevel(_, args) {
-  let partition = getPartition(args.partition) || {};
-  partition.name = args.partition;
-  partition.zoomLevel = args.zoomLevel;
-  savePartition(partition);
-}
-
-function getPartitions() {
-  return appConfig.settingsStore.get("app.partitions") || [];
-}
-
-function getPartition(name) {
-  const partitions = getPartitions();
-  return partitions.find((p) => {
-    return p.name === name;
-  });
-}
-
-function savePartition(arg) {
-  const partitions = getPartitions();
-  const partitionIndex = partitions.findIndex((p) => {
-    return p.name === arg.name;
-  });
-
-  if (partitionIndex >= 0) {
-    partitions[partitionIndex] = arg;
-  } else {
-    partitions.push(arg);
-  }
-  appConfig.settingsStore.set("app.partitions", partitions);
 }
 
 function handleCertificateError() {

@@ -1,49 +1,22 @@
 const { ipcMain, BrowserWindow, desktopCapturer, screen } = require("electron");
 const path = require("node:path");
 
-/**
- * ScreenSharingService
- *
- * Handles IPC communication and state management for screen sharing functionality.
- * This service is responsible for:
- * - Managing desktop capturer source selection (picker dialog)
- * - Tracking screen sharing session lifecycle (started/stopped events)
- * - Managing preview window state and communication
- * - Providing screen sharing status and stream information to renderer processes
- *
- * State is encapsulated within the service using private fields, eliminating the need
- * for global state and improving testability.
- */
 class ScreenSharingService {
   #mainWindow;
   #picker = null;
   #selectedScreenShareSource = null;
   #previewWindow = null;
 
-  /**
-   * Create a ScreenSharingService
-   *
-   * @param {Object} mainWindow - Main application window module
-   */
   constructor(mainWindow) {
     this.#mainWindow = mainWindow;
   }
 
-  /**
-   * Register IPC handlers for screen sharing
-   * Call this method after instantiation to set up IPC communication
-   */
   initialize() {
-    // Desktop capturer handlers
     ipcMain.handle("desktop-capturer-get-sources", this.#handleGetDesktopCapturerSources.bind(this));
     ipcMain.handle("choose-desktop-media", this.#handleChooseDesktopMedia.bind(this));
     ipcMain.on("cancel-desktop-media", this.#handleCancelDesktopMedia.bind(this));
-
-    // Screen sharing lifecycle handlers
     ipcMain.on("screen-sharing-started", this.#handleScreenSharingStarted.bind(this));
     ipcMain.on("screen-sharing-stopped", this.#handleScreenSharingStopped.bind(this));
-
-    // Preview window management handlers
     ipcMain.handle("get-screen-sharing-status", this.#handleGetScreenSharingStatus.bind(this));
     ipcMain.handle("get-screen-share-stream", this.#handleGetScreenShareStream.bind(this));
     ipcMain.handle("get-screen-share-screen", this.#handleGetScreenShareScreen.bind(this));
@@ -51,90 +24,42 @@ class ScreenSharingService {
     ipcMain.on("stop-screen-sharing-from-thumbnail", this.#handleStopScreenSharingFromThumbnail.bind(this));
   }
 
-  /**
-   * Set the selected screen share source
-   * Called by mainAppWindow when user selects a source via StreamSelector
-   *
-   * @param {string|Object} source - The selected source (string ID or source object)
-   * @public
-   */
   setSelectedSource(source) {
     this.#selectedScreenShareSource = source;
   }
 
-  /**
-   * Get the selected screen share source
-   *
-   * @returns {string|Object|null} The selected source or null if none
-   * @public
-   */
   getSelectedSource() {
     return this.#selectedScreenShareSource;
   }
 
-  /**
-   * Set the preview window
-   * Called by mainAppWindow when creating the preview window
-   *
-   * @param {BrowserWindow} window - The preview window instance
-   * @public
-   */
   setPreviewWindow(window) {
     this.#previewWindow = window;
   }
 
-  /**
-   * Get the preview window
-   *
-   * @returns {BrowserWindow|null} The preview window or null if none
-   * @public
-   */
   getPreviewWindow() {
     return this.#previewWindow;
   }
 
-  /**
-   * Check if screen sharing is currently active
-   *
-   * @returns {boolean} True if screen sharing is active
-   * @public
-   */
   isScreenSharingActive() {
     return this.#selectedScreenShareSource !== null;
   }
 
-  /**
-   * IPC handler for getting desktop capturer sources
-   * @private
-   */
   async #handleGetDesktopCapturerSources(_event, opts) {
     return desktopCapturer.getSources(opts);
   }
 
-  /**
-   * IPC handler for choosing desktop media (shows picker dialog)
-   * @private
-   */
   async #handleChooseDesktopMedia(_event, sourceTypes) {
     const sources = await desktopCapturer.getSources({ types: sourceTypes });
     const chosen = await this.#showScreenPicker(sources);
     return chosen ? chosen.id : null;
   }
 
-  /**
-   * IPC handler for canceling desktop media selection
-   * @private
-   */
   #handleCancelDesktopMedia() {
     if (this.#picker) {
       this.#picker.close();
     }
   }
 
-  /**
-   * IPC handler for screen sharing started event
-   * @private
-   */
   #handleScreenSharingStarted(event, sourceId) {
     try {
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
@@ -188,10 +113,6 @@ class ScreenSharingService {
     }
   }
 
-  /**
-   * IPC handler for screen sharing stopped event
-   * @private
-   */
   #handleScreenSharingStopped() {
     console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
       timestamp: new Date().toISOString(),
@@ -214,18 +135,10 @@ class ScreenSharingService {
     }
   }
 
-  /**
-   * IPC handler for getting screen sharing status
-   * @private
-   */
   #handleGetScreenSharingStatus() {
     return this.#selectedScreenShareSource !== null;
   }
 
-  /**
-   * IPC handler for getting screen share stream source ID
-   * @private
-   */
   #handleGetScreenShareStream() {
     // Return the source ID - handle both string and object formats
     if (typeof this.#selectedScreenShareSource === "string") {
@@ -236,10 +149,6 @@ class ScreenSharingService {
     return null;
   }
 
-  /**
-   * IPC handler for getting screen share screen dimensions
-   * @private
-   */
   #handleGetScreenShareScreen() {
     // Return screen dimensions if available from StreamSelector, otherwise default
     if (
@@ -257,10 +166,6 @@ class ScreenSharingService {
     return { width: 1920, height: 1080 };
   }
 
-  /**
-   * IPC handler for resizing preview window
-   * @private
-   */
   #handleResizePreviewWindow(event, { width, height }) {
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
       const [minWidth, minHeight] = this.#previewWindow.getMinimumSize();
@@ -271,10 +176,6 @@ class ScreenSharingService {
     }
   }
 
-  /**
-   * IPC handler for stopping screen sharing from thumbnail
-   * @private
-   */
   #handleStopScreenSharingFromThumbnail() {
     this.#selectedScreenShareSource = null;
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
@@ -282,18 +183,7 @@ class ScreenSharingService {
     }
   }
 
-  /**
-   * Show screen/window picker dialog
-   *
-   * Prevents race conditions by ensuring only one picker window is open at a time.
-   * If a picker is already open, focuses it and returns null.
-   *
-   * @private
-   * @param {Array} sources - Array of available desktop capturer sources
-   * @returns {Promise<Object|null>} Selected source or null if cancelled/already open
-   */
   #showScreenPicker(sources) {
-    // Guard: prevent multiple picker windows
     if (this.#picker) {
       console.warn("[SCREEN_PICKER] Picker already open, focusing existing window");
       this.#picker.focus();
