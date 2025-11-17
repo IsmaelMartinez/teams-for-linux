@@ -25,7 +25,7 @@
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
-    "release:prepare": "node scripts/release-prepare.js",
+    "release:prepare": "node scripts/release-prepare.mjs",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",

@@ -11,11 +11,11 @@
  * 5. Shows summary for review
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { execSync } = require('node:child_process');
-const readline = require('node:readline');
-const xml2js = require('xml2js');
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import readline from 'node:readline';
+import xml2js from 'xml2js';
 
 // Fixed, unwriteable system directories for PATH (security requirement)
 // This constant is hardcoded and never derived from user input or environment
@@ -30,6 +30,7 @@ function question(query) {
   return new Promise(resolve => rl.question(query, resolve));
 }
 
+// Main function
 async function main() {
   console.log('🚀 Release Preparation\n');
 
@@ -221,13 +222,11 @@ async function main() {
   rl.close();
 }
 
-// Execute main with proper error handling
-(async () => {
-  try {
-    await main();
-  } catch (err) {
-    console.error('\n❌ Error:', err.message);
-    rl.close();
-    process.exit(1);
-  }
-})();
+// Top-level await (ESM)
+try {
+  await main();
+} catch (err) {
+  console.error('\n❌ Error:', err.message);
+  rl.close();
+  process.exit(1);
+}
