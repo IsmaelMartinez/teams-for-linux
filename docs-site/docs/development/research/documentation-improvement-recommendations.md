@@ -170,8 +170,11 @@ graph TD
 
 ### Configure Multiple Instances
 ```bash
-teams-for-linux --partition work
-teams-for-linux --partition personal
+# Work profile
+teams-for-linux --class=teams-work --user-data-dir=~/.config/teams-profile-work
+
+# Personal profile
+teams-for-linux --class=teams-personal --user-data-dir=~/.config/teams-profile-personal
 ```
 [Full guide →](multiple-instances.md)
 
