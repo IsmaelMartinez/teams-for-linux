@@ -67,6 +67,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/001-desktopcapturer-source-id-format',
             'development/adr/002-token-cache-secure-storage',
             'development/adr/003-token-refresh-implementation',
+            'development/adr/004-agents-md-standard-investigation',
           ],
         },
         {
@@ -78,8 +79,6 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Authentication & Security',
               items: [
-                'development/research/token-cache-authentication-research',
-                'development/research/secure-storage-research',
                 'development/research/dom-access-investigation',
               ],
             },
@@ -102,7 +101,7 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Strategic Analysis',
               items: [
-                'development/research/documentation-health-analysis',
+                'development/research/documentation-improvement-recommendations',
                 'development/research/ui-system-strategic-analysis',
               ],
             },
