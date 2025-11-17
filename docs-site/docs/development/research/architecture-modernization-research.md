@@ -1053,7 +1053,8 @@ class TeamsIntegrationDomain {
 ### Internal Documentation
 - [IPC API Documentation](../ipc-api.md)
 - [DOM Access Investigation](./dom-access-investigation.md)
-- [Token Cache Authentication Research](./token-cache-authentication-research.md)
+- [ADR-002: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md)
+- [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md)
 - [Automated Testing Strategy](./automated-testing-strategy.md)
 
 ### External Resources
