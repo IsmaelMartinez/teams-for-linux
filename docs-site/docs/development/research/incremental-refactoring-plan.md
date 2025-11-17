@@ -225,7 +225,7 @@ module.exports = NotificationService;
 
 ### Week 3: Screen Sharing Handlers
 
-**New File**: `app/screenSharing/ipcHandlers.js`
+**New File**: `app/screenSharing/service.js`
 
 **Extract from index.js:**
 1. All 9 screen sharing IPC handlers - Lines 152-275 (124 lines)
@@ -238,7 +238,7 @@ module.exports = NotificationService;
 **Implementation pattern**:
 
 ```javascript
-// app/screenSharing/ipcHandlers.js
+// app/screenSharing/service.js
 const { ipcMain } = require("electron");
 
 class ScreenSharingService {
