@@ -66,10 +66,10 @@ async function main() {
   // 4. Get version bump from args or prompt
   let versionAnswer = process.argv[2];
 
-  if (!versionAnswer) {
-    versionAnswer = await question('\n🔢 Version bump (patch/minor/major or specific version): ');
-  } else {
+  if (versionAnswer) {
     console.log(`🔢 Version bump: ${versionAnswer}`);
+  } else {
+    versionAnswer = await question('\n🔢 Version bump (patch/minor/major or specific version): ');
   }
 
   let newVersion;
