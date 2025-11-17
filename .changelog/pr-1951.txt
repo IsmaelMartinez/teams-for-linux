@@ -1,1 +1,0 @@
-Add AI-powered changelog system to decouple merging from releasing - by @IsmaelMartinez (#1951)

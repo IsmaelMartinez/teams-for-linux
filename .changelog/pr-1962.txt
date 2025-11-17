@@ -1,1 +1,0 @@
-[Refactor]: Extract notification functions from app/index.js - part of #1960 - by @IsmaelMartinez (#1962)
