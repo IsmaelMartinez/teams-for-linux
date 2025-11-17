@@ -150,10 +150,20 @@ async function main() {
   const nodeBinDir = path.dirname(process.execPath);
   const npmPath = path.join(nodeBinDir, 'npm');
 
+  // Use isolated environment to prevent PATH injection attacks
+  // Include only the node bin directory and system directories
+  const safeEnv = {
+    HOME: process.env.HOME || '',
+    USER: process.env.USER || '',
+    PATH: `${nodeBinDir}:/usr/bin:/bin:/usr/local/bin`,
+    NODE_ENV: process.env.NODE_ENV || 'production'
+  };
+
   try {
     execSync(`"${npmPath}" install`, {
       stdio: 'inherit',
-      shell: '/bin/sh'
+      shell: '/bin/sh',
+      env: safeEnv
     });
     console.log('   ✅ Updated package-lock.json');
   } catch (err) {
