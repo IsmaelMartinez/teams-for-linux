@@ -11,11 +11,14 @@ const path = require("node:path");
  * - Managing preview window state and communication
  * - Providing screen sharing status and stream information to renderer processes
  *
- * Dependencies are injected to improve testability and break coupling with global state.
+ * State is encapsulated within the service using private fields, eliminating the need
+ * for global state and improving testability.
  */
 class ScreenSharingService {
   #mainWindow;
   #picker = null;
+  #selectedScreenShareSource = null;
+  #previewWindow = null;
 
   /**
    * Create a ScreenSharingService
@@ -46,6 +49,58 @@ class ScreenSharingService {
     ipcMain.handle("get-screen-share-screen", this.#handleGetScreenShareScreen.bind(this));
     ipcMain.on("resize-preview-window", this.#handleResizePreviewWindow.bind(this));
     ipcMain.on("stop-screen-sharing-from-thumbnail", this.#handleStopScreenSharingFromThumbnail.bind(this));
+  }
+
+  /**
+   * Set the selected screen share source
+   * Called by mainAppWindow when user selects a source via StreamSelector
+   *
+   * @param {string|Object} source - The selected source (string ID or source object)
+   * @public
+   */
+  setSelectedSource(source) {
+    this.#selectedScreenShareSource = source;
+  }
+
+  /**
+   * Get the selected screen share source
+   *
+   * @returns {string|Object|null} The selected source or null if none
+   * @public
+   */
+  getSelectedSource() {
+    return this.#selectedScreenShareSource;
+  }
+
+  /**
+   * Set the preview window
+   * Called by mainAppWindow when creating the preview window
+   *
+   * @param {BrowserWindow} window - The preview window instance
+   * @public
+   */
+  setPreviewWindow(window) {
+    this.#previewWindow = window;
+  }
+
+  /**
+   * Get the preview window
+   *
+   * @returns {BrowserWindow|null} The preview window or null if none
+   * @public
+   */
+  getPreviewWindow() {
+    return this.#previewWindow;
+  }
+
+  /**
+   * Check if screen sharing is currently active
+   *
+   * @returns {boolean} True if screen sharing is active
+   * @public
+   */
+  isScreenSharingActive() {
+    return this.#selectedScreenShareSource !== null;
   }
 
   /**
@@ -84,9 +139,9 @@ class ScreenSharingService {
     try {
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
         receivedSourceId: sourceId,
-        existingSourceId: globalThis.selectedScreenShareSource,
+        existingSourceId: this.#selectedScreenShareSource,
         timestamp: new Date().toISOString(),
-        hasExistingPreview: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
+        hasExistingPreview: this.#previewWindow && !this.#previewWindow.isDestroyed(),
         mainWindowVisible: this.#mainWindow?.isVisible?.() || false,
         mainWindowFocused: this.#mainWindow?.isFocused?.() || false
       });
@@ -101,26 +156,26 @@ class ScreenSharingService {
             sourceId: sourceId,
             sourceType: sourceId.startsWith('screen:') ? 'screen' : 'window'
           });
-          globalThis.selectedScreenShareSource = sourceId;
+          this.#selectedScreenShareSource = sourceId;
         } else {
           // UUID format detected - this is the bug we're fixing
           console.warn("[SCREEN_SHARE_DIAG] Received invalid source ID format (UUID?), keeping existing", {
             received: sourceId,
-            existing: globalThis.selectedScreenShareSource,
+            existing: this.#selectedScreenShareSource,
             note: "MediaStream.id (UUID) cannot be used for preview window - see ADR"
           });
           // Keep existing value, don't overwrite
         }
       } else {
         console.debug("[SCREEN_SHARE_DIAG] No source ID received (null), keeping existing", {
-          existing: globalThis.selectedScreenShareSource,
+          existing: this.#selectedScreenShareSource,
           note: "Source ID was already set correctly by setupScreenSharing()"
         });
       }
 
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
-        sourceId: globalThis.selectedScreenShareSource,
-        sourceType: globalThis.selectedScreenShareSource?.startsWith?.('screen:') ? 'screen' : 'window',
+        sourceId: this.#selectedScreenShareSource,
+        sourceType: this.#selectedScreenShareSource?.startsWith?.('screen:') ? 'screen' : 'window',
         willCreatePreview: true
       });
 
@@ -140,20 +195,20 @@ class ScreenSharingService {
   #handleScreenSharingStopped() {
     console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
       timestamp: new Date().toISOString(),
-      stoppedSource: globalThis.selectedScreenShareSource,
-      previewWindowExists: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
+      stoppedSource: this.#selectedScreenShareSource,
+      previewWindowExists: this.#previewWindow && !this.#previewWindow.isDestroyed(),
       mainWindowState: {
         visible: this.#mainWindow?.isVisible?.() || false,
         focused: this.#mainWindow?.isFocused?.() || false
       }
     });
 
-    globalThis.selectedScreenShareSource = null;
+    this.#selectedScreenShareSource = null;
 
     // Close preview window when screen sharing stops
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
+    if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
       console.debug("[SCREEN_SHARE_DIAG] Closing preview window after screen sharing stopped");
-      globalThis.previewWindow.close();
+      this.#previewWindow.close();
     } else {
       console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
     }
@@ -164,7 +219,7 @@ class ScreenSharingService {
    * @private
    */
   #handleGetScreenSharingStatus() {
-    return globalThis.selectedScreenShareSource !== null;
+    return this.#selectedScreenShareSource !== null;
   }
 
   /**
@@ -173,10 +228,10 @@ class ScreenSharingService {
    */
   #handleGetScreenShareStream() {
     // Return the source ID - handle both string and object formats
-    if (typeof globalThis.selectedScreenShareSource === "string") {
-      return globalThis.selectedScreenShareSource;
-    } else if (globalThis.selectedScreenShareSource?.id) {
-      return globalThis.selectedScreenShareSource.id;
+    if (typeof this.#selectedScreenShareSource === "string") {
+      return this.#selectedScreenShareSource;
+    } else if (this.#selectedScreenShareSource?.id) {
+      return this.#selectedScreenShareSource.id;
     }
     return null;
   }
@@ -188,12 +243,12 @@ class ScreenSharingService {
   #handleGetScreenShareScreen() {
     // Return screen dimensions if available from StreamSelector, otherwise default
     if (
-      globalThis.selectedScreenShareSource &&
-      typeof globalThis.selectedScreenShareSource === "object"
+      this.#selectedScreenShareSource &&
+      typeof this.#selectedScreenShareSource === "object"
     ) {
       const displays = screen.getAllDisplays();
 
-      if (globalThis.selectedScreenShareSource?.id?.startsWith("screen:")) {
+      if (this.#selectedScreenShareSource?.id?.startsWith("screen:")) {
         const display = displays[0] || { size: { width: 1920, height: 1080 } };
         return { width: display.size.width, height: display.size.height };
       }
@@ -207,12 +262,12 @@ class ScreenSharingService {
    * @private
    */
   #handleResizePreviewWindow(event, { width, height }) {
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
-      const [minWidth, minHeight] = globalThis.previewWindow.getMinimumSize();
+    if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
+      const [minWidth, minHeight] = this.#previewWindow.getMinimumSize();
       const newWidth = Math.max(minWidth, Math.min(width, 480));
       const newHeight = Math.max(minHeight, Math.min(height, 360));
-      globalThis.previewWindow.setSize(newWidth, newHeight);
-      globalThis.previewWindow.center();
+      this.#previewWindow.setSize(newWidth, newHeight);
+      this.#previewWindow.center();
     }
   }
 
@@ -221,20 +276,30 @@ class ScreenSharingService {
    * @private
    */
   #handleStopScreenSharingFromThumbnail() {
-    globalThis.selectedScreenShareSource = null;
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
-      globalThis.previewWindow.webContents.send("screen-sharing-status-changed");
+    this.#selectedScreenShareSource = null;
+    if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
+      this.#previewWindow.webContents.send("screen-sharing-status-changed");
     }
   }
 
   /**
    * Show screen/window picker dialog
    *
+   * Prevents race conditions by ensuring only one picker window is open at a time.
+   * If a picker is already open, focuses it and returns null.
+   *
    * @private
    * @param {Array} sources - Array of available desktop capturer sources
-   * @returns {Promise<Object|null>} Selected source or null if cancelled
+   * @returns {Promise<Object|null>} Selected source or null if cancelled/already open
    */
   #showScreenPicker(sources) {
+    // Guard: prevent multiple picker windows
+    if (this.#picker) {
+      console.warn("[SCREEN_PICKER] Picker already open, focusing existing window");
+      this.#picker.focus();
+      return Promise.resolve(null);
+    }
+
     return new Promise((resolve) => {
       this.#picker = new BrowserWindow({
         width: 800,
@@ -250,14 +315,19 @@ class ScreenSharingService {
         this.#picker.webContents.send("sources-list", sources);
       });
 
-      ipcMain.once("source-selected", (event, source) => {
+      // Store handler reference for proper cleanup
+      const onSourceSelected = (_event, source) => {
         resolve(source);
         if (this.#picker) {
           this.#picker.close();
         }
-      });
+      };
+
+      ipcMain.once("source-selected", onSourceSelected);
 
       this.#picker.on("closed", () => {
+        // Clean up IPC listener to prevent memory leaks
+        ipcMain.removeListener("source-selected", onSourceSelected);
         this.#picker = null;
         resolve(null);
       });

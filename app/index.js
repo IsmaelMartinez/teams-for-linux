@@ -257,7 +257,7 @@ function handleAppReady() {
     mqttClient.initialize();
   }
 
-  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
   // Register global shortcuts
   globalShortcuts.register(config, mainAppWindow, app);
