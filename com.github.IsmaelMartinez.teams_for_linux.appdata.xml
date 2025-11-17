@@ -21,6 +21,7 @@
           <li>[Refactor]: Extract notification functions from app/index.js - part of #1960 - by @IsmaelMartinez (#1962)</li>
           <li>Continue refactoring epic work of #1960 - by @IsmaelMartinez (#1966)</li>
           <li>chore(deps): bump js-yaml from 3.14.1 to 3.14.2 in /docs-site in the npm_and_yarn group across 1 directory (#1967)</li>
+          <li>Update: Electron 37.10.0 and electron-builder 26.2.0 for latest bug fixes and improvements</li>
         </ul>
       </description>
     </release>
