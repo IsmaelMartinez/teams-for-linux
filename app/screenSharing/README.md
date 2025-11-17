@@ -1,10 +1,15 @@
-# Stream Selector Module
+# Screen Sharing Module
 
-The Stream Selector module provides the native screen/window selection interface for screen sharing in Teams for Linux. It creates a modal dialog that allows users to choose which screen or application window to share during Teams meetings.
+The Screen Sharing module provides comprehensive screen sharing functionality for Teams for Linux. This includes the native screen/window selection interface, IPC communication handlers for screen sharing events, and preview window management.
 
 ## Overview
 
-This module bridges the gap between Teams' web-based screen sharing requests and the native desktop capture capabilities provided by Electron's `desktopCapturer` API. It ensures a smooth user experience while maintaining security through proper permission handling.
+This module bridges the gap between Teams' web-based screen sharing requests and the native desktop capture capabilities provided by Electron's `desktopCapturer` API. It consists of two main components:
+
+1. **StreamSelector** - Provides the native UI for selecting which screen/window to share
+2. **ScreenSharingService** - Manages IPC handlers, screen sharing lifecycle events, and preview window state
+
+The module ensures a smooth user experience while maintaining security through proper permission handling.
 
 ## Architecture
 
@@ -40,15 +45,49 @@ flowchart TD
 
 ### Files Structure
 
-- **[index.js](index.js)** - Main StreamSelector class and window management
-- **[browser.js](browser.js)** - Renderer process logic for UI interactions  
+- **[service.js](service.js)** - ScreenSharingService class for IPC handlers and state management
+- **[index.js](index.js)** - StreamSelector class for source selection UI
+- **[browser.js](browser.js)** - Renderer process logic for UI interactions
 - **[preload.js](preload.js)** - Context bridge for secure IPC communication
-- **[index.html](index.html)** - User interface template with source grid
+- **[previewWindowPreload.js](previewWindowPreload.js)** - Preload script for preview window
+- **[index.html](index.html)** - User interface template for source selection
+- **[previewWindow.html](previewWindow.html)** - User interface for preview window
 - **[index.css](index.css)** - Styling for the selection interface
+- **[injectedScreenSharing.js](injectedScreenSharing.js)** - Client-side script for Teams DOM integration
+
+### ScreenSharingService Class
+
+The ScreenSharingService class manages all IPC handlers and state for screen sharing functionality. It is instantiated in the main process and provides:
+
+- **Desktop capturer access** - Handles requests for available screens and windows
+- **Lifecycle event tracking** - Monitors screen sharing start/stop events
+- **Preview window management** - Controls preview window state and dimensions
+- **Screen picker dialog** - Shows modal dialog for legacy screen selection flows
+
+```javascript
+const ScreenSharingService = require("./screenSharing/service");
+const screenSharingService = new ScreenSharingService(mainWindow);
+
+// Register all IPC handlers
+screenSharingService.initialize();
+```
+
+**IPC Channels Handled:**
+
+- `desktop-capturer-get-sources` - Returns available screens and windows
+- `choose-desktop-media` - Shows picker dialog and returns selected source
+- `cancel-desktop-media` - Cancels ongoing source selection
+- `screen-sharing-started` - Notifies when screen sharing session starts
+- `screen-sharing-stopped` - Notifies when screen sharing session stops
+- `get-screen-sharing-status` - Returns whether screen sharing is active
+- `get-screen-share-stream` - Returns the active screen share source ID
+- `get-screen-share-screen` - Returns screen dimensions for the shared source
+- `resize-preview-window` - Resizes the preview window
+- `stop-screen-sharing-from-thumbnail` - Stops sharing from preview window control
 
 ### StreamSelector Class
 
-The main class provides a simple interface for displaying the source selection dialog:
+The StreamSelector class provides a modern interface for displaying the source selection dialog:
 
 ```javascript
 const streamSelector = new StreamSelector(parentWindow);
