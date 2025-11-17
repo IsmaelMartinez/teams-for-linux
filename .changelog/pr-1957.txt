@@ -1,0 +1,1 @@
+[Research]: Consolidate project documentation and ADRs - by @IsmaelMartinez (#1957)
