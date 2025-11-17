@@ -17,6 +17,10 @@ const { execSync } = require('node:child_process');
 const readline = require('node:readline');
 const xml2js = require('xml2js');
 
+// Fixed, unwriteable system directories for PATH (security requirement)
+// This constant is hardcoded and never derived from user input or environment
+const SAFE_PATH = '/usr/bin:/bin';
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -167,12 +171,12 @@ async function main() {
 
   // Update package-lock.json via npm install
   console.log('   ⏳ Running npm install...');
-  // Use only safe system directories in PATH to prevent command injection
+  // Use isolated environment to prevent PATH injection attacks
   // Do not spread process.env to avoid inheriting potentially unsafe PATH
   const safeEnv = {
     HOME: process.env.HOME || '',
     USER: process.env.USER || '',
-    PATH: '/usr/bin:/bin',  // Only fixed, unwriteable system directories
+    PATH: SAFE_PATH,  // Hardcoded constant - only fixed, unwriteable system directories
     NODE_ENV: process.env.NODE_ENV || 'production'
   };
   execSync('npm install', {

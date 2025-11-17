@@ -1,1 +1,1 @@
-[Research]: Investigate the Release Process - by @IsmaelMartinez (#1951)
+Add AI-powered changelog system to decouple merging from releasing - by @IsmaelMartinez (#1951)
