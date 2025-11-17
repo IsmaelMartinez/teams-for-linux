@@ -217,7 +217,6 @@ teams-for-linux/
 │       └── build.yml               # Builds on version change
 │
 ├── scripts/
-│   ├── add-changelog.sh            # Manual: add changelog entry
 │   ├── release-prepare.js          # Optional: automated preparation
 │   └── generateReleaseInfo.js      # Existing: validation
 │
@@ -282,11 +281,10 @@ teams-for-linux/
 
 ### Adding Changelog Manually
 
-If bot doesn't run or you want manual control:
+If bot doesn't run or you want manual control, just create a file:
 
 ```bash
-npm run changelog:add "Your feature description"
-# Creates: .changelog/manual-TIMESTAMP.txt
+echo "Your feature description - by @username (#PR)" > .changelog/manual-$(date +%s).txt
 ```
 
 ### Editing Changelog Entries

@@ -355,7 +355,7 @@ git push
 
 **Manual entry:**
 ```bash
-npm run changelog:add "Your description"
+echo "Your description - by @username (#PR)" > .changelog/manual-$(date +%s).txt
 ```
 
 ---

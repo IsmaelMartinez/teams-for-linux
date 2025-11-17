@@ -168,7 +168,6 @@ Additionally, writing changelog entries manually when preparing releases is:
 **Files Created:**
 - `.github/workflows/changelog-generator.yml` - Auto-generates entries
 - `scripts/release-prepare.js` - Optional script to consume changelogs
-- `scripts/add-changelog.sh` - Manual changelog helper
 - `.changelog/README.md` - Quick setup guide
 - `docs-site/docs/development/manual-release-process.md` - Release guide
 - `docs-site/docs/development/research/changelog-generator-setup.md` - Full setup docs
@@ -176,10 +175,11 @@ Additionally, writing changelog entries manually when preparing releases is:
 **npm Scripts:**
 ```json
 {
-  "changelog:add": "bash scripts/add-changelog.sh",
   "release:prepare": "node scripts/release-prepare.js"
 }
 ```
+
+**Manual changelog entries:** Users can simply create `.changelog/*.txt` files directly.
 
 **GitHub Action Trigger:**
 ```yaml

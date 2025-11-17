@@ -25,7 +25,6 @@
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
-    "changelog:add": "bash scripts/add-changelog.sh",
     "release:prepare": "node scripts/release-prepare.js",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "prebuild": "npm run generate-release-info",

@@ -34,11 +34,8 @@ When you open or update a PR, a GitHub Action automatically:
 If you want to add or edit a changelog entry manually:
 
 ```bash
-# Add new entry
-npm run changelog:add "Your changelog description"
-
-# Or use the script directly
-./scripts/add-changelog.sh "Your changelog description"
+# Just create a .txt file in .changelog/ directory
+echo "Your changelog description - by @username (#PR)" > .changelog/manual-$(date +%s).txt
 ```
 
 ## Release Process
