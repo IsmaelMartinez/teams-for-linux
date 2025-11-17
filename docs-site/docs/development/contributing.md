@@ -395,28 +395,15 @@ Examples:
 
 ## Release Process
 
-1. **Update version** in `package.json`:
-   - Patches: `1.0.0` → `1.0.1` 
-   - Features: `1.0.0` → `1.1.0`
-   - Major: Reserved
+Releases use AI-generated changelog entries that accumulate in `.changelog/` directory:
 
-2. **Update dependencies**: `npm install`
+1. **PRs automatically get changelog entries** - Gemini AI generates summaries
+2. **When ready to release** - Review `.changelog/*.txt` files
+3. **Prepare release** - Update versions and appdata.xml (manually or via `npm run release:prepare`)
+4. **Create release PR** - Push to `release/vX.Y.Z` branch and merge to main
+5. **Build triggers automatically** - On version change in main
 
-3. **Add release notes** in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
-   ```xml
-   <release version="2.0.17" date="2025-06-15">
-     <description>
-       <ul>
-         <li>New feature description</li>
-         <li>Bug fix description</li>
-       </ul>
-     </description>
-   </release>
-   ```
-
-4. **Commit and push** changes, then create a pull request
-
-See [Release Automation](release-info.md) for technical details.
+See [Manual Release Process](manual-release-process.md) for detailed instructions.
 
 ## Getting Help
 

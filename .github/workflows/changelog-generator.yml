@@ -1,0 +1,137 @@
+name: Generate Changelog Entry
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if changelog already exists
+        id: check
+        run: |
+          if [ -f ".changelog/pr-${{ github.event.pull_request.number }}.txt" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate summary with Gemini
+        if: steps.check.outputs.exists == 'false'
+        id: gemini
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const prBody = context.payload.pull_request.body || '';
+
+            // Truncate body safely (first 1000 chars)
+            const cleanBody = prBody.substring(0, 1000).replace(/"/g, "'");
+
+            const prompt = `Summarize this PR in ONE concise line suitable for a changelog (max 80 chars):
+
+            Title: ${prTitle}
+
+            Description: ${cleanBody}
+
+            Guidelines:
+            - Start with action verb (Add/Fix/Update/Remove)
+            - Focus on user-facing impact
+            - Max 80 characters
+            - Professional tone
+
+            Example: "Add MQTT integration for Teams status publishing"`;
+
+            try {
+              const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                      temperature: 0.3,
+                      maxOutputTokens: 50
+                    }
+                  })
+                }
+              );
+
+              const data = await response.json();
+              const summary = data.candidates[0].content.parts[0].text.trim();
+
+              core.setOutput('summary', summary);
+              console.log(`Generated: ${summary}`);
+            } catch (error) {
+              console.log(`Gemini API failed, using PR title as fallback`);
+              core.setOutput('summary', prTitle);
+            }
+
+      - name: Post-process summary
+        if: steps.check.outputs.exists == 'false'
+        id: final
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            let summary = `${{ steps.gemini.outputs.summary }}`;
+            const author = context.payload.pull_request.user.login;
+            const prNum = context.payload.pull_request.number;
+
+            // Add author if not a bot
+            if (!author.includes('bot')) {
+              summary = `${summary} - by @${author}`;
+            }
+
+            // Add PR number
+            summary = `${summary} (#${prNum})`;
+
+            core.setOutput('final_summary', summary);
+            console.log(`Final: ${summary}`);
+
+      - name: Save changelog entry
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          mkdir -p .changelog
+          echo "${{ steps.final.outputs.final_summary }}" > .changelog/pr-${{ github.event.pull_request.number }}.txt
+
+          echo "✅ Created: .changelog/pr-${{ github.event.pull_request.number }}.txt"
+          cat .changelog/pr-${{ github.event.pull_request.number }}.txt
+
+      - name: Commit changelog file to PR branch
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .changelog/
+          git commit -m "chore: add changelog entry for PR #${{ github.event.pull_request.number }}"
+          git push
+
+          echo "✅ Changelog entry committed to PR branch"
+
+      - name: Comment on PR
+        if: steps.check.outputs.exists == 'false'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ Changelog entry generated and committed to this PR:\n\n\`\`\`\n${{ steps.final.outputs.final_summary }}\n\`\`\`\n\nThe file \`.changelog/pr-${{ github.event.pull_request.number }}.txt\` will be included when you merge this PR.\n\nYou can edit it directly in this PR if needed.`
+            })
