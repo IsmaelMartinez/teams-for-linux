@@ -19,39 +19,31 @@ class IdleMonitor {
       this.#config.appIdleTimeout
     );
 
-    if (systemIdleState !== "active" && this.#idleTimeUserStatus === -1) {
-      console.debug(
-        `GetSystemIdleState => IdleTimeout: ${
-          this.#config.appIdleTimeout
-        }s, IdleTimeoutPollInterval: ${
-          this.#config.appIdleTimeoutCheckInterval
-        }s, ActiveCheckPollInterval: ${
-          this.#config.appActiveCheckInterval
-        }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-      );
-      this.#idleTimeUserStatus = this.#getUserStatus();
+    const logDetails = () => `IdleTimeout: ${
+        this.#config.appIdleTimeout
+      }s, IdleTimeoutPollInterval: ${
+        this.#config.appIdleTimeoutCheckInterval
+      }s, ActiveCheckPollInterval: ${
+        this.#config.appActiveCheckInterval
+      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`;
+
+    if (systemIdleState !== "active") {
+      if (this.#idleTimeUserStatus === -1) {
+        console.debug(`GetSystemIdleState => ${logDetails()}`);
+        this.#idleTimeUserStatus = this.#getUserStatus();
+      }
+    } else {
+      if (this.#idleTimeUserStatus !== -1) {
+        console.debug(`GetSystemIdleState => ${logDetails()}`);
+        this.#idleTimeUserStatus = -1;
+      }
     }
 
-    const state = {
+    return {
       system: systemIdleState,
       userIdle: this.#idleTimeUserStatus,
       userCurrent: this.#getUserStatus(),
     };
-
-    if (systemIdleState === "active") {
-      console.debug(
-        `GetSystemIdleState => IdleTimeout: ${
-          this.#config.appIdleTimeout
-        }s, IdleTimeoutPollInterval: ${
-          this.#config.appIdleTimeoutCheckInterval
-        }s, ActiveCheckPollInterval: ${
-          this.#config.appActiveCheckInterval
-        }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-      );
-      this.#idleTimeUserStatus = -1;
-    }
-
-    return state;
   }
 }
 

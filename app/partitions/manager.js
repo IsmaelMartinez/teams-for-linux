@@ -18,9 +18,10 @@ class PartitionsManager {
   }
 
   async #handleSaveZoomLevel(_event, args) {
-    const partition = this.#getPartition(args.partition) || {};
-    partition.name = args.partition;
-    partition.zoomLevel = args.zoomLevel;
+    const partition = {
+      name: args.partition,
+      zoomLevel: args.zoomLevel,
+    };
     this.#savePartition(partition);
   }
 
