@@ -7,7 +7,6 @@ const {
   globalShortcut,
   systemPreferences,
   powerMonitor,
-  Notification,
   nativeImage,
 } = require("electron");
 const path = require("node:path");
@@ -16,6 +15,7 @@ const { MQTTClient } = require("./mqtt");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const globalShortcuts = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
+const NotificationService = require("./notifications/service");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -39,17 +39,6 @@ config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 CommandLineManager.addSwitchesAfterConfigLoad(config);
 
-const notificationSounds = [
-  {
-    type: "new-message",
-    file: path.join(config.appPath, "assets/sounds/new_message.wav"),
-  },
-  {
-    type: "meeting-started",
-    file: path.join(config.appPath, "assets/sounds/meeting_started.wav"),
-  },
-];
-
 let userStatus = -1;
 let idleTimeUserStatus = -1;
 let picker = null;
@@ -64,6 +53,17 @@ try {
     `No audio players found. Audio notifications might not work. ${err}`
   );
 }
+
+// Getter function for user status - injected into NotificationService to break coupling
+const getUserStatus = () => userStatus;
+
+// Initialize notification service with dependencies
+const notificationService = new NotificationService(
+  player,
+  config,
+  require("./mainAppWindow"),
+  getUserStatus
+);
 
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
@@ -141,8 +141,10 @@ if (gotTheLock) {
       picker.close();
     }
   });
-  ipcMain.handle("play-notification-sound", playNotificationSound);
-  ipcMain.handle("show-notification", showNotification);
+
+  // Initialize notification service IPC handlers
+  notificationService.initialize();
+
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
   ipcMain.handle("get-app-version", async () => {
@@ -308,90 +310,6 @@ function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
   app.exit();
-}
-
-
-async function showNotification(_event, options) {
-  const startTime = Date.now();
-  console.debug("[TRAY_DIAG] Native notification request received", {
-    title: options.title,
-    bodyLength: options.body?.length || 0,
-    hasIcon: !!options.icon,
-    type: options.type,
-    urgency: config.defaultNotificationUrgency,
-    timestamp: new Date().toISOString(),
-    suggestion: "Monitor totalTimeMs for notification display delays"
-  });
-  
-  try {
-    playNotificationSound(null, {
-      type: options.type,
-      audio: "default",
-      title: options.title,
-      body: options.body,
-    });
-
-    const notification = new Notification({
-      icon: nativeImage.createFromDataURL(options.icon),
-      title: options.title,
-      body: options.body,
-      urgency: config.defaultNotificationUrgency,
-    });
-
-    notification.on("click", () => {
-      console.debug("[TRAY_DIAG] Notification clicked, showing main window");
-      mainAppWindow.show();
-    });
-
-    notification.show();
-    
-    const totalTime = Date.now() - startTime;
-    console.debug("[TRAY_DIAG] Native notification displayed successfully", {
-      title: options.title,
-      totalTimeMs: totalTime,
-      urgency: config.defaultNotificationUrgency,
-      performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
-    });
-    
-  } catch (error) {
-    console.error("[TRAY_DIAG] Failed to show native notification", {
-      error: error.message,
-      title: options.title,
-      elapsedMs: Date.now() - startTime,
-      suggestion: "Check if notification permissions are granted or icon data is valid"
-    });
-  }
-}
-
-async function playNotificationSound(_event, options) {
-  console.debug(
-    `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
-  );
-  // Player failed to load or notification sound disabled in config
-  if (!player || config.disableNotificationSound) {
-    console.debug("Notification sounds are disabled");
-    return;
-  }
-  // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
-  if (
-    config.disableNotificationSoundIfNotAvailable &&
-    userStatus !== 1 &&
-    userStatus !== -1
-  ) {
-    console.debug("Notification sounds are disabled when user is not active");
-    return;
-  }
-  const sound = notificationSounds.find((ns) => {
-    return ns.type === options.type;
-  });
-
-  if (sound) {
-    console.debug(`Playing file: ${sound.file}`);
-    await player.play(sound.file);
-    return;
-  }
-
-  console.debug("No notification sound played", player, options);
 }
 
 /**
