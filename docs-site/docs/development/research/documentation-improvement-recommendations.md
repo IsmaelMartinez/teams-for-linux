@@ -203,25 +203,25 @@ tags: [architecture, modules, reference]
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
-| Startup | `app/startup/` | Command line switches & initialization | [README](../../../app/startup/README.md) |
-| Main App Window | `app/mainAppWindow/` | Primary BrowserWindow | [README](../../../app/mainAppWindow/README.md) |
-| App Configuration | `app/appConfiguration/` | Config management | [README](../../../app/appConfiguration/README.md) |
-| Browser | `app/browser/` | Preload & client scripts | [README](../../../app/browser/README.md) |
+| Startup | `app/startup/` | Command line switches & initialization | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/startup/README.md) |
+| Main App Window | `app/mainAppWindow/` | Primary BrowserWindow | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mainAppWindow/README.md) |
+| App Configuration | `app/appConfiguration/` | Config management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/appConfiguration/README.md) |
+| Browser | `app/browser/` | Preload & client scripts | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/browser/README.md) |
 
 ## Feature Modules
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
-| MQTT | `app/mqtt/` | Status publishing | [README](../../../app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
-| Screen Sharing | `app/screenSharing/` | Desktop capture | [README](../../../app/screenSharing/README.md), [User Guide](../screen-sharing.md) |
-| Custom Background | `app/customBackground/` | Video backgrounds | [README](../../../app/customBackground/README.md) |
+| MQTT | `app/mqtt/` | Status publishing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
+| Screen Sharing | `app/screenSharing/` | Desktop capture | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/screenSharing/README.md), [User Guide](../screen-sharing.md) |
+| Custom Background | `app/customBackground/` | Video backgrounds | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md) |
 
 ## Utility Modules
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
-| Cache Manager | `app/cacheManager/` | Cache handling | [README](../../../app/cacheManager/README.md) |
-| Helpers | `app/helpers/` | Utility functions | [README](../../../app/helpers/README.md) |
+| Cache Manager | `app/cacheManager/` | Cache handling | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/cacheManager/README.md) |
+| Helpers | `app/helpers/` | Utility functions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/helpers/README.md) |
 
 ## Adding New Modules
 
