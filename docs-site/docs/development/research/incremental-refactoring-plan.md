@@ -659,50 +659,57 @@ We're taking the **best insights** (modular organization, testing) and applying 
 
 ## Progress Tracking
 
-### Current Status: Week 1 - Completed ✓
+### Current Status: Extraction 3 - Completed ✓ | Extraction 4 - In Progress
 
-| Week | Task | Status | Lines Removed | Date Completed |
-|------|------|--------|---------------|----------------|
-| Week 1 | Command Line Logic | 🟢 Completed | **96** (Target: 94) | 2025-11-13 |
-| Week 2 | Notification System | ⚪ Not Started | Target: 83 | - |
-| Week 3 | Screen Sharing Handlers | ⚪ Not Started | Target: 124 | - |
-| Week 4 | Partitions & Idle State | ⚪ Not Started | Target: 73 | - |
+| Extraction | Task | Status | Lines Removed | Date Completed |
+|------------|------|--------|---------------|----------------|
+| Extraction 1 | Command Line Logic | 🟢 Completed | **96** (Target: 94) | 2025-11-13 |
+| Extraction 2 | Notification System | 🟢 Completed | **~82** (Target: 83) | 2025-11-14 |
+| Extraction 3 | Screen Sharing Handlers | 🟢 Completed | **~166** (Target: 124) | 2025-11-15 |
+| Extraction 4 | Partitions & Idle State | 🟡 In Progress | Target: ~26 remaining | - |
 | Week 5 | Singleton Refactoring | ⚪ Not Started | N/A | - |
 | Week 6 | IPC Registration Pattern | ⚪ Not Started | N/A | - |
 | Week 7 | Automated Testing | ⚪ Not Started | N/A | - |
 | Week 8 | Documentation Automation | ⚪ Not Started | N/A | - |
 
-**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked
+**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked | ⏸️ Paused
 
-**Current index.js LOC**: 655 (Baseline: 751, Removed: 96)
+**Current index.js LOC**: 407 (Baseline: 755, Total Removed: 348)
+**Phase 1 Progress**: 348 / 374 lines removed (**93%** complete)
+
+**Timeline Note**: This is a volunteer OSS project with work done as time permits. The "Week" references are planning units, not deadlines.
 
 ---
 
 ## Next Steps
 
-### Next Week (Week 2)
+### Current: Extraction 4 (Final Phase 1 Task)
 
-1. **Extract notification system**: Create `app/notifications/service.js`
-2. **Move notification functions**: Extract `showNotification()` and `playNotificationSound()`
-3. **Break coupling**: Inject user status dependency instead of global access
-4. **Update index.js**: Replace inline functions with NotificationService
-5. **Add unit tests**: Test notification service with mocked dependencies
-6. **Commit and deploy**: Ship to production
-7. **Measure impact**: Verify index.js reduced by ~83 lines
+1. **Extract partitions & idle state**: Create `app/partitions/manager.js` + `app/idle/monitor.js`
+2. **Target**: Remove remaining ~26 lines from index.js to reach 381 LOC goal
+3. **Complete Phase 1**: Achieve 49% reduction target
+4. **Document completion**: Update progress tracking and close Phase 1
 
-### Upcoming (Weeks 3-4)
+### After Phase 1 Complete - Decision Point
 
-- Week 3: Extract screen sharing handlers (~124 lines)
-- Week 4: Extract partitions & idle state (~73 lines)
-- Add automated tests for each extraction
-- Document learnings
+**Choose one of three paths:**
 
-### Future (Weeks 5-8)
+**Path A: Documentation & Consolidation**
+- Update architecture documentation (#1957)
+- Document new module structure
+- Update contributing guidelines
+- Create visual diagrams
 
-- Evaluate need for Phase 2 (testability improvements)
-- Add singleton refactoring if valuable
-- Re-assess architecture needs
-- Decide on Phase 3 scope
+**Path B: Continue to Phase 2 (Testability)**
+- Weeks 5-8: Singleton refactoring, IPC patterns, automated testing
+- Best if: Phase 1 revealed quality issues needing immediate attention
+
+**Path C: Feature Implementation Sprint**
+- Unblock and implement: #1935 (notification modal), #1937 (config options), #1958 (Graph API)
+- Continue: #1941 (MQTT events), #1956 (MQTT commands)
+- Best if: User-facing features are higher priority
+
+**Current plan**: Path A (documentation) → Evaluate → Path B or C
 
 ---
 
