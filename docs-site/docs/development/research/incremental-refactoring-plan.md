@@ -426,51 +426,54 @@ class Tray {
 
 ### Week 7: Automated Testing
 
-**Framework**: Use existing Playwright setup from PR #1880
+**Status**: ⚠️ **Reassessing Feasibility**
 
-**Add E2E tests**:
+**Current Reality**:
+- Existing Playwright setup (PR #1880) only verifies app loads
+- No login or actual Teams flow testing
+- **Blocker**: Microsoft authentication likely blocks automated login (bot detection)
+- Full E2E testing may not be achievable or worth the effort
 
+**What's Currently Testable**:
+
+**Limited E2E tests** (already in place):
 ```javascript
-// tests/e2e/startup.test.js
-test('app starts successfully with command line args', async () => {
+// tests/e2e/startup.test.js - ✅ Working
+test('app starts successfully', async () => {
   const { electronApp } = await launchElectronApp();
   const window = await electronApp.firstWindow();
   expect(await window.title()).toContain("Teams for Linux");
 });
-
-// tests/e2e/notifications.test.js
-test('notification shows and plays sound', async () => {
-  // Test notification flow
-});
-
-// tests/e2e/screenSharing.test.js
-test('screen sharing lifecycle works correctly', async () => {
-  // Test screen sharing
-});
 ```
 
-**Add unit tests** for extracted modules:
-
+**Potential unit tests** for extracted modules:
 ```javascript
-// tests/unit/notifications/service.test.js
-test('plays sound when user is available', async () => {
-  const service = new NotificationService(mockPlayer, mockConfig, mockWindow, () => 1);
-  await service.playSound(null, { type: 'new-message' });
-  expect(mockPlayer.play).toHaveBeenCalled();
-});
-
-// tests/unit/screenSharing/ipcHandlers.test.js
 // tests/unit/partitions/manager.test.js
+// Can test CRUD operations without MS Teams dependency
+
 // tests/unit/idle/monitor.test.js
+// Can test idle state logic in isolation
+
+// tests/unit/startup/commandLine.test.js
+// Can test command line flag parsing
 ```
 
-**Target**: 20+ automated tests covering critical paths
+**Cannot Reliably Test** (MS authentication required):
+- ❌ Login flows (bot detection)
+- ❌ Notification flows (requires authenticated Teams session)
+- ❌ Screen sharing lifecycle (requires active meeting)
+- ❌ Presence/status updates (requires Teams backend)
 
-**Benefits**:
-- ✅ Confidence in refactoring
-- ✅ Catch regressions early
-- ✅ Document expected behavior
-- ✅ Enable CI/CD improvements
+**Revised Approach**:
+- Focus on unit tests for business logic that doesn't require MS authentication
+- Keep basic E2E test (app startup verification)
+- Consider manual testing checklist for authentication-dependent features
+- Document testing limitations in ADR
+
+**Benefits of Limited Testing**:
+- ✅ Basic smoke tests prevent catastrophic breakage
+- ✅ Unit tests for utility functions provide some confidence
+- ⚠️ But won't catch integration issues or MS Teams-specific problems
 
 ---
 
@@ -496,15 +499,32 @@ test('plays sound when user is available', async () => {
 
 ## Phase 2 Summary
 
-**Total Impact After 8 Weeks**:
+**Status**: ⏸️ **Paused - Reassessing Value**
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Singleton exports | 3 | 0 | -100% |
-| Constructor IPC registration | 2+ | 0 | -100% |
-| Automated tests | 0 | 20+ | +20 |
-| Test coverage | 0% | 40%+ | +40% |
-| IPC docs | Manual | Auto-generated | ✅ |
+Phase 2 was originally designed to improve testability and add extensive automated testing. After Phase 1 completion and further analysis, several items need reassessment:
+
+**Testability Improvements** (Still Valuable):
+- Singleton refactoring - Makes code more testable
+- IPC registration patterns - Reduces side effects
+- Documentation automation - Reduces maintenance burden
+
+**Automated Testing** (Feasibility Concerns):
+- ⚠️ MS authentication blocks most E2E testing (bot detection)
+- ⚠️ Current tests only verify app startup, not actual flows
+- ⚠️ Target of "20+ tests" and "40% coverage" may not be realistic
+- ⚠️ Manual testing may be more practical for Teams-dependent features
+
+**Revised Expectations**:
+
+| Metric | Before | Realistic After Phase 2 | Original Goal |
+|--------|--------|-------------------------|---------------|
+| Singleton exports | 3 | 0 | 0 ✅ |
+| Constructor IPC registration | 2+ | 0 | 0 ✅ |
+| Automated tests | 1 (startup) | 5-10 (unit tests) | 20+ ⚠️ |
+| Test coverage | ~1% | 15-20% | 40%+ ⚠️ |
+| IPC docs | Manual | Auto-generated | Auto-generated ✅ |
+
+**Recommendation**: Focus on high-value, achievable improvements (singleton refactoring, documentation automation) rather than extensive testing that may be blocked by external factors.
 
 ---
 
@@ -671,12 +691,14 @@ We're taking the **best insights** (modular organization, testing) and applying 
 **Phase 1 Complete!**
 
 **Phase 2 Tasks:**
-| Task | Status |
-|------|--------|
-| Week 5 | Singleton Refactoring | ⏸️ Paused - Evaluating need |
-| Week 6 | IPC Registration Pattern | ⏸️ Paused - Evaluating need |
-| Week 7 | Automated Testing | ⏸️ Paused - Evaluating need |
-| Week 8 | Documentation Automation | ⏸️ Paused - Evaluating need |
+| Task | Status | Feasibility |
+|------|--------|-------------|
+| Week 5: Singleton Refactoring | ⏸️ Paused | ✅ Achievable - Low effort, high value |
+| Week 6: IPC Registration Pattern | ⏸️ Paused | ✅ Achievable - Removes side effects |
+| Week 7: Automated Testing | ⏸️ Paused | ⚠️ Limited - MS auth blocks most E2E tests |
+| Week 8: Documentation Automation | ⏸️ Paused | ✅ Achievable - IPC docs generation |
+
+**Note**: Phase 2 scope under reassessment. Testing goals may not be realistic due to Microsoft authentication constraints (bot detection blocking automated login/flows).
 
 **Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked | ⏸️ Paused
 
@@ -736,26 +758,29 @@ The following PRs are now unblocked and can proceed:
 
 **After documentation work (#1957) completes, evaluate:**
 
-**Option A: Continue to Phase 2 (Testability)**
-- Singleton refactoring (export classes, not instances)
-- IPC registration pattern improvements (move out of constructors)
-- Automated testing (20+ tests)
-- Documentation automation
-- Best if: Code quality and maintainability are top priority
+**Option A: Selective Phase 2 Work** (Recommended subset)
+- ✅ Documentation automation (IPC docs generation) - High value, achievable
+- ✅ Singleton refactoring (if needed) - Makes code more testable
+- ✅ IPC registration patterns (if problematic) - Reduces side effects
+- ⚠️ Skip extensive automated testing - Blocked by MS auth constraints
+- **Effort**: 1-2 weeks for achievable items only
+- **Best if**: Code quality improvements are prioritized
 
-**Option B: Feature Implementation Sprint**
+**Option B: Feature Implementation Sprint** (Primary focus)
 - Implement notification modal (#1935)
 - Restructure config options (#1937)
 - Add Graph API integration (#1958)
 - Implement MQTT extensions (#1941, #1956)
-- Best if: User-facing features are higher priority
+- **Effort**: 4-6 weeks depending on scope
+- **Best if**: User-facing features are higher priority
 
 **Option C: Hybrid Approach**
-- Select highest-value items from Phase 2 (e.g., automated testing)
-- Plus 1-2 high-priority feature implementations
+- Documentation automation (Week 8 only from Phase 2)
+- Plus 2-3 high-priority feature implementations
 - Balance quality improvements with feature delivery
+- **Effort**: 3-4 weeks
 
-**Current Recommendation**: Complete documentation work, then evaluate based on user feedback and priorities.
+**Current Recommendation**: After documentation (#1957), focus on **Option B (Features)** or **Option C (Hybrid)**. Phase 2's extensive testing goals are not realistic given MS authentication constraints.
 
 ---
 
