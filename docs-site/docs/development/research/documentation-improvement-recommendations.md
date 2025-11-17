@@ -174,7 +174,6 @@ teams-for-linux --partition work
 teams-for-linux --partition personal
 ```
 [Full guide →](multiple-instances.md)
-```
 
 **Why This Matters:**
 - Developers use this constantly (high page views guaranteed)
