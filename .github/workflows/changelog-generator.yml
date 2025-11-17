@@ -8,6 +8,8 @@ on:
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
+    # Skip changelog generation for release PRs
+    if: ${{ !startsWith(github.event.pull_request.head.ref, 'release/') }}
     permissions:
       contents: write
       pull-requests: write
