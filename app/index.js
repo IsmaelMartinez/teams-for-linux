@@ -54,6 +54,11 @@ try {
   );
 }
 
+const certificateModule = require("./certificate");
+const CacheManager = require("./cacheManager");
+const gotTheLock = app.requestSingleInstanceLock();
+const mainAppWindow = require("./mainAppWindow");
+
 // Getter function for user status - injected into NotificationService to break coupling
 const getUserStatus = () => userStatus;
 
@@ -61,14 +66,9 @@ const getUserStatus = () => userStatus;
 const notificationService = new NotificationService(
   player,
   config,
-  require("./mainAppWindow"),
+  mainAppWindow,
   getUserStatus
 );
-
-const certificateModule = require("./certificate");
-const CacheManager = require("./cacheManager");
-const gotTheLock = app.requestSingleInstanceLock();
-const mainAppWindow = require("./mainAppWindow");
 
 if (isMac) {
   requestMediaAccess();

@@ -1,6 +1,13 @@
 const { Notification, nativeImage, ipcMain } = require("electron");
 const path = require("node:path");
 
+// User status constants - matches Teams presence states
+const USER_STATUS = {
+  UNKNOWN: -1,     // Status not yet determined
+  AVAILABLE: 1,    // User is available/active
+  // Other statuses (2-4) represent busy, away, do not disturb, etc.
+};
+
 /**
  * NotificationService
  *
@@ -51,22 +58,37 @@ class NotificationService {
    * Call this method after instantiation to set up IPC communication
    */
   initialize() {
-    ipcMain.handle("play-notification-sound", this.#playNotificationSound.bind(this));
-    ipcMain.handle("show-notification", this.#showNotification.bind(this));
+    ipcMain.handle("play-notification-sound", this.#handlePlayNotificationSound.bind(this));
+    ipcMain.handle("show-notification", this.#handleShowNotification.bind(this));
+  }
+
+  /**
+   * IPC handler for showing notifications
+   * @private
+   */
+  async #handleShowNotification(_event, options) {
+    return this.#showNotification(options);
+  }
+
+  /**
+   * IPC handler for playing notification sounds
+   * @private
+   */
+  async #handlePlayNotificationSound(_event, options) {
+    return this.#playNotificationSound(options);
   }
 
   /**
    * Show a native desktop notification
    *
    * @private
-   * @param {Electron.IpcMainInvokeEvent} _event - IPC event (unused)
    * @param {Object} options - Notification options
    * @param {string} options.title - Notification title
    * @param {string} options.body - Notification body text
-   * @param {string} options.icon - Data URL for notification icon
+   * @param {string} [options.icon] - Data URL for notification icon (optional)
    * @param {string} options.type - Notification type (e.g., "new-message", "meeting-started")
    */
-  async #showNotification(_event, options) {
+  async #showNotification(options) {
     const startTime = Date.now();
     console.debug("[TRAY_DIAG] Native notification request received", {
       title: options.title,
@@ -79,21 +101,28 @@ class NotificationService {
     });
 
     try {
-      // Play notification sound if configured
-      this.#playNotificationSound(null, {
+      // Play notification sound if configured (await to catch any errors)
+      await this.#playNotificationSound({
         type: options.type,
         audio: "default",
         title: options.title,
         body: options.body,
       });
 
-      // Create and show native notification
-      const notification = new Notification({
-        icon: nativeImage.createFromDataURL(options.icon),
+      // Create notification config
+      const notificationConfig = {
         title: options.title,
         body: options.body,
         urgency: this.#config.defaultNotificationUrgency,
-      });
+      };
+
+      // Only add icon if provided to avoid errors with null/undefined
+      if (options.icon) {
+        notificationConfig.icon = nativeImage.createFromDataURL(options.icon);
+      }
+
+      // Create and show native notification
+      const notification = new Notification(notificationConfig);
 
       notification.on("click", () => {
         console.debug("[TRAY_DIAG] Notification clicked, showing main window");
@@ -129,14 +158,13 @@ class NotificationService {
    * - Current user status (injected via getUserStatus function)
    *
    * @private
-   * @param {Electron.IpcMainInvokeEvent} _event - IPC event (unused)
    * @param {Object} options - Sound options
    * @param {string} options.type - Notification type to determine which sound to play
    * @param {string} options.audio - Audio setting (e.g., "default")
    * @param {string} options.title - Notification title (for logging)
    * @param {string} options.body - Notification body (for logging)
    */
-  async #playNotificationSound(_event, options) {
+  async #playNotificationSound(options) {
     console.debug(
       `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
     );
@@ -153,8 +181,8 @@ class NotificationService {
     // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
     if (
       this.#config.disableNotificationSoundIfNotAvailable &&
-      userStatus !== 1 &&
-      userStatus !== -1
+      userStatus !== USER_STATUS.AVAILABLE &&
+      userStatus !== USER_STATUS.UNKNOWN
     ) {
       console.debug("Notification sounds are disabled when user is not active");
       return;
