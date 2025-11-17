@@ -141,10 +141,10 @@ async function main() {
   console.log(`║  Ready to Release v${newVersion.padEnd(43)}║`);
   console.log('╠══════════════════════════════════════════════════════════╣');
   console.log('║  Changelog:                                              ║');
-  entries.forEach(entry => {
+  for (const entry of entries) {
     const truncated = entry.length > 52 ? entry.substring(0, 49) + '...' : entry;
     console.log(`║  • ${truncated.padEnd(53)}║`);
-  });
+  }
   console.log('╠══════════════════════════════════════════════════════════╣');
   console.log('║  Files to be modified:                                   ║');
   console.log('║    • package.json                                        ║');
@@ -191,9 +191,9 @@ async function main() {
   console.log('   ✅ Updated appdata.xml');
 
   // Delete changelog files
-  files.forEach(file => {
+  for (const file of files) {
     fs.unlinkSync(path.join(changelogDir, file));
-  });
+  }
   console.log(`   ✅ Deleted ${files.length} changelog files`);
 
   // 8. Final instructions
@@ -221,8 +221,13 @@ async function main() {
   rl.close();
 }
 
-main().catch(err => {
-  console.error('\n❌ Error:', err.message);
-  rl.close();
-  process.exit(1);
-});
+// Execute main with proper error handling
+(async () => {
+  try {
+    await main();
+  } catch (err) {
+    console.error('\n❌ Error:', err.message);
+    rl.close();
+    process.exit(1);
+  }
+})();
