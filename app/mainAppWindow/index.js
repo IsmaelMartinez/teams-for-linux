@@ -16,7 +16,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
-const connMgr = require("../connectionManager");
+const ConnectionManager = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("node:os");
 const path = require("node:path");
@@ -40,6 +40,7 @@ let appConfig = null;
 let customBackgroundService = null;
 let streamSelector;
 let screenSharingService = null;
+let connectionManager = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -257,8 +258,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   );
 
+  // Initialize connection manager
+  connectionManager = new ConnectionManager();
+
   if (iconChooser) {
-    const m = new Menus(window, configGroup, iconChooser.getFile());
+    const m = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
     m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
@@ -270,7 +274,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   });
 
   const url = processArgs(process.argv);
-  connMgr.start(url, {
+  connectionManager.start(url, {
     window: window,
     config: config,
   });

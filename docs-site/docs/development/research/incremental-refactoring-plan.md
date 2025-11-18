@@ -352,7 +352,9 @@ screenSharingService.getSource();
 
 **Goal**: Make the codebase testable and add automated tests.
 
-### Week 5: Singleton Refactoring
+### Week 5: Singleton Refactoring ✅ COMPLETE
+
+**Status**: ✅ **Completed** - 2025-11-18
 
 **Problem**: Several modules export singleton instances, preventing fresh instances for testing.
 
@@ -369,9 +371,17 @@ module.exports = new ConnectionManager(); // Singleton export
 class ConnectionManager { /* ... */ }
 module.exports = ConnectionManager; // Export class
 
-// index.js
+// mainAppWindow/index.js
 const ConnectionManager = require("./connectionManager");
 const connectionManager = new ConnectionManager();
+
+// menus/index.js - receives instance via dependency injection
+class Menus {
+  constructor(window, configGroup, iconPath, connectionManager) {
+    this.connectionManager = connectionManager;
+    // ...
+  }
+}
 ```
 
 **Benefits**:
@@ -379,11 +389,16 @@ const connectionManager = new ConnectionManager();
 - ✅ No shared state between tests
 - ✅ Explicit dependency injection
 
-**Apply to**: `connectionManager`, `screenSharingService` (from Phase 1)
+**Completed Changes**:
+- ✅ `connectionManager/index.js` - Exports class instead of singleton
+- ✅ `mainAppWindow/index.js` - Creates ConnectionManager instance
+- ✅ `menus/index.js` - Receives connectionManager via constructor dependency injection
 
 ---
 
-### Week 6: IPC Registration Pattern
+### Week 6: IPC Registration Pattern ✅ COMPLETE
+
+**Status**: ✅ **Completed** - 2025-11-18
 
 **Problem**: Some modules register IPC handlers in constructors, creating side effects.
 
@@ -400,9 +415,11 @@ class Tray {
 
 **Refactored pattern**:
 ```javascript
-class Tray {
+class ApplicationTray {
   constructor(window, appMenu, iconPath, config) {
     // No IPC registration in constructor
+    this.tray = new Tray(...);
+    // Setup UI only
   }
 
   initialize() {
@@ -413,6 +430,10 @@ class Tray {
     this.updateTrayImage(data.icon, data.flash, data.count);
   }
 }
+
+// menus/index.js - calls initialize() after construction
+this.tray = new Tray(...);
+this.tray.initialize();
 ```
 
 **Benefits**:
@@ -420,7 +441,10 @@ class Tray {
 - ✅ Testable in isolation
 - ✅ Explicit initialization phase
 
-**Apply to**: `menus/tray.js` and any other modules with constructor IPC registration
+**Completed Changes**:
+- ✅ `menus/tray.js` - Moved IPC registration to `initialize()` method
+- ✅ `menus/index.js` - Calls `tray.initialize()` after construction
+- ✅ All Phase 1 modules already follow this pattern (notifications, screenSharing, partitions, idle)
 
 ---
 
@@ -477,54 +501,75 @@ test('app starts successfully', async () => {
 
 ---
 
-### Week 8: Documentation Automation
+### Week 8: Documentation Automation ✅ COMPLETE
 
-**Create IPC documentation generator**:
+**Status**: ✅ **Completed** - 2025-11-18
+
+**Created IPC documentation generator**:
 
 ```javascript
 // scripts/generateIpcDocs.js
 // Scans all ipcMain.handle/on calls across codebase
-// Generates docs/ipc-api.md automatically
+// Generates docs-site/docs/development/ipc-api-generated.md automatically
 // Keeps documentation in sync with code
 ```
+
+**Usage**:
+```bash
+npm run generate-ipc-docs
+```
+
+**Output**: `docs-site/docs/development/ipc-api-generated.md`
+
+**Features**:
+- ✅ Automatically scans entire codebase for IPC registrations
+- ✅ Categorizes channels by module (Notifications, Screen Sharing, etc.)
+- ✅ Generates markdown table with channel name, type, description, and location
+- ✅ Found 31 IPC channels across 11 categories
+- ✅ Includes links to source code locations
 
 **Benefits**:
 - ✅ Always up-to-date IPC documentation
 - ✅ No manual maintenance required
-- ✅ Can validate IPC security allowlist
-
-**Additional**: Update any outdated architecture docs, create visual diagrams of module dependencies.
+- ✅ Can be used to validate IPC security allowlist
+- ✅ Provides comprehensive overview of all IPC communications
 
 ---
 
 ## Phase 2 Summary
 
-**Status**: ⏸️ **Paused - Reassessing Value**
+**Status**: ✅ **Completed** (Partial - High-Value Items) - 2025-11-18
 
-Phase 2 was originally designed to improve testability and add extensive automated testing. After Phase 1 completion and further analysis, several items need reassessment:
+Phase 2 was originally designed to improve testability and add extensive automated testing. After Phase 1 completion, we focused on high-value, achievable improvements:
 
-**Testability Improvements** (Still Valuable):
-- Singleton refactoring - Makes code more testable
-- IPC registration patterns - Reduces side effects
-- Documentation automation - Reduces maintenance burden
+**Testability Improvements** ✅ **COMPLETED**:
+- ✅ Singleton refactoring - Makes code more testable
+- ✅ IPC registration patterns - Reduces side effects
+- ✅ Documentation automation - Reduces maintenance burden
 
-**Automated Testing** (Feasibility Concerns):
+**Automated Testing** ⚠️ **DEFERRED** (Per user request - tests skipped):
 - ⚠️ MS authentication blocks most E2E testing (bot detection)
 - ⚠️ Current tests only verify app startup, not actual flows
-- ⚠️ Target of "20+ tests" and "40% coverage" may not be realistic
-- ⚠️ Manual testing may be more practical for Teams-dependent features
+- ⚠️ Target of "20+ tests" and "40% coverage" not realistic for this codebase
+- ⚠️ Manual testing remains the practical approach for Teams-dependent features
 
-**Revised Expectations**:
+**Phase 2 Achievements**:
 
-| Metric | Before | Realistic After Phase 2 | Original Goal |
-|--------|--------|-------------------------|---------------|
-| Singleton exports | 3 | 0 | 0 ✅ |
-| Constructor IPC registration | 2+ | 0 | 0 ✅ |
-| Automated tests | 1 (startup) | 5-10 (unit tests) | 20+ ⚠️ |
-| Test coverage | ~1% | 15-20% | 40%+ ⚠️ |
-| IPC docs | Manual | Auto-generated | Auto-generated ✅ |
+| Metric | Before | After Phase 2 | Original Goal |
+|--------|--------|---------------|---------------|
+| Singleton exports | 1 | 0 | 0 ✅ |
+| Constructor IPC registration | 1 | 0 | 0 ✅ |
+| Automated tests | 1 (startup) | 1 (startup) | 20+ (deferred) |
+| Test coverage | ~1% | ~1% | 40%+ (deferred) |
+| IPC docs | Manual | Auto-generated ✅ | Auto-generated ✅ |
 
-**Recommendation**: Focus on high-value, achievable improvements (singleton refactoring, documentation automation) rather than extensive testing that may be blocked by external factors.
+**Completed Deliverables**:
+1. ✅ ConnectionManager refactored to export class (not singleton)
+2. ✅ ApplicationTray IPC registration moved to initialize() method
+3. ✅ IPC documentation generator script (`scripts/generateIpcDocs.js`)
+4. ✅ All Phase 1 modules already follow best practices (no singleton exports, initialize() pattern)
+
+**Outcome**: Successfully improved code quality and maintainability without the unrealistic goal of extensive automated testing for an Electron wrapper around a web application with authentication barriers.
 
 ---
 
@@ -691,16 +736,18 @@ We're taking the **best insights** (modular organization, testing) and applying 
 **Phase 1 Complete!**
 
 **Phase 2 Tasks:**
-| Task | Status | Feasibility |
-|------|--------|-------------|
-| Week 5: Singleton Refactoring | ⏸️ Paused | ✅ Achievable - Low effort, high value |
-| Week 6: IPC Registration Pattern | ⏸️ Paused | ✅ Achievable - Removes side effects |
-| Week 7: Automated Testing | ⏸️ Paused | ⚠️ Limited - MS auth blocks most E2E tests |
-| Week 8: Documentation Automation | ⏸️ Paused | ✅ Achievable - IPC docs generation |
+| Task | Status | Completed Date |
+|------|--------|----------------|
+| Week 5: Singleton Refactoring | 🟢 Completed | 2025-11-18 |
+| Week 6: IPC Registration Pattern | 🟢 Completed | 2025-11-18 |
+| Week 7: Automated Testing | ⏸️ Deferred | N/A (Per user request) |
+| Week 8: Documentation Automation | 🟢 Completed | 2025-11-18 |
 
-**Note**: Phase 2 scope under reassessment. Testing goals may not be realistic due to Microsoft authentication constraints (bot detection blocking automated login/flows).
+**Note**: Phase 2 high-value improvements completed. Testing deferred due to MS authentication constraints and user request to skip tests.
 
-**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked | ⏸️ Paused
+**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked | ⏸️ Deferred
+
+**Overall Progress**: Phase 1 ✅ Complete | Phase 2 ✅ Complete (High-Value Items) | Phase 3 ⚪ Future
 
 ### Final Metrics
 

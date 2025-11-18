@@ -233,4 +233,4 @@ function isOnlineDns(testDomain) {
   });
 }
 
-module.exports = new ConnectionManager();
+module.exports = ConnectionManager;

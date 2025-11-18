@@ -15,12 +15,16 @@ class ApplicationTray {
     this.tray.setToolTip(this.config.appTitle);
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
+  }
 
-    ipcMain.on("tray-update", (_event, data) => {
-      // Handle both old format { icon, flash } and new format { icon, flash, count }
-      const { icon, flash, count } = data;
-      this.updateTrayImage(icon, flash, count);
-    });
+  initialize() {
+    ipcMain.on("tray-update", this.#handleTrayUpdate.bind(this));
+  }
+
+  #handleTrayUpdate(_event, data) {
+    // Handle both old format { icon, flash } and new format { icon, flash, count }
+    const { icon, flash, count } = data;
+    this.updateTrayImage(icon, flash, count);
   }
 
   getIconImage(iconPath) {
