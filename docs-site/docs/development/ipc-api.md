@@ -2,6 +2,12 @@
 
 This document provides a comprehensive reference for all Inter-Process Communication (IPC) channels in Teams for Linux. IPC enables communication between the main Electron process and renderer processes (web content).
 
+:::info Auto-Generated Documentation Available
+**For a complete, automatically generated list of all IPC channels**, see [IPC API Generated Reference](ipc-api-generated.md).
+
+The auto-generated documentation is created by scanning the codebase and is always up-to-date. Run `npm run generate-ipc-docs` to regenerate it.
+:::
+
 ## Overview
 
 Teams for Linux uses two types of IPC channels:
@@ -21,7 +27,9 @@ Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthor
 
 ## Core Application IPC Handlers
 
-// TODO: Properly document all IPC handler calls.
+:::tip Complete Channel List
+For a complete list of all 31 IPC channels across all categories, see the [auto-generated IPC API reference](ipc-api-generated.md).
+:::
 
 ### Configuration Management
 
