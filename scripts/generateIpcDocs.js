@@ -43,7 +43,6 @@ function findCategory(filePath) {
 function extractIpcChannels() {
   console.log('Scanning for IPC channels...');
 
-  // Use ripgrep to find all IPC registrations
   const grepCommand = `rg -n "ipcMain\\.(handle|on)\\(" --type js ${APP_DIR}`;
 
   let output;
@@ -54,70 +53,53 @@ function extractIpcChannels() {
     process.exit(1);
   }
 
-  const channels = [];
-  const lines = output.trim().split('\n');
-
-  for (const line of lines) {
-    // Parse the ripgrep output: filename:lineNumber:content
+  return output.trim().split('\n').map(line => {
     const match = line.match(/^([^:]+):(\d+):(.+)$/);
-    if (!match) continue;
+    if (!match) return null;
 
     const [, filePath, lineNumber, content] = match;
-
-    // Extract channel name and type
     const channelMatch = content.match(/ipcMain\.(handle|on)\(\s*["']([^"']+)["']/);
-    if (!channelMatch) continue;
+    if (!channelMatch) return null;
 
     const [, type, channelName] = channelMatch;
+    const relativePath = path.relative(path.join(__dirname, '..'), path.resolve(filePath));
+    const description = extractDescription(filePath, parseInt(lineNumber) - 1);
 
-    // Read the file to get context (comments, function signature)
-    const fullPath = path.resolve(filePath);
-    const relativePath = path.relative(path.join(__dirname, '..'), fullPath);
-    const fileContent = fs.readFileSync(fullPath, 'utf8');
-    const fileLines = fileContent.split('\n');
-    const lineIndex = parseInt(lineNumber) - 1;
-
-    // Look for JSDoc or inline comments above the line
-    let description = '';
-    for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 5); i--) {
-      const prevLine = fileLines[i].trim();
-      if (prevLine.startsWith('//')) {
-        description = prevLine.replace('//', '').trim() + ' ' + description;
-      } else if (prevLine.startsWith('*')) {
-        description = prevLine.replace(/^\*\s*/, '').trim() + ' ' + description;
-      } else if (prevLine && !prevLine.startsWith('/*')) {
-        break;
-      }
-    }
-
-    if (!description) {
-      description = 'No description available';
-    }
-
-    channels.push({
+    return {
       name: channelName,
       type: type === 'handle' ? 'Request/Response' : 'Event',
       category: findCategory(relativePath),
       file: relativePath,
-      lineNumber: lineNumber,
-      description: description.trim() || 'No description available',
-    });
+      lineNumber,
+      description,
+    };
+  }).filter(Boolean);
+}
+
+function extractDescription(filePath, lineIndex) {
+  const fileLines = fs.readFileSync(filePath, 'utf8').split('\n');
+  const commentLines = [];
+
+  // Look up to 5 lines above for comments
+  for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 5); i--) {
+    const line = fileLines[i].trim();
+    if (line.startsWith('//') || line.startsWith('*')) {
+      commentLines.unshift(line.replace(/^(\/\/|\*)\s*/, ''));
+    } else if (line && !line.startsWith('/*')) {
+      break;
+    }
   }
 
-  return channels;
+  return commentLines.join(' ').trim() || 'No description available';
 }
 
 function generateMarkdown(channels) {
   // Group channels by category
-  const channelsByCategory = {};
-  for (const channel of channels) {
-    if (!channelsByCategory[channel.category]) {
-      channelsByCategory[channel.category] = [];
-    }
-    channelsByCategory[channel.category].push(channel);
-  }
+  const channelsByCategory = channels.reduce((acc, channel) => {
+    (acc[channel.category] = acc[channel.category] || []).push(channel);
+    return acc;
+  }, {});
 
-  // Sort categories
   const sortedCategories = Object.keys(channelsByCategory).sort();
 
   let markdown = `# IPC API Reference (Auto-Generated)
@@ -196,16 +178,16 @@ function main() {
   fs.writeFileSync(DOCS_OUTPUT, markdown, 'utf8');
   console.log(`✅ Documentation generated: ${DOCS_OUTPUT}`);
 
-  // Also output a summary to console
+  // Output summary by category
   console.log('\nChannel Summary:');
-  const categories = {};
-  for (const channel of channels) {
-    categories[channel.category] = (categories[channel.category] || 0) + 1;
-  }
+  const summary = channels.reduce((acc, ch) => {
+    acc[ch.category] = (acc[ch.category] || 0) + 1;
+    return acc;
+  }, {});
 
-  for (const [category, count] of Object.entries(categories).sort()) {
+  Object.entries(summary).sort().forEach(([category, count]) => {
     console.log(`  ${category}: ${count} channels`);
-  }
+  });
 }
 
 main();
