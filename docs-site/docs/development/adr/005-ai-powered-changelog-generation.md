@@ -170,7 +170,6 @@ Additionally, writing changelog entries manually when preparing releases is:
 - `scripts/release-prepare.js` - Optional script to consume changelogs
 - `.changelog/README.md` - Quick setup guide
 - `docs-site/docs/development/manual-release-process.md` - Release guide
-- `docs-site/docs/development/research/changelog-generator-setup.md` - Full setup docs
 
 **npm Scripts:**
 ```json
@@ -234,7 +233,6 @@ permissions:
 
 - **Implementation PR:** #1951
 - **Gemini API Docs:** https://ai.google.dev/gemini-api/docs
-- **Setup Guide:** `docs-site/docs/development/research/changelog-generator-setup.md`
 - **Manual Release Process:** `docs-site/docs/development/manual-release-process.md`
 - **GitHub Actions Security:** https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
 

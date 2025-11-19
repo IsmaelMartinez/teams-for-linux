@@ -431,4 +431,5 @@ By contributing to Teams for Linux, you agree that your contributions will be li
 
 - [Configuration Options](configuration.md) - Application configuration reference
 - [IPC API](ipc-api.md) - Developer integration documentation
-- [Release Automation](release-info.md) - Release process details
+- [Manual Release Process](manual-release-process.md) - Release workflow with AI changelog generation
+- [Release Info Generation](release-info.md) - Technical details of release info script
