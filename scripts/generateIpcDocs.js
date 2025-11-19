@@ -47,13 +47,14 @@ function extractIpcChannels() {
   try {
     execSync('rg --version', { stdio: 'ignore' });
   } catch (error) {
+    // ripgrep not found - provide helpful error message
     console.error('\n❌ Error: ripgrep (rg) is not installed or not in your PATH.');
     console.error('This script requires ripgrep to scan for IPC channels.\n');
     console.error('Please install it from: https://github.com/BurntSushi/ripgrep#installation\n');
     process.exit(1);
   }
 
-  const grepCommand = `rg -n "ipcMain\\.(handle|on)\\(" --type js ${APP_DIR}`;
+  const grepCommand = String.raw`rg -n "ipcMain\.(handle|on)\(" --type js ${APP_DIR}`;
 
   let output;
   try {
@@ -73,7 +74,7 @@ function extractIpcChannels() {
 
     const [, type, channelName] = channelMatch;
     const relativePath = path.relative(path.join(__dirname, '..'), path.resolve(filePath));
-    const description = extractDescription(filePath, parseInt(lineNumber) - 1);
+    const description = extractDescription(filePath, Number.parseInt(lineNumber, 10) - 1);
 
     return {
       name: channelName,
@@ -106,7 +107,10 @@ function extractDescription(filePath, lineIndex) {
 function generateMarkdown(channels) {
   // Group channels by category
   const channelsByCategory = channels.reduce((acc, channel) => {
-    (acc[channel.category] = acc[channel.category] || []).push(channel);
+    if (!acc[channel.category]) {
+      acc[channel.category] = [];
+    }
+    acc[channel.category].push(channel);
     return acc;
   }, {});
 
@@ -151,7 +155,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 ## Channel Security
 
 All IPC channels are validated through the security layer in \`app/security/ipcValidator.js\`.
-See the [IPC Security documentation](../../security.md#ipc-security) for more information.
+See the [IPC Channel Validation documentation](./security-architecture.md#ipc-channel-validation) for more information.
 
 ## Adding New Channels
 
