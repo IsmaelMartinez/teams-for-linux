@@ -15,6 +15,7 @@ const { execSync } = require('node:child_process');
 
 const APP_DIR = path.join(__dirname, '..', 'app');
 const DOCS_OUTPUT = path.join(__dirname, '..', 'docs-site', 'docs', 'development', 'ipc-api-generated.md');
+const GITHUB_REPO = 'https://github.com/IsmaelMartinez/teams-for-linux';
 
 // IPC channel categories based on file location
 const CATEGORIES = {
@@ -60,6 +61,13 @@ function extractIpcChannels() {
   try {
     output = execSync(grepCommand, { encoding: 'utf8' });
   } catch (error) {
+    // ripgrep failed (could be no matches found or actual error)
+    if (error.status === 1) {
+      // Exit code 1 means no matches found
+      console.log('No IPC channels found.');
+      return [];
+    }
+    // Other errors (exit code 2+) are actual failures
     console.error('Error running ripgrep:', error.message);
     process.exit(1);
   }
@@ -143,7 +151,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
     markdown += `|---------|------|-------------|----------|\n`;
 
     for (const channel of categoryChannels.sort((a, b) => a.name.localeCompare(b.name))) {
-      const location = `[\`${channel.file}:${channel.lineNumber}\`](/${channel.file}#L${channel.lineNumber})`;
+      const location = `[\`${channel.file}:${channel.lineNumber}\`](${GITHUB_REPO}/blob/develop/${channel.file}#L${channel.lineNumber})`;
       markdown += `| \`${channel.name}\` | ${channel.type} | ${channel.description} | ${location} |\n`;
     }
 
