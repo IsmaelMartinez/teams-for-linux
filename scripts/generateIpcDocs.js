@@ -43,6 +43,16 @@ function findCategory(filePath) {
 function extractIpcChannels() {
   console.log('Scanning for IPC channels...');
 
+  // Check if ripgrep is available
+  try {
+    execSync('rg --version', { stdio: 'ignore' });
+  } catch (error) {
+    console.error('\n❌ Error: ripgrep (rg) is not installed or not in your PATH.');
+    console.error('This script requires ripgrep to scan for IPC channels.\n');
+    console.error('Please install it from: https://github.com/BurntSushi/ripgrep#installation\n');
+    process.exit(1);
+  }
+
   const grepCommand = `rg -n "ipcMain\\.(handle|on)\\(" --type js ${APP_DIR}`;
 
   let output;
@@ -85,7 +95,7 @@ function extractDescription(filePath, lineIndex) {
     const line = fileLines[i].trim();
     if (line.startsWith('//') || line.startsWith('*')) {
       commentLines.unshift(line.replace(/^(\/\/|\*)\s*/, ''));
-    } else if (line && !line.startsWith('/*')) {
+    } else if (line && !line.startsWith('/*') && line !== '*/') {
       break;
     }
   }
