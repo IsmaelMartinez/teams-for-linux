@@ -172,12 +172,18 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 ## Additional Resources
 
 **Local documentation files (read these):**
+- **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
+- **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
+- **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
 - **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
 
 **Web versions (for human reference):**
+- https://ismaelmartinez.github.io/teams-for-linux/quick-reference
+- https://ismaelmartinez.github.io/teams-for-linux/development/module-index
+- https://ismaelmartinez.github.io/teams-for-linux/development/adr/
 - https://ismaelmartinez.github.io/teams-for-linux/development/contributing
 - https://ismaelmartinez.github.io/teams-for-linux/configuration
 - https://ismaelmartinez.github.io/teams-for-linux/troubleshooting

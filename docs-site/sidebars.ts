@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
   // Teams for Linux documentation sidebar
   docsSidebar: [
     'index',
+    'quick-reference',
     {
       type: 'category',
       label: 'Getting Started',
@@ -56,6 +57,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture',
           items: [
+            'development/module-index',
             'development/token-cache-architecture',
             'development/security-architecture',
           ],
@@ -64,10 +66,12 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture Decisions',
           items: [
+            'development/adr/README',
             'development/adr/001-desktopcapturer-source-id-format',
             'development/adr/002-token-cache-secure-storage',
             'development/adr/003-token-refresh-implementation',
             'development/adr/004-agents-md-standard-investigation',
+            'development/adr/005-ai-powered-changelog-generation',
           ],
         },
         {
