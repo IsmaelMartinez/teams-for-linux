@@ -1,13 +1,9 @@
 const {
   app,
-  BrowserWindow,
   dialog,
   ipcMain,
-  desktopCapturer,
   globalShortcut,
   systemPreferences,
-  powerMonitor,
-  Notification,
   nativeImage,
 } = require("electron");
 const path = require("node:path");
@@ -16,6 +12,10 @@ const { MQTTClient } = require("./mqtt");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const globalShortcuts = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
+const NotificationService = require("./notifications/service");
+const ScreenSharingService = require("./screenSharing/service");
+const PartitionsManager = require("./partitions/manager");
+const IdleMonitor = require("./idle/monitor");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -39,20 +39,7 @@ config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 CommandLineManager.addSwitchesAfterConfigLoad(config);
 
-const notificationSounds = [
-  {
-    type: "new-message",
-    file: path.join(config.appPath, "assets/sounds/new_message.wav"),
-  },
-  {
-    type: "meeting-started",
-    file: path.join(config.appPath, "assets/sounds/meeting_started.wav"),
-  },
-];
-
 let userStatus = -1;
-let idleTimeUserStatus = -1;
-let picker = null;
 let mqttClient = null;
 
 let player;
@@ -69,6 +56,26 @@ const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
+
+// Getter function for user status - injected into NotificationService to break coupling
+const getUserStatus = () => userStatus;
+
+// Initialize notification service with dependencies
+const notificationService = new NotificationService(
+  player,
+  config,
+  mainAppWindow,
+  getUserStatus
+);
+
+// Initialize screen sharing service with dependencies
+const screenSharingService = new ScreenSharingService(mainAppWindow);
+
+// Initialize partitions manager with dependencies
+const partitionsManager = new PartitionsManager(appConfig.settingsStore);
+
+// Initialize idle monitor with dependencies
+const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 if (isMac) {
   requestMediaAccess();
@@ -124,155 +131,23 @@ if (gotTheLock) {
   ipcMain.handle("get-config", async () => {
     return config;
   });
-  ipcMain.handle("get-system-idle-state", handleGetSystemIdleState);
-  ipcMain.handle("get-zoom-level", handleGetZoomLevel);
-  ipcMain.handle("save-zoom-level", handleSaveZoomLevel);
-  ipcMain.handle("desktop-capturer-get-sources", (_event, opts) =>
-    desktopCapturer.getSources(opts)
-  );
-  ipcMain.handle("choose-desktop-media", async (_event, sourceTypes) => {
-    const sources = await desktopCapturer.getSources({ types: sourceTypes });
-    const chosen = await showScreenPicker(sources);
-    return chosen ? chosen.id : null;
-  });
 
-  ipcMain.on("cancel-desktop-media", () => {
-    if (picker) {
-      picker.close();
-    }
-  });
-  ipcMain.handle("play-notification-sound", playNotificationSound);
-  ipcMain.handle("show-notification", showNotification);
+  // Initialize notification service IPC handlers
+  notificationService.initialize();
+
+  // Initialize screen sharing service IPC handlers
+  screenSharingService.initialize();
+
+  // Initialize partitions manager IPC handlers
+  partitionsManager.initialize();
+
+  // Initialize idle monitor IPC handlers
+  idleMonitor.initialize();
+
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
-  });
-
-  // Screen sharing IPC handlers
-  ipcMain.on("screen-sharing-started", (event, sourceId) => {
-    try {
-      console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
-        receivedSourceId: sourceId,
-        existingSourceId: globalThis.selectedScreenShareSource,
-        timestamp: new Date().toISOString(),
-        hasExistingPreview: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
-        mainWindowVisible: mainAppWindow?.isVisible?.() || false,
-        mainWindowFocused: mainAppWindow?.isFocused?.() || false
-      });
-
-      // Only update if we received a valid source ID
-      if (sourceId) {
-        // Validate format - must be screen:x:y or window:x:y (not UUID)
-        const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
-
-        if (isValidFormat) {
-          console.debug("[SCREEN_SHARE_DIAG] Received valid source ID format, updating", {
-            sourceId: sourceId,
-            sourceType: sourceId.startsWith('screen:') ? 'screen' : 'window'
-          });
-          globalThis.selectedScreenShareSource = sourceId;
-        } else {
-          // UUID format detected - this is the bug we're fixing
-          console.warn("[SCREEN_SHARE_DIAG] Received invalid source ID format (UUID?), keeping existing", {
-            received: sourceId,
-            existing: globalThis.selectedScreenShareSource,
-            note: "MediaStream.id (UUID) cannot be used for preview window - see ADR"
-          });
-          // Keep existing value, don't overwrite
-        }
-      } else {
-        console.debug("[SCREEN_SHARE_DIAG] No source ID received (null), keeping existing", {
-          existing: globalThis.selectedScreenShareSource,
-          note: "Source ID was already set correctly by setupScreenSharing()"
-        });
-      }
-
-      console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
-        sourceId: globalThis.selectedScreenShareSource,
-        sourceType: globalThis.selectedScreenShareSource?.startsWith?.('screen:') ? 'screen' : 'window',
-        willCreatePreview: true
-      });
-
-    } catch (error) {
-      console.error("[SCREEN_SHARE_DIAG] Error handling screen-sharing-started event", {
-        error: error.message,
-        sourceId: sourceId,
-        stack: error.stack
-      });
-    }
-  });
-
-  ipcMain.on("screen-sharing-stopped", () => {
-    console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
-      timestamp: new Date().toISOString(),
-      stoppedSource: globalThis.selectedScreenShareSource,
-      previewWindowExists: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
-      mainWindowState: {
-        visible: mainAppWindow?.isVisible?.() || false,
-        focused: mainAppWindow?.isFocused?.() || false
-      }
-    });
-
-    globalThis.selectedScreenShareSource = null;
-
-    // Close preview window when screen sharing stops
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
-      console.debug("[SCREEN_SHARE_DIAG] Closing preview window after screen sharing stopped");
-      globalThis.previewWindow.close();
-    } else {
-      console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
-    }
-  });
-
-  // Preview window management IPC handlers
-  ipcMain.handle("get-screen-sharing-status", () => {
-    return globalThis.selectedScreenShareSource !== null;
-  });
-
-  ipcMain.handle("get-screen-share-stream", () => {
-    // Return the source ID - handle both string and object formats
-    if (typeof globalThis.selectedScreenShareSource === "string") {
-      return globalThis.selectedScreenShareSource;
-    } else if (globalThis.selectedScreenShareSource?.id) {
-      return globalThis.selectedScreenShareSource.id;
-    }
-    return null;
-  });
-
-  ipcMain.handle("get-screen-share-screen", () => {
-    // Return screen dimensions if available from StreamSelector, otherwise default
-    if (
-      globalThis.selectedScreenShareSource &&
-      typeof globalThis.selectedScreenShareSource === "object"
-    ) {
-      const { screen } = require("electron");
-      const displays = screen.getAllDisplays();
-
-      if (globalThis.selectedScreenShareSource?.id?.startsWith("screen:")) {
-        const display = displays[0] || { size: { width: 1920, height: 1080 } };
-        return { width: display.size.width, height: display.size.height };
-      }
-    }
-
-    return { width: 1920, height: 1080 };
-  });
-
-  ipcMain.on("resize-preview-window", (event, { width, height }) => {
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
-      const [minWidth, minHeight] = globalThis.previewWindow.getMinimumSize();
-      const newWidth = Math.max(minWidth, Math.min(width, 480));
-      const newHeight = Math.max(minHeight, Math.min(height, 360));
-      globalThis.previewWindow.setSize(newWidth, newHeight);
-      globalThis.previewWindow.center();
-    }
-  });
-
-  ipcMain.on("stop-screen-sharing-from-thumbnail", () => {
-    globalThis.selectedScreenShareSource = null;
-    if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
-      globalThis.previewWindow.webContents.send("screen-sharing-status-changed");
-    }
   });
 
   // Navigation IPC handlers
@@ -308,90 +183,6 @@ function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
   app.exit();
-}
-
-
-async function showNotification(_event, options) {
-  const startTime = Date.now();
-  console.debug("[TRAY_DIAG] Native notification request received", {
-    title: options.title,
-    bodyLength: options.body?.length || 0,
-    hasIcon: !!options.icon,
-    type: options.type,
-    urgency: config.defaultNotificationUrgency,
-    timestamp: new Date().toISOString(),
-    suggestion: "Monitor totalTimeMs for notification display delays"
-  });
-  
-  try {
-    playNotificationSound(null, {
-      type: options.type,
-      audio: "default",
-      title: options.title,
-      body: options.body,
-    });
-
-    const notification = new Notification({
-      icon: nativeImage.createFromDataURL(options.icon),
-      title: options.title,
-      body: options.body,
-      urgency: config.defaultNotificationUrgency,
-    });
-
-    notification.on("click", () => {
-      console.debug("[TRAY_DIAG] Notification clicked, showing main window");
-      mainAppWindow.show();
-    });
-
-    notification.show();
-    
-    const totalTime = Date.now() - startTime;
-    console.debug("[TRAY_DIAG] Native notification displayed successfully", {
-      title: options.title,
-      totalTimeMs: totalTime,
-      urgency: config.defaultNotificationUrgency,
-      performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
-    });
-    
-  } catch (error) {
-    console.error("[TRAY_DIAG] Failed to show native notification", {
-      error: error.message,
-      title: options.title,
-      elapsedMs: Date.now() - startTime,
-      suggestion: "Check if notification permissions are granted or icon data is valid"
-    });
-  }
-}
-
-async function playNotificationSound(_event, options) {
-  console.debug(
-    `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
-  );
-  // Player failed to load or notification sound disabled in config
-  if (!player || config.disableNotificationSound) {
-    console.debug("Notification sounds are disabled");
-    return;
-  }
-  // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
-  if (
-    config.disableNotificationSoundIfNotAvailable &&
-    userStatus !== 1 &&
-    userStatus !== -1
-  ) {
-    console.debug("Notification sounds are disabled when user is not active");
-    return;
-  }
-  const sound = notificationSounds.find((ns) => {
-    return ns.type === options.type;
-  });
-
-  if (sound) {
-    console.debug(`Playing file: ${sound.file}`);
-    await player.play(sound.file);
-    return;
-  }
-
-  console.debug("No notification sound played", player, options);
 }
 
 /**
@@ -475,7 +266,7 @@ function handleAppReady() {
     mqttClient.initialize();
   }
 
-  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config));
+  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
   // Register global shortcuts
   globalShortcuts.register(config, mainAppWindow, app);
@@ -483,83 +274,6 @@ function handleAppReady() {
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
-}
-
-async function handleGetSystemIdleState() {
-  const systemIdleState = powerMonitor.getSystemIdleState(
-    config.appIdleTimeout
-  );
-
-  if (systemIdleState !== "active" && idleTimeUserStatus == -1) {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = userStatus;
-  }
-
-  const state = {
-    system: systemIdleState,
-    userIdle: idleTimeUserStatus,
-    userCurrent: userStatus,
-  };
-
-  if (systemIdleState === "active") {
-    console.debug(
-      `GetSystemIdleState => IdleTimeout: ${
-        config.appIdleTimeout
-      }s, IdleTimeoutPollInterval: ${
-        config.appIdleTimeoutCheckInterval
-      }s, ActiveCheckPollInterval: ${
-        config.appActiveCheckInterval
-      }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`
-    );
-    idleTimeUserStatus = -1;
-  }
-
-  return state;
-}
-
-async function handleGetZoomLevel(_, name) {
-  const partition = getPartition(name) || {};
-  return partition.zoomLevel ? partition.zoomLevel : 0;
-}
-
-async function handleSaveZoomLevel(_, args) {
-  let partition = getPartition(args.partition) || {};
-  partition.name = args.partition;
-  partition.zoomLevel = args.zoomLevel;
-  savePartition(partition);
-}
-
-function getPartitions() {
-  return appConfig.settingsStore.get("app.partitions") || [];
-}
-
-function getPartition(name) {
-  const partitions = getPartitions();
-  return partitions.find((p) => {
-    return p.name === name;
-  });
-}
-
-function savePartition(arg) {
-  const partitions = getPartitions();
-  const partitionIndex = partitions.findIndex((p) => {
-    return p.name === arg.name;
-  });
-
-  if (partitionIndex >= 0) {
-    partitions[partitionIndex] = arg;
-  } else {
-    partitions.push(arg);
-  }
-  appConfig.settingsStore.set("app.partitions", partitions);
 }
 
 function handleCertificateError() {
@@ -621,35 +335,5 @@ function handleGlobalShortcutDisabledRevert() {
       globalShortcut.unregister(shortcut);
       console.debug(`Global shortcut ${shortcut} unregistered`);
     }
-  });
-}
-
-function showScreenPicker(sources) {
-  return new Promise((resolve) => {
-    picker = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        preload: path.join(__dirname, "screenPicker", "preload.js"),
-      },
-    });
-
-    picker.loadFile(path.join(__dirname, "screenPicker", "index.html"));
-
-    picker.webContents.on("did-finish-load", () => {
-      picker.webContents.send("sources-list", sources);
-    });
-
-    ipcMain.once("source-selected", (event, source) => {
-      resolve(source);
-      if (picker) {
-        picker.close();
-      }
-    });
-
-    picker.on("closed", () => {
-      picker = null;
-      resolve(null);
-    });
   });
 }

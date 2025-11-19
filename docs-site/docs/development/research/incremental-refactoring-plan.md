@@ -225,7 +225,7 @@ module.exports = NotificationService;
 
 ### Week 3: Screen Sharing Handlers
 
-**New File**: `app/screenSharing/ipcHandlers.js`
+**New File**: `app/screenSharing/service.js`
 
 **Extract from index.js:**
 1. All 9 screen sharing IPC handlers - Lines 152-275 (124 lines)
@@ -238,7 +238,7 @@ module.exports = NotificationService;
 **Implementation pattern**:
 
 ```javascript
-// app/screenSharing/ipcHandlers.js
+// app/screenSharing/service.js
 const { ipcMain } = require("electron");
 
 class ScreenSharingService {
@@ -426,51 +426,54 @@ class Tray {
 
 ### Week 7: Automated Testing
 
-**Framework**: Use existing Playwright setup from PR #1880
+**Status**: ⚠️ **Reassessing Feasibility**
 
-**Add E2E tests**:
+**Current Reality**:
+- Existing Playwright setup (PR #1880) only verifies app loads
+- No login or actual Teams flow testing
+- **Blocker**: Microsoft authentication likely blocks automated login (bot detection)
+- Full E2E testing may not be achievable or worth the effort
 
+**What's Currently Testable**:
+
+**Limited E2E tests** (already in place):
 ```javascript
-// tests/e2e/startup.test.js
-test('app starts successfully with command line args', async () => {
+// tests/e2e/startup.test.js - ✅ Working
+test('app starts successfully', async () => {
   const { electronApp } = await launchElectronApp();
   const window = await electronApp.firstWindow();
   expect(await window.title()).toContain("Teams for Linux");
 });
-
-// tests/e2e/notifications.test.js
-test('notification shows and plays sound', async () => {
-  // Test notification flow
-});
-
-// tests/e2e/screenSharing.test.js
-test('screen sharing lifecycle works correctly', async () => {
-  // Test screen sharing
-});
 ```
 
-**Add unit tests** for extracted modules:
-
+**Potential unit tests** for extracted modules:
 ```javascript
-// tests/unit/notifications/service.test.js
-test('plays sound when user is available', async () => {
-  const service = new NotificationService(mockPlayer, mockConfig, mockWindow, () => 1);
-  await service.playSound(null, { type: 'new-message' });
-  expect(mockPlayer.play).toHaveBeenCalled();
-});
-
-// tests/unit/screenSharing/ipcHandlers.test.js
 // tests/unit/partitions/manager.test.js
+// Can test CRUD operations without MS Teams dependency
+
 // tests/unit/idle/monitor.test.js
+// Can test idle state logic in isolation
+
+// tests/unit/startup/commandLine.test.js
+// Can test command line flag parsing
 ```
 
-**Target**: 20+ automated tests covering critical paths
+**Cannot Reliably Test** (MS authentication required):
+- ❌ Login flows (bot detection)
+- ❌ Notification flows (requires authenticated Teams session)
+- ❌ Screen sharing lifecycle (requires active meeting)
+- ❌ Presence/status updates (requires Teams backend)
 
-**Benefits**:
-- ✅ Confidence in refactoring
-- ✅ Catch regressions early
-- ✅ Document expected behavior
-- ✅ Enable CI/CD improvements
+**Revised Approach**:
+- Focus on unit tests for business logic that doesn't require MS authentication
+- Keep basic E2E test (app startup verification)
+- Consider manual testing checklist for authentication-dependent features
+- Document testing limitations in ADR
+
+**Benefits of Limited Testing**:
+- ✅ Basic smoke tests prevent catastrophic breakage
+- ✅ Unit tests for utility functions provide some confidence
+- ⚠️ But won't catch integration issues or MS Teams-specific problems
 
 ---
 
@@ -496,15 +499,32 @@ test('plays sound when user is available', async () => {
 
 ## Phase 2 Summary
 
-**Total Impact After 8 Weeks**:
+**Status**: ⏸️ **Paused - Reassessing Value**
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Singleton exports | 3 | 0 | -100% |
-| Constructor IPC registration | 2+ | 0 | -100% |
-| Automated tests | 0 | 20+ | +20 |
-| Test coverage | 0% | 40%+ | +40% |
-| IPC docs | Manual | Auto-generated | ✅ |
+Phase 2 was originally designed to improve testability and add extensive automated testing. After Phase 1 completion and further analysis, several items need reassessment:
+
+**Testability Improvements** (Still Valuable):
+- Singleton refactoring - Makes code more testable
+- IPC registration patterns - Reduces side effects
+- Documentation automation - Reduces maintenance burden
+
+**Automated Testing** (Feasibility Concerns):
+- ⚠️ MS authentication blocks most E2E testing (bot detection)
+- ⚠️ Current tests only verify app startup, not actual flows
+- ⚠️ Target of "20+ tests" and "40% coverage" may not be realistic
+- ⚠️ Manual testing may be more practical for Teams-dependent features
+
+**Revised Expectations**:
+
+| Metric | Before | Realistic After Phase 2 | Original Goal |
+|--------|--------|-------------------------|---------------|
+| Singleton exports | 3 | 0 | 0 ✅ |
+| Constructor IPC registration | 2+ | 0 | 0 ✅ |
+| Automated tests | 1 (startup) | 5-10 (unit tests) | 20+ ⚠️ |
+| Test coverage | ~1% | 15-20% | 40%+ ⚠️ |
+| IPC docs | Manual | Auto-generated | Auto-generated ✅ |
+
+**Recommendation**: Focus on high-value, achievable improvements (singleton refactoring, documentation automation) rather than extensive testing that may be blocked by external factors.
 
 ---
 
@@ -659,50 +679,43 @@ We're taking the **best insights** (modular organization, testing) and applying 
 
 ## Progress Tracking
 
-### Current Status: Week 1 - Completed ✓
+### 🎉 Phase 1 Status: COMPLETE ✓
 
-| Week | Task | Status | Lines Removed | Date Completed |
-|------|------|--------|---------------|----------------|
-| Week 1 | Command Line Logic | 🟢 Completed | **96** (Target: 94) | 2025-11-13 |
-| Week 2 | Notification System | ⚪ Not Started | Target: 83 | - |
-| Week 3 | Screen Sharing Handlers | ⚪ Not Started | Target: 124 | - |
-| Week 4 | Partitions & Idle State | ⚪ Not Started | Target: 73 | - |
-| Week 5 | Singleton Refactoring | ⚪ Not Started | N/A | - |
-| Week 6 | IPC Registration Pattern | ⚪ Not Started | N/A | - |
-| Week 7 | Automated Testing | ⚪ Not Started | N/A | - |
-| Week 8 | Documentation Automation | ⚪ Not Started | N/A | - |
+| Extraction | Task | Status | Lines Removed | Date Completed |
+|------------|------|--------|---------------|----------------|
+| Extraction 1 | Command Line Logic | 🟢 Completed | **96** (Target: 94) | 2025-11-13 |
+| Extraction 2 | Notification System | 🟢 Completed | **~82** (Target: 83) | 2025-11-14 |
+| Extraction 3 | Screen Sharing Handlers | 🟢 Completed | **~166** (Target: 124) | 2025-11-15 |
+| Extraction 4 | Partitions & Idle State | 🟢 Completed | **~68** (Target: 73) | 2025-11-16 |
 
-**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked
+**Phase 1 Complete!**
 
-**Current index.js LOC**: 655 (Baseline: 751, Removed: 96)
+**Phase 2 Tasks:**
+| Task | Status | Feasibility |
+|------|--------|-------------|
+| Week 5: Singleton Refactoring | ⏸️ Paused | ✅ Achievable - Low effort, high value |
+| Week 6: IPC Registration Pattern | ⏸️ Paused | ✅ Achievable - Removes side effects |
+| Week 7: Automated Testing | ⏸️ Paused | ⚠️ Limited - MS auth blocks most E2E tests |
+| Week 8: Documentation Automation | ⏸️ Paused | ✅ Achievable - IPC docs generation |
 
----
+**Note**: Phase 2 scope under reassessment. Testing goals may not be realistic due to Microsoft authentication constraints (bot detection blocking automated login/flows).
 
-## Next Steps
+**Legend**: 🟢 Completed | 🟡 In Progress | ⚪ Not Started | 🔴 Blocked | ⏸️ Paused
 
-### Next Week (Week 2)
+### Final Metrics
 
-1. **Extract notification system**: Create `app/notifications/service.js`
-2. **Move notification functions**: Extract `showNotification()` and `playNotificationSound()`
-3. **Break coupling**: Inject user status dependency instead of global access
-4. **Update index.js**: Replace inline functions with NotificationService
-5. **Add unit tests**: Test notification service with mocked dependencies
-6. **Commit and deploy**: Ship to production
-7. **Measure impact**: Verify index.js reduced by ~83 lines
+**index.js LOC**: 755 → **339** lines (**55% reduction**)
+**Total Removed**: **416 lines** (Target: 374 lines - **111% of goal!**)
+**Extractions**: 4 of 4 complete
 
-### Upcoming (Weeks 3-4)
+**New Modules Created:**
+- `app/startup/commandLine.js` - Command line switches and configuration
+- `app/notifications/service.js` - Notification system and sounds
+- `app/screenSharing/service.js` - Screen sharing IPC handlers and state
+- `app/partitions/manager.js` - Partition zoom level management
+- `app/idle/monitor.js` - System idle state monitoring
 
-- Week 3: Extract screen sharing handlers (~124 lines)
-- Week 4: Extract partitions & idle state (~73 lines)
-- Add automated tests for each extraction
-- Document learnings
-
-### Future (Weeks 5-8)
-
-- Evaluate need for Phase 2 (testability improvements)
-- Add singleton refactoring if valuable
-- Re-assess architecture needs
-- Decide on Phase 3 scope
+**Timeline Note**: This is a volunteer OSS project with work done as time permits. Phase 1 completed in ~3 days of actual work time.
 
 ---
 

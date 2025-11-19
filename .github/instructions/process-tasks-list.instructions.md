@@ -42,14 +42,9 @@ Guidelines for managing task lists in markdown files to track progress on comple
   - **Push**: Push changes to remote repository (`git push origin <branch-name>`)
   - **Create Pull Request**: After pushing changes and completing the parent task:
     - Create a Pull Request/Merge Request to the main branch
-    - Follow version management guidelines from `RELEASE_INFO.md`:
-      - Update version in `package.json` if this is a feature/fix release
-      - Run `npm install` to update `package-lock.json`
-      - Add new `<release>` entry in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml` with:
-        - Updated version number
-        - Current date
-        - Description of changes made
-      - Commit version updates with message format: `chore: bump version to X.Y.Z`
+    - **Do NOT update versions in regular PRs** - the changelog system handles this
+    - The PR will automatically get a `.changelog/pr-XXX.txt` file with an AI-generated summary
+    - See `docs-site/docs/development/manual-release-process.md` for the release process
     - Include clear PR description summarizing completed tasks and changes
     - Reference the original PRD and task list in PR description
 
@@ -90,8 +85,8 @@ When working with task lists, the AI must:
    - Developer instructions in `.github/copilot-instructions.md`
    - Configuration documentation for new settings or patterns
    - API documentation for new IPC channels or interfaces
-8. **Version Management and PR Creation**: When all tasks are complete:
-   - Follow versioning guidelines from `RELEASE_INFO.md`
-   - Update `package.json`, `package-lock.json`, and `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`
+8. **PR Creation**: When all tasks are complete:
+   - **Do NOT update versions** - the changelog system handles releases separately
    - Create comprehensive Pull Request with clear description of completed work
    - Reference original PRD and summarize implementation approach
+   - The PR will automatically get a `.changelog/pr-XXX.txt` file for the future release

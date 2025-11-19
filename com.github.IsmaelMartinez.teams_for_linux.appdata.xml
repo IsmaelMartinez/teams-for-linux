@@ -1,1982 +1,1975 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <component type="desktop-application">
-	<id>com.github.IsmaelMartinez.teams_for_linux</id>
-	<metadata_license>CC0-1.0</metadata_license>
-	<project_license>GPL-3.0</project_license>
-	<name>Portal for Teams</name>
-	<summary>Unofficial Microsoft Teams client for Linux</summary>
-	<description>
-		<p>Experience seamless integration with the Microsoft Teams Web App in a standalone Electron application.</p>
-		<p>This application is an unofficial client for Microsoft Teams.</p>
-	</description>
-	<url type="homepage">https://github.com/IsmaelMartinez/teams-for-linux</url>
-	<url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/main/KNOWN_ISSUES.md</url>
-	<url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
-	<launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
-	<releases>
-		<release version="2.6.14" date="2025-11-16">
-			<description>
-				<ul>
-					<li>Refactor: Extract command line switch management into dedicated startup module - reduces app/index.js by 96 lines (12.8%) with improved code organization (Week 1 of incremental refactoring plan)</li>
-					<li>Feature: Enable PR artifact downloads - pre-built binaries now automatically uploaded to pull requests for easier testing without building from source (#1952)</li>
-					<li>Documentation: Consolidate AI agent instruction files - eliminate 28% content duplication by establishing single source of truth for markdown standards and using reference-based approach across CLAUDE.md, copilot-instructions.md, and workflow instruction files</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.13" date="2025-11-12">
-			<description>
-				<ul>
-					<li>Update: Electron upgraded to 37.9.0, ESLint to 9.39.1, and globals to 16.5.0 for latest bug fixes and improvements</li>
-					<li>Refactor: Remove excessive comments from feature flag handling functions for improved code clarity</li>
-					<li>Feature: Add automated PR binary artifact uploads for all platforms - contributors and testers can now download pre-built packages directly from GitHub Actions to test PR changes without building from source (closes #1940)</li>
-					<li>Documentation: Streamline CONTRIBUTING.md to be a quick reference guide with links to comprehensive Docusaurus documentation</li>
-					<li>Research: Complete architecture modernization analysis - comprehensive research revealing that the codebase is well-structured with 49% of index.js extractable through low-risk incremental refactoring instead of large-scale architectural overhaul (supersedes #1799 DDD+Plugin approach)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.12" date="2025-11-07">
-			<description>
-				<ul>
-					<li>Feature: Add MQTT integration for Teams status publishing - implemented by @Donnyp751 (closes #1791)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.11" date="2025-11-06">
-			<description>
-				<ul>
-					<li>Fix: Revert notification behavior to v2.2.1 pattern to fix "notifications only work once" issue - v2.6.8 async refactoring broke notification return value, preventing Teams from managing notification lifecycle (issue #1921)</li>
-					<li>Feature: Add GPU info debug window accessible from Debug menu - displays chrome://gpu information for diagnosing graphics and hardware acceleration issues</li>
-					<li>Feature: Add configurable global keyboard shortcuts that work system-wide - allows Teams shortcuts to work even when app is not focused (opt-in, disabled by default)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.10" date="2025-11-04">
-			<description>
-				<ul>
-					<li>Fix: Resolve SonarQube code quality issues</li>
-					<li>Feature: Expand regex for Teams URLs to include most formats of MS Teams URLs</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.9" date="2025-11-02">
-			<description>
-				<ul>
-					<li>Feature: Support short form Teams URLs (e.g., /meet/) with simplified single regex configuration</li>
-					<li>Feature: Add back/forward navigation buttons to Teams UI - browser-style navigation controls positioned in titlebar</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.8" date="2025-10-31">
-			<description>
-				<ul>
-					<li>Fix: Restore notification auto-close behavior on Ubuntu by re-integrating CustomNotification wrapper that sets requireInteraction: false (issue #1888)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.7" date="2025-10-30">
-			<description>
-				<ul>
-					<li>Feature: Respect user's disableGpu configuration on Wayland - users can now explicitly enable GPU acceleration via config file or CLI argument (issue #1890)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.6" date="2025-10-26">
-			<description>
-				<ul>
-					<li>Feature: Add in-app documentation viewer accessible from Help menu</li>
-					<li>Fix: Restore trayIconRenderer ipcRenderer initialization that was accidentally reverted (issue #1902)</li>
-					<li>Fix: Narrow screen share detection to prevent audio being disabled in regular calls - fixes mute/unmute workaround requirement (issues #1896, #1871)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.5" date="2025-10-26">
-			<description>
-				<ul>
-					<li>Update: Electron upgraded to 37.7.1 for latest security patches and bug fixes</li>
-					<li>CI/CD: Parallelize E2E tests with builds for ~40% faster CI/CD pipeline execution</li>
-					<li>Security: Pin all GitHub Actions to commit SHAs to prevent supply chain attacks and update actions to latest versions</li>
-					<li>Code Cleanup: Removed ~70 lines of debug/test code from reactHandler.js - removed React version detection, globalThis debug exposure, and verbose logging</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.4" date="2025-10-22">
-			<description>
-				<ul>
-					<li>Fix: Cache management now disabled by default based on user feedback - can still be manually enabled if needed (issues #1868, #1840)</li>
-					<li>Fix: Screen sharing selector X button no longer shows TypeError when canceling - graceful error handling implemented (issue #1889)</li>
-					<li>Fix: Preview window now closes automatically when meeting ends - detects when stop sharing button disappears from DOM (issue #1870)</li>
-					<li>Docs: Add Recall.ai sponsorship section to README</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.3" date="2025-10-21">
-			<description>
-				<ul>
-					<li>Fix: Prevent infinite loop on rapid network changes from Docker - resolves critical system freeze issue caused by Docker container restarts</li>
-					<li>Fix: Implement debouncing mechanism (1s delay) for network refresh operations to handle rapid network change events gracefully</li>
-					<li>Fix: Add concurrent refresh prevention flag to avoid overlapping network test operations that could saturate system resources</li>
-					<li>Fix: Proper event listener cleanup to prevent memory leaks when ConnectionManager is restarted</li>
-					<li>Enhancement: Add start:dev npm script with --no-sandbox flag for easier development testing</li>
-					<li>Fix: Revert to core22 and Electron 37.7.0 for snap compatibility - electron-builder doesn't support core24 yet (issue #8548)</li>
-					<li>Documentation: Add comprehensive MQTT integration documentation with configuration guide, troubleshooting, and home automation examples</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.2" date="2025-01-21">
-			<description>
-				<ul>
-					<li>Fix: Upgrade snap base from core22 to core24 to resolve LIBDBUS_PRIVATE_1.12.20 startup crash with Electron 38</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.1" date="2025-01-20">
-			<description>
-				<ul>
-					<li>Feature: Add automated E2E testing infrastructure using Playwright - smoke tests validate app launch and Microsoft login redirect</li>
-					<li>CI/CD: Integrate E2E tests into GitHub Actions workflow - all builds now depend on tests passing</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.6.0" date="2025-10-19">
-			<description>
-				<ul>
-					<li>Major: Upgrade Electron from 37.6.0 to 38.3.0 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
-					<li>Enhancement: Modernize screen sharing with native private fields, fix IPC listener memory leak and race conditions - improves reliability</li>
-					<li>Update: ESLint upgraded to 9.38.0 and electron-builder to 26.1.0 for latest bug fixes and improvements</li>
-					<li>Documentation: Overall review of the documentation to add missing links and re-ordering of some areas</li>
-					<li>Documentation: Upgrade Docusaurus dependencies and fix search functionality for improved documentation experience</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.13" date="2025-10-08">
-			<description>
-				<ul>
-					<li>Fix: Wayland screenshare preview window now works correctly by using desktopCapturer source ID format (screen:x:y) instead of MediaStream UUIDs</li>
-					<li>Fix: Correct snap workflow arm64 build command typo (armv64 -> arm64) that prevented arm64 snap releases</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.12" date="2025-10-06">
-			<description>
-				<ul>
-					<li>Update the release pipeline to publish arm64 snaps</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.11" date="2025-10-03">
-			<description>
-				<ul>
-					<li>Feature: Add a new tray menu entry to join a teams meeting from a copied URL in the clipboard</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.10" date="2025-10-02">
-			<description>
-				<ul>
-					<li>Attempt: Disable all audio in screen sharing to try to fix issue #1800 - might fix audio echo on Wayland/Pipewire</li>
-					<li>Update: Electron updated to 37.6.0, ESLint to 9.36.0 for latest security patches and bug fixes</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.9" date="2025-09-19">
-			<description>
-				<ul>
-					<li>Feature: Implement secure token cache storage using Electron safeStorage API - tokens are now encrypted using OS-level security (Keychain/DPAPI/kwallet) instead of plain localStorage</li>
-					<li>Enhancement: Increase default cache size limit from 300MB to 600MB to reduce frequency of automatic cache cleanup</li>
-					<li>Fix: Resolve disableAutogain initialization failure that prevented microphone auto-gain control from being disabled properly</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.8" date="2025-09-19">
-			<description>
-				<ul>
-					<li>Restore: Re-enable disableAutogain functionality that was removed in v2.3.0 - allows manual control over microphone auto-gain for professional audio setups</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.7" date="2025-09-18">
-			<description>
-				<ul>
-					<li>Fix: Restore tray icon badge count functionality that was missing since v2.3.0 - properly initialize TrayIconRenderer module in preload script</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.6" date="2025-09-15">
-			<description>
-				<ul>
-					<li>Fix: Ensure microsoft-identity-broker is started before use, allowing SSO to work more reliability</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.5" date="2025-09-15">
-			<description>
-				<ul>
-					<li>Fix: Resolve missing screen-sharing-started IPC handler that could cause screen sharing session tracking issues</li>
-					<li>Enhancement: Add comprehensive tray icon diagnostic logging with [TRAY_DIAG] tags to help troubleshoot notification timing and performance issues</li>
-					<li>Enhancement: Add detailed screen sharing echo diagnostics with audio track analysis and duplicate session detection</li>
-					<li>Enhancement: Add extensive Intune SSO diagnostic logging with troubleshooting guidance for D-Bus and Identity Broker issues</li>
-					<li>Documentation: Add comprehensive Intune SSO documentation with troubleshooting guidance for enterprise environments</li>
-					<li>Documentation: Refactor Intune integration documentation to separate developer vs user content</li>
-					<li>Documentation: Update RPM installation instructions to use modern dnf commands with proper sudo usage</li>
-					<li>Update: Electron updated to 37.4.0 and electron-builder to 26.0.20 with latest security patches</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.4" date="2025-09-06">
-			<description>
-				<ul>
-					<li>Fix: Reactions bar no longer shows an unintended set of reactions above the bar due to GPU composition on Wayland systems.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.3" date="2025-09-03">
-			<description>
-				<ul>
-					<li>Fix: Implement token cache bridge to resolve authentication refresh issues - provides missing _tokenCache interface to Teams authentication provider</li>
-					<li>Enhancement: Add comprehensive diagnostic logging for authentication refresh issues to help diagnose persistent "Please sign in again" problems</li>
-					<li>Enhancement: Add detailed screen sharing audio duplication logging to identify echo issues and multiple session creation</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.2" date="2025-09-02">
-			<description>
-				<ul>
-					<li>Fix: Restore DOM access functionality by disabling contextIsolation and sandbox for Teams browser integration</li>
-					<li>Security: Implement comprehensive compensating controls including Content Security Policy headers and IPC channel validation</li>
-					<li>Enhancement: Add React version detection to monitor for breaking changes in React 19+ timeline</li>
-					<li>Changed from --webDebug --logConfig='{}' to ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'</li>
-					<li>Fix: Revert audio channel disabling in screen sharing as it doesn't resolve echo issues</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.1" date="2025-08-26">
-			<description>
-				<ul>
-					<li>Fix: Attempt to address screen sharing audio echo by preventing audio channel creation during screen sharing</li>
-					<li>Update: Electron updated to 37.3.1 with latest security patches</li>
-					<li>Update: ESLint and related dependencies updated to latest versions</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.5.0" date="2025-08-18">
-			<description>
-				<ul>
-					<li>Major: Complete documentation platform migration to Docusaurus with modern search and mobile-first design</li>
-					<li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles. Might fix #1357</li>
-					<li>Fix: macOS dock icon now displays correctly with proper 128x128 minimum size requirement and fallback resizing</li>
-					<li>Fix: preload browser scripts now correctly handle context isolation. Might fix #1789 and #1795</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.4.0" date="2025-08-18">
-			<description>
-				<ul>
-					<li>New: GitHub Pages documentation deployment - documentation now available online</li>
-					<li>Update: Electron upgraded to 37.3.0</li>
-					<li>Improvement: Enhanced contributor documentation with GitHub Pages workflow</li>
-					<li>Enhancement: Added comprehensive documentation links throughout project</li>
-					<li>Fix: Remove duplicate instantiation of the notifications object</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.3.0" date="2025-08-13">
-			<description>
-				<ul>
-					<li>New: Improved screen sharing with enhanced contextIsolation and sandbox support</li>
-					<li>Improvement: Comprehensive documentation restructuring and simplification</li>
-					<li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox, disableAutogain)</li>
-					<li>Remove the inAppUi as it is not needed at the moment</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.2.1" date="2025-08-12">
-			<description>
-				<ul>
-					<li>Update: Electron upgraded to 37.2.6 (may fix issue #1755)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.2.0" date="2025-08-11">
-			<description>
-				<ul>
-					<li>New: Implemented control for in-app UI window visibility via configuration.</li>
-					<li>New: Enhanced screen sharing pop-out window (Closes #1538):</li>
-					<li>  • Displays shared screen content.</li>
-					<li>  • Ensures only a single pop-out window instance.</li>
-					<li>  • Closes automatically when screen sharing stops.</li>
-					<li>Added system-wide configuration support at /etc/teams-for-linux/config.json for enterprise deployments (Closes #1773)</li>
-					<li>Enabling by default the cache management solution implemented in #1765</li>
-					<li>Internal: Added CLAUDE.md for Claude-specific instructions.</li>
-					<li>Internal: Added new task list files for project management.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.1.4" date="2025-08-04">
-			<description>
-				<ul>
-					<li>Add msTeamsProtocols config option to handle v1 and v2 Teams protocol links, and adding messages</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.1.3" date="2025-08-01">
-			<description>
-				<ul>
-					<li>Documentation improvements</li>
-					<li>Created future prds and ai research documents for documentation-health and ui-system-strategic-analysis</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.1.2" date="2025-07-28">
-			<description>
-				<ul>
-					<li>Removed deb packaging details to fix #1768</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.1.1" date="2025-07-26">
-			<description>
-				<ul>
-					<li>Add configurable cache management to prevent daily logout issues (Issue #1756) - disabled by default, enable with config option</li>
-					<li>Add proper Debian changelog generation for package managers (Issue #1691)</li>
-					<li>Enhance build process with upstream changelog support for deb and rpm packages</li>
-					<li>Update Electron from 37.2.0 to 37.2.4 with major stability improvements:</li>
-					<li>  • Fixed window close callback crashes that caused unexpected app termination (addresses Issue #1757)</li>
-					<li>  • Enhanced desktop capture with reduced crashes and better screen sharing quality (addresses Issues #1762, #1743, #1715)</li>
-					<li>  • Improved window management and resizing functionality (addresses Issue #1736)</li>
-					<li>  • Updated Chromium to 138.0.7204.157 for security and performance improvements</li>
-					<li>  • Better Linux desktop environment compatibility and PipeWire integration</li>
-					<li>Update @homebridge/dbus-native to 0.7.2 for improved ARM compatibility</li>
-					<li>Update ESLint to 9.32.0 and electron-builder to 26.0.19 for better development experience</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.1.0" date="2025-07-06">
-			<description>
-				<ul>
-					<li>Update Electron to 37.2.0</li>
-					<li>Update @eslint/js to 9.30.1</li>
-					<li>Update eslint to 9.30.1</li>
-					<li>Update globals to 16.3.0</li>
-					<li>Reviewed Electron 37 breaking changes: no impact on this project</li>
-					<li>electron-store not updated due to breaking changes in v9+</li>
-					<li>yargs not updated due to breaking changes in v18+</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.18" date="2025-06-16">
-			<description>
-				<ul>
-					<li>Added setting to include timestamps and usernames on copy (default)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.17" date="2025-06-15">
-			<description>
-				<ul>
-					<li>Update electron to 36.4.0 and @homebridge/dbus-native to 0.7.1 for improved ARM compatibility and security</li>
-					<li>Adding release info generation from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file</li>
-					<li>Validate the release version is ready on the build.yml github action</li>
-					<li>Updating github actions to use node 22</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.16" date="2025-06-05">
-			<description>
-				<ul>
-					<li>Added a reimplementation of the call events to revive the incoming call scripts</li>
-					<li>Added an incoming call toast just like the one from the discontinued Linux Teams App from Microsoft</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.15" date="2025-05-25">
-			<description>
-				<ul>
-					<li>Ensuring that microphone and camera entitlements are properly requested on OSX</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.14" date="2025-05-20">
-			<description>
-				<ul>
-					<li>Adding --videoMenu option to enable a menu section which contains options to manipulate video elements (enable video controls, enter picture-in-picture mode)</li>
-				</ul>
-			</description>
-		</release>
-	    <release version="2.0.13" date="2025-05-15">
-			<description>
-				<ul>
-					<li>Update electron to 35.4.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.12" date="2025-05-06">
-			<description>
-				<ul>
-					<li>Fixing 1681 by only applying the tray icon size changes if in macos</li>
-					<li>Update electron to 35.2.2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.11" date="2025-04-25">
-			<description>
-				<ul>
-					<li>Removing using the appTitle to setup the app name introduced in the previous version, as that breaks the icon in linux systems</li>
-					<li>Update electron to 35.2.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.10" date="2025-04-20">
-			<description>
-				<ul>
-					<li>New: dynamically set Docker icon for macOS</li>
-					<li>Updating electron to 35.2.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.9" date="2025-04-18">
-			<description>
-				<ul>
-					<li>Remove disableMeetingNotifications as it is not possible anymore</li>
-					<li>Removing the incomingCallCommand and incomingCallCommandArgs as they are not working anymore</li>
-					<li>Removing ntlmV2enabled as it is not documented anymore in Chromium and it should be the default value</li>
-					<li>Removing deprecated `clearStorage` in favor of `clearStorageData`</li>
-					<li>Removing deprecated `customUserDir` in favor of `--user-data-dir`</li>
-					<li>Changing the default value of `onNewWindowOpenMeetupJoinUrlInApp` to `true`</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.8" date="2025-04-11">
-			<description>
-				<ul>
-					<li>Fix documentation reference for running multiple instances</li>
-					<li>Minor electron version bump to 35.1.5</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.7" date="2025-04-09">
-			<description>
-				<ul>
-					<li>Improving documentation by adding font square characters info fix in the KNOWN_ISSUES section</li>
-					<li>Adding information on how to run multiple instances in the app</li>
-					<li>Reshaping the config README file for easier reading</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.6" date="2025-04-08">
-			<description>
-				<ul>
-					<li>Fix 1379 allow option for links in offline meetings to open in the app. The config option called onNewWindowOpenMeetupJoinUrlInApp and defaults to false</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.5" date="2025-04-08">
-			<description>
-				<ul>
-					<li>Fix 1644 Status is set to away unless mouse moves over Teams for Linux window</li>
-					<li>Fix user-data-dir references in the README</li>
-					<li>Fix unable to join some meeting links</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.4" date="2025-04-07">
-			<description>
-				<ul>
-					<li>Fix undefined Error when quitting with Quit (Clear Storage)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.3" date="2025-04-05">
-			<description>
-				<ul>
-					<li>Fix the appdata file typo in version 1.14.2, and fixing warnings for appstream-screenshot-missing-caption</li>
-					<li>Some formatting and minor improvements to the README/HISTORY/KNWON_ISSUES md files</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.2" date="2025-04-05">
-			<description>
-				<ul>
-					<li>Fix the appdata file</li>
-				</ul>
-			</description>
-		</release>
-	    <release version="2.0.1" date="2025-04-05">
-			<description>
-				<ul>
-					<li>Fix: Fix the electron-builder configuration to fix the desktop file been broken</li>
-					<li>Update dependencies including electron to version 35.1.4</li>
-				</ul>
-			</description>
-		</release>
-		<release version="2.0.0" date="2025-02-08">
-			<description>
-				<ul>
-					<li>Remove deprecated config enableBackgroundCallsAuthentication that was never announced but people didn't complain about</li>
-					<li>optInTeamsV2 and customBGServiceIgnoreMSDefaults config options are no longer available as they where teams-v1 specific</li>
-					<li>Cleaning up teams-v1 logic in the app</li>
-					<li>Set default url to be https://teams.microsoft.com/v2 instead of https://teams.microsoft.com</li>
-					<li>Remove activityHub eventHandlers for the teams-v1 events</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.14.2" date="2025-03-30">
-			<description>
-				<ul>
-					<li>Deprecate clearStorage in favour of clearStorageData</li>
-					<li>Reformat code using prettier</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.14.1" date="2025-03-28">
-			<description>
-				<ul>
-					<li>Remove permissionCheckHandler and cookie printing</li>
-					<li>Remove deprecated appLogLevels. Use logConfig instead</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.14.0" date="2025-03-28">
-			<description>
-				<ul>
-					<li>Update electron to 35.1.2</li>
-					<li>Update electron-builder to 26.0.12</li>
-					<li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.13.2" date="2025-03-25">
-			<description>
-				<ul>
-					<li>Update the deep link regex to allow /l/chat deep links in addition to meetings and channels</li>
-					<li>Increase dependency versions to include fix from electron for #1487</li>
-					<li>Checking if the settings file exists when trying to restore it to fix #1547</li>
-					<li>Add screen-wake-lock, persistent-storage and geolocation to the allowed permission, and add sharepoint.com and outlook.office.com to the allowed domains</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.13.1" date="2025-03-20">
-			<description>
-				<ul>
-					<li>Update electron to 34.4.5 and other small library updates to fix issue 1590</li>
-					<li>Fixing permissions to allow copy link that stopped working when adding the permissionHandlersConfig (issue 1585)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.13.0" date="2025-03-04">
-			<description>
-				<ul>
-					<li>Update electron to 34.3.0 and other small library updates</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.8" date="2025-02-21">
-			<description>
-				<ul>
-					<li>Adding permissionCheckHandler config option to verify if 3rd party cookies are affecting token refreshing</li>
-					<li>Removing enableBackgroundCallsAuthentication config option as it was broken, and probabaly not doing anything for us</li>
-					<li>Update electron to 33.4.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.7" date="2025-01-15">
-			<description>
-				<ul>
-					<li>Adding enableBackgroundCallsAuthentication config option to validate if this keeps the user authenticated for longer</li>
-					<li>Removing the writeUrlBlockLog function that use to log those requests into a file for debugging</li>
-					<li>Handling of UnhandledPromiseRejectionWarning: TypeError: Cannot read properties of undefined (reading 'webContents') at PowerMonitor.refresh (.../app/connectionManager/index.js:31:34)</li>
-					<li>Checking the tray status before trying to update the badge count</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.6" date="2025-01-17">
-			<description>
-				<ul>
-					<li>Fixing frame option by applying the correct type (boolean instead of string)</li>
-					<li>Updating electron to 33.3.1 and eslint to 9.18.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.5" date="2024-12-17">
-			<description>
-				<ul>
-					<li>Fix wrong console.warning error to console.warn</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.4" date="2024-12-10">
-			<description>
-				<ul>
-					<li>Update electron version to 33.3.0</li>
-					<li>Change Fetched custom background remote configuration... error to warning</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.3" date="2024-11-30">
-			<description>
-				<ul>
-					<li>Update electron version to 33.2.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.2" date="2024-11-28">
-			<description>
-				<ul>
-					<li>Fix selection of InTune user when explicitly pinning it via `ssoInTuneAuthUser`</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.1" date="2024-11-25">
-			<description>
-				<ul>
-					<li>Improving security on the loginForm by removing the need of contentIsolation</li>
-					<li>Removing the already deprecated `onlineCheckMethod` option from the config options</li>
-					<li>Updating the HISTORY section to be more inline with the current stated of affairs</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.12.0" date="2024-11-15">
-			<description>
-				<ul>
-					<li>Improving security on the streamSelector to work without the need of contentIsolation</li>
-					<li>Move from BaseView (deprecated), to WebContentsView in the streamSelector</li>
-					<li>Updating vsconfig to allow for electron and chrome debugging</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.5" date="2024-11-11">
-			<description>
-				<ul>
-					<li>Change the default value of frame to true</li>
-					<li>Package updates including moving to electron 33.2.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.4" date="2024-11-09">
-			<description>
-				<ul>
-					<li>Allow frameless window by using the config 'frame' option</li>
-					<li>Remove unused electron remote package</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.3" date="2024-10-27">
-			<description>
-				<ul>
-					<li>Update electron to 33.0.2</li>
-					<li>Remove electron-is-dev and just use the app.isPackaged</li>
-					<li>Other small library updates</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.2" date="2024-10-16">
-			<description>
-				<ul>
-					<li>Modifying the menu to include zoom, and help sections</li>
-					<li>Fix some sonarcloud detected issues</li>
-					<li>Add debug log for cookie change for authtoken and domain teams.microsoft.com</li>
-					<li>Updated electron to 32.2.0</li>
-					<li>Updated electron-builder 25.1.8</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.1" date="2024-10-03">
-			<description>
-				<ul>
-					<li>Automated network check and deprecating `onlineCheckMethod`</li>
-					<li>Changing default logger to console.info and no file, instead of using the electron-log defaults</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.11.0" date="2024-09-24">
-			<description>
-				<ul>
-					<li>Increase electron version to 32.1.2 and electron build to 25.0.5</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.10.3" date="2024-09-23">
-			<description>
-				<ul>
-					<li>Moving the notification number to be in the bottom right hand side of the icon</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.10.2" date="2024-09-10">
-			<description>
-				<ul>
-					<li>Add support to simulate Windows-based Chromium Browser</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.10.1" date="2024-09-09">
-			<description>
-				<ul>
-					<li>Added support for OpenSUSE to rpm distribution</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.10.0" date="2024-09-03">
-			<description>
-				<ul>
-					<li>Changing the T4L icons to comply with Flathub policies</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.6" date="2024-09-02">
-			<description>
-				<ul>
-					<li>refine disabling gpu and fix render-process-gone logging</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.5" date="2024-08-23">
-			<description>
-				<ul>
-					<li>Fix Incomplete regular expression for hostnames for github scanning in ms teams url</li>
-					<li>Printing the render-process-gone reason to help analyse #1369</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.4" date="2024-08-23">
-			<description>
-				<ul>
-					<li>Update the logger to be `electron-log` by default, and update the documentation, as the config options don't seem to overwrite the logger</li>
-					<li>Adding a new conditional for msteams meeting invites to handle the differences between v1 and v2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.3" date="2024-08-23">
-			<description>
-				<ul>
-					<li>Revert the default url to be teams v1, not v2.</li>
-					<li>Update the logger to be `console` by default, as the documentation indicates</li>
-					<li>Update electron from  30.2.0 to 30.4.0</li>
-					<li>Update electron from  eslint and global libraries</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.2" date="2024-08-22">
-			<description>
-				<ul>
-					<li>Add --class flag to allow setting the WM_CLASS property to a custom value</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.1" date="2024-08-20">
-			<description>
-				<ul>
-					<li>Apply disableHardwareAcceleration on disableGpu flag</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.9.0" date="2024-07-19">
-			<description>
-				<ul>
-					<li>Moving from lucid-log to electron-log</li>
-					<li>Adding --logConfig option to allow choosing between console, electron-log or Falsy (no logs in console)</li>
-					<li>Adding --help option to show the config options</li>
-					<li>Deprecating --appLogLevels in favor of --logConfig</li>
-					<li>Adding deprecated warning popup if deprecated options found to be in use</li>
-					<li>Refactoring the customBackground service and including an example</li>
-					<li>Updating electron to 30.2.0, and other small dependency updates</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.8.1" date="2024-07-10">
-			<description>
-				<ul>
-					<li>Fix awayOnSystemIdle behaviour when locking the screen: now it shows status as "Available" when locking the screen with awayOnSystemIdle = false</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.8.0" date="2024-07-08">
-			<description>
-				<ul>
-					<li>Increase electron version to 30.1.2</li>
-					<li>Fix handleOnCallConnected not calling disable screen lock</li>
-					<li>Adding contextIsolation and sandbox config options. These will break some functionality but are added as a WIP to help assessing what it would break</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.5" date="2024-07-02">
-			<description>
-				<ul>
-					<li>Add watchConfigFile option to restart the app if the configuration changes</li>
-					<li>Modify configError message to have an icon and adding the ability to provide warning dialogs (for config deprecations)</li>
-					<li>Changing app description to be more flathub compliat</li>
-					<li>Refactoring around inTune and the config file handling</li>
-					<li>Refactoring events to all be kebab-case instead of a mix of kebab-case and camelCase</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.4" date="2024-06-25">
-			<description>
-				<ul>
-					<li>FIX broken screen sharing during calls</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.3" date="2024-06-18">
-			<description>
-				<ul>
-					<li>App renamed to Portal for Teams in flathub</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.2" date="2024-06-14">
-			<description>
-				<ul>
-					<li>Moved to sonarcloud from codacity and fixed some sonarcloud issues</li>
-					<li>Moved from deprecated v2 version of codeql to v3</li>
-					<li>Added disableGlobalShortcuts config option to disable global shortcuts</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.1" date="2024-06-11">
-			<description>
-				<ul>
-					<li>Adding a meetupJoinRegEx config option to handle meetup-join/channel regular expressions</li>
-					<li>Aligning setWindowOpenHandler and processArgs to use the meetupJoinRegEx config option</li>
-					<li>Small linting fixes for css files</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.7.0" date="2024-06-09">
-			<description>
-				<ul>
-					<li>General small refactoring work</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.6.1" date="2024-06-07">
-			<description>
-				<ul>
-					<li>FIX missing icon in alt-tab</li>
-					<li>Improve tweaks css file, to hide the "waffle" menu and align the logo</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.6.0" date="2024-06-06">
-			<description>
-				<ul>
-					<li>FIX broken app when dbus not present</li>
-					<li>Moved from Yarn to NPM to simplify the build process</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.5.3" date="2024-06-04">
-			<description>
-				<ul>
-					<li>Add support for Single Sign On using Microsoft Intune</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.5.2" date="2024-05-28">
-			<description>
-				<ul>
-					<li>Adding --rpm-digest=sha256 to fix RPM insatll on FIPS enabled system</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.5.1" date="2024-05-28">
-			<description>
-				<ul>
-					<li>Adding teams.live.com to the URLs evaluated across the app</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.5.0" date="2024-05-28">
-			<description>
-				<ul>
-					<li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
-					<li>Adding the config option trayIconEnabled that defaults to true</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.40" date="2024-05-24">
-			<description>
-				<ul>
-					<li>Adding ssoUser and ssoPasswordCommand to allow to bypass needing to add your password.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.39" date="2024-05-07">
-			<description>
-				<ul>
-					<li>Don't show error in case of missing config file.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.38" date="2024-05-06">
-			<description>
-				<ul>
-					<li>Show error message if configuration is invalid</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.37" date="2024-05-04">
-			<description>
-				<ul>
-					<li>Fix awayOnSystemIdle flag in Teams V2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.36" date="2024-05-03">
-			<description>
-				<ul>
-					<li>Fix custom backgrounds in Teams V2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.35" date="2024-05-03">
-			<description>
-				<ul>
-					<li>Fix for away status detection (idle tracking)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.34" date="2024-05-01">
-			<description>
-				<ul>
-					<li>Electron version downgraded to 29.3.0 due to inconsistent behaviour in different desktop environments</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.33" date="2024-04-29">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 30.0.1</li>
-					<li>Updated implementation of Notification.requestPermission()</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.32" date="2024-04-28">
-			<description>
-				<ul>
-					<li>
+  <id>com.github.IsmaelMartinez.teams_for_linux</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <name>Portal for Teams</name>
+  <summary>Unofficial Microsoft Teams client for Linux</summary>
+  <description>
+    <p>Experience seamless integration with the Microsoft Teams Web App in a standalone Electron application.</p>
+    <p>This application is an unofficial client for Microsoft Teams.</p>
+  </description>
+  <url type="homepage">https://github.com/IsmaelMartinez/teams-for-linux</url>
+  <url type="help">https://github.com/IsmaelMartinez/teams-for-linux/blob/main/KNOWN_ISSUES.md</url>
+  <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
+  <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
+  <releases>
+    <release version="2.6.15" date="2025-11-17">
+      <description>
+        <ul>
+          <li>Add AI-powered changelog system to decouple merging from releasing - by @IsmaelMartinez (#1951)</li>
+          <li>[Refactor]: Extract notification functions from app/index.js - part of #1960 - by @IsmaelMartinez (#1962)</li>
+          <li>Continue refactoring epic work of #1960 - by @IsmaelMartinez (#1966)</li>
+          <li>chore(deps): bump js-yaml from 3.14.1 to 3.14.2 in /docs-site in the npm_and_yarn group across 1 directory (#1967)</li>
+          <li>Update: Electron 37.10.0 and electron-builder 26.2.0 for latest bug fixes and improvements</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.14" date="2025-11-16">
+      <description>
+        <ul>
+          <li>Refactor: Extract command line switch management into dedicated startup module - reduces app/index.js by 96 lines (12.8%) with improved code organization (Week 1 of incremental refactoring plan)</li>
+          <li>Feature: Enable PR artifact downloads - pre-built binaries now automatically uploaded to pull requests for easier testing without building from source (#1952)</li>
+          <li>Documentation: Consolidate AI agent instruction files - eliminate 28% content duplication by establishing single source of truth for markdown standards and using reference-based approach across CLAUDE.md, copilot-instructions.md, and workflow instruction files</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.13" date="2025-11-12">
+      <description>
+        <ul>
+          <li>Update: Electron upgraded to 37.9.0, ESLint to 9.39.1, and globals to 16.5.0 for latest bug fixes and improvements</li>
+          <li>Refactor: Remove excessive comments from feature flag handling functions for improved code clarity</li>
+          <li>Feature: Add automated PR binary artifact uploads for all platforms - contributors and testers can now download pre-built packages directly from GitHub Actions to test PR changes without building from source (closes #1940)</li>
+          <li>Documentation: Streamline CONTRIBUTING.md to be a quick reference guide with links to comprehensive Docusaurus documentation</li>
+          <li>Research: Complete architecture modernization analysis - comprehensive research revealing that the codebase is well-structured with 49% of index.js extractable through low-risk incremental refactoring instead of large-scale architectural overhaul (supersedes #1799 DDD+Plugin approach)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.12" date="2025-11-07">
+      <description>
+        <ul>
+          <li>Feature: Add MQTT integration for Teams status publishing - implemented by @Donnyp751 (closes #1791)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.11" date="2025-11-06">
+      <description>
+        <ul>
+          <li>Fix: Revert notification behavior to v2.2.1 pattern to fix "notifications only work once" issue - v2.6.8 async refactoring broke notification return value, preventing Teams from managing notification lifecycle (issue #1921)</li>
+          <li>Feature: Add GPU info debug window accessible from Debug menu - displays chrome://gpu information for diagnosing graphics and hardware acceleration issues</li>
+          <li>Feature: Add configurable global keyboard shortcuts that work system-wide - allows Teams shortcuts to work even when app is not focused (opt-in, disabled by default)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.10" date="2025-11-04">
+      <description>
+        <ul>
+          <li>Fix: Resolve SonarQube code quality issues</li>
+          <li>Feature: Expand regex for Teams URLs to include most formats of MS Teams URLs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.9" date="2025-11-02">
+      <description>
+        <ul>
+          <li>Feature: Support short form Teams URLs (e.g., /meet/) with simplified single regex configuration</li>
+          <li>Feature: Add back/forward navigation buttons to Teams UI - browser-style navigation controls positioned in titlebar</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.8" date="2025-10-31">
+      <description>
+        <ul>
+          <li>Fix: Restore notification auto-close behavior on Ubuntu by re-integrating CustomNotification wrapper that sets requireInteraction: false (issue #1888)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.7" date="2025-10-30">
+      <description>
+        <ul>
+          <li>Feature: Respect user's disableGpu configuration on Wayland - users can now explicitly enable GPU acceleration via config file or CLI argument (issue #1890)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.6" date="2025-10-26">
+      <description>
+        <ul>
+          <li>Feature: Add in-app documentation viewer accessible from Help menu</li>
+          <li>Fix: Restore trayIconRenderer ipcRenderer initialization that was accidentally reverted (issue #1902)</li>
+          <li>Fix: Narrow screen share detection to prevent audio being disabled in regular calls - fixes mute/unmute workaround requirement (issues #1896, #1871)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.5" date="2025-10-26">
+      <description>
+        <ul>
+          <li>Update: Electron upgraded to 37.7.1 for latest security patches and bug fixes</li>
+          <li>CI/CD: Parallelize E2E tests with builds for ~40% faster CI/CD pipeline execution</li>
+          <li>Security: Pin all GitHub Actions to commit SHAs to prevent supply chain attacks and update actions to latest versions</li>
+          <li>Code Cleanup: Removed ~70 lines of debug/test code from reactHandler.js - removed React version detection, globalThis debug exposure, and verbose logging</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.4" date="2025-10-22">
+      <description>
+        <ul>
+          <li>Fix: Cache management now disabled by default based on user feedback - can still be manually enabled if needed (issues #1868, #1840)</li>
+          <li>Fix: Screen sharing selector X button no longer shows TypeError when canceling - graceful error handling implemented (issue #1889)</li>
+          <li>Fix: Preview window now closes automatically when meeting ends - detects when stop sharing button disappears from DOM (issue #1870)</li>
+          <li>Docs: Add Recall.ai sponsorship section to README</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.3" date="2025-10-21">
+      <description>
+        <ul>
+          <li>Fix: Prevent infinite loop on rapid network changes from Docker - resolves critical system freeze issue caused by Docker container restarts</li>
+          <li>Fix: Implement debouncing mechanism (1s delay) for network refresh operations to handle rapid network change events gracefully</li>
+          <li>Fix: Add concurrent refresh prevention flag to avoid overlapping network test operations that could saturate system resources</li>
+          <li>Fix: Proper event listener cleanup to prevent memory leaks when ConnectionManager is restarted</li>
+          <li>Enhancement: Add start:dev npm script with --no-sandbox flag for easier development testing</li>
+          <li>Fix: Revert to core22 and Electron 37.7.0 for snap compatibility - electron-builder doesn't support core24 yet (issue #8548)</li>
+          <li>Documentation: Add comprehensive MQTT integration documentation with configuration guide, troubleshooting, and home automation examples</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.2" date="2025-01-21">
+      <description>
+        <ul>
+          <li>Fix: Upgrade snap base from core22 to core24 to resolve LIBDBUS_PRIVATE_1.12.20 startup crash with Electron 38</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.1" date="2025-01-20">
+      <description>
+        <ul>
+          <li>Feature: Add automated E2E testing infrastructure using Playwright - smoke tests validate app launch and Microsoft login redirect</li>
+          <li>CI/CD: Integrate E2E tests into GitHub Actions workflow - all builds now depend on tests passing</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.6.0" date="2025-10-19">
+      <description>
+        <ul>
+          <li>Major: Upgrade Electron from 37.6.0 to 38.3.0 with Chromium 140, Node.js 22, improved Wayland support - macOS 12+ now required</li>
+          <li>Enhancement: Modernize screen sharing with native private fields, fix IPC listener memory leak and race conditions - improves reliability</li>
+          <li>Update: ESLint upgraded to 9.38.0 and electron-builder to 26.1.0 for latest bug fixes and improvements</li>
+          <li>Documentation: Overall review of the documentation to add missing links and re-ordering of some areas</li>
+          <li>Documentation: Upgrade Docusaurus dependencies and fix search functionality for improved documentation experience</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.13" date="2025-10-08">
+      <description>
+        <ul>
+          <li>Fix: Wayland screenshare preview window now works correctly by using desktopCapturer source ID format (screen:x:y) instead of MediaStream UUIDs</li>
+          <li>Fix: Correct snap workflow arm64 build command typo (armv64 -&gt; arm64) that prevented arm64 snap releases</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.12" date="2025-10-06">
+      <description>
+        <ul>
+          <li>Update the release pipeline to publish arm64 snaps</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.11" date="2025-10-03">
+      <description>
+        <ul>
+          <li>Feature: Add a new tray menu entry to join a teams meeting from a copied URL in the clipboard</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.10" date="2025-10-02">
+      <description>
+        <ul>
+          <li>Attempt: Disable all audio in screen sharing to try to fix issue #1800 - might fix audio echo on Wayland/Pipewire</li>
+          <li>Update: Electron updated to 37.6.0, ESLint to 9.36.0 for latest security patches and bug fixes</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.9" date="2025-09-19">
+      <description>
+        <ul>
+          <li>Feature: Implement secure token cache storage using Electron safeStorage API - tokens are now encrypted using OS-level security (Keychain/DPAPI/kwallet) instead of plain localStorage</li>
+          <li>Enhancement: Increase default cache size limit from 300MB to 600MB to reduce frequency of automatic cache cleanup</li>
+          <li>Fix: Resolve disableAutogain initialization failure that prevented microphone auto-gain control from being disabled properly</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.8" date="2025-09-19">
+      <description>
+        <ul>
+          <li>Restore: Re-enable disableAutogain functionality that was removed in v2.3.0 - allows manual control over microphone auto-gain for professional audio setups</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.7" date="2025-09-18">
+      <description>
+        <ul>
+          <li>Fix: Restore tray icon badge count functionality that was missing since v2.3.0 - properly initialize TrayIconRenderer module in preload script</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.6" date="2025-09-15">
+      <description>
+        <ul>
+          <li>Fix: Ensure microsoft-identity-broker is started before use, allowing SSO to work more reliability</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.5" date="2025-09-15">
+      <description>
+        <ul>
+          <li>Fix: Resolve missing screen-sharing-started IPC handler that could cause screen sharing session tracking issues</li>
+          <li>Enhancement: Add comprehensive tray icon diagnostic logging with [TRAY_DIAG] tags to help troubleshoot notification timing and performance issues</li>
+          <li>Enhancement: Add detailed screen sharing echo diagnostics with audio track analysis and duplicate session detection</li>
+          <li>Enhancement: Add extensive Intune SSO diagnostic logging with troubleshooting guidance for D-Bus and Identity Broker issues</li>
+          <li>Documentation: Add comprehensive Intune SSO documentation with troubleshooting guidance for enterprise environments</li>
+          <li>Documentation: Refactor Intune integration documentation to separate developer vs user content</li>
+          <li>Documentation: Update RPM installation instructions to use modern dnf commands with proper sudo usage</li>
+          <li>Update: Electron updated to 37.4.0 and electron-builder to 26.0.20 with latest security patches</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.4" date="2025-09-06">
+      <description>
+        <ul>
+          <li>Fix: Reactions bar no longer shows an unintended set of reactions above the bar due to GPU composition on Wayland systems.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.3" date="2025-09-03">
+      <description>
+        <ul>
+          <li>Fix: Implement token cache bridge to resolve authentication refresh issues - provides missing _tokenCache interface to Teams authentication provider</li>
+          <li>Enhancement: Add comprehensive diagnostic logging for authentication refresh issues to help diagnose persistent "Please sign in again" problems</li>
+          <li>Enhancement: Add detailed screen sharing audio duplication logging to identify echo issues and multiple session creation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.2" date="2025-09-02">
+      <description>
+        <ul>
+          <li>Fix: Restore DOM access functionality by disabling contextIsolation and sandbox for Teams browser integration</li>
+          <li>Security: Implement comprehensive compensating controls including Content Security Policy headers and IPC channel validation</li>
+          <li>Enhancement: Add React version detection to monitor for breaking changes in React 19+ timeline</li>
+          <li>Changed from --webDebug --logConfig='{}' to ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'</li>
+          <li>Fix: Revert audio channel disabling in screen sharing as it doesn't resolve echo issues</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.1" date="2025-08-26">
+      <description>
+        <ul>
+          <li>Fix: Attempt to address screen sharing audio echo by preventing audio channel creation during screen sharing</li>
+          <li>Update: Electron updated to 37.3.1 with latest security patches</li>
+          <li>Update: ESLint and related dependencies updated to latest versions</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.5.0" date="2025-08-18">
+      <description>
+        <ul>
+          <li>Major: Complete documentation platform migration to Docusaurus with modern search and mobile-first design</li>
+          <li>Fix: Cache manager now preserves authentication tokens. This might prevent 24-hour forced re-authentication cycles. Might fix #1357</li>
+          <li>Fix: macOS dock icon now displays correctly with proper 128x128 minimum size requirement and fallback resizing</li>
+          <li>Fix: preload browser scripts now correctly handle context isolation. Might fix #1789 and #1795</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.4.0" date="2025-08-18">
+      <description>
+        <ul>
+          <li>New: GitHub Pages documentation deployment - documentation now available online</li>
+          <li>Update: Electron upgraded to 37.3.0</li>
+          <li>Improvement: Enhanced contributor documentation with GitHub Pages workflow</li>
+          <li>Enhancement: Added comprehensive documentation links throughout project</li>
+          <li>Fix: Remove duplicate instantiation of the notifications object</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.3.0" date="2025-08-13">
+      <description>
+        <ul>
+          <li>New: Improved screen sharing with enhanced contextIsolation and sandbox support</li>
+          <li>Improvement: Comprehensive documentation restructuring and simplification</li>
+          <li>Cleanup: Removed obsolete configuration options (contextIsolation, sandbox, disableAutogain)</li>
+          <li>Remove the inAppUi as it is not needed at the moment</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.2.1" date="2025-08-12">
+      <description>
+        <ul>
+          <li>Update: Electron upgraded to 37.2.6 (may fix issue #1755)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.2.0" date="2025-08-11">
+      <description>
+        <ul>
+          <li>New: Implemented control for in-app UI window visibility via configuration.</li>
+          <li>New: Enhanced screen sharing pop-out window (Closes #1538):</li>
+          <li>  • Displays shared screen content.</li>
+          <li>  • Ensures only a single pop-out window instance.</li>
+          <li>  • Closes automatically when screen sharing stops.</li>
+          <li>Added system-wide configuration support at /etc/teams-for-linux/config.json for enterprise deployments (Closes #1773)</li>
+          <li>Enabling by default the cache management solution implemented in #1765</li>
+          <li>Internal: Added CLAUDE.md for Claude-specific instructions.</li>
+          <li>Internal: Added new task list files for project management.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.4" date="2025-08-04">
+      <description>
+        <ul>
+          <li>Add msTeamsProtocols config option to handle v1 and v2 Teams protocol links, and adding messages</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.3" date="2025-08-01">
+      <description>
+        <ul>
+          <li>Documentation improvements</li>
+          <li>Created future prds and ai research documents for documentation-health and ui-system-strategic-analysis</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.2" date="2025-07-28">
+      <description>
+        <ul>
+          <li>Removed deb packaging details to fix #1768</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.1" date="2025-07-26">
+      <description>
+        <ul>
+          <li>Add configurable cache management to prevent daily logout issues (Issue #1756) - disabled by default, enable with config option</li>
+          <li>Add proper Debian changelog generation for package managers (Issue #1691)</li>
+          <li>Enhance build process with upstream changelog support for deb and rpm packages</li>
+          <li>Update Electron from 37.2.0 to 37.2.4 with major stability improvements:</li>
+          <li>  • Fixed window close callback crashes that caused unexpected app termination (addresses Issue #1757)</li>
+          <li>  • Enhanced desktop capture with reduced crashes and better screen sharing quality (addresses Issues #1762, #1743, #1715)</li>
+          <li>  • Improved window management and resizing functionality (addresses Issue #1736)</li>
+          <li>  • Updated Chromium to 138.0.7204.157 for security and performance improvements</li>
+          <li>  • Better Linux desktop environment compatibility and PipeWire integration</li>
+          <li>Update @homebridge/dbus-native to 0.7.2 for improved ARM compatibility</li>
+          <li>Update ESLint to 9.32.0 and electron-builder to 26.0.19 for better development experience</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.0" date="2025-07-06">
+      <description>
+        <ul>
+          <li>Update Electron to 37.2.0</li>
+          <li>Update @eslint/js to 9.30.1</li>
+          <li>Update eslint to 9.30.1</li>
+          <li>Update globals to 16.3.0</li>
+          <li>Reviewed Electron 37 breaking changes: no impact on this project</li>
+          <li>electron-store not updated due to breaking changes in v9+</li>
+          <li>yargs not updated due to breaking changes in v18+</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.18" date="2025-06-16">
+      <description>
+        <ul>
+          <li>Added setting to include timestamps and usernames on copy (default)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.17" date="2025-06-15">
+      <description>
+        <ul>
+          <li>Update electron to 36.4.0 and @homebridge/dbus-native to 0.7.1 for improved ARM compatibility and security</li>
+          <li>Adding release info generation from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file</li>
+          <li>Validate the release version is ready on the build.yml github action</li>
+          <li>Updating github actions to use node 22</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.16" date="2025-06-05">
+      <description>
+        <ul>
+          <li>Added a reimplementation of the call events to revive the incoming call scripts</li>
+          <li>Added an incoming call toast just like the one from the discontinued Linux Teams App from Microsoft</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.15" date="2025-05-25">
+      <description>
+        <ul>
+          <li>Ensuring that microphone and camera entitlements are properly requested on OSX</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.14" date="2025-05-20">
+      <description>
+        <ul>
+          <li>Adding --videoMenu option to enable a menu section which contains options to manipulate video elements (enable video controls, enter picture-in-picture mode)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.13" date="2025-05-15">
+      <description>
+        <ul>
+          <li>Update electron to 35.4.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.12" date="2025-05-06">
+      <description>
+        <ul>
+          <li>Fixing 1681 by only applying the tray icon size changes if in macos</li>
+          <li>Update electron to 35.2.2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.11" date="2025-04-25">
+      <description>
+        <ul>
+          <li>Removing using the appTitle to setup the app name introduced in the previous version, as that breaks the icon in linux systems</li>
+          <li>Update electron to 35.2.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.10" date="2025-04-20">
+      <description>
+        <ul>
+          <li>New: dynamically set Docker icon for macOS</li>
+          <li>Updating electron to 35.2.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.9" date="2025-04-18">
+      <description>
+        <ul>
+          <li>Remove disableMeetingNotifications as it is not possible anymore</li>
+          <li>Removing the incomingCallCommand and incomingCallCommandArgs as they are not working anymore</li>
+          <li>Removing ntlmV2enabled as it is not documented anymore in Chromium and it should be the default value</li>
+          <li>Removing deprecated `clearStorage` in favor of `clearStorageData`</li>
+          <li>Removing deprecated `customUserDir` in favor of `--user-data-dir`</li>
+          <li>Changing the default value of `onNewWindowOpenMeetupJoinUrlInApp` to `true`</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.8" date="2025-04-11">
+      <description>
+        <ul>
+          <li>Fix documentation reference for running multiple instances</li>
+          <li>Minor electron version bump to 35.1.5</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.7" date="2025-04-09">
+      <description>
+        <ul>
+          <li>Improving documentation by adding font square characters info fix in the KNOWN_ISSUES section</li>
+          <li>Adding information on how to run multiple instances in the app</li>
+          <li>Reshaping the config README file for easier reading</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.6" date="2025-04-08">
+      <description>
+        <ul>
+          <li>Fix 1379 allow option for links in offline meetings to open in the app. The config option called onNewWindowOpenMeetupJoinUrlInApp and defaults to false</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.5" date="2025-04-08">
+      <description>
+        <ul>
+          <li>Fix 1644 Status is set to away unless mouse moves over Teams for Linux window</li>
+          <li>Fix user-data-dir references in the README</li>
+          <li>Fix unable to join some meeting links</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.4" date="2025-04-07">
+      <description>
+        <ul>
+          <li>Fix undefined Error when quitting with Quit (Clear Storage)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.3" date="2025-04-05">
+      <description>
+        <ul>
+          <li>Fix the appdata file typo in version 1.14.2, and fixing warnings for appstream-screenshot-missing-caption</li>
+          <li>Some formatting and minor improvements to the README/HISTORY/KNWON_ISSUES md files</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.2" date="2025-04-05">
+      <description>
+        <ul>
+          <li>Fix the appdata file</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.1" date="2025-04-05">
+      <description>
+        <ul>
+          <li>Fix: Fix the electron-builder configuration to fix the desktop file been broken</li>
+          <li>Update dependencies including electron to version 35.1.4</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.0" date="2025-02-08">
+      <description>
+        <ul>
+          <li>Remove deprecated config enableBackgroundCallsAuthentication that was never announced but people didn't complain about</li>
+          <li>optInTeamsV2 and customBGServiceIgnoreMSDefaults config options are no longer available as they where teams-v1 specific</li>
+          <li>Cleaning up teams-v1 logic in the app</li>
+          <li>Set default url to be https://teams.microsoft.com/v2 instead of https://teams.microsoft.com</li>
+          <li>Remove activityHub eventHandlers for the teams-v1 events</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.14.2" date="2025-03-30">
+      <description>
+        <ul>
+          <li>Deprecate clearStorage in favour of clearStorageData</li>
+          <li>Reformat code using prettier</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.14.1" date="2025-03-28">
+      <description>
+        <ul>
+          <li>Remove permissionCheckHandler and cookie printing</li>
+          <li>Remove deprecated appLogLevels. Use logConfig instead</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.14.0" date="2025-03-28">
+      <description>
+        <ul>
+          <li>Update electron to 35.1.2</li>
+          <li>Update electron-builder to 26.0.12</li>
+          <li>BREAKING CHANGE: deprecating customUserDir as eletron doesn't support camelCase on those anymore. Use ELECTRON_USER_DATA_PATH env variable instead</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.13.2" date="2025-03-25">
+      <description>
+        <ul>
+          <li>Update the deep link regex to allow /l/chat deep links in addition to meetings and channels</li>
+          <li>Increase dependency versions to include fix from electron for #1487</li>
+          <li>Checking if the settings file exists when trying to restore it to fix #1547</li>
+          <li>Add screen-wake-lock, persistent-storage and geolocation to the allowed permission, and add sharepoint.com and outlook.office.com to the allowed domains</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.13.1" date="2025-03-20">
+      <description>
+        <ul>
+          <li>Update electron to 34.4.5 and other small library updates to fix issue 1590</li>
+          <li>Fixing permissions to allow copy link that stopped working when adding the permissionHandlersConfig (issue 1585)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.13.0" date="2025-03-04">
+      <description>
+        <ul>
+          <li>Update electron to 34.3.0 and other small library updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.8" date="2025-02-21">
+      <description>
+        <ul>
+          <li>Adding permissionCheckHandler config option to verify if 3rd party cookies are affecting token refreshing</li>
+          <li>Removing enableBackgroundCallsAuthentication config option as it was broken, and probabaly not doing anything for us</li>
+          <li>Update electron to 33.4.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.7" date="2025-01-15">
+      <description>
+        <ul>
+          <li>Adding enableBackgroundCallsAuthentication config option to validate if this keeps the user authenticated for longer</li>
+          <li>Removing the writeUrlBlockLog function that use to log those requests into a file for debugging</li>
+          <li>Handling of UnhandledPromiseRejectionWarning: TypeError: Cannot read properties of undefined (reading 'webContents') at PowerMonitor.refresh (.../app/connectionManager/index.js:31:34)</li>
+          <li>Checking the tray status before trying to update the badge count</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.6" date="2025-01-17">
+      <description>
+        <ul>
+          <li>Fixing frame option by applying the correct type (boolean instead of string)</li>
+          <li>Updating electron to 33.3.1 and eslint to 9.18.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.5" date="2024-12-17">
+      <description>
+        <ul>
+          <li>Fix wrong console.warning error to console.warn</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.4" date="2024-12-10">
+      <description>
+        <ul>
+          <li>Update electron version to 33.3.0</li>
+          <li>Change Fetched custom background remote configuration... error to warning</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.3" date="2024-11-30">
+      <description>
+        <ul>
+          <li>Update electron version to 33.2.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.2" date="2024-11-28">
+      <description>
+        <ul>
+          <li>Fix selection of InTune user when explicitly pinning it via `ssoInTuneAuthUser`</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.1" date="2024-11-25">
+      <description>
+        <ul>
+          <li>Improving security on the loginForm by removing the need of contentIsolation</li>
+          <li>Removing the already deprecated `onlineCheckMethod` option from the config options</li>
+          <li>Updating the HISTORY section to be more inline with the current stated of affairs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.12.0" date="2024-11-15">
+      <description>
+        <ul>
+          <li>Improving security on the streamSelector to work without the need of contentIsolation</li>
+          <li>Move from BaseView (deprecated), to WebContentsView in the streamSelector</li>
+          <li>Updating vsconfig to allow for electron and chrome debugging</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.5" date="2024-11-11">
+      <description>
+        <ul>
+          <li>Change the default value of frame to true</li>
+          <li>Package updates including moving to electron 33.2.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.4" date="2024-11-09">
+      <description>
+        <ul>
+          <li>Allow frameless window by using the config 'frame' option</li>
+          <li>Remove unused electron remote package</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.3" date="2024-10-27">
+      <description>
+        <ul>
+          <li>Update electron to 33.0.2</li>
+          <li>Remove electron-is-dev and just use the app.isPackaged</li>
+          <li>Other small library updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.2" date="2024-10-16">
+      <description>
+        <ul>
+          <li>Modifying the menu to include zoom, and help sections</li>
+          <li>Fix some sonarcloud detected issues</li>
+          <li>Add debug log for cookie change for authtoken and domain teams.microsoft.com</li>
+          <li>Updated electron to 32.2.0</li>
+          <li>Updated electron-builder 25.1.8</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.1" date="2024-10-03">
+      <description>
+        <ul>
+          <li>Automated network check and deprecating `onlineCheckMethod`</li>
+          <li>Changing default logger to console.info and no file, instead of using the electron-log defaults</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.11.0" date="2024-09-24">
+      <description>
+        <ul>
+          <li>Increase electron version to 32.1.2 and electron build to 25.0.5</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.10.3" date="2024-09-23">
+      <description>
+        <ul>
+          <li>Moving the notification number to be in the bottom right hand side of the icon</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.10.2" date="2024-09-10">
+      <description>
+        <ul>
+          <li>Add support to simulate Windows-based Chromium Browser</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.10.1" date="2024-09-09">
+      <description>
+        <ul>
+          <li>Added support for OpenSUSE to rpm distribution</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.10.0" date="2024-09-03">
+      <description>
+        <ul>
+          <li>Changing the T4L icons to comply with Flathub policies</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.6" date="2024-09-02">
+      <description>
+        <ul>
+          <li>refine disabling gpu and fix render-process-gone logging</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.5" date="2024-08-23">
+      <description>
+        <ul>
+          <li>Fix Incomplete regular expression for hostnames for github scanning in ms teams url</li>
+          <li>Printing the render-process-gone reason to help analyse #1369</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.4" date="2024-08-23">
+      <description>
+        <ul>
+          <li>Update the logger to be `electron-log` by default, and update the documentation, as the config options don't seem to overwrite the logger</li>
+          <li>Adding a new conditional for msteams meeting invites to handle the differences between v1 and v2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.3" date="2024-08-23">
+      <description>
+        <ul>
+          <li>Revert the default url to be teams v1, not v2.</li>
+          <li>Update the logger to be `console` by default, as the documentation indicates</li>
+          <li>Update electron from  30.2.0 to 30.4.0</li>
+          <li>Update electron from  eslint and global libraries</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.2" date="2024-08-22">
+      <description>
+        <ul>
+          <li>Add --class flag to allow setting the WM_CLASS property to a custom value</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.1" date="2024-08-20">
+      <description>
+        <ul>
+          <li>Apply disableHardwareAcceleration on disableGpu flag</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.9.0" date="2024-07-19">
+      <description>
+        <ul>
+          <li>Moving from lucid-log to electron-log</li>
+          <li>Adding --logConfig option to allow choosing between console, electron-log or Falsy (no logs in console)</li>
+          <li>Adding --help option to show the config options</li>
+          <li>Deprecating --appLogLevels in favor of --logConfig</li>
+          <li>Adding deprecated warning popup if deprecated options found to be in use</li>
+          <li>Refactoring the customBackground service and including an example</li>
+          <li>Updating electron to 30.2.0, and other small dependency updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.8.1" date="2024-07-10">
+      <description>
+        <ul>
+          <li>Fix awayOnSystemIdle behaviour when locking the screen: now it shows status as "Available" when locking the screen with awayOnSystemIdle = false</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.8.0" date="2024-07-08">
+      <description>
+        <ul>
+          <li>Increase electron version to 30.1.2</li>
+          <li>Fix handleOnCallConnected not calling disable screen lock</li>
+          <li>Adding contextIsolation and sandbox config options. These will break some functionality but are added as a WIP to help assessing what it would break</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.5" date="2024-07-02">
+      <description>
+        <ul>
+          <li>Add watchConfigFile option to restart the app if the configuration changes</li>
+          <li>Modify configError message to have an icon and adding the ability to provide warning dialogs (for config deprecations)</li>
+          <li>Changing app description to be more flathub compliat</li>
+          <li>Refactoring around inTune and the config file handling</li>
+          <li>Refactoring events to all be kebab-case instead of a mix of kebab-case and camelCase</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.4" date="2024-06-25">
+      <description>
+        <ul>
+          <li>FIX broken screen sharing during calls</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.3" date="2024-06-18">
+      <description>
+        <ul>
+          <li>App renamed to Portal for Teams in flathub</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.2" date="2024-06-14">
+      <description>
+        <ul>
+          <li>Moved to sonarcloud from codacity and fixed some sonarcloud issues</li>
+          <li>Moved from deprecated v2 version of codeql to v3</li>
+          <li>Added disableGlobalShortcuts config option to disable global shortcuts</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.1" date="2024-06-11">
+      <description>
+        <ul>
+          <li>Adding a meetupJoinRegEx config option to handle meetup-join/channel regular expressions</li>
+          <li>Aligning setWindowOpenHandler and processArgs to use the meetupJoinRegEx config option</li>
+          <li>Small linting fixes for css files</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.0" date="2024-06-09">
+      <description>
+        <ul>
+          <li>General small refactoring work</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.1" date="2024-06-07">
+      <description>
+        <ul>
+          <li>FIX missing icon in alt-tab</li>
+          <li>Improve tweaks css file, to hide the "waffle" menu and align the logo</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.0" date="2024-06-06">
+      <description>
+        <ul>
+          <li>FIX broken app when dbus not present</li>
+          <li>Moved from Yarn to NPM to simplify the build process</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.3" date="2024-06-04">
+      <description>
+        <ul>
+          <li>Add support for Single Sign On using Microsoft Intune</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.2" date="2024-05-28">
+      <description>
+        <ul>
+          <li>Adding --rpm-digest=sha256 to fix RPM insatll on FIPS enabled system</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.1" date="2024-05-28">
+      <description>
+        <ul>
+          <li>Adding teams.live.com to the URLs evaluated across the app</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.0" date="2024-05-28">
+      <description>
+        <ul>
+          <li>Renaming ssoUser to ssoBasicAuthUser,  and ssoPasswordCommand to ssoBasicAuthPassswordCommand.</li>
+          <li>Adding the config option trayIconEnabled that defaults to true</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.40" date="2024-05-24">
+      <description>
+        <ul>
+          <li>Adding ssoUser and ssoPasswordCommand to allow to bypass needing to add your password.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.39" date="2024-05-07">
+      <description>
+        <ul>
+          <li>Don't show error in case of missing config file.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.38" date="2024-05-06">
+      <description>
+        <ul>
+          <li>Show error message if configuration is invalid</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.37" date="2024-05-04">
+      <description>
+        <ul>
+          <li>Fix awayOnSystemIdle flag in Teams V2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.36" date="2024-05-03">
+      <description>
+        <ul>
+          <li>Fix custom backgrounds in Teams V2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.35" date="2024-05-03">
+      <description>
+        <ul>
+          <li>Fix for away status detection (idle tracking)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.34" date="2024-05-01">
+      <description>
+        <ul>
+          <li>Electron version downgraded to 29.3.0 due to inconsistent behaviour in different desktop environments</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.33" date="2024-04-29">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 30.0.1</li>
+          <li>Updated implementation of Notification.requestPermission()</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.32" date="2024-04-28">
+      <description>
+        <ul>
+          <li>
 						Revert "Build universal app for Mac" - the unsigned package does not run on Apple Silicon.
 						See KNOWN_ISSUES.md for steps how to build the app for Apple Silicon locally.
 					</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.31" date="2024-04-25">
-			<description>
-				<ul>
-					<li>Add isCustomBackgroundEnabled config option that defaults to true</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.30" date="2024-04-24">
-			<description>
-				<ul>
-					<li>Enable useMutationTitleLogic by default</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.29" date="2024-04-22">
-			<description>
-				<ul>
-					<li>Build universal app for Mac, to support Apple Silicon as well as Intel Macs</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.28" date="2024-04-17">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 30.0.0</li>
-					<li>Clicking on notification shows the application</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.27" date="2024-04-15">
-			<description>
-				<ul>
-					<li>Rearranged quit menu</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.26" date="2024-04-14">
-			<description>
-				<ul>
-					<li>Added menu option to choose notification urgency</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.25" date="2024-04-14">
-			<description>
-				<ul>
-					<li>Now lets user choose the notification method and urgency</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.24" date="2024-04-13">
-			<description>
-				<ul>
-					<li>Support for electron CLI flags in config file</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.23" date="2024-04-12">
-			<description>
-				<ul>
-					<li>Additional logs for debugging custom background issues</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.22" date="2024-04-12">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 29.3.0</li>
-					<li>Fix: Teams doesn't remember the setting disable notification sound</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.21" date="2024-04-07">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 29.2.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.20" date="2024-04-06">
-			<description>
-				<ul>
-					<li>Now the notification badge count clears when all are read</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.19" date="2024-04-05">
-			<description>
-				<ul>
-					<li>updating tray icon with the number in the document.title. This is hidden behind a feature flag/config option called useMutationTitleLogic</li>
-					<li>moved trayIconRenderer out of the activityHub, and to react to events instead.</li>
-					<li>re-order config readme to show in the right order.</li>
-					<li>removing the 'removal' of the opt in for teamsv2. Now if you use that feature flag and want to revert you will need to do it manually.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.18" date="2024-04-04">
-			<description>
-				<ul>
-					<li>adding how to debug in bug report, moving react logic into its own ha… by @IsmaelMartinez in #1176</li>
-					<li>Feature/teams v2 changes theme by @IsmaelMartinez in #1177</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.17" date="2024-03-31">
-			<description>
-				<ul>
-					<li>feat: add opt in handling for teams v2 by @mhenselin in #1160</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.16" date="2024-03-28">
-			<description>
-				<ul>
-					<li>Removing the angular recurring call to disable some promotions as I s… by @IsmaelMartinez in #1152</li>
-					<li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1153</li>
-					<li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1154</li>
-					<li>add support for changing idle (away) state in Teams2 by @bastidest in #1157</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.15" date="2024-03-23">
-			<description>
-				<ul>
-					<li>Added bail out logic to the angular detection as this is creating some memory issues in some users</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.14" date="2024-03-11">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 29.1.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.13" date="2024-03-04">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 29.0.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.12" date="2024-02-14">
-			<description>
-				<ul>
-					<li>Fix: Preload script error introduced in 1.4.11</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.11" date="2024-02-14">
-			<description>
-				<ul>
-					<li>Fix: MacOS - Disable Option + Left / Right keyboard shortcuts for history navigation (it is used for word jumping on MacOS)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.10" date="2024-02-04">
-			<description>
-				<ul>
-					<li>New: Experimental switch --awayOnSystemIdle which sets the user status to away when system goes idle</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.9" date="2024-02-03">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 28.2.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.8" date="2024-02-02">
-			<description>
-				<ul>
-					<li>New: Updated snap core to core22</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.7" date="2024-01-31">
-			<description>
-				<ul>
-					<li>New: Added --followSystemTheme config option</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.6" date="2024-01-28">
-			<description>
-				<ul>
-					<li>Fix: Notifications show the app's icon and not the sender's profile picture</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.5" date="2024-01-28">
-			<description>
-				<ul>
-					<li>New: Added the notification options to the tray menu</li>
-					<li>Fix: Wayland screenshare including system audio</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.4" date="2024-01-28">
-			<description>
-				<ul>
-					<li>Documentation: Added Flatpak config file location</li>
-					<li>New: Added apptitle to the tooltip</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.3" date="2024-01-22">
-			<description>
-				<ul>
-					<li>New: Rework wayland screenshare source selection</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.2" date="2024-01-22">
-			<description>
-				<ul>
-					<li>Fix: Getting version from cli arg with yargs after the Electron 28 bump</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.1" date="2024-01-08">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 28.0.0</li>
-					<li>Fix: Updated ipc handlers for incomming call command</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.4.0" date="2023-12-21">
-			<description>
-				<ul>
-					<li>Electron version upgrade to 28.0.0</li>
-					<li>Update dependencies to latest versions</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.26" date="2023-12-17">
-			<description>
-				<ul>
-					<li>New: Make sure executable is writable before running fuses in afterpack script</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.25" date="2023-12-10">
-			<description>
-				<ul>
-					<li>Fix: Missing "Meeting started" notifications</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.24" date="2023-12-10">
-			<description>
-				<ul>
-					<li>New: Allow usage of arbitrary disable-features switch</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.23" date="2023-11-20">
-			<description>
-				<ul>
-					<li>New: Adds afterpack script to flip EnableCookieEncryption electron fuse</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.22" date="2023-11-17">
-			<description>
-				<ul>
-					<li>New: Increased node version in the runners</li>
-					<li>New: Enhanced zooming in and out controls</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.21" date="2023-11-14">
-			<description>
-				<ul>
-					<li>New: Added support for running custom scripts on events</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.20" date="2023-11-14">
-			<description>
-				<ul>
-					<li>Fix: custom css compatibility with New Teams</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.19" date="2023-11-06">
-			<description>
-				<ul>
-					<li>New: Moved about menu entry to bottom</li>
-					<li>Update: Upgraded electron version to 27.0.3</li>
-					<li>Update: Edited documentation</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.18" date="2023-10-31">
-			<description>
-				<ul>
-					<li>Updated documentation</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.17" date="2023-10-30">
-			<description>
-				<ul>
-					<li>Fix: Avoid calling child_process.exec with untrusted string</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.16" date="2023-10-30">
-			<description>
-				<ul>
-					<li>New: add flag --disableGpu to disable GPU and hardware acceleration</li>
-					<li>Update: Electron version upgraded to 27.0.2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.13" date="2023-09-29">
-			<description>
-				<ul>
-					<li>Update: Electron version upgraded to 24.8.5</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.12" date="2023-09-28">
-			<description>
-				<ul>
-					<li>Fix: Import empty certificate path. The default config.clientCertPath is an empty string</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.11" date="2023-09-18">
-			<description>
-				<ul>
-					<li>Fix: A glitch in network waiting loop</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.10" date="2023-09-07">
-			<description>
-				<ul>
-					<li>Fix: fixed HTTPS network check from behind an HTTP proxy</li>
-					<li>New: Added --onlineCheckMethod {https,dns,native,none} to enable picking a different network check method (or disabling)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.9" date="2023-09-01">
-			<description>
-				<ul>
-					<li>Update: reordering and cleaning up the list of config options</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.8" date="2023-08-27">
-			<description>
-				<ul>
-					<li>New: Added about dialog</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.7" date="2023-08-26">
-			<description>
-				<ul>
-					<li>New: Network check logic uses HTTP instead of DNS resolve</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.5" date="2023-08-20">
-			<description>
-				<ul>
-					<li>New: App now waits for network during start up. It waits for up to 30 seconds before becomes idle.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.4" date="2023-08-18">
-			<description>
-				<ul>
-					<li>Default value for --onlineOfflineReload flag is set to false</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.3" date="2023-08-13">
-			<description>
-				<ul>
-					<li>New: More plugs added to snap package</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.2" date="2023-08-12">
-			<description>
-				<ul>
-					<li>New: Electron version downgraded to 24.6.3 due to multiple issues</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.1" date="2023-08-08">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 25.4.0</li>
-					<li>Fix: White screen after wakeup from suspend mode</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.3.0" date="2023-07-27">
-			<description>
-				<ul>
-					<li>New: Electron version upgraded to 25.3.2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.9" date="2023-07-27">
-			<description>
-				<ul>
-					<li>New: Workaround solution for screen sharing issues in Wayland</li>
-					<li>New: --bypassWaylandSourceSelection flag for those desktop environments that do not require additional video source selection dialog during screen-sharing request under Wayland</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.7" date="2023-07-19">
-			<description>
-				<ul>
-					<li>New: Spellchecker language selections are persisted between runs</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.5" date="2023-07-11">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 24.6.3</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.4" date="2023-07-11">
-			<description>
-				<ul>
-					<li>New: Support for monochrome icon</li>
-					<li>New: Empty spellchecker language list disables spellchcker</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.3" date="2023-07-09">
-			<description>
-				<ul>
-					<li>New: Command-line argument --defaultURLHandler to change the browser application to be used to open links instead of the system default</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.2" date="2023-07-06">
-			<description>
-				<ul>
-					<li>Electron version downgraded to 24.6.2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.2.0" date="2023-07-06">
-			<description>
-				<ul>
-					<li>Electron version upgraded to 25.2.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.11" date="2023-07-03">
-			<description>
-				<ul>
-					<li>New: Command line flag --disableAutogain</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.8" date="2023-06-27">
-			<description>
-				<ul>
-					<li>Fix: Tray icon missing when --menubar hidden parameter is used</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.7" date="2023-06-27">
-			<description>
-				<ul>
-					<li>New: Command-line parameter --menubar [auto | visible |hidden]</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.6" date="2023-06-15">
-			<description>
-				<ul>
-					<li>Fix: A rare crash when session times out</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.4" date="2023-06-15">
-			<description>
-				<ul>
-					<li>New: Added flag --disableNotificationWindowFlash which disables flashing the window frame when there is a new notification</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.3" date="2023-06-13">
-			<description>
-				<ul>
-					<li>New: Additional logs to debug notification issues</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.2" date="2023-06-06">
-			<description>
-				<ul>
-					<li>Restored appdata.xml</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.1.1" date="2023-05-31">
-			<description>
-				<ul>
-					<li>New: Badge count on supported desktop environments</li>
-					<li>Update: default value for disableNotificationSoundIfNotAvailable is set to false</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.92" date="2023-05-18">
-			<description>
-				<ul>
-					<li>Fix: External links are not opened correctly when they point to a Teams channel</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.90" date="2023-05-16">
-			<description>
-				<ul>
-					<li>New: Code refactoring</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.88" date="2023-05-14">
-			<description>
-				<ul>
-					<li>New: Now custom background images can be downloaded from a remote server</li>
-					<li>New: Command line parameter --customBGServiceIgnoreMSDefaults to ignore Microsoft provided images</li>
-					<li>New: Custom background service 'config.json' need not have prefix '/teams-for-linux/custom-bg/' for 'src' and 'thumb_src'</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.86" date="2023-05-11">
-			<description>
-				<ul>
-					<li>New: User can set custom backgrounds for video calls. Read the documentation in git repo</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.83" date="2023-05-04">
-			<description>
-				<ul>
-					<li>New: CTRL + Click for SSO login.</li>
-					<li>New: Settings menu entry with 'Save' and 'Restore'. Settings saved and restored are theme, chat density, devices.</li>
-					<li>New: Extended quit menu with 'Normally' and 'Clear Storage'. 'Normally' would be the default but 'Clear Storage' would give a fresh start on next launch.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.80" date="2023-04-30">
-			<description>
-				<ul>
-					<li>New: Removed menu bar from the popup windows</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.79" date="2023-04-30">
-			<description>
-				<ul>
-					<li>New: Default chrome user agent set dynamically based on electron version</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.78" date="2023-04-29">
-			<description>
-				<ul>
-					<li>New: Safely open links</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.77" date="2023-04-29">
-			<description>
-				<ul>
-					<li>Update: Removed obsolete flag --enableDesktopNotificationsHack</li>
-					<li>Fix: Mac keyboard shortcuts are shown</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.74" date="2023-04-28">
-			<description>
-				<ul>
-					<li>New: Back/Forward navigation using keys</li>
-					<li>Fix: Now zoom in/out shortcuts work while on chat window</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.72" date="2023-04-26">
-			<description>
-				<ul>
-					<li>Fix: Right click link -> copy not working</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.71" date="2023-04-23">
-			<description>
-				<ul>
-					<li>Fix: Teams gets unloaded after suspend</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.70" date="2023-04-22">
-			<description>
-				<ul>
-					<li>New: Improved selection of spell check languages</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.69" date="2023-04-21">
-			<description>
-				<ul>
-					<li>New: Disable all notifications with --disableNotifications flag</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.68" date="2023-04-19">
-			<description>
-				<ul>
-					<li>New: Disable/Enable Notification Sound if not Available with --disableNotificationSoundIfNotAvailable flag</li>
-					<li>Fix: Teams gets unloaded after suspend</li>
-					<li>Minor code optimization</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.65" date="2023-04-16">
-			<description>
-				<ul>
-					<li>Updated documentation</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.64" date="2023-04-16">
-			<description>
-				<ul>
-					<li>New: Option to choose spellcheck language while writing</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.63" date="2023-04-15">
-			<description>
-				<ul>
-					<li>New: command line option --appActiveCheckInterval</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.62" date="2023-04-15">
-			<description>
-				<ul>
-					<li>Update: Application presence state optimisation</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.61" date="2023-04-15">
-			<description>
-				<ul>
-					<li>New: Command line option --screenLockInhibitionMethod to choose screen lock inhibition method. Possible values are Electron and WakeLockSentinel</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.60" date="2023-04-13">
-			<description>
-				<ul>
-					<li>Fix: away after a couple minutes</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.59-2" date="2023-04-11">
-			<description>
-				<ul>
-					<li>Added required permisions for inhibiting screen lock</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.59" date="2023-04-11">
-			<description>
-				<ul>
-					<li>Fix: Prevent screensaver while in call</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.58" date="2023-04-01">
-			<description>
-				<ul>
-					<li>Fix: Click on link to external meetings is ignored</li>
-					<li>Fix: No longer able to open meeting invitations in app</li>
-					<li>Fix: Option for SSO Login Popups for certain Apps</li>
-					<li>Fix: The new-window event is deprecated and will be removed. Please use contents.setWindowOpenHandler() instead</li>
-					<li>New: Set default spellchecker language to en-US</li>
-					<li>New: Disable hardware media key handling</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.55" date="2023-03-22">
-			<description>
-				<ul>
-					<li>New command line option --disableNotificationSound</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.54" date="2023-03-21">
-			<description>
-				<ul>
-					<li>Add doc for additional settings (#703)</li>
-					<li>New command line argument --appTitle for custom page title</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.52" date="2023-03-08">
-			<description>
-				<ul>
-					<li>Release to fix dependabot removing the "integration" section from the yarn.lock files</li>
-					<li>Bringing the multi account option to those who asked for it</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.50" date="2023-03-02">
-			<description>
-				<ul>
-					<li>Add: Option to load client certificates for corporate auth</li>
-					<li>Add: Corporate account authentication with smart-card</li>
-					<li>Add: Option to set the spellchecker languages</li>
-					<li>Add: WIP Mac OS support</li>
-					<li>Add: Minimal support for dark mode</li>
-					<li>Fix: Minimise on startup</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.45" date="2022-10-12">
-			<description>
-				<ul>
-					<li>Fix: Cannot find how to turn off notifications for started meetings (620)</li>
-					<li>Fix: Showing expired notifications</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.44" date="2022-10-09">
-			<description>
-				<ul>
-					<li>Fix: Prevent screensaver while in a call (613)</li>
-					<li>Fix: No meeting notifications in KDE (470)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.42" date="2022-10-08">
-			<description>
-				<ul>
-					<li>Fix: The interstitial page of "Open Teams in Browser" / "Download Linux Client" / "Open in Teams App" opens when the app is started. By @breunigs</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.41" date="2022-09-29">
-			<description>
-				<ul>
-					<li>New: A command line flag (--clearStorage) to start afresh</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.40" date="2022-09-29">
-			<description>
-				<ul>
-					<li>Update: Electron version upgraded to 21.0.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.39" date="2022-09-26">
-			<description>
-				<ul>
-					<li>Fixed: Option closeAppOnCross not working (#602)</li>
-					<li>Update: Electron version upgraded to 20.2.0</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.38" date="2022-09-20">
-			<description>
-				<ul>
-					<li>Fixed: Right click in text box does not work (#594)</li>
-					<li>New: Spellcheck is back</li>
-					<li>Update: Electron version upgraded to 20.1.4</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.37" date="2022-09-14">
-			<description>
-				<ul>
-					<li>New: Command line argument --appLogLevels for controlling application logs. This can have values error, warn, info, debug. It can be single or multiple levels separated by comma. Default is error. Ex: --appLogLevels=error,warn</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.36" date="2022-09-13">
-			<description>
-				<ul>
-					<li>Fixed: No notification sound when installed through flatpak (569)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.35" date="2022-09-10">
-			<description>
-				<ul>
-					<li>New: More flexible command line arguments</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.33" date="2022-09-06">
-			<description>
-				<ul>
-					<li>Fixed: No more notification sound (565)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.32" date="2022-09-06">
-			<description>
-				<ul>
-					<li>Fixed: Add "zoom-in/out" functionnality (560)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.31" date="2022-09-05">
-			<description>
-				<ul>
-					<li>Fixed: Impossible to submit company login (538)</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.30" date="2022-09-01">
-			<description>
-				<ul>
-					<li>Fixed: Open window when clicking on your launcher (556)</li>
-					<li>Electron version upgraded to 20.1.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.29" date="2022-08-13">
-			<description>
-				<ul>
-					<li>Fixed: Leaks X11 client connections, eventually causing screen sharing failure</li>
-					<li>Electron version upgraded to 20.0.2</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.28" date="2022-08-11">
-			<description>
-				<ul>
-					<li>Fixed: Kill signal does not terminate the app</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.27" date="2022-08-10">
-			<description>
-				<ul>
-					<li>Fixed: Cannot start teams-for-linux again after quit</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.26" date="2022-08-09">
-			<description>
-				<ul>
-					<li>Bumped electron version to 20.0.1</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.25" date="2022-08-02">
-			<description>
-				<ul>
-					<li>Bumped electron version to 20.0.0</li>
-					<li>Spellchecker is no longer available due to incompatibilities with the latest node versions</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.24" date="2022-03-21">
-			<description>
-				<ul>
-					<li>Fix: #519 Black window on wayland</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.23" date="2022-01-14">
-			<description>
-				<p>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.31" date="2024-04-25">
+      <description>
+        <ul>
+          <li>Add isCustomBackgroundEnabled config option that defaults to true</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.30" date="2024-04-24">
+      <description>
+        <ul>
+          <li>Enable useMutationTitleLogic by default</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.29" date="2024-04-22">
+      <description>
+        <ul>
+          <li>Build universal app for Mac, to support Apple Silicon as well as Intel Macs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.28" date="2024-04-17">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 30.0.0</li>
+          <li>Clicking on notification shows the application</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.27" date="2024-04-15">
+      <description>
+        <ul>
+          <li>Rearranged quit menu</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.26" date="2024-04-14">
+      <description>
+        <ul>
+          <li>Added menu option to choose notification urgency</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.25" date="2024-04-14">
+      <description>
+        <ul>
+          <li>Now lets user choose the notification method and urgency</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.24" date="2024-04-13">
+      <description>
+        <ul>
+          <li>Support for electron CLI flags in config file</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.23" date="2024-04-12">
+      <description>
+        <ul>
+          <li>Additional logs for debugging custom background issues</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.22" date="2024-04-12">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 29.3.0</li>
+          <li>Fix: Teams doesn't remember the setting disable notification sound</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.21" date="2024-04-07">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 29.2.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.20" date="2024-04-06">
+      <description>
+        <ul>
+          <li>Now the notification badge count clears when all are read</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.19" date="2024-04-05">
+      <description>
+        <ul>
+          <li>updating tray icon with the number in the document.title. This is hidden behind a feature flag/config option called useMutationTitleLogic</li>
+          <li>moved trayIconRenderer out of the activityHub, and to react to events instead.</li>
+          <li>re-order config readme to show in the right order.</li>
+          <li>removing the 'removal' of the opt in for teamsv2. Now if you use that feature flag and want to revert you will need to do it manually.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.18" date="2024-04-04">
+      <description>
+        <ul>
+          <li>adding how to debug in bug report, moving react logic into its own ha… by @IsmaelMartinez in #1176</li>
+          <li>Feature/teams v2 changes theme by @IsmaelMartinez in #1177</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.17" date="2024-03-31">
+      <description>
+        <ul>
+          <li>feat: add opt in handling for teams v2 by @mhenselin in #1160</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.16" date="2024-03-28">
+      <description>
+        <ul>
+          <li>Removing the angular recurring call to disable some promotions as I s… by @IsmaelMartinez in #1152</li>
+          <li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1153</li>
+          <li>Hotfix/remove recurring angular call by @IsmaelMartinez in #1154</li>
+          <li>add support for changing idle (away) state in Teams2 by @bastidest in #1157</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.15" date="2024-03-23">
+      <description>
+        <ul>
+          <li>Added bail out logic to the angular detection as this is creating some memory issues in some users</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.14" date="2024-03-11">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 29.1.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.13" date="2024-03-04">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 29.0.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.12" date="2024-02-14">
+      <description>
+        <ul>
+          <li>Fix: Preload script error introduced in 1.4.11</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.11" date="2024-02-14">
+      <description>
+        <ul>
+          <li>Fix: MacOS - Disable Option + Left / Right keyboard shortcuts for history navigation (it is used for word jumping on MacOS)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.10" date="2024-02-04">
+      <description>
+        <ul>
+          <li>New: Experimental switch --awayOnSystemIdle which sets the user status to away when system goes idle</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.9" date="2024-02-03">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 28.2.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.8" date="2024-02-02">
+      <description>
+        <ul>
+          <li>New: Updated snap core to core22</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.7" date="2024-01-31">
+      <description>
+        <ul>
+          <li>New: Added --followSystemTheme config option</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.6" date="2024-01-28">
+      <description>
+        <ul>
+          <li>Fix: Notifications show the app's icon and not the sender's profile picture</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.5" date="2024-01-28">
+      <description>
+        <ul>
+          <li>New: Added the notification options to the tray menu</li>
+          <li>Fix: Wayland screenshare including system audio</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.4" date="2024-01-28">
+      <description>
+        <ul>
+          <li>Documentation: Added Flatpak config file location</li>
+          <li>New: Added apptitle to the tooltip</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.3" date="2024-01-22">
+      <description>
+        <ul>
+          <li>New: Rework wayland screenshare source selection</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.2" date="2024-01-22">
+      <description>
+        <ul>
+          <li>Fix: Getting version from cli arg with yargs after the Electron 28 bump</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.1" date="2024-01-08">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 28.0.0</li>
+          <li>Fix: Updated ipc handlers for incomming call command</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.0" date="2023-12-21">
+      <description>
+        <ul>
+          <li>Electron version upgrade to 28.0.0</li>
+          <li>Update dependencies to latest versions</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.26" date="2023-12-17">
+      <description>
+        <ul>
+          <li>New: Make sure executable is writable before running fuses in afterpack script</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.25" date="2023-12-10">
+      <description>
+        <ul>
+          <li>Fix: Missing "Meeting started" notifications</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.24" date="2023-12-10">
+      <description>
+        <ul>
+          <li>New: Allow usage of arbitrary disable-features switch</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.23" date="2023-11-20">
+      <description>
+        <ul>
+          <li>New: Adds afterpack script to flip EnableCookieEncryption electron fuse</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.22" date="2023-11-17">
+      <description>
+        <ul>
+          <li>New: Increased node version in the runners</li>
+          <li>New: Enhanced zooming in and out controls</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.21" date="2023-11-14">
+      <description>
+        <ul>
+          <li>New: Added support for running custom scripts on events</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.20" date="2023-11-14">
+      <description>
+        <ul>
+          <li>Fix: custom css compatibility with New Teams</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.19" date="2023-11-06">
+      <description>
+        <ul>
+          <li>New: Moved about menu entry to bottom</li>
+          <li>Update: Upgraded electron version to 27.0.3</li>
+          <li>Update: Edited documentation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.18" date="2023-10-31">
+      <description>
+        <ul>
+          <li>Updated documentation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.17" date="2023-10-30">
+      <description>
+        <ul>
+          <li>Fix: Avoid calling child_process.exec with untrusted string</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.16" date="2023-10-30">
+      <description>
+        <ul>
+          <li>New: add flag --disableGpu to disable GPU and hardware acceleration</li>
+          <li>Update: Electron version upgraded to 27.0.2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.13" date="2023-09-29">
+      <description>
+        <ul>
+          <li>Update: Electron version upgraded to 24.8.5</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.12" date="2023-09-28">
+      <description>
+        <ul>
+          <li>Fix: Import empty certificate path. The default config.clientCertPath is an empty string</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.11" date="2023-09-18">
+      <description>
+        <ul>
+          <li>Fix: A glitch in network waiting loop</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.10" date="2023-09-07">
+      <description>
+        <ul>
+          <li>Fix: fixed HTTPS network check from behind an HTTP proxy</li>
+          <li>New: Added --onlineCheckMethod {https,dns,native,none} to enable picking a different network check method (or disabling)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.9" date="2023-09-01">
+      <description>
+        <ul>
+          <li>Update: reordering and cleaning up the list of config options</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.8" date="2023-08-27">
+      <description>
+        <ul>
+          <li>New: Added about dialog</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.7" date="2023-08-26">
+      <description>
+        <ul>
+          <li>New: Network check logic uses HTTP instead of DNS resolve</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.5" date="2023-08-20">
+      <description>
+        <ul>
+          <li>New: App now waits for network during start up. It waits for up to 30 seconds before becomes idle.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.4" date="2023-08-18">
+      <description>
+        <ul>
+          <li>Default value for --onlineOfflineReload flag is set to false</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.3" date="2023-08-13">
+      <description>
+        <ul>
+          <li>New: More plugs added to snap package</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.2" date="2023-08-12">
+      <description>
+        <ul>
+          <li>New: Electron version downgraded to 24.6.3 due to multiple issues</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.1" date="2023-08-08">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 25.4.0</li>
+          <li>Fix: White screen after wakeup from suspend mode</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.0" date="2023-07-27">
+      <description>
+        <ul>
+          <li>New: Electron version upgraded to 25.3.2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.9" date="2023-07-27">
+      <description>
+        <ul>
+          <li>New: Workaround solution for screen sharing issues in Wayland</li>
+          <li>New: --bypassWaylandSourceSelection flag for those desktop environments that do not require additional video source selection dialog during screen-sharing request under Wayland</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.7" date="2023-07-19">
+      <description>
+        <ul>
+          <li>New: Spellchecker language selections are persisted between runs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.5" date="2023-07-11">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 24.6.3</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.4" date="2023-07-11">
+      <description>
+        <ul>
+          <li>New: Support for monochrome icon</li>
+          <li>New: Empty spellchecker language list disables spellchcker</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.3" date="2023-07-09">
+      <description>
+        <ul>
+          <li>New: Command-line argument --defaultURLHandler to change the browser application to be used to open links instead of the system default</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.2" date="2023-07-06">
+      <description>
+        <ul>
+          <li>Electron version downgraded to 24.6.2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.0" date="2023-07-06">
+      <description>
+        <ul>
+          <li>Electron version upgraded to 25.2.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.11" date="2023-07-03">
+      <description>
+        <ul>
+          <li>New: Command line flag --disableAutogain</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.8" date="2023-06-27">
+      <description>
+        <ul>
+          <li>Fix: Tray icon missing when --menubar hidden parameter is used</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.7" date="2023-06-27">
+      <description>
+        <ul>
+          <li>New: Command-line parameter --menubar [auto | visible |hidden]</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.6" date="2023-06-15">
+      <description>
+        <ul>
+          <li>Fix: A rare crash when session times out</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.4" date="2023-06-15">
+      <description>
+        <ul>
+          <li>New: Added flag --disableNotificationWindowFlash which disables flashing the window frame when there is a new notification</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.3" date="2023-06-13">
+      <description>
+        <ul>
+          <li>New: Additional logs to debug notification issues</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.2" date="2023-06-06">
+      <description>
+        <ul>
+          <li>Restored appdata.xml</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.1" date="2023-05-31">
+      <description>
+        <ul>
+          <li>New: Badge count on supported desktop environments</li>
+          <li>Update: default value for disableNotificationSoundIfNotAvailable is set to false</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.92" date="2023-05-18">
+      <description>
+        <ul>
+          <li>Fix: External links are not opened correctly when they point to a Teams channel</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.90" date="2023-05-16">
+      <description>
+        <ul>
+          <li>New: Code refactoring</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.88" date="2023-05-14">
+      <description>
+        <ul>
+          <li>New: Now custom background images can be downloaded from a remote server</li>
+          <li>New: Command line parameter --customBGServiceIgnoreMSDefaults to ignore Microsoft provided images</li>
+          <li>New: Custom background service 'config.json' need not have prefix '/teams-for-linux/custom-bg/' for 'src' and 'thumb_src'</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.86" date="2023-05-11">
+      <description>
+        <ul>
+          <li>New: User can set custom backgrounds for video calls. Read the documentation in git repo</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.83" date="2023-05-04">
+      <description>
+        <ul>
+          <li>New: CTRL + Click for SSO login.</li>
+          <li>New: Settings menu entry with 'Save' and 'Restore'. Settings saved and restored are theme, chat density, devices.</li>
+          <li>New: Extended quit menu with 'Normally' and 'Clear Storage'. 'Normally' would be the default but 'Clear Storage' would give a fresh start on next launch.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.80" date="2023-04-30">
+      <description>
+        <ul>
+          <li>New: Removed menu bar from the popup windows</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.79" date="2023-04-30">
+      <description>
+        <ul>
+          <li>New: Default chrome user agent set dynamically based on electron version</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.78" date="2023-04-29">
+      <description>
+        <ul>
+          <li>New: Safely open links</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.77" date="2023-04-29">
+      <description>
+        <ul>
+          <li>Update: Removed obsolete flag --enableDesktopNotificationsHack</li>
+          <li>Fix: Mac keyboard shortcuts are shown</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.74" date="2023-04-28">
+      <description>
+        <ul>
+          <li>New: Back/Forward navigation using keys</li>
+          <li>Fix: Now zoom in/out shortcuts work while on chat window</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.72" date="2023-04-26">
+      <description>
+        <ul>
+          <li>Fix: Right click link -&gt; copy not working</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.71" date="2023-04-23">
+      <description>
+        <ul>
+          <li>Fix: Teams gets unloaded after suspend</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.70" date="2023-04-22">
+      <description>
+        <ul>
+          <li>New: Improved selection of spell check languages</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.69" date="2023-04-21">
+      <description>
+        <ul>
+          <li>New: Disable all notifications with --disableNotifications flag</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.68" date="2023-04-19">
+      <description>
+        <ul>
+          <li>New: Disable/Enable Notification Sound if not Available with --disableNotificationSoundIfNotAvailable flag</li>
+          <li>Fix: Teams gets unloaded after suspend</li>
+          <li>Minor code optimization</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.65" date="2023-04-16">
+      <description>
+        <ul>
+          <li>Updated documentation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.64" date="2023-04-16">
+      <description>
+        <ul>
+          <li>New: Option to choose spellcheck language while writing</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.63" date="2023-04-15">
+      <description>
+        <ul>
+          <li>New: command line option --appActiveCheckInterval</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.62" date="2023-04-15">
+      <description>
+        <ul>
+          <li>Update: Application presence state optimisation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.61" date="2023-04-15">
+      <description>
+        <ul>
+          <li>New: Command line option --screenLockInhibitionMethod to choose screen lock inhibition method. Possible values are Electron and WakeLockSentinel</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.60" date="2023-04-13">
+      <description>
+        <ul>
+          <li>Fix: away after a couple minutes</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.59-2" date="2023-04-11">
+      <description>
+        <ul>
+          <li>Added required permisions for inhibiting screen lock</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.59" date="2023-04-11">
+      <description>
+        <ul>
+          <li>Fix: Prevent screensaver while in call</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.58" date="2023-04-01">
+      <description>
+        <ul>
+          <li>Fix: Click on link to external meetings is ignored</li>
+          <li>Fix: No longer able to open meeting invitations in app</li>
+          <li>Fix: Option for SSO Login Popups for certain Apps</li>
+          <li>Fix: The new-window event is deprecated and will be removed. Please use contents.setWindowOpenHandler() instead</li>
+          <li>New: Set default spellchecker language to en-US</li>
+          <li>New: Disable hardware media key handling</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.55" date="2023-03-22">
+      <description>
+        <ul>
+          <li>New command line option --disableNotificationSound</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.54" date="2023-03-21">
+      <description>
+        <ul>
+          <li>Add doc for additional settings (#703)</li>
+          <li>New command line argument --appTitle for custom page title</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.52" date="2023-03-08">
+      <description>
+        <ul>
+          <li>Release to fix dependabot removing the "integration" section from the yarn.lock files</li>
+          <li>Bringing the multi account option to those who asked for it</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.50" date="2023-03-02">
+      <description>
+        <ul>
+          <li>Add: Option to load client certificates for corporate auth</li>
+          <li>Add: Corporate account authentication with smart-card</li>
+          <li>Add: Option to set the spellchecker languages</li>
+          <li>Add: WIP Mac OS support</li>
+          <li>Add: Minimal support for dark mode</li>
+          <li>Fix: Minimise on startup</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.45" date="2022-10-12">
+      <description>
+        <ul>
+          <li>Fix: Cannot find how to turn off notifications for started meetings (620)</li>
+          <li>Fix: Showing expired notifications</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.44" date="2022-10-09">
+      <description>
+        <ul>
+          <li>Fix: Prevent screensaver while in a call (613)</li>
+          <li>Fix: No meeting notifications in KDE (470)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.42" date="2022-10-08">
+      <description>
+        <ul>
+          <li>Fix: The interstitial page of "Open Teams in Browser" / "Download Linux Client" / "Open in Teams App" opens when the app is started. By @breunigs</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.41" date="2022-09-29">
+      <description>
+        <ul>
+          <li>New: A command line flag (--clearStorage) to start afresh</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.40" date="2022-09-29">
+      <description>
+        <ul>
+          <li>Update: Electron version upgraded to 21.0.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.39" date="2022-09-26">
+      <description>
+        <ul>
+          <li>Fixed: Option closeAppOnCross not working (#602)</li>
+          <li>Update: Electron version upgraded to 20.2.0</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.38" date="2022-09-20">
+      <description>
+        <ul>
+          <li>Fixed: Right click in text box does not work (#594)</li>
+          <li>New: Spellcheck is back</li>
+          <li>Update: Electron version upgraded to 20.1.4</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.37" date="2022-09-14">
+      <description>
+        <ul>
+          <li>New: Command line argument --appLogLevels for controlling application logs. This can have values error, warn, info, debug. It can be single or multiple levels separated by comma. Default is error. Ex: --appLogLevels=error,warn</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.36" date="2022-09-13">
+      <description>
+        <ul>
+          <li>Fixed: No notification sound when installed through flatpak (569)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.35" date="2022-09-10">
+      <description>
+        <ul>
+          <li>New: More flexible command line arguments</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.33" date="2022-09-06">
+      <description>
+        <ul>
+          <li>Fixed: No more notification sound (565)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.32" date="2022-09-06">
+      <description>
+        <ul>
+          <li>Fixed: Add "zoom-in/out" functionnality (560)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.31" date="2022-09-05">
+      <description>
+        <ul>
+          <li>Fixed: Impossible to submit company login (538)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.30" date="2022-09-01">
+      <description>
+        <ul>
+          <li>Fixed: Open window when clicking on your launcher (556)</li>
+          <li>Electron version upgraded to 20.1.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.29" date="2022-08-13">
+      <description>
+        <ul>
+          <li>Fixed: Leaks X11 client connections, eventually causing screen sharing failure</li>
+          <li>Electron version upgraded to 20.0.2</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.28" date="2022-08-11">
+      <description>
+        <ul>
+          <li>Fixed: Kill signal does not terminate the app</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.27" date="2022-08-10">
+      <description>
+        <ul>
+          <li>Fixed: Cannot start teams-for-linux again after quit</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.26" date="2022-08-09">
+      <description>
+        <ul>
+          <li>Bumped electron version to 20.0.1</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.25" date="2022-08-02">
+      <description>
+        <ul>
+          <li>Bumped electron version to 20.0.0</li>
+          <li>Spellchecker is no longer available due to incompatibilities with the latest node versions</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.24" date="2022-03-21">
+      <description>
+        <ul>
+          <li>Fix: #519 Black window on wayland</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.23" date="2022-01-14">
+      <description>
+        <p>
 					Fixes available in this build:
 				</p>
-				<ul>
-					<li>Fix: #455 Screen share: black screen + mouse vs Ubuntu 21.04 + Chrome. Thanks to @pablorq, @herbiejhopkins and @IsmaelMartinez</li>
-				</ul>
-				<ul>
-					<li>Fix: #505 Cannot share screen nor window with snap. Thanks to @crazyscientist and @jijojosephk.</li>
-				</ul>
-			</description>
-		</release>
-		<release version="1.0.20" date="2021-11-02">
-			<description>
-				<p>
+        <ul>
+          <li>Fix: #455 Screen share: black screen + mouse vs Ubuntu 21.04 + Chrome. Thanks to @pablorq, @herbiejhopkins and @IsmaelMartinez</li>
+        </ul>
+        <ul>
+          <li>Fix: #505 Cannot share screen nor window with snap. Thanks to @crazyscientist and @jijojosephk.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.20" date="2021-11-02">
+      <description>
+        <p>
 					Fixes available in this build:
 				</p>
-				<ul>
-					<li>#447: Zoom resets to 100% on app close or refresh</li>
-				</ul>
-				<p>
+        <p>
 					Thanks @DiegoChajtur for reporting #447
 				</p>
-			</description>
-		</release>
-		<release version="1.0.19" date="2021-10-29">
-			<description>
-				<p>
+        <ul>
+          <li>#447: Zoom resets to 100% on app close or refresh</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.19" date="2021-10-29">
+      <description>
+        <p>
 					Fixes available in this build:
 				</p>
-				<ul>
-					<li>#488: Javascript error in main process</li>
-				</ul>
-				<p>
+        <p>
 					Thanks @FPSUsername for reporting #488
 				</p>
-			</description>
-		</release>
-		<release version="1.0.18" date="2021-10-28">
-			<description>
-				<p>
+        <ul>
+          <li>#488: Javascript error in main process</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.18" date="2021-10-28">
+      <description>
+        <p>
 					Latest release is out!
 				</p>
-				<ul>
-					<li>Fix: #497 Flatpak install - Not launching from menu entry</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to all who contributed to this project.
 				</p>
-			</description>
-		</release>
-		<release version="1.0.17" date="2021-10-28">
-			<description>
-				<p>
+        <ul>
+          <li>Fix: #497 Flatpak install - Not launching from menu entry</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.17" date="2021-10-28">
+      <description>
+        <p>
 					Screen sharing now works.
 				</p>
-				<ul>
-					<li>Fix: #492 Can't share screen on Ubuntu</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to all who contributed to this project.
 				</p>
-			</description>
-		</release>
-		<release version="1.0.16" date="2021-10-28">
-			<description>
-				<p>
+        <ul>
+          <li>Fix: #492 Can't share screen on Ubuntu</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.16" date="2021-10-28">
+      <description>
+        <p>
 					This release has been focused on fixing flatpak runtime issues.
 				</p>
-				<ul>
-					<li>Fix: #489 - Application fails to launch</li>
-					<li>Known issue: Screen sharing does not work</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to all who contributed to this project.
 				</p>
-			</description>
-		</release>
-		<release version="1.0.15" date="2021-10-24">
-			<description>
-				<p>
+        <ul>
+          <li>Fix: #489 - Application fails to launch</li>
+          <li>Known issue: Screen sharing does not work</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.15" date="2021-10-24">
+      <description>
+        <p>
 					This release has been focused on fixing flatpak runtime issues.
 				</p>
-				<ul>
-					<li>#489</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to all who contributed to this project.
 				</p>
-			</description>
-		</release>
-		<release version="1.0.13" date="2021-10-24">
-			<description>
-				<p>
+        <ul>
+          <li>#489</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.13" date="2021-10-24">
+      <description>
+        <p>
 					This release has been focused on fixing small issues and improving screen sharing capabilities.
 				</p>
-				<ul>
-					<li>Major bump from version 1.0.0 to 1.0.13</li>
-					<li>Migrated to Electron v15</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to all who contributed to this project.
 				</p>
-			</description>
-		</release>
-		<release version="1.0.0" date="2019-11-01">
-			<description>
-				<p>
+        <ul>
+          <li>Major bump from version 1.0.0 to 1.0.13</li>
+          <li>Migrated to Electron v15</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2019-11-01">
+      <description>
+        <p>
 					While we wait for Microsoft... Here we go, we are now version 1.0.0 🍾🎉
 
 					This release has been focus on fixing small issues, improving config options (specially for proxy),
 					adding some bots to help automation, adding more functionality to the right click button
 					and automatically place your downloads into the download folder (opt in feature)
 				</p>
-				<ul>
-					<li>Adding electron dl to automatically place your dowloads into the dowload folder (opt-in feature, check the config options) (#295)</li>
-					<li>Enabling the right click on url and adding copy URL to that menu option (#294)</li>
-					<li>Add proxy server to config options to ease configuration (#292)</li>
-					<li>Adding the 'try-supported-channel-layouts' to avoid locking the audio on the 1st instance (#291)</li>
-					<li>Feature/fix anylint issues and close #272 (#288)</li>
-					<li>Bump eslint-utils from 1.3.1 to 1.4.2 (#287)</li>
-					<li>fix: enable meetups join also for https protocol links (#283)</li>
-					<li>Updating stale.yml</li>
-					<li>feat: add join meeting via link outside application (#255)</li>
-					<li>Feat adding snyk (#260)</li>
-					<li>Replacing depShield for snyk to check vulnerabilities (#259)</li>
-					<li>revert - Fix depshield issues (#258)</li>
-					<li>Fix depshield issues (#256)</li>
-					<li>Update README.md</li>
-					<li>Adding stale bot</li>
-					<li>Fix merge issue (#238)</li>
-				</ul>
-				<p>
+        <p>
 					Thanks to @standagh, @emanuelbatista, @jef79m and everybody that created issues/enhancements, fixed and/or tested them.
 
 					Special thanks to @julian-alarcon for continuously supporting the snap version of this project and to anyone else that is supporting other package types.
@@ -1987,102 +1980,120 @@
 
 					Release notes partly done by Stamp.
 				</p>
-			</description>
-		</release>
-		<release version="0.7.0" date="2019-08-19">
-			<description>
-				<p>Because #217, you need to clear you config folder before your 1st login (config folder locations). This is not necessary if you are moving from version 0.6.6 or higher.</p>
-				<p>This release is been mostly concentrated on bug fixes and making this a bit more stable.</p>
-				<ul>
-					<li>Fix #220. Electron's getLocale, and Chromium's l10n_util, can return the language code in the IETF BCP 47 format (en-US) instead of the ISO 15897 format (en_US). Hunspell, the dictionaries included with this project, and the JavaScript code here assumes the ISO 15897 format, so this hotfix converts what getLocale returns. (#234) (97eb15f) Thanks to @pnickerson-cashstar</li>
-					<li>Add flatpak to configuration directory list (#232) (afbb725) Thanks to @agates</li>
-					<li>Fix #208. Increasing the electron-builder (#231) (555e364)</li>
-					<li>Fix #221: updating readme with a link to AppImageLauncher (#226) (4fce0df) Thanks to @orange-buffalo</li>
-					<li>Fix #171. Can't open Microsoft Teams - blank screen (#218) (f0242d2) Thanks to @inglor and @basaas</li>
-					<li>Fix #204. Updating default user agent string (#217) (952c55a) Thanks to @whofferbert</li>
-					<li>Feature #185 Adding the ability to toogle fullscreen f11 (#216) (adeec1d) Thanks to @rt3norio</li>
-					<li>Update KNOWN_ISSUES to reference cache folder (#171) (#210) (36af526) Thanks to @skyghis</li>
-					<li>Fix #182. Better handle external requests in new windows (#206) (599e140) Thanks to @HarlemSquirrel</li>
-				</ul>
-				<p>Extras</p>
-				<ul>
-					<li>Special thanks also to all the people that reported issues, tested them, fixed them, improved the documentation, and, in general, helped making this a bit more stable. All of this will not be possible with your contributions.</li>
-				</ul>
-				<p>Apologies if I have missed anyone.</p>
-			</description>
-		</release>
-		<release version="0.4.0" date="2019-07-19">
-			<description>
-				<p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
-				<p>#149 Re-implementing the spellchecker to improve performance. (PR #152, #155 and #163)</p>
-				<p>#123 Is now possible as the main issue was with the spellchecker (issue #149)</p>
-				<p>#41 Teams-for-linux now also available in Flatpak! (Thanks to @gabops)</p>
-				<p>#99 Fixing the cursor in snap (PR #168)</p>
-				<p>#61 Improving the screen-share quality by adding a white end to the browserviews. This is a chrome issue that basically doesn't trigger then the antialiasing. Strange but it works! (PR #165)</p>
-				<p>#89 Adding the basic part for the xdg-open. This might need a few improvements as it is currently quite difficult to test. (PR #170)</p>
-				<p>#162 Improving the documentation for snap as people keep coming back reporting camera not working (Thanks @julian-alarcon) (PR in #167)</p>
-				<p>#171 blank screen issue. Workaround found and documented (Thanks to @sant123 for documenting and the others for finding/testing the solution!) (PR #178)</p>
-				<p>#176 Fixing the multiple icons in dock (Thanks to @lkms) (PR #179)</p>
-				<p>#98 Fixing the loop when launching that some people where experiencing.</p>
-				<p>#109 and #107 Improving the handling of "about:blank" links (mainly connectors and preview images) (Thanks to @HarlemSquirrel) (PRs #131 and #172)</p>
-			</description>
-		</release>
-		<release version="0.3.0" date="2019-05-27">
-			<description>
-				<p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
-				<p>automating the snap release (Thanks to @julian-alarcon and @benyanke)</p>
-				<p>Fixing snap and camera not working together (Thanks to @julian-alarcon)</p>
-				<p>Unpacking the spellchecker dictionaries and adding the ones installed in hunspell (Thanks to @vadimi and @noderat )</p>
-				<p>Updating the MS icon (Thanks to @julian-alarcon)</p>
-				<p>removing the apparmor=DENIED messages in syslog for snap build (Thanks to @julian-alarcon)</p>
-				<p>Adding the --minimized option to start the app minimized (Thanks to @didster)</p>
-				<p>Adding webDebug to the tray menu options</p>
-			</description>
-		</release>
-	</releases>
-	<developer_name>Ismael Martinez</developer_name>
-	<screenshots>
-		<screenshot type="default">
-			<image type="source">https://iili.io/sUyRS9.png</image>
-			<caption>General Chat</caption>
-		</screenshot>
-		<screenshot>
-			<image type="source">https://iili.io/sUyuFS.png</image>
-			<caption>Calendar view</caption>
-		</screenshot>
-		<screenshot>
-			<image type="source">https://iili.io/sUyAc7.png</image>
-			<caption>Logging screen</caption>
-		</screenshot>
-		<screenshot>
-			<image type="source">https://iili.io/sUyIP2.png</image>
-			<caption>Call</caption>
-		</screenshot>
-		<screenshot>
-			<image type="source">https://iili.io/sUy79e.png</image>
-			<caption>Screen sharing</caption>
-		</screenshot>
-	</screenshots>
-	<content_rating type="oars-1.0">
-		<content_attribute id="violence-cartoon">none</content_attribute>
-		<content_attribute id="violence-fantasy">none</content_attribute>
-		<content_attribute id="violence-realistic">none</content_attribute>
-		<content_attribute id="violence-bloodshed">none</content_attribute>
-		<content_attribute id="violence-sexual">none</content_attribute>
-		<content_attribute id="drugs-alcohol">none</content_attribute>
-		<content_attribute id="drugs-narcotics">none</content_attribute>
-		<content_attribute id="drugs-tobacco">none</content_attribute>
-		<content_attribute id="sex-nudity">none</content_attribute>
-		<content_attribute id="sex-themes">none</content_attribute>
-		<content_attribute id="language-profanity">none</content_attribute>
-		<content_attribute id="language-humor">none</content_attribute>
-		<content_attribute id="language-discrimination">none</content_attribute>
-		<content_attribute id="social-chat">none</content_attribute>
-		<content_attribute id="social-info">none</content_attribute>
-		<content_attribute id="social-audio">none</content_attribute>
-		<content_attribute id="social-location">none</content_attribute>
-		<content_attribute id="social-contacts">none</content_attribute>
-		<content_attribute id="money-purchasing">none</content_attribute>
-		<content_attribute id="money-gambling">none</content_attribute>
-	</content_rating>
+        <ul>
+          <li>Adding electron dl to automatically place your dowloads into the dowload folder (opt-in feature, check the config options) (#295)</li>
+          <li>Enabling the right click on url and adding copy URL to that menu option (#294)</li>
+          <li>Add proxy server to config options to ease configuration (#292)</li>
+          <li>Adding the 'try-supported-channel-layouts' to avoid locking the audio on the 1st instance (#291)</li>
+          <li>Feature/fix anylint issues and close #272 (#288)</li>
+          <li>Bump eslint-utils from 1.3.1 to 1.4.2 (#287)</li>
+          <li>fix: enable meetups join also for https protocol links (#283)</li>
+          <li>Updating stale.yml</li>
+          <li>feat: add join meeting via link outside application (#255)</li>
+          <li>Feat adding snyk (#260)</li>
+          <li>Replacing depShield for snyk to check vulnerabilities (#259)</li>
+          <li>revert - Fix depshield issues (#258)</li>
+          <li>Fix depshield issues (#256)</li>
+          <li>Update README.md</li>
+          <li>Adding stale bot</li>
+          <li>Fix merge issue (#238)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.0" date="2019-08-19">
+      <description>
+        <p>Because #217, you need to clear you config folder before your 1st login (config folder locations). This is not necessary if you are moving from version 0.6.6 or higher.</p>
+        <p>This release is been mostly concentrated on bug fixes and making this a bit more stable.</p>
+        <p>Extras</p>
+        <p>Apologies if I have missed anyone.</p>
+        <ul>
+          <li>Fix #220. Electron's getLocale, and Chromium's l10n_util, can return the language code in the IETF BCP 47 format (en-US) instead of the ISO 15897 format (en_US). Hunspell, the dictionaries included with this project, and the JavaScript code here assumes the ISO 15897 format, so this hotfix converts what getLocale returns. (#234) (97eb15f) Thanks to @pnickerson-cashstar</li>
+          <li>Add flatpak to configuration directory list (#232) (afbb725) Thanks to @agates</li>
+          <li>Fix #208. Increasing the electron-builder (#231) (555e364)</li>
+          <li>Fix #221: updating readme with a link to AppImageLauncher (#226) (4fce0df) Thanks to @orange-buffalo</li>
+          <li>Fix #171. Can't open Microsoft Teams - blank screen (#218) (f0242d2) Thanks to @inglor and @basaas</li>
+          <li>Fix #204. Updating default user agent string (#217) (952c55a) Thanks to @whofferbert</li>
+          <li>Feature #185 Adding the ability to toogle fullscreen f11 (#216) (adeec1d) Thanks to @rt3norio</li>
+          <li>Update KNOWN_ISSUES to reference cache folder (#171) (#210) (36af526) Thanks to @skyghis</li>
+          <li>Fix #182. Better handle external requests in new windows (#206) (599e140) Thanks to @HarlemSquirrel</li>
+        </ul>
+        <ul>
+          <li>Special thanks also to all the people that reported issues, tested them, fixed them, improved the documentation, and, in general, helped making this a bit more stable. All of this will not be possible with your contributions.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.4.0" date="2019-07-19">
+      <description>
+        <p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
+        <p>#149 Re-implementing the spellchecker to improve performance. (PR #152, #155 and #163)</p>
+        <p>#123 Is now possible as the main issue was with the spellchecker (issue #149)</p>
+        <p>#41 Teams-for-linux now also available in Flatpak! (Thanks to @gabops)</p>
+        <p>#99 Fixing the cursor in snap (PR #168)</p>
+        <p>#61 Improving the screen-share quality by adding a white end to the browserviews. This is a chrome issue that basically doesn't trigger then the antialiasing. Strange but it works! (PR #165)</p>
+        <p>#89 Adding the basic part for the xdg-open. This might need a few improvements as it is currently quite difficult to test. (PR #170)</p>
+        <p>#162 Improving the documentation for snap as people keep coming back reporting camera not working (Thanks @julian-alarcon) (PR in #167)</p>
+        <p>#171 blank screen issue. Workaround found and documented (Thanks to @sant123 for documenting and the others for finding/testing the solution!) (PR #178)</p>
+        <p>#176 Fixing the multiple icons in dock (Thanks to @lkms) (PR #179)</p>
+        <p>#98 Fixing the loop when launching that some people where experiencing.</p>
+        <p>#109 and #107 Improving the handling of "about:blank" links (mainly connectors and preview images) (Thanks to @HarlemSquirrel) (PRs #131 and #172)</p>
+      </description>
+    </release>
+    <release version="0.3.0" date="2019-05-27">
+      <description>
+        <p>Using gitflow from now on for releases (having master and develop branches) (Thanks to @julian-alarcon)</p>
+        <p>automating the snap release (Thanks to @julian-alarcon and @benyanke)</p>
+        <p>Fixing snap and camera not working together (Thanks to @julian-alarcon)</p>
+        <p>Unpacking the spellchecker dictionaries and adding the ones installed in hunspell (Thanks to @vadimi and @noderat )</p>
+        <p>Updating the MS icon (Thanks to @julian-alarcon)</p>
+        <p>removing the apparmor=DENIED messages in syslog for snap build (Thanks to @julian-alarcon)</p>
+        <p>Adding the --minimized option to start the app minimized (Thanks to @didster)</p>
+        <p>Adding webDebug to the tray menu options</p>
+      </description>
+    </release>
+  </releases>
+  <developer_name>Ismael Martinez</developer_name>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://iili.io/sUyRS9.png</image>
+      <caption>General Chat</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://iili.io/sUyuFS.png</image>
+      <caption>Calendar view</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://iili.io/sUyAc7.png</image>
+      <caption>Logging screen</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://iili.io/sUyIP2.png</image>
+      <caption>Call</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://iili.io/sUy79e.png</image>
+      <caption>Screen sharing</caption>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.0">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+  </content_rating>
 </component>
