@@ -131,19 +131,24 @@ class BrowserWindowManager {
   }
 
   assignEventHandlers() {
+    // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
     if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
+    // Handle incoming call notification created
     ipcMain.handle(
       "incoming-call-created",
       this.assignOnIncomingCallCreatedHandler()
     );
+    // Handle incoming call notification ended
     ipcMain.handle(
       "incoming-call-ended",
       this.assignOnIncomingCallEndedHandler()
     );
+    // Notify when a call is connected
     ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
+    // Notify when a call is disconnected
     ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
   }
 

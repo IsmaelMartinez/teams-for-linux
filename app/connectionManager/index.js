@@ -38,6 +38,7 @@ class ConnectionManager {
     _ConnectionManager_boundRefresh.set(this, boundRefresh);
     _ConnectionManager_boundDidFailLoad.set(this, boundDidFailLoad);
 
+    // Retry connection when user clicks retry button on offline page
     ipcMain.on("offline-retry", boundRefresh);
     powerMonitor.on("resume", boundRefresh);
     this.window.webContents.on("did-fail-load", boundDidFailLoad);
