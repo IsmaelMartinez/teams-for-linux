@@ -87,6 +87,8 @@ const sidebars: SidebarsConfig = {
               label: 'Testing & Development',
               items: [
                 'development/research/automated-testing-strategy',
+                'development/research/changelog-generator-setup',
+                'development/research/release-pr-workflow-plan',
               ],
             },
             {
@@ -109,7 +111,6 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Architecture & Refactoring',
               items: [
-                'development/research/incremental-refactoring-plan',
                 'development/research/architecture-modernization-research',
               ],
             },

@@ -30,15 +30,26 @@ related_docs:
 Teams for Linux documentation is **already excellent** with a clean, well-organized structure. The Docusaurus migration is complete, ADR system is working well, and module documentation is comprehensive.
 
 **Documentation Inventory:**
-- **Total:** 59 markdown files
+- **Total:** 65 markdown files
   - Root-level: 8 files (CLAUDE.md, README.md, CONTRIBUTING.md, SECURITY.md, LICENSE.md, CODE_OF_CONDUCT.md, HISTORY.md, ISSUE_INVESTIGATION_2025_09_02.md)
   - User Documentation: 10 files (installation, configuration, troubleshooting, features)
-  - Developer Documentation: 7 files (contributing, IPC API, architecture)
-  - Architecture Decision Records (ADRs): 4 files
-  - Research Documents: 8 files (down from 11 after cleanup)
-  - Module READMEs: 21 files
+  - Developer Documentation: 9 files (contributing, IPC API manual & generated, architecture, manual release process)
+  - Architecture Decision Records (ADRs): 5 files (including ADR-005: AI-powered changelog generation)
+  - Research Documents: 9 files (includes new changelog-generator-setup, release-pr-workflow-plan)
+  - Module READMEs: 24 files (up from 21 after incremental refactoring: +idle, +notifications, +partitions)
 
-**Health Score:** 8.5/10 (Excellent)
+**Health Score:** 9.0/10 (Excellent) - Improved with automated IPC documentation
+
+**Recent Major Changes (November 2024):**
+- ✅ **Incremental Refactoring Completed** - Successfully extracted 5 modules, reduced index.js by 55%
+- ✅ **Automated IPC Documentation** - 31 IPC channels now auto-documented via script
+- ✅ **New Modules Added** - idle monitoring, notifications service, partitions manager
+- ✅ **ADR-005 Created** - AI-powered changelog generation approach documented
+
+**Key Learnings from Refactoring:**
+- **Testing Complexity**: Automated testing was deferred due to MS authentication constraints and external dependencies. Applications requiring OAuth/SSO authentication face significant testing challenges.
+- **Documentation Automation**: Auto-generating IPC documentation from code proved highly valuable - documentation stays in sync with implementation.
+- **Incremental Approach**: Small, focused changes (extract one module per week) delivered continuous value with minimal risk.
 
 **Recent improvements (November 2024):**
 - ✅ CLAUDE.md updated with local documentation references
@@ -90,19 +101,19 @@ Three expert reviews converged on a unanimous conclusion: **targeted improvement
 
 ### What's Working Well ✅
 
-1. **Comprehensive Coverage** - 59 markdown files with clear organization (down from 62 after cleanup)
+1. **Comprehensive Coverage** - 65 markdown files with clear organization (up from 59 after refactoring work)
 2. **Modern Platform** - Docusaurus 3.9.1 with search, mobile support, and clean sidebar navigation
-3. **Well-Structured ADRs** - 4 ADRs with good format (ADR-002 is exemplary)
-4. **Focused Research** - 8 strategic research documents (consolidated from 11, removed 1,489 lines of redundancy)
-5. **Module Documentation** - 21 module READMEs, many comprehensive (e.g., MQTT, Screen Sharing, Startup)
-6. **Recent Consolidation** - Instruction files consolidated, markdown standards centralized, redundant research removed, all links validated
+3. **Well-Structured ADRs** - 5 ADRs with good format, including new ADR-005 on AI changelog generation
+4. **Focused Research** - 9 strategic research documents with clear outcomes
+5. **Module Documentation** - 24 module READMEs (up from 21), comprehensive coverage including new modules from refactoring
+6. **Automated Documentation** - IPC API documentation now auto-generated from code (31 channels documented)
 
 ### Real Gaps Identified ❌
 
 1. **No Quick Reference** - Developers need fast access to common commands and configs
-2. **Module Discoverability** - 21 modules in `app/` not indexed in main documentation
+2. **Module Discoverability** - 24 modules in `app/` not indexed in main documentation (recently increased after refactoring)
 3. **Inconsistent Metadata** - Some docs have YAML frontmatter, most don't
-4. **Missing ADR Index** - 4 ADRs exist but no overview/status page
+4. **Missing ADR Index** - 5 ADRs exist but no overview/status page (recently added ADR-005)
 
 ### Artificial Problems (Don't Solve) ⚠️
 
@@ -110,6 +121,7 @@ Three expert reviews converged on a unanimous conclusion: **targeted improvement
 2. **Bidirectional cross-references** - Search and grep work fine
 3. **Extensive version annotations** - Only needed for breaking changes
 4. **Feature hubs** - Would create "documentation about documentation" overhead
+5. **Comprehensive automated testing** - Recent refactoring experience showed that testing adds significant complexity (MS authentication constraints, external dependencies). Focus on E2E tests for critical paths rather than comprehensive unit test coverage.
 
 ---
 
@@ -224,7 +236,7 @@ teams-for-linux --class=teams-personal --user-data-dir=~/.config/teams-profile-p
 
 **File:** `docs-site/docs/development/module-index.md`
 
-**Format:** Simple table categorizing all 21 modules in the `app/` directory
+**Format:** Simple table categorizing all 24 modules in the `app/` directory (includes recent additions: idle, notifications, partitions)
 
 ```markdown
 ---
@@ -295,6 +307,7 @@ This directory contains Architecture Decision Records documenting significant te
 | [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2024-09-08 | v2.5.9 |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2024-11-12 | N/A |
+| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2024-11-18 | v2.6.15 |
 
 ## By Topic
 
@@ -307,6 +320,9 @@ This directory contains Architecture Decision Records documenting significant te
 
 ### Documentation & Standards
 - [004](004-agents-md-standard-investigation.md) - Investigation and rejection of agents.md standard
+
+### Release Process
+- [005](005-ai-powered-changelog-generation.md) - Automated changelog generation using AI
 
 ## Creating New ADRs
 
@@ -453,8 +469,8 @@ Based on expert consensus, the following were rejected:
 
 **After Phase 1 (Week 1), verify:**
 - [ ] Quick Reference exists and is discoverable
-- [ ] Module Index links to all 21 modules
-- [ ] ADR Index provides status overview for all 4 ADRs
+- [ ] Module Index links to all 24 modules (includes idle, notifications, partitions from recent refactoring)
+- [ ] ADR Index provides status overview for all 5 ADRs (including ADR-005: AI changelog generation)
 - [x] CLAUDE.md paths are correct (already completed in November 2024)
 
 **After Phase 2 (Week 2), verify:**
@@ -807,8 +823,8 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 
 **Week 1 Priority Order:**
 1. Quick Reference Guide (8 hours) - Highest value
-2. Module Index (3-4 hours) - Real gap, covers 21 modules
-3. ADR Index (2 hours) - Low effort, high value, now includes 4 ADRs
+2. Module Index (3-4 hours) - Real gap, covers 24 modules (updated after refactoring)
+3. ADR Index (2 hours) - Low effort, high value, now includes 5 ADRs
 4. ~~Fix CLAUDE.md~~ (0.5-1 hour) - ✅ Complete (November 2024 update)
 
 ### Validation After Week 1
@@ -839,8 +855,8 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 
 **Implement Week 1 (12-15 hours):**
 1. Quick Reference Guide (8h)
-2. Module Index (3-4h) - covers 21 modules
-3. ADR Index (2h) - includes 4 ADRs
+2. Module Index (3-4h) - covers 24 modules (updated after refactoring)
+3. ADR Index (2h) - includes 5 ADRs (including new ADR-005)
 4. ~~Enhance CLAUDE.md~~ - ✅ Complete (November 2024)
 
 **This delivers:**

@@ -34,11 +34,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
 
 ### Architecture & Refactoring
-- **[Incremental Refactoring Plan](incremental-refactoring-plan.md)** ⭐ **PHASE 1 & 2 COMPLETE** - Practical refactoring plan modernizing architecture through incremental extraction
-  - **Phase 1 Complete**: Reduced index.js by 55% (755 → 339 lines), extracted 5 focused modules
-  - **Phase 2 Complete**: Singleton refactoring, IPC pattern improvements, automated IPC documentation
+- **Incremental Refactoring** - ✅ **COMPLETED (November 2024)** - Successfully modernized architecture through incremental extraction
+  - **Phase 1 Results**: Reduced index.js by 55% (755 → 339 lines), extracted 5 focused modules (startup, notifications, screen sharing, partitions, idle)
+  - **Phase 2 Results**: Eliminated singleton patterns, improved IPC registration, automated IPC documentation generation
+  - **Key Learning**: Testing deferred due to MS authentication constraints - automated testing adds significant complexity in apps requiring external authentication
   - Low risk, continuous value delivery approach
-  - Supersedes closed #1799 (DDD+Plugin approach)
+  - Superseded closed #1799 (DDD+Plugin approach)
+  - See [Contributing Guide](../contributing.md) for current architecture and new module structure
 - **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
   - Preserved as reference and historical context
   - 10-week big-bang migration plan
