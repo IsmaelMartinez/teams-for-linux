@@ -50,6 +50,7 @@ function extractIpcChannels() {
   } catch (error) {
     // ripgrep not found - provide helpful error message
     console.error('\n❌ Error: ripgrep (rg) is not installed or not in your PATH.');
+    console.error(`   Reason: ${error.message}`);
     console.error('This script requires ripgrep to scan for IPC channels.\n');
     console.error('Please install it from: https://github.com/BurntSushi/ripgrep#installation\n');
     process.exit(1);
