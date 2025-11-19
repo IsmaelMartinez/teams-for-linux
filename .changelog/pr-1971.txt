@@ -1,0 +1,1 @@
+Continue incremental refactoring implementation - by @IsmaelMartinez (#1971)

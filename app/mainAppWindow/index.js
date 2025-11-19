@@ -16,7 +16,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
-const connMgr = require("../connectionManager");
+const ConnectionManager = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("node:os");
 const path = require("node:path");
@@ -39,6 +39,8 @@ let window = null;
 let appConfig = null;
 let customBackgroundService = null;
 let streamSelector;
+let screenSharingService = null;
+let connectionManager = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -47,8 +49,8 @@ function findSelectedSource(sources, source) {
 }
 
 function setupScreenSharing(selectedSource) {
-  // Store the source ID globally for access by screen sharing manager
-  globalThis.selectedScreenShareSource = selectedSource;
+  // Store the source ID in the screen sharing service
+  screenSharingService.setSelectedSource(selectedSource);
 
   // Create preview window for screen sharing
   createScreenSharePreviewWindow();
@@ -84,11 +86,14 @@ function createScreenSharePreviewWindow() {
     config?.screenSharingThumbnail ??
     DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
+  const previewWindow = screenSharingService.getPreviewWindow();
+  const activeSource = screenSharingService.getSelectedSource();
+
   console.debug("[SCREEN_SHARE_DIAG] Preview window creation requested", {
     enabled: thumbnailConfig.enabled,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
-    existingWindow: globalThis.previewWindow && !globalThis.previewWindow.isDestroyed(),
-    activeSource: globalThis.selectedScreenShareSource,
+    existingWindow: previewWindow && !previewWindow.isDestroyed(),
+    activeSource: activeSource,
     timestamp: new Date().toISOString()
   });
 
@@ -98,13 +103,13 @@ function createScreenSharePreviewWindow() {
   }
 
   // Don't create duplicate windows - this is critical for preventing echo
-  if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
+  if (previewWindow && !previewWindow.isDestroyed()) {
     console.warn("[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing", {
       riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
       action: "focusing existing window instead of creating new",
-      windowId: globalThis.previewWindow.id
+      windowId: previewWindow.id
     });
-    globalThis.previewWindow.focus();
+    previewWindow.focus();
     return;
   }
 
@@ -114,7 +119,7 @@ function createScreenSharePreviewWindow() {
     partition: "persist:teams-for-linux-session"
   });
 
-  globalThis.previewWindow = new BrowserWindow({
+  const newPreviewWindow = new BrowserWindow({
     width: 320,
     height: 180,
     minWidth: 200,
@@ -134,56 +139,62 @@ function createScreenSharePreviewWindow() {
     },
   });
 
-  const windowId = globalThis.previewWindow.id;
+  // Store in service
+  screenSharingService.setPreviewWindow(newPreviewWindow);
+
+  const windowId = newPreviewWindow.id;
   console.debug("[SCREEN_SHARE_DIAG] Preview BrowserWindow created", {
     windowId: windowId,
     creationTimeMs: Date.now() - startTime,
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false
   });
 
-  globalThis.previewWindow.loadFile(
+  newPreviewWindow.loadFile(
     path.join(__dirname, "..", "screenSharing", "previewWindow.html")
   );
 
-  globalThis.previewWindow.once("ready-to-show", () => {
+  newPreviewWindow.once("ready-to-show", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window ready, showing now", {
       windowId: windowId,
       totalCreationTimeMs: Date.now() - startTime,
-      focused: globalThis.previewWindow.isFocused(),
-      visible: globalThis.previewWindow.isVisible()
+      focused: newPreviewWindow.isFocused(),
+      visible: newPreviewWindow.isVisible()
     });
-    globalThis.previewWindow.show();
+    newPreviewWindow.show();
   });
 
   // Add focus/blur event handlers to detect when preview window gets focus
-  globalThis.previewWindow.on("focus", () => {
+  newPreviewWindow.on("focus", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window gained focus", {
       windowId: windowId,
       potentialIssue: "Focus on preview might interfere with main Teams window"
     });
   });
 
-  globalThis.previewWindow.on("blur", () => {
+  newPreviewWindow.on("blur", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window lost focus", {
       windowId: windowId
     });
   });
 
-  globalThis.previewWindow.on("closed", () => {
+  newPreviewWindow.on("closed", () => {
+    const closedSource = screenSharingService.getSelectedSource();
     console.debug("[SCREEN_SHARE_DIAG] Preview window closed", {
       windowId: windowId,
-      hadActiveSource: !!globalThis.selectedScreenShareSource,
-      closedSource: globalThis.selectedScreenShareSource
+      hadActiveSource: !!closedSource,
+      closedSource: closedSource
     });
-    globalThis.previewWindow = null;
-    globalThis.selectedScreenShareSource = null;
+    // Clear both preview window and selected source when window closes
+    screenSharingService.setPreviewWindow(null);
+    screenSharingService.setSelectedSource(null);
   });
 }
 
-exports.onAppReady = async function onAppReady(configGroup, customBackground) {
+exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
   customBackgroundService = customBackground;
+  screenSharingService = sharingService;
 
   if (config.ssoInTuneEnabled) {
     intune = require("../intune");
@@ -247,8 +258,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
     }
   );
 
+  // Initialize connection manager
+  connectionManager = new ConnectionManager();
+
   if (iconChooser) {
-    const m = new Menus(window, configGroup, iconChooser.getFile());
+    const m = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
     m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
@@ -260,7 +274,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground) {
   });
 
   const url = processArgs(process.argv);
-  connMgr.start(url, {
+  connectionManager.start(url, {
     window: window,
     config: config,
   });
@@ -554,11 +568,12 @@ function onWindowClosed() {
   console.debug("window closed");
 
   // Close preview window before quitting to prevent race conditions
-  if (globalThis.previewWindow && !globalThis.previewWindow.isDestroyed()) {
+  const previewWindow = screenSharingService?.getPreviewWindow();
+  if (previewWindow && !previewWindow.isDestroyed()) {
     console.debug("[SCREEN_SHARE_DIAG] Closing preview window before app quit");
-    globalThis.previewWindow.close();
-    globalThis.previewWindow = null;
-    globalThis.selectedScreenShareSource = null;
+    previewWindow.close();
+    screenSharingService.setPreviewWindow(null);
+    screenSharingService.setSelectedSource(null);
   }
 
   window = null;

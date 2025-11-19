@@ -1,8 +1,25 @@
-# Architecture Modernization Research
+# Architecture Modernization Research (DDD+Plugin Approach)
 
-**Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799)
+:::danger ARCHIVED - PLAN NOT ADOPTED
+**Status**: Archived - Research complete but plan deemed too complex
+
+**Date Created**: 2025-10-30
+**Date Archived**: 2025-11-08
+
+**Reason**: After critical analysis, this DDD+Plugin approach was determined to be over-engineered for the actual problems in the codebase:
+- 10-week big-bang migration of all 35 modules (too risky)
+- 8+ new abstractions introduced (PluginManager, EventBus, etc.)
+- Over-engineered for actual pain points (374 lines extractable with minimal risk)
+- Implementation paralysis (plan so big, nothing was started)
+
+**See instead**: Incremental refactoring approach was successfully completed in November 2025, achieving 55% reduction in index.js (755 → 339 lines) through continuous delivery with lower risk (4-8 weeks vs 10 weeks, incremental extraction vs all-or-nothing). See [Contributing Guide](../contributing.md) for current architecture.
+
+This document is preserved as reference and for historical context.
+:::
+
+**Issue**: [#1799 - Architecture Modernization](https://github.com/IsmaelMartinez/teams-for-linux/issues/1799) (Closed)
 **Created**: 2025-10-30
-**Status**: Research Phase
+**Status**: ~~Research Phase~~ **ARCHIVED**
 
 ## Executive Summary
 
@@ -1036,7 +1053,8 @@ class TeamsIntegrationDomain {
 ### Internal Documentation
 - [IPC API Documentation](../ipc-api.md)
 - [DOM Access Investigation](./dom-access-investigation.md)
-- [Token Cache Authentication Research](./token-cache-authentication-research.md)
+- [ADR-002: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md)
+- [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md)
 - [Automated Testing Strategy](./automated-testing-strategy.md)
 
 ### External Resources

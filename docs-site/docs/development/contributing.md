@@ -10,11 +10,28 @@ This project is a great starting point for learning Electron development!
 
 1. **Fork** the repository
 2. **Clone** your fork and create a feature branch
-3. **Make changes** (entry point: `app/index.js`)
+3. **Make changes** (see architecture below)
 4. **Test** your changes with `npm start`
 5. **Submit** a pull request to `main` branch
 
 Each `app/` subfolder contains a README explaining its purpose.
+
+## Testing Pull Requests
+
+You can test PR changes without building from source by downloading pre-built artifacts from GitHub Actions.
+
+### How to Download PR Artifacts
+
+A bot automatically posts a comment on each PR with direct download links to all build artifacts.
+
+Alternatively:
+1. Go to the PR's "Checks" tab
+2. Select a workflow run
+3. Scroll to "Artifacts" section and download
+
+:::info
+Artifacts require GitHub login and are retained for 30 days.
+:::
 
 ## Development Setup
 
@@ -93,7 +110,8 @@ graph TD
 
 ### Key Components
 
-- **Main Process** (`app/index.js`) - Application entry point
+- **Main Process** (`app/index.js`) - Application entry point (being refactored)
+- **Startup** (`app/startup/`) - Command line switches and initialization
 - **Configuration** (`app/appConfiguration/`) - Settings management
 - **IPC System** (`app/` + browser scripts) - Process communication
 - **Browser Integration** (`app/browser/`) - Teams web app enhancements
@@ -178,6 +196,66 @@ npm run build
 - Include **code examples** for technical documentation
 - Add **cross-references** to related documentation
 - Use **Mermaid diagrams** for architecture visualization
+
+### Markdown Standards
+
+When creating or updating any markdown documentation in this project (including documentation files, README files, task lists, and PRDs), leverage existing markdown library features instead of building custom solutions:
+
+#### Content Structure
+
+- **Table of Contents**: Use GitHub's `<!-- toc -->` element or Docusaurus auto-TOC for automatic table of contents generation instead of manual lists
+- **Collapsible Sections**: Use GitHub's `<details>` and `<summary>` elements for optional or lengthy information
+
+#### Callouts and Alerts
+
+- **Callouts**: Use GitHub's alert syntax for important information, warnings, and critical notes:
+  - `> [!NOTE]` - For neutral informational notes
+  - `> [!TIP]` - For helpful tips and best practices
+  - `> [!IMPORTANT]` - For critical information users must know
+  - `> [!WARNING]` - For warnings about potential issues
+  - `> [!CAUTION]` - For dangerous actions or critical warnings
+- **Docusaurus**: In Docusaurus files, use admonitions: `:::note`, `:::tip`, `:::warning`, `:::danger`, `:::info`
+
+#### Code and Technical Content
+
+- **Code Blocks**: Use proper syntax highlighting with language identifiers (e.g., ` ```javascript`, ` ```bash`, ` ```json`)
+- **Inline Code**: Use backticks for inline code, commands, file paths, and variable names
+- **Commands**: Show shell commands with appropriate prompts and syntax highlighting
+
+#### Data Presentation
+
+- **Tables**: Use standard markdown tables with proper alignment for structured data
+- **Checkboxes**: Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking and checklists
+
+#### Links and References
+
+- **Internal Links**: Use relative paths for internal documentation links (e.g., `[Configuration](../configuration.md)`)
+- **External Links**: Use absolute URLs for external resources
+- **Issue/PR References**: Use GitHub's `#123` syntax for issue and pull request references
+
+#### Diagrams and Visuals
+
+- **Mermaid Diagrams**: Use GitHub's Mermaid support for flowcharts, sequence diagrams, and architecture diagrams when applicable
+- **Supported Types**: flowchart, sequence, class, state, ER, gantt, pie, git graph
+- **Example**:
+  ````markdown
+  ```mermaid
+  graph TD
+      A[Start] --> B[Process]
+      B --> C[End]
+  ```
+  ````
+
+:::tip Single Source of Truth
+These markdown standards apply to ALL markdown files in the project:
+- Documentation site (`docs-site/docs/`)
+- Root-level documentation (README, CONTRIBUTING, CLAUDE.md)
+- Task management files (`tasks/`)
+- AI agent instruction files (`.github/instructions/`)
+- Module READMEs in `app/` directories
+
+When updating standards, update this section only. All other files should reference these standards.
+:::
 
 ## Testing
 
@@ -317,28 +395,15 @@ Examples:
 
 ## Release Process
 
-1. **Update version** in `package.json`:
-   - Patches: `1.0.0` → `1.0.1` 
-   - Features: `1.0.0` → `1.1.0`
-   - Major: Reserved
+Releases use AI-generated changelog entries that accumulate in `.changelog/` directory:
 
-2. **Update dependencies**: `npm install`
+1. **PRs automatically get changelog entries** - Gemini AI generates summaries
+2. **When ready to release** - Review `.changelog/*.txt` files
+3. **Prepare release** - Update versions and appdata.xml (manually or via `npm run release:prepare`)
+4. **Create release PR** - Push to `release/vX.Y.Z` branch and merge to main
+5. **Build triggers automatically** - On version change in main
 
-3. **Add release notes** in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
-   ```xml
-   <release version="2.0.17" date="2025-06-15">
-     <description>
-       <ul>
-         <li>New feature description</li>
-         <li>Bug fix description</li>
-       </ul>
-     </description>
-   </release>
-   ```
-
-4. **Commit and push** changes, then create a pull request
-
-See [Release Automation](release-info.md) for technical details.
+See [Manual Release Process](manual-release-process.md) for detailed instructions.
 
 ## Getting Help
 
