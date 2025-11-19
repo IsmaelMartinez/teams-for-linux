@@ -127,7 +127,9 @@ if (gotTheLock) {
     });
   };
 
+  // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
+  // Get current application configuration
   ipcMain.handle("get-config", async () => {
     return config;
   });
@@ -144,13 +146,16 @@ if (gotTheLock) {
   // Initialize idle monitor IPC handlers
   idleMonitor.initialize();
 
+  // Handle user status changes from Teams (e.g., Available, Busy, Away)
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
+  // Set application badge count (dock/taskbar notification)
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+  // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
   });
 
-  // Navigation IPC handlers
+  // Navigate back in browser history
   ipcMain.on("navigate-back", (event) => {
     const webContents = event.sender;
     if (webContents?.navigationHistory?.canGoBack()) {
@@ -159,6 +164,7 @@ if (gotTheLock) {
     }
   });
 
+  // Navigate forward in browser history
   ipcMain.on("navigate-forward", (event) => {
     const webContents = event.sender;
     if (webContents?.navigationHistory?.canGoForward()) {
@@ -167,6 +173,7 @@ if (gotTheLock) {
     }
   });
 
+  // Get current navigation state (can go back/forward)
   ipcMain.handle("get-navigation-state", (event) => {
     const webContents = event.sender;
     return {

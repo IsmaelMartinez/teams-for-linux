@@ -11,6 +11,7 @@ class IdleMonitor {
   }
 
   initialize() {
+    // Get system idle state to sync with Teams presence
     ipcMain.handle("get-system-idle-state", this.#handleGetSystemIdleState.bind(this));
   }
 

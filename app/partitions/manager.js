@@ -8,7 +8,9 @@ class PartitionsManager {
   }
 
   initialize() {
+    // Get current zoom level for a partition
     ipcMain.handle("get-zoom-level", this.#handleGetZoomLevel.bind(this));
+    // Save zoom level for a partition
     ipcMain.handle("save-zoom-level", this.#handleSaveZoomLevel.bind(this));
   }
 

@@ -12,15 +12,25 @@ class ScreenSharingService {
   }
 
   initialize() {
+    // Get available desktop capturer sources (screens/windows) for sharing
     ipcMain.handle("desktop-capturer-get-sources", this.#handleGetDesktopCapturerSources.bind(this));
+    // Select desktop media source for screen sharing
     ipcMain.handle("choose-desktop-media", this.#handleChooseDesktopMedia.bind(this));
+    // Cancel desktop media selection dialog
     ipcMain.on("cancel-desktop-media", this.#handleCancelDesktopMedia.bind(this));
+    // Notify when screen sharing session starts
     ipcMain.on("screen-sharing-started", this.#handleScreenSharingStarted.bind(this));
+    // Notify when screen sharing session stops
     ipcMain.on("screen-sharing-stopped", this.#handleScreenSharingStopped.bind(this));
+    // Get current screen sharing status
     ipcMain.handle("get-screen-sharing-status", this.#handleGetScreenSharingStatus.bind(this));
+    // Get screen share stream for thumbnail preview
     ipcMain.handle("get-screen-share-stream", this.#handleGetScreenShareStream.bind(this));
+    // Get screen share screen details
     ipcMain.handle("get-screen-share-screen", this.#handleGetScreenShareScreen.bind(this));
+    // Resize screen sharing preview window
     ipcMain.on("resize-preview-window", this.#handleResizePreviewWindow.bind(this));
+    // Stop screen sharing from thumbnail preview
     ipcMain.on("stop-screen-sharing-from-thumbnail", this.#handleStopScreenSharingFromThumbnail.bind(this));
   }
 
