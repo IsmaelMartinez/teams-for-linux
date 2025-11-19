@@ -24,6 +24,7 @@ class IncomingCallToast {
         });
         this.toast.loadFile(path.join(__dirname, 'incomingCallToast.html'));
         this.positioner = new Positioner(this.toast);
+        // Handle incoming call actions (accept/decline)
         ipcMain.on('incoming-call-action', (event, action) => {
             this.hide();
             if (actionListener && typeof actionListener == 'function') {

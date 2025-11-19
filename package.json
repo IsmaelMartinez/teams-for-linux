@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.6.14",
+  "version": "2.6.15",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -25,7 +25,9 @@
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
+    "release:prepare": "node scripts/release-prepare.mjs",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
+    "generate-ipc-docs": "node scripts/generateIpcDocs.js",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
