@@ -124,15 +124,7 @@ This section captures enhancements and non-critical features that could be imple
 
 ## Markdown Standards
 
-When creating task lists, leverage existing markdown library features instead of building custom solutions:
-
-- **Table of Contents:** Use GitHub's `<!-- toc -->` element for automatic TOC generation if task list becomes long
-- **Callouts:** Use GitHub's alert syntax (`> [!NOTE]`, `> [!WARNING]`, `> [!IMPORTANT]`) for critical information
-- **Code Blocks:** Use proper syntax highlighting with language identifiers for commands and code snippets
-- **Tables:** Use standard markdown tables for structured data comparison
-- **Checkboxes:** Use standard GitHub checkbox syntax `- [ ]` and `- [x]` for task tracking
-- **Links:** Use relative paths for internal documentation and issue references
-- **Diagrams:** Consider GitHub's Mermaid support for complex workflow or architecture diagrams when helpful
+For comprehensive markdown standards, see the Markdown Standards section in `docs-site/docs/development/contributing.md` (the source file for the [web documentation](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards)).
 
 ## Interaction Model
 

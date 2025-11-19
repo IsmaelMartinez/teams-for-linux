@@ -9,9 +9,8 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ## Contents
 
 ### Authentication & Security Research
-- **[Token Cache Authentication Research](token-cache-authentication-research.md)** - Comprehensive research from problem analysis through implementation and validation of token cache authentication solution (#1357)
-- **[Secure Storage Research](secure-storage-research.md)** - Research on secure storage options, platform capabilities, and implementation considerations
 - **[DOM Access Investigation](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
+- For implemented authentication solutions, see [ADR-002: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md)
 
 ### Testing & Development Research
 - **[Automated Testing Strategy](automated-testing-strategy.md)** - Comprehensive analysis of testing frameworks for Electron apps with MS authentication constraints
@@ -30,18 +29,24 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Strategic Analysis
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - Research on refactoring app/index.js and improving architectural organization
 - **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
-  - 53 options analyzed for grouping and naming consistency
+  - 51 options analyzed for grouping and naming consistency
   - Three-phase migration plan from flat to nested structure
   - Backward-compatible approach with auto-migration
 - **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
+- **[Documentation Improvement Recommendations](documentation-improvement-recommendations.md)** - Actionable plan for optimizing documentation for both LLM and human consumption
+  - Based on expert reviews from 3 specialized perspectives
+  - Week 1 implementation (12-15 hours): Quick Reference, Module Index, ADR Index
+  - 80% value with 60% less effort than comprehensive overhaul
 - **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
 
 ### Architecture & Refactoring
-- **[Incremental Refactoring Plan](incremental-refactoring-plan.md)** ⭐ **ACTIVE PLAN** - Practical 4-8 week plan to modernize architecture through incremental extraction
-  - Reduces index.js by 49% (755 → 381 lines)
-  - Low risk, continuous value delivery
-  - Adds 20+ automated tests
-  - Supersedes closed #1799 (DDD+Plugin approach)
+- **Incremental Refactoring** - ✅ **COMPLETED (November 2025)** - Successfully modernized architecture through incremental extraction
+  - **Phase 1 Results**: Reduced index.js by 55% (755 → 339 lines), extracted 5 focused modules (startup, notifications, screen sharing, partitions, idle)
+  - **Phase 2 Results**: Eliminated singleton patterns, improved IPC registration, automated IPC documentation generation
+  - **Key Learning**: Testing deferred due to MS authentication constraints - automated testing adds significant complexity in apps requiring external authentication
+  - Low risk, continuous value delivery approach
+  - Superseded closed #1799 (DDD+Plugin approach)
+  - See [Contributing Guide](../contributing.md) for current architecture and new module structure
 - **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
   - Preserved as reference and historical context
   - 10-week big-bang migration plan

@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> [!NOTE]
+> **For comprehensive documentation**, see the markdown files in `docs-site/docs/` directory. These files are the source for the [Teams for Linux Documentation Site](https://ismaelmartinez.github.io/teams-for-linux/). This file contains essential quick reference information and critical warnings specific to Claude Code workflows.
+>
+> **Important for AI agents**: Always read documentation from the local markdown files in `docs-site/docs/` rather than fetching from the web. The URLs are provided for human reference only.
+
 ## Essential Commands
 
 **Development:**
@@ -16,35 +21,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Utility:**
 - `npm run generate-release-info` - Generate release information file
+- `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
 
 ## Project Architecture
 
 Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app. The architecture follows a modular pattern with the main process coordinating various specialized modules.
 
-### Core Structure
-
-- **Entry Point:** `app/index.js` - Main Electron process (currently being refactored into smaller modules)
-- **Configuration:** `app/appConfiguration/` - Centralized configuration management using AppConfiguration class
-- **Main Window:** `app/mainAppWindow/` - Manages the primary BrowserWindow and Teams web wrapper
+**Key file locations:**
+- **Entry Point:** `app/index.js` - Main Electron process (being refactored incrementally)
+- **Startup:** `app/startup/` - Command line switches and initialization
+- **Configuration:** `app/appConfiguration/` - Centralized configuration management
+- **Main Window:** `app/mainAppWindow/` - Primary BrowserWindow and Teams web wrapper
 - **Browser Tools:** `app/browser/tools/` - Client-side scripts injected into Teams interface
 
-### Key Modules
+**For detailed architecture information**, see:
+- Architecture Overview: `docs-site/docs/development/contributing.md` (Architecture Overview section)
+- IPC API Documentation: `docs-site/docs/development/ipc-api.md`
+- Module-specific README.md files in `app/` subdirectories
 
-- **IPC Communication:** Extensive IPC system for main-renderer communication (see `docs/ipc-api.md`)
-- **Notifications:** System notification integration with custom sounds
-- **Screen Sharing:** Desktop capture and stream selector functionality
-- **Custom Backgrounds:** Custom background image management
-- **Tray Integration:** System tray with status indicators
-- **Cache Management:** Application cache handling
-- **Authentication:** SSO login support
-- **Audio Control:** Microphone auto-gain control disabling for professional audio setups
-
-### State Management
-
-Global state is managed through specific modules:
-- User status tracking (`userStatus`, `idleTimeUserStatus`)
-- Screen sharing state (`screenSharingActive`, `currentScreenShareSourceId`)
-- Configuration managed via immutable AppConfiguration class
+**Web references (for humans):**
+- https://ismaelmartinez.github.io/teams-for-linux/development/contributing#architecture-overview
+- https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api
 
 ## Development Patterns
 
@@ -61,13 +58,17 @@ Global state is managed through specific modules:
 
 ### IPC Communication
 - Use `ipcMain.handle` for request-response patterns
-- Use `ipcMain.on` for fire-and-forget notifications  
-- Document all new IPC channels in `docs/ipc-api.md`
+- Use `ipcMain.on` for fire-and-forget notifications
+- Add a descriptive comment above each IPC channel registration
+- Run `npm run generate-ipc-docs` after adding/modifying IPC channels
+- All IPC channels must be added to the allowlist in `app/security/ipcValidator.js`
 
 ### Error Handling
 - Robust error handling with try-catch in async functions
 - Graceful degradation with clear user feedback
 - Use `electron-log` for structured logging
+
+**For complete development patterns and guidelines**, see `docs-site/docs/development/contributing.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)).
 
 ## Testing and Quality
 
@@ -83,7 +84,8 @@ The project uses Playwright for end-to-end testing:
 - Each test creates a unique temp directory via `E2E_USER_DATA_DIR`
 - Tests start with completely clean state (no cookies, cache, storage)
 - Validates complete app launch flow and Microsoft login redirect
-- See `docs-site/docs/development/research/automated-testing-strategy.md` for full strategy
+
+**For full testing strategy**, see `docs-site/docs/development/research/automated-testing-strategy.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/research/automated-testing-strategy)).
 
 ### Quality Checks
 
@@ -92,17 +94,38 @@ When contributing:
 - Run `npm run test:e2e` to verify E2E tests pass
 - Ensure cross-platform compatibility (Linux primary, Windows/macOS supported)
 
-## Documentation Deployment
+## Documentation
 
-The project documentation has been migrated to Docusaurus and is deployed to GitHub Pages via GitHub Actions.
+### Documentation Site
 
-- **Platform**: Docusaurus 3.9.1
+The project documentation is built with Docusaurus and deployed to GitHub Pages:
 - **URL**: https://ismaelmartinez.github.io/teams-for-linux/
-- **Deployment Method**: GitHub Actions to GitHub Pages
-- **Search**: Client-side local search using [@easyops-cn/docusaurus-search-local](https://github.com/easyops-cn/docusaurus-search-local)
-- **Features**: Enhanced search, improved navigation, rich content support (including Mermaid diagrams), mobile-first design, and dark/light theme support
+- **Platform**: Docusaurus 3.9.1
+- **Local Development**: `cd docs-site && npm run start`
+- **Deployment**: Automated via GitHub Actions
 
-For detailed documentation development instructions, see [docs-site/README.md](docs-site/README.md).
+**For documentation development**, see [docs-site/README.md](docs-site/README.md).
+
+### Markdown Standards
+
+**All markdown files in this project** should follow the project's markdown standards:
+- See `docs-site/docs/development/contributing.md` (Markdown Standards section) for comprehensive guidelines ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing#markdown-standards))
+- Applies to documentation, README files, task lists, PRDs, and all markdown content
+
+### Documentation Updates
+
+When making code changes, update relevant documentation in the same PR:
+- Module README.md files when changing functionality
+- **IPC channels**: Add descriptive comments above registrations and run `npm run generate-ipc-docs`
+- Configuration documentation for new options in `docs-site/docs/configuration.md`
+- Architecture Decision Records (ADRs) for significant technical decisions in `docs-site/docs/development/adr/`
+
+**Important for IPC changes:**
+When adding or modifying IPC channels, you must:
+1. Add a descriptive comment above the `ipcMain.handle()` or `ipcMain.on()` registration
+2. Add the channel to the allowlist in `app/security/ipcValidator.js`
+3. Run `npm run generate-ipc-docs` to update the auto-generated documentation
+4. The auto-generated docs in `docs-site/docs/development/ipc-api-generated.md` should be committed with your changes
 
 ## Critical Module Initialization Requirements
 
@@ -129,6 +152,14 @@ if (module.name === "settings" || module.name === "theme" || module.name === "tr
 - Test tray icon functionality thoroughly after any changes to module initialization
 - Reference this documentation if unclear why this module needs special handling
 
+## AI Workflow Instructions
+
+For AI agent workflows (PRD generation, task list generation, task execution):
+- See `.github/instructions/*.instructions.md` for detailed workflow instructions
+- Follow the task execution protocol for systematic implementation
+- Always run tests and linting before commits
+- Update documentation alongside code changes
+
 ## Important Notes
 
 - The project is undergoing active refactoring to improve modularity
@@ -136,3 +167,24 @@ if (module.name === "settings" || module.name === "theme" || module.name === "tr
 - Browser scripts must be defensive as Teams DOM can change without notice
 - Follow single responsibility principle for new modules
 - Update module-specific README.md files when making changes
+- Cross-platform compatibility is essential (Linux primary, Windows/macOS supported)
+
+## Additional Resources
+
+**Local documentation files (read these):**
+- **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
+- **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
+- **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
+- **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
+- **Configuration Reference**: `docs-site/docs/configuration.md`
+- **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
+- **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
+
+**Web versions (for human reference):**
+- https://ismaelmartinez.github.io/teams-for-linux/quick-reference
+- https://ismaelmartinez.github.io/teams-for-linux/development/module-index
+- https://ismaelmartinez.github.io/teams-for-linux/development/adr/
+- https://ismaelmartinez.github.io/teams-for-linux/development/contributing
+- https://ismaelmartinez.github.io/teams-for-linux/configuration
+- https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
+- https://ismaelmartinez.github.io/teams-for-linux/development/ipc-api

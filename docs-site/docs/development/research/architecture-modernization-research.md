@@ -12,7 +12,7 @@
 - Over-engineered for actual pain points (374 lines extractable with minimal risk)
 - Implementation paralysis (plan so big, nothing was started)
 
-**See instead**: [Incremental Refactoring Plan](./incremental-refactoring-plan.md) - The adopted approach that delivers 49% reduction in index.js with lower risk through incremental extraction (4-8 weeks vs 10 weeks, continuous delivery vs all-or-nothing).
+**See instead**: Incremental refactoring approach was successfully completed in November 2025, achieving 55% reduction in index.js (755 → 339 lines) through continuous delivery with lower risk (4-8 weeks vs 10 weeks, incremental extraction vs all-or-nothing). See [Contributing Guide](../contributing.md) for current architecture.
 
 This document is preserved as reference and for historical context.
 :::
@@ -1053,7 +1053,8 @@ class TeamsIntegrationDomain {
 ### Internal Documentation
 - [IPC API Documentation](../ipc-api.md)
 - [DOM Access Investigation](./dom-access-investigation.md)
-- [Token Cache Authentication Research](./token-cache-authentication-research.md)
+- [ADR-002: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md)
+- [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md)
 - [Automated Testing Strategy](./automated-testing-strategy.md)
 
 ### External Resources

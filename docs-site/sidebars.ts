@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
   // Teams for Linux documentation sidebar
   docsSidebar: [
     'index',
+    'quick-reference',
     {
       type: 'category',
       label: 'Getting Started',
@@ -56,6 +57,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture',
           items: [
+            'development/module-index',
             'development/token-cache-architecture',
             'development/security-architecture',
           ],
@@ -64,9 +66,12 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture Decisions',
           items: [
+            'development/adr/README',
             'development/adr/001-desktopcapturer-source-id-format',
             'development/adr/002-token-cache-secure-storage',
             'development/adr/003-token-refresh-implementation',
+            'development/adr/004-agents-md-standard-investigation',
+            'development/adr/005-ai-powered-changelog-generation',
           ],
         },
         {
@@ -78,8 +83,6 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Authentication & Security',
               items: [
-                'development/research/token-cache-authentication-research',
-                'development/research/secure-storage-research',
                 'development/research/dom-access-investigation',
               ],
             },
@@ -88,6 +91,8 @@ const sidebars: SidebarsConfig = {
               label: 'Testing & Development',
               items: [
                 'development/research/automated-testing-strategy',
+                'development/research/changelog-generator-setup',
+                'development/research/release-pr-workflow-plan',
               ],
             },
             {
@@ -102,7 +107,7 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Strategic Analysis',
               items: [
-                'development/research/documentation-health-analysis',
+                'development/research/documentation-improvement-recommendations',
                 'development/research/ui-system-strategic-analysis',
               ],
             },
@@ -110,7 +115,6 @@ const sidebars: SidebarsConfig = {
               type: 'category',
               label: 'Architecture & Refactoring',
               items: [
-                'development/research/incremental-refactoring-plan',
                 'development/research/architecture-modernization-research',
               ],
             },

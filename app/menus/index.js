@@ -12,16 +12,16 @@ const fs = require("node:fs"),
 const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
-const connectionManager = require("../connectionManager");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
-  constructor(window, configGroup, iconPath) {
+  constructor(window, configGroup, iconPath, connectionManager) {
     this.window = window;
     this.iconPath = iconPath;
     this.configGroup = configGroup;
+    this.connectionManager = connectionManager;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
@@ -113,7 +113,7 @@ class Menus {
       this.window.show();
     }
 
-    connectionManager.refresh();
+    this.connectionManager.refresh();
   }
 
   debug() {
@@ -141,6 +141,7 @@ class Menus {
       this.iconPath,
       this.configGroup.startupConfig
     );
+    this.tray.initialize();
     this.spellCheckProvider = new SpellCheckProvider(this.window);
   }
 
