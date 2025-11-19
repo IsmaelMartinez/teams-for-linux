@@ -18,6 +18,7 @@ class ApplicationTray {
   }
 
   initialize() {
+    // Update tray icon based on Teams status (notifications, badge count)
     ipcMain.on("tray-update", this.#handleTrayUpdate.bind(this));
   }
 

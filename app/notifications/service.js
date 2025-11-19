@@ -32,7 +32,9 @@ class NotificationService {
   }
 
   initialize() {
+    // Play notification sound for Teams messages and calls
     ipcMain.handle("play-notification-sound", this.#handlePlayNotificationSound.bind(this));
+    // Show system notification for Teams activity
     ipcMain.handle("show-notification", this.#handleShowNotification.bind(this));
   }
 
