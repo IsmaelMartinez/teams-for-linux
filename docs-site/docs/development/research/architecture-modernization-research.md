@@ -12,7 +12,7 @@
 - Over-engineered for actual pain points (374 lines extractable with minimal risk)
 - Implementation paralysis (plan so big, nothing was started)
 
-**See instead**: Incremental refactoring approach was successfully completed in November 2024, achieving 55% reduction in index.js (755 → 339 lines) through continuous delivery with lower risk (4-8 weeks vs 10 weeks, incremental extraction vs all-or-nothing). See [Contributing Guide](../contributing.md) for current architecture.
+**See instead**: Incremental refactoring approach was successfully completed in November 2025, achieving 55% reduction in index.js (755 → 339 lines) through continuous delivery with lower risk (4-8 weeks vs 10 weeks, incremental extraction vs all-or-nothing). See [Contributing Guide](../contributing.md) for current architecture.
 
 This document is preserved as reference and for historical context.
 :::

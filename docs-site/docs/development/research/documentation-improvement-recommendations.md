@@ -40,7 +40,7 @@ Teams for Linux documentation is **already excellent** with a clean, well-organi
 
 **Health Score:** 9.0/10 (Excellent) - Improved with automated IPC documentation
 
-**Recent Major Changes (November 2024):**
+**Recent Major Changes (November 2025):**
 - ✅ **Incremental Refactoring Completed** - Successfully extracted 5 modules, reduced index.js by 55%
 - ✅ **Automated IPC Documentation** - 31 IPC channels now auto-documented via script
 - ✅ **New Modules Added** - idle monitoring, notifications service, partitions manager
@@ -51,13 +51,13 @@ Teams for Linux documentation is **already excellent** with a clean, well-organi
 - **Documentation Automation**: Auto-generating IPC documentation from code proved highly valuable - documentation stays in sync with implementation.
 - **Incremental Approach**: Small, focused changes (extract one module per week) delivered continuous value with minimal risk.
 
-**Recent improvements (November 2024):**
+**Recent improvements (November 2025):**
 - ✅ CLAUDE.md updated with local documentation references
 - ✅ Instruction files consolidated (removing 28% duplication)
 - ✅ Markdown standards centralized in contributing.md
 - ✅ ADR-004 created (agents.md investigation - rejected)
 - ✅ New startup module extracted from index.js
-- ✅ Research cleanup completed (November 17, 2024):
+- ✅ Research cleanup completed (November 17, 2025):
   - Deleted 3 redundant research files superseded by ADRs (1,489 lines)
   - Fixed all broken links in documentation
   - Updated sidebars and indexes to reflect cleanup
@@ -78,7 +78,7 @@ Three expert reviews converged on a unanimous conclusion: **targeted improvement
 
 ### Implementation Progress
 
-**Status:** In Progress (Started November 17, 2024)
+**Status:** In Progress (Started November 17, 2025)
 
 **Completed:**
 - ✅ **Research Consolidation** - Removed 3 redundant research files superseded by ADRs (token-cache-authentication-research.md, secure-storage-research.md, documentation-health-analysis.md)
@@ -172,7 +172,7 @@ Three expert reviews converged on a unanimous conclusion: **targeted improvement
 
 **Goal:** Solve real pain points with immediate, sustainable value.
 
-**Note:** CLAUDE.md was recently updated (November 2024) with local documentation references, significantly reducing the scope of Week 1.
+**Note:** CLAUDE.md was recently updated (November 2025) with local documentation references, significantly reducing the scope of Week 1.
 
 #### 1. Quick Reference Guide (8 hours) 🔥 HIGHEST PRIORITY
 
@@ -306,8 +306,8 @@ This directory contains Architecture Decision Records documenting significant te
 | [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2024-09-15 | v2.3.0 |
 | [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2024-09-08 | v2.5.9 |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
-| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2024-11-12 | N/A |
-| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2024-11-18 | v2.6.15 |
+| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
+| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
 
 ## By Topic
 
@@ -339,7 +339,7 @@ ADRs should be numbered sequentially (004, 005, etc.) and include:
 
 **File:** `CLAUDE.md`
 
-**Status:** CLAUDE.md was recently updated (November 2024) with local documentation references. Remaining work is minimal.
+**Status:** CLAUDE.md was recently updated (November 2025) with local documentation references. Remaining work is minimal.
 
 **Remaining changes (optional):**
 1. ~~Update paths~~ ✅ Already done
@@ -471,7 +471,7 @@ Based on expert consensus, the following were rejected:
 - [ ] Quick Reference exists and is discoverable
 - [ ] Module Index links to all 24 modules (includes idle, notifications, partitions from recent refactoring)
 - [ ] ADR Index provides status overview for all 5 ADRs (including ADR-005: AI changelog generation)
-- [x] CLAUDE.md paths are correct (already completed in November 2024)
+- [x] CLAUDE.md paths are correct (already completed in November 2025)
 
 **After Phase 2 (Week 2), verify:**
 - [ ] Documentation Standards doc exists with templates
@@ -825,7 +825,7 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 1. Quick Reference Guide (8 hours) - Highest value
 2. Module Index (3-4 hours) - Real gap, covers 24 modules (updated after refactoring)
 3. ADR Index (2 hours) - Low effort, high value, now includes 5 ADRs
-4. ~~Fix CLAUDE.md~~ (0.5-1 hour) - ✅ Complete (November 2024 update)
+4. ~~Fix CLAUDE.md~~ (0.5-1 hour) - ✅ Complete (November 2025 update)
 
 ### Validation After Week 1
 
@@ -857,7 +857,7 @@ The MQTT README (166 lines, no metadata overhead) is excellent and heavily used.
 1. Quick Reference Guide (8h)
 2. Module Index (3-4h) - covers 24 modules (updated after refactoring)
 3. ADR Index (2h) - includes 5 ADRs (including new ADR-005)
-4. ~~Enhance CLAUDE.md~~ - ✅ Complete (November 2024)
+4. ~~Enhance CLAUDE.md~~ - ✅ Complete (November 2025)
 
 **This delivers:**
 - 80% of theoretical maximum value
