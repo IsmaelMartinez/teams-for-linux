@@ -1,242 +1,183 @@
 # IPC API Documentation
 
-This document provides a comprehensive reference for all Inter-Process Communication (IPC) channels in Teams for Linux. IPC enables communication between the main Electron process and renderer processes (web content).
+This document provides an overview of Inter-Process Communication (IPC) in Teams for Linux.
 
-:::info Auto-Generated Documentation Available
-**For a complete, automatically generated list of all IPC channels**, see [IPC API Generated Reference](ipc-api-generated.md).
+:::info Complete Channel Reference
+**For a complete list of all IPC channels**, see the [Auto-Generated IPC API Reference](ipc-api-generated.md).
 
-The auto-generated documentation is created by scanning the codebase and is always up-to-date. Run `npm run generate-ipc-docs` to regenerate it.
+The auto-generated documentation includes all 31 channels with descriptions, types, and source locations. It's always up-to-date - run `npm run generate-ipc-docs` to regenerate it.
 :::
 
 ## Overview
 
-Teams for Linux uses two types of IPC channels:
-- **`ipcMain.on`**: One-way communication from renderer to main process (fire-and-forget)
-- **`ipcMain.handle`**: Two-way communication with return values (request-response pattern)
+Teams for Linux uses Electron's IPC system to communicate between the main process and renderer processes. There are two types of IPC channels:
+
+- **`ipcMain.handle()`** - Request/Response pattern. The renderer sends a request and waits for a response.
+- **`ipcMain.on()`** - Event pattern. Fire-and-forget notifications from renderer to main process.
+
+## IPC Security
 
 ### Security Configuration (v2.5.2+)
 
-As of version 2.5.2, Teams for Linux implements IPC security validation as a compensating control for disabled contextIsolation and sandbox features:
+As a compensating control for disabled `contextIsolation` and `sandbox` features, Teams for Linux implements comprehensive IPC security:
 
 - **Channel Allowlisting**: Only pre-approved IPC channels are permitted
 - **Payload Sanitization**: Automatic removal of dangerous properties (`__proto__`, `constructor`, etc.)
 - **Request Logging**: Blocked channels are logged for security monitoring
 - **Domain Validation**: Enhanced Teams domain validation prevents subdomain hijacking
 
+**Implementation**: `app/security/ipcValidator.js`
+
 Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthorized IPC channel" errors, verify the channel name is in the official allowlist.
 
-## Core Application IPC Handlers
+For more information, see the [IPC Channel Validation documentation](./security-architecture.md#ipc-channel-validation).
 
-:::tip Complete Channel List
-For a complete list of all 31 IPC channels across all categories, see the [auto-generated IPC API reference](ipc-api-generated.md).
-:::
+## Usage from Renderer Process
 
-### Configuration Management
+### Sending Events (Fire-and-Forget)
 
-#### `get-config`
-**Type**: `ipcMain.handle`  
-**Purpose**: Retrieves the complete application configuration object  
-**Parameters**: None  
-**Returns**: `Object` - Complete configuration object with all app settings  
-**Example Usage**:
 ```javascript
-const config = await ipcRenderer.invoke('get-config');
+// Send an event to main process
+ipcRenderer.send('channel-name', data);
 ```
 
-#### `config-file-changed`
-**Type**: `ipcMain.on`  
-**Purpose**: Triggers application restart when configuration file changes  
-**Parameters**: None  
-**Returns**: None (triggers `app.relaunch()` and `app.exit()`)  
-**Example Usage**:
-```javascript
-ipcRenderer.send('config-file-changed');
-```
-
-### System State Management
-
-#### `get-system-idle-state`
-**Type**: `ipcMain.handle`  
-**Purpose**: Retrieves current system idle state and user status information  
-**Parameters**: None  
-**Returns**: `Object` with properties:
-- `system`: `string` - System idle state ('active', 'idle', 'locked', or 'unknown')
-- `userIdle`: `number` - User status when idle was detected (-1 if not idle)
-- `userCurrent`: `number` - Current user status
-
-**Example Usage**:
-```javascript
-const state = await ipcRenderer.invoke('get-system-idle-state');
-// state = { system: 'active', userIdle: -1, userCurrent: 1 }
-```
-
-:::note Developer Reference
-This documentation is automatically generated from the IPC handler definitions in the codebase. For implementation details, see the source files in `app/` directory.
-:::
-
-## Screen Sharing IPC Handlers
-
-### Stream Selection
-
-#### `screen-sharing-started`
-**Type**: `ipcMain.on`  
-**Purpose**: Notifies main process that screen sharing has started  
-**Parameters**: `string` - Source ID of the shared screen  
-
-#### `screen-sharing-stopped`
-**Type**: `ipcMain.on`  
-**Purpose**: Notifies main process that screen sharing has stopped  
-**Parameters**: None  
-
-## Notification Management
-
-### Notification Handling
-
-#### `show-notification`
-**Type**: `ipcMain.on`  
-**Purpose**: Displays system notification  
-**Parameters**: `Object` with notification options  
-
-## Navigation IPC Handlers
-
-### Navigation Control
-
-#### `navigate-back`
-**Type**: `ipcMain.on`
-**Purpose**: Navigates back in the browser history
-**Parameters**: None
-**Returns**: None
-**Example Usage**:
+**Example:**
 ```javascript
 ipcRenderer.send('navigate-back');
 ```
 
-#### `navigate-forward`
-**Type**: `ipcMain.on`
-**Purpose**: Navigates forward in the browser history
-**Parameters**: None
-**Returns**: None
-**Example Usage**:
+### Request/Response Pattern
+
 ```javascript
-ipcRenderer.send('navigate-forward');
+// Send request and await response
+const result = await ipcRenderer.invoke('channel-name', data);
 ```
 
-#### `get-navigation-state`
-**Type**: `ipcMain.handle`
-**Purpose**: Retrieves current navigation state (whether back/forward navigation is available)
-**Parameters**: None
-**Returns**: `Object` with properties:
-- `canGoBack`: `boolean` - Whether back navigation is available
-- `canGoForward`: `boolean` - Whether forward navigation is available
-
-**Example Usage**:
+**Example:**
 ```javascript
-const state = await ipcRenderer.invoke('get-navigation-state');
-// state = { canGoBack: true, canGoForward: false }
+const config = await ipcRenderer.invoke('get-config');
+console.log('App version:', config.appVersion);
 ```
 
-#### `navigation-state-changed`
-**Type**: Event (main to renderer)
-**Purpose**: Notifies renderer when navigation state changes (fired after navigation events)
-**Parameters**:
-- `event`: `IpcRendererEvent`
-- `canGoBack`: `boolean` - Whether back navigation is available
-- `canGoForward`: `boolean` - Whether forward navigation is available
+## Adding New IPC Channels
 
-**Example Usage**:
+When adding a new IPC channel, follow these steps:
+
+### 1. Register the Channel
+
+In the main process, register the channel using either `ipcMain.handle()` or `ipcMain.on()`:
+
 ```javascript
-ipcRenderer.on('navigation-state-changed', (event, canGoBack, canGoForward) => {
-  console.log(`Can go back: ${canGoBack}, Can go forward: ${canGoForward}`);
+// Request/Response pattern
+ipcMain.handle('my-channel', async (event, ...args) => {
+  // Handle request
+  return result;
+});
+
+// Event pattern
+ipcMain.on('my-event', (event, ...args) => {
+  // Handle event
 });
 ```
 
-## Usage Examples
+### 2. Add Security Allowlist Entry
 
-### Basic Configuration Retrieval
+Add the channel to the allowlist in `app/security/ipcValidator.js`:
+
 ```javascript
-// In renderer process
-const config = await window.electronAPI.invoke('get-config');
-console.log('App title:', config.appTitle);
-console.log('Theme:', config.followSystemTheme);
+const allowedChannels = new Set([
+  // ... existing channels
+  'my-channel',
+]);
 ```
 
-### Screen Sharing Implementation
+### 3. Document the Channel
+
+Add a descriptive comment above the channel registration:
+
 ```javascript
-// Get available sources
-const sources = await window.electronAPI.invoke('get-desktop-capturer-sources', {
-  types: ['window', 'screen']
+// Describe what this channel does and why
+ipcMain.handle('my-channel', async (event, data) => {
+  // Implementation
 });
-
-// Start screen sharing
-window.electronAPI.send('screen-sharing-started', selectedSourceId);
-
-// Stop screen sharing
-window.electronAPI.send('screen-sharing-stopped');
 ```
 
-### System State Monitoring
-```javascript
-// Check if user is idle
-const idleState = await window.electronAPI.invoke('get-system-idle-state');
-if (idleState.system === 'idle') {
-  console.log('System is idle');
-}
+### 4. Update Documentation
+
+Run the documentation generator to update the auto-generated docs:
+
+```bash
+npm run generate-ipc-docs
 ```
 
-## Security Considerations
+## Channel Categories
 
-:::warning Security Notice
-All IPC handlers implement proper validation and sanitization of input parameters. When adding new IPC channels:
+IPC channels are organized by functional area:
 
-1. Always validate input parameters
-2. Use `ipcMain.handle` for data retrieval
-3. Use `ipcMain.on` for actions without return values
-4. Never expose sensitive system APIs directly
-5. Implement proper error handling
-:::
+- **Core Application** - Configuration, navigation, version info
+- **Authentication** - Login and SSO workflows
+- **Notifications** - System notifications and sounds
+- **Screen Sharing** - Desktop capture and sharing
+- **Idle Monitoring** - System idle state detection
+- **Partitions & Zoom** - Zoom level management
+- **Custom Background** - Custom background images
+- **Connection Management** - Network connectivity
+- **Incoming Calls** - Call notifications
+- **Main Window** - Window and call events
+- **Menus & Tray** - Tray icon and menu updates
 
-## Adding New IPC Handlers
+For the complete channel list with descriptions, see the [Auto-Generated IPC API Reference](ipc-api-generated.md).
 
-When adding new IPC functionality:
+## Best Practices
 
-1. **Define the handler** in the appropriate module
-2. **Document the interface** following the format above
-3. **Add security validation** for all parameters
-4. **Test both success and error cases**
-5. **Update this documentation**
+### Security
 
-### Example Implementation
+- Always validate input data in IPC handlers
+- Never trust data from renderer processes
+- Use the security validator for all IPC channels
+- Keep the allowlist in sync with registered channels
+
+### Error Handling
+
 ```javascript
-// In main process
-ipcMain.handle('my-new-handler', async (event, param1, param2) => {
+ipcMain.handle('my-channel', async (event, data) => {
   try {
-    // Validate parameters
-    if (!param1 || typeof param1 !== 'string') {
-      throw new Error('Invalid param1');
-    }
-    
-    // Perform operation
-    const result = await someAsyncOperation(param1, param2);
+    // Handle request
     return result;
   } catch (error) {
-    console.error('IPC Handler Error:', error);
-    throw error;
+    console.error('IPC handler error:', error);
+    throw error; // Will be caught by renderer
   }
 });
 ```
 
-## Troubleshooting
+### Performance
 
-### Common Issues
+- Keep IPC handlers lightweight
+- Avoid blocking operations in handlers
+- Use async/await for asynchronous operations
+- Consider debouncing for frequent events
 
-1. **Handler not found**: Ensure the handler is registered in the main process
-2. **Type errors**: Verify parameter types match the expected interface
-3. **Security errors**: Note that as of v2.5.2+, contextIsolation has been disabled for Teams DOM access with IPC validation as compensating control
-4. **Async issues**: Use proper async/await syntax for handle-type IPC
+## Debugging
 
-### Debug Tips
+### Enable IPC Logging
 
-- Use `console.log` in both main and renderer processes
-- Check the developer console for IPC-related errors
-- Verify that preload scripts are properly configured
-- Test IPC calls in isolation before integrating with UI
+IPC security events are automatically logged when channels are blocked:
+
+```
+[IPC Security] Blocked unauthorized channel: dangerous-channel
+```
+
+### Monitor IPC Traffic
+
+Use Electron DevTools to monitor IPC messages:
+
+1. Open DevTools (`Ctrl+Shift+I`)
+2. Go to Console tab
+3. Look for IPC-related log messages
+
+## Related Documentation
+
+- [Auto-Generated IPC API Reference](ipc-api-generated.md) - Complete channel listing
+- [Security Architecture](./security-architecture.md) - IPC security implementation
+- [Contributing Guide](./contributing.md) - Development guidelines
