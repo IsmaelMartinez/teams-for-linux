@@ -82,7 +82,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Decoupled merging from releasing
 - AI-generated concise changelog entries (60 chars avg vs 165 manual)
 - Quality score: 9.0/10 on validation testing
-- Cost-effective (less than $0.01 per release)
+- Zero cost (uses Gemini API free tier)
 
 ## Creating New ADRs
 
