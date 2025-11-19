@@ -249,7 +249,7 @@ When referencing code in ADRs:
 - **Total ADRs**: 5
 - **Implemented**: 4
 - **Rejected**: 1
-- **Average length**: ~500 lines
+- **Average length**: ~500 words
 - **Topics covered**: 4 (Authentication, Screen Sharing, Documentation, Release Process)
 
 ## Related Documentation
