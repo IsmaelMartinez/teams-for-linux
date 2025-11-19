@@ -156,21 +156,6 @@ graph TD
 - **Dependency Injection**: Pass dependencies explicitly, avoid global state
 - **Configuration-First**: Modules read from centralized config object
 
-## Recent Changes
-
-### November 2025 - Incremental Refactoring
-
-Recent refactoring work extracted several modules from the monolithic `app/index.js`:
-
-- ✅ **Startup** - Command line switches and initialization
-- ✅ **Idle** - System idle state monitoring
-- ✅ **Notifications** - Notification service
-- ✅ **Partitions** - Partition management
-
-**Impact**: Reduced `app/index.js` by 55%, improved maintainability and testability.
-
-See [ADR: Incremental Refactoring](adr/README.md) for architectural decisions related to this work.
-
 ## Related Documentation
 
 - **Contributing Guide**: [Development Guidelines](contributing.md)
