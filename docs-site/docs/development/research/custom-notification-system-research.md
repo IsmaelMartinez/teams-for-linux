@@ -4,6 +4,19 @@
 **Date:** November 2025
 **Issue:** Investigation for alternative notification modal system
 **Author:** Claude AI Assistant
+**Dependencies:** Incremental Refactoring Plan Phase 1 (Completed ✓)
+
+---
+
+## Prerequisites
+
+This research builds on the completed [Incremental Refactoring Plan Phase 1](./incremental-refactoring-plan.md), specifically:
+
+- ✅ **Extraction 2 (Week 2)**: Notification System extracted into `app/notifications/service.js` (#1962)
+- ✅ **NotificationService class**: Centralized notification and sound handling
+- ✅ **IPC channels**: `show-notification` and `play-notification-sound` established
+
+The custom notification system will integrate with this new architecture rather than modifying `app/index.js` directly.
 
 ---
 
@@ -445,49 +458,86 @@ const soundMap = {
 
 ## 6. IPC Security & Channels (MVP: Minimal)
 
-### 6.1 New IPC Channels
+### 6.1 Integration with Existing NotificationService
 
-All channels must be added to `app/security/ipcValidator.js`:
+The custom notification system **integrates with** the existing `NotificationService` class rather than replacing it:
+
+**Existing IPC Channels** (from Phase 1 refactoring):
+- `show-notification` - Native OS notifications (handled by NotificationService)
+- `play-notification-sound` - Sound playback (handled by NotificationService)
+
+**New IPC Channel** (for custom notifications):
+- `notification-show-toast` - Custom toast BrowserWindow (new handler)
+
+### 6.2 Architecture Integration
 
 ```javascript
-// MVP: Single channel for showing toasts
-'notification-show-toast',          // Show toast notification
+// app/index.js (integration point)
+
+const NotificationService = require("./notifications/service");
+const CustomNotificationManager = require("./notificationSystem"); // NEW
+
+// Existing: NotificationService for native notifications
+const notificationService = new NotificationService(
+  player,
+  config,
+  mainWindow,
+  getUserStatus
+);
+notificationService.initialize();
+
+// NEW: CustomNotificationManager for toast notifications
+const customNotificationManager = new CustomNotificationManager(
+  config,
+  mainWindow
+);
+customNotificationManager.initialize(); // Registers 'notification-show-toast' handler
 ```
 
-**Future channels** (Phase 2+):
-- `notification-center-toggle` - Toggle notification center
-- `notification-mark-read` - Mark notification as read
-- `notification-action` - Handle user actions
-
-### 6.2 IPC Handler Registration (MVP)
+### 6.3 IPC Handler Registration (MVP)
 
 ```javascript
-// In app/index.js or app/notificationSystem/index.js
+// app/notificationSystem/index.js (NEW)
 
-const NotificationToast = require('./notificationSystem/NotificationToast');
+const { ipcMain } = require('electron');
+const NotificationToast = require('./NotificationToast');
 
-ipcMain.on('notification-show-toast', (event, data) => {
-  // Basic validation
-  if (!data || !data.title) {
-    console.warn('[Notification] Invalid notification data');
-    return;
+class CustomNotificationManager {
+  #config;
+  #mainWindow;
+
+  constructor(config, mainWindow) {
+    this.#config = config;
+    this.#mainWindow = mainWindow;
   }
 
-  // Create and show toast
-  const toast = new NotificationToast(data, () => {
-    // On click: focus main window
-    mainWindow.focus();
-  });
+  initialize() {
+    ipcMain.on('notification-show-toast', this.#handleShowToast.bind(this));
+  }
 
-  toast.show();
-});
+  #handleShowToast(event, data) {
+    // Basic validation
+    if (!data || !data.title) {
+      console.warn('[CustomNotification] Invalid notification data');
+      return;
+    }
+
+    // Create and show toast
+    const toast = new NotificationToast(data, () => {
+      // On click: focus main window
+      this.#mainWindow.show();
+      this.#mainWindow.focus();
+    }, this.#config.customNotification.toastDuration);
+
+    toast.show();
+  }
+}
+
+module.exports = CustomNotificationManager;
 ```
 
-**Key Simplifications:**
-- Single IPC channel (not handle, just one-way send)
-- No store management
-- No badge updates
-- No complex validation (just basic checks)
+**Security Validation:**
+Add `'notification-show-toast'` to `app/security/ipcValidator.js` allowedChannels list.
 
 ### 6.3 Security Considerations
 
@@ -630,15 +680,33 @@ ipcMain.on('notification-show-toast', (event, data) => {
 
 ### 8.2 File Structure (MVP: Minimal)
 
+**New Files Created:**
 ```
 app/
-├── notificationSystem/
-│   ├── index.js                      # Module entry point & IPC handlers
-│   ├── NotificationToast.js          # Toast BrowserWindow class
-│   ├── notificationToast.html        # Toast UI (Teams design)
-│   ├── notificationToastPreload.js   # Toast preload script
-│   └── README.md                     # Module documentation
+├── notificationSystem/                # NEW module for custom notifications
+│   ├── index.js                       # CustomNotificationManager class + IPC handlers
+│   ├── NotificationToast.js           # Toast BrowserWindow class
+│   ├── notificationToast.html         # Toast UI (Teams design)
+│   ├── notificationToastPreload.js    # Toast preload script
+│   └── README.md                      # Module documentation
+│
+├── notifications/                     # EXISTING (from Phase 1 refactoring)
+│   ├── service.js                     # NotificationService - native notifications
+│   └── README.md                      # Existing documentation
 ```
+
+**Modified Files:**
+```
+app/
+├── index.js                          # Add CustomNotificationManager initialization
+├── browser/preload.js                # Update CustomNotification() to route to custom toast
+└── security/ipcValidator.js          # Add 'notification-show-toast' to allowedChannels
+```
+
+**Integration Pattern:**
+- `app/notifications/service.js` - Handles native OS notifications ("web" and "electron" methods)
+- `app/notificationSystem/index.js` - Handles custom toast notifications ("custom" method)
+- Both coexist and are initialized in `app/index.js`
 
 **Future expansion** (Phase 2+):
 ```
@@ -831,6 +899,8 @@ app/notificationSystem/
 ## 13. Related Documentation
 
 ### Internal References
+- **[Incremental Refactoring Plan](./incremental-refactoring-plan.md)** ⭐ - Phase 1 complete, NotificationService extracted
+- **NotificationService Implementation** (`app/notifications/service.js`) - Existing native notification handler
 - **IncomingCallToast Implementation** (`app/incomingCallToast/`) - Source code pattern we're following
 - **[IPC API Documentation](../ipc-api.md)** - IPC channel reference
 - **[Security Architecture](../security-architecture.md)** - Security best practices
@@ -879,13 +949,29 @@ The custom BrowserWindow-based notification system provides a **third option** f
 - **Maintain alternatives**: Keep web/electron methods as viable options
 - **Iterate based on feedback**: Add Phase 2+ features only if users actually need them
 
+### Impact of Phase 1 Refactoring
+
+The completion of [Incremental Refactoring Plan Phase 1](./incremental-refactoring-plan.md) **improves** the custom notification implementation:
+
+**Benefits:**
+- ✅ **Cleaner integration**: Add CustomNotificationManager alongside existing NotificationService
+- ✅ **Smaller index.js**: Don't add handlers to 755-line file (now 339 lines)
+- ✅ **Follows established pattern**: NotificationService shows the class-based architecture pattern
+- ✅ **Clear separation**: Native notifications (NotificationService) vs Custom toasts (CustomNotificationManager)
+- ✅ **Reduced complexity**: Can leverage existing sound handling from NotificationService
+
+**No Breaking Changes:**
+- Research plan remains valid - just better integration points
+- Timeline unchanged (~1 week for MVP)
+- Architecture simplified by building on refactored foundation
+
 ### Next Steps
 
 1. ✅ **Approval**: Get maintainer approval on ultra-minimal MVP approach
 2. 📝 **Create feature branch**: `feature/custom-notification-system-mvp`
-3. 🏗️ **Days 1-2**: Configuration setup and module structure
-4. 🎨 **Days 3-4**: Toast implementation (BrowserWindow + HTML)
-5. 🧪 **Day 5**: Integration, testing, documentation
+3. 🏗️ **Days 1-2**: Configuration setup and CustomNotificationManager structure
+4. 🎨 **Days 3-4**: NotificationToast implementation (BrowserWindow + HTML)
+5. 🧪 **Day 5**: Integration with NotificationService, testing, documentation
 6. 📦 **Release**: v2.7.0 as opt-in alternative (`notificationMethod: "custom"`)
 7. 📊 **Collect feedback**: Monitor GitHub issues and user adoption
 8. 🔄 **Iterate**: Add Phase 2+ features only if users request them
