@@ -95,7 +95,7 @@ Three expert reviews converged on a unanimous conclusion: **targeted improvement
 - ✅ **Index Updates** - Updated research/README.md to point to relevant ADRs instead of deleted research
 
 **Results:**
-- Added 665 lines of high-quality documentation across 3 new pages
+- Added 640 lines of high-quality documentation across 3 new pages
 - Expected LLM optimization improvement: 6.5/10 → 8.5/10
 - Reduced research documentation from 11 files to 8 focused documents (prep work)
 - All documentation links validated
