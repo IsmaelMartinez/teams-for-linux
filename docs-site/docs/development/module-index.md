@@ -33,11 +33,11 @@ User-facing features and integrations.
 |--------|------|---------|---------------|
 | **MQTT** | `app/mqtt/` | MQTT broker integration for status publishing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
 | **Screen Sharing** | `app/screenSharing/` | Native screen/window selection and preview | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/screenSharing/README.md), [User Guide](../screen-sharing.md) |
-| **Custom Background** | `app/customBackground/` | Virtual background management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md) |
+| **Custom Background** | `app/customBackground/` | Virtual background management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md), [User Guide](../custom-backgrounds.md) |
 | **Custom CSS** | `app/customCSS/` | Custom styling and themes | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customCSS/README.md) |
 | **Notifications** | `app/notifications/` | Native desktop notifications & sound playback | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/notifications/README.md) |
 | **Incoming Call Toast** | `app/incomingCallToast/` | Call notification toasts | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/incomingCallToast/README.md) |
-| **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md) |
+| **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
 
 ## System Integration Modules
@@ -63,7 +63,7 @@ Supporting infrastructure, utilities, and cross-cutting concerns.
 | **Connection Manager** | `app/connectionManager/` | Network connectivity and connection state | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/connectionManager/README.md) |
 | **Partitions** | `app/partitions/` | Electron partition management for sessions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/partitions/README.md) |
 | **Security** | `app/security/` | Security controls and validation | No README yet |
-| **Certificate** | `app/certificate/` | Custom certificate handling | No README yet |
+| **Certificate** | `app/certificate/` | Custom certificate handling | [User Guide](../certificate.md) |
 
 ## UI Components
 
