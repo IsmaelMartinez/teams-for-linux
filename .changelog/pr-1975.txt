@@ -1,0 +1,1 @@
+Review and reduce duplication in development docs - by @IsmaelMartinez (#1975)
