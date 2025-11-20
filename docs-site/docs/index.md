@@ -40,94 +40,38 @@ This is an independent project, not affiliated with Microsoft. Some features are
 - **[MQTT Integration](mqtt-integration.md)** - Home automation and status publishing via MQTT
 
 ## Developer Documentation
-- **[Contributing Guide](development/contributing.md)** - Development setup, code standards, and contribution guidelines
-- **[IPC API Reference](development/ipc-api.md)** - Inter-process communication channels and developer integration
 - **[Development Guide](development/README.md)** - Architecture patterns, security guidelines, and development practices
-- **[Token Cache Architecture](development/token-cache-architecture.md)** - Authentication persistence and secure storage implementation
-- **[Security Architecture](development/security-architecture.md)** - Security model, threat analysis, and compensating controls
-- **[Logging Configuration](development/log-config.md)** - Customizing application logging and debugging
-- **[Release Automation](development/release-info.md)** - Release process and automation for maintainers
-
-## Architecture Decisions
-- **[ADR-001: DesktopCapturer Source ID Format](development/adr/001-desktopcapturer-source-id-format.md)** - Screen sharing source identification
-- **[ADR-002: Token Cache Secure Storage](development/adr/002-token-cache-secure-storage.md)** - OS-level secure storage for authentication tokens
-- **[ADR-003: Token Refresh Implementation](development/adr/003-token-refresh-implementation.md)** - Token refresh strategy and implementation
-
-## Research & Analysis
+- **[Contributing Guide](development/contributing.md)** - Development setup, code standards, and contribution guidelines
+- **[Architecture Decision Records](development/adr/README.md)** - Significant technical decisions and their rationale
 - **[Research Documentation](development/research/README.md)** - Strategic analysis and research documents
 
 ## Architecture Overview
 
 ```mermaid
 graph TD
-    subgraph Main Process
-        A[app/index.js] --> B(App Configuration)
-        A --> C(IPC Main Handlers)
-        A --> D(Window Management)
-        A --> E(System Integrations)
-        A --> F(Cache Management)
-        A --> G(Menu Management)
-        A --> H(Protocol Handling)
-        A --> T(Screen Sharing Core)
+    subgraph Main["Main Process"]
+        A[Entry Point] --> B[Configuration]
+        A --> C[Window Management]
+        A --> D[System Integration]
     end
 
-    subgraph Configuration Sources
-        Q[System Config<br>/etc/teams-for-linux/config.json]
-        R[User Config<br>~/.config/teams-for-linux/config.json]
-        S[Default Values]
+    subgraph Renderer["Renderer Process"]
+        E[Teams PWA] --> F[Browser Tools]
+        E --> G[Notifications]
     end
 
-    subgraph Renderer Process
-        I[Teams PWA] --> J(IPC Renderer Calls)
-        I --> K(Browser Tools)
-        I --> L(Notifications)
-        I --> M(Custom CSS/Backgrounds)
-        K --> U(Screen Share Detection)
-    end
-    
-    subgraph Screen Sharing System
-        T --> V[Stream Selector<br>app/streamSelector/]
-        T --> W[Screen Sharing Manager<br>app/screenSharing/]
-        V --> X[Desktop Capturer<br>Source Selection]
-        W --> Y[Preview Window<br>Real-time Thumbnail]
+    subgraph External["External"]
+        H[Microsoft Teams]
+        I[Operating System]
     end
 
-    subgraph External Systems
-        N(Operating System)
-        O(Microsoft Teams Services)
-        P(External Browser)
-        Z(Desktop Capture APIs<br>X11/Wayland/DWM)
-    end
-
-    Q --> B
-    R --> B
-    S --> B
-
-    C -- IPC --> J
-    J -- IPC --> C
-
-    D -- Controls --> I
-    I -- Renders --> D
-    D -- Manages --> Y
-
-    E -- Interacts with --> N
-    H -- Opens links in --> P
-
-    I -- Communicates with --> O
-    A -- Communicates with --> O
-
-    F -- Manages --> N
-    M -- Modifies --> I
-    
-    U -- Triggers --> T
-    T -- Uses --> Z
-    X -- Queries --> Z
-    
-    style T fill:#e3f2fd
-    style V fill:#e8f5e8
-    style W fill:#fff3e0
-    style U fill:#f3e5f5
+    B --> A
+    C <--> E
+    D --> I
+    E --> H
 ```
+
+For detailed architecture documentation, see the [Development Guide](development/README.md).
 
 ## Quick Start
 
