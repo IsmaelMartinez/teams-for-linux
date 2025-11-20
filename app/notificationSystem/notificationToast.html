@@ -14,9 +14,9 @@
 
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            background-color: #1F1F1F;
+            background-color: #2D2D2D;
             color: #FFFFFF;
-            padding: 12px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -24,64 +24,85 @@
             cursor: pointer;
             user-select: none;
             overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.2s ease-out;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         body:hover {
-            background-color: #2D2C2C;
-            opacity: 0.95;
+            background-color: #3a3a3a;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
 
         body:active {
-            opacity: 0.85;
+            background-color: #353535;
         }
 
         /* Header with icon and title */
         header {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            align-items: flex-start;
+            gap: 12px;
             margin-bottom: 8px;
-            min-height: 24px;
+        }
+
+        .icon-container {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6264A7 0%, #464775 100%);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         header img {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            flex-shrink: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .title-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 48px;
         }
 
         header .title {
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 14px;
+            font-weight: 600;
             color: #FFFFFF;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            flex-grow: 1;
+            margin-bottom: 2px;
         }
 
         /* Body text */
         main {
-            flex-grow: 1;
             display: flex;
-            align-items: center;
-            min-height: 20px;
+            align-items: flex-start;
+            flex-grow: 1;
+            margin-bottom: 8px;
         }
 
         main p {
-            font-size: 12px;
-            color: #B3B3B3;
-            line-height: 1.4;
+            font-size: 13px;
+            color: #D1D1D1;
+            line-height: 1.5;
             overflow: hidden;
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             word-break: break-word;
+            margin: 0;
         }
 
         /* Footer with branding */
@@ -89,30 +110,36 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-top: 8px;
-            font-size: 11px;
-            color: #808080;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 6px;
+            font-size: 10px;
+            color: #888888;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 8px;
+            margin-top: auto;
         }
 
         footer img {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
         }
 
         footer span {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            opacity: 0.8;
         }
     </style>
 </head>
 
 <body>
     <header>
-        <img id="icon" src="" alt="">
-        <div class="title" id="title"></div>
+        <div class="icon-container">
+            <img id="icon" src="" alt="">
+        </div>
+        <div class="title-container">
+            <div class="title" id="title"></div>
+        </div>
     </header>
     <main>
         <p id="body"></p>
