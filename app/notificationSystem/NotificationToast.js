@@ -1,4 +1,4 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 const Positioner = require('electron-positioner');
 
@@ -13,6 +13,7 @@ class NotificationToast {
   #onClickCallback;
   #autoCloseTimer;
   #toastDuration;
+  #ipcClickHandler;
 
   constructor(data, onClickCallback, toastDuration = 5000) {
     this.#onClickCallback = onClickCallback;
@@ -46,15 +47,24 @@ class NotificationToast {
     // Position toast at bottom-right corner with multi-monitor support
     this.#positioner = new Positioner(this.#window);
 
-    // Handle window ready event
+    // Handle window ready event and send notification data
+    // Use 'did-finish-load' to ensure HTML and preload are fully loaded
     this.#window.webContents.once('did-finish-load', () => {
       // Send notification data to renderer
       this.#window.webContents.send('notification-toast-init', data);
     });
 
+    // Set up IPC handler for click events from this toast
+    // Use a unique handler ID to support multiple toasts
+    this.#ipcClickHandler = () => {
+      this.#handleClick();
+    };
+    ipcMain.once('notification-toast-click', this.#ipcClickHandler);
+
     // Clean up when window is closed
     this.#window.on('closed', () => {
       this.#clearAutoClose();
+      this.#cleanupIpcHandler();
     });
   }
 
@@ -109,6 +119,17 @@ class NotificationToast {
       this.#autoCloseTimer = null;
     }
   }
+
+  /**
+   * Clean up IPC handler
+   */
+  #cleanupIpcHandler() {
+    if (this.#ipcClickHandler) {
+      ipcMain.removeListener('notification-toast-click', this.#ipcClickHandler);
+      this.#ipcClickHandler = null;
+    }
+  }
 }
 
 module.exports = NotificationToast;
+

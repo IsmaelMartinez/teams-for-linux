@@ -21,9 +21,9 @@ const NotificationToast = require('./NotificationToast');
  * - Do Not Disturb mode integration
  */
 class CustomNotificationManager {
-  #config;
   #mainWindow;
   #toastDuration;
+  #activeToasts;
 
   /**
    * Initialize the CustomNotificationManager
@@ -31,9 +31,9 @@ class CustomNotificationManager {
    * @param {Object} mainWindow - Reference to the main application window
    */
   constructor(config, mainWindow) {
-    this.#config = config;
     this.#mainWindow = mainWindow;
     this.#toastDuration = config?.customNotification?.toastDuration || 5000;
+    this.#activeToasts = new Set(); // Keep track of active toasts to prevent garbage collection
   }
 
   /**
@@ -65,6 +65,16 @@ class CustomNotificationManager {
         () => this.#handleToastClick(),
         this.#toastDuration
       );
+
+      // Keep track of active toast to prevent garbage collection
+      this.#activeToasts.add(toast);
+
+      // Remove from tracking when toast closes
+      const originalClose = toast.close.bind(toast);
+      toast.close = function() {
+        originalClose();
+        this.#activeToasts.delete(toast);
+      }.bind(this);
 
       toast.show();
       console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}"`);
