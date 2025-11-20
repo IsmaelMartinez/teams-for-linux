@@ -374,7 +374,7 @@ function extractYargConfig(configObject, appVersion) {
           toastDuration: 5000,
         },
         describe:
-          "Custom in-app notification system configuration (MVP: toast notifications only)",
+          "Custom in-app notification system configuration",
         type: "object",
       },
       onNewWindowOpenMeetupJoinUrlInApp: {
