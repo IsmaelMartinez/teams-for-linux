@@ -1,10 +1,14 @@
-# Release Automation
+# Release Info Generation
 
-Technical documentation on the automated release process and info generation.
+Technical documentation for the `generate-release-info` script and build integration.
+
+:::info Release Process
+For the complete release process (including changelog generation and release PRs), see [Manual Release Process](manual-release-process.md).
+:::
 
 ## Overview
 
-The release info integration automatically:
+The `generate-release-info` script:
 
 1. **Validates version consistency** across `package.json`, `package-lock.json`, and `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`
 2. **Extracts release notes** from the `com.github.IsmaelMartinez.teams_for_linux.appdata.xml` file
@@ -122,39 +126,6 @@ The generated `release-info.json` follows electron-builder's ReleaseInfo interfa
 | `releaseNotes` | `appdata.xml` | Release notes from `<description>` section |
 | `releaseDate` | `appdata.xml` | Release date from `date` attribute |
 
-## Release Workflow
-
-### Adding Release Notes
-
-To add release notes for a new version:
-
-1. **Update version** in `package.json`
-2. **Update lock file** by running `npm install` to update `package-lock.json`
-3. **Add release entry** in `com.github.IsmaelMartinez.teams_for_linux.appdata.xml`:
-
-```xml
-<release version="2.0.17" date="2025-06-15">
-  <description>
-    <ul>
-      <li>New feature description</li>
-      <li>Bug fix description</li>
-      <li>Performance improvement</li>
-    </ul>
-  </description>
-</release>
-```
-
-4. **Build automatically** - The release info will be generated during the next build
-
-### Release Checklist
-
-- [ ] Version updated in `package.json`
-- [ ] `package-lock.json` updated via `npm install`
-- [ ] Release entry added to `appdata.xml`
-- [ ] Release notes describe all significant changes
-- [ ] Version consistency validated
-- [ ] Build and test locally before publishing
-
 ## Error Handling
 
 The system performs validation and provides helpful error messages:
@@ -245,5 +216,6 @@ For cross-platform releases, ensure:
 
 ## Related Documentation
 
-- [Configuration Options](configuration.md) - Application configuration reference
+- [Manual Release Process](manual-release-process.md) - Complete release workflow
+- [ADR 005: AI-Powered Changelog Generation](adr/005-ai-powered-changelog-generation.md) - Changelog automation
 - [IPC API](ipc-api.md) - Integration with application features
