@@ -163,25 +163,18 @@ class GraphApiClient {
 
       // Make the request
       const response = await fetch(url, requestOptions);
+      const responseText = await response.text();
 
-      // Handle response - check if there's a body before parsing JSON
+      // Safely parse JSON, handles empty bodies (e.g., 204 No Content)
       let data = null;
-      const contentType = response.headers.get('content-type');
-      const hasJsonContent = contentType && contentType.includes('application/json');
-
-      // Only try to parse JSON if there's content and it's JSON
-      if (response.status !== 204 && hasJsonContent) {
-        const text = await response.text();
-        if (text && text.length > 0) {
-          try {
-            data = JSON.parse(text);
-          } catch (parseError) {
-            logger.warn('[GRAPH_API] Failed to parse response as JSON', {
-              status: response.status,
-              contentType,
-              textPreview: text.substring(0, 100)
-            });
-          }
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          logger.warn('[GRAPH_API] Failed to parse response as JSON', {
+            status: response.status,
+            textPreview: responseText.substring(0, 100)
+          });
         }
       }
 
@@ -198,7 +191,7 @@ class GraphApiClient {
         });
         return {
           success: false,
-          error: data?.error?.message || `API request failed with status ${response.status}`,
+          error: data?.error?.message || responseText || 'API request failed',
           status: response.status,
           data
         };
