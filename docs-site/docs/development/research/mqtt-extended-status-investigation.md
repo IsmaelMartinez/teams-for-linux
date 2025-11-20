@@ -1,6 +1,7 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
 **Date**: 2025-11-12
+**Updated**: 2025-11-20
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
 **Status**: Investigation Complete - Ready for Implementation
 
@@ -16,9 +17,25 @@ User **vbartik** requested three additional MQTT status fields for RGB LED autom
 
 ---
 
-## Solution: WebRTC Stream Monitoring
+## Solution: Hybrid Approach (Existing IPC + WebRTC Monitoring)
 
-**Approach**: Intercept `getUserMedia()` calls and monitor MediaStreamTrack states to detect actual device usage.
+**Key insight**: The codebase already has IPC channels for call and screen sharing state. We only need WebRTC monitoring for camera/microphone.
+
+### Existing IPC Channels to Leverage
+
+| State | IPC Channel | Location |
+|-------|-------------|----------|
+| Call connected | `call-connected` | `app/mainAppWindow/browserWindowManager.js:150` |
+| Call disconnected | `call-disconnected` | `app/mainAppWindow/browserWindowManager.js:152` |
+| Screen sharing started | `screen-sharing-started` | `app/screenSharing/service.js:22` |
+| Screen sharing stopped | `screen-sharing-stopped` | `app/screenSharing/service.js:24` |
+
+### What Still Needs WebRTC Monitoring
+
+- **Camera state** - Not currently tracked via IPC
+- **Microphone state** - Not currently tracked via IPC
+
+**Approach**: Intercept `getUserMedia()` calls and monitor MediaStreamTrack states for camera/mic only.
 
 ### Why This Works
 
@@ -192,23 +209,141 @@ automation:
 
 ---
 
+## Architecture: New Service Pattern
+
+Following the established pattern (see `CustomNotificationManager`, `ScreenSharingService`):
+
+### Main Process: MQTTMediaStatusService
+
+```javascript
+// app/mqtt/mediaStatusService.js
+const { ipcMain } = require('electron');
+
+class MQTTMediaStatusService {
+  #mqttClient;
+  #config;
+
+  constructor(mqttClient, config) {
+    this.#mqttClient = mqttClient;
+    this.#config = config;
+  }
+
+  initialize() {
+    // Publish MQTT status when call connects
+    ipcMain.on('call-connected', this.#handleCallConnected.bind(this));
+
+    // Publish MQTT status when call disconnects
+    ipcMain.on('call-disconnected', this.#handleCallDisconnected.bind(this));
+
+    // Publish MQTT status when camera state changes
+    ipcMain.on('mqtt-camera-changed', this.#handleCameraChanged.bind(this));
+
+    // Publish MQTT status when microphone state changes
+    ipcMain.on('mqtt-microphone-changed', this.#handleMicrophoneChanged.bind(this));
+
+    console.info('[MQTTMediaStatusService] Initialized');
+  }
+
+  async #handleCallConnected() {
+    if (this.#config.mqtt?.call?.enabled) {
+      await this.#mqttClient.publish(
+        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.call.topic}`,
+        'true',
+        { retain: true }
+      );
+    }
+  }
+
+  async #handleCallDisconnected() {
+    if (this.#config.mqtt?.call?.enabled) {
+      await this.#mqttClient.publish(
+        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.call.topic}`,
+        'false',
+        { retain: true }
+      );
+    }
+    // Also reset camera/mic when call ends
+    await this.#handleCameraChanged(null, false);
+    await this.#handleMicrophoneChanged(null, false);
+  }
+
+  async #handleCameraChanged(event, enabled) {
+    if (this.#config.mqtt?.camera?.enabled) {
+      await this.#mqttClient.publish(
+        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.camera.topic}`,
+        String(enabled),
+        { retain: true }
+      );
+    }
+  }
+
+  async #handleMicrophoneChanged(event, enabled) {
+    if (this.#config.mqtt?.microphone?.enabled) {
+      await this.#mqttClient.publish(
+        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.microphone.topic}`,
+        String(enabled),
+        { retain: true }
+      );
+    }
+  }
+}
+
+module.exports = MQTTMediaStatusService;
+```
+
+### Generic `publish()` Method for MQTTClient
+
+Add to existing `app/mqtt/index.js`:
+
+```javascript
+async publish(topic, payload, options = {}) {
+  if (!this.isConnected || !this.client) {
+    console.debug('MQTT not connected, skipping publish');
+    return;
+  }
+
+  const payloadString = typeof payload === 'object'
+    ? JSON.stringify(payload)
+    : String(payload);
+
+  await this.client.publish(topic, payloadString, {
+    retain: options.retain ?? true,
+    qos: options.qos ?? 0
+  });
+}
+```
+
+---
+
 ## Implementation Checklist
 
-- [ ] Create `app/browser/tools/mqttExtendedStatus.js`
+### Phase 1: Core Infrastructure
+
+- [ ] Add generic `publish()` method to `app/mqtt/index.js`
+- [ ] Create `app/mqtt/mediaStatusService.js` following service pattern
+- [ ] Add IPC channel allowlist entries in `app/security/ipcValidator.js`:
+  - [ ] `mqtt-camera-changed`
+  - [ ] `mqtt-microphone-changed`
+- [ ] Initialize service in `app/index.js`
+- [ ] Add configuration schema for semantic categories
+
+### Phase 2: WebRTC Monitoring (Camera/Mic)
+
+- [ ] Create `app/browser/tools/mqttMediaStatus.js`
 - [ ] Implement getUserMedia interceptor
 - [ ] Add screen sharing detection (reuse `isScreenShare` logic)
 - [ ] Implement hybrid track monitoring:
   - [ ] Event listeners (mute/unmute/ended)
   - [ ] Poll track.enabled (500ms interval)
   - [ ] Cleanup intervals on track end
-- [ ] Add IPC channel `mqtt-extended-status-changed`
-- [ ] Update MQTT publisher in main process:
-  - [ ] Convert booleans to strings
-  - [ ] Publish to three topics
-- [ ] Add configuration schema
 - [ ] Update `preload.js` to load module
-- [ ] Document in `docs/ipc-api.md`
+
+### Phase 3: Documentation & Testing
+
+- [ ] Run `npm run generate-ipc-docs` to update auto-generated docs
 - [ ] Test with UI buttons AND keyboard shortcuts
+- [ ] Test call connect/disconnect publishes correct state
+- [ ] Test camera/mic toggle publishes correct state
 
 ---
 
@@ -507,20 +642,28 @@ await mqttClient.publish('teams/screen-sharing', 'true');
 ## References
 
 - **Issue #1938**: https://github.com/IsmaelMartinez/teams-for-linux/issues/1938
+- **Service pattern**: `app/notificationSystem/index.js` (CustomNotificationManager)
+- **Screen sharing service**: `app/screenSharing/service.js` (existing IPC channels)
 - **Existing pattern**: `app/browser/tools/disableAutogain.js` (getUserMedia interception)
-- **Existing MQTT**: `app/browser/tools/mqttStatusMonitor.js`
+- **Existing MQTT**: `app/mqtt/index.js`
 - **Screen sharing**: `app/screenSharing/injectedScreenSharing.js` (audio muting context)
+- **IPC documentation**: `docs-site/docs/development/ipc-api-generated.md`
 - **MediaStreamTrack.enabled**: https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/enabled
 
 ---
 
 ## Decision
 
-**Implement WebRTC Stream Monitoring**
+**Implement Hybrid Approach: Existing IPC + WebRTC Stream Monitoring**
 
 This approach:
-- Solves the user's exact request (camera, mic, in-call)
-- Uses proven, stable techniques already in the codebase
-- Is maintainable and future-proof
-- Provides accurate, real-time device state
-- Enables future expansion without refactoring
+- **Leverages existing infrastructure**: Uses `call-connected`/`call-disconnected` IPC channels already in the codebase
+- **Follows established patterns**: Uses service pattern from `CustomNotificationManager`
+- **Only adds what's missing**: WebRTC monitoring only for camera/mic state
+- **Provides accurate, real-time state**: Camera and mic states detected via MediaStreamTrack
+- **Enables future expansion**: Semantic categories and generic `publish()` support any future use case
+
+**Simplified implementation**:
+- Call state → Already detected, just wire to MQTT
+- Screen sharing → Already detected, just wire to MQTT (future Phase 2)
+- Camera/mic → Implement WebRTC monitoring with IPC bridge
