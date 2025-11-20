@@ -14,6 +14,21 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.6.16" date="2025-11-20">
+      <description>
+        <ul>
+          <li>[Research]: Build notification modal component - by @IsmaelMartinez (#1935)</li>
+          <li>[Research]: Consolidate project documentation and ADRs - by @IsmaelMartinez (#1957)</li>
+          <li>Refactor index.js partitions and idle state of #1960 - by @IsmaelMartinez (#1968)</li>
+          <li>[Docs] Update Incremental Refactoring Plan - Phase 1 Complete &amp; Phase 2 Reassessment - by @IsmaelMartinez (#1970)</li>
+          <li>Continue incremental refactoring implementation - by @IsmaelMartinez (#1971)</li>
+          <li>documentation improvements - by @IsmaelMartinez (#1974)</li>
+          <li>Review and reduce duplication in development docs - by @IsmaelMartinez (#1975)</li>
+          <li>Simplify docs homepage and quick reference - by @IsmaelMartinez (#1976)</li>
+          <li>Implement notifications modal MVP - by @IsmaelMartinez (#1979)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.6.15" date="2025-11-17">
       <description>
         <ul>
