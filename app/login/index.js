@@ -22,6 +22,7 @@ exports.loginService = function loginService(parentWindow, callback) {
     win.show();
   });
 
+  // Handle form submission for SSO/authentication workflows
   ipcMain.on("submitForm", submitFormHandler(callback, win));
 
   win.on("closed", () => {

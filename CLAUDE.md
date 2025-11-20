@@ -21,6 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Utility:**
 - `npm run generate-release-info` - Generate release information file
+- `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
 
 ## Project Architecture
 
@@ -58,7 +59,9 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 ### IPC Communication
 - Use `ipcMain.handle` for request-response patterns
 - Use `ipcMain.on` for fire-and-forget notifications
-- Document all new IPC channels in `docs-site/docs/development/ipc-api.md`
+- Add a descriptive comment above each IPC channel registration
+- Run `npm run generate-ipc-docs` after adding/modifying IPC channels
+- All IPC channels must be added to the allowlist in `app/security/ipcValidator.js`
 
 ### Error Handling
 - Robust error handling with try-catch in async functions
@@ -113,9 +116,16 @@ The project documentation is built with Docusaurus and deployed to GitHub Pages:
 
 When making code changes, update relevant documentation in the same PR:
 - Module README.md files when changing functionality
-- IPC API documentation for new channels in `docs-site/docs/development/ipc-api.md`
+- **IPC channels**: Add descriptive comments above registrations and run `npm run generate-ipc-docs`
 - Configuration documentation for new options in `docs-site/docs/configuration.md`
 - Architecture Decision Records (ADRs) for significant technical decisions in `docs-site/docs/development/adr/`
+
+**Important for IPC changes:**
+When adding or modifying IPC channels, you must:
+1. Add a descriptive comment above the `ipcMain.handle()` or `ipcMain.on()` registration
+2. Add the channel to the allowlist in `app/security/ipcValidator.js`
+3. Run `npm run generate-ipc-docs` to update the auto-generated documentation
+4. The auto-generated docs in `docs-site/docs/development/ipc-api-generated.md` should be committed with your changes
 
 ## Critical Module Initialization Requirements
 
@@ -162,12 +172,18 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 ## Additional Resources
 
 **Local documentation files (read these):**
+- **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
+- **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
+- **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
 - **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
 
 **Web versions (for human reference):**
+- https://ismaelmartinez.github.io/teams-for-linux/quick-reference
+- https://ismaelmartinez.github.io/teams-for-linux/development/module-index
+- https://ismaelmartinez.github.io/teams-for-linux/development/adr/
 - https://ismaelmartinez.github.io/teams-for-linux/development/contributing
 - https://ismaelmartinez.github.io/teams-for-linux/configuration
 - https://ismaelmartinez.github.io/teams-for-linux/troubleshooting

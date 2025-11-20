@@ -56,6 +56,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture',
           items: [
+            'development/module-index',
             'development/token-cache-architecture',
             'development/security-architecture',
           ],
@@ -64,9 +65,12 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Architecture Decisions',
           items: [
+            'development/adr/README',
             'development/adr/001-desktopcapturer-source-id-format',
             'development/adr/002-token-cache-secure-storage',
             'development/adr/003-token-refresh-implementation',
+            'development/adr/004-agents-md-standard-investigation',
+            'development/adr/005-ai-powered-changelog-generation',
           ],
         },
         {
@@ -74,46 +78,11 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            {
-              type: 'category',
-              label: 'Authentication & Security',
-              items: [
-                'development/research/token-cache-authentication-research',
-                'development/research/secure-storage-research',
-                'development/research/dom-access-investigation',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Testing & Development',
-              items: [
-                'development/research/automated-testing-strategy',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Electron & Framework',
-              items: [
-                'development/research/electron-38-migration-analysis',
-                'development/research/usesystempicker-investigation',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Strategic Analysis',
-              items: [
-                'development/research/documentation-health-analysis',
-                'development/research/ui-system-strategic-analysis',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Architecture & Refactoring',
-              items: [
-                'development/research/incremental-refactoring-plan',
-                'development/research/architecture-modernization-research',
-              ],
-            },
+            'development/research/dom-access-investigation',
+            'development/research/automated-testing-strategy',
+            'development/research/electron-38-migration-analysis',
+            'development/research/usesystempicker-investigation',
+            'development/research/architecture-modernization-research',
           ],
         },
       ],

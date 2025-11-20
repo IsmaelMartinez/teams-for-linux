@@ -1,0 +1,273 @@
+---
+title: "Architecture Decision Records"
+sidebar_position: 1
+type: reference
+last_updated: 2025-11-19
+tags: [adr, architecture, decisions]
+---
+
+# Architecture Decision Records (ADRs)
+
+This directory contains Architecture Decision Records documenting significant technical decisions made in the Teams for Linux project.
+
+## What are ADRs?
+
+Architecture Decision Records capture important architectural decisions along with their context and consequences. They help:
+
+- **Document the "why"** behind technical choices
+- **Preserve context** for future maintainers
+- **Enable better decisions** by learning from past choices
+- **Onboard contributors** faster by explaining rationale
+
+## Status Overview
+
+| ADR | Title | Status | Date | Version |
+|-----|-------|--------|------|---------|
+| [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2024-09-15 | v2.3.0+ |
+| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2024-09-08 | v2.5.9 |
+| [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
+| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
+| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
+
+**Legend:**
+- ✅ **Implemented** - Decision accepted and code in production
+- ❌ **Rejected** - Decision evaluated and declined with rationale
+- 🚧 **Proposed** - Under review, not yet accepted
+- 🔄 **Superseded** - Replaced by a newer decision
+
+## By Topic
+
+### Authentication & Security
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | Secure token storage using Electron safeStorage with OS-level encryption to prevent daily re-authentication |
+| [003](003-token-refresh-implementation.md) | Token Refresh Implementation | Configurable token refresh mechanism to proactively renew authentication before expiry |
+
+**Key Outcomes:**
+- Eliminated daily re-authentication issues
+- Platform-native secure storage (Keychain/DPAPI/kwallet)
+- Graceful fallback for unsupported platforms
+- Configurable refresh intervals
+
+### Screen Sharing
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | Use `screen:x:y` format throughout screen sharing pipeline for Wayland compatibility |
+
+**Key Outcomes:**
+- Fixed Wayland screen sharing preview
+- Standardized source identification
+- Improved cross-platform compatibility
+
+### Documentation & Standards
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | Investigated and rejected agents.md standard in favor of tool-specific standards (CLAUDE.md, copilot-instructions.md) |
+
+**Key Outcomes:**
+- Consolidated instruction files (removed 28% duplication)
+- Centralized markdown standards in contributing.md
+- Maintained tool-specific official standards
+
+### Release Process & Automation
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | Use Gemini 2.0 Flash for automated changelog generation with release-pr workflow |
+
+**Key Outcomes:**
+- Decoupled merging from releasing
+- AI-generated concise changelog entries (60 chars avg vs 165 manual)
+- Quality score: 9.0/10 on validation testing
+- Zero cost (uses Gemini API free tier)
+
+## Creating New ADRs
+
+### When to Create an ADR
+
+Create an ADR for decisions that:
+- Have significant architectural impact
+- Affect multiple modules or systems
+- Involve trade-offs between alternatives
+- Need to be explained to future contributors
+- Change existing patterns or conventions
+
+### ADR Template
+
+Use this template for new ADRs (save as `docs-site/docs/development/adr/00X-your-title.md`):
+
+```markdown
+---
+id: 00X-your-title
+---
+
+# ADR 00X: [Title - Short Noun Phrase]
+
+## Status
+
+[Proposed | Accepted | Implemented | Rejected | Superseded by ADR-XXX]
+
+## Context
+
+What is the issue we're trying to address? Include:
+- Problem description
+- Why this needs a decision now
+- Technical background and constraints
+- What we investigated or researched
+
+## Decision
+
+What did we decide to do? Be specific:
+- Exact approach chosen
+- Implementation strategy
+- Key parameters or configurations
+
+## Consequences
+
+What are the impacts of this decision?
+
+### Positive
+- Benefits gained
+- Problems solved
+- Improvements delivered
+
+### Negative
+- Trade-offs accepted
+- Limitations introduced
+- Future constraints
+
+### Neutral
+- Implementation notes
+- Maintenance considerations
+- Migration requirements (if applicable)
+
+## Alternatives Considered
+
+What other options did we evaluate and why were they not chosen?
+
+### Option 1: [Name]
+- Description
+- Pros
+- Cons
+- **Why rejected**: [Specific reason]
+
+### Option 2: [Name]
+- ...
+
+## Related
+- ADR-XXX: [Related decision]
+- Issue #XXX
+- PR #XXX
+```
+
+### ADR Naming Conventions
+
+- **Number**: Sequential (001, 002, 003, ...)
+- **Title**: Short, descriptive noun phrase
+- **Filename**: `00X-lowercase-with-hyphens.md`
+
+**Examples:**
+- ✅ `001-desktopcapturer-source-id-format.md`
+- ✅ `002-token-cache-secure-storage.md`
+- ❌ `001-screen-sharing-bug-fix.md` (too vague)
+- ❌ `001-ImplementDesktopCapturerFix.md` (wrong case)
+
+### ADR Workflow
+
+1. **Create draft ADR** with "Proposed" status
+2. **Discuss with maintainers** (GitHub discussion or PR)
+3. **Update status** to "Accepted" or "Rejected" based on outcome
+4. **Implement** (if accepted)
+5. **Update status** to "Implemented" when deployed
+6. **Add to this index** in the appropriate topic category
+
+## ADR Maintenance
+
+### Updating Existing ADRs
+
+- **Status changes**: Update when implementation completes or decision is superseded
+- **Consequences**: Add learned lessons or unexpected outcomes after implementation
+- **Version notes**: Add when decision affects specific releases
+
+### Superseding ADRs
+
+When replacing an old decision:
+1. Create new ADR documenting the new approach
+2. Update old ADR status to: `Superseded by ADR-XXX`
+3. Link new ADR to old one in "Related" section
+4. Explain in new ADR why the old approach was replaced
+
+### Example Supersession
+
+```markdown
+## Status
+
+~~Accepted~~ → Superseded by [ADR-008](008-new-approach.md)
+
+**Note**: This approach was replaced in November 2025 due to [reason].
+See ADR-008 for the current implementation.
+```
+
+## Best Practices
+
+### Writing Good ADRs
+
+✅ **Do:**
+- Write for future readers who don't have your context
+- Explain the "why" more than the "what"
+- Document alternatives considered
+- Include specific examples and code references
+- Update ADR when you learn something new post-implementation
+
+❌ **Don't:**
+- Write implementation documentation (that belongs in module READMEs)
+- Skip the consequences section
+- Forget to add links to related issues/PRs
+- Leave status outdated (update when implemented)
+
+### ADR Size Guidelines
+
+- **Minimum**: ~200 words (if shorter, might not need an ADR)
+- **Typical**: 500-1000 words
+- **Maximum**: No hard limit, but consider splitting if >2000 words
+
+### Code References
+
+When referencing code in ADRs:
+
+```markdown
+**Implementation**: `app/browser/tools/tokenCache.js`
+**Configuration**: See `config.json` → `tokenRefreshInterval`
+**IPC Channel**: `token-refresh:trigger`
+```
+
+## ADR Statistics
+
+- **Total ADRs**: 5
+- **Implemented**: 4
+- **Rejected**: 1
+- **Average length**: ~500 words
+- **Topics covered**: 4 (Authentication, Screen Sharing, Documentation, Release Process)
+
+## Related Documentation
+
+- **Contributing Guide**: [Development Guidelines](../contributing.md)
+- **Module Documentation**: [Module Index](../module-index.md)
+- **Research Documents**: [Research Index](../research/README.md)
+- **Configuration Reference**: [Configuration Options](../../configuration.md)
+
+## Questions?
+
+- **"Should I create an ADR for this?"** → If you're asking, probably yes. When in doubt, create one.
+- **"Where do implementation details go?"** → Module READMEs. ADRs explain "why", READMEs explain "how".
+- **"Can I update an old ADR?"** → Yes! Add consequences learned or update status. Don't rewrite history, but do add learnings.
+- **"What if my decision was wrong?"** → Document it! Create a new ADR explaining why you're changing course. This is valuable learning.
+
+## External Resources
+
+- [Architecture Decision Records (ADR) Overview](https://adr.github.io/)
+- [When to Write an ADR](https://engineering.atspotify.com/2020/04/when-should-i-write-an-architecture-decision-record/)
+- [ADR Template Collection](https://github.com/joelparkerhenderson/architecture-decision-record)

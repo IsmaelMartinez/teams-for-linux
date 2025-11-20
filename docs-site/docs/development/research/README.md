@@ -8,40 +8,27 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Authentication & Security Research
-- **[Token Cache Authentication Research](token-cache-authentication-research.md)** - Comprehensive research from problem analysis through implementation and validation of token cache authentication solution (#1357)
-- **[Secure Storage Research](secure-storage-research.md)** - Research on secure storage options, platform capabilities, and implementation considerations
-- **[DOM Access Investigation](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
+### Authentication & Security
+- **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
+- For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
-### Testing & Development Research
-- **[Automated Testing Strategy](automated-testing-strategy.md)** - Comprehensive analysis of testing frameworks for Electron apps with MS authentication constraints
-  - Playwright for E2E, Vitest for unit/integration tests
-  - Storage state reuse for authentication handling
-  - 8-week migration path to >70% coverage
+### Testing & Development
+- **[Automated Testing Strategy](automated-testing-strategy.md)** - Testing frameworks for Electron apps with MS authentication constraints
+  - Playwright for E2E, Vitest for unit/integration
+  - Key learning: MS authentication makes automated testing complex
 
-### Electron & Framework Research
-- **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Comprehensive analysis of Electron 37 → 38 upgrade
-  - Breaking changes, API updates, platform-specific considerations
-  - Migration strategy and testing requirements
-- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Analysis of Electron 38's native screen picker feature
-  - Decision: Not viable due to Linux Wayland/PipeWire blocker
-  - Platform compatibility matrix and reasoning
+### Electron & Framework
+- **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
+- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Electron 38's native screen picker (not viable on Linux)
 
-### Strategic Analysis
-- **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
-- **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
+### Architecture
+- **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
+  - Superseded by incremental refactoring (55% reduction in index.js)
+  - See [Contributing Guide](../contributing.md) for current architecture
 
-### Architecture & Refactoring
-- **[Incremental Refactoring Plan](incremental-refactoring-plan.md)** ⭐ **ACTIVE PLAN** - Practical 4-8 week plan to modernize architecture through incremental extraction
-  - Reduces index.js by 49% (755 → 381 lines)
-  - Low risk, continuous value delivery
-  - Adds 20+ automated tests
-  - Supersedes closed #1799 (DDD+Plugin approach)
-- **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
-  - Preserved as reference and historical context
-  - 10-week big-bang migration plan
-  - Excellent research but over-engineered for actual needs
-  - See Critical Analysis for why this was not adopted
+### Changelog & Release
+- For AI-powered changelog generation, see [ADR-005](../adr/005-ai-powered-changelog-generation.md)
+- For release process, see [Manual Release Process](../manual-release-process.md)
 
 ### Notification System Research
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
