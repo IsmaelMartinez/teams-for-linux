@@ -168,5 +168,4 @@ git log --oneline --since="2 weeks ago"
 ## Related Documentation
 
 - [ADR 005: AI-Powered Changelog Generation](adr/005-ai-powered-changelog-generation.md)
-- [Changelog Generator Setup Guide](research/changelog-generator-setup.md)
-- [Release Automation Technical Details](release-info.md)
+- [Release Info Generation](release-info.md) - Technical details of release info script
