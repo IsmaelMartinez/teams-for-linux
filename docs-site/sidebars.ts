@@ -16,7 +16,6 @@ const sidebars: SidebarsConfig = {
   // Teams for Linux documentation sidebar
   docsSidebar: [
     'index',
-    'quick-reference',
     {
       type: 'category',
       label: 'Getting Started',
