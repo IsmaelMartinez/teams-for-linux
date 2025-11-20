@@ -16,7 +16,6 @@ const sidebars: SidebarsConfig = {
   // Teams for Linux documentation sidebar
   docsSidebar: [
     'index',
-    'quick-reference',
     {
       type: 'category',
       label: 'Getting Started',
@@ -79,45 +78,11 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            {
-              type: 'category',
-              label: 'Authentication & Security',
-              items: [
-                'development/research/dom-access-investigation',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Testing & Development',
-              items: [
-                'development/research/automated-testing-strategy',
-                'development/research/changelog-generator-setup',
-                'development/research/release-pr-workflow-plan',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Electron & Framework',
-              items: [
-                'development/research/electron-38-migration-analysis',
-                'development/research/usesystempicker-investigation',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Strategic Analysis',
-              items: [
-                'development/research/documentation-improvement-recommendations',
-                'development/research/ui-system-strategic-analysis',
-              ],
-            },
-            {
-              type: 'category',
-              label: 'Architecture & Refactoring',
-              items: [
-                'development/research/architecture-modernization-research',
-              ],
-            },
+            'development/research/dom-access-investigation',
+            'development/research/automated-testing-strategy',
+            'development/research/electron-38-migration-analysis',
+            'development/research/usesystempicker-investigation',
+            'development/research/architecture-modernization-research',
           ],
         },
       ],

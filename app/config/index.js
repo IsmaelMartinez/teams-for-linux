@@ -357,9 +357,17 @@ function extractYargConfig(configObject, appVersion) {
       notificationMethod: {
         default: "web",
         describe:
-          "Notification method to be used by the application (web/electron)",
+          "Notification method to be used by the application (web/electron/custom)",
         type: "string",
-        choices: ["web", "electron"],
+        choices: ["web", "electron", "custom"],
+      },
+      customNotification: {
+        default: {
+          toastDuration: 5000,
+        },
+        describe:
+          "Custom in-app notification system configuration",
+        type: "object",
       },
       onNewWindowOpenMeetupJoinUrlInApp: {
         default: true,

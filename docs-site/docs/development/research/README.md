@@ -8,50 +8,44 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Authentication & Security Research
-- **[DOM Access Investigation](dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
-- For implemented authentication solutions, see [ADR-002: Token Cache Secure Storage](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md)
+### Authentication & Security
+- **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
+- For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
-### Testing & Development Research
-- **[Automated Testing Strategy](automated-testing-strategy.md)** - Comprehensive analysis of testing frameworks for Electron apps with MS authentication constraints
-  - Playwright for E2E, Vitest for unit/integration tests
-  - Storage state reuse for authentication handling
-  - 8-week migration path to >70% coverage
+### Testing & Development
+- **[Automated Testing Strategy](automated-testing-strategy.md)** - Testing frameworks for Electron apps with MS authentication constraints
+  - Playwright for E2E, Vitest for unit/integration
+  - Key learning: MS authentication makes automated testing complex
 
-### Electron & Framework Research
-- **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Comprehensive analysis of Electron 37 → 38 upgrade
-  - Breaking changes, API updates, platform-specific considerations
-  - Migration strategy and testing requirements
-- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Analysis of Electron 38's native screen picker feature
-  - Decision: Not viable due to Linux Wayland/PipeWire blocker
-  - Platform compatibility matrix and reasoning
+### Electron & Framework
+- **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
+- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Electron 38's native screen picker (not viable on Linux)
 
 ### Strategic Analysis
-- **[Architecture Modernization Research](architecture-modernization-research.md)** - Research on refactoring app/index.js and improving architectural organization
 - **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
-  - 51 options analyzed for grouping and naming consistency
+  - Config options analyzed for grouping and naming consistency
   - Three-phase migration plan from flat to nested structure
   - Backward-compatible approach with auto-migration
-- **[Documentation Health Analysis](documentation-health-analysis.md)** - Comprehensive assessment of documentation structure, quality, and maintainability
-- **[Documentation Improvement Recommendations](documentation-improvement-recommendations.md)** - Actionable plan for optimizing documentation for both LLM and human consumption
-  - Based on expert reviews from 3 specialized perspectives
-  - Week 1 implementation (12-15 hours): Quick Reference, Module Index, ADR Index
+- **[Documentation Improvement Recommendations](documentation-improvement-recommendations.md)** - Actionable plan for optimizing documentation
   - 80% value with 60% less effort than comprehensive overhaul
-- **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal and its alignment with project goals
+- **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal
 
-### Architecture & Refactoring
-- **Incremental Refactoring** - ✅ **COMPLETED (November 2025)** - Successfully modernized architecture through incremental extraction
-  - **Phase 1 Results**: Reduced index.js by 55% (755 → 339 lines), extracted 5 focused modules (startup, notifications, screen sharing, partitions, idle)
-  - **Phase 2 Results**: Eliminated singleton patterns, improved IPC registration, automated IPC documentation generation
-  - **Key Learning**: Testing deferred due to MS authentication constraints - automated testing adds significant complexity in apps requiring external authentication
-  - Low risk, continuous value delivery approach
-  - Superseded closed #1799 (DDD+Plugin approach)
-  - See [Contributing Guide](../contributing.md) for current architecture and new module structure
-- **[Architecture Modernization Research (DDD+Plugin)](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - Comprehensive DDD+Plugin research deemed too complex
-  - Preserved as reference and historical context
-  - 10-week big-bang migration plan
-  - Excellent research but over-engineered for actual needs
-  - See Critical Analysis for why this was not adopted
+### Architecture
+- **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
+  - Superseded by incremental refactoring (55% reduction in index.js)
+  - See [Contributing Guide](../contributing.md) for current architecture
+
+### Changelog & Release
+- For AI-powered changelog generation, see [ADR-005](../adr/005-ai-powered-changelog-generation.md)
+- For release process, see [Manual Release Process](../manual-release-process.md)
+
+### Notification System Research
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
+  - Investigation of existing libraries and solutions
+  - Architectural constraints analysis (Electron wrapper vs React app)
+  - Custom BrowserWindow-based implementation plan
+  - Decision: Build custom system following IncomingCallToast pattern
+  - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
 
 ## Purpose
 

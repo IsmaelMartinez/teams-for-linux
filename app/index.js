@@ -13,6 +13,7 @@ const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator
 const globalShortcuts = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
+const CustomNotificationManager = require("./notificationSystem");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
@@ -76,6 +77,9 @@ const partitionsManager = new PartitionsManager(appConfig.settingsStore);
 
 // Initialize idle monitor with dependencies
 const idleMonitor = new IdleMonitor(config, getUserStatus);
+
+// Initialize custom notification manager for toast notifications
+const customNotificationManager = new CustomNotificationManager(config, mainAppWindow);
 
 if (isMac) {
   requestMediaAccess();
@@ -145,6 +149,9 @@ if (gotTheLock) {
 
   // Initialize idle monitor IPC handlers
   idleMonitor.initialize();
+
+  // Initialize custom notification manager for toast notifications
+  customNotificationManager.initialize();
 
   // Handle user status changes from Teams (e.g., Available, Busy, Away)
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
