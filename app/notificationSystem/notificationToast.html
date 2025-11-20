@@ -122,16 +122,11 @@
     </footer>
 
     <script>
-        // Initialize notification data from main process
         globalThis.notificationApi.onNotificationToastInit((data) => {
-            const titleElement = document.getElementById('title');
-            const bodyElement = document.getElementById('body');
-
-            titleElement.innerText = data.title || 'Teams';
-            bodyElement.innerText = data.body || '';
+            document.getElementById('title').innerText = data.title || 'Teams';
+            document.getElementById('body').innerText = data.body || '';
         });
 
-        // Handle click to trigger close/focus main window
         document.body.addEventListener('click', () => {
             globalThis.notificationApi.notifyClick();
         });

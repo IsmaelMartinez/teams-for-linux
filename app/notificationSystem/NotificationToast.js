@@ -2,11 +2,6 @@ const { BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 const Positioner = require('electron-positioner');
 
-/**
- * NotificationToast class for displaying custom in-app notifications
- * Follows the pattern established by IncomingCallToast
- * MVP: Shows a temporary toast notification that auto-dismisses
- */
 class NotificationToast {
   #window;
   #positioner;
@@ -19,7 +14,6 @@ class NotificationToast {
     this.#onClickCallback = onClickCallback;
     this.#toastDuration = toastDuration;
 
-    // Create BrowserWindow for toast notification
     this.#window = new BrowserWindow({
       alwaysOnTop: true,
       autoHideMenuBar: true,
@@ -41,56 +35,38 @@ class NotificationToast {
       },
     });
 
-    // Load the toast HTML UI
     this.#window.loadFile(path.join(__dirname, 'notificationToast.html'));
-
-    // Position toast at bottom-right corner with multi-monitor support
     this.#positioner = new Positioner(this.#window);
 
-    // Handle window ready event and send notification data
-    // Use 'did-finish-load' to ensure HTML and preload are fully loaded
     this.#window.webContents.once('did-finish-load', () => {
-      // Send notification data to renderer
       this.#window.webContents.send('notification-toast-init', data);
     });
 
-    // Set up IPC handler for click events from this toast
-    // Use a unique handler ID to support multiple toasts
+    // Use ipcMain.once per toast to support multiple simultaneous toasts
     this.#ipcClickHandler = () => {
       this.#handleClick();
     };
     ipcMain.once('notification-toast-click', this.#ipcClickHandler);
 
-    // Clean up when window is closed
     this.#window.on('closed', () => {
       this.#clearAutoClose();
       this.#cleanupIpcHandler();
     });
   }
 
-  /**
-   * Display the toast notification
-   */
   show() {
     if (!this.#window || this.#window.isDestroyed()) {
       return;
     }
 
-    // Position at bottom-right
     this.#positioner.move('bottomRight');
-
-    // Show window
     this.#window.show();
 
-    // Set auto-close timer
     this.#autoCloseTimer = setTimeout(() => {
       this.close();
     }, this.#toastDuration);
   }
 
-  /**
-   * Close the toast notification
-   */
   close() {
     this.#clearAutoClose();
     if (this.#window && !this.#window.isDestroyed()) {
@@ -98,10 +74,6 @@ class NotificationToast {
     }
   }
 
-  /**
-   * Trigger the click callback and close the toast
-   * Called when user clicks on the notification
-   */
   #handleClick() {
     this.#clearAutoClose();
     if (this.#onClickCallback && typeof this.#onClickCallback === 'function') {
@@ -110,9 +82,6 @@ class NotificationToast {
     this.close();
   }
 
-  /**
-   * Clear the auto-close timer
-   */
   #clearAutoClose() {
     if (this.#autoCloseTimer) {
       clearTimeout(this.#autoCloseTimer);
@@ -120,9 +89,6 @@ class NotificationToast {
     }
   }
 
-  /**
-   * Clean up IPC handler
-   */
   #cleanupIpcHandler() {
     if (this.#ipcClickHandler) {
       ipcMain.removeListener('notification-toast-click', this.#ipcClickHandler);
@@ -132,4 +98,5 @@ class NotificationToast {
 }
 
 module.exports = NotificationToast;
+
 

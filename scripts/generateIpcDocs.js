@@ -21,6 +21,7 @@ const GITHUB_REPO = 'https://github.com/IsmaelMartinez/teams-for-linux';
 const CATEGORIES = {
   'app/index.js': 'Core Application',
   'app/notifications/': 'Notifications',
+  'app/notificationSystem/': 'Notifications (Custom)',
   'app/screenSharing/': 'Screen Sharing',
   'app/idle/': 'Idle Monitoring',
   'app/partitions/': 'Partitions & Zoom',
