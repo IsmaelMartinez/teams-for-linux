@@ -46,6 +46,12 @@ globalThis.electronAPI = {
     }
     return ipcRenderer.invoke("play-notification-sound", options);
   },
+  sendNotificationToast: (data) => {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid notification toast data');
+    }
+    ipcRenderer.send("notification-show-toast", data);
+  },
 
   // Badge count with validation
   setBadgeCount: (count) => {
@@ -174,6 +180,40 @@ function createElectronNotification(options) {
   return { onclick: null, onclose: null, onerror: null };
 }
 
+function createCustomNotification(title, options) {
+  // Send notification data to main process for custom toast notification
+  const notificationData = {
+    id: crypto.randomUUID(),
+    timestamp: Date.now(),
+    title: title,
+    body: options.body || '',
+    icon: options.icon,
+  };
+
+  // Play notification sound if enabled
+  const notifSound = {
+    type: options.type,
+    audio: "default",
+    title: title,
+    body: options.body,
+  };
+  playNotificationSound(notifSound);
+
+  // Send to main process to show toast
+  try {
+    if (globalThis.electronAPI?.sendNotificationToast) {
+      globalThis.electronAPI.sendNotificationToast(notificationData);
+    } else {
+      console.warn("sendNotificationToast API not available");
+    }
+  } catch (e) {
+    console.error("Failed to send custom notification:", e);
+  }
+
+  // Return stub object
+  return { onclick: null, onclose: null, onerror: null };
+}
+
 // Override window.Notification immediately before Teams loads
 // Using factory function pattern instead of class to avoid "return in constructor" anti-pattern
 (function() {
@@ -199,6 +239,10 @@ function createElectronNotification(options) {
 
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
+
+    if (method === "custom") {
+      return createCustomNotification(title, options);
+    }
 
     if (method === "web") {
       const notification = createWebNotification(classicNotification, title, options);
