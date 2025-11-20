@@ -145,25 +145,10 @@ async function main() {
 
   // Update package-lock.json via npm install
   console.log('   ⏳ Running npm install...');
-  // Use the npm from the same directory as the current node binary
-  // This works with nvm, system installs, and other node version managers
-  const nodeBinDir = path.dirname(process.execPath);
-  const npmPath = path.join(nodeBinDir, 'npm');
-
-  // Use isolated environment to prevent PATH injection attacks
-  // Include only the node bin directory and system directories
-  const safeEnv = {
-    HOME: process.env.HOME || '',
-    USER: process.env.USER || '',
-    PATH: `${nodeBinDir}:/usr/bin:/bin:/usr/local/bin`,
-    NODE_ENV: process.env.NODE_ENV || 'production'
-  };
 
   try {
-    execSync(`"${npmPath}" install`, {
-      stdio: 'inherit',
-      shell: '/bin/sh',
-      env: safeEnv
+    execSync('npm install', {
+      stdio: 'inherit'
     });
     console.log('   ✅ Updated package-lock.json');
   } catch (err) {

@@ -1,1 +1,0 @@
-Implement notifications modal MVP - by @IsmaelMartinez (#1979)
