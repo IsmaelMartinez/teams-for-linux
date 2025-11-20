@@ -1,1 +1,0 @@
-documentation improvements - by @IsmaelMartinez (#1974)
