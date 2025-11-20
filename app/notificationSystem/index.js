@@ -15,6 +15,8 @@ class CustomNotificationManager {
   initialize() {
     // Display custom in-app toast notification in bottom-right corner
     ipcMain.on('notification-show-toast', this.#handleShowToast.bind(this));
+    // Handle toast clicks - close the window and focus main window
+    ipcMain.on('notification-toast-click', this.#handleToastClick.bind(this));
 
     console.info('[CustomNotificationManager] Initialized and listening on "notification-show-toast" channel');
   }
@@ -28,7 +30,6 @@ class CustomNotificationManager {
     try {
       const toast = new NotificationToast(
         data,
-        () => this.#handleToastClick(),
         this.#toastDuration
       );
 
@@ -48,8 +49,17 @@ class CustomNotificationManager {
     }
   }
 
-  #handleToastClick() {
+  #handleToastClick(event) {
     try {
+      // Find and close the toast window that was clicked
+      for (const toast of this.#activeToasts) {
+        if (toast.getWebContents() === event.sender) {
+          toast.close();
+          break;
+        }
+      }
+
+      // Focus main window
       if (this.#mainWindow && !this.#mainWindow.isDestroyed()) {
         this.#mainWindow.show();
         this.#mainWindow.focus();

@@ -48,9 +48,9 @@ globalThis.electronAPI = {
   },
   sendNotificationToast: (data) => {
     if (!data || typeof data !== 'object') {
-      return Promise.reject(new Error('Invalid notification toast data'));
+      throw new Error('Invalid notification toast data');
     }
-    return ipcRenderer.send("notification-show-toast", data);
+    ipcRenderer.send("notification-show-toast", data);
   },
 
   // Badge count with validation

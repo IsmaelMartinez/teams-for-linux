@@ -1,17 +1,14 @@
-const { BrowserWindow, ipcMain } = require('electron');
+const { BrowserWindow } = require('electron');
 const path = require('node:path');
 const Positioner = require('electron-positioner');
 
 class NotificationToast {
   #window;
   #positioner;
-  #onClickCallback;
   #autoCloseTimer;
   #toastDuration;
-  #ipcClickHandler;
 
-  constructor(data, onClickCallback, toastDuration = 5000) {
-    this.#onClickCallback = onClickCallback;
+  constructor(data, toastDuration = 5000) {
     this.#toastDuration = toastDuration;
 
     this.#window = new BrowserWindow({
@@ -42,16 +39,13 @@ class NotificationToast {
       this.#window.webContents.send('notification-toast-init', data);
     });
 
-    // Use ipcMain.once per toast to support multiple simultaneous toasts
-    this.#ipcClickHandler = () => {
-      this.#handleClick();
-    };
-    ipcMain.once('notification-toast-click', this.#ipcClickHandler);
-
     this.#window.on('closed', () => {
       this.#clearAutoClose();
-      this.#cleanupIpcHandler();
     });
+  }
+
+  getWebContents() {
+    return this.#window?.webContents;
   }
 
   show() {
@@ -76,9 +70,6 @@ class NotificationToast {
 
   #handleClick() {
     this.#clearAutoClose();
-    if (this.#onClickCallback && typeof this.#onClickCallback === 'function') {
-      this.#onClickCallback();
-    }
     this.close();
   }
 
@@ -86,13 +77,6 @@ class NotificationToast {
     if (this.#autoCloseTimer) {
       clearTimeout(this.#autoCloseTimer);
       this.#autoCloseTimer = null;
-    }
-  }
-
-  #cleanupIpcHandler() {
-    if (this.#ipcClickHandler) {
-      ipcMain.removeListener('notification-toast-click', this.#ipcClickHandler);
-      this.#ipcClickHandler = null;
     }
   }
 }
