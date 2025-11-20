@@ -10,7 +10,7 @@
 
 ## Prerequisites
 
-This research builds on the completed [Incremental Refactoring Plan Phase 1](./incremental-refactoring-plan.md), specifically:
+This research builds on the completed Phase 1 refactoring work (see [Contributing Guide - Architecture](../contributing.md)), specifically:
 
 - ✅ **Extraction 2 (Week 2)**: Notification System extracted into `app/notifications/service.js` (#1962)
 - ✅ **NotificationService class**: Centralized notification and sound handling
@@ -899,11 +899,10 @@ app/notificationSystem/
 ## 13. Related Documentation
 
 ### Internal References
-- **[Incremental Refactoring Plan](./incremental-refactoring-plan.md)** ⭐ - Phase 1 complete, NotificationService extracted
+- **[Contributing Guide - Architecture](../contributing.md)** ⭐ - Current architecture after Phase 1 refactoring
 - **NotificationService Implementation** (`app/notifications/service.js`) - Existing native notification handler
 - **IncomingCallToast Implementation** (`app/incomingCallToast/`) - Source code pattern we're following
 - **[IPC API Documentation](../ipc-api.md)** - IPC channel reference
-- **[Security Architecture](../security-architecture.md)** - Security best practices
 - **[Configuration Reference](../../configuration.md)** - Config options
 
 ### External References
@@ -951,7 +950,7 @@ The custom BrowserWindow-based notification system provides a **third option** f
 
 ### Impact of Phase 1 Refactoring
 
-The completion of [Incremental Refactoring Plan Phase 1](./incremental-refactoring-plan.md) **improves** the custom notification implementation:
+The completion of Phase 1 refactoring (see [Contributing Guide](../contributing.md)) **improves** the custom notification implementation:
 
 **Benefits:**
 - ✅ **Cleaner integration**: Add CustomNotificationManager alongside existing NotificationService
