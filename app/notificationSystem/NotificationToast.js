@@ -68,11 +68,6 @@ class NotificationToast {
     }
   }
 
-  #handleClick() {
-    this.#clearAutoClose();
-    this.close();
-  }
-
   #clearAutoClose() {
     if (this.#autoCloseTimer) {
       clearTimeout(this.#autoCloseTimer);
