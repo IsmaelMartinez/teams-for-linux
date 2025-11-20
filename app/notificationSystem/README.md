@@ -1,8 +1,8 @@
 # Custom Notification System
 
-Custom in-app toast notifications as an alternative to OS-level notifications. MVP implementation displays temporary notifications in the bottom-right corner with auto-dismiss.
+Custom in-app toast notifications as an alternative to OS-level notifications.
 
-## Architecture
+## Components
 
 - **CustomNotificationManager** - Coordinates toast display, handles IPC channel `notification-show-toast`
 - **NotificationToast** - BrowserWindow wrapper, manages individual notification lifecycle
@@ -26,13 +26,9 @@ Custom in-app toast notifications as an alternative to OS-level notifications. M
 }
 ```
 
-## Implementation Notes
+## Implementation Details
 
 - Follows `IncomingCallToast` pattern for consistency
 - Uses `electron-positioner` for multi-monitor support
-- Simplified MVP: toast only (notification center is Phase 2)
 - Keeps active toasts in memory to prevent garbage collection
-
-## Future Enhancements
-
-Phase 2+: notification center, action buttons, queue management, DND integration, type indicators (message/meeting/etc)
+- Toast appears in bottom-right corner with auto-dismiss
