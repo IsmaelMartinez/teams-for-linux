@@ -90,7 +90,8 @@ Place your `config.json` file in the appropriate location based on your installa
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
 | `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
 | `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
-| `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron` |
+| `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
+| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
 | `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast |
 | `customCSSName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
@@ -234,6 +235,27 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 
 > [!NOTE]
 > The `disableAutogain` option prevents Teams from automatically adjusting your microphone volume. This is particularly useful for users with professional audio equipment, external mixers, or specific hardware configurations where manual gain control is preferred.
+
+#### Custom Notifications Setup
+```json
+{
+  "notificationMethod": "custom",
+  "customNotification": {
+    "toastDuration": 5000
+  }
+}
+```
+
+> [!NOTE]
+> The `custom` notification method displays in-app toast notifications instead of OS-level notifications. This is useful when:
+> - Your notification daemon is unreliable or not running
+> - You experience application freezes with web/electron notifications
+> - OS notifications don't work consistently on your desktop environment
+>
+> **Configuration options:**
+> - `toastDuration`: Time in milliseconds before toast auto-dismisses (default: 5000ms)
+>
+> Toasts appear in the bottom-right corner and clicking them focuses the main Teams window.
 
 ### System-wide Configuration
 
