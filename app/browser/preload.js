@@ -337,8 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
-      { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "reactHandler", path: "./tools/reactHandler" }
+      { name: "navigationButtons", path: "./tools/navigationButtons" }
     ];
 
     let successCount = 0;
