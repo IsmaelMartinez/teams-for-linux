@@ -1,5 +1,4 @@
 // Microsoft Graph API IPC Handlers
-// Extracted module following #1959 architecture modernization pattern
 
 const logger = require('electron-log');
 
@@ -9,27 +8,46 @@ const logger = require('electron-log');
  * @param {object} graphApiClient - GraphApiClient instance (can be null if disabled)
  */
 function registerGraphApiHandlers(ipcMain, graphApiClient) {
-  const handlers = {
-    "graph-api-get-user-profile": (client) => client.getUserProfile(),
-    "graph-api-get-calendar-events": (client, options) => client.getCalendarEvents(options),
-    "graph-api-get-calendar-view": (client, startDateTime, endDateTime, options) =>
-      client.getCalendarView(startDateTime, endDateTime, options),
-    "graph-api-create-calendar-event": (client, event) => client.createCalendarEvent(event),
-    "graph-api-get-mail-messages": (client, options) => client.getMailMessages(options),
-    "graph-api-get-presence": (client) => client.getPresence(),
-  };
+  const notEnabled = { success: false, error: 'Graph API not enabled' };
 
-  for (const [channel, handler] of Object.entries(handlers)) {
-    ipcMain.handle(channel, async (_event, ...args) => {
-      if (!graphApiClient) {
-        return { success: false, error: "Graph API not enabled" };
-      }
-      return await handler(graphApiClient, ...args);
-    });
-  }
+  // Get current user profile from Microsoft Graph API
+  ipcMain.handle('graph-api-get-user-profile', async () => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.getUserProfile();
+  });
+
+  // Get calendar events with optional OData query options
+  ipcMain.handle('graph-api-get-calendar-events', async (_event, options) => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.getCalendarEvents(options);
+  });
+
+  // Get calendar view for a specific time range
+  ipcMain.handle('graph-api-get-calendar-view', async (_event, startDateTime, endDateTime, options) => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.getCalendarView(startDateTime, endDateTime, options);
+  });
+
+  // Create a new calendar event
+  ipcMain.handle('graph-api-create-calendar-event', async (_event, event) => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.createCalendarEvent(event);
+  });
+
+  // Get mail messages with optional OData query options
+  ipcMain.handle('graph-api-get-mail-messages', async (_event, options) => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.getMailMessages(options);
+  });
+
+  // Get user's presence/availability status
+  ipcMain.handle('graph-api-get-presence', async () => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.getPresence();
+  });
 
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: Object.keys(handlers).length,
+    channels: 6,
     enabled: !!graphApiClient
   });
 }
