@@ -61,7 +61,14 @@ const allowedChannels = new Set([
   'navigate-back',
   'navigate-forward',
   'get-navigation-state',
-  'navigation-state-changed'
+  'navigation-state-changed',
+
+  // Microsoft Graph API integration
+  'graph-api-get-user-profile',
+  'graph-api-get-calendar-events',
+  'graph-api-get-calendar-view',
+  'graph-api-create-calendar-event',
+  'graph-api-get-mail-messages'
 ]);
 
 /**

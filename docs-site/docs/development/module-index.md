@@ -39,6 +39,7 @@ User-facing features and integrations.
 | **Incoming Call Toast** | `app/incomingCallToast/` | Call notification toasts | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/incomingCallToast/README.md) |
 | **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
+| **Graph API** | `app/graphApi/` | Microsoft Graph API integration for calendar and mail | [Research](./research/graph-api-integration-research.md) |
 
 ## System Integration Modules
 
