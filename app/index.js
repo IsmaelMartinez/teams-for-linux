@@ -234,7 +234,7 @@ function onAppTerminated(signal) {
   }
 }
 
-function handleAppReady() {
+async function handleAppReady() {
   // check for configuration errors
   if (config.error) {
     dialog.showMessageBox({
@@ -283,7 +283,7 @@ function handleAppReady() {
     mqttClient.initialize();
   }
 
-  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+  await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
   // Initialize Graph API client if enabled (after mainAppWindow is ready)
   if (config.graphApi?.enabled) {
