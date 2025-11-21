@@ -1,0 +1,1 @@
+Fix changelog push to run all build jobs - by @IsmaelMartinez (#1983)
