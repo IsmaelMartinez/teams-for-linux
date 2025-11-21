@@ -1,7 +1,7 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
 **Date**: 2025-11-12
-**Updated**: 2025-11-20
+**Updated**: 2025-11-21
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
 **Status**: Investigation Complete - Ready for Implementation
 
@@ -418,9 +418,10 @@ The semantic category pattern scales to many future use cases. This section docu
 }
 ```
 
-**Detection strategy**:
-- **Option 1**: Microsoft Graph API Calendar (wait for Issue #1832)
-- **Option 2**: DOM scraping of calendar panel (fragile)
+**Detection strategy**: Microsoft Graph API Calendar (Issue #1832 now implemented!)
+- Use `graph-api-get-calendar-view` IPC channel for date range queries
+- Poll periodically or subscribe to events
+- See `app/graphApi/index.js` and `app/graphApi/ipcHandlers.js`
 
 **Potential topics**:
 - `teams/calendar/next` → JSON: `{ "subject": "Sprint Planning", "startTime": "2025-11-16T14:00:00Z" }`
@@ -428,7 +429,7 @@ The semantic category pattern scales to many future use cases. This section docu
 
 **Use case**: Pre-warm RGB LEDs before meeting starts (e.g., blue = meeting in 5 min)
 
-**Implementation priority**: Medium (wait for Graph API #1832)
+**Implementation priority**: Medium (Graph API now available, straightforward integration)
 
 ---
 
@@ -587,8 +588,10 @@ The semantic category pattern scales to many future use cases. This section docu
 | **Reactions** | DOM (elements) | Low | High ⚠️ | Low |
 | **Participants** | DOM (roster) | Medium | High ⚠️ | Low |
 
+**Note**: Presence via Graph API returns 403 Forbidden (Teams token lacks `Presence.Read` scope). Use existing `user-status-changed` IPC channel instead.
+
 **Preferred order**:
-1. **Stable APIs first**: WebRTC, IPC, Graph API
+1. **Stable APIs first**: WebRTC, IPC, Graph API (now available!)
 2. **DOM-based second**: Only if users request and accept fragility
 
 ---
@@ -601,9 +604,9 @@ The semantic category pattern scales to many future use cases. This section docu
 - Screen sharing (IPC events exist)
 - Message count (title monitoring exists)
 
-**Phase 3**: Wait for Graph API (#1832)
-- Calendar integration
-- Enhanced presence
+**Phase 3**: Graph API integration (now available!)
+- Calendar integration via `graph-api-get-calendar-view`
+- Note: Presence endpoint returns 403 - use `user-status-changed` instead
 
 **Phase 4**: Only if users request (fragile DOM scraping)
 - Recording indicators
@@ -642,12 +645,15 @@ await mqttClient.publish('teams/screen-sharing', 'true');
 ## References
 
 - **Issue #1938**: https://github.com/IsmaelMartinez/teams-for-linux/issues/1938
+- **Issue #1832**: https://github.com/IsmaelMartinez/teams-for-linux/issues/1832 (Graph API - now implemented)
 - **Service pattern**: `app/notificationSystem/index.js` (CustomNotificationManager)
 - **Screen sharing service**: `app/screenSharing/service.js` (existing IPC channels)
+- **Graph API client**: `app/graphApi/index.js` and `app/graphApi/ipcHandlers.js`
+- **Graph API research**: `docs-site/docs/development/research/graph-api-integration-research.md`
 - **Existing pattern**: `app/browser/tools/disableAutogain.js` (getUserMedia interception)
 - **Existing MQTT**: `app/mqtt/index.js`
 - **Screen sharing**: `app/screenSharing/injectedScreenSharing.js` (audio muting context)
-- **IPC documentation**: `docs-site/docs/development/ipc-api-generated.md`
+- **IPC documentation**: `docs-site/docs/development/ipc-api-generated.md` (38 channels)
 - **MediaStreamTrack.enabled**: https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/enabled
 
 ---
