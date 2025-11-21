@@ -69,8 +69,7 @@ const allowedChannels = new Set([
   'graph-api-get-calendar-view',
   'graph-api-create-calendar-event',
   'graph-api-get-mail-messages',
-  'graph-api-get-presence',
-  'graph-api-get-diagnostics'
+  'graph-api-get-presence'
 ]);
 
 /**

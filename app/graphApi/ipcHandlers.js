@@ -17,7 +17,6 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     "graph-api-create-calendar-event": (client, event) => client.createCalendarEvent(event),
     "graph-api-get-mail-messages": (client, options) => client.getMailMessages(options),
     "graph-api-get-presence": (client) => client.getPresence(),
-    "graph-api-get-diagnostics": (client) => client.getDiagnostics(),
   };
 
   for (const [channel, handler] of Object.entries(handlers)) {

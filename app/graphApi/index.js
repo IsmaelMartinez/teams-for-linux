@@ -99,27 +99,18 @@ class GraphApiClient {
 
       const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
       const method = options.method || 'GET';
-      const headers = {
-        'Authorization': `Bearer ${tokenResult.token}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-      };
 
-      const requestOptions = {
+      logger.debug('[GRAPH_API] Making request', { method, endpoint: url });
+
+      const response = await fetch(url, {
         method,
-        headers
-      };
-
-      if (options.body) {
-        requestOptions.body = JSON.stringify(options.body);
-      }
-
-      logger.debug('[GRAPH_API] Making request', {
-        method,
-        endpoint: url
+        headers: {
+          'Authorization': `Bearer ${tokenResult.token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        ...(options.body && { body: JSON.stringify(options.body) })
       });
-
-      const response = await fetch(url, requestOptions);
       const responseText = await response.text();
 
       let data = null;
@@ -262,16 +253,6 @@ class GraphApiClient {
   async getPresence() {
     logger.debug('[GRAPH_API] Getting presence information');
     return await this.makeRequest('/me/presence');
-  }
-
-  getDiagnostics() {
-    return {
-      enabled: this.enabled,
-      baseUrl: this.baseUrl,
-      hasToken: !!this.currentToken,
-      tokenExpiry: this.tokenExpiry,
-      hasMainWindow: !!this.mainWindow
-    };
   }
 }
 
