@@ -234,7 +234,7 @@ Users reported OS-level notifications don't work reliably, especially on Linux:
 ## 7. Related Documentation
 
 ### Internal References
-- **[Module README](../../../app/notificationSystem/README.md)** - Implementation details
+- **[Module README](../../../../app/notificationSystem/README.md)** - Implementation details
 - **[Contributing Guide](../contributing.md)** - Architecture overview
 - **[IPC API Documentation](../ipc-api.md)** - IPC channel reference
 - **[Configuration Reference](../../configuration.md)** - Config options
