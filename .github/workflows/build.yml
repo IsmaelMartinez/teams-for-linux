@@ -12,8 +12,6 @@ defaults:
 jobs:
   e2e_tests:
     runs-on: ubuntu-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -43,8 +41,6 @@ jobs:
 
   linux_x64:
     runs-on: ubuntu-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -84,8 +80,6 @@ jobs:
 
   linux_arm64:
     runs-on: ubuntu-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -125,8 +119,6 @@ jobs:
 
   linux_arm:
     runs-on: ubuntu-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -166,8 +158,6 @@ jobs:
 
   dmg:
     runs-on: macos-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -203,8 +193,6 @@ jobs:
 
   exe:
     runs-on: windows-latest
-    # Skip for automated changelog commits
-    if: "!contains(github.event.head_commit.message, 'chore: add changelog entry')"
 
     steps:
       - name: Check out Git repository
@@ -240,8 +228,7 @@ jobs:
 
   comment-artifacts:
     runs-on: ubuntu-latest
-    # Skip for main branch and automated changelog commits
-    if: "!contains(github.ref, 'main') && !contains(github.event.head_commit.message, 'chore: add changelog entry')"
+    if: "!contains(github.ref, 'main')"
     needs: [linux_x64, linux_arm64, linux_arm, dmg, exe]
     permissions:
       pull-requests: write
