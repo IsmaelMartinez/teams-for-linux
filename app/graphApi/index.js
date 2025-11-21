@@ -171,9 +171,11 @@ class GraphApiClient {
         try {
           data = JSON.parse(responseText);
         } catch (parseError) {
+          // Intentionally catch and log - continue with null data for non-JSON responses
           logger.warn('[GRAPH_API] Failed to parse response as JSON', {
             status: response.status,
-            textPreview: responseText.substring(0, 100)
+            textPreview: responseText.substring(0, 100),
+            parseError: parseError.message
           });
         }
       }
