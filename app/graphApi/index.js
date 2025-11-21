@@ -188,11 +188,13 @@ class GraphApiClient {
     return params.toString();
   }
 
+  /** Get current user profile from Graph API */
   async getUserProfile() {
     logger.debug('[GRAPH_API] Getting user profile');
     return await this.makeRequest('/me');
   }
 
+  /** Get calendar events with optional OData query options (top, select, filter, etc.) */
   async getCalendarEvents(options = {}) {
     logger.debug('[GRAPH_API] Getting calendar events', options);
 
@@ -202,6 +204,7 @@ class GraphApiClient {
     return await this.makeRequest(endpoint);
   }
 
+  /** Get calendar view for a time range (ISO 8601 date strings) */
   async getCalendarView(startDateTime, endDateTime, options = {}) {
     logger.debug('[GRAPH_API] Getting calendar view', { startDateTime, endDateTime });
 
@@ -216,6 +219,7 @@ class GraphApiClient {
     return await this.makeRequest(endpoint);
   }
 
+  /** Create a calendar event (requires subject, start, end objects) */
   async createCalendarEvent(event) {
     logger.debug('[GRAPH_API] Creating calendar event', { subject: event.subject });
 
@@ -225,6 +229,7 @@ class GraphApiClient {
     });
   }
 
+  /** Update a calendar event by ID */
   async updateCalendarEvent(eventId, updates) {
     logger.debug('[GRAPH_API] Updating calendar event', { eventId });
 
@@ -234,6 +239,7 @@ class GraphApiClient {
     });
   }
 
+  /** Delete a calendar event by ID */
   async deleteCalendarEvent(eventId) {
     logger.debug('[GRAPH_API] Deleting calendar event', { eventId });
 
@@ -242,6 +248,7 @@ class GraphApiClient {
     });
   }
 
+  /** Get mail messages with optional OData query options */
   async getMailMessages(options = {}) {
     logger.debug('[GRAPH_API] Getting mail messages', options);
 
@@ -251,6 +258,7 @@ class GraphApiClient {
     return await this.makeRequest(endpoint);
   }
 
+  /** Get user's presence/availability status */
   async getPresence() {
     logger.debug('[GRAPH_API] Getting presence information');
     return await this.makeRequest('/me/presence');
