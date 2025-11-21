@@ -1,0 +1,1 @@
+[Research]: Review and improve project configuration options - by @IsmaelMartinez (#1937)
