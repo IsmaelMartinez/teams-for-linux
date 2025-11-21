@@ -157,6 +157,19 @@ Automated E2E tests not feasible due to authentication requirement.
 3. **Rate limiting** - Subject to Microsoft Graph API rate limits
 4. **No offline support** - Requires network connectivity
 
+### Endpoint Access Restrictions
+
+The Teams web app token has limited scopes. Some endpoints return **403 Forbidden**:
+
+| Endpoint | Status | Required Scope |
+|----------|--------|----------------|
+| `/me` | ✅ Works | `User.Read` |
+| `/me/calendar/events` | ✅ Works | `Calendars.Read` |
+| `/me/messages` | ✅ Works | `Mail.Read` |
+| `/me/presence` | ❌ Forbidden | `Presence.Read` |
+
+The presence endpoint requires explicit consent that the Teams web app doesn't have.
+
 ## Future Considerations
 
 1. **Batch requests** - Use Graph API batching for multiple requests
