@@ -117,7 +117,6 @@ globalThis.electronAPI = {
     getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
     createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
-    getPresence: () => ipcRenderer.invoke("graph-api-get-presence"),
   },
 
   // System information (safe to expose)

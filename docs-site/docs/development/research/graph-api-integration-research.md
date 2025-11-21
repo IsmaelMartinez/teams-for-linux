@@ -49,7 +49,7 @@ This document tracks the research and implementation of Microsoft Graph API inte
 |------|---------|
 | `app/index.js` | Import and initialization of Graph API client |
 | `app/config/index.js` | Added `graphApi` configuration option |
-| `app/security/ipcValidator.js` | Added 6 Graph API channels to allowlist |
+| `app/security/ipcValidator.js` | Added 5 Graph API channels to allowlist |
 | `app/browser/tools/reactHandler.js` | Added `acquireToken()` method |
 | `scripts/generateIpcDocs.js` | Added Microsoft Graph API category |
 
@@ -62,7 +62,6 @@ This document tracks the research and implementation of Microsoft Graph API inte
 | `graph-api-get-calendar-view` | Get events within date range |
 | `graph-api-create-calendar-event` | Create new calendar event |
 | `graph-api-get-mail-messages` | Get mail messages with OData options |
-| `graph-api-get-presence` | Get user presence/availability |
 
 ## Technical Details
 
@@ -107,7 +106,6 @@ graphApi:
 - `PATCH /me/calendar/events/{id}` - Update event
 - `DELETE /me/calendar/events/{id}` - Delete event
 - `GET /me/messages` - Mail messages
-- `GET /me/presence` - Presence status
 
 ### OData Support
 

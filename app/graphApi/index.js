@@ -248,12 +248,6 @@ class GraphApiClient {
 
     return await this.makeRequest(endpoint);
   }
-
-  /** Get user's presence/availability status */
-  async getPresence() {
-    logger.debug('[GRAPH_API] Getting presence information');
-    return await this.makeRequest('/me/presence');
-  }
 }
 
 module.exports = GraphApiClient;

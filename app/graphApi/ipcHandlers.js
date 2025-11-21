@@ -40,14 +40,8 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.getMailMessages(options);
   });
 
-  // Get user's presence/availability status
-  ipcMain.handle('graph-api-get-presence', async () => {
-    if (!graphApiClient) return notEnabled;
-    return await graphApiClient.getPresence();
-  });
-
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: 6,
+    channels: 5,
     enabled: !!graphApiClient
   });
 }
