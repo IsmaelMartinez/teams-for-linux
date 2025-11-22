@@ -38,6 +38,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Decision: Build custom system following IncomingCallToast pattern
   - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
 
+### MQTT & Integration
+- **[MQTT Commands Implementation](mqtt-commands-implementation.md)** - Adding bidirectional MQTT support for action commands
+  - Implementation plan: 4-6 hours, ~60 lines of code, low risk
+  - Enables keyboard shortcuts and home automation integration
+  - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
+- **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
+
 ## Purpose
 
 These documents capture:

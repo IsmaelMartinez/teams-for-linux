@@ -28,6 +28,8 @@ Architecture Decision Records capture important architectural decisions along wi
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
+| [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | 🚧 Proposed | 2025-11-19 | N/A |
+| [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -83,6 +85,19 @@ Architecture Decision Records capture important architectural decisions along wi
 - AI-generated concise changelog entries (60 chars avg vs 165 manual)
 - Quality score: 9.0/10 on validation testing
 - Zero cost (uses Gemini API free tier)
+
+### MQTT & Integration
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | Keep yargs for config parsing, use MQTT for action commands instead of CLI subcommands |
+| [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | Rejected bundling Aedes broker - users still need client tools, better alternatives exist |
+
+**Key Outcomes:**
+- Avoid fragile CLI argument bypass layer
+- MQTT commands provide clean architecture for external triggers
+- Users provide own MQTT broker (localhost or Home Assistant)
+- Consider HTTP server for zero-dependency alternative (future)
 
 ## Creating New ADRs
 
@@ -246,11 +261,12 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 5
+- **Total ADRs**: 7
 - **Implemented**: 4
-- **Rejected**: 1
+- **Proposed**: 1
+- **Rejected**: 2
 - **Average length**: ~500 words
-- **Topics covered**: 4 (Authentication, Screen Sharing, Documentation, Release Process)
+- **Topics covered**: 5 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration)
 
 ## Related Documentation
 
