@@ -345,7 +345,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
-      { name: "mqttExtendedStatusSpike", path: "./tools/mqttExtendedStatusSpike" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" }
     ];
