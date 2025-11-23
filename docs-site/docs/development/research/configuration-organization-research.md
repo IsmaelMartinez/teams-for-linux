@@ -1563,3 +1563,9 @@ The nested configuration structure will:
 4. Create GitHub issue for remaining Phase 1 implementation
 5. Update docs-site/docs/configuration.md with reorganized categories
 6. Plan Phase 2 for future release
+
+**Future Considerations (Beyond Phase 3):**
+- **Sensitive Data Security**: Move sensitive configuration (e.g., `clientCertPassword`, MQTT credentials) outside of config.json and implement encryption
+  - Separate secure storage for credentials
+  - Integration with system keyring/secret service
+  - Clear separation between settings and secrets
