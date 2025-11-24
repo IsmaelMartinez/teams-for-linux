@@ -26,10 +26,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Superseded by incremental refactoring (55% reduction in index.js)
   - See [Contributing Guide](../contributing.md) for current architecture
 
-### Changelog & Release
-- For AI-powered changelog generation, see [ADR-005](../adr/005-ai-powered-changelog-generation.md)
-- For release process, see [Manual Release Process](../manual-release-process.md)
-
 ### Notification System Research
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
   - Investigation of existing libraries and solutions
