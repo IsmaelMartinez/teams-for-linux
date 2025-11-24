@@ -482,9 +482,10 @@ function extractYargConfig(configObject, appVersion) {
           clientId: "teams-for-linux",
           topicPrefix: "teams",
           statusTopic: "status",
+          commandTopic: "command",
           statusCheckInterval: 10000,
         },
-        describe: "MQTT configuration for publishing Teams status updates",
+        describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",
       },
       graphApi: {

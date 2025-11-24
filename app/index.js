@@ -12,7 +12,7 @@ const { MQTTClient } = require("./mqtt");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
-const globalShortcuts = require("./globalShortcuts");
+const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
@@ -281,6 +281,28 @@ async function handleAppReady() {
   if (config.mqtt?.enabled) {
     mqttClient = new MQTTClient(config);
     mqttClient.initialize();
+
+    // Handle MQTT commands for Teams actions
+    mqttClient.on('command', (command) => {
+      // Map MQTT command actions to Teams keyboard shortcuts
+      const actionShortcutMap = {
+        'toggle-mute': 'Ctrl+Shift+M',
+        'toggle-video': 'Ctrl+Shift+O',
+        'raise-hand': 'Ctrl+Shift+K',
+        'toggle-blur': 'Ctrl+Shift+P',
+      };
+
+      const shortcut = actionShortcutMap[command.action];
+      if (shortcut) {
+        const window = mainAppWindow.getWindow();
+        if (window && !window.isDestroyed()) {
+          sendKeyboardEventToWindow(window, shortcut);
+          console.info(`Executed MQTT command '${command.action}' -> ${shortcut}`);
+        } else {
+          console.warn(`Cannot execute MQTT command '${command.action}': window not available`);
+        }
+      }
+    });
   }
 
   await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
@@ -301,7 +323,7 @@ async function handleAppReady() {
   registerGraphApiHandlers(ipcMain, graphApiClient);
 
   // Register global shortcuts
-  globalShortcuts.register(config, mainAppWindow, app);
+  registerGlobalShortcuts(config, mainAppWindow, app);
 
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
