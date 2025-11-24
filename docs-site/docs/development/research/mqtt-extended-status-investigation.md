@@ -236,10 +236,10 @@ class MQTTMediaStatusService {
     ipcMain.on('call-disconnected', this.#handleCallDisconnected.bind(this));
 
     // Publish MQTT status when camera state changes
-    ipcMain.on('mqtt-camera-changed', this.#handleCameraChanged.bind(this));
+    ipcMain.on('camera-state-changed', this.#handleCameraChanged.bind(this));
 
     // Publish MQTT status when microphone state changes
-    ipcMain.on('mqtt-microphone-changed', this.#handleMicrophoneChanged.bind(this));
+    ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
 
     console.info('[MQTTMediaStatusService] Initialized');
   }
@@ -322,14 +322,14 @@ async publish(topic, payload, options = {}) {
 - [ ] Add generic `publish()` method to `app/mqtt/index.js`
 - [ ] Create `app/mqtt/mediaStatusService.js` following service pattern
 - [ ] Add IPC channel allowlist entries in `app/security/ipcValidator.js`:
-  - [ ] `mqtt-camera-changed`
-  - [ ] `mqtt-microphone-changed`
+  - [ ] `camera-state-changed`
+  - [ ] `microphone-state-changed`
 - [ ] Initialize service in `app/index.js`
 - [ ] Add configuration schema for semantic categories
 
 ### Phase 2: WebRTC Monitoring (Camera/Mic)
 
-- [ ] Create `app/browser/tools/mqttMediaStatus.js`
+- [ ] Create `app/browser/tools/mediaStatus.js`
 - [ ] Implement getUserMedia interceptor
 - [ ] Add screen sharing detection (reuse `isScreenShare` logic)
 - [ ] Implement hybrid track monitoring:
