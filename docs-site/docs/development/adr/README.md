@@ -30,6 +30,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | 🚧 Proposed | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
+| [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -57,11 +58,13 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | Use `screen:x:y` format throughout screen sharing pipeline for Wayland compatibility |
+| [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | Rejected OS native picker due to incomplete Linux Wayland/PipeWire support |
 
 **Key Outcomes:**
 - Fixed Wayland screen sharing preview
 - Standardized source identification
 - Improved cross-platform compatibility
+- Deferred native picker until Linux support available
 
 ### Documentation & Standards
 
@@ -261,10 +264,10 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 7
+- **Total ADRs**: 8
 - **Implemented**: 4
 - **Proposed**: 1
-- **Rejected**: 2
+- **Rejected**: 3
 - **Average length**: ~500 words
 - **Topics covered**: 5 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration)
 
