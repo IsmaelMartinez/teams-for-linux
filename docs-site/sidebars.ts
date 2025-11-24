@@ -71,6 +71,9 @@ const sidebars: SidebarsConfig = {
             'development/adr/003-token-refresh-implementation',
             'development/adr/004-agents-md-standard-investigation',
             'development/adr/005-ai-powered-changelog-generation',
+            'development/adr/006-cli-argument-parsing-library',
+            'development/adr/007-embedded-mqtt-broker',
+            'development/adr/008-usesystempicker-electron-38',
           ],
         },
         {
@@ -81,7 +84,6 @@ const sidebars: SidebarsConfig = {
             'development/research/dom-access-investigation',
             'development/research/automated-testing-strategy',
             'development/research/electron-38-migration-analysis',
-            'development/research/usesystempicker-investigation',
             'development/research/architecture-modernization-research',
           ],
         },

@@ -19,7 +19,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Electron & Framework
 - **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
-- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Electron 38's native screen picker (not viable on Linux)
+- **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
 
 ### Architecture
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
