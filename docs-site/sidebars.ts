@@ -81,10 +81,6 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            'development/research/dom-access-investigation',
-            'development/research/automated-testing-strategy',
-            'development/research/electron-38-migration-analysis',
-            'development/research/architecture-modernization-research',
           ],
         },
       ],
