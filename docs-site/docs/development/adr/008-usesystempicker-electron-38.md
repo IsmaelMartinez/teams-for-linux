@@ -121,7 +121,6 @@ function canUseSystemPicker(platform) {
 
 ## Related
 
-- [Research: usesystempicker-investigation.md](../research/usesystempicker-investigation.md)
 - [Electron DesktopCapturer API](https://www.electronjs.org/docs/latest/api/desktop-capturer)
 - [ADR 001: DesktopCapturer Source ID Format](001-desktopcapturer-source-id-format.md)
 
@@ -129,6 +128,5 @@ function canUseSystemPicker(platform) {
 
 - [Electron 38.0.0 Release](https://releases.electronjs.org/release/v38.0.0)
 - [Electron 38.2.0 Release](https://releases.electronjs.org/release/v38.2.0) - Wayland fixes
-- [Electron desktopCapturer API](https://www.electronjs.org/docs/latest/api/desktop-capturer)
 - [Chrome Screen Sharing Controls](https://developer.chrome.com/docs/web-platform/screen-sharing-controls/)
 - [xdg-desktop-portal ScreenCast API](https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.ScreenCast)
