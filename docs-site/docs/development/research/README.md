@@ -66,16 +66,39 @@ These research documents are intended for:
 
 ## Maintenance Guidelines
 
-Research documents should be:
+### Document Lifecycle
+
+Research documents follow this lifecycle:
+
+1. **Active Research Phase**: Document findings, analysis, and recommendations
+2. **Decision Phase**: Use research to inform final decisions (implemented or rejected)
+3. **Archive Phase**: Move content to appropriate location after decision:
+   - **Implemented features**: Compress findings into feature documentation, update architecture docs
+   - **Rejected features**: Create/update ADR with concise decision record (e.g., [ADR 008](../adr/008-usesystempicker-electron-38.md))
+   - **Superseded research**: Close with reference to superseding document
+4. **History**: Git commit history preserves full investigation context
+
+### Maintenance Guidelines
+
+Research documents that are **in active research phase** should be:
 
 - **Updated** when significant changes affect the analysis
 - **Referenced** in PRDs and major feature discussions
 - **Used to inform** future project direction decisions
-- **Preserved** as historical context even when superseded
 
-:::note Documentation Lifecycle
-While technical documentation should be kept current, research documents serve as historical records and may represent analysis from specific points in time.
-:::
+### Archiving Research
+
+Once a decision is made (feature implemented or rejected):
+
+- **DO**: Move content to appropriate permanent location (ADR, feature docs, architecture guide)
+- **DO**: Compress findings into concise decision format
+- **DO**: Remove from active research navigation if no longer relevant
+- **DO NOT**: Keep full research documents as "historical context"—use git for history
+
+**Examples:**
+- useSystemPicker investigation → [ADR 008](../adr/008-usesystempicker-electron-38.md) (rejected decision)
+- Automated testing strategy → Preserved as research (informs future implementation decisions)
+- Architecture modernization → Marked as archived with cross-reference to current approach
 
 ## Contributing Research
 
