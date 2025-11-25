@@ -12,7 +12,7 @@
 **✅ Completed** - Initial implementation deployed with the following features:
 - Command reception via MQTT with JSON validation
 - Three actions supported: `toggle-mute`, `toggle-video`, `raise-hand`
-- Security: action whitelist, rate limiting (2 commands/sec), JSON validation
+- Security: action whitelist, JSON validation
 - Event-based architecture for clean separation of concerns
 - Comprehensive documentation and testing examples
 
@@ -242,7 +242,6 @@ Easy to extend with more Teams keyboard shortcuts.
 2. **Validate commands**
    - Whitelist of allowed actions
    - JSON schema validation
-   - Rate limiting (2 commands/sec)
 
 3. **File permissions**
    - Document `chmod 600 config.json`

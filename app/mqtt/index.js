@@ -27,10 +27,6 @@ class MQTTClient extends EventEmitter {
 			'toggle-video': 'Ctrl+Shift+O',
 			'raise-hand': 'Ctrl+Shift+K'
 		};
-
-		// Rate limiting: track last command timestamp (max 2 commands/sec)
-		this.lastCommandTime = 0;
-		this.commandRateLimitMs = 500;
 	}
 
 	/**
@@ -156,19 +152,11 @@ class MQTTClient extends EventEmitter {
 	 * Security features:
 	 * - JSON validation
 	 * - Action whitelist (only allowed actions are processed)
-	 * - Rate limiting (max 2 commands per second)
 	 *
 	 * Emits 'command' event with { action, shortcut } when valid command received
 	 */
 	handleCommand(messageString) {
 		try {
-			// Rate limiting check
-			const now = Date.now();
-			if (now - this.lastCommandTime < this.commandRateLimitMs) {
-				console.warn('[MQTT] Command rate limit exceeded, ignoring command');
-				return;
-			}
-
 			// Parse JSON
 			const command = JSON.parse(messageString);
 
@@ -188,9 +176,6 @@ class MQTTClient extends EventEmitter {
 				console.warn(`[MQTT] Invalid command: action '${command.action}' not in whitelist`);
 				return;
 			}
-
-			// Update rate limit timestamp
-			this.lastCommandTime = now;
 
 			console.info(`[MQTT] Received valid command: ${command.action}`);
 

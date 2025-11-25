@@ -38,7 +38,7 @@ Receive action commands from your MQTT broker to control Teams, enabling scenari
 
 ### Command Reception Features
 - **Bidirectional Control**: Receive commands from MQTT to control Teams actions
-- **Security Validated**: Action whitelist, JSON validation, and rate limiting (2 commands/sec)
+- **Security Validated**: Action whitelist and JSON validation
 - **Multiple Actions**: Toggle mute, video, raise hand
 - **Reliable Execution**: Maps commands to Teams keyboard shortcuts
 
@@ -220,7 +220,6 @@ Commands are validated with multiple security measures:
 
 - **Action Whitelist**: Only the three supported actions are allowed
 - **JSON Validation**: Commands must be valid JSON
-- **Rate Limiting**: Maximum 2 commands per second
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice
@@ -348,15 +347,6 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 - Verify JSON is valid (use a JSON validator)
 - Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
 - Check spelling and case sensitivity (use lowercase with hyphens)
-
-#### Command Rate Limiting
-
-**Symptoms**: Some commands are ignored
-
-**Solutions**:
-- Commands are limited to 2 per second
-- Wait at least 500ms between commands
-- Check logs for "rate limit exceeded" messages
 
 #### Window Not Available Error
 
@@ -487,7 +477,6 @@ Commands are validated with multiple security layers:
 - **JSON Parsing**: Validates message is valid JSON
 - **Structure Check**: Ensures `action` field exists and is a string
 - **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `raise-hand`
-- **Rate Limiting**: Maximum 2 commands per second
 
 #### 3. Command Execution
 - **Location**: `app/index.js` command handler
@@ -511,7 +500,7 @@ Commands are validated with multiple security layers:
 #### Command Reception
 1. External system publishes command to MQTT broker
 2. MQTT Client receives message on command topic
-3. Command validation (JSON, whitelist, rate limit)
+3. Command validation (JSON, whitelist)
 4. MQTTClient emits 'command' event to main process
 5. Command handler maps action to keyboard shortcut
 6. Keyboard event sent to Teams window

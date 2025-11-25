@@ -16,7 +16,7 @@ This module provides bidirectional MQTT integration for Teams for Linux, allowin
 ### Command Reception (Inbound)
 - Receives action commands from MQTT broker
 - Executes Teams keyboard shortcuts (toggle mute, video, raise hand, etc.)
-- Security features: action whitelist, JSON validation, rate limiting
+- Security features: action whitelist, JSON validation
 - Configurable MQTT connection settings
 
 ## Configuration
@@ -108,7 +108,6 @@ Command messages should be sent as JSON with the following structure:
 Commands are validated with the following security measures:
 - **Action whitelist**: Only the supported actions listed above are allowed
 - **JSON validation**: Commands must be valid JSON
-- **Rate limiting**: Maximum 2 commands per second
 - **Localhost recommended**: For maximum security, use a localhost MQTT broker (`mqtt://localhost:1883`)
 
 #### Sending Commands
@@ -179,16 +178,11 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timest
    - Check application logs for validation errors
    - Ensure JSON is valid (use a JSON validator)
 
-2. **Rate Limiting**:
-   - Commands are limited to 2 per second
-   - Wait at least 500ms between commands
-   - Check logs for "rate limit exceeded" messages
-
-3. **Invalid Action Errors**:
+2. **Invalid Action Errors**:
    - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
    - Check spelling and case sensitivity (use lowercase with hyphens)
 
-4. **Window Not Available**:
+3. **Window Not Available**:
    - Ensure Teams for Linux window is open
    - Check logs for "window not available" messages
 
@@ -226,7 +220,7 @@ The status monitor uses a dual-layer approach for robust detection:
 
 1. **MQTT Broker** receives command from external source (mosquitto_pub, automation systems, etc.)
 2. **MQTTClient** receives message on command topic
-3. **Validation** checks JSON format, action whitelist, and rate limits
+3. **Validation** checks JSON format and action whitelist
 4. **Event Emission** MQTTClient emits 'command' event
 5. **Main Process** maps action to Teams keyboard shortcut
 6. **Execution** sends keyboard event to Teams window via `sendKeyboardEventToWindow`
@@ -235,7 +229,6 @@ The status monitor uses a dual-layer approach for robust detection:
 
 - **Action Whitelist**: Only predefined actions are allowed
 - **JSON Validation**: Commands must be valid JSON objects
-- **Rate Limiting**: Maximum 2 commands per second to prevent abuse
 - **Localhost Recommendation**: Users should use localhost broker for maximum security
 
 ### Additional Features
