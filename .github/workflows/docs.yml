@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat-github-docs-page-2  # For testing during development
     paths:
       - 'docs-site/**'
       - '.github/workflows/docs.yml'
