@@ -487,7 +487,7 @@ Commands are validated with multiple security layers:
 - **JSON Parsing**: Validates message is valid JSON
 - **Structure Check**: Ensures `action` field exists and is a string
 - **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `raise-hand`
-- **Rate Limiting**: Maximum 1 command per second
+- **Rate Limiting**: Maximum 2 commands per second
 
 #### 3. Command Execution
 - **Location**: `app/index.js` command handler

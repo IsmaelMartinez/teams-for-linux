@@ -228,7 +228,7 @@ Easy to extend with more Teams keyboard shortcuts.
 2. **Validate commands**
    - Whitelist of allowed actions
    - JSON schema validation
-   - Rate limiting (1 command/sec)
+   - Rate limiting (2 commands/sec)
 
 3. **File permissions**
    - Document `chmod 600 config.json`
