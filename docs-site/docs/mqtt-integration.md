@@ -170,7 +170,6 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 | `toggle-mute` | Ctrl+Shift+M | Toggle microphone mute/unmute |
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
 | `raise-hand` | Ctrl+Shift+K | Raise/lower hand in meeting |
-| `toggle-blur` | Ctrl+Shift+P | Toggle background blur |
 
 ### Sending Commands
 
@@ -185,9 +184,6 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 # Raise hand
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand"}' -q 1
-
-# Toggle blur
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-blur"}' -q 1
 ```
 
 #### System Keyboard Shortcuts
@@ -351,7 +347,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 - Ensure the command topic is correct (`teams/command` by default)
 - Check application logs for validation errors
 - Verify JSON is valid (use a JSON validator)
-- Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`, `toggle-blur`
+- Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
 - Check spelling and case sensitivity (use lowercase with hyphens)
 
 #### Command Rate Limiting
@@ -491,7 +487,7 @@ Commands are validated with multiple security layers:
 #### 2. Message Validation
 - **JSON Parsing**: Validates message is valid JSON
 - **Structure Check**: Ensures `action` field exists and is a string
-- **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `raise-hand`, `toggle-blur`
+- **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `raise-hand`
 - **Rate Limiting**: Maximum 1 command per second
 
 #### 3. Command Execution
@@ -500,7 +496,6 @@ Commands are validated with multiple security layers:
   - `toggle-mute` → Ctrl+Shift+M
   - `toggle-video` → Ctrl+Shift+O
   - `raise-hand` → Ctrl+Shift+K
-  - `toggle-blur` → Ctrl+Shift+P
 - Sends keyboard events to Teams window via `sendKeyboardEventToWindow`
 - **Location**: `app/globalShortcuts/index.js` for keyboard event generation
 

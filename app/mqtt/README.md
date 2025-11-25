@@ -102,7 +102,6 @@ Command messages should be sent as JSON with the following structure:
 - `toggle-mute` - Toggle microphone mute (Ctrl+Shift+M)
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
 - `raise-hand` - Raise/lower hand in meeting (Ctrl+Shift+K)
-- `toggle-blur` - Toggle background blur (Ctrl+Shift+P)
 
 #### Command Security
 
@@ -125,9 +124,6 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 # Raise hand
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand"}' -q 1
-
-# Toggle blur
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-blur"}' -q 1
 ```
 
 ## Use Cases
@@ -288,7 +284,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timest
    - Check logs for "rate limit exceeded" messages
 
 3. **Invalid Action Errors**:
-   - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`, `toggle-blur`
+   - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
    - Check spelling and case sensitivity (use lowercase with hyphens)
 
 4. **Window Not Available**:

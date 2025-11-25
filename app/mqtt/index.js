@@ -26,8 +26,7 @@ class MQTTClient extends EventEmitter {
 		this.actionShortcutMap = {
 			'toggle-mute': 'Ctrl+Shift+M',
 			'toggle-video': 'Ctrl+Shift+O',
-			'raise-hand': 'Ctrl+Shift+K',
-			'toggle-blur': 'Ctrl+Shift+P'
+			'raise-hand': 'Ctrl+Shift+K'
 		};
 
 		// Rate limiting: track last command timestamp (max 1 command/sec)
