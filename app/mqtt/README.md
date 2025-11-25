@@ -47,7 +47,7 @@ The MQTT module is configured through the main application configuration. Add th
 - **clientId**: `string` - Unique client identifier (default: "teams-for-linux")
 - **topicPrefix**: `string` - Topic prefix for all messages (default: "teams")
 - **statusTopic**: `string` - Topic name for status messages (default: "status")
-- **commandTopic**: `string` - Topic name for receiving commands (default: "command"). Omit to disable command reception.
+- **commandTopic**: `string` - Topic name for receiving commands (default: "" - disabled). Set to "command" to enable bidirectional mode.
 
 ## MQTT Topics
 

@@ -136,7 +136,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `mqtt.clientId` | `string` | `"teams-for-linux"` | Unique MQTT client identifier |
 | `mqtt.topicPrefix` | `string` | `"teams"` | Topic prefix for all MQTT messages |
 | `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (outbound, combined with topicPrefix) |
-| `mqtt.commandTopic` | `string` | `"command"` | Topic name for receiving commands (inbound). Omit to disable command reception. |
+| `mqtt.commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty to disable (status-only mode). Set to `"command"` to enable bidirectional mode. |
 | `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
 
 **Example MQTT Configuration:**
@@ -157,7 +157,7 @@ Place your `config.json` file in the appropriate location based on your installa
 ```
 
 > [!NOTE]
-> Status messages are published to `{topicPrefix}/{statusTopic}` and commands are received on `{topicPrefix}/{commandTopic}` (e.g., `home/office/teams/status` and `home/office/teams/command`). Omit `commandTopic` to only publish status without receiving commands. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
+> By default, MQTT operates in **status-only mode** (publishes status to `{topicPrefix}/{statusTopic}` but doesn't receive commands). To enable **bidirectional mode**, set `commandTopic` to a topic name like `"command"`. Commands will then be received on `{topicPrefix}/{commandTopic}`. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
 
 ### Microsoft Graph API
 
