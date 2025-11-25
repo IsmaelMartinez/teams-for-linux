@@ -29,9 +29,9 @@ class MQTTClient extends EventEmitter {
 			'raise-hand': 'Ctrl+Shift+K'
 		};
 
-		// Rate limiting: track last command timestamp (max 1 command/sec)
+		// Rate limiting: track last command timestamp (max 2 commands/sec)
 		this.lastCommandTime = 0;
-		this.commandRateLimitMs = 1000;
+		this.commandRateLimitMs = 500;
 	}
 
 	/**
@@ -69,15 +69,19 @@ class MQTTClient extends EventEmitter {
 				this.isConnected = true;
 				console.info('Successfully connected to MQTT broker');
 
-				// Subscribe to command topic for receiving action commands
-				const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
-				this.client.subscribe(commandTopic, (err) => {
-					if (err) {
-						console.error(`Failed to subscribe to command topic ${commandTopic}:`, err);
-					} else {
-						console.info(`Subscribed to MQTT command topic: ${commandTopic}`);
-					}
-				});
+				// Subscribe to command topic for receiving action commands (if configured)
+				if (this.config.commandTopic) {
+					const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
+					this.client.subscribe(commandTopic, (err) => {
+						if (err) {
+							console.error(`Failed to subscribe to command topic ${commandTopic}:`, err);
+						} else {
+							console.info(`Subscribed to MQTT command topic: ${commandTopic}`);
+						}
+					});
+				} else {
+					console.debug('MQTT command topic not configured, skipping command subscription');
+				}
 			});
 
 			this.client.on('error', (error) => {
@@ -95,9 +99,11 @@ class MQTTClient extends EventEmitter {
 			});
 
 			this.client.on('message', (topic, message) => {
-				const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
-				if (topic === commandTopic) {
-					this.handleCommand(message.toString());
+				if (this.config.commandTopic) {
+					const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
+					if (topic === commandTopic) {
+						this.handleCommand(message.toString());
+					}
 				}
 			});
 
@@ -151,7 +157,7 @@ class MQTTClient extends EventEmitter {
 	 * Security features:
 	 * - JSON validation
 	 * - Action whitelist (only allowed actions are processed)
-	 * - Rate limiting (max 1 command per second)
+	 * - Rate limiting (max 2 commands per second)
 	 */
 	handleCommand(messageString) {
 		try {

@@ -108,7 +108,7 @@ Command messages should be sent as JSON with the following structure:
 Commands are validated with the following security measures:
 - **Action whitelist**: Only the supported actions listed above are allowed
 - **JSON validation**: Commands must be valid JSON
-- **Rate limiting**: Maximum 1 command per second
+- **Rate limiting**: Maximum 2 commands per second
 - **Localhost recommended**: For maximum security, use a localhost MQTT broker (`mqtt://localhost:1883`)
 
 #### Sending Commands
@@ -159,71 +159,19 @@ chmod +x ~/.local/bin/teams-toggle-mute
 
 ### Home Automation Integration
 
-#### Home Assistant Example
+The MQTT integration has been tested with various automation platforms. However, specific configurations vary based on your setup and requirements.
 
-**Monitor status and send commands:**
+#### Share Your Automations
 
-```yaml
-mqtt:
-  sensor:
-    - name: "Teams Status"
-      state_topic: "teams/status"
-      value_template: "{{ value_json.status }}"
-      json_attributes_topic: "teams/status"
-      json_attributes_template: "{{ value_json | tojson }}"
+If you've successfully integrated Teams for Linux with your home automation system, **please share your configurations** to help other users:
 
-script:
-  teams_toggle_mute:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: "teams/command"
-          payload: '{"action":"toggle-mute"}'
-          qos: 1
-
-  teams_toggle_video:
-    sequence:
-      - service: mqtt.publish
-        data:
-          topic: "teams/command"
-          payload: '{"action":"toggle-video"}'
-          qos: 1
-
-automation:
-  - alias: "Mute Teams on Doorbell"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.doorbell
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: sensor.teams_status
-        state: "busy"
-    action:
-      - service: script.teams_toggle_mute
-```
-
-### Node-RED Example
-
-```json
-[
-  {
-    "id": "mqtt-teams",
-    "type": "mqtt in",
-    "topic": "teams/status",
-    "name": "Teams Status",
-    "server": "mqtt-broker",
-    "wires": [["process-status"]]
-  },
-  {
-    "id": "process-status",
-    "type": "function",
-    "name": "Process Teams Status",
-    "func": "const data = JSON.parse(msg.payload);\nmsg.payload = data.status;\nreturn msg;",
-    "wires": [["status-output"]]
-  }
-]
-```
+- **[GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)** - Tag as enhancement and share your automation scripts
+- **Supported Platforms**: Home Assistant, Node-RED, n8n, openHAB, Domoticz, and other MQTT-enabled systems
+- **What to Share**:
+  - Flow exports for Node-RED/n8n
+  - YAML configurations for Home Assistant
+  - Example use cases (busy lights, notification routing, etc.)
+  - Hardware integrations (ESP32, Raspberry Pi projects, etc.)
 
 ## Testing
 
@@ -279,8 +227,8 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timest
    - Ensure JSON is valid (use a JSON validator)
 
 2. **Rate Limiting**:
-   - Commands are limited to 1 per second
-   - Wait at least 1 second between commands
+   - Commands are limited to 2 per second
+   - Wait at least 500ms between commands
    - Check logs for "rate limit exceeded" messages
 
 3. **Invalid Action Errors**:
@@ -323,7 +271,7 @@ The status monitor uses a dual-layer approach for robust detection:
 
 ### Command Processing Flow
 
-1. **MQTT Broker** receives command from external source (mosquitto_pub, Home Assistant, etc.)
+1. **MQTT Broker** receives command from external source (mosquitto_pub, automation systems, etc.)
 2. **MQTTClient** receives message on command topic
 3. **Validation** checks JSON format, action whitelist, and rate limits
 4. **Event Emission** MQTTClient emits 'command' event
@@ -334,7 +282,7 @@ The status monitor uses a dual-layer approach for robust detection:
 
 - **Action Whitelist**: Only predefined actions are allowed
 - **JSON Validation**: Commands must be valid JSON objects
-- **Rate Limiting**: Maximum 1 command per second to prevent abuse
+- **Rate Limiting**: Maximum 2 commands per second to prevent abuse
 - **Localhost Recommendation**: Users should use localhost broker for maximum security
 
 ### Additional Features

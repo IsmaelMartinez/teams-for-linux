@@ -38,8 +38,8 @@ Receive action commands from your MQTT broker to control Teams, enabling scenari
 
 ### Command Reception Features
 - **Bidirectional Control**: Receive commands from MQTT to control Teams actions
-- **Security Validated**: Action whitelist, JSON validation, and rate limiting (1 command/sec)
-- **Multiple Actions**: Toggle mute, video, raise hand, toggle blur
+- **Security Validated**: Action whitelist, JSON validation, and rate limiting (2 commands/sec)
+- **Multiple Actions**: Toggle mute, video, raise hand
 - **Reliable Execution**: Maps commands to Teams keyboard shortcuts
 
 ### General Features
@@ -218,9 +218,9 @@ chmod +x ~/.local/bin/teams-toggle-mute
 
 Commands are validated with multiple security measures:
 
-- **Action Whitelist**: Only the four supported actions are allowed
+- **Action Whitelist**: Only the three supported actions are allowed
 - **JSON Validation**: Commands must be valid JSON
-- **Rate Limiting**: Maximum 1 command per second
+- **Rate Limiting**: Maximum 2 commands per second
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice
@@ -237,9 +237,8 @@ If you've successfully integrated Teams for Linux with your home automation syst
 
 - **[GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)** - Tag as enhancement and share your automation scripts
 - **[Matrix Chat](https://matrix.to/#/#teams-for-linux_community:gitter.im)** - Discuss and share configurations with the community
-- **Supported Platforms**: Home Assistant, Node-RED, n8n, openHAB, Domoticz, and others
+- **Supported Platforms**: Node-RED, n8n, openHAB, Domoticz, and other MQTT-enabled systems
 - **What to Share**:
-  - YAML configurations for Home Assistant
   - Flow exports for Node-RED/n8n
   - Example use cases (busy lights, notification routing, etc.)
   - Hardware integrations (ESP32, Raspberry Pi projects, etc.)
@@ -355,8 +354,8 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 **Symptoms**: Some commands are ignored
 
 **Solutions**:
-- Commands are limited to 1 per second
-- Wait at least 1 second between commands
+- Commands are limited to 2 per second
+- Wait at least 500ms between commands
 - Check logs for "rate limit exceeded" messages
 
 #### Window Not Available Error
@@ -435,7 +434,7 @@ graph TB
 1. Teams Web UI status changes → MutationObserver/Polling Monitor detects → Status Detector → IPC to Main Process → MQTT Client publishes to broker
 
 **Command Reception Flow** (Inbound):
-1. External system (mosquitto_pub, Home Assistant, etc.) → MQTT Broker → MQTT Client subscribes → Command validation → Command Handler → Keyboard Events sent to Teams Web UI
+1. External system (mosquitto_pub, automation systems, etc.) → MQTT Broker → MQTT Client subscribes → Command validation → Command Handler → Keyboard Events sent to Teams Web UI
 
 ### Status Detection Strategy
 
@@ -530,5 +529,3 @@ Commands are validated with multiple security layers:
 
 - [MQTT.org](https://mqtt.org/) - MQTT protocol specification
 - [Mosquitto](https://mosquitto.org/) - Popular open-source MQTT broker
-- [Home Assistant MQTT Integration](https://www.home-assistant.io/integrations/mqtt/)
-- [Node-RED MQTT nodes](https://flows.nodered.org/node/node-red-contrib-mqtt-broker)
