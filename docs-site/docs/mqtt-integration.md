@@ -96,7 +96,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | `clientId` | `string` | `"teams-for-linux"` | Unique client identifier |
 | `topicPrefix` | `string` | `"teams"` | Topic prefix for all messages |
 | `statusTopic` | `string` | `"status"` | Topic name for status messages (outbound) |
-| `commandTopic` | `string` | `"command"` | Topic name for receiving commands (inbound) |
+| `commandTopic` | `string` | `"command"` | Topic name for receiving commands (inbound). Omit to disable command reception while keeping status publishing active. |
 | `statusCheckInterval` | `number` | `10000` | Polling fallback interval in milliseconds |
 
 ### Topic Structure
