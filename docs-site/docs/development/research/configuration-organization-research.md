@@ -7,12 +7,14 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux has **64 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
+Teams for Linux has **65 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
 
 **Recent Improvements**:
 - MQTT documentation added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
 - Custom notification system added in PR [#1979](https://github.com/IsmaelMartinez/teams-for-linux/pull/1979) with new `customNotification` object config
+- Graph API integration added in PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) with new `graphApi` object config
+- MQTT enhancement research: command-line arguments ([ADR-006](../adr/006-cli-argument-parsing-library.md)), embedded broker ([ADR-007](../adr/007-embedded-mqtt-broker.md)), extended status publishing ([#1941](https://github.com/IsmaelMartinez/teams-for-linux/pull/1941))
 
 ### Key Findings
 
@@ -26,13 +28,14 @@ Teams for Linux has **64 active configuration options** managed through a flat y
 
 3. **Conditional Options**: Some options are only relevant when other options are set to specific values:
    - `customNotification` settings only apply when `notificationMethod: "custom"`
+   - `graphApi` settings only apply when `graphApi.enabled: true`
    - This pattern creates complexity where not all implementations need all options
    - Future consideration: validation/documentation to clarify these dependencies
 
 4. **~~Technical Debt~~ ✅ RESOLVED**: Deprecated options (`contextIsolation`, `sandbox`) have been removed from the configuration.
 
 5. **Structural Inconsistency**: Mix of flat options and nested objects without clear pattern:
-   - Good: `mqtt`, `cacheManagement`, `screenSharingThumbnail`, `customNotification` (nested)
+   - Good: `mqtt`, `cacheManagement`, `screenSharingThumbnail`, `customNotification`, `graphApi` (nested)
    - Bad: `customBGServiceBaseUrl`, `customBGServiceConfigFetchInterval` (should be nested)
 
 6. **Naming Issues**: Mix of negative (`disableNotifications`) and positive (`trayIconEnabled`) naming, plus some overly verbose names.
@@ -79,7 +82,7 @@ System Config → User Config → CLI Args → Defaults
 - Immutable config pattern via AppConfiguration class
 
 **Problem Areas:**
-- All 64 active options defined in single ~525-line yargs config block
+- All 65 active options defined in single ~530-line yargs config block
 - No programmatic grouping (only documentation grouping)
 - Mixed patterns (flat vs nested) without clear logic
 
@@ -137,7 +140,7 @@ mqtt  // Now documented in PR #1939
 // contextIsolation, sandbox - REMOVED from configuration
 ```
 
-**Total Active Options: 64** (including new customNotification system)
+**Total Active Options: 65** (including customNotification and graphApi systems)
 
 ### Problem Analysis
 
@@ -278,7 +281,7 @@ customBackground: {
 - Removed `sandbox` option from app/config/index.js (was at lines 388-395)
 - Both options were never actually used in the code (verified via grep)
 - Users with these in their config.json will simply have them ignored (no breaking change)
-- Total configuration options: 64 (after adding customNotification system)
+- Total configuration options: 65 (after adding customNotification and graphApi systems)
 
 **Original Issue** (now resolved):
 These options were deprecated with warnings but still accepted values, cluttering the configuration without providing any functionality. They have now been cleanly removed.
@@ -1180,7 +1183,7 @@ function migrateConfig(config, configPath) {
 ### Phase 1 Success Criteria
 - [x] ~~MQTT configuration documented with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - [x] ~~Deprecated options removed~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
-- [ ] All 64 options organized into logical categories
+- [ ] All 65 options organized into logical categories
 - [ ] Zero breaking changes
 - [ ] Documentation builds and deploys successfully
 
