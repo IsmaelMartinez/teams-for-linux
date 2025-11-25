@@ -279,8 +279,10 @@ async function handleAppReady() {
 
   // Initialize MQTT client if enabled
   if (config.mqtt?.enabled) {
-    // Create command executor that sends keyboard events to Teams window
-    const commandExecutor = (shortcut, action) => {
+    mqttClient = new MQTTClient(config);
+
+    // Listen for command events and execute keyboard shortcuts
+    mqttClient.on('command', ({ action, shortcut }) => {
       const window = mainAppWindow.getWindow();
       if (window && !window.isDestroyed()) {
         sendKeyboardEventToWindow(window, shortcut);
@@ -288,9 +290,8 @@ async function handleAppReady() {
       } else {
         console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
       }
-    };
+    });
 
-    mqttClient = new MQTTClient(config, commandExecutor);
     mqttClient.initialize();
   }
 

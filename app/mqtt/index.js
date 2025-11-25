@@ -6,13 +6,12 @@ const { EventEmitter } = require('node:events');
  * Manages connection, publishing of Teams status updates, and receiving action commands from an MQTT broker
  */
 class MQTTClient extends EventEmitter {
-	constructor(config, commandExecutor = null) {
+	constructor(config) {
 		super();
 		this.config = config.mqtt;
 		this.client = null;
 		this.isConnected = false;
 		this.lastPublishedStatus = null;
-		this.commandExecutor = commandExecutor;
 		this.statusMap = {
 			'-1': 'unknown',
 			'1': 'available',
@@ -150,7 +149,7 @@ class MQTTClient extends EventEmitter {
 
 	/**
 	 * Handle incoming MQTT command
-	 * Validates and processes command messages, executing them via the commandExecutor callback
+	 * Validates command messages and emits 'command' event for execution
 	 *
 	 * @param {string} messageString - Raw message string from MQTT
 	 *
@@ -158,6 +157,8 @@ class MQTTClient extends EventEmitter {
 	 * - JSON validation
 	 * - Action whitelist (only allowed actions are processed)
 	 * - Rate limiting (max 2 commands per second)
+	 *
+	 * Emits 'command' event with { action, shortcut } when valid command received
 	 */
 	handleCommand(messageString) {
 		try {
@@ -193,13 +194,9 @@ class MQTTClient extends EventEmitter {
 
 			console.info(`[MQTT] Received valid command: ${command.action}`);
 
-			// Execute the command via the executor callback
+			// Emit command event for main process to handle
 			const shortcut = this.actionShortcutMap[command.action];
-			if (shortcut && this.commandExecutor) {
-				this.commandExecutor(shortcut, command.action);
-			} else if (!this.commandExecutor) {
-				console.warn('[MQTT] No command executor configured');
-			}
+			this.emit('command', { action: command.action, shortcut });
 
 		} catch (error) {
 			console.error('[MQTT] Failed to handle command:', error.message);

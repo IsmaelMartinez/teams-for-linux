@@ -1,8 +1,22 @@
 # Research: MQTT Commands Implementation
 
 **Date:** 2025-11-16
-**Status:** Approved for Implementation
+**Status:** ✅ Implemented
+**Implementation Date:** 2025-11-25
 **Related ADRs:** [CLI Argument Parsing (ADR-006)](../adr/006-cli-argument-parsing-library.md), [Embedded MQTT Broker (ADR-007)](../adr/007-embedded-mqtt-broker.md)
+
+---
+
+## Implementation Status
+
+**✅ Completed** - Initial implementation deployed with the following features:
+- Command reception via MQTT with JSON validation
+- Three actions supported: `toggle-mute`, `toggle-video`, `raise-hand`
+- Security: action whitelist, rate limiting (2 commands/sec), JSON validation
+- Event-based architecture for clean separation of concerns
+- Comprehensive documentation and testing examples
+
+See [MQTT Integration Documentation](../../mqtt-integration.md) for user guide.
 
 ---
 
@@ -10,8 +24,8 @@
 
 Add bidirectional MQTT support to allow external systems (keyboard shortcuts, home automation) to send action commands to Teams for Linux.
 
-**Current state:** Teams publishes status → MQTT (one-way)
-**Proposed state:** Teams publishes status + receives commands ← MQTT (two-way)
+**Previous state:** Teams publishes status → MQTT (one-way)
+**Current state:** Teams publishes status + receives commands ← MQTT (two-way) ✅
 
 ---
 
