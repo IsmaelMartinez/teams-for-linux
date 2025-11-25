@@ -284,9 +284,9 @@ async function handleAppReady() {
       const window = mainAppWindow.getWindow();
       if (window && !window.isDestroyed()) {
         sendKeyboardEventToWindow(window, shortcut);
-        console.info(`Executed MQTT command '${action}' -> ${shortcut}`);
+        console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
       } else {
-        console.warn(`Cannot execute MQTT command '${action}': window not available`);
+        console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
       }
     };
 

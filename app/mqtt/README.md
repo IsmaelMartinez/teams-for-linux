@@ -206,8 +206,8 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timest
 
 **Expected behavior:**
 - Teams should execute the corresponding keyboard shortcut
-- Application logs should show: `Received valid MQTT command: <action>`
-- Application logs should show: `Executed MQTT command '<action>' -> <shortcut>`
+- Application logs should show: `[MQTT] Received valid command: <action>`
+- Application logs should show: `[MQTT] Executed command '<action>' -> <shortcut>`
 
 ## Troubleshooting
 

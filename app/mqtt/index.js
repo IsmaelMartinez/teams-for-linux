@@ -47,7 +47,7 @@ class MQTTClient extends EventEmitter {
 	 */
 	async initialize() {
 		if (!this.config.enabled || !this.config.brokerUrl) {
-			console.debug('MQTT disabled or no broker URL configured');
+			console.debug('[MQTT] Disabled or no broker URL configured');
 			return;
 		}
 
@@ -61,41 +61,41 @@ class MQTTClient extends EventEmitter {
 				options.password = this.config.password;
 			}
 
-			console.info(`Connecting to MQTT broker: ${this.config.brokerUrl}`);
+			console.info(`[MQTT] Connecting to broker: ${this.config.brokerUrl}`);
 
 			this.client = mqtt.connect(this.config.brokerUrl, options);
 
 			this.client.on('connect', () => {
 				this.isConnected = true;
-				console.info('Successfully connected to MQTT broker');
+				console.info('[MQTT] Successfully connected to broker');
 
 				// Subscribe to command topic for receiving action commands (if configured)
 				if (this.config.commandTopic) {
 					const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
 					this.client.subscribe(commandTopic, (err) => {
 						if (err) {
-							console.error(`Failed to subscribe to command topic ${commandTopic}:`, err);
+							console.error(`[MQTT] Failed to subscribe to command topic ${commandTopic}:`, err);
 						} else {
-							console.info(`Subscribed to MQTT command topic: ${commandTopic}`);
+							console.info(`[MQTT] Subscribed to command topic: ${commandTopic}`);
 						}
 					});
 				} else {
-					console.debug('MQTT command topic not configured, skipping command subscription');
+					console.debug('[MQTT] Command topic not configured, skipping command subscription');
 				}
 			});
 
 			this.client.on('error', (error) => {
-				console.error('MQTT connection error:', error);
+				console.error('[MQTT] Connection error:', error);
 				this.isConnected = false;
 			});
 
 			this.client.on('close', () => {
 				this.isConnected = false;
-				console.debug('MQTT connection closed');
+				console.debug('[MQTT] Connection closed');
 			});
 
 			this.client.on('reconnect', () => {
-				console.debug('Reconnecting to MQTT broker');
+				console.debug('[MQTT] Reconnecting to broker');
 			});
 
 			this.client.on('message', (topic, message) => {
@@ -108,7 +108,7 @@ class MQTTClient extends EventEmitter {
 			});
 
 		} catch (error) {
-			console.error('Failed to initialize MQTT client:', error);
+			console.error('[MQTT] Failed to initialize client:', error);
 		}
 	}
 
@@ -118,7 +118,7 @@ class MQTTClient extends EventEmitter {
 	 */
 	async publishStatus(status) {
 		if (!this.isConnected || !this.client) {
-			console.debug('MQTT not connected, skipping status publish');
+			console.debug('[MQTT] Not connected, skipping status publish');
 			return;
 		}
 
@@ -141,10 +141,10 @@ class MQTTClient extends EventEmitter {
 			await this.client.publish(topic, payload, { retain: true });
 
 			this.lastPublishedStatus = statusString;
-			console.debug(`Published Teams status to MQTT: ${statusString} (${status}) on topic: ${topic}`);
+			console.debug(`[MQTT] Published status: ${statusString} (${status}) on topic: ${topic}`);
 
 		} catch (error) {
-			console.error('Failed to publish status to MQTT:', error);
+			console.error('[MQTT] Failed to publish status:', error);
 		}
 	}
 
@@ -164,7 +164,7 @@ class MQTTClient extends EventEmitter {
 			// Rate limiting check
 			const now = Date.now();
 			if (now - this.lastCommandTime < this.commandRateLimitMs) {
-				console.warn('MQTT command rate limit exceeded, ignoring command');
+				console.warn('[MQTT] Command rate limit exceeded, ignoring command');
 				return;
 			}
 
@@ -173,36 +173,36 @@ class MQTTClient extends EventEmitter {
 
 			// Validate command structure
 			if (!command || typeof command !== 'object') {
-				console.warn('Invalid MQTT command: not an object');
+				console.warn('[MQTT] Invalid command: not an object');
 				return;
 			}
 
 			if (!command.action || typeof command.action !== 'string') {
-				console.warn('Invalid MQTT command: missing or invalid action');
+				console.warn('[MQTT] Invalid command: missing or invalid action');
 				return;
 			}
 
 			// Whitelist validation
 			if (!this.allowedActions.includes(command.action)) {
-				console.warn(`Invalid MQTT command: action '${command.action}' not in whitelist`);
+				console.warn(`[MQTT] Invalid command: action '${command.action}' not in whitelist`);
 				return;
 			}
 
 			// Update rate limit timestamp
 			this.lastCommandTime = now;
 
-			console.info(`Received valid MQTT command: ${command.action}`);
+			console.info(`[MQTT] Received valid command: ${command.action}`);
 
 			// Execute the command via the executor callback
 			const shortcut = this.actionShortcutMap[command.action];
 			if (shortcut && this.commandExecutor) {
 				this.commandExecutor(shortcut, command.action);
 			} else if (!this.commandExecutor) {
-				console.warn('No command executor configured for MQTT commands');
+				console.warn('[MQTT] No command executor configured');
 			}
 
 		} catch (error) {
-			console.error('Failed to handle MQTT command:', error.message);
+			console.error('[MQTT] Failed to handle command:', error.message);
 		}
 	}
 
@@ -211,11 +211,11 @@ class MQTTClient extends EventEmitter {
 	 */
 	async disconnect() {
 		if (this.client) {
-			console.debug('Disconnecting from MQTT broker');
+			console.debug('[MQTT] Disconnecting from broker');
 			try {
 				await this.client.end(false);
 			} catch (error) {
-				console.error('Error disconnecting from MQTT broker:', error);
+				console.error('[MQTT] Error disconnecting:', error);
 			}
 			this.client = null;
 			this.isConnected = false;
