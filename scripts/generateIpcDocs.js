@@ -31,6 +31,7 @@ const CATEGORIES = {
   'app/login/': 'Authentication',
   'app/connectionManager/': 'Connection Management',
   'app/incomingCallToast/': 'Incoming Calls',
+  'app/graphApi/': 'Microsoft Graph API',
 };
 
 function findCategory(filePath) {

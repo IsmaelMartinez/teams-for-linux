@@ -19,7 +19,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Electron & Framework
 - **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
-- **[useSystemPicker Investigation](usesystempicker-investigation.md)** - Electron 38's native screen picker (not viable on Linux)
+- **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
 
 ### Strategic Analysis
 - **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
@@ -35,10 +35,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Superseded by incremental refactoring (55% reduction in index.js)
   - See [Contributing Guide](../contributing.md) for current architecture
 
-### Changelog & Release
-- For AI-powered changelog generation, see [ADR-005](../adr/005-ai-powered-changelog-generation.md)
-- For release process, see [Manual Release Process](../manual-release-process.md)
-
 ### Notification System Research
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
   - Investigation of existing libraries and solutions
@@ -46,6 +42,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Custom BrowserWindow-based implementation plan
   - Decision: Build custom system following IncomingCallToast pattern
   - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
+
+### MQTT & Integration
+- **[MQTT Commands Implementation](mqtt-commands-implementation.md)** - Adding bidirectional MQTT support for action commands
+  - Implementation plan: 4-6 hours, ~60 lines of code, low risk
+  - Enables keyboard shortcuts and home automation integration
+  - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
+- **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
 
 ## Purpose
 
@@ -68,16 +71,39 @@ These research documents are intended for:
 
 ## Maintenance Guidelines
 
-Research documents should be:
+### Document Lifecycle
+
+Research documents follow this lifecycle:
+
+1. **Active Research Phase**: Document findings, analysis, and recommendations
+2. **Decision Phase**: Use research to inform final decisions (implemented or rejected)
+3. **Archive Phase**: Move content to appropriate location after decision:
+   - **Implemented features**: Compress findings into feature documentation, update architecture docs
+   - **Rejected features**: Create/update ADR with concise decision record (e.g., [ADR 008](../adr/008-usesystempicker-electron-38.md))
+   - **Superseded research**: Close with reference to superseding document
+4. **History**: Git commit history preserves full investigation context
+
+### Maintenance Guidelines
+
+Research documents that are **in active research phase** should be:
 
 - **Updated** when significant changes affect the analysis
 - **Referenced** in PRDs and major feature discussions
 - **Used to inform** future project direction decisions
-- **Preserved** as historical context even when superseded
 
-:::note Documentation Lifecycle
-While technical documentation should be kept current, research documents serve as historical records and may represent analysis from specific points in time.
-:::
+### Archiving Research
+
+Once a decision is made (feature implemented or rejected):
+
+- **DO**: Move content to appropriate permanent location (ADR, feature docs, architecture guide)
+- **DO**: Compress findings into concise decision format
+- **DO**: Remove from active research navigation if no longer relevant
+- **DO NOT**: Keep full research documents as "historical context"—use git for history
+
+**Examples:**
+- useSystemPicker investigation → [ADR 008](../adr/008-usesystempicker-electron-38.md) (rejected decision)
+- Automated testing strategy → Preserved as research (informs future implementation decisions)
+- Architecture modernization → Marked as archived with cross-reference to current approach
 
 ## Contributing Research
 

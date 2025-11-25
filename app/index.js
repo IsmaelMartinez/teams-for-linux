@@ -9,6 +9,8 @@ const {
 const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
+const GraphApiClient = require("./graphApi");
+const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
 const globalShortcuts = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
@@ -42,6 +44,7 @@ CommandLineManager.addSwitchesAfterConfigLoad(config);
 
 let userStatus = -1;
 let mqttClient = null;
+let graphApiClient = null;
 
 let player;
 try {
@@ -231,7 +234,7 @@ function onAppTerminated(signal) {
   }
 }
 
-function handleAppReady() {
+async function handleAppReady() {
   // check for configuration errors
   if (config.error) {
     dialog.showMessageBox({
@@ -280,7 +283,22 @@ function handleAppReady() {
     mqttClient.initialize();
   }
 
-  mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+  await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+
+  // Initialize Graph API client if enabled (after mainAppWindow is ready)
+  if (config.graphApi?.enabled) {
+    graphApiClient = new GraphApiClient(config);
+    const mainWindow = mainAppWindow.getWindow();
+    if (mainWindow) {
+      graphApiClient.initialize(mainWindow);
+      console.debug("[GRAPH_API] Graph API client initialized with main window");
+    } else {
+      console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
+    }
+  }
+
+  // Register Graph API IPC handlers (always register, handlers check for client availability)
+  registerGraphApiHandlers(ipcMain, graphApiClient);
 
   // Register global shortcuts
   globalShortcuts.register(config, mainAppWindow, app);

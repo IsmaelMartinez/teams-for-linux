@@ -157,6 +157,23 @@ Place your `config.json` file in the appropriate location based on your installa
 > [!NOTE]
 > Messages are published to `{topicPrefix}/{statusTopic}` (e.g., `home/office/teams/status`). See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, home automation examples, and troubleshooting.
 
+### Microsoft Graph API
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `graphApi.enabled` | `boolean` | `false` | Enable Microsoft Graph API integration for calendar and mail access |
+
+```json title="Example Configuration"
+{
+  "graphApi": {
+    "enabled": true
+  }
+}
+```
+
+> [!NOTE]
+> This feature uses Teams' existing authentication to access Microsoft Graph API endpoints. No additional login required. Currently supports reading user profile, calendar events, and mail messages.
+
 ### Advanced Options
 
 | Option | Type | Default | Description |

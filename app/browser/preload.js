@@ -110,6 +110,15 @@ globalThis.electronAPI = {
     return ipcRenderer.on("navigation-state-changed", callback);
   },
 
+  // Microsoft Graph API
+  graphApi: {
+    getUserProfile: () => ipcRenderer.invoke("graph-api-get-user-profile"),
+    getCalendarEvents: (options) => ipcRenderer.invoke("graph-api-get-calendar-events", options),
+    getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
+    createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
+    getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
+  },
+
   // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
