@@ -6,12 +6,13 @@ const { EventEmitter } = require('node:events');
  * Manages connection, publishing of Teams status updates, and receiving action commands from an MQTT broker
  */
 class MQTTClient extends EventEmitter {
-	constructor(config) {
+	constructor(config, commandExecutor = null) {
 		super();
 		this.config = config.mqtt;
 		this.client = null;
 		this.isConnected = false;
 		this.lastPublishedStatus = null;
+		this.commandExecutor = commandExecutor;
 		this.statusMap = {
 			'-1': 'unknown',
 			'1': 'available',
@@ -22,16 +23,24 @@ class MQTTClient extends EventEmitter {
 		};
 
 		// Command handling configuration
-		this.allowedActions = [
-			'toggle-mute',
-			'toggle-video',
-			'raise-hand',
-			'toggle-blur'
-		];
+		this.actionShortcutMap = {
+			'toggle-mute': 'Ctrl+Shift+M',
+			'toggle-video': 'Ctrl+Shift+O',
+			'raise-hand': 'Ctrl+Shift+K',
+			'toggle-blur': 'Ctrl+Shift+P'
+		};
 
 		// Rate limiting: track last command timestamp (max 1 command/sec)
 		this.lastCommandTime = 0;
 		this.commandRateLimitMs = 1000;
+	}
+
+	/**
+	 * Get list of allowed actions
+	 * @returns {string[]} Array of allowed action names
+	 */
+	get allowedActions() {
+		return Object.keys(this.actionShortcutMap);
 	}
 
 	/**
@@ -136,7 +145,7 @@ class MQTTClient extends EventEmitter {
 
 	/**
 	 * Handle incoming MQTT command
-	 * Validates and processes command messages, emitting 'command' events for valid commands
+	 * Validates and processes command messages, executing them via the commandExecutor callback
 	 *
 	 * @param {string} messageString - Raw message string from MQTT
 	 *
@@ -179,8 +188,13 @@ class MQTTClient extends EventEmitter {
 
 			console.info(`Received valid MQTT command: ${command.action}`);
 
-			// Emit command event for main process to handle
-			this.emit('command', command);
+			// Execute the command via the executor callback
+			const shortcut = this.actionShortcutMap[command.action];
+			if (shortcut && this.commandExecutor) {
+				this.commandExecutor(shortcut, command.action);
+			} else if (!this.commandExecutor) {
+				console.warn('No command executor configured for MQTT commands');
+			}
 
 		} catch (error) {
 			console.error('Failed to handle MQTT command:', error.message);

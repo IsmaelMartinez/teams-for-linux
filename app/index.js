@@ -279,30 +279,19 @@ async function handleAppReady() {
 
   // Initialize MQTT client if enabled
   if (config.mqtt?.enabled) {
-    mqttClient = new MQTTClient(config);
-    mqttClient.initialize();
-
-    // Handle MQTT commands for Teams actions
-    mqttClient.on('command', (command) => {
-      // Map MQTT command actions to Teams keyboard shortcuts
-      const actionShortcutMap = {
-        'toggle-mute': 'Ctrl+Shift+M',
-        'toggle-video': 'Ctrl+Shift+O',
-        'raise-hand': 'Ctrl+Shift+K',
-        'toggle-blur': 'Ctrl+Shift+P',
-      };
-
-      const shortcut = actionShortcutMap[command.action];
-      if (shortcut) {
-        const window = mainAppWindow.getWindow();
-        if (window && !window.isDestroyed()) {
-          sendKeyboardEventToWindow(window, shortcut);
-          console.info(`Executed MQTT command '${command.action}' -> ${shortcut}`);
-        } else {
-          console.warn(`Cannot execute MQTT command '${command.action}': window not available`);
-        }
+    // Create command executor that sends keyboard events to Teams window
+    const commandExecutor = (shortcut, action) => {
+      const window = mainAppWindow.getWindow();
+      if (window && !window.isDestroyed()) {
+        sendKeyboardEventToWindow(window, shortcut);
+        console.info(`Executed MQTT command '${action}' -> ${shortcut}`);
+      } else {
+        console.warn(`Cannot execute MQTT command '${action}': window not available`);
       }
-    });
+    };
+
+    mqttClient = new MQTTClient(config, commandExecutor);
+    mqttClient.initialize();
   }
 
   await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
