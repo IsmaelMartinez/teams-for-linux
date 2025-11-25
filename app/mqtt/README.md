@@ -126,53 +126,6 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand"}' -q 1
 ```
 
-## Use Cases
-
-### System Keyboard Shortcuts
-
-Bind global keyboard shortcuts to trigger Teams actions:
-
-**1. Create a wrapper script** (`~/.local/bin/teams-toggle-mute`):
-
-```bash
-#!/bin/bash
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-mute"}' -q 1
-```
-
-**2. Make it executable:**
-
-```bash
-chmod +x ~/.local/bin/teams-toggle-mute
-```
-
-**3. Bind in your desktop environment:**
-
-- **GNOME**: Settings → Keyboard → Custom Shortcuts
-  - Name: "Toggle Teams Mute"
-  - Command: `teams-toggle-mute`
-  - Shortcut: `Super+M`
-
-- **KDE Plasma**: System Settings → Shortcuts → Custom Shortcuts
-  - Add new custom shortcut
-  - Command: `teams-toggle-mute`
-  - Trigger: `Meta+M`
-
-### Home Automation Integration
-
-The MQTT integration has been tested with various automation platforms. However, specific configurations vary based on your setup and requirements.
-
-#### Share Your Automations
-
-If you've successfully integrated Teams for Linux with your home automation system, **please share your configurations** to help other users:
-
-- **[GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)** - Tag as enhancement and share your automation scripts
-- **Supported Platforms**: Home Assistant, Node-RED, n8n, openHAB, Domoticz, and other MQTT-enabled systems
-- **What to Share**:
-  - Flow exports for Node-RED/n8n
-  - YAML configurations for Home Assistant
-  - Example use cases (busy lights, notification routing, etc.)
-  - Hardware integrations (ESP32, Raspberry Pi projects, etc.)
-
 ## Testing
 
 ### Testing Status Publishing
