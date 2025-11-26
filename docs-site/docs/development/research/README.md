@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Authentication & Security
 - **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
+- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - Comprehensive research on tray icon logout indicator feature ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
+  - Multi-signal authentication detection strategy
+  - Visual indicator and notification implementation plan
+  - Critical technical validation spikes required before implementation
+  - Estimated effort: 38-60 hours with technical validation
 - For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
 ### Testing & Development
