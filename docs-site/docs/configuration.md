@@ -90,6 +90,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
 | `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
 | `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
+| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 | `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
@@ -129,13 +130,14 @@ Place your `config.json` file in the appropriate location based on your installa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `mqtt.enabled` | `boolean` | `false` | Enable/disable MQTT status publishing |
+| `mqtt.enabled` | `boolean` | `false` | Enable/disable MQTT integration (status publishing and command reception) |
 | `mqtt.brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://192.168.1.100:1883` or `mqtts://broker:8883` for TLS) |
 | `mqtt.username` | `string` | `""` | MQTT username for authentication (optional) |
 | `mqtt.password` | `string` | `""` | MQTT password for authentication (optional) |
 | `mqtt.clientId` | `string` | `"teams-for-linux"` | Unique MQTT client identifier |
 | `mqtt.topicPrefix` | `string` | `"teams"` | Topic prefix for all MQTT messages |
-| `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (combined with topicPrefix) |
+| `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (outbound, combined with topicPrefix) |
+| `mqtt.commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty to disable (status-only mode). Set to `"command"` to enable bidirectional mode. |
 | `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
 
 **Example MQTT Configuration:**
@@ -149,13 +151,14 @@ Place your `config.json` file in the appropriate location based on your installa
     "clientId": "teams-for-linux",
     "topicPrefix": "home/office",
     "statusTopic": "teams/status",
+    "commandTopic": "teams/command",
     "statusCheckInterval": 10000
   }
 }
 ```
 
 > [!NOTE]
-> Messages are published to `{topicPrefix}/{statusTopic}` (e.g., `home/office/teams/status`). See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, home automation examples, and troubleshooting.
+> By default, MQTT operates in **status-only mode** (publishes status to `{topicPrefix}/{statusTopic}` but doesn't receive commands). To enable **bidirectional mode**, set `commandTopic` to a topic name like `"command"`. Commands will then be received on `{topicPrefix}/{commandTopic}`. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
 
 ### Microsoft Graph API
 
