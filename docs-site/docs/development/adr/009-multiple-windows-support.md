@@ -126,19 +126,26 @@ Use Electron BrowserViews to create "virtual" windows within single window.
 
 ## Future Considerations
 
-### Allow Multiple Instances (Advanced Users)
+### Multiple Instances (Already Supported)
 
-Consider adding CLI flag to bypass single instance lock for advanced users:
+Users can already run multiple independent instances by specifying different user data directories:
 
 ```bash
-teams-for-linux --user-data-dir=/path/to/profile2 --allow-multiple-instances
+# Instance 1 (default)
+teams-for-linux
+
+# Instance 2 (separate profile)
+teams-for-linux --user-data-dir=/path/to/profile2
 ```
 
-This provides functionality without multi-window complexity, with clear trade-offs:
+Each instance operates independently with:
 - Separate tray icons
 - Separate login sessions
+- Separate configuration
 - Higher memory usage
-- Independent operation
+- No coordination between instances
+
+**Note:** This is a workaround, not the integrated multi-window experience users expect from the native client, but it provides the ability to view different accounts or contexts simultaneously.
 
 ### Monitor Teams PWA Evolution
 
