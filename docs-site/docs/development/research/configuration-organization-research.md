@@ -7,14 +7,16 @@
 ## Executive Summary
 
 ### Current State
-Teams for Linux has **65 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
+Teams for Linux has **66 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
 
 **Recent Improvements**:
 - MQTT documentation added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
 - Custom notification system added in PR [#1979](https://github.com/IsmaelMartinez/teams-for-linux/pull/1979) with new `customNotification` object config
 - Graph API integration added in PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) with new `graphApi` object config
+- MQTT commands feature implemented in PR [#1986](https://github.com/IsmaelMartinez/teams-for-linux/pull/1986) - bidirectional MQTT support for action commands
 - MQTT enhancement research: command-line arguments ([ADR-006](../adr/006-cli-argument-parsing-library.md)), embedded broker ([ADR-007](../adr/007-embedded-mqtt-broker.md)), extended status publishing ([#1941](https://github.com/IsmaelMartinez/teams-for-linux/pull/1941))
+- Badge count control added with `disableBadgeCount` option in PR [#1994](https://github.com/IsmaelMartinez/teams-for-linux/pull/1994)
 
 ### Key Findings
 
@@ -82,7 +84,7 @@ System Config → User Config → CLI Args → Defaults
 - Immutable config pattern via AppConfiguration class
 
 **Problem Areas:**
-- All 65 active options defined in single ~530-line yargs config block
+- All 66 active options defined in single ~535-line yargs config block
 - No programmatic grouping (only documentation grouping)
 - Mixed patterns (flat vs nested) without clear logic
 
@@ -140,7 +142,7 @@ mqtt  // Now documented in PR #1939
 // contextIsolation, sandbox - REMOVED from configuration
 ```
 
-**Total Active Options: 65** (including customNotification and graphApi systems)
+**Total Active Options: 66** (including customNotification, graphApi, and disableBadgeCount)
 
 ### Problem Analysis
 
@@ -281,7 +283,7 @@ customBackground: {
 - Removed `sandbox` option from app/config/index.js (was at lines 388-395)
 - Both options were never actually used in the code (verified via grep)
 - Users with these in their config.json will simply have them ignored (no breaking change)
-- Total configuration options: 65 (after adding customNotification and graphApi systems)
+- Total configuration options: 66 (after adding customNotification, graphApi, and disableBadgeCount)
 
 **Original Issue** (now resolved):
 These options were deprecated with warnings but still accepted values, cluttering the configuration without providing any functionality. They have now been cleanly removed.
@@ -1183,7 +1185,7 @@ function migrateConfig(config, configPath) {
 ### Phase 1 Success Criteria
 - [x] ~~MQTT configuration documented with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
 - [x] ~~Deprecated options removed~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
-- [ ] All 65 options organized into logical categories
+- [ ] All 66 options organized into logical categories
 - [ ] Zero breaking changes
 - [ ] Documentation builds and deploys successfully
 

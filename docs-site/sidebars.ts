@@ -83,6 +83,7 @@ const sidebars: SidebarsConfig = {
             'development/research/README',
             'development/research/automated-testing-strategy',
             'development/research/architecture-modernization-research',
+            'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/dom-access-investigation',
             'development/research/electron-38-migration-analysis',
