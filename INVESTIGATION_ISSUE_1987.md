@@ -132,6 +132,15 @@ Implement both visual indicator and notification.
 
 ## Technical Requirements
 
+### Critical Prerequisite: IPC Access for ReactHandler
+
+**IMPORTANT:** ReactHandler currently does NOT have access to `ipcRenderer`, which is required for sending notifications. This must be addressed first by either:
+
+1. Adding `reactHandler` to the modules array in `preload.js` and updating the conditional to pass `ipcRenderer`
+2. Initializing ReactHandler with `ipcRenderer` in ActivityHub where it's used
+
+See **Section 3: Notification on Logout** below for detailed implementation steps.
+
 ### 1. Authentication State Detection
 
 Add to `ReactHandler` (`app/browser/tools/reactHandler.js`):
@@ -321,21 +330,125 @@ _addLogoutIndicator(ctx) {
 
 ### 3. Notification on Logout
 
-Add notification when logout is detected:
+**IMPORTANT:** ReactHandler currently does NOT receive `ipcRenderer` in its initialization. This must be fixed first.
+
+#### Required Changes to Enable Notifications
+
+**A. Update ReactHandler.init() signature** (`app/browser/tools/reactHandler.js`):
 
 ```javascript
-// In ReactHandler after detecting auth state change
-if (!currentState.authenticated && lastAuthState?.authenticated) {
-  // User just logged out - send notification
-  if (this.ipcRenderer) {
+/**
+ * Initialize the ReactHandler (for compatibility with preload module loading)
+ * @param {object} config - Application configuration
+ * @param {object} ipcRenderer - Electron IPC renderer (optional, needed for notifications)
+ */
+init(config, ipcRenderer) {
+  this.config = config;
+  this.ipcRenderer = ipcRenderer; // Add this line
+  console.debug('[ReactHandler] Initialized', {
+    hasIpcRenderer: !!ipcRenderer
+  });
+}
+```
+
+**B. Update preload.js module initialization** (`app/browser/preload.js:357`):
+
+Add `reactHandler` to the list of modules that receive `ipcRenderer`:
+
+```javascript
+// CRITICAL: These modules need ipcRenderer for IPC communication
+if (module.name === "settings" ||
+    module.name === "theme" ||
+    module.name === "trayIconRenderer" ||
+    module.name === "mqttStatusMonitor" ||
+    module.name === "reactHandler") {  // <-- Add this
+  moduleInstance.init(config, ipcRenderer);
+} else {
+  moduleInstance.init(config);
+}
+```
+
+**NOTE:** The `reactHandler` module is not currently in the modules array in preload.js. You have two options:
+
+1. **Add reactHandler to the modules array** (if it should be initialized via preload):
+```javascript
+const modules = [
+  { name: "zoom", path: "./tools/zoom" },
+  { name: "shortcuts", path: "./tools/shortcuts" },
+  { name: "settings", path: "./tools/settings" },
+  { name: "theme", path: "./tools/theme" },
+  { name: "emulatePlatform", path: "./tools/emulatePlatform" },
+  { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+  { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
+  { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
+  { name: "disableAutogain", path: "./tools/disableAutogain" },
+  { name: "navigationButtons", path: "./tools/navigationButtons" },
+  { name: "reactHandler", path: "./tools/reactHandler" }  // <-- Add this
+];
+```
+
+2. **Initialize reactHandler separately** in ActivityHub where it's already imported and used.
+
+**C. Add notification logic in ReactHandler**:
+
+After `ipcRenderer` is available, add notification when logout is detected:
+
+```javascript
+/**
+ * Monitor authentication state and dispatch events on changes
+ */
+startAuthenticationMonitoring() {
+  let lastAuthState = null;
+
+  const checkAuthState = () => {
+    const currentState = this.getAuthenticationState();
+
+    if (lastAuthState?.authenticated !== currentState.authenticated) {
+      console.debug('[AUTH_STATE] Authentication state changed:', currentState);
+
+      // Send notification on logout
+      if (!currentState.authenticated && lastAuthState?.authenticated) {
+        this._sendLogoutNotification();
+      }
+
+      // Dispatch custom event for tray icon update
+      const event = new CustomEvent('auth-state-changed', {
+        detail: currentState
+      });
+      globalThis.dispatchEvent(event);
+
+      lastAuthState = currentState;
+    }
+  };
+
+  // Check immediately
+  checkAuthState();
+
+  // Check periodically (every 30 seconds)
+  setInterval(checkAuthState, 30000);
+}
+
+/**
+ * Send notification when user is logged out
+ * @private
+ */
+_sendLogoutNotification() {
+  if (!this.ipcRenderer) {
+    console.warn('[AUTH_STATE] Cannot send logout notification - ipcRenderer not available');
+    return;
+  }
+
+  try {
     this.ipcRenderer.invoke('show-notification', {
       title: 'Teams for Linux - Logged Out',
-      body: 'You have been logged out of Microsoft Teams. Click here to log in again.',
+      body: 'You have been logged out of Microsoft Teams. Click to view the application.',
       requireInteraction: true,
-      actions: [
-        { action: 'relogin', title: 'Log In' }
-      ]
+      urgency: 'normal'
+    }).catch(error => {
+      console.error('[AUTH_STATE] Failed to send logout notification:', error);
     });
+  } catch (error) {
+    console.error('[AUTH_STATE] Error sending logout notification:', error);
   }
 }
 ```
