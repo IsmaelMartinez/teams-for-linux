@@ -159,7 +159,6 @@ If Microsoft adds native multi-window support to Teams PWA:
 ## Related
 
 - Issue [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) - Allow multiple windows for one account
-- Investigation document: `docs-site/docs/development/research/multiple-windows-investigation.md`
 - `app/index.js:61` - Single instance lock implementation
 - `app/mainAppWindow/index.js:530-553` - Window open handler
 - `app/security/ipcValidator.js` - IPC channel validation (72 channels)
