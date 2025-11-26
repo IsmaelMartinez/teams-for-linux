@@ -56,7 +56,9 @@ class TrayIconRenderer {
       });
     });
     
-    this.ipcRenderer.invoke("set-badge-count", count);
+    if (!this.config.disableBadgeCount) {
+      this.ipcRenderer.invoke("set-badge-count", count);
+    }
     this.lastActivityCount = count;
   }
 
@@ -96,7 +98,7 @@ class TrayIconRenderer {
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(image, 0, 0, 140, 140);
-    if (newActivityCount > 0) {
+    if (newActivityCount > 0 && !this.config.disableBadgeCount) {
       ctx.fillStyle = "red";
       ctx.beginPath();
       ctx.ellipse(100, 90, 40, 40, 40, 0, 2 * Math.PI);
