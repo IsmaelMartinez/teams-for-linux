@@ -12,7 +12,7 @@ const { MQTTClient } = require("./mqtt");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
-const globalShortcuts = require("./globalShortcuts");
+const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
@@ -280,6 +280,18 @@ async function handleAppReady() {
   // Initialize MQTT client if enabled
   if (config.mqtt?.enabled) {
     mqttClient = new MQTTClient(config);
+
+    // Listen for command events and execute keyboard shortcuts
+    mqttClient.on('command', ({ action, shortcut }) => {
+      const window = mainAppWindow.getWindow();
+      if (window && !window.isDestroyed()) {
+        sendKeyboardEventToWindow(window, shortcut);
+        console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
+      } else {
+        console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
+      }
+    });
+
     mqttClient.initialize();
   }
 
@@ -301,7 +313,7 @@ async function handleAppReady() {
   registerGraphApiHandlers(ipcMain, graphApiClient);
 
   // Register global shortcuts
-  globalShortcuts.register(config, mainAppWindow, app);
+  registerGlobalShortcuts(config, mainAppWindow, app);
 
   // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
