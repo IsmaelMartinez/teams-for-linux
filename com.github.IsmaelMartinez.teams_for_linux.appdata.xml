@@ -14,6 +14,21 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.6.17" date="2025-11-26">
+      <description>
+        <ul>
+          <li>[Research]: Explore solutions MQTT Publish camera, microphone and in-call state - by @IsmaelMartinez (#1941)</li>
+          <li>[Research]: Evaludate adding command line arguments, bundle an mqtt server and supporting commands/actions in our mqtt implementation - by @IsmaelMartinez (#1956)</li>
+          <li>[Research]: Graph API integration - by @IsmaelMartinez (#1958)</li>
+          <li>Add custom notification system to docs - by @IsmaelMartinez (#1981)</li>
+          <li>Update notification system research documentation - by @IsmaelMartinez (#1982)</li>
+          <li>Fix changelog push to run all build jobs - by @IsmaelMartinez (#1983)</li>
+          <li>Move useSystemPicker investigation to ADR - by @IsmaelMartinez (#1985)</li>
+          <li>Implement MQTT Commands feature - by @IsmaelMartinez (#1986)</li>
+          <li>Fix Docusaurus build and deployment in main - by @IsmaelMartinez (#1988)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.6.16" date="2025-11-20">
       <description>
         <ul>
