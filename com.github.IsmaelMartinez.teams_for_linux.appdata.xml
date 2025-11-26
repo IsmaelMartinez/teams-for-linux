@@ -18,7 +18,7 @@
       <description>
         <ul>
           <li>[Research]: Explore solutions MQTT Publish camera, microphone and in-call state - by @IsmaelMartinez (#1941)</li>
-          <li>[Research]: Evaludate adding command line arguments, bundle an mqtt server and supporting commands/actions in our mqtt implementation - by @IsmaelMartinez (#1956)</li>
+          <li>[Research]: Evaluate adding command line arguments, bundle an mqtt server and supporting commands/actions in our mqtt implementation - by @IsmaelMartinez (#1956)</li>
           <li>[Research]: Graph API integration - by @IsmaelMartinez (#1958)</li>
           <li>Add custom notification system to docs - by @IsmaelMartinez (#1981)</li>
           <li>Update notification system research documentation - by @IsmaelMartinez (#1982)</li>
