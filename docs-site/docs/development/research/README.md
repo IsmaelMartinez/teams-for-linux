@@ -26,9 +26,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Config options analyzed for grouping and naming consistency
   - Three-phase migration plan from flat to nested structure
   - Backward-compatible approach with auto-migration
-- **[Documentation Improvement Recommendations](documentation-improvement-recommendations.md)** - Actionable plan for optimizing documentation
-  - 80% value with 60% less effort than comprehensive overhaul
-- **[UI System Strategic Analysis](ui-system-strategic-analysis.md)** - Strategic evaluation of the in-app UI system proposal
 
 ### Architecture
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
