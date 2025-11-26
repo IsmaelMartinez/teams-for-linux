@@ -360,7 +360,9 @@ async function userStatusChangedHandler(_event, options) {
 
 async function setBadgeCountHandler(_event, count) {
   console.debug(`Badge count set to '${count}'`);
-  app.setBadgeCount(count);
+  if (!config.disableBadgeCount) {
+    app.setBadgeCount(count);
+  }
 }
 
 function handleGlobalShortcutDisabled() {
