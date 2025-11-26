@@ -278,12 +278,6 @@ function extractYargConfig(configObject, appVersion) {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
       },
-      disableBadgeCount: {
-        default: false,
-        describe:
-          "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
-        type: "boolean",
-      },
       disableGlobalShortcuts: {
         default: [],
         describe:

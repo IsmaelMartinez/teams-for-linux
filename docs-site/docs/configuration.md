@@ -90,7 +90,6 @@ Place your `config.json` file in the appropriate location based on your installa
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
 | `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
 | `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
-| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 | `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
