@@ -144,4 +144,4 @@ function register(config, mainAppWindow, app) {
   }
 }
 
-module.exports = { register };
+module.exports = { register, sendKeyboardEventToWindow };

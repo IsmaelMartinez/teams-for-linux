@@ -278,6 +278,12 @@ function extractYargConfig(configObject, appVersion) {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
       },
+      disableBadgeCount: {
+        default: false,
+        describe:
+          "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
+        type: "boolean",
+      },
       disableGlobalShortcuts: {
         default: [],
         describe:
@@ -482,9 +488,10 @@ function extractYargConfig(configObject, appVersion) {
           clientId: "teams-for-linux",
           topicPrefix: "teams",
           statusTopic: "status",
+          commandTopic: "",
           statusCheckInterval: 10000,
         },
-        describe: "MQTT configuration for publishing Teams status updates",
+        describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",
       },
       graphApi: {
