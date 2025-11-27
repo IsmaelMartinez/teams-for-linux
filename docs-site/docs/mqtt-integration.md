@@ -345,7 +345,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 - Ensure the command topic is correct (`teams/command` by default)
 - Check application logs for validation errors
 - Verify JSON is valid (use a JSON validator)
-- Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
+- Ensure action is in the whitelist (see [Supported Actions](#supported-actions) above)
 - Check spelling and case sensitivity (use lowercase with hyphens)
 
 #### Window Not Available Error
@@ -476,7 +476,7 @@ Commands are validated with multiple security layers:
 #### 2. Message Validation
 - **JSON Parsing**: Validates message is valid JSON
 - **Structure Check**: Ensures `action` field exists and is a string
-- **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
+- **Action Whitelist**: Only allows actions listed in [Supported Actions](#supported-actions)
 
 #### 3. Command Execution
 - **Location**: `app/index.js` command handler

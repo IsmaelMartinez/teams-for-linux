@@ -218,7 +218,6 @@ mosquitto_pub -h localhost -t teams/command -m '{"action":"toggle-mute"}' -q 1
 - `toggle-mute` - Ctrl+Shift+M
 - `toggle-video` - Ctrl+Shift+O
 - `toggle-hand-raise` - Ctrl+Shift+K
-- `toggle-blur` - Ctrl+Shift+P
 
 Easy to extend with more Teams keyboard shortcuts.
 

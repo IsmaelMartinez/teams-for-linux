@@ -179,7 +179,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise",
    - Ensure JSON is valid (use a JSON validator)
 
 2. **Invalid Action Errors**:
-   - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
+   - Verify action is in the whitelist (see "Supported Actions" above)
    - Check spelling and case sensitivity (use lowercase with hyphens)
 
 3. **Window Not Available**:
