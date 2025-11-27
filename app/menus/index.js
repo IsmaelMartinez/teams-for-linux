@@ -197,6 +197,17 @@ class Menus {
     const menu = appMenu(this);
     this.window.setMenu(Menu.buildFromTemplate([menu]));
     this.tray.setContextMenu(menu.submenu);
+
+    // Notify renderer process of config changes that affect renderer behavior
+    // This allows menu toggles to take effect immediately without restart
+    this.window.webContents.send("config-changed", {
+      disableNotifications: this.configGroup.startupConfig.disableNotifications,
+      disableNotificationSound: this.configGroup.startupConfig.disableNotificationSound,
+      disableNotificationSoundIfNotAvailable: this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable,
+      disableNotificationWindowFlash: this.configGroup.startupConfig.disableNotificationWindowFlash,
+      disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
+      defaultNotificationUrgency: this.configGroup.startupConfig.defaultNotificationUrgency,
+    });
   }
 
   toggleDisableNotifications() {
@@ -246,10 +257,6 @@ class Menus {
       "disableBadgeCount",
       this.configGroup.startupConfig.disableBadgeCount
     );
-    // Notify renderer process of config change
-    this.window.webContents.send("config-changed", {
-      disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
-    });
     this.updateMenu();
   }
 
