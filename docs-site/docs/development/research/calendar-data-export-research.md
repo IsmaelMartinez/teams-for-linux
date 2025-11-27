@@ -7,558 +7,287 @@
 
 ## Overview
 
-This document investigates the implementation of calendar data export functionality for Teams for Linux, enabling users to access their calendar data for external processing (e.g., org-mode conversion). The research focuses on event-driven architecture where the system reacts to external events rather than implementing internal scheduling logic.
+User needs access to calendar data from Teams for Linux to process externally (e.g., convert to org-mode). This research investigates how to expose calendar data with minimal internal logic.
 
 ## Problem Statement
 
-### User Requirements
+User wants to:
+1. Access their Teams calendar data programmatically
+2. Process it externally (org-mode conversion, etc.)
+3. Avoid maintaining separate authentication scripts (2FA expires daily)
 
-From issue #1995, the user needs to:
+**Key insight:** Since they log into Teams for Linux daily anyway, the app can expose calendar data using existing authentication.
 
-1. **Extract calendar/meeting data** from Teams for personal processing
-2. **Convert to org-mode format** for personal knowledge management
-3. **Avoid daily authentication** - Creating standalone extraction scripts is impractical due to 2FA expiring daily
+## Current State
 
-### Core Challenge
+### ✅ Already Implemented
 
-The user must log into Teams daily anyway, making Teams for Linux an ideal integration point for calendar data extraction without requiring separate authentication flows.
+Teams for Linux has Graph API integration (Phase 1 complete):
 
-## Current State Analysis
+- **GraphApiClient** in `app/graphApi/`
+- **Calendar endpoints** functional:
+  - `GET /me/calendar/events` - All events
+  - `GET /me/calendar/calendarView` - Date range filtered
+- **IPC channels** available:
+  - `graph-api-get-calendar-events`
+  - `graph-api-get-calendar-view`
 
-### Existing Infrastructure
-
-Teams for Linux already has foundational components for calendar access:
-
-#### 1. Graph API Integration (Phase 1 Complete)
-
-Location: `app/graphApi/`
-
-**Capabilities:**
-- Token acquisition via Teams React authentication
-- Authenticated Graph API requests
-- Calendar endpoint support:
-  - `GET /me/calendar/events` - List all events
-  - `GET /me/calendar/calendarView` - Time-range filtered view
-  - `POST /me/calendar/events` - Create events
-  - `PATCH /me/calendar/events/{id}` - Update events
-  - `DELETE /me/calendar/events/{id}` - Delete events
-
-**Key Files:**
-- `app/graphApi/index.js` - GraphApiClient class
-- `app/graphApi/ipcHandlers.js` - IPC handlers for renderer access
-- `app/browser/tools/reactHandler.js` - Token acquisition
-
-**Configuration:**
-```yaml
-graphApi:
-  enabled: true  # Must be enabled for calendar access
-```
-
-#### 2. IPC Communication Infrastructure
-
-**Existing Calendar IPC Channels:**
-- `graph-api-get-calendar-events` - Get events with OData options
-- `graph-api-get-calendar-view` - Get events within date range
-
-**Security:**
-- All channels validated through `app/security/ipcValidator.js`
-- Channels must be on allowlist
-
-### Limitations of Current Implementation
-
-1. **Pull-based only** - Client must request data, no push notifications
-2. **No export functionality** - No mechanism to write data to files
-3. **No scheduling** - No way to trigger exports automatically
-4. **No webhook support** - Cannot receive change notifications from Microsoft
-
-## Architecture Options
-
-### Option 1: Event-Driven via Microsoft Graph Webhooks (RECOMMENDED)
-
-**Concept:** Subscribe to Microsoft Graph change notifications and react to calendar changes.
-
-#### How Microsoft Graph Webhooks Work
-
-```mermaid
-sequenceDiagram
-    participant TFL as Teams for Linux
-    participant Graph as Microsoft Graph API
-    participant Webhook as Public Webhook Endpoint
-
-    TFL->>Graph: Subscribe to /me/calendar/events
-    Graph->>TFL: Returns subscription ID
-    Note over Graph: Calendar event changes
-    Graph->>Webhook: POST notification
-    Webhook->>TFL: Forward notification
-    TFL->>TFL: Trigger export
-```
-
-**Microsoft Graph Subscription:**
-```javascript
-POST https://graph.microsoft.com/v1.0/subscriptions
-{
-  "changeType": "created,updated,deleted",
-  "notificationUrl": "https://your-server.com/webhook",
-  "resource": "/me/calendar/events",
-  "expirationDateTime": "2025-11-28T18:00:00.0000000Z",
-  "clientState": "secretClientValue"
-}
-```
-
-**Requirements:**
-1. **Public HTTPS endpoint** - Microsoft requires publicly accessible webhook URL
-2. **Subscription management** - Renewals required (max 3 days for calendar)
-3. **Validation handshake** - Endpoint must respond to validation token
-4. **Change processing** - React to notifications and fetch updated data
-
-**Pros:**
-- ✅ True event-driven - no polling needed
-- ✅ Real-time updates as calendar changes
-- ✅ Efficient - only processes when changes occur
-- ✅ Aligns with "react to events" principle
-
-**Cons:**
-- ❌ Requires public webhook endpoint (infrastructure burden)
-- ❌ Subscription management complexity (renewals, failures)
-- ❌ Not suitable for single-user desktop app
-- ❌ Security considerations for exposing endpoint
-
-**Verdict:** **Not recommended for desktop application** - Webhooks are designed for server applications with public endpoints. Inappropriate for single-user desktop client.
-
-### Option 2: Event-Driven via User Actions
-
-**Concept:** Export calendar data in response to explicit user actions.
-
-#### Trigger Options
-
-1. **Manual export button** - User clicks "Export Calendar" in menu
-2. **Keyboard shortcut** - e.g., `Ctrl+Shift+E` to export
-3. **IPC-triggered export** - External script triggers via IPC
-4. **Session startup** - Export on app launch (after Teams loads)
-5. **Session shutdown** - Export on quit
-
-#### Architecture
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant TFL as Teams for Linux
-    participant Graph as Graph API Client
-    participant FS as File System
-
-    User->>TFL: Trigger export (menu/shortcut/IPC)
-    TFL->>Graph: getCalendarView(startDate, endDate)
-    Graph->>TFL: Calendar events array
-    TFL->>TFL: Format to org-mode
-    TFL->>FS: Write to export file
-    TFL->>User: Show notification (success/failure)
-```
-
-**Implementation Pattern:**
+**User can already access calendar data today** via IPC calls:
 
 ```javascript
-// New module: app/calendarExport/index.js
-class CalendarExporter {
-  constructor(graphApiClient, config) {
-    this.graphApi = graphApiClient;
-    this.config = config;
-  }
+// From renderer/external script
+const result = await ipcRenderer.invoke('graph-api-get-calendar-view',
+  '2025-11-27T00:00:00Z',
+  '2025-12-27T00:00:00Z'
+);
 
-  async exportToFile(options = {}) {
-    const {
-      startDate = new Date(),
-      daysAhead = 30,
-      outputPath = '~/calendar-export.org',
-      format = 'org-mode'
-    } = options;
-
-    // 1. Fetch calendar data
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + daysAhead);
-
-    const result = await this.graphApi.getCalendarView(
-      startDate.toISOString(),
-      endDate.toISOString()
-    );
-
-    // 2. Transform to desired format
-    const formatted = this.formatData(result.data.value, format);
-
-    // 3. Write to file
-    await fs.writeFile(outputPath, formatted);
-
-    return { success: true, path: outputPath, events: result.data.value.length };
-  }
-
-  formatData(events, format) {
-    if (format === 'org-mode') {
-      return this.toOrgMode(events);
-    }
-    // Other formats: json, csv, ics...
-  }
-
-  toOrgMode(events) {
-    // Convert Graph API events to org-mode format
-    // Implementation TBD based on user requirements
-  }
-}
+console.log(result.data.value); // Raw Graph API JSON
 ```
-
-**Pros:**
-- ✅ Simple architecture - no external dependencies
-- ✅ User controls when exports happen
-- ✅ No polling or timers needed
-- ✅ Leverages existing Graph API client
-- ✅ Appropriate for desktop application model
-
-**Cons:**
-- ⚠️ Requires user action (not automatic)
-- ⚠️ Need to define export format specifications
-
-**Verdict:** **Recommended as Phase 1** - Aligns with desktop app model and "react to events" principle.
-
-### Option 3: Hybrid - User Actions + External Event System
-
-**Concept:** Allow external systems to trigger exports via IPC, enabling integration with user's automation tools.
-
-#### Architecture
-
-```mermaid
-graph LR
-    A[User Action] --> D[Export Module]
-    B[External Script/Cron] --> C[IPC Channel]
-    C --> D
-    D --> E[File System]
-    F[Other Desktop Apps] --> C
-```
-
-**Implementation:**
-
-```javascript
-// IPC Handler
-ipcMain.handle('calendar-export', async (_event, options) => {
-  if (!calendarExporter) {
-    return { success: false, error: 'Calendar export not enabled' };
-  }
-  return await calendarExporter.exportToFile(options);
-});
-```
-
-**External Trigger Example:**
-
-```bash
-#!/bin/bash
-# External script to trigger export via electron-ipc-tunnel or similar
-electron-ipc-send teams-for-linux calendar-export '{
-  "outputPath": "~/org/calendar.org",
-  "daysAhead": 14
-}'
-```
-
-**Pros:**
-- ✅ Enables automation without polling
-- ✅ User controls scheduling externally (cron, systemd timers, etc.)
-- ✅ Separates scheduling concern from application
-- ✅ Flexible integration with user's existing workflows
-
-**Cons:**
-- ⚠️ Requires external IPC communication mechanism
-- ⚠️ Security considerations for IPC exposure
-
-**Verdict:** **Recommended as Phase 2 enhancement** - Provides flexibility without internal scheduling complexity.
 
 ## Recommended Architecture
 
-### Phase 1: User-Triggered Export
+### Philosophy: Minimal Internal Logic
 
-**Scope:** Basic export functionality triggered by user actions.
+**What Teams for Linux should do:**
+- ✅ Expose calendar data via commands/IPC
+- ✅ Return raw Graph API JSON
+- ✅ Provide simple trigger mechanisms
 
-**Components:**
+**What Teams for Linux should NOT do:**
+- ❌ Format conversion (org-mode, CSV, etc.)
+- ❌ Internal scheduling/polling
+- ❌ Complex data transformation
+- ❌ File management logic
 
-1. **CalendarExporter Module** (`app/calendarExport/`)
-   - Export orchestration
-   - Format conversion (org-mode, JSON, CSV)
-   - File writing with error handling
+**Let the user handle:** All formatting, scheduling, and processing externally.
 
-2. **Menu Integration**
-   - Add "Export Calendar..." to app menu
-   - Dialog for export options (date range, format, output path)
+### Implementation: Command-Line Calendar Access
 
-3. **IPC Handler**
-   - `calendar-export` channel for programmatic export
-   - Security validation in `ipcValidator.js`
+**Add a simple CLI command:**
 
-4. **Configuration**
-   ```yaml
-   calendarExport:
-     enabled: true
-     defaultFormat: 'org-mode'
-     defaultPath: '~/calendar-export.org'
-     defaultDaysAhead: 30
-   ```
+```bash
+# Get calendar for next 7 days as JSON
+teams-for-linux --get-calendar --days 7 > calendar.json
 
-**Implementation Steps:**
-
-1. Create `app/calendarExport/index.js` module
-2. Implement org-mode formatter (iterate with user on format)
-3. Add IPC handler and security validation
-4. Add menu item with export dialog
-5. Update documentation
-
-**Estimated Effort:** 1-2 days
-
-### Phase 2: External Integration (Future)
-
-**Scope:** Enable external automation tools to trigger exports.
-
-**Options for IPC Communication:**
-
-1. **Unix Domain Socket** - Local IPC endpoint
-2. **Named Pipes** - Cross-platform IPC
-3. **HTTP Local Server** - Simple REST API on localhost
-4. **MQTT Integration** - Leverage existing MQTT infrastructure
-
-**Recommended:** Leverage existing MQTT infrastructure if user already uses it, otherwise Unix Domain Socket for simplicity.
-
-**Estimated Effort:** 0.5-1 day (depends on IPC mechanism chosen)
-
-## Open Questions for User
-
-Before implementation, we need clarification on:
-
-### 1. Export Format Requirements
-
-**Question:** What specific org-mode format do you need?
-
-**Context:** Org-mode has various formats for events/todos. Examples:
-
-**Option A: Org-mode Agenda Format**
-```org
-* TODO Meeting Title
-  SCHEDULED: <2025-11-27 Wed 14:00-15:00>
-  :PROPERTIES:
-  :LOCATION: Teams Meeting
-  :ORGANIZER: John Doe
-  :ATTENDEES: Jane Smith, Bob Johnson
-  :END:
-
-  Meeting description/notes here
+# User processes externally
+./convert-to-orgmode.sh calendar.json > calendar.org
 ```
 
-**Option B: Simple Headline Format**
-```org
-* 2025-11-27 Wed 14:00 Meeting Title
-** Location: Teams Meeting
-** Attendees: Jane Smith, Bob Johnson
+**Or via IPC for external scripts:**
+
+```bash
+# External script triggers via IPC, receives JSON
+electron-ipc-send teams-for-linux calendar-get-events \
+  --start "2025-11-27" --end "2025-12-04" > events.json
+
+# User's script processes it
+python3 ~/scripts/to_orgmode.py events.json
 ```
 
-**Option C: Custom Format**
-```org
-[Your preferred format]
+### Architecture Diagram
+
+```mermaid
+graph LR
+    A[User CLI Command] --> B[Teams for Linux]
+    C[External Script] --> B
+    B --> D[Graph API Client]
+    D --> E[Microsoft Graph API]
+    E --> D
+    D --> B
+    B --> F[Return Raw JSON]
+    F --> G[User's External Processor]
+    G --> H[Org-mode / CSV / etc.]
 ```
 
-**Need to know:**
-- Preferred headline structure?
-- Include meeting descriptions/notes?
-- Include attendee lists?
-- Include meeting links?
-- Include meeting status (tentative/accepted/declined)?
-- Date/time format preferences?
+**Key point:** Teams for Linux is just a bridge to the Graph API. All logic lives in user's scripts.
 
-### 2. Export Trigger Requirements
+## Implementation Options
 
-**Question:** How do you want to trigger calendar exports?
+### Option 1: CLI Flag (Recommended)
 
-**Options:**
-- [ ] Manual button/menu item in application
-- [ ] Keyboard shortcut
-- [ ] Automatic on app startup
-- [ ] Automatic on app shutdown
-- [ ] External script/automation tool
-- [ ] On-demand via command line
-- [ ] Other: ___________
+**Add to existing CLI:**
 
-**If automatic:** What frequency? (once per session, hourly, etc.)
-
-### 3. Export Scope Requirements
-
-**Question:** What date range should be exported?
-
-**Options:**
-- [ ] Next N days (specify N: ___)
-- [ ] Current week
-- [ ] Current month
-- [ ] Date range (specify: ___)
-- [ ] All upcoming events
-- [ ] Past + future (specify range: ___)
-
-### 4. File Management Requirements
-
-**Question:** How should export files be managed?
-
-**Options:**
-- [ ] Overwrite same file each time
-- [ ] Append to existing file
-- [ ] Create dated files (e.g., `calendar-2025-11-27.org`)
-- [ ] Create separate files per event
-- [ ] Other: ___________
-
-**File path:**
-- Fixed path: ___________
-- Configurable in settings
-- Choose via dialog each time
-
-### 5. Error Handling Requirements
-
-**Question:** What should happen if export fails?
-
-**Options:**
-- [ ] Show desktop notification
-- [ ] Write error to log file only
-- [ ] Retry N times (specify N: ___)
-- [ ] Show error dialog (blocks workflow)
-- [ ] Silent failure (log only)
-
-### 6. Integration Requirements
-
-**Question:** Do you use any automation tools that should integrate with this?
-
-**Context:** Understanding your workflow helps design the right integration points.
-
-- Do you use cron/systemd timers?
-- Do you use home automation (Home Assistant, etc.)?
-- Do you use org-mode in Emacs? (Any specific Emacs integration needs?)
-- Do you use any calendar sync tools already?
-- Would MQTT integration be useful? (existing MQTT feature in Teams for Linux)
-
-### 7. Privacy/Security Requirements
-
-**Question:** Are there any calendar entries you want to exclude?
-
-**Options:**
-- [ ] Export all events
-- [ ] Exclude private events
-- [ ] Exclude events with certain keywords
-- [ ] Only include accepted events
-- [ ] Filter by calendar (if multiple calendars)
-
-### 8. Additional Data Requirements
-
-**Question:** Beyond basic calendar events, what other data interests you?
-
-**Options:**
-- [ ] Tasks/To-Dos from Microsoft To Do
-- [ ] Email metadata (recent messages)
-- [ ] Teams chat presence status
-- [ ] Meeting recordings/transcripts (if available)
-- [ ] Shared files from meetings
-
-**Context:** Helps scope future enhancements.
-
-## Technical Considerations
-
-### Security
-
-1. **File system access** - Need to validate output paths
-2. **IPC security** - Add calendar export channels to allowlist
-3. **Token scoping** - Calendar.Read permission (already available)
-4. **Data sanitization** - Escape special characters in org-mode output
-
-### Performance
-
-1. **Large calendars** - Pagination for calendars with many events
-2. **Network errors** - Retry logic with exponential backoff
-3. **Token expiry** - Handled by existing GraphApiClient
-4. **Concurrent exports** - Prevent multiple simultaneous exports
-
-### Cross-Platform
-
-1. **File paths** - Use `path.resolve()` for cross-platform compatibility
-2. **Line endings** - Respect platform conventions (CRLF vs LF)
-3. **Default paths** - Platform-specific defaults (~/Documents vs %USERPROFILE%\Documents)
-
-## Implementation Risks
-
-### Low Risk
-- ✅ Leveraging existing Graph API infrastructure
-- ✅ Simple file I/O operations
-- ✅ Well-defined Microsoft Graph API endpoints
-
-### Medium Risk
-- ⚠️ Org-mode format specification - may require iteration with user
-- ⚠️ External IPC mechanism - needs careful security design
-- ⚠️ Error handling edge cases - network failures, permission errors
-
-### High Risk
-- ❌ None identified
-
-## Alternative Approaches Considered
-
-### Polling/Scheduled Fetching
-
-**Approach:** Internal timer to periodically fetch and export calendar.
-
-**Example:**
 ```javascript
-setInterval(async () => {
-  await calendarExporter.exportToFile();
-}, 3600000); // Every hour
+// app/startup/commandLine.js
+if (args['get-calendar']) {
+  const days = args['days'] || 7;
+  // Fetch calendar, print JSON to stdout, exit
+  fetchAndPrintCalendar(days);
+  app.quit();
+}
 ```
 
-**Rejected because:**
-- Violates "react to events" principle from user requirements
-- Unnecessary resource usage when calendar unchanged
-- Adds scheduling logic complexity to application
-- User can achieve same result with external cron if desired
+**User workflow:**
+```bash
+teams-for-linux --get-calendar --days 14 | jq . | my-processor.sh
+```
 
-### Direct DOM Scraping
+**Pros:**
+- ✅ Simple, standard CLI pattern
+- ✅ Composable with pipes/scripts
+- ✅ No new IPC channels needed
+- ✅ Can be scripted with cron
 
-**Approach:** Extract calendar data from Teams web UI DOM.
+**Cons:**
+- ⚠️ Requires Teams to be authenticated (may need to handle auth flow)
 
-**Rejected because:**
-- Brittle - Teams DOM changes frequently
-- Graph API provides reliable structured data
-- Already have Graph API integration
-- DOM access has security implications
+### Option 2: IPC Command (Secondary)
 
-### Outlook Integration
+**Expose existing IPC for external access:**
 
-**Approach:** Use Outlook REST API instead of Graph API.
+Already exists! User just needs documentation on how to call from external scripts.
 
-**Rejected because:**
-- Graph API is Outlook REST API v2.0 (superset)
-- Already have Graph API infrastructure
-- No additional benefit
+**User workflow:**
+```bash
+# Using electron-ipc or similar tool
+electron-ipc call teams-for-linux graph-api-get-calendar-view \
+  "2025-11-27T00:00:00Z" "2025-12-04T00:00:00Z"
+```
 
-## Success Metrics
+**Pros:**
+- ✅ Already implemented
+- ✅ No code changes needed
 
-### Phase 1 Success Criteria
+**Cons:**
+- ⚠️ Requires IPC bridge tool
+- ⚠️ Less standard than CLI
 
-1. User can export calendar data via menu action
-2. Output file is valid org-mode format (validated by user)
-3. Export completes within 5 seconds for typical calendars (<100 events)
-4. Clear error messages for common failure cases
-5. No impact on application startup time
+### Option 3: MQTT Publishing (If User Uses MQTT)
 
-### Phase 2 Success Criteria
+**Leverage existing MQTT infrastructure:**
 
-1. External scripts can trigger export reliably
-2. User can automate exports with their preferred scheduling tool
-3. IPC interface is documented and stable
+```javascript
+// On command or schedule
+mqttClient.publish('teams-for-linux/calendar/events', JSON.stringify(events));
+```
 
-## Next Steps
+**Pros:**
+- ✅ Integrates with home automation
+- ✅ Existing infrastructure
 
-1. **Await user responses** to open questions above
-2. **Create PRD** based on user requirements
-3. **Implement Phase 1** (user-triggered export)
-4. **Iterate on format** with user feedback
-5. **Consider Phase 2** based on user needs
+**Cons:**
+- ⚠️ Only useful if user has MQTT
+
+## Data Format
+
+**Return exactly what Graph API returns:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "value": [
+      {
+        "id": "AAMkAGI1...",
+        "subject": "Team Standup",
+        "start": {
+          "dateTime": "2025-11-27T10:00:00.0000000",
+          "timeZone": "UTC"
+        },
+        "end": {
+          "dateTime": "2025-11-27T10:30:00.0000000",
+          "timeZone": "UTC"
+        },
+        "location": {
+          "displayName": "Teams Meeting"
+        },
+        "organizer": {
+          "emailAddress": {
+            "name": "John Doe",
+            "address": "john@example.com"
+          }
+        },
+        "attendees": [...],
+        "onlineMeeting": {
+          "joinUrl": "https://teams.microsoft.com/l/meetup/..."
+        }
+      }
+    ]
+  }
+}
+```
+
+**User converts externally** with their own script (Python, shell, whatever).
+
+## Implementation Steps
+
+### Phase 1: CLI Access (Minimal)
+
+1. Add `--get-calendar` CLI flag
+2. Add `--days N` option (default: 7)
+3. Print raw JSON to stdout
+4. Document usage
+5. User handles everything else
+
+**Estimated effort:** 2-4 hours
+
+### Phase 2: MQTT Integration (If Requested)
+
+1. Add command to publish calendar to MQTT topic
+2. User subscribes and processes
+3. Document usage
+
+**Estimated effort:** 1-2 hours
+
+## Questions for User
+
+### 1. Trigger Mechanism ⭐
+
+**How do you want to retrieve calendar data?**
+
+- [ ] CLI command (e.g., `teams-for-linux --get-calendar`)
+- [ ] Existing IPC (call from external script)
+- [ ] MQTT publish (if you use MQTT)
+- [ ] Other: ___________
+
+### 2. Date Range ⭐
+
+**What date range should be retrieved?**
+
+- [ ] Next N days (specify: ___)
+- [ ] Specific start/end dates (passed as arguments)
+- [ ] Doesn't matter, I'll specify each time
+- [ ] Other: ___________
+
+### 3. Your Processing Workflow
+
+**What will you do with the JSON data?**
+
+Example: "I'll run `teams-for-linux --get-calendar | python3 ~/scripts/to_orgmode.py > calendar.org`"
+
+Your workflow:
+```
+[Describe briefly]
+```
+
+### 4. Scheduling
+
+**How will you schedule/trigger this?**
+
+- [ ] Manually when needed
+- [ ] Cron job (I'll set up)
+- [ ] Systemd timer (I'll set up)
+- [ ] Home automation (I'll set up)
+- [ ] Other: ___________
+
+## Implementation Risk
+
+**Low risk:**
+- ✅ Minimal code changes
+- ✅ Uses existing Graph API client
+- ✅ No complex logic
+- ✅ No file I/O (just stdout)
+- ✅ User controls everything
+
+## Success Criteria
+
+1. User can retrieve calendar data as JSON
+2. Data includes all Graph API fields
+3. User can pipe output to their own processor
+4. No internal formatting/transformation logic
 
 ## References
 
-- [Issue #1995 - Calendar Data Access](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
-- [Issue #1832 - Graph API Integration](https://github.com/IsmaelMartinez/teams-for-linux/issues/1832)
+- [Issue #1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
 - [Microsoft Graph Calendar API](https://learn.microsoft.com/en-us/graph/api/resources/calendar)
-- [Microsoft Graph Change Notifications](https://learn.microsoft.com/en-us/graph/webhooks)
-- [Org-mode Manual - Timestamps](https://orgmode.org/manual/Timestamps.html)
-- [Existing Research: Graph API Integration](graph-api-integration-research.md)
+- [Existing Graph API Integration](graph-api-integration-research.md)
