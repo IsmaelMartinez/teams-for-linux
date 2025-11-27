@@ -169,7 +169,7 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 |--------|---------------|-------------|
 | `toggle-mute` | Ctrl+Shift+M | Toggle microphone mute/unmute |
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
-| `raise-hand` | Ctrl+Shift+K | Raise/lower hand in meeting |
+| `toggle-hand-raise` | Ctrl+Shift+K | Toggle hand raise in meeting |
 
 ### Sending Commands
 
@@ -182,8 +182,8 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-mute"}' -q 1
 # Toggle video
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 1
 
-# Raise hand
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand"}' -q 1
+# Toggle hand raise
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
 ```
 
 #### System Keyboard Shortcuts
@@ -218,7 +218,7 @@ chmod +x ~/.local/bin/teams-toggle-mute
 
 Commands are validated with multiple security measures:
 
-- **Action Whitelist**: Only the three supported actions are allowed
+- **Action Whitelist**: Only the supported actions are allowed
 - **JSON Validation**: Commands must be valid JSON
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
@@ -345,7 +345,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 - Ensure the command topic is correct (`teams/command` by default)
 - Check application logs for validation errors
 - Verify JSON is valid (use a JSON validator)
-- Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
+- Ensure action is in the whitelist: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
 - Check spelling and case sensitivity (use lowercase with hyphens)
 
 #### Window Not Available Error
@@ -476,14 +476,14 @@ Commands are validated with multiple security layers:
 #### 2. Message Validation
 - **JSON Parsing**: Validates message is valid JSON
 - **Structure Check**: Ensures `action` field exists and is a string
-- **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `raise-hand`
+- **Action Whitelist**: Only allows: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
 
 #### 3. Command Execution
 - **Location**: `app/index.js` command handler
 - Maps action to Teams keyboard shortcut:
   - `toggle-mute` → Ctrl+Shift+M
   - `toggle-video` → Ctrl+Shift+O
-  - `raise-hand` → Ctrl+Shift+K
+  - `toggle-hand-raise` → Ctrl+Shift+K
 - Sends keyboard events to Teams window via `sendKeyboardEventToWindow`
 - **Location**: `app/globalShortcuts/index.js` for keyboard event generation
 

@@ -101,7 +101,7 @@ Command messages should be sent as JSON with the following structure:
 
 - `toggle-mute` - Toggle microphone mute (Ctrl+Shift+M)
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
-- `raise-hand` - Raise/lower hand in meeting (Ctrl+Shift+K)
+- `toggle-hand-raise` - Toggle hand raise in meeting (Ctrl+Shift+K)
 
 #### Command Security
 
@@ -121,8 +121,8 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-mute"}' -q 1
 # Toggle video
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 1
 
-# Raise hand
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand"}' -q 1
+# Toggle hand raise
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
 ```
 
 ## Testing
@@ -153,7 +153,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-mute"}' -q 1
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 1
 
 # Test with timestamp and requestId
-mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timestamp":"2025-01-15T10:30:00Z","requestId":"test-123"}' -q 1
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise","timestamp":"2025-01-15T10:30:00Z","requestId":"test-123"}' -q 1
 ```
 
 **Expected behavior:**
@@ -179,7 +179,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"raise-hand","timest
    - Ensure JSON is valid (use a JSON validator)
 
 2. **Invalid Action Errors**:
-   - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `raise-hand`
+   - Verify action is in the whitelist: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
    - Check spelling and case sensitivity (use lowercase with hyphens)
 
 3. **Window Not Available**:
