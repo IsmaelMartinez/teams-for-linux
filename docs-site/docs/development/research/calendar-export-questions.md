@@ -8,34 +8,20 @@
 
 Teams for Linux will:
 - ✅ Give you raw calendar data as JSON (exactly what Microsoft Graph API returns)
-- ✅ Provide a way to trigger retrieval (MQTT command or IPC)
+- ✅ Provide MQTT command to trigger retrieval
 - ❌ NOT do any formatting, conversion, or processing
 
 **You handle everything else externally** - format conversion, scheduling, file management, etc.
 
-## 4 Simple Questions
+## Implementation: MQTT Command
 
-### 1. How do you want to get the data? ⭐
+**Trigger:** Send MQTT command `get-calendar`
+**Response:** Teams publishes raw JSON to `teams/calendar` topic
+**Processing:** You subscribe and pipe to your own converter
 
-**Pick your preferred trigger method:**
+## 3 Quick Questions
 
-- [ ] **MQTT command** (recommended)
-  - Send: `mosquitto_pub -t teams/command -m '{"action":"get-calendar","days":7}'`
-  - Receive: Subscribe to `teams/calendar` topic, pipe to your processor
-  - Can be scheduled with cron
-  - Integrates with home automation
-  - **Requires:** MQTT broker (mosquitto)
-
-- [ ] **IPC** (already works, just needs documentation)
-  - Call existing `graph-api-get-calendar-view` IPC channel
-  - No broker needed
-  - **Requires:** Node.js/Electron tooling
-
-- [ ] **Don't care** - Implement both, I'll choose later
-
-**Note:** CLI commands (e.g., `teams-for-linux --get-calendar`) are not possible due to architectural constraints (see [ADR-006](../adr/006-cli-argument-parsing-library.md)).
-
-### 2. What date range? ⭐
+### 1. Date Range ⭐
 
 **What calendar range should be retrieved?**
 
@@ -44,19 +30,19 @@ Teams for Linux will:
 - [ ] Don't care, make it configurable
 - [ ] Other: ___________
 
-### 3. Your workflow?
+### 2. Your Workflow ⭐
 
 **Briefly describe what you'll do with the JSON data:**
 
 Example:
-> "I'll run a cron job at 6am that sends MQTT command: `mosquitto_pub -t teams/command -m '{"action":"get-calendar","days":7}'`. I have another script that subscribes to `teams/calendar` topic and pipes output to my Python script: `mosquitto_sub -t teams/calendar | python3 ~/to_orgmode.py > ~/org/calendar.org`. Emacs reads that file."
+> "I'll run a cron job at 6am that sends MQTT command. I have another script that subscribes to `teams/calendar` and pipes output to my Python script that converts to org-mode and saves to `~/org/calendar.org`. Emacs reads that file."
 
 Your workflow:
 ```
 [Describe here]
 ```
 
-### 4. Scheduling?
+### 3. Scheduling
 
 **How will you trigger the data retrieval?**
 
@@ -66,21 +52,27 @@ Your workflow:
 - [ ] Home automation system (I'll set up)
 - [ ] Other: ___________
 
-## Example: MQTT Workflow
+## MQTT Workflow
 
 **1. User sends command:**
 ```bash
 mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
 ```
 
-**2. Teams for Linux receives command, fetches calendar, publishes to `teams/calendar` topic**
+**2. Teams for Linux receives command, fetches calendar from Graph API**
 
-**3. User subscribes and processes:**
+**3. Teams publishes raw JSON to `teams/calendar` topic**
+
+**4. User subscribes and processes:**
 ```bash
-mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/my_processor.py
+# One-time retrieval
+mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > calendar.org
+
+# Or persistent subscriber
+mosquitto_sub -h localhost -t teams/calendar | python3 ~/processor.py
 ```
 
-**4. User's Python script converts to org-mode:**
+**5. User's Python script converts to org-mode:**
 ```python
 #!/usr/bin/env python3
 import json
@@ -88,9 +80,15 @@ import sys
 
 data = json.load(sys.stdin)
 for event in data['data']['value']:
-    print(f"* {event['subject']}")
-    print(f"  SCHEDULED: <{event['start']['dateTime']}>")
-    print(f"  Location: {event['location']['displayName']}")
+    subject = event['subject']
+    start = event['start']['dateTime']
+    location = event['location']['displayName']
+
+    print(f"* {subject}")
+    print(f"  SCHEDULED: <{start}>")
+    print(f"  :PROPERTIES:")
+    print(f"  :LOCATION: {location}")
+    print(f"  :END:")
     print()
 ```
 
@@ -146,13 +144,15 @@ for event in data['data']['value']:
 
 ## That's It!
 
-Answer those 4 questions and we're good to go. Implementation is probably 2-3 hours for MQTT, or 0 hours for IPC (just documentation).
+Answer those 3 questions and we're good to go.
+
+**Implementation estimate:** 2-3 hours
 
 ## Next Steps
 
 Once you answer:
-1. We implement the MQTT command handler (if you choose MQTT)
-2. We document the IPC approach (if you choose IPC)
+1. We implement the MQTT `get-calendar` command handler
+2. We document the workflow
 3. You write your external processing script
 4. Done!
 
