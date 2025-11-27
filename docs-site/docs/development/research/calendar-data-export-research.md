@@ -32,24 +32,14 @@ Teams for Linux has Graph API integration (Phase 1 complete):
   - `graph-api-get-calendar-events`
   - `graph-api-get-calendar-view`
 
-**User can already access calendar data today** via IPC calls:
-
-```javascript
-// From renderer/external script
-const result = await ipcRenderer.invoke('graph-api-get-calendar-view',
-  '2025-11-27T00:00:00Z',
-  '2025-12-27T00:00:00Z'
-);
-
-console.log(result.data.value); // Raw Graph API JSON
-```
+**User can already access calendar data today** via IPC calls (just needs documentation).
 
 ## Recommended Architecture
 
 ### Philosophy: Minimal Internal Logic
 
 **What Teams for Linux should do:**
-- ✅ Expose calendar data via commands/IPC
+- ✅ Expose calendar data via MQTT or IPC
 - ✅ Return raw Graph API JSON
 - ✅ Provide simple trigger mechanisms
 
@@ -61,112 +51,173 @@ console.log(result.data.value); // Raw Graph API JSON
 
 **Let the user handle:** All formatting, scheduling, and processing externally.
 
-### Implementation: Command-Line Calendar Access
+### Architectural Constraints
 
-**Add a simple CLI command:**
+Per [ADR-006](../adr/006-cli-argument-parsing-library.md):
+- ❌ **Cannot add CLI action commands** (e.g., `teams-for-linux --get-calendar`)
+  - Conflicts with meeting URL positional arguments
+  - Would require fragile pre-parsing
+  - High risk of breaking existing functionality
 
-```bash
-# Get calendar for next 7 days as JSON
-teams-for-linux --get-calendar --days 7 > calendar.json
-
-# User processes externally
-./convert-to-orgmode.sh calendar.json > calendar.org
-```
-
-**Or via IPC for external scripts:**
-
-```bash
-# External script triggers via IPC, receives JSON
-electron-ipc-send teams-for-linux calendar-get-events \
-  --start "2025-11-27" --end "2025-12-04" > events.json
-
-# User's script processes it
-python3 ~/scripts/to_orgmode.py events.json
-```
-
-### Architecture Diagram
-
-```mermaid
-graph LR
-    A[User CLI Command] --> B[Teams for Linux]
-    C[External Script] --> B
-    B --> D[Graph API Client]
-    D --> E[Microsoft Graph API]
-    E --> D
-    D --> B
-    B --> F[Return Raw JSON]
-    F --> G[User's External Processor]
-    G --> H[Org-mode / CSV / etc.]
-```
-
-**Key point:** Teams for Linux is just a bridge to the Graph API. All logic lives in user's scripts.
+**Approved mechanisms:**
+- ✅ MQTT commands (recommended, already used for actions)
+- ✅ IPC channels (already exist for calendar)
 
 ## Implementation Options
 
-### Option 1: CLI Flag (Recommended)
+### Option 1: MQTT Command (Recommended)
 
-**Add to existing CLI:**
+**Leverages existing MQTT infrastructure** (per [MQTT Commands Implementation](mqtt-commands-implementation.md)):
+
+**User triggers export via MQTT command:**
+
+```bash
+# User sends command to get calendar
+mosquitto_pub -h localhost -t teams/command -m '{
+  "action": "get-calendar",
+  "days": 7
+}'
+```
+
+**Teams publishes calendar data to response topic:**
+
+```bash
+# Teams publishes to teams/calendar topic
+# User subscribes and pipes to their processor
+mosquitto_sub -h localhost -t teams/calendar | python3 ~/to_orgmode.py
+```
+
+**Architecture:**
+
+```mermaid
+graph LR
+    A[User Script/Cron] --> B[MQTT Pub: teams/command]
+    B --> C[Teams for Linux]
+    C --> D[Graph API Client]
+    D --> E[Microsoft Graph]
+    E --> D
+    D --> C
+    C --> F[MQTT Pub: teams/calendar]
+    F --> G[User Subscribes]
+    G --> H[User's Processor]
+    H --> I[Org-mode/CSV/etc]
+```
+
+**Implementation:**
 
 ```javascript
-// app/startup/commandLine.js
-if (args['get-calendar']) {
-  const days = args['days'] || 7;
-  // Fetch calendar, print JSON to stdout, exit
-  fetchAndPrintCalendar(days);
-  app.quit();
+// app/mqtt/index.js - Add command handler
+async handleCommand(message) {
+  const command = JSON.parse(message);
+
+  if (command.action === 'get-calendar') {
+    const days = command.days || 7;
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+
+    const result = await this.graphApiClient.getCalendarView(
+      startDate.toISOString(),
+      endDate.toISOString()
+    );
+
+    // Publish raw Graph API JSON
+    this.client.publish('teams/calendar', JSON.stringify(result));
+  }
 }
 ```
 
 **User workflow:**
+
 ```bash
-teams-for-linux --get-calendar --days 14 | jq . | my-processor.sh
+# 1. User creates script to request calendar
+#!/bin/bash
+mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
+
+# 2. User subscribes and processes
+mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > calendar.org
+
+# 3. User schedules with cron
+0 6 * * * /home/user/scripts/fetch-calendar.sh
 ```
 
 **Pros:**
-- ✅ Simple, standard CLI pattern
-- ✅ Composable with pipes/scripts
-- ✅ No new IPC channels needed
-- ✅ Can be scripted with cron
+- ✅ Follows established MQTT pattern (ADR-006, ADR-007)
+- ✅ Minimal code changes (~20 lines)
+- ✅ Integrates with home automation
+- ✅ Event-driven (no internal scheduling)
+- ✅ User controls everything externally
 
 **Cons:**
-- ⚠️ Requires Teams to be authenticated (may need to handle auth flow)
+- ⚠️ Requires MQTT broker (but many users already have one)
+- ⚠️ Slightly more setup than direct IPC
 
-### Option 2: IPC Command (Secondary)
+**Estimated effort:** 2-3 hours
 
-**Expose existing IPC for external access:**
+### Option 2: IPC Documentation (Zero Implementation)
 
-Already exists! User just needs documentation on how to call from external scripts.
+**Expose existing IPC channels with documentation:**
+
+Already implemented! Just document how external scripts can call the IPC channels.
 
 **User workflow:**
-```bash
-# Using electron-ipc or similar tool
-electron-ipc call teams-for-linux graph-api-get-calendar-view \
-  "2025-11-27T00:00:00Z" "2025-12-04T00:00:00Z"
+
+```javascript
+// External Node.js script
+const { ipcRenderer } = require('electron');
+
+const startDate = new Date();
+const endDate = new Date();
+endDate.setDate(endDate.getDate() + 7);
+
+const result = await ipcRenderer.invoke(
+  'graph-api-get-calendar-view',
+  startDate.toISOString(),
+  endDate.toISOString()
+);
+
+// User processes result.data.value
+console.log(JSON.stringify(result.data.value));
 ```
 
 **Pros:**
 - ✅ Already implemented
-- ✅ No code changes needed
+- ✅ Zero code changes needed
+- ✅ Direct access, no broker needed
 
 **Cons:**
-- ⚠️ Requires IPC bridge tool
-- ⚠️ Less standard than CLI
+- ⚠️ Requires Node.js/Electron IPC mechanism
+- ⚠️ Less standard than MQTT for automation
+- ⚠️ Harder to integrate with non-JS tools
 
-### Option 3: MQTT Publishing (If User Uses MQTT)
+**Estimated effort:** 0 hours (documentation only)
 
-**Leverage existing MQTT infrastructure:**
+### Option 3: MQTT Auto-Publish (Optional Enhancement)
+
+**Periodically publish calendar to MQTT topic:**
 
 ```javascript
-// On command or schedule
-mqttClient.publish('teams-for-linux/calendar/events', JSON.stringify(events));
+// Publish calendar every N minutes
+setInterval(async () => {
+  const result = await this.graphApiClient.getCalendarView(...);
+  this.client.publish('teams/calendar', JSON.stringify(result));
+}, config.mqtt.calendarPublishInterval || 30 * 60 * 1000);
+```
+
+**User subscribes and processes whenever published:**
+
+```bash
+mosquitto_sub -h localhost -t teams/calendar | python3 ~/to_orgmode.py
 ```
 
 **Pros:**
-- ✅ Integrates with home automation
-- ✅ Existing infrastructure
+- ✅ Push model (user doesn't trigger)
+- ✅ Always up-to-date
 
 **Cons:**
-- ⚠️ Only useful if user has MQTT
+- ❌ Adds internal scheduling (violates "react to events" principle)
+- ❌ Wastes API calls if user doesn't need frequent updates
+- ❌ Not recommended
 
 ## Data Format
 
@@ -198,6 +249,7 @@ mqttClient.publish('teams-for-linux/calendar/events', JSON.stringify(events));
           }
         },
         "attendees": [...],
+        "bodyPreview": "Meeting description...",
         "onlineMeeting": {
           "joinUrl": "https://teams.microsoft.com/l/meetup/..."
         }
@@ -211,23 +263,23 @@ mqttClient.publish('teams-for-linux/calendar/events', JSON.stringify(events));
 
 ## Implementation Steps
 
-### Phase 1: CLI Access (Minimal)
+### Phase 1: MQTT Command Handler
 
-1. Add `--get-calendar` CLI flag
-2. Add `--days N` option (default: 7)
-3. Print raw JSON to stdout
-4. Document usage
-5. User handles everything else
+1. Add `get-calendar` command to MQTT command handler
+2. Validate command parameters (days, date range)
+3. Fetch from Graph API
+4. Publish raw JSON to `teams/calendar` topic
+5. Document usage
 
-**Estimated effort:** 2-4 hours
+**Estimated effort:** 2-3 hours
 
-### Phase 2: MQTT Integration (If Requested)
+### Phase 2: Documentation
 
-1. Add command to publish calendar to MQTT topic
-2. User subscribes and processes
-3. Document usage
+1. Document MQTT workflow
+2. Provide example scripts (Python converter to org-mode)
+3. Document existing IPC approach as alternative
 
-**Estimated effort:** 1-2 hours
+**Estimated effort:** 1 hour
 
 ## Questions for User
 
@@ -235,25 +287,33 @@ mqttClient.publish('teams-for-linux/calendar/events', JSON.stringify(events));
 
 **How do you want to retrieve calendar data?**
 
-- [ ] CLI command (e.g., `teams-for-linux --get-calendar`)
-- [ ] Existing IPC (call from external script)
-- [ ] MQTT publish (if you use MQTT)
-- [ ] Other: ___________
+- [ ] **MQTT command** - Send `get-calendar` command, receive on `teams/calendar` topic
+  - Integrates with home automation
+  - Can be scheduled with cron
+  - Requires MQTT broker
+
+- [ ] **IPC** - Call existing `graph-api-get-calendar-view` from external script
+  - No broker needed
+  - Requires Node.js/Electron tooling
+  - Already works today
+
+- [ ] **Don't care** - Implement both, I'll choose later
 
 ### 2. Date Range ⭐
 
 **What date range should be retrieved?**
 
 - [ ] Next N days (specify: ___)
-- [ ] Specific start/end dates (passed as arguments)
-- [ ] Doesn't matter, I'll specify each time
+- [ ] I'll specify start/end dates each time as command parameters
+- [ ] Doesn't matter, make it configurable
 - [ ] Other: ___________
 
 ### 3. Your Processing Workflow
 
 **What will you do with the JSON data?**
 
-Example: "I'll run `teams-for-linux --get-calendar | python3 ~/scripts/to_orgmode.py > calendar.org`"
+Example:
+> "I'll run a cron job at 6am that sends MQTT command to get next 7 days. I subscribe to teams/calendar topic and pipe to my Python script that converts to org-mode and saves to ~/org/calendar.org. Emacs reads that file."
 
 Your workflow:
 ```
@@ -264,30 +324,34 @@ Your workflow:
 
 **How will you schedule/trigger this?**
 
-- [ ] Manually when needed
+- [ ] Manual (I'll run command when I need it)
 - [ ] Cron job (I'll set up)
 - [ ] Systemd timer (I'll set up)
-- [ ] Home automation (I'll set up)
+- [ ] Home automation system (I'll set up)
 - [ ] Other: ___________
 
 ## Implementation Risk
 
 **Low risk:**
-- ✅ Minimal code changes
+- ✅ Minimal code changes (~20 lines for MQTT)
 - ✅ Uses existing Graph API client
+- ✅ Uses existing MQTT infrastructure
 - ✅ No complex logic
-- ✅ No file I/O (just stdout)
 - ✅ User controls everything
 
 ## Success Criteria
 
-1. User can retrieve calendar data as JSON
+1. User can retrieve calendar data as JSON via MQTT or IPC
 2. Data includes all Graph API fields
-3. User can pipe output to their own processor
+3. User can process output with their own tools
 4. No internal formatting/transformation logic
+5. No internal scheduling (user controls when to fetch)
 
 ## References
 
 - [Issue #1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
+- [ADR-006: CLI Argument Parsing](../adr/006-cli-argument-parsing-library.md) - Why CLI commands are rejected
+- [ADR-007: Embedded MQTT Broker](../adr/007-embedded-mqtt-broker.md) - MQTT architecture decisions
+- [MQTT Commands Implementation](mqtt-commands-implementation.md) - Existing MQTT command pattern
 - [Microsoft Graph Calendar API](https://learn.microsoft.com/en-us/graph/api/resources/calendar)
 - [Existing Graph API Integration](graph-api-integration-research.md)

@@ -8,7 +8,7 @@
 
 Teams for Linux will:
 - ✅ Give you raw calendar data as JSON (exactly what Microsoft Graph API returns)
-- ✅ Provide a way to trigger retrieval (CLI, IPC, or MQTT)
+- ✅ Provide a way to trigger retrieval (MQTT command or IPC)
 - ❌ NOT do any formatting, conversion, or processing
 
 **You handle everything else externally** - format conversion, scheduling, file management, etc.
@@ -19,26 +19,28 @@ Teams for Linux will:
 
 **Pick your preferred trigger method:**
 
-- [ ] **CLI command** - `teams-for-linux --get-calendar --days 7 > calendar.json`
-  - Then you run your own script: `./my-converter.py calendar.json`
-  - Can be used in cron jobs, scripts, etc.
+- [ ] **MQTT command** (recommended)
+  - Send: `mosquitto_pub -t teams/command -m '{"action":"get-calendar","days":7}'`
+  - Receive: Subscribe to `teams/calendar` topic, pipe to your processor
+  - Can be scheduled with cron
+  - Integrates with home automation
+  - **Requires:** MQTT broker (mosquitto)
 
-- [ ] **IPC** - Call existing `graph-api-get-calendar-view` from external script
-  - Already works today, just needs documentation
-  - Requires IPC bridge tool
+- [ ] **IPC** (already works, just needs documentation)
+  - Call existing `graph-api-get-calendar-view` IPC channel
+  - No broker needed
+  - **Requires:** Node.js/Electron tooling
 
-- [ ] **MQTT** - Publish calendar data to MQTT topic
-  - e.g., `teams-for-linux/calendar/events` topic with JSON payload
-  - Good if you use home automation
+- [ ] **Don't care** - Implement both, I'll choose later
 
-- [ ] **Other**: ___________
+**Note:** CLI commands (e.g., `teams-for-linux --get-calendar`) are not possible due to architectural constraints (see [ADR-006](../adr/006-cli-argument-parsing-library.md)).
 
 ### 2. What date range? ⭐
 
 **What calendar range should be retrieved?**
 
 - [ ] Next N days (specify N: ___)
-- [ ] I'll specify start/end dates each time as arguments
+- [ ] I'll specify start/end dates each time as command parameters
 - [ ] Don't care, make it configurable
 - [ ] Other: ___________
 
@@ -47,7 +49,7 @@ Teams for Linux will:
 **Briefly describe what you'll do with the JSON data:**
 
 Example:
-> "I'll run `teams-for-linux --get-calendar` daily via cron at 6am. Output goes to a Python script that converts to org-mode and saves to `~/org/calendar.org`. Emacs reads that file."
+> "I'll run a cron job at 6am that sends MQTT command: `mosquitto_pub -t teams/command -m '{"action":"get-calendar","days":7}'`. I have another script that subscribes to `teams/calendar` topic and pipes output to my Python script: `mosquitto_sub -t teams/calendar | python3 ~/to_orgmode.py > ~/org/calendar.org`. Emacs reads that file."
 
 Your workflow:
 ```
@@ -63,6 +65,34 @@ Your workflow:
 - [ ] Systemd timer (I'll set up)
 - [ ] Home automation system (I'll set up)
 - [ ] Other: ___________
+
+## Example: MQTT Workflow
+
+**1. User sends command:**
+```bash
+mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
+```
+
+**2. Teams for Linux receives command, fetches calendar, publishes to `teams/calendar` topic**
+
+**3. User subscribes and processes:**
+```bash
+mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/my_processor.py
+```
+
+**4. User's Python script converts to org-mode:**
+```python
+#!/usr/bin/env python3
+import json
+import sys
+
+data = json.load(sys.stdin)
+for event in data['data']['value']:
+    print(f"* {event['subject']}")
+    print(f"  SCHEDULED: <{event['start']['dateTime']}>")
+    print(f"  Location: {event['location']['displayName']}")
+    print()
+```
 
 ## Example JSON Output
 
@@ -116,14 +146,15 @@ Your workflow:
 
 ## That's It!
 
-Answer those 4 questions and we're good to go. Implementation is probably 2-4 hours.
+Answer those 4 questions and we're good to go. Implementation is probably 2-3 hours for MQTT, or 0 hours for IPC (just documentation).
 
 ## Next Steps
 
 Once you answer:
-1. We implement the trigger mechanism you chose
-2. You write your external processing script
-3. Done!
+1. We implement the MQTT command handler (if you choose MQTT)
+2. We document the IPC approach (if you choose IPC)
+3. You write your external processing script
+4. Done!
 
 ---
 
