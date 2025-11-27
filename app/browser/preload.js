@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
-    
+
     // Initialize ActivityManager
     try {
       const ActivityManager = require("./notifications/activityManager");
@@ -374,7 +374,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error("Preload: ActivityManager failed to initialize:", err.message);
     }
-    
+
+    // Listen for config changes from the main process (e.g., when menu toggles are clicked)
+    ipcRenderer.on("config-changed", (_event, configChanges) => {
+      console.debug("Preload: Received config-changed event", configChanges);
+      // Update the local config object with the changes
+      for (const key in configChanges) {
+        if (Object.prototype.hasOwnProperty.call(configChanges, key)) {
+          config[key] = configChanges[key];
+          console.debug(`Preload: Updated config.${key} to ${configChanges[key]}`);
+        }
+      }
+    });
+
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }

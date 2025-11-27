@@ -239,6 +239,20 @@ class Menus {
     this.updateMenu();
   }
 
+  toggleDisableBadgeCount() {
+    this.configGroup.startupConfig.disableBadgeCount =
+      !this.configGroup.startupConfig.disableBadgeCount;
+    this.configGroup.legacyConfigStore.set(
+      "disableBadgeCount",
+      this.configGroup.startupConfig.disableBadgeCount
+    );
+    // Notify renderer process of config change
+    this.window.webContents.send("config-changed", {
+      disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
+    });
+    this.updateMenu();
+  }
+
   setNotificationUrgency(value) {
     this.configGroup.startupConfig.defaultNotificationUrgency = value;
     this.configGroup.legacyConfigStore.set("defaultNotificationUrgency", value);
