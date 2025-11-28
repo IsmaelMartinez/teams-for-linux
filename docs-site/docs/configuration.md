@@ -86,11 +86,11 @@ Place your `config.json` file in the appropriate location based on your installa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableNotifications` | `boolean` | `false` | Disable all notifications (can also be toggled via menu: Notifications > Disable All Notifications) |
-| `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound (can also be toggled via menu: Notifications > Disable Notifications Sound) |
-| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available (can also be toggled via menu) |
-| `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification (can also be toggled via menu) |
-| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon (can also be toggled via menu: Notifications > Disable Badge Count) |
+| `disableNotifications` | `boolean` | `false` | Disable all notifications |
+| `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
+| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
+| `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
+| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 | `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
