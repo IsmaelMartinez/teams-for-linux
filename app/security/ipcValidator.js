@@ -9,7 +9,8 @@
 const allowedChannels = new Set([
   // Core application channels
   'config-file-changed',
-  'get-config', 
+  'config-changed',
+  'get-config',
   'get-system-idle-state',
   'get-app-version',
   
