@@ -1,1 +1,0 @@
-Add menu toggle for badge count notification setting - by @IsmaelMartinez (#2000)

@@ -1,1 +1,0 @@
-Display research docs in side panel - by @IsmaelMartinez (#1993)

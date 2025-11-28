@@ -1,1 +1,0 @@
-Change raise-hand command to toggle-hand-raise - by @IsmaelMartinez (#1997)

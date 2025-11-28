@@ -1,1 +1,0 @@
-Remove [skip ci] from changelog generator to enable PR merging - by @IsmaelMartinez (#1999)
