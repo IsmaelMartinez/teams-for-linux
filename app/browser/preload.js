@@ -379,11 +379,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     ipcRenderer.on("config-changed", (_event, configChanges) => {
       console.debug("Preload: Received config-changed event", configChanges);
       // Update the local config object with the changes
-      for (const key in configChanges) {
-        if (Object.prototype.hasOwnProperty.call(configChanges, key)) {
-          config[key] = configChanges[key];
-          console.debug(`Preload: Updated config.${key} to ${configChanges[key]}`);
-        }
+      for (const [key, value] of Object.entries(configChanges)) {
+        config[key] = value;
+        console.debug(`Preload: Updated config.${key} to ${value}`);
       }
     });
 
