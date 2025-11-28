@@ -74,6 +74,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/006-cli-argument-parsing-library',
             'development/adr/007-embedded-mqtt-broker',
             'development/adr/008-usesystempicker-electron-38',
+            'development/adr/009-multiple-windows-support',
           ],
         },
         {
@@ -83,6 +84,8 @@ const sidebars: SidebarsConfig = {
             'development/research/README',
             'development/research/automated-testing-strategy',
             'development/research/architecture-modernization-research',
+            'development/research/chat-modal-investigation',
+            'development/research/chat-modal-spikes-and-gaps',
             'development/research/custom-notification-system-research',
             'development/research/dom-access-investigation',
             'development/research/electron-38-migration-analysis',
