@@ -1,100 +1,108 @@
-# Calendar Export - User Questions
+# Calendar Export - Implementation Proposal
 
 **Related Issue**: [#1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
 **Research Document**: [calendar-data-export-research.md](calendar-data-export-research.md)
 **Date**: 2025-11-27
 
-## Simple Approach
+## What We'll Implement
 
-Teams for Linux will:
-- ✅ Give you raw calendar data as JSON (exactly what Microsoft Graph API returns)
-- ✅ Provide MQTT command to trigger retrieval
-- ❌ NOT do any formatting, conversion, or processing
+Add MQTT command `get-calendar` that returns raw Microsoft Graph API calendar JSON.
 
-**You handle everything else externally** - format conversion, scheduling, file management, etc.
+**Implementation:** ~20 lines in `app/mqtt/index.js`
+**Effort:** 2-3 hours
 
-## Implementation: MQTT Command
+## What You'll Do
 
-**Trigger:** Send MQTT command `get-calendar`
-**Response:** Teams publishes raw JSON to `teams/calendar` topic
-**Processing:** You subscribe and pipe to your own converter
+### 1. Send MQTT Command to Get Calendar
 
-## 3 Quick Questions
-
-### 1. Date Range ⭐
-
-**What calendar range should be retrieved?**
-
-- [ ] Next N days (specify N: ___)
-- [ ] I'll specify start/end dates each time as command parameters
-- [ ] Don't care, make it configurable
-- [ ] Other: ___________
-
-### 2. Your Workflow ⭐
-
-**Briefly describe what you'll do with the JSON data:**
-
-Example:
-> "I'll run a cron job at 6am that sends MQTT command. I have another script that subscribes to `teams/calendar` and pipes output to my Python script that converts to org-mode and saves to `~/org/calendar.org`. Emacs reads that file."
-
-Your workflow:
-```
-[Describe here]
-```
-
-### 3. Scheduling
-
-**How will you trigger the data retrieval?**
-
-- [ ] Manual (I'll run command when I need it)
-- [ ] Cron job (I'll set up)
-- [ ] Systemd timer (I'll set up)
-- [ ] Home automation system (I'll set up)
-- [ ] Other: ___________
-
-## MQTT Workflow
-
-**1. User sends command:**
 ```bash
-mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
+mosquitto_pub -h localhost -t teams/command -m '{
+  "action": "get-calendar",
+  "days": 7
+}'
 ```
 
-**2. Teams for Linux receives command, fetches calendar from Graph API**
+### 2. Subscribe to Receive Calendar Data
 
-**3. Teams publishes raw JSON to `teams/calendar` topic**
-
-**4. User subscribes and processes:**
 ```bash
 # One-time retrieval
-mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > calendar.org
+mosquitto_sub -h localhost -t teams/calendar -C 1 > calendar.json
 
 # Or persistent subscriber
-mosquitto_sub -h localhost -t teams/calendar | python3 ~/processor.py
+mosquitto_sub -h localhost -t teams/calendar > calendar.json
 ```
 
-**5. User's Python script converts to org-mode:**
+### 3. Convert to Org-Mode (Your Script)
+
+Create your own converter, e.g., `~/scripts/to_orgmode.py`:
+
 ```python
 #!/usr/bin/env python3
 import json
 import sys
+from datetime import datetime
 
+# Read JSON from stdin
 data = json.load(sys.stdin)
+
+# Convert each event to org-mode
 for event in data['data']['value']:
     subject = event['subject']
     start = event['start']['dateTime']
-    location = event['location']['displayName']
+    end = event['end']['dateTime']
+    location = event.get('location', {}).get('displayName', 'No location')
 
+    # Format as org-mode
     print(f"* {subject}")
-    print(f"  SCHEDULED: <{start}>")
+    print(f"  SCHEDULED: <{start[:10]} {start[11:16]}-{end[11:16]}>")
     print(f"  :PROPERTIES:")
     print(f"  :LOCATION: {location}")
+    if 'onlineMeeting' in event and event['onlineMeeting']:
+        print(f"  :JOIN_URL: {event['onlineMeeting'].get('joinUrl', '')}")
     print(f"  :END:")
+
+    # Add attendees
+    if 'attendees' in event and event['attendees']:
+        attendees = [a['emailAddress']['name'] for a in event['attendees']]
+        print(f"  Attendees: {', '.join(attendees)}")
+
     print()
 ```
 
-## Example JSON Output
+### 4. Use It
 
-**This is what you'll get (raw Microsoft Graph API format):**
+```bash
+# Get calendar and convert in one go
+mosquitto_pub -t teams/command -m '{"action":"get-calendar","days":7}' && \
+mosquitto_sub -t teams/calendar -C 1 | python3 ~/scripts/to_orgmode.py > ~/org/calendar.org
+```
+
+### 5. Automate with Cron (Optional)
+
+Create `~/scripts/fetch-calendar.sh`:
+
+```bash
+#!/bin/bash
+# Request calendar
+mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
+
+# Wait a moment for response
+sleep 1
+
+# Receive and convert
+mosquitto_sub -h localhost -t teams/calendar -C 1 | \
+  python3 ~/scripts/to_orgmode.py > ~/org/calendar.org
+```
+
+Add to crontab:
+```bash
+# Fetch calendar every day at 6am
+0 6 * * * /home/user/scripts/fetch-calendar.sh
+```
+
+## Example Output
+
+**Raw JSON you'll receive:**
 
 ```json
 {
@@ -130,7 +138,6 @@ for event in data['data']['value']:
             "type": "required"
           }
         ],
-        "bodyPreview": "Meeting description...",
         "onlineMeeting": {
           "joinUrl": "https://teams.microsoft.com/l/meetup/..."
         }
@@ -140,22 +147,46 @@ for event in data['data']['value']:
 }
 ```
 
-**You parse this JSON and convert to whatever format you want** (org-mode, CSV, whatever).
+**After your Python script converts it:**
 
-## That's It!
+```org
+* Team Standup
+  SCHEDULED: <2025-11-27 10:00-10:30>
+  :PROPERTIES:
+  :LOCATION: Teams Meeting
+  :JOIN_URL: https://teams.microsoft.com/l/meetup/...
+  :END:
+  Attendees: Jane Smith
+```
 
-Answer those 3 questions and we're good to go.
+## Configuration Options
 
-**Implementation estimate:** 2-3 hours
+We'll add support for:
 
-## Next Steps
+```json
+{
+  "action": "get-calendar",
+  "days": 7                    // Next 7 days (default)
+}
+```
 
-Once you answer:
-1. We implement the MQTT `get-calendar` command handler
-2. We document the workflow
-3. You write your external processing script
-4. Done!
+Or specify exact dates:
 
----
+```json
+{
+  "action": "get-calendar",
+  "startDate": "2025-11-27",
+  "endDate": "2025-12-04"
+}
+```
 
-**Philosophy:** Teams for Linux is just a bridge to Microsoft's calendar API. All the interesting logic (formatting, processing, scheduling) lives in your scripts where you have full control.
+## Requirements
+
+**You need:**
+- MQTT broker running (mosquitto)
+- Graph API enabled in config: `graphApi.enabled: true`
+- Teams for Linux running and authenticated
+
+## Does This Work for You?
+
+If yes, we'll implement it. If you want changes to the approach, let us know.
