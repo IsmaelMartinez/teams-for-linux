@@ -21,6 +21,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
 - **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
 
+### Strategic Analysis
+- **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
+  - Config options analyzed for grouping and naming consistency
+  - Three-phase migration plan from flat to nested structure
+  - Backward-compatible approach with auto-migration
+
 ### Architecture
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
   - Superseded by incremental refactoring (55% reduction in index.js)
