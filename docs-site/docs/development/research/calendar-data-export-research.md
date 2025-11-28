@@ -104,24 +104,29 @@ graph LR
 **Implementation:**
 
 ```javascript
-// app/mqtt/index.js - Add command handler
-async handleCommand(message) {
-  const command = JSON.parse(message);
+// In app/index.js - Extend existing mqttClient 'command' event listener
+mqttClient.on('command', async (command) => {
+  // ... existing command handlers (toggle-mute, toggle-video, etc.)
 
   if (command.action === 'get-calendar') {
-    // User provides start and end dates
-    const startDate = command.startDate;
-    const endDate = command.endDate;
+    // Validate parameters
+    const { startDate, endDate } = command;
+    if (!startDate || !endDate) {
+      console.error('[MQTT] get-calendar requires startDate and endDate');
+      return;
+    }
 
-    const result = await this.graphApiClient.getCalendarView(
-      startDate,
-      endDate
-    );
+    // Fetch from Graph API
+    const result = await graphApiClient.getCalendarView(startDate, endDate);
 
-    // Publish raw Graph API JSON
-    this.client.publish('teams/calendar', JSON.stringify(result));
+    // Publish raw Graph API JSON to dedicated topic
+    if (result.success) {
+      mqttClient.publish('teams/calendar', JSON.stringify(result));
+    } else {
+      console.error('[MQTT] Failed to get calendar:', result.error);
+    }
   }
-}
+});
 ```
 
 **User workflow:**
