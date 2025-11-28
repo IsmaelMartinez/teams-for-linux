@@ -1,6 +1,6 @@
 # Tray Icon Logout Indicator - Research & Implementation Plan
 
-**Status:** Research Complete - Awaiting Technical Validation
+**Status:** Research Complete - Awaiting Spike Validation
 **Date:** November 2025
 **Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
 **Author:** Claude AI Assistant
@@ -10,1418 +10,529 @@
 
 ## Executive Summary
 
-This document provides comprehensive research and implementation planning for adding a visual logout indicator to the system tray icon. The user requests this feature to immediately recognize when they've been logged out of Teams (particularly due to multi-device conflicts) without having to check the application window.
+User requests a visual indicator in the tray icon when logged out of Teams, specifically to detect multi-device logout conflicts without having to open the application.
 
-:::warning Critical Technical Uncertainty
-This feature has **HIGH technical risk** due to reliance on Teams internal React structure for authentication detection. **Technical validation spikes must be completed** before proceeding with implementation to confirm the approach is viable.
+:::danger Critical Validation Required
+This feature depends on **unvalidated assumptions** about Teams internal structure. **Do not implement anything** until core validation spikes prove the approach works. This prevents building throwaway code.
 :::
 
 ### Key Findings
 
-- ✅ **Architecture exists:** Tray icon system is modular and well-structured
-- ✅ **Access possible:** ReactHandler can theoretically access Teams authentication service
-- ⚠️ **Detection unvalidated:** Authentication state detection method needs verification
-- ⚠️ **IPC prerequisite:** ReactHandler requires `ipcRenderer` access (currently missing)
-- ⚠️ **False positive risk:** High risk of incorrect logout detection during app startup
-- ⚠️ **Stability concern:** Relies on Teams internal structure that could change
+- ✅ **Architecture exists:** Tray icon rendering system is in place
+- ⚠️ **UNVALIDATED:** Can we reliably detect logout state from Teams internals?
+- ⚠️ **UNVALIDATED:** Will detection work across different logout scenarios?
+- ⚠️ **UNVALIDATED:** Can we avoid false positives during app startup?
 
-### Recommended Approach
+### Proposed Solution (If Spikes Succeed)
 
-**Option 3: Combined Visual + Notification** (configurable)
-- Visual overlay on tray icon (red slash, X, or warning symbol)
-- OS notification when logout detected
-- Both features individually configurable
-- Multi-signal detection to improve reliability
+**Simple combined approach:**
+- Visual overlay on tray icon when logged out (red slash)
+- OS notification on logout detection
+- Both individually configurable
 
-### Effort Estimate
+### Validation-First Strategy
 
-| Phase | Hours |
-|-------|-------|
-| Technical validation spikes | 16-28 |
-| Implementation | 16-24 |
-| Testing and refinement | 6-8 |
-| **Total** | **38-60 hours** |
+```
+Phase 1: VALIDATE (4-6 hours)
+├─ Spike 1: Prove we can detect logout → GO/NO-GO decision
+├─ Spike 2: Prove we can avoid false positives → Adjust approach if needed
+└─ Decision: Proceed to implementation OR stop
+
+Phase 2: IMPLEMENT (only if spikes succeed) (8-12 hours)
+├─ Add simple detection
+├─ Add visual overlay
+├─ Add notification
+└─ Add configuration
+
+Total: 12-18 hours (not 38-60 hours)
+```
 
 ---
 
 ## 1. Problem Statement
 
-### User Scenario
+User experiences frequent logouts when logged into Teams on multiple machines simultaneously. They need:
 
-The user experiences frequent logouts when simultaneously logged into Teams across multiple machines. They need:
+1. **Visual indicator** in tray icon showing logged-out state
+2. **Persistent awareness** without opening the application
+3. **Notification** when logout occurs
 
-1. **Immediate awareness** when logged out (regardless of current workspace)
-2. **Persistent indicator** (not just a dismissible notification)
-3. **Visual distinction** that doesn't require opening the application
-
-### Current Behavior
-
-- No indication in tray icon when logged out
-- User discovers logout only when attempting to use the application
-- Tray icon looks identical whether logged in or out
-
-### Proposed Solutions
-
-**Original Request:** Change tray icon color (e.g., to red) when logged out
-
-**Maintainer Concern:** Some users dislike drastic visual modifications
-
-**Refined Approach:** Subtle overlay (slash, X, or badge) instead of full color change
+**Current state:** Tray icon looks identical whether logged in or logged out.
 
 ---
 
-## 2. Current Architecture Analysis
+## 2. Core Technical Question
 
-### 2.1 Tray Icon System
-
-The application has a modular tray icon system split between processes:
-
-#### TrayIconRenderer (`app/browser/tools/trayIconRenderer.js`)
-
-**Purpose:** Runs in renderer process, renders tray icons with notification badges
-
-**Key Methods:**
-- `init(config, ipcRenderer)` - Initialize with base icon
-- `updateActivityCount(event)` - Renders icon with red badge when unread messages exist
-- `render(count)` - Creates canvas with icon + notification badge
-- `_addRedCircleNotification()` - Draws red circle with count overlay
-
-**Current Flow:**
-```
-1. Listens to 'unread-count' events from page title mutations
-2. Renders icon on canvas with red notification badge (if count > 0)
-3. Sends rendered icon to main process via 'tray-update' IPC
-```
-
-**Location:** `app/browser/tools/trayIconRenderer.js:1-136`
-
-#### TrayIconChooser (`app/browser/tools/trayIconChooser.js`)
-
-**Purpose:** Selects base icon based on configuration
-
-**Icon Types:**
-- `default` - Colored icons (16x16, 96x96)
-- `dark` - Monochrome dark (16x16, 96x96)
-- `light` - Monochrome light (16x16, 96x96)
-- Custom path support via `config.appIcon`
-
-**Location:** `app/browser/tools/trayIconChooser.js:1-31`
-
-#### ApplicationTray (`app/menus/tray.js`)
-
-**Purpose:** Main process, manages system tray icon
-
-**Key Methods:**
-- `updateTrayImage(iconUrl, flash, count)` - Updates tray icon and tooltip
-- `#handleTrayUpdate()` - Receives IPC messages from renderer
-
-**Current Behavior:**
-- Updates tooltip with unread count: `Teams (5)`
-- Flashes window on new notifications
-
-**Location:** `app/menus/tray.js:1-76`
-
-### 2.2 Authentication Detection Infrastructure
-
-#### ReactHandler (`app/browser/tools/reactHandler.js`)
-
-**Purpose:** Accesses Teams internal React components and services
-
-**Capabilities:**
-- Validates Teams environment (domain, document, React structure)
-- Accesses `teams2CoreServices` via React internals
-- Can reach authentication service: `teams2CoreServices.authenticationService._coreAuthService._authProvider`
-- Already has `acquireToken()` method for Graph API
-
-**Current Status:**
-- ⚠️ Does NOT receive `ipcRenderer` in `init()` method
-- ⚠️ Not in preload.js modules array for initialization
-- ✅ Has validation and environment checking infrastructure
-
-**Location:** `app/browser/tools/reactHandler.js:1-308`
-
-#### TokenCache (`app/browser/tools/tokenCache.js`)
-
-**Purpose:** Manages authentication tokens with secure storage
-
-**Capabilities:**
-- Tracks auth-related localStorage keys
-- Recognizes token patterns (refresh_token, msal.token, etc.)
-- Provides `getCacheStats()` for diagnostics
-
-**Potential Use:** Could check token presence as authentication signal
-
-**Location:** `app/browser/tools/tokenCache.js:1-358`
-
-#### ActivityHub (`app/browser/tools/activityHub.js`)
-
-**Purpose:** Monitors Teams activity and manages event subscriptions
-
-**Authentication Monitoring:**
-- Calls `ReactHandler.logAuthenticationState()` at lines 64, 77
-- ⚠️ **Bug:** This method doesn't exist in ReactHandler!
-- Periodic monitoring every 5 minutes intended
-
-**Location:** `app/browser/tools/activityHub.js:1-273`
-
-### 2.3 Event Flow for Tray Updates
-
-```
-1. Page Title Changes
-   └─> MutationObserverTitle detects (app/browser/tools/mutationTitle.js)
-       └─> Extracts unread count from "(N) Teams" format
-           └─> Dispatches 'unread-count' custom event
-               └─> TrayIconRenderer.updateActivityCount() receives
-                   └─> Renders icon with badge
-                       └─> Sends 'tray-update' IPC to main process
-                           └─> ApplicationTray updates system tray
-```
-
-**Proposed Addition:**
-```
-2. Authentication State Changes
-   └─> ReactHandler monitors auth service
-       └─> Detects logout
-           └─> Dispatches 'auth-state-changed' custom event
-               └─> TrayIconRenderer.updateAuthState() receives
-                   └─> Re-renders with logout overlay
-                       └─> Updates tray icon
-               └─> ReactHandler sends notification (if configured)
-```
-
----
-
-## 3. Implementation Approach Options
-
-### Option 1: Visual Indicator Only
-
-**Description:** Add overlay to tray icon when logged out (slash, X, warning symbol)
-
-**Pros:**
-- Non-intrusive, respects user preferences about color changes
-- Uses existing rendering infrastructure
-- Persistent indicator visible across all workspaces
-- Configurable overlay style
-
-**Cons:**
-- May be less visible on some desktop environments
-- Requires creating visual overlay assets
-- User must look at tray to notice
-
-**Estimated Effort:** 12-16 hours (after spikes)
-
-### Option 2: Notification Only
-
-**Description:** Send OS notification when logout detected
-
-**Pros:**
-- Immediate user awareness
-- Works across all workspaces/virtual desktops
-- Uses existing notification infrastructure
-- Simple to implement
-
-**Cons:**
-- Notification can be dismissed and forgotten
-- No persistent visual indicator
-- May be annoying if logouts frequent
-- Doesn't help if user returns to computer later
-
-**Estimated Effort:** 8-12 hours (after spikes)
-
-### Option 3: Combined Approach ⭐ **RECOMMENDED**
-
-**Description:** Both visual indicator AND notification (independently configurable)
-
-**Pros:**
-- ✅ Immediate awareness (notification)
-- ✅ Persistent indicator (icon overlay)
-- ✅ Best user experience for reported scenario
-- ✅ Flexible - users can enable/disable each feature
-- ✅ Covers all use cases (immediate + later discovery)
-
-**Cons:**
-- More complex implementation
-- More testing required
-- Higher maintenance burden
-
-**Estimated Effort:** 16-24 hours (after spikes)
-
----
-
-## 4. Technical Requirements
-
-### 4.1 Critical Prerequisite: IPC Access for ReactHandler
-
-:::danger Blocking Issue
-ReactHandler currently does **NOT** have access to `ipcRenderer`, which is required for sending logout notifications. This must be fixed before notification functionality can be implemented.
+:::warning THE Critical Question
+Can we reliably detect when the user is logged out of Teams by inspecting the web application's internal state?
 :::
 
-**Current State:**
+**Hypothesis:** Teams stores authentication state in its React component tree at `teams2CoreServices.authenticationService._authProvider._account`
+
+**Validation needed:**
+- Does this property exist and is it accessible?
+- Is `_account` null when logged out and populated when logged in?
+- Is the structure stable enough to rely on?
+
+**Alternative if hypothesis fails:**
+- URL-based detection (login page vs app)
+- localStorage token presence checking
+- **OR** abandon feature
+
+---
+
+## 3. Current Architecture (Relevant Pieces Only)
+
+### Tray Icon System
+
+**TrayIconRenderer** (`app/browser/tools/trayIconRenderer.js`)
+- Renders tray icons with notification badges
+- Already listens to events and re-renders icons
+- Can easily add logout overlay to existing rendering
+
+**Flow:**
+```
+Event → TrayIconRenderer.render() → Canvas manipulation → IPC to main → Tray updated
+```
+
+**What we'd add:** Listen to `auth-state-changed` event, add overlay if logged out
+
+### Authentication Access
+
+**ReactHandler** (`app/browser/tools/reactHandler.js`)
+- Can access Teams React internals via `_getTeams2CoreServices()`
+- Has methods to navigate to authentication service
+- **Missing:** Method to check if logged in/out
+- **Missing:** `ipcRenderer` access (needed for notifications)
+
+**What we'd add:** Method to check `authProvider._account` and dispatch events
+
+---
+
+## 4. Critical Validation Spikes
+
+:::danger Stop and Validate First
+Do NOT write implementation code until these spikes prove the approach works. Each spike should be 1-2 hours of throwaway code to test assumptions.
+:::
+
+### Spike 1: Can We Detect Logout? ⚠️ **BLOCKER**
+
+**Duration:** 2-3 hours
+**Goal:** Prove we can distinguish logged-in from logged-out state
+
+**What to do:**
+1. Add temporary logging to ReactHandler:
+```javascript
+// In reactHandler.js, add to an existing method or create test method
+testAuthDetection() {
+  console.log('=== AUTH DETECTION TEST ===');
+  const cores = this._getTeams2CoreServices();
+  console.log('Has coreServices:', !!cores);
+  console.log('Has authService:', !!cores?.authenticationService);
+  console.log('Has authProvider:', !!cores?.authenticationService?._coreAuthService?._authProvider);
+
+  const authProvider = cores?.authenticationService?._coreAuthService?._authProvider;
+  console.log('Account:', authProvider?._account);
+  console.log('Is logged in?:', !!authProvider?._account);
+}
+```
+
+2. Test in these scenarios:
+   - ✅ On login page (should show logged out)
+   - ✅ After successful login (should show logged in)
+   - ✅ After manual logout (should show logged out)
+   - ✅ After letting session expire overnight (should show logged out)
+
+3. Document the results:
+   - Does `_account` reliably indicate login state?
+   - What does the account object contain when logged in?
+   - Is it null/undefined when logged out?
+
+**Success Criteria:**
+- `_account` is consistently null/undefined when logged out
+- `_account` is consistently populated when logged in
+- Property is accessible without errors
+
+**Failure Plan:**
+- If property doesn't exist → Try URL-based detection spike
+- If inconsistent → Document patterns, try alternative properties
+- If completely unreliable → **STOP, feature not feasible**
+
+**Decision Point:** Only proceed to Spike 2 if this succeeds
+
+### Spike 2: Can We Avoid False Positives? ⚠️ **CRITICAL**
+
+**Duration:** 1-2 hours
+**Goal:** Ensure we don't incorrectly report "logged out" during app startup
+
+**What to do:**
+1. Add timing logging:
+```javascript
+// Track when things become available
+console.log('[TIMING] DOMContentLoaded:', Date.now());
+
+// In testAuthDetection, add:
+console.log('[TIMING] Auth check at:', Date.now());
+console.log('[TIMING] URL:', window.location.href);
+```
+
+2. Test scenarios:
+   - Cold start (first app launch)
+   - Warm start (app already logged in)
+   - Page refresh
+   - Network reconnect after disconnect
+
+3. Answer questions:
+   - When does `_account` become available after app start?
+   - Is there a period where it's temporarily null during loading?
+   - How can we distinguish "loading" from "logged out"?
+
+**Success Criteria:**
+- Can identify when Teams is "still loading" vs actually logged out
+- Have strategy to wait until Teams is ready before checking
+
+**Simple Mitigation Ideas:**
+- Wait 10 seconds after app start before checking
+- Check URL: if on login page → logged out, if on `/` with no account → still loading
+- Combine: Only report logged out if `!_account AND URL includes 'login'`
+
+**Decision Point:** If we can't avoid false positives reliably, feature will annoy users on every startup → **STOP**
+
+### Spike 3: Test Multi-Device Logout (Optional but Recommended)
+
+**Duration:** 1 hour
+**Goal:** Confirm we can detect the user's specific scenario
+
+**What to do:**
+1. Log into Teams on the test machine
+2. Log into Teams on another device with same account
+3. Watch the console logs on test machine
+4. Verify auth state changes when kicked out
+
+**Success Criteria:**
+- Detection works for multi-device logout scenario
+
+---
+
+## 5. Simplified Implementation (Only If Spikes Succeed)
+
+### Approach: Start Simple, Add Complexity Only If Needed
+
+:::info Simple First
+Don't implement multi-signal detection, confidence scoring, or complex debouncing upfront. Start with the simplest thing that works based on spike results.
+:::
+
+### Step 1: Add Auth Detection to ReactHandler
+
+**Prerequisite:** Add `ipcRenderer` to ReactHandler initialization (see section 6)
+
 ```javascript
 // In reactHandler.js
-init(config) {
-  this.config = config;
-  console.debug('[ReactHandler] Initialized');
-}
-```
-
-**Required Change:**
-```javascript
-// Update ReactHandler.init() signature
-init(config, ipcRenderer) {
-  this.config = config;
-  this.ipcRenderer = ipcRenderer;  // Add this
-  console.debug('[ReactHandler] Initialized', {
-    hasIpcRenderer: !!ipcRenderer
-  });
-}
-```
-
-**Preload.js Changes Required:**
-
-Two options for implementation:
-
-**Option A: Add to modules array** (Recommended)
-```javascript
-// In preload.js - Add to modules array
-const modules = [
-  { name: "zoom", path: "./tools/zoom" },
-  { name: "shortcuts", path: "./tools/shortcuts" },
-  { name: "settings", path: "./tools/settings" },
-  { name: "theme", path: "./tools/theme" },
-  { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-  { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
-  { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
-  { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
-  { name: "disableAutogain", path: "./tools/disableAutogain" },
-  { name: "navigationButtons", path: "./tools/navigationButtons" },
-  { name: "reactHandler", path: "./tools/reactHandler" }  // <-- Add this
-];
-
-// Update conditional to pass ipcRenderer
-if (module.name === "settings" ||
-    module.name === "theme" ||
-    module.name === "trayIconRenderer" ||
-    module.name === "mqttStatusMonitor" ||
-    module.name === "reactHandler") {  // <-- Add this
-  moduleInstance.init(config, ipcRenderer);
-} else {
-  moduleInstance.init(config);
-}
-```
-
-**Option B: Initialize in ActivityHub**
-```javascript
-// In activityHub.js
-const ReactHandler = require("./reactHandler");
-const { ipcRenderer } = require("electron");
-
-// Initialize with ipcRenderer
-ReactHandler.init(config, ipcRenderer);
-```
-
-### 4.2 Authentication State Detection
-
-Add to ReactHandler:
-
-```javascript
-/**
- * Check if user is authenticated/logged in to Teams
- * @returns {object} Authentication state information
- */
 getAuthenticationState() {
   if (!this._validateTeamsEnvironment()) {
-    return {
-      authenticated: false,
-      reason: 'invalid_environment',
-      confidence: 0
-    };
+    return { authenticated: false, reason: 'not_ready' };
   }
 
   try {
-    const teams2CoreServices = this._getTeams2CoreServices();
-    const authService = teams2CoreServices?.authenticationService;
+    const authProvider = this._getTeams2CoreServices()
+      ?.authenticationService
+      ?._coreAuthService
+      ?._authProvider;
 
-    if (!authService) {
-      return {
-        authenticated: false,
-        reason: 'no_auth_service',
-        confidence: 0.2
-      };
-    }
-
-    const authProvider = authService._coreAuthService?._authProvider;
-
-    if (!authProvider) {
-      return {
-        authenticated: false,
-        reason: 'no_auth_provider',
-        confidence: 0.3
-      };
-    }
-
-    // Check for active account
-    const account = authProvider._account;
-    const authenticated = account !== null && account !== undefined;
-
+    const account = authProvider?._account;
     return {
-      authenticated: authenticated,
-      hasAccount: !!account,
-      hasTokenCache: authProvider._tokenCache !== undefined,
-      accountId: account?.id || null,
-      confidence: authenticated ? 0.9 : 0.7,
-      method: 'react_internals'
+      authenticated: !!account,
+      accountId: account?.id
     };
-
   } catch (error) {
-    console.error('[AUTH_STATE] Error checking authentication state:', error);
-    return {
-      authenticated: false,
-      reason: 'error',
-      error: error.message,
-      confidence: 0
-    };
+    console.error('[AUTH] Detection error:', error);
+    return { authenticated: false, reason: 'error' };
   }
 }
-```
 
-### 4.3 Authentication Monitoring
-
-Add monitoring with smart timing and debouncing:
-
-```javascript
-/**
- * Monitor authentication state and dispatch events on changes
- */
 startAuthenticationMonitoring() {
-  // Wait for Teams to fully load before starting
-  this._waitForTeamsReady().then(() => {
-    console.debug('[AUTH_STATE] Teams ready, starting authentication monitoring');
+  // Based on Spike 2 results, wait for Teams to load
+  // Simple approach: wait 15 seconds after init
+  setTimeout(() => {
+    let lastState = this.getAuthenticationState();
 
-    // Establish baseline state
-    let lastAuthState = this.getAuthenticationState();
-    console.debug('[AUTH_STATE] Baseline state:', lastAuthState);
-
-    // Periodic checking
-    const checkAuthState = () => {
+    setInterval(() => {
       const currentState = this.getAuthenticationState();
 
-      // State changed - but debounce to confirm stability
-      if (lastAuthState?.authenticated !== currentState.authenticated) {
-        console.debug('[AUTH_STATE] State change detected, debouncing...');
+      if (currentState.authenticated !== lastState.authenticated) {
+        console.log('[AUTH] State changed:', currentState);
 
-        if (this._stateChangeDebounce) {
-          clearTimeout(this._stateChangeDebounce);
+        // Send notification if logged out
+        if (!currentState.authenticated && this.config?.notifyOnLogout) {
+          this._sendLogoutNotification();
         }
 
-        this._stateChangeDebounce = setTimeout(() => {
-          // Verify state still changed after debounce
-          const verifiedState = this.getAuthenticationState();
+        // Dispatch event for tray icon
+        globalThis.dispatchEvent(new CustomEvent('auth-state-changed', {
+          detail: currentState
+        }));
 
-          if (verifiedState.authenticated === currentState.authenticated) {
-            this._handleAuthStateChange(verifiedState, lastAuthState);
-            lastAuthState = verifiedState;
-          }
-        }, 3000); // 3 second debounce
+        lastState = currentState;
       }
-    };
-
-    // Check every 30 seconds
-    setInterval(checkAuthState, 30000);
-
-    // Initial check
-    checkAuthState();
-  });
+    }, 30000); // Check every 30 seconds
+  }, 15000); // Wait 15 seconds for Teams to load
 }
 
-/**
- * Wait for Teams application to fully load
- * @private
- */
-_waitForTeamsReady() {
-  return new Promise((resolve) => {
-    const maxAttempts = 30; // 30 seconds max wait
-    let attempts = 0;
-
-    const check = () => {
-      attempts++;
-
-      if (this._isTeamsFullyLoaded()) {
-        console.debug('[AUTH_STATE] Teams fully loaded after', attempts, 'seconds');
-        resolve();
-      } else if (attempts >= maxAttempts) {
-        console.warn('[AUTH_STATE] Teams load timeout after', maxAttempts, 'seconds');
-        resolve(); // Continue anyway
-      } else {
-        setTimeout(check, 1000); // Check every second
-      }
-    };
-
-    check();
-  });
-}
-
-/**
- * Check if Teams is fully loaded and ready
- * @private
- */
-_isTeamsFullyLoaded() {
-  // Multiple checks to ensure Teams is ready
-  const hasReactStructure = this._validateReactStructure();
-  const hasCoreServices = !!this._getTeams2CoreServices();
-  const notOnLoginPage = !window.location.href.includes('/login');
-
-  return hasReactStructure && hasCoreServices && notOnLoginPage;
-}
-
-/**
- * Handle confirmed authentication state change
- * @private
- */
-_handleAuthStateChange(currentState, previousState) {
-  console.debug('[AUTH_STATE] Authentication state changed:', {
-    previous: previousState?.authenticated,
-    current: currentState.authenticated,
-    confidence: currentState.confidence
-  });
-
-  // Send notification on logout (if configured and high confidence)
-  if (!currentState.authenticated &&
-      previousState?.authenticated &&
-      currentState.confidence > 0.6) {
-    this._sendLogoutNotification();
-  }
-
-  // Dispatch custom event for tray icon update
-  const event = new CustomEvent('auth-state-changed', {
-    detail: currentState
-  });
-  globalThis.dispatchEvent(event);
-}
-
-/**
- * Send notification when user is logged out
- * @private
- */
 _sendLogoutNotification() {
-  if (!this.ipcRenderer) {
-    console.warn('[AUTH_STATE] Cannot send logout notification - ipcRenderer not available');
-    return;
-  }
+  if (!this.ipcRenderer) return;
 
-  if (!this.config?.notifyOnLogout) {
-    console.debug('[AUTH_STATE] Logout notifications disabled in config');
-    return;
-  }
-
-  try {
-    this.ipcRenderer.invoke('show-notification', {
-      title: 'Teams for Linux - Logged Out',
-      body: 'You have been logged out of Microsoft Teams. Click to view the application.',
-      requireInteraction: true,
-      urgency: 'normal'
-    }).catch(error => {
-      console.error('[AUTH_STATE] Failed to send logout notification:', error);
-    });
-  } catch (error) {
-    console.error('[AUTH_STATE] Error sending logout notification:', error);
-  }
+  this.ipcRenderer.invoke('show-notification', {
+    title: 'Teams for Linux - Logged Out',
+    body: 'You have been logged out of Microsoft Teams.',
+    urgency: 'normal'
+  }).catch(err => console.error('[AUTH] Notification failed:', err));
 }
 ```
 
-### 4.4 Visual Indicator Rendering
-
-Modify TrayIconRenderer to add logout overlay:
+### Step 2: Add Visual Overlay to TrayIconRenderer
 
 ```javascript
+// In trayIconRenderer.js
 init(config, ipcRenderer) {
   this.ipcRenderer = ipcRenderer;
   this.config = config;
-  this.isAuthenticated = true; // Default to authenticated
-  this.lastActivityCount = 0;
+  this.isAuthenticated = true; // Assume logged in initially
 
-  const iconChooser = new TrayIconChooser(config);
-  this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
-  this.iconSize = this.baseIcon.getSize();
+  // ... existing init code ...
 
-  // Listen to unread count events
-  globalThis.addEventListener(
-    "unread-count",
-    this.updateActivityCount.bind(this),
-  );
-
-  // Listen to authentication state changes
-  globalThis.addEventListener(
-    "auth-state-changed",
-    this.updateAuthState.bind(this),
-  );
-
-  console.debug('[TRAY_AUTH] TrayIconRenderer initialized with auth monitoring');
+  // Listen for auth state changes
+  globalThis.addEventListener('auth-state-changed', (event) => {
+    this.isAuthenticated = event.detail?.authenticated ?? true;
+    // Re-render with current count
+    this.updateActivityCount({ detail: { number: this.lastActivityCount || 0 }});
+  });
 }
 
-/**
- * Handle authentication state changes
- */
-updateAuthState(event) {
-  const authenticated = event.detail?.authenticated;
-  const confidence = event.detail?.confidence || 0;
-
-  // Only update if high confidence
-  if (confidence < 0.6) {
-    console.debug('[TRAY_AUTH] Ignoring low confidence auth state:', confidence);
-    return;
-  }
-
-  if (this.isAuthenticated !== authenticated) {
-    console.debug('[TRAY_AUTH] Authentication state changed:', authenticated);
-    this.isAuthenticated = authenticated;
-
-    // Re-render icon with current count and new auth state
-    this.updateActivityCount({
-      detail: { number: this.lastActivityCount || 0 }
-    });
-  }
-}
-
-/**
- * Add red circle notification badge and logout overlay if needed
- */
 _addRedCircleNotification(canvas, image, newActivityCount, resolve) {
   const ctx = canvas.getContext("2d");
-
-  // Draw base icon
   ctx.drawImage(image, 0, 0, 140, 140);
 
-  // Add logout indicator if not authenticated (and feature enabled)
+  // Add logout indicator if feature enabled and not authenticated
   if (!this.isAuthenticated && this.config?.trayIconShowLogoutIndicator !== false) {
-    this._addLogoutIndicator(ctx);
+    // Simple red diagonal slash
+    ctx.strokeStyle = "#ff0000";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(20, 20);
+    ctx.lineTo(120, 120);
+    ctx.stroke();
   }
 
-  // Add notification badge if there are unread messages
+  // Add notification badge (existing code)
   if (newActivityCount > 0) {
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.ellipse(100, 90, 40, 40, 40, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.textAlign = "center";
-    ctx.fillStyle = "white";
-
-    ctx.font =
-      'bold 70px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif';
-    if (newActivityCount > 9) {
-      ctx.fillText("+", 100, 110);
-    } else {
-      ctx.fillText(newActivityCount.toString(), 100, 110);
-    }
+    // ... existing badge code ...
   }
 
   const resizedCanvas = this._getResizeCanvasWithOriginalIconSize(canvas);
   resolve(resizedCanvas.toDataURL());
 }
-
-/**
- * Add visual indicator for logout state
- * @private
- */
-_addLogoutIndicator(ctx) {
-  const style = this.config?.logoutIndicatorStyle || 'slash';
-
-  switch (style) {
-    case 'slash':
-      // Red diagonal slash (like "disabled" icons)
-      ctx.strokeStyle = "#ff0000";
-      ctx.lineWidth = 8;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(20, 20);
-      ctx.lineTo(120, 120);
-      ctx.stroke();
-      break;
-
-    case 'x':
-      // Red X in corner
-      ctx.fillStyle = "#ff0000";
-      ctx.font = 'bold 50px Arial';
-      ctx.textAlign = "left";
-      ctx.fillText("✗", 10, 50);
-      break;
-
-    case 'triangle':
-      // Warning triangle
-      ctx.fillStyle = "#ff6b00"; // Orange
-      ctx.beginPath();
-      ctx.moveTo(30, 130);
-      ctx.lineTo(70, 130);
-      ctx.lineTo(50, 95);
-      ctx.closePath();
-      ctx.fill();
-
-      // Exclamation mark
-      ctx.fillStyle = "white";
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = "center";
-      ctx.fillText("!", 50, 120);
-      break;
-
-    case 'dim':
-      // Dim the entire icon
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.fillRect(0, 0, 140, 140);
-      break;
-
-    default:
-      console.warn('[TRAY_AUTH] Unknown logout indicator style:', style);
-  }
-}
 ```
 
-### 4.5 Missing Implementation: logAuthenticationState()
-
-The ActivityHub calls this method but it doesn't exist:
+### Step 3: Add Configuration
 
 ```javascript
-/**
- * Log current authentication state for diagnostics
- * Called by ActivityHub for periodic monitoring
- */
-logAuthenticationState() {
-  const state = this.getAuthenticationState();
-  const tokenStats = this._getTokenCacheStats();
-
-  console.debug('[AUTH_DIAG] Authentication state:', {
-    authenticated: state.authenticated,
-    hasAccount: state.hasAccount,
-    hasTokenCache: state.hasTokenCache,
-    accountId: state.accountId ? `${state.accountId.substring(0, 8)}...` : null,
-    confidence: state.confidence,
-    method: state.method,
-    tokenCacheKeys: tokenStats?.totalKeys || 0,
-    refreshTokens: tokenStats?.refreshTokenCount || 0,
-    timestamp: new Date().toISOString()
-  });
-
-  return state;
-}
-
-/**
- * Get token cache statistics
- * @private
- */
-_getTokenCacheStats() {
-  try {
-    const TokenCache = require('./tokenCache');
-    return TokenCache.getCacheStats();
-  } catch (error) {
-    console.warn('[AUTH_DIAG] Could not get token cache stats:', error.message);
-    return null;
-  }
-}
-```
-
-### 4.6 Configuration Schema
-
-Add new configuration options:
-
-```javascript
+// In config schema
 {
-  // Visual indicator on tray icon when logged out
+  // Show visual indicator on tray icon when logged out
   "trayIconShowLogoutIndicator": true,
 
   // Send notification when logout detected
-  "notifyOnLogout": true,
-
-  // Style of logout indicator: "slash", "x", "triangle", "dim"
-  "logoutIndicatorStyle": "slash",
-
-  // Minimum confidence threshold for logout detection (0.0-1.0)
-  "logoutDetectionConfidenceThreshold": 0.6,
-
-  // Debounce time in ms before confirming state change
-  "logoutDetectionDebounceMs": 3000,
-
-  // Enable debug logging for authentication detection
-  "debugAuthDetection": false
+  "notifyOnLogout": true
 }
 ```
 
+### Step 4: Fix IPC Prerequisite
+
+Add ReactHandler to preload.js modules list (see section 6 for details)
+
 ---
 
-## 5. Critical Gaps & Technical Risks
+## 6. IPC Prerequisite Fix
 
-:::warning High Technical Uncertainty
-The proposed implementation has significant gaps and unvalidated assumptions. Technical validation spikes are **REQUIRED** before committing to this approach.
+:::danger Required Before Implementation
+ReactHandler needs `ipcRenderer` to send notifications but currently doesn't receive it.
 :::
 
-### 5.1 Authentication Detection Reliability (CRITICAL)
-
-**Gap:** Assumes `authProvider._account` reliably indicates logout state - **UNVALIDATED**
-
-**Risks:**
-- Teams internal structure may not be available when expected
-- Property paths could change with Teams updates
-- Different logout scenarios may manifest differently
-- False positives during app startup or network issues
-
-**Impact:** If detection doesn't work reliably, entire feature fails
-
-**Mitigation:** Complete Spike 1 & 2 (see Section 6)
-
-### 5.2 Alternative Detection Methods Not Explored
-
-**Gap:** Single detection method (React internals) with no fallback
-
-**Missing Alternatives:**
-
-1. **URL-Based Detection:**
+**Change 1:** Update ReactHandler init signature
 ```javascript
-// Login page has distinctive URL patterns
-const isLoginPage = window.location.href.includes('/login') ||
-                    window.location.href.includes('/auth') ||
-                    window.location.pathname === '/';
+// In app/browser/tools/reactHandler.js
+init(config, ipcRenderer) {
+  this.config = config;
+  this.ipcRenderer = ipcRenderer;
+  console.debug('[ReactHandler] Initialized');
+}
 ```
 
-**Pros:** More stable, immediate availability
-**Cons:** May not catch session expiry on loaded page
-
-2. **localStorage Token Detection:**
+**Change 2:** Add to preload.js modules array
 ```javascript
-// Check for presence of authentication tokens
-const hasAuthTokens = () => {
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key?.includes('refresh_token') || key?.includes('msal.token')) {
-      return true;
-    }
-  }
-  return false;
-};
+// In app/browser/preload.js
+const modules = [
+  // ... existing modules ...
+  { name: "reactHandler", path: "./tools/reactHandler" }
+];
+
+// Update conditional
+if (module.name === "settings" ||
+    module.name === "theme" ||
+    module.name === "trayIconRenderer" ||
+    module.name === "mqttStatusMonitor" ||
+    module.name === "reactHandler") {  // Add this
+  moduleInstance.init(config, ipcRenderer);
+}
 ```
-
-**Pros:** Uses existing TokenCache patterns
-**Cons:** Tokens might persist temporarily after logout
-
-3. **DOM-Based Detection:**
-```javascript
-// Check for login page elements vs authenticated UI
-const hasLoginUI = !!document.querySelector('[data-testid="signin-button"]');
-const hasAuthUI = !!document.querySelector('[data-testid="app-bar"]');
-```
-
-**Pros:** Visual state matches user experience
-**Cons:** DOM structure can change
-
-**Recommendation:** Use **multi-signal approach** combining multiple methods with confidence scoring
-
-### 5.3 Timing and False Positives (HIGH RISK)
-
-**Gap:** No strategy to avoid false "logged out" detection during app startup
-
-**Problem Scenario:**
-```
-1. App starts → DOMContentLoaded fires
-2. Modules initialize (including ReactHandler)
-3. Auth monitoring starts immediately
-4. Teams not yet loaded → appears "logged out"
-5. False notification sent to user ❌
-```
-
-**Impact:** Users get spurious logout notifications on every app start
-
-**Mitigation:** Implement smart timing:
-- Wait for Teams fully loaded before monitoring
-- Debounce state changes (3+ seconds)
-- Require high confidence threshold
-- Check multiple signals before deciding
-
-### 5.4 Different Logout Scenarios Not Distinguished
-
-**Gap:** All "not authenticated" states treated the same
-
-**Scenarios:**
-
-| Scenario | Should Notify? | Detection Challenge |
-|----------|---------------|---------------------|
-| Manual logout | ✅ Yes | Easy to detect |
-| Session expired | ✅ Yes | May look like network issue |
-| Network disconnected | ❌ No (temporary) | Hard to distinguish from real logout |
-| Multi-device conflict | ✅ Yes (user's case!) | Looks like session expiry |
-| App starting up | ❌ No (false positive) | Requires smart timing |
-| Login page visible | ⚠️ Maybe | Could be re-auth flow |
-
-**Mitigation:**
-- Confidence scoring based on multiple signals
-- Debouncing to wait for stable state
-- Check network connectivity before notifying
-
-### 5.5 Performance Impact Not Analyzed
-
-**Gap:** No measurement of overhead from monitoring
-
-**Concerns:**
-- Auth state check every 30 seconds
-- Re-rendering tray icon on every check?
-- Accessing React internals - does it trigger re-renders?
-- Canvas rendering overhead
-
-**Mitigation:** Complete Spike 5 to measure actual impact
-
-### 5.6 Edge Cases Not Covered
-
-1. **Tray icon disabled:** Should auth monitoring still run?
-2. **Custom icon path:** Does overlay work with custom icons?
-3. **Multiple windows:** Duplicate monitoring/notifications?
-4. **SSO/SAML flows:** Different authentication patterns?
-5. **React internals change:** Teams update breaks detection?
 
 ---
 
-## 6. Required Technical Validation Spikes
+## 7. Effort Estimate (Validation-First)
 
-:::danger Blocking Validation Required
-Do **NOT** proceed with implementation until Phase 1 spikes complete successfully. Results may require complete redesign of approach.
+| Phase | Hours | Stop Condition |
+|-------|-------|----------------|
+| **Spike 1: Detection** | 2-3 | If detection doesn't work reliably |
+| **Spike 2: False positives** | 1-2 | If can't avoid false positives |
+| **Spike 3: Multi-device** | 1 | N/A (optional) |
+| **DECISION POINT** | - | **STOP if spikes fail** |
+| **Implementation** | 8-12 | Only if spikes succeed |
+| **Testing** | 2-4 | N/A |
+| **TOTAL** | **14-22 hours** | Much better than 38-60! |
+
+### Comparison
+
+| Approach | Hours | Risk |
+|----------|-------|------|
+| **Original (over-engineered)** | 38-60 | Build half-feature before knowing if it works |
+| **Simplified (validation-first)** | 14-22 | Validate first, implement only if proven |
+
+---
+
+## 8. Decision Tree
+
+```
+START
+  ↓
+Spike 1: Can detect logout?
+  ↓
+  ├─ NO → Try URL-based spike → If fails → STOP (feature not feasible)
+  ↓
+  └─ YES → Continue
+       ↓
+Spike 2: Can avoid false positives?
+  ↓
+  ├─ NO → STOP (will annoy users)
+  ↓
+  └─ YES → GO (implement simple version)
+       ↓
+Implementation (8-12 hours)
+  ↓
+Testing (2-4 hours)
+  ↓
+DONE
+```
+
+**Key Decision Points:**
+1. After Spike 1: Does detection work? (If no → STOP or try alternative)
+2. After Spike 2: Can we avoid false positives? (If no → STOP)
+3. Only implement if both spikes succeed
+
+---
+
+## 9. What We're NOT Doing (Simplifications)
+
+To avoid over-engineering, we're explicitly NOT doing:
+
+❌ **Multi-signal detection** - Start with React internals only, add alternatives later if needed
+❌ **Confidence scoring** - Binary logged-in/logged-out, no percentages
+❌ **Complex debouncing** - Simple 30-second polling with 15-second startup delay
+❌ **Multiple visual styles** - Just red slash, add options later if requested
+❌ **Extensive logging modes** - Basic console.log, add debug mode later if needed
+❌ **Edge case handling** - Handle common cases first, add complexity only if problems arise
+
+**Philosophy:** Validate → Implement minimum → Test → Add features if needed
+
+---
+
+## 10. Testing Strategy
+
+### Manual Testing Checklist
+
+**After Spike 1 & 2:**
+- [ ] Detects logged-in state correctly
+- [ ] Detects logged-out state after manual logout
+- [ ] Detects logged-out state after session expiry
+- [ ] No false positive on cold start
+- [ ] No false positive on warm start
+
+**After Implementation:**
+- [ ] Visual overlay appears when logged out
+- [ ] Visual overlay disappears when logged in
+- [ ] Notification sent on logout (if enabled)
+- [ ] No notification on app startup
+- [ ] Configuration options work
+- [ ] Existing tray features still work (unread badges)
+
+---
+
+## 11. Risks & Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Detection doesn't work | CRITICAL - Feature impossible | Spike 1 validates before any implementation |
+| False positives on startup | HIGH - Annoys users | Spike 2 validates, simple timing delay |
+| Teams structure changes | HIGH - Feature breaks | Document fragility, monitor for breakage |
+| Performance impact | LOW - Check every 30s | Test on slow machines |
+
+**Overall Risk:** MEDIUM - Spikes reduce risk significantly by validating before implementation
+
+---
+
+## 12. Next Steps
+
+:::info Immediate Next Action
+Complete Spike 1 (2-3 hours) to validate core assumption. Do NOT proceed with any other work until spike proves detection works.
 :::
 
-### Phase 1: Core Validation (CRITICAL - Must Complete First)
+**Sequence:**
+1. **Complete Spike 1** → Determines if feature is feasible
+2. **Review spike results** → Decide go/no-go
+3. **If GO: Complete Spike 2** → Ensures we can avoid false positives
+4. **If GO: Implement** → Simple version per section 5
+5. **Test** → Manual testing per section 10
+6. **Ship** → Monitor for issues, add complexity only if needed
 
-#### Spike 1: Verify ReactHandler Access to authenticationService ⚠️ **BLOCKER**
-
-**Duration:** 2-4 hours
-**Priority:** CRITICAL
-
-**Objective:** Confirm we can reliably access Teams authentication service
-
-**Tasks:**
-1. Add logging to inspect available structure:
-```javascript
-const teams2CoreServices = this._getTeams2CoreServices();
-console.log('[SPIKE] teams2CoreServices:', teams2CoreServices);
-console.log('[SPIKE] authService:', teams2CoreServices?.authenticationService);
-console.log('[SPIKE] authProvider:', teams2CoreServices?.authenticationService?._coreAuthService?._authProvider);
-console.log('[SPIKE] account:', teams2CoreServices?.authenticationService?._coreAuthService?._authProvider?._account);
-```
-
-2. Test in different states:
-   - On login page (not authenticated)
-   - After successful login
-   - After manual logout
-   - During app loading
-
-3. Document actual structure and timing
-
-**Success Criteria:**
-- ✅ Can access authenticationService consistently
-- ✅ Can differentiate logged-in vs logged-out
-- ✅ Structure available within 30 seconds of app load
-
-**Failure Plan:**
-- If unavailable → Explore URL-based detection
-- If unreliable → Implement multi-signal approach
-- If too unstable → Consider localStorage token method
-
-#### Spike 2: Test Multiple Logout Scenarios ⚠️ **BLOCKER**
-
-**Duration:** 3-4 hours
-**Priority:** CRITICAL
-
-**Objective:** Understand how different logout scenarios manifest
-
-**Tasks:**
-1. Set up comprehensive logging:
-```javascript
-console.log('[SPIKE] Auth State:', {
-  url: window.location.href,
-  hasAccount: !!authProvider?._account,
-  hasTokens: hasAuthTokens(),
-  loginPageVisible: !!document.querySelector('[data-testid="signin-button"]'),
-  teamsUIVisible: !!document.querySelector('[data-testid="app-bar"]'),
-  timestamp: Date.now()
-});
-```
-
-2. Test scenarios:
-   - ✅ Manual logout (click logout)
-   - ✅ Session expiry (leave open overnight)
-   - ✅ Network disconnect (disable network)
-   - ✅ Multi-device conflict (login on another device)
-   - ✅ App restart
-   - ✅ Cold start vs warm start
-
-3. Document observable differences
-
-4. Identify which should trigger notifications
-
-**Success Criteria:**
-- ✅ Can distinguish real logout from network issues
-- ✅ Can detect multi-device conflict (user's scenario)
-- ✅ Can avoid false positives during startup
-
-**Failure Plan:**
-- If indistinguishable → Use multiple signals + time delays
-- If too many false positives → Increase debounce/threshold
-- If unreliable → Add manual test mode for debugging
-
-#### Spike 3: Verify Timing of Teams Internals ⚠️ **HIGH**
-
-**Duration:** 2-3 hours
-**Priority:** HIGH
-
-**Objective:** Determine when authentication checking can safely begin
-
-**Tasks:**
-1. Add timestamp logging:
-```javascript
-console.log('[TIMING] DOMContentLoaded:', Date.now());
-console.log('[TIMING] ReactHandler.init:', Date.now());
-console.log('[TIMING] teams2CoreServices available:', Date.now());
-console.log('[TIMING] authService available:', Date.now());
-```
-
-2. Test scenarios:
-   - Cold start (first launch)
-   - Warm start (already logged in)
-   - Slow network connection
-   - After force quit
-
-3. Measure variability
-
-**Success Criteria:**
-- ✅ Know exact timing of when auth checking can start
-- ✅ Understand timing variation across scenarios
-- ✅ Have strategy to avoid startup false positives
-
-**Failure Plan:**
-- If too variable → Progressive checking with exponential backoff
-- If too slow → Add loading state indicator
-- If unreliable → Don't start monitoring until user interaction
-
-**Phase 1 Decision Point:** If ANY spike fails, STOP and redesign approach
-
-### Phase 2: Implementation Validation (Before Full Implementation)
-
-#### Spike 4: Test Custom Event Propagation
-
-**Duration:** 1-2 hours
-**Priority:** HIGH
-
-**Objective:** Verify events work between modules
-
-**Tasks:**
-1. Dispatch test event from ReactHandler
-2. Listen in TrayIconRenderer
-3. Verify timing and data integrity
-
-**Success Criteria:**
-- ✅ Events propagate reliably
-- ✅ No race conditions
-- ✅ Correct data received
-
-#### Spike 5: Test Canvas Overlay Rendering
-
-**Duration:** 2-3 hours
-**Priority:** MEDIUM-HIGH
-
-**Objective:** Verify visual indicators render correctly
-
-**Tasks:**
-1. Implement test overlays (slash, X, triangle)
-2. Test on available desktop environments (GNOME, KDE, XFCE)
-3. Test with all icon types
-4. Measure performance impact
-
-**Success Criteria:**
-- ✅ Visible on all environments
-- ✅ Good contrast on light/dark themes
-- ✅ No significant performance impact
-
-### Phase 3: Fallback Options (Parallel with Implementation)
-
-#### Spike 6: URL-Based Detection
-
-**Duration:** 1-2 hours
-**Priority:** MEDIUM
-
-**Objective:** Validate URL patterns as fallback
-
-#### Spike 7: localStorage Token Patterns
-
-**Duration:** 1-2 hours
-**Priority:** MEDIUM
-
-**Objective:** Validate token presence as auth indicator
+**Do not:**
+- Implement multi-signal detection until simple version proves insufficient
+- Add configuration complexity until basic version works
+- Optimize performance until there's a measurable problem
+- Handle edge cases until they actually occur
 
 ---
 
-## 7. Recommended Implementation Strategy
+## 13. Related Documentation
 
-### Multi-Signal Detection Approach
-
-Don't rely on single method - combine signals with confidence scoring:
-
-```javascript
-getAuthenticationState() {
-  const signals = {
-    reactInternals: this._checkReactInternals(),      // Weight: 40%
-    urlPattern: this._checkUrlPattern(),               // Weight: 30%
-    tokenPresence: this._checkTokenPresence(),         // Weight: 20%
-    domState: this._checkDomState()                    // Weight: 10%
-  };
-
-  const confidence = this._calculateConfidence(signals);
-  const authenticated = confidence.score > 0.6;
-
-  return {
-    authenticated,
-    confidence: confidence.score,
-    signals,
-    timestamp: Date.now()
-  };
-}
-
-_calculateConfidence(signals) {
-  let score = 0;
-
-  if (signals.reactInternals.authenticated) score += 0.4;
-  if (signals.urlPattern.authenticated) score += 0.3;
-  if (signals.tokenPresence.authenticated) score += 0.2;
-  if (signals.domState.authenticated) score += 0.1;
-
-  return { score, details: signals };
-}
-
-_checkReactInternals() {
-  try {
-    const authProvider = this._getAuthProvider();
-    const authenticated = !!authProvider?._account;
-    return { authenticated, available: true, method: 'react' };
-  } catch {
-    return { authenticated: false, available: false, method: 'react' };
-  }
-}
-
-_checkUrlPattern() {
-  const url = window.location.href;
-  const isLoginPage = url.includes('/login') || url.includes('/auth');
-  return {
-    authenticated: !isLoginPage,
-    available: true,
-    method: 'url',
-    url: window.location.pathname
-  };
-}
-
-_checkTokenPresence() {
-  try {
-    const TokenCache = require('./tokenCache');
-    const stats = TokenCache.getCacheStats();
-    const hasTokens = stats.refreshTokenCount > 0 || stats.msalTokenCount > 0;
-    return {
-      authenticated: hasTokens,
-      available: true,
-      method: 'tokens',
-      tokenCount: stats.totalKeys
-    };
-  } catch {
-    return { authenticated: false, available: false, method: 'tokens' };
-  }
-}
-
-_checkDomState() {
-  const hasLoginUI = !!document.querySelector('[data-testid="signin-button"]');
-  const hasAppBar = !!document.querySelector('[data-testid="app-bar"]');
-  return {
-    authenticated: hasAppBar && !hasLoginUI,
-    available: true,
-    method: 'dom',
-    hasLoginUI,
-    hasAppBar
-  };
-}
-```
-
-### Smart Timing with Debouncing
-
-```javascript
-startAuthenticationMonitoring() {
-  // Phase 1: Wait for Teams to load
-  this._waitForTeamsReady().then(() => {
-    console.debug('[AUTH] Teams ready, establishing baseline');
-
-    // Phase 2: Establish stable baseline (wait 10 seconds)
-    setTimeout(() => {
-      this._establishBaseline();
-
-      // Phase 3: Start periodic monitoring
-      this._beginPeriodicMonitoring();
-    }, 10000);
-  });
-}
-
-_beginPeriodicMonitoring() {
-  let lastState = this.baselineState;
-
-  const check = () => {
-    const currentState = this.getAuthenticationState();
-
-    if (currentState.authenticated !== lastState.authenticated) {
-      console.debug('[AUTH] State change detected, confidence:', currentState.confidence);
-
-      // Debounce: confirm still changed after delay
-      if (this._debounceTimer) {
-        clearTimeout(this._debounceTimer);
-      }
-
-      this._debounceTimer = setTimeout(() => {
-        const verifiedState = this.getAuthenticationState();
-
-        // Only act if still changed AND high confidence
-        if (verifiedState.authenticated === currentState.authenticated &&
-            verifiedState.confidence > this.config.logoutDetectionConfidenceThreshold) {
-          this._handleStateChange(verifiedState, lastState);
-          lastState = verifiedState;
-        } else {
-          console.debug('[AUTH] State change not confirmed or low confidence');
-        }
-      }, this.config.logoutDetectionDebounceMs || 3000);
-    }
-  };
-
-  setInterval(check, 30000); // Check every 30 seconds
-  check(); // Initial check
-}
-```
-
-### Extensive Logging and Debug Mode
-
-```javascript
-// Only log in debug mode
-if (this.config.debugAuthDetection) {
-  console.log('[AUTH_DEBUG]', {
-    timestamp: new Date().toISOString(),
-    authenticated: this.isAuthenticated,
-    confidence: this.lastConfidence,
-    signals: this.lastSignals,
-    url: window.location.href,
-    timeSinceInit: Date.now() - this.initTimestamp
-  });
-}
-```
-
----
-
-## 8. Testing Strategy
-
-### 8.1 Unit Testing
-
-Not feasible for this feature - requires live Teams environment and authentication
-
-### 8.2 Manual Testing Checklist
-
-**Authentication Detection:**
-- [ ] Verify detection on login page
-- [ ] Verify detection after successful login
-- [ ] Verify detection after manual logout
-- [ ] Verify detection after session expiry
-- [ ] Verify no false positive on app startup
-- [ ] Verify no false positive on network disconnect
-- [ ] Verify detection of multi-device logout
-
-**Visual Indicator:**
-- [ ] Test on GNOME desktop environment
-- [ ] Test on KDE Plasma desktop environment
-- [ ] Test on XFCE desktop environment
-- [ ] Test with default icon
-- [ ] Test with dark monochrome icon
-- [ ] Test with light monochrome icon
-- [ ] Test with custom icon path
-- [ ] Test visibility on light system theme
-- [ ] Test visibility on dark system theme
-- [ ] Verify overlay appears when logged out
-- [ ] Verify overlay disappears when logged in
-- [ ] Test all indicator styles (slash, X, triangle, dim)
-
-**Notification:**
-- [ ] Verify notification sent on logout
-- [ ] Verify notification not sent on startup
-- [ ] Verify notification not sent on network disconnect
-- [ ] Verify notification can be disabled via config
-- [ ] Test notification click behavior
-
-**Performance:**
-- [ ] Monitor CPU usage during monitoring
-- [ ] Monitor memory usage over time
-- [ ] Verify no impact on app startup time
-- [ ] Verify no lag in icon updates
-
-**Configuration:**
-- [ ] Test with visual indicator enabled
-- [ ] Test with visual indicator disabled
-- [ ] Test with notification enabled
-- [ ] Test with notification disabled
-- [ ] Test different indicator styles
-- [ ] Test different confidence thresholds
-- [ ] Test different debounce times
-- [ ] Test debug mode logging
-
-### 8.3 Regression Testing
-
-- [ ] Verify existing tray functionality (unread badges) still works
-- [ ] Verify tray icon still updates on new messages
-- [ ] Verify tray click still focuses window
-- [ ] Verify tray tooltip still shows unread count
-- [ ] Verify custom notification system still works
-
----
-
-## 9. Risk Assessment & Mitigation
-
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| **Auth detection fails entirely** | MEDIUM | CRITICAL | Phase 1 spikes validate before implementation |
-| **False positives on startup** | HIGH | HIGH | Smart timing + debouncing + confidence threshold |
-| **React internals change** | MEDIUM | HIGH | Multi-signal approach + fallback methods |
-| **Performance degradation** | LOW | MEDIUM | Spike 5 measures impact, optimize if needed |
-| **Visual indicator not visible** | LOW | MEDIUM | Test on multiple DEs, provide style options |
-| **Notification spam** | MEDIUM | HIGH | Debouncing + confidence + config to disable |
-| **Edge case failures** | MEDIUM | MEDIUM | Comprehensive testing, config flags to disable |
-| **Maintenance burden** | LOW | MEDIUM | Good documentation, debug mode for troubleshooting |
-
-### Overall Risk Level
-
-**MEDIUM-HIGH** - Feature has technical uncertainty but is well-researched with clear validation path
-
-**Recommendation:** Proceed with Phase 1 spikes to validate feasibility before committing to full implementation
-
----
-
-## 10. Effort Estimate
-
-| Phase | Description | Hours |
-|-------|-------------|-------|
-| **Phase 1: Validation Spikes** | Critical technical validation | **12-18** |
-| - Spike 1 | ReactHandler auth access | 2-4 |
-| - Spike 2 | Multiple logout scenarios | 3-4 |
-| - Spike 3 | Timing verification | 2-3 |
-| - Phase 1 decision | Evaluate results, redesign if needed | 2-4 |
-| - Spike 4 | Event propagation | 1-2 |
-| - Spike 5 | Canvas rendering | 2-3 |
-| **Phase 2: Implementation** | Core feature development | **16-24** |
-| - IPC prerequisite fix | ReactHandler + preload changes | 2-3 |
-| - Auth state detection | Multi-signal implementation | 4-6 |
-| - Auth monitoring | Smart timing + debouncing | 3-4 |
-| - Visual indicator | Canvas overlay rendering | 3-4 |
-| - Notification | Logout notification logic | 2-3 |
-| - Configuration | Config schema + defaults | 2-3 |
-| **Phase 3: Testing & Refinement** | Quality assurance | **8-12** |
-| - Manual testing | All scenarios + environments | 4-6 |
-| - Bug fixes | Issues found during testing | 2-4 |
-| - Performance optimization | If needed based on Spike 5 | 1-2 |
-| - Documentation | User guide + config reference | 1-2 |
-| **Phase 4: Fallback Options** | Robustness improvements (optional) | **4-6** |
-| - Spike 6 | URL-based detection | 1-2 |
-| - Spike 7 | Token-based detection | 1-2 |
-| - Integration | Add to multi-signal system | 2-3 |
-| **TOTAL** | | **38-60** |
-
-### Original vs Realistic Estimate
-
-| Estimate | Hours | Notes |
-|----------|-------|-------|
-| **Original** (investigation only) | 16-24 | Assumed detection works, no validation |
-| **Realistic** (with validation) | **38-60** | Includes spikes, multi-signal, testing |
-
-### Assumptions
-
-- Assumes Phase 1 spikes succeed (no major redesign needed)
-- Assumes one developer working part-time
-- Includes buffer for unforeseen issues
-- Does not include code review or PR feedback cycles
-
----
-
-## 11. Decision Recommendation
-
-### Proceed with Caution
-
-✅ **RECOMMEND: Proceed with Phase 1 spikes**
-
-The feature is well-researched and has clear user value, but **high technical uncertainty** requires validation before full commitment.
-
-### Next Steps
-
-1. **Discuss with maintainer** - Confirm feature is desired and effort is acceptable
-2. **Complete Phase 1 spikes** (12-18 hours) - Validate core assumptions
-3. **Evaluate spike results:**
-   - ✅ If successful → Proceed with implementation
-   - ⚠️ If partial → Adjust approach based on findings
-   - ❌ If failed → Consider alternative feature or abandon
-
-4. **If proceeding:** Complete Phase 2 spikes, then implement
-5. **Regular check-ins:** Review progress and adjust plan as needed
-
-### Alternative: Lightweight Approach
-
-If full implementation is too risky/expensive, consider simplified version:
-
-**Notification-Only Implementation (8-12 hours):**
-- Skip visual indicator (reduces complexity)
-- Use simpler detection (URL-based only)
-- No multi-signal or confidence scoring
-- Accept higher false positive rate
-- Make opt-in (disabled by default)
-
-**Pros:** Much faster, lower risk
-**Cons:** Less robust, may annoy some users
-
----
-
-## 12. Related Documentation
-
-- **GitHub Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
-- **Related Issues:**
-  - [#1357](https://github.com/IsmaelMartinez/teams-for-linux/issues/1357) - Authentication refresh failures (token cache)
-  - [#1902](https://github.com/IsmaelMartinez/teams-for-linux/issues/1902) - TrayIconRenderer IPC initialization
-  - [#1795](https://github.com/IsmaelMartinez/teams-for-linux/issues/1795) - Tray icon timing issues
-- **Architecture Documentation:**
+- **Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
+- **Related Architecture:**
   - [Module Index](../module-index.md)
-  - [Token Cache Architecture](../token-cache-architecture.md)
-  - [Security Architecture](../security-architecture.md)
-- **Configuration:**
-  - [Configuration Reference](../../configuration.md)
-
----
-
-## 13. Appendix: Code Locations
-
-### Files to Modify
-
-| File | Purpose | Changes Required |
-|------|---------|------------------|
-| `app/browser/tools/reactHandler.js` | Authentication detection | Add auth monitoring methods |
-| `app/browser/tools/trayIconRenderer.js` | Visual indicator | Add overlay rendering |
-| `app/browser/preload.js` | IPC access | Pass ipcRenderer to ReactHandler |
-| `app/browser/tools/activityHub.js` | Monitoring lifecycle | Call new auth monitoring |
-| `app/config/index.js` | Configuration | Add new config options |
-
-### New Files Required
-
-None - all changes are modifications to existing files
-
-### Dependencies
-
-- No new npm packages required
-- Uses existing Electron, Node.js, and browser APIs
-- Leverages existing IPC infrastructure
+  - [Token Cache Architecture](../token-cache-architecture.md) - Related auth work
+- **Related Issues:**
+  - [#1357](https://github.com/IsmaelMartinez/teams-for-linux/issues/1357) - Token cache (auth)
+  - [#1902](https://github.com/IsmaelMartinez/teams-for-linux/issues/1902) - Tray IPC
 
 ---
 
 ## Document History
 
-- **2025-11-26:** Initial research document created from investigation report and gaps analysis
-- **2025-11-26:** Added comprehensive spike definitions and multi-signal detection strategy
-- **2025-11-26:** Merged into Docusaurus documentation site
+- **2025-11-26:** Simplified from over-engineered 38-60 hour plan to validation-first 14-22 hour plan
+- **2025-11-26:** Removed multi-signal detection, confidence scoring, complex timing
+- **2025-11-26:** Focused on 2-3 critical spikes to validate before any implementation
+- **2025-11-26:** Added clear decision tree and stop conditions
 
 ---
 
-:::info Next Action
-Complete **Phase 1 technical validation spikes** before proceeding with implementation. Results will determine if approach is viable or requires redesign.
+:::danger Remember
+The goal is to validate the approach works with **2-3 hours of throwaway spike code**, NOT to build half the feature before discovering it won't work. Do the spikes first!
 :::
