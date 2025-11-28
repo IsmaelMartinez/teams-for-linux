@@ -69,10 +69,11 @@ Per [ADR-006](../adr/006-cli-argument-parsing-library.md):
 **User triggers export via MQTT command:**
 
 ```bash
-# User sends command to get calendar
+# User sends command to get calendar with start/end dates
 mosquitto_pub -h localhost -t teams/command -m '{
   "action": "get-calendar",
-  "days": 7
+  "startDate": "2025-11-27T00:00:00Z",
+  "endDate": "2025-12-04T23:59:59Z"
 }'
 ```
 
@@ -108,14 +109,13 @@ async handleCommand(message) {
   const command = JSON.parse(message);
 
   if (command.action === 'get-calendar') {
-    const days = command.days || 7;
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + days);
+    // User provides start and end dates
+    const startDate = command.startDate;
+    const endDate = command.endDate;
 
     const result = await this.graphApiClient.getCalendarView(
-      startDate.toISOString(),
-      endDate.toISOString()
+      startDate,
+      endDate
     );
 
     // Publish raw Graph API JSON
@@ -129,7 +129,13 @@ async handleCommand(message) {
 ```bash
 # 1. User creates script to request calendar
 #!/bin/bash
-mosquitto_pub -h localhost -t teams/command -m '{"action":"get-calendar","days":7}'
+START_DATE=$(date -I)
+END_DATE=$(date -I -d "+7 days")
+mosquitto_pub -h localhost -t teams/command -m "{
+  \"action\":\"get-calendar\",
+  \"startDate\":\"${START_DATE}T00:00:00Z\",
+  \"endDate\":\"${END_DATE}T23:59:59Z\"
+}"
 
 # 2. User subscribes and processes
 mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > calendar.org
@@ -196,46 +202,13 @@ mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > ca
 ## Implementation Steps
 
 1. Add `get-calendar` command to MQTT command handler
-2. Validate command parameters (days, date range)
-3. Fetch from Graph API
+2. Validate command parameters (startDate, endDate)
+3. Fetch from Graph API using user-provided date range
 4. Publish raw JSON to `teams/calendar` topic
 5. Document MQTT workflow
 6. Provide example scripts (Python converter to org-mode)
 
 **Estimated effort:** 2-3 hours
-
-## Questions for User
-
-### 1. Date Range ⭐
-
-**What date range should be retrieved?**
-
-- [ ] Next N days (specify: ___)
-- [ ] I'll specify start/end dates each time as command parameters
-- [ ] Doesn't matter, make it configurable
-- [ ] Other: ___________
-
-### 2. Your Processing Workflow
-
-**What will you do with the JSON data?**
-
-Example:
-> "I'll run a cron job at 6am that sends MQTT command to get next 7 days. I subscribe to teams/calendar topic and pipe to my Python script that converts to org-mode and saves to ~/org/calendar.org. Emacs reads that file."
-
-Your workflow:
-```
-[Describe briefly]
-```
-
-### 3. Scheduling
-
-**How will you schedule/trigger this?**
-
-- [ ] Manual (I'll run command when I need it)
-- [ ] Cron job (I'll set up)
-- [ ] Systemd timer (I'll set up)
-- [ ] Home automation system (I'll set up)
-- [ ] Other: ___________
 
 ## Implementation Risk
 
