@@ -46,6 +46,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Enables keyboard shortcuts and home automation integration
   - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
+- **[Calendar Data Export Research](calendar-data-export-research.md)** - Event-driven calendar export for org-mode and external tools
+  - Related to [Issue #1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
+  - Event-driven architecture: React to user actions instead of internal scheduling
+  - Leverages existing Graph API infrastructure
 
 ## Purpose
 
