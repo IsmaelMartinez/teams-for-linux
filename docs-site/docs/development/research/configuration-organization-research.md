@@ -9,45 +9,39 @@
 ### Current State
 Teams for Linux has **66 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
 
-**Recent Improvements**:
-- MQTT documentation added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
-- Custom notification system added in PR [#1979](https://github.com/IsmaelMartinez/teams-for-linux/pull/1979) with new `customNotification` object config
-- Graph API integration added in PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) with new `graphApi` object config
-- MQTT commands feature implemented in PR [#1986](https://github.com/IsmaelMartinez/teams-for-linux/pull/1986) - bidirectional MQTT support for action commands
-- MQTT enhancement research: command-line arguments ([ADR-006](../adr/006-cli-argument-parsing-library.md)), embedded broker ([ADR-007](../adr/007-embedded-mqtt-broker.md)), extended status publishing ([#1941](https://github.com/IsmaelMartinez/teams-for-linux/pull/1941))
-- Badge count control added with `disableBadgeCount` option in PR [#1994](https://github.com/IsmaelMartinez/teams-for-linux/pull/1994)
-
 ### Key Findings
 
-1. **~~Missing Documentation~~ ✅ RESOLVED**: MQTT configuration documentation was added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939), including configuration reference and integration guide.
-
-2. **Poor Grouping**: Related options controlling single features are scattered:
+1. **Poor Grouping**: Related options controlling single features are scattered:
    - Idle detection (4 options) spread across categories
    - Notification system (11 options) split between categories
    - Window behavior (7 options) scattered across Core, Advanced, and Screen Sharing sections
    - SSO options use inconsistent naming patterns
 
 3. **Conditional Options**: Some options are only relevant when other options are set to specific values:
-   - `customNotification` settings only apply when `notificationMethod: "custom"`
-   - `graphApi` settings only apply when `graphApi.enabled: true`
-   - This pattern creates complexity where not all implementations need all options
-   - Future consideration: validation/documentation to clarify these dependencies
 
-4. **~~Technical Debt~~ ✅ RESOLVED**: Deprecated options (`contextIsolation`, `sandbox`) have been removed from the configuration.
+   **Current Conditional Dependencies:**
+   - `customNotification.*` settings only apply when `notificationMethod: "custom"`
+   - `graphApi.*` settings only apply when `graphApi.enabled: true`
+   - `mqtt.brokerUrl`, `mqtt.username`, `mqtt.password`, `mqtt.commandTopic` only apply when `mqtt.enabled: true`
+   - `auth.basic.passwordCommand` only applies when `auth.basic.user` is set
+   - `auth.intune.user` only applies when `auth.intune.enabled: true`
+   - `screenSharingThumbnail.alwaysOnTop` only applies when `screenSharingThumbnail.enabled: true`
+   - `idleDetection` check intervals only apply when `idleDetection.enabled: true`
 
-5. **Structural Inconsistency**: Mix of flat options and nested objects without clear pattern:
+   **Impact:** This pattern creates complexity where not all implementations need all options. Future Phase 2 work should include validation to warn users when dependent options are set without their parent enabled.
+
+4. **Structural Inconsistency**: Mix of flat options and nested objects without clear pattern:
    - Good: `mqtt`, `cacheManagement`, `screenSharingThumbnail`, `customNotification`, `graphApi` (nested)
    - Bad: `customBGServiceBaseUrl`, `customBGServiceConfigFetchInterval` (should be nested)
 
-6. **Naming Issues**: Mix of negative (`disableNotifications`) and positive (`trayIconEnabled`) naming, plus some overly verbose names.
+5. **Naming Issues**: Mix of negative (`disableNotifications`) and positive (`trayIconEnabled`) naming, plus some overly verbose names.
 
 ### Recommended Approach
 **Three-Phase Gradual Migration** with backward compatibility:
 
-**Phase 1 (v2.x)**: Documentation reorganization + ~~MQTT docs~~ ✅ + deprecation of old flat keys
+**Phase 1 (v2.x)**: Documentation reorganization + deprecation warnings
 **Phase 2 (v2.x)**: Introduce nested structure with auto-migration
-**Phase 3 (v3.0)**: Remove deprecated flat keys (breaking change)
+**Phase 3 (v3.0)**: Automatic migration without prompts
 
 ### Expected Benefits
 - **Discoverability**: Better documentation grouping helps users find related options
@@ -142,43 +136,13 @@ mqtt  // Now documented in PR #1939
 // contextIsolation, sandbox - REMOVED from configuration
 ```
 
-**Total Active Options: 66** (including customNotification, graphApi, and disableBadgeCount)
+**Total Active Options: 66**
+
+*Count breakdown: 7 (Core) + 8 (Auth & Security) + 10 (Notifications & UI) + 7 (Screen Sharing & Media) + 10 (System Integration) + 15 (Advanced) + 1 (MQTT) + 2 (customNotification, graphApi) + 6 (from examples: incomingCallCommand, incomingCallCommandArgs, disableBadgeCount, alwaysOnTop, class, disableTimestampOnCopy) = 66 total*
 
 ### Problem Analysis
 
-#### ~~Problem 1: Missing MQTT Documentation~~ ✅ RESOLVED
-
-**Status**: Fixed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939) (merged after research began)
-
-**Solution Implemented:**
-- Added MQTT section to docs-site/docs/configuration.md with configuration reference table
-- Created comprehensive docs-site/docs/mqtt-integration.md guide
-- Includes examples for Home Assistant integration
-- Added to documentation navigation sidebar
-- Users can now discover and configure the MQTT feature
-
-**Original Issue** (now resolved):
-```javascript
-// app/config/index.js:468-481
-mqtt: {
-  default: {
-    enabled: false,
-    brokerUrl: "",
-    username: "",
-    password: "",
-    clientId: "teams-for-linux",
-    topicPrefix: "teams",
-    statusTopic: "status",
-    statusCheckInterval: 10000,
-  },
-  describe: "MQTT configuration for publishing Teams status updates",
-  type: "object",
-}
-```
-
-This feature was in code but undocumented, making it impossible for users to discover.
-
-#### Problem 2: Scattered Related Options
+#### Problem 1: Scattered Related Options
 
 **Case Study: Idle Detection**
 
@@ -274,21 +238,7 @@ customBackground: {
 }
 ```
 
-#### ~~Problem 3: Deprecated Options Still Present~~ ✅ RESOLVED
-
-**Status**: Fixed by removing deprecated options from configuration
-
-**Solution Implemented:**
-- Removed `contextIsolation` option from app/config/index.js (was at lines 185-192)
-- Removed `sandbox` option from app/config/index.js (was at lines 388-395)
-- Both options were never actually used in the code (verified via grep)
-- Users with these in their config.json will simply have them ignored (no breaking change)
-- Total configuration options: 66 (after adding customNotification, graphApi, and disableBadgeCount)
-
-**Original Issue** (now resolved):
-These options were deprecated with warnings but still accepted values, cluttering the configuration without providing any functionality. They have now been cleanly removed.
-
-#### Problem 4: Naming Inconsistencies
+#### Problem 2: Naming Inconsistencies
 
 **Negative vs Positive Naming:**
 ```javascript
@@ -320,7 +270,7 @@ isCustomBackgroundEnabled  // Full word
 - Use consistent abbreviations or always spell out
 - Nested structure reduces name length needs
 
-#### Problem 5: Flat vs Nested Structure
+#### Problem 3: Flat vs Nested Structure
 
 **Current Nested Options (Good):**
 ```javascript
@@ -414,9 +364,9 @@ defaultNotificationUrgency: "normal",
 **Goal:** Improve discoverability without code changes
 
 **Changes:**
-1. ~~Add MQTT to configuration.md~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-2. ~~Remove deprecated options~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
-3. Reorganize documentation categories into logical groupings
+1. [x] Add MQTT to configuration.md (completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939))
+2. [x] Remove deprecated options (completed - contextIsolation, sandbox removed)
+3. [ ] Reorganize documentation categories into logical groupings
 
 **New Documentation Categories:**
 
@@ -473,7 +423,7 @@ defaultNotificationUrgency: "normal",
 ### Keyboard Shortcuts
 - disableGlobalShortcuts, globalShortcuts
 
-### MQTT Integration ✅ DOCUMENTED
+### MQTT Integration
 - mqtt configuration object (see [MQTT Integration Guide](https://ismaelmartinez.github.io/teams-for-linux/mqtt-integration))
 
 ### Performance & Hardware
@@ -489,16 +439,16 @@ defaultNotificationUrgency: "normal",
 - chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages,
   disableTimestampOnCopy
 
-### ~~Deprecated Options~~ ✅ REMOVED
-- ~~contextIsolation~~ REMOVED from app/config/index.js
-- ~~sandbox~~ REMOVED from app/config/index.js
+### Deprecated Options (Removed)
+- contextIsolation (removed from app/config/index.js)
+- sandbox (removed from app/config/index.js)
 ```
 
 **Deliverables:**
-- Updated docs-site/docs/configuration.md (reorganize categories)
-- ~~New MQTT configuration section with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- ~~Deprecated options removal~~ ✅ **COMPLETED** (removed from config)
-- **Remaining Effort: 1-2 hours** (reduced from 4-6 hours: MQTT done, deprecated options done)
+- [ ] Updated docs-site/docs/configuration.md (reorganize categories)
+- [x] New MQTT configuration section with examples (completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939))
+- [x] Deprecated options removal (completed - removed from config)
+- **Remaining Effort: 1-2 hours**
 
 ### Phase 2: Introduce Nested Structure (v2.x) - Backward Compatible
 
@@ -1080,11 +1030,43 @@ function migrateConfig(config, configPath) {
 ```
 
 **Benefits:**
-- ✅ Zero breakage even for users who never migrated
-- ✅ Automatic upgrade on first v3.0 launch
-- ✅ Backup created automatically
-- ✅ Falls back to in-memory if write fails
-- ✅ Migration logic preserved for safety
+- Zero breakage even for users who never migrated
+- Automatic upgrade on first v3.0 launch
+- Backup created automatically
+- Falls back to in-memory if write fails
+- Migration logic preserved for safety
+
+**Edge Cases Handled:**
+
+The automatic migration in v3.0 addresses several edge cases:
+
+1. **Read-only config files**: Falls back to in-memory migration with warning log. App continues to work normally.
+   ```javascript
+   catch (error) {
+     console.warn(`[Config Migration v3.0] Could not write to disk: ${error.message}`);
+     console.info(`[Config Migration v3.0] In-memory migration successful, app will work normally`);
+   }
+   ```
+
+2. **Multiple app instances**: First instance to start will perform file migration. Subsequent instances will see the migrated file.
+   - No race condition issues since migration is atomic (backup → write)
+   - All instances benefit from migration
+
+3. **Config managed by CM tools** (Ansible, Puppet, Chef):
+   - Document migration in release notes
+   - Recommend updating CM templates to new format
+   - Old format continues working via in-memory migration if CM reverts file
+
+4. **Sandboxed environments** (snap/flatpak):
+   - User config directories are writable in snap/flatpak
+   - Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/`
+   - Flatpak: `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/`
+   - Backup and migration work correctly in both
+
+5. **Partial migration**: If user manually updated some but not all keys:
+   - Migration logic checks if new keys exist before overwriting
+   - Only migrates keys that haven't been manually updated
+   - User's manual changes take precedence
 
 **Deliverables:**
 - Remove old options from yargs schema (cleanup)
@@ -1183,8 +1165,8 @@ function migrateConfig(config, configPath) {
 ## Success Metrics
 
 ### Phase 1 Success Criteria
-- [x] ~~MQTT configuration documented with examples~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- [x] ~~Deprecated options removed~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
+- [x] MQTT configuration documented with examples (completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939))
+- [x] Deprecated options removed (completed - contextIsolation, sandbox removed)
 - [ ] All 66 options organized into logical categories
 - [ ] Zero breaking changes
 - [ ] Documentation builds and deploys successfully
@@ -1543,16 +1525,23 @@ function migrateConfig(config, configPath) {
 
 The proposed three-phase approach provides a balanced path forward:
 
-1. **Phase 1** delivers immediate value (better docs, ~~MQTT~~ ✅) with zero risk
+1. **Phase 1** delivers immediate value (documentation improvements) with zero risk
 2. **Phase 2** introduces modern structure while maintaining compatibility
 3. **Phase 3** completes the transformation after users have time to migrate
 
-**Phase 1 Status Update**:
-- ✅ MQTT documentation completed in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-- ✅ Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
-- ⏳ Remaining: Documentation reorganization into logical categories
+This research recommends **completing remaining Phase 1 tasks** (documentation reorganization) and planning Phase 2 for a future release.
 
-This research recommends **proceeding with remaining Phase 1 tasks** (low effort, high value, zero risk) and planning Phase 2 for a future release cycle.
+### Implementation Status
+
+Since this research was completed, several improvements have been implemented:
+
+- [x] MQTT documentation added in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
+- [x] Deprecated options (`contextIsolation`, `sandbox`) removed from configuration
+- [x] Custom notification system added in PR [#1979](https://github.com/IsmaelMartinez/teams-for-linux/pull/1979) with new `customNotification` object config
+- [x] Graph API integration added in PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) with new `graphApi` object config
+- [x] MQTT commands feature implemented in PR [#1986](https://github.com/IsmaelMartinez/teams-for-linux/pull/1986) - bidirectional MQTT support with `commandTopic`
+- [x] Badge count control added with `disableBadgeCount` option in PR [#1994](https://github.com/IsmaelMartinez/teams-for-linux/pull/1994)
+- [ ] Documentation reorganization (Phase 1 remaining task)
 
 The nested configuration structure will:
 - Make related options easier to discover and configure
@@ -1562,12 +1551,9 @@ The nested configuration structure will:
 - Create better user experience with logical grouping
 
 **Next Steps:**
-1. ~~Review and approve this research document~~ ✅
-2. ~~Add MQTT configuration documentation~~ ✅ **COMPLETED** in PR [#1939](https://github.com/IsmaelMartinez/teams-for-linux/pull/1939)
-3. ~~Remove deprecated options~~ ✅ **COMPLETED** (contextIsolation, sandbox removed)
-4. Create GitHub issue for remaining Phase 1 implementation
-5. Update docs-site/docs/configuration.md with reorganized categories
-6. Plan Phase 2 for future release
+1. Create GitHub issue for Phase 1 completion (documentation reorganization)
+2. Update docs-site/docs/configuration.md with reorganized categories
+3. Plan Phase 2 implementation for future release
 
 **Future Considerations (Beyond Phase 3):**
 - **Sensitive Data Security**: Move sensitive configuration (e.g., `clientCertPassword`, MQTT credentials) outside of config.json and implement encryption
