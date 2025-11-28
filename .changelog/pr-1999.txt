@@ -1,1 +1,1 @@
-Add keywords to AppStream metadata for improved discoverability - by @IsmaelMartinez (#1999)
+Remove [skip ci] from changelog generator to enable PR merging - by @IsmaelMartinez (#1999)
