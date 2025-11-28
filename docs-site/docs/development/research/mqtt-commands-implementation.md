@@ -11,7 +11,7 @@
 
 **✅ Completed** - Initial implementation deployed with the following features:
 - Command reception via MQTT with JSON validation
-- Three actions supported: `toggle-mute`, `toggle-video`, `raise-hand`
+- Three actions supported: `toggle-mute`, `toggle-video`, `toggle-hand-raise`
 - Security: action whitelist, JSON validation
 - Event-based architecture for clean separation of concerns
 - Comprehensive documentation and testing examples
@@ -149,7 +149,7 @@ mqttClient.on('command', (command) => {
   const shortcuts = {
     'toggle-mute': 'Ctrl+Shift+M',
     'toggle-video': 'Ctrl+Shift+O',
-    'raise-hand': 'Ctrl+Shift+K',
+    'toggle-hand-raise': 'Ctrl+Shift+K',
   };
 
   const shortcut = shortcuts[command.action];
@@ -217,8 +217,7 @@ mosquitto_pub -h localhost -t teams/command -m '{"action":"toggle-mute"}' -q 1
 
 - `toggle-mute` - Ctrl+Shift+M
 - `toggle-video` - Ctrl+Shift+O
-- `raise-hand` - Ctrl+Shift+K
-- `toggle-blur` - Ctrl+Shift+P
+- `toggle-hand-raise` - Ctrl+Shift+K
 
 Easy to extend with more Teams keyboard shortcuts.
 

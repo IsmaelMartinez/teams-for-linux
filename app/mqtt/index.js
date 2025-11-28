@@ -25,7 +25,7 @@ class MQTTClient extends EventEmitter {
 		this.actionShortcutMap = {
 			'toggle-mute': 'Ctrl+Shift+M',
 			'toggle-video': 'Ctrl+Shift+O',
-			'raise-hand': 'Ctrl+Shift+K'
+			'toggle-hand-raise': 'Ctrl+Shift+K'
 		};
 	}
 
