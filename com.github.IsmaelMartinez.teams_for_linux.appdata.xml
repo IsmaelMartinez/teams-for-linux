@@ -14,6 +14,21 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.6.18" date="2025-11-28">
+      <description>
+        <ul>
+          <li>[Research]: Review and improve project configuration options - by @IsmaelMartinez (#1937)</li>
+          <li>Display research docs in side panel - by @IsmaelMartinez (#1993)</li>
+          <li>Implement issue 1991 with simple approach - by @IsmaelMartinez (#1994)</li>
+          <li>chore(deps): bump node-forge from 1.3.1 to 1.3.2 in /docs-site in the npm_and_yarn group across 1 directory (#1996)</li>
+          <li>Change raise-hand command to toggle-hand-raise - by @IsmaelMartinez (#1997)</li>
+          <li>Remove [skip ci] from changelog generator to enable PR merging  - by @IsmaelMartinez (#1998)</li>
+          <li>Update metadata for com.github.IsmaelMartinez.teams_for_linux - by @razzeee (#1999)</li>
+          <li>Add menu toggle for badge count notification setting - by @IsmaelMartinez (#2000)</li>
+          <li>Add calendar export research for issue #1995 - by @IsmaelMartinez (#2001)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.6.17" date="2025-11-26">
       <description>
         <ul>

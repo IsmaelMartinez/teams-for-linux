@@ -1,1 +1,0 @@
-Prevent changelog generator from triggering builds - by @IsmaelMartinez (#1998)
