@@ -84,6 +84,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `minimized` | `boolean` | `false` | Start the application minimized |
 | `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
+| `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
 | `class` | `string` | `null` | Custom value for the WM_CLASS property |
 
 ### Theming & Appearance
