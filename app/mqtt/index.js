@@ -108,6 +108,36 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
+	 * Generic publish method for publishing any payload to MQTT
+	 * @param {string} topic - Full MQTT topic path
+	 * @param {string|object} payload - Payload to publish (will be converted to string)
+	 * @param {object} options - MQTT publish options
+	 * @param {boolean} options.retain - Whether to retain the message (default: true)
+	 * @param {number} options.qos - Quality of Service level (default: 0)
+	 */
+	async publish(topic, payload, options = {}) {
+		if (!this.isConnected || !this.client) {
+			console.debug('[MQTT] Not connected, skipping publish');
+			return;
+		}
+
+		const payloadString = typeof payload === 'object'
+			? JSON.stringify(payload)
+			: String(payload);
+
+		try {
+			await this.client.publish(topic, payloadString, {
+				retain: options.retain ?? true,
+				qos: options.qos ?? 0
+			});
+
+			console.debug(`[MQTT] Published to ${topic}: ${payloadString.substring(0, 100)}`);
+		} catch (error) {
+			console.error(`[MQTT] Failed to publish to ${topic}:`, error);
+		}
+	}
+
+	/**
 	 * Publish Teams status to MQTT topic
 	 * @param {number|string} status - Teams status code
 	 */
