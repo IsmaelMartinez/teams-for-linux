@@ -3,7 +3,7 @@
 **Date**: 2025-11-12
 **Updated**: 2025-11-30
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1a Complete - Core Infrastructure Implemented
+**Status**: Phase 1 Complete (Infrastructure + Documentation)
 
 ## User Request
 
@@ -308,10 +308,10 @@ async publish(topic, payload, options = {}) {
 - [x] Initialize service in `app/index.js`
 - [ ] Add configuration schema for semantic categories (deferred to Phase 1b)
 
-### Phase 1b: Documentation (Next)
+### Phase 1b: Documentation ✅ COMPLETED (2025-11-30)
 
-- [ ] Document new MQTT topics in `docs-site/docs/configuration.md`
-- [ ] Update MQTT section with camera/microphone/in-call topics
+- [x] Document new MQTT topics in `docs-site/docs/configuration.md`
+- [x] Update MQTT section with camera/microphone/in-call topics
 
 ### Phase 2: WebRTC Monitoring (Camera/Mic)
 
@@ -377,10 +377,20 @@ async publish(topic, payload, options = {}) {
 - Infrastructure ready for camera/microphone state monitoring (Phase 2)
 - Generic publish() method ready for any future MQTT publishing needs
 
-**What's next (Phase 1b):**
-- Document configuration schema for semantic categories
-- Add example configuration showing camera/microphone/call topics
-- Document default values and how to customize topics
+### Phase 1b - Documentation (Completed 2025-11-30)
+
+**What was implemented:**
+
+1. **Configuration Documentation** (`docs-site/docs/configuration.md:160-171`)
+   - Added "Published Topics" table showing all MQTT topics
+   - Documents `{topicPrefix}/in-call`, `{topicPrefix}/camera`, `{topicPrefix}/microphone`
+   - Clear explanation of payload format (`"true"` or `"false"` strings)
+   - Notes that Phase 2 topics (camera/microphone) are coming
+   - Explains retained message behavior
+
+**What's working:**
+- Users can now see exactly what topics will be published when MQTT is enabled
+- Clear documentation for home automation integration
 
 **What's next (Phase 2):**
 - Implement WebRTC monitoring in browser process to detect camera/mic state
