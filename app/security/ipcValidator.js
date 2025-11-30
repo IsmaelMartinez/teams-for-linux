@@ -48,6 +48,10 @@ const allowedChannels = new Set([
   'incoming-call-action',
   'call-connected',
   'call-disconnected',
+
+  // Media status (camera/microphone)
+  'camera-state-changed',
+  'microphone-state-changed',
   
   // Authentication and forms
   'submitForm',

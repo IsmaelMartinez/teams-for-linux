@@ -1,9 +1,9 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
 **Date**: 2025-11-12
-**Updated**: 2025-11-23
+**Updated**: 2025-11-30
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Investigation Complete - Ready for Implementation
+**Status**: Phase 1a Complete - Core Infrastructure Implemented
 
 ## User Request
 
@@ -150,45 +150,26 @@ publishToMqtt('teams/camera', String(data.camera));  // "true" as string
 
 ## MQTT Topics
 
-Three simple topics (configurable in `config.json`):
+Three simple topics using existing `topicPrefix`:
 
-- `teams/camera` → `"true"` or `"false"`
-- `teams/microphone` → `"true"` or `"false"`
-- `teams/in-call` → `"true"` or `"false"`
+- `{topicPrefix}/camera` → `"true"` or `"false"`
+- `{topicPrefix}/microphone` → `"true"` or `"false"`
+- `{topicPrefix}/in-call` → `"true"` or `"false"`
 
 ### Configuration
 
-Each category is independently configurable with semantic naming:
+Uses existing MQTT configuration structure:
 
 ```json
 {
   "mqtt": {
     "enabled": true,
-    "topicPrefix": "teams",
-
-    "camera": {
-      "enabled": true,
-      "topic": "camera"
-    },
-
-    "microphone": {
-      "enabled": true,
-      "topic": "microphone"
-    },
-
-    "call": {
-      "enabled": true,
-      "topic": "in-call"
-    }
+    "topicPrefix": "teams"
   }
 }
 ```
 
-**Benefits**:
-- Each category clearly named (camera, microphone, call)
-- Enable/disable each independently
-- Customize topic names per category
-- Self-documenting configuration
+If MQTT is enabled, all media status events are published. No per-feature toggles needed.
 
 ### Home Assistant Example
 
@@ -317,15 +298,21 @@ async publish(topic, payload, options = {}) {
 
 ## Implementation Checklist
 
-### Phase 1: Core Infrastructure
+### Phase 1a: Core Infrastructure ✅ COMPLETED (2025-11-30)
 
-- [ ] Add generic `publish()` method to `app/mqtt/index.js`
-- [ ] Create `app/mqtt/mediaStatusService.js` following service pattern
-- [ ] Add IPC channel allowlist entries in `app/security/ipcValidator.js`:
-  - [ ] `camera-state-changed`
-  - [ ] `microphone-state-changed`
-- [ ] Initialize service in `app/index.js`
-- [ ] Add configuration schema for semantic categories
+- [x] Add generic `publish()` method to `app/mqtt/index.js`
+- [x] Create `app/mqtt/mediaStatusService.js` following service pattern
+- [x] Add IPC channel allowlist entries in `app/security/ipcValidator.js`:
+  - [x] `camera-state-changed`
+  - [x] `microphone-state-changed`
+- [x] Initialize service in `app/index.js`
+- [ ] Add configuration schema for semantic categories (deferred to Phase 1b)
+
+### Phase 1b: Documentation (Next)
+
+- [ ] Document new MQTT topics in `docs-site/docs/configuration.md`
+- [ ] Add Home Assistant integration examples
+- [ ] Update MQTT section with camera/microphone/in-call topics
 
 ### Phase 2: WebRTC Monitoring (Camera/Mic)
 
@@ -340,10 +327,66 @@ async publish(topic, payload, options = {}) {
 
 ### Phase 3: Documentation & Testing
 
-- [ ] Run `npm run generate-ipc-docs` to update auto-generated docs
+- [x] Run `npm run generate-ipc-docs` to update auto-generated docs
 - [ ] Test with UI buttons AND keyboard shortcuts
 - [ ] Test call connect/disconnect publishes correct state
 - [ ] Test camera/mic toggle publishes correct state
+
+---
+
+## Implementation Notes
+
+### Phase 1a - Core Infrastructure (Completed 2025-11-30)
+
+**What was implemented:**
+
+1. **Generic MQTT Publish Method** (`app/mqtt/index.js:118-138`)
+   - Added `publish(topic, payload, options)` method to MQTTClient
+   - Handles both string and object payloads (auto-converts objects to JSON)
+   - Configurable retain and QoS options with sensible defaults
+   - Reusable for all future MQTT publishing needs
+
+2. **MQTT Media Status Service** (`app/mqtt/mediaStatusService.js`)
+   - New service following established pattern (like ScreenSharingService)
+   - Uses private fields for encapsulation (#mqttClient, #topicPrefix)
+   - Registers IPC listeners for:
+     - `call-connected` - Publishes "true" to {topicPrefix}/in-call
+     - `call-disconnected` - Publishes "false" to {topicPrefix}/in-call
+     - `camera-state-changed` - Publishes camera state to {topicPrefix}/camera
+     - `microphone-state-changed` - Publishes microphone state to {topicPrefix}/microphone
+   - Simple design: if MQTT enabled, publish all events
+   - Only publishes actual known state changes (no assumptions about camera/mic on call end)
+   - Proper error handling and logging
+
+3. **IPC Security Allowlist** (`app/security/ipcValidator.js:52-54`)
+   - Added `camera-state-changed` to allowlist
+   - Added `microphone-state-changed` to allowlist
+   - Maintains security by explicitly whitelisting new channels
+
+4. **Service Initialization** (`app/index.js:12, 48, 300-301`)
+   - Imported MQTTMediaStatusService
+   - Added mqttMediaStatusService variable
+   - Initialize service after mqttClient connects (only if MQTT enabled)
+   - Follows same initialization pattern as other services
+
+5. **IPC Documentation** (`docs-site/docs/development/ipc-api-generated.md`)
+   - Auto-generated documentation updated with new channels
+   - Now documents 42 IPC channels (was 40)
+
+**What's working:**
+- Call state publishing is fully functional (leverages existing call-connected/call-disconnected events)
+- Infrastructure ready for camera/microphone state monitoring (Phase 2)
+- Generic publish() method ready for any future MQTT publishing needs
+
+**What's next (Phase 1b):**
+- Document configuration schema for semantic categories
+- Add example configuration showing camera/microphone/call topics
+- Document default values and how to customize topics
+
+**What's next (Phase 2):**
+- Implement WebRTC monitoring in browser process to detect camera/mic state
+- Create mediaStatus.js browser tool with getUserMedia interception
+- Wire camera/mic state changes to send IPC events that trigger MQTT publishing
 
 ---
 

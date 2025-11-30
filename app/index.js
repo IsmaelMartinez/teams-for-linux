@@ -9,6 +9,7 @@ const {
 const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
+const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
@@ -44,6 +45,7 @@ CommandLineManager.addSwitchesAfterConfigLoad(config);
 
 let userStatus = -1;
 let mqttClient = null;
+let mqttMediaStatusService = null;
 let graphApiClient = null;
 
 let player;
@@ -293,6 +295,9 @@ async function handleAppReady() {
     });
 
     mqttClient.initialize();
+
+    mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
+    mqttMediaStatusService.initialize();
   }
 
   // Load menu-toggleable settings from persistent store
