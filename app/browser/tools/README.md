@@ -55,6 +55,9 @@ Modifies platform detection to improve Teams web compatibility on Linux.
 #### [shortcuts.js](shortcuts.js)
 Implements custom keyboard shortcuts for in-app actions like zoom control and navigation.
 
+#### [frameless.js](frameless.js)
+Ensures proper functionality of the top bar in frameless mode (i.e. without native window title bar).
+
 #### Global Shortcuts System (Main Process)
 System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `globalShortcuts` array in `config.json`.
 
