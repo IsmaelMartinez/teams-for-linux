@@ -21,8 +21,8 @@ class MQTTMediaStatusService {
 	}
 
 	initialize() {
-		ipcMain.on('call-connected', this.#handleCallConnected.bind(this));
-		ipcMain.on('call-disconnected', this.#handleCallDisconnected.bind(this));
+		ipcMain.on('teams-call-connected', this.#handleCallConnected.bind(this));
+		ipcMain.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
 		ipcMain.on('camera-state-changed', this.#handleCameraChanged.bind(this));
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
 
