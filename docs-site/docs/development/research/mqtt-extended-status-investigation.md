@@ -152,9 +152,9 @@ publishToMqtt('teams/camera', String(data.camera));  // "true" as string
 
 Three simple topics using existing `topicPrefix`:
 
-- `{topicPrefix}/camera` → `"true"` or `"false"`
-- `{topicPrefix}/microphone` → `"true"` or `"false"`
-- `{topicPrefix}/in-call` → `"true"` or `"false"`
+- `\{topicPrefix\}/camera` → `"true"` or `"false"`
+- `\{topicPrefix\}/microphone` → `"true"` or `"false"`
+- `\{topicPrefix\}/in-call` → `"true"` or `"false"`
 
 ### Configuration
 
@@ -349,10 +349,10 @@ async publish(topic, payload, options = {}) {
    - New service following established pattern (like ScreenSharingService)
    - Uses private fields for encapsulation (#mqttClient, #topicPrefix)
    - Registers IPC listeners for:
-     - `call-connected` - Publishes "true" to {topicPrefix}/in-call
-     - `call-disconnected` - Publishes "false" to {topicPrefix}/in-call
-     - `camera-state-changed` - Publishes camera state to {topicPrefix}/camera
-     - `microphone-state-changed` - Publishes microphone state to {topicPrefix}/microphone
+     - `call-connected` - Publishes "true" to `\{topicPrefix\}/in-call`
+     - `call-disconnected` - Publishes "false" to `\{topicPrefix\}/in-call`
+     - `camera-state-changed` - Publishes camera state to `\{topicPrefix\}/camera`
+     - `microphone-state-changed` - Publishes microphone state to `\{topicPrefix\}/microphone`
    - Simple design: if MQTT enabled, publish all events
    - Only publishes actual known state changes (no assumptions about camera/mic on call end)
    - Proper error handling and logging
@@ -383,7 +383,7 @@ async publish(topic, payload, options = {}) {
 
 1. **Configuration Documentation** (`docs-site/docs/configuration.md:160-171`)
    - Added "Published Topics" table showing all MQTT topics
-   - Documents `{topicPrefix}/in-call`, `{topicPrefix}/camera`, `{topicPrefix}/microphone`
+   - Documents `\{topicPrefix\}/in-call`, `\{topicPrefix\}/camera`, `\{topicPrefix\}/microphone`
    - Clear explanation of payload format (`"true"` or `"false"` strings)
    - Notes that Phase 2 topics (camera/microphone) are coming
    - Explains retained message behavior

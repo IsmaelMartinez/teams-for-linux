@@ -163,15 +163,15 @@ When MQTT is enabled, the following topics are automatically published:
 
 | Topic | Payload | Description |
 |-------|---------|-------------|
-| `{topicPrefix}/status` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
-| `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected) |
-| `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
-| `{topicPrefix}/microphone` | `"true"` or `"false"` | Microphone on/off state (Phase 2) |
+| `\{topicPrefix\}/status` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
+| `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected) |
+| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
+| `\{topicPrefix\}/microphone` | `"true"` or `"false"` | Microphone on/off state (Phase 2) |
 
 All topics use retained messages by default, ensuring subscribers receive the last known state immediately upon connecting.
 
 > [!NOTE]
-> By default, MQTT operates in **status-only mode** (publishes status to `{topicPrefix}/{statusTopic}` but doesn't receive commands). To enable **bidirectional mode**, set `commandTopic` to a topic name like `"command"`. Commands will then be received on `{topicPrefix}/{commandTopic}`. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
+> By default, MQTT operates in **status-only mode** (publishes status to `\{topicPrefix\}/\{statusTopic\}` but doesn't receive commands). To enable **bidirectional mode**, set `commandTopic` to a topic name like `"command"`. Commands will then be received on `\{topicPrefix\}/\{commandTopic\}`. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
 
 ### Microsoft Graph API
 
