@@ -311,7 +311,6 @@ async publish(topic, payload, options = {}) {
 ### Phase 1b: Documentation (Next)
 
 - [ ] Document new MQTT topics in `docs-site/docs/configuration.md`
-- [ ] Add Home Assistant integration examples
 - [ ] Update MQTT section with camera/microphone/in-call topics
 
 ### Phase 2: WebRTC Monitoring (Camera/Mic)
