@@ -1,4 +1,4 @@
-const { ipcMain } = require('electron');
+const { app, ipcMain } = require('electron');
 
 /**
  * MQTT Media Status Service
@@ -21,10 +21,13 @@ class MQTTMediaStatusService {
 	}
 
 	initialize() {
-		ipcMain.on('teams-call-connected', this.#handleCallConnected.bind(this));
-		ipcMain.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
+		// Publish MQTT status when camera state changes
 		ipcMain.on('camera-state-changed', this.#handleCameraChanged.bind(this));
+		// Publish MQTT status when microphone state changes
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
+
+		app.on('teams-call-connected', this.#handleCallConnected.bind(this));
+		app.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
 
 		console.info('[MQTTMediaStatusService] Initialized');
 	}

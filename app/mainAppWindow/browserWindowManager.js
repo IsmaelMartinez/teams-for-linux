@@ -1,4 +1,5 @@
 const {
+  app,
   BrowserWindow,
   ipcMain,
   session,
@@ -250,7 +251,7 @@ class BrowserWindowManager {
         ? this.disableScreenLockElectron()
         : this.disableScreenLockWakeLockSentinel();
 
-      ipcMain.emit('teams-call-connected');
+      app.emit('teams-call-connected');
       return result;
     };
   }
@@ -262,7 +263,7 @@ class BrowserWindowManager {
         ? this.enableScreenLockElectron()
         : this.enableScreenLockWakeLockSentinel();
 
-      ipcMain.emit('teams-call-disconnected');
+      app.emit('teams-call-disconnected');
       return result;
     };
   }
