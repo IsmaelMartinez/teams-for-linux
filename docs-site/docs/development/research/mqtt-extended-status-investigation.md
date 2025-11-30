@@ -247,7 +247,7 @@ class MQTTMediaStatusService {
   async #handleCallConnected() {
     if (this.#config.mqtt?.call?.enabled) {
       await this.#mqttClient.publish(
-        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.call.topic}`,
+        `$\{this.#config.mqtt.topicPrefix}/$\{this.#config.mqtt.call.topic}`,
         'true',
         { retain: true }
       );
@@ -257,7 +257,7 @@ class MQTTMediaStatusService {
   async #handleCallDisconnected() {
     if (this.#config.mqtt?.call?.enabled) {
       await this.#mqttClient.publish(
-        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.call.topic}`,
+        `$\{this.#config.mqtt.topicPrefix}/$\{this.#config.mqtt.call.topic}`,
         'false',
         { retain: true }
       );
@@ -270,7 +270,7 @@ class MQTTMediaStatusService {
   async #handleCameraChanged(event, enabled) {
     if (this.#config.mqtt?.camera?.enabled) {
       await this.#mqttClient.publish(
-        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.camera.topic}`,
+        `$\{this.#config.mqtt.topicPrefix}/$\{this.#config.mqtt.camera.topic}`,
         String(enabled),
         { retain: true }
       );
@@ -280,7 +280,7 @@ class MQTTMediaStatusService {
   async #handleMicrophoneChanged(event, enabled) {
     if (this.#config.mqtt?.microphone?.enabled) {
       await this.#mqttClient.publish(
-        `${this.#config.mqtt.topicPrefix}/${this.#config.mqtt.microphone.topic}`,
+        `$\{this.#config.mqtt.topicPrefix}/$\{this.#config.mqtt.microphone.topic}`,
         String(enabled),
         { retain: true }
       );
