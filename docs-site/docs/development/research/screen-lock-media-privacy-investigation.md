@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-This document investigates the feasibility of implementing automatic camera and microphone disabling when the user's screen is locked - a privacy feature that exists in the Windows Teams client. The investigation covers screen lock detection capabilities, media device control mechanisms, and implementation approaches for cross-platform support.
+This document investigates the feasibility of implementing automatic camera and microphone disabling when the user's screen is locked - a privacy feature that exists in the Windows Teams client. The investigation covers screen lock detection capabilities, media device control mechanisms, and implementation approaches with a **Linux-first philosophy**.
 
-**Key Finding:** This feature is **feasible but requires platform-specific implementations**, with Linux requiring additional workarounds due to current Electron API limitations.
+**Key Finding:** This feature is **feasible using a user-script approach** that aligns with Linux/Unix philosophy. Rather than implementing all screen lock detection logic in the application, Teams for Linux should expose **commands/APIs** that users can invoke from their own screen lock scripts (D-Bus listeners, systemd hooks, etc.).
 
 ## Problem Statement
 
@@ -217,62 +217,244 @@ ipcRenderer.on('screen-locked', () => {
 });
 ```
 
+## Linux-First Approach: User-Controlled Scripts
+
+### Philosophy
+
+Teams for Linux is a **Linux application** that should embrace Unix philosophy: provide composable tools that users can wire together. Rather than trying to detect every desktop environment's screen lock mechanism, we should:
+
+1. **Expose commands/APIs** that users can call to disable/enable media
+2. **Document integration patterns** for common desktop environments
+3. **Let users hook into their OS** using the tools they prefer
+
+### Existing Infrastructure to Leverage
+
+Teams for Linux already has **two mechanisms** that users can integrate with:
+
+#### 1. MQTT Commands (Already Implemented!)
+
+The MQTT integration already supports bidirectional communication:
+
+**Existing commands:**
+- `toggle-mute` - Toggle microphone
+- `toggle-video` - Toggle camera
+- `toggle-hand-raise` - Raise/lower hand
+
+**How it works:**
+```bash
+# User's screen lock script can send MQTT commands
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"toggle-video"}' -q 1
+```
+
+**Limitation:** These are **toggles**, not explicit disable/enable commands. We need to add:
+- `disable-media` - Explicitly disable camera and mic
+- `enable-media` - Explicitly enable camera and mic (or restore previous state)
+- `query-media-state` - Get current camera/mic state
+
+#### 2. Similar Pattern: `incomingCallCommand`
+
+The app already runs external commands for events:
+```json
+{
+  "incomingCallCommand": "/path/to/script.sh",
+  "incomingCallCommandArgs": ["caller", "text", "image"]
+}
+```
+
+We could extend this pattern with:
+```json
+{
+  "screenLockCommand": "/path/to/user-script.sh",
+  "screenLockCommandArgs": ["lock|unlock"]
+}
+```
+
+But this is **backwards** - we want the user's lock script to call us, not us calling the user's script.
+
+### Recommended Linux Solution
+
+**Provide new MQTT commands that users can invoke from their own screen lock handlers.**
+
+#### User's Workflow
+
+**Step 1: User sets up screen lock listener** (their responsibility)
+
+Example for GNOME:
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy.sh
+
+dbus-monitor --session "type='signal',interface='org.gnome.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    # Screen locked
+    mosquitto_pub -h localhost -t "teams/command" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    # Screen unlocked (optional)
+    # User can choose whether to re-enable or leave disabled
+    # mosquitto_pub -h localhost -t "teams/command" \
+    #   -m '{"action":"enable-media"}' -q 1
+  fi
+done
+```
+
+**Step 2: Teams for Linux handles the command** (our responsibility)
+
+New MQTT command handlers:
+- `disable-media` - Stop all active camera and microphone tracks
+- `enable-media` - Allow media requests again (doesn't auto-start)
+- `query-media-state` - Return current media state
+
+#### Benefits of This Approach
+
+✅ **Linux philosophy** - Composable tools, user control
+✅ **Desktop agnostic** - Works with GNOME, KDE, XFCE, sway, etc.
+✅ **Reuses existing infrastructure** - MQTT already implemented
+✅ **Flexible** - Users can customize behavior, add delays, logging, etc.
+✅ **Optional** - Users opt-in by writing their own integration
+✅ **Testable** - Users can manually test with `mosquitto_pub`
+
+#### Challenges
+
+⚠️ **Requires MQTT enabled** - Not all users have MQTT configured
+⚠️ **User setup required** - Not "automatic" like native Windows/macOS
+⚠️ **Documentation needed** - Must provide clear examples for different DEs
+
+### Alternative: D-Bus Interface
+
+Instead of (or in addition to) MQTT, Teams for Linux could expose its own D-Bus interface:
+
+```bash
+# User's lock script calls our D-Bus method
+dbus-send --session --dest=org.teamsforlinux.MediaPrivacy \
+  --type=method_call /org/teamsforlinux/MediaPrivacy \
+  org.teamsforlinux.MediaPrivacy.DisableMedia
+```
+
+**Benefits:**
+- More "native" to Linux desktop integration
+- Doesn't require MQTT broker
+- Can be called synchronously
+
+**Drawbacks:**
+- Additional implementation complexity
+- Another integration point to maintain
+- MQTT is already implemented and working
+
 ## Implementation Approach
 
-### Recommended Phased Implementation
+### Recommended: Three-Tier Implementation
 
-#### Phase 1: macOS/Windows Support
+Support all platforms with appropriate approaches:
 
-**Scope:** Implement feature using native Electron powerMonitor events
+#### Tier 1: MQTT Commands (Linux Focus - Immediate)
 
-**Components:**
-1. **New main process module**: `app/screenLockPrivacy/`
-   - Listen to `lock-screen` and `unlock-screen` events
-   - Send IPC messages to renderer
-   - Configuration integration
+**Add new MQTT commands for user-script integration:**
+
+1. **New MQTT Actions** (extend `app/mqtt/index.js`):
+   ```javascript
+   this.actionShortcutMap = {
+     'toggle-mute': 'Ctrl+Shift+M',
+     'toggle-video': 'Ctrl+Shift+O',
+     'toggle-hand-raise': 'Ctrl+Shift+K',
+     // NEW COMMANDS:
+     'disable-media': null,  // Custom handler, not keyboard shortcut
+     'enable-media': null,   // Custom handler, not keyboard shortcut
+   };
+   ```
 
 2. **New browser tool**: `app/browser/tools/mediaPrivacy.js`
    - Track active MediaStream objects
-   - Stop camera/mic tracks on lock
-   - Block getUserMedia while locked
-   - Optional: Track state for restore on unlock
+   - Handle `disable-media` command: Stop all camera/mic tracks
+   - Handle `enable-media` command: Remove block on getUserMedia
+   - Track state for optional restore
+   - Expose via IPC for MQTT to call
 
-3. **Configuration option**: `disableMediaOnScreenLock: boolean`
-   - Default: `false` (opt-in feature)
-   - Added to `app/config/index.js`
-   - Documented in configuration docs
+3. **Documentation** (primary deliverable):
+   - Add section to `docs-site/docs/mqtt-integration.md`
+   - Provide example scripts for:
+     - GNOME (`org.gnome.ScreenSaver`)
+     - KDE (`org.freedesktop.ScreenSaver`)
+     - Cinnamon (`org.cinnamon.ScreenSaver`)
+     - systemd user session hooks
+     - Generic D-Bus monitor approach
 
 **Benefits:**
-- Provides value for macOS/Windows users immediately
-- Establishes architecture for Linux implementation
-- Lower complexity, uses native Electron APIs
+- ✅ Works TODAY with existing infrastructure
+- ✅ Aligns with Linux philosophy
+- ✅ Maximum flexibility for users
+- ✅ No desktop environment dependencies
+- ✅ Users can test immediately with `mosquitto_pub`
 
-#### Phase 2: Linux Support
+**User experience:**
+```bash
+# User's GNOME lock script
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"disable-media"}' -q 1
+```
 
-**Scope:** Add Linux compatibility using polling or D-Bus
+#### Tier 2: Native Events (macOS/Windows - Optional)
 
-**Option A: Polling Approach (Simpler)**
-- Extend `IdleMonitor` to detect "locked" state changes
-- Poll `getSystemIdleState()` periodically
-- Trigger same IPC messages as macOS/Windows events
-- Works across all Linux desktop environments
+**Add automatic handling for platforms with native support:**
 
-**Option B: D-Bus Approach (Better UX)**
-- Add optional dependency: `dbus-next` or `dbus-native`
-- Detect desktop environment (GNOME, KDE, Cinnamon, etc.)
-- Subscribe to appropriate D-Bus signals
-- Fallback to polling if D-Bus unavailable
+1. **New main process module**: `app/screenLockPrivacy/index.js`
+   - Listen to `powerMonitor` `lock-screen`/`unlock-screen` events
+   - Automatically call media privacy functions
+   - Configuration: `screenLockPrivacy.enabled: false` (opt-in)
 
-**Recommendation:** Start with Option A (polling) for consistency, add Option B later if user feedback demands it.
+2. **Reuse browser tool** from Tier 1
+   - Same media control logic
+   - Called automatically instead of via MQTT
 
-#### Phase 3: Enhanced Privacy Features
+**Benefits:**
+- Automatic for macOS/Windows users
+- Leverages native OS events
+- Still reuses core media control logic
 
-**Potential Extensions:**
-- Configuration for screen lock timeout before disabling media
-- Separate controls for camera vs microphone
-- Notification when media is disabled due to lock
-- Log events for security audit
-- Integration with MQTT status reporting
+**Configuration:**
+```json
+{
+  "screenLockPrivacy": {
+    "enabled": true,  // macOS/Windows only
+    "disableCamera": true,
+    "disableMicrophone": true,
+    "restoreOnUnlock": false
+  }
+}
+```
+
+#### Tier 3: Polling Fallback (Linux - Optional)
+
+**For users who don't want to set up scripts:**
+
+1. **Extend `IdleMonitor`** (`app/idle/monitor.js`)
+   - Detect state transitions to/from "locked"
+   - Trigger media privacy functions automatically
+   - Configuration: `screenLockPrivacy.usePolling: true`
+
+2. **Reuse browser tool** from Tier 1
+   - Same media control logic
+   - Called automatically via polling
+
+**Benefits:**
+- Works without user scripts
+- Cross-desktop-environment on Linux
+- Opt-in for users who want "automatic" behavior
+
+**Drawbacks:**
+- Polling overhead (5-10 second intervals)
+- Less precise than event-based detection
+- May not work on all distributions
+
+### Prioritization
+
+**Recommended order:**
+1. **FIRST: Tier 1 (MQTT Commands)** - Biggest impact for Linux users
+2. **SECOND: Documentation** - Critical for adoption
+3. **THIRD: Tier 2 (Native Events)** - Nice-to-have for macOS/Windows
+4. **MAYBE: Tier 3 (Polling)** - Only if users request it
 
 ### Configuration Design
 
@@ -409,9 +591,167 @@ app/
 - [Ask Ubuntu - Monitor screen lock/unlock with D-Bus](https://askubuntu.com/questions/858236/how-do-i-call-dbus-code-that-monitors-when-screen-is-locked-unlocked)
 - [Linux Mint Forums - D-Bus signals for monitor power](https://forums.linuxmint.com/viewtopic.php?t=403577)
 
-## Appendix: Code Examples
+## Appendix A: User Integration Scripts
 
-### Example: Main Process Module
+These are example scripts users can deploy to integrate screen lock with Teams for Linux media privacy.
+
+### GNOME (Ubuntu, Fedora, etc.)
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy.sh
+# Monitors GNOME screen lock and disables Teams media
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.gnome.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen locked - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media","timestamp":"'"$(date -Iseconds)"'"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlocked"
+    # Optionally enable media on unlock:
+    # mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+    #   -m '{"action":"enable-media"}' -q 1
+  fi
+done
+```
+
+**Autostart with systemd:**
+
+```ini
+# ~/.config/systemd/user/teams-lock-privacy.service
+[Unit]
+Description=Teams for Linux screen lock media privacy
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/%u/.local/bin/teams-lock-privacy.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Enable:
+```bash
+chmod +x ~/.local/bin/teams-lock-privacy.sh
+systemctl --user enable --now teams-lock-privacy.service
+```
+
+### KDE Plasma
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-kde.sh
+# Monitors KDE screen lock and disables Teams media
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.freedesktop.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen locked - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlocked"
+  fi
+done
+```
+
+### Cinnamon (Linux Mint)
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-cinnamon.sh
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.cinnamon.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  fi
+done
+```
+
+### Generic D-Bus Monitor (Any Desktop)
+
+This version listens for multiple screen saver interfaces:
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-generic.sh
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+# Listen for any screen saver lock signal
+dbus-monitor --session "type='signal',member='ActiveChanged'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen lock detected - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlock detected"
+  fi
+done
+```
+
+### i3/sway (Manual Lock with i3lock/swaylock)
+
+Wrap your lock command:
+
+```bash
+#!/bin/bash
+# ~/.local/bin/lock-with-teams-privacy.sh
+
+# Disable Teams media BEFORE locking
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"disable-media"}' -q 1
+
+# Lock the screen
+i3lock -c 000000  # or: swaylock
+
+# Optionally enable on unlock:
+# mosquitto_pub -h localhost -t "teams/command" \
+#   -m '{"action":"enable-media"}' -q 1
+```
+
+Bind in i3 config:
+```
+bindsym $mod+Shift+x exec ~/.local/bin/lock-with-teams-privacy.sh
+```
+
+### Testing Your Integration
+
+Test manually without locking:
+
+```bash
+# Disable media
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"disable-media"}' -q 1
+
+# Verify camera/mic are stopped in Teams UI
+
+# Enable media
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"enable-media"}' -q 1
+```
+
+## Appendix B: Code Examples
+
+### Example: MQTT Command Handler (Tier 1)
 
 ```javascript
 // app/screenLockPrivacy/index.js
@@ -558,11 +898,56 @@ module.exports = { init };
 
 ## Conclusion
 
-This feature is **technically feasible and recommended for implementation**. The main challenge is Linux support due to Electron API limitations, but this can be addressed through polling `getSystemIdleState()` or optional D-Bus integration.
+This feature is **technically feasible and recommended for implementation** with a **Linux-first, user-empowering approach**.
+
+### Key Recommendations
+
+1. **Start with MQTT command extension** (Tier 1)
+   - Immediate value for Linux users
+   - Leverages existing infrastructure
+   - Aligns with Unix philosophy
+   - Minimal implementation effort
+
+2. **Provide comprehensive documentation**
+   - Example scripts for major desktop environments
+   - systemd integration patterns
+   - Testing procedures
+   - This is MORE important than the code
+
+3. **Optional: Add native event handling** for macOS/Windows users who want automatic behavior
+
+### Why This Approach Works
+
+✅ **Embraces Linux philosophy** - Composable tools, user control
+✅ **Desktop environment agnostic** - Works everywhere
+✅ **Leverages existing code** - MQTT already implemented and tested
+✅ **User empowerment** - Users can customize, log, add delays, etc.
+✅ **Testable** - Users can verify behavior before integrating
+✅ **Optional** - Users opt-in by choice
+
+### Implementation Effort
+
+**Tier 1 (MQTT Commands):**
+- Code: ~200 lines (browser tool + MQTT handler extension)
+- Documentation: Critical - provide ready-to-use scripts
+- Estimated effort: 1-2 days development + documentation
+
+**Tier 2 (Native Events):**
+- Code: ~150 lines (main process module)
+- Documentation: Configuration examples
+- Estimated effort: 1 day
+
+**Tier 3 (Polling):**
+- Code: ~100 lines (IdleMonitor extension)
+- Estimated effort: 0.5 days
+
+### Alignment with Project Goals
 
 The feature aligns with:
-- User privacy expectations
-- Windows Teams client parity
-- Teams for Linux's goal of providing a native-like experience
+- ✅ User privacy expectations
+- ✅ Linux-first development philosophy
+- ✅ Unix composability principles
+- ✅ Existing MQTT integration patterns
+- ✅ Power user customization abilities
 
-Recommend starting with macOS/Windows implementation using native events, then adding Linux support via polling in a second phase.
+This approach turns a "Linux limitation" into a "Linux strength" by empowering users to integrate Teams with their desktop environment in their own way.
