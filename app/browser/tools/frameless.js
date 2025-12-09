@@ -9,8 +9,6 @@
  * As of now the top bar is already draggable by default in Teams CSS. The settings and account buttons
  * are already non-draggable by default. The navigation buttons are configured as non-draggable in their
  * respective module. This function only needs to make the search box and waffle menu non-draggable.
- *
- * The style is applied unconditioally also to framed windows, as it does not hurt there.
  */
 function init(config, ipcRenderer) {
 	if (!config.frame) {
