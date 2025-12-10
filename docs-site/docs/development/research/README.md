@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Authentication & Security
 - **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
+- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - Investigation into enabling Microsoft Teams authentication in system browser ([Issue #2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017))
+  - Comprehensive analysis of current authentication architecture
+  - Research on external browser OAuth patterns in Electron apps
+  - Feasibility assessment and technical challenges
+  - Recommendation: Document existing CLI password manager integration
 - For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
 ### Testing & Development
