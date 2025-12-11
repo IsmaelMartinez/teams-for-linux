@@ -47,8 +47,16 @@ class MQTTClient extends EventEmitter {
 		}
 
 		try {
+			const connectionTopic = `${this.config.topicPrefix}/connected`;
+
 			const options = {
 				clientId: this.config.clientId,
+				will: {
+					topic: connectionTopic,
+					payload: 'false',
+					qos: 0,
+					retain: true
+				}
 			};
 
 			if (this.config.username) {
@@ -63,6 +71,8 @@ class MQTTClient extends EventEmitter {
 			this.client.on('connect', () => {
 				this.isConnected = true;
 				console.info('[MQTT] Successfully connected to broker');
+
+				this.client.publish(connectionTopic, 'true', { retain: true });
 
 				// Subscribe to command topic for receiving action commands (if configured)
 				if (this.config.commandTopic) {
@@ -225,6 +235,8 @@ class MQTTClient extends EventEmitter {
 		if (this.client) {
 			console.debug('[MQTT] Disconnecting from broker');
 			try {
+				const connectionTopic = `${this.config.topicPrefix}/connected`;
+				await this.client.publish(connectionTopic, 'false', { retain: true });
 				await this.client.end(false);
 			} catch (error) {
 				console.error('[MQTT] Error disconnecting:', error);
