@@ -3,7 +3,7 @@
 **Date**: 2025-11-12
 **Updated**: 2025-11-30
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1 Complete (Infrastructure + Documentation)
+**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT)
 
 ## User Request
 
@@ -150,8 +150,9 @@ publishToMqtt('teams/camera', String(data.camera));  // "true" as string
 
 ## MQTT Topics
 
-Three simple topics using existing `topicPrefix`:
+Topics using existing `topicPrefix`:
 
+- `\{topicPrefix\}/connected` → `"true"` or `"false"` (uses MQTT LWT)
 - `\{topicPrefix\}/camera` → `"true"` or `"false"`
 - `\{topicPrefix\}/microphone` → `"true"` or `"false"`
 - `\{topicPrefix\}/in-call` → `"true"` or `"false"`
@@ -313,6 +314,12 @@ async publish(topic, payload, options = {}) {
 - [x] Document new MQTT topics in `docs-site/docs/configuration.md`
 - [x] Update MQTT section with camera/microphone/in-call topics
 
+### Phase 1c: Connection State & Last Will ✅ COMPLETED (2025-11-30)
+
+- [x] Implement MQTT Last Will and Testament (LWT)
+- [x] Publish connection state on connect/disconnect
+- [x] Document `{topicPrefix}/connected` topic
+
 ### Phase 2: WebRTC Monitoring (Camera/Mic)
 
 - [ ] Create `app/browser/tools/mediaStatus.js`
@@ -391,6 +398,46 @@ async publish(topic, payload, options = {}) {
 **What's working:**
 - Users can now see exactly what topics will be published when MQTT is enabled
 - Clear documentation for home automation integration
+
+**What's next (Phase 1c):**
+- Add MQTT Last Will and Testament (LWT) for connection state tracking
+
+### Phase 1c - Connection State & Last Will (Completed 2025-11-30)
+
+**What was implemented:**
+
+1. **MQTT Last Will and Testament** (`app/mqtt/index.js:50-60`)
+   - Configured LWT on broker connection
+   - LWT message: `{topicPrefix}/connected` → `"false"`
+   - Broker auto-publishes if app crashes or network fails
+
+2. **Connection State Publishing** (`app/mqtt/index.js:75, 238-239`)
+   - Publish `connected=true` when successfully connected
+   - Publish `connected=false` on graceful disconnect
+   - Both use retained messages for immediate subscriber awareness
+
+3. **Documentation** (`docs-site/docs/configuration.md:166,174`)
+   - Added `{topicPrefix}/connected` topic to published topics table
+   - Explained LWT behavior for handling stale state
+
+**Problem solved:**
+- App crashes while in a call → `in-call=true` retained forever ❌
+- With LWT → `connected=false` published → consumers can invalidate stale state ✅
+
+**Home automation benefit:**
+```yaml
+# Invalidate all state when app disconnects
+automation:
+  - trigger:
+      platform: mqtt
+      topic: "teams/connected"
+      payload: "false"
+    action:
+      # Reset all Teams state
+      service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.teams_in_call
+```
 
 **What's next (Phase 2):**
 - Implement WebRTC monitoring in browser process to detect camera/mic state
