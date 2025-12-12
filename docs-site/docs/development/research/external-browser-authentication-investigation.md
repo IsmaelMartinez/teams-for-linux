@@ -37,125 +37,22 @@ User wants to:
 
 ## Current Authentication Architecture
 
-### Existing Authentication Methods
+**Existing Methods** (for proxy/network auth only):
+- NTLM Authentication (`app/login/index.js`) - HTTP auth challenges
+- SSO Basic Auth - CLI command execution for proxy passwords
+- Intune SSO - Enterprise D-Bus integration
+- Certificate Authentication - Custom CA certs
 
-Teams for Linux currently supports multiple authentication methods:
+**Teams OAuth Login** (what issue requests):
+- Managed entirely by Teams web app JavaScript
+- Tokens stored in IndexedDB/WebStorage with OS-level encryption
+- Main process has no direct access to authentication flow
 
-#### 1. **NTLM Authentication** (`app/login/index.js`)
-- Creates modal BrowserWindow for credential prompts
-- Listens for `webContents.on('login')` events
-- Supports SSO with basic auth via configuration
-- Falls back to manual entry dialog if SSO fails
+## Why External Browser Auth Doesn't Work
 
-#### 2. **SSO Basic Auth** (`app/config/index.js`)
-- Configuration: `ssoBasicAuthUser`, `ssoBasicAuthPasswordCommand`
-- Executes shell command to retrieve password (e.g., from password manager CLI)
-- Automatically provides credentials on HTTP auth challenges
+**Standard Electron OAuth Pattern**: Open system browser → OAuth redirect to custom protocol → app receives tokens → inject into session
 
-#### 3. **Intune SSO** (`app/intune/index.js`)
-- Enterprise authentication via Microsoft Identity Broker (D-Bus)
-- Configuration: `ssoInTuneEnabled`, `ssoInTuneAuthUser`
-- Retrieves Primary Refresh Token (PRT) for SSO
-- Injects `X-Ms-Refreshtokencredential` header into Microsoft login requests
-
-#### 4. **Certificate Authentication** (`app/certificate/index.js`)
-- Custom CA certificate support for enterprise networks
-- Validates certificates against fingerprint whitelist
-
-### Session & Token Management
-
-#### Token Cache (`app/browser/tools/tokenCache.js`)
-- Implements Storage interface for Teams authentication tokens
-- Uses Electron `safeStorage` API with OS-level encryption
-- Manages token types: `tmp.auth.v1.*`, `refresh_token`, `msal.token`, etc.
-- Prevents daily re-login requirement
-
-#### Session Storage
-- Partition: `persist:teams-4-linux` (configurable)
-- IndexedDB and WebStorage preserved for auth tokens
-- Cache management explicitly excludes auth storage
-
-### Existing External URL Handling
-
-#### Protocol Handler (`app/index.js`)
-- Registers as `msteams://` protocol handler
-- Already infrastructure for custom protocol callbacks
-
-#### External Browser Opening
-- `shell.openExternal()` for non-Teams URLs
-- `defaultURLHandler` configuration for custom browser
-- `setWindowOpenHandler` determines in-app vs external opening
-
-## Research: External Browser OAuth in Electron
-
-### Industry Standard Approaches
-
-Modern Electron applications implement external browser OAuth using:
-
-#### **Pattern 1: Custom Protocol Handler + External Browser**
-1. Open system browser with OAuth provider URL (Microsoft login)
-2. OAuth provider redirects to custom protocol URL after auth (e.g., `msteams://auth-callback?code=...`)
-3. App receives protocol callback via `app.on('open-url')` or `app.on('second-instance')`
-4. Extract authorization code from callback URL
-5. Exchange code for access token
-6. Inject tokens into app's session
-
-#### **Pattern 2: Local Callback Server**
-1. Start temporary local HTTP server (e.g., `http://localhost:8000/callback`)
-2. Open system browser with OAuth URL pointing to localhost redirect
-3. Receive authorization code via HTTP request
-4. Shut down local server
-5. Exchange code for tokens
-
-#### **Pattern 3: Hybrid Approach**
-- Use custom protocol as primary mechanism
-- Fallback to localhost server if protocol registration fails
-- Provides maximum compatibility
-
-### Benefits of External Browser Authentication
-
-Per industry research:
-- ✅ **Enhanced Security**: User authenticates in familiar, trusted browser environment
-- ✅ **Better UX**: Password managers work seamlessly via browser extensions
-- ✅ **Session Reuse**: If already logged into provider in browser, can skip credential entry
-- ✅ **Multi-Platform**: Same session can be reused across web, mobile, desktop apps
-- ✅ **Reduced Credential Exposure**: No credentials enter Electron app directly
-
-### Challenges
-
-- ⚠️ Requires OAuth authorization code flow (not implicit flow)
-- ⚠️ Need to handle token exchange securely
-- ⚠️ Complex for applications with multiple authentication paths
-- ⚠️ Browser must redirect back to app successfully
-- ⚠️ May require custom redirect URI configuration in Microsoft Azure AD
-
-## Microsoft Teams OAuth Flow
-
-### Standard Teams Authentication
-
-Microsoft Teams uses Microsoft Identity Platform (Azure AD) for authentication:
-
-- **Authorization Endpoint**: `https://login.microsoftonline.com/common/oauth2/v2.0/authorize`
-- **Token Endpoint**: `https://login.microsoftonline.com/common/oauth2/v2.0/token`
-- **Redirect URIs**: Configurable in Azure AD app registration
-  - Teams web: `https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect`
-  - Custom protocol support: `msteams://teams.microsoft.com/l/auth-callback`
-
-### Teams Web App Authentication
-
-The Teams web application handles authentication internally within its JavaScript context:
-1. User navigates to teams.microsoft.com
-2. Teams web app redirects to login.microsoftonline.com
-3. User authenticates
-4. Redirect back to teams.microsoft.com with tokens
-5. Tokens stored in localStorage/sessionStorage/IndexedDB
-
-### Current Teams for Linux Behavior
-
-Teams for Linux loads the Teams web app URL and lets it handle authentication within the embedded webContents:
-- Authentication happens "invisibly" to the main process
-- Tokens managed entirely by Teams web app JavaScript
-- Main process only aware via `about:blank` navigation handling (`app/mainAppWindow/index.js`)
+**Teams for Linux Problem**: Teams web app manages OAuth internally in JavaScript without exposing token APIs. Even if we obtained tokens externally, Teams web app wouldn't recognize them.
 
 ## Technical Feasibility Analysis
 
@@ -237,18 +134,12 @@ External browser authentication for Teams for Linux is **not currently feasible*
 
 ### Key Blockers
 
-1. **Teams web app controls authentication internally**: The Teams JavaScript application manages OAuth flow without exposing APIs for external token injection
-2. **Token compatibility unknown**: No evidence that externally-obtained OAuth tokens work with Teams web app
-3. **No official Microsoft support**: No documented way for desktop wrappers to implement external browser OAuth
-4. **Reverse-engineering required**: Would need to reverse-engineer Teams web app authentication, which is:
-   - Fragile (breaks with Teams updates)
-   - Potentially against Microsoft ToS
-   - Unsustainable long-term
-5. **Multiple auth methods**: Risk of breaking existing working configurations (NTLM, Intune SSO, Basic Auth)
+1. Teams web app manages OAuth internally - no exposed token APIs
+2. Externally-obtained tokens won't work with Teams web app
+3. Would require reverse-engineering (fragile, potentially against ToS)
+4. Risk breaking existing auth methods (NTLM, Intune SSO)
 
-### Critical Clarification
-
-**Important**: The existing `ssoBasicAuthPasswordCommand` configuration is **only for proxy/network authentication**, not Microsoft Teams login. It does not solve the password manager integration need described in issue #2017.
+**Note**: `ssoBasicAuthPasswordCommand` is for proxy/network auth only, NOT Teams login.
 
 ### Recommended Path Forward
 
@@ -260,29 +151,13 @@ External browser authentication for Teams for Linux is **not currently feasible*
 
 ### Response to Issue #2017
 
-**Suggested Response**:
-
-> Thank you for this feature request! Unfortunately, after thorough investigation, **external browser authentication is not currently feasible** for Teams for Linux.
+> Thank you for this request. Unfortunately, **external browser authentication is not currently feasible**.
 >
-> **Why it's not possible:**
-> - The Teams web application manages Microsoft account authentication internally via JavaScript
-> - There's no exposed API for external token injection or authentication delegation
-> - Implementing this would require reverse-engineering Teams web app authentication, which is fragile and unsustainable
-> - The `ssoBasicAuthPasswordCommand` configuration only works for proxy/network authentication, not Microsoft Teams OAuth login
+> **Why**: Teams web app manages OAuth internally in JavaScript without exposed APIs. We can't inject externally-obtained tokens. The `ssoBasicAuthPasswordCommand` config is for proxy/network auth only, not Teams login.
 >
-> **No workaround available:**
-> - Password manager browser extensions cannot interact with the embedded Electron browser context
-> - CLI password managers (`ssoBasicAuthPasswordCommand`) only help with proxy authentication, not Teams login
-> - Session import from external browser poses security risks and browser compatibility issues
+> **No workarounds**: Password manager extensions can't access embedded Electron contexts. Session import poses security risks.
 >
-> **Keeping this open:**
-> - We'll keep this issue open as "future consideration" in case circumstances change
-> - If Microsoft provides official guidance for desktop client authentication, we can revisit
-> - Community contributions for proof-of-concept research are welcome
->
-> We understand this is frustrating, and we wish we had better news. The technical constraints are significant, but we'll continue monitoring for future opportunities.
->
-> **Note**: Using teams.microsoft.com in a regular browser would create a completely separate session from Teams for Linux (different browser contexts/storage) and is not a workaround for authentication within the app.
+> **Keeping open**: Labeled "future consideration" in case Microsoft provides official support. Community proof-of-concepts welcome.
 
 ## References
 
@@ -301,59 +176,19 @@ External browser authentication for Teams for Linux is **not currently feasible*
 - [Intune SSO Documentation](../../intune-sso.md)
 - [Contributing Guide](../contributing.md)
 
-### Related Code Files
+### Related Code
 
-- `app/login/index.js` - NTLM login dialog
-- `app/intune/index.js` - Intune SSO via D-Bus
-- `app/certificate/index.js` - Certificate validation
-- `app/browser/tools/tokenCache.js` - Token storage
-- `app/mainAppWindow/index.js` - Main window, auth flow handling (about:blank navigation handling)
-- `app/mainAppWindow/browserWindowManager.js` - Window creation, session setup
-- `app/config/index.js` - Configuration options (SSO config)
+Authentication: `app/login/`, `app/intune/`, `app/certificate/`, `app/browser/tools/tokenCache.js`
+Configuration: `app/config/index.js`, `app/mainAppWindow/`
 
 ## Appendix: SSO Basic Auth vs Teams OAuth Login
 
-### Understanding the Distinction
+**Two separate authentication layers**:
 
-This investigation initially confused two completely different authentication mechanisms:
+- **Network layer** (SSO Basic Auth): Proxy/VPN authentication via `ssoBasicAuthPasswordCommand` - triggered by HTTP 401/407
+- **Application layer** (Teams OAuth): Microsoft account login managed by Teams web app JavaScript - no Electron access
 
-#### SSO Basic Auth (`ssoBasicAuthPasswordCommand`)
-- **What it is**: Electron's `webContents.on('login')` event handler
-- **When it triggers**: HTTP 401/407 responses requiring Basic/NTLM/Kerberos auth
-- **Use cases**:
-  - Corporate proxy authentication (most common)
-  - VPN gateway authentication
-  - Internal corporate web resources with HTTP auth
-- **Configuration example**:
-  ```json
-  {
-    "ssoBasicAuthUser": "corp-username",
-    "ssoBasicAuthPasswordCommand": "secret-tool lookup proxy-password"
-  }
-  ```
-- **Code location**: `app/login/index.js` - `webContents.on('login')` event handler
-- **Documentation**: Network-level authentication, not Teams login
-
-#### Microsoft Teams OAuth Login
-- **What it is**: OAuth 2.0 flow managed by Teams web app JavaScript
-- **When it triggers**: When navigating to login.microsoftonline.com for Microsoft account
-- **Use cases**:
-  - Initial Teams account login
-  - Multi-factor authentication (MFA)
-  - Account switching
-  - Session refresh after expiry
-- **Managed by**: Teams web application (not Electron main process)
-- **What issue #2017 requests**: Password manager integration for THIS authentication
-- **Current behavior**: Happens invisibly within webContents, no external access
-
-### Why the Confusion Occurred
-
-The terminology "SSO" and "authentication" made it seem like `ssoBasicAuthPasswordCommand` might help with Teams login, but these are entirely separate authentication layers:
-
-- **Network layer** (SSO Basic Auth): Getting through proxy/firewall to reach Microsoft servers
-- **Application layer** (Teams OAuth): Authenticating your Microsoft account with Teams service
-
-Password manager integration is needed at the **application layer**, but `ssoBasicAuthPasswordCommand` only works at the **network layer**.
+Password manager integration is needed for Teams OAuth (application layer), but `ssoBasicAuthPasswordCommand` only works for network auth.
 
 ---
 
