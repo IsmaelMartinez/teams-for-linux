@@ -835,7 +835,7 @@ module.exports = ScreenLockPrivacy;
 ```javascript
 // app/browser/tools/mediaPrivacy.js
 const activeStreams = new WeakSet();
-const trackedTracks = [];
+let trackedTracks = [];
 
 function init(config, ipcRenderer) {
   if (!config.screenLockPrivacy?.enabled) {
