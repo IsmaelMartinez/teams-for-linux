@@ -406,27 +406,27 @@ Keep issue open and monitor for changes that might make this feasible:
 - Complex proxy logic
 - May break TLS certificate validation
 
-### Alternative 3: Manual Browser-Based Workflow
+### Alternative 3: Use Web Version Instead of App
 
-**Concept**: Document workflow for users who want password manager integration
+**Concept**: User abandons Teams for Linux and uses teams.microsoft.com in regular browser
 
 **Workflow**:
-1. Open teams.microsoft.com in system browser
+1. Open teams.microsoft.com in system browser (Chrome, Firefox, etc.)
 2. Use password manager browser extension to login
-3. Keep browser tab open alongside Teams for Linux
-4. Use browser for authentication, app for Teams features
+3. Use web version exclusively instead of desktop app
 
 **Pros**:
-- Works today with any password manager
+- Password manager browser extensions work perfectly
 - No development needed
-- Full browser extension support
+- Full browser features available
 
 **Cons**:
-- Two applications to manage (browser + Teams for Linux)
-- Doesn't solve re-authentication in Teams for Linux app
-- Suboptimal user experience
+- ❌ **Not a solution for Teams for Linux** - completely defeats the purpose of using the desktop app
+- ❌ **Loses all desktop app benefits**: system tray integration, notifications, screen sharing optimizations, etc.
+- ❌ **Separate sessions**: Browser and app don't share authentication
+- User asked for desktop app with password manager integration, not "use the web version"
 
-**Recommendation**: Suggest as workaround until/unless better solution found
+**Recommendation**: NOT a viable alternative - user wants the desktop app to work with password managers
 
 ## Conclusion
 
@@ -479,12 +479,9 @@ External browser authentication for Teams for Linux is **not currently feasible*
 > - If Microsoft provides official guidance for desktop client authentication, we can revisit
 > - Community contributions for proof-of-concept research are welcome
 >
-> **Temporary workaround:**
-> - Consider using teams.microsoft.com in your regular browser alongside Teams for Linux
-> - This allows password manager browser extensions to work for authentication
-> - Not ideal, but may help until a better solution emerges
->
 > We understand this is frustrating, and we wish we had better news. The technical constraints are significant, but we'll continue monitoring for future opportunities.
+>
+> **Note**: Using teams.microsoft.com in a regular browser would create a completely separate session from Teams for Linux (different browser contexts/storage) and is not a workaround for authentication within the app.
 
 ## References
 

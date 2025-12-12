@@ -41,12 +41,9 @@ Thank you for this feature request! Unfortunately, after thorough investigation,
 - If Microsoft provides official guidance for desktop client authentication, we can revisit
 - Community contributions for proof-of-concept research are welcome
 
-**Temporary workaround:**
-- Consider using teams.microsoft.com in your regular browser alongside Teams for Linux
-- This allows password manager browser extensions to work for authentication
-- Not ideal, but may help until a better solution emerges
-
 We understand this is frustrating, and we wish we had better news. The technical constraints are significant, but we'll continue monitoring for future opportunities.
+
+**Note**: Using teams.microsoft.com in your regular browser would provide separate sessions and is not a workaround for Teams for Linux authentication.
 ```
 
 ## Label Suggestions
