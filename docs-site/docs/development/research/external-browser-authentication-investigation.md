@@ -159,153 +159,33 @@ Teams for Linux loads the Teams web app URL and lets it handle authentication wi
 
 ## Technical Feasibility Analysis
 
+Four potential approaches were evaluated, all deemed infeasible:
+
 ### Approach 1: Intercept Initial Authentication
-
-**Concept**: Detect when authentication is required and redirect to system browser
-
-#### Implementation Steps
-1. **Detection**: Monitor webContents navigation events for login.microsoftonline.com URLs
-2. **Interception**: Cancel navigation and capture authentication URL
-3. **External Launch**: Open system browser with captured URL
-4. **Callback**: Use `msteams://auth-callback` protocol to receive result
-5. **Token Injection**: Extract tokens and inject into webContents session
-
-#### Pros
-- ✅ Leverages existing protocol handler infrastructure
-- ✅ Minimal changes to existing authentication flows
-- ✅ User-configurable (can be optional feature)
-
-#### Cons
-- ❌ **Complex token extraction**: OAuth code needs to be exchanged for tokens
-- ❌ **Requires Azure AD app registration**: Need custom redirect URI
-- ❌ **May break existing SSO methods**: Intune SSO, Basic Auth rely on internal flow
-- ❌ **Teams web app expects certain token format**: May not accept externally-obtained tokens
+**Concept**: Detect authentication and redirect to system browser
+**Blockers**: Complex token extraction, requires Azure AD app registration, Teams web app may not accept externally-obtained tokens
 
 ### Approach 2: PKCE Flow with Token Exchange
-
-**Concept**: Use OAuth 2.0 PKCE (Proof Key for Code Exchange) flow in external browser
-
-#### Implementation Steps
-1. **Generate PKCE challenge**: Create code verifier and challenge
-2. **Construct OAuth URL**: Build authorization URL with PKCE parameters
-3. **Open Browser**: Launch system browser with OAuth URL
-4. **Receive Code**: Protocol callback receives authorization code
-5. **Token Exchange**: Exchange code for access token using PKCE verifier
-6. **Session Setup**: Create authenticated session with received tokens
-
-#### Pros
-- ✅ Standard OAuth 2.0 pattern
-- ✅ Enhanced security (PKCE prevents code interception)
-- ✅ Works with password managers
-
-#### Cons
-- ❌ **Requires custom Azure AD app**: Cannot use Teams' existing OAuth configuration
-- ❌ **Complex token management**: Need to maintain tokens separately from Teams web app
-- ❌ **May not work with Teams web app**: Teams expects to manage its own auth
-- ❌ **Breaking change**: Would fundamentally alter how authentication works
+**Concept**: Standard OAuth 2.0 PKCE flow in external browser
+**Blockers**: Requires custom Azure AD app per user, Teams expects to manage its own auth, breaking change to existing flows
 
 ### Approach 3: Hybrid Optional Mode
-
-**Concept**: Add optional configuration to open authentication in external browser while keeping existing flows
-
-#### Implementation Steps
-1. **Add Configuration**: `externalBrowserAuth: false` (default: false)
-2. **Navigation Interception**: When enabled, intercept login.microsoftonline.com navigations
-3. **External Launch**: Open system browser with full authentication URL
-4. **Manual Session Import**: After user authenticates in browser, provide mechanism to import session
-5. **Fallback**: If external auth fails, fall back to embedded authentication
-
-#### Pros
-- ✅ Backward compatible (opt-in feature)
-- ✅ Preserves existing authentication methods
-- ✅ Less complex than full OAuth implementation
-- ✅ User can use password manager in browser
-
-#### Cons
-- ⚠️ **Session import challenge**: How to transfer authenticated session from browser to app?
-- ⚠️ **Partial solution**: May still require some manual steps
-- ⚠️ **Complex fallback logic**: Need to handle failures gracefully
+**Concept**: Optional external browser auth with fallback
+**Blockers**: No clear session transfer mechanism from browser to app, complex fallback logic
 
 ### Approach 4: Browser Cookie/Session Import
-
-**Concept**: After user authenticates in external browser, import session data into Electron app
-
-#### Implementation Steps
-1. **User authenticates externally**: Open teams.microsoft.com in system browser
-2. **Session export**: Extract cookies/localStorage/sessionStorage from browser
-3. **Import mechanism**: Provide tool to import session data into Teams for Linux
-4. **Session validation**: Verify imported session works with Teams web app
-
-#### Pros
-- ✅ User can use browser password manager
-- ✅ No OAuth flow modification needed
-- ✅ Simpler than full external OAuth
-
-#### Cons
-- ❌ **Security risk**: Exposing session cookies
-- ❌ **Complex extraction**: Different per browser (Chrome, Firefox, Edge)
-- ❌ **May violate browser security**: Cookie encryption/protection
-- ❌ **Manual process**: Not seamless user experience
-- ❌ **Maintenance burden**: Browser updates could break extraction
+**Concept**: Import authenticated session from browser
+**Blockers**: Security risk, browser-specific implementations, violates browser security models, manual process
 
 ## Critical Technical Challenges
 
-### Challenge 1: Teams Web App Token Management
+**Teams Web App Token Management**: Teams manages authentication internally; externally-obtained tokens may not be recognized. Would require reverse-engineering proprietary token mechanisms.
 
-**Problem**: The Teams web application manages its own authentication state internally. Externally-obtained tokens may not be recognized or properly handled by the Teams JavaScript code.
+**OAuth App Registration**: Custom redirect URIs require per-user Azure AD app registration with organizational admin privileges.
 
-**Impact**: Even if we obtain valid Microsoft OAuth tokens externally, the Teams web app may:
-- Not recognize the token format
-- Expect specific cookie/storage structure
-- Require additional API calls to establish session
-- Use proprietary token exchange mechanisms
+**Multiple Authentication Methods**: Risk breaking existing NTLM, SSO Basic Auth, and Intune SSO configurations.
 
-**Mitigation Options**:
-- Research Teams web app authentication internals (difficult, may change)
-- Attempt to reverse-engineer token injection points
-- Focus on initial authentication only (not token refresh)
-
-### Challenge 2: OAuth App Registration
-
-**Problem**: To use custom redirect URIs (like `msteams://auth-callback`), the OAuth application must be registered in Azure AD with those redirect URIs explicitly allowed.
-
-**Impact**:
-- Users cannot use this feature without creating their own Azure AD app registration
-- Requires organizational admin privileges in many cases
-- Significantly raises barrier to entry
-
-**Mitigation Options**:
-- Provide detailed documentation for Azure AD app setup
-- Create helper wizard for app registration
-- Investigate if Microsoft provides public OAuth app for Teams
-
-### Challenge 3: Multiple Authentication Methods
-
-**Problem**: Teams for Linux already supports NTLM, SSO Basic Auth, and Intune SSO. External browser authentication may conflict with these.
-
-**Impact**:
-- Need to determine precedence order
-- Risk breaking existing working setups
-- Configuration complexity increases
-
-**Mitigation Options**:
-- Make external browser auth mutually exclusive with other methods
-- Clear documentation on compatibility
-- Configuration validation on startup
-
-### Challenge 4: About:blank Navigation Handling
-
-**Problem**: Current code handles `about:blank` navigations during auth flows (`app/mainAppWindow/index.js`). External browser auth may bypass or interfere with this.
-
-**Impact**:
-- Existing auth flow detection may break
-- Hidden window auth completion may not trigger
-- Race conditions between internal and external auth
-
-**Mitigation Options**:
-- Disable about:blank handling when external auth enabled
-- Refactor navigation handling to be auth-method-aware
-- Comprehensive testing of all auth scenarios
+**About:blank Navigation Handling**: Current auth flow detection (`app/mainAppWindow/index.js`) may conflict with external authentication.
 
 ## Recommendations
 
@@ -327,106 +207,27 @@ Teams for Linux loads the Teams web app URL and lets it handle authentication wi
 
 ### Medium-Term: Research Feasibility (If Resources Available)
 
-**Priority: Medium | Effort: High | Impact: High**
-
-Before committing to implementation, deeper research is needed:
-
-**Research Tasks**:
-1. **Reverse-engineer Teams web app authentication**
-   - Analyze network traffic during authentication
-   - Identify token storage mechanisms
-   - Test if externally-obtained tokens work
-
-2. **Test OAuth flow with Teams backend**
-   - Create test Azure AD app with custom redirect URI
-   - Attempt authorization code flow with Teams API scopes
-   - Verify token exchange and session establishment
-
-3. **Prototype token injection**
-   - Build proof-of-concept external browser auth
-   - Test token injection into webContents session
-   - Validate that Teams web app accepts external tokens
-
-4. **Assess compatibility with existing auth methods**
-   - Test interaction with Intune SSO
-   - Verify NTLM authentication still works
-   - Ensure Basic Auth fallback remains functional
-
-**Expected Outcome**: Clear determination of technical feasibility and implementation complexity
+If circumstances change, research would need to:
+- Reverse-engineer Teams web app authentication (analyze network traffic, test token injection)
+- Test OAuth flow with custom Azure AD app
+- Assess compatibility with existing auth methods (Intune SSO, NTLM, Basic Auth)
 
 ### Long-Term: Monitor for Future Opportunities
 
-**Priority: Low | Effort: Low | Impact: Unknown**
+Keep issue open and monitor for enabling changes:
+- Microsoft provides official OAuth app or authentication API for desktop clients
+- Electron adds authentication delegation features
+- Community discovers working token injection method
 
-Keep issue open and monitor for changes that might make this feasible:
+**Until then**: Label as "future consideration", welcome community proof-of-concepts
 
-**Potential Future Enablers**:
-- Microsoft provides official OAuth app for desktop clients
-- Teams web app exposes authentication API for wrappers
-- Electron adds better authentication delegation features
-- Community discovers reliable token injection method
+## Alternative Solutions (All Rejected)
 
-**Conditions for Reconsidering**:
-- Evidence that externally-obtained tokens work with Teams web app
-- Microsoft official guidance for desktop client authentication
-- Proven proof-of-concept from community members
-- Clear implementation path that doesn't require reverse-engineering
+**Browser Extension**: Complex bidirectional communication, security concerns with extension permissions
 
-**For Now**:
-- Keep issue #2017 open for visibility
-- Label as "future consideration" or "help wanted"
-- Welcome community research and proof-of-concepts
-- Document findings if anyone attempts implementation
+**Proxy-Based Authentication**: Security risk (MITM on localhost), may break TLS certificate validation
 
-## Alternative Solutions
-
-### Alternative 1: Browser Extension for Teams
-
-**Concept**: Create browser extension that syncs authentication state with Teams for Linux
-
-**Pros**:
-- Full browser password manager access
-- Native browser session reuse
-
-**Cons**:
-- Requires separate extension installation
-- Complex bidirectional communication
-- Security concerns with extension permissions
-
-### Alternative 2: Proxy-Based Authentication
-
-**Concept**: Run local proxy that intercepts authentication requests and injects credentials
-
-**Pros**:
-- Transparent to Teams web app
-- No app code changes needed
-
-**Cons**:
-- Security risk (MITM on localhost)
-- Complex proxy logic
-- May break TLS certificate validation
-
-### Alternative 3: Use Web Version Instead of App
-
-**Concept**: User abandons Teams for Linux and uses teams.microsoft.com in regular browser
-
-**Workflow**:
-1. Open teams.microsoft.com in system browser (Chrome, Firefox, etc.)
-2. Use password manager browser extension to login
-3. Use web version exclusively instead of desktop app
-
-**Pros**:
-- Password manager browser extensions work perfectly
-- No development needed
-- Full browser features available
-
-**Cons**:
-- ❌ **Not a solution for Teams for Linux** - completely defeats the purpose of using the desktop app
-- ❌ **Loses all desktop app benefits**: system tray integration, notifications, screen sharing optimizations, etc.
-- ❌ **Separate sessions**: Browser and app don't share authentication
-- User asked for desktop app with password manager integration, not "use the web version"
-
-**Recommendation**: NOT a viable alternative - user wants the desktop app to work with password managers
+**Use Web Version Instead**: Defeats purpose of desktop app, loses all app benefits (tray integration, notifications, screen sharing)
 
 ## Conclusion
 
