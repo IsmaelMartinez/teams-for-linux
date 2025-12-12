@@ -62,7 +62,7 @@
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.56.1",
-    "electron": "^37.9.0",
+    "electron": "^39.2.6",
     "electron-builder": "^26.1.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
