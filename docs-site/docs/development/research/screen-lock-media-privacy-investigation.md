@@ -877,16 +877,13 @@ This feature is **technically feasible and recommended for implementation** with
 **Tier 1 (MQTT Commands):**
 - Code: ~200 lines (browser tool + MQTT handler extension)
 - Documentation: Critical - provide ready-to-use scripts
-- Estimated effort: 1-2 days development + documentation
 
 **Tier 2 (Native Events):**
 - Code: ~150 lines (main process module)
 - Documentation: Configuration examples
-- Estimated effort: 1 day
 
 **Tier 3 (Polling):**
 - Code: ~100 lines (IdleMonitor extension)
-- Estimated effort: 0.5 days
 
 ### Alignment with Project Goals
 
