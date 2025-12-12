@@ -1,7 +1,7 @@
 # Screen Lock Media Privacy Investigation
 
 **Issue:** [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015)
-**Investigation Date:** 2025-12-07
+**Investigation Date:** 2025-12-12
 **Status:** Research Complete
 
 ## Executive Summary
