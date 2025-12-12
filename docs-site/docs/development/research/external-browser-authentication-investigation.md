@@ -77,7 +77,7 @@ Teams for Linux currently supports multiple authentication methods:
 
 ### Existing External URL Handling
 
-#### Protocol Handler (`app/index.js:91-94`)
+#### Protocol Handler (`app/index.js`)
 - Registers as `msteams://` protocol handler
 - Already infrastructure for custom protocol callbacks
 
@@ -155,7 +155,7 @@ The Teams web application handles authentication internally within its JavaScrip
 Teams for Linux loads the Teams web app URL and lets it handle authentication within the embedded webContents:
 - Authentication happens "invisibly" to the main process
 - Tokens managed entirely by Teams web app JavaScript
-- Main process only aware via `about:blank` navigation handling (`app/mainAppWindow/index.js:490-508`)
+- Main process only aware via `about:blank` navigation handling (`app/mainAppWindow/index.js`)
 
 ## Technical Feasibility Analysis
 
@@ -295,7 +295,7 @@ Teams for Linux loads the Teams web app URL and lets it handle authentication wi
 
 ### Challenge 4: About:blank Navigation Handling
 
-**Problem**: Current code handles `about:blank` navigations during auth flows (`app/mainAppWindow/index.js:490-508`). External browser auth may bypass or interfere with this.
+**Problem**: Current code handles `about:blank` navigations during auth flows (`app/mainAppWindow/index.js`). External browser auth may bypass or interfere with this.
 
 **Impact**:
 - Existing auth flow detection may break
@@ -506,9 +506,9 @@ External browser authentication for Teams for Linux is **not currently feasible*
 - `app/intune/index.js` - Intune SSO via D-Bus
 - `app/certificate/index.js` - Certificate validation
 - `app/browser/tools/tokenCache.js` - Token storage
-- `app/mainAppWindow/index.js` - Main window, auth flow handling (lines 490-508: about:blank handling)
+- `app/mainAppWindow/index.js` - Main window, auth flow handling (about:blank navigation handling)
 - `app/mainAppWindow/browserWindowManager.js` - Window creation, session setup
-- `app/config/index.js` - Configuration options (lines 407-422: SSO config)
+- `app/config/index.js` - Configuration options (SSO config)
 
 ## Appendix: SSO Basic Auth vs Teams OAuth Login
 
@@ -530,7 +530,7 @@ This investigation initially confused two completely different authentication me
     "ssoBasicAuthPasswordCommand": "secret-tool lookup proxy-password"
   }
   ```
-- **Code location**: `app/login/index.js:39` - `webContents.on('login')`
+- **Code location**: `app/login/index.js` - `webContents.on('login')` event handler
 - **Documentation**: Network-level authentication, not Teams login
 
 #### Microsoft Teams OAuth Login
