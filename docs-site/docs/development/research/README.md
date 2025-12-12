@@ -14,7 +14,8 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Comprehensive analysis of current authentication architecture
   - Research on external browser OAuth patterns in Electron apps
   - Feasibility assessment and technical challenges
-  - Recommendation: Document existing CLI password manager integration
+  - **Conclusion**: Not currently feasible - Teams web app manages authentication internally without exposed APIs
+  - Clarification: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
 - For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
 ### Testing & Development

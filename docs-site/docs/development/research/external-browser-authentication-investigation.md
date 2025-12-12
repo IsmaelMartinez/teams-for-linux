@@ -1,12 +1,22 @@
 # External Browser Authentication Investigation
 
 **Issue**: [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)
-**Status**: Investigation Phase
+**Status**: Investigation Phase - Not Feasible
 **Date**: 2025-12-10
+
+:::warning Critical Clarification
+This investigation initially confused **proxy/network authentication** (SSO Basic Auth) with **Microsoft Teams OAuth login**. They are completely separate:
+- **SSO Basic Auth** (`ssoBasicAuthPasswordCommand`): Only for proxy/VPN/network-level HTTP authentication (NTLM, Kerberos)
+- **Microsoft Teams Login**: OAuth flow within Teams web app - what issue #2017 actually requests
+
+The `ssoBasicAuthPasswordCommand` configuration **does not help** with Microsoft account login or password manager integration for Teams authentication.
+:::
 
 ## Overview
 
 Investigation into enabling Microsoft Teams authentication to occur in the user's default system browser instead of within the Teams for Linux embedded window. This would improve password manager integration and potentially enable session reuse from existing browser logins.
+
+**Finding**: This feature is **not currently feasible** due to how Teams web application manages authentication internally.
 
 ## Problem Statement
 
@@ -216,25 +226,27 @@ Teams for Linux loads the Teams web app URL and lets it handle authentication wi
 - ⚠️ **Partial solution**: May still require some manual steps
 - ⚠️ **Complex fallback logic**: Need to handle failures gracefully
 
-### Approach 4: Extend Existing SSO Basic Auth
+### Approach 4: Browser Cookie/Session Import
 
-**Concept**: Enhance existing `ssoBasicAuthPasswordCommand` to support password managers better
+**Concept**: After user authenticates in external browser, import session data into Electron app
 
 #### Implementation Steps
-1. **Document Current Capability**: Make it clear that password manager CLI tools work
-2. **Add Browser Integration**: Create helper script that opens browser-stored passwords
-3. **Improve Documentation**: Clear examples for Bitwarden CLI, 1Password CLI, etc.
+1. **User authenticates externally**: Open teams.microsoft.com in system browser
+2. **Session export**: Extract cookies/localStorage/sessionStorage from browser
+3. **Import mechanism**: Provide tool to import session data into Teams for Linux
+4. **Session validation**: Verify imported session works with Teams web app
 
 #### Pros
-- ✅ **Already implemented**: No code changes needed to core app
-- ✅ **Works today**: User can integrate password manager CLI immediately
-- ✅ **No breaking changes**: Purely additive
-- ✅ **Supports existing flows**: Compatible with NTLM, Intune SSO
+- ✅ User can use browser password manager
+- ✅ No OAuth flow modification needed
+- ✅ Simpler than full external OAuth
 
 #### Cons
-- ⚠️ **CLI-only**: Requires password manager with CLI interface
-- ⚠️ **Not true browser integration**: Still not using browser extensions
-- ⚠️ **Documentation/education needed**: Users may not know this exists
+- ❌ **Security risk**: Exposing session cookies
+- ❌ **Complex extraction**: Different per browser (Chrome, Firefox, Edge)
+- ❌ **May violate browser security**: Cookie encryption/protection
+- ❌ **Manual process**: Not seamless user experience
+- ❌ **Maintenance burden**: Browser updates could break extraction
 
 ## Critical Technical Challenges
 
@@ -297,30 +309,23 @@ Teams for Linux loads the Teams web app URL and lets it handle authentication wi
 
 ## Recommendations
 
-### Immediate Action: Document Existing Capability
+### Immediate Action: Respond to Issue with Technical Assessment
 
-**Priority: High | Effort: Low | Impact: Medium**
-
-The existing `ssoBasicAuthPasswordCommand` configuration already enables password manager integration via CLI tools. Many password managers provide CLI interfaces:
-
-- **Bitwarden**: `bw get password <item-id>`
-- **1Password**: `op read "op://vault/item/password"`
-- **LastPass**: `lpass show --password <item-name>`
-- **pass**: `pass show <password-name>`
+**Priority: High | Effort: Low | Impact: High**
 
 **Action Items**:
-1. Create documentation section for password manager integration
-2. Provide example configurations for popular password managers
-3. Add to FAQ/troubleshooting guide
-4. Update issue #2017 with documentation link
+1. Respond to issue #2017 explaining technical infeasibility
+2. Clarify that `ssoBasicAuthPasswordCommand` is only for proxy auth, not Teams login
+3. Explain why external browser authentication is not currently possible
+4. Keep issue open for future research if Teams authentication internals become accessible
 
-**Benefits**:
-- ✅ Solves user's password manager integration need TODAY
-- ✅ No code changes required
-- ✅ Works with existing authentication methods
-- ✅ Low risk, high value
+**Reasoning**:
+- ❌ No immediate workaround exists
+- ❌ `ssoBasicAuthPasswordCommand` does not solve the user's actual need
+- ❌ External browser OAuth would require reverse-engineering Teams web app
+- ⚠️ Feature is technically challenging and may not be achievable
 
-### Medium-Term: Research Feasibility
+### Medium-Term: Research Feasibility (If Resources Available)
 
 **Priority: Medium | Effort: High | Impact: High**
 
@@ -349,25 +354,29 @@ Before committing to implementation, deeper research is needed:
 
 **Expected Outcome**: Clear determination of technical feasibility and implementation complexity
 
-### Long-Term: Conditional Implementation
+### Long-Term: Monitor for Future Opportunities
 
-**Priority: Low (pending research) | Effort: Very High | Impact: High**
+**Priority: Low | Effort: Low | Impact: Unknown**
 
-If research confirms feasibility, consider implementation with strict criteria:
+Keep issue open and monitor for changes that might make this feasible:
 
-**Implementation Criteria** (ALL must be met):
-- ✅ Teams web app accepts externally-obtained tokens
-- ✅ Can be implemented without breaking existing auth methods
-- ✅ Works without requiring users to create Azure AD apps
-- ✅ Provides clear benefit over existing CLI password manager integration
-- ✅ Maintainable without Teams web app internals access
+**Potential Future Enablers**:
+- Microsoft provides official OAuth app for desktop clients
+- Teams web app exposes authentication API for wrappers
+- Electron adds better authentication delegation features
+- Community discovers reliable token injection method
 
-**Recommended Architecture** (if proceeding):
-- **Optional feature**: `externalBrowserAuth` config (default: false)
-- **Protocol callback**: Use existing `msteams://` handler with new `/auth-callback` path
-- **Graceful fallback**: If external auth fails, fall back to embedded
-- **Clear documentation**: Explain limitations and setup requirements
-- **Compatibility checks**: Disable conflicting auth methods when enabled
+**Conditions for Reconsidering**:
+- Evidence that externally-obtained tokens work with Teams web app
+- Microsoft official guidance for desktop client authentication
+- Proven proof-of-concept from community members
+- Clear implementation path that doesn't require reverse-engineering
+
+**For Now**:
+- Keep issue #2017 open for visibility
+- Label as "future consideration" or "help wanted"
+- Welcome community research and proof-of-concepts
+- Document findings if anyone attempts implementation
 
 ## Alternative Solutions
 
@@ -397,56 +406,85 @@ If research confirms feasibility, consider implementation with strict criteria:
 - Complex proxy logic
 - May break TLS certificate validation
 
-### Alternative 3: User Education Campaign
+### Alternative 3: Manual Browser-Based Workflow
 
-**Concept**: Comprehensive documentation on existing capabilities
+**Concept**: Document workflow for users who want password manager integration
+
+**Workflow**:
+1. Open teams.microsoft.com in system browser
+2. Use password manager browser extension to login
+3. Keep browser tab open alongside Teams for Linux
+4. Use browser for authentication, app for Teams features
 
 **Pros**:
-- No development effort
-- Works immediately
-- Solves user's stated need (password manager integration)
+- Works today with any password manager
+- No development needed
+- Full browser extension support
 
 **Cons**:
-- Doesn't provide browser extension integration
-- CLI-only solution
+- Two applications to manage (browser + Teams for Linux)
+- Doesn't solve re-authentication in Teams for Linux app
+- Suboptimal user experience
 
-**Recommendation**: Start with Alternative 3 (already recommended above)
+**Recommendation**: Suggest as workaround until/unless better solution found
 
 ## Conclusion
 
-### Technical Feasibility: **UNCERTAIN**
+### Technical Feasibility: **NOT FEASIBLE (Currently)**
 
-External browser authentication for Teams for Linux is **technically complex** and **may not be feasible** without significant reverse-engineering of Teams web application authentication internals.
+External browser authentication for Teams for Linux is **not currently feasible** due to the following blockers:
 
 ### Key Blockers
 
-1. **Token compatibility unknown**: Unclear if Teams web app accepts externally-obtained tokens
-2. **OAuth app registration**: May require per-user Azure AD app setup
-3. **Multiple auth methods**: Risk of breaking existing working configurations
-4. **Maintenance burden**: Teams web app auth changes could break external integration
+1. **Teams web app controls authentication internally**: The Teams JavaScript application manages OAuth flow without exposing APIs for external token injection
+2. **Token compatibility unknown**: No evidence that externally-obtained OAuth tokens work with Teams web app
+3. **No official Microsoft support**: No documented way for desktop wrappers to implement external browser OAuth
+4. **Reverse-engineering required**: Would need to reverse-engineer Teams web app authentication, which is:
+   - Fragile (breaks with Teams updates)
+   - Potentially against Microsoft ToS
+   - Unsustainable long-term
+5. **Multiple auth methods**: Risk of breaking existing working configurations (NTLM, Intune SSO, Basic Auth)
+
+### Critical Clarification
+
+**Important**: The existing `ssoBasicAuthPasswordCommand` configuration is **only for proxy/network authentication**, not Microsoft Teams login. It does not solve the password manager integration need described in issue #2017.
 
 ### Recommended Path Forward
 
-1. ✅ **Short-term**: Document existing CLI password manager integration (addresses user's core need)
-2. 🔬 **Medium-term**: Research feasibility with proof-of-concept testing
-3. ⏸️ **Long-term**: Only implement if research confirms feasibility and clear value over CLI approach
+1. ❌ **No immediate solution available**
+2. 📝 **Document the limitation** - Be transparent that this is not currently possible
+3. 🔬 **Keep issue open** - For future opportunities or community solutions
+4. 👀 **Monitor for changes** - Microsoft may provide official solution in future
+5. 🤝 **Welcome community research** - If someone finds a working approach, consider it
 
 ### Response to Issue #2017
 
 **Suggested Response**:
 
-> Thank you for this feature request! Password manager integration is definitely valuable.
+> Thank you for this feature request! Unfortunately, after thorough investigation, **external browser authentication is not currently feasible** for Teams for Linux.
 >
-> **Good news**: Teams for Linux already supports password manager integration via the `ssoBasicAuthPasswordCommand` configuration, which can execute CLI commands from password managers like Bitwarden CLI, 1Password CLI, LastPass CLI, etc.
+> **Why it's not possible:**
+> - The Teams web application manages Microsoft account authentication internally via JavaScript
+> - There's no exposed API for external token injection or authentication delegation
+> - Implementing this would require reverse-engineering Teams web app authentication, which is fragile and unsustainable
+> - The `ssoBasicAuthPasswordCommand` configuration only works for proxy/network authentication, not Microsoft Teams OAuth login
 >
-> **Documentation**: We'll create comprehensive documentation with examples for popular password managers.
+> **No workaround available:**
+> - Password manager browser extensions cannot interact with the embedded Electron browser context
+> - CLI password managers (`ssoBasicAuthPasswordCommand`) only help with proxy authentication, not Teams login
+> - Session import from external browser poses security risks and browser compatibility issues
 >
-> **External browser authentication**: We've investigated this and it's technically complex. The Teams web application manages its own authentication internally, and external browser authentication would require significant reverse-engineering and may not be compatible with existing authentication methods (NTLM, Intune SSO, Basic Auth).
+> **Keeping this open:**
+> - We'll keep this issue open as "future consideration" in case circumstances change
+> - If Microsoft provides official guidance for desktop client authentication, we can revisit
+> - Community contributions for proof-of-concept research are welcome
 >
-> **Next steps**:
-> - We'll add password manager CLI integration documentation
-> - We'll keep this issue open for potential future external browser authentication if research shows it's feasible
-> - If you'd like to help with research/proof-of-concept testing, we'd welcome contributions!
+> **Temporary workaround:**
+> - Consider using teams.microsoft.com in your regular browser alongside Teams for Linux
+> - This allows password manager browser extensions to work for authentication
+> - Not ideal, but may help until a better solution emerges
+>
+> We understand this is frustrating, and we wish we had better news. The technical constraints are significant, but we'll continue monitoring for future opportunities.
 
 ## References
 
@@ -475,65 +513,52 @@ External browser authentication for Teams for Linux is **technically complex** a
 - `app/mainAppWindow/browserWindowManager.js` - Window creation, session setup
 - `app/config/index.js` - Configuration options (lines 407-422: SSO config)
 
-## Appendix: Configuration Examples for Password Managers
+## Appendix: SSO Basic Auth vs Teams OAuth Login
 
-### Bitwarden CLI
+### Understanding the Distinction
 
-```json
-{
-  "ssoBasicAuthUser": "user@example.com",
-  "ssoBasicAuthPasswordCommand": "bw get password 'Teams Login'"
-}
-```
+This investigation initially confused two completely different authentication mechanisms:
 
-**Prerequisites**:
-- Install Bitwarden CLI: `npm install -g @bitwarden/cli`
-- Login: `bw login`
-- Unlock: `bw unlock` (get session key)
-- Store session: `export BW_SESSION="<session-key>"`
+#### SSO Basic Auth (`ssoBasicAuthPasswordCommand`)
+- **What it is**: Electron's `webContents.on('login')` event handler
+- **When it triggers**: HTTP 401/407 responses requiring Basic/NTLM/Kerberos auth
+- **Use cases**:
+  - Corporate proxy authentication (most common)
+  - VPN gateway authentication
+  - Internal corporate web resources with HTTP auth
+- **Configuration example**:
+  ```json
+  {
+    "ssoBasicAuthUser": "corp-username",
+    "ssoBasicAuthPasswordCommand": "secret-tool lookup proxy-password"
+  }
+  ```
+- **Code location**: `app/login/index.js:39` - `webContents.on('login')`
+- **Documentation**: Network-level authentication, not Teams login
 
-### 1Password CLI
+#### Microsoft Teams OAuth Login
+- **What it is**: OAuth 2.0 flow managed by Teams web app JavaScript
+- **When it triggers**: When navigating to login.microsoftonline.com for Microsoft account
+- **Use cases**:
+  - Initial Teams account login
+  - Multi-factor authentication (MFA)
+  - Account switching
+  - Session refresh after expiry
+- **Managed by**: Teams web application (not Electron main process)
+- **What issue #2017 requests**: Password manager integration for THIS authentication
+- **Current behavior**: Happens invisibly within webContents, no external access
 
-```json
-{
-  "ssoBasicAuthUser": "user@example.com",
-  "ssoBasicAuthPasswordCommand": "op read 'op://Personal/Microsoft Teams/password'"
-}
-```
+### Why the Confusion Occurred
 
-**Prerequisites**:
-- Install 1Password CLI: `https://developer.1password.com/docs/cli/get-started`
-- Sign in: `op signin`
-- Enable biometric unlock (recommended)
+The terminology "SSO" and "authentication" made it seem like `ssoBasicAuthPasswordCommand` might help with Teams login, but these are entirely separate authentication layers:
 
-### LastPass CLI
+- **Network layer** (SSO Basic Auth): Getting through proxy/firewall to reach Microsoft servers
+- **Application layer** (Teams OAuth): Authenticating your Microsoft account with Teams service
 
-```json
-{
-  "ssoBasicAuthUser": "user@example.com",
-  "ssoBasicAuthPasswordCommand": "lpass show --password 'Microsoft Teams'"
-}
-```
-
-**Prerequisites**:
-- Install LastPass CLI: `https://github.com/lastpass/lastpass-cli`
-- Login: `lpass login user@example.com`
-
-### pass (Standard Unix Password Manager)
-
-```json
-{
-  "ssoBasicAuthUser": "user@example.com",
-  "ssoBasicAuthPasswordCommand": "pass show work/microsoft-teams"
-}
-```
-
-**Prerequisites**:
-- Install pass: `apt install pass` / `brew install pass`
-- Initialize: `pass init <gpg-key-id>`
-- Add password: `pass insert work/microsoft-teams`
+Password manager integration is needed at the **application layer**, but `ssoBasicAuthPasswordCommand` only works at the **network layer**.
 
 ---
 
 **Investigation completed**: 2025-12-10
-**Next review**: After user feedback on CLI password manager documentation
+**Status**: Not feasible - No workaround available
+**Next review**: Monitor for Microsoft official guidance or community breakthroughs
