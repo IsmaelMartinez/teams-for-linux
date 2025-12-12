@@ -456,51 +456,19 @@ mosquitto_pub -h localhost -t "teams/command" \
 3. **THIRD: Tier 2 (Native Events)** - Nice-to-have for macOS/Windows
 4. **MAYBE: Tier 3 (Polling)** - Only if users request it
 
-### Configuration Design
-
-```json
-{
-  "screenLockPrivacy": {
-    "enabled": false,
-    "disableCamera": true,
-    "disableMicrophone": true,
-    "restoreOnUnlock": false,
-    "lockDetectionMethod": "auto",  // "auto", "events", "polling", "dbus"
-    "notifyUser": true
-  }
-}
-```
-
-### File Structure
-
-```
-app/
-  screenLockPrivacy/
-    index.js           # Main process module
-    README.md          # Module documentation
-  browser/
-    tools/
-      mediaPrivacy.js  # Renderer process media control
-```
-
 ### Testing Considerations
 
-1. **Manual Testing:**
-   - Lock screen during active call - verify camera/mic disabled
-   - Unlock screen - verify state behavior matches config
-   - Test across desktop environments (GNOME, KDE, XFCE)
-   - Test with screen sharing active
+**Manual Testing:**
+- Test with `mosquitto_pub` to verify media disabling works
+- Lock screen during active call - verify camera/mic disabled via user script
+- Test across desktop environments (GNOME, KDE, XFCE, i3)
+- Verify systemd service starts correctly and survives session restarts
 
-2. **Edge Cases:**
-   - Screen lock during ongoing screen share
-   - Rapid lock/unlock cycles
-   - System suspend vs screen lock
-   - Multiple displays
-
-3. **E2E Test Challenges:**
-   - Difficult to automate screen locking in test environment
-   - May need platform-specific test utilities
-   - Could mock powerMonitor events for testing logic
+**Edge Cases:**
+- Screen lock during ongoing screen share
+- Rapid lock/unlock cycles
+- User's script calling disable-media when already disabled
+- MQTT broker temporarily unavailable
 
 ## Security and Privacy Considerations
 
@@ -519,21 +487,11 @@ app/
 
 ### Mitigations
 
-- Make feature opt-in by default
-- Show notification when media disabled due to lock
-- Add configuration for lock timeout before disabling
-- Document behavior clearly
-- Consider keeping microphone active but camera disabled (option)
-
-## Platform Support Matrix
-
-| Platform | Lock Detection | Implementation Status | Notes |
-|----------|---------------|----------------------|-------|
-| macOS | `powerMonitor` events | ✅ Ready | Native support |
-| Windows | `powerMonitor` events | ✅ Ready | Native support |
-| Linux (GNOME) | Polling or D-Bus | ⚠️ Workaround needed | D-Bus: `org.gnome.ScreenSaver` |
-| Linux (KDE) | Polling or D-Bus | ⚠️ Workaround needed | D-Bus: `org.freedesktop.ScreenSaver` |
-| Linux (Other) | Polling | ⚠️ Workaround needed | Use `getSystemIdleState()` |
+- Feature is opt-in (requires user to set up script + MQTT)
+- Users can add notification to their own scripts
+- Users control exact behavior via their lock script
+- Document behavior and provide working examples
+- Users decide whether to re-enable on unlock (commented in examples)
 
 ## Related Work
 
@@ -555,27 +513,16 @@ app/
 ### Immediate Actions
 
 1. ✅ **Create GitHub issue comment** with investigation findings
-2. ✅ **Discuss with maintainer** about desired implementation approach
+2. ✅ **Discuss with maintainer** about Linux-first MQTT approach
 3. **Create Architecture Decision Record (ADR)** if approved for implementation
-
-### Implementation Recommendation
-
-**YES - Implement this feature** with the following approach:
-
-1. **Start with Phase 1** (macOS/Windows using native events)
-2. **Use polling for Linux** in Phase 2 (extend `IdleMonitor`)
-3. **Make opt-in** to avoid surprising users
-4. **Add comprehensive configuration** for flexibility
-5. **Document thoroughly** in user and developer docs
 
 ### Open Questions for Maintainer
 
-1. Should this be enabled by default or opt-in?
-2. Should screen sharing also be disabled, or only camera/microphone?
-3. Should we attempt to restore media on unlock, or leave disabled?
-4. Should we invest in D-Bus integration for Linux, or is polling acceptable?
-5. Should there be a grace period/timeout before disabling on lock?
-6. How should this interact with the existing wake lock functionality?
+1. Is the user-script approach acceptable, or prefer automatic detection?
+2. Should we also expose a D-Bus interface in addition to MQTT?
+3. Should screen sharing also be disabled, or only camera/microphone?
+4. Should `disable-media` block new media requests, or just stop existing tracks?
+5. Priority: Implement Tier 1 now, or backlog for future release?
 
 ## References
 
@@ -630,7 +577,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/home/%u/.local/bin/teams-lock-privacy.sh
+ExecStart=%h/.local/bin/teams-lock-privacy.sh
 Restart=on-failure
 RestartSec=5
 
