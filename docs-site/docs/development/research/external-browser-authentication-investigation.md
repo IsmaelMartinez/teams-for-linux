@@ -2,7 +2,7 @@
 
 **Issue**: [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)
 **Status**: Investigation Phase - Not Feasible
-**Date**: 2025-12-10
+**Date**: 2025-12-12
 
 :::warning Critical Clarification
 This investigation initially confused **proxy/network authentication** (SSO Basic Auth) with **Microsoft Teams OAuth login**. They are completely separate:
@@ -556,6 +556,6 @@ Password manager integration is needed at the **application layer**, but `ssoBas
 
 ---
 
-**Investigation completed**: 2025-12-10
+**Investigation completed**: 2025-12-12
 **Status**: Not feasible - No workaround available
 **Next review**: Monitor for Microsoft official guidance or community breakthroughs
