@@ -90,6 +90,7 @@ const sidebars: SidebarsConfig = {
             'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/dom-access-investigation',
+            'development/research/logout-indicator-investigation',
             'development/research/electron-38-migration-analysis',
             'development/research/external-browser-authentication-investigation',
             'development/research/graph-api-integration-research',
