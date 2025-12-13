@@ -17,7 +17,6 @@ apps:
   teams-for-linux:
     command: teams-for-linux
     desktop: usr/share/applications/teams-for-linux.desktop
-    extensions: [gnome]
     plugs:
       - browser-support
       - camera
@@ -60,4 +59,3 @@ parts:
       - libxkbcommon0
       - libpango-1.0-0
       - libcairo2
-
