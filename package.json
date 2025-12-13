@@ -132,10 +132,7 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
-      "base": "core22",
-      "environment": {
-        "DISABLE_WAYLAND": 1
-      },
+      "base": "core24",
       "plugs": [
         "default",
         "camera",
