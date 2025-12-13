@@ -307,7 +307,7 @@ async publish(topic, payload, options = {}) {
   - [x] `camera-state-changed`
   - [x] `microphone-state-changed`
 - [x] Initialize service in `app/index.js`
-- [ ] Add configuration schema for semantic categories (deferred to Phase 1b)
+- [x] Add configuration schema for semantic categories (deferred to Phase 1b)
 
 ### Phase 1b: Documentation ✅ COMPLETED (2025-11-30)
 
