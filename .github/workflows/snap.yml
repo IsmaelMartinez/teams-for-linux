@@ -49,47 +49,8 @@ jobs:
           retention-days: 30
           compression-level: 0
 
-  snap-armv7l:
-    runs-on: ubuntu-latest
-
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-      SNAPCRAFT_BUILD_ENVIRONMENT: lxd
-
-    steps:
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
-
-      - name: Install and initialize LXD
-        uses: canonical/setup-lxd@62cd335190e2b612b427db9319ea6b59ab1691f8 # main
-
-      - name: Check out Git repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-
-      - name: Install Node.js and NPM
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 22
-
-      - name: Build
-        run: npm ci
-
-      - name: Build for Release
-        if: contains(github.ref, 'main')
-        run: npm run dist:linux:snap:armv7l -- --publish always
-
-      - name: Build for PR
-        if: "!contains(github.ref, 'main')"
-        run: npm run dist:linux:snap:armv7l -- --publish never
-
-      - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: teams-for-linux-snap-armv7l
-          path: dist/*.snap
-          retention-days: 30
-          compression-level: 0
+  # Note: armv7l snap build removed - snapcraft cannot cross-compile armhf on amd64
+  # and GitHub doesn't provide armv7l runners
 
   snap-arm64:
     runs-on: ubuntu-24.04-arm
