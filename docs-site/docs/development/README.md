@@ -74,7 +74,7 @@ The project uses a multi-layered testing approach:
 
 For comprehensive testing documentation, see:
 - [Contributing Guide - Testing Section](contributing.md#testing)
-- [Automated Testing Strategy](research/automated-testing-strategy.md)
+- [ADR-009: Automated Testing Strategy](adr/009-automated-testing-strategy.md)
 
 ### ADR Index
 - [ADR-001: DesktopCapturer Source ID Format](adr/001-desktopcapturer-source-id-format.md) - Decision on screen sharing source identification format
