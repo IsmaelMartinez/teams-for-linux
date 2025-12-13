@@ -346,7 +346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
-      { name: "navigationButtons", path: "./tools/navigationButtons" }
+      { name: "navigationButtons", path: "./tools/navigationButtons" },
+      { name: "framelessTweaks", path: "./tools/frameless" }
     ];
 
     let successCount = 0;
@@ -366,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
-    
+
     // Initialize ActivityManager
     try {
       const ActivityManager = require("./notifications/activityManager");
@@ -374,7 +375,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error("Preload: ActivityManager failed to initialize:", err.message);
     }
-    
+
+    // Listen for config changes from the main process (e.g., when menu toggles are clicked)
+    ipcRenderer.on("config-changed", (_event, configChanges) => {
+      console.debug("Preload: Received config-changed event", configChanges);
+      // Update the local config object with the changes
+      for (const [key, value] of Object.entries(configChanges)) {
+        config[key] = value;
+        console.debug(`Preload: Updated config.${key} to ${value}`);
+      }
+    });
+
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }

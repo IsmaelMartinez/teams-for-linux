@@ -1,8 +1,8 @@
 ---
-id: 009-multiple-windows-support
+id: 010-multiple-windows-support
 ---
 
-# ADR 009: Multiple Windows Support for Single Account
+# ADR 010: Multiple Windows Support for Single Account
 
 ## Status
 

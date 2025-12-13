@@ -10,16 +10,23 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Authentication & Security
 - **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
+- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - Investigation into enabling Microsoft Teams authentication in system browser ([Issue #2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017))
+  - Comprehensive analysis of current authentication architecture
+  - Research on external browser OAuth patterns in Electron apps
+  - Feasibility assessment and technical challenges
+  - **Conclusion**: Not currently feasible - Teams web app manages authentication internally without exposed APIs
+  - Clarification: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
 - For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
-
-### Testing & Development
-- **[Automated Testing Strategy](automated-testing-strategy.md)** - Testing frameworks for Electron apps with MS authentication constraints
-  - Playwright for E2E, Vitest for unit/integration
-  - Key learning: MS authentication makes automated testing complex
 
 ### Electron & Framework
 - **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
 - **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
+
+### Strategic Analysis
+- **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
+  - ✅ **Phase 1 Complete**: Documentation reorganization
+  - Three-phase migration plan from flat to nested structure
+  - Phases 2-3: Nested structure with auto-migration (planned)
 
 ### Architecture
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
@@ -39,7 +46,18 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Implementation plan: 4-6 hours, ~60 lines of code, low risk
   - Enables keyboard shortcuts and home automation integration
   - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
+- **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Research on extending MQTT status publishing
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
+- **[Calendar Data Export Research](calendar-data-export-research.md)** - Event-driven calendar export for org-mode and external tools
+  - Related to [Issue #1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
+  - Event-driven architecture: React to user actions instead of internal scheduling
+  - Leverages existing Graph API infrastructure
+
+### Privacy & Media
+- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
+  - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
+  - Electron powerMonitor limited on Linux; user-script approach recommended
+  - Feasible via MQTT commands that users invoke from their own lock scripts
 
 ## Purpose
 

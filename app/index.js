@@ -295,6 +295,26 @@ async function handleAppReady() {
     mqttClient.initialize();
   }
 
+  // Load menu-toggleable settings from persistent store
+  // These settings can be changed via the application menu and are persisted
+  // across app restarts. The store values override the config file values.
+  const menuToggleSettings = [
+    'disableNotifications',
+    'disableNotificationSound',
+    'disableNotificationSoundIfNotAvailable',
+    'disableNotificationWindowFlash',
+    'disableBadgeCount',
+    'defaultNotificationUrgency'
+  ];
+
+  for (const setting of menuToggleSettings) {
+    if (appConfig.legacyConfigStore.has(setting)) {
+      const storedValue = appConfig.legacyConfigStore.get(setting);
+      console.debug(`Loading ${setting} from persistent store: ${storedValue}`);
+      config[setting] = storedValue;
+    }
+  }
+
   await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
   // Initialize Graph API client if enabled (after mainAppWindow is ready)

@@ -133,6 +133,12 @@ function getNotificationsMenu(Menus) {
         click: () => Menus.toggleDisableNotificationWindowFlash(),
       },
       {
+        label: "Disable Badge Count",
+        type: "checkbox",
+        checked: Menus.configGroup.startupConfig.disableBadgeCount,
+        click: () => Menus.toggleDisableBadgeCount(),
+      },
+      {
         label: "Urgency",
         submenu: [
           {

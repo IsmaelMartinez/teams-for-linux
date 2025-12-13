@@ -182,14 +182,6 @@ function extractYargConfig(configObject, appVersion) {
         describe: "custom CSS styles file location",
         type: "string",
       },
-      contextIsolation: {
-        default: true,
-        deprecated:
-          "Enabled by default and not configurable anymore. Please remove it from your configuration",
-        describe:
-          "Use contextIsolation on the main BrowserWindow (WIP - Disabling this will break most functionality)",
-        type: "boolean",
-      },
       disableTimestampOnCopy: {
         default: false,
         describe:
@@ -398,14 +390,6 @@ function extractYargConfig(configObject, appVersion) {
         default: null,
         describe: "Proxy Server with format address:port",
         type: "string",
-      },
-      sandbox: {
-        default: true,
-        deprecated:
-          "Enabled by default and not configurable anymore. Please remove it from your configuration",
-        describe:
-          "Sandbox for the BrowserWindow (WIP - disabling this might break some functionality)",
-        type: "boolean",
       },
       screenLockInhibitionMethod: {
         default: "Electron",
