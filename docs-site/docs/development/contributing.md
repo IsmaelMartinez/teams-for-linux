@@ -334,7 +334,7 @@ test('your feature test', async () => {
 ```
 
 :::info Testing Strategy
-For detailed information about the testing strategy, architecture decisions, and advanced testing patterns, see the [Automated Testing Strategy](research/automated-testing-strategy.md) documentation.
+For detailed information about the testing strategy and architecture decisions, see [ADR-009: Automated Testing Strategy](adr/009-automated-testing-strategy.md).
 :::
 
 ### Manual Testing

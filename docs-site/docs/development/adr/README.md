@@ -31,6 +31,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | 🚧 Proposed | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
+| [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Accepted | 2025-12-13 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -65,6 +66,18 @@ Architecture Decision Records capture important architectural decisions along wi
 - Standardized source identification
 - Improved cross-platform compatibility
 - Deferred native picker until Linux support available
+
+### Testing & Quality
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [009](009-automated-testing-strategy.md) | Automated Testing Strategy | Smoke testing with Playwright; comprehensive testing impractical due to MS authentication constraints |
+
+**Key Outcomes:**
+- Playwright E2E smoke tests validate app launch and login redirect
+- Tests run in isolated temp directories for clean state
+- Manual testing remains primary quality gate for feature changes
+- Low maintenance approach suitable for volunteer-maintained project
 
 ### Documentation & Standards
 
@@ -264,8 +277,9 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 8
+- **Total ADRs**: 9
 - **Implemented**: 4
+- **Accepted**: 1
 - **Proposed**: 1
 - **Rejected**: 3
 - **Average length**: ~500 words
