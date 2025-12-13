@@ -129,21 +129,6 @@
       ]
     },
     "snap": {
-      "summary": "Teams for Linux",
-      "confinement": "strict",
-      "grade": "stable",
-      "base": "core24",
-      "plugs": [
-        "default",
-        "camera",
-        "screen-inhibit-control",
-        "upower-observe",
-        "audio-record",
-        "hardware-observe",
-        "network-bind",
-        "network-manager-observe",
-        "system-observe"
-      ],
       "publish": [
         "snapStore"
       ]
