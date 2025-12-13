@@ -25,7 +25,7 @@
           <li>Make top bar elements clickable in frameless mode - by @KrissN (#2009)</li>
           <li>chore(deps): bump mdast-util-to-hast from 13.2.0 to 13.2.1 in /docs-site in the npm_and_yarn group across 1 directory (#2012)</li>
           <li>[Research]: Disable camera and microphone when screen is locked (#2015) - by @IsmaelMartinez (#2018)</li>
-          <li>Investigate Open Login Dialog in the browser 2017 - by @IsmaelMartinez (#2019)</li>
+          <li>Investigate Open Login Dialog in the browser #2017 - by @IsmaelMartinez (#2019)</li>
           <li>chore: cleanup obsolete tasks folder and consolidate docs - by @IsmaelMartinez (#2022)</li>
         </ul>
       </description>
