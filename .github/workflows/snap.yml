@@ -12,6 +12,7 @@ jobs:
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+      SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
       - name: Install Snapcraft
@@ -53,6 +54,7 @@ jobs:
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+      SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
       - name: Install Snapcraft
@@ -94,6 +96,7 @@ jobs:
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+      SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
       - name: Install Snapcraft
