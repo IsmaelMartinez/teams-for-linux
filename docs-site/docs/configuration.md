@@ -9,13 +9,26 @@ This document details all available configuration options for the Teams for Linu
 - [Quick Start](#quick-start)
 - [Configuration Locations](#configuration-locations)
 - [Configuration Options Reference](#configuration-options-reference)
-  - [Core Application Settings](#core-application-settings)
-  - [Authentication & Security](#authentication--security)
-  - [Notifications & UI](#notifications--ui)
-  - [Screen Sharing & Media](#screen-sharing--media)
-  - [System Integration](#system-integration)
+  - [Application Core](#application-core)
+  - [Window & UI Behavior](#window--ui-behavior)
+  - [Theming & Appearance](#theming--appearance)
+  - [Tray Icon](#tray-icon)
+  - [Notification System](#notification-system)
+  - [Incoming Call Handling](#incoming-call-handling)
+  - [Idle & Activity Detection](#idle--activity-detection)
+  - [Authentication & SSO](#authentication--sso)
+  - [Network & Proxy](#network--proxy)
+  - [Screen Sharing](#screen-sharing)
+  - [Media Settings](#media-settings)
+  - [Virtual Backgrounds](#virtual-backgrounds)
+  - [URL & Protocol Handling](#url--protocol-handling)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [MQTT Integration](#mqtt-integration)
-  - [Advanced Options](#advanced-options)
+  - [Microsoft Graph API](#microsoft-graph-api)
+  - [Performance & Hardware](#performance--hardware)
+  - [Cache & Storage](#cache--storage)
+  - [Development & Debug](#development--debug)
+  - [Advanced Platform Options](#advanced-platform-options)
 - [Usage Examples & Guides](#usage-examples--guides)
   - [Basic Setup Examples](#basic-setup-examples)
   - [System-wide Configuration](#system-wide-configuration)
@@ -55,63 +68,34 @@ Place your `config.json` file in the appropriate location based on your installa
 
 ## Configuration Options Reference
 
-### Core Application Settings
+### Application Core
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `url` | `string` | `"https://teams.microsoft.com/v2"` | Microsoft Teams URL |
 | `appTitle` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
-| `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
-| `minimized` | `boolean` | `false` | Start the application minimized |
+
+### Window & UI Behavior
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
-| `webDebug` | `boolean` | `false` | Enable debug at start |
+| `minimized` | `boolean` | `false` | Start the application minimized |
+| `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
+| `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
+| `class` | `string` | `null` | Custom value for the WM_CLASS property |
 
-### Authentication & Security
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
-| `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
-| `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
-| `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
-| `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth |
-| `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
-| `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
-| `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO |
-| `proxyServer` | `string` | `null` | Proxy Server with format address:port |
-
-### Notifications & UI
+### Theming & Appearance
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableNotifications` | `boolean` | `false` | Disable all notifications |
-| `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
-| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
-| `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
-| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
-| `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
-| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
-| `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
-| `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast |
 | `customCSSName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
 | `customCSSLocation` | `string` | `""` | Custom CSS styles file location |
 | `followSystemTheme` | `boolean` | `false` | Follow system theme |
 
-### Screen Sharing & Media
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
-| `screenSharingThumbnail` | `object` | `{ enabled: true, alwaysOnTop: true }` | Automatically show thumbnail window when screen sharing |
-| `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
-| `videoMenu` | `boolean` | `false` | Enable menu entry for controlling video elements |
-| `isCustomBackgroundEnabled` | `boolean` | `false` | Enable custom background feature |
-| `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
-| `customBGServiceConfigFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
-
-### System Integration
+### Tray Icon
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -119,10 +103,109 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appIcon` | `string` | `""` | Teams app icon to show in the tray |
 | `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
+| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
+
+### Notification System
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `disableNotifications` | `boolean` | `false` | Disable all notifications |
+| `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
+| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
+| `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
+| `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
+| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
+| `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
+
+### Incoming Call Handling
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast |
+| `incomingCallCommand` | `string` | `null` | Command or executable to run when an incoming call is detected |
+| `incomingCallCommandArgs` | `array` | `[]` | Arguments to pass to the incoming call command |
+
+> [!NOTE]
+> See [Incoming Call Command](#incoming-call-command) for detailed usage examples.
+
+### Idle & Activity Detection
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `awayOnSystemIdle` | `boolean` | `false` | Sets user status as away when system goes idle |
 | `appIdleTimeout` | `number` | `300` | Duration in seconds before app considers system as idle |
 | `appIdleTimeoutCheckInterval` | `number` | `10` | Poll interval in seconds to check if idle timeout is reached |
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
+
+### Authentication & SSO
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
+| `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
+
+#### Basic Authentication
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth |
+| `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
+
+#### InTune SSO
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
+| `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO |
+
+#### Certificates
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
+| `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
+
+### Network & Proxy
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+
+### Screen Sharing
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `screenSharingThumbnail` | `object` | `{ enabled: true, alwaysOnTop: true }` | Automatically show thumbnail window when screen sharing |
+| `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
+
+### Media Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
+| `videoMenu` | `boolean` | `false` | Enable menu entry for controlling video elements |
+
+### Virtual Backgrounds
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `isCustomBackgroundEnabled` | `boolean` | `false` | Enable custom background feature |
+| `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
+| `customBGServiceConfigFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
+
+### URL & Protocol Handling
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
+| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft|live)\\.com/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/` | Regex for Teams meetup-join and related links |
+| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
+| `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
+
+### Keyboard Shortcuts
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
 | `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
 
@@ -177,25 +260,39 @@ Place your `config.json` file in the appropriate location based on your installa
 > [!NOTE]
 > This feature uses Teams' existing authentication to access Microsoft Graph API endpoints. No additional login required. Currently supports reading user profile, calendar events, and mail messages.
 
-### Advanced Options
+### Performance & Hardware
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
 | `electronCLIFlags` | `array` | `[]` | Electron CLI flags |
+
+### Cache & Storage
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
+| `clearStorageData` | `boolean` | `null` | Flag to clear storage data |
+
+> [!NOTE]
+> See [Cache Management](#cache-management) for detailed configuration and usage examples.
+
+### Development & Debug
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `webDebug` | `boolean` | `false` | Enable debug at start |
+| `logConfig` | `object` | `{ transports: { console: { level: "info" }, file: { level: false } } }` | Electron-log configuration |
+| `watchConfigFile` | `boolean` | `false` | Watch for changes in config file and reload the app |
+
+### Advanced Platform Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36` | Google Chrome User Agent |
 | `emulateWinChromiumPlatform` | `boolean` | `false` | Use windows platform information in chromium (helpful if MFA app doesn't support Linux) |
-| `disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
-| `clearStorageData` | `boolean` | `null` | Flag to clear storage data |
-| `watchConfigFile` | `boolean` | `false` | Watch for changes in config file and reload the app |
-| `class` | `string` | `null` | Custom value for the WM_CLASS property |
-| `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
 | `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |
-| `logConfig` | `object` | `{ transports: { console: { level: "info" }, file: { level: false } } }` | Electron-log configuration |
-| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft|live)\\.com/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/` | Regex for Teams meetup-join and related links |
-| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
-| `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
-| `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
 
 :::note Wayland GPU Handling
 When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, you can explicitly override this behavior using either:
