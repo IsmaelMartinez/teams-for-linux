@@ -619,7 +619,7 @@ Implement complete chat client with message history, real-time updates, rich for
 ## Related
 
 - Issue [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) - Multiple windows request (catalyst for this investigation)
-- [ADR 009](../adr/009-multiple-windows-support.md) - Multiple windows support decision
+- [ADR 010](../adr/010-multiple-windows-support.md) - Multiple windows support decision
 - `app/notificationSystem/` - Notification toast pattern to build upon
 - `app/graphApi/` - Graph API integration foundation
 - Microsoft Graph API permissions in configuration
