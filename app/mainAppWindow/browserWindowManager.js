@@ -1,4 +1,5 @@
 const {
+  app,
   BrowserWindow,
   ipcMain,
   session,
@@ -246,18 +247,24 @@ class BrowserWindowManager {
   assignOnCallConnectedHandler() {
     return async (e) => {
       this.isOnCall = true;
-      return this.config.screenLockInhibitionMethod === "Electron"
+      const result = this.config.screenLockInhibitionMethod === "Electron"
         ? this.disableScreenLockElectron()
         : this.disableScreenLockWakeLockSentinel();
+
+      app.emit('teams-call-connected');
+      return result;
     };
   }
 
   assignOnCallDisconnectedHandler() {
     return async (e) => {
       this.isOnCall = false;
-      return this.config.screenLockInhibitionMethod === "Electron"
+      const result = this.config.screenLockInhibitionMethod === "Electron"
         ? this.enableScreenLockElectron()
         : this.enableScreenLockWakeLockSentinel();
+
+      app.emit('teams-call-disconnected');
+      return result;
     };
   }
 }

@@ -47,8 +47,16 @@ class MQTTClient extends EventEmitter {
 		}
 
 		try {
+			const connectionTopic = `${this.config.topicPrefix}/connected`;
+
 			const options = {
 				clientId: this.config.clientId,
+				will: {
+					topic: connectionTopic,
+					payload: 'false',
+					qos: 0,
+					retain: true
+				}
 			};
 
 			if (this.config.username) {
@@ -63,6 +71,8 @@ class MQTTClient extends EventEmitter {
 			this.client.on('connect', () => {
 				this.isConnected = true;
 				console.info('[MQTT] Successfully connected to broker');
+
+				this.client.publish(connectionTopic, 'true', { retain: true });
 
 				// Subscribe to command topic for receiving action commands (if configured)
 				if (this.config.commandTopic) {
@@ -104,6 +114,36 @@ class MQTTClient extends EventEmitter {
 
 		} catch (error) {
 			console.error('[MQTT] Failed to initialize client:', error);
+		}
+	}
+
+	/**
+	 * Generic publish method for publishing any payload to MQTT
+	 * @param {string} topic - Full MQTT topic path
+	 * @param {string|object} payload - Payload to publish (will be converted to string)
+	 * @param {object} options - MQTT publish options
+	 * @param {boolean} options.retain - Whether to retain the message (default: true)
+	 * @param {number} options.qos - Quality of Service level (default: 0)
+	 */
+	async publish(topic, payload, options = {}) {
+		if (!this.isConnected || !this.client) {
+			console.debug('[MQTT] Not connected, skipping publish');
+			return;
+		}
+
+		const payloadString = typeof payload === 'object'
+			? JSON.stringify(payload)
+			: String(payload);
+
+		try {
+			await this.client.publish(topic, payloadString, {
+				retain: options.retain ?? true,
+				qos: options.qos ?? 0
+			});
+
+			console.debug(`[MQTT] Published to ${topic}: ${payloadString.substring(0, 100)}`);
+		} catch (error) {
+			console.error(`[MQTT] Failed to publish to ${topic}:`, error);
 		}
 	}
 
@@ -195,6 +235,8 @@ class MQTTClient extends EventEmitter {
 		if (this.client) {
 			console.debug('[MQTT] Disconnecting from broker');
 			try {
+				const connectionTopic = `${this.config.topicPrefix}/connected`;
+				await this.client.publish(connectionTopic, 'false', { retain: true });
 				await this.client.end(false);
 			} catch (error) {
 				console.error('[MQTT] Error disconnecting:', error);
