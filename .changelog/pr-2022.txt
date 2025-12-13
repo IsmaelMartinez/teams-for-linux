@@ -1,1 +1,0 @@
-chore: cleanup obsolete tasks folder and consolidate docs - by @IsmaelMartinez (#2022)

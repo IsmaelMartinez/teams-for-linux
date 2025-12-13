@@ -1,1 +1,0 @@
-Implement MQTT Extended Status Phase 1a - by @IsmaelMartinez (#2007)
