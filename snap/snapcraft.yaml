@@ -1,0 +1,63 @@
+name: teams-for-linux
+version: "${version}"
+summary: Teams for Linux
+description: |
+  Unofficial Microsoft Teams client for Linux using Electron.
+  It uses the Web App and wraps it as a standalone application using Electron.
+base: core24
+grade: stable
+confinement: strict
+
+platforms:
+  amd64:
+  arm64:
+  armhf:
+
+apps:
+  teams-for-linux:
+    command: teams-for-linux --no-sandbox
+    desktop: usr/share/applications/teams-for-linux.desktop
+    plugs:
+      - browser-support
+      - camera
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - home
+      - network
+      - network-bind
+      - opengl
+      - pulseaudio
+      - audio-record
+      - removable-media
+      - screen-inhibit-control
+      - upower-observe
+      - hardware-observe
+      - network-manager-observe
+      - system-observe
+      - unity7
+      - wayland
+      - x11
+
+parts:
+  teams-for-linux:
+    plugin: dump
+    source: ${source}
+    stage-packages:
+      - libnss3
+      - libnspr4
+      - libasound2t64
+      - libatk1.0-0t64
+      - libatk-bridge2.0-0t64
+      - libcups2t64
+      - libdrm2
+      - libgbm1
+      - libgtk-3-0t64
+      - libxcomposite1
+      - libxdamage1
+      - libxfixes3
+      - libxrandr2
+      - libxkbcommon0
+      - libpango-1.0-0
+      - libcairo2
+
