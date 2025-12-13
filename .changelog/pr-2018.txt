@@ -1,1 +1,0 @@
-[Research]: Disable camera and microphone when screen is locked (#2015) - by @IsmaelMartinez (#2018)

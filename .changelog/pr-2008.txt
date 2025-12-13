@@ -1,1 +1,0 @@
-Fix changelog generation triggering on every change - by @IsmaelMartinez (#2008)

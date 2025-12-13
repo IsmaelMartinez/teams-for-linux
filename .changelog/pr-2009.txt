@@ -1,1 +1,0 @@
-Make top bar elements clickable in frameless mode - by @KrissN (#2009)

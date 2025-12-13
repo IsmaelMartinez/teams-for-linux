@@ -14,6 +14,22 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.6.19" date="2025-12-13">
+      <description>
+        <ul>
+          <li>Investigate issue 1984 - by @IsmaelMartinez (#1989)</li>
+          <li>Investigate and resolve GitHub issue 1987 - by @IsmaelMartinez (#1990)</li>
+          <li>Start config research implementation phase one - by @IsmaelMartinez (#2005)</li>
+          <li>Implement MQTT Extended Status Phase 1a - by @IsmaelMartinez (#2007)</li>
+          <li>Fix changelog generation triggering on every change - by @IsmaelMartinez (#2008)</li>
+          <li>Make top bar elements clickable in frameless mode - by @KrissN (#2009)</li>
+          <li>chore(deps): bump mdast-util-to-hast from 13.2.0 to 13.2.1 in /docs-site in the npm_and_yarn group across 1 directory (#2012)</li>
+          <li>[Research]: Disable camera and microphone when screen is locked (#2015) - by @IsmaelMartinez (#2018)</li>
+          <li>Investigate Open Login Dialog in the browser 2017 - by @IsmaelMartinez (#2019)</li>
+          <li>chore: cleanup obsolete tasks folder and consolidate docs - by @IsmaelMartinez (#2022)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.6.18" date="2025-11-28">
       <description>
         <ul>
