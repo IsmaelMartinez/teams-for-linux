@@ -1,61 +1,55 @@
-const { BrowserWindow } = require('electron');
-const path = require('node:path');
+import { BrowserWindow } from "electron";
+import path from "node:path";
+import { getDirname } from "../utils/esm-utils.js";
 
+const __dirname = getDirname(import.meta.url);
+
+/**
+ * DocumentationWindow manages the documentation viewer window.
+ */
 class DocumentationWindow {
-  window = null;
+	constructor() {
+		this.window = null;
+	}
 
-  show() {
-    // If window already exists, just show and focus it
-    if (this.window) {
-      if (this.window.isMinimized()) {
-        this.window.restore();
-      }
-      this.window.show();
-      this.window.focus();
-      return;
-    }
+	/**
+	 * Show the documentation window
+	 */
+	show() {
+		if (this.window && !this.window.isDestroyed()) {
+			this.window.show();
+			this.window.focus();
+			return;
+		}
 
-    // Create new documentation window
-    this.window = new BrowserWindow({
-      title: 'Teams for Linux - Documentation',
-      width: 1200,
-      height: 800,
-      minWidth: 800,
-      minHeight: 600,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        webSecurity: true,
-      },
-    });
+		this.window = new BrowserWindow({
+			width: 800,
+			height: 600,
+			title: "Teams for Linux Documentation",
+			autoHideMenuBar: true,
+			webPreferences: {
+				preload: path.join(__dirname, "documentation.js"),
+				contextIsolation: true,
+				nodeIntegration: false,
+			},
+		});
 
-    // Load the documentation HTML file
-    this.window.loadFile(path.join(__dirname, 'documentation.html'));
+		this.window.loadFile(path.join(__dirname, "documentation.html"));
 
-    // Show window when ready
-    this.window.once('ready-to-show', () => {
-      this.window.show();
-      this.window.focus();
-    });
+		this.window.on("closed", () => {
+			this.window = null;
+		});
+	}
 
-    // Clean up when window is closed
-    this.window.on('closed', () => {
-      this.window = null;
-    });
-  }
-
-  close() {
-    if (this.window) {
-      this.window.close();
-    }
-  }
-
-  isVisible() {
-    return this.window && this.window.isVisible();
-  }
+	/**
+	 * Close the documentation window
+	 */
+	close() {
+		if (this.window && !this.window.isDestroyed()) {
+			this.window.close();
+			this.window = null;
+		}
+	}
 }
 
-module.exports = DocumentationWindow;
+export default DocumentationWindow;

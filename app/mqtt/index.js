@@ -1,5 +1,5 @@
-const mqtt = require('mqtt');
-const { EventEmitter } = require('node:events');
+import mqtt from 'mqtt';
+import { EventEmitter } from 'node:events';
 
 /**
  * MQTT Client for Teams Status Publishing and Command Reception
@@ -205,4 +205,4 @@ class MQTTClient extends EventEmitter {
 	}
 }
 
-module.exports = { MQTTClient };
+export { MQTTClient };

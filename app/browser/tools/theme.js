@@ -1,32 +1,43 @@
-const ReactHandler = require("./reactHandler");
+import ReactHandler from "./reactHandler.js";
 
-class ThemeManager {
-  init(config, ipcRenderer) {
-    this.ipcRenderer = ipcRenderer;
-    this.config = config;
+const _Theme_config = new WeakMap();
+const _Theme_ipcRenderer = new WeakMap();
 
-    const clientPreferences = ReactHandler.getTeams2ClientPreferences();
-    if (clientPreferences) {
-      console.debug("Using react to set the follow system theme");
-      ReactHandler.getTeams2ClientPreferences().theme.followOsTheme =
-        config.followSystemTheme;
-    }
+class Theme {
+	init(config, ipcRenderer) {
+		_Theme_config.set(this, config);
+		_Theme_ipcRenderer.set(this, ipcRenderer);
 
-    if (config.followSystemTheme) {
-      console.debug("followSystemTheme", config.followSystemTheme);
-      this.ipcRenderer.on("system-theme-changed", this.applyTheme);
-    }
-  }
+		if (config.followSystemTheme) {
+			this.ipcRenderer.on("system-theme-changed", (_event, isDark) => {
+				this.setTheme(isDark ? "dark" : "default");
+			});
+		}
+	}
 
-  async applyTheme(_event, ...args) {
-    const theme = args[0] ? "dark" : "default";
-    const clientPreferences = ReactHandler.getTeams2ClientPreferences();
-    if (clientPreferences) {
-      console.debug("Using react to set the theme");
-      clientPreferences.theme.userTheme = theme;
-      console.debug("Theme changed to", theme);
-    }
-  }
+	get config() {
+		return _Theme_config.get(this);
+	}
+
+	get ipcRenderer() {
+		return _Theme_ipcRenderer.get(this);
+	}
+
+	/**
+	 * Set the Teams theme
+	 * @param {string} theme - The theme to set ("dark" or "default")
+	 */
+	setTheme(theme) {
+		try {
+			const clientPreferences = ReactHandler.getTeams2ClientPreferences();
+			if (clientPreferences?.theme) {
+				clientPreferences.theme.userTheme = theme;
+				console.debug(`[Theme] Set theme to: ${theme}`);
+			}
+		} catch (err) {
+			console.error("[Theme] Error setting theme:", err.message);
+		}
+	}
 }
 
-module.exports = new ThemeManager();
+export default new Theme();

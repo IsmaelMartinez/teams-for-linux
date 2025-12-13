@@ -1,39 +1,42 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
+import { getDirname } from "../utils/esm-utils.js";
 
-exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
-  const customCssLocation = getCustomCssLocation(config);
-  if (customCssLocation) {
-    applyCustomCSSToContent(content, customCssLocation);
-  }
-  content.insertCSS(
-    "#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }"
-  );
-  content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
-};
+const __dirname = getDirname(import.meta.url);
 
-exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config) {
-  const customCssLocation = getCustomCssLocation(config);
-  if (customCssLocation) {
-    applyCustomCSSToFrame(webFrame, customCssLocation);
-  }
-};
+export function onDidFinishLoad(content, config) {
+	const customCssLocation = getCustomCssLocation(config);
+	if (customCssLocation) {
+		applyCustomCSSToContent(content, customCssLocation);
+	}
+	content.insertCSS(
+		"#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }"
+	);
+	content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
+}
+
+export function onDidFrameFinishLoad(webFrame, config) {
+	const customCssLocation = getCustomCssLocation(config);
+	if (customCssLocation) {
+		applyCustomCSSToFrame(webFrame, customCssLocation);
+	}
+}
 
 function getCustomCssLocation(config) {
-  if (config.customCSSName) {
-    return path.join(__dirname, "assets", "css", config.customCSSName + ".css");
-  } else if (config.customCSSLocation) {
-    return config.customCSSLocation;
-  }
-  return null;
+	if (config.customCSSName) {
+		return path.join(__dirname, "assets", "css", config.customCSSName + ".css");
+	} else if (config.customCSSLocation) {
+		return config.customCSSLocation;
+	}
+	return null;
 }
 
 function applyCustomCSSToContent(content, cssLocation) {
-  fs.readFile(cssLocation, "utf-8", (error, data) => {
-    if (!error) {
-      content.insertCSS(data);
-    }
-  });
+	fs.readFile(cssLocation, "utf-8", (error, data) => {
+		if (!error) {
+			content.insertCSS(data);
+		}
+	});
 }
 
 /**
@@ -46,16 +49,16 @@ function applyCustomCSSToContent(content, cssLocation) {
  * @param {string} cssLocation - Path to the CSS file to inject
  */
 function applyCustomCSSToFrame(webFrame, cssLocation) {
-  const customCssId = "tfl-custom-css-style";
+	const customCssId = "tfl-custom-css-style";
 
-  fs.readFile(cssLocation, "utf-8", (error, data) => {
-    if (error) {
-      return;
-    }
+	fs.readFile(cssLocation, "utf-8", (error, data) => {
+		if (error) {
+			return;
+		}
 
-    data = data.replaceAll("`", String.raw`\u0060`);
+		data = data.replaceAll("`", String.raw`\u0060`);
 
-    webFrame.executeJavaScript(`
+		webFrame.executeJavaScript(`
 			if(!document.getElementById("${customCssId}")) {
 				var style = document.createElement('style');
 				style.id = "${customCssId}";
@@ -64,5 +67,5 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 				document.head.appendChild(style);
 			}
 		`);
-  });
+	});
 }

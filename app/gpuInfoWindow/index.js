@@ -1,61 +1,51 @@
-const { BrowserWindow } = require('electron');
+import { BrowserWindow, app } from "electron";
 
 /**
- * Window for displaying chrome://gpu information
- * Shows GPU and graphics acceleration details for debugging
+ * GpuInfoWindow displays GPU information for debugging purposes.
  */
 class GpuInfoWindow {
-  window = null;
+	constructor() {
+		this.window = null;
+	}
 
-  show() {
-    // Reuse existing window if already open
-    if (this.window) {
-      if (this.window.isMinimized()) {
-        this.window.restore();
-      }
-      this.window.show();
-      this.window.focus();
-      return;
-    }
+	/**
+	 * Show the GPU info window
+	 */
+	show() {
+		if (this.window && !this.window.isDestroyed()) {
+			this.window.show();
+			this.window.focus();
+			return;
+		}
 
-    // Create new window
-    this.window = new BrowserWindow({
-      title: 'GPU Information',
-      width: 1000,
-      height: 800,
-      minWidth: 600,
-      minHeight: 400,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        webSecurity: true,
-      },
-    });
+		this.window = new BrowserWindow({
+			width: 800,
+			height: 600,
+			title: "GPU Information",
+			autoHideMenuBar: true,
+			webPreferences: {
+				contextIsolation: true,
+				nodeIntegration: false,
+			},
+		});
 
-    this.window.loadURL('chrome://gpu');
+		// Load the Chrome GPU page
+		this.window.loadURL("chrome://gpu");
 
-    this.window.once('ready-to-show', () => {
-      this.window.show();
-      this.window.focus();
-    });
+		this.window.on("closed", () => {
+			this.window = null;
+		});
+	}
 
-    this.window.on('closed', () => {
-      this.window = null;
-    });
-  }
-
-  close() {
-    if (this.window) {
-      this.window.close();
-    }
-  }
-
-  isVisible() {
-    return this.window && this.window.isVisible();
-  }
+	/**
+	 * Close the GPU info window
+	 */
+	close() {
+		if (this.window && !this.window.isDestroyed()) {
+			this.window.close();
+			this.window = null;
+		}
+	}
 }
 
-module.exports = GpuInfoWindow;
+export default GpuInfoWindow;

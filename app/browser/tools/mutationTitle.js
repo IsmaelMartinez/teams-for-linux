@@ -1,95 +1,98 @@
-class MutationObserverTitle {
-  init(config) {
-    if (config.useMutationTitleLogic) {
-      console.debug("MutationObserverTitle enabled");
-      // Check if DOM is already loaded
-      if (document.readyState === 'loading') {
-        // DOM is still loading, wait for DOMContentLoaded
-        globalThis.addEventListener(
-          "DOMContentLoaded",
-          this._applyMutationToTitleLogic,
-        );
-      } else {
-        // DOM is already loaded, apply logic immediately
-        this._applyMutationToTitleLogic();
-      }
-    }
-  }
+/**
+ * MutationTitle tool
+ * 
+ * Uses MutationObserver to monitor title changes and extract unread counts.
+ */
+class MutationTitle {
+	init(config) {
+		this.config = config;
+		this.observer = null;
+		this.lastCount = 0;
+		this.startObserving();
+	}
 
-  _applyMutationToTitleLogic() {
-    console.debug("Appliying MutationObserverTitle logic");
-    
-    try {
-      // Validate DOM environment
-      if (!globalThis.document || !globalThis.MutationObserver) {
-        console.error("MutationTitle: Invalid DOM environment");
-        return;
-      }
-      
-      const titleElement = globalThis.document.querySelector("title");
-      if (!titleElement) {
-        console.error("MutationTitle: Title element not found");
-        return;
-      }
-      
-      // Enhanced debugging for tray icon timing issue (#1795)
-      console.debug("MutationTitle: Initial setup", {
-        currentTitle: globalThis.document.title,
-        titleElementExists: !!titleElement,
-        documentReadyState: document.readyState
-      });
-      
-      const observer = new globalThis.MutationObserver(() => {
-        try {
-          // Validate and sanitize document title
-          const title = globalThis.document.title;
-          if (typeof title !== 'string') {
-            console.warn("MutationTitle: Invalid title type");
-            return;
-          }
-          
-          // Limit title length for security
-          const sanitizedTitle = title.substring(0, 200);
-          console.debug(`MutationTitle: Title changed to "${sanitizedTitle}"`);
-          
-          // Safely extract number from title with input validation
-          const regex = /^\((\d+)\)/;
-          const match = regex.exec(sanitizedTitle);
-          const number = match ? Number.parseInt(match[1], 10) : 0;
-          
-          // Enhanced debugging for unread count extraction
-          console.debug("MutationTitle: Extracting unread count", {
-            title: sanitizedTitle,
-            regexMatch: match,
-            extractedNumber: number,
-            regexPattern: regex.toString()
-          });
-          
-          // Validate extracted number
-          if (Number.isNaN(number) || number < 0 || number > 9999) {
-            console.warn("MutationTitle: Invalid unread count extracted:", number);
-            return;
-          }
-          
-          const event = new CustomEvent("unread-count", {
-            detail: { number: number },
-          });
-          
-          console.debug(`MutationTitle: Dispatching unread-count event with number: ${number}`);
-          globalThis.dispatchEvent(event);
-        } catch (error) {
-          console.error("MutationTitle: Error in observer callback:", error);
-        }
-      });
-      
-      observer.observe(titleElement, {
-        childList: true,
-      });
-      console.debug("MutationTitle: Observer successfully attached to title element");
-    } catch (error) {
-      console.error("MutationTitle: Error setting up mutation observer:", error);
-    }
-  }
+	/**
+	 * Start observing title changes
+	 */
+	startObserving() {
+		// Observe the document title
+		const titleElement = document.querySelector("title");
+		if (!titleElement) {
+			// Wait for title element
+			setTimeout(() => this.startObserving(), 500);
+			return;
+		}
+
+		this.observer = new MutationObserver(() => {
+			this.onTitleChange();
+		});
+
+		this.observer.observe(titleElement, {
+			childList: true,
+			characterData: true,
+			subtree: true,
+		});
+
+		// Also observe head for title changes
+		const head = document.querySelector("head");
+		if (head) {
+			const headObserver = new MutationObserver((mutations) => {
+				for (const mutation of mutations) {
+					if (mutation.addedNodes) {
+						for (const node of mutation.addedNodes) {
+							if (node.nodeName === "TITLE") {
+								this.onTitleChange();
+							}
+						}
+					}
+				}
+			});
+			headObserver.observe(head, { childList: true });
+		}
+
+		// Initial check
+		this.onTitleChange();
+		console.debug("[MutationTitle] Started observing title changes");
+	}
+
+	/**
+	 * Handle title change
+	 */
+	onTitleChange() {
+		const title = document.title;
+		const count = this.extractUnreadCount(title);
+
+		if (count !== this.lastCount) {
+			this.lastCount = count;
+			this.emitUnreadCount(count);
+		}
+	}
+
+	/**
+	 * Extract unread count from title
+	 * @param {string} title - The document title
+	 * @returns {number} The unread count
+	 */
+	extractUnreadCount(title) {
+		// Match patterns like "(5) Microsoft Teams" or "Microsoft Teams (5)"
+		const match = title.match(/\((\d+)\)/);
+		if (match) {
+			return parseInt(match[1], 10);
+		}
+		return 0;
+	}
+
+	/**
+	 * Emit unread count event
+	 * @param {number} count - The unread count
+	 */
+	emitUnreadCount(count) {
+		const event = new CustomEvent("unread-count", {
+			detail: { number: count }
+		});
+		globalThis.dispatchEvent(event);
+		console.debug(`[MutationTitle] Unread count: ${count}`);
+	}
 }
 
-module.exports = new MutationObserverTitle();
+export default new MutationTitle();

@@ -1,0 +1,1 @@
+feat: migrate codebase from CommonJS to ES Modules - by @IsmaelMartinez (#2023)

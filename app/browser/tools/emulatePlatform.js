@@ -1,40 +1,37 @@
-class PlatformEmulator {
-  init(config) {
-    //proceed without emulating windows platform in browser
-    if (!config.emulateWinChromiumPlatform) {
-      return;
-    }
+/**
+ * EmulatePlatform tool
+ * 
+ * Emulates Windows platform for compatibility with certain MFA apps.
+ */
+class EmulatePlatform {
+	init(config) {
+		this.config = config;
 
-    // update property platform property in navigator.navigator
-    const win32Str = "Win32";
-    const windowsStr = "Windows";
-    Object.defineProperty(Navigator.prototype, "platform", {
-      get: () => {
-        return win32Str;
-      },
-    });
+		if (config.emulateWinChromiumPlatform) {
+			this.emulateWindows();
+		}
+	}
 
-    //update userAgentData object
-    let originalUserAgentData = navigator.userAgentData;
-    let customUserAgentData = structuredClone(originalUserAgentData);
-    customUserAgentData = {
-      ...customUserAgentData,
-      platform: windowsStr,
-      getHighEntropyValues: async function (input) {
-        let highEntropyValue =
-          await originalUserAgentData.getHighEntropyValues(input);
-        if (highEntropyValue["platform"]) {
-          highEntropyValue["platform"] = windowsStr;
-        }
-        return highEntropyValue;
-      },
-    };
-    Object.defineProperty(Navigator.prototype, "userAgentData", {
-      get: () => {
-        return customUserAgentData;
-      },
-    });
-  }
+	/**
+	 * Emulate Windows platform
+	 */
+	emulateWindows() {
+		// Override navigator.platform
+		Object.defineProperty(navigator, "platform", {
+			get: () => "Win32",
+			configurable: true,
+		});
+
+		// Override navigator.userAgentData if available
+		if (navigator.userAgentData) {
+			Object.defineProperty(navigator.userAgentData, "platform", {
+				get: () => "Windows",
+				configurable: true,
+			});
+		}
+
+		console.debug("[EmulatePlatform] Emulating Windows platform");
+	}
 }
 
-module.exports = new PlatformEmulator();
+export default new EmulatePlatform();

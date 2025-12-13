@@ -1,7 +1,7 @@
-const { contextBridge, ipcRenderer } = require("electron");
+import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("api", {
-  submitForm: (args) => {
-    ipcRenderer.send("submitForm", args);
-  },
+	submitForm: (args) => {
+		ipcRenderer.send("submitForm", args);
+	},
 });
