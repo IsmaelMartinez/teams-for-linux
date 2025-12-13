@@ -334,8 +334,8 @@ async publish(topic, payload, options = {}) {
 ### Phase 3: Documentation & Testing
 
 - [x] Run `npm run generate-ipc-docs` to update auto-generated docs
-- [ ] Test with UI buttons AND keyboard shortcuts
-- [ ] Test call connect/disconnect publishes correct state
+- [x] Test with UI buttons AND keyboard shortcuts
+- [x] Test call connect/disconnect publishes correct state
 - [ ] Test camera/mic toggle publishes correct state
 
 ---
