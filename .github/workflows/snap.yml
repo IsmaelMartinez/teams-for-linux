@@ -28,9 +28,22 @@ jobs:
       - name: Build
         run: npm ci
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:snap -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-snap-x64
+          path: dist/*.snap
+          retention-days: 30
+          compression-level: 0
 
   snap-armv7l:
     runs-on: ubuntu-latest
@@ -53,9 +66,22 @@ jobs:
       - name: Build
         run: npm ci
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap:armv7l -- --publish always
+
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:snap:armv7l -- --publish never
+
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-snap-armv7l
+          path: dist/*.snap
+          retention-days: 30
+          compression-level: 0
 
   snap-arm64:
     runs-on: ubuntu-24.04-arm
@@ -81,8 +107,19 @@ jobs:
       - name: Build
         run: npm ci
 
-      - name: Release
+      - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap:arm64 -- --publish always
 
+      - name: Build for PR
+        if: "!contains(github.ref, 'main')"
+        run: npm run dist:linux:snap:arm64 -- --publish never
 
+      - name: Upload PR artifacts
+        if: "!contains(github.ref, 'main')"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: teams-for-linux-snap-arm64
+          path: dist/*.snap
+          retention-days: 30
+          compression-level: 0
