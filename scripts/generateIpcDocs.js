@@ -9,9 +9,12 @@
  * Usage: node scripts/generateIpcDocs.js
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { execSync } = require('node:child_process');
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const APP_DIR = path.join(__dirname, '..', 'app');
 const DOCS_OUTPUT = path.join(__dirname, '..', 'docs-site', 'docs', 'development', 'ipc-api-generated.md');
@@ -19,115 +22,115 @@ const GITHUB_REPO = 'https://github.com/IsmaelMartinez/teams-for-linux';
 
 // IPC channel categories based on file location
 const CATEGORIES = {
-  'app/index.js': 'Core Application',
-  'app/notifications/': 'Notifications',
-  'app/notificationSystem/': 'Notifications (Custom)',
-  'app/screenSharing/': 'Screen Sharing',
-  'app/idle/': 'Idle Monitoring',
-  'app/partitions/': 'Partitions & Zoom',
-  'app/menus/': 'Menus & Tray',
-  'app/customBackground/': 'Custom Background',
-  'app/mainAppWindow/': 'Main Window',
-  'app/login/': 'Authentication',
-  'app/connectionManager/': 'Connection Management',
-  'app/incomingCallToast/': 'Incoming Calls',
-  'app/graphApi/': 'Microsoft Graph API',
+	'app/index.js': 'Core Application',
+	'app/notifications/': 'Notifications',
+	'app/notificationSystem/': 'Notifications (Custom)',
+	'app/screenSharing/': 'Screen Sharing',
+	'app/idle/': 'Idle Monitoring',
+	'app/partitions/': 'Partitions & Zoom',
+	'app/menus/': 'Menus & Tray',
+	'app/customBackground/': 'Custom Background',
+	'app/mainAppWindow/': 'Main Window',
+	'app/login/': 'Authentication',
+	'app/connectionManager/': 'Connection Management',
+	'app/incomingCallToast/': 'Incoming Calls',
+	'app/graphApi/': 'Microsoft Graph API',
 };
 
 function findCategory(filePath) {
-  for (const [pattern, category] of Object.entries(CATEGORIES)) {
-    if (filePath.includes(pattern)) {
-      return category;
-    }
-  }
-  return 'Other';
+	for (const [pattern, category] of Object.entries(CATEGORIES)) {
+		if (filePath.includes(pattern)) {
+			return category;
+		}
+	}
+	return 'Other';
 }
 
 function extractIpcChannels() {
-  console.log('Scanning for IPC channels...');
+	console.log('Scanning for IPC channels...');
 
-  // Check if ripgrep is available
-  try {
-    execSync('rg --version', { stdio: 'ignore' });
-  } catch (error) {
-    // ripgrep not found - provide helpful error message
-    console.error('\n❌ Error: ripgrep (rg) is not installed or not in your PATH.');
-    console.error(`   Reason: ${error.message}`);
-    console.error('This script requires ripgrep to scan for IPC channels.\n');
-    console.error('Please install it from: https://github.com/BurntSushi/ripgrep#installation\n');
-    process.exit(1);
-  }
+	// Check if ripgrep is available
+	try {
+		execSync('rg --version', { stdio: 'ignore' });
+	} catch (error) {
+		// ripgrep not found - provide helpful error message
+		console.error('\n❌ Error: ripgrep (rg) is not installed or not in your PATH.');
+		console.error(`   Reason: ${error.message}`);
+		console.error('This script requires ripgrep to scan for IPC channels.\n');
+		console.error('Please install it from: https://github.com/BurntSushi/ripgrep#installation\n');
+		process.exit(1);
+	}
 
-  const grepCommand = String.raw`rg -n "ipcMain\.(handle|on)\(" --type js ${APP_DIR}`;
+	const grepCommand = String.raw`rg -n "ipcMain\.(handle|on)\(" --type js ${APP_DIR}`;
 
-  let output;
-  try {
-    output = execSync(grepCommand, { encoding: 'utf8' });
-  } catch (error) {
-    // ripgrep failed (could be no matches found or actual error)
-    if (error.status === 1) {
-      // Exit code 1 means no matches found
-      console.log('No IPC channels found.');
-      return [];
-    }
-    // Other errors (exit code 2+) are actual failures
-    console.error('Error running ripgrep:', error.message);
-    process.exit(1);
-  }
+	let output;
+	try {
+		output = execSync(grepCommand, { encoding: 'utf8' });
+	} catch (error) {
+		// ripgrep failed (could be no matches found or actual error)
+		if (error.status === 1) {
+			// Exit code 1 means no matches found
+			console.log('No IPC channels found.');
+			return [];
+		}
+		// Other errors (exit code 2+) are actual failures
+		console.error('Error running ripgrep:', error.message);
+		process.exit(1);
+	}
 
-  return output.trim().split('\n').map(line => {
-    const match = line.match(/^([^:]+):(\d+):(.+)$/);
-    if (!match) return null;
+	return output.trim().split('\n').map(line => {
+		const match = line.match(/^([^:]+):(\d+):(.+)$/);
+		if (!match) return null;
 
-    const [, filePath, lineNumber, content] = match;
-    const channelMatch = content.match(/ipcMain\.(handle|on)\(\s*["']([^"']+)["']/);
-    if (!channelMatch) return null;
+		const [, filePath, lineNumber, content] = match;
+		const channelMatch = content.match(/ipcMain\.(handle|on)\(\s*["']([^"']+)["']/);
+		if (!channelMatch) return null;
 
-    const [, type, channelName] = channelMatch;
-    const relativePath = path.relative(path.join(__dirname, '..'), path.resolve(filePath));
-    const description = extractDescription(filePath, Number.parseInt(lineNumber, 10) - 1);
+		const [, type, channelName] = channelMatch;
+		const relativePath = path.relative(path.join(__dirname, '..'), path.resolve(filePath));
+		const description = extractDescription(filePath, Number.parseInt(lineNumber, 10) - 1);
 
-    return {
-      name: channelName,
-      type: type === 'handle' ? 'Request/Response' : 'Event',
-      category: findCategory(relativePath),
-      file: relativePath,
-      lineNumber,
-      description,
-    };
-  }).filter(Boolean);
+		return {
+			name: channelName,
+			type: type === 'handle' ? 'Request/Response' : 'Event',
+			category: findCategory(relativePath),
+			file: relativePath,
+			lineNumber,
+			description,
+		};
+	}).filter(Boolean);
 }
 
 function extractDescription(filePath, lineIndex) {
-  const fileLines = fs.readFileSync(filePath, 'utf8').split('\n');
-  const commentLines = [];
+	const fileLines = fs.readFileSync(filePath, 'utf8').split('\n');
+	const commentLines = [];
 
-  // Look up to 5 lines above for comments
-  for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 5); i--) {
-    const line = fileLines[i].trim();
-    if (line.startsWith('//') || line.startsWith('*')) {
-      commentLines.unshift(line.replace(/^(\/\/|\*)\s*/, ''));
-    } else if (line && !line.startsWith('/*') && line !== '*/') {
-      break;
-    }
-  }
+	// Look up to 5 lines above for comments
+	for (let i = lineIndex - 1; i >= Math.max(0, lineIndex - 5); i--) {
+		const line = fileLines[i].trim();
+		if (line.startsWith('//') || line.startsWith('*')) {
+			commentLines.unshift(line.replace(/^(\/\/|\*)\s*/, ''));
+		} else if (line && !line.startsWith('/*') && line !== '*/') {
+			break;
+		}
+	}
 
-  return commentLines.join(' ').trim() || 'No description available';
+	return commentLines.join(' ').trim() || 'No description available';
 }
 
 function generateMarkdown(channels) {
-  // Group channels by category
-  const channelsByCategory = channels.reduce((acc, channel) => {
-    if (!acc[channel.category]) {
-      acc[channel.category] = [];
-    }
-    acc[channel.category].push(channel);
-    return acc;
-  }, {});
+	// Group channels by category
+	const channelsByCategory = channels.reduce((acc, channel) => {
+		if (!acc[channel.category]) {
+			acc[channel.category] = [];
+		}
+		acc[channel.category].push(channel);
+		return acc;
+	}, {});
 
-  const sortedCategories = Object.keys(channelsByCategory).sort();
+	const sortedCategories = Object.keys(channelsByCategory).sort();
 
-  let markdown = `# IPC API Reference (Auto-Generated)
+	let markdown = `# IPC API Reference (Auto-Generated)
 
 > **Note**: This file is auto-generated by \`scripts/generateIpcDocs.js\`. Do not edit manually.
 >
@@ -146,22 +149,22 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 
 `;
 
-  for (const category of sortedCategories) {
-    const categoryChannels = channelsByCategory[category];
+	for (const category of sortedCategories) {
+		const categoryChannels = channelsByCategory[category];
 
-    markdown += `## ${category}\n\n`;
-    markdown += `| Channel | Type | Description | Location |\n`;
-    markdown += `|---------|------|-------------|----------|\n`;
+		markdown += `## ${category}\n\n`;
+		markdown += `| Channel | Type | Description | Location |\n`;
+		markdown += `|---------|------|-------------|----------|\n`;
 
-    for (const channel of categoryChannels.sort((a, b) => a.name.localeCompare(b.name))) {
-      const location = `[\`${channel.file}:${channel.lineNumber}\`](${GITHUB_REPO}/blob/develop/${channel.file}#L${channel.lineNumber})`;
-      markdown += `| \`${channel.name}\` | ${channel.type} | ${channel.description} | ${location} |\n`;
-    }
+		for (const channel of categoryChannels.sort((a, b) => a.name.localeCompare(b.name))) {
+			const location = `[\`${channel.file}:${channel.lineNumber}\`](${GITHUB_REPO}/blob/develop/${channel.file}#L${channel.lineNumber})`;
+			markdown += `| \`${channel.name}\` | ${channel.type} | ${channel.description} | ${location} |\n`;
+		}
 
-    markdown += '\n';
-  }
+		markdown += '\n';
+	}
 
-  markdown += `---
+	markdown += `---
 
 ## Channel Security
 
@@ -182,37 +185,37 @@ When adding a new IPC channel:
 *Generated by \`scripts/generateIpcDocs.js\`*
 `;
 
-  return markdown;
+	return markdown;
 }
 
 function main() {
-  console.log('IPC Documentation Generator');
-  console.log('============================\n');
+	console.log('IPC Documentation Generator');
+	console.log('============================\n');
 
-  const channels = extractIpcChannels();
-  console.log(`Found ${channels.length} IPC channels\n`);
+	const channels = extractIpcChannels();
+	console.log(`Found ${channels.length} IPC channels\n`);
 
-  const markdown = generateMarkdown(channels);
+	const markdown = generateMarkdown(channels);
 
-  // Ensure output directory exists
-  const outputDir = path.dirname(DOCS_OUTPUT);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
+	// Ensure output directory exists
+	const outputDir = path.dirname(DOCS_OUTPUT);
+	if (!fs.existsSync(outputDir)) {
+		fs.mkdirSync(outputDir, { recursive: true });
+	}
 
-  fs.writeFileSync(DOCS_OUTPUT, markdown, 'utf8');
-  console.log(`✅ Documentation generated: ${DOCS_OUTPUT}`);
+	fs.writeFileSync(DOCS_OUTPUT, markdown, 'utf8');
+	console.log(`✅ Documentation generated: ${DOCS_OUTPUT}`);
 
-  // Output summary by category
-  console.log('\nChannel Summary:');
-  const summary = channels.reduce((acc, ch) => {
-    acc[ch.category] = (acc[ch.category] || 0) + 1;
-    return acc;
-  }, {});
+	// Output summary by category
+	console.log('\nChannel Summary:');
+	const summary = channels.reduce((acc, ch) => {
+		acc[ch.category] = (acc[ch.category] || 0) + 1;
+		return acc;
+	}, {});
 
-  Object.entries(summary).sort().forEach(([category, count]) => {
-    console.log(`  ${category}: ${count} channels`);
-  });
+	Object.entries(summary).sort().forEach(([category, count]) => {
+		console.log(`  ${category}: ${count} channels`);
+	});
 }
 
 main();

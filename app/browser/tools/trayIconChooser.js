@@ -1,30 +1,51 @@
-const os = require("node:os");
-const path = require("node:path");
-const iconFolder = path.join(__dirname, "../..", "assets/icons");
-const isMac = os.platform() === "darwin";
+import path from "node:path";
 
-const icons = {
-  icon_default_16: "icon-16x16.png",
-  icon_default_96: "icon-96x96.png",
-  icon_dark_16: "icon-monochrome-dark-16x16.png",
-  icon_dark_96: "icon-monochrome-dark-96x96.png",
-  icon_light_16: "icon-monochrome-light-16x16.png",
-  icon_light_96: "icon-monochrome-light-96x96.png",
-};
-
+/**
+ * TrayIconChooser
+ * 
+ * Selects the appropriate tray icon based on configuration.
+ */
 class TrayIconChooser {
-  constructor(config) {
-    this.config = config;
-  }
-  getFile() {
-    if (this.config.appIcon.trim() !== "") {
-      return this.config.appIcon;
-    }
-    return path.join(
-      iconFolder,
-      icons[`icon_${this.config.appIconType}_${isMac ? 16 : 96}`],
-    );
-  }
+	constructor(config) {
+		this.config = config;
+		this.iconPath = this.determineIconPath();
+	}
+
+	/**
+	 * Determine the icon path based on configuration
+	 * @returns {string} The icon file path
+	 */
+	determineIconPath() {
+		// If custom icon is specified, use it
+		if (this.config.appIcon && this.config.appIcon.trim() !== "") {
+			return this.config.appIcon;
+		}
+
+		// Otherwise, use default icon based on type
+		const iconType = this.config.appIconType || "default";
+		let iconName;
+
+		switch (iconType) {
+			case "light":
+				iconName = "icon-monochrome-light-96x96.png";
+				break;
+			case "dark":
+				iconName = "icon-monochrome-dark-96x96.png";
+				break;
+			default:
+				iconName = "icon-96x96.png";
+		}
+
+		return path.join(this.config.appPath, "assets", "icons", iconName);
+	}
+
+	/**
+	 * Get the icon file path
+	 * @returns {string} The icon file path
+	 */
+	getFile() {
+		return this.iconPath;
+	}
 }
 
-module.exports = TrayIconChooser;
+export default TrayIconChooser;

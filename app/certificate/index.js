@@ -1,54 +1,25 @@
 /**
- * Handles certificate validation errors for corporate environments with custom CAs.
- * This allows Teams to work in enterprise networks with self-signed or custom
- * certificate authorities by checking against a user-configured whitelist.
- *
- * @param {Object} arg - Certificate error details
- * @param {string} arg.error - The certificate error type
- * @param {Electron.Certificate} arg.certificate - The failing certificate
- * @param {Object} arg.config - App configuration containing customCACertsFingerprints
- * @param {Electron.Event} arg.event - The certificate error event
- * @param {Function} arg.callback - Callback to accept/reject the certificate
+ * Handle certificate errors
+ * @param {Object} arg - Certificate error arguments
  */
-exports.onAppCertificateError = function onAppCertificateError(arg) {
-  if (arg.error === "net::ERR_CERT_AUTHORITY_INVALID") {
-    let unknownIssuerCert = getCertIssuer(arg.certificate);
-    if (
-      arg.config.customCACertsFingerprints.includes(
-        unknownIssuerCert.fingerprint
-      )
-    ) {
-      arg.event.preventDefault();
-      arg.callback(true);
-    } else {
-      console.error("Unknown cert issuer for url: " + arg.url);
-      console.error("Issuer Name: " + unknownIssuerCert.issuerName);
-      console.error(
-        "The unknown certificate fingerprint is: " +
-          unknownIssuerCert.fingerprint
-      );
-      arg.callback(false);
-    }
-  } else {
-    console.error("An unexpected SSL error has occurred: " + arg.error);
-    arg.callback(false);
-  }
-};
+export function onAppCertificateError(arg) {
+	const { event, url, error, certificate, callback, config } = arg;
 
-/**
- * Recursively traverses the certificate chain to find the root issuer.
- * This is necessary because certificates can have intermediate CAs,
- * and we need to validate against the actual root certificate authority.
- *
- * @param {Electron.Certificate} cert - Certificate to examine
- * @returns {Electron.Certificate} The root issuer certificate
- */
-function getCertIssuer(cert) {
-  if ("issuerCert" in cert && cert.issuerCert === cert) {
-    return cert;
-  }
-  if ("issuerCert" in cert) {
-    return getCertIssuer(cert.issuerCert);
-  }
-  return cert;
+	// Check if the certificate fingerprint is in the allowlist
+	if (config.customCACertsFingerprints && 
+			config.customCACertsFingerprints.length > 0 &&
+			config.customCACertsFingerprints.includes(certificate.fingerprint)) {
+		console.info(`Certificate error ignored for ${url} - fingerprint in allowlist`);
+		event.preventDefault();
+		callback(true);
+		return;
+	}
+
+	console.error(`Certificate error for ${url}: ${error}`);
+	console.error(`Certificate fingerprint: ${certificate.fingerprint}`);
+	console.error(`Certificate issuer: ${certificate.issuerName}`);
+	console.error(`Certificate subject: ${certificate.subjectName}`);
+
+	// Don't trust the certificate by default
+	callback(false);
 }

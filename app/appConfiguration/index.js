@@ -1,12 +1,13 @@
-const Store = require("electron-store");
+import Store from "electron-store";
+import argv from "../config/index.js";
 
 // WeakMap-based private fields pattern provides true privacy without relying on newer
 // JavaScript private field syntax (#property). This ensures compatibility with older
 // Node.js versions while preventing external access to internal state.
-let _AppConfiguration_configPath = new WeakMap();
-let _AppConfiguration_startupConfig = new WeakMap();
-let _AppConfiguration_legacyConfigStore = new WeakMap();
-let _AppConfiguration_settingsStore = new WeakMap();
+const _AppConfiguration_configPath = new WeakMap();
+const _AppConfiguration_startupConfig = new WeakMap();
+const _AppConfiguration_legacyConfigStore = new WeakMap();
+const _AppConfiguration_settingsStore = new WeakMap();
 
 /**
  * Manages application configuration including startup settings and persistent stores.
@@ -14,47 +15,47 @@ let _AppConfiguration_settingsStore = new WeakMap();
  * or modified externally, providing a secure configuration management layer.
  */
 class AppConfiguration {
-  /**
-   * @param {string} configPath - Path to the configuration directory
-   * @param {string} appVersion - Current application version for config compatibility
-   */
-  constructor(configPath, appVersion) {
-    _AppConfiguration_configPath.set(this, configPath);
-    _AppConfiguration_startupConfig.set(
-      this,
-      require("../config")(configPath, appVersion)
-    );
-    _AppConfiguration_legacyConfigStore.set(
-      this,
-      new Store({
-        name: "config",
-        clearInvalidConfig: true,
-      })
-    );
-    _AppConfiguration_settingsStore.set(
-      this,
-      new Store({
-        name: "settings",
-        clearInvalidConfig: true,
-      })
-    );
-  }
+	/**
+	 * @param {string} configPath - Path to the configuration directory
+	 * @param {string} appVersion - Current application version for config compatibility
+	 */
+	constructor(configPath, appVersion) {
+		_AppConfiguration_configPath.set(this, configPath);
+		_AppConfiguration_startupConfig.set(
+			this,
+			argv(configPath, appVersion)
+		);
+		_AppConfiguration_legacyConfigStore.set(
+			this,
+			new Store({
+				name: "config",
+				clearInvalidConfig: true,
+			})
+		);
+		_AppConfiguration_settingsStore.set(
+			this,
+			new Store({
+				name: "settings",
+				clearInvalidConfig: true,
+			})
+		);
+	}
 
-  get configPath() {
-    return _AppConfiguration_configPath.get(this);
-  }
+	get configPath() {
+		return _AppConfiguration_configPath.get(this);
+	}
 
-  get startupConfig() {
-    return _AppConfiguration_startupConfig.get(this);
-  }
+	get startupConfig() {
+		return _AppConfiguration_startupConfig.get(this);
+	}
 
-  get legacyConfigStore() {
-    return _AppConfiguration_legacyConfigStore.get(this);
-  }
+	get legacyConfigStore() {
+		return _AppConfiguration_legacyConfigStore.get(this);
+	}
 
-  get settingsStore() {
-    return _AppConfiguration_settingsStore.get(this);
-  }
+	get settingsStore() {
+		return _AppConfiguration_settingsStore.get(this);
+	}
 }
 
-module.exports = { AppConfiguration };
+export { AppConfiguration };

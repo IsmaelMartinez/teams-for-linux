@@ -1,21 +1,42 @@
-globalThis.electron.ipcRenderer.on('sources-list', (sources) => {
-  const container = document.getElementById('sources-container');
-  container.innerHTML = '';
-  for (const source of sources) {
-    const div = document.createElement('div');
-    div.className = 'source';
-    div.onclick = () => {
-      globalThis.electron.ipcRenderer.send('source-selected', source);
-    };
+// Screen picker renderer script
+// This runs in the renderer process of the screen picker window
 
-    const img = document.createElement('img');
-    img.src = source.thumbnail.toDataURL();
-    div.appendChild(img);
+document.addEventListener('DOMContentLoaded', () => {
+	console.debug('[ScreenPicker] Renderer loaded');
 
-    const p = document.createElement('p');
-    p.innerText = source.name;
-    div.appendChild(p);
-
-    container.appendChild(div);
-  }
+	// Listen for sources list from main process
+	if (window.electron?.ipcRenderer) {
+		window.electron.ipcRenderer.on('sources-list', (sources) => {
+			renderSources(sources);
+		});
+	}
 });
+
+function renderSources(sources) {
+	const container = document.getElementById('sources-container');
+	if (!container) return;
+
+	container.innerHTML = '';
+
+	for (const source of sources) {
+		const element = createSourceElement(source);
+		container.appendChild(element);
+	}
+}
+
+function createSourceElement(source) {
+	const div = document.createElement('div');
+	div.className = 'source-item';
+	div.innerHTML = `
+		<img src="${source.thumbnail}" alt="${source.name}">
+		<span>${source.name}</span>
+	`;
+
+	div.addEventListener('click', () => {
+		if (window.electron?.ipcRenderer) {
+			window.electron.ipcRenderer.send('source-selected', source);
+		}
+	});
+
+	return div;
+}

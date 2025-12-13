@@ -5,82 +5,84 @@
  * This addresses issue #1691: Debian package contains a nonsense changelog
  */
 
-const fs = require("node:fs");
-const path = require("node:path");
-const xml2js = require("xml2js");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import xml2js from "xml2js";
 
-async function generateDebianChangelog(projectRoot = null) {
-  const root = projectRoot || path.join(__dirname, "..");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-  // Load appdata.xml for release information
-  const appdataPath = path.join(
-    root,
-    "com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
-  );
-  if (!fs.existsSync(appdataPath)) {
-    throw new Error(
-      "com.github.IsmaelMartinez.teams_for_linux.appdata.xml not found."
-    );
-  }
+export async function generateDebianChangelog(projectRoot = null) {
+	const root = projectRoot || path.join(__dirname, "..");
 
-  const appdataContent = fs.readFileSync(appdataPath, "utf8");
-  const parser = new xml2js.Parser();
-  const result = await parser.parseStringPromise(appdataContent);
+	// Load appdata.xml for release information
+	const appdataPath = path.join(
+		root,
+		"com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
+	);
+	if (!fs.existsSync(appdataPath)) {
+		throw new Error(
+			"com.github.IsmaelMartinez.teams_for_linux.appdata.xml not found."
+		);
+	}
 
-  // Extract releases
-  const component = result.component;
-  if (!component?.releases?.[0]?.release) {
-    throw new Error("No releases found in appdata.xml.");
-  }
+	const appdataContent = fs.readFileSync(appdataPath, "utf8");
+	const parser = new xml2js.Parser();
+	const result = await parser.parseStringPromise(appdataContent);
 
-  const releases = component.releases[0].release;
+	// Extract releases
+	const component = result.component;
+	if (!component?.releases?.[0]?.release) {
+		throw new Error("No releases found in appdata.xml.");
+	}
 
-  // Generate changelog entries
-  let changelogContent = "";
+	const releases = component.releases[0].release;
 
-  for (const release of releases) {
-    const version = release.$.version;
-    const date = release.$.date;
+	// Generate changelog entries
+	let changelogContent = "";
 
-    // Convert date to Debian changelog format (RFC 2822)
-    const releaseDate = new Date(date);
-    const debianDate = releaseDate.toUTCString().replace(/GMT/, "+0000");
+	for (const release of releases) {
+		const version = release.$.version;
+		const date = release.$.date;
 
-    // Extract release notes
-    let releaseNotes = "  * Version update.";
-    if (release.description?.[0]) {
-      const descObj = release.description[0];
-      if (descObj.ul?.[0]?.li) {
-        const listItems = descObj.ul[0].li.map((li) => {
-          const text = typeof li === "string" ? li : li._ || li;
-          return `  * ${text}`;
-        });
-        releaseNotes = listItems.join("\n");
-      }
-    }
+		// Convert date to Debian changelog format (RFC 2822)
+		const releaseDate = new Date(date);
+		const debianDate = releaseDate.toUTCString().replace(/GMT/, "+0000");
 
-    changelogContent += `teams-for-linux (${version}) stable; urgency=medium\n\n`;
-    changelogContent += `${releaseNotes}\n\n`;
-    changelogContent += ` -- Ismael Martinez <ismaelmartinez@gmail.com>  ${debianDate}\n\n`;
-  }
+		// Extract release notes
+		let releaseNotes = "  * Version update.";
+		if (release.description?.[0]) {
+			const descObj = release.description[0];
+			if (descObj.ul?.[0]?.li) {
+				const listItems = descObj.ul[0].li.map((li) => {
+					const text = typeof li === "string" ? li : li._ || li;
+					return `  * ${text}`;
+				});
+				releaseNotes = listItems.join("\n");
+			}
+		}
 
-  return changelogContent;
+		changelogContent += `teams-for-linux (${version}) stable; urgency=medium\n\n`;
+		changelogContent += `${releaseNotes}\n\n`;
+		changelogContent += ` -- Ismael Martinez <ismaelmartinez@gmail.com>  ${debianDate}\n\n`;
+	}
+
+	return changelogContent;
 }
 
-// Generate and save changelog
-if (require.main === module) {
-  (async () => {
-    try {
-      const changelog = await generateDebianChangelog();
-      const outputPath = path.join(__dirname, "..", "debian-changelog");
-      fs.writeFileSync(outputPath, changelog);
-      console.log("✅ Debian changelog generated successfully!");
-      console.log(`💾 Changelog saved to: ${outputPath}`);
-    } catch (error) {
-      console.error("❌ Error:", error.message);
-      process.exit(1);
-    }
-  })();
+// CLI mode when run directly
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+	(async () => {
+		try {
+			const changelog = await generateDebianChangelog();
+			const outputPath = path.join(__dirname, "..", "debian-changelog");
+			fs.writeFileSync(outputPath, changelog);
+			console.log("✅ Debian changelog generated successfully!");
+			console.log(`💾 Changelog saved to: ${outputPath}`);
+		} catch (error) {
+			console.error("❌ Error:", error.message);
+			process.exit(1);
+		}
+	})();
 }
-
-module.exports = { generateDebianChangelog };

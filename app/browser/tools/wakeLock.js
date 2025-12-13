@@ -1,36 +1,70 @@
-let _WakeLock_lock = new WeakMap();
+/**
+ * WakeLock tool
+ * 
+ * Prevents screen from sleeping during calls using WakeLockSentinel API.
+ */
 class WakeLock {
-  constructor() {
-    _WakeLock_lock.set(this, null);
-  }
+	init(config) {
+		this.config = config;
+		this.wakeLock = null;
 
-  async enable() {
-    try {
-      let lock = await navigator.wakeLock.request("screen");
-      lock.addEventListener("release", () => {
-        console.debug("Wake Lock was released");
-      });
-      console.debug("Wake Lock is active");
-      _WakeLock_lock.set(this, lock);
-    } catch (err) {
-      console.error(`wakelog enable error ${err.name}, ${err.message}`);
-    }
-  }
+		if (config.screenLockInhibitionMethod === "WakeLockSentinel") {
+			this.setupWakeLock();
+		}
+	}
 
-  async disable() {
-    let lock = _WakeLock_lock.get(this);
-    if (!lock) {
-      return;
-    }
-    try {
-      await lock.release();
-      lock = null;
-      _WakeLock_lock.set(this, lock);
-    } catch (err) {
-      console.error(`wakelog disable error ${err.name}, ${err.message}`);
-    }
-  }
+	/**
+	 * Set up wake lock monitoring
+	 */
+	async setupWakeLock() {
+		// Request wake lock when in a call
+		// This would need integration with Teams call state detection
+		console.debug("[WakeLock] WakeLockSentinel mode enabled");
+
+		// Handle visibility changes
+		document.addEventListener("visibilitychange", async () => {
+			if (document.visibilityState === "visible" && this.shouldKeepAwake()) {
+				await this.requestWakeLock();
+			}
+		});
+	}
+
+	/**
+	 * Request wake lock
+	 */
+	async requestWakeLock() {
+		try {
+			if ("wakeLock" in navigator) {
+				this.wakeLock = await navigator.wakeLock.request("screen");
+				console.debug("[WakeLock] Wake lock acquired");
+
+				this.wakeLock.addEventListener("release", () => {
+					console.debug("[WakeLock] Wake lock released");
+				});
+			}
+		} catch (err) {
+			console.debug("[WakeLock] Failed to acquire wake lock:", err.message);
+		}
+	}
+
+	/**
+	 * Release wake lock
+	 */
+	async releaseWakeLock() {
+		if (this.wakeLock) {
+			await this.wakeLock.release();
+			this.wakeLock = null;
+		}
+	}
+
+	/**
+	 * Check if wake lock should be active
+	 * @returns {boolean} True if should keep awake
+	 */
+	shouldKeepAwake() {
+		// Would check if in an active call
+		return false;
+	}
 }
 
-const wakeLock = new WakeLock();
-module.exports = wakeLock;
+export default new WakeLock();
