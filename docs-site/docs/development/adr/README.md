@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2025-11-19
+last_updated: 2025-12-13
 tags: [adr, architecture, decisions]
 ---
 
@@ -32,6 +32,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Accepted | 2025-12-13 | N/A |
+| [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -277,13 +278,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 9
+- **Total ADRs**: 10
 - **Implemented**: 4
 - **Accepted**: 1
 - **Proposed**: 1
-- **Rejected**: 3
+- **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 5 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration)
+- **Topics covered**: 7 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI/UX)
 
 ## Related Documentation
 

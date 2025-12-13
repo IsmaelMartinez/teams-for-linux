@@ -75,6 +75,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/007-embedded-mqtt-broker',
             'development/adr/008-usesystempicker-electron-38',
             'development/adr/009-automated-testing-strategy',
+            'development/adr/010-multiple-windows-support',
           ],
         },
         {
@@ -84,6 +85,8 @@ const sidebars: SidebarsConfig = {
             'development/research/README',
             'development/research/architecture-modernization-research',
             'development/research/calendar-data-export-research',
+            'development/research/chat-modal-investigation',
+            'development/research/chat-modal-spikes-and-gaps',
             'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/dom-access-investigation',
