@@ -668,7 +668,7 @@ If chat API permissions are not available:
 ### Internal Documentation
 - [Graph API Integration Research](graph-api-integration-research.md) - Shows current permissions
 - [Chat Modal Investigation](chat-modal-investigation.md) - Original feature proposal
-- [ADR 009: Multiple Windows Support](../adr/009-multiple-windows-support.md) - Context for chat modal
+- [ADR 010: Multiple Windows Support](../adr/010-multiple-windows-support.md) - Context for chat modal
 
 ---
 

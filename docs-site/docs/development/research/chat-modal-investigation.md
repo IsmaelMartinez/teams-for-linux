@@ -10,7 +10,7 @@ This document investigates the feasibility of implementing a lightweight chat mo
 
 ## Motivation
 
-Since full multi-window support for Teams was determined to be infeasible (see [ADR 009](../adr/009-multiple-windows-support.md)), a chat modal could provide a simpler alternative that addresses some user needs:
+Since full multi-window support for Teams was determined to be infeasible (see [ADR 010](../adr/010-multiple-windows-support.md)), a chat modal could provide a simpler alternative that addresses some user needs:
 
 - Quick access to chat without leaving current context (meeting, channel, etc.)
 - Ability to send quick messages without navigating away
