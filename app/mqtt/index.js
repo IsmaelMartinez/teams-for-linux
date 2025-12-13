@@ -27,6 +27,8 @@ class MQTTClient extends EventEmitter {
 			'toggle-video': 'Ctrl+Shift+O',
 			'toggle-hand-raise': 'Ctrl+Shift+K'
 		};
+
+		this.nonShortcutActions = ['get-calendar'];
 	}
 
 	/**
@@ -34,7 +36,7 @@ class MQTTClient extends EventEmitter {
 	 * @returns {string[]} Array of allowed action names
 	 */
 	get allowedActions() {
-		return Object.keys(this.actionShortcutMap);
+		return [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions];
 	}
 
 	/**
@@ -144,6 +146,29 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
+	 * Publish data to a custom MQTT topic
+	 * @param {string} topic - Topic name (without prefix)
+	 * @param {object|string} payload - Data to publish (will be stringified if object)
+	 * @param {object} options - MQTT publish options (optional)
+	 */
+	async publish(topic, payload, options = {}) {
+		if (!this.isConnected || !this.client) {
+			console.debug('[MQTT] Not connected, skipping publish');
+			return;
+		}
+
+		const fullTopic = `${this.config.topicPrefix}/${topic}`;
+		const message = typeof payload === 'string' ? payload : JSON.stringify(payload);
+
+		try {
+			await this.client.publish(fullTopic, message, options);
+			console.debug(`[MQTT] Published to topic: ${fullTopic}`);
+		} catch (error) {
+			console.error('[MQTT] Failed to publish:', error);
+		}
+	}
+
+	/**
 	 * Handle incoming MQTT command
 	 * Validates command messages and emits 'command' event for execution
 	 *
@@ -181,7 +206,7 @@ class MQTTClient extends EventEmitter {
 
 			// Emit command event for main process to handle
 			const shortcut = this.actionShortcutMap[command.action];
-			this.emit('command', { action: command.action, shortcut });
+			this.emit('command', { ...command, shortcut });
 
 		} catch (error) {
 			console.error('[MQTT] Failed to handle command:', error.message);
