@@ -1,58 +1,328 @@
-/**
- * ReactHandler
- * 
- * Provides access to Teams' React internals for settings management.
- */
+// Import token cache for authentication provider integration
+import TokenCache from './tokenCache.js';
+
 class ReactHandler {
+	_validationEnabled = true;
+	_tokenCacheInjected = false;
+
 	/**
-	 * Get Teams V2 client preferences from React state
-	 * @returns {Object|null} The client preferences or null if not found
+	 * Initialize the ReactHandler (for compatibility with preload module loading)
+	 * @param {object} config - Application configuration
 	 */
-	static getTeams2ClientPreferences() {
+	init(config) {
+		this.config = config;
+		console.debug('[ReactHandler] Initialized');
+	}
+
+	getCommandChangeReportingService() {
+		if (!this._validateTeamsEnvironment()) return null;
+		const teams2CoreServices = this._getTeams2CoreServices();
+		return teams2CoreServices?.commandChangeReportingService;
+	}
+
+	getTeams2IdleTracker() {
+		if (!this._validateTeamsEnvironment()) return null;
+		const teams2CoreServices = this._getTeams2CoreServices();
+		return teams2CoreServices?.clientState?._idleTracker;
+	}
+
+	getTeams2ClientPreferences() {
+		if (!this._validateTeamsEnvironment()) return null;
+		const teams2CoreServices = this._getTeams2CoreServices();
+		return teams2CoreServices?.clientPreferences?.clientPreferences;
+	}
+
+	// Public method to manually trigger token cache injection
+	injectTokenCache() {
+		if (!this._validateTeamsEnvironment()) {
+			return false;
+		}
+
 		try {
-			// Teams V2 stores preferences in a React context
-			// This is a best-effort attempt to access it
-			const teamsRoot = document.getElementById("app");
-			if (!teamsRoot) {
-				console.debug("[ReactHandler] Teams root element not found");
-				return null;
+			const teams2CoreServices = this._getTeams2CoreServices();
+			const authService = teams2CoreServices?.authenticationService;
+			const authProvider = authService?._coreAuthService?._authProvider;
+
+			if (!authProvider) {
+				return false;
 			}
 
-			// Try to find React fiber
-			const reactFiberKey = Object.keys(teamsRoot).find(
-				key => key.startsWith("__reactFiber$")
-			);
+			return this._attemptTokenCacheInjection(authProvider);
 
-			if (!reactFiberKey) {
-				console.debug("[ReactHandler] React fiber not found");
-				return null;
+		} catch (error) {
+			console.error(`[TOKEN_CACHE] Error in token cache injection:`, error);
+			return false;
+		}
+	}
+
+	/**
+	 * Acquire token for a specific resource (e.g., Microsoft Graph API)
+	 * @param {string} resource - The resource URL (e.g., 'https://graph.microsoft.com')
+	 * @param {object} options - Optional token acquisition options
+	 * @returns {Promise<object>} Token acquisition result
+	 */
+	async acquireToken(resource = 'https://graph.microsoft.com', options = {}) {
+		try {
+			if (!this._validateTeamsEnvironment()) {
+				console.warn('[GRAPH_API] Teams environment not validated');
+				return { success: false, error: 'Teams environment not validated' };
 			}
 
-			// Navigate React fiber tree to find preferences
-			// This is fragile and may break with Teams updates
-			const fiber = teamsRoot[reactFiberKey];
-			let current = fiber;
-			let iterations = 0;
-			const maxIterations = 100;
+			const teams2CoreServices = this._getTeams2CoreServices();
+			const authService = teams2CoreServices?.authenticationService;
+			const authProvider = authService?._coreAuthService?._authProvider;
 
-			while (current && iterations < maxIterations) {
-				if (current.memoizedProps?.clientPreferences) {
-					return current.memoizedProps.clientPreferences;
-				}
-				if (current.memoizedState?.clientPreferences) {
-					return current.memoizedState.clientPreferences;
-				}
-				current = current.return;
-				iterations++;
+			if (!authProvider) {
+				console.warn('[GRAPH_API] Auth provider not available');
+				return { success: false, error: 'Auth provider not found' };
 			}
 
-			console.debug("[ReactHandler] Client preferences not found in fiber tree");
+			if (typeof authProvider.acquireToken !== 'function') {
+				console.error('[GRAPH_API] acquireToken method not available');
+				return { success: false, error: 'acquireToken method not found' };
+			}
+
+			// Get correlation from core services if available
+			const correlation = teams2CoreServices?.correlation;
+
+			// Merge default options with provided options
+			const tokenOptions = {
+				correlation: correlation,
+				forceRenew: options.forceRenew || false,
+				forceRefresh: options.forceRefresh || false,
+				skipCache: options.skipCache || false,
+				prompt: options.prompt || 'none',
+				...options
+			};
+
+			console.debug(`[GRAPH_API] Acquiring token for resource: ${resource}`);
+			const result = await authProvider.acquireToken(resource, tokenOptions);
+
+			if (result && result.token) {
+				console.debug('[GRAPH_API] Token acquired successfully', {
+					hasToken: true,
+					fromCache: result.fromCache,
+					expiry: result.expiresOn || result.expires_on
+				});
+
+				return {
+					success: true,
+					token: result.token,
+					fromCache: result.fromCache,
+					expiry: result.expiresOn || result.expires_on,
+					timestamp: Date.now()
+				};
+			} else {
+				console.warn('[GRAPH_API] Token acquisition returned no result');
+				return { success: false, error: 'No token in result' };
+			}
+
+		} catch (error) {
+			console.error('[GRAPH_API] Token acquisition failed:', error);
+			return {
+				success: false,
+				error: error.message || error.toString(),
+				timestamp: Date.now()
+			};
+		}
+	}
+
+	// Get token cache injection status
+	getTokenCacheStatus() {
+		return {
+			injected: this._tokenCacheInjected,
+			canRetry: !this._tokenCacheInjected && this._validateTeamsEnvironment()
+		};
+	}
+
+	// Log authentication state for diagnostics
+	logAuthenticationState() {
+		try {
+			const teams2CoreServices = this._getTeams2CoreServices();
+			const authService = teams2CoreServices?.authenticationService;
+			const authProvider = authService?._coreAuthService?._authProvider;
+
+			console.debug('[AUTH_DIAG] Authentication state:', {
+				hasAuthService: !!authService,
+				hasAuthProvider: !!authProvider,
+				tokenCacheInjected: this._tokenCacheInjected,
+				cacheStats: TokenCache.getCacheStats()
+			});
+		} catch (error) {
+			console.debug('[AUTH_DIAG] Error logging auth state:', error.message);
+		}
+	}
+
+	// Attempt to inject token cache into Teams authentication provider
+	_attemptTokenCacheInjection(authProvider) {
+		try {
+			if (this._tokenCacheInjected) {
+				return true;
+			}
+
+			if (!authProvider || typeof authProvider !== 'object') {
+				console.error('[TOKEN_CACHE] Invalid auth provider for injection');
+				return false;
+			}
+
+			if (!TokenCache || typeof TokenCache.getItem !== 'function') {
+				console.error('[TOKEN_CACHE] TokenCache module not properly loaded');
+				return false;
+			}
+
+			// Perform the injection
+			authProvider._tokenCache = TokenCache;
+
+			// Verify injection success
+			if (this._validateTokenCacheInjection(authProvider)) {
+				this._tokenCacheInjected = true;
+				return true;
+			} else {
+				console.error('[TOKEN_CACHE] Validation failed after injection');
+				delete authProvider._tokenCache;
+				return false;
+			}
+
+		} catch (error) {
+			console.error('[TOKEN_CACHE] Error during token cache injection:', error);
+			return false;
+		}
+	}
+
+	// Validate token cache injection was successful
+	_validateTokenCacheInjection(authProvider) {
+		const tokenCache = authProvider._tokenCache;
+		if (!tokenCache) return false;
+
+		const requiredMethods = ['getItem', 'setItem', 'removeItem', 'clear'];
+		return requiredMethods.every(method => typeof tokenCache[method] === 'function');
+	}
+
+	_validateTeamsEnvironment() {
+		try {
+			const validationResult = this._performEnvironmentValidation();
+			this._validationEnabled = validationResult;
+			return validationResult;
+
+		} catch (error) {
+			console.error('ReactHandler: Validation error:', error);
+			this._validationEnabled = false;
+			return false;
+		}
+	}
+
+	_performEnvironmentValidation() {
+		return this._validateDomain() &&
+			this._validateDocument() &&
+			this._validateAppElement() &&
+			this._validateReactStructure();
+	}
+
+	_validateDomain() {
+		const isTeamsDomain = this._isAllowedTeamsDomain(globalThis.location.hostname);
+		if (!isTeamsDomain) {
+			console.warn('ReactHandler: Not in Teams domain context');
+			return false;
+		}
+		return true;
+	}
+
+	_validateDocument() {
+		if (!document || typeof document.getElementById !== 'function') {
+			console.warn('ReactHandler: Invalid document context');
+			return false;
+		}
+		return true;
+	}
+
+	_validateAppElement() {
+		const appElement = document.getElementById("app");
+		if (!appElement) {
+			console.warn('ReactHandler: Teams app element not found');
+			return false;
+		}
+		return true;
+	}
+
+	_validateReactStructure() {
+		const appElement = document.getElementById("app");
+
+		// Check for traditional React mount structures
+		const hasLegacyReact = appElement._reactRootContainer || appElement._reactInternalInstance;
+
+		// Check for React 18+ createRoot structure (keys starting with __react)
+		const reactKeys = Object.getOwnPropertyNames(appElement).filter(key =>
+			key.startsWith('__react') || key.startsWith('_react')
+		);
+		const hasModernReact = reactKeys.length > 0;
+
+		if (!hasLegacyReact && !hasModernReact) {
+			console.warn('ReactHandler: No React structure detected');
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns true if hostname is exactly allowed, or an immediate subdomain.
+	 * Prevents subdomain hijacking attacks by validating domain endings properly.
+	 * @param {string} hostname - The hostname to validate
+	 * @returns {boolean} - True if hostname is a legitimate Teams domain
+	 */
+	_isAllowedTeamsDomain(hostname) {
+		// List of valid Teams domains
+		const allowedDomains = [
+			'teams.microsoft.com',
+			'teams.live.com'
+		];
+		
+		for (const domain of allowedDomains) {
+			// Exact match
+			if (hostname === domain) return true;
+			// Immediate subdomain match (prevents evil.com.teams.microsoft.com attacks)
+			if (hostname.endsWith('.' + domain)) return true;
+		}
+		
+		return false;
+	}
+
+	_getTeams2ReactElement() {
+		if (!this._validateTeamsEnvironment()) return null;
+		
+		try {
+			const element = document.getElementById("app");
+			return element;
+		} catch (error) {
+			console.error('ReactHandler: Error accessing React element:', error);
 			return null;
-		} catch (err) {
-			console.error("[ReactHandler] Error accessing React state:", err.message);
+		}
+	}
+
+	_getTeams2CoreServices() {
+		const reactElement = this._getTeams2ReactElement();
+		if (!reactElement) return null;
+
+		try {
+			const internalRoot =
+				reactElement?._reactRootContainer?._internalRoot ||
+				reactElement?._reactRootContainer;
+			
+			const coreServices = internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
+			
+			// Additional validation that we have legitimate core services
+			if (coreServices && typeof coreServices === 'object') {
+				return coreServices;
+			}
+			
+			return null;
+		} catch (error) {
+			console.error('ReactHandler: Error accessing core services:', error);
 			return null;
 		}
 	}
 }
 
-export default ReactHandler;
+const reactHandlerInstance = new ReactHandler();
+export default reactHandlerInstance;
+export { ReactHandler };

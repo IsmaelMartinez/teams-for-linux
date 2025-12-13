@@ -1,37 +1,40 @@
-/**
- * EmulatePlatform tool
- * 
- * Emulates Windows platform for compatibility with certain MFA apps.
- */
-class EmulatePlatform {
+class PlatformEmulator {
 	init(config) {
-		this.config = config;
-
-		if (config.emulateWinChromiumPlatform) {
-			this.emulateWindows();
+		//proceed without emulating windows platform in browser
+		if (!config.emulateWinChromiumPlatform) {
+			return;
 		}
-	}
 
-	/**
-	 * Emulate Windows platform
-	 */
-	emulateWindows() {
-		// Override navigator.platform
-		Object.defineProperty(navigator, "platform", {
-			get: () => "Win32",
-			configurable: true,
+		// update property platform property in navigator.navigator
+		const win32Str = "Win32";
+		const windowsStr = "Windows";
+		Object.defineProperty(Navigator.prototype, "platform", {
+			get: () => {
+				return win32Str;
+			},
 		});
 
-		// Override navigator.userAgentData if available
-		if (navigator.userAgentData) {
-			Object.defineProperty(navigator.userAgentData, "platform", {
-				get: () => "Windows",
-				configurable: true,
-			});
-		}
-
-		console.debug("[EmulatePlatform] Emulating Windows platform");
+		//update userAgentData object
+		const originalUserAgentData = navigator.userAgentData;
+		let customUserAgentData = structuredClone(originalUserAgentData);
+		customUserAgentData = {
+			...customUserAgentData,
+			platform: windowsStr,
+			getHighEntropyValues: async function (input) {
+				const highEntropyValue =
+					await originalUserAgentData.getHighEntropyValues(input);
+				if (highEntropyValue["platform"]) {
+					highEntropyValue["platform"] = windowsStr;
+				}
+				return highEntropyValue;
+			},
+		};
+		Object.defineProperty(Navigator.prototype, "userAgentData", {
+			get: () => {
+				return customUserAgentData;
+			},
+		});
 	}
 }
 
-export default new EmulatePlatform();
+export default new PlatformEmulator();
