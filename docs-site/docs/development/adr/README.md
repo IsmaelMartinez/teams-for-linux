@@ -31,6 +31,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | 🚧 Proposed | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
+| [009](009-esm-migration.md) | ESM Migration | ✅ Implemented | 2025-12-14 | v2.7.0 |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -262,14 +263,26 @@ When referencing code in ADRs:
 **IPC Channel**: `token-refresh:trigger`
 ```
 
+### Build & Architecture
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [009](009-esm-migration.md) | ESM Migration | Migrate entire codebase from CommonJS to ES Modules for modern dependency support |
+
+**Key Outcomes:**
+- Unlocked yargs v18+, electron-store v11+ upgrades
+- Modern JavaScript module syntax throughout
+- Better tooling and static analysis support
+- All functionality preserved during migration
+
 ## ADR Statistics
 
-- **Total ADRs**: 8
-- **Implemented**: 4
+- **Total ADRs**: 9
+- **Implemented**: 5
 - **Proposed**: 1
 - **Rejected**: 3
 - **Average length**: ~500 words
-- **Topics covered**: 5 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration)
+- **Topics covered**: 6 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Build & Architecture)
 
 ## Related Documentation
 
