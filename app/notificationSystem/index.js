@@ -1,95 +1,71 @@
-import { BrowserWindow, ipcMain } from "electron";
-import path from "node:path";
-import { getDirname } from "../utils/esm-utils.js";
-import NotificationToast from "./NotificationToast.js";
+import { ipcMain } from 'electron';
+import NotificationToast from './NotificationToast.js';
 
-const __dirname = getDirname(import.meta.url);
-
-/**
- * CustomNotificationManager handles custom in-app toast notifications.
- * This provides an alternative to system notifications with more control
- * over appearance and behavior.
- */
 class CustomNotificationManager {
-	/**
-	 * @param {Object} config - Application configuration
-	 * @param {Object} mainAppWindow - Main application window module
-	 */
-	constructor(config, mainAppWindow) {
-		this.config = config;
-		this.mainAppWindow = mainAppWindow;
-		this.toastWindow = null;
-		this.notificationToast = null;
+	#mainWindow;
+	#toastDuration;
+	#activeToasts;
+
+	constructor(config, mainWindow) {
+		this.#mainWindow = mainWindow;
+		this.#toastDuration = config?.customNotification?.toastDuration || 5000;
+		this.#activeToasts = new Set();
 	}
 
-	/**
-	 * Initialize IPC handlers for custom notifications
-	 */
 	initialize() {
-		// Show custom notification toast
-		ipcMain.on("notification-show-toast", this.handleShowToast.bind(this));
-		// Close notification toast
-		ipcMain.on("notification-close-toast", this.handleCloseToast.bind(this));
-		// Handle toast click (focus main window)
-		ipcMain.on("notification-toast-clicked", this.handleToastClicked.bind(this));
+		// Display custom in-app toast notification in bottom-right corner
+		ipcMain.on('notification-show-toast', this.#handleShowToast.bind(this));
+		// Handle toast clicks - close the window and focus main window
+		ipcMain.on('notification-toast-click', this.#handleToastClick.bind(this));
 
-		// Initialize the notification toast window
-		this.initializeToastWindow();
+		console.info('[CustomNotificationManager] Initialized and listening on "notification-show-toast" channel');
 	}
 
-	/**
-	 * Initialize the toast notification window
-	 */
-	initializeToastWindow() {
-		if (this.config.notificationMethod !== "custom") {
+	#handleShowToast(event, data) {
+		if (!data || !data.title) {
+			console.warn('[CustomNotificationManager] Invalid notification data, missing title');
 			return;
 		}
 
-		this.notificationToast = new NotificationToast(this.config);
-	}
+		try {
+			const toast = new NotificationToast(
+				data,
+				this.#toastDuration
+			);
 
-	/**
-	 * Handle showing a toast notification
-	 * @param {Electron.IpcMainEvent} _event - IPC event
-	 * @param {Object} data - Notification data
-	 */
-	handleShowToast(_event, data) {
-		if (this.config.disableNotifications) {
-			console.debug("Notifications are disabled");
-			return;
-		}
+			this.#activeToasts.add(toast);
 
-		if (this.notificationToast) {
-			this.notificationToast.show(data);
-		}
-	}
+			// Remove from tracking when toast closes
+			const originalClose = toast.close.bind(toast);
+			toast.close = () => {
+				originalClose();
+				this.#activeToasts.delete(toast);
+			};
 
-	/**
-	 * Handle closing the toast notification
-	 * @param {Electron.IpcMainEvent} _event - IPC event
-	 */
-	handleCloseToast(_event) {
-		if (this.notificationToast) {
-			this.notificationToast.hide();
+			toast.show();
+			console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}"`);
+		} catch (error) {
+			console.error('[CustomNotificationManager] Error displaying toast:', error);
 		}
 	}
 
-	/**
-	 * Handle toast click - focus main window
-	 * @param {Electron.IpcMainEvent} _event - IPC event
-	 */
-	handleToastClicked(_event) {
-		const window = this.mainAppWindow.getWindow();
-		if (window) {
-			if (window.isMinimized()) {
-				window.restore();
+	#handleToastClick(event) {
+		try {
+			// Find and close the toast window that was clicked
+			for (const toast of this.#activeToasts) {
+				if (toast.getWebContents() === event.sender) {
+					toast.close();
+					break;
+				}
 			}
-			window.show();
-			window.focus();
-		}
 
-		if (this.notificationToast) {
-			this.notificationToast.hide();
+			// Focus main window
+			if (this.#mainWindow && !this.#mainWindow.isDestroyed()) {
+				this.#mainWindow.show();
+				this.#mainWindow.focus();
+			}
+		} catch (error) {
+			console.error('[CustomNotificationManager] Error handling toast click:', error);
 		}
 	}
 }
