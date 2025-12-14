@@ -1,50 +1,60 @@
-import { BrowserWindow, app } from "electron";
+import { BrowserWindow } from 'electron';
 
 /**
- * GpuInfoWindow displays GPU information for debugging purposes.
+ * Window for displaying chrome://gpu information
+ * Shows GPU and graphics acceleration details for debugging
  */
 class GpuInfoWindow {
-	constructor() {
-		this.window = null;
-	}
+	window = null;
 
-	/**
-	 * Show the GPU info window
-	 */
 	show() {
-		if (this.window && !this.window.isDestroyed()) {
+		// Reuse existing window if already open
+		if (this.window) {
+			if (this.window.isMinimized()) {
+				this.window.restore();
+			}
 			this.window.show();
 			this.window.focus();
 			return;
 		}
 
+		// Create new window
 		this.window = new BrowserWindow({
-			width: 800,
-			height: 600,
-			title: "GPU Information",
+			title: 'GPU Information',
+			width: 1000,
+			height: 800,
+			minWidth: 600,
+			minHeight: 400,
+			show: false,
 			autoHideMenuBar: true,
 			webPreferences: {
-				contextIsolation: true,
 				nodeIntegration: false,
+				contextIsolation: true,
+				sandbox: true,
+				webSecurity: true,
 			},
 		});
 
-		// Load the Chrome GPU page
-		this.window.loadURL("chrome://gpu");
+		this.window.loadURL('chrome://gpu');
 
-		this.window.on("closed", () => {
+		this.window.once('ready-to-show', () => {
+			this.window.show();
+			this.window.focus();
+		});
+
+		this.window.on('closed', () => {
 			this.window = null;
 		});
 	}
 
-	/**
-	 * Close the GPU info window
-	 */
 	close() {
-		if (this.window && !this.window.isDestroyed()) {
+		if (this.window) {
 			this.window.close();
-			this.window = null;
 		}
+	}
+
+	isVisible() {
+		return this.window && this.window.isVisible();
 	}
 }
 

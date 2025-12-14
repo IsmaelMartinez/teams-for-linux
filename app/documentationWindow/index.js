@@ -1,54 +1,63 @@
-import { BrowserWindow } from "electron";
-import path from "node:path";
+import { BrowserWindow } from 'electron';
+import path from 'node:path';
 import { getDirname } from "../utils/esm-utils.js";
 
 const __dirname = getDirname(import.meta.url);
 
-/**
- * DocumentationWindow manages the documentation viewer window.
- */
 class DocumentationWindow {
-	constructor() {
-		this.window = null;
-	}
+	window = null;
 
-	/**
-	 * Show the documentation window
-	 */
 	show() {
-		if (this.window && !this.window.isDestroyed()) {
+		// If window already exists, just show and focus it
+		if (this.window) {
+			if (this.window.isMinimized()) {
+				this.window.restore();
+			}
 			this.window.show();
 			this.window.focus();
 			return;
 		}
 
+		// Create new documentation window
 		this.window = new BrowserWindow({
-			width: 800,
-			height: 600,
-			title: "Teams for Linux Documentation",
+			title: 'Teams for Linux - Documentation',
+			width: 1200,
+			height: 800,
+			minWidth: 800,
+			minHeight: 600,
+			show: false,
 			autoHideMenuBar: true,
 			webPreferences: {
-				preload: path.join(__dirname, "documentation.js"),
-				contextIsolation: true,
 				nodeIntegration: false,
+				contextIsolation: true,
+				sandbox: true,
+				webSecurity: true,
 			},
 		});
 
-		this.window.loadFile(path.join(__dirname, "documentation.html"));
+		// Load the documentation HTML file
+		this.window.loadFile(path.join(__dirname, 'documentation.html'));
 
-		this.window.on("closed", () => {
+		// Show window when ready
+		this.window.once('ready-to-show', () => {
+			this.window.show();
+			this.window.focus();
+		});
+
+		// Clean up when window is closed
+		this.window.on('closed', () => {
 			this.window = null;
 		});
 	}
 
-	/**
-	 * Close the documentation window
-	 */
 	close() {
-		if (this.window && !this.window.isDestroyed()) {
+		if (this.window) {
 			this.window.close();
-			this.window = null;
 		}
+	}
+
+	isVisible() {
+		return this.window && this.window.isVisible();
 	}
 }
 

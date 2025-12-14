@@ -1,165 +1,226 @@
-/**
- * Create the application menu template
- * @param {Menus} menus - The Menus instance
- * @returns {Object} The menu template
- */
-function appMenu(menus) {
-	const config = menus.configGroup.startupConfig;
+import { shell } from "electron";
 
-	const template = {
-		label: "Application",
-		submenu: [
-			{
-				label: "Open",
-				click: () => menus.open(),
-			},
-			{
-				label: "Reload",
-				click: () => menus.reload(),
-			},
-			{
-				label: "Hide",
-				click: () => menus.hide(),
-			},
-			{ type: "separator" },
-			{
-				label: "Join Meeting",
-				click: () => menus.joinMeeting(),
-			},
-			{ type: "separator" },
-			{
-				label: "Notifications",
-				submenu: [
-					{
-						label: "Disable Notifications",
-						type: "checkbox",
-						checked: config.disableNotifications,
-						click: () => menus.toggleDisableNotifications(),
-					},
-					{
-						label: "Disable Notification Sound",
-						type: "checkbox",
-						checked: config.disableNotificationSound,
-						click: () => menus.toggleDisableNotificationSound(),
-					},
-					{
-						label: "Disable Sound If Not Available",
-						type: "checkbox",
-						checked: config.disableNotificationSoundIfNotAvailable,
-						click: () => menus.toggleDisableNotificationSoundIfNotAvailable(),
-					},
-					{
-						label: "Disable Window Flash",
-						type: "checkbox",
-						checked: config.disableNotificationWindowFlash,
-						click: () => menus.toggleDisableNotificationWindowFlash(),
-					},
-					{
-						label: "Disable Badge Count",
-						type: "checkbox",
-						checked: config.disableBadgeCount,
-						click: () => menus.toggleDisableBadgeCount(),
-					},
-					{ type: "separator" },
-					{
-						label: "Urgency",
-						submenu: [
-							{
-								label: "Low",
-								type: "radio",
-								checked: config.defaultNotificationUrgency === "low",
-								click: () => menus.setNotificationUrgency("low"),
-							},
-							{
-								label: "Normal",
-								type: "radio",
-								checked: config.defaultNotificationUrgency === "normal",
-								click: () => menus.setNotificationUrgency("normal"),
-							},
-							{
-								label: "Critical",
-								type: "radio",
-								checked: config.defaultNotificationUrgency === "critical",
-								click: () => menus.setNotificationUrgency("critical"),
-							},
-						],
-					},
-				],
-			},
-			{ type: "separator" },
-			{
-				label: "Settings",
-				submenu: [
-					{
-						label: "Save Settings",
-						click: () => menus.saveSettings(),
-					},
-					{
-						label: "Restore Settings",
-						click: () => menus.restoreSettings(),
-					},
-				],
-			},
-			{ type: "separator" },
-		],
-	};
-
-	// Add video menu if enabled
-	if (config.videoMenu) {
-		template.submenu.push({
-			label: "Video",
+export default (Menus) => ({
+	label: "Teams for Linux",
+	submenu: [
+		{
+			label: "Open",
+			accelerator: "ctrl+O",
+			click: () => Menus.open(),
+		},
+		{
+			label: "Join Meeting",
+			accelerator: "ctrl+J",
+			click: () => Menus.joinMeeting(),
+		},
+		{
+			label: "Refresh",
+			accelerator: "ctrl+R",
+			click: () => Menus.reload(),
+		},
+		{
+			label: "Hide",
+			accelerator: "ctrl+H",
+			click: () => Menus.hide(),
+		},
+		{
+			label: "Debug",
 			submenu: [
 				{
-					label: "Force Picture-in-Picture",
-					click: () => menus.forcePip(),
+					label: "Open DevTools",
+					accelerator: "ctrl+D",
+					click: () => Menus.debug(),
 				},
 				{
-					label: "Toggle Video Controls",
-					click: () => menus.forceVideoControls(),
+					label: "Open GPU Info",
+					click: () => Menus.showGpuInfo(),
 				},
 			],
-		});
-		template.submenu.push({ type: "separator" });
-	}
+		},
+		{
+			type: "separator",
+		},
+		getSettingsMenu(Menus),
+		getPreferencesMenu(),
+		getNotificationsMenu(Menus),
+		{
+			type: "separator",
+		},
+		{
+			label: "About",
+			click: () => Menus.about(),
+		},
+		getHelpMenu(Menus),
+		...(Menus.configGroup.startupConfig.videoMenu
+			? [
+				{
+					type: "separator",
+				},
+				getVideoMenu(Menus),
+			]
+			: []),
+		{
+			type: "separator",
+		},
+		{
+			label: "Quit (Clear Storage)",
+			click: () => Menus.quit(true),
+		},
+		{
+			label: "Quit",
+			accelerator: "ctrl+Q",
+			click: () => Menus.quit(),
+		},
+	],
+});
 
-	// Add help submenu
-	template.submenu.push({
+function getSettingsMenu(Menus) {
+	return {
+		label: "Settings",
+		submenu: [
+			{
+				label: "Save",
+				click: () => Menus.saveSettings(),
+			},
+			{
+				label: "Restore",
+				click: () => Menus.restoreSettings(),
+			},
+		],
+	};
+}
+
+function getPreferencesMenu() {
+	return {
+		label: "Zoom",
+		submenu: [
+			{ role: "resetZoom" },
+			{ role: "zoomIn" },
+			{ role: "zoomOut" },
+			{ role: "togglefullscreen" },
+		],
+	};
+}
+
+function getNotificationsMenu(Menus) {
+	return {
+		label: "Notifications",
+		submenu: [
+			{
+				label: "Disable All Notifications",
+				type: "checkbox",
+				checked: Menus.configGroup.startupConfig.disableNotifications,
+				click: () => Menus.toggleDisableNotifications(),
+			},
+			{
+				label: "Disable Notifications Sound",
+				type: "checkbox",
+				checked: Menus.configGroup.startupConfig.disableNotificationSound,
+				click: () => Menus.toggleDisableNotificationSound(),
+			},
+			{
+				label: "Disable Sound when Not Available (e.g: busy, in a call)",
+				type: "checkbox",
+				checked:
+					Menus.configGroup.startupConfig
+						.disableNotificationSoundIfNotAvailable,
+				click: () => Menus.toggleDisableNotificationSoundIfNotAvailable(),
+			},
+			{
+				label: "Disables Window Flash on New Notifications",
+				type: "checkbox",
+				checked: Menus.configGroup.startupConfig.disableNotificationWindowFlash,
+				click: () => Menus.toggleDisableNotificationWindowFlash(),
+			},
+			{
+				label: "Disable Badge Count",
+				type: "checkbox",
+				checked: Menus.configGroup.startupConfig.disableBadgeCount,
+				click: () => Menus.toggleDisableBadgeCount(),
+			},
+			{
+				label: "Urgency",
+				submenu: [
+					{
+						label: "Low",
+						type: "checkbox",
+						checked:
+							Menus.configGroup.startupConfig.defaultNotificationUrgency ===
+							"low",
+						click: () => Menus.setNotificationUrgency("low"),
+					},
+					{
+						label: "Normal",
+						type: "checkbox",
+						checked:
+							Menus.configGroup.startupConfig.defaultNotificationUrgency ===
+							"normal",
+						click: () => Menus.setNotificationUrgency("normal"),
+					},
+					{
+						label: "Critical",
+						type: "checkbox",
+						checked:
+							Menus.configGroup.startupConfig.defaultNotificationUrgency ===
+							"critical",
+						click: () => Menus.setNotificationUrgency("critical"),
+					},
+				],
+			},
+		],
+	};
+}
+
+function getHelpMenu(Menus) {
+	return {
 		label: "Help",
 		submenu: [
 			{
-				label: "Documentation",
-				click: () => menus.showDocumentation(),
+				label: "Teams for Linux Documentation",
+				click: () => Menus.showDocumentation(),
 			},
 			{
-				label: "GPU Info",
-				click: () => menus.showGpuInfo(),
+				type: "separator",
 			},
 			{
-				label: "Debug",
-				click: () => menus.debug(),
+				label: "Online Documentation",
+				click: () =>
+					shell.openExternal("https://support.office.com/en-us/teams"),
 			},
 			{
-				label: "About",
-				click: () => menus.about(),
+				label: "Github Project",
+				click: () =>
+					shell.openExternal(
+						"https://github.com/IsmaelMartinez/teams-for-linux"
+					),
+			},
+			{
+				label: "Microsoft Teams Support",
+				click: () =>
+					shell.openExternal(
+						"https://answers.microsoft.com/en-us/msteams/forum"
+					),
 			},
 		],
-	});
-
-	template.submenu.push({ type: "separator" });
-
-	// Quit options
-	template.submenu.push({
-		label: "Quit",
-		accelerator: "CommandOrControl+Q",
-		click: () => menus.quit(false),
-	});
-
-	template.submenu.push({
-		label: "Quit and Clear Storage",
-		click: () => menus.quit(true),
-	});
-
-	return template;
+	};
 }
 
-export default appMenu;
+function getVideoMenu(Menus) {
+	return {
+		label: "Video",
+		submenu: [
+			{
+				label: "Force enable PiP mode for shared screen",
+				click: () => {
+					Menus.forcePip();
+				},
+			},
+			{
+				label: "Force toggle controls for all video elements",
+				click: () => {
+					Menus.forceVideoControls();
+				},
+			},
+		],
+	};
+}
