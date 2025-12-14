@@ -1,10 +1,22 @@
 # Tray Icon Logout Indicator - Research & Implementation Plan
 
-**Status:** Research Complete - Awaiting Spike Validation
+**Status:** Spikes Implemented - Ready for Validation
 **Date:** November 2025
+**Updated:** December 2025
 **Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
 **Author:** Claude AI Assistant
 **Priority:** Enhancement - User Experience Improvement
+
+:::info Spike Implementation Available
+All validation spikes have been implemented in `app/browser/tools/authSpikes.js`. To run them:
+
+1. Launch the app
+2. Open DevTools console (Ctrl+Shift+I)
+3. Run: `window.teamsForLinuxAuthSpikes.runAllSpikes()`
+4. Review results in console
+
+For ongoing monitoring: `window.teamsForLinuxAuthSpikes.startMonitoring(5000, 60000)`
+:::
 
 ---
 
@@ -536,3 +548,62 @@ Complete Spike 1 (2-3 hours) to validate core assumption. Do NOT proceed with an
 :::danger Remember
 The goal is to validate the approach works with **2-3 hours of throwaway spike code**, NOT to build half the feature before discovering it won't work. Do the spikes first!
 :::
+
+---
+
+## Spike Implementation Details
+
+### Implementation Location
+
+All spikes have been implemented in `app/browser/tools/authSpikes.js`.
+
+### How to Run
+
+```javascript
+// From DevTools console:
+
+// Run all spikes at once:
+const results = window.teamsForLinuxAuthSpikes.runAllSpikes();
+
+// Results include:
+// - spike1_detection: Auth state detection via React internals
+// - spike2_timing: False positive avoidance strategy
+// - spike3_urlDetection: URL-based backup detection
+// - overallResult: { status: 'GO'|'CONDITIONAL'|'BLOCKED', summary: '...' }
+
+// Monitor auth state over time (check every 5s for 60s):
+const monitor = window.teamsForLinuxAuthSpikes.startMonitoring(5000, 60000);
+// Stop early: monitor.stop()
+```
+
+### Interpreting Results
+
+| Spike | Success Criteria | Failure Action |
+|-------|-----------------|----------------|
+| `spike1_detection` | `authProviderFound: true` AND `isLoggedIn` is not null | Try URL-based detection only |
+| `spike2_timing` | `authStateConsistent: true` | Increase startup delay |
+| `spike3_urlDetection` | `canUseAsBackup: true` | Always true (URL patterns work) |
+
+### Decision Tree
+
+```
+spike1_detection.authProviderFound?
+├─ YES → Primary method works → GO
+└─ NO → spike3_urlDetection.canUseAsBackup?
+        ├─ YES → URL-only fallback → CONDITIONAL GO
+        └─ NO → BLOCKED (unlikely)
+```
+
+### Next Steps After Validation
+
+If spikes pass:
+1. Add `getAuthenticationState()` method to ReactHandler
+2. Add `startAuthenticationMonitoring()` with 15s startup delay
+3. Update TrayIconRenderer to listen for `auth-state-changed` events
+4. Add visual overlay when logged out
+5. Add notification on logout detection
+
+### Files Changed
+
+- `app/browser/tools/authSpikes.js` - Spike implementation
+- `app/browser/preload.js` - Added authSpikes to module list

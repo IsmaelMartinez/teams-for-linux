@@ -40,8 +40,14 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.getMailMessages(options);
   });
 
+  // Run chat API validation spikes (for development/testing)
+  ipcMain.handle('run-chat-spikes', async () => {
+    if (!graphApiClient) return notEnabled;
+    return await graphApiClient.runChatSpikes();
+  });
+
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: 5,
+    channels: 6,
     enabled: !!graphApiClient
   });
 }

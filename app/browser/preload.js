@@ -117,6 +117,7 @@ globalThis.electronAPI = {
     getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
     createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
+    runChatSpikes: () => ipcRenderer.invoke("run-chat-spikes"),
   },
 
   // System information (safe to expose)
@@ -347,7 +348,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "framelessTweaks", path: "./tools/frameless" }
+      { name: "framelessTweaks", path: "./tools/frameless" },
+      { name: "authSpikes", path: "./tools/authSpikes" }
     ];
 
     let successCount = 0;
