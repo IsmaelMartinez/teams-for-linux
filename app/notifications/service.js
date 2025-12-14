@@ -1,135 +1,147 @@
-import { Notification, ipcMain, app } from "electron";
+import { Notification, nativeImage, ipcMain } from "electron";
 import path from "node:path";
-import { getDirname } from "../utils/esm-utils.js";
 
-const __dirname = getDirname(import.meta.url);
+const USER_STATUS = {
+	UNKNOWN: -1,
+	AVAILABLE: 1,
+};
 
-/**
- * NotificationService handles all desktop notification functionality.
- * This service manages showing notifications, playing sounds, and coordinating
- * with the main window for notification-related tasks.
- */
 class NotificationService {
-	/**
-	 * @param {Object} player - Audio player instance for notification sounds
-	 * @param {Object} config - Application configuration
-	 * @param {Object} mainAppWindow - Main application window module
-	 * @param {Function} getUserStatus - Function to get current user status
-	 */
-	constructor(player, config, mainAppWindow, getUserStatus) {
-		this.player = player;
-		this.config = config;
-		this.mainAppWindow = mainAppWindow;
-		this.getUserStatus = getUserStatus;
+	#soundPlayer;
+	#config;
+	#mainWindow;
+	#getUserStatus;
+	#notificationSounds;
+
+	constructor(soundPlayer, config, mainWindow, getUserStatus) {
+		this.#soundPlayer = soundPlayer;
+		this.#config = config;
+		this.#mainWindow = mainWindow;
+		this.#getUserStatus = getUserStatus;
+
+		this.#notificationSounds = [
+			{
+				type: "new-message",
+				file: path.join(config.appPath, "assets/sounds/new_message.wav"),
+			},
+			{
+				type: "meeting-started",
+				file: path.join(config.appPath, "assets/sounds/meeting_started.wav"),
+			},
+		];
 	}
 
-	/**
-	 * Initialize IPC handlers for notification-related events
-	 */
 	initialize() {
-		// Show desktop notification with customizable options
-		ipcMain.handle("show-notification", this.handleShowNotification.bind(this));
-		// Play notification sound based on notification type
-		ipcMain.handle("play-notification-sound", this.handlePlayNotificationSound.bind(this));
+		// Play notification sound for Teams messages and calls
+		ipcMain.handle("play-notification-sound", this.#handlePlayNotificationSound.bind(this));
+		// Show system notification for Teams activity
+		ipcMain.handle("show-notification", this.#handleShowNotification.bind(this));
 	}
 
-	/**
-	 * Handle showing a desktop notification
-	 * @param {Electron.IpcMainInvokeEvent} _event - IPC event
-	 * @param {Object} options - Notification options (title, body, icon, etc.)
-	 */
-	async handleShowNotification(_event, options) {
-		if (this.config.disableNotifications) {
-			console.debug("Notifications are disabled");
-			return;
-		}
-
-		const notification = new Notification({
-			title: options.title || "Teams for Linux",
-			body: options.body || "",
-			icon: options.icon || path.join(__dirname, "../assets/icons/icon-96x96.png"),
-			urgency: this.config.defaultNotificationUrgency || "normal",
-		});
-
-		notification.on("click", () => {
-			const window = this.mainAppWindow.getWindow();
-			if (window) {
-				if (window.isMinimized()) {
-					window.restore();
-				}
-				window.show();
-				window.focus();
-			}
-		});
-
-		notification.show();
-
-		// Flash window if enabled
-		if (!this.config.disableNotificationWindowFlash) {
-			const window = this.mainAppWindow.getWindow();
-			if (window && !window.isFocused()) {
-				window.flashFrame(true);
-			}
-		}
+	async #handleShowNotification(_event, options) {
+		return this.#showNotification(options);
 	}
 
-	/**
-	 * Handle playing notification sound
-	 * @param {Electron.IpcMainInvokeEvent} _event - IPC event
-	 * @param {Object} options - Sound options (type, audio)
-	 */
-	async handlePlayNotificationSound(_event, options) {
-		// Check if sound is disabled
-		if (this.config.disableNotificationSound) {
-			console.debug("Notification sound is disabled");
-			return;
-		}
+	async #handlePlayNotificationSound(_event, options) {
+		return this.#playNotificationSound(options);
+	}
 
-		// Check if sound should be disabled when not available
-		if (this.config.disableNotificationSoundIfNotAvailable) {
-			const userStatus = this.getUserStatus();
-			// Status 1 = Available
-			if (userStatus !== 1) {
-				console.debug(`Notification sound disabled - user status is ${userStatus} (not Available)`);
-				return;
-			}
-		}
-
-		if (!this.player) {
-			console.debug("No audio player available");
-			return;
-		}
+	async #showNotification(options) {
+		const startTime = Date.now();
+		console.debug("[TRAY_DIAG] Native notification request received", {
+			title: options.title,
+			bodyLength: options.body?.length || 0,
+			hasIcon: !!options.icon,
+			type: options.type,
+			urgency: this.#config.defaultNotificationUrgency,
+			timestamp: new Date().toISOString(),
+			suggestion: "Monitor totalTimeMs for notification display delays"
+		});
 
 		try {
-			const soundType = options?.type || "new-message";
-			const soundFile = this.getSoundFile(soundType);
-			
-			if (soundFile) {
-				console.debug(`Playing notification sound: ${soundFile}`);
-				this.player.play(soundFile);
+			// Play notification sound if configured (await to catch any errors)
+			await this.#playNotificationSound({
+				type: options.type,
+				audio: "default",
+				title: options.title,
+				body: options.body,
+			});
+
+			// Create notification config
+			const notificationConfig = {
+				title: options.title,
+				body: options.body,
+				urgency: this.#config.defaultNotificationUrgency,
+			};
+
+			// Only add icon if provided to avoid errors with null/undefined
+			if (options.icon) {
+				notificationConfig.icon = nativeImage.createFromDataURL(options.icon);
 			}
+
+			// Create and show native notification
+			const notification = new Notification(notificationConfig);
+
+			notification.on("click", () => {
+				console.debug("[TRAY_DIAG] Notification clicked, showing main window");
+				this.#mainWindow.show();
+			});
+
+			notification.show();
+
+			const totalTime = Date.now() - startTime;
+			console.debug("[TRAY_DIAG] Native notification displayed successfully", {
+				title: options.title,
+				totalTimeMs: totalTime,
+				urgency: this.#config.defaultNotificationUrgency,
+				performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
+			});
+
 		} catch (error) {
-			console.error("Error playing notification sound:", error);
+			console.error("[TRAY_DIAG] Failed to show native notification", {
+				error: error.message,
+				title: options.title,
+				elapsedMs: Date.now() - startTime,
+				suggestion: "Check if notification permissions are granted or icon data is valid"
+			});
 		}
 	}
 
-	/**
-	 * Get the sound file path for a given notification type
-	 * @param {string} type - Notification type (new-message, meeting-started, etc.)
-	 * @returns {string|null} Path to sound file or null if not found
-	 */
-	getSoundFile(type) {
-		const soundsPath = app.isPackaged
-			? path.join(process.resourcesPath, "assets/sounds")
-			: path.join(__dirname, "../assets/sounds");
+	async #playNotificationSound(options) {
+		console.debug(
+			`Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
+		);
 
-		const soundFiles = {
-			"new-message": "new_message.wav",
-			"meeting-started": "meeting_started.wav",
-		};
+		// Player failed to load or notification sound disabled in config
+		if (!this.#soundPlayer || this.#config.disableNotificationSound) {
+			console.debug("Notification sounds are disabled");
+			return;
+		}
 
-		const fileName = soundFiles[type] || soundFiles["new-message"];
-		return path.join(soundsPath, fileName);
+		// Get current user status via injected function
+		const userStatus = this.#getUserStatus();
+
+		// Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
+		if (
+			this.#config.disableNotificationSoundIfNotAvailable &&
+			userStatus !== USER_STATUS.AVAILABLE &&
+			userStatus !== USER_STATUS.UNKNOWN
+		) {
+			console.debug("Notification sounds are disabled when user is not active");
+			return;
+		}
+
+		const sound = this.#notificationSounds.find((ns) => {
+			return ns.type === options.type;
+		});
+
+		if (sound) {
+			console.debug(`Playing file: ${sound.file}`);
+			await this.#soundPlayer.play(sound.file);
+			return;
+		}
+
+		console.debug("No notification sound played", this.#soundPlayer, options);
 	}
 }
 

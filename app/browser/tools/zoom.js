@@ -1,130 +1,79 @@
-/**
- * Zoom tool
- * 
- * Handles zoom level management with keyboard shortcuts.
- */
+import { webFrame, ipcRenderer } from "electron";
+
+//zoomFactor can be configurable
+const zoomFactor = 0.25;
+const zoomMin = -7.5; //-7.5 * 20% = -150% or 50% of original
+const zoomMax = 7.5; // 7.5 * 20% = +200% or 300% of original
+const zoomOffsets = {
+	"+": 1,
+	"-": -1,
+	0: 0,
+};
+
+const _Zoom_config = new WeakMap();
+const _Zoom_initialized = new WeakMap();
+
 class Zoom {
+	constructor() {
+		_Zoom_initialized.set(this, false);
+	}
+
 	init(config) {
-		this.config = config;
-		this.setupKeyboardShortcuts();
-		this.loadZoomLevel();
-	}
-
-	/**
-	 * Set up keyboard shortcuts for zoom
-	 */
-	setupKeyboardShortcuts() {
-		document.addEventListener("keydown", (event) => {
-			// Ctrl/Cmd + Plus: Zoom in
-			if ((event.ctrlKey || event.metaKey) && (event.key === "+" || event.key === "=")) {
-				event.preventDefault();
-				this.zoomIn();
-			}
-			// Ctrl/Cmd + Minus: Zoom out
-			else if ((event.ctrlKey || event.metaKey) && event.key === "-") {
-				event.preventDefault();
-				this.zoomOut();
-			}
-			// Ctrl/Cmd + 0: Reset zoom
-			else if ((event.ctrlKey || event.metaKey) && event.key === "0") {
-				event.preventDefault();
-				this.resetZoom();
-			}
-		});
-
-		// Handle mouse wheel zoom
-		document.addEventListener("wheel", (event) => {
-			if (event.ctrlKey || event.metaKey) {
-				event.preventDefault();
-				if (event.deltaY < 0) {
-					this.zoomIn();
-				} else {
-					this.zoomOut();
-				}
-			}
-		}, { passive: false });
-	}
-
-	/**
-	 * Zoom in
-	 */
-	zoomIn() {
-		const currentZoom = this.getZoom();
-		const newZoom = Math.min(currentZoom + 0.1, 3);
-		this.setZoom(newZoom);
-	}
-
-	/**
-	 * Zoom out
-	 */
-	zoomOut() {
-		const currentZoom = this.getZoom();
-		const newZoom = Math.max(currentZoom - 0.1, 0.5);
-		this.setZoom(newZoom);
-	}
-
-	/**
-	 * Reset zoom to 100%
-	 */
-	resetZoom() {
-		this.setZoom(1);
-	}
-
-	/**
-	 * Get current zoom level
-	 * @returns {number} Current zoom level
-	 */
-	getZoom() {
-		return globalThis.electronAPI?.getZoomLevel 
-			? 1 // Actual level would be retrieved async
-			: document.body.style.zoom 
-				? parseFloat(document.body.style.zoom) 
-				: 1;
-	}
-
-	/**
-	 * Set zoom level
-	 * @param {number} level - Zoom level
-	 */
-	setZoom(level) {
-		document.body.style.zoom = level;
-		this.saveZoomLevel(level);
-		console.debug(`[Zoom] Set to ${Math.round(level * 100)}%`);
-	}
-
-	/**
-	 * Load saved zoom level
-	 */
-	async loadZoomLevel() {
-		try {
-			if (globalThis.electronAPI?.getZoomLevel) {
-				const level = await globalThis.electronAPI.getZoomLevel(this.config.partition);
-				if (level && level !== 0) {
-					document.body.style.zoom = 1 + level * 0.1;
-				}
-			}
-		} catch (err) {
-			console.debug("[Zoom] Error loading zoom level:", err.message);
+		if (this.initialized) {
+			return;
 		}
+
+		_Zoom_config.set(this, config);
+		_Zoom_initialized.set(this, true);
+		this.restoreZoomLevel();
 	}
 
-	/**
-	 * Save zoom level
-	 * @param {number} level - Zoom level
-	 */
-	async saveZoomLevel(level) {
-		try {
-			if (globalThis.electronAPI?.saveZoomLevel) {
-				const zoomLevel = Math.round((level - 1) * 10);
-				await globalThis.electronAPI.saveZoomLevel({
-					partition: this.config.partition,
-					level: zoomLevel
-				});
-			}
-		} catch (err) {
-			console.debug("[Zoom] Error saving zoom level:", err.message);
-		}
+	get config() {
+		return _Zoom_config.get(this);
 	}
+
+	get initialized() {
+		return _Zoom_initialized.get(this);
+	}
+
+	restoreZoomLevel() {
+		restoreZoomLevelInternal(this.config);
+	}
+
+	resetZoomLevel() {
+		setNextZoomLevel("0", this.config);
+	}
+
+	increaseZoomLevel() {
+		setNextZoomLevel("+", this.config);
+	}
+
+	decreaseZoomLevel() {
+		setNextZoomLevel("-", this.config);
+	}
+}
+
+function restoreZoomLevelInternal(config) {
+	ipcRenderer.invoke("get-zoom-level", config.partition).then((zoomLevel) => {
+		webFrame.setZoomLevel(zoomLevel);
+	});
+}
+
+function setNextZoomLevel(keyName, config) {
+	const zoomOffset = zoomOffsets[keyName];
+	let zoomLevel = webFrame.getZoomLevel();
+	console.debug(`Current zoom level: ${zoomLevel}`);
+	if (typeof zoomOffset !== "number") {
+		return;
+	}
+
+	zoomLevel = zoomOffset === 0 ? 0 : zoomLevel + zoomOffset * zoomFactor;
+	if (zoomLevel < zoomMin || zoomLevel > zoomMax) return;
+	webFrame.setZoomLevel(zoomLevel);
+	ipcRenderer.invoke("save-zoom-level", {
+		partition: config.partition,
+		zoomLevel: webFrame.getZoomLevel(),
+	});
 }
 
 export default new Zoom();

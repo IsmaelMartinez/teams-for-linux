@@ -1,123 +1,101 @@
-import { LANGUAGE_LIST } from "./codes.js";
+import codes from "./codes.js";
 
-/**
- * SpellCheckProvider manages spell checking languages for the application.
- */
+const _SpellCheckProvider_supportedList = new WeakMap();
+const _SpellCheckProvider_window = new WeakMap();
+
 class SpellCheckProvider {
-	/**
-	 * @param {BrowserWindow} window - The browser window
-	 */
 	constructor(window) {
-		this.window = window;
-		this.supportedList = this.window.webContents.session.availableSpellCheckerLanguages;
-		this.supportedListByGroup = this.groupLanguages();
+		_SpellCheckProvider_window.set(this, window);
+		init(this, window);
 	}
 
-	/**
-	 * Group languages by their primary language code
-	 * @returns {Array} Grouped languages
-	 */
-	groupLanguages() {
-		const groups = {};
-		
-		for (const code of this.supportedList) {
-			const language = LANGUAGE_LIST[code] || code;
-			const primaryCode = code.split("-")[0];
-			
-			if (!groups[primaryCode]) {
-				groups[primaryCode] = {
-					key: this.getLanguageGroupName(primaryCode),
-					list: [],
-				};
+	get supportedList() {
+		return _SpellCheckProvider_supportedList.get(this);
+	}
+
+	get supportedListByGroup() {
+		const groupedList = [];
+		for (const language of this.supportedList) {
+			addLanguageToGroup(
+				groupedList,
+				language.language.substring(0, 1),
+				language,
+			);
+		}
+		return groupedList;
+	}
+
+	get window() {
+		return _SpellCheckProvider_window.get(this);
+	}
+
+	isLanguageSupported(code) {
+		return this.supportedList.some((i) => {
+			return i.code === code;
+		});
+	}
+
+	setLanguages(codeList) {
+		const setlanguages = [];
+		for (const c of codeList) {
+			if (!this.isLanguageSupported(c)) {
+				console.warn(`Unsupported language code '${c}' for spellchecker`);
+			} else {
+				setlanguages.push(c);
 			}
-			
-			groups[primaryCode].list.push({
-				code: code,
-				language: language,
-			});
+		}
+		this.window.webContents.session.setSpellCheckerLanguages(setlanguages);
+		if (setlanguages.length > 0) {
+			console.debug(
+				`Language codes ${setlanguages.join(",")} set for spellchecker`,
+			);
+		} else {
+			console.debug("Spellchecker is disabled!");
 		}
 
-		return Object.values(groups).sort((a, b) => a.key.localeCompare(b.key));
+		return setlanguages;
 	}
+}
 
-	/**
-	 * Get the display name for a language group
-	 * @param {string} code - Primary language code
-	 * @returns {string} Language group name
-	 */
-	getLanguageGroupName(code) {
-		const groupNames = {
-			af: "Afrikaans",
-			bg: "Bulgarian",
-			ca: "Catalan",
-			cs: "Czech",
-			cy: "Welsh",
-			da: "Danish",
-			de: "German",
-			el: "Greek",
-			en: "English",
-			es: "Spanish",
-			et: "Estonian",
-			fa: "Persian",
-			fo: "Faroese",
-			fr: "French",
-			he: "Hebrew",
-			hi: "Hindi",
-			hr: "Croatian",
-			hu: "Hungarian",
-			hy: "Armenian",
-			id: "Indonesian",
-			it: "Italian",
-			ko: "Korean",
-			lt: "Lithuanian",
-			lv: "Latvian",
-			nb: "Norwegian Bokmål",
-			nl: "Dutch",
-			pl: "Polish",
-			pt: "Portuguese",
-			ro: "Romanian",
-			ru: "Russian",
-			sh: "Serbo-Croatian",
-			sk: "Slovak",
-			sl: "Slovenian",
-			sq: "Albanian",
-			sr: "Serbian",
-			sv: "Swedish",
-			ta: "Tamil",
-			tg: "Tajik",
-			tr: "Turkish",
-			uk: "Ukrainian",
-			vi: "Vietnamese",
-		};
+function init(instance, window) {
+	const listFromElectron =
+		window.webContents.session.availableSpellCheckerLanguages;
+	const list = codes.filter((lf) => {
+		return listContains(listFromElectron, lf.code);
+	});
+	sortLanguages(list);
+	_SpellCheckProvider_supportedList.set(instance, list);
+}
 
-		return groupNames[code] || code.toUpperCase();
+function listContains(list, text) {
+	return list.includes(text);
+}
+
+function addLanguageToGroup(groupedList, key, language) {
+	const group = groupedList.find((f) => f.key === key);
+	if (group) {
+		group.list.push(language);
+	} else {
+		groupedList.push({
+			key: key,
+			list: [language],
+		});
 	}
+}
 
-	/**
-	 * Set the spell checker languages
-	 * @param {Array<string>} languages - Language codes to enable
-	 * @returns {Array<string>} Actually enabled languages
-	 */
-	setLanguages(languages) {
-		const validLanguages = languages.filter(lang => this.supportedList.includes(lang));
-		
-		try {
-			this.window.webContents.session.setSpellCheckerLanguages(validLanguages);
-			console.debug(`Spell checker languages set to: ${validLanguages.join(", ")}`);
-			return validLanguages;
-		} catch (error) {
-			console.error("Error setting spell checker languages:", error);
-			return [];
-		}
-	}
+function sortLanguages(languages) {
+	languages.sort((a, b) => {
+		return stringCompare(
+			a.language.toLocaleLowerCase(),
+			b.language.toLocaleLowerCase(),
+		);
+	});
+}
 
-	/**
-	 * Get currently active spell checker languages
-	 * @returns {Array<string>} Active language codes
-	 */
-	getLanguages() {
-		return this.window.webContents.session.getSpellCheckerLanguages();
-	}
+function stringCompare(str1, str2) {
+	const le = str1 < str2;
+	const gr = str1 > str2;
+	return le ? -1 : gr ? 1 : 0;
 }
 
 export { SpellCheckProvider };
