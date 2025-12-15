@@ -96,6 +96,10 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
+      - name: Set build number
+        # Inspired by https://github.com/orgs/community/discussions/26709#discussioncomment-14579020
+        run: echo "BUILD_NUMBER=$(($GITHUB_RUN_NUMBER + $GITHUB_RUN_ATTEMPT - 2))" >> $GITHUB_ENV
+
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:x64 -- --publish always
@@ -144,6 +148,10 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
+      - name: Set build number
+        # Inspired by https://github.com/orgs/community/discussions/26709#discussioncomment-14579020
+        run: echo "BUILD_NUMBER=$(($GITHUB_RUN_NUMBER + $GITHUB_RUN_ATTEMPT - 2))" >> $GITHUB_ENV
+
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:arm64 -- --publish always
@@ -191,6 +199,10 @@ jobs:
 
       - name: Validate Release Notes
         run: npm run generate-release-info
+
+      - name: Set build number
+        # Inspired by https://github.com/orgs/community/discussions/26709#discussioncomment-14579020
+        run: echo "BUILD_NUMBER=$(($GITHUB_RUN_NUMBER + $GITHUB_RUN_ATTEMPT - 2))" >> $GITHUB_ENV
 
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
