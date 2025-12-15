@@ -324,14 +324,32 @@ class AuthDetectionSpikes {
       if (workingMethod) {
         result.workingPath = `${workingMethod}()`;
 
-        // Check if we have users
-        const hasUsers = Array.isArray(activeUsers)
-          ? activeUsers.length > 0
-          : (activeUsers && typeof activeUsers === 'object' && Object.keys(activeUsers).length > 0);
+        // Check if we have users - handle various return types
+        let hasUsers = false;
+        let userCount = 0;
 
-        result.activeUsers = Array.isArray(activeUsers)
-          ? activeUsers.length
-          : (activeUsers ? 1 : 0);
+        if (Array.isArray(activeUsers)) {
+          hasUsers = activeUsers.length > 0;
+          userCount = activeUsers.length;
+        } else if (activeUsers && typeof activeUsers === 'object') {
+          // Could be a single user object or a map of users
+          const keys = Object.keys(activeUsers);
+          // If it has user-like properties, it's a single user
+          if (activeUsers.id || activeUsers.homeAccountId || activeUsers.username || activeUsers.tenantId) {
+            hasUsers = true;
+            userCount = 1;
+          } else if (keys.length > 0) {
+            // It's a map/dictionary of users
+            hasUsers = true;
+            userCount = keys.length;
+          }
+        } else if (activeUsers) {
+          // Some truthy value
+          hasUsers = true;
+          userCount = 1;
+        }
+
+        result.activeUsers = userCount;
 
         if (hasUsers) {
           result.accountProperty = 'has_active_users';
@@ -772,6 +790,115 @@ class AuthDetectionSpikes {
     console.log('[AUTH_SPIKE 3] URL detection result:', result.urlIndicatesState, '(confidence:', result.confidence + ')');
 
     return result;
+  }
+
+  // ============================================
+  // Token Management Scripts for Testing
+  // ============================================
+
+  /**
+   * View current auth state (safe, no changes)
+   */
+  viewAuthState() {
+    const accountKeys = localStorage.getItem('msal.account.keys');
+    const tokenKeys = Object.keys(localStorage).filter(k => k.includes('-accesstoken-'));
+
+    console.log('=== MSAL Auth State ===');
+    console.log('Account keys:', accountKeys);
+    console.log('Token count:', tokenKeys.length);
+
+    tokenKeys.forEach(key => {
+      try {
+        const token = JSON.parse(localStorage.getItem(key));
+        const expiresOn = token.expiresOn || token.expires_on;
+        const expiryMs = expiresOn > 9999999999 ? expiresOn : expiresOn * 1000;
+        const isExpired = expiryMs < Date.now();
+        const minsLeft = Math.round((expiryMs - Date.now()) / 60000);
+        console.log(`  ${key.substring(0, 50)}...`);
+        console.log(`    Status: ${isExpired ? '❌ EXPIRED' : '✅ VALID'}`);
+        console.log(`    Expires: ${isExpired ? 'already expired' : minsLeft + ' mins'}`);
+      } catch (e) {
+        console.log(`  ${key}: parse error`);
+      }
+    });
+
+    return { accountKeys, tokenCount: tokenKeys.length };
+  }
+
+  /**
+   * Expire all tokens (sets expiry to past - tokens stay but are invalid)
+   */
+  expireAllTokens() {
+    const tokenKeys = Object.keys(localStorage).filter(k => k.includes('-accesstoken-'));
+    let count = 0;
+
+    tokenKeys.forEach(key => {
+      try {
+        const token = JSON.parse(localStorage.getItem(key));
+        // Set expiry to 1 hour ago
+        token.expiresOn = Math.floor((Date.now() - 3600000) / 1000);
+        token.expires_on = token.expiresOn;
+        localStorage.setItem(key, JSON.stringify(token));
+        count++;
+      } catch (e) {
+        console.error(`Failed to expire ${key}:`, e);
+      }
+    });
+
+    console.log(`✅ Expired ${count} tokens. Run viewAuthState() to verify.`);
+    return { expiredCount: count };
+  }
+
+  /**
+   * Clear all tokens (removes them entirely)
+   */
+  clearAllTokens() {
+    const tokenKeys = Object.keys(localStorage).filter(k =>
+      k.includes('-accesstoken-') ||
+      k.includes('-refreshtoken-') ||
+      k.includes('-idtoken-')
+    );
+
+    tokenKeys.forEach(key => localStorage.removeItem(key));
+    console.log(`✅ Cleared ${tokenKeys.length} tokens.`);
+    return { clearedCount: tokenKeys.length };
+  }
+
+  /**
+   * Clear everything (full logout simulation)
+   */
+  clearAllMsalData() {
+    const msalKeys = Object.keys(localStorage).filter(k =>
+      k.includes('msal') ||
+      k.includes('-accesstoken-') ||
+      k.includes('-refreshtoken-') ||
+      k.includes('-idtoken-') ||
+      k.includes('tmp.auth')
+    );
+
+    console.log('Removing:', msalKeys);
+    msalKeys.forEach(key => localStorage.removeItem(key));
+    console.log(`✅ Cleared ${msalKeys.length} MSAL-related keys.`);
+    console.log('⚠️  Reload the page to trigger re-authentication.');
+    return { clearedCount: msalKeys.length, keys: msalKeys };
+  }
+
+  /**
+   * List all auth-related keys
+   */
+  listAuthKeys() {
+    const keys = Object.keys(localStorage).filter(k => {
+      const lower = k.toLowerCase();
+      return lower.includes('msal') ||
+             lower.includes('token') ||
+             lower.includes('auth') ||
+             lower.includes('account');
+    });
+
+    console.log('=== Auth-related localStorage keys ===');
+    keys.forEach(k => console.log(`  ${k}`));
+    console.log(`Total: ${keys.length} keys`);
+    return keys;
   }
 
   /**
