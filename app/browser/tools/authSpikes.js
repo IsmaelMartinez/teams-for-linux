@@ -279,84 +279,87 @@ class AuthDetectionSpikes {
         return result;
       }
 
-      // Step 5: Try multiple paths to find account info
-      const pathsToTry = [
-        { path: '_coreAuthService._authProvider._account', name: 'authProvider._account' },
-        { path: '_coreAuthService._authProvider.account', name: 'authProvider.account' },
-        { path: '_coreAuthService._account', name: 'coreAuthService._account' },
-        { path: '_coreAuthService.account', name: 'coreAuthService.account' },
-        { path: '_account', name: 'authService._account' },
-        { path: 'account', name: 'authService.account' },
-        { path: '_coreAuthService._authProvider._cachedAccount', name: 'authProvider._cachedAccount' },
-        { path: '_coreAuthService._authProvider.getActiveAccount', name: 'authProvider.getActiveAccount()' }
+      // Step 5: Get authProvider and try MSAL methods
+      const authProvider = authService?._coreAuthService?._authProvider;
+      result.authProviderFound = !!authProvider;
+
+      if (!authProvider) {
+        result.error = 'Auth provider not found';
+        return result;
+      }
+
+      result.authProviderKeys = Object.keys(authProvider).filter(k =>
+        k.includes('user') || k.includes('User') || k.includes('account') || k.includes('Account')
+      );
+
+      // Try MSAL methods to get active users
+      const methodsToTry = [
+        { name: 'getActiveUsers', method: authProvider.getActiveUsers },
+        { name: 'getCachedUsers', method: authProvider.getCachedUsers },
+        { name: 'getMappedActiveUserFromMsal2', method: authProvider.getMappedActiveUserFromMsal2 }
       ];
 
-      let foundAccount = null;
-      let workingPath = null;
+      let activeUsers = null;
+      let workingMethod = null;
 
-      for (const { path, name } of pathsToTry) {
+      for (const { name, method } of methodsToTry) {
         result.testedPaths.push(name);
-        let value;
+        if (typeof method === 'function') {
+          try {
+            const methodResult = method.call(authProvider);
+            console.log(`[AUTH_SPIKE 1] ${name}() returned:`, methodResult);
 
-        if (path.includes('getActiveAccount')) {
-          // Special case for method call
-          const provider = this._getNestedProperty(authService, '_coreAuthService._authProvider');
-          if (provider && typeof provider.getActiveAccount === 'function') {
-            try {
-              value = provider.getActiveAccount();
-            } catch (e) {
-              console.log(`[AUTH_SPIKE 1] ${name}: method call failed -`, e.message);
-              continue;
+            if (methodResult !== undefined && methodResult !== null) {
+              activeUsers = methodResult;
+              workingMethod = name;
+              break;
             }
+          } catch (e) {
+            console.log(`[AUTH_SPIKE 1] ${name}() failed:`, e.message);
+          }
+        }
+      }
+
+      // Step 6: Analyze active users result
+      if (workingMethod) {
+        result.workingPath = `${workingMethod}()`;
+
+        // Check if we have users
+        const hasUsers = Array.isArray(activeUsers)
+          ? activeUsers.length > 0
+          : (activeUsers && typeof activeUsers === 'object' && Object.keys(activeUsers).length > 0);
+
+        result.activeUsers = Array.isArray(activeUsers)
+          ? activeUsers.length
+          : (activeUsers ? 1 : 0);
+
+        if (hasUsers) {
+          result.accountProperty = 'has_active_users';
+          result.isLoggedIn = true;
+          result.detectionWorks = true;
+
+          // Extract user info if available
+          const firstUser = Array.isArray(activeUsers) ? activeUsers[0] : activeUsers;
+          if (firstUser && typeof firstUser === 'object') {
+            result.userInfo = {
+              hasId: !!firstUser.id || !!firstUser.homeAccountId,
+              hasTenant: !!firstUser.tenantId,
+              hasUsername: !!firstUser.username || !!firstUser.name
+            };
           }
         } else {
-          value = this._getNestedProperty(authService, path);
-        }
-
-        console.log(`[AUTH_SPIKE 1] Testing ${name}:`, value !== undefined ? 'exists' : 'undefined');
-
-        if (value !== undefined) {
-          foundAccount = value;
-          workingPath = name;
-          break;
-        }
-      }
-
-      // Step 6: Analyze what we found
-      if (workingPath) {
-        result.authProviderFound = true;
-        result.workingPath = workingPath;
-
-        if (foundAccount === null) {
-          result.accountProperty = 'null';
+          result.accountProperty = 'no_active_users';
           result.isLoggedIn = false;
-          result.detectionWorks = true; // null means explicitly not logged in
-        } else if (foundAccount && typeof foundAccount === 'object') {
-          result.accountProperty = 'populated';
-          result.isLoggedIn = true;
           result.detectionWorks = true;
-          result.accountKeys = Object.keys(foundAccount);
-        } else if (foundAccount) {
-          result.accountProperty = 'truthy_non_object';
-          result.isLoggedIn = true;
-          result.detectionWorks = true;
-        } else {
-          // undefined or falsy but not null
-          result.accountProperty = 'falsy';
-          result.isLoggedIn = false;
-          result.detectionWorks = false; // Can't distinguish logged out from missing
         }
       } else {
-        // No path worked - try to find authProvider anyway for reporting
-        const authProvider = authService?._coreAuthService?._authProvider;
-        result.authProviderFound = !!authProvider;
-        result.accountProperty = 'not_found';
+        // Fall back to MSAL localStorage check
+        result.accountProperty = 'methods_failed';
         result.detectionWorks = false;
-
-        if (authProvider) {
-          result.authProviderKeys = Object.keys(authProvider);
-        }
       }
+
+      // Step 6b: Also check MSAL localStorage for token validity
+      result.msalState = this._checkMsalLocalStorage();
 
       console.log('[AUTH_SPIKE 1] Account property:', result.accountProperty);
       console.log('[AUTH_SPIKE 1] Detection works:', result.detectionWorks);
@@ -429,6 +432,127 @@ class AuthDetectionSpikes {
     }
 
     return signals;
+  }
+
+  /**
+   * Check MSAL localStorage for accounts and token validity
+   * This is a more reliable way to detect valid auth state
+   */
+  _checkMsalLocalStorage() {
+    const state = {
+      hasAccounts: false,
+      accountCount: 0,
+      hasValidTokens: false,
+      tokenStatus: 'unknown',
+      accounts: [],
+      tokens: []
+    };
+
+    try {
+      // Check for msal.account.keys
+      const accountKeysRaw = localStorage.getItem('msal.account.keys');
+      if (accountKeysRaw) {
+        try {
+          const accountKeys = JSON.parse(accountKeysRaw);
+          state.accountCount = Array.isArray(accountKeys) ? accountKeys.length : 0;
+          state.hasAccounts = state.accountCount > 0;
+
+          // Get account details
+          for (const key of (accountKeys || []).slice(0, 3)) {
+            const accountData = localStorage.getItem(key);
+            if (accountData) {
+              try {
+                const account = JSON.parse(accountData);
+                state.accounts.push({
+                  hasHomeAccountId: !!account.homeAccountId,
+                  hasTenantId: !!account.tenantId,
+                  hasUsername: !!account.username,
+                  realm: account.realm || account.tenantId || 'unknown'
+                });
+              } catch {
+                // Skip malformed accounts
+              }
+            }
+          }
+        } catch {
+          // msal.account.keys might not be JSON
+        }
+      }
+
+      // Find and check access tokens
+      const now = Date.now();
+      const accessTokenKeys = Object.keys(localStorage).filter(k =>
+        k.includes('-accesstoken-') || k.includes('accesstoken')
+      );
+
+      let validTokenCount = 0;
+      let expiredTokenCount = 0;
+      let soonestExpiry = null;
+
+      for (const key of accessTokenKeys.slice(0, 10)) {
+        try {
+          const tokenData = localStorage.getItem(key);
+          if (tokenData) {
+            const token = JSON.parse(tokenData);
+
+            // MSAL stores expiresOn as Unix timestamp (seconds)
+            const expiresOn = token.expiresOn || token.expires_on;
+            if (expiresOn) {
+              // Convert to milliseconds if needed
+              const expiryMs = expiresOn > 9999999999 ? expiresOn : expiresOn * 1000;
+              const isExpired = expiryMs < now;
+              const timeUntilExpiry = expiryMs - now;
+
+              if (isExpired) {
+                expiredTokenCount++;
+              } else {
+                validTokenCount++;
+                if (soonestExpiry === null || expiryMs < soonestExpiry) {
+                  soonestExpiry = expiryMs;
+                }
+              }
+
+              state.tokens.push({
+                key: key.substring(0, 50) + '...',
+                isExpired,
+                expiresIn: isExpired ? 'expired' : `${Math.round(timeUntilExpiry / 60000)}min`,
+                resource: token.target || token.resource || 'unknown'
+              });
+            }
+          }
+        } catch {
+          // Skip malformed tokens
+        }
+      }
+
+      state.validTokenCount = validTokenCount;
+      state.expiredTokenCount = expiredTokenCount;
+      state.hasValidTokens = validTokenCount > 0;
+
+      if (validTokenCount > 0) {
+        state.tokenStatus = 'valid';
+        if (soonestExpiry) {
+          const minsUntilExpiry = Math.round((soonestExpiry - now) / 60000);
+          state.soonestExpiryMins = minsUntilExpiry;
+          if (minsUntilExpiry < 5) {
+            state.tokenStatus = 'expiring_soon';
+          }
+        }
+      } else if (expiredTokenCount > 0) {
+        state.tokenStatus = 'expired';
+      } else if (state.hasAccounts) {
+        state.tokenStatus = 'no_tokens_but_has_accounts';
+      } else {
+        state.tokenStatus = 'no_auth_data';
+      }
+
+      console.log('[AUTH_SPIKE] MSAL localStorage state:', state);
+
+    } catch (error) {
+      state.error = error.message;
+    }
+
+    return state;
   }
 
   /**
@@ -718,62 +842,95 @@ class AuthDetectionSpikes {
       recommendations: []
     };
 
-    // Check Spike 1 results - FIXED: check detectionWorks, not just isLoggedIn !== null
     const s1 = this.results.spike1_detection;
+    const s2 = this.results.spike2_timing;
+    const s3 = this.results.spike3_urlDetection;
 
+    // Check Spike 1: React method detection
     if (s1?.detectionWorks) {
       assessment.canProceed = true;
-      assessment.primaryMethod = `React internals (${s1.workingPath || '_account property'})`;
-      console.log('[AUTH_SPIKE] ✅ Primary detection method works');
-    } else if (s1?.authProviderFound) {
-      // Found auth provider but _account is undefined - this is NOT working!
-      assessment.warnings.push('Auth provider found but account property is undefined - detection NOT working');
-      assessment.recommendations.push('Run exploreStructure() to find alternative auth signals');
-      assessment.recommendations.push('Check localStorage signals or alternative coreServices properties');
-    } else if (s1?.structureAccessible) {
-      assessment.warnings.push('React structure accessible but auth provider not found');
-      assessment.recommendations.push('Teams may have changed internal structure');
-    } else {
-      assessment.warnings.push('React structure not accessible - Teams may have changed internals');
+      assessment.primaryMethod = `React MSAL methods (${s1.workingPath})`;
+      console.log('[AUTH_SPIKE] ✅ Primary detection via', s1.workingPath);
     }
 
-    // Check localStorage signals as potential backup
-    if (s1?.localStorageSignals?.hasAuthData) {
-      assessment.backupMethod = 'localStorage auth data';
-      assessment.recommendations.push('Investigate localStorage-based detection as alternative');
+    // Check MSAL localStorage as alternative/backup
+    const msalState = s1?.msalState;
+    if (msalState?.hasValidTokens || msalState?.hasAccounts) {
+      if (!assessment.primaryMethod) {
+        assessment.primaryMethod = 'MSAL localStorage (token expiry check)';
+        assessment.canProceed = true;
+      } else {
+        assessment.backupMethod = 'MSAL localStorage (token expiry check)';
+      }
+
+      // Report token status
+      if (msalState.tokenStatus === 'valid') {
+        assessment.tokenInfo = {
+          status: 'valid',
+          validTokens: msalState.validTokenCount,
+          soonestExpiryMins: msalState.soonestExpiryMins
+        };
+      } else if (msalState.tokenStatus === 'expired') {
+        assessment.tokenInfo = {
+          status: 'expired',
+          expiredTokens: msalState.expiredTokenCount
+        };
+        assessment.warnings.push('All tokens are expired - user may need to re-authenticate');
+      } else if (msalState.tokenStatus === 'expiring_soon') {
+        assessment.tokenInfo = {
+          status: 'expiring_soon',
+          expiresInMins: msalState.soonestExpiryMins
+        };
+        assessment.warnings.push(`Tokens expiring in ${msalState.soonestExpiryMins} minutes`);
+      }
+
+      console.log('[AUTH_SPIKE] ✅ MSAL localStorage detection available');
     }
 
-    // Check Spike 3 for URL backup
-    const s3 = this.results.spike3_urlDetection;
+    // If neither primary method works
+    if (!assessment.canProceed) {
+      if (s1?.authProviderFound) {
+        assessment.warnings.push('Auth provider found but MSAL methods returned no users');
+        assessment.recommendations.push('User may be logged out or session expired');
+      } else if (s1?.structureAccessible) {
+        assessment.warnings.push('React structure accessible but auth provider not found');
+      } else {
+        assessment.warnings.push('React structure not accessible');
+      }
+    }
+
+    // Check URL-based detection for logout page
     if (s3?.canUseAsBackup) {
       if (!assessment.backupMethod) {
-        assessment.backupMethod = 'URL pattern detection (login pages only)';
+        assessment.backupMethod = 'URL pattern detection';
       }
-      assessment.recommendations.push('Use URL patterns to detect login page (high confidence logout)');
+      if (s3.urlIndicatesState === 'logged_out') {
+        assessment.recommendations.push('URL indicates login page - high confidence logged out');
+      }
     }
 
-    // Check Spike 2 for timing
-    const s2 = this.results.spike2_timing;
-    if (s2?.proposedStrategy && assessment.canProceed) {
+    // Add timing recommendations
+    if (assessment.canProceed) {
       assessment.recommendations.push('Implement 15-second startup delay before first check');
-      assessment.recommendations.push('Poll every 30 seconds after initial check');
+      assessment.recommendations.push('Poll every 30 seconds, check token expiry');
+      assessment.recommendations.push('Use MSAL localStorage for token validity (valid/expired/expiring_soon)');
     }
 
-    // Final verdict - FIXED: stricter check
-    if (assessment.canProceed && s1?.detectionWorks) {
+    // Final verdict
+    if (assessment.canProceed && (s1?.detectionWorks || msalState?.hasValidTokens || msalState?.hasAccounts)) {
       assessment.status = 'GO';
-      assessment.summary = 'Auth detection is feasible. Implement with timing delay and URL backup.';
-    } else if (s3?.canUseAsPrimary || s1?.localStorageSignals?.hasMsalData) {
-      assessment.status = 'CONDITIONAL';
-      assessment.summary = 'Primary React method not working. Could use URL-only or localStorage detection as fallback.';
+      assessment.summary = 'Auth detection is feasible via MSAL methods and/or localStorage token check.';
+    } else if (msalState?.hasAccounts && !msalState?.hasValidTokens) {
+      assessment.status = 'GO';
+      assessment.summary = 'Can detect auth state. Currently: accounts exist but tokens expired.';
       assessment.canProceed = true;
-    } else if (assessment.warnings.length > 0) {
-      assessment.status = 'NEEDS_INVESTIGATION';
-      assessment.summary = 'Primary detection not working. Run exploreStructure() to find alternatives.';
-      assessment.canProceed = false;
+    } else if (s3?.urlIndicatesState === 'logged_out') {
+      assessment.status = 'CONDITIONAL';
+      assessment.summary = 'URL indicates logged out. Can detect logout via URL patterns.';
+      assessment.canProceed = true;
     } else {
-      assessment.status = 'BLOCKED';
-      assessment.summary = 'Cannot reliably detect auth state. Feature not feasible.';
+      assessment.status = 'NEEDS_INVESTIGATION';
+      assessment.summary = 'Detection unclear. May be in loading state or need page refresh.';
     }
 
     return assessment;
