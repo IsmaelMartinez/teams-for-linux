@@ -1,17 +1,19 @@
-name: Upload to APT repo
+name: Upload to APT & RPM repos
 
 on:
   workflow_call:
     secrets:
-      APT_REPO_HOST:
+      REPO_HOST:
         required: true
-      APT_REPO_USER:
+      REPO_USER:
         required: true
-      APT_REPO_KEY:
+      REPO_KEY:
         required: true
-      APT_REPO_PORT:
+      REPO_PORT:
         required: true
       APT_REPO_PATH:
+        required: true
+      RPM_REPO_PATH:
         required: true
 
 jobs:
@@ -32,19 +34,39 @@ jobs:
       - name: Upload artifact to custom APT repo
         uses: appleboy/scp-action@v1
         with:
-          host: ${{ secrets.APT_REPO_HOST }}
-          username: ${{ secrets.APT_REPO_USER }}
-          key: ${{ secrets.APT_REPO_KEY }}
-          port: ${{ secrets.APT_REPO_PORT }}
+          host: ${{ secrets.REPO_HOST }}
+          username: ${{ secrets.REPO_USER }}
+          key: ${{ secrets.REPO_KEY }}
+          port: ${{ secrets.REPO_PORT }}
           source: "dist/*/*.deb"
           strip_components: 2
           target: ${{ secrets.APT_REPO_PATH }}/${{ vars.APT_REPO_POOL_PATH }}
 
-      - name: Update repo after upload
+      - name: Upload artifact to custom RPM repo
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.REPO_HOST }}
+          username: ${{ secrets.REPO_USER }}
+          key: ${{ secrets.REPO_KEY }}
+          port: ${{ secrets.REPO_PORT }}
+          source: "dist/*/*.rpm"
+          strip_components: 2
+          target: ${{ secrets.RPM_REPO_PATH }}/${{ vars.RPM_REPO_POOL_PATH }}
+
+      - name: Update APT repo after upload
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.APT_REPO_HOST }}
-          username: ${{ secrets.APT_REPO_USER }}
-          key: ${{ secrets.APT_REPO_KEY }}
-          port: ${{ secrets.APT_REPO_PORT }}
-          script: ${{ secrets.APT_REPO_PATH }}/${{ vars.APT_REPO_UPDATE_SCRIPT }}
+          host: ${{ secrets.REPO_HOST }}
+          username: ${{ secrets.REPO_USER }}
+          key: ${{ secrets.REPO_KEY }}
+          port: ${{ secrets.REPO_PORT }}
+          script: ${{ secrets.APT_REPO_PATH }}/${{ vars.REPO_UPDATE_SCRIPT }}
+
+      - name: Update RPM repo after upload
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.REPO_HOST }}
+          username: ${{ secrets.REPO_USER }}
+          key: ${{ secrets.REPO_KEY }}
+          port: ${{ secrets.REPO_PORT }}
+          script: ${{ secrets.RPM_REPO_PATH }}/${{ vars.REPO_UPDATE_SCRIPT }}
