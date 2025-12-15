@@ -16,6 +16,19 @@ All validation spikes have been implemented in `app/browser/tools/authSpikes.js`
 4. Review results in console
 
 For ongoing monitoring: `window.teamsForLinuxAuthSpikes.startMonitoring(5000, 60000)`
+
+To explore Teams structure for debugging: `window.teamsForLinuxAuthSpikes.exploreStructure()`
+:::
+
+:::warning Spike Results (December 2025)
+Initial testing revealed that the `_account` property returns `undefined` in both authenticated and unauthenticated states on Teams v2 (`/v2/` routes). This means:
+
+- **Primary detection method NOT working** as originally designed
+- The spike now correctly reports `NEEDS_INVESTIGATION` status
+- Need to run `exploreStructure()` to find alternative auth signals
+- Potential alternatives: localStorage MSAL data, URL-only detection for login pages
+
+**Next step**: Run `exploreStructure()` when authenticated vs not authenticated to find a working signal.
 :::
 
 ---
