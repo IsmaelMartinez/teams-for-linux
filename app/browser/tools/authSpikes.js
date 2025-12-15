@@ -390,7 +390,7 @@ class AuthDetectionSpikes {
       result.localStorageSignals = this._checkLocalStorageAuth();
 
       if (result.detectionWorks) {
-        console.log('[AUTH_SPIKE 1] ✅ Auth detection WORKS via', workingPath);
+        console.log('[AUTH_SPIKE 1] ✅ Auth detection WORKS via', result.workingPath || 'localStorage');
       } else {
         console.log('[AUTH_SPIKE 1] ❌ Auth detection does NOT work - need alternative approach');
       }

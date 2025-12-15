@@ -20,15 +20,39 @@ For ongoing monitoring: `window.teamsForLinuxAuthSpikes.startMonitoring(5000, 60
 To explore Teams structure for debugging: `window.teamsForLinuxAuthSpikes.exploreStructure()`
 :::
 
-:::warning Spike Results (December 2025)
-Initial testing revealed that the `_account` property returns `undefined` in both authenticated and unauthenticated states on Teams v2 (`/v2/` routes). This means:
+:::tip Spike Results VALIDATED (December 2025)
+Comprehensive testing revealed the working detection strategy:
 
-- **Primary detection method NOT working** as originally designed
-- The spike now correctly reports `NEEDS_INVESTIGATION` status
-- Need to run `exploreStructure()` to find alternative auth signals
-- Potential alternatives: localStorage MSAL data, URL-only detection for login pages
+**Key Findings:**
+- ❌ `_account` property: Returns `undefined` in Teams v2 - NOT usable
+- ❌ `getActiveUsers()` method: Returns empty object `{}` - NOT usable
+- ✅ **localStorage token parsing: WORKS RELIABLY**
 
-**Next step**: Run `exploreStructure()` when authenticated vs not authenticated to find a working signal.
+**Validated Detection Method - localStorage Token Expiry:**
+```javascript
+// Parse MSAL tokens from localStorage
+const tokenKeys = Object.keys(localStorage).filter(k => k.includes('-accesstoken-'));
+for (const key of tokenKeys) {
+  const token = JSON.parse(localStorage.getItem(key));
+  const expiresOn = token.expiresOn || token.expires_on;
+  const isExpired = expiresOn * 1000 < Date.now();
+  // If ANY token is valid → user is authenticated
+  // If ALL tokens expired → user needs re-authentication
+}
+```
+
+**Test Results:**
+| State | tokenStatus | hasValidTokens | validTokenCount |
+|-------|-------------|----------------|-----------------|
+| Valid session | `"valid"` | `true` | 4+ |
+| Expired session | `"expired"` | `false` | 0 |
+
+**Recommendation: GO** - Implement using localStorage token parsing as primary detection.
+
+**Token management scripts available for testing:**
+- `window.teamsForLinuxAuthSpikes.viewAuthState()` - View current tokens
+- `window.teamsForLinuxAuthSpikes.expireAllTokens()` - Simulate expired session
+- `window.teamsForLinuxAuthSpikes.clearAllMsalData()` - Full logout simulation
 :::
 
 ---
@@ -44,9 +68,9 @@ This feature depends on **unvalidated assumptions** about Teams internal structu
 ### Key Findings
 
 - ✅ **Architecture exists:** Tray icon rendering system is in place
-- ⚠️ **UNVALIDATED:** Can we reliably detect logout state from Teams internals?
-- ⚠️ **UNVALIDATED:** Will detection work across different logout scenarios?
-- ⚠️ **UNVALIDATED:** Can we avoid false positives during app startup?
+- ✅ **VALIDATED:** localStorage token parsing reliably detects auth state
+- ✅ **VALIDATED:** Detection works for valid vs expired token scenarios
+- ⚠️ **NEEDS TESTING:** False positive avoidance during app startup
 
 ### Proposed Solution (If Spikes Succeed)
 
@@ -252,22 +276,40 @@ Don't implement multi-signal detection, confidence scoring, or complex debouncin
 **Prerequisite:** Add `ipcRenderer` to ReactHandler initialization (see section 6)
 
 ```javascript
-// In reactHandler.js
+// In reactHandler.js - VALIDATED APPROACH using localStorage token parsing
 getAuthenticationState() {
-  if (!this._validateTeamsEnvironment()) {
-    return { authenticated: false, reason: 'not_ready' };
-  }
-
   try {
-    const authProvider = this._getTeams2CoreServices()
-      ?.authenticationService
-      ?._coreAuthService
-      ?._authProvider;
+    // Parse MSAL tokens from localStorage
+    const tokenKeys = Object.keys(localStorage).filter(k => k.includes('-accesstoken-'));
 
-    const account = authProvider?._account;
+    if (tokenKeys.length === 0) {
+      return { authenticated: false, reason: 'no_tokens' };
+    }
+
+    // Check if ANY token is still valid
+    let hasValidToken = false;
+    let soonestExpiry = Infinity;
+
+    for (const key of tokenKeys) {
+      try {
+        const token = JSON.parse(localStorage.getItem(key));
+        const expiresOn = token.expiresOn || token.expires_on;
+        // Handle both seconds and milliseconds timestamps
+        const expiryMs = expiresOn > 9999999999 ? expiresOn : expiresOn * 1000;
+
+        if (expiryMs > Date.now()) {
+          hasValidToken = true;
+          soonestExpiry = Math.min(soonestExpiry, expiryMs);
+        }
+      } catch (e) {
+        // Skip unparseable tokens
+      }
+    }
+
     return {
-      authenticated: !!account,
-      accountId: account?.id
+      authenticated: hasValidToken,
+      tokenCount: tokenKeys.length,
+      expiresInMins: hasValidToken ? Math.round((soonestExpiry - Date.now()) / 60000) : 0
     };
   } catch (error) {
     console.error('[AUTH] Detection error:', error);
