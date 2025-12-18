@@ -1,0 +1,1 @@
+docs: fix documentation inconsistencies across repository - by @IsmaelMartinez (#2030)
