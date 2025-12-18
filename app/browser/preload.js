@@ -350,12 +350,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "framelessTweaks", path: "./tools/frameless" }
     ];
 
+    // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
+    const modulesRequiringIpc = ["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"];
+    
     let successCount = 0;
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        // CRITICAL: mqttStatusMonitor needs ipcRenderer for IPC communication (see CLAUDE.md)
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
+        if (modulesRequiringIpc.includes(module.name)) {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

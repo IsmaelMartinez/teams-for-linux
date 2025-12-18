@@ -18,19 +18,20 @@ const allowedChannels = new Set([
   'get-zoom-level',
   'save-zoom-level',
   
-  // Screen sharing and desktop capture
-  'desktop-capturer-get-sources',
-  'choose-desktop-media',
+  // Screen sharing and desktop capture (sorted alphabetically)
   'cancel-desktop-media',
-  'select-source',
-  'selected-source',
+  'choose-desktop-media',
   'close-view',
-  'get-screen-sharing-status',
-  'get-screen-share-stream',
+  'desktop-capturer-get-sources',
   'get-screen-share-screen',
+  'get-screen-share-stream',
+  'get-screen-sharing-status',
+  'resize-preview-window',
   'screen-sharing-started',
   'screen-sharing-stopped',
-  'resize-preview-window',
+  'select-source',
+  'selected-source',
+  'source-selected',
   'stop-screen-sharing-from-thumbnail',
   
   // Notifications and user interaction
@@ -56,6 +57,10 @@ const allowedChannels = new Set([
   
   // Authentication and forms
   'submitForm',
+  
+  // Settings management
+  'get-teams-settings',
+  'set-teams-settings',
   
   // Custom backgrounds
   'get-custom-bg-list',
