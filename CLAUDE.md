@@ -129,28 +129,29 @@ When adding or modifying IPC channels, you must:
 
 ## Critical Module Initialization Requirements
 
-### TrayIconRenderer IPC Initialization (Issue #1902)
+### Modules Requiring IPC Initialization (Issue #1902)
 
-**CRITICAL: DO NOT REMOVE** - The `trayIconRenderer` module **MUST** be included in the list of modules that receive `ipcRenderer` during initialization in `app/browser/preload.js`.
+**CRITICAL: DO NOT REMOVE** - The `trayIconRenderer` and `mqttStatusMonitor` modules **MUST** be included in the list of modules that receive `ipcRenderer` during initialization in `app/browser/preload.js`.
 
 ```javascript
-// REQUIRED: trayIconRenderer needs ipcRenderer for IPC communication
-if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer") {
+// REQUIRED: trayIconRenderer and mqttStatusMonitor need ipcRenderer for IPC communication
+if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
   moduleInstance.init(config, ipcRenderer);
 }
 ```
 
 **Why this is critical:**
-- The trayIconRenderer module requires `ipcRenderer` to communicate with the main process for tray icon updates
-- Without it, tray icon functionality breaks completely (badge counts, notifications, etc.)
+- The `trayIconRenderer` module requires `ipcRenderer` to communicate with the main process for tray icon updates
+- The `mqttStatusMonitor` module requires `ipcRenderer` to send Teams status changes to the main process for MQTT publishing
+- Without these, tray icon functionality (badge counts, notifications) and MQTT status publishing break completely
 - This fix has been accidentally removed multiple times in git history, causing recurring issues
 - Most recently addressed in issue #1902
 
 **When modifying preload.js:**
-- Always verify `trayIconRenderer` is in the condition that passes `ipcRenderer` to `init()`
-- Do NOT remove this module from the list, even if it seems redundant
-- Test tray icon functionality thoroughly after any changes to module initialization
-- Reference this documentation if unclear why this module needs special handling
+- Always verify `trayIconRenderer` and `mqttStatusMonitor` are in the condition that passes `ipcRenderer` to `init()`
+- Do NOT remove these modules from the list, even if they seem redundant
+- Test tray icon functionality and MQTT status publishing thoroughly after any changes to module initialization
+- Reference this documentation if unclear why these modules need special handling
 
 ## AI Workflow Instructions
 

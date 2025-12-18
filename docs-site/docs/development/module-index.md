@@ -36,6 +36,7 @@ User-facing features and integrations.
 | **Custom Background** | `app/customBackground/` | Virtual background management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md), [User Guide](../custom-backgrounds.md) |
 | **Custom CSS** | `app/customCSS/` | Custom styling and themes | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customCSS/README.md) |
 | **Notifications** | `app/notifications/` | Native desktop notifications & sound playback | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/notifications/README.md) |
+| **Notification System** | `app/notificationSystem/` | Custom in-app toast notifications | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/notificationSystem/README.md) |
 | **Incoming Call Toast** | `app/incomingCallToast/` | Call notification toasts | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/incomingCallToast/README.md) |
 | **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |

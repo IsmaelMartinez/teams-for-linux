@@ -46,6 +46,7 @@ const allowedChannels = new Set([
   'incoming-call-created',
   'incoming-call-ended',
   'incoming-call-action',
+  'incoming-call-toast-ready',
   'call-connected',
   'call-disconnected',
 
