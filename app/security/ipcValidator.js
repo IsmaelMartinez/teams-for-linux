@@ -42,13 +42,13 @@ const allowedChannels = new Set([
   'set-badge-count',
   'tray-update',
   
-  // Call management
-  'incoming-call-created',
-  'incoming-call-ended',
-  'incoming-call-action',
-  'incoming-call-toast-ready',
+  // Call management (sorted alphabetically)
   'call-connected',
   'call-disconnected',
+  'incoming-call-action',
+  'incoming-call-created',
+  'incoming-call-ended',
+  'incoming-call-toast-ready',
 
   // Media status (camera/microphone)
   'camera-state-changed',

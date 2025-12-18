@@ -223,6 +223,7 @@ class ScreenSharingService {
         }
       };
 
+      // Receive selected screen sharing source from native picker window
       ipcMain.once("source-selected", onSourceSelected);
 
       this.#picker.on("closed", () => {

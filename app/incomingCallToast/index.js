@@ -34,6 +34,7 @@ class IncomingCallToast {
     }
 
     show(data) {
+        // Signal from toast window that it's ready to be displayed
         ipcMain.once('incoming-call-toast-ready', () => {
             this.positioner.move('bottomRight');
             this.toast.show();

@@ -134,8 +134,9 @@ When adding or modifying IPC channels, you must:
 **CRITICAL: DO NOT REMOVE** - The `trayIconRenderer` and `mqttStatusMonitor` modules **MUST** be included in the list of modules that receive `ipcRenderer` during initialization in `app/browser/preload.js`.
 
 ```javascript
-// REQUIRED: trayIconRenderer and mqttStatusMonitor need ipcRenderer for IPC communication
-if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
+// REQUIRED: These modules need ipcRenderer for IPC communication
+const modulesRequiringIpc = ["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"];
+if (modulesRequiringIpc.includes(module.name)) {
   moduleInstance.init(config, ipcRenderer);
 }
 ```
