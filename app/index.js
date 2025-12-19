@@ -95,8 +95,6 @@ if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
   app.setAsDefaultProtocolClient(protocolClient, process.execPath);
 }
 
-app.allowRendererProcessReuse = false;
-
 if (gotTheLock) {
   app.on("second-instance", mainAppWindow.onAppSecondInstance);
   app.on("ready", handleAppReady);
