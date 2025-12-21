@@ -160,12 +160,12 @@ class MQTTStatusMonitor {
 			}
 		}
 
-		// Strategy 1: Try multiple CSS selectors for presence indicators
+		// Strategy 1: Try multiple CSS selectors for direct presence indicators
+		// Note: me-control-button is handled separately in Strategy 2
 		const selectors = [
 			// Teams v2 specific selectors
 			'[data-tid="me-control-presence-icon"]',
 			'[data-tid="presence-indicator"]',
-			'button[data-tid="me-control-button"]',
 			// General presence selectors
 			'[data-testid="presence-status"]',
 			'[data-tid="my-status-button"]',

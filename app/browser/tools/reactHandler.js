@@ -120,9 +120,10 @@ class ReactHandler {
   }
 
   /**
-   * Log authentication state for debugging
+   * Log authentication state for debugging and attempt token cache injection if needed
+   * Note: This method has side effects - it will attempt token injection if not yet done
    */
-  logAuthenticationState() {
+  logAndAttemptTokenInjection() {
     try {
       if (!this._validateTeamsEnvironment()) {
         console.debug('[AUTH_DIAG] Teams environment not validated');
