@@ -141,27 +141,63 @@ class MQTTStatusMonitor {
 	 * @returns {number|null} Status code (1-5) or null if not detected
 	 */
 	detectCurrentStatus() {
-		let status = null;
-
 		// Strategy 0: Try React internals first (most reliable)
 		console.debug('[MQTT Status] Strategy 0: Checking React internals...');
-		status = this.detectStatusFromReact();
+		let status = this.detectStatusFromReact();
 		if (status !== null) {
 			console.debug(`[MQTT Status] Status ${status} detected from React internals`);
 			return status;
 		}
 
 		// Log available core services for debugging (once)
-		if (!this._loggedCoreServices) {
-			const serviceKeys = ReactHandler.getCoreServiceKeys();
-			if (serviceKeys) {
-				console.debug('[MQTT Status] Available core services:', serviceKeys);
-				this._loggedCoreServices = true;
-			}
+		this._logCoreServicesOnce();
+
+		// Strategy 1: Try CSS selectors for direct presence indicators
+		console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
+		status = this.detectStatusFromSelectors();
+		if (status !== null) {
+			return status;
 		}
 
-		// Strategy 1: Try multiple CSS selectors for direct presence indicators
-		// Note: me-control-button is handled separately in Strategy 2
+		// Strategy 2: Check me-control button for presence indicator
+		console.debug('[MQTT Status] Strategy 2: Checking me-control button...');
+		status = this.detectStatusFromMeControl();
+		if (status !== null) {
+			return status;
+		}
+
+		// Strategy 3: Check page title (unlikely but kept for compatibility)
+		console.debug('[MQTT Status] Strategy 3: Checking page title...');
+		console.debug('[MQTT Status] Page title:', document.title);
+		status = this.extractStatusFromPageTitle();
+		if (status !== null) {
+			console.debug(`[MQTT Status] Status ${status} detected from page title`);
+			return status;
+		}
+
+		console.debug('[MQTT Status] No status detected from targeted elements');
+		return null;
+	}
+
+	/**
+	 * Log available core services once for debugging
+	 */
+	_logCoreServicesOnce() {
+		if (this._loggedCoreServices) {
+			return;
+		}
+		const serviceKeys = ReactHandler.getCoreServiceKeys();
+		if (serviceKeys) {
+			console.debug('[MQTT Status] Available core services:', serviceKeys);
+			this._loggedCoreServices = true;
+		}
+	}
+
+	/**
+	 * Detect status from CSS selectors
+	 * @returns {number|null} Status code or null if not detected
+	 */
+	detectStatusFromSelectors() {
 		const selectors = [
 			// Teams v2 specific selectors
 			'[data-tid="me-control-presence-icon"]',
@@ -175,22 +211,11 @@ class MQTTStatusMonitor {
 			'div[class*="presence"]'
 		];
 
-		console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
 		for (const selector of selectors) {
 			const element = document.querySelector(selector);
 			if (element) {
-				const elementInfo = {
-					selector,
-					classList: element.classList.toString(),
-					ariaLabel: element.getAttribute('aria-label'),
-					title: element.getAttribute('title'),
-					textContent: element.textContent?.substring(0, 100),
-					dataTestId: element.dataset?.testid,
-					dataTid: element.dataset?.tid
-				};
-				console.debug('[MQTT Status] Found element:', elementInfo);
-				
-				status = this.extractStatusFromElement(element);
+				this._logElementInfo(selector, element);
+				const status = this.extractStatusFromElement(element);
 				if (status !== null) {
 					console.debug(`[MQTT Status] Status ${status} detected from selector: ${selector}`);
 					return status;
@@ -198,52 +223,60 @@ class MQTTStatusMonitor {
 			}
 		}
 		console.debug('[MQTT Status] No status found via CSS selectors');
+		return null;
+	}
 
-		// Strategy 2: Look for the me-control button and check its presence indicator
-		console.debug('[MQTT Status] Strategy 2: Checking me-control button...');
+	/**
+	 * Log element information for debugging
+	 */
+	_logElementInfo(selector, element) {
+		console.debug('[MQTT Status] Found element:', {
+			selector,
+			classList: element.classList.toString(),
+			ariaLabel: element.getAttribute('aria-label'),
+			title: element.getAttribute('title'),
+			textContent: element.textContent?.substring(0, 100),
+			dataTestId: element.dataset?.testid,
+			dataTid: element.dataset?.tid
+		});
+	}
+
+	/**
+	 * Detect status from me-control button
+	 * @returns {number|null} Status code or null if not detected
+	 */
+	detectStatusFromMeControl() {
 		const meControl = document.querySelector('[data-tid="me-control-button"]');
-		if (meControl) {
-			// Look for presence indicator within or near the me-control
-			const presenceIndicator = meControl.querySelector('[class*="presence"]') || 
-									  meControl.querySelector('[data-tid*="presence"]');
-			if (presenceIndicator) {
-				console.debug('[MQTT Status] Found presence indicator in me-control:', {
-					classList: presenceIndicator.classList.toString(),
-					ariaLabel: presenceIndicator.getAttribute('aria-label')
-				});
-				status = this.extractStatusFromElement(presenceIndicator);
-				if (status !== null) {
-					console.debug(`[MQTT Status] Status ${status} detected from me-control presence indicator`);
-					return status;
-				}
-			}
-			
-			// Check the me-control button itself for aria-label with status
-			const meControlAriaLabel = meControl.getAttribute('aria-label') || '';
-			if (meControlAriaLabel) {
-				console.debug('[MQTT Status] me-control aria-label:', meControlAriaLabel);
-				status = this.mapTextToStatusCode(meControlAriaLabel);
-				if (status !== null) {
-					console.debug(`[MQTT Status] Status ${status} detected from me-control aria-label`);
-					return status;
-				}
-			}
+		if (!meControl) {
+			return null;
 		}
 
-		// Strategy 3: Check page title (unlikely to have status but kept for compatibility)
-		console.debug('[MQTT Status] Strategy 3: Checking page title...');
-		console.debug('[MQTT Status] Page title:', document.title);
-		status = this.extractStatusFromPageTitle();
-		if (status !== null) {
-			console.debug(`[MQTT Status] Status ${status} detected from page title`);
-			return status;
+		// Look for presence indicator within the me-control
+		const presenceIndicator = meControl.querySelector('[class*="presence"]') || 
+								  meControl.querySelector('[data-tid*="presence"]');
+		if (presenceIndicator) {
+			console.debug('[MQTT Status] Found presence indicator in me-control:', {
+				classList: presenceIndicator.classList.toString(),
+				ariaLabel: presenceIndicator.getAttribute('aria-label')
+			});
+			const status = this.extractStatusFromElement(presenceIndicator);
+			if (status !== null) {
+				console.debug(`[MQTT Status] Status ${status} detected from me-control presence indicator`);
+				return status;
+			}
 		}
-
-		// Strategy 4: Body scan disabled - too broad and causes false positives
-		// The body text always contains "Do Not Disturb" in settings/menus, causing
-		// incorrect status detection. Only use targeted element detection.
-		console.debug('[MQTT Status] No status detected from targeted elements');
 		
+		// Check the me-control button itself for aria-label with status
+		const meControlAriaLabel = meControl.getAttribute('aria-label') || '';
+		if (meControlAriaLabel) {
+			console.debug('[MQTT Status] me-control aria-label:', meControlAriaLabel);
+			const status = this.mapTextToStatusCode(meControlAriaLabel);
+			if (status !== null) {
+				console.debug(`[MQTT Status] Status ${status} detected from me-control aria-label`);
+				return status;
+			}
+		}
+
 		return null;
 	}
 
