@@ -4,7 +4,7 @@
  * IPC Documentation Generator
  *
  * Automatically scans the codebase for all IPC channel registrations
- * (ipcMain.handle and ipcMain.on) and generates documentation.
+ * (ipcMain.handle, ipcMain.on, and ipcMain.once) and generates documentation.
  *
  * Usage: node scripts/generateIpcDocs.js
  */
@@ -58,7 +58,7 @@ function extractIpcChannels() {
     process.exit(1);
   }
 
-  const grepCommand = String.raw`rg -n "ipcMain\.(handle|on)\(" --type js ${APP_DIR}`;
+  const grepCommand = String.raw`rg -n "ipcMain\.(handle|on|once)\(" --type js ${APP_DIR}`;
 
   let output;
   try {
@@ -80,16 +80,23 @@ function extractIpcChannels() {
     if (!match) return null;
 
     const [, filePath, lineNumber, content] = match;
-    const channelMatch = content.match(/ipcMain\.(handle|on)\(\s*["']([^"']+)["']/);
+    const channelMatch = content.match(/ipcMain\.(handle|on|once)\(\s*["']([^"']+)["']/);
     if (!channelMatch) return null;
 
     const [, type, channelName] = channelMatch;
     const relativePath = path.relative(path.join(__dirname, '..'), path.resolve(filePath));
     const description = extractDescription(filePath, Number.parseInt(lineNumber, 10) - 1);
 
+    // Map IPC method to human-readable type
+    const typeMap = {
+      'handle': 'Request/Response',
+      'on': 'Event',
+      'once': 'One-Time Event'
+    };
+
     return {
       name: channelName,
-      type: type === 'handle' ? 'Request/Response' : 'Event',
+      type: typeMap[type] || 'Event',
       category: findCategory(relativePath),
       file: relativePath,
       lineNumber,
@@ -139,6 +146,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 
 - **Request/Response** channels use \`ipcMain.handle()\` and expect a return value
 - **Event** channels use \`ipcMain.on()\` for fire-and-forget notifications
+- **One-Time Event** channels use \`ipcMain.once()\` for single-use listeners
 
 **Total Channels**: ${channels.length}
 
@@ -172,7 +180,7 @@ See the [IPC Channel Validation documentation](./security-architecture.md#ipc-ch
 
 When adding a new IPC channel:
 
-1. Register the channel with \`ipcMain.handle()\` or \`ipcMain.on()\`
+1. Register the channel with \`ipcMain.handle()\`, \`ipcMain.on()\`, or \`ipcMain.once()\`
 2. Add the channel to the allowlist in \`app/security/ipcValidator.js\`
 3. Add a comment above the registration describing its purpose
 4. Run \`npm run generate-ipc-docs\` to update this documentation

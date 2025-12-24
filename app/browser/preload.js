@@ -353,15 +353,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "reactHandler", path: "./tools/reactHandler" }
     ];
 
+    // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
+    // - trayIconRenderer: Tray icon updates
+    // - mqttStatusMonitor: MQTT status updates
+    // - reactHandler: Auth state notifications and logout indicator
+    const modulesRequiringIpc = ["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "reactHandler"];
+
     let successCount = 0;
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-        // - trayIconRenderer: Tray icon updates
-        // - mqttStatusMonitor: MQTT status updates
-        // - reactHandler: Auth state notifications and logout indicator
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor" || module.name === "reactHandler") {
+        if (modulesRequiringIpc.includes(module.name)) {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

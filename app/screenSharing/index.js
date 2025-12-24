@@ -58,7 +58,9 @@ class StreamSelector {
     };
 
     this.#parent.on("resize", this.#resizeHandler);
+    // Receive user's screen sharing source selection from picker UI
     ipcMain.once("selected-source", this.#sourceHandler);
+    // Close the stream selector view without selection
     ipcMain.once("close-view", this.#closeHandler);
   }
 

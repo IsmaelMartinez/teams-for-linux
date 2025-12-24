@@ -5,7 +5,7 @@ This document provides an overview of Inter-Process Communication (IPC) in Teams
 :::info Complete Channel Reference
 **For a complete list of all IPC channels**, see the [Auto-Generated IPC API Reference](ipc-api-generated.md).
 
-The auto-generated documentation includes all 31 channels with descriptions, types, and source locations. It's always up-to-date - run `npm run generate-ipc-docs` to regenerate it.
+The auto-generated documentation includes all IPC channels with descriptions, types, and source locations. It's always up-to-date - run `npm run generate-ipc-docs` to regenerate it.
 :::
 
 ## Overview

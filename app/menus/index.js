@@ -169,11 +169,13 @@ class Menus {
   }
 
   saveSettings() {
+    // Receive Teams settings from renderer to save to file
     ipcMain.once("get-teams-settings", saveSettingsInternal);
     this.window.webContents.send("get-teams-settings");
   }
 
   restoreSettings() {
+    // Acknowledge settings restoration completion from renderer
     ipcMain.once("set-teams-settings", restoreSettingsInternal);
     const settingsPath = path.join(
       app.getPath("userData"),

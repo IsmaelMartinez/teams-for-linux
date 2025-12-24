@@ -47,6 +47,9 @@ Handle tray icon selection, rendering, and badge count display based on Teams ac
 #### [zoom.js](zoom.js)
 Manages zoom level controls and persistence across sessions.
 
+#### [navigationButtons.js](navigationButtons.js)
+Adds back and forward navigation buttons to the Teams interface, similar to the Microsoft official Teams app. Injects styled buttons next to the search region and handles navigation state updates.
+
 ### System Integration
 
 #### [emulatePlatform.js](emulatePlatform.js)
@@ -95,6 +98,12 @@ Set to empty array `[]` or omit from config to disable. See [Electron Accelerato
 
 #### [tokenCache.js](tokenCache.js)
 Provides authentication token caching and management for improved login persistence.
+
+#### [mqttStatusMonitor.js](mqttStatusMonitor.js)
+Monitors Teams user status and sends updates to the main process via IPC for MQTT publishing to home automation systems. Uses a dual-layer detection strategy with MutationObserver for real-time DOM changes (debounced) and polling as a fallback. See the [MQTT module README](../../mqtt/README.md) for full documentation.
+
+**Configuration**: Requires `mqtt.enabled: true` in config
+**Requires**: `ipcRenderer` passed during initialization
 
 ## Architecture Patterns
 
