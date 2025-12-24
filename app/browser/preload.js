@@ -349,15 +349,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
       { name: "framelessTweaks", path: "./tools/frameless" },
-      { name: "authSpikes", path: "./tools/authSpikes" }
+      { name: "authSpikes", path: "./tools/authSpikes" },
+      { name: "reactHandler", path: "./tools/reactHandler" }
     ];
 
     let successCount = 0;
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        // CRITICAL: mqttStatusMonitor needs ipcRenderer for IPC communication (see CLAUDE.md)
-        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
+        // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
+        // - trayIconRenderer: Tray icon updates
+        // - mqttStatusMonitor: MQTT status updates
+        // - reactHandler: Auth state notifications and logout indicator
+        if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor" || module.name === "reactHandler") {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

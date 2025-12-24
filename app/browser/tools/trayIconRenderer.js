@@ -1,6 +1,8 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
 class TrayIconRenderer {
+  #isAuthenticated = true; // Assume logged in initially
+
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
@@ -11,6 +13,23 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+
+    // Listen for auth state changes (logout indicator feature)
+    if (config?.trayIconShowLogoutIndicator !== false) {
+      globalThis.addEventListener('auth-state-changed', (event) => {
+        const wasAuthenticated = this.#isAuthenticated;
+        this.#isAuthenticated = event.detail?.authenticated ?? true;
+
+        // Re-render tray icon if auth state changed
+        if (wasAuthenticated !== this.#isAuthenticated) {
+          console.debug('[TRAY] Auth state changed, re-rendering icon', {
+            authenticated: this.#isAuthenticated
+          });
+          this.updateActivityCount({ detail: { number: this.lastActivityCount || 0 } });
+        }
+      });
+      console.debug('[TRAY] Logout indicator enabled, listening for auth-state-changed events');
+    }
   }
 
   updateActivityCount(event) {
@@ -98,6 +117,27 @@ class TrayIconRenderer {
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(image, 0, 0, 140, 140);
+
+    // Add logout indicator (red diagonal slash) if not authenticated
+    if (!this.#isAuthenticated && this.config?.trayIconShowLogoutIndicator !== false) {
+      ctx.strokeStyle = "#ff3333";
+      ctx.lineWidth = 12;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(25, 25);
+      ctx.lineTo(115, 115);
+      ctx.stroke();
+
+      // Add subtle shadow/outline for better visibility
+      ctx.strokeStyle = "#990000";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(25, 25);
+      ctx.lineTo(115, 115);
+      ctx.stroke();
+    }
+
+    // Add notification badge
     if (newActivityCount > 0 && !this.config.disableBadgeCount) {
       ctx.fillStyle = "red";
       ctx.beginPath();

@@ -1,23 +1,30 @@
 # Tray Icon Logout Indicator - Research & Implementation Plan
 
-**Status:** Spikes Implemented - Ready for Validation
+**Status:** ✅ IMPLEMENTED
 **Date:** November 2025
 **Updated:** December 2025
 **Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
 **Author:** Claude AI Assistant
 **Priority:** Enhancement - User Experience Improvement
 
-:::info Spike Implementation Available
-All validation spikes have been implemented in `app/browser/tools/authSpikes.js`. To run them:
+:::success Feature Implemented
+The logout indicator feature is now fully implemented! When your Teams session expires:
 
-1. Launch the app
-2. Open DevTools console (Ctrl+Shift+I)
-3. Run: `window.teamsForLinuxAuthSpikes.runAllSpikes()`
-4. Review results in console
+- **Visual indicator**: Red diagonal slash appears on tray icon
+- **Desktop notification**: "Teams for Linux - Session Expired" notification
 
-For ongoing monitoring: `window.teamsForLinuxAuthSpikes.startMonitoring(5000, 60000)`
+**Configuration options** (both enabled by default):
+```json
+{
+  "trayIconShowLogoutIndicator": true,
+  "notifyOnLogout": true
+}
+```
 
-To explore Teams structure for debugging: `window.teamsForLinuxAuthSpikes.exploreStructure()`
+**Testing tools still available** in `app/browser/tools/authSpikes.js`:
+- `window.teamsForLinuxAuthSpikes.runAllSpikes()` - Run validation spikes
+- `window.teamsForLinuxAuthSpikes.expireAllTokens()` - Test expired session
+- `window.teamsForLinuxAuthSpikes.viewAuthState()` - View current auth state
 :::
 
 :::tip Spike Results VALIDATED (December 2025)

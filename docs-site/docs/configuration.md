@@ -102,6 +102,8 @@ Place your `config.json` file in the appropriate location based on your installa
 | `trayIconEnabled` | `boolean` | `true` | Enable tray icon |
 | `appIcon` | `string` | `""` | Teams app icon to show in the tray |
 | `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
+| `trayIconShowLogoutIndicator` | `boolean` | `true` | Show visual indicator (red slash) on tray icon when session is expired |
+| `notifyOnLogout` | `boolean` | `true` | Send desktop notification when session expires or user is logged out |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
 | `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 

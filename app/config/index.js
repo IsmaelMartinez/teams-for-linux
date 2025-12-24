@@ -429,6 +429,16 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable tray icon",
         type: "boolean",
       },
+      trayIconShowLogoutIndicator: {
+        default: true,
+        describe: "Show visual indicator (red slash) on tray icon when session is expired",
+        type: "boolean",
+      },
+      notifyOnLogout: {
+        default: true,
+        describe: "Send desktop notification when session expires or user is logged out",
+        type: "boolean",
+      },
       msTeamsProtocols: {
         default: {
           v1: "^msteams:/l/(?:meetup-join|channel|chat|message)",

@@ -4,14 +4,24 @@ const TokenCache = require('./tokenCache');
 class ReactHandler {
   _validationEnabled = true;
   _tokenCacheInjected = false;
+  #ipcRenderer = null;
+  #authMonitoringActive = false;
+  #lastAuthState = null;
 
   /**
    * Initialize the ReactHandler (for compatibility with preload module loading)
    * @param {object} config - Application configuration
+   * @param {object} ipcRenderer - Electron IPC renderer for notifications
    */
-  init(config) {
+  init(config, ipcRenderer) {
     this.config = config;
+    this.#ipcRenderer = ipcRenderer;
     console.debug('[ReactHandler] Initialized');
+
+    // Start auth monitoring if logout indicator is enabled
+    if (config?.trayIconShowLogoutIndicator !== false) {
+      this.startAuthenticationMonitoring();
+    }
   }
 
   getCommandChangeReportingService() {
@@ -261,9 +271,130 @@ class ReactHandler {
     return false;
   }
 
+  /**
+   * Get current authentication state by checking localStorage token expiry
+   * Uses validated approach from spike testing - localStorage token parsing
+   * @returns {object} Authentication state with authenticated flag
+   */
+  getAuthenticationState() {
+    try {
+      // Parse MSAL tokens from localStorage
+      const tokenKeys = Object.keys(localStorage).filter(k => k.includes('-accesstoken-'));
+
+      if (tokenKeys.length === 0) {
+        return { authenticated: false, reason: 'no_tokens', tokenCount: 0 };
+      }
+
+      // Check if ANY token is still valid
+      let hasValidToken = false;
+      let soonestExpiry = Infinity;
+      let validCount = 0;
+
+      for (const key of tokenKeys) {
+        try {
+          const token = JSON.parse(localStorage.getItem(key));
+          const expiresOn = token.expiresOn || token.expires_on;
+          // Handle both seconds and milliseconds timestamps
+          const expiryMs = expiresOn > 9999999999 ? expiresOn : expiresOn * 1000;
+
+          if (expiryMs > Date.now()) {
+            hasValidToken = true;
+            validCount++;
+            soonestExpiry = Math.min(soonestExpiry, expiryMs);
+          }
+        } catch (e) {
+          // Skip unparseable tokens
+        }
+      }
+
+      return {
+        authenticated: hasValidToken,
+        tokenCount: tokenKeys.length,
+        validTokenCount: validCount,
+        expiresInMins: hasValidToken ? Math.round((soonestExpiry - Date.now()) / 60000) : 0
+      };
+    } catch (error) {
+      console.error('[AUTH] Detection error:', error);
+      return { authenticated: false, reason: 'error' };
+    }
+  }
+
+  /**
+   * Start monitoring authentication state changes
+   * Waits for Teams to load before starting checks
+   */
+  startAuthenticationMonitoring() {
+    if (this.#authMonitoringActive) {
+      console.debug('[AUTH] Monitoring already active');
+      return;
+    }
+
+    this.#authMonitoringActive = true;
+    console.debug('[AUTH] Starting authentication monitoring');
+
+    // Wait 15 seconds for Teams to fully load before first check
+    // This avoids false positives during app startup
+    setTimeout(() => {
+      this.#lastAuthState = this.getAuthenticationState();
+      console.debug('[AUTH] Initial state:', this.#lastAuthState);
+
+      // Dispatch initial event for tray icon
+      this.#dispatchAuthStateChanged(this.#lastAuthState);
+
+      // Check every 30 seconds
+      setInterval(() => {
+        const currentState = this.getAuthenticationState();
+
+        if (currentState.authenticated !== this.#lastAuthState?.authenticated) {
+          console.log('[AUTH] State changed:', currentState);
+
+          // Send notification if logged out
+          if (!currentState.authenticated && this.config?.notifyOnLogout !== false) {
+            this.#sendLogoutNotification();
+          }
+
+          // Dispatch event for tray icon
+          this.#dispatchAuthStateChanged(currentState);
+
+          this.#lastAuthState = currentState;
+        }
+      }, 30000);
+    }, 15000);
+  }
+
+  /**
+   * Dispatch auth state changed event for tray icon updates
+   * @param {object} state - Current authentication state
+   */
+  #dispatchAuthStateChanged(state) {
+    try {
+      globalThis.dispatchEvent(new CustomEvent('auth-state-changed', {
+        detail: state
+      }));
+    } catch (error) {
+      console.error('[AUTH] Failed to dispatch auth event:', error);
+    }
+  }
+
+  /**
+   * Send notification when logout is detected
+   */
+  #sendLogoutNotification() {
+    if (!this.#ipcRenderer) {
+      console.warn('[AUTH] Cannot send notification - ipcRenderer not available');
+      return;
+    }
+
+    this.#ipcRenderer.invoke('show-notification', {
+      title: 'Teams for Linux - Session Expired',
+      body: 'Your Teams session has expired. Please sign in again.',
+      urgency: 'normal'
+    }).catch(err => console.error('[AUTH] Notification failed:', err));
+  }
+
   _getTeams2ReactElement() {
     if (!this._validateTeamsEnvironment()) return null;
-    
+
     try {
       const element = document.getElementById("app");
       return element;
