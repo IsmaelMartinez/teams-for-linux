@@ -19,7 +19,8 @@ class ReactHandler {
     console.debug('[ReactHandler] Initialized');
 
     // Start auth monitoring if logout indicator is enabled
-    if (config?.trayIconShowLogoutIndicator !== false) {
+    const logoutIndicator = config?.logoutIndicator ?? {};
+    if (logoutIndicator.enabled !== false) {
       this.startAuthenticationMonitoring();
     }
   }
@@ -332,7 +333,13 @@ class ReactHandler {
     this.#authMonitoringActive = true;
     console.debug('[AUTH] Starting authentication monitoring');
 
-    // Wait 15 seconds for Teams to fully load before first check
+    // Get config with defaults
+    const logoutIndicator = this.config?.logoutIndicator ?? {};
+    const startupDelayMs = logoutIndicator.startupDelayMs ?? 15000;
+    const checkIntervalMs = logoutIndicator.checkIntervalMs ?? 30000;
+    const showNotification = logoutIndicator.showNotification !== false;
+
+    // Wait for Teams to fully load before first check
     // This avoids false positives during app startup
     setTimeout(() => {
       this.#lastAuthState = this.getAuthenticationState();
@@ -341,7 +348,7 @@ class ReactHandler {
       // Dispatch initial event for tray icon
       this.#dispatchAuthStateChanged(this.#lastAuthState);
 
-      // Check every 30 seconds
+      // Check periodically
       setInterval(() => {
         const currentState = this.getAuthenticationState();
 
@@ -349,7 +356,7 @@ class ReactHandler {
           console.log('[AUTH] State changed:', currentState);
 
           // Send notification if logged out
-          if (!currentState.authenticated && this.config?.notifyOnLogout !== false) {
+          if (!currentState.authenticated && showNotification) {
             this.#sendLogoutNotification();
           }
 
@@ -358,8 +365,8 @@ class ReactHandler {
 
           this.#lastAuthState = currentState;
         }
-      }, 30000);
-    }, 15000);
+      }, checkIntervalMs);
+    }, startupDelayMs);
   }
 
   /**

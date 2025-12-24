@@ -102,10 +102,32 @@ Place your `config.json` file in the appropriate location based on your installa
 | `trayIconEnabled` | `boolean` | `true` | Enable tray icon |
 | `appIcon` | `string` | `""` | Teams app icon to show in the tray |
 | `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
-| `trayIconShowLogoutIndicator` | `boolean` | `true` | Show visual indicator (red slash) on tray icon when session is expired |
-| `notifyOnLogout` | `boolean` | `true` | Send desktop notification when session expires or user is logged out |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
 | `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
+
+#### Logout Indicator
+
+The `logoutIndicator` option configures session expiry detection and visual feedback:
+
+```json
+{
+  "logoutIndicator": {
+    "enabled": true,
+    "showTrayIndicator": true,
+    "showNotification": true,
+    "checkIntervalMs": 30000,
+    "startupDelayMs": 15000
+  }
+}
+```
+
+| Sub-option | Type | Default | Description |
+|------------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable session expiry detection |
+| `showTrayIndicator` | `boolean` | `true` | Show red slash on tray icon when session expires |
+| `showNotification` | `boolean` | `true` | Send desktop notification when session expires |
+| `checkIntervalMs` | `number` | `30000` | How often to check token expiry (milliseconds) |
+| `startupDelayMs` | `number` | `15000` | Delay before first check after app start (avoids false positives) |
 
 ### Notification System
 

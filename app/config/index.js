@@ -429,15 +429,16 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable tray icon",
         type: "boolean",
       },
-      trayIconShowLogoutIndicator: {
-        default: true,
-        describe: "Show visual indicator (red slash) on tray icon when session is expired",
-        type: "boolean",
-      },
-      notifyOnLogout: {
-        default: true,
-        describe: "Send desktop notification when session expires or user is logged out",
-        type: "boolean",
+      logoutIndicator: {
+        default: {
+          enabled: true,
+          showTrayIndicator: true,
+          showNotification: true,
+          checkIntervalMs: 30000,
+          startupDelayMs: 15000,
+        },
+        describe: "Session expiry detection and visual indicator configuration. Shows red slash on tray icon and sends notification when tokens expire.",
+        type: "object",
       },
       msTeamsProtocols: {
         default: {

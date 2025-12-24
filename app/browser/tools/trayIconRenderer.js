@@ -15,7 +15,8 @@ class TrayIconRenderer {
     );
 
     // Listen for auth state changes (logout indicator feature)
-    if (config?.trayIconShowLogoutIndicator !== false) {
+    const logoutIndicator = config?.logoutIndicator ?? {};
+    if (logoutIndicator.enabled !== false && logoutIndicator.showTrayIndicator !== false) {
       globalThis.addEventListener('auth-state-changed', (event) => {
         const wasAuthenticated = this.#isAuthenticated;
         this.#isAuthenticated = event.detail?.authenticated ?? true;
@@ -119,7 +120,8 @@ class TrayIconRenderer {
     ctx.drawImage(image, 0, 0, 140, 140);
 
     // Add logout indicator (red diagonal slash) if not authenticated
-    if (!this.#isAuthenticated && this.config?.trayIconShowLogoutIndicator !== false) {
+    const logoutIndicator = this.config?.logoutIndicator ?? {};
+    if (!this.#isAuthenticated && logoutIndicator.enabled !== false && logoutIndicator.showTrayIndicator !== false) {
       ctx.strokeStyle = "#ff3333";
       ctx.lineWidth = 12;
       ctx.lineCap = "round";
