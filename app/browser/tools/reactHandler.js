@@ -303,8 +303,8 @@ class ReactHandler {
             validCount++;
             soonestExpiry = Math.min(soonestExpiry, expiryMs);
           }
-        } catch (e) {
-          // Skip unparseable tokens
+        } catch {
+          // Skip unparseable tokens - expected for corrupted/invalid entries
         }
       }
 
