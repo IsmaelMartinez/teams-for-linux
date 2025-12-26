@@ -60,7 +60,7 @@ class AuthDetectionSpikes {
 
     const exploration = {
       timestamp: new Date().toISOString(),
-      url: window.location.href,
+      url: globalThis.location.href,
       findings: {}
     };
 
@@ -100,7 +100,7 @@ class AuthDetectionSpikes {
           for (const path of paths) {
             const value = this._getNestedProperty(current, path);
             if (value) {
-              exploration.findings[`path_${path.replace(/\./g, '_')}`] = {
+              exploration.findings[`path_${path.replaceAll('.', '_')}`] = {
                 found: true,
                 keys: Object.keys(value).slice(0, 20)
               };
@@ -186,9 +186,9 @@ class AuthDetectionSpikes {
 
       // Check for global Teams objects
       exploration.findings.globalObjects = {
-        hasTeamsClientSdk: typeof window.microsoftTeams !== 'undefined',
-        hasTeams: typeof window.teams !== 'undefined',
-        hasTeamsForLinuxReactHandler: typeof window.teamsForLinuxReactHandler !== 'undefined'
+        hasTeamsClientSdk: globalThis.microsoftTeams !== undefined,
+        hasTeams: globalThis.teams !== undefined,
+        hasTeamsForLinuxReactHandler: globalThis.teamsForLinuxReactHandler !== undefined
       };
 
       // Check localStorage for auth tokens
@@ -646,7 +646,7 @@ class AuthDetectionSpikes {
 
     const result = {
       spike: 'Timing Analysis',
-      currentUrl: window.location.href,
+      currentUrl: globalThis.location.href,
       isLoginPage: false,
       isMainApp: false,
       isTeamsV2: false,
@@ -655,8 +655,8 @@ class AuthDetectionSpikes {
     };
 
     // Check URL patterns - updated for Teams v2
-    const url = window.location.href;
-    const pathname = window.location.pathname;
+    const url = globalThis.location.href;
+    const pathname = globalThis.location.pathname;
 
     result.isLoginPage = url.includes('login') ||
                          url.includes('auth') ||
@@ -704,10 +704,10 @@ class AuthDetectionSpikes {
       result.recommendation = 'URL indicates login page - safe to report logged out';
     } else if (result.isMainApp && authState.isLoggedIn) {
       result.recommendation = 'URL indicates main app and auth confirmed - safe to report logged in';
-    } else if (!authState.structureAccessible) {
-      result.recommendation = 'Still loading - wait before checking auth state';
-    } else {
+    } else if (authState.structureAccessible) {
       result.recommendation = 'Ambiguous state - combine URL + auth check with delay';
+    } else {
+      result.recommendation = 'Still loading - wait before checking auth state';
     }
 
     // Strategy recommendation
@@ -734,14 +734,14 @@ class AuthDetectionSpikes {
 
     const result = {
       spike: 'URL Detection',
-      currentUrl: window.location.href,
-      hostname: window.location.hostname,
-      pathname: window.location.pathname,
+      currentUrl: globalThis.location.href,
+      hostname: globalThis.location.hostname,
+      pathname: globalThis.location.pathname,
       patterns: {}
     };
 
-    const url = window.location.href.toLowerCase();
-    const pathname = window.location.pathname.toLowerCase();
+    const url = globalThis.location.href.toLowerCase();
+    const pathname = globalThis.location.pathname.toLowerCase();
 
     // Test various URL patterns - updated for Teams v2
     result.patterns = {
@@ -817,7 +817,7 @@ class AuthDetectionSpikes {
         console.log(`  ${key.substring(0, 50)}...`);
         console.log(`    Status: ${isExpired ? '❌ EXPIRED' : '✅ VALID'}`);
         console.log(`    Expires: ${isExpired ? 'already expired' : minsLeft + ' mins'}`);
-      } catch (e) {
+      } catch {
         console.log(`  ${key}: parse error`);
       }
     });
@@ -920,7 +920,7 @@ class AuthDetectionSpikes {
         isLoggedIn: detection.isLoggedIn,
         detectionWorks: detection.detectionWorks,
         accountProperty: detection.accountProperty,
-        url: window.location.pathname
+        url: globalThis.location.pathname
       };
 
       readings.push(currentState);
@@ -970,7 +970,6 @@ class AuthDetectionSpikes {
     };
 
     const s1 = this.results.spike1_detection;
-    const s2 = this.results.spike2_timing;
     const s3 = this.results.spike3_urlDetection;
 
     // Check Spike 1: React method detection
@@ -983,11 +982,11 @@ class AuthDetectionSpikes {
     // Check MSAL localStorage as alternative/backup
     const msalState = s1?.msalState;
     if (msalState?.hasValidTokens || msalState?.hasAccounts) {
-      if (!assessment.primaryMethod) {
+      if (assessment.primaryMethod) {
+        assessment.backupMethod = 'MSAL localStorage (token expiry check)';
+      } else {
         assessment.primaryMethod = 'MSAL localStorage (token expiry check)';
         assessment.canProceed = true;
-      } else {
-        assessment.backupMethod = 'MSAL localStorage (token expiry check)';
       }
 
       // Report token status
@@ -1038,9 +1037,11 @@ class AuthDetectionSpikes {
 
     // Add timing recommendations
     if (assessment.canProceed) {
-      assessment.recommendations.push('Implement 15-second startup delay before first check');
-      assessment.recommendations.push('Poll every 30 seconds, check token expiry');
-      assessment.recommendations.push('Use MSAL localStorage for token validity (valid/expired/expiring_soon)');
+      assessment.recommendations.push(
+        'Implement 15-second startup delay before first check',
+        'Poll every 30 seconds, check token expiry',
+        'Use MSAL localStorage for token validity (valid/expired/expiring_soon)'
+      );
     }
 
     // Final verdict
@@ -1067,12 +1068,9 @@ class AuthDetectionSpikes {
 // Create and expose instance
 const authSpikesInstance = new AuthDetectionSpikes();
 
-if (typeof globalThis !== 'undefined') {
+// Make available in browser context
+if (globalThis.window !== undefined) {
   globalThis.teamsForLinuxAuthSpikes = authSpikesInstance;
-}
-
-if (typeof window !== 'undefined') {
-  window.teamsForLinuxAuthSpikes = authSpikesInstance;
 }
 
 module.exports = authSpikesInstance;

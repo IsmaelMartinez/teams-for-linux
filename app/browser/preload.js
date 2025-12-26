@@ -357,13 +357,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // - trayIconRenderer: Tray icon updates
     // - mqttStatusMonitor: MQTT status updates
     // - reactHandler: Auth state notifications and logout indicator
-    const modulesRequiringIpc = ["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "reactHandler"];
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "reactHandler"]);
 
     let successCount = 0;
     for (const module of modules) {
       try {
         const moduleInstance = require(module.path);
-        if (modulesRequiringIpc.includes(module.name)) {
+        if (modulesRequiringIpc.has(module.name)) {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

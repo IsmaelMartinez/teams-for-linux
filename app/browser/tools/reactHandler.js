@@ -303,8 +303,9 @@ class ReactHandler {
             validCount++;
             soonestExpiry = Math.min(soonestExpiry, expiryMs);
           }
-        } catch {
-          // Skip unparseable tokens - expected for corrupted/invalid entries
+        } catch (parseError) {
+          // Skip unparseable tokens - expected for corrupted/invalid localStorage entries
+          console.debug('[AUTH] Skipping unparseable token:', key, parseError.message);
         }
       }
 

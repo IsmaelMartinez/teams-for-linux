@@ -442,10 +442,10 @@ class ChatApiSpikes {
     const successes = [];
 
     // Check Spike 1 (Critical Blocker)
-    if (!this.results.spike1_chatPermissions?.hasPermission) {
-      criticalBlockers.push('Chat API permissions not available (403 Forbidden)');
-    } else {
+    if (this.results.spike1_chatPermissions?.hasPermission) {
       successes.push('Chat API permissions available');
+    } else {
+      criticalBlockers.push('Chat API permissions not available (403 Forbidden)');
     }
 
     // Check Spike 2
