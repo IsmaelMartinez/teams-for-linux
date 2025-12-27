@@ -50,6 +50,8 @@ const sidebars: SidebarsConfig = {
             'development/ipc-api',
             'development/log-config',
             'development/release-info',
+            'development/ai-quick-reference',
+            'development/ai-collaboration-methodology',
           ],
         },
         {
