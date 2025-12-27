@@ -119,23 +119,40 @@ class TrayIconRenderer {
 
     ctx.drawImage(image, 0, 0, 140, 140);
 
-    // Add logout indicator (red diagonal slash) if not authenticated
+    // Add logout indicator if not authenticated
     const logoutIndicator = this.config?.logoutIndicator ?? {};
     if (!this.#isAuthenticated && logoutIndicator.enabled !== false && logoutIndicator.showTrayIndicator !== false) {
-      ctx.strokeStyle = "#ff3333";
-      ctx.lineWidth = 12;
+      // Semi-transparent dark overlay to "gray out" the icon
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, 140, 140);
+
+      // Orange/yellow warning "X" pattern - visible against both icon and red badge
+      ctx.strokeStyle = "#ff9900";
+      ctx.lineWidth = 14;
       ctx.lineCap = "round";
+
+      // First diagonal
       ctx.beginPath();
-      ctx.moveTo(25, 25);
-      ctx.lineTo(115, 115);
+      ctx.moveTo(20, 20);
+      ctx.lineTo(120, 120);
       ctx.stroke();
 
-      // Add subtle shadow/outline for better visibility
-      ctx.strokeStyle = "#990000";
+      // Second diagonal (forms X)
+      ctx.beginPath();
+      ctx.moveTo(120, 20);
+      ctx.lineTo(20, 120);
+      ctx.stroke();
+
+      // Dark outline for contrast
+      ctx.strokeStyle = "#cc6600";
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(25, 25);
-      ctx.lineTo(115, 115);
+      ctx.moveTo(20, 20);
+      ctx.lineTo(120, 120);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(120, 20);
+      ctx.lineTo(20, 120);
       ctx.stroke();
     }
 
