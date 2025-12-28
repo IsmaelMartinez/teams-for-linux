@@ -1,0 +1,1 @@
+fix: MQTT status stuck on do_not_disturb - by @IsmaelMartinez (#2032)
