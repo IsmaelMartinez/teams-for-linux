@@ -61,7 +61,7 @@ class ActivityHub {
   // Monitor authentication state and initialize token cache for #1357
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
-    ReactHandler.logAndAttemptTokenInjection();
+    ReactHandler.logAuthenticationState();
     
     // Give Teams a moment to fully initialize, then try manual injection if auto-injection failed
     setTimeout(() => {
@@ -74,7 +74,7 @@ class ActivityHub {
     
     // Then log every 5 minutes to track token lifecycle and cache health
     this._authMonitorInterval = setInterval(() => {
-      ReactHandler.logAndAttemptTokenInjection();
+      ReactHandler.logAuthenticationState();
       
       // Periodically check token cache status
       const status = ReactHandler.getTokenCacheStatus();

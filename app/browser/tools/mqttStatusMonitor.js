@@ -5,16 +5,13 @@
  * for MQTT publishing to home automation systems.
  *
  * Status Detection Strategy:
- * 1. Try React internals first (most reliable)
- * 2. Uses MutationObserver for real-time DOM changes (debounced)
- * 3. Polls periodically as fallback (configurable interval)
- * 4. Checks multiple selectors and strategies for robustness
+ * 1. Uses MutationObserver for real-time DOM changes (debounced)
+ * 2. Polls periodically as fallback (configurable interval)
+ * 3. Checks multiple selectors and strategies for robustness
  *
  * Status Codes:
  * 1 = Available, 2 = Busy, 3 = Do Not Disturb, 4 = Away, 5 = Be Right Back
  */
-const ReactHandler = require('./reactHandler');
-
 class MQTTStatusMonitor {
 	init(config, ipcRenderer) {
 		this.config = config;
@@ -23,7 +20,6 @@ class MQTTStatusMonitor {
 		this.observer = null;
 		this.pollInterval = null;
 		this.debounceTimer = null;
-		this._loggedCoreServices = false;
 
 		// Status keyword mapping for efficient lookup
 		this.statusKeywords = [
@@ -141,70 +137,14 @@ class MQTTStatusMonitor {
 	 * @returns {number|null} Status code (1-5) or null if not detected
 	 */
 	detectCurrentStatus() {
-		// Strategy 0: Try React internals first (most reliable)
-		console.debug('[MQTT Status] Strategy 0: Checking React internals...');
-		let status = this.detectStatusFromReact();
-		if (status !== null) {
-			console.debug(`[MQTT Status] Status ${status} detected from React internals`);
-			return status;
-		}
+		let status = null;
 
-		// Log available core services for debugging (once)
-		this._logCoreServicesOnce();
-
-		// Strategy 1: Try CSS selectors for direct presence indicators
-		console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
-		status = this.detectStatusFromSelectors();
-		if (status !== null) {
-			return status;
-		}
-
-		// Strategy 2: Check me-control button for presence indicator
-		console.debug('[MQTT Status] Strategy 2: Checking me-control button...');
-		status = this.detectStatusFromMeControl();
-		if (status !== null) {
-			return status;
-		}
-
-		// Strategy 3: Check page title (unlikely but kept for compatibility)
-		console.debug('[MQTT Status] Strategy 3: Checking page title...');
-		console.debug('[MQTT Status] Page title:', document.title);
-		status = this.extractStatusFromPageTitle();
-		if (status !== null) {
-			console.debug(`[MQTT Status] Status ${status} detected from page title`);
-			return status;
-		}
-
-		console.debug('[MQTT Status] No status detected from targeted elements');
-		return null;
-	}
-
-	/**
-	 * Log available core services once for debugging
-	 */
-	_logCoreServicesOnce() {
-		if (this._loggedCoreServices) {
-			return;
-		}
-		const serviceKeys = ReactHandler.getCoreServiceKeys();
-		if (serviceKeys) {
-			console.debug('[MQTT Status] Available core services:', serviceKeys);
-			this._loggedCoreServices = true;
-		}
-	}
-
-	/**
-	 * Detect status from CSS selectors
-	 * @returns {number|null} Status code or null if not detected
-	 */
-	detectStatusFromSelectors() {
+		// Strategy 1: Try multiple CSS selectors
 		const selectors = [
-			// Teams v2 specific selectors
-			'[data-tid="me-control-presence-icon"]',
-			'[data-tid="presence-indicator"]',
-			// General presence selectors
 			'[data-testid="presence-status"]',
 			'[data-tid="my-status-button"]',
+			'[aria-label*="status"]',
+			'[title*="status"]',
 			'.ts-presence',
 			'.presence-button',
 			'button[class*="presence"]',
@@ -214,139 +154,40 @@ class MQTTStatusMonitor {
 		for (const selector of selectors) {
 			const element = document.querySelector(selector);
 			if (element) {
-				this._logElementInfo(selector, element);
-				const status = this.extractStatusFromElement(element);
+				status = this.extractStatusFromElement(element);
 				if (status !== null) {
-					console.debug(`[MQTT Status] Status ${status} detected from selector: ${selector}`);
+					console.debug(`Status found using selector: ${selector}`);
 					return status;
 				}
 			}
 		}
-		console.debug('[MQTT Status] No status found via CSS selectors');
-		return null;
-	}
 
-	/**
-	 * Log element information for debugging
-	 */
-	_logElementInfo(selector, element) {
-		console.debug('[MQTT Status] Found element:', {
-			selector,
-			classList: element.classList.toString(),
-			ariaLabel: element.getAttribute('aria-label'),
-			title: element.getAttribute('title'),
-			textContent: element.textContent?.substring(0, 100),
-			dataTestId: element.dataset?.testid,
-			dataTid: element.dataset?.tid
-		});
-	}
-
-	/**
-	 * Detect status from me-control button
-	 * @returns {number|null} Status code or null if not detected
-	 */
-	detectStatusFromMeControl() {
-		const meControl = document.querySelector('[data-tid="me-control-button"]');
-		if (!meControl) {
-			return null;
+		// Strategy 2: Check page title
+		status = this.extractStatusFromPageTitle();
+		if (status !== null) {
+			return status;
 		}
 
-		// Look for presence indicator within the me-control
-		const presenceIndicator = meControl.querySelector('[class*="presence"]') || 
-								  meControl.querySelector('[data-tid*="presence"]');
-		if (presenceIndicator) {
-			console.debug('[MQTT Status] Found presence indicator in me-control:', {
-				classList: presenceIndicator.classList.toString(),
-				ariaLabel: presenceIndicator.getAttribute('aria-label')
-			});
-			const status = this.extractStatusFromElement(presenceIndicator);
-			if (status !== null) {
-				console.debug(`[MQTT Status] Status ${status} detected from me-control presence indicator`);
-				return status;
-			}
-		}
-		
-		// Check the me-control button itself for aria-label with status
-		const meControlAriaLabel = meControl.getAttribute('aria-label') || '';
-		if (meControlAriaLabel) {
-			console.debug('[MQTT Status] me-control aria-label:', meControlAriaLabel);
-			const status = this.mapTextToStatusCode(meControlAriaLabel);
-			if (status !== null) {
-				console.debug(`[MQTT Status] Status ${status} detected from me-control aria-label`);
-				return status;
-			}
+		// Strategy 3: Scan for status text in DOM
+		status = this.scanForStatusText();
+		if (status !== null) {
+			return status;
 		}
 
 		return null;
-	}
-
-	/**
-	 * Detect status from React internals
-	 * This is more reliable than DOM scraping as it accesses Teams' internal state
-	 *
-	 * @returns {number|null} Status code (1-5) or null if not detected
-	 */
-	detectStatusFromReact() {
-		try {
-			const presence = ReactHandler.getUserPresence();
-			if (!presence) {
-				return null;
-			}
-
-			console.debug('[MQTT Status] Got presence from React:', presence);
-
-			// Map presence object to status code
-			// Teams uses various formats, try to handle them all
-			const presenceStatus = presence.availability || 
-								   presence.status || 
-								   presence.presenceStatus ||
-								   presence;
-
-			if (typeof presenceStatus === 'number') {
-				// Direct numeric status
-				if (presenceStatus >= 1 && presenceStatus <= 5) {
-					return presenceStatus;
-				}
-			}
-
-			if (typeof presenceStatus === 'string') {
-				// Map string status to numeric code
-				const statusText = presenceStatus.toLowerCase();
-				return this.mapTextToStatusCode(statusText);
-			}
-
-			return null;
-		} catch (error) {
-			console.debug('[MQTT Status] Error detecting status from React:', error.message);
-			return null;
-		}
 	}
 
 	/**
 	 * Extract status from a DOM element
-	 * Checks class names, aria-label, title, and other attributes for status indicators
 	 */
 	extractStatusFromElement(element) {
 		const classList = element.classList.toString();
 		const ariaLabel = element.getAttribute('aria-label') || '';
 		const title = element.getAttribute('title') || '';
 		const textContent = element.textContent || '';
-		const dataTestId = element.dataset?.testid || '';
-		const dataTid = element.dataset?.tid || '';
-		
-		// Also check for SVG fill colors or specific presence class patterns
-		const style = element.getAttribute('style') || '';
-		const fill = element.getAttribute('fill') || '';
-		
-		// Check child elements for presence indicators (often nested SVGs or spans)
-		let childPresenceInfo = '';
-		const presenceChild = element.querySelector('[class*="presence"], [data-tid*="presence"]');
-		if (presenceChild) {
-			childPresenceInfo = presenceChild.classList.toString() + ' ' + 
-							   (presenceChild.getAttribute('aria-label') || '');
-		}
+		const dataTestId = element.dataset.testid || '';
 
-		return this.mapTextToStatusCode(classList, ariaLabel, title, textContent, dataTestId, dataTid, style, fill, childPresenceInfo);
+		return this.mapTextToStatusCode(classList, ariaLabel, title, textContent, dataTestId);
 	}
 
 	/**
