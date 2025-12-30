@@ -1,8 +1,14 @@
+---
+id: ai-safe-starting
+title: "Safe Starting Points: Where AI Can't Hurt You"
+sidebar_label: Safe Starting Points
+---
+
 # Safe Starting Points: Where AI Can't Hurt You
 
 **Read time: 6 minutes** | **Audience:** Teams beginning AI adoption
 
-*Part 5 of 6 in the AI Collaboration series*
+*Part 5 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 

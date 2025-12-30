@@ -157,7 +157,10 @@ if (modulesRequiringIpc.includes(module.name)) {
 ## AI Workflow Instructions
 
 For AI agent workflows (PRD generation, task list generation, task execution):
-- See `docs-site/docs/development/ai-collaboration-methodology.md` for the full methodology (research-first workflow, multi-persona reviews, trigger vocabulary)
+- See `docs-site/docs/development/ai/` for comprehensive AI collaboration documentation:
+  - `02-methodology.md` - Full methodology (research-first workflow, gates, multi-persona reviews)
+  - `01-quick-reference.md` - 2-minute cheat sheet with trigger vocabulary
+  - `00-philosophy.md` - The ultrasimplification principle
 - See `.github/instructions/*.instructions.md` for detailed workflow instructions
 - Follow the task execution protocol for systematic implementation
 - Always run tests and linting before commits
@@ -178,7 +181,7 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 - **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
 - **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
 - **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
-- **AI Collaboration Methodology**: `docs-site/docs/development/ai-collaboration-methodology.md` - Research-first workflow and multi-persona reviews
+- **AI Collaboration**: `docs-site/docs/development/ai/` - AI methodology, quick reference, and article series
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`

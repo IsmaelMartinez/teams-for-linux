@@ -68,26 +68,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 Structured workflow for collaborating with AI assistants on this project.
 
-| Document | Purpose | Read Time |
-|----------|---------|-----------|
-| [Quick Reference](../ai-quick-reference.md) | One-page cheat sheet | 2 min |
-| [Methodology](../ai-collaboration-methodology.md) | Core 6-phase workflow | 7 min |
-| [Evolution](ai-collaboration-evolution.md) | Advanced patterns (multi-model, debate) | 5 min |
+**Moved to:** [docs/development/ai/](../ai/) — Comprehensive AI collaboration documentation including:
 
-### Articles
-
-| Article | Audience | Status |
-|---------|----------|--------|
-| [How I Actually Use AI](ai-how-i-work-article.md) | All developers | ✅ Ready |
-| [The AI-Generated Code Trap](ai-manager-article.md) | Managers, tech leads | ✅ Ready |
-| [The Security Tax](ai-security-article.md) | All developers | ✅ Ready |
-| [Starting a Team with AI](ai-team-adoption-article.md) | Tech leads | ✅ Ready |
-| [Safe Starting Points](ai-safe-starting-points-article.md) | Teams beginning adoption | ✅ Ready |
-| [Learning to Code in the Age of AI](ai-junior-developer-article.md) | Junior developers | ✅ Ready |
-
-### Series Overview
-
-- [Article Series Overview](ai-collaboration-article-series.md) — 6-part series, validation-first approach
+- [Quick Reference](../ai/01-quick-reference.md) — 2-minute cheat sheet
+- [Methodology](../ai/02-methodology.md) — Core 6-phase workflow
+- [Philosophy](../ai/00-philosophy.md) — The ultrasimplification principle
+- [Article Series](../ai/articles/) — 7-part series on AI-assisted development
+- [Glossary](../ai/glossary.md) — Term definitions
 
 ## Purpose
 

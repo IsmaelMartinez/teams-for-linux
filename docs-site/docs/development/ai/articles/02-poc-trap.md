@@ -1,8 +1,14 @@
+---
+id: ai-poc-trap
+title: The AI-Generated Code Trap
+sidebar_label: The POC Trap
+---
+
 # The AI-Generated Code Trap: Why Most AI POCs Failed in 2025
 
 **Read time: 6 minutes** | **Audience:** Engineering managers, tech leads, product managers, CTOs
 
-*Part 2 of 6 in the AI Collaboration series*
+*Part 2 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 

@@ -1,7 +1,13 @@
+---
+id: ai-evolution
+title: "AI Collaboration Evolution: Future Patterns"
+sidebar_label: Evolution Patterns
+---
+
 # AI Collaboration Evolution: Future Patterns
 
 **Read time: 5 minutes** | **Status:** Research/Exploration
-**Prerequisite:** [AI Collaboration Methodology](../ai-collaboration-methodology.md)
+**Prerequisite:** [AI Collaboration Methodology](../02-methodology.md)
 
 These patterns build on the foundational workflow. Master the basics first.
 
@@ -158,4 +164,4 @@ Track AI confidence vs. actual accuracy over time. Calibrate your trust.
 
 ---
 
-**Related:** [Methodology](../ai-collaboration-methodology.md) | [Security](ai-security-article.md)
+**Related:** [Methodology](../02-methodology.md) | [Security](../articles/03-security-tax.md)

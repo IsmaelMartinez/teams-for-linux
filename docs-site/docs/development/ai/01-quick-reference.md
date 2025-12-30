@@ -1,12 +1,23 @@
 ---
 id: ai-quick-reference
 title: AI Collaboration Quick Reference
-sidebar_label: AI Quick Reference
+sidebar_label: Quick Reference
 ---
 
 # AI Collaboration: Quick Reference
 
-**Read time: 2 minutes** | [Full methodology](ai-collaboration-methodology.md)
+**Read time: 2 minutes** | [Full methodology](02-methodology.md) | [Philosophy](00-philosophy.md) | [Glossary](glossary.md)
+
+---
+
+## The Sticky Note Version
+
+```
+Before: "Should we build this?"
+During: Gate every 3 steps
+After: "What can we remove?"
+Risk: Match scrutiny to stakes
+```
 
 ---
 
@@ -89,15 +100,6 @@ Security-touching? → Full workflow + security checklist
 
 ---
 
-## Key Principles
-
-1. **Research before code** — Understand, then build
-2. **Validate, don't assume** — Spikes are cheap, rework is expensive
-3. **Gates, not speed** — AI-generated code needs the same scrutiny
-4. **Less is more** — Fight the urge to add
-
----
-
-**Deep dives:** [Methodology](ai-collaboration-methodology.md) | [Security](research/ai-security-article.md) | [For Juniors](research/ai-junior-developer-article.md) | [For Managers](research/ai-manager-article.md)
+**Go deeper:** [Full Methodology](02-methodology.md) | [Article Series](articles/README.md)
 
 

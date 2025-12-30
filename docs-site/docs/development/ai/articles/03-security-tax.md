@@ -1,8 +1,14 @@
+---
+id: ai-security-tax
+title: The Security Tax of AI-Generated Code
+sidebar_label: Security Tax
+---
+
 # The Security Tax of AI-Generated Code
 
 **Read time: 6 minutes** | **Audience:** Developers, security engineers, engineering managers
 
-*Part 3 of 6 in the AI Collaboration series*
+*Part 3 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 

@@ -1,6 +1,22 @@
+---
+id: ai-philosophy
+title: The Ultrasimplification Paradox
+sidebar_label: Philosophy
+---
+
 # The Ultrasimplification Paradox
 
-**Read time: 3 minutes** | **Audience:** Everyone building with AI
+**Article 0** in the [AI Collaboration series](articles/README.md) | **Read time: 4 minutes**
+
+*The philosophy behind everything else. Read this first.*
+
+---
+
+## The Core Insight
+
+AI removed the cost of building. It didn't remove the cost of maintaining.
+
+Every AI-generated feature still needs review, testing, securing, maintaining. We automated generation. We didn't automate judgment.
 
 ---
 
@@ -39,6 +55,14 @@ We automated generation. We didn't automate judgment.
 
 ---
 
+## The Infinite Scroll Problem
+
+Netflix has infinite content, world-class algorithms, and billions in R&D. Users are exhausted by it.
+
+Every feature "works." The experience fails. This is ultrasimplification: not "does this feature work?" but "does this experience work?" Not "can we add this?" but "should we remove this?"
+
+---
+
 ## From Ultraautomation to Ultrasimplification
 
 The discipline has flipped.
@@ -66,10 +90,11 @@ Sometimes that means writing MORE code:
 - Better error messages (more code, simpler debugging for users)
 - Cleaner APIs (more abstraction work, simpler integration)
 - Thoughtful defaults (more logic, fewer config options to understand)
+- Smarter curation (more intelligence to show less, not more)
 
 The metric isn't lines of code. It's **cognitive load on the person using what you built.**
 
-AI makes it easy to generate complexity. The discipline is choosing simplicity — which sometimes requires more engineering effort, not less.
+AI makes it easy to generate complexity. But AI can also *power* simplification — curating instead of listing, anticipating instead of asking, doing the hard work so users don't have to. The discipline is choosing that path.
 
 ---
 
@@ -95,6 +120,16 @@ AI will accelerate this unless we consciously choose otherwise.
 
 ---
 
+## The Caveat
+
+This doesn't mean never build. Prototypes teach you what users need. Sometimes you build the wrong thing to find the right thing.
+
+The distinction: **Prototyping?** Build fast, learn fast, keep it throwaway. **Production?** Every feature ships with maintenance debt. Apply the discipline.
+
+Know which mode you're in.
+
+---
+
 ## One Action
 
 Before your next feature, AI prompt, or project:
@@ -104,4 +139,8 @@ Before your next feature, AI prompt, or project:
 If the answer is "nothing bad happens," don't build it.
 
 That's ultrasimplification. It's harder than it sounds. And it's the discipline this era demands.
+
+---
+
+**Next:** [How I Actually Use AI](articles/01-how-i-work.md) (Article 1) | [Full series](articles/README.md)
 

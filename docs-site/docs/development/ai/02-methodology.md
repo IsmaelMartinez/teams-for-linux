@@ -1,12 +1,12 @@
 ---
-id: ai-collaboration-methodology
+id: ai-methodology
 title: AI-Assisted Development Methodology
-sidebar_label: AI Collaboration
+sidebar_label: Methodology
 ---
 
 # AI-Assisted Development Methodology
 
-**Read time: 7 minutes** | [Quick Reference](ai-quick-reference.md)
+**Read time: 7 minutes** | [Quick Reference](01-quick-reference.md) | [Examples](examples/research-doc-example.md)
 
 A structured workflow for collaborating with AI coding assistants. Evolved through practice on the Teams for Linux project.
 
@@ -23,17 +23,27 @@ A structured workflow for collaborating with AI coding assistants. Evolved throu
 
 ### Ultrasimplification
 
-AI generates more code, more features, more documentation. This overwhelms developers AND users.
+AI removed the cost of building. It didn't remove the cost of maintaining. So the discipline shifted from "can we?" to "should we?"
 
-**Fight the gravitational pull toward more:**
-- Implement only what was agreed
-- Challenge what was built
-- Ask "should we build this?" before "how?"
-- Ask "what can we remove?" after shipping
+For the full philosophy, see [Article 0: The Ultrasimplification Paradox](00-philosophy.md).
 
 ---
 
-## The Workflow
+## When to Use What
+
+Most tasks don't need all 6 phases. Match the workflow to the risk:
+
+| Task Type | Workflow |
+|-----------|----------|
+| Bug fix, small change | Skip to Implement, review if needed |
+| Feature, refactoring | Research → Plan → Implement (gated) → Review |
+| Architecture, new systems | Full workflow, ADR required, multi-persona review |
+
+---
+
+## The Full Workflow
+
+Use this for non-trivial work. Skip phases when appropriate.
 
 ### Phase 1: Research
 
@@ -107,16 +117,6 @@ Review this code as:
 
 ---
 
-## Adaptation
-
-| Task Type | Workflow |
-|-----------|----------|
-| Bug fix, small change | Skip to Implement, review if needed |
-| Feature, refactoring | Research → Plan → Implement (gated) → Review |
-| Architecture, new systems | Full workflow, ADR required, multi-persona review |
-
----
-
 ## Anti-Patterns
 
 | Don't | Do Instead |
@@ -154,7 +154,7 @@ Security is mandatory, not optional. More velocity = more risk if practices don'
 4. Auth AND authz (AI conflates them)
 5. Automated scanning (too much code to catch manually)
 
-**Full security requirements:** [The MUSTs You Can't Skip](research/ai-security-article.md)
+**Full security requirements:** [The MUSTs You Can't Skip](articles/03-security-tax.md)
 
 ---
 
@@ -165,14 +165,13 @@ Once fundamentals are solid, consider:
 - The debate pattern (multiple perspectives before decisions)
 - DevOps automation (changelogs, PR review, issue triage)
 
-**Details:** [Evolution Research](research/ai-collaboration-evolution.md)
+**Details:** [Evolution Research](frameworks/evolution.md)
 
 ---
 
 ## References
 
-- [Quick Reference](ai-quick-reference.md) — 2-minute version
-- [Security Requirements](research/ai-security-article.md) — The MUSTs
-- [For Junior Developers](research/ai-junior-developer-article.md)
-- [For Managers](research/ai-manager-article.md)
-- [CLAUDE.md](../../../CLAUDE.md) — Project AI instructions
+- [Quick Reference](01-quick-reference.md) — 2-minute version
+- [Article Series](articles/README.md) — All 7 articles
+- [Security Requirements](articles/03-security-tax.md) — The MUSTs
+- [CLAUDE.md](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/CLAUDE.md) — Project AI instructions

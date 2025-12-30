@@ -1,8 +1,14 @@
+---
+id: ai-how-i-work
+title: How I Actually Use AI for Development
+sidebar_label: How I Work
+---
+
 # How I Actually Use AI for Development (It's Not What You Think)
 
 **Read time: 7 minutes** | **Audience:** Developers curious about structured AI collaboration
 
-*Part 1 of 6 in the AI Collaboration series*
+*Part 1 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 
@@ -135,30 +141,13 @@ These evolved naturally. They're not magic — they're just consistent vocabular
 
 ---
 
-## The Hardest Discipline: Keep It Simple
+## The Hardest Discipline: Simplicity
 
-Here's the counterintuitive thing: AI makes it easy to add. Features, code, documentation — AI will generate as much as you ask for.
+The counterintuitive thing: AI makes adding easy. The discipline is removing.
 
-The discipline is removing.
+Every feature has maintenance cost. AI doesn't feel this cost. You do. KISS and YAGNI matter MORE now, not less — they're survival skills.
 
-Every feature has maintenance cost. Every line of code needs review, testing, securing. AI doesn't feel this cost. You do.
-
-**KISS (Keep It Simple Stupid) and YAGNI (You Ain't Gonna Need It) matter MORE now, not less.** These aren't old-school principles to abandon. They're survival skills.
-
-I keep repeating these to the AI:
-- "What's the simplest solution?"
-- "Do we actually need this?"
-- "What can we remove?"
-
-Every time I've ignored this, I've paid for it. The complexity creep is real, and AI accelerates it.
-
-So I've adopted a principle: **Fight the gravitational pull toward more.**
-
-- "Should we build this?" before "How do we build this?"
-- "What can we remove?" after shipping
-- Challenge every addition, even the easy ones
-
-AI-generated abundance is not the goal. Simplicity is. And it's getting harder to maintain. Humans are tired of bloated software. Users feel it. Don't add to the problem.
+For the full argument, see [Article 0: The Ultrasimplification Paradox](../00-philosophy.md).
 
 ---
 

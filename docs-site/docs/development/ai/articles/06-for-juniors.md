@@ -1,8 +1,14 @@
+---
+id: ai-for-juniors
+title: Learning to Code in the Age of AI
+sidebar_label: For Juniors
+---
+
 # Learning to Code in the Age of AI
 
 **Read time: 6 minutes** | **Audience:** Junior developers, bootcamp graduates, career changers
 
-*Part 6 of 6 in the AI Collaboration series*
+*Part 6 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 

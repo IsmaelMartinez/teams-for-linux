@@ -1,8 +1,14 @@
+---
+id: ai-team-adoption
+title: Starting a Team with AI
+sidebar_label: Team Adoption
+---
+
 # Starting a Team with AI: Why Validation-First Beats Generation-First
 
 **Read time: 7 minutes** | **Audience:** Tech leads, engineering managers starting team AI adoption
 
-*Part 4 of 6 in the AI Collaboration series*
+*Part 4 of 7 in the [AI Collaboration series](README.md)*
 
 ---
 
