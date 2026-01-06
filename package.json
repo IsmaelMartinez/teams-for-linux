@@ -136,25 +136,7 @@
       ]
     },
     "snap": {
-      "summary": "Teams for Linux",
-      "confinement": "strict",
-      "grade": "stable",
-      "base": "core22",
-      "executableArgs": [
-        "--ozone-platform=x11"
-      ],
-      "plugs": [
-        "default",
-        "audio-record",
-        "camera",
-        "hardware-observe",
-        "network-bind",
-        "network-manager-observe",
-        "removable-media",
-        "screen-inhibit-control",
-        "system-observe",
-        "upower-observe"
-      ],
+      "useTemplateApp": false,
       "publish": [
         "snapStore"
       ]
