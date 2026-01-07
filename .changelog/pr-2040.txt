@@ -1,0 +1,1 @@
+Verify Electron 39 snap permissions issue - by @IsmaelMartinez (#2040)
