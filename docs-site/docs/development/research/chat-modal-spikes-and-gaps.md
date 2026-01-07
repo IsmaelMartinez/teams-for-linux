@@ -2,7 +2,20 @@
 
 **Related:** [Chat Modal Investigation](chat-modal-investigation.md)
 **Date:** 2025-11-26
-**Status:** Pre-implementation Validation
+**Updated:** 2025-12-14
+**Status:** Spikes Implemented - Ready for Validation
+
+:::info Spike Implementation Available
+All critical validation spikes have been implemented in `app/graphApi/chatSpikes.js`. To run them:
+
+1. Enable Graph API in config: `graphApi: { enabled: true }`
+2. Launch the app and sign in
+3. Open DevTools console (Ctrl+Shift+I)
+4. Run: `await window.electronAPI.graphApi.runChatSpikes()`
+5. Review results in console
+
+The spikes will automatically determine GO/NO-GO for the chat modal feature.
+:::
 
 ## Executive Summary
 
@@ -729,3 +742,52 @@ If chat API permissions are not available:
 - [ ] Test keyboard interactions
 - [ ] Test focus behavior
 - [ ] Document UX findings
+
+---
+
+## Spike Implementation Details
+
+### Implementation Location
+
+All spikes have been implemented in `app/graphApi/chatSpikes.js` as a reusable class.
+
+### How to Run
+
+```javascript
+// From DevTools console after login:
+const results = await window.electronAPI.graphApi.runChatSpikes();
+console.table(results);
+
+// Results include:
+// - spike1_chatPermissions: GO/NO-GO for chat API access
+// - spike2_chatDiscovery: 1:1 chat discovery patterns
+// - spike3_firstMessage: Chat creation flow
+// - spike4_userSearch: Working search methods
+// - spike5_messageFormat: HTML/text content handling
+// - spike6_rateLimits: API throttling behavior
+// - overallResult: { status: 'GO'|'CONDITIONAL_GO'|'BLOCKED', recommendation: '...' }
+```
+
+### Interpreting Results
+
+| Result Status | Action |
+|--------------|--------|
+| `GO` | All critical spikes passed. Proceed with implementation. |
+| `CONDITIONAL_GO` | Some warnings but feasible. Address warnings in implementation. |
+| `BLOCKED` | Critical blocker found. Do NOT implement. Consider alternatives. |
+
+### Alternatives if Blocked
+
+If `spike1_chatPermissions` returns 403:
+
+1. **Teams Deep Links** - Generate `https://teams.microsoft.com/l/chat/...` links
+2. **Read-Only Panel** - Build notification panel without send capability
+3. **Recent Chats Only** - Skip user search, only show existing chat threads
+
+### Files Changed
+
+- `app/graphApi/chatSpikes.js` - Spike implementation
+- `app/graphApi/index.js` - Added `runChatSpikes()` method
+- `app/graphApi/ipcHandlers.js` - Added IPC handler
+- `app/security/ipcValidator.js` - Allowlisted IPC channel
+- `app/browser/preload.js` - Exposed API to renderer
