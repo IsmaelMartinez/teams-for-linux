@@ -226,6 +226,139 @@ Commands are validated with multiple security measures:
 Commands trigger Teams keyboard shortcuts. Only use trusted MQTT brokers and protect your broker credentials. For maximum security, use `mqtt://localhost:1883` with no external network access.
 :::
 
+## Calendar Data Export
+
+:::info Prerequisites
+Calendar export requires **Graph API** to be enabled in your configuration. See [Configuration Options](#configuration-options) for MQTT setup.
+:::
+
+Teams for Linux can export calendar data via MQTT commands, allowing you to:
+
+- Export calendar events programmatically
+- Convert to other formats (org-mode, CSV, iCalendar, etc.)
+- Integrate with external scheduling systems
+- Process calendar data without maintaining separate authentication
+
+### Calendar Export Command
+
+The `get-calendar` command retrieves calendar events for a specified date range:
+
+```json
+{
+  "action": "get-calendar",
+  "startDate": "2025-11-27T00:00:00Z",
+  "endDate": "2025-12-04T23:59:59Z"
+}
+```
+
+**Parameters:**
+
+- `action`: Must be `"get-calendar"`
+- `startDate`: ISO 8601 datetime string (start of date range)
+- `endDate`: ISO 8601 datetime string (end of date range)
+
+**Response Topic:** `teams/calendar`
+
+### Calendar Response Format
+
+Calendar data is published to the `teams/calendar` topic as raw Graph API JSON:
+
+```json
+{
+  "success": true,
+  "data": {
+    "value": [
+      {
+        "id": "AAMkAGI1...",
+        "subject": "Team Standup",
+        "start": {
+          "dateTime": "2025-11-27T10:00:00.0000000",
+          "timeZone": "UTC"
+        },
+        "end": {
+          "dateTime": "2025-11-27T10:30:00.0000000",
+          "timeZone": "UTC"
+        },
+        "location": {
+          "displayName": "Teams Meeting"
+        },
+        "organizer": {
+          "emailAddress": {
+            "name": "John Doe",
+            "address": "john@example.com"
+          }
+        },
+        "attendees": [...],
+        "bodyPreview": "Meeting description...",
+        "onlineMeeting": {
+          "joinUrl": "https://teams.microsoft.com/l/meetup/..."
+        }
+      }
+    ]
+  }
+}
+```
+
+See [Microsoft Graph Calendar API documentation](https://learn.microsoft.com/en-us/graph/api/resources/calendar) for complete field reference.
+
+### Usage
+
+**1. Configuration** - Add to your `config.json`:
+
+```json
+{
+  "graphApi": {
+    "enabled": true
+  },
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://localhost:1883",
+    "topicPrefix": "teams",
+    "commandTopic": "command"
+  }
+}
+```
+
+**2. Subscribe to calendar data:**
+
+```bash
+mosquitto_sub -h localhost -t "teams/calendar" -C 1 | jq
+```
+
+**3. Request calendar events:**
+
+```bash
+mosquitto_pub -h localhost -t "teams/command" -m '{
+  "action": "get-calendar",
+  "startDate": "2025-11-29T00:00:00Z",
+  "endDate": "2025-12-06T23:59:59Z"
+}'
+```
+
+:::tip Formatting Output
+Use `jq` to format the JSON output for better readability. Install with `apt-get install jq`, `brew install jq`, or `pacman -S jq`.
+:::
+
+### Troubleshooting Calendar Export
+
+**No calendar data received:**
+
+- Verify Graph API is enabled in config.json
+- Ensure you're logged in to Teams (Graph API requires authentication)
+- Check Teams for Linux logs for Graph API errors
+- Verify date range parameters are valid ISO 8601 format
+
+**Authentication errors:**
+
+- Log out and log back in to Teams for Linux
+- Check Microsoft 365 permissions for your account
+- Verify Graph API scopes are granted (Calendars.Read)
+
+**Related Research:**
+
+- [Calendar Data Export Research](development/research/calendar-data-export-research.md)
+- [Graph API Integration](development/research/graph-api-integration-research.md)
+
 ## Home Automation Integration
 
 The MQTT integration has been tested with various home automation platforms. However, specific automation configurations vary based on your setup and requirements.
