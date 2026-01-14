@@ -305,7 +305,7 @@ logConfig: {
 
 msTeamsProtocols: {
   v1: "^msteams:/l/(?:meetup-join|channel|chat|message)",
-  v2: "^msteams://teams.microsoft.com/l/(?:meetup-join|channel|chat|message)"
+  v2: "^msteams://teams.cloud.microsoft/l/(?:meetup-join|channel|chat|message)"
 }
 ```
 
@@ -1279,7 +1279,7 @@ The automatic migration in v3.0 addresses several edge cases:
   // Core
   "app": {
     "title": "Microsoft Teams",
-    "url": "https://teams.microsoft.com/v2",
+    "url": "https://teams.cloud.microsoft",
     "partition": "persist:teams-4-linux"
   },
 
@@ -1388,7 +1388,7 @@ The automatic migration in v3.0 addresses several edge cases:
     "meetupJoinRegEx": "^https://teams\\.(?:microsoft|live)\\.com/...",
     "msTeamsProtocols": {
       "v1": "^msteams:/l/...",
-      "v2": "^msteams://teams.microsoft.com/l/..."
+      "v2": "^msteams://tteams.cloud.microsoft/l/..."
     },
     "openMeetupJoinInApp": true
   },

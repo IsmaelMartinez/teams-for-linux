@@ -432,14 +432,14 @@ function extractYargConfig(configObject, appVersion) {
       msTeamsProtocols: {
         default: {
           v1: "^msteams:/l/(?:meetup-join|channel|chat|message)",
-          v2: "^msteams://teams.microsoft.com/l/(?:meetup-join|channel|chat|message)",
+          v2: "^msteams://teams.cloud.microsoft/l/(?:meetup-join|channel|chat|message)",
         },
         describe:
           "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
         type: "object",
       },
       url: {
-        default: "https://teams.microsoft.com/v2",
+        default: "https://teams.cloud.microsoft",
         describe: "Microsoft Teams URL",
         type: "string",
       },

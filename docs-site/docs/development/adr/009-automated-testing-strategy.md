@@ -53,7 +53,7 @@ Each test creates a unique temporary userData directory via `E2E_USER_DATA_DIR` 
 // Validates:
 // 1. Application launches successfully
 // 2. Main window opens
-// 3. Redirects to Microsoft login (teams.microsoft.com or login.microsoftonline.com)
+// 3. Redirects to Microsoft login (teams.cloud.microsoft or login.microsoftonline.com)
 ```
 
 ## Consequences

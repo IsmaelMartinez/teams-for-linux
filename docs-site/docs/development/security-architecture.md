@@ -52,8 +52,8 @@ webPreferences: {
 ```javascript
 const responseHeaders = {
   'Content-Security-Policy': [
-    "default-src 'self' https://teams.microsoft.com https://teams.live.com ...",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.microsoft.com ...",
+    "default-src 'self' https://teams.cloud.microsoft https://teams.live.com ...",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.cloud.microsoft ...",
     "object-src 'none';",
     "base-uri 'self';",
     "frame-ancestors 'none';"
@@ -90,7 +90,7 @@ function validateIpcChannel(channel, payload = null) {
 ```javascript
 _isAllowedTeamsDomain(hostname) {
   const allowedDomains = [
-    'teams.microsoft.com',
+    'teams.cloud.microsoft',
     'teams.live.com'
   ];
   

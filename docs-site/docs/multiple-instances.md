@@ -177,7 +177,7 @@ For developers working with different Teams environments:
 ./teams-for-linux \
   --class=teams-prod \
   --user-data-dir="$HOME/.config/teams-production" \
-  --url="https://teams.microsoft.com"
+  --url="https://teams.cloud.microsoft"
 
 # Development/Test environment
 ./teams-for-linux \

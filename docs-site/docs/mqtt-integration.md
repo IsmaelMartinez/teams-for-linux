@@ -291,7 +291,7 @@ Calendar data is published to the `teams/calendar` topic as raw Graph API JSON:
         "attendees": [...],
         "bodyPreview": "Meeting description...",
         "onlineMeeting": {
-          "joinUrl": "https://teams.microsoft.com/l/meetup/..."
+          "joinUrl": "https://teams.cloud.microsoft/l/meetup/..."
         }
       }
     ]
