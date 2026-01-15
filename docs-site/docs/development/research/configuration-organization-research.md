@@ -1388,7 +1388,7 @@ The automatic migration in v3.0 addresses several edge cases:
     "meetupJoinRegEx": "^https://teams\\.(?:microsoft|live)\\.com/...",
     "msTeamsProtocols": {
       "v1": "^msteams:/l/...",
-      "v2": "^msteams://tteams.cloud.microsoft/l/..."
+      "v2": "^msteams://teams.cloud.microsoft/l/..."
     },
     "openMeetupJoinInApp": true
   },
