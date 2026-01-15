@@ -18,7 +18,7 @@ Teams for Linux uses `yargs` for CLI argument parsing. We evaluated whether to:
 ### Requirements
 - Support 30+ configuration options
 - Parse config files and environment variables
-- Handle meeting URLs as positional arguments (`teams-for-linux https://teams.microsoft.com/...`)
+- Handle meeting URLs as positional arguments (`teams-for-linux https://teams.cloud.microsoft/...`)
 - Low risk of breaking existing functionality
 
 ### Considered Options

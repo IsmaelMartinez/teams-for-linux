@@ -195,7 +195,7 @@ mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > ca
         "attendees": [...],
         "bodyPreview": "Meeting description...",
         "onlineMeeting": {
-          "joinUrl": "https://teams.microsoft.com/l/meetup/..."
+          "joinUrl": "https://teams.cloud.microsoft/l/meetup/..."
         }
       }
     ]
