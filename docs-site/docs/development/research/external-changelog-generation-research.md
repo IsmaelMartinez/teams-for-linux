@@ -122,10 +122,12 @@ Changelog entry generated:
 {generated content}
 \`\`\`
 
-**To add this to your PR**, create `.changelog/pr-XXX.txt`:
+**To add this to your PR**, create `.changelog/pr-${{ github.event.pull_request.number }}.txt`:
 
 \`\`\`bash
-echo '{generated content}' > .changelog/pr-XXX.txt
+cat <<'EOT' > .changelog/pr-${{ github.event.pull_request.number }}.txt
+{generated content}
+EOT
 git add .changelog/ && git commit -m "chore: add changelog entry" && git push
 \`\`\`
 
