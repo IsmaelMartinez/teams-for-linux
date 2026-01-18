@@ -1,0 +1,1 @@
+Fix SonarQube security issue in changelog workflow - by @IsmaelMartinez (#2051)

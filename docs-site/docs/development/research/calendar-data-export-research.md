@@ -2,8 +2,9 @@
 
 **Issue**: [#1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
 **Related**: [#1832 - Graph API Integration](https://github.com/IsmaelMartinez/teams-for-linux/issues/1832)
-**Status**: Research Phase
+**Status**: ✅ Implemented
 **Date**: 2025-11-27
+**Implementation Date**: 2025-11-29
 
 ## Overview
 
@@ -206,14 +207,19 @@ mosquitto_sub -h localhost -t teams/calendar -C 1 | python3 ~/to_orgmode.py > ca
 
 ## Implementation Steps
 
-1. Add `get-calendar` command to MQTT command handler
-2. Validate command parameters (startDate, endDate)
-3. Fetch from Graph API using user-provided date range
-4. Publish raw JSON to `teams/calendar` topic
-5. Document MQTT workflow
-6. Provide example scripts (Python converter to org-mode)
+✅ **Completed Implementation** (2025-11-29):
 
-**Estimated effort:** 2-3 hours
+1. ✅ Added `get-calendar` command to MQTT command handler (`app/mqtt/index.js`)
+2. ✅ Implemented command validation for startDate and endDate parameters
+3. ✅ Integrated Graph API client to fetch calendar data (`app/index.js`)
+4. ✅ Added generic `publish()` method to MQTTClient for calendar data publishing
+5. ✅ Published raw Graph API JSON to `teams/calendar` topic
+6. ✅ Documented MQTT workflow in [MQTT Integration Guide](../../mqtt-integration.md#calendar-data-export)
+
+**Files Modified:**
+- `app/mqtt/index.js` - Added `get-calendar` to allowed actions and generic `publish()` method
+- `app/index.js` - Added get-calendar command handler with Graph API integration
+- `docs-site/docs/mqtt-integration.md` - Added Calendar Data Export section
 
 ## Implementation Risk
 
