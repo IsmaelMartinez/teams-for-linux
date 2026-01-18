@@ -138,4 +138,4 @@ Or create the file manually with the content above.
 
 - [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
 - [Changelog README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/.changelog/README.md)
-- [Manual Release Process](manual-release-process.md)
+- [Manual Release Process](../manual-release-process.md)
