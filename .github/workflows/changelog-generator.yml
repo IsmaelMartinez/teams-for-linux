@@ -117,10 +117,18 @@ jobs:
             // Add PR number
             summary = `${summary} (#${prNum})`;
 
+            // Detect if PR is from external fork
+            const headRepo = context.payload.pull_request.head.repo.full_name;
+            const baseRepo = context.payload.pull_request.base.repo.full_name;
+            const isExternalFork = headRepo !== baseRepo;
+
             core.setOutput('final_summary', summary);
+            core.setOutput('is_external_fork', isExternalFork.toString());
             console.log(`Final: ${summary}`);
+            console.log(`External fork: ${isExternalFork} (${headRepo} vs ${baseRepo})`);
 
       - name: Save changelog entry
+        if: steps.final.outputs.is_external_fork == 'false'
         run: |
           mkdir -p .changelog
           echo "${{ steps.final.outputs.final_summary }}" > .changelog/pr-${{ github.event.pull_request.number }}.txt
@@ -129,6 +137,7 @@ jobs:
           cat .changelog/pr-${{ github.event.pull_request.number }}.txt
 
       - name: Commit changelog file to PR branch
+        if: steps.final.outputs.is_external_fork == 'false'
         env:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
@@ -140,7 +149,8 @@ jobs:
           git push origin "HEAD:${PR_BRANCH}"
           echo "✅ Changelog entry committed to PR branch"
 
-      - name: Comment on PR
+      - name: Comment on PR (internal)
+        if: steps.final.outputs.is_external_fork == 'false'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
@@ -149,4 +159,19 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `✅ Changelog entry generated and committed to this PR:\n\n\`\`\`\n${{ steps.final.outputs.final_summary }}\n\`\`\`\n\nThe file \`.changelog/pr-${{ github.event.pull_request.number }}.txt\` will be included when you merge this PR.\n\nYou can edit it directly in this PR if needed.`
+            })
+
+      - name: Comment on PR (external fork)
+        if: steps.final.outputs.is_external_fork == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const summary = `${{ steps.final.outputs.final_summary }}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\necho '${summary}' > .changelog/pr-${prNumber}.txt\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
             })
