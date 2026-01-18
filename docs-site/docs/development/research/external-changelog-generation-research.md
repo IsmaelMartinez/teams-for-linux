@@ -2,8 +2,9 @@
 
 **Issue**: External fork PRs cannot push changelog files
 **Related**: [ADR-005 - AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
-**Status**: In Progress
+**Status**: Phase 1 Complete, Phase 2 Implemented
 **Date**: 2025-01-18
+**Updated**: 2026-01-18
 
 ## Overview
 
@@ -86,16 +87,28 @@ The comment for external forks will include:
 - Clear instructions to create the file manually
 - A copy-paste command for convenience
 
-### Phase 2: Release Automation (Future)
+### Phase 2: Release Automation (✅ Implemented)
 
-Create a "Prepare Release" workflow that:
-1. Fetches all merged PRs since last release tag
-2. Identifies PRs missing changelog entries
-3. Generates entries for missing ones via Gemini
-4. Runs release preparation (version bump, appdata.xml update)
-5. Creates a release PR with all changes
+**Status**: Implemented in `.github/workflows/prepare-release.yml`
 
-This ensures no changelog entries are missed, even if external contributors don't add them manually.
+Automated GitHub Actions workflow that:
+1. Validates changelog entries exist in `.changelog/` directory
+2. Runs release preparation script with specified version bump
+3. Creates release branch (`release/vX.Y.Z`)
+4. Commits all changes (package.json, package-lock.json, appdata.xml)
+5. Creates a pull request with detailed release notes
+
+**Triggers**: Manual workflow dispatch from GitHub Actions UI
+
+**Benefits**:
+- No local setup required
+- Consistent release process
+- Automatic PR creation with standardized format
+- Reduces human error in version bumping and file updates
+
+**Usage**: See [Release Process Documentation](../manual-release-process.md#option-a-automated-github-workflow-recommended)
+
+**Note**: Phase 2 initially planned to fetch PRs and generate missing changelogs with Gemini, but this proved unnecessary since Phase 1 handles changelog generation at PR time. The workflow now focuses on automating the release preparation and PR creation steps.
 
 ### Phase 3: Enhanced Release Notes (Future)
 
