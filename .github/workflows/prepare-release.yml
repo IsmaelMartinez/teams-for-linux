@@ -1,0 +1,176 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump (patch/minor/major) or specific version (e.g., 2.7.0)'
+        required: true
+        default: 'minor'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for changelog entries
+        id: check_changelog
+        run: |
+          if [ ! -d .changelog ]; then
+            echo "❌ No .changelog/ directory found"
+            exit 1
+          fi
+
+          count=$(ls -1 .changelog/*.txt 2>/dev/null | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "❌ No changelog entries found in .changelog/"
+            exit 1
+          fi
+
+          echo "Found $count changelog entries"
+          echo "count=$count" >> $GITHUB_OUTPUT
+
+      - name: Get current version
+        id: current_version
+        run: |
+          current=$(node -p "require('./package.json').version")
+          echo "current=$current" >> $GITHUB_OUTPUT
+          echo "Current version: $current"
+
+      - name: Calculate new version
+        id: new_version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          CURRENT_VERSION: ${{ steps.current_version.outputs.current }}
+        run: |
+          # Check if input is a specific version number
+          if echo "$INPUT_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            new_version="$INPUT_VERSION"
+          else
+            # Parse current version
+            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+
+            # Calculate new version based on bump type
+            case "$INPUT_VERSION" in
+              major)
+                new_version="$((major + 1)).0.0"
+                ;;
+              minor)
+                new_version="$major.$((minor + 1)).0"
+                ;;
+              patch)
+                new_version="$major.$minor.$((patch + 1))"
+                ;;
+              *)
+                echo "❌ Invalid version input: $INPUT_VERSION"
+                echo "Must be 'patch', 'minor', 'major', or a specific version like '2.7.0'"
+                exit 1
+                ;;
+            esac
+          fi
+
+          echo "new=$new_version" >> $GITHUB_OUTPUT
+          echo "New version: $new_version"
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+        run: |
+          git checkout -b "release/v$NEW_VERSION"
+
+      - name: Run release preparation script
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+        run: |
+          npm run release:prepare "$NEW_VERSION"
+
+      - name: Commit changes
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+        run: |
+          git add package.json package-lock.json com.github.IsmaelMartinez.teams_for_linux.appdata.xml .changelog/
+          git commit -m "chore: release v$NEW_VERSION"
+
+      - name: Push release branch
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+        run: |
+          git push -u origin "release/v$NEW_VERSION"
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+          CHANGELOG_COUNT: ${{ steps.check_changelog.outputs.count }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Create PR body
+          cat > pr_body.md <<EOF
+          ## Release v$NEW_VERSION
+
+          This PR prepares release v$NEW_VERSION with $CHANGELOG_COUNT changelog entries.
+
+          ### Changes
+          - Updated \`package.json\` → v$NEW_VERSION
+          - Updated \`package-lock.json\` → v$NEW_VERSION
+          - Updated \`appdata.xml\` with new release entry
+          - Consumed $CHANGELOG_COUNT changelog files from \`.changelog/\`
+
+          ### Next Steps
+          After merging this PR:
+          1. Build workflow will automatically trigger
+          2. GitHub draft release will be created
+          3. Snap edge channel will be published
+          4. Test the Snap edge version
+          5. Promote GitHub draft → full release (triggers Flatpak)
+          6. Manually promote Snap edge → stable
+
+          ---
+
+          🤖 Generated by [Prepare Release Workflow](https://github.com/$REPO/actions/workflows/prepare-release.yml)
+          EOF
+
+          gh pr create \
+            --title "Release v$NEW_VERSION" \
+            --body-file pr_body.md \
+            --base main \
+            --head "release/v$NEW_VERSION"
+
+      - name: Summary
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+          CURRENT_VERSION: ${{ steps.current_version.outputs.current }}
+          CHANGELOG_COUNT: ${{ steps.check_changelog.outputs.count }}
+        run: |
+          echo "✅ Release v$NEW_VERSION prepared successfully!"
+          echo ""
+          echo "📋 Summary:"
+          echo "  - Current version: $CURRENT_VERSION"
+          echo "  - New version: $NEW_VERSION"
+          echo "  - Changelog entries: $CHANGELOG_COUNT"
+          echo ""
+          echo "🔗 Pull request created for release/v$NEW_VERSION"

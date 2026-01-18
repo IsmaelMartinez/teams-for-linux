@@ -6,7 +6,29 @@ PRs automatically get AI-generated changelog entries in `.changelog/pr-XXX.txt` 
 
 ## Quick Start
 
-### Option A: Using the Script
+### Option A: Automated GitHub Workflow (Recommended)
+
+The easiest and most reliable method is to use the automated GitHub Actions workflow:
+
+1. Go to [Actions → Prepare Release](https://github.com/IsmaelMartinez/teams-for-linux/actions/workflows/prepare-release.yml)
+2. Click "Run workflow"
+3. Select the version bump type:
+   - `patch` - Bug fixes (2.6.19 → 2.6.20)
+   - `minor` - New features (2.6.19 → 2.7.0)
+   - `major` - Breaking changes (2.6.19 → 3.0.0)
+   - Or enter a specific version like `2.7.0`
+4. Click "Run workflow"
+
+The workflow will automatically:
+- Validate changelog entries exist
+- Run the release preparation script
+- Create a release branch
+- Commit all changes
+- Create a pull request
+
+You'll get a PR ready for review and merging. No local setup required.
+
+### Option B: Using the Script Locally
 
 ```bash
 npm run release:prepare patch  # or minor, major, or 2.6.15
@@ -32,7 +54,7 @@ git push -u origin release/vX.Y.Z
 gh pr create --title "Release vX.Y.Z" --body "Release vX.Y.Z"
 ```
 
-### Option B: Manual
+### Option C: Manual
 
 1. Review changelog files:
    ```bash
@@ -72,7 +94,7 @@ gh pr create --title "Release vX.Y.Z" --body "Release vX.Y.Z"
    gh pr create --title "Release vX.Y.Z" --body "Release vX.Y.Z"
    ```
 
-### Option C: LLM-Assisted
+### Option D: LLM-Assisted
 
 Point an LLM at `.changelog/` and ask it to prepare the release:
 
