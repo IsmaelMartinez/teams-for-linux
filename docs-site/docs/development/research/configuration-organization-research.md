@@ -2,7 +2,8 @@
 
 **Issue**: Configuration improvements and cleanup investigation
 **Created**: 2025-11-09
-**Status**: Phase 1 Complete
+**Updated**: 2026-01-18
+**Status**: Phase 1 Complete | Phases 2-3 DEFERRED
 
 ## Executive Summary
 
@@ -36,12 +37,15 @@ Teams for Linux has **66 active configuration options** managed through a flat y
 
 5. **Naming Issues**: Mix of negative (`disableNotifications`) and positive (`trayIconEnabled`) naming, plus some overly verbose names.
 
-### Recommended Approach
-**Three-Phase Gradual Migration** with backward compatibility:
+### Approach Decision
+**Incremental Migration** (Phases 2-3 deferred):
 
-**Phase 1 (v2.x)**: Documentation reorganization + deprecation warnings - ✅ **Complete**
-**Phase 2 (v2.x)**: Introduce nested structure with auto-migration
-**Phase 3 (v3.0)**: Automatic migration without prompts
+**Phase 1 (v2.x)**: Documentation reorganization + deprecation warnings - ✅ **COMPLETE**
+**Phases 2-3**: ⏸️ **DEFERRED** - Nested structure will happen incrementally as modules are refactored
+  - No comprehensive auto-migration tooling will be built
+  - New features will use nested patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`)
+  - Existing flat options will migrate opportunistically when those modules are refactored
+  - Gradual evolution preferred over coordinated migration effort
 
 ### Expected Benefits
 - **Discoverability**: Better documentation grouping helps users find related options
@@ -450,9 +454,11 @@ defaultNotificationUrgency: "normal",
 - [x] Deprecated options removal (completed - removed from config)
 - **Remaining Effort: 1-2 hours**
 
-### Phase 2: Introduce Nested Structure (v2.x) - Backward Compatible
+### Phase 2: Introduce Nested Structure (DEFERRED)
 
-**Goal:** Add new nested options while maintaining backward compatibility
+**Status:** ⏸️ DEFERRED - Will happen incrementally as modules are refactored
+
+**Original Goal:** Add new nested options while maintaining backward compatibility
 
 **Implementation Strategy:**
 
@@ -959,9 +965,11 @@ Auto-migration ensures both work:
 - Updated documentation showing new pattern
 - Estimated Effort: 16-24 hours
 
-### Phase 3: Automatic Migration (v3.0) - NO BREAKING CHANGES
+### Phase 3: Automatic Migration (DEFERRED)
 
-**Goal:** Automatically migrate remaining users without breaking their systems
+**Status:** ⏸️ DEFERRED - Comprehensive migration not planned
+
+**Original Goal:** Automatically migrate remaining users without breaking their systems
 
 **Changes:**
 1. Remove old flat option definitions from yargs schema (cleanup)
@@ -1094,9 +1102,11 @@ The automatic migration in v3.0 addresses several edge cases:
 
 **Deliverable:** Updated documentation only
 
-### Phase 2: Nested Structure (2.x+1)
+### Phase 2: Nested Structure (DEFERRED)
 
-**Week 1-2: Implementation**
+**Status:** ⏸️ DEFERRED - Comprehensive migration not planned
+
+**Original Week 1-2: Implementation**
 - [ ] Add new nested option definitions to yargs
 - [ ] Implement auto-migration function
 - [ ] Add deprecation warnings for old keys
@@ -1523,13 +1533,19 @@ The automatic migration in v3.0 addresses several edge cases:
 
 ## Conclusion
 
-The proposed three-phase approach provides a balanced path forward:
+**Decision (2026-01-18):** The comprehensive three-phase migration approach has been **deferred in favor of incremental evolution**.
 
-1. **Phase 1** delivers immediate value (documentation improvements) with zero risk
-2. **Phase 2** introduces modern structure while maintaining compatibility
-3. **Phase 3** completes the transformation after users have time to migrate
+**Rationale:**
+- Complexity of auto-migration doesn't justify the benefits
+- New features already use nested configuration patterns successfully
+- Existing flat options work fine and can migrate opportunistically
+- Avoids risk of breaking existing user configurations
 
-This research recommends **completing remaining Phase 1 tasks** (documentation reorganization) and planning Phase 2 for a future release.
+**Current Approach:**
+1. ✅ **Phase 1 Complete** - Documentation improvements delivered
+2. ⏸️ **Phases 2-3 Deferred** - No coordinated migration effort
+3. ✅ **New features** - Use nested patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`)
+4. 📋 **Future** - Migrate existing options only when refactoring those modules
 
 ### Implementation Status
 

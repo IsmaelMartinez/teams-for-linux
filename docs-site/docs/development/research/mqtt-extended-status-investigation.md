@@ -1,9 +1,9 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
 **Date**: 2025-11-12
-**Updated**: 2025-11-30
+**Updated**: 2026-01-18
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT)
+**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT) | Phase 2 DEFERRED
 
 ## User Request
 
@@ -320,8 +320,15 @@ async publish(topic, payload, options = {}) {
 - [x] Publish connection state on connect/disconnect
 - [x] Document `{topicPrefix}/connected` topic
 
-### Phase 2: WebRTC Monitoring (Camera/Mic)
+### Phase 2: WebRTC Monitoring (Camera/Mic) - ⏸️ DEFERRED
 
+**Status**: Deferred pending user feedback
+
+Phase 1 provides call state (`in-call`) and connection state (`connected`) via existing IPC events. Phase 2 would add camera and microphone state monitoring via WebRTC stream interception.
+
+**Deferral Reason**: Awaiting confirmation from user ([#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)) that the current Phase 1 implementation is insufficient for their RGB LED automation needs. Will implement Phase 2 only if user confirms they need granular camera/mic state in addition to call state.
+
+**If/When Resumed:**
 - [ ] Create `app/browser/tools/mediaStatus.js`
 - [ ] Implement getUserMedia interceptor
 - [ ] Add screen sharing detection (reuse `isScreenShare` logic)

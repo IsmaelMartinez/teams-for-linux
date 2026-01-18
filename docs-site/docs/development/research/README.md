@@ -24,14 +24,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
 
 ### Electron & Framework
-- **[Electron 38 Migration Analysis](electron-38-migration-analysis.md)** - Analysis of Electron 37 → 38 upgrade
 - **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
 
 ### Strategic Analysis
 - **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
   - ✅ **Phase 1 Complete**: Documentation reorganization
-  - Three-phase migration plan from flat to nested structure
-  - Phases 2-3: Nested structure with auto-migration (planned)
+  - 📋 **Phases 2-3 DEFERRED**: Nested structure migration will happen incrementally as modules are refactored
+  - No automatic migration tooling planned - new features use nested patterns from day one
 
 ### Architecture
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
@@ -39,24 +38,21 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - See [Contributing Guide](../contributing.md) for current architecture
 
 ### Notification System Research
-- **[Custom Notification System Research](custom-notification-system-research.md)** - Comprehensive investigation into alternative notification modal system
-  - Investigation of existing libraries and solutions
-  - Architectural constraints analysis (Electron wrapper vs React app)
-  - Custom BrowserWindow-based implementation plan
-  - Decision: Build custom system following IncomingCallToast pattern
-  - Timeline: ~1 week for ultra-minimal MVP (toast notifications only)
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
+  - ✅ **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
+  - 📋 **Phase 2 DEFERRED**: Notification center awaiting user feedback
 
 ### MQTT & Integration
-- **[MQTT Commands Implementation](mqtt-commands-implementation.md)** - Adding bidirectional MQTT support for action commands
+- **[MQTT Commands Implementation](mqtt-commands-implementation.md)** - ✅ **IMPLEMENTED** (2025-11-25) - Bidirectional MQTT support for action commands
   - Implementation plan: 4-6 hours, ~60 lines of code, low risk
   - Enables keyboard shortcuts and home automation integration
   - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Research on extending MQTT status publishing
+  - ✅ **Phase 1 Complete**: Infrastructure, documentation, and Last Will Testament
+  - 📋 **Phase 2 DEFERRED**: WebRTC monitoring awaiting user feedback
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
-- **[Calendar Data Export Research](calendar-data-export-research.md)** - Event-driven calendar export for org-mode and external tools
-  - Related to [Issue #1995](https://github.com/IsmaelMartinez/teams-for-linux/issues/1995)
-  - Event-driven architecture: React to user actions instead of internal scheduling
-  - Leverages existing Graph API infrastructure
+  - ✅ **Phase 1 POC Complete**: Token acquisition, basic endpoints
+- **[Calendar Data Export Research](calendar-data-export-research.md)** - ✅ **IMPLEMENTED** (2025-11-29) - Event-driven calendar export via MQTT
 
 ### Privacy & Media
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
