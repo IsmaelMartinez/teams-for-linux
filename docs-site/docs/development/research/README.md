@@ -64,6 +64,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Electron powerMonitor limited on Linux; user-script approach recommended
   - Feasible via MQTT commands that users invoke from their own lock scripts
 
+### CI/CD & Release Process
+- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Handling changelog generation for external fork PRs
+  - Phase 1: Graceful degradation with instructional comments for external contributors
+  - Phase 2: Automated release preparation workflow (planned)
+  - Related: [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
+
 ## Purpose
 
 These documents capture:
