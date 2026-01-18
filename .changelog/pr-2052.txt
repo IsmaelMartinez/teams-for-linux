@@ -1,0 +1,1 @@
+Fix changelog generation for external repositories - by @IsmaelMartinez (#2052)
