@@ -1,0 +1,1 @@
+docs: update research documentation status and remove outdated files - by @IsmaelMartinez (#2053)
