@@ -28,16 +28,14 @@ class IdleMonitor {
         this.#config.appActiveCheckInterval
       }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`;
 
-    if (systemIdleState !== "active") {
-      if (this.#idleTimeUserStatus === -1) {
-        console.debug(`GetSystemIdleState => ${logDetails()}`);
-        this.#idleTimeUserStatus = this.#getUserStatus();
-      }
-    } else {
+    if (systemIdleState === "active") {
       if (this.#idleTimeUserStatus !== -1) {
         console.debug(`GetSystemIdleState => ${logDetails()}`);
         this.#idleTimeUserStatus = -1;
       }
+    } else if (this.#idleTimeUserStatus === -1) {
+      console.debug(`GetSystemIdleState => ${logDetails()}`);
+      this.#idleTimeUserStatus = this.#getUserStatus();
     }
 
     return {

@@ -303,7 +303,7 @@ async function handleAppReady() {
         const result = await graphApiClient.getCalendarView(startDate, endDate);
 
         if (result.success) {
-          await mqttClient.publish('calendar', result);
+          await mqttClient.publishToTopic('calendar', result);
           console.info('[MQTT] Calendar data published to teams/calendar topic');
         } else {
           console.error('[MQTT] Failed to get calendar:', result.error);

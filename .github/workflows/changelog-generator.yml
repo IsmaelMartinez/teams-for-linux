@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -129,14 +129,15 @@ jobs:
           cat .changelog/pr-${{ github.event.pull_request.number }}.txt
 
       - name: Commit changelog file to PR branch
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
+          git checkout -b temp-changelog-branch
           git add .changelog/
           git commit -m "chore: add changelog entry for PR #${{ github.event.pull_request.number }}"
-          git push
-
+          git push origin "HEAD:${PR_BRANCH}"
           echo "✅ Changelog entry committed to PR branch"
 
       - name: Comment on PR

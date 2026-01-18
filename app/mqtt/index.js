@@ -186,12 +186,12 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
-	 * Publish data to a custom MQTT topic
+	 * Publish data to a custom MQTT topic (with auto-prefix)
 	 * @param {string} topic - Topic name (without prefix)
 	 * @param {object|string} payload - Data to publish (will be stringified if object)
 	 * @param {object} options - MQTT publish options (optional)
 	 */
-	async publish(topic, payload, options = {}) {
+	async publishToTopic(topic, payload, options = {}) {
 		if (!this.isConnected || !this.client) {
 			console.debug('[MQTT] Not connected, skipping publish');
 			return;
