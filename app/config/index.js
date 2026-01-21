@@ -431,8 +431,8 @@ function extractYargConfig(configObject, appVersion) {
       },
       msTeamsProtocols: {
         default: {
-          v1: "^msteams:\\/l\\/(?:meetup-join|channel|chat|message)",
-          v2: "^msteams:\/\/teams\\.(?:microsoft\\.com|cloud\\.microsoft)\/l\/(?:meetup-join|channel|chat|message)",
+          v1: "^msteams:\/l\/(?:meetup-join|channel|chat|message)",
+          v2: "^msteams:\/\/teams\.(?:microsoft\.com|cloud\.microsoft)\/l\/(?:meetup-join|channel|chat|message)",
         },
         describe:
           "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
