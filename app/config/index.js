@@ -256,10 +256,9 @@ function extractYargConfig(configObject, appVersion) {
       cameraAspectRatio: {
         default: {
           enabled: false,
-          mode: "contain",
         },
         describe:
-          "Camera aspect ratio fix for preventing video stretching when moving between monitors with different orientations. Mode can be 'contain' (fit within bounds, black bars if needed) or 'cover' (fill bounds, may crop).",
+          "Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints to the video track.",
         type: "object",
       },
       disableGpu: {

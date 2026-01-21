@@ -62,21 +62,16 @@ Removes or overrides video resolution constraints that Microsoft Teams sets when
 **Use Case**: Cameras that support higher resolutions than 720p, professional video setups, improving video quality in meetings
 
 #### [cameraAspectRatio.js](cameraAspectRatio.js)
-Fixes camera video stretching when moving Teams between monitors with different orientations (horizontal to vertical or vice versa). Applies CSS object-fit to maintain proper aspect ratio.
+Fixes camera video stretching when moving Teams between monitors with different orientations (horizontal to vertical or vice versa). Intercepts `getUserMedia` calls to monitor video tracks and reapplies proper aspect ratio constraints to the MediaStreamTrack when window size changes are detected, ensuring remote participants don't see a stretched video feed.
 
 **Configuration**:
 ```json
 {
   "cameraAspectRatio": {
-    "enabled": true,
-    "mode": "contain"
+    "enabled": true
   }
 }
 ```
-
-**Modes**:
-- `contain` (default): Fits video within bounds, adds black bars if needed to maintain aspect ratio
-- `cover`: Fills bounds completely, may crop video edges to maintain aspect ratio
 
 **Use Case**: Multi-monitor setups with different orientations, prevents stretched/distorted camera feed when moving windows between portrait and landscape monitors
 

@@ -9,20 +9,10 @@
  * stream so other meeting participants don't see a stretched video feed.
  */
 
-function applyCameraAspectRatioPatch(config) {
+function applyCameraAspectRatioPatch() {
   const activeVideoTracks = new Set();
   let lastWindowSize = { width: window.innerWidth, height: window.innerHeight };
-
-  /**
-   * Get the natural aspect ratio from a video track's settings
-   */
-  function getTrackAspectRatio(track) {
-    const settings = track.getSettings();
-    if (settings.width && settings.height) {
-      return settings.width / settings.height;
-    }
-    return null;
-  }
+  const SIGNIFICANT_RESIZE_THRESHOLD = 100;
 
   /**
    * Fix aspect ratio on a video track by reapplying proper constraints
@@ -73,14 +63,12 @@ function applyCameraAspectRatioPatch(config) {
 
       // If exact aspectRatio fails, try with ideal
       try {
-        const settings = track.getSettings();
-        const aspectRatio = settings.width / settings.height;
         await track.applyConstraints({
-          aspectRatio: { ideal: aspectRatio },
+          aspectRatio: { ideal: nativeAspectRatio },
         });
         console.debug(
           "[CAMERA_ASPECT_RATIO] Applied ideal aspect ratio:",
-          aspectRatio.toFixed(2)
+          nativeAspectRatio.toFixed(2)
         );
       } catch (fallbackError) {
         console.error(
@@ -159,7 +147,7 @@ function applyCameraAspectRatioPatch(config) {
     const widthChange = Math.abs(currentSize.width - lastWindowSize.width);
     const heightChange = Math.abs(currentSize.height - lastWindowSize.height);
 
-    if (widthChange > 100 || heightChange > 100) {
+    if (widthChange > SIGNIFICANT_RESIZE_THRESHOLD || heightChange > SIGNIFICANT_RESIZE_THRESHOLD) {
       console.debug(
         `[CAMERA_ASPECT_RATIO] Significant window size change detected: ${lastWindowSize.width}x${lastWindowSize.height} -> ${currentSize.width}x${currentSize.height}`
       );
@@ -211,7 +199,7 @@ function init(config) {
   }
 
   try {
-    applyCameraAspectRatioPatch(config);
+    applyCameraAspectRatioPatch();
     console.info(
       "[CAMERA_ASPECT_RATIO] Camera aspect ratio fix enabled - will maintain proper aspect ratio when moving between monitors"
     );
