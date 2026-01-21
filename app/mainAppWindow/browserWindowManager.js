@@ -66,6 +66,7 @@ class BrowserWindowManager {
       // Only apply CSP to Teams domains, not to all requests
       const teamsOrigins = [
         'https://teams.cloud.microsoft',
+        'https://teams.microsoft.com',
         'https://teams.live.com',
         'https://outlook.office.com',
         'https://login.microsoftonline.com'
@@ -78,8 +79,8 @@ class BrowserWindowManager {
           ...details.responseHeaders,
           'Content-Security-Policy': [
             [
-              "default-src 'self' https://teams.cloud.microsoft https://teams.live.com https://outlook.office.com https://login.microsoftonline.com https://*.office.com https://*.sharepoint.com https://*.microsoftonline.com;",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://teams.cloud.microsoft https://teams.live.com https://*.office.com https://*.microsoftonline.com;",
+              "default-src 'self' https://teams.cloud.microsoft https://teams.microsoft.com https://teams.live.com https://outlook.office.com https://login.microsoftonline.com https://*.office.com https://*.sharepoint.com https://*.microsoftonline.com;",
+              "script-src 'self' https://teams.cloud.microsoft https://teams.microsoft.com https://teams.live.com https://*.office.com https://*.microsoftonline.com;",
               "style-src 'self' 'unsafe-inline' https://teams.cloud.microsoft https://teams.live.com https://*.office.com;",
               "img-src 'self' data: blob: https: http:;",
               "media-src 'self' blob: https: mediastream:;",

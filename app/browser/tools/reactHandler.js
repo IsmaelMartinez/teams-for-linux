@@ -368,14 +368,20 @@ class ReactHandler {
     // List of valid Teams domains
     const allowedDomains = [
       'teams.cloud.microsoft',
+      'teams.microsoft.com',
       'teams.live.com'
     ];
     
     for (const domain of allowedDomains) {
       // Exact match
       if (hostname === domain) return true;
-      // Immediate subdomain match (prevents evil.com.teams.cloud.microsoft attacks)
-      if (hostname.endsWith('.' + domain)) return true;
+      // Immediate subdomain match (prevents evil.com.teams.cloud.microsoft / evil.com.teams.microsoft.com attacks)
+      if (hostname.endsWith('.' + domain)) {
+        const subdomainPart = hostname.substring(0, hostname.length - (domain.length + 1));
+        if (!subdomainPart.includes('.')) {
+          return true;
+        }
+      }
     }
     
     return false;
