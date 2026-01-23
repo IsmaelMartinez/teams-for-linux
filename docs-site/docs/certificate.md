@@ -100,7 +100,7 @@ Error: certificate verify failed: unable to get local issuer certificate
 
 2. **Check the certificate chain** with openssl:
    ```bash
-   openssl s_client -connect teams.microsoft.com:443 -showcerts
+   openssl s_client -connect teams.cloud.microsoft:443 -showcerts
    ```
 
 3. **Verify your fingerprint calculation** matches the expected format.

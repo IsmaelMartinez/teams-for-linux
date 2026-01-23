@@ -40,7 +40,8 @@ test('app launches and redirects to Microsoft login', async () => {
       const url = w.url();
       try {
         const hostname = new URL(url).hostname;
-        return hostname === 'teams.microsoft.com' ||
+        return hostname === 'teams.cloud.microsoft' ||
+               hostname === 'teams.microsoft.com' ||
                hostname === 'teams.live.com' ||
                hostname === 'login.microsoftonline.com';
       } catch (error) {

@@ -645,7 +645,7 @@ If chat API permissions are not available:
 
 **Option B:** Use Teams Deep Links Instead
 - Instead of sending messages via API, generate Teams deep links
-- Example: `https://teams.microsoft.com/l/chat/0/0?users=user@domain.com`
+- Example: `https://teams.cloud.microsoft/l/chat/0/0?users=user@domain.com`
 - Opens chat in Teams web app
 - ⚠️ Less integrated but doesn't require API permissions
 

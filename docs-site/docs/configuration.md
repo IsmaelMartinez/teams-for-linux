@@ -72,7 +72,7 @@ Place your `config.json` file in the appropriate location based on your installa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `url` | `string` | `"https://teams.microsoft.com/v2"` | Microsoft Teams URL |
+| `url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
 | `appTitle` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
 
