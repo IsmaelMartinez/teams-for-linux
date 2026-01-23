@@ -53,7 +53,7 @@
     "electron-positioner": "^4.1.0",
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "mqtt": "^5.14.1",
     "node-sound": "^0.0.8",
     "yargs": "^17.7.2"
