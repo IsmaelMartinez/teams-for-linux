@@ -1,1 +1,0 @@
-feat: add automated release preparation workflow - by @IsmaelMartinez (#2056)

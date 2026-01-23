@@ -1,1 +1,0 @@
-Implement Calendar Data Export Feature - by @IsmaelMartinez (#2006)

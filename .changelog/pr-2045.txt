@@ -1,1 +1,0 @@
-Update dependencies for Electron 39 - by @IsmaelMartinez (#2045)

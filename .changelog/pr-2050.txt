@@ -1,1 +1,0 @@
-ci: restore armv7l snap build - by @IsmaelMartinez (#2050)
