@@ -1,5 +1,5 @@
 // Global config for preview settings - allows disabling live previews for problematic hardware
-let screenShareConfig = { screenSharePreviewDisabled: false };
+let livePreviewDisabled = false;
 
 globalThis.addEventListener("DOMContentLoaded", async () => {
   const screens = [
@@ -42,9 +42,10 @@ globalThis.addEventListener("DOMContentLoaded", async () => {
   try {
     const config = await globalThis.api.getConfig();
     if (config) {
-      screenShareConfig = config;
-      if (config.screenSharePreviewDisabled) {
-        console.debug("[SCREEN_SHARE] Live video previews disabled via configuration (screenSharePreviewDisabled: true)");
+      // Support new nested config path: screenSharing.picker.livePreviewDisabled
+      livePreviewDisabled = config?.screenSharing?.picker?.livePreviewDisabled ?? false;
+      if (livePreviewDisabled) {
+        console.debug("[SCREEN_SHARE] Live video previews disabled via configuration (screenSharing.picker.livePreviewDisabled: true)");
       }
     }
   } catch (error) {
@@ -59,7 +60,7 @@ globalThis.addEventListener("DOMContentLoaded", async () => {
       // Handle case where no sources are available (GPU/driver issues - see #2058, #2041)
       if (!sources || sources.length === 0) {
         console.error("[SCREEN_SHARE] No screen sources available - this may be due to GPU/driver compatibility issues");
-        showErrorMessage(rowElement, "Unable to access screen sources. This may be due to graphics driver compatibility issues. Try disabling GPU acceleration with --disable-gpu flag or set screenSharePreviewDisabled: true in your config.");
+        showErrorMessage(rowElement, "Unable to access screen sources. This may be due to graphics driver compatibility issues. Try disabling GPU acceleration with --disable-gpu flag or set screenSharing.picker.livePreviewDisabled: true in your config.");
         return;
       }
 
@@ -72,14 +73,14 @@ globalThis.addEventListener("DOMContentLoaded", async () => {
           rowElement,
           screens,
           sscontainer,
-          disablePreview: screenShareConfig.screenSharePreviewDisabled,
+          disablePreview: livePreviewDisabled,
         });
       }
     })
     .catch((error) => {
       console.error("[SCREEN_SHARE] Failed to get desktop sources:", error);
       const rowElement = document.querySelector(".container-fluid .row");
-      showErrorMessage(rowElement, "Failed to access screen sharing. Please try restarting the application, disabling GPU acceleration, or setting screenSharePreviewDisabled: true in your config.");
+      showErrorMessage(rowElement, "Failed to access screen sharing. Please try restarting the application, disabling GPU acceleration, or setting screenSharing.picker.livePreviewDisabled: true in your config.");
     });
 });
 
@@ -120,7 +121,7 @@ async function createPreviewStream(properties, videoElement) {
   // Check if live previews are disabled (workaround for hardware compatibility issues)
   // See issues #2058, #2041 - USB-C docking stations, DisplayLink adapters can crash
   if (properties.disablePreview) {
-    console.debug(`[SCREEN_SHARE] Live preview disabled for source: ${properties.source.id} (screenSharePreviewDisabled: true)`);
+    console.debug(`[SCREEN_SHARE] Live preview disabled for source: ${properties.source.id} (screenSharing.picker.livePreviewDisabled: true)`);
     showStaticPreview(videoElement, properties);
     return;
   }

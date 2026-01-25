@@ -96,20 +96,19 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
       },
-      screenSharingThumbnail: {
+      screenSharing: {
         default: {
-          enabled: true,
-          alwaysOnTop: true,
+          thumbnail: {
+            enabled: true,
+            alwaysOnTop: true,
+          },
+          picker: {
+            livePreviewDisabled: false,
+          },
         },
         describe:
-          "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
+          "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. picker: controls the source selection dialog. Set picker.livePreviewDisabled to true if screen sharing causes crashes on certain hardware (e.g., USB-C docking stations, DisplayLink adapters).",
         type: "object",
-      },
-      screenSharePreviewDisabled: {
-        default: false,
-        describe:
-          "Disable live video previews in the screen picker. Enable this if screen sharing causes crashes on your hardware (e.g., USB-C docking stations, DisplayLink adapters). Sources will still be shown with static placeholders.",
-        type: "boolean",
       },
       appIcon: {
         default: "",
@@ -553,6 +552,21 @@ function argv(configPath, appVersion) {
   const wasSetInCli = process.argv.some(arg => arg.startsWith('--disableGpu'));
   const wasSetInFile = configObject.configFile && "disableGpu" in configObject.configFile;
   config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
+
+  // Migrate legacy screenSharingThumbnail to new screenSharing.thumbnail structure
+  // This provides backward compatibility while transitioning to grouped config options
+  if (configObject.configFile && "screenSharingThumbnail" in configObject.configFile) {
+    console.info("[Config Migration] Found legacy 'screenSharingThumbnail' config - migrating to 'screenSharing.thumbnail'");
+    const legacyThumbnail = configObject.configFile.screenSharingThumbnail;
+    if (!config.screenSharing) {
+      config.screenSharing = { thumbnail: {}, picker: { livePreviewDisabled: false } };
+    }
+    // Merge legacy config into new structure (user's explicit values take precedence)
+    config.screenSharing.thumbnail = {
+      enabled: legacyThumbnail?.enabled ?? config.screenSharing?.thumbnail?.enabled ?? true,
+      alwaysOnTop: legacyThumbnail?.alwaysOnTop ?? config.screenSharing?.thumbnail?.alwaysOnTop ?? true,
+    };
+  }
 
   logger.init(config.logConfig);
 
