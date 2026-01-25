@@ -563,21 +563,6 @@ function argv(configPath, appVersion) {
   const wasSetInFile = configObject.configFile && "disableGpu" in configObject.configFile;
   config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
 
-  // Migrate legacy screenSharingThumbnail to new screenSharing.thumbnail structure
-  // This provides backward compatibility while transitioning to grouped config options
-  if (configObject.configFile && "screenSharingThumbnail" in configObject.configFile) {
-    console.info("[Config Migration] Found legacy 'screenSharingThumbnail' config - migrating to 'screenSharing.thumbnail'");
-    const legacyThumbnail = configObject.configFile.screenSharingThumbnail;
-    if (!config.screenSharing) {
-      config.screenSharing = { thumbnail: {}, picker: { livePreviewDisabled: false } };
-    }
-    // Merge legacy config into new structure (user's explicit values take precedence)
-    config.screenSharing.thumbnail = {
-      enabled: legacyThumbnail?.enabled ?? config.screenSharing?.thumbnail?.enabled ?? true,
-      alwaysOnTop: legacyThumbnail?.alwaysOnTop ?? config.screenSharing?.thumbnail?.alwaysOnTop ?? true,
-    };
-  }
-
   logger.init(config.logConfig);
 
   console.info("configPath:", configPath);
