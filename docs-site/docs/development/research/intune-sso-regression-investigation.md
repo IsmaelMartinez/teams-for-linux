@@ -2,7 +2,8 @@
 
 **Issue:** [#2047](https://github.com/IsmaelMartinez/teams-for-linux/issues/2047)
 **Date:** 2026-01-25
-**Status:** Investigation Complete
+**Status:** ✅ Fixed
+**ADR:** [011-intune-sso-broker-compatibility](../adr/011-intune-sso-broker-compatibility.md)
 
 ## Executive Summary
 
@@ -240,3 +241,16 @@ async function initSso() {
   </interface>
 </node>
 ```
+
+## Implementation Status
+
+**✅ Fix Implemented**
+
+The recommended solution (Option A with version detection) has been implemented in `app/intune/index.js`:
+
+1. **Direct D-Bus Invocation**: Replaced `getInterface()` with `invoke()` method
+2. **Version Detection**: Added `detectBrokerVersion()` to automatically detect broker version
+3. **Version-Aware Requests**: `buildPrtSsoCookieRequest()` formats requests based on broker version
+4. **Dual Response Parsing**: `extractCookieContent()` handles both old and new response formats
+
+See [ADR-011: Intune SSO Broker Compatibility](../adr/011-intune-sso-broker-compatibility.md) for the full architectural decision record.
