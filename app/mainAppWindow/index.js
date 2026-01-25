@@ -101,7 +101,6 @@ function createScreenSharePreviewWindow() {
   // Support both new (screenSharing.thumbnail) and legacy (screenSharingThumbnail) config paths
   let thumbnailConfig =
     config?.screenSharing?.thumbnail ??
-    config?.screenSharingThumbnail?.default ??
     config?.screenSharingThumbnail ??
     DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
