@@ -74,6 +74,23 @@ function handleScreenSourceSelection(source, callback) {
           }
         });
       }
+    })
+    .catch((error) => {
+      // Handle desktopCapturer failures gracefully - can crash on certain hardware
+      // configurations (USB-C docking stations, DisplayLink drivers, etc.)
+      // See issues #2058, #2041
+      console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
+        error: error.message,
+        stack: error.stack,
+        sourceId: source?.id
+      });
+      setImmediate(() => {
+        try {
+          callback({});
+        } catch {
+          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
+        }
+      });
     });
 }
 

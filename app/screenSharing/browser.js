@@ -1,4 +1,7 @@
-globalThis.addEventListener("DOMContentLoaded", () => {
+// Global config for preview settings - allows disabling live previews for problematic hardware
+let screenShareConfig = { screenSharePreviewDisabled: false };
+
+globalThis.addEventListener("DOMContentLoaded", async () => {
   const screens = [
     {
       width: 1280,
@@ -32,10 +35,34 @@ globalThis.addEventListener("DOMContentLoaded", () => {
   let windowsIndex = 0;
   const sscontainer = document.getElementById("screen-size");
   createEventHandlers({ screens, sscontainer });
+
+  // Load config to check if live previews should be disabled
+  // This is a workaround for hardware issues (USB-C docking stations, DisplayLink adapters)
+  // See issues #2058, #2041
+  try {
+    const config = await globalThis.api.getConfig();
+    if (config) {
+      screenShareConfig = config;
+      if (config.screenSharePreviewDisabled) {
+        console.debug("[SCREEN_SHARE] Live video previews disabled via configuration (screenSharePreviewDisabled: true)");
+      }
+    }
+  } catch (error) {
+    console.warn("[SCREEN_SHARE] Failed to load config, using defaults:", error);
+  }
+
   globalThis.api
     .desktopCapturerGetSources({ types: ["window", "screen"] })
     .then(async (sources) => {
       const rowElement = document.querySelector(".container-fluid .row");
+
+      // Handle case where no sources are available (GPU/driver issues - see #2058, #2041)
+      if (!sources || sources.length === 0) {
+        console.error("[SCREEN_SHARE] No screen sources available - this may be due to GPU/driver compatibility issues");
+        showErrorMessage(rowElement, "Unable to access screen sources. This may be due to graphics driver compatibility issues. Try disabling GPU acceleration with --disable-gpu flag or set screenSharePreviewDisabled: true in your config.");
+        return;
+      }
+
       for (const source of sources) {
         await createPreview({
           source,
@@ -45,10 +72,28 @@ globalThis.addEventListener("DOMContentLoaded", () => {
           rowElement,
           screens,
           sscontainer,
+          disablePreview: screenShareConfig.screenSharePreviewDisabled,
         });
       }
+    })
+    .catch((error) => {
+      console.error("[SCREEN_SHARE] Failed to get desktop sources:", error);
+      const rowElement = document.querySelector(".container-fluid .row");
+      showErrorMessage(rowElement, "Failed to access screen sharing. Please try restarting the application, disabling GPU acceleration, or setting screenSharePreviewDisabled: true in your config.");
     });
 });
+
+function showErrorMessage(container, message) {
+  const errorElement = document.createElement("div");
+  errorElement.className = "col-12 text-center p-4";
+  errorElement.innerHTML = `
+    <div class="alert alert-warning" role="alert">
+      <strong>Screen sharing unavailable</strong><br>
+      ${message}
+    </div>
+  `;
+  container.appendChild(errorElement);
+}
 
 async function createPreview(properties) {
   let columnElement = document.createElement("div");
@@ -72,34 +117,109 @@ async function createPreview(properties) {
 }
 
 async function createPreviewStream(properties, videoElement) {
+  // Check if live previews are disabled (workaround for hardware compatibility issues)
+  // See issues #2058, #2041 - USB-C docking stations, DisplayLink adapters can crash
+  if (properties.disablePreview) {
+    console.debug(`[SCREEN_SHARE] Live preview disabled for source: ${properties.source.id} (screenSharePreviewDisabled: true)`);
+    showStaticPreview(videoElement, properties);
+    return;
+  }
+
   // Disable audio in preview streams to prevent echo during screen sharing
   console.debug(`[SCREEN_SHARE_DIAG] Creating preview stream for source: ${properties.source.id}`);
   console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: DISABLED, dimensions: 192x108 (echo prevention)`);
-  
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: false, // CRITICAL: No audio to prevent duplicate capture sessions causing echo
-    video: {
-      mandatory: {
-        chromeMediaSource: "desktop",
-        chromeMediaSourceId: properties.source.id,
-        minWidth: 192,
-        maxWidth: 192,
-        minHeight: 108,
-        maxHeight: 108,
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false, // CRITICAL: No audio to prevent duplicate capture sessions causing echo
+      video: {
+        mandatory: {
+          chromeMediaSource: "desktop",
+          chromeMediaSourceId: properties.source.id,
+          minWidth: 192,
+          maxWidth: 192,
+          minHeight: 108,
+          maxHeight: 108,
+        },
       },
-    },
-  });
-  
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream created successfully - ID: ${stream.id}`);
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream tracks - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
-  
-  videoElement.srcObject = stream;
-  playPreview({
-    videoElement,
-    source: properties.source,
-    screens: properties.screens,
-    sscontainer: properties.sscontainer,
-  });
+    });
+
+    console.debug(`[SCREEN_SHARE_DIAG] Preview stream created successfully - ID: ${stream.id}`);
+    console.debug(`[SCREEN_SHARE_DIAG] Preview stream tracks - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
+
+    videoElement.srcObject = stream;
+    playPreview({
+      videoElement,
+      source: properties.source,
+      screens: properties.screens,
+      sscontainer: properties.sscontainer,
+    });
+  } catch (error) {
+    // Handle getUserMedia failures gracefully - can crash on certain hardware
+    // configurations (USB-C docking stations, DisplayLink drivers, etc.)
+    // See issues #2058, #2041
+    console.error(`[SCREEN_SHARE] Failed to create preview stream for ${properties.source.id}:`, {
+      error: error.message,
+      name: error.name,
+      sourceId: properties.source.id
+    });
+
+    // Show placeholder instead of video preview
+    showPreviewError(videoElement, properties);
+  }
+}
+
+function showStaticPreview(videoElement, properties) {
+  // Show a static placeholder when live previews are disabled (hardware workaround)
+  const container = videoElement.parentElement;
+  if (container) {
+    videoElement.style.display = "none";
+
+    const isScreen = properties.source.id.startsWith("screen:");
+    const iconClass = isScreen ? "bi-display" : "bi-window";
+    const typeLabel = isScreen ? "Screen" : "Window";
+
+    const placeholder = document.createElement("div");
+    placeholder.className = "static-preview";
+    placeholder.style.cssText = "width: 192px; height: 108px; background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #444; border-radius: 4px; transition: border-color 0.2s;";
+    placeholder.innerHTML = `
+      <i class="bi ${iconClass}" style="font-size: 32px; color: #666; margin-bottom: 8px;"></i>
+      <span style="color: #aaa; font-size: 11px; text-align: center;">${typeLabel}<br>Click to select</span>
+    `;
+    placeholder.onmouseenter = () => { placeholder.style.borderColor = "#6c5ce7"; };
+    placeholder.onmouseleave = () => { placeholder.style.borderColor = "#444"; };
+    placeholder.onclick = () => {
+      console.debug(`[SCREEN_SHARE_DIAG] User selected source (static preview): ${properties.source.id}`);
+      closePreviews();
+      globalThis.api.selectedSource({
+        id: properties.source.id,
+        screen: properties.screens[properties.sscontainer.value]
+      });
+    };
+    container.appendChild(placeholder);
+  }
+}
+
+function showPreviewError(videoElement, properties) {
+  // Replace video element with a clickable placeholder
+  const container = videoElement.parentElement;
+  if (container) {
+    videoElement.style.display = "none";
+
+    const placeholder = document.createElement("div");
+    placeholder.className = "preview-error";
+    placeholder.style.cssText = "width: 192px; height: 108px; background: #333; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #555;";
+    placeholder.innerHTML = `<span style="color: #999; font-size: 12px; text-align: center;">Preview unavailable<br>Click to select</span>`;
+    placeholder.onclick = () => {
+      console.debug(`[SCREEN_SHARE_DIAG] User selected source (no preview): ${properties.source.id}`);
+      closePreviews();
+      globalThis.api.selectedSource({
+        id: properties.source.id,
+        screen: properties.screens[properties.sscontainer.value]
+      });
+    };
+    container.appendChild(placeholder);
+  }
 }
 
 function playPreview(properties) {

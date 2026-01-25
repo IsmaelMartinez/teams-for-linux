@@ -55,13 +55,41 @@ class ScreenSharingService {
   }
 
   async #handleGetDesktopCapturerSources(_event, opts) {
-    return desktopCapturer.getSources(opts);
+    try {
+      // desktopCapturer.getSources() can crash on certain hardware configurations
+      // (e.g., USB-C docking stations with DisplayLink drivers) due to GPU-accelerated
+      // thumbnail generation. Wrap in try-catch to handle gracefully.
+      // See issues #2058, #2041
+      const sources = await desktopCapturer.getSources(opts);
+      return sources;
+    } catch (error) {
+      console.error("[SCREEN_SHARE] Failed to get desktop capturer sources:", {
+        error: error.message,
+        stack: error.stack,
+        options: opts
+      });
+      // Return empty array to allow UI to show error state instead of crashing
+      return [];
+    }
   }
 
   async #handleChooseDesktopMedia(_event, sourceTypes) {
-    const sources = await desktopCapturer.getSources({ types: sourceTypes });
-    const chosen = await this.#showScreenPicker(sources);
-    return chosen ? chosen.id : null;
+    try {
+      const sources = await desktopCapturer.getSources({ types: sourceTypes });
+      if (!sources || sources.length === 0) {
+        console.warn("[SCREEN_SHARE] No screen sources available");
+        return null;
+      }
+      const chosen = await this.#showScreenPicker(sources);
+      return chosen ? chosen.id : null;
+    } catch (error) {
+      console.error("[SCREEN_SHARE] Failed to get desktop media sources:", {
+        error: error.message,
+        stack: error.stack,
+        sourceTypes
+      });
+      return null;
+    }
   }
 
   #handleCancelDesktopMedia() {
