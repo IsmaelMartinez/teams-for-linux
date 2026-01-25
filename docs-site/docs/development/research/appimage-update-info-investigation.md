@@ -2,6 +2,8 @@
 
 This document summarizes the investigation into adding update information to Teams for Linux AppImages, as requested in [Issue #2065](https://github.com/IsmaelMartinez/teams-for-linux/issues/2065).
 
+**Status**: Implemented in `.github/workflows/build.yml`
+
 ## Background
 
 The feature request proposes embedding update metadata into AppImage releases using `.zsync` files. This would enable third-party update managers like [Gear Lever](https://github.com/mijorus/gearlever) to automatically detect and manage application updates.
