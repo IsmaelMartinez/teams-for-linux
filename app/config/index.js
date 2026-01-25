@@ -110,6 +110,16 @@ function extractYargConfig(configObject, appVersion) {
           "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. picker: controls the source selection dialog. Set picker.livePreviewDisabled to true if screen sharing causes crashes on certain hardware (e.g., USB-C docking stations, DisplayLink adapters).",
         type: "object",
       },
+      screenSharingThumbnail: {
+        default: {
+          enabled: true,
+          alwaysOnTop: true,
+        },
+        deprecated: "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
+        describe:
+          "[DEPRECATED] Use screenSharing.thumbnail instead. Controls the thumbnail preview window during active screen sharing.",
+        type: "object",
+      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",
