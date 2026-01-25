@@ -40,7 +40,7 @@ globalThis.addEventListener("DOMContentLoaded", async () => {
   // This is a workaround for hardware issues (USB-C docking stations, DisplayLink adapters)
   // See issues #2058, #2041
   try {
-    const config = await globalThis.api.getConfig();
+    const config = await globalThis.api.getScreenSharingConfig();
     if (config) {
       // Support new nested config path: screenSharing.picker.livePreviewDisabled
       livePreviewDisabled = config?.screenSharing?.picker?.livePreviewDisabled ?? false;
@@ -49,7 +49,7 @@ globalThis.addEventListener("DOMContentLoaded", async () => {
       }
     }
   } catch (error) {
-    console.warn("[SCREEN_SHARE] Failed to load config, using defaults:", error);
+    console.warn("[SCREEN_SHARE] Failed to load screen sharing config, using defaults:", error);
   }
 
   globalThis.api
@@ -182,13 +182,15 @@ function showStaticPreview(videoElement, properties) {
 
     const placeholder = document.createElement("div");
     placeholder.className = "static-preview";
-    placeholder.style.cssText = "width: 192px; height: 108px; background: linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #444; border-radius: 4px; transition: border-color 0.2s;";
-    placeholder.innerHTML = `
-      <i class="bi ${iconClass}" style="font-size: 32px; color: #666; margin-bottom: 8px;"></i>
-      <span style="color: #aaa; font-size: 11px; text-align: center;">${typeLabel}<br>Click to select</span>
-    `;
-    placeholder.onmouseenter = () => { placeholder.style.borderColor = "#6c5ce7"; };
-    placeholder.onmouseleave = () => { placeholder.style.borderColor = "#444"; };
+
+    const icon = document.createElement("i");
+    icon.className = `bi ${iconClass}`;
+    placeholder.appendChild(icon);
+
+    const label = document.createElement("span");
+    label.textContent = `${typeLabel}\nClick to select`;
+    placeholder.appendChild(label);
+
     placeholder.onclick = () => {
       console.debug(`[SCREEN_SHARE_DIAG] User selected source (static preview): ${properties.source.id}`);
       closePreviews();
@@ -209,8 +211,11 @@ function showPreviewError(videoElement, properties) {
 
     const placeholder = document.createElement("div");
     placeholder.className = "preview-error";
-    placeholder.style.cssText = "width: 192px; height: 108px; background: #333; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #555;";
-    placeholder.innerHTML = `<span style="color: #999; font-size: 12px; text-align: center;">Preview unavailable<br>Click to select</span>`;
+
+    const label = document.createElement("span");
+    label.textContent = "Preview unavailable\nClick to select";
+    placeholder.appendChild(label);
+
     placeholder.onclick = () => {
       console.debug(`[SCREEN_SHARE_DIAG] User selected source (no preview): ${properties.source.id}`);
       closePreviews();

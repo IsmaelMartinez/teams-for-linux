@@ -3,12 +3,14 @@ const path = require("node:path");
 
 class ScreenSharingService {
   #mainWindow;
+  #config;
   #picker = null;
   #selectedScreenShareSource = null;
   #previewWindow = null;
 
-  constructor(mainWindow) {
+  constructor(mainWindow, config) {
     this.#mainWindow = mainWindow;
+    this.#config = config;
   }
 
   initialize() {
@@ -32,6 +34,8 @@ class ScreenSharingService {
     ipcMain.on("resize-preview-window", this.#handleResizePreviewWindow.bind(this));
     // Stop screen sharing from thumbnail preview
     ipcMain.on("stop-screen-sharing-from-thumbnail", this.#handleStopScreenSharingFromThumbnail.bind(this));
+    // Get screen sharing configuration (only exposes screenSharing config, not entire app config)
+    ipcMain.handle("get-screen-sharing-config", this.#handleGetScreenSharingConfig.bind(this));
   }
 
   setSelectedSource(source) {
@@ -212,6 +216,17 @@ class ScreenSharingService {
       this.#previewWindow.setSize(newWidth, newHeight);
       this.#previewWindow.center();
     }
+  }
+
+  #handleGetScreenSharingConfig() {
+    // Only expose screenSharing config to renderer, not entire app config
+    // This prevents leaking sensitive credentials (clientCertPassword, mqtt.password, etc.)
+    return {
+      screenSharing: this.#config?.screenSharing ?? {
+        thumbnail: { enabled: true, alwaysOnTop: true },
+        picker: { livePreviewDisabled: false }
+      }
+    };
   }
 
   #handleStopScreenSharingFromThumbnail() {
