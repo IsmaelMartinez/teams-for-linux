@@ -246,11 +246,9 @@ async function initSso() {
 
 **✅ Fix Implemented**
 
-The recommended solution (Option A with version detection) has been implemented in `app/intune/index.js`:
+The solution has been implemented in `app/intune/index.js`:
 
 1. **Direct D-Bus Invocation**: Replaced `getInterface()` with `invoke()` method
-2. **Version Detection**: Added `detectBrokerVersion()` to automatically detect broker version
-3. **Version-Aware Requests**: `buildPrtSsoCookieRequest()` formats requests based on broker version
-4. **Dual Response Parsing**: `extractCookieContent()` handles both old and new response formats
+2. **Dual Response Parsing**: `extractCookieContent()` handles both old and new response formats
 
 See [ADR-011: Intune SSO Broker Compatibility](../adr/011-intune-sso-broker-compatibility.md) for the full architectural decision record.

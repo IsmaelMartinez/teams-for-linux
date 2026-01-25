@@ -35,16 +35,10 @@ sessionBus.invoke({
 
 ### Broker Version Compatibility
 
-The module supports both legacy (≤ 2.0.1) and new (> 2.0.1) Microsoft Identity Broker versions:
+The module supports both legacy (≤ 2.0.1) and new (> 2.0.1) Microsoft Identity Broker versions by:
 
-| Feature | Broker ≤ 2.0.1 | Broker > 2.0.1 |
-|---------|----------------|----------------|
-| D-Bus Introspection | Supported | **Removed** |
-| Account parameter | Top-level | Nested in `authParameters` |
-| Response format | `cookieContent` | `cookieItems[]` |
-| Auth type parameter | Not required | Required (`authorizationType: 8`) |
-
-The module automatically detects the broker version and adjusts request/response handling accordingly.
+1. **Direct D-Bus invocation** - Bypasses introspection (removed in broker > 2.0.1)
+2. **Dual response parsing** - Handles both `cookieContent` and `cookieItems[]` formats
 
 See [ADR-011: Intune SSO Broker Version Compatibility](../../docs-site/docs/development/adr/011-intune-sso-broker-compatibility.md) for technical details.
 

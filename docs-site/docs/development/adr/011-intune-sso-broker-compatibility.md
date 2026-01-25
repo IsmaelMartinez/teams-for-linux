@@ -48,7 +48,7 @@ Analysis of the [linux-entra-sso project](https://github.com/siemens/linux-entra
 
 ## Decision
 
-**We will use direct D-Bus method invocation with version-aware request/response handling to support all Microsoft Identity Broker versions.**
+**We will use direct D-Bus method invocation with dual response parsing to support all Microsoft Identity Broker versions.**
 
 ### Implementation
 
@@ -72,53 +72,20 @@ function invokeBrokerMethod(methodName, request, correlationId = "") {
 }
 ```
 
-2. **Version Detection**:
-
-```javascript
-async function detectBrokerVersion() {
-  const resp = await invokeBrokerMethod("getLinuxBrokerVersion", {});
-  const data = JSON.parse(resp);
-  brokerVersion = data.version;
-  isNewBroker = compareVersion(brokerVersion, "2.0.1") > 0;
-}
-```
-
-3. **Version-Aware Request Format**:
-
-```javascript
-function buildPrtSsoCookieRequest(ssoUrl) {
-  if (isNewBroker) {
-    // New broker (> 2.0.1): account in authParameters
-    return {
-      ssoUrl,
-      authParameters: {
-        authority: "https://login.microsoftonline.com/common/",
-        account: inTuneAccount,
-        authorizationType: 8  // PRT_SSO_COOKIE
-      }
-    };
-  }
-  // Old broker (≤ 2.0.1): account at top level
-  return {
-    ssoUrl,
-    account: inTuneAccount,
-    authParameters: { authority: "..." }
-  };
-}
-```
-
-4. **Version-Aware Response Parsing**:
+2. **Dual Response Parsing** (handles both formats):
 
 ```javascript
 function extractCookieContent(response) {
-  // New format: { cookieItems: [{ cookieContent: "..." }] }
+  // New format (> 2.0.1): { cookieItems: [{ cookieContent: "..." }] }
   if (response.cookieItems?.length > 0) {
     return response.cookieItems[0].cookieContent;
   }
-  // Old format: { cookieContent: "..." }
+  // Old format (≤ 2.0.1): { cookieContent: "..." }
   return response.cookieContent;
 }
 ```
+
+This approach is simpler than version detection - it uses the standard request format and handles both response formats transparently.
 
 ## Consequences
 

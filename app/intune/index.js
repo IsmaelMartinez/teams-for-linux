@@ -1,8 +1,6 @@
 const dbus = require("@homebridge/dbus-native");
 
 let inTuneAccount = null;
-let brokerVersion = null;
-let isNewBroker = false;
 
 // D-Bus connection constants
 const BROKER_SERVICE = "com.microsoft.identity.broker1";
@@ -40,46 +38,6 @@ function invokeBrokerMethod(methodName, request, correlationId = "") {
       }
     });
   });
-}
-
-/**
- * Detect the broker version and determine if it's a new broker (> 2.0.1).
- * New brokers require different request/response handling.
- */
-async function detectBrokerVersion() {
-  try {
-    const resp = await invokeBrokerMethod("getLinuxBrokerVersion", {});
-    const data = JSON.parse(resp);
-
-    if (data.version) {
-      brokerVersion = data.version;
-      // Compare version: > 2.0.1 means new broker
-      const parts = brokerVersion.split(".").map(Number);
-      isNewBroker = parts[0] > 2 ||
-        (parts[0] === 2 && parts[1] > 0) ||
-        (parts[0] === 2 && parts[1] === 0 && parts[2] > 1);
-
-      console.debug("[INTUNE_DIAG] Detected broker version", {
-        version: brokerVersion,
-        isNewBroker,
-        usesDirectInvocation: true
-      });
-    } else {
-      // If version not available, assume old broker for safety
-      brokerVersion = "unknown";
-      isNewBroker = false;
-      console.debug("[INTUNE_DIAG] Could not detect broker version, assuming legacy broker");
-    }
-  } catch (error) {
-    // If version detection fails, try to infer from error type
-    // New brokers may still work, old brokers might fail differently
-    brokerVersion = "unknown";
-    isNewBroker = false;
-    console.debug("[INTUNE_DIAG] Broker version detection failed", {
-      error: error.message,
-      assumingLegacy: true
-    });
-  }
 }
 
 /**
@@ -226,21 +184,13 @@ async function getBrokerAccountsAsync() {
 }
 
 exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
-  // Enhanced Intune SSO initialization logging for better diagnostics
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
     configuredUser: ssoInTuneAuthUser || "(none - will use first available)",
-    timestamp: new Date().toISOString(),
-    method: "direct D-Bus invocation (supports broker > 2.0.1)"
+    timestamp: new Date().toISOString()
   });
 
   try {
-    // Wait for broker to be ready (uses direct invocation, no introspection needed)
     await waitForBrokerReady(10, 500);
-
-    // Detect broker version to determine request/response format
-    await detectBrokerVersion();
-
-    // Get accounts using direct invocation
     const resp = await getBrokerAccountsAsync();
     processInTuneAccounts(resp, ssoInTuneAuthUser);
   } catch (err) {
@@ -263,27 +213,13 @@ exports.isSsoUrl = function isSsoUrl(url) {
 };
 
 /**
- * Build the request object for acquirePrtSsoCookie based on broker version.
- *
- * Old broker (≤ 2.0.1): account at top level
- * New broker (> 2.0.1): account nested in authParameters with authorizationType
+ * Build the request object for acquirePrtSsoCookie.
+ * Uses format compatible with both old and new broker versions.
  *
  * @param {string} ssoUrl - The URL requiring SSO authentication
- * @returns {object} - The request object formatted for the current broker version
+ * @returns {object} - The request object
  */
 function buildPrtSsoCookieRequest(ssoUrl) {
-  if (isNewBroker) {
-    // New broker format (> 2.0.1)
-    return {
-      ssoUrl: ssoUrl,
-      authParameters: {
-        authority: "https://login.microsoftonline.com/common/",
-        account: inTuneAccount,
-        authorizationType: 8  // PRT_SSO_COOKIE
-      }
-    };
-  }
-  // Old broker format (≤ 2.0.1)
   return {
     ssoUrl: ssoUrl,
     account: inTuneAccount,
@@ -294,7 +230,6 @@ function buildPrtSsoCookieRequest(ssoUrl) {
 }
 
 function processPrtResponse(resp, detail) {
-  // Enhanced PRT response processing with detailed logging
   try {
     const response = JSON.parse(resp);
     if ("error" in response) {
@@ -305,31 +240,23 @@ function processPrtResponse(resp, detail) {
         suggestion: "Check if the account has valid PRT tokens or needs reauthentication"
       });
     } else {
-      // Extract cookie content handling both old and new response formats
       const cookieContent = extractCookieContent(response);
-
       if (cookieContent) {
         console.debug("[INTUNE_DIAG] Adding SSO credential to request", {
           url: detail.url,
-          hasCookieContent: true,
-          cookieLength: cookieContent.length,
-          brokerVersion: brokerVersion || "unknown",
-          responseFormat: response.cookieItems ? "new (cookieItems)" : "old (cookieContent)"
+          cookieLength: cookieContent.length
         });
         detail.requestHeaders["X-Ms-Refreshtokencredential"] = cookieContent;
       } else {
         console.warn("[INTUNE_DIAG] SSO cookie response missing cookie content", {
-          url: detail.url,
-          brokerVersion: brokerVersion || "unknown",
-          hasError: false
+          url: detail.url
         });
       }
     }
   } catch (error) {
     console.error("[INTUNE_DIAG] Error parsing PRT response", {
       error: error.message,
-      url: detail.url,
-      rawResponse: resp?.substring(0, 200) + (resp?.length > 200 ? "..." : "")
+      url: detail.url
     });
   }
 }
@@ -341,22 +268,9 @@ function processPrtResponse(resp, detail) {
  * @param {function} callback - Callback to invoke with modified headers
  */
 async function acquirePrtSsoCookieFromBroker(detail, callback) {
-  console.debug("[INTUNE_DIAG] Acquiring PRT SSO cookie from broker", {
-    url: detail.url,
-    account: inTuneAccount.username,
-    brokerVersion: brokerVersion || "unknown",
-    isNewBroker
-  });
-
   try {
     const request = buildPrtSsoCookieRequest(detail.url);
     const resp = await invokeBrokerMethod("acquirePrtSsoCookie", request);
-
-    console.debug("[INTUNE_DIAG] PRT SSO cookie request completed", {
-      url: detail.url,
-      hasResponse: !!resp
-    });
-
     processPrtResponse(resp, detail);
   } catch (err) {
     console.warn("[INTUNE_DIAG] Failed to acquire PRT SSO cookie", {
