@@ -105,6 +105,12 @@ function extractYargConfig(configObject, appVersion) {
           "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
         type: "object",
       },
+      screenSharePreviewDisabled: {
+        default: false,
+        describe:
+          "Disable live video previews in the screen picker. Enable this if screen sharing causes crashes on your hardware (e.g., USB-C docking stations, DisplayLink adapters). Sources will still be shown with static placeholders.",
+        type: "boolean",
+      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",
