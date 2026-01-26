@@ -27,8 +27,10 @@ The automatic changelog generation uses Google's Gemini AI. You need to add the 
 When you open or update a PR, a GitHub Action automatically:
 1. Uses Gemini AI to generate a one-line summary
 2. Creates a file: `.changelog/pr-XXXX.txt`
-3. Commits it to the PR branch
+3. Commits it to the PR branch (for internal PRs)
 4. Comments on the PR with the generated entry
+
+**External Fork PRs:** For PRs from external forks, the workflow cannot commit directly to your branch. Instead, it posts a comment with the generated changelog entry and instructions to add it manually. Just copy-paste the provided command or create the file yourself.
 
 ### Manual (if needed)
 If you want to add or edit a changelog entry manually:
