@@ -183,12 +183,14 @@ Additionally, writing changelog entries manually when preparing releases is:
 **GitHub Action Trigger:**
 ```yaml
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
 permissions:
   contents: write
   pull-requests: write
 ```
+
+> **Note:** The workflow uses `pull_request_target` instead of `pull_request` to enable posting comments on external fork PRs. See [External Changelog Generation Research](../research/external-changelog-generation-research.md) for security considerations.
 
 **Gemini API Configuration:**
 - Model: `gemini-2.0-flash-thinking-exp-1219`
