@@ -1,0 +1,1 @@
+Fix AppImage extraction for cross-architecture builds - by @IsmaelMartinez (#2073)
