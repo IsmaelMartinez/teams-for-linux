@@ -40,8 +40,10 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
         totalAvailable: response.accounts.length
       });
     } else {
+      // Case-insensitive comparison for email addresses
+      const requestedUserLower = ssoInTuneAuthUser.toLowerCase();
       for (const account of response.accounts) {
-        if (account.username == ssoInTuneAuthUser) {
+        if (account.username.toLowerCase() === requestedUserLower) {
           inTuneAccount = account;
           console.debug("[INTUNE_DIAG] Found matching InTune account", {
             selectedUser: inTuneAccount.username,
