@@ -184,6 +184,9 @@ async function getBrokerAccountsAsync() {
 }
 
 exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
+  // Reset global state to prevent credential leakage between sessions
+  inTuneAccount = null;
+
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
     configuredUser: ssoInTuneAuthUser || "(none - will use first available)",
     timestamp: new Date().toISOString()
@@ -276,7 +279,7 @@ async function acquirePrtSsoCookieFromBroker(detail, callback) {
     console.warn("[INTUNE_DIAG] Failed to acquire PRT SSO cookie", {
       error: err.message || err,
       url: detail.url,
-      account: inTuneAccount.username
+      account: inTuneAccount?.username
     });
   }
 

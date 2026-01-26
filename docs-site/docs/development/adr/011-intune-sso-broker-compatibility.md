@@ -77,7 +77,7 @@ function invokeBrokerMethod(methodName, request, correlationId = "") {
 ```javascript
 function extractCookieContent(response) {
   // New format (> 2.0.1): { cookieItems: [{ cookieContent: "..." }] }
-  if (response.cookieItems?.length > 0) {
+  if (response.cookieItems && Array.isArray(response.cookieItems) && response.cookieItems.length > 0) {
     return response.cookieItems[0].cookieContent;
   }
   // Old format (≤ 2.0.1): { cookieContent: "..." }
@@ -155,6 +155,6 @@ Maintain completely separate implementations for old and new brokers.
 
 - [Microsoft Identity Broker for Linux](https://learn.microsoft.com/en-us/entra/identity/devices/sso-linux)
 - [linux-entra-sso project](https://github.com/siemens/linux-entra-sso)
+- [linux-entra-sso PR #116](https://github.com/siemens/linux-entra-sso/pull/116) - Reference implementation for broker > 2.0.1 support
 - [sso-mib library](https://github.com/siemens/sso-mib)
 - [@homebridge/dbus-native](https://github.com/homebridge/dbus-native)
-- [Investigation Report](../research/intune-sso-regression-investigation.md)
