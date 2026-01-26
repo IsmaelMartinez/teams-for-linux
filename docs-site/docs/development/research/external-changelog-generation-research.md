@@ -174,7 +174,9 @@ await github.rest.repos.getContent({
 **To add this to your PR**, create `.changelog/pr-{prNumber}.txt`:
 
 \`\`\`bash
-echo '{generated content}' > .changelog/pr-{prNumber}.txt
+cat <<'EOF' > .changelog/pr-{prNumber}.txt
+{generated content}
+EOF
 git add .changelog/ && git commit -m "chore: add changelog entry" && git push
 \`\`\`
 

@@ -189,5 +189,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\necho '${summary}' > .changelog/pr-${prNumber}.txt\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
+              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\ncat <<'EOF' > .changelog/pr-${prNumber}.txt\n${summary}\nEOF\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
             })
