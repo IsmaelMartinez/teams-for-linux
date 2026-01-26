@@ -58,7 +58,7 @@ class CommandLineManager {
     // Authentication server whitelist for SSO
     app.commandLine.appendSwitch(
       "auth-server-whitelist",
-      config.authServerWhitelist
+      config.auth?.serverWhitelist || "*"
     );
 
     // GPU acceleration settings

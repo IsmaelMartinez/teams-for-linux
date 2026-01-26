@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
+const { migrateConfig } = require("./migration");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -142,6 +143,7 @@ function extractYargConfig(configObject, appVersion) {
         default: "*",
         describe: "Set auth-server-whitelist value",
         type: "string",
+        deprecated: "Use auth.serverWhitelist instead",
       },
       awayOnSystemIdle: {
         default: false,
@@ -170,6 +172,7 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
         type: "array",
+        deprecated: "Use auth.customCACertsFingerprints instead",
       },
       customCSSName: {
         default: "",
@@ -214,12 +217,14 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
+        deprecated: "Use auth.certificate.path instead",
       },
       clientCertPassword: {
         default: "",
         describe:
           "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
+        deprecated: "Use auth.certificate.password instead",
       },
       closeAppOnCross: {
         default: false,
@@ -408,21 +413,25 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "User to use for SSO basic auth.",
         type: "string",
+        deprecated: "Use auth.basic.user instead",
       },
       ssoBasicAuthPasswordCommand: {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
+        deprecated: "Use auth.basic.passwordCommand instead",
       },
       ssoInTuneEnabled: {
         default: false,
         describe: "Enable Single-Sign-On using Microsoft InTune.",
         type: "boolean",
+        deprecated: "Use auth.intune.enabled instead",
       },
       ssoInTuneAuthUser: {
         default: "",
         describe: "User (e-mail) to use for InTune SSO.",
         type: "string",
+        deprecated: "Use auth.intune.user instead",
       },
       trayIconEnabled: {
         default: true,
@@ -485,6 +494,26 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
         type: "object",
       },
+      auth: {
+        default: {
+          serverWhitelist: "*",
+          basic: {
+            user: "",
+            passwordCommand: "",
+          },
+          intune: {
+            enabled: false,
+            user: "",
+          },
+          certificate: {
+            path: "",
+            password: "",
+          },
+          customCACertsFingerprints: [],
+        },
+        describe: "Authentication configuration for SSO, certificates, and server whitelist",
+        type: "object",
+      },
     })
     .help()
     .parse(process.argv.slice(1));
@@ -514,6 +543,9 @@ function argv(configPath, appVersion) {
   populateConfigObjectFromFile(configObject, configPath);
 
   let config = extractYargConfig(configObject, appVersion);
+
+  // Auto-migrate old config keys to new nested structure
+  config = migrateConfig(config);
 
   if (configObject.configError) {
     config["error"] = configObject.configError;

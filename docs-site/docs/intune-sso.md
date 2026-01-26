@@ -27,12 +27,34 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 **User-specific**: `~/.config/teams-for-linux/config.json`
 ```json
 {
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com"
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    }
+  }
 }
 ```
 
 **System-wide** (common in enterprise environments): `/etc/teams-for-linux/config.json`
+```json
+{
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    }
+  }
+}
+```
+
+**Configuration Options:**
+- `auth.intune.enabled`: Enable/disable Intune SSO integration (default: false)
+- `auth.intune.user`: Specific user account to use (default: "" - uses first available account)
+
+**Legacy Configuration (deprecated):**
+
+The old flat configuration keys are still supported but deprecated:
 ```json
 {
   "ssoInTuneEnabled": true,
@@ -40,9 +62,7 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 }
 ```
 
-**Configuration Options:**
-- `ssoInTuneEnabled`: Enable/disable Intune SSO integration (default: false)
-- `ssoInTuneAuthUser`: Specific user account to use (default: "" - uses first available account)
+These will be automatically migrated to the new nested format.
 
 ## Troubleshooting
 

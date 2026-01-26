@@ -52,8 +52,10 @@ See [ADR-011: Intune SSO Broker Version Compatibility](../../docs-site/docs/deve
 ### Configuration Integration
 
 The module integrates with the main configuration system to read:
-- `ssoInTuneEnabled`: Enable/disable Intune SSO integration
-- `ssoInTuneAuthUser`: Specific user account to use for authentication
+- `auth.intune.enabled`: Enable/disable Intune SSO integration
+- `auth.intune.user`: Specific user account to use for authentication
+
+Legacy flat options (`ssoInTuneEnabled`, `ssoInTuneAuthUser`) are automatically migrated to the new nested format.
 
 ## Diagnostic Logging
 

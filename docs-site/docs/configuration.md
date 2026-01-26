@@ -139,31 +139,69 @@ Place your `config.json` file in the appropriate location based on your installa
 
 ### Authentication & SSO
 
+The `auth` object contains all authentication-related configuration:
+
+```json
+{
+  "auth": {
+    "serverWhitelist": "*",
+    "basic": {
+      "user": "",
+      "passwordCommand": ""
+    },
+    "intune": {
+      "enabled": false,
+      "user": ""
+    },
+    "certificate": {
+      "path": "",
+      "password": ""
+    },
+    "customCACertsFingerprints": []
+  }
+}
+```
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
-| `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
+| `auth.serverWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
+| `auth.customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
 
 #### Basic Authentication
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth |
-| `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
+| `auth.basic.user` | `string` | `""` | User to use for SSO basic auth |
+| `auth.basic.passwordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
 
 #### InTune SSO
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
-| `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO |
+| `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
+| `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
 
 #### Certificates
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
-| `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
+| `auth.certificate.path` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
+| `auth.certificate.password` | `string` | `""` | Custom Client Certs password for corporate authentication |
+
+#### Legacy Options (Deprecated)
+
+The following flat options are deprecated but still supported via auto-migration:
+
+| Old Option | New Option | Notes |
+|------------|------------|-------|
+| `authServerWhitelist` | `auth.serverWhitelist` | Moved |
+| `ssoBasicAuthUser` | `auth.basic.user` | Renamed + moved |
+| `ssoBasicAuthPasswordCommand` | `auth.basic.passwordCommand` | Renamed + moved |
+| `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
+| `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
+| `clientCertPath` | `auth.certificate.path` | Moved |
+| `clientCertPassword` | `auth.certificate.password` | Moved |
+| `customCACertsFingerprints` | `auth.customCACertsFingerprints` | Moved |
 
 ### Network & Proxy
 
@@ -351,10 +389,16 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 #### Enterprise Setup
 ```json
 {
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com",
-  "clientCertPath": "/path/to/cert.p12",
-  "clientCertPassword": "password",
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    },
+    "certificate": {
+      "path": "/path/to/cert.p12",
+      "password": "password"
+    }
+  },
   "proxyServer": "proxy.company.com:8080"
 }
 ```
@@ -414,7 +458,11 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
     "enabled": true
   },
   "customCSSName": "compactDark",
-  "ssoInTuneEnabled": true,
+  "auth": {
+    "intune": {
+      "enabled": true
+    }
+  },
   "proxyServer": "proxy.company.com:8080"
 }
 ```

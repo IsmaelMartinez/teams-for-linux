@@ -34,22 +34,25 @@ exports.loginService = function loginService(parentWindow, callback) {
 
 exports.handleLoginDialogTry = function handleLoginDialogTry(
   window,
-  { ssoBasicAuthUser, ssoBasicAuthPasswordCommand },
+  authBasicConfig,
 ) {
+  const user = authBasicConfig?.user || "";
+  const passwordCommand = authBasicConfig?.passwordCommand || "";
+
   window.webContents.on("login", (event, _request, _authInfo, callback) => {
     event.preventDefault();
     if (isFirstLoginTry) {
       isFirstLoginTry = false;
-      if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
+      if (user && passwordCommand) {
         console.debug(
-          `Retrieve password using command : ${ssoBasicAuthPasswordCommand}`,
+          `Retrieve password using command : ${passwordCommand}`,
         );
         try {
-          const ssoPassword = execSync(ssoBasicAuthPasswordCommand).toString();
-          callback(ssoBasicAuthUser, ssoPassword);
+          const ssoPassword = execSync(passwordCommand).toString();
+          callback(user, ssoPassword);
         } catch (error) {
           console.error(
-            `Failed to execute ssoBasicAuthPasswordCommand. Status Code: ${error.status} with '${error.message}'`,
+            `Failed to execute auth.basic.passwordCommand. Status Code: ${error.status} with '${error.message}'`,
           );
         }
       } else {
