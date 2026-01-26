@@ -149,6 +149,9 @@ jobs:
       - name: Add AppImage update info
         if: contains(github.ref, 'main')
         run: |
+          # Install squashfs-tools for cross-architecture extraction
+          sudo apt-get update && sudo apt-get install -y squashfs-tools
+
           # Download appimagetool
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
@@ -159,8 +162,10 @@ jobs:
               echo "Processing $appimage"
               filename=$(basename "$appimage")
 
-              # Extract the AppImage
-              "$appimage" --appimage-extract
+              # Extract the AppImage using unsquashfs (works cross-architecture)
+              # Find the squashfs offset and extract
+              offset=$(grep -abom 1 'hsqs' "$appimage" | head -1 | cut -d: -f1)
+              unsquashfs -d squashfs-root -offset "$offset" "$appimage"
 
               # Repack with update info (use --appimage-extract-and-run to avoid FUSE requirement)
               ARCH=aarch64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
@@ -234,6 +239,9 @@ jobs:
       - name: Add AppImage update info
         if: contains(github.ref, 'main')
         run: |
+          # Install squashfs-tools for cross-architecture extraction
+          sudo apt-get update && sudo apt-get install -y squashfs-tools
+
           # Download appimagetool
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
@@ -244,8 +252,10 @@ jobs:
               echo "Processing $appimage"
               filename=$(basename "$appimage")
 
-              # Extract the AppImage
-              "$appimage" --appimage-extract
+              # Extract the AppImage using unsquashfs (works cross-architecture)
+              # Find the squashfs offset and extract
+              offset=$(grep -abom 1 'hsqs' "$appimage" | head -1 | cut -d: -f1)
+              unsquashfs -d squashfs-root -offset "$offset" "$appimage"
 
               # Repack with update info (use --appimage-extract-and-run to avoid FUSE requirement)
               ARCH=armhf ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
