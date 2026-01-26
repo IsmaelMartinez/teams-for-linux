@@ -13,7 +13,7 @@
 exports.onAppCertificateError = function onAppCertificateError(arg) {
   if (arg.error === "net::ERR_CERT_AUTHORITY_INVALID") {
     let unknownIssuerCert = getCertIssuer(arg.certificate);
-    const fingerprints = arg.config.auth?.customCACertsFingerprints || [];
+    const fingerprints = arg.config.customCACertsFingerprints || [];
     if (
       fingerprints.includes(
         unknownIssuerCert.fingerprint

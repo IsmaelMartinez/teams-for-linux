@@ -6,73 +6,36 @@
  */
 
 /**
- * Check if config has any old auth keys that need migration
+ * Check if config has any old Intune keys that need migration
  * @param {Object} config - The config object
  * @returns {boolean} - True if migration needed
  */
-function hasOldAuthKeys(config) {
-  return "authServerWhitelist" in config ||
-    "ssoBasicAuthUser" in config ||
-    "ssoBasicAuthPasswordCommand" in config ||
-    "ssoInTuneEnabled" in config ||
-    "ssoInTuneAuthUser" in config ||
-    "clientCertPath" in config ||
-    "clientCertPassword" in config ||
-    "customCACertsFingerprints" in config;
+function hasOldIntuneKeys(config) {
+  return "ssoInTuneEnabled" in config || "ssoInTuneAuthUser" in config;
 }
 
 /**
- * Migrate old auth keys to new nested structure
+ * Migrate old Intune keys to new nested structure
  * @param {Object} config - The config object to migrate
  */
-function migrateAuth(config) {
+function migrateIntune(config) {
   // Initialize auth object if it doesn't exist or is using defaults
   if (!config.auth || typeof config.auth !== "object") {
     config.auth = {
-      serverWhitelist: "*",
-      basic: { user: "", passwordCommand: "" },
       intune: { enabled: false, user: "" },
-      certificate: { path: "", password: "" },
-      customCACertsFingerprints: [],
     };
   }
 
-  // Ensure nested objects exist
-  if (!config.auth.basic) config.auth.basic = { user: "", passwordCommand: "" };
+  // Ensure intune nested object exists
   if (!config.auth.intune) config.auth.intune = { enabled: false, user: "" };
-  if (!config.auth.certificate) config.auth.certificate = { path: "", password: "" };
 
   // Migrate individual keys (only if old key is explicitly set)
-  if ("authServerWhitelist" in config && config.authServerWhitelist !== "*") {
-    config.auth.serverWhitelist = config.authServerWhitelist;
-  }
-
-  if ("ssoBasicAuthUser" in config && config.ssoBasicAuthUser !== "") {
-    config.auth.basic.user = config.ssoBasicAuthUser;
-  }
-
-  if ("ssoBasicAuthPasswordCommand" in config && config.ssoBasicAuthPasswordCommand !== "") {
-    config.auth.basic.passwordCommand = config.ssoBasicAuthPasswordCommand;
-  }
-
   if ("ssoInTuneEnabled" in config) {
     config.auth.intune.enabled = config.ssoInTuneEnabled;
   }
 
   if ("ssoInTuneAuthUser" in config && config.ssoInTuneAuthUser !== "") {
     config.auth.intune.user = config.ssoInTuneAuthUser;
-  }
-
-  if ("clientCertPath" in config && config.clientCertPath !== "") {
-    config.auth.certificate.path = config.clientCertPath;
-  }
-
-  if ("clientCertPassword" in config && config.clientCertPassword !== "") {
-    config.auth.certificate.password = config.clientCertPassword;
-  }
-
-  if ("customCACertsFingerprints" in config && Array.isArray(config.customCACertsFingerprints) && config.customCACertsFingerprints.length > 0) {
-    config.auth.customCACertsFingerprints = config.customCACertsFingerprints;
   }
 }
 
@@ -84,9 +47,9 @@ function migrateAuth(config) {
 function migrateConfig(config) {
   const migrations = [];
 
-  if (hasOldAuthKeys(config)) {
-    migrateAuth(config);
-    migrations.push("auth");
+  if (hasOldIntuneKeys(config)) {
+    migrateIntune(config);
+    migrations.push("auth.intune");
   }
 
   if (migrations.length > 0) {
@@ -98,4 +61,4 @@ function migrateConfig(config) {
   return config;
 }
 
-module.exports = { migrateConfig, hasOldAuthKeys, migrateAuth };
+module.exports = { migrateConfig, hasOldIntuneKeys, migrateIntune };

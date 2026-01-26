@@ -143,7 +143,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "*",
         describe: "Set auth-server-whitelist value",
         type: "string",
-        deprecated: "Use auth.serverWhitelist instead",
       },
       awayOnSystemIdle: {
         default: false,
@@ -172,7 +171,6 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
         type: "array",
-        deprecated: "Use auth.customCACertsFingerprints instead",
       },
       customCSSName: {
         default: "",
@@ -217,14 +215,12 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
-        deprecated: "Use auth.certificate.path instead",
       },
       clientCertPassword: {
         default: "",
         describe:
           "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
-        deprecated: "Use auth.certificate.password instead",
       },
       closeAppOnCross: {
         default: false,
@@ -413,13 +409,11 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "User to use for SSO basic auth.",
         type: "string",
-        deprecated: "Use auth.basic.user instead",
       },
       ssoBasicAuthPasswordCommand: {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
-        deprecated: "Use auth.basic.passwordCommand instead",
       },
       ssoInTuneEnabled: {
         default: false,
@@ -496,22 +490,12 @@ function extractYargConfig(configObject, appVersion) {
       },
       auth: {
         default: {
-          serverWhitelist: "*",
-          basic: {
-            user: "",
-            passwordCommand: "",
-          },
           intune: {
             enabled: false,
             user: "",
           },
-          certificate: {
-            path: "",
-            password: "",
-          },
-          customCACertsFingerprints: [],
         },
-        describe: "Authentication configuration for SSO, certificates, and server whitelist",
+        describe: "Authentication configuration (currently supports Intune SSO)",
         type: "object",
       },
     })

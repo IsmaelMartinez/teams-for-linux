@@ -139,69 +139,51 @@ Place your `config.json` file in the appropriate location based on your installa
 
 ### Authentication & SSO
 
-The `auth` object contains all authentication-related configuration:
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
+| `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
+
+#### Basic Authentication
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth |
+| `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
+
+#### InTune SSO
+
+InTune SSO uses a nested `auth.intune` configuration:
 
 ```json
 {
   "auth": {
-    "serverWhitelist": "*",
-    "basic": {
-      "user": "",
-      "passwordCommand": ""
-    },
     "intune": {
       "enabled": false,
       "user": ""
-    },
-    "certificate": {
-      "path": "",
-      "password": ""
-    },
-    "customCACertsFingerprints": []
+    }
   }
 }
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `auth.serverWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
-| `auth.customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
-
-#### Basic Authentication
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `auth.basic.user` | `string` | `""` | User to use for SSO basic auth |
-| `auth.basic.passwordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
-
-#### InTune SSO
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
 | `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
 | `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
+
+**Legacy Options (Deprecated):**
+
+| Old Option | New Option | Notes |
+|------------|------------|-------|
+| `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
+| `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
 #### Certificates
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `auth.certificate.path` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
-| `auth.certificate.password` | `string` | `""` | Custom Client Certs password for corporate authentication |
-
-#### Legacy Options (Deprecated)
-
-The following flat options are deprecated but still supported via auto-migration:
-
-| Old Option | New Option | Notes |
-|------------|------------|-------|
-| `authServerWhitelist` | `auth.serverWhitelist` | Moved |
-| `ssoBasicAuthUser` | `auth.basic.user` | Renamed + moved |
-| `ssoBasicAuthPasswordCommand` | `auth.basic.passwordCommand` | Renamed + moved |
-| `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
-| `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
-| `clientCertPath` | `auth.certificate.path` | Moved |
-| `clientCertPassword` | `auth.certificate.password` | Moved |
-| `customCACertsFingerprints` | `auth.customCACertsFingerprints` | Moved |
+| `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
+| `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
 
 ### Network & Proxy
 

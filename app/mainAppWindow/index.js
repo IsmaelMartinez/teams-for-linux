@@ -268,7 +268,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   addEventHandlers();
 
-  login.handleLoginDialogTry(window, config.auth?.basic);
+  login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
 
   const url = processArgs(process.argv);
   connectionManager.start(url, {
@@ -313,12 +313,12 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
-  const certPath = config.auth?.certificate?.path;
+  const certPath = config.clientCertPath;
   if (certPath) {
     app.importCertificate(
       {
         certificate: certPath,
-        password: config.auth?.certificate?.password || "",
+        password: config.clientCertPassword || "",
       },
       (result) => {
         console.info(
