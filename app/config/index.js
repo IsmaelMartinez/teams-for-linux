@@ -105,9 +105,10 @@ function extractYargConfig(configObject, appVersion) {
           picker: {
             livePreviewDisabled: false,
           },
+          lockInhibitionMethod: "Electron",
         },
         describe:
-          "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. picker: controls the source selection dialog. Set picker.livePreviewDisabled to true if screen sharing causes crashes on certain hardware (e.g., USB-C docking stations, DisplayLink adapters).",
+          "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. picker: controls the source selection dialog. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). Set picker.livePreviewDisabled to true if screen sharing causes crashes on certain hardware (e.g., USB-C docking stations, DisplayLink adapters).",
         type: "object",
       },
       screenSharingThumbnail: {
@@ -408,8 +409,9 @@ function extractYargConfig(configObject, appVersion) {
       },
       screenLockInhibitionMethod: {
         default: "Electron",
+        deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
         describe:
-          "Screen lock inhibition method to be used (Electron/WakeLockSentinel)",
+          "[DEPRECATED] Use screenSharing.lockInhibitionMethod instead. Screen lock inhibition method (Electron/WakeLockSentinel).",
         type: "string",
         choices: ["Electron", "WakeLockSentinel"],
       },
