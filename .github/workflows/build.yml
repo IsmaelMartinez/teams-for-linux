@@ -406,14 +406,52 @@ jobs:
               return;
             }
 
+            // Group artifacts by platform
+            const linuxX64 = buildArtifacts.find(a => a.name.includes('linux-x64'));
+            const linuxArm64 = buildArtifacts.find(a => a.name.includes('linux-arm64'));
+            const linuxArmv7l = buildArtifacts.find(a => a.name.includes('linux-armv7l'));
+            const macos = buildArtifacts.find(a => a.name.includes('macos'));
+            const windows = buildArtifacts.find(a => a.name.includes('windows'));
+
             let body = '## 📦 PR Build Artifacts\n\n✅ **Build successful!** Download artifacts:\n\n';
 
-            buildArtifacts.forEach(artifact => {
-              const sizeMB = (artifact.size_in_bytes / 1024 / 1024).toFixed(2);
-              body += `- [${artifact.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${artifact.id}) (${sizeMB} MB)\n`;
-            });
+            // Linux section
+            body += '### 🐧 Linux\n\n';
+            if (linuxX64) {
+              const sizeMB = (linuxX64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**x86_64** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxX64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${linuxX64.id})\n\n`;
+            }
+            if (linuxArm64) {
+              const sizeMB = (linuxArm64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**arm64** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${linuxArm64.id})\n\n`;
+            }
+            if (linuxArmv7l) {
+              const sizeMB = (linuxArmv7l.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**armv7l** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxArmv7l.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${linuxArmv7l.id})\n\n`;
+            }
 
-            body += `\n[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            // macOS section
+            if (macos) {
+              const sizeMB = (macos.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += '### 🍎 macOS\n\n';
+              body += `**x86_64** (${sizeMB} MB) - Contains: .dmg\n`;
+              body += `- [${macos.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${macos.id})\n\n`;
+            }
+
+            // Windows section
+            if (windows) {
+              const sizeMB = (windows.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += '### 🪟 Windows\n\n';
+              body += `**x86_64** (${sizeMB} MB) - Contains: .exe installer\n`;
+              body += `- [${windows.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/${windows.id})\n\n`;
+            }
+
+            body += '---\n\n';
+            body += `📝 **Note:** Snap packages (.snap) are built in a [separate workflow](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/snap.yml)\n\n`;
+            body += `[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
