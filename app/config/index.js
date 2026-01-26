@@ -3,7 +3,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
-const { migrateConfig } = require("./migration");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -526,10 +525,7 @@ function argv(configPath, appVersion) {
 
   populateConfigObjectFromFile(configObject, configPath);
 
-  let config = extractYargConfig(configObject, appVersion);
-
-  // Auto-migrate old config keys to new nested structure
-  config = migrateConfig(config);
+  const config = extractYargConfig(configObject, appVersion);
 
   if (configObject.configError) {
     config["error"] = configObject.configError;

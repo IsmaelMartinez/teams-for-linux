@@ -196,9 +196,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   customBackgroundService = customBackground;
   screenSharingService = sharingService;
 
-  if (config.auth?.intune?.enabled) {
+  // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
+  const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
+  const intuneUser = config.auth?.intune?.user || config.ssoInTuneAuthUser;
+  if (intuneEnabled) {
     intune = require("../intune");
-    await intune.initSso(config.auth.intune.user);
+    await intune.initSso(intuneUser);
   }
 
   if (config.trayIconEnabled) {
