@@ -2,23 +2,23 @@
 
 **Issue**: External fork PRs cannot push changelog files
 **Related**: [ADR-005 - AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
-**Status**: Phase 1 Complete, Phase 2 Implemented
+**Status**: Phase 1 Complete (with `pull_request_target` fix), Phase 2 Implemented
 **Date**: 2025-01-18
-**Updated**: 2026-01-18
+**Updated**: 2026-01-26
 
 ## Overview
 
-The current AI-powered changelog generation workflow fails for PRs from external forks because the `GITHUB_TOKEN` cannot push to repositories it doesn't have write access to.
+The AI-powered changelog generation workflow handles PRs from external forks gracefully by using the `pull_request_target` trigger, which runs in the base repository context with full permissions to post comments.
 
 ## Problem Statement
 
-When a PR comes from an external fork:
-1. The workflow checks out the fork's branch
-2. Generates a changelog entry using Gemini AI
-3. Attempts to commit and push the `.changelog/pr-XXX.txt` file
-4. **Fails** because `GITHUB_TOKEN` only has write access to the main repository
+When using the `pull_request` trigger, PRs from external forks face permission restrictions:
+1. The `GITHUB_TOKEN` has read-only access to the base repository
+2. Write permissions declared in the workflow are ignored for fork PRs
+3. The workflow cannot push to the fork's branch (no write access to external repos)
+4. The workflow cannot even post comments on the PR (403 error)
 
-This means external contributors don't get automatic changelog entries.
+**Solution**: Use `pull_request_target` trigger which runs in the base repository context with full permissions. This allows posting comments while maintaining security by never checking out fork code.
 
 ## Options Considered
 
@@ -75,14 +75,28 @@ Keep current workflow but handle forks gracefully:
 
 ## Implementation Plan
 
-### Phase 1: Quick Fix (This PR)
+### Phase 1: Fork Detection with Graceful Degradation (✅ Implemented)
 
-Modify `changelog-generator.yml` to:
+**Status**: Implemented with `pull_request_target` trigger
+
+The workflow uses `pull_request_target` instead of `pull_request` to run in the base repository context, enabling:
+- Full permissions to post comments on external fork PRs
+- Access to repository secrets (GEMINI_API_KEY)
+- Proper fork detection and handling
+
+**Security Considerations:**
+- `pull_request_target` runs with elevated permissions, so we must NEVER checkout and execute code from external forks
+- The workflow only uses PR metadata (title, body) for Gemini API calls, which is safe
+- Changelog existence is checked via GitHub API, not by checking out code
+- Checkout is only performed for internal PRs where `head.repo == base.repo`
+
+**Behavior:**
 1. Detect external forks by comparing `head.repo.full_name` with `base.repo.full_name`
-2. For external forks: skip push step, post instructional comment
-3. For internal PRs: continue with current behavior
+2. Check if changelog already exists via GitHub API (no checkout required)
+3. For external forks: Generate changelog from PR metadata, post instructional comment
+4. For internal PRs: Checkout, generate changelog, commit to PR branch, post confirmation comment
 
-The comment for external forks will include:
+The comment for external forks includes:
 - The AI-generated changelog content
 - Clear instructions to create the file manually
 - A copy-paste command for convenience
@@ -119,32 +133,54 @@ Extend the release automation to:
 
 ## Technical Details
 
-### Fork Detection Logic
+### Trigger Selection: `pull_request_target` vs `pull_request`
 
-```yaml
-# Check if PR is from external fork
-if: github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+| Aspect | `pull_request` | `pull_request_target` |
+|--------|---------------|----------------------|
+| Runs in context of | Fork repository | Base repository |
+| GITHUB_TOKEN permissions | Read-only for forks | Full (as declared) |
+| Access to secrets | No (for forks) | Yes |
+| Can post PR comments | No (for forks) | Yes |
+| Security risk | Low | Higher (must not run fork code) |
+
+### Fork Detection Logic (via GitHub API)
+
+```javascript
+// Safe - uses API metadata, not code checkout
+const headRepo = context.payload.pull_request.head.repo.full_name;
+const baseRepo = context.payload.pull_request.base.repo.full_name;
+const isExternalFork = headRepo !== baseRepo;
+
+// Check changelog existence via API (no checkout needed)
+await github.rest.repos.getContent({
+  owner: context.payload.pull_request.head.repo.owner.login,
+  repo: context.payload.pull_request.head.repo.name,
+  path: `.changelog/pr-${prNumber}.txt`,
+  ref: context.payload.pull_request.head.sha
+});
 ```
 
 ### Comment Template for External Forks
 
 ```markdown
-Changelog entry generated:
+📝 **Changelog entry generated:**
 
 \`\`\`
 {generated content}
 \`\`\`
 
-**To add this to your PR**, create `.changelog/pr-${{ github.event.pull_request.number }}.txt`:
+---
+
+**To add this to your PR**, create `.changelog/pr-{prNumber}.txt`:
 
 \`\`\`bash
-cat <<'EOT' > .changelog/pr-${{ github.event.pull_request.number }}.txt
-{generated content}
-EOT
+echo '{generated content}' > .changelog/pr-{prNumber}.txt
 git add .changelog/ && git commit -m "chore: add changelog entry" && git push
 \`\`\`
 
 Or create the file manually with the content above.
+
+> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.
 ```
 
 ## References
