@@ -1,0 +1,1 @@
+fix(ci): use unsquashfs for cross-architecture ARM AppImage extraction - by @IsmaelMartinez (#2080)
