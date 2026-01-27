@@ -11,7 +11,7 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
 | **High** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
-| **Medium** | Logout Indicator | Requires validation spikes | 14-22 hours |
+| **Stalled** | Logout Indicator | Partial implementation exists, awaiting user validation | ~50% done |
 | **Medium** | Chat Modal | Requires validation spikes | 8-12 hours |
 | **Low** | Custom Notifications Phase 2 | Awaiting user feedback | TBD |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
@@ -67,38 +67,45 @@ These features have completed research and are ready to be built.
 
 ---
 
-## Requires Validation First
-
-These features need validation spikes before implementation to prove the approach works.
+## Stalled - Awaiting User Validation
 
 ### Tray Icon Logout Indicator
 
 **Issue:** [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
 **Research:** [logout-indicator-investigation.md](../research/logout-indicator-investigation.md)
-**Effort:** 14-22 hours (if spikes succeed)
+**Branch:** `origin/claude/analyze-research-spikes-XbYVZ`
+**Status:** ⏸️ STALLED - Partial implementation exists, awaiting user validation
 
 **Description:** Visual indicator on tray icon when logged out of Teams, plus optional notification.
 
-**Required Spikes:**
+**Work Completed (~50%):**
 
-1. **Spike 1 (CRITICAL):** Can we detect logout via `authProvider._account`? (2-3 hours)
-2. **Spike 2 (CRITICAL):** Can we avoid false positives during app startup? (1-2 hours)
-3. **Spike 3 (Optional):** Test multi-device logout scenario (1 hour)
+- ✅ Validation spikes implemented (`authSpikes.js` - 1095 lines)
+- ✅ Auth detection methods added to `reactHandler.js`
+- ✅ Tray icon overlay rendering (`trayIconRenderer.js`)
+- ✅ Configuration structure added
+- ✅ Documentation updated with spike results
+- ❓ Awaiting user testing/validation of the approach
 
-**Decision Tree:**
+**Files Changed:**
 
-- If Spike 1 fails → Feature not feasible
-- If Spike 2 fails → Feature will annoy users, stop
-- If both pass → Implement simple version
+- `app/browser/tools/authSpikes.js` (new)
+- `app/browser/tools/reactHandler.js` (+143 lines)
+- `app/browser/tools/trayIconRenderer.js` (+59 lines)
+- `app/config/index.js` (+11 lines)
+- Documentation updates
 
-**Implementation (if spikes pass):**
+**Next Steps:**
 
-1. Add auth detection method to ReactHandler
-2. Add visual overlay to tray icon when logged out
-3. Add notification on logout (configurable)
-4. Configuration options for both features
+- User from issue #1987 needs to test the branch and confirm it works
+- If no response by end of February 2026, consider closing issue and archiving branch
+- Alternative: Merge as experimental feature behind config flag
 
 ---
+
+## Requires Validation First
+
+These features need validation spikes before implementation to prove the approach works.
 
 ### Chat Modal Feature
 
@@ -272,8 +279,8 @@ These are long-term improvements that happen incrementally.
 
 1. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
 2. **MQTT Screen Sharing Status** - Minimal effort, completes media status
-3. **Logout Indicator Spikes** - Validate before committing to implementation
-4. **Chat Modal Spikes** - Validate API permissions before building
+3. **Chat Modal Spikes** - Validate API permissions before building
+4. **Logout Indicator** - Stalled; resume only if user validates the existing branch
 
 ### Principles
 
