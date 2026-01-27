@@ -144,15 +144,16 @@ This is the practical alternative to the rejected multiple windows feature ([ADR
 
 ---
 
-## Awaiting User Feedback
+## User Feedback Received - Improvements Needed
 
-These features have completed initial implementation. Further phases depend on user requests.
+These features have MVP implementations and real user feedback identifying gaps.
 
 ### Custom Notification System Phase 2
 
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
 **Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
 **Current Status:** MVP Complete (v2.6.16) - User feedback confirms gaps
+**Priority:** Medium
 
 **MVP Delivered:**
 
@@ -182,6 +183,10 @@ These features have completed initial implementation. Further phases depend on u
 **Status:** User actively using feature, confirmed it helps but incomplete coverage.
 
 ---
+
+## Awaiting User Feedback
+
+These features have completed initial implementation. Further phases depend on user requests.
 
 ### MQTT Extended Status Phase 2
 
