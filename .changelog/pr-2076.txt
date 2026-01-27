@@ -1,0 +1,1 @@
+Fix username matching for intune auth to not be case-sensitive - by @vizius-jps (#2076)

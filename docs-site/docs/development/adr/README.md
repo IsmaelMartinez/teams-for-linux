@@ -33,6 +33,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Accepted | 2025-12-13 | N/A |
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
+| [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | ✅ Implemented | 2026-01-25 | v2.7.1 |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Accepted | 2026-01-25 | v2.7.1 |
 
 **Legend:**
@@ -118,6 +119,18 @@ Architecture Decision Records capture important architectural decisions along wi
 - MQTT commands provide clean architecture for external triggers
 - Users provide own MQTT broker (localhost or Home Assistant)
 - Consider HTTP server for zero-dependency alternative (future)
+
+### Distribution & Packaging
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [011](011-appimage-update-info.md) | AppImage Update Info | Post-process AppImages with appimagetool to embed update info for third-party update managers |
+
+**Key Outcomes:**
+- Third-party tools (Gear Lever, AppImageUpdate) can detect and manage updates
+- Delta updates via `.zsync` files reduce bandwidth
+- Both electron-updater and AppImage update info coexist
+- Adds ~2-3 minutes to CI build time
 
 ## Creating New ADRs
 
@@ -282,12 +295,12 @@ When referencing code in ADRs:
 ## ADR Statistics
 
 - **Total ADRs**: 12
-- **Implemented**: 4
+- **Implemented**: 5
 - **Accepted**: 3
 - **Proposed**: 1
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 7 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI/UX)
+- **Topics covered**: 8 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI/UX, Distribution & Packaging)
 
 ## Related Documentation
 

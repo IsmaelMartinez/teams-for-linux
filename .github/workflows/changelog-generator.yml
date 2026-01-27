@@ -1,53 +1,75 @@
 name: Generate Changelog Entry
 
+# SECURITY NOTE: Using pull_request_target to enable commenting on external fork PRs.
+# This trigger runs in the base repository context with full permissions.
+# CRITICAL: We must NEVER checkout and execute code from forks with this trigger.
+# The workflow only uses PR metadata (title, body) for Gemini API calls, which is safe.
+# Checkout is only performed for internal PRs where head.repo == base.repo.
+
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
     branches: [main]
 
 jobs:
-  check-changelog:
+  generate-changelog:
     runs-on: ubuntu-latest
     # Skip changelog generation for release PRs
     if: ${{ !startsWith(github.event.pull_request.head.ref, 'release/') }}
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check if changelog already exists
-        id: check
-        run: |
-          if [ -f ".changelog/pr-${{ github.event.pull_request.number }}.txt" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Changelog file already exists, skipping generation"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "📝 Changelog file not found, will generate"
-          fi
-
-  generate-changelog:
-    runs-on: ubuntu-latest
-    needs: check-changelog
-    # Only run if changelog doesn't exist
-    if: needs.check-changelog.outputs.exists == 'false'
     permissions:
       contents: write
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Detect fork status and check changelog existence
+        id: setup
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          script: |
+            const headRepo = context.payload.pull_request.head.repo.full_name;
+            const baseRepo = context.payload.pull_request.base.repo.full_name;
+            const isExternalFork = headRepo !== baseRepo;
+            const prNumber = context.payload.pull_request.number;
+
+            core.setOutput('is_external_fork', isExternalFork.toString());
+            console.log(`Fork status: ${isExternalFork ? 'external fork' : 'internal'} (${headRepo} vs ${baseRepo})`);
+
+            // Check if changelog already exists using GitHub API (safe - no code execution)
+            // For external forks, we check their repo; for internal PRs, we check the base repo
+            const repoOwner = context.payload.pull_request.head.repo.owner.login;
+            const repoName = context.payload.pull_request.head.repo.name;
+
+            try {
+              await github.rest.repos.getContent({
+                owner: repoOwner,
+                repo: repoName,
+                path: `.changelog/pr-${prNumber}.txt`,
+                ref: context.payload.pull_request.head.sha
+              });
+              core.setOutput('changelog_exists', 'true');
+              console.log('✅ Changelog file already exists, skipping generation');
+            } catch (e) {
+              if (e.status === 404) {
+                core.setOutput('changelog_exists', 'false');
+                console.log('📝 Changelog file not found, will generate');
+              } else {
+                // For other errors (e.g., rate limiting), log and continue
+                console.log(`⚠️ Could not check changelog existence: ${e.message}`);
+                core.setOutput('changelog_exists', 'false');
+              }
+            }
+
+      # Only checkout for internal PRs where we need to commit the changelog
+      # SECURITY: Never checkout external fork code with pull_request_target
+      - name: Checkout PR branch (internal PRs only)
+        if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate summary with Gemini
+        if: steps.setup.outputs.changelog_exists == 'false'
         id: gemini
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
@@ -101,6 +123,7 @@ jobs:
             }
 
       - name: Post-process summary
+        if: steps.setup.outputs.changelog_exists == 'false'
         id: final
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
@@ -117,18 +140,11 @@ jobs:
             // Add PR number
             summary = `${summary} (#${prNum})`;
 
-            // Detect if PR is from external fork
-            const headRepo = context.payload.pull_request.head.repo.full_name;
-            const baseRepo = context.payload.pull_request.base.repo.full_name;
-            const isExternalFork = headRepo !== baseRepo;
-
             core.setOutput('final_summary', summary);
-            core.setOutput('is_external_fork', isExternalFork.toString());
             console.log(`Final: ${summary}`);
-            console.log(`External fork: ${isExternalFork} (${headRepo} vs ${baseRepo})`);
 
-      - name: Save changelog entry
-        if: steps.final.outputs.is_external_fork == 'false'
+      - name: Save changelog entry (internal PRs only)
+        if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
         run: |
           mkdir -p .changelog
           echo "${{ steps.final.outputs.final_summary }}" > .changelog/pr-${{ github.event.pull_request.number }}.txt
@@ -136,8 +152,8 @@ jobs:
           echo "✅ Created: .changelog/pr-${{ github.event.pull_request.number }}.txt"
           cat .changelog/pr-${{ github.event.pull_request.number }}.txt
 
-      - name: Commit changelog file to PR branch
-        if: steps.final.outputs.is_external_fork == 'false'
+      - name: Commit changelog file to PR branch (internal PRs only)
+        if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
         env:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
@@ -150,7 +166,7 @@ jobs:
           echo "✅ Changelog entry committed to PR branch"
 
       - name: Comment on PR (internal)
-        if: steps.final.outputs.is_external_fork == 'false'
+        if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
@@ -162,7 +178,7 @@ jobs:
             })
 
       - name: Comment on PR (external fork)
-        if: steps.final.outputs.is_external_fork == 'true'
+        if: steps.setup.outputs.is_external_fork == 'true' && steps.setup.outputs.changelog_exists == 'false'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
@@ -173,5 +189,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\necho '${summary}' > .changelog/pr-${prNumber}.txt\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
+              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\ncat <<'EOF' > .changelog/pr-${prNumber}.txt\n${summary}\nEOF\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
             })
