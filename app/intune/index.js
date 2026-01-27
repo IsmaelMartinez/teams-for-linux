@@ -273,6 +273,12 @@ function processPrtResponse(resp, detail) {
 async function acquirePrtSsoCookieFromBroker(detail, callback) {
   try {
     const request = buildPrtSsoCookieRequest(detail.url);
+    console.debug("[INTUNE_DIAG] Sending acquirePrtSsoCookie request", {
+      url: detail.url,
+      accountUsername: inTuneAccount?.username,
+      accountKeys: Object.keys(inTuneAccount || {}),
+      requestKeys: Object.keys(request)
+    });
     const resp = await invokeBrokerMethod("acquirePrtSsoCookie", request);
     processPrtResponse(resp, detail);
   } catch (err) {
