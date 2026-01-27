@@ -11,9 +11,9 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
 | **High** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
+| **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
+| **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | 8-12 hours |
 | **Stalled** | Logout Indicator | Partial implementation exists, awaiting user validation | ~50% done |
-| **Medium** | Chat Modal | Requires validation spikes | 8-12 hours |
-| **Low** | Custom Notifications Phase 2 | Awaiting user feedback | TBD |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
 
 ---
@@ -115,6 +115,12 @@ These features need validation spikes before implementation to prove the approac
 
 **Description:** Lightweight chat modal for quick messaging without navigating away from current Teams view.
 
+**User Feedback (from #1984):**
+
+> "Yes, a small chat window might work. The main issue is chatting with someone while in a call, so that would solve this issue."
+
+This is the practical alternative to the rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md)).
+
 **Required Spikes:**
 
 1. **Spike 1 (CRITICAL):** Test if `Chat.Read`/`Chat.ReadWrite` permissions are available in Teams token
@@ -134,6 +140,8 @@ These features need validation spikes before implementation to prove the approac
 3. Build UI (search + send)
 4. Add keyboard shortcut to show modal
 
+**Note:** Chat spikes already exist on branch `origin/claude/analyze-research-spikes-XbYVZ` in `app/graphApi/chatSpikes.js` (507 lines).
+
 ---
 
 ## Awaiting User Feedback
@@ -143,22 +151,35 @@ These features have completed initial implementation. Further phases depend on u
 ### Custom Notification System Phase 2
 
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
-**Current Status:** MVP Complete (v2.6.16)
+**Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
+**Current Status:** MVP Complete (v2.6.16) - User feedback confirms gaps
 
 **MVP Delivered:**
 
-- Toast notifications with auto-dismiss
-- Click-to-focus functionality
-- Configuration via `notificationMethod: "custom"`
+- ✅ Meeting notifications (meeting started) - working with Quickshell/Noctalia
+- ✅ Toast notifications with auto-dismiss
+- ✅ Click-to-focus functionality
+- ✅ Configuration via `notificationMethod: "custom"`
 
-**Phase 2 (If Requested):**
+**Known Gaps (from #2039):**
+
+- ❌ **Chat notifications** - Private/group chat messages only appear in internal notification, not system
+- ❌ **Calendar invitations** - Meeting invites bypass system notification handler
+- Different notification types use separate code paths
+
+**Phase 2 Priority Items:**
+
+1. Route chat notifications through custom notification system
+2. Route calendar invitation notifications through custom notification system
+3. Investigate unified notification handling
+
+**Phase 2 Nice-to-Have:**
 
 - Notification center drawer
 - Mark as read/unread
 - Badge count on tray icon
-- Clear all functionality
 
-**Trigger:** Monitor GitHub issues for 2-4 weeks; implement if users request notification history/center features.
+**Status:** User actively using feature, confirmed it helps but incomplete coverage.
 
 ---
 
@@ -279,8 +300,9 @@ These are long-term improvements that happen incrementally.
 
 1. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
 2. **MQTT Screen Sharing Status** - Minimal effort, completes media status
-3. **Chat Modal Spikes** - Validate API permissions before building
-4. **Logout Indicator** - Stalled; resume only if user validates the existing branch
+3. **Custom Notifications Phase 2** - User feedback confirms gaps; chat/calendar notifications missing
+4. **Chat Modal Spikes** - User confirmed it solves their use case; spikes already written
+5. **Logout Indicator** - Stalled; resume only if user validates the existing branch
 
 ### Principles
 
