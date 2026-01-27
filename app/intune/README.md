@@ -40,7 +40,7 @@ The module supports both legacy (≤ 2.0.1) and new (> 2.0.1) Microsoft Identity
 1. **Direct D-Bus invocation** - Bypasses introspection (removed in broker > 2.0.1)
 2. **Dual response parsing** - Handles both `cookieContent` and `cookieItems[]` formats
 
-See [ADR-011: Intune SSO Broker Version Compatibility](../../docs-site/docs/development/adr/011-intune-sso-broker-compatibility.md) for technical details.
+See [ADR-012: Intune SSO Broker Version Compatibility](../../docs-site/docs/development/adr/012-intune-sso-broker-compatibility.md) for technical details.
 
 ### Authentication Flow
 

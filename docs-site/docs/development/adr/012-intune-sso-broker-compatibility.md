@@ -1,8 +1,8 @@
 ---
-id: 011-intune-sso-broker-compatibility
+id: 012-intune-sso-broker-compatibility
 ---
 
-# ADR 011: Intune SSO Broker Version Compatibility
+# ADR 012: Intune SSO Broker Version Compatibility
 
 ## Status
 
