@@ -146,57 +146,12 @@ jobs:
         if: contains(github.ref, 'main')
         run: npm run dist:linux:arm64 -- --publish always
 
-      - name: Add AppImage update info
-        if: contains(github.ref, 'main')
-        run: |
-          # Download appimagetool
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-          # Process each arm64 AppImage
-          for appimage in dist/*arm64*.AppImage; do
-            if [ -f "$appimage" ]; then
-              echo "Processing $appimage"
-              filename=$(basename "$appimage")
-
-              # Extract the AppImage
-              "$appimage" --appimage-extract
-
-              # Repack with update info (use --appimage-extract-and-run to avoid FUSE requirement)
-              ARCH=aarch64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
-                -u "gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*arm64*.AppImage.zsync" \
-                squashfs-root \
-                "$appimage"
-
-              # Cleanup
-              rm -rf squashfs-root
-
-              echo "Successfully added update info to $appimage"
-            fi
-          done
-
-      - name: Upload AppImage with update info to release
-        if: contains(github.ref, 'main')
-        run: |
-          # Get version from package.json
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-
-          # Upload the repackaged AppImage and zsync file to the release
-          for file in dist/*arm64*.AppImage dist/*arm64*.AppImage.zsync; do
-            if [ -f "$file" ]; then
-              echo "Uploading $file to release $TAG"
-              gh release upload "$TAG" "$file" --clobber || echo "Warning: Could not upload $file"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build for PR
         if: "!contains(github.ref, 'main')"
         run: npm run dist:linux:arm64 -- --publish never
 
       - name: Add AppImage update info
+        if: contains(github.ref, 'main')
         run: |
           # Install squashfs-tools for cross-architecture extraction
           sudo apt-get update && sudo apt-get install -y squashfs-tools
@@ -275,57 +230,12 @@ jobs:
         if: contains(github.ref, 'main')
         run: npm run dist:linux:arm -- --publish always
 
-      - name: Add AppImage update info
-        if: contains(github.ref, 'main')
-        run: |
-          # Download appimagetool
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-          # Process each armv7l AppImage
-          for appimage in dist/*armv7l*.AppImage; do
-            if [ -f "$appimage" ]; then
-              echo "Processing $appimage"
-              filename=$(basename "$appimage")
-
-              # Extract the AppImage
-              "$appimage" --appimage-extract
-
-              # Repack with update info (use --appimage-extract-and-run to avoid FUSE requirement)
-              ARCH=armhf ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
-                -u "gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*armv7l*.AppImage.zsync" \
-                squashfs-root \
-                "$appimage"
-
-              # Cleanup
-              rm -rf squashfs-root
-
-              echo "Successfully added update info to $appimage"
-            fi
-          done
-
-      - name: Upload AppImage with update info to release
-        if: contains(github.ref, 'main')
-        run: |
-          # Get version from package.json
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-
-          # Upload the repackaged AppImage and zsync file to the release
-          for file in dist/*armv7l*.AppImage dist/*armv7l*.AppImage.zsync; do
-            if [ -f "$file" ]; then
-              echo "Uploading $file to release $TAG"
-              gh release upload "$TAG" "$file" --clobber || echo "Warning: Could not upload $file"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build for PR
         if: "!contains(github.ref, 'main')"
         run: npm run dist:linux:arm -- --publish never
 
       - name: Add AppImage update info
+        if: contains(github.ref, 'main')
         run: |
           # Install squashfs-tools for cross-architecture extraction
           sudo apt-get update && sudo apt-get install -y squashfs-tools
