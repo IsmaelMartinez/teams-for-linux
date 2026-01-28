@@ -34,7 +34,8 @@ exports.loginService = function loginService(parentWindow, callback) {
 
 exports.handleLoginDialogTry = function handleLoginDialogTry(
   window,
-  { ssoBasicAuthUser, ssoBasicAuthPasswordCommand },
+  ssoBasicAuthUser,
+  ssoBasicAuthPasswordCommand,
 ) {
   window.webContents.on("login", (event, _request, _authInfo, callback) => {
     event.preventDefault();

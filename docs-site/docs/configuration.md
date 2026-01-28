@@ -153,10 +153,30 @@ Place your `config.json` file in the appropriate location based on your installa
 
 #### InTune SSO
 
+InTune SSO uses a nested `auth.intune` configuration:
+
+```json
+{
+  "auth": {
+    "intune": {
+      "enabled": false,
+      "user": ""
+    }
+  }
+}
+```
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ssoInTuneEnabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
-| `ssoInTuneAuthUser` | `string` | `""` | User (e-mail) to use for InTune SSO |
+| `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
+| `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
+
+**Legacy Options (Deprecated):**
+
+| Old Option | New Option | Notes |
+|------------|------------|-------|
+| `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
+| `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
 #### Certificates
 
@@ -351,10 +371,16 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 #### Enterprise Setup
 ```json
 {
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com",
-  "clientCertPath": "/path/to/cert.p12",
-  "clientCertPassword": "password",
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    },
+    "certificate": {
+      "path": "/path/to/cert.p12",
+      "password": "password"
+    }
+  },
   "proxyServer": "proxy.company.com:8080"
 }
 ```
@@ -414,7 +440,11 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
     "enabled": true
   },
   "customCSSName": "compactDark",
-  "ssoInTuneEnabled": true,
+  "auth": {
+    "intune": {
+      "enabled": true
+    }
+  },
   "proxyServer": "proxy.company.com:8080"
 }
 ```

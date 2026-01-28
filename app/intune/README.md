@@ -15,13 +15,32 @@ The module consists of the following key components:
 
 ### D-Bus Integration
 
-The module communicates with Microsoft Identity Broker using D-Bus interface `com.microsoft.identity.broker1`:
+The module communicates with Microsoft Identity Broker using direct D-Bus method invocation:
 
 ```javascript
-const brokerService = dbus
-  .sessionBus()
-  .getService("com.microsoft.identity.broker1");
+const BROKER_SERVICE = "com.microsoft.identity.broker1";
+const BROKER_PATH = "/com/microsoft/identity/broker1";
+const BROKER_INTERFACE = "com.microsoft.identity.Broker1";
+
+// Direct invocation - works with all broker versions
+sessionBus.invoke({
+  destination: BROKER_SERVICE,
+  path: BROKER_PATH,
+  interface: BROKER_INTERFACE,
+  member: methodName,
+  signature: "sss",
+  body: [protocolVersion, correlationId, JSON.stringify(request)]
+}, callback);
 ```
+
+### Broker Version Compatibility
+
+The module supports both legacy (≤ 2.0.1) and new (> 2.0.1) Microsoft Identity Broker versions by:
+
+1. **Direct D-Bus invocation** - Bypasses introspection (removed in broker > 2.0.1)
+2. **Dual response parsing** - Handles both `cookieContent` and `cookieItems[]` formats
+
+See [ADR-012: Intune SSO Broker Version Compatibility](../../docs-site/docs/development/adr/012-intune-sso-broker-compatibility.md) for technical details.
 
 ### Authentication Flow
 
@@ -33,8 +52,10 @@ const brokerService = dbus
 ### Configuration Integration
 
 The module integrates with the main configuration system to read:
-- `ssoInTuneEnabled`: Enable/disable Intune SSO integration
-- `ssoInTuneAuthUser`: Specific user account to use for authentication
+- `auth.intune.enabled`: Enable/disable Intune SSO integration
+- `auth.intune.user`: Specific user account to use for authentication
+
+Legacy flat options (`ssoInTuneEnabled`, `ssoInTuneAuthUser`) are automatically migrated to the new nested format.
 
 ## Diagnostic Logging
 
