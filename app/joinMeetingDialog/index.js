@@ -15,13 +15,17 @@ class JoinMeetingDialog {
   show(clipboardText, onJoin) {
     this.#onJoin = onJoin;
 
-    // If window already exists, just show and focus it
+    // If window already exists, update it and show
     if (this.#window) {
       if (this.#window.isMinimized()) {
         this.#window.restore();
       }
       this.#window.show();
       this.#window.focus();
+      this.#window.webContents.send('init-dialog', {
+        clipboardText: clipboardText || '',
+        regexPattern: this.#meetupJoinRegEx,
+      });
       return;
     }
 
@@ -79,8 +83,15 @@ class JoinMeetingDialog {
   }
 
   #handleSubmit = (_event, url) => {
-    if (this.#onJoin && url) {
-      this.#onJoin(url);
+    if (this.#onJoin && url && typeof url === 'string') {
+      try {
+        const pattern = new RegExp(this.#meetupJoinRegEx);
+        if (pattern.test(url)) {
+          this.#onJoin(url);
+        }
+      } catch (error) {
+        console.error('Error validating meeting URL:', error);
+      }
     }
     this.close();
   };

@@ -1,4 +1,4 @@
-let regexPattern = null;
+let compiledRegex = null;
 
 const urlInput = document.getElementById('url-input');
 const joinBtn = document.getElementById('join-btn');
@@ -6,15 +6,10 @@ const cancelBtn = document.getElementById('cancel-btn');
 const errorMessage = document.getElementById('error-message');
 
 function isValidUrl(text) {
-    if (!text || !regexPattern) {
+    if (!text || !compiledRegex) {
         return false;
     }
-    try {
-        const pattern = new RegExp(regexPattern);
-        return pattern.test(text);
-    } catch {
-        return false;
-    }
+    return compiledRegex.test(text);
 }
 
 function updateValidation() {
@@ -45,7 +40,16 @@ function handleCancel() {
 
 // Initialize when data is received from main process
 globalThis.joinMeetingApi.onInit((data) => {
-    regexPattern = data.regexPattern;
+    if (data.regexPattern) {
+        try {
+            compiledRegex = new RegExp(data.regexPattern);
+        } catch (e) {
+            console.error('Invalid regex pattern received:', e);
+            compiledRegex = null;
+        }
+    } else {
+        compiledRegex = null;
+    }
 
     // Pre-populate with clipboard text if it's a valid URL
     if (data.clipboardText && isValidUrl(data.clipboardText)) {
