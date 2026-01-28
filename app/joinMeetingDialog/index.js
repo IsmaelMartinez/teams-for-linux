@@ -36,7 +36,7 @@ class JoinMeetingDialog {
     this.#window = new BrowserWindow({
       title: 'Join Meeting',
       width: 500,
-      height: 220,
+      height: 250,
       resizable: false,
       minimizable: false,
       maximizable: false,
