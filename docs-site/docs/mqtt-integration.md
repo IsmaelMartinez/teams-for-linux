@@ -356,7 +356,6 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 
 **Related Research:**
 
-- [Calendar Data Export Research](development/research/calendar-data-export-research.md)
 - [Graph API Integration](development/research/graph-api-integration-research.md)
 
 ## Home Automation Integration

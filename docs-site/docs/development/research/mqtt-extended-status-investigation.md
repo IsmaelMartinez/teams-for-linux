@@ -750,13 +750,13 @@ await mqttClient.publish('teams/screen-sharing', 'true');
 
 ## Integration with MQTT Commands
 
-The [MQTT Commands Implementation research](mqtt-commands-implementation.md) plans bidirectional MQTT support with future "state queries" (Phase 2). The extended status fields we're adding directly enable these queries:
+Future bidirectional MQTT support with "state queries" would enable:
 
 - `toggle-mute` command → query current `teams/microphone` state
 - `toggle-video` command → query current `teams/camera` state
 - Home automation can check state before deciding action
 
-**Synergy**: The generic `publish()` method serves both status publishing (this issue) and command acknowledgments (MQTT commands).
+**Synergy**: The generic `publish()` method serves both status publishing (this issue) and command acknowledgments (potential MQTT commands feature).
 
 ---
 
@@ -764,7 +764,6 @@ The [MQTT Commands Implementation research](mqtt-commands-implementation.md) pla
 
 - **Issue #1938**: https://github.com/IsmaelMartinez/teams-for-linux/issues/1938
 - **Issue #1832**: https://github.com/IsmaelMartinez/teams-for-linux/issues/1832 (Graph API - now implemented)
-- **MQTT Commands Research**: `docs-site/docs/development/research/mqtt-commands-implementation.md` (bidirectional MQTT, state queries)
 - **Service pattern**: `app/notificationSystem/index.js` (CustomNotificationManager)
 - **Screen sharing service**: `app/screenSharing/service.js` (existing IPC channels)
 - **Graph API client**: `app/graphApi/index.js` and `app/graphApi/ipcHandlers.js`
