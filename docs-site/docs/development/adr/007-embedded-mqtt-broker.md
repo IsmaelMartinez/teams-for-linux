@@ -178,7 +178,6 @@ Document connecting to existing brokers:
 
 ## References
 
-- [MQTT Commands Implementation Research](../research/mqtt-commands-implementation.md)
 - [Aedes MQTT Broker](https://github.com/moscajs/aedes)
 - Related: HTTP command server (future consideration)
 

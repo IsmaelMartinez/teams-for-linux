@@ -92,6 +92,5 @@ Teams for Linux uses `yargs` for CLI argument parsing. We evaluated whether to:
 
 ## References
 
-- [CLI Arguments vs MQTT Comparison](../research/mqtt-commands-implementation.md)
 - [yargs Documentation](https://yargs.js.org/)
 - [commander.js Documentation](https://github.com/tj/commander.js)
