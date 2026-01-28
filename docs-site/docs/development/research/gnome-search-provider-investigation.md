@@ -23,7 +23,7 @@ Requires system files in `/usr/share/dbus-1/services/` and `/usr/share/gnome-she
 
 | Challenge | Severity | Notes |
 |-----------|----------|-------|
-| Authentication without UI | High | Tokens require active BrowserWindow with Teams loaded |
+| Authentication without UI | High | Tokens are acquired via Teams' React internals, requiring an active BrowserWindow. A background service cannot do this. |
 | Latency | High | Graph API: 200-1000ms per call. GNOME expects ~500ms total |
 | Package distribution | Medium | AppImage/Flatpak/Snap can't easily install system D-Bus files |
 | GNOME-only | Low | Acceptable trade-off |
@@ -53,7 +53,7 @@ Just launch Teams with search query pre-filled. No results in GNOME Shell.
 
 - **Latency:** N/A (just opens app)
 - **Complexity:** Very low
-- **Cons:** Defeats the purpose
+- **Cons:** Does not show results directly in GNOME Shell, failing to meet the core user request
 
 ## Why Latency is Unavoidable
 
@@ -68,11 +68,11 @@ Total: **~300-1100ms** for the complete search. Graph API latency dominates and 
 
 ## Recommendation
 
-**Do not implement.** The user experience will be poor (slow results) and the feature only benefits GNOME users willing to keep Teams running.
+**Do not implement.** High development effort for a feature limited to GNOME users, combined with poor UX (slow results), results in an unfavorable complexity-to-value ratio.
 
 **Alternatives:**
 - Global keyboard shortcut to focus Teams + open search (already works)
-- CLI wrapper around Graph API with cached credentials
+- CLI wrapper around Graph API with cached credentials (could integrate with launchers like `rofi`)
 
 ## If Proceeding Anyway
 
