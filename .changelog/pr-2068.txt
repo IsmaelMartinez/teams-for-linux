@@ -1,0 +1,1 @@
+Add screen sharing configuration and improve hardware compatibility - by @IsmaelMartinez (#2068)

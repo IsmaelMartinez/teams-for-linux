@@ -96,13 +96,29 @@ function extractYargConfig(configObject, appVersion) {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
       },
+      screenSharing: {
+        default: {
+          thumbnail: {
+            enabled: true,
+            alwaysOnTop: true,
+          },
+          picker: {
+            livePreviewDisabled: false,
+          },
+          lockInhibitionMethod: "Electron",
+        },
+        describe:
+          "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. picker: controls the source selection dialog. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). Set picker.livePreviewDisabled to true if screen sharing causes crashes on certain hardware (e.g., USB-C docking stations, DisplayLink adapters).",
+        type: "object",
+      },
       screenSharingThumbnail: {
         default: {
           enabled: true,
           alwaysOnTop: true,
         },
+        deprecated: "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
         describe:
-          "Automatically show a thumbnail window when screen sharing is active, with alwaysOnTop to keep the preview window above other windows.",
+          "[DEPRECATED] Use screenSharing.thumbnail instead. Controls the thumbnail preview window during active screen sharing.",
         type: "object",
       },
       appIcon: {
@@ -393,8 +409,9 @@ function extractYargConfig(configObject, appVersion) {
       },
       screenLockInhibitionMethod: {
         default: "Electron",
+        deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
         describe:
-          "Screen lock inhibition method to be used (Electron/WakeLockSentinel)",
+          "[DEPRECATED] Use screenSharing.lockInhibitionMethod instead. Screen lock inhibition method (Electron/WakeLockSentinel).",
         type: "string",
         choices: ["Electron", "WakeLockSentinel"],
       },
