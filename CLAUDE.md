@@ -162,6 +162,17 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 - Always run tests and linting before commits
 - Update documentation alongside code changes
 
+### Responding to PR Review Comments
+
+When a PR has review comments, address them proactively:
+
+1. Fetch PR comments using `gh api repos/IsmaelMartinez/teams-for-linux/pulls/{PR_NUMBER}/comments`
+2. For each actionable review comment (not automated bots like changelog, build artifacts, SonarQube):
+   - Make the requested code changes
+   - Commit and push the changes
+3. Reply to the review by adding a PR comment summarizing all changes made, referencing the discussion IDs
+4. Use `gh pr comment {PR_NUMBER} --body "..."` to post the summary
+
 ### Development Roadmap
 
 **IMPORTANT:** The project maintains a development roadmap at `docs-site/docs/development/plan/roadmap.md`.
