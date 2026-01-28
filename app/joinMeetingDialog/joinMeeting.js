@@ -35,16 +35,16 @@ function updateValidation() {
 function handleJoin() {
     const url = urlInput.value.trim();
     if (isValidUrl(url)) {
-        window.joinMeetingApi.submit(url);
+        globalThis.joinMeetingApi.submit(url);
     }
 }
 
 function handleCancel() {
-    window.joinMeetingApi.cancel();
+    globalThis.joinMeetingApi.cancel();
 }
 
 // Initialize when data is received from main process
-window.joinMeetingApi.onInit((data) => {
+globalThis.joinMeetingApi.onInit((data) => {
     regexPattern = data.regexPattern;
 
     // Pre-populate with clipboard text if it's a valid URL
