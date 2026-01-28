@@ -1,0 +1,1 @@
+Upgrade yargs to v18 and refactor config parsing - by @IsmaelMartinez (#2072)
