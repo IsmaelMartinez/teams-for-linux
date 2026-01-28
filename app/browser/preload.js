@@ -117,6 +117,7 @@ globalThis.electronAPI = {
     getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
     createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
+    runChatSpikes: () => ipcRenderer.invoke("run-chat-spikes"),
   },
 
   // System information (safe to expose)
@@ -347,11 +348,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "framelessTweaks", path: "./tools/frameless" }
+      { name: "framelessTweaks", path: "./tools/frameless" },
+      { name: "authSpikes", path: "./tools/authSpikes" },
+      { name: "reactHandler", path: "./tools/reactHandler" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"]);
+    // - trayIconRenderer: Tray icon updates
+    // - mqttStatusMonitor: MQTT status updates
+    // - reactHandler: Auth state notifications and logout indicator
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "reactHandler"]);
 
     let successCount = 0;
     for (const module of modules) {

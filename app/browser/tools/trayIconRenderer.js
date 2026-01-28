@@ -1,6 +1,8 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
 class TrayIconRenderer {
+  #isAuthenticated = true; // Assume logged in initially
+
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
@@ -11,6 +13,24 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+
+    // Listen for auth state changes (logout indicator feature)
+    const logoutIndicator = config?.logoutIndicator ?? {};
+    if (logoutIndicator.enabled !== false && logoutIndicator.showTrayIndicator !== false) {
+      globalThis.addEventListener('auth-state-changed', (event) => {
+        const wasAuthenticated = this.#isAuthenticated;
+        this.#isAuthenticated = event.detail?.authenticated ?? true;
+
+        // Re-render tray icon if auth state changed
+        if (wasAuthenticated !== this.#isAuthenticated) {
+          console.debug('[TRAY] Auth state changed, re-rendering icon', {
+            authenticated: this.#isAuthenticated
+          });
+          this.updateActivityCount({ detail: { number: this.lastActivityCount || 0 } });
+        }
+      });
+      console.debug('[TRAY] Logout indicator enabled, listening for auth-state-changed events');
+    }
   }
 
   updateActivityCount(event) {
@@ -98,6 +118,45 @@ class TrayIconRenderer {
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(image, 0, 0, 140, 140);
+
+    // Add logout indicator if not authenticated
+    const logoutIndicator = this.config?.logoutIndicator ?? {};
+    if (!this.#isAuthenticated && logoutIndicator.enabled !== false && logoutIndicator.showTrayIndicator !== false) {
+      // Semi-transparent dark overlay to "gray out" the icon
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, 140, 140);
+
+      // Orange/yellow warning "X" pattern - visible against both icon and red badge
+      ctx.strokeStyle = "#ff9900";
+      ctx.lineWidth = 14;
+      ctx.lineCap = "round";
+
+      // First diagonal
+      ctx.beginPath();
+      ctx.moveTo(20, 20);
+      ctx.lineTo(120, 120);
+      ctx.stroke();
+
+      // Second diagonal (forms X)
+      ctx.beginPath();
+      ctx.moveTo(120, 20);
+      ctx.lineTo(20, 120);
+      ctx.stroke();
+
+      // Dark outline for contrast
+      ctx.strokeStyle = "#cc6600";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(20, 20);
+      ctx.lineTo(120, 120);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(120, 20);
+      ctx.lineTo(20, 120);
+      ctx.stroke();
+    }
+
+    // Add notification badge
     if (newActivityCount > 0 && !this.config.disableBadgeCount) {
       ctx.fillStyle = "red";
       ctx.beginPath();
