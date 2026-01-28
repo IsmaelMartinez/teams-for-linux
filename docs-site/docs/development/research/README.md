@@ -71,6 +71,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Conclusion:** Not currently feasible - Teams manages auth internally without exposed APIs
   - Note: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
 
+- **[GNOME Search Provider Investigation](gnome-search-provider-investigation.md)** - **NOT RECOMMENDED**
+  - GNOME Shell search integration ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075))
+  - Feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor
+
 ### Implemented Features (Research Archived)
 
 The following research documents have been archived as their features are fully implemented:

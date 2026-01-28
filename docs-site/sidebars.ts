@@ -92,6 +92,7 @@ const sidebars: SidebarsConfig = {
             'development/research/dom-access-investigation',
             'development/research/logout-indicator-investigation',
             'development/research/external-browser-authentication-investigation',
+            'development/research/gnome-search-provider-investigation',
             'development/research/graph-api-integration-research',
             'development/research/mqtt-commands-implementation',
             'development/research/mqtt-extended-status-investigation',
