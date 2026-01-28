@@ -12,8 +12,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
 | **High** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
 | **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
-| **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | 8-12 hours |
-| **Stalled** | Logout Indicator | Partial implementation exists, awaiting user validation | ~50% done |
+| **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | Spikes: 2h, Phase 1: 8-12h |
+| **Stalled** | Logout Indicator | Partial implementation (~50% complete), awaiting user validation | Remaining: ~4-6h |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
 
 ---
@@ -87,13 +87,7 @@ These features have completed research and are ready to be built.
 - ✅ Documentation updated with spike results
 - ❓ Awaiting user testing/validation of the approach
 
-**Files Changed:**
-
-- `app/browser/tools/authSpikes.js` (new)
-- `app/browser/tools/reactHandler.js` (+143 lines)
-- `app/browser/tools/trayIconRenderer.js` (+59 lines)
-- `app/config/index.js` (+11 lines)
-- Documentation updates
+**Work Summary:** Auth detection spike code, tray icon overlay rendering, and configuration structure. See branch for details.
 
 **Next Steps:**
 
