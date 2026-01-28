@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+    <title>Join Meeting</title>
+    <link rel="stylesheet" href="joinMeeting.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Join Meeting</h2>
+        <p>Paste a Teams meeting URL:</p>
+        <input type="text" id="url-input" placeholder="https://teams.microsoft.com/l/meetup-join/..." autofocus>
+        <div class="error" id="error-message"></div>
+        <div class="buttons">
+            <button id="cancel-btn" class="secondary">Cancel</button>
+            <button id="join-btn" class="primary">Join</button>
+        </div>
+    </div>
+    <script src="joinMeeting.js"></script>
+</body>
+</html>

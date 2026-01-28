@@ -1,0 +1,126 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #444;
+}
+
+p {
+    font-size: 14px;
+    color: #666;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+    border-color: #6264a7;
+}
+
+input[type="text"].invalid {
+    border-color: #c42b1c;
+}
+
+.error {
+    font-size: 12px;
+    color: #c42b1c;
+    min-height: 16px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+button.primary {
+    background-color: #6264a7;
+    color: white;
+}
+
+button.primary:hover {
+    background-color: #525299;
+}
+
+button.primary:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+button.secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+button.secondary:hover {
+    background-color: #d0d0d0;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1f1f1f;
+        color: #e0e0e0;
+    }
+
+    h2 {
+        color: #e0e0e0;
+    }
+
+    p {
+        color: #b0b0b0;
+    }
+
+    input[type="text"] {
+        background-color: #2d2d2d;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+
+    input[type="text"]:focus {
+        border-color: #6264a7;
+    }
+
+    button.secondary {
+        background-color: #3d3d3d;
+        color: #e0e0e0;
+    }
+
+    button.secondary:hover {
+        background-color: #4d4d4d;
+    }
+}
