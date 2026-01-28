@@ -242,6 +242,25 @@ function extractYargConfig(configObject, appVersion) {
         describe: "A flag indicates whether to disable microphone auto gain control or not",
         type: "boolean",
       },
+      cameraResolution: {
+        default: {
+          enabled: false,
+          mode: "remove",
+          width: 1920,
+          height: 1080,
+        },
+        describe:
+          "Camera resolution configuration. When enabled with mode 'remove', removes Teams' resolution constraints allowing native camera resolution. With mode 'override', sets camera to specified width/height.",
+        type: "object",
+      },
+      cameraAspectRatio: {
+        default: {
+          enabled: false,
+        },
+        describe:
+          "Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints to the video track.",
+        type: "object",
+      },
       disableGpu: {
         default: false,
         describe:
