@@ -304,6 +304,7 @@ When referencing code in ADRs:
 - **Contributing Guide**: [Development Guidelines](../contributing.md)
 - **Module Documentation**: [Module Index](../module-index.md)
 - **Research Documents**: [Research Index](../research/README.md)
+- **Development Roadmap**: [Future Plans](../plan/roadmap.md)
 - **Configuration Reference**: [Configuration Options](../../configuration.md)
 
 ## Questions?

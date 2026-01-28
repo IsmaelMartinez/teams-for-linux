@@ -8,63 +8,78 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Authentication & Security
-- **[DOM Access Investigation](dom-access-investigation.md)** - Research on DOM access requirements and React breaking changes
-- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - Comprehensive research on tray icon logout indicator feature ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
-  - Multi-signal authentication detection strategy
-  - Visual indicator and notification implementation plan
-  - Critical technical validation spikes required before implementation
-  - Estimated effort: 38-60 hours with technical validation
-- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - Investigation into enabling Microsoft Teams authentication in system browser ([Issue #2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017))
-  - Comprehensive analysis of current authentication architecture
-  - Research on external browser OAuth patterns in Electron apps
-  - Feasibility assessment and technical challenges
-  - **Conclusion**: Not currently feasible - Teams web app manages authentication internally without exposed APIs
-  - Clarification: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
-- For implemented solutions, see [ADR-002: Token Cache](../adr/002-token-cache-secure-storage.md) and [ADR-003: Token Refresh](../adr/003-token-refresh-implementation.md)
+### Active Research - Ready for Implementation
 
-### Electron & Framework
-- **useSystemPicker Investigation** - ✅ Moved to [ADR 008](../adr/008-usesystempicker-electron-38.md) - Electron 38's native screen picker rejected due to incomplete Linux Wayland support
+- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
+  - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
+  - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
+  - **Status:** Research complete, ready to implement
 
-### Strategic Analysis
-- **[Configuration Organization Research](configuration-organization-research.md)** - Analysis of configuration system organization and proposed improvements
-  - ✅ **Phase 1 Complete**: Documentation reorganization
-  - 📋 **Phases 2-3 DEFERRED**: Nested structure migration will happen incrementally as modules are refactored
-  - No automatic migration tooling planned - new features use nested patterns from day one
+### Active Research - Requires Validation Spikes
 
-### Architecture
-- **[Architecture Modernization Research](architecture-modernization-research.md)** - 🗄️ **ARCHIVED** - DDD+Plugin approach deemed too complex
+- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
+  - Visual indicator and notification when logged out
+  - **Status:** Research complete, requires validation spikes before implementation
+  - Estimated effort: 14-22 hours (if spikes succeed)
+
+- **[Chat Modal Investigation](chat-modal-investigation.md)** - Quick chat modal feature
+  - Lightweight alternative to multi-window support
+  - Uses Microsoft Graph API for chat functionality
+  - **Status:** Investigation complete, requires API permission validation
+  - Related: [Chat Modal Spikes and Gaps](chat-modal-spikes-and-gaps.md)
+
+### Ongoing Development - Awaiting User Feedback
+
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
+  - **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
+  - **Phase 2 DEFERRED**: Notification center awaiting user feedback
+
+- **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
+  - **Phase 1 Complete**: Infrastructure, documentation, and Last Will Testament
+  - **Phase 2 DEFERRED**: WebRTC camera/mic monitoring awaiting user feedback
+
+- **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
+  - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
+  - **Phases 2-3**: Enhanced features and user-facing UI not started
+
+### Strategic Documentation
+
+- **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
+  - **Phase 1 Complete**: Documentation reorganization
+  - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
+
+- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Handling changelog for external fork PRs
+  - **Phase 1-2 Complete**: Graceful degradation + release automation workflow
+  - **Phase 3**: Enhanced release notes generation (future)
+  - Related: [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
+
+### Technical Context & Monitoring
+
+- **[DOM Access Investigation](dom-access-investigation.md)** - DOM access requirements and React compatibility
+  - Documents v2.5.2 DOM access restoration and future React compatibility risks
+  - Hybrid API + DOM approach for future resilience
+
+### Archived / Not Feasible
+
+- **[Architecture Modernization Research](architecture-modernization-research.md)** - **ARCHIVED**
+  - DDD+Plugin approach deemed too complex
   - Superseded by incremental refactoring (55% reduction in index.js)
   - See [Contributing Guide](../contributing.md) for current architecture
 
-### Notification System Research
-- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
-  - ✅ **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
-  - 📋 **Phase 2 DEFERRED**: Notification center awaiting user feedback
+- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE**
+  - Investigation into enabling Teams auth in system browser
+  - **Conclusion:** Not currently feasible - Teams manages auth internally without exposed APIs
+  - Note: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
 
-### MQTT & Integration
-- **[MQTT Commands Implementation](mqtt-commands-implementation.md)** - ✅ **IMPLEMENTED** (2025-11-25) - Bidirectional MQTT support for action commands
-  - Implementation plan: 4-6 hours, ~60 lines of code, low risk
-  - Enables keyboard shortcuts and home automation integration
-  - Related ADRs: [ADR-006](../adr/006-cli-argument-parsing-library.md), [ADR-007](../adr/007-embedded-mqtt-broker.md)
-- **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Research on extending MQTT status publishing
-  - ✅ **Phase 1 Complete**: Infrastructure, documentation, and Last Will Testament
-  - 📋 **Phase 2 DEFERRED**: WebRTC monitoring awaiting user feedback
-- **[Graph API Integration Research](graph-api-integration-research.md)** - Investigation of Microsoft Graph API for enhanced Teams features
-  - ✅ **Phase 1 POC Complete**: Token acquisition, basic endpoints
-- **[Calendar Data Export Research](calendar-data-export-research.md)** - ✅ **IMPLEMENTED** (2025-11-29) - Event-driven calendar export via MQTT
+### Implemented Features (Research Archived)
 
-### Privacy & Media
-- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
-  - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
-  - Electron powerMonitor limited on Linux; user-script approach recommended
-  - Feasible via MQTT commands that users invoke from their own lock scripts
+The following research documents have been archived as their features are fully implemented:
 
-### CI/CD & Release Process
-- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Handling changelog generation for external fork PRs
-  - Phase 1: Graceful degradation with instructional comments for external contributors
-  - Phase 2: Automated release preparation workflow (planned)
-  - Related: [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
+| Feature | Implementation Date | Notes |
+|---------|---------------------|-------|
+| MQTT Commands | 2025-11-25 | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
+| Calendar Data Export | 2025-11-29 | MQTT `get-calendar` command |
+| useSystemPicker | 2025-11-24 | Rejected - See [ADR 008](../adr/008-usesystempicker-electron-38.md) |
 
 ## Purpose
 
@@ -85,41 +100,17 @@ These research documents are intended for:
 - **Future developers** needing historical context
 - **Documentation** of the decision-making process for major features
 
-## Maintenance Guidelines
-
-### Document Lifecycle
+## Document Lifecycle
 
 Research documents follow this lifecycle:
 
 1. **Active Research Phase**: Document findings, analysis, and recommendations
 2. **Decision Phase**: Use research to inform final decisions (implemented or rejected)
 3. **Archive Phase**: Move content to appropriate location after decision:
-   - **Implemented features**: Compress findings into feature documentation, update architecture docs
-   - **Rejected features**: Create/update ADR with concise decision record (e.g., [ADR 008](../adr/008-usesystempicker-electron-38.md))
+   - **Implemented features**: Create ADR if significant, update feature docs
+   - **Rejected features**: Create/update ADR with concise decision record
    - **Superseded research**: Close with reference to superseding document
 4. **History**: Git commit history preserves full investigation context
-
-### Maintenance Guidelines
-
-Research documents that are **in active research phase** should be:
-
-- **Updated** when significant changes affect the analysis
-- **Referenced** in PRDs and major feature discussions
-- **Used to inform** future project direction decisions
-
-### Archiving Research
-
-Once a decision is made (feature implemented or rejected):
-
-- **DO**: Move content to appropriate permanent location (ADR, feature docs, architecture guide)
-- **DO**: Compress findings into concise decision format
-- **DO**: Remove from active research navigation if no longer relevant
-- **DO NOT**: Keep full research documents as "historical context"—use git for history
-
-**Examples:**
-- useSystemPicker investigation → [ADR 008](../adr/008-usesystempicker-electron-38.md) (rejected decision)
-- Automated testing strategy → Preserved as research (informs future implementation decisions)
-- Architecture modernization → Marked as archived with cross-reference to current approach
 
 ## Contributing Research
 
@@ -131,19 +122,9 @@ When adding new research documents:
 4. **Update this index**: Add entries for new research documents
 5. **Provide actionable outcomes**: Include clear recommendations or decisions
 
-## Document Template
-
-Research documents should include:
-
-- **Status** - Current state (Research Complete, Ongoing, Superseded)
-- **Date** - When the research was conducted
-- **Summary** - Executive summary of findings
-- **Analysis** - Detailed investigation and findings
-- **Decision/Recommendation** - Clear outcome or next steps
-- **References** - External sources and related documentation
-
 ## Related Documentation
 
 - [Configuration Options](../../configuration.md) - Application configuration reference
 - [IPC API](../ipc-api.md) - Developer integration documentation
-- [Architecture Decision Records](../README.md#adr-index) - Formal architectural decisions
+- [Architecture Decision Records](../adr/README.md) - Formal architectural decisions
+- [Development Roadmap](../plan/roadmap.md) - Future development plans

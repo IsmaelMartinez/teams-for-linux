@@ -162,6 +162,39 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 - Always run tests and linting before commits
 - Update documentation alongside code changes
 
+### Responding to PR Review Comments
+
+When a PR has review comments, address them proactively:
+
+1. Fetch PR comments using `gh api repos/IsmaelMartinez/teams-for-linux/pulls/{PR_NUMBER}/comments`
+2. For each actionable review comment (not automated bots like changelog, build artifacts, SonarQube):
+   - Make the requested code changes
+   - Commit and push the changes
+3. Reply to the review by adding a PR comment summarizing all changes made, referencing the discussion IDs
+4. Use `gh pr comment {PR_NUMBER} --body "..."` to post the summary
+
+### Development Roadmap
+
+**IMPORTANT:** The project maintains a development roadmap at `docs-site/docs/development/plan/roadmap.md`.
+
+**Before starting work:**
+- Check the roadmap to understand current priorities and feature status
+- Verify the feature you're implementing aligns with the roadmap
+
+**After implementing a feature (PR merged):**
+- Update the roadmap to reflect the completed work
+- Move completed features to appropriate sections or remove if fully done
+- Update status indicators (Ready → Implemented, etc.)
+- Add any new insights or follow-up work discovered during implementation
+
+**Roadmap sections:**
+- **Ready for Implementation** - Features with completed research, ready to build
+- **User Feedback Received** - MVP shipped, user feedback identifies gaps to address
+- **Requires Validation First** - Features needing spikes/validation before implementation
+- **Stalled** - Work started but blocked (e.g., awaiting user validation)
+- **Awaiting User Feedback** - Shipped features, waiting for requests before expanding
+- **Not Planned / Not Feasible** - Rejected or infeasible features with rationale
+
 ## Important Notes
 
 - The project is undergoing active refactoring to improve modularity
@@ -174,18 +207,22 @@ For AI agent workflows (PRD generation, task list generation, task execution):
 ## Additional Resources
 
 **Local documentation files (read these):**
+- **Development Roadmap**: `docs-site/docs/development/plan/roadmap.md` - Future development priorities and feature status
 - **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
 - **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
 - **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
+- **Research Index**: `docs-site/docs/development/research/README.md` - Feature research and investigations
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
 - **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
 
 **Web versions (for human reference):**
+- https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap
 - https://ismaelmartinez.github.io/teams-for-linux/quick-reference
 - https://ismaelmartinez.github.io/teams-for-linux/development/module-index
 - https://ismaelmartinez.github.io/teams-for-linux/development/adr/
+- https://ismaelmartinez.github.io/teams-for-linux/development/research/
 - https://ismaelmartinez.github.io/teams-for-linux/development/contributing
 - https://ismaelmartinez.github.io/teams-for-linux/configuration
 - https://ismaelmartinez.github.io/teams-for-linux/troubleshooting
