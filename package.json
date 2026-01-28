@@ -21,6 +21,7 @@
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint **/*.js",
+    "test:unit": "node --test 'tests/unit/**/*.test.js'",
     "test:e2e": "playwright test",
     "test:unit": "node tests/unit/logSanitizer.test.js",
     "prestart": "npm ci",
