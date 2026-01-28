@@ -407,14 +407,15 @@ class ReactHandler {
       const internalRoot =
         reactElement?._reactRootContainer?._internalRoot ||
         reactElement?._reactRootContainer;
-      
-      const coreServices = internalRoot?.current?.updateQueue?.baseState?.element?.props?.coreServices;
-      
+
+      const coreProps = internalRoot?.current?.updateQueue?.baseState?.element?.props;
+      const coreServices = coreProps?.coreServices || coreProps?.children?.props?.coreServices;
+
       // Additional validation that we have legitimate core services
       if (coreServices && typeof coreServices === 'object') {
         return coreServices;
       }
-      
+
       return null;
     } catch (error) {
       console.error('ReactHandler: Error accessing core services:', error);
