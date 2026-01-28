@@ -219,18 +219,30 @@ exports.isSsoUrl = function isSsoUrl(url) {
 
 /**
  * Build the request object for acquirePrtSsoCookie.
- * Uses format compatible with both old and new broker versions.
+ * Format based on linux-entra-sso reference implementation.
  *
  * @param {string} ssoUrl - The URL requiring SSO authentication
  * @returns {object} - The request object
  */
 function buildPrtSsoCookieRequest(ssoUrl) {
+  const scopes = ["openid", "profile", "offline_access"];
+
   return {
-    ssoUrl: ssoUrl,
     account: inTuneAccount,
     authParameters: {
-      authority: "https://login.microsoftonline.com/common/",
-    }
+      account: inTuneAccount,
+      additionalQueryParametersForAuthorization: {},
+      authority: "https://login.microsoftonline.com/common",
+      authorizationType: 8, // PRT_SSO_COOKIE
+      clientId: "d7b530a4-7680-4c23-a8bf-c52c121d2e87",
+      redirectUri: "https://login.microsoftonline.com/common/oauth2/nativeclient",
+      requestedScopes: scopes,
+      username: inTuneAccount.username,
+      uxContextHandle: -1,
+      ssoUrl: ssoUrl,
+    },
+    mamEnrollment: false,
+    ssoUrl: ssoUrl,
   };
 }
 
@@ -279,7 +291,8 @@ async function acquirePrtSsoCookieFromBroker(detail, callback) {
       url: detail.url,
       accountUsername: inTuneAccount?.username,
       accountKeys: Object.keys(inTuneAccount || {}),
-      requestKeys: Object.keys(request)
+      requestKeys: Object.keys(request),
+      authParamsKeys: Object.keys(request.authParameters || {}),
     });
     const resp = await invokeBrokerMethod("acquirePrtSsoCookie", request);
     processPrtResponse(resp, detail);
