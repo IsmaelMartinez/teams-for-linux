@@ -14,6 +14,20 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.1" date="2026-01-29">
+      <description>
+        <ul>
+          <li>Add AppImage update info to Linux builds for third-party managers - by @IsmaelMartinez (#2067)</li>
+          <li>Fix username matching for intune auth to not be case-sensitive - by @vizius-jps (#2076)</li>
+          <li>Add development roadmap and reorganize research documentation - by @IsmaelMartinez (#2079)</li>
+          <li>fix(ci): use unsquashfs for cross-architecture ARM AppImage extraction - by @IsmaelMartinez (#2080)</li>
+          <li>docs: Add GNOME Shell search provider investigation research - by @IsmaelMartinez (#2081)</li>
+          <li>Remove references to mqtt-commands-implementation research doc - by @IsmaelMartinez (#2083)</li>
+          <li>chore(deps): bump tar from 6.2.1 to 7.5.7 in the npm_and_yarn group across 1 directory (#2084)</li>
+          <li>Fix: update reference to core services due to upstream change (#2077) - by @bastidest (#2085)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.0" date="2026-01-23">
       <description>
         <ul>

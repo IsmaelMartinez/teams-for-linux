@@ -1,1 +1,0 @@
-Add AppImage update info to Linux builds for third-party managers - by @IsmaelMartinez (#2067)

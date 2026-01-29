@@ -1,1 +1,0 @@
-Remove references to mqtt-commands-implementation research doc - by @IsmaelMartinez (#2083)
