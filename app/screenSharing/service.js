@@ -55,7 +55,28 @@ class ScreenSharingService {
   }
 
   async #handleGetDesktopCapturerSources(_event, opts) {
-    return desktopCapturer.getSources(opts);
+    const sources = await desktopCapturer.getSources(opts);
+    
+    // Convert NativeImage thumbnails to data URLs for IPC serialization
+    // NativeImage objects don't serialize properly over IPC
+    return sources.map(source => {
+      let thumbnailDataUrl = null;
+      try {
+        if (source.thumbnail && !source.thumbnail.isEmpty()) {
+          thumbnailDataUrl = source.thumbnail.toDataURL();
+        }
+      } catch (err) {
+        console.error(`[SCREEN_SHARE] Error converting thumbnail for ${source.id}:`, err);
+      }
+      
+      return {
+        id: source.id,
+        name: source.name,
+        display_id: source.display_id,
+        thumbnailDataUrl: thumbnailDataUrl,
+        appIconDataUrl: source.appIcon && !source.appIcon.isEmpty() ? source.appIcon.toDataURL() : null
+      };
+    });
   }
 
   async #handleChooseDesktopMedia(_event, sourceTypes) {
