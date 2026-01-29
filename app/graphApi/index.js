@@ -1,4 +1,5 @@
 const logger = require('electron-log');
+const ChatApiSpikes = require('./chatSpikes');
 
 class GraphApiClient {
   constructor(config = {}) {
@@ -247,6 +248,26 @@ class GraphApiClient {
     const endpoint = queryString ? `/me/messages?${queryString}` : '/me/messages';
 
     return await this.makeRequest(endpoint);
+  }
+
+  /**
+   * Run chat API validation spikes
+   * These spikes validate if the chat modal feature is feasible
+   * @returns {Promise<object>} Results of all spikes
+   */
+  async runChatSpikes() {
+    logger.info('[GRAPH_API] Running chat API validation spikes');
+
+    if (!this.enabled) {
+      return {
+        success: false,
+        error: 'Graph API is disabled. Enable it in config to run spikes.',
+        overallResult: 'BLOCKED'
+      };
+    }
+
+    const spikes = new ChatApiSpikes(this);
+    return await spikes.runAllSpikes();
   }
 }
 
