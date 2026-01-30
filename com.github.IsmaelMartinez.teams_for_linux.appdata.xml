@@ -14,6 +14,16 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.2" date="2026-01-30">
+      <description>
+        <ul>
+          <li>fix(screenSharing): prevent SIGILL crash by using static thumbnails - by @bluvulture (#2089), @IsmaelMartinez (#2068)</li>
+          <li>Fix Intune SSO for Microsoft Identity Broker &gt; 2.0.1 - by @IsmaelMartinez (#2069)</li>
+          <li>Fix tray icon rendering on Linux by always using nativeImage - by @IsmaelMartinez (#2096)</li>
+          <li>Upgrade yargs to v18 and update dependencies - by @IsmaelMartinez (#2097)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.1" date="2026-01-29">
       <description>
         <ul>

@@ -1,1 +1,0 @@
-Fix tray icon rendering on Linux by always using nativeImage - by @IsmaelMartinez (#2096)
