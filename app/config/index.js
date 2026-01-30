@@ -85,7 +85,9 @@ function populateConfigObjectFromFile(configObject, configPath) {
 }
 
 function extractYargConfig(configObject, appVersion) {
-  return yargs
+  // yargs v18 requires explicit instantiation - it's no longer a singleton
+  const yargsInstance = yargs();
+  const parsedConfig = yargsInstance
     .env(true)
     .config(configObject.configFile)
     .version(appVersion)
@@ -500,18 +502,28 @@ function extractYargConfig(configObject, appVersion) {
     })
     .help()
     .parse(process.argv.slice(1));
+
+  return { yargsInstance, parsedConfig };
 }
 
-function checkUsedDeprecatedValues(configObject, config) {
-  const deprecatedOptions = yargs.getDeprecatedOptions();
+function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
+  // yargs v18: getDeprecatedOptions() must be called on the instance
+  const deprecatedOptions = yargsInstance.getDeprecatedOptions();
+  const warnings = [];
+
   for (const option in deprecatedOptions) {
     if (option in configObject.configFile) {
       const deprecatedWarningMessage = `Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
       console.warn(deprecatedWarningMessage);
-      config["warning"] = deprecatedWarningMessage;
+      warnings.push(deprecatedWarningMessage);
     } else {
       console.debug(`all good with ${option} you aren't using them`);
     }
+  }
+
+  // Accumulate all warnings instead of overwriting
+  if (warnings.length > 0) {
+    config["warnings"] = warnings;
   }
 }
 
@@ -525,13 +537,15 @@ function argv(configPath, appVersion) {
 
   populateConfigObjectFromFile(configObject, configPath);
 
-  const config = extractYargConfig(configObject, appVersion);
+  // yargs v18: extractYargConfig now returns both the instance and parsed config
+  const { yargsInstance, parsedConfig: config } = extractYargConfig(configObject, appVersion);
 
   if (configObject.configError) {
     config["error"] = configObject.configError;
   }
 
-  checkUsedDeprecatedValues(configObject, config);
+  // Pass yargs instance to access getDeprecatedOptions() in v18
+  checkUsedDeprecatedValues(yargsInstance, configObject, config);
 
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {

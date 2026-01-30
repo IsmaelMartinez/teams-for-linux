@@ -56,16 +56,16 @@
     "lodash": "^4.17.23",
     "mqtt": "^5.14.1",
     "node-sound": "^0.0.8",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.39.2",
-    "@playwright/test": "^1.57.0",
-    "electron": "^39.2.7",
+    "@playwright/test": "^1.58.0",
+    "electron": "^39.3.0",
     "electron-builder": "^26.6.0",
     "eslint": "^9.39.2",
-    "globals": "^17.0.0",
+    "globals": "^17.1.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
