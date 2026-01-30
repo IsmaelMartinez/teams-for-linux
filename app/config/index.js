@@ -418,11 +418,13 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe: "Enable Single-Sign-On using Microsoft InTune.",
         type: "boolean",
+        deprecated: "Use auth.intune.enabled instead",
       },
       ssoInTuneAuthUser: {
         default: "",
         describe: "User (e-mail) to use for InTune SSO.",
         type: "string",
+        deprecated: "Use auth.intune.user instead",
       },
       trayIconEnabled: {
         default: true,
@@ -485,6 +487,16 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
         type: "object",
       },
+      auth: {
+        default: {
+          intune: {
+            enabled: false,
+            user: "",
+          },
+        },
+        describe: "Authentication configuration (currently supports Intune SSO)",
+        type: "object",
+      },
     })
     .help()
     .parse(process.argv.slice(1));
@@ -513,7 +525,7 @@ function argv(configPath, appVersion) {
 
   populateConfigObjectFromFile(configObject, configPath);
 
-  let config = extractYargConfig(configObject, appVersion);
+  const config = extractYargConfig(configObject, appVersion);
 
   if (configObject.configError) {
     config["error"] = configObject.configError;

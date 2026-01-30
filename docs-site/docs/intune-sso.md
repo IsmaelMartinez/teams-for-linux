@@ -27,22 +27,40 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 **User-specific**: `~/.config/teams-for-linux/config.json`
 ```json
 {
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com"
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    }
+  }
 }
 ```
 
 **System-wide** (common in enterprise environments): `/etc/teams-for-linux/config.json`
 ```json
 {
-  "ssoInTuneEnabled": true,
-  "ssoInTuneAuthUser": "user@company.com"
+  "auth": {
+    "intune": {
+      "enabled": true,
+      "user": "user@company.com"
+    }
+  }
 }
 ```
 
 **Configuration Options:**
-- `ssoInTuneEnabled`: Enable/disable Intune SSO integration (default: false)
-- `ssoInTuneAuthUser`: Specific user account to use (default: "" - uses first available account)
+- `auth.intune.enabled`: Enable/disable Intune SSO integration (default: false)
+- `auth.intune.user`: Specific user account to use (default: "" - uses first available account)
+
+**Legacy Configuration (deprecated):**
+
+The old flat configuration keys are still supported but deprecated:
+```json
+{
+  "ssoInTuneEnabled": true,
+  "ssoInTuneAuthUser": "user@company.com"
+}
+```
 
 ## Troubleshooting
 
@@ -57,8 +75,8 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 - Verify accounts are properly enrolled and have valid tokens
 
 **3. "Failed to find matching InTune account"**
-- Check if `ssoInTuneAuthUser` matches an available account exactly
-- Use `[INTUNE_DIAG]` logs to see available accounts
+- Check if `auth.intune.user` matches an available account (case-insensitive)
+- Verify the account is enrolled in Microsoft Identity Broker
 
 **4. "Failed to retrieve Intune SSO cookie"**
 - Account may need reauthentication in Company Portal
@@ -72,9 +90,9 @@ Enable debug logging to see detailed Intune diagnostics:
 ELECTRON_ENABLE_LOGGING=true teams-for-linux
 ```
 
-Look for `[INTUNE_DIAG]` prefixed messages that provide detailed information about:
+Look for `[INTUNE_DIAG]` prefixed messages that provide information about:
 - SSO initialization status
-- Available accounts
+- Account configuration status
 - Authentication flow
 - Error details and suggestions
 

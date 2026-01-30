@@ -196,9 +196,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   customBackgroundService = customBackground;
   screenSharingService = sharingService;
 
-  if (config.ssoInTuneEnabled) {
+  // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
+  const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
+  const intuneUser = config.auth?.intune?.user || config.ssoInTuneAuthUser;
+  if (intuneEnabled) {
     intune = require("../intune");
-    await intune.initSso(config.ssoInTuneAuthUser);
+    await intune.initSso(intuneUser);
   }
 
   if (config.trayIconEnabled) {
@@ -268,10 +271,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   addEventHandlers();
 
-  login.handleLoginDialogTry(window, {
-    ssoBasicAuthUser: config.ssoBasicAuthUser,
-    ssoBasicAuthPasswordCommand: config.ssoBasicAuthPasswordCommand,
-  });
+  login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
 
   const url = processArgs(process.argv);
   connectionManager.start(url, {
@@ -316,18 +316,16 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
 
-  if (
-    config.clientCertPath !== undefined &&
-    config.clientCertPath !== ""
-  ) {
+  const certPath = config.clientCertPath;
+  if (certPath) {
     app.importCertificate(
       {
-        certificate: config.clientCertPath,
-        password: config.clientCertPassword,
+        certificate: certPath,
+        password: config.clientCertPassword || "",
       },
       (result) => {
         console.info(
-          "Loaded certificate: " + config.clientCertPath + ", result: " + result
+          "Loaded certificate: " + certPath + ", result: " + result
         );
       }
     );

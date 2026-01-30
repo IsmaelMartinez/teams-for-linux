@@ -6,15 +6,16 @@
  * @param {Object} arg - Certificate error details
  * @param {string} arg.error - The certificate error type
  * @param {Electron.Certificate} arg.certificate - The failing certificate
- * @param {Object} arg.config - App configuration containing customCACertsFingerprints
+ * @param {Object} arg.config - App configuration containing auth.customCACertsFingerprints
  * @param {Electron.Event} arg.event - The certificate error event
  * @param {Function} arg.callback - Callback to accept/reject the certificate
  */
 exports.onAppCertificateError = function onAppCertificateError(arg) {
   if (arg.error === "net::ERR_CERT_AUTHORITY_INVALID") {
     let unknownIssuerCert = getCertIssuer(arg.certificate);
+    const fingerprints = arg.config.customCACertsFingerprints || [];
     if (
-      arg.config.customCACertsFingerprints.includes(
+      fingerprints.includes(
         unknownIssuerCert.fingerprint
       )
     ) {
