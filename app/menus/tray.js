@@ -9,9 +9,9 @@ class ApplicationTray {
     this.appMenu = appMenu;
     this.config = config;
 
-    this.tray = new Tray(
-      isMac ? this.getIconImage(this.iconPath) : this.iconPath
-    );
+    // Always use nativeImage for tray icon creation to ensure proper
+    // AppIndicator integration on Linux (fixes three-dots icon issue on GNOME)
+    this.tray = new Tray(this.getIconImage(this.iconPath));
     this.tray.setToolTip(this.config.appTitle);
     this.tray.on("click", () => this.showAndFocusWindow());
     this.tray.setContextMenu(Menu.buildFromTemplate(this.appMenu));
