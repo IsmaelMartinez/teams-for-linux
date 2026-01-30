@@ -2,13 +2,12 @@ const { ipcMain, BrowserWindow, desktopCapturer, screen } = require("electron");
 const path = require("node:path");
 
 class ScreenSharingService {
-  #mainWindow;
   #picker = null;
   #selectedScreenShareSource = null;
   #previewWindow = null;
 
-  constructor(mainWindow) {
-    this.#mainWindow = mainWindow;
+  constructor() {
+    // No dependencies required
   }
 
   initialize() {
