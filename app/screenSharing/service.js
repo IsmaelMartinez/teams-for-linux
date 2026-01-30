@@ -3,14 +3,12 @@ const path = require("node:path");
 
 class ScreenSharingService {
   #mainWindow;
-  #config;
   #picker = null;
   #selectedScreenShareSource = null;
   #previewWindow = null;
 
-  constructor(mainWindow, config) {
+  constructor(mainWindow) {
     this.#mainWindow = mainWindow;
-    this.#config = config;
   }
 
   initialize() {
@@ -34,8 +32,6 @@ class ScreenSharingService {
     ipcMain.on("resize-preview-window", this.#handleResizePreviewWindow.bind(this));
     // Stop screen sharing from thumbnail preview
     ipcMain.on("stop-screen-sharing-from-thumbnail", this.#handleStopScreenSharingFromThumbnail.bind(this));
-    // Get screen sharing configuration (only exposes screenSharing config, not entire app config)
-    ipcMain.handle("get-screen-sharing-config", this.#handleGetScreenSharingConfig.bind(this));
   }
 
   setSelectedSource(source) {
@@ -60,21 +56,14 @@ class ScreenSharingService {
 
   /**
    * Get desktop capturer sources with thumbnails converted to data URLs.
-   * Uses static thumbnails instead of live video streams to prevent SIGILL crashes
-   * caused by too many simultaneous getUserMedia calls.
-   *
+   * Uses static thumbnails instead of live video streams to prevent SIGILL crashes.
    * @author bluvulture (PR #2089)
    */
   async #handleGetDesktopCapturerSources(_event, opts) {
     try {
-      // desktopCapturer.getSources() can crash on certain hardware configurations
-      // (e.g., USB-C docking stations with DisplayLink drivers) due to GPU-accelerated
-      // thumbnail generation. Wrap in try-catch to handle gracefully.
-      // See issues #2058, #2041, #2091
       const sources = await desktopCapturer.getSources(opts);
 
       // Convert NativeImage thumbnails to data URLs for IPC serialization
-      // NativeImage objects don't serialize properly over IPC
       return sources.map(source => {
         let thumbnailDataUrl = null;
         try {
@@ -94,12 +83,7 @@ class ScreenSharingService {
         };
       });
     } catch (error) {
-      console.error("[SCREEN_SHARE] Failed to get desktop capturer sources:", {
-        error: error.message,
-        stack: error.stack,
-        options: opts
-      });
-      // Return empty array to allow UI to show error state instead of crashing
+      console.error("[SCREEN_SHARE] Failed to get desktop capturer sources:", error.message);
       return [];
     }
   }
@@ -114,11 +98,7 @@ class ScreenSharingService {
       const chosen = await this.#showScreenPicker(sources);
       return chosen ? chosen.id : null;
     } catch (error) {
-      console.error("[SCREEN_SHARE] Failed to get desktop media sources:", {
-        error: error.message,
-        stack: error.stack,
-        sourceTypes
-      });
+      console.error("[SCREEN_SHARE] Failed to get desktop media sources:", error.message);
       return null;
     }
   }
@@ -129,78 +109,22 @@ class ScreenSharingService {
     }
   }
 
-  #handleScreenSharingStarted(event, sourceId) {
-    try {
-      console.debug("[SCREEN_SHARE_DIAG] Screen sharing session started", {
-        receivedSourceId: sourceId,
-        existingSourceId: this.#selectedScreenShareSource,
-        timestamp: new Date().toISOString(),
-        hasExistingPreview: this.#previewWindow && !this.#previewWindow.isDestroyed(),
-        mainWindowVisible: this.#mainWindow?.isVisible?.() || false,
-        mainWindowFocused: this.#mainWindow?.isFocused?.() || false
-      });
-
-      // Only update if we received a valid source ID
-      if (sourceId) {
-        // Validate format - must be screen:x:y or window:x:y (not UUID)
-        const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
-
-        if (isValidFormat) {
-          console.debug("[SCREEN_SHARE_DIAG] Received valid source ID format, updating", {
-            sourceId: sourceId,
-            sourceType: sourceId.startsWith('screen:') ? 'screen' : 'window'
-          });
-          this.#selectedScreenShareSource = sourceId;
-        } else {
-          // UUID format detected - this is the bug we're fixing
-          console.warn("[SCREEN_SHARE_DIAG] Received invalid source ID format (UUID?), keeping existing", {
-            received: sourceId,
-            existing: this.#selectedScreenShareSource,
-            note: "MediaStream.id (UUID) cannot be used for preview window - see ADR"
-          });
-          // Keep existing value, don't overwrite
-        }
-      } else {
-        console.debug("[SCREEN_SHARE_DIAG] No source ID received (null), keeping existing", {
-          existing: this.#selectedScreenShareSource,
-          note: "Source ID was already set correctly by setupScreenSharing()"
-        });
+  #handleScreenSharingStarted(_event, sourceId) {
+    // Only update if we received a valid source ID format (screen:x:y or window:x:y)
+    if (sourceId) {
+      const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
+      if (isValidFormat) {
+        this.#selectedScreenShareSource = sourceId;
       }
-
-      console.debug("[SCREEN_SHARE_DIAG] Screen sharing source registered", {
-        sourceId: this.#selectedScreenShareSource,
-        sourceType: this.#selectedScreenShareSource?.startsWith?.('screen:') ? 'screen' : 'window',
-        willCreatePreview: true
-      });
-
-    } catch (error) {
-      console.error("[SCREEN_SHARE_DIAG] Error handling screen-sharing-started event", {
-        error: error.message,
-        sourceId: sourceId,
-        stack: error.stack
-      });
+      // Ignore UUID format (MediaStream.id) - keep existing value
     }
   }
 
   #handleScreenSharingStopped() {
-    console.debug("[SCREEN_SHARE_DIAG] Screen sharing session stopped", {
-      timestamp: new Date().toISOString(),
-      stoppedSource: this.#selectedScreenShareSource,
-      previewWindowExists: this.#previewWindow && !this.#previewWindow.isDestroyed(),
-      mainWindowState: {
-        visible: this.#mainWindow?.isVisible?.() || false,
-        focused: this.#mainWindow?.isFocused?.() || false
-      }
-    });
-
     this.#selectedScreenShareSource = null;
 
-    // Close preview window when screen sharing stops
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
-      console.debug("[SCREEN_SHARE_DIAG] Closing preview window after screen sharing stopped");
       this.#previewWindow.close();
-    } else {
-      console.debug("[SCREEN_SHARE_DIAG] No preview window to close");
     }
   }
 
@@ -209,7 +133,6 @@ class ScreenSharingService {
   }
 
   #handleGetScreenShareStream() {
-    // Return the source ID - handle both string and object formats
     if (typeof this.#selectedScreenShareSource === "string") {
       return this.#selectedScreenShareSource;
     } else if (this.#selectedScreenShareSource?.id) {
@@ -219,7 +142,6 @@ class ScreenSharingService {
   }
 
   #handleGetScreenShareScreen() {
-    // Return screen dimensions if available from StreamSelector, otherwise default
     if (
       this.#selectedScreenShareSource &&
       typeof this.#selectedScreenShareSource === "object"
@@ -235,7 +157,7 @@ class ScreenSharingService {
     return { width: 1920, height: 1080 };
   }
 
-  #handleResizePreviewWindow(event, { width, height }) {
+  #handleResizePreviewWindow(_event, { width, height }) {
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
       const [minWidth, minHeight] = this.#previewWindow.getMinimumSize();
       const newWidth = Math.max(minWidth, Math.min(width, 480));
@@ -243,17 +165,6 @@ class ScreenSharingService {
       this.#previewWindow.setSize(newWidth, newHeight);
       this.#previewWindow.center();
     }
-  }
-
-  #handleGetScreenSharingConfig() {
-    // Only expose screenSharing config to renderer, not entire app config
-    // This prevents leaking sensitive credentials (clientCertPassword, mqtt.password, etc.)
-    return {
-      screenSharing: this.#config?.screenSharing ?? {
-        thumbnail: { enabled: true, alwaysOnTop: true },
-        picker: { livePreviewDisabled: false }
-      }
-    };
   }
 
   #handleStopScreenSharingFromThumbnail() {
@@ -265,7 +176,6 @@ class ScreenSharingService {
 
   #showScreenPicker(sources) {
     if (this.#picker) {
-      console.warn("[SCREEN_PICKER] Picker already open, focusing existing window");
       this.#picker.focus();
       return Promise.resolve(null);
     }
@@ -285,7 +195,6 @@ class ScreenSharingService {
         this.#picker.webContents.send("sources-list", sources);
       });
 
-      // Store handler reference for proper cleanup
       const onSourceSelected = (_event, source) => {
         resolve(source);
         if (this.#picker) {
@@ -297,7 +206,6 @@ class ScreenSharingService {
       ipcMain.once("source-selected", onSourceSelected);
 
       this.#picker.on("closed", () => {
-        // Clean up IPC listener to prevent memory leaks
         ipcMain.removeListener("source-selected", onSourceSelected);
         this.#picker = null;
         resolve(null);

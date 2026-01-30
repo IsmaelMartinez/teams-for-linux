@@ -12,7 +12,4 @@ contextBridge.exposeInMainWorld("api", {
   desktopCapturerGetSources: (args) => {
     return ipcRenderer.invoke("desktop-capturer-get-sources", args);
   },
-  getScreenSharingConfig: () => {
-    return ipcRenderer.invoke("get-screen-sharing-config");
-  },
 });

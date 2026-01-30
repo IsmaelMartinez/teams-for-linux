@@ -75,7 +75,7 @@ const notificationService = new NotificationService(
 );
 
 // Initialize screen sharing service with dependencies
-const screenSharingService = new ScreenSharingService(mainAppWindow, config);
+const screenSharingService = new ScreenSharingService(mainAppWindow);
 
 // Initialize partitions manager with dependencies
 const partitionsManager = new PartitionsManager(appConfig.settingsStore);

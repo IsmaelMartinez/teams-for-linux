@@ -25,7 +25,6 @@ const allowedChannels = new Set([
   'desktop-capturer-get-sources',
   'get-screen-share-screen',
   'get-screen-share-stream',
-  'get-screen-sharing-config',
   'get-screen-sharing-status',
   'resize-preview-window',
   'screen-sharing-started',
