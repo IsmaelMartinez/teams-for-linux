@@ -246,13 +246,13 @@ async function handleAppReady() {
     });
   }
   // check for configuration warnings
-  if (config.warning) {
+  if (config.warnings && config.warnings.length > 0) {
     dialog.showMessageBox({
       title: "Configuration Warning",
       icon: nativeImage.createFromPath(
         path.join(config.appPath, "assets/icons/alert-diamond.256x256.png")
       ),
-      message: config.warning,
+      message: config.warnings.join("\n\n"),
     });
   }
 

@@ -1,0 +1,1 @@
+Upgrade yargs to v18 and update dependencies - by @IsmaelMartinez (#2097)
