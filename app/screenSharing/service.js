@@ -65,6 +65,8 @@ class ScreenSharingService {
       // Convert NativeImage thumbnails to data URLs for IPC serialization
       return sources.map(source => {
         let thumbnailDataUrl = null;
+        let appIconDataUrl = null;
+
         try {
           if (source.thumbnail && !source.thumbnail.isEmpty()) {
             thumbnailDataUrl = source.thumbnail.toDataURL();
@@ -73,12 +75,20 @@ class ScreenSharingService {
           console.error(`[SCREEN_SHARE] Error converting thumbnail for ${source.id}:`, err);
         }
 
+        try {
+          if (source.appIcon && !source.appIcon.isEmpty()) {
+            appIconDataUrl = source.appIcon.toDataURL();
+          }
+        } catch (err) {
+          console.error(`[SCREEN_SHARE] Error converting appIcon for ${source.id}:`, err);
+        }
+
         return {
           id: source.id,
           name: source.name,
           display_id: source.display_id,
-          thumbnailDataUrl: thumbnailDataUrl,
-          appIconDataUrl: source.appIcon && !source.appIcon.isEmpty() ? source.appIcon.toDataURL() : null
+          thumbnailDataUrl,
+          appIconDataUrl
         };
       });
     } catch (error) {
