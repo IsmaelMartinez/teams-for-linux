@@ -79,8 +79,7 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 
     console.debug("[INTUNE_DIAG] Retrieved InTune accounts", {
       totalAccounts: response.accounts?.length || 0,
-      requestedUser: ssoInTuneAuthUser || "(none - will use first)",
-      availableUsers: response.accounts?.map(acc => acc.username) || []
+      hasRequestedUser: !!ssoInTuneAuthUser,
     });
 
     if (!response.accounts || response.accounts.length === 0) {
@@ -93,7 +92,6 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
     if (ssoInTuneAuthUser == "") {
       inTuneAccount = response.accounts[0];
       console.debug("[INTUNE_DIAG] Using first available InTune account", {
-        selectedUser: inTuneAccount.username,
         accountType: inTuneAccount.accountType || "unknown",
         totalAvailable: response.accounts.length
       });
@@ -104,7 +102,6 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
         if (account.username?.toLowerCase() === requestedUserLower) {
           inTuneAccount = account;
           console.debug("[INTUNE_DIAG] Found matching InTune account", {
-            selectedUser: inTuneAccount.username,
             accountType: inTuneAccount.accountType || "unknown"
           });
           break;
@@ -113,18 +110,14 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 
       if (inTuneAccount == null) {
         console.warn("[INTUNE_DIAG] Failed to find matching InTune account", {
-          requestedUser: ssoInTuneAuthUser,
-          availableUsers: response.accounts.map(acc => acc.username),
-          suggestion: `Either configure '${ssoInTuneAuthUser}' in Identity Broker or use one of the available accounts`
+          availableCount: response.accounts.length,
+          suggestion: "Either configure the requested user in Identity Broker or use one of the available accounts"
         });
       }
     }
 
     if (inTuneAccount) {
-      console.info("[INTUNE_DIAG] InTune SSO account configured successfully", {
-        user: inTuneAccount.username,
-        ready: true
-      });
+      console.info("[INTUNE_DIAG] InTune SSO account configured successfully");
     }
 
   } catch (error) {
@@ -190,8 +183,7 @@ exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
   inTuneAccount = null;
 
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
-    configuredUser: ssoInTuneAuthUser || "(none - will use first available)",
-    timestamp: new Date().toISOString()
+    hasConfiguredUser: !!ssoInTuneAuthUser,
   });
 
   try {
@@ -253,27 +245,20 @@ function processPrtResponse(resp, detail) {
       console.warn("[INTUNE_DIAG] Failed to retrieve Intune SSO cookie", {
         error: response.error.context,
         errorCode: response.error.code || "unknown",
-        url: detail.url,
         suggestion: "Check if the account has valid PRT tokens or needs reauthentication"
       });
     } else {
       const cookieContent = extractCookieContent(response);
       if (cookieContent) {
-        console.debug("[INTUNE_DIAG] Adding SSO credential to request", {
-          url: detail.url,
-          cookieLength: cookieContent.length
-        });
+        console.debug("[INTUNE_DIAG] SSO credential added to request");
         detail.requestHeaders["X-Ms-Refreshtokencredential"] = cookieContent;
       } else {
-        console.warn("[INTUNE_DIAG] SSO cookie response missing cookie content", {
-          url: detail.url
-        });
+        console.warn("[INTUNE_DIAG] SSO cookie response missing cookie content");
       }
     }
   } catch (error) {
     console.error("[INTUNE_DIAG] Error parsing PRT response", {
       error: error.message,
-      url: detail.url
     });
   }
 }
@@ -287,20 +272,12 @@ function processPrtResponse(resp, detail) {
 async function acquirePrtSsoCookieFromBroker(detail, callback) {
   try {
     const request = buildPrtSsoCookieRequest(detail.url);
-    console.debug("[INTUNE_DIAG] Sending acquirePrtSsoCookie request", {
-      url: detail.url,
-      accountUsername: inTuneAccount?.username,
-      accountKeys: Object.keys(inTuneAccount || {}),
-      requestKeys: Object.keys(request),
-      authParamsKeys: Object.keys(request.authParameters || {}),
-    });
+    console.debug("[INTUNE_DIAG] Sending acquirePrtSsoCookie request");
     const resp = await invokeBrokerMethod("acquirePrtSsoCookie", request);
     processPrtResponse(resp, detail);
   } catch (err) {
     console.warn("[INTUNE_DIAG] Failed to acquire PRT SSO cookie", {
       error: err.message || err,
-      url: detail.url,
-      account: inTuneAccount?.username
     });
   }
 
@@ -310,18 +287,12 @@ async function acquirePrtSsoCookieFromBroker(detail, callback) {
 }
 
 exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
-  // Enhanced SSO cookie retrieval with comprehensive logging
   console.debug("[INTUNE_DIAG] Retrieving InTune SSO cookie", {
-    url: detail.url,
     hasAccount: !!inTuneAccount,
-    accountUser: inTuneAccount?.username || "none"
   });
 
   if (inTuneAccount == null) {
-    console.info("[INTUNE_DIAG] InTune SSO not active - no account configured", {
-      url: detail.url,
-      suggestion: "Ensure InTune SSO is properly initialized and has valid accounts"
-    });
+    console.info("[INTUNE_DIAG] InTune SSO not active - no account configured");
     callback({
       requestHeaders: detail.requestHeaders,
     });
@@ -332,8 +303,6 @@ exports.addSsoCookie = function addIntuneSsoCookie(detail, callback) {
   acquirePrtSsoCookieFromBroker(detail, callback).catch(error => {
     console.error("[INTUNE_DIAG] Unexpected error during SSO cookie retrieval", {
       error: error.message,
-      url: detail.url,
-      stack: error.stack
     });
     callback({
       requestHeaders: detail.requestHeaders,
