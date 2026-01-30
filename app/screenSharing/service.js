@@ -58,14 +58,41 @@ class ScreenSharingService {
     return this.#selectedScreenShareSource !== null;
   }
 
+  /**
+   * Get desktop capturer sources with thumbnails converted to data URLs.
+   * Uses static thumbnails instead of live video streams to prevent SIGILL crashes
+   * caused by too many simultaneous getUserMedia calls.
+   *
+   * @author bluvulture (PR #2089)
+   */
   async #handleGetDesktopCapturerSources(_event, opts) {
     try {
       // desktopCapturer.getSources() can crash on certain hardware configurations
       // (e.g., USB-C docking stations with DisplayLink drivers) due to GPU-accelerated
       // thumbnail generation. Wrap in try-catch to handle gracefully.
-      // See issues #2058, #2041
+      // See issues #2058, #2041, #2091
       const sources = await desktopCapturer.getSources(opts);
-      return sources;
+
+      // Convert NativeImage thumbnails to data URLs for IPC serialization
+      // NativeImage objects don't serialize properly over IPC
+      return sources.map(source => {
+        let thumbnailDataUrl = null;
+        try {
+          if (source.thumbnail && !source.thumbnail.isEmpty()) {
+            thumbnailDataUrl = source.thumbnail.toDataURL();
+          }
+        } catch (err) {
+          console.error(`[SCREEN_SHARE] Error converting thumbnail for ${source.id}:`, err);
+        }
+
+        return {
+          id: source.id,
+          name: source.name,
+          display_id: source.display_id,
+          thumbnailDataUrl: thumbnailDataUrl,
+          appIconDataUrl: source.appIcon && !source.appIcon.isEmpty() ? source.appIcon.toDataURL() : null
+        };
+      });
     } catch (error) {
       console.error("[SCREEN_SHARE] Failed to get desktop capturer sources:", {
         error: error.message,
