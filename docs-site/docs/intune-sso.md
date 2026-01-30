@@ -62,8 +62,6 @@ The old flat configuration keys are still supported but deprecated:
 }
 ```
 
-These will be automatically migrated to the new nested format.
-
 ## Troubleshooting
 
 ### Common Issues
@@ -77,8 +75,8 @@ These will be automatically migrated to the new nested format.
 - Verify accounts are properly enrolled and have valid tokens
 
 **3. "Failed to find matching InTune account"**
-- Check if `ssoInTuneAuthUser` matches an available account exactly
-- Use `[INTUNE_DIAG]` logs to see available accounts
+- Check if `auth.intune.user` matches an available account (case-insensitive)
+- Verify the account is enrolled in Microsoft Identity Broker
 
 **4. "Failed to retrieve Intune SSO cookie"**
 - Account may need reauthentication in Company Portal
@@ -92,9 +90,9 @@ Enable debug logging to see detailed Intune diagnostics:
 ELECTRON_ENABLE_LOGGING=true teams-for-linux
 ```
 
-Look for `[INTUNE_DIAG]` prefixed messages that provide detailed information about:
+Look for `[INTUNE_DIAG]` prefixed messages that provide information about:
 - SSO initialization status
-- Available accounts
+- Account configuration status
 - Authentication flow
 - Error details and suggestions
 
