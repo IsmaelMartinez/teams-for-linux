@@ -6,10 +6,6 @@ class ScreenSharingService {
   #selectedScreenShareSource = null;
   #previewWindow = null;
 
-  constructor() {
-    // No dependencies required
-  }
-
   initialize() {
     // Get available desktop capturer sources (screens/windows) for sharing
     ipcMain.handle("desktop-capturer-get-sources", this.#handleGetDesktopCapturerSources.bind(this));
