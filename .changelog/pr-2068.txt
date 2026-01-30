@@ -1,0 +1,1 @@
+fix(screenSharing): prevent SIGILL crash by using static thumbnails - by @bluvulture (#2089), @IsmaelMartinez (#2068)

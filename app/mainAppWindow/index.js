@@ -74,6 +74,23 @@ function handleScreenSourceSelection(source, callback) {
           }
         });
       }
+    })
+    .catch((error) => {
+      // Handle desktopCapturer failures gracefully - can crash on certain hardware
+      // configurations (USB-C docking stations, DisplayLink drivers, etc.)
+      // See issues #2058, #2041
+      console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
+        error: error.message,
+        stack: error.stack,
+        sourceId: source?.id
+      });
+      setImmediate(() => {
+        try {
+          callback({});
+        } catch {
+          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
+        }
+      });
     });
 }
 
@@ -81,8 +98,9 @@ function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
+  // Support both new (screenSharing.thumbnail) and legacy (screenSharingThumbnail) config paths
   let thumbnailConfig =
-    config?.screenSharingThumbnail?.default ??
+    config?.screenSharing?.thumbnail ??
     config?.screenSharingThumbnail ??
     DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 

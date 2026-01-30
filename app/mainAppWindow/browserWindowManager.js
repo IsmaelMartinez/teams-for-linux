@@ -23,6 +23,17 @@ class BrowserWindowManager {
     this.incomingCallToast = null;
   }
 
+  /**
+   * Get screen lock inhibition method from config.
+   * Supports both new (screenSharing.lockInhibitionMethod) and legacy (screenLockInhibitionMethod) paths.
+   * @returns {string} "Electron" or "WakeLockSentinel"
+   */
+  get screenLockInhibitionMethod() {
+    return this.config?.screenSharing?.lockInhibitionMethod ??
+           this.config?.screenLockInhibitionMethod ??
+           "Electron";
+  }
+
   async createWindow() {
     // Load the previous state with fallback to defaults
     const windowState = windowStateKeeper({
@@ -135,7 +146,7 @@ class BrowserWindowManager {
   assignEventHandlers() {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
-    if (this.config.screenLockInhibitionMethod === "WakeLockSentinel") {
+    if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
       this.window.on("restore", this.enableWakeLockOnWindowRestore);
     }
     // Handle incoming call notification created
@@ -167,7 +178,7 @@ class BrowserWindowManager {
     if (this.blockerId == null) {
       this.blockerId = powerSaveBlocker.start("prevent-display-sleep");
       console.debug(
-        `Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`
+        `Power save is disabled using ${this.screenLockInhibitionMethod} API.`
       );
       return true;
     }
@@ -177,7 +188,7 @@ class BrowserWindowManager {
   disableScreenLockWakeLockSentinel() {
     this.window.webContents.send("enable-wakelock");
     console.debug(
-      `Power save is disabled using ${this.config.screenLockInhibitionMethod} API.`
+      `Power save is disabled using ${this.screenLockInhibitionMethod} API.`
     );
     return true;
   }
@@ -185,7 +196,7 @@ class BrowserWindowManager {
   enableScreenLockElectron() {
     if (this.blockerId != null && powerSaveBlocker.isStarted(this.blockerId)) {
       console.debug(
-        `Power save is restored using ${this.config.screenLockInhibitionMethod} API`
+        `Power save is restored using ${this.screenLockInhibitionMethod} API`
       );
       powerSaveBlocker.stop(this.blockerId);
       this.blockerId = null;
@@ -197,7 +208,7 @@ class BrowserWindowManager {
   enableScreenLockWakeLockSentinel() {
     this.window.webContents.send("disable-wakelock");
     console.debug(
-      `Power save is restored using ${this.config.screenLockInhibitionMethod} API`
+      `Power save is restored using ${this.screenLockInhibitionMethod} API`
     );
     return true;
   }
@@ -248,7 +259,7 @@ class BrowserWindowManager {
   assignOnCallConnectedHandler() {
     return async (e) => {
       this.isOnCall = true;
-      const result = this.config.screenLockInhibitionMethod === "Electron"
+      const result = this.screenLockInhibitionMethod === "Electron"
         ? this.disableScreenLockElectron()
         : this.disableScreenLockWakeLockSentinel();
 
@@ -260,7 +271,7 @@ class BrowserWindowManager {
   assignOnCallDisconnectedHandler() {
     return async (e) => {
       this.isOnCall = false;
-      const result = this.config.screenLockInhibitionMethod === "Electron"
+      const result = this.screenLockInhibitionMethod === "Electron"
         ? this.enableScreenLockElectron()
         : this.enableScreenLockWakeLockSentinel();
 

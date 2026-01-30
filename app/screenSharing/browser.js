@@ -1,166 +1,130 @@
 globalThis.addEventListener("DOMContentLoaded", () => {
   const screens = [
-    {
-      width: 1280,
-      height: 720,
-      name: "HD",
-      alt_name: "720p",
-      default: false,
-    },
-    {
-      width: 1920,
-      height: 1080,
-      name: "FHD",
-      alt_name: "1080p",
-      default: true,
-    },
-    {
-      width: 2048,
-      height: 1080,
-      name: "2K",
-      alt_name: "QHD",
-      default: false,
-    },
-    {
-      width: 3840,
-      height: 2160,
-      name: "4K",
-      alt_name: "UHD",
-      default: false,
-    },
+    { width: 1280, height: 720, name: "HD", alt_name: "720p", default: false },
+    { width: 1920, height: 1080, name: "FHD", alt_name: "1080p", default: true },
+    { width: 2048, height: 1080, name: "2K", alt_name: "QHD", default: false },
+    { width: 3840, height: 2160, name: "4K", alt_name: "UHD", default: false },
   ];
   let windowsIndex = 0;
   const sscontainer = document.getElementById("screen-size");
   createEventHandlers({ screens, sscontainer });
+
   globalThis.api
-    .desktopCapturerGetSources({ types: ["window", "screen"] })
-    .then(async (sources) => {
+    .desktopCapturerGetSources({
+      types: ["window", "screen"],
+      thumbnailSize: { width: 320, height: 180 },
+      fetchWindowIcons: true
+    })
+    .then((sources) => {
       const rowElement = document.querySelector(".container-fluid .row");
+
+      if (!sources || sources.length === 0) {
+        showMessage(rowElement, "No screens or windows available for sharing", [
+          "This may be due to system permissions. On Linux:",
+          "• On Wayland: Ensure xdg-desktop-portal is installed and running",
+          "• On Ubuntu: Install xdg-desktop-portal-gnome package"
+        ]);
+        return;
+      }
+
       for (const source of sources) {
-        await createPreview({
+        createPreview({
           source,
-          title: source.id.startsWith("screen:")
-            ? source.name
-            : `Window ${++windowsIndex}`,
+          title: source.id.startsWith("screen:") ? source.name : `Window ${++windowsIndex}`,
           rowElement,
           screens,
           sscontainer,
         });
       }
+    })
+    .catch((error) => {
+      const rowElement = document.querySelector(".container-fluid .row");
+      showMessage(rowElement, "Failed to access screen capture", [error.message || "Unknown error"]);
     });
 });
 
-async function createPreview(properties) {
-  let columnElement = document.createElement("div");
+function showMessage(container, title, details) {
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "col-12 text-center";
+  msgDiv.style.cssText = "padding: 20px; color: #ff6b6b;";
+
+  const titleEl = document.createElement("p");
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+  titleEl.appendChild(strong);
+  msgDiv.appendChild(titleEl);
+
+  const detailsEl = document.createElement("p");
+  detailsEl.style.cssText = "font-size: 12px; color: #aaa;";
+  detailsEl.textContent = details.join(" ");
+  msgDiv.appendChild(detailsEl);
+
+  container.appendChild(msgDiv);
+}
+
+/**
+ * Creates a preview element using static thumbnail instead of live video stream.
+ * This prevents SIGILL crashes caused by too many simultaneous getUserMedia calls.
+ * @author bluvulture (PR #2089)
+ */
+function createPreview(properties) {
+  const columnElement = document.createElement("div");
   columnElement.className = `col-5 ${properties.source.id.startsWith("screen:") ? "screen" : "window"}`;
-  // Video container
-  let videoContainerElement = document.createElement("div");
-  videoContainerElement.className = "video-container";
-  // Video
-  let videoElement = document.createElement("video");
-  videoElement.dataset.id = properties.source.id;
-  videoElement.title = properties.source.name;
-  videoContainerElement.appendChild(videoElement);
-  // Label
-  let labelElement = document.createElement("div");
+
+  const imageContainerElement = document.createElement("div");
+  imageContainerElement.className = "video-container";
+  imageContainerElement.style.cssText = "position: relative; min-height: 108px; background: #2d2d2d; border-radius: 4px; display: flex; align-items: center; justify-content: center;";
+
+  const thumbnailUrl = properties.source.thumbnailDataUrl;
+  if (thumbnailUrl && thumbnailUrl.startsWith("data:")) {
+    const imgElement = document.createElement("img");
+    imgElement.dataset.id = properties.source.id;
+    imgElement.title = properties.source.name;
+    imgElement.style.cssText = "width: 100%; height: auto; cursor: pointer; border-radius: 4px;";
+    imgElement.src = thumbnailUrl;
+    imgElement.onclick = () => selectSource(properties);
+    imageContainerElement.appendChild(imgElement);
+  } else {
+    const placeholder = document.createElement("div");
+    placeholder.style.cssText = "text-align: center; padding: 20px; cursor: pointer; width: 100%;";
+
+    const icon = document.createElement("div");
+    icon.style.fontSize = "32px";
+    icon.textContent = properties.source.id.startsWith("screen:") ? "🖥️" : "🪟";
+    placeholder.appendChild(icon);
+
+    const label = document.createElement("div");
+    label.style.cssText = "font-size: 11px; color: #888; margin-top: 5px;";
+    label.textContent = properties.source.id.startsWith("screen:")
+      ? (properties.source.name || "Screen")
+      : "Window";
+    placeholder.appendChild(label);
+
+    placeholder.onclick = () => selectSource(properties);
+    imageContainerElement.appendChild(placeholder);
+  }
+
+  const labelElement = document.createElement("div");
   labelElement.className = "label-container";
-  labelElement.appendChild(document.createTextNode(properties.title));
-  columnElement.appendChild(videoContainerElement);
+  labelElement.textContent = properties.title;
+
+  columnElement.appendChild(imageContainerElement);
   columnElement.appendChild(labelElement);
   properties.rowElement.appendChild(columnElement);
-  await createPreviewStream(properties, videoElement);
 }
 
-async function createPreviewStream(properties, videoElement) {
-  // Disable audio in preview streams to prevent echo during screen sharing
-  console.debug(`[SCREEN_SHARE_DIAG] Creating preview stream for source: ${properties.source.id}`);
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream - audio: DISABLED, dimensions: 192x108 (echo prevention)`);
-  
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: false, // CRITICAL: No audio to prevent duplicate capture sessions causing echo
-    video: {
-      mandatory: {
-        chromeMediaSource: "desktop",
-        chromeMediaSourceId: properties.source.id,
-        minWidth: 192,
-        maxWidth: 192,
-        minHeight: 108,
-        maxHeight: 108,
-      },
-    },
+function selectSource(properties) {
+  globalThis.api.selectedSource({
+    id: properties.source.id,
+    screen: properties.screens[properties.sscontainer.value]
   });
-  
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream created successfully - ID: ${stream.id}`);
-  console.debug(`[SCREEN_SHARE_DIAG] Preview stream tracks - Audio: ${stream.getAudioTracks().length}, Video: ${stream.getVideoTracks().length}`);
-  
-  videoElement.srcObject = stream;
-  playPreview({
-    videoElement,
-    source: properties.source,
-    screens: properties.screens,
-    sscontainer: properties.sscontainer,
-  });
-}
-
-function playPreview(properties) {
-  properties.videoElement.onclick = () => {
-    console.debug(`[SCREEN_SHARE_DIAG] User selected source: ${properties.source.id}, cleaning up all previews immediately`);
-    closePreviews(); // Clean up all preview streams immediately to prevent ongoing capture
-    globalThis.api.selectedSource({
-      id: properties.source.id,
-      screen: properties.screens[properties.sscontainer.value]
-    });
-  };
-  properties.videoElement.onloadedmetadata = () =>
-    properties.videoElement.play();
 }
 
 function createEventHandlers(properties) {
   createQualitySelector(properties);
-  document
-    .querySelector("#btn-screens")
-    .addEventListener("click", toggleSources);
-  document
-    .querySelector("#btn-windows")
-    .addEventListener("click", toggleSources);
-  document.querySelector("#btn-close").addEventListener("click", () => {
-    closePreviews();
-    globalThis.api.closeView();
-  });
-}
-
-function closePreviews() {
-  // Enhanced logging for preview cleanup - prevents audio echo
-  const vidElements = document.getElementsByTagName("video");
-  console.debug(`[SCREEN_SHARE_DIAG] Closing ${vidElements.length} preview streams to prevent echo`);
-  
-  for (const vidElement of vidElements) {
-    if (vidElement.srcObject) {
-      const stream = vidElement.srcObject;
-      console.debug(`[SCREEN_SHARE_DIAG] Closing preview stream: ${stream.id}`, {
-        audioTracks: stream.getAudioTracks().length,
-        videoTracks: stream.getVideoTracks().length,
-        hasAudio: stream.getAudioTracks().length > 0
-      });
-      
-      vidElement.pause();
-      
-      // Stop all tracks to immediately release desktop capture
-      for (const track of stream.getTracks()) {
-        console.debug(`[SCREEN_SHARE_DIAG] Stopping track: ${track.kind} - ${track.id}`);
-        track.stop();
-      }
-      
-      // Clear the srcObject reference
-      vidElement.srcObject = null;
-      
-      console.debug(`[SCREEN_SHARE_DIAG] Preview stream ${stream.id} cleaned up - desktop capture released`);
-    } else {
-      console.debug(`[SCREEN_SHARE_DIAG] Video element has no srcObject to clean up`);
-    }
-  }
-  
-  console.debug(`[SCREEN_SHARE_DIAG] All preview streams closed - echo prevention complete`);
+  document.querySelector("#btn-screens").addEventListener("click", toggleSources);
+  document.querySelector("#btn-windows").addEventListener("click", toggleSources);
+  document.querySelector("#btn-close").addEventListener("click", () => globalThis.api.closeView());
 }
 
 function toggleSources(e) {
@@ -168,23 +132,16 @@ function toggleSources(e) {
     b.classList.toggle("btn-primary");
     b.classList.toggle("btn-secondary");
   }
-  document
-    .querySelector(".container-fluid")
-    .dataset.view = e.target.dataset.view;
+  document.querySelector(".container-fluid").dataset.view = e.target.dataset.view;
 }
 
 function createQualitySelector(properties) {
   for (const [i, s] of properties.screens.entries()) {
     const opt = document.createElement("option");
-    opt.appendChild(document.createTextNode(s.name));
+    opt.textContent = s.name;
     opt.value = i;
     properties.sscontainer.appendChild(opt);
   }
-  let defaultSelection = properties.screens.findIndex((s) => {
-    return s.default;
-  });
-
-  defaultSelection =
-    defaultSelection > -1 ? defaultSelection : properties.screens.length - 1;
-  properties.sscontainer.selectedIndex = defaultSelection;
+  let defaultSelection = properties.screens.findIndex((s) => s.default);
+  properties.sscontainer.selectedIndex = defaultSelection > -1 ? defaultSelection : properties.screens.length - 1;
 }
