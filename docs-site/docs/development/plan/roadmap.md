@@ -10,17 +10,17 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| **High** | PR #2082 Join Meeting Dialog | In progress (branch exists) | Near complete |
-| **High** | PR #2101 MCAS Domain Handling | Ready to merge, needs investigation | 1-2 hours |
-| **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
-| **Medium** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
-| **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
-| **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | Spikes: 2h, Phase 1: 8-12h |
-| **Awaiting** | #2095 appIcon KDE regression | PR #2104 submitted; awaiting user validation | - |
-| **Awaiting** | #2065 AppImage update info | PR #2102 merged; awaiting user validation | - |
-| **Parked** | PR #2033 Logout Indicator | User not responding | - |
-| **Parked** | PR #2060 Camera Resolution | User not responding | - |
-| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
+| **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
+| **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
+| **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
+| **Medium** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Ready to implement | Tiny |
+| **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
+| **Medium** | Chat Modal | Requires validation spikes | Medium |
+| **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
+| **Medium** | #2065 AppImage update info | PR #2102 awaiting validation | - |
+| **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
+| **Low** | PR #2060 Camera Resolution | Parked - user not responding | - |
+| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
 ---
 
@@ -31,7 +31,7 @@ This document outlines the future development direction for Teams for Linux, org
 | Item | Description | Status |
 |------|-------------|--------|
 | **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
-| **PR #2101** | Handle MCAS domain suffix in hostname validation | Ready, needs codebase check |
+| **PR #2101** | MCAS domain suffix in hostname validation | Pending final checks |
 
 ### Awaiting User Validation
 
@@ -68,9 +68,9 @@ These features have completed research and are ready to be built.
 
 ### Screen Lock Media Privacy
 
-**Issue:** [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015)
+**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
 **Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
-**Effort:** 2-3 hours
+**Effort:** Small
 
 **Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
 
@@ -93,8 +93,9 @@ These features have completed research and are ready to be built.
 
 ### MQTT Screen Sharing Status
 
+**Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
-**Effort:** ~1 hour
+**Effort:** Tiny
 
 **Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
 
@@ -149,7 +150,7 @@ These features need validation spikes before implementation to prove the approac
 
 **Issue:** [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984)
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spikes-and-gaps.md](../research/chat-modal-spikes-and-gaps.md)
-**Effort:** 8-12 hours for Phase 1 (if spikes succeed)
+**Effort:** Medium (if spikes succeed)
 
 **Description:** Lightweight chat modal for quick messaging without navigating away from current Teams view.
 
@@ -352,10 +353,10 @@ These are long-term improvements that happen incrementally.
 ### Suggested Order (v2.7.3)
 
 1. **Finish PR #2082** - Join meeting dialog (in progress)
-2. **Merge PR #2101** - MCAS domain handling (after verifying no other files need updates)
+2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
 3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
-4. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-5. **MQTT Screen Sharing Status** - Minimal effort, completes media status
+4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+5. **#2107 MQTT Screen Sharing Status** - Minimal effort, completes media status
 
 ### Future Priorities
 
