@@ -365,19 +365,25 @@ async function handleAppReady() {
     mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
     mqttMediaStatusService.initialize();
 
+    // Helper function to publish media privacy state to MQTT
+    function publishMediaPrivacyState(state, requestId = null) {
+      const topic = 'media-privacy/state';
+      const payload = requestId ? { ...state, requestId } : state;
+      const logMessage = requestId
+        ? '[MQTT] Publishing media privacy state response:'
+        : '[MQTT] Publishing media privacy state change:';
+      console.debug(logMessage, payload);
+      mqttClient.publishToTopic(topic, payload);
+    }
+
     // Handle media privacy state responses from renderer for MQTT publishing
     ipcMain.on('media-privacy:state', (_event, { requestId, state }) => {
-      console.debug('[MQTT] Publishing media privacy state:', state);
-      mqttClient.publishToTopic('media-privacy/state', {
-        ...state,
-        requestId
-      });
+      publishMediaPrivacyState(state, requestId);
     });
 
     // Handle media privacy state change notifications from renderer
     ipcMain.on('media-privacy:state-changed', (_event, state) => {
-      console.debug('[MQTT] Publishing media privacy state change:', state);
-      mqttClient.publishToTopic('media-privacy/state', state);
+      publishMediaPrivacyState(state);
     });
   }
 
