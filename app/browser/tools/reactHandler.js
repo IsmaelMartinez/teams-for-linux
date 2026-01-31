@@ -371,6 +371,11 @@ class ReactHandler {
       'teams.microsoft.com',
       'teams.live.com'
     ];
+
+    // Handle Microsoft Cloud App Security (MCAS) suffix. eg: teams.cloud.microsoft.mcas.ms
+    if(hostname.endsWith('.mcas.ms')){
+      hostname = hostname.substring(0, hostname.length - 8);
+    }
     
     for (const domain of allowedDomains) {
       // Exact match
