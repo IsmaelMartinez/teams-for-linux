@@ -350,7 +350,8 @@ const PII_PATTERNS = {
   token: /bearer\s+[a-zA-Z0-9._-]+/gi,
   ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
   mqttUrl: /(mqtt[s]?:\/\/)[^:]+:[^@]+@/gi,
-  urlQueryParams: /\?[^\s]+/g,
+  // Note: [^"'\s] prevents matching beyond quotes in JSON strings
+  urlQueryParams: /\?[^"'\s]+/g,
 };
 
 function sanitize(message) {
@@ -360,8 +361,11 @@ function sanitize(message) {
 
   let sanitized = message;
 
-  // Email → ***@***.***
+  // Email → [EMAIL_REDACTED]
   sanitized = sanitized.replace(PII_PATTERNS.email, '[EMAIL_REDACTED]');
+
+  // IP Address → [IP_REDACTED]
+  sanitized = sanitized.replace(PII_PATTERNS.ipAddress, '[IP_REDACTED]');
 
   // UUID → first 8 chars...
   sanitized = sanitized.replace(PII_PATTERNS.uuid, (m) => `${m.slice(0, 8)}...`);
