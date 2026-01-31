@@ -35,6 +35,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
 | [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | ✅ Implemented | 2026-01-25 | v2.7.1 |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Accepted | 2026-01-25 | v2.7.1 |
+| [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -51,6 +52,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | Secure token storage using Electron safeStorage with OS-level encryption to prevent daily re-authentication |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | Configurable token refresh mechanism to proactively renew authentication before expiry |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | Direct D-Bus invocation for Microsoft Identity Broker version compatibility |
+| [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -58,6 +60,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Graceful fallback for unsupported platforms
 - Configurable refresh intervals
 - Support for Microsoft Identity Broker versions ≤ 2.0.1 and > 2.0.1
+- PII sanitization with zero dependencies, UUIDs correlatable for debugging
 
 ### Screen Sharing
 
@@ -294,9 +297,9 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 12
-- **Implemented**: 5
-- **Accepted**: 3
+- **Total ADRs**: 13
+- **Implemented**: 6
+- **Accepted**: 2
 - **Proposed**: 1
 - **Rejected**: 4
 - **Average length**: ~500 words
