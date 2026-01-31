@@ -3,13 +3,22 @@
 **Related:** [Chat Modal Investigation](chat-modal-investigation.md) | [Spike Results](chat-modal-spike-results.md)
 **Date:** 2025-11-26
 **Updated:** 2025-01-31
-**Status:** BLOCKED - Feature Not Feasible
+**Status:** Ready for Implementation (Deep Link Approach)
 
 ## Executive Summary
 
-The validation spikes have been executed and **confirmed a critical blocker**: the Teams token does not include `Chat.Read` or `Chat.ReadWrite` permissions. The chat modal feature cannot be implemented as designed.
+The validation spikes confirmed that the Chat API is blocked (403 Forbidden), but an alternative approach using People API + Deep Links is viable and validated.
 
-See [Spike Results](chat-modal-spike-results.md) for full details and alternative approaches.
+**What works:**
+- People API (`/me/people`) - search/list contacts by relevance
+- Deep link navigation - opens chat with specified user in Teams
+
+**Recommended implementation:**
+1. User search modal using People API
+2. Click to open chat via deep link
+3. Optional: notification clicks open chat with sender
+
+See [Spike Results](chat-modal-spike-results.md) for full validation details.
 
 ## Critical Blockers Requiring Validation
 
