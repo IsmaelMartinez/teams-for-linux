@@ -79,7 +79,8 @@ const allowedChannels = new Set([
   'graph-api-get-calendar-events',
   'graph-api-get-calendar-view',
   'graph-api-create-calendar-event',
-  'graph-api-get-mail-messages'
+  'graph-api-get-mail-messages',
+  'graph-api-run-chat-spikes'
 ]);
 
 /**

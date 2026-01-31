@@ -2,7 +2,21 @@
 
 **Related Issue:** [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) - Multiple Windows Investigation
 **Date:** 2025-11-26
-**Status:** Investigation Complete
+**Updated:** 2025-01-31
+**Status:** Ready for Implementation (Revised Approach)
+
+## Validation Update (2025-01-31)
+
+The original Graph API approach was validated and found to be blocked - the Teams token does not include `Chat.Read` or `Chat.ReadWrite` permissions. However, an alternative approach using People API + Deep Links has been validated and works.
+
+**See:** [Spike Results](chat-modal-spike-results.md) for full validation details.
+
+**Revised Implementation:**
+- People API (`/me/people`) works for contact search
+- Deep links (`/l/chat/0/0?users=email`) work for opening chat
+- No message history or inline send (navigates Teams to chat instead)
+
+This provides quick chat access without requiring blocked API permissions.
 
 ## Summary
 
@@ -14,7 +28,7 @@ Since full multi-window support for Teams was determined to be infeasible (see [
 
 - Quick access to chat without leaving current context (meeting, channel, etc.)
 - Ability to send quick messages without navigating away
-- View recent message history
+- ~~View recent message history~~ (blocked - no API access)
 - Potential evolution into a notifications panel with reply capabilities
 
 ## Existing Foundation
@@ -578,43 +592,37 @@ Implement complete chat client with message history, real-time updates, rich for
 
 **Why rejected:** Scope too large, duplicates existing functionality, high maintenance burden.
 
-## Recommendations
+## Recommendations (Updated 2025-01-31)
 
-### Phase 1: Implement Basic Chat Modal
+### Revised Approach: Quick Chat Access via Deep Links
 
-**Rationale:**
+The original Graph API-based approach is blocked. The recommended implementation uses:
 
-1. **Addresses user need:** Provides quick access to chat functionality without full multi-window complexity
-2. **Feasible implementation:** Builds on existing patterns (NotificationToast, GraphApiClient)
-3. **Incremental value:** Useful standalone feature even if not evolved further
-4. **Learning opportunity:** Tests Graph API chat capabilities and user reception
-5. **Low risk:** Modal is isolated component, easy to disable if issues arise
+**Working Components:**
+- People API (`/me/people`) - Search contacts by relevance
+- Deep links (`/l/chat/0/0?users=email`) - Navigate to chat in Teams
 
 **Implementation Order:**
 
-1. Add chat methods to GraphApiClient
-2. Create ChatModal and ChatModalManager classes
-3. Build basic UI (search + send)
-4. Add IPC handlers and validation
-5. Implement keyboard shortcut to show modal
-6. Test with various user scenarios
-7. Document usage and limitations
+1. Add People API method to GraphApiClient (`searchPeople`)
+2. Create QuickChatModal with user search UI
+3. On user selection, navigate via deep link (`openChatWithUser`)
+4. Add keyboard shortcut to show modal
+5. Optionally: enhance notification clicks to open chat with sender
 
-### Phase 2 & 3: Evaluate Based on Feedback
+**Scope (Simplified):**
+- Search for contacts
+- Click to open chat (navigates Teams, no inline messaging)
+- No message history display (API blocked)
+- No inline message sending (API blocked)
 
-**Approach:**
+### Future Enhancements
 
-- Release Phase 1 and gather user feedback
-- Monitor Graph API usage and any rate limiting issues
-- Evaluate if enhanced features are requested
-- Consider real-time update mechanisms if demand is high
-
-**Defer if:**
-
-- Graph API proves unreliable or too limited
-- Users prefer existing Teams web interface
-- Synchronization issues cause confusion
-- Implementation effort exceeds value delivered
+If users request more functionality:
+- Cache recent contacts for faster access
+- Add "favorites" list
+- Improve deep link navigation (reduce page refresh)
+- Consider notification reply integration (if API access changes)
 
 ## Related
 

@@ -15,7 +15,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
-| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Chat Modal Spikes | Requires validation spikes | Small |
+| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
 | **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
 | **Medium** | #2065 AppImage update info | PR #2102 awaiting validation | - |
 | **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
@@ -91,6 +91,46 @@ These features have completed research and are ready to be built.
 
 ---
 
+### Quick Chat Access
+
+**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
+**Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
+**Effort:** Small
+**Status:** ✅ Spikes complete - ready for implementation
+
+**Spike Results (2025-01-31):**
+
+- ❌ Chat API (`/me/chats`) - 403 Forbidden (Teams token lacks permissions)
+- ✅ People API (`/me/people`) - Works, returns contacts ranked by interaction
+- ✅ Deep links (`/l/chat/0/0?users=email`) - Works, navigates Teams to chat
+
+**Revised Implementation (Deep Link Approach):**
+
+1. Add `searchPeople` method to GraphApiClient
+2. Create QuickChatModal with user search UI
+3. On user selection, navigate via deep link (`openChatWithUser`)
+4. Add keyboard shortcut to show modal (e.g., Ctrl+Shift+C)
+5. Optional: enhance notification clicks to open chat with sender
+
+**Already Implemented:**
+
+- `window.electronAPI.openChatWithUser(email)` - deep link navigation helper
+
+**Scope (Simplified):**
+
+- Search for contacts via People API
+- Click to open chat (navigates Teams, no inline messaging)
+- No message history display (API blocked)
+- No inline message sending (API blocked)
+
+**Value:**
+
+- Quick access to start/open chat without navigating Teams UI
+- Practical alternative to rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md))
+- Can enhance notification clicks to open chat with sender
+
+---
+
 ### MQTT Screen Sharing Status
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
@@ -148,40 +188,7 @@ These features have completed research and are ready to be built.
 
 These features need validation spikes before implementation to prove the approach works.
 
-### Chat Modal Feature
-
-**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) (Spikes), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
-**Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spikes-and-gaps.md](../research/chat-modal-spikes-and-gaps.md)
-**Effort:** Small (spikes), Medium (Phase 1 if spikes succeed)
-
-**Description:** Lightweight chat modal for quick messaging without navigating away from current Teams view.
-
-**User Feedback (from #1984):**
-
-> "Yes, a small chat window might work. The main issue is chatting with someone while in a call, so that would solve this issue."
-
-This is the practical alternative to the rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md)).
-
-**Required Spikes:**
-
-1. **Spike 1 (CRITICAL):** Test if `Chat.Read`/`Chat.ReadWrite` permissions are available in Teams token
-2. **Spike 2 (CRITICAL):** Test chat discovery for 1:1 conversations
-3. **Spike 3:** Test first-time message sending (chat creation)
-4. **Spike 4:** Test user search API permissions
-
-**Decision Tree:**
-
-- If Spike 1 returns 403 Forbidden → Feature cannot be implemented as designed
-- Alternative if blocked: Use Teams deep links instead of API
-
-**Implementation (if spikes pass):**
-
-1. Extend GraphApiClient with chat methods
-2. Create ChatModal and ChatModalManager classes
-3. Build UI (search + send)
-4. Add keyboard shortcut to show modal
-
-**Note:** Chat spikes already exist on branch `origin/claude/analyze-research-spikes-XbYVZ` in `app/graphApi/chatSpikes.js` (507 lines).
+(No features currently in this section - all pending spikes have been completed.)
 
 ---
 
@@ -359,7 +366,7 @@ These are long-term improvements that happen incrementally.
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
 3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
 4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-5. **#2109 Chat Modal Spikes** - Validate approach before full implementation
+5. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
 6. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
 
 ### Future Priorities
