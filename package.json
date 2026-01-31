@@ -22,6 +22,7 @@
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint **/*.js",
     "test:e2e": "playwright test",
+    "test:unit": "node tests/unit/logSanitizer.test.js",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
