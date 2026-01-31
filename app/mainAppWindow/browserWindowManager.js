@@ -2,6 +2,7 @@ const {
   app,
   BrowserWindow,
   ipcMain,
+  nativeImage,
   session,
   nativeTheme,
   powerSaveBlocker,
@@ -114,6 +115,20 @@ class BrowserWindowManager {
     console.debug("Content Security Policy configured as compensating control for disabled security features");
   }
 
+  /**
+   * Converts an icon path to a nativeImage.
+   * On Linux/KDE, the BrowserWindow icon must be a nativeImage for proper
+   * display in the window list/panel (similar to tray icon fix in #2096).
+   * @param {string} iconPath - Path to the icon file
+   * @returns {Electron.NativeImage|undefined} The native image or undefined if no path
+   */
+  getIconImage(iconPath) {
+    if (!iconPath) {
+      return undefined;
+    }
+    return nativeImage.createFromPath(iconPath);
+  }
+
   createNewBrowserWindow(windowState) {
     return new BrowserWindow({
       title: "Teams for Linux",
@@ -126,7 +141,7 @@ class BrowserWindowManager {
 
       show: false,
       autoHideMenuBar: this.config.menubar == "auto",
-      icon: this.iconChooser ? this.iconChooser.getFile() : undefined,
+      icon: this.iconChooser ? this.getIconImage(this.iconChooser.getFile()) : undefined,
       frame: this.config.frame,
 
       webPreferences: {
