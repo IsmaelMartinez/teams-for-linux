@@ -55,11 +55,13 @@ This research investigates implementing PII redaction in Teams for Linux logging
 
 | Data Type | File | Line(s) | Example |
 |-----------|------|---------|---------|
-| MQTT broker URL | `app/mqtt/index.js` | 69, 84 | Full broker connection string |
-| MQTT username | `app/mqtt/index.js` | 86 | Plaintext username |
-| MQTT topics | `app/mqtt/index.js` | 181, 205 | Topic prefix + status topics |
-| Password command | `app/login/index.js` | 46 | SSO password retrieval command |
-| Request headers | `app/intune/index.js` | 254 | Custom headers with auth info |
+| MQTT broker URL | `app/mqtt/index.js` | 69 | Full broker connection string |
+| MQTT topics | `app/mqtt/index.js` | 84, 86, 146, 181, 205 | Topic prefix + status/command topics |
+| MQTT payload | `app/mqtt/index.js` | 146 | Published message content |
+| Password command | `app/login/index.js` | 45 | SSO password retrieval command |
+| Request headers | `app/intune/index.js` | 253 | SSO credential info |
+
+**Note:** MQTT username/password are in connection options but NOT logged directly (good practice).
 
 #### MEDIUM RISK - Should Address
 
@@ -137,7 +139,8 @@ A complete audit of all `console.log/debug/info/warn/error` statements reveals *
 | File | Line | Log Statement | PII Type | Action |
 |------|------|---------------|----------|--------|
 | `app/mqtt/index.js` | 69 | `Connecting to broker: ${this.config.brokerUrl}` | Broker URL | **Remove URL** |
-| `app/mqtt/index.js` | 86 | `Subscribed to command topic: ${commandTopic}` | Topic name | **Sanitize** |
+| `app/mqtt/index.js` | 84, 86 | `Subscribed to command topic: ${commandTopic}` | Topic name | **Sanitize** |
+| `app/mqtt/index.js` | 146 | `Published to ${topic}: ${payloadString...}` | Topic + payload | **Sanitize** |
 | `app/mqtt/index.js` | 181 | `Published status...on topic: ${topic}` | Topic name | **Sanitize** |
 | `app/mqtt/index.js` | 205 | `Published to topic: ${fullTopic}` | Topic name | **Sanitize** |
 | `app/login/index.js` | 45 | Logs password command | Credentials | **Remove entirely** |
@@ -146,6 +149,8 @@ A complete audit of all `console.log/debug/info/warn/error` statements reveals *
 | `app/intune/index.js` | 253 | `SSO credential added` | Auth info | **Remove** |
 | `app/customBackground/index.js` | 74, 89 | `Forwarding '${details.url}' to...` | Custom URLs | **Sanitize** |
 | `app/mainAppWindow/index.js` | 510-511 | DEBUG intercepted URLs | URL + headers | **Remove** |
+
+**Note:** MQTT username/password are passed in connection options but are NOT directly logged (good).
 
 #### MEDIUM RISK - Could Expose Indirect PII
 
