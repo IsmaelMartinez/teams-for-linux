@@ -123,10 +123,7 @@ class BrowserWindowManager {
    * @returns {Electron.NativeImage|undefined} The native image or undefined if no path
    */
   getIconImage(iconPath) {
-    if (!iconPath) {
-      return undefined;
-    }
-    return nativeImage.createFromPath(iconPath);
+    return iconPath ? nativeImage.createFromPath(iconPath) : undefined;
   }
 
   createNewBrowserWindow(windowState) {
