@@ -2,7 +2,7 @@
 
 **Related:** [Chat Modal Spikes and Gaps](chat-modal-spikes-and-gaps.md) | [Chat Modal Investigation](chat-modal-investigation.md)
 **Date:** 2025-01-31
-**Status:** BLOCKED - Feature Not Feasible
+**Status:** API Blocked - Deep Link Alternative Validated
 
 ## How to Run Spikes
 
@@ -184,26 +184,40 @@ The chat modal feature **cannot be implemented** using the Microsoft Graph API a
 
 This is consistent with how Microsoft has designed Teams permissions - chat functionality requires explicit consent that cannot be obtained through the embedded web app token.
 
-## Alternatives to Consider
+## Alternative Validation: Deep Links + People API
 
-### Option A: Teams Deep Links (Recommended)
-Instead of API-based chat, generate deep links that open chat in the main Teams interface:
+After the Chat API was blocked, we validated an alternative approach.
 
-```
-https://teams.microsoft.com/l/chat/0/0?users=user@example.com
-```
+### People API Test
+- **Status:** PASS
+- **Endpoint:** `GET /me/people?$top=5`
+- **Response:** 200 OK with list of contacts ranked by interaction frequency
+- **Notes:** Returns displayName, email, jobTitle, department - sufficient for user search
 
-This provides quick access to chat without requiring API permissions.
+### Deep Link Navigation Test
+- **Status:** PASS
+- **URL Format:** `{currentOrigin}/l/chat/0/0?users={email}`
+- **Behavior:** Navigates Teams to chat with specified user (causes page refresh but works)
+- **Notes:** Uses current Teams origin (teams.cloud.microsoft or teams.microsoft.com)
 
-### Option B: Read-Only Notification Panel
-If `Presence.Read` permissions become available, build a read-only panel showing user presence/status and unread message counts (via existing tray icon logic), but no send capability.
+### Viable Feature: Quick Chat Access
 
-### Option C: Close the Feature Request
-Document the limitation and close Issue #2109 as "not feasible" with this technical explanation.
+With these working components, a simplified feature is feasible:
+
+1. **User Search Modal** - Search contacts via People API
+2. **Click to Chat** - Navigate to chat via deep link
+3. **Notification Enhancement** - Click notification sender to open chat with them
+
+**Implementation added:**
+- `window.electronAPI.openChatWithUser(email)` - Opens chat with specified user
 
 ## Next Steps
 
-Since the spikes returned BLOCKED status, the recommended action is to update the roadmap and close/defer the chat modal feature request with this technical explanation.
+The original API-based chat modal is blocked, but the deep link approach provides a viable alternative:
+
+1. Implement user search modal using People API
+2. Add deep link navigation on user selection
+3. Optionally enhance notifications to open chat with sender on click
 
 ## Related Files
 
