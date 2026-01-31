@@ -16,8 +16,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **Medium** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
 | **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
 | **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | Spikes: 2h, Phase 1: 8-12h |
-| **Investigate** | #2095 appIcon KDE regression | Needs investigation (likely Electron/WM issue) | TBD |
-| **Investigate** | #2065 AppImage update info | User reports it doesn't work; needs verification | TBD |
+| **Awaiting** | #2095 appIcon KDE regression | PR #2104 submitted; awaiting user validation | - |
+| **Awaiting** | #2065 AppImage update info | PR #2102 merged; awaiting user validation | - |
 | **Parked** | PR #2033 Logout Indicator | User not responding | - |
 | **Parked** | PR #2060 Camera Resolution | User not responding | - |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
@@ -33,12 +33,12 @@ This document outlines the future development direction for Teams for Linux, org
 | **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
 | **PR #2101** | Handle MCAS domain suffix in hostname validation | Ready, needs codebase check |
 
-### To Investigate
+### Awaiting User Validation
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **#2095** | `--appIcon` not working in KDE window list | May be Electron/WM issue; worked before v2.6 |
-| **#2065** | AppImage update info not working | See [ADR-011](../adr/011-appimage-update-info.md); user reports changes didn't work |
+| **#2095** | `--appIcon` not working in KDE window list | PR #2104 submitted as fix; awaiting user feedback |
+| **#2065** | AppImage update info not working | PR #2102 merged; awaiting user validation of fix |
 
 ### Blocked (External Dependencies)
 
@@ -353,10 +353,9 @@ These are long-term improvements that happen incrementally.
 
 1. **Finish PR #2082** - Join meeting dialog (in progress)
 2. **Merge PR #2101** - MCAS domain handling (after verifying no other files need updates)
-3. **Investigate #2095** - appIcon KDE regression (understand root cause)
-4. **Investigate #2065** - AppImage update info (verify from our side)
-5. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-6. **MQTT Screen Sharing Status** - Minimal effort, completes media status
+3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
+4. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+5. **MQTT Screen Sharing Status** - Minimal effort, completes media status
 
 ### Future Priorities
 
