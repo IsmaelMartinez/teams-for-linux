@@ -52,7 +52,19 @@ class ChatApiSpikes {
     logger.info('[CHAT_SPIKE] ========================================');
     logger.info('[CHAT_SPIKE] Spike Results Summary');
     logger.info('[CHAT_SPIKE] ========================================');
-    logger.info('[CHAT_SPIKE]', JSON.stringify(this.results, null, 2));
+    // Redact PII before logging to avoid leaking sensitive data in log files
+    const redactedResults = JSON.parse(JSON.stringify(this.results));
+    if (redactedResults.spike2_chatDiscovery?.memberStructure?.memberSample) {
+      redactedResults.spike2_chatDiscovery.memberStructure.memberSample = '[REDACTED]';
+    }
+    if (redactedResults.spike5_messageFormat?.formats) {
+      redactedResults.spike5_messageFormat.formats = redactedResults.spike5_messageFormat.formats.map(f => ({
+        ...f,
+        bodyPreview: '[REDACTED]',
+        from: '[REDACTED]'
+      }));
+    }
+    logger.info('[CHAT_SPIKE]', JSON.stringify(redactedResults, null, 2));
 
     return this.results;
   }
@@ -71,7 +83,7 @@ class ChatApiSpikes {
         spike: 'Chat Permissions',
         success: result.success,
         status: result.status,
-        hasPermission: result.success === true,
+        hasPermission: result.success,
         chatCount: result.data?.value?.length ?? 0,
         error: result.error || null
       };
@@ -154,7 +166,8 @@ class ChatApiSpikes {
       logger.info('[CHAT_SPIKE 2] Chat discovery successful');
       logger.info('[CHAT_SPIKE 2] Found', oneOnOneChats.length, '1:1 chats,', groupChats.length, 'group chats');
       if (memberStructure) {
-        logger.info('[CHAT_SPIKE 2] Member structure:', JSON.stringify(memberStructure, null, 2));
+        // Log structure info without PII
+        logger.info('[CHAT_SPIKE 2] Member structure found: memberCount=' + memberStructure.memberCount);
       }
 
       return spikeResult;
