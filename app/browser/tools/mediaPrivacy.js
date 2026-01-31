@@ -133,8 +133,11 @@ class MediaPrivacy {
 		this.#isMediaBlocked = true;
 		this.#stoppedTracks = [];
 
-		// Stop all active tracks from tracked streams
-		for (const stream of this.#trackedStreams) {
+		// Gather all streams to stop (tracked streams + video element streams)
+		const streamsToStop = this.#getAllMediaStreams();
+
+		// Stop all active tracks from all found streams
+		for (const stream of streamsToStop) {
 			for (const track of stream.getTracks()) {
 				if (track.readyState === 'live') {
 					this.#stoppedTracks.push({
@@ -148,9 +151,6 @@ class MediaPrivacy {
 			}
 		}
 
-		// Also try to find and stop any video elements with streams
-		this.#stopVideoElementStreams();
-
 		console.info(`[MEDIA_PRIVACY] Media disabled - stopped ${this.#stoppedTracks.length} tracks`);
 
 		// Notify main process of state change
@@ -158,27 +158,21 @@ class MediaPrivacy {
 	}
 
 	/**
-	 * Stop streams attached to video elements
-	 * Teams may have video elements with srcObject that we didn't track
+	 * Get all media streams from tracked streams and video elements
+	 * @returns {Set<MediaStream>} Set of all unique media streams
 	 */
-	#stopVideoElementStreams() {
+	#getAllMediaStreams() {
+		const streams = new Set(this.#trackedStreams);
+
+		// Also find streams from video elements that might not be tracked
 		const videoElements = document.querySelectorAll('video');
 		for (const video of videoElements) {
-			const stream = video.srcObject;
-			if (stream instanceof MediaStream) {
-				for (const track of stream.getTracks()) {
-					if (track.readyState === 'live' && (track.kind === 'video' || track.kind === 'audio')) {
-						this.#stoppedTracks.push({
-							kind: track.kind,
-							label: track.label,
-							wasEnabled: track.enabled
-						});
-						track.stop();
-						console.debug(`[MEDIA_PRIVACY] Stopped ${track.kind} track from video element`);
-					}
-				}
+			if (video.srcObject instanceof MediaStream) {
+				streams.add(video.srcObject);
 			}
 		}
+
+		return streams;
 	}
 
 	/**
@@ -210,16 +204,21 @@ class MediaPrivacy {
 	 */
 	#getMediaState() {
 		const activeTracks = [];
+		const processedTracks = new Set();
 
-		// Count active tracks from tracked streams
-		for (const stream of this.#trackedStreams) {
+		// Get all streams (tracked + video elements) for accurate state
+		const allStreams = this.#getAllMediaStreams();
+
+		// Count active tracks from all unique streams
+		for (const stream of allStreams) {
 			for (const track of stream.getTracks()) {
-				if (track.readyState === 'live') {
+				if (track.readyState === 'live' && !processedTracks.has(track)) {
 					activeTracks.push({
 						kind: track.kind,
 						label: track.label,
 						enabled: track.enabled
 					});
+					processedTracks.add(track);
 				}
 			}
 		}
