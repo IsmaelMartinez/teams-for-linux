@@ -248,6 +248,27 @@ function handleShortcutCommand({ action, shortcut }) {
   }
 }
 
+function handleMediaPrivacyCommand({ action }) {
+  const window = mainAppWindow.getWindow();
+  if (!window || window.isDestroyed()) {
+    console.warn(`[MQTT] Cannot execute media privacy command '${action}': window not available`);
+    return;
+  }
+
+  const channelMap = {
+    'disable-media': 'media-privacy:disable',
+    'enable-media': 'media-privacy:enable',
+    'query-media-state': 'media-privacy:query'
+  };
+
+  const channel = channelMap[action];
+  if (channel) {
+    const requestId = Date.now().toString();
+    window.webContents.send(channel, requestId);
+    console.info(`[MQTT] Sent media privacy command '${action}' to renderer`);
+  }
+}
+
 function initializeMqtt() {
   mqttClient = new MQTTClient(config);
 
@@ -288,6 +309,8 @@ function initializeMqtt() {
 
     if (action === 'get-calendar') {
       await handleGetCalendarCommand(command);
+    } else if (mqttClient.isMediaPrivacyAction(action)) {
+      handleMediaPrivacyCommand(command);
     } else {
       handleShortcutCommand(command);
     }
@@ -298,6 +321,20 @@ function initializeMqtt() {
 
   mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
   mqttMediaStatusService.initialize();
+
+  function publishMediaPrivacyState(state, requestId = null) {
+    const payload = requestId ? { ...state, requestId } : state;
+    console.debug('[MQTT] Publishing media privacy state:', payload);
+    mqttClient.publishToTopic('media-privacy/state', payload);
+  }
+
+  ipcMain.on('media-privacy:state', (_event, { requestId, state }) => {
+    publishMediaPrivacyState(state, requestId);
+  });
+
+  ipcMain.on('media-privacy:state-changed', (_event, state) => {
+    publishMediaPrivacyState(state);
+  });
 }
 
 function showConfigurationDialogs() {

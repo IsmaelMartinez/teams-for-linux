@@ -29,6 +29,9 @@ class MQTTClient extends EventEmitter {
 		};
 
 		this.nonShortcutActions = ['get-calendar'];
+
+		// Media privacy actions (handled via IPC to renderer)
+		this.mediaPrivacyActions = ['disable-media', 'enable-media', 'query-media-state'];
 	}
 
 	/**
@@ -36,7 +39,16 @@ class MQTTClient extends EventEmitter {
 	 * @returns {string[]} Array of allowed action names
 	 */
 	get allowedActions() {
-		return [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions];
+		return [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions, ...this.mediaPrivacyActions];
+	}
+
+	/**
+	 * Check if action is a media privacy action
+	 * @param {string} action - Action name
+	 * @returns {boolean} True if action is a media privacy action
+	 */
+	isMediaPrivacyAction(action) {
+		return this.mediaPrivacyActions.includes(action);
 	}
 
 	/**

@@ -54,6 +54,13 @@ const allowedChannels = new Set([
   // Media status (camera/microphone)
   'camera-state-changed',
   'microphone-state-changed',
+
+  // Media privacy (screen lock integration)
+  'media-privacy:disable',
+  'media-privacy:enable',
+  'media-privacy:query',
+  'media-privacy:state',
+  'media-privacy:state-changed',
   
   // Authentication and forms
   'submitForm',
