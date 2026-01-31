@@ -53,7 +53,7 @@ class ChatApiSpikes {
     logger.info('[CHAT_SPIKE] Spike Results Summary');
     logger.info('[CHAT_SPIKE] ========================================');
     // Redact PII before logging to avoid leaking sensitive data in log files
-    const redactedResults = JSON.parse(JSON.stringify(this.results));
+    const redactedResults = structuredClone(this.results);
     if (redactedResults.spike2_chatDiscovery?.memberStructure?.memberSample) {
       redactedResults.spike2_chatDiscovery.memberStructure.memberSample = '[REDACTED]';
     }

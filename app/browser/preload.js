@@ -127,11 +127,11 @@ globalThis.electronAPI = {
       return false;
     }
     // Use the current Teams base URL (could be teams.cloud.microsoft or teams.microsoft.com)
-    const currentOrigin = window.location.origin;
+    const currentOrigin = globalThis.location.origin;
     const chatPath = `/l/chat/0/0?users=${encodeURIComponent(email)}`;
     const chatUrl = `${currentOrigin}${chatPath}`;
     console.log('[CHAT_LINK] Navigating to chat with:', email, 'URL:', chatUrl);
-    window.location.href = chatUrl;
+    globalThis.location.href = chatUrl;
     return true;
   },
 
