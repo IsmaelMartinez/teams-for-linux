@@ -1,0 +1,1 @@
+feat: Add Phase 2 notification support for chat, calendar, and activity events - by @IsmaelMartinez (#2112)
