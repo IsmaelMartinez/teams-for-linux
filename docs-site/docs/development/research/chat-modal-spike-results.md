@@ -2,7 +2,7 @@
 
 **Related:** [Chat Modal Spikes and Gaps](chat-modal-spikes-and-gaps.md) | [Chat Modal Investigation](chat-modal-investigation.md)
 **Date:** 2025-01-31
-**Status:** Ready for Validation
+**Status:** BLOCKED - Feature Not Feasible
 
 ## How to Run Spikes
 
@@ -26,7 +26,7 @@
 From the DevTools console, run:
 
 ```javascript
-const results = await window.electronAPI.invoke('graph-api-run-chat-spikes');
+const results = await window.electronAPI.graphApi.runChatSpikes();
 console.table(results);
 ```
 
@@ -159,59 +159,51 @@ Critical blocker detected (typically Spike 1 failing with 403).
 2. **Read-Only Panel:** If any read permissions work, build notification viewer without send
 3. **Wait for Microsoft:** If permissions may be added in future Teams versions
 
-## Spike Results Template
-
-Copy this template to record actual spike results:
-
-```markdown
 ## Actual Spike Results
 
-**Date Run:** YYYY-MM-DD
-**Environment:** [Production/Test tenant]
-**Teams Version:** vX.X.X
+**Date Run:** 2025-01-31
+**Environment:** Production tenant
+**Teams Version:** v2.7.2
 
 ### Spike 1: Chat Permissions
-- **Status:** PASS / FAIL
-- **Response Code:** XXX
-- **Notes:**
+- **Status:** FAIL (CRITICAL BLOCKER)
+- **Response Code:** 403 Forbidden
+- **Error Message:** "Missing scope permissions on the request. API requires one of 'Chat.Read, Chat.ReadBasic, Chat.ReadWrite, ChatMessage.Read.All, Chat.ReadBasic.All, Chat.Read.All, Chat.ReadForTeam, TeamsTab.Create, User.ReadBasic.All'"
+- **Notes:** The Teams token does not include any chat-related scopes. This is a fundamental limitation of the token that Teams provides to embedded applications.
 
-### Spike 2: Chat Discovery
-- **Status:** PASS / FAIL
-- **Chats Found:** X 1:1, X group
-- **Notes:**
-
-### Spike 3: First-Time Message
-- **Status:** PASS / FAIL
-- **Can Create Chats:** Yes / No
-- **Notes:**
-
-### Spike 4: User Search
-- **Status:** PASS / FAIL
-- **Working Methods:**
-- **Notes:**
-
-### Spike 5: Message Format
-- **Status:** PASS / FAIL
-- **Content Types Found:**
-- **Notes:**
-
-### Spike 6: Rate Limits
-- **Status:** PASS / FAIL
-- **Rate Limited Requests:** X/10
-- **Notes:**
+### Spikes 2-6: Not Executed
+- **Reason:** Spike 1 is a critical blocker - remaining spikes were skipped as they all depend on chat API access.
 
 ### Overall Assessment
-- **Status:** GO / CONDITIONAL_GO / BLOCKED
-- **Recommendation:**
+- **Status:** BLOCKED
+- **Recommendation:** DO NOT IMPLEMENT chat modal feature as designed. The Microsoft Graph Chat API is not accessible with the available token permissions.
+
+## Conclusion
+
+The chat modal feature **cannot be implemented** using the Microsoft Graph API approach. The Teams authentication token does not include the required `Chat.Read` or `Chat.ReadWrite` scopes.
+
+This is consistent with how Microsoft has designed Teams permissions - chat functionality requires explicit consent that cannot be obtained through the embedded web app token.
+
+## Alternatives to Consider
+
+### Option A: Teams Deep Links (Recommended)
+Instead of API-based chat, generate deep links that open chat in the main Teams interface:
+
 ```
+https://teams.microsoft.com/l/chat/0/0?users=user@example.com
+```
+
+This provides quick access to chat without requiring API permissions.
+
+### Option B: Read-Only Notification Panel
+If `Presence.Read` permissions become available, build a read-only panel showing user presence/status and unread message counts (via existing tray icon logic), but no send capability.
+
+### Option C: Close the Feature Request
+Document the limitation and close Issue #2109 as "not feasible" with this technical explanation.
 
 ## Next Steps
 
-After running spikes:
-
-1. **If GO:** Update roadmap and begin Phase 1 implementation
-2. **If CONDITIONAL_GO:** Document limitations and adjust design
-3. **If BLOCKED:** Document findings and close/defer Issue #2109
+Since the spikes returned BLOCKED status, the recommended action is to update the roadmap and close/defer the chat modal feature request with this technical explanation.
 
 ## Related Files
 
