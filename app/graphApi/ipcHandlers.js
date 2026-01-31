@@ -1,6 +1,7 @@
 // Microsoft Graph API IPC Handlers
 
 const logger = require('electron-log');
+const ChatApiSpikes = require('./chatSpikes');
 
 /**
  * Register all Graph API IPC handlers
@@ -40,8 +41,15 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.getMailMessages(options);
   });
 
+  // Run chat API validation spikes for testing chat modal feasibility
+  ipcMain.handle('graph-api-run-chat-spikes', async () => {
+    if (!graphApiClient) return notEnabled;
+    const spikes = new ChatApiSpikes(graphApiClient);
+    return await spikes.runAllSpikes();
+  });
+
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: 5,
+    channels: 6,
     enabled: !!graphApiClient
   });
 }
