@@ -1,0 +1,1 @@
+Fix AppImage extraction to work without execute permissions - by @IsmaelMartinez (#2102)
