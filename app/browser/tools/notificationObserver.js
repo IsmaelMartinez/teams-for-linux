@@ -383,10 +383,10 @@ class NotificationObserver {
     }, 5000);
 
     // Send to custom notification system
-    if (this.#ipcRenderer && globalThis.electronAPI?.sendNotificationToast) {
+    if (globalThis.electronAPI?.sendNotificationToast) {
       try {
         globalThis.electronAPI.sendNotificationToast(data);
-        console.debug('[NotificationObserver] Custom notification sent:', data.title);
+        console.debug('[NotificationObserver] Custom notification sent');
       } catch (error) {
         console.error('[NotificationObserver] Failed to send notification:', error);
       }
