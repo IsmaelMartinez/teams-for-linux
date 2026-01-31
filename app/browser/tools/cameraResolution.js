@@ -46,8 +46,7 @@ function removeConstraint(constraint, name) {
   delete constraint[name];
 }
 
-const applyCameraResolutionPatch = function (config) {
-  const resolutionConfig = config.cameraResolution;
+const applyCameraResolutionPatch = function (resolutionConfig) {
   const mode = resolutionConfig.mode || "remove";
   const targetWidth = resolutionConfig.width;
   const targetHeight = resolutionConfig.height;
@@ -179,21 +178,21 @@ const applyCameraResolutionPatch = function (config) {
  * @param {Object} config - Application configuration
  */
 function init(config) {
-  if (!config.cameraResolution?.enabled) {
-    console.debug("[CAMERA_RESOLUTION] Feature disabled in configuration");
+  const resolutionConfig = config.media?.camera?.resolution;
+  if (!resolutionConfig?.enabled) {
     return;
   }
 
   try {
-    applyCameraResolutionPatch(config);
-    const mode = config.cameraResolution.mode || "remove";
+    applyCameraResolutionPatch(resolutionConfig);
+    const mode = resolutionConfig.mode || "remove";
     if (mode === "remove") {
       console.info(
         "[CAMERA_RESOLUTION] Camera resolution constraints will be removed"
       );
     } else {
       console.info(
-        `[CAMERA_RESOLUTION] Camera resolution will be set to ${config.cameraResolution.width}x${config.cameraResolution.height}`
+        `[CAMERA_RESOLUTION] Camera resolution will be set to ${resolutionConfig.width}x${resolutionConfig.height}`
       );
     }
   } catch (error) {

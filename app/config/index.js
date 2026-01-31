@@ -239,27 +239,9 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableAutogain: {
         default: false,
-        describe: "A flag indicates whether to disable microphone auto gain control or not",
+        describe: "DEPRECATED: Use media.microphone.disableAutogain instead",
         type: "boolean",
-      },
-      cameraResolution: {
-        default: {
-          enabled: false,
-          mode: "remove",
-          width: 1920,
-          height: 1080,
-        },
-        describe:
-          "Camera resolution configuration. When enabled with mode 'remove', removes Teams' resolution constraints allowing native camera resolution. With mode 'override', sets camera to specified width/height.",
-        type: "object",
-      },
-      cameraAspectRatio: {
-        default: {
-          enabled: false,
-        },
-        describe:
-          "Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints to the video track.",
-        type: "object",
+        deprecated: "Use media.microphone.disableAutogain instead",
       },
       disableGpu: {
         default: false,
@@ -479,8 +461,21 @@ function extractYargConfig(configObject, appVersion) {
       },
       videoMenu: {
         default: false,
-        describe: "Enable menu entry for controlling video elements",
+        describe: "DEPRECATED: Use media.video.menuEnabled instead",
         type: "boolean",
+        deprecated: "Use media.video.menuEnabled instead",
+      },
+      media: {
+        default: {
+          microphone: { disableAutogain: false },
+          camera: {
+            resolution: { enabled: false, mode: "remove" },
+            autoAdjustAspectRatio: { enabled: false },
+          },
+          video: { menuEnabled: false },
+        },
+        describe: "Media settings for microphone, camera, and video",
+        type: "object",
       },
       mqtt: {
         default: {

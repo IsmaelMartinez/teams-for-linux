@@ -193,8 +193,8 @@ function applyCameraAspectRatioPatch() {
  * @param {Object} config - Application configuration
  */
 function init(config) {
-  if (!config.cameraAspectRatio?.enabled) {
-    console.debug("[CAMERA_ASPECT_RATIO] Feature disabled in configuration");
+  const aspectRatioConfig = config.media?.camera?.autoAdjustAspectRatio;
+  if (!aspectRatioConfig?.enabled) {
     return;
   }
 
