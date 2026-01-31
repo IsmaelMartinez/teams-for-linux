@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
+const defaults = require("./defaults");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -361,7 +362,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "object",
       },
       meetupJoinRegEx: {
-        default: String.raw`^https://teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/`,
+        default: defaults.meetupJoinRegEx,
         describe: "Regex for Teams meetup-join and related links",
         type: "string",
       },

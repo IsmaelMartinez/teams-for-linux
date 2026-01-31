@@ -2,12 +2,11 @@
  * Unit tests for meetupJoinRegEx pattern
  * Run with: node tests/unit/meetupJoinRegEx.test.js
  *
- * This tests the default meetupJoinRegEx pattern from app/config/index.js
+ * This tests the default meetupJoinRegEx pattern from app/config/defaults.js
  */
 
-// Default regex pattern (must match app/config/index.js)
-const MEETUP_JOIN_REGEX = String.raw`^https://teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/`;
-const pattern = new RegExp(MEETUP_JOIN_REGEX);
+const defaults = require('../../app/config/defaults');
+const pattern = new RegExp(defaults.meetupJoinRegEx);
 
 // Test cases: [url, shouldMatch, description]
 const testCases = [
