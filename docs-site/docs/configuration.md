@@ -243,7 +243,7 @@ Media settings are organized under the `media` configuration object with subgrou
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
-| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft|live)\\.com/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/` | Regex for Teams meetup-join and related links |
+| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/` | Regex for Teams meetup-join and related links |
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 
