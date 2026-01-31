@@ -5,7 +5,10 @@ const supportedEvents = new Set([
   "incoming-call-created",
   "incoming-call-ended",
   "call-connected",
-  "call-disconnected"
+  "call-disconnected",
+  "chat-notification",
+  "calendar-notification",
+  "activity-notification"
 ]);
 
 class ActivityHub {
@@ -169,8 +172,20 @@ function getEventHandlers(event) {
 
 function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
-    // Only Handle events that are from type ["CommandStart", "ScenarioMarked"]
-    // and have a context target of ["internal-command-handler", "use-command-reporting-callbacks"]
+    // Handle notification-related events with broader filtering
+    if (e.context) {
+      // Check for chat and calendar notification events (expanded filtering)
+      if (e.context.entityCommand) {
+        handleNotificationEntityCommand(e.context.entityCommand);
+      }
+
+      // Check for notification-related scenarios
+      if (e.context.scenario || e.context.step) {
+        handleNotificationScenario(e.context);
+      }
+    }
+
+    // Original call event handling (keep existing logic)
     if (!["CommandStart", "ScenarioMarked"].includes(e.type) ||
       !["internal-command-handler", "use-command-reporting-callbacks"].includes(e.context.target)) {
       return;
@@ -181,6 +196,138 @@ function assignEventHandlers(commandChangeReportingService) {
       handleCallEventStep(e.context.step);
     }
   });
+}
+
+/**
+ * Handle notification events from Teams entity commands
+ * Detects chat messages, calendar invites, and other notification types
+ */
+function handleNotificationEntityCommand(entityCommand) {
+  const options = entityCommand.entityOptions || {};
+
+  // Skip call notifications (handled separately)
+  if (options.isIncomingCall) {
+    return;
+  }
+
+  // Detect chat/message notifications
+  if (isChatNotification(entityCommand)) {
+    console.debug("[ActivityHub] Chat notification detected:", entityCommand);
+    onChatNotification({
+      title: options.title || options.senderName || 'New Message',
+      body: options.text || options.preview || options.message || '',
+      icon: options.mainImage?.src || options.senderImage,
+      chatId: options.chatId,
+      messageId: options.messageId,
+      senderId: options.senderId
+    });
+  }
+
+  // Detect calendar/meeting invite notifications
+  if (isCalendarNotification(entityCommand)) {
+    console.debug("[ActivityHub] Calendar notification detected:", entityCommand);
+    onCalendarNotification({
+      title: options.title || options.subject || 'Meeting Invitation',
+      body: options.text || options.organizer || '',
+      icon: options.mainImage?.src,
+      meetingId: options.meetingId,
+      eventId: options.eventId,
+      startTime: options.startTime,
+      endTime: options.endTime
+    });
+  }
+
+  // Detect activity notifications (mentions, reactions)
+  if (isActivityNotification(entityCommand)) {
+    console.debug("[ActivityHub] Activity notification detected:", entityCommand);
+    onActivityNotification({
+      title: options.title || 'Teams Activity',
+      body: options.text || options.preview || '',
+      icon: options.mainImage?.src,
+      activityType: options.activityType || options.type
+    });
+  }
+}
+
+/**
+ * Handle notification scenarios from command context
+ */
+function handleNotificationScenario(context) {
+  const scenario = (context.scenario || '').toLowerCase();
+  const step = (context.step || '').toLowerCase();
+
+  // Chat message scenarios
+  if (scenario.includes('message') || scenario.includes('chat') ||
+      step.includes('message') || step.includes('chat-notification')) {
+    console.debug("[ActivityHub] Chat scenario detected:", scenario, step);
+  }
+
+  // Calendar/meeting scenarios
+  if (scenario.includes('calendar') || scenario.includes('meeting-invite') ||
+      step.includes('calendar') || step.includes('meeting-notification')) {
+    console.debug("[ActivityHub] Calendar scenario detected:", scenario, step);
+  }
+}
+
+/**
+ * Check if entity command represents a chat notification
+ */
+function isChatNotification(entityCommand) {
+  const options = entityCommand.entityOptions || {};
+  const commandType = (entityCommand.type || '').toLowerCase();
+  const scenarioName = (options.crossClientScenarioName || '').toLowerCase();
+
+  return (
+    commandType.includes('message') ||
+    commandType.includes('chat') ||
+    scenarioName.includes('message') ||
+    scenarioName.includes('chat') ||
+    options.isChat === true ||
+    options.isMessage === true ||
+    options.type === 'message' ||
+    options.type === 'chat'
+  );
+}
+
+/**
+ * Check if entity command represents a calendar notification
+ */
+function isCalendarNotification(entityCommand) {
+  const options = entityCommand.entityOptions || {};
+  const commandType = (entityCommand.type || '').toLowerCase();
+  const scenarioName = (options.crossClientScenarioName || '').toLowerCase();
+
+  return (
+    commandType.includes('calendar') ||
+    commandType.includes('meeting') ||
+    commandType.includes('invite') ||
+    scenarioName.includes('calendar') ||
+    scenarioName.includes('meeting_invite') ||
+    scenarioName.includes('event') ||
+    options.isCalendar === true ||
+    options.isMeetingInvite === true ||
+    options.type === 'calendar' ||
+    options.type === 'meeting' ||
+    options.type === 'event'
+  );
+}
+
+/**
+ * Check if entity command represents an activity notification
+ */
+function isActivityNotification(entityCommand) {
+  const options = entityCommand.entityOptions || {};
+  const commandType = (entityCommand.type || '').toLowerCase();
+
+  return (
+    commandType.includes('mention') ||
+    commandType.includes('reaction') ||
+    commandType.includes('reply') ||
+    options.isMention === true ||
+    options.isReaction === true ||
+    options.type === 'mention' ||
+    options.type === 'reaction'
+  );
 }
 
 function handleCallEventEntityCommand(entityCommand) {
@@ -239,6 +386,39 @@ async function onCallDisconnected() {
   const handlers = getEventHandlers('call-disconnected');
   for (const handler of handlers) {
     handler.handler({});
+  }
+}
+
+/**
+ * Trigger chat notification event handlers
+ * @param {object} data - Notification data (title, body, icon, chatId, etc.)
+ */
+async function onChatNotification(data) {
+  const handlers = getEventHandlers('chat-notification');
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+/**
+ * Trigger calendar notification event handlers
+ * @param {object} data - Notification data (title, body, icon, meetingId, etc.)
+ */
+async function onCalendarNotification(data) {
+  const handlers = getEventHandlers('calendar-notification');
+  for (const handler of handlers) {
+    handler.handler(data);
+  }
+}
+
+/**
+ * Trigger activity notification event handlers (mentions, reactions)
+ * @param {object} data - Notification data (title, body, icon, activityType)
+ */
+async function onActivityNotification(data) {
+  const handlers = getEventHandlers('activity-notification');
+  for (const handler of handlers) {
+    handler.handler(data);
   }
 }
 
