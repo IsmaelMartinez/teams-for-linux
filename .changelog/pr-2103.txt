@@ -1,0 +1,1 @@
+Upgrade Playwright to v1.58.1 - by @IsmaelMartinez (#2103)
