@@ -1,7 +1,7 @@
 # Custom Notification System Research & Implementation Plan
 
-**Status:** MVP Complete - Phase 2 Planning
-**Date:** November 2025
+**Status:** Phase 2 Complete - Chat & Calendar Notifications
+**Date:** January 2026
 **Issue:** Investigation for alternative notification modal system
 **Author:** Claude AI Assistant
 **Dependencies:** Incremental Refactoring Plan Phase 1 (Completed ✓)
@@ -10,19 +10,21 @@
 
 ## Executive Summary
 
-This document tracks the development of a **custom notification modal system** for Teams for Linux as an alternative to OS-level notifications. The MVP (toast notifications) has been successfully implemented and released in v2.6.16.
+This document tracks the development of a **custom notification modal system** for Teams for Linux as an alternative to OS-level notifications. The MVP (toast notifications) has been successfully implemented and released in v2.6.16, with Phase 2 (chat and calendar notifications) completed in v2.7.3.
 
 ### Current Status
 
 - ✅ **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
+- ✅ **Phase 2 Complete** (v2.7.3): Chat and calendar notification routing
 - ✅ **Documentation**: Configuration and usage guides updated
-- 🔄 **Next Phase**: Investigating Phase 2 options based on user feedback
+- 🔄 **Next Phase**: Monitoring user feedback for further enhancements
 
-### Key Findings from MVP
+### Key Findings
 
 - Custom BrowserWindow approach works well following the `IncomingCallToast` pattern
 - No critical bugs reported since release
 - System provides reliable alternative for users with OS notification issues
+- Phase 2 adds notification routing for chat messages, calendar invites, and activity notifications
 
 ---
 
@@ -62,9 +64,47 @@ app/notificationSystem/
 
 ---
 
-## 2. Next Steps Investigation
+## 2. Phase 2 Implementation Summary (Completed)
 
-### 2.1 Recommended Next Phase: Notification Center (Session-Based)
+### What Was Implemented
+
+Phase 2 addressed user feedback from #2039 regarding missing chat and calendar notifications when using custom notification mode:
+
+**Files Created/Modified:**
+
+```
+app/browser/tools/notificationObserver.js  # NEW: Observer for Teams internal notification events
+app/browser/tools/activityHub.js           # MODIFIED: Added chat/calendar event handlers
+app/browser/notifications/activityManager.js # MODIFIED: Routing to custom notification system
+app/browser/preload.js                     # MODIFIED: Added notificationObserver module
+```
+
+**Features Delivered:**
+
+- Chat message notifications now route through custom notification system
+- Calendar/meeting invite notifications now route through custom notification system
+- Activity notifications (mentions, reactions) now route through custom notification system
+- All notification types maintain consistent appearance and click-to-focus behavior
+
+**Technical Approach:**
+
+1. **NotificationObserver Module**: New module that observes Teams' internal `commandChangeReportingService` for notification events beyond call notifications
+2. **Extended ActivityHub**: Added detection for chat, calendar, and activity notification events based on entity command patterns
+3. **Enhanced ActivityManager**: Added handlers that route detected notifications through the custom notification system via IPC
+
+**How It Works:**
+
+1. Teams generates internal events via `commandChangeReportingService.observeChanges()`
+2. `activityHub.js` detects notification patterns in entity commands
+3. Events are emitted as `chat-notification`, `calendar-notification`, or `activity-notification`
+4. `activityManager.js` handles these events and sends them to main process via `notification-show-toast` IPC
+5. `CustomNotificationManager` displays the toast notification
+
+---
+
+## 3. Next Steps Investigation
+
+### 3.1 Recommended Next Phase: Notification Center (Session-Based)
 
 Based on the original research and common user needs, the most valuable next enhancement would be a **Notification Center** - a drawer showing current session's notifications.
 
@@ -83,7 +123,7 @@ Based on the original research and common user needs, the most valuable next enh
 
 **Estimated Effort:** 1-2 weeks
 
-### 2.2 Alternative: Enhanced Toast Features
+### 3.2 Alternative: Enhanced Toast Features
 
 If user feedback indicates toast improvements are more valuable than a notification center:
 
@@ -95,7 +135,7 @@ If user feedback indicates toast improvements are more valuable than a notificat
 
 **Estimated Effort:** 3-5 days
 
-### 2.3 Integration Options
+### 3.3 Integration Options
 
 These could be done alongside either phase:
 
@@ -105,7 +145,7 @@ These could be done alongside either phase:
 
 ---
 
-## 3. Decision Criteria for Next Phase
+## 4. Decision Criteria for Next Phase
 
 ### User Feedback Signals
 
@@ -132,9 +172,9 @@ Before proceeding with Phase 2, evaluate:
 
 ---
 
-## 4. Phase 2 Implementation Plan (When Ready)
+## 5. Future Phase Implementation Plan (When Ready)
 
-### 4.1 Notification Center Architecture
+### 5.1 Notification Center Architecture
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -149,7 +189,7 @@ Before proceeding with Phase 2, evaluate:
 └──────────────────────────────────────────────────┘
 ```
 
-### 4.2 New Files Required
+### 5.2 New Files Required
 
 ```
 app/notificationSystem/
@@ -161,7 +201,7 @@ app/notificationSystem/
 │   └── NotificationStore.js       # In-memory storage
 ```
 
-### 4.3 New IPC Channels
+### 5.3 New IPC Channels
 
 - `notification-open-center` - Open notification center drawer
 - `notification-close-center` - Close notification center
@@ -169,7 +209,7 @@ app/notificationSystem/
 - `notification-clear-all` - Clear all notifications
 - `notification-get-all` - Get all notifications for display
 
-### 4.4 Configuration Additions
+### 5.4 Configuration Additions
 
 ```javascript
 customNotification: {
@@ -183,7 +223,7 @@ customNotification: {
 
 ---
 
-## 5. Long-Term Roadmap
+## 6. Long-Term Roadmap
 
 ### Phase 3: Enhanced Toast Features
 - Toast queue management
@@ -206,7 +246,7 @@ customNotification: {
 
 ---
 
-## 6. Background & Context
+## 7. Background & Context
 
 ### Problem Statement
 
@@ -231,7 +271,7 @@ Users reported OS-level notifications don't work reliably, especially on Linux:
 
 ---
 
-## 7. Related Documentation
+## 8. Related Documentation
 
 ### Internal References
 - **Module README** (`app/notificationSystem/README.md`) - Implementation details
@@ -250,20 +290,24 @@ Users reported OS-level notifications don't work reliably, especially on Linux:
 
 ---
 
-## 8. Conclusion
+## 9. Conclusion
 
-The custom notification system MVP is complete and provides a working alternative for users experiencing OS notification issues.
+The custom notification system Phase 2 is complete, addressing user feedback about missing chat and calendar notifications. The system now provides comprehensive notification routing for all Teams notification types when using custom notification mode.
+
+**Completed:**
+1. ✅ MVP (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
+2. ✅ Phase 2 (v2.7.3): Chat, calendar, and activity notification routing
 
 **Next Actions:**
-1. Monitor user feedback on the MVP implementation
+1. Monitor user feedback on Phase 2 implementation
 2. Gather feature requests via GitHub issues/discussions
-3. Decide on Phase 2 scope based on actual user needs
-4. Implement Phase 2 when justified by user demand
+3. Consider Notification Center (Phase 3) based on user demand
+4. Consider enhanced toast features based on user feedback
 
-**Key Principle:** Continue the "start simple, iterate based on feedback" approach that made the MVP successful.
+**Key Principle:** Continue the "start simple, iterate based on feedback" approach that has proven successful.
 
 ---
 
-**Document Status:** ✅ MVP Complete - Awaiting User Feedback for Phase 2
-**Current Version:** v2.6.16
-**Next Review:** After 2-4 weeks of user feedback collection
+**Document Status:** ✅ Phase 2 Complete - Monitoring User Feedback
+**Current Version:** v2.7.3
+**Related Issue:** #2108 (Phase 2), #2039 (User Feedback)
