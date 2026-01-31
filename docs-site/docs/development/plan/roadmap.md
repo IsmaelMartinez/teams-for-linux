@@ -13,7 +13,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
 | **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
-| **Medium** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Ready to implement | Tiny |
+| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
 | **Medium** | Chat Modal | Requires validation spikes | Medium |
 | **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
@@ -94,8 +94,10 @@ These features have completed research and are ready to be built.
 ### MQTT Screen Sharing Status
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
+**Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Effort:** Tiny
+**Status:** ⏸️ Awaiting user feedback (original requester inactive since Nov 2025)
 
 **Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
 
@@ -356,7 +358,6 @@ These are long-term improvements that happen incrementally.
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
 3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
 4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-5. **#2107 MQTT Screen Sharing Status** - Minimal effort, completes media status
 
 ### Future Priorities
 
