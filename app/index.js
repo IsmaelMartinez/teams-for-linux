@@ -325,11 +325,35 @@ async function handleAppReady() {
       }
     }
 
+    // Handle media privacy commands by sending IPC to renderer
+    function handleMediaPrivacyCommand({ action }) {
+      const window = mainAppWindow.getWindow();
+      if (!window || window.isDestroyed()) {
+        console.warn(`[MQTT] Cannot execute media privacy command '${action}': window not available`);
+        return;
+      }
+
+      const channelMap = {
+        'disable-media': 'media-privacy:disable',
+        'enable-media': 'media-privacy:enable',
+        'query-media-state': 'media-privacy:query'
+      };
+
+      const channel = channelMap[action];
+      if (channel) {
+        const requestId = Date.now().toString();
+        window.webContents.send(channel, requestId);
+        console.info(`[MQTT] Sent media privacy command '${action}' to renderer`);
+      }
+    }
+
     async function handleMqttCommand(command) {
       const { action } = command;
 
       if (action === 'get-calendar') {
         await handleGetCalendarCommand(command);
+      } else if (mqttClient.isMediaPrivacyAction(action)) {
+        handleMediaPrivacyCommand(command);
       } else {
         handleShortcutCommand(command);
       }
@@ -340,6 +364,21 @@ async function handleAppReady() {
 
     mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
     mqttMediaStatusService.initialize();
+
+    // Handle media privacy state responses from renderer for MQTT publishing
+    ipcMain.on('media-privacy:state', (_event, { requestId, state }) => {
+      console.debug('[MQTT] Publishing media privacy state:', state);
+      mqttClient.publishToTopic('media-privacy/state', {
+        ...state,
+        requestId
+      });
+    });
+
+    // Handle media privacy state change notifications from renderer
+    ipcMain.on('media-privacy:state-changed', (_event, state) => {
+      console.debug('[MQTT] Publishing media privacy state change:', state);
+      mqttClient.publishToTopic('media-privacy/state', state);
+    });
   }
 
   // Load menu-toggleable settings from persistent store

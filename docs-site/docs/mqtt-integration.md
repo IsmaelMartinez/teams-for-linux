@@ -170,6 +170,9 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 | `toggle-mute` | Ctrl+Shift+M | Toggle microphone mute/unmute |
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
 | `toggle-hand-raise` | Ctrl+Shift+K | Toggle hand raise in meeting |
+| `disable-media` | - | Disable camera and microphone (see [Screen Lock Privacy](#screen-lock-media-privacy)) |
+| `enable-media` | - | Re-enable camera and microphone |
+| `query-media-state` | - | Query current media privacy state |
 
 ### Sending Commands
 
@@ -357,6 +360,219 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 **Related Research:**
 
 - [Graph API Integration](development/research/graph-api-integration-research.md)
+
+## Screen Lock Media Privacy
+
+:::info Use Case
+Automatically disable camera and microphone when your screen locks for privacy protection during meetings.
+:::
+
+Teams for Linux exposes MQTT commands that let you integrate screen lock events with media privacy. This follows the **Linux-first philosophy** of providing composable tools that you wire into your own desktop environment.
+
+### How It Works
+
+1. **You set up a screen lock listener** (D-Bus monitor, systemd hook, etc.)
+2. **When screen locks**, your script sends `disable-media` to Teams via MQTT
+3. **Teams stops all active camera/microphone tracks**
+4. **When screen unlocks** (optional), your script sends `enable-media`
+5. **Teams allows new media requests** (you may need to re-enable camera/mic in the UI)
+
+### Media Privacy Commands
+
+| Command | Description |
+|---------|-------------|
+| `disable-media` | Stop all active camera and microphone tracks, block new media requests |
+| `enable-media` | Allow new media requests (doesn't auto-restart stopped tracks) |
+| `query-media-state` | Returns current media privacy state to `teams/media-privacy/state` topic |
+
+### Testing Commands
+
+```bash
+# Disable camera and microphone
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"disable-media"}' -q 1
+
+# Re-enable media (allows new requests)
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"enable-media"}' -q 1
+
+# Query current state (subscribe first)
+mosquitto_sub -h localhost -t "teams/media-privacy/state" &
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"query-media-state"}' -q 1
+```
+
+### Media State Response
+
+The `query-media-state` command publishes to `teams/media-privacy/state`:
+
+```json
+{
+  "isMediaBlocked": true,
+  "activeTrackCount": 0,
+  "activeTracks": [],
+  "stoppedTrackCount": 2,
+  "timestamp": "2025-01-15T10:30:00.000Z"
+}
+```
+
+### Integration Scripts
+
+Below are ready-to-use scripts for common desktop environments.
+
+#### GNOME (Ubuntu, Fedora)
+
+**Script** (`~/.local/bin/teams-lock-privacy.sh`):
+
+```bash
+#!/bin/bash
+# Monitors GNOME screen lock and disables Teams media
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.gnome.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen locked - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlocked"
+    # Optionally enable media on unlock:
+    # mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+    #   -m '{"action":"enable-media"}' -q 1
+  fi
+done
+```
+
+**systemd user service** (`~/.config/systemd/user/teams-lock-privacy.service`):
+
+```ini
+[Unit]
+Description=Teams for Linux screen lock media privacy
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/teams-lock-privacy.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+**Enable the service:**
+
+```bash
+chmod +x ~/.local/bin/teams-lock-privacy.sh
+systemctl --user enable --now teams-lock-privacy.service
+```
+
+#### KDE Plasma
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-kde.sh
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.freedesktop.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen locked - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlocked"
+  fi
+done
+```
+
+#### Cinnamon (Linux Mint)
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-cinnamon.sh
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',interface='org.cinnamon.ScreenSaver'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  fi
+done
+```
+
+#### i3 / sway (with i3lock/swaylock)
+
+Wrap your lock command to disable media before locking:
+
+```bash
+#!/bin/bash
+# ~/.local/bin/lock-with-teams-privacy.sh
+
+# Disable Teams media BEFORE locking
+mosquitto_pub -h localhost -t "teams/command" \
+  -m '{"action":"disable-media"}' -q 1
+
+# Lock the screen
+i3lock -c 000000  # or: swaylock
+
+# Optionally enable on unlock:
+# mosquitto_pub -h localhost -t "teams/command" \
+#   -m '{"action":"enable-media"}' -q 1
+```
+
+Bind in i3 config:
+```
+bindsym $mod+Shift+x exec ~/.local/bin/lock-with-teams-privacy.sh
+```
+
+#### Generic (Any Desktop)
+
+Listens for any screen saver lock signal:
+
+```bash
+#!/bin/bash
+# ~/.local/bin/teams-lock-privacy-generic.sh
+
+MQTT_HOST="localhost"
+MQTT_TOPIC="teams/command"
+
+dbus-monitor --session "type='signal',member='ActiveChanged'" |
+while read -r line; do
+  if echo "$line" | grep -q "boolean true"; then
+    echo "$(date): Screen lock detected - disabling Teams media"
+    mosquitto_pub -h "$MQTT_HOST" -t "$MQTT_TOPIC" \
+      -m '{"action":"disable-media"}' -q 1
+  elif echo "$line" | grep -q "boolean false"; then
+    echo "$(date): Screen unlock detected"
+  fi
+done
+```
+
+### Important Notes
+
+- **Stopped tracks don't auto-restart**: When you enable media again, you may need to manually toggle camera/mic in the Teams UI to restart them
+- **Works during active calls**: The `disable-media` command stops camera/mic mid-call
+- **MQTT required**: This feature requires MQTT to be enabled in your configuration
+- **User-controlled**: You decide when and how to integrate - Teams doesn't detect screen lock automatically
+
+### Troubleshooting
+
+**Commands not working:**
+- Verify MQTT is enabled in config (`mqtt.enabled: true`)
+- Verify command topic is configured (`mqtt.commandTopic: "command"`)
+- Check Teams for Linux logs for `[MEDIA_PRIVACY]` messages
+- Ensure Teams window is open and not destroyed
+
+**D-Bus script not detecting lock:**
+- Test D-Bus monitoring manually: `dbus-monitor --session "type='signal',interface='org.gnome.ScreenSaver'"`
+- Lock your screen and check if signals appear
+- Different DEs use different D-Bus interfaces (see scripts above)
 
 ## Home Automation Integration
 
