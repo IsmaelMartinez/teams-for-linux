@@ -409,7 +409,8 @@ The `query-media-state` command publishes to `teams/media-privacy/state`:
   "activeTrackCount": 0,
   "activeTracks": [],
   "stoppedTrackCount": 2,
-  "timestamp": "2025-01-15T10:30:00.000Z"
+  "timestamp": "2025-01-15T10:30:00.000Z",
+  "requestId": "1700000000000"
 }
 ```
 
