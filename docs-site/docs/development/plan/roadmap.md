@@ -1,6 +1,7 @@
 # Development Roadmap
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-31
+**Current Version:** v2.7.2
 **Status:** Living Document
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
@@ -9,12 +10,55 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
+| **High** | PR #2082 Join Meeting Dialog | In progress (branch exists) | Near complete |
+| **High** | PR #2101 MCAS Domain Handling | Ready to merge, needs investigation | 1-2 hours |
 | **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
-| **High** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
+| **Medium** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
 | **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
 | **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | Spikes: 2h, Phase 1: 8-12h |
-| **Stalled** | Logout Indicator | Partial implementation (~50% complete), awaiting user validation | Remaining: ~4-6h |
+| **Investigate** | #2095 appIcon KDE regression | Needs investigation (likely Electron/WM issue) | TBD |
+| **Investigate** | #2065 AppImage update info | User reports it doesn't work; needs verification | TBD |
+| **Parked** | PR #2033 Logout Indicator | User not responding | - |
+| **Parked** | PR #2060 Camera Resolution | User not responding | - |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
+
+---
+
+## Current Focus (v2.7.3)
+
+### In Progress
+
+| Item | Description | Status |
+|------|-------------|--------|
+| **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
+| **PR #2101** | Handle MCAS domain suffix in hostname validation | Ready, needs codebase check |
+
+### To Investigate
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **#2095** | `--appIcon` not working in KDE window list | May be Electron/WM issue; worked before v2.6 |
+| **#2065** | AppImage update info not working | See [ADR-011](../adr/011-appimage-update-info.md); user reports changes didn't work |
+
+### Blocked (External Dependencies)
+
+| Issue | Description | Blocker |
+|-------|-------------|---------|
+| **#2094** | Maximized window gap/shrink on focus loss | Electron |
+| **#2074** | Window restore from tray appears tiny | Electron |
+| **#2047** | Intune SSO regression (broker v2.0.2+) | Microsoft broker; see [ADR-012](../adr/012-intune-sso-broker-compatibility.md) |
+| **#1972** | Microphone doesn't work in meetings | External |
+| **#1923** | Wayland screen sharing with snap | External |
+| **#1879** | App prevents sleep | External |
+
+### Parked (Awaiting User Response)
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **PR #2033** | Logout indicator to tray icon | User not responding |
+| **PR #2060** | Camera resolution/aspect ratio | User not responding |
+| **#2048** | Uninstall instructions | Good first issue for contributors |
+| **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
 ---
 
@@ -67,14 +111,15 @@ These features have completed research and are ready to be built.
 
 ---
 
-## Stalled - Awaiting User Validation
+## Parked - Awaiting User Response
 
 ### Tray Icon Logout Indicator
 
 **Issue:** [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
+**PR:** [#2033](https://github.com/IsmaelMartinez/teams-for-linux/pull/2033)
 **Research:** [logout-indicator-investigation.md](../research/logout-indicator-investigation.md)
 **Branch:** `origin/claude/analyze-research-spikes-XbYVZ`
-**Status:** ⏸️ STALLED - Partial implementation exists, awaiting user validation
+**Status:** ⏸️ PARKED - User not responding to PR
 
 **Description:** Visual indicator on tray icon when logged out of Teams, plus optional notification.
 
@@ -91,7 +136,6 @@ These features have completed research and are ready to be built.
 
 **Next Steps:**
 
-- User from issue #1987 needs to test the branch and confirm it works
 - If no response by end of February 2026, consider closing issue and archiving branch
 - Alternative: Merge as experimental feature behind config flag
 
@@ -260,6 +304,16 @@ These are long-term improvements that happen incrementally.
 
 ## Not Planned / Not Feasible
 
+### GNOME Search Provider
+
+**Issue:** [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075)
+**Research:** [gnome-search-provider-investigation.md](../research/gnome-search-provider-investigation.md)
+**Status:** Not Recommended
+
+**Reason:** Technically feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor for search provider use case.
+
+---
+
 ### External Browser Authentication
 
 **Issue:** [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)
@@ -295,13 +349,20 @@ These are long-term improvements that happen incrementally.
 
 ## Implementation Priorities
 
-### Suggested Order
+### Suggested Order (v2.7.3)
 
-1. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-2. **MQTT Screen Sharing Status** - Minimal effort, completes media status
-3. **Custom Notifications Phase 2** - User feedback confirms gaps; chat/calendar notifications missing
-4. **Chat Modal Spikes** - User confirmed it solves their use case; spikes already written
-5. **Logout Indicator** - Stalled; resume only if user validates the existing branch
+1. **Finish PR #2082** - Join meeting dialog (in progress)
+2. **Merge PR #2101** - MCAS domain handling (after verifying no other files need updates)
+3. **Investigate #2095** - appIcon KDE regression (understand root cause)
+4. **Investigate #2065** - AppImage update info (verify from our side)
+5. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+6. **MQTT Screen Sharing Status** - Minimal effort, completes media status
+
+### Future Priorities
+
+7. **Custom Notifications Phase 2** - User feedback confirms gaps; chat/calendar notifications missing
+8. **Chat Modal Spikes** - User confirmed it solves their use case; spikes already written
+9. **Logout Indicator** - Parked; resume only if user responds to PR #2033
 
 ### Principles
 
@@ -318,3 +379,8 @@ These are long-term improvements that happen incrementally.
 - [ADR Index](../adr/README.md) - Architecture decision records
 - [Contributing Guide](../contributing.md) - Development guidelines
 - [Module Index](../module-index.md) - Codebase structure
+
+### Recent ADRs
+
+- [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
+- [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
