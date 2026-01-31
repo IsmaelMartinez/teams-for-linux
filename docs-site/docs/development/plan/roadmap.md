@@ -1,6 +1,7 @@
 # Development Roadmap
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-31
+**Current Version:** v2.7.2
 **Status:** Living Document
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
@@ -9,12 +10,55 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| **High** | Screen Lock Media Privacy | Ready to implement | 2-3 hours |
-| **High** | MQTT Screen Sharing Status | Ready to implement | 1 hour |
-| **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps (chat/calendar notifications missing) | TBD |
-| **Medium** | Chat Modal | Requires validation spikes; user confirmed it solves their use case | Spikes: 2h, Phase 1: 8-12h |
-| **Stalled** | Logout Indicator | Partial implementation (~50% complete), awaiting user validation | Remaining: ~4-6h |
-| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | TBD |
+| **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
+| **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
+| **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
+| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
+| **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
+| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Chat Modal Spikes | Requires validation spikes | Small |
+| **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
+| **Medium** | #2065 AppImage update info | PR #2102 awaiting validation | - |
+| **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
+| **Low** | PR #2060 Camera Resolution | Parked - user not responding | - |
+| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
+
+---
+
+## Current Focus (v2.7.3)
+
+### In Progress
+
+| Item | Description | Status |
+|------|-------------|--------|
+| **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
+| **PR #2101** | MCAS domain suffix in hostname validation | Pending final checks |
+
+### Awaiting User Validation
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **#2095** | `--appIcon` not working in KDE window list | PR #2104 submitted as fix; awaiting user feedback |
+| **#2065** | AppImage update info not working | PR #2102 merged; awaiting user validation of fix |
+
+### Blocked (External Dependencies)
+
+| Issue | Description | Blocker |
+|-------|-------------|---------|
+| **#2094** | Maximized window gap/shrink on focus loss | Electron |
+| **#2074** | Window restore from tray appears tiny | Electron |
+| **#2047** | Intune SSO regression (broker v2.0.2+) | Microsoft broker; see [ADR-012](../adr/012-intune-sso-broker-compatibility.md) |
+| **#1972** | Microphone doesn't work in meetings | External |
+| **#1923** | Wayland screen sharing with snap | External |
+| **#1879** | App prevents sleep | External |
+
+### Parked (Awaiting User Response)
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **PR #2033** | Logout indicator to tray icon | User not responding |
+| **PR #2060** | Camera resolution/aspect ratio | User not responding |
+| **#2048** | Uninstall instructions | Good first issue for contributors |
+| **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
 ---
 
@@ -24,9 +68,9 @@ These features have completed research and are ready to be built.
 
 ### Screen Lock Media Privacy
 
-**Issue:** [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015)
+**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
 **Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
-**Effort:** 2-3 hours
+**Effort:** Small
 
 **Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
 
@@ -49,8 +93,11 @@ These features have completed research and are ready to be built.
 
 ### MQTT Screen Sharing Status
 
+**Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
+**Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
-**Effort:** ~1 hour
+**Effort:** Tiny
+**Status:** ⏸️ Awaiting user feedback (original requester inactive since Nov 2025)
 
 **Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
 
@@ -67,14 +114,15 @@ These features have completed research and are ready to be built.
 
 ---
 
-## Stalled - Awaiting User Validation
+## Parked - Awaiting User Response
 
 ### Tray Icon Logout Indicator
 
 **Issue:** [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
+**PR:** [#2033](https://github.com/IsmaelMartinez/teams-for-linux/pull/2033)
 **Research:** [logout-indicator-investigation.md](../research/logout-indicator-investigation.md)
 **Branch:** `origin/claude/analyze-research-spikes-XbYVZ`
-**Status:** ⏸️ STALLED - Partial implementation exists, awaiting user validation
+**Status:** ⏸️ PARKED - User not responding to PR
 
 **Description:** Visual indicator on tray icon when logged out of Teams, plus optional notification.
 
@@ -91,7 +139,6 @@ These features have completed research and are ready to be built.
 
 **Next Steps:**
 
-- User from issue #1987 needs to test the branch and confirm it works
 - If no response by end of February 2026, consider closing issue and archiving branch
 - Alternative: Merge as experimental feature behind config flag
 
@@ -103,9 +150,9 @@ These features need validation spikes before implementation to prove the approac
 
 ### Chat Modal Feature
 
-**Issue:** [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984)
+**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) (Spikes), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spikes-and-gaps.md](../research/chat-modal-spikes-and-gaps.md)
-**Effort:** 8-12 hours for Phase 1 (if spikes succeed)
+**Effort:** Small (spikes), Medium (Phase 1 if spikes succeed)
 
 **Description:** Lightweight chat modal for quick messaging without navigating away from current Teams view.
 
@@ -144,6 +191,7 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 ### Custom Notification System Phase 2
 
+**Issue:** [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108)
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
 **Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
 **Current Status:** MVP Complete (v2.6.16) - User feedback confirms gaps
@@ -260,6 +308,16 @@ These are long-term improvements that happen incrementally.
 
 ## Not Planned / Not Feasible
 
+### GNOME Search Provider
+
+**Issue:** [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075)
+**Research:** [gnome-search-provider-investigation.md](../research/gnome-search-provider-investigation.md)
+**Status:** Not Recommended
+
+**Reason:** Technically feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor for search provider use case.
+
+---
+
 ### External Browser Authentication
 
 **Issue:** [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)
@@ -295,13 +353,19 @@ These are long-term improvements that happen incrementally.
 
 ## Implementation Priorities
 
-### Suggested Order
+### Suggested Order (v2.7.3)
 
-1. **Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-2. **MQTT Screen Sharing Status** - Minimal effort, completes media status
-3. **Custom Notifications Phase 2** - User feedback confirms gaps; chat/calendar notifications missing
-4. **Chat Modal Spikes** - User confirmed it solves their use case; spikes already written
-5. **Logout Indicator** - Stalled; resume only if user validates the existing branch
+1. **Finish PR #2082** - Join meeting dialog (in progress)
+2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
+3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
+4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+5. **#2109 Chat Modal Spikes** - Validate approach before full implementation
+6. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
+
+### Future Priorities
+
+7. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+8. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
 
 ### Principles
 
@@ -318,3 +382,8 @@ These are long-term improvements that happen incrementally.
 - [ADR Index](../adr/README.md) - Architecture decision records
 - [Contributing Guide](../contributing.md) - Development guidelines
 - [Module Index](../module-index.md) - Codebase structure
+
+### Recent ADRs
+
+- [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
+- [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
