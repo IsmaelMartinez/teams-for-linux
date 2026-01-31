@@ -13,9 +13,10 @@ This research investigates implementing PII redaction in Teams for Linux logging
 - Current logging uses `electron-log` v5.4.3 with file logging disabled by default
 - **HIGH-RISK** PII exposure: MQTT credentials, password commands, API endpoints
 - Only one file (`tokenCache.js`) has any sanitization (UUID masking)
+- **Excessive verbosity:** ~590 log statements in app code, many could be removed or demoted
 - Multiple approaches evaluated: custom regex, Microsoft Presidio, PII-PALADIN, @redactpii/node
 - **Recommended:** Custom regex utility (no dependencies, fast, full control)
-- Implementation effort: **Medium** (12-19 hours across 4 phases)
+- Implementation effort: **Medium** (16-24 hours across 5 phases)
 
 ## Current State Analysis
 
@@ -92,6 +93,228 @@ _sanitizeKey(key) {
 ```
 
 **Coverage:** 2 uses in 1 file out of 42 files with logging.
+
+## Comprehensive Log Audit
+
+### Log Statement Count by File
+
+A complete audit of all `console.log/debug/info/warn/error` statements reveals **~590 log statements** in app code (excluding scripts, tests, and documentation examples).
+
+#### Most Verbose Files (Candidates for Reduction)
+
+| File | Log Count | Category | Recommendation |
+|------|-----------|----------|----------------|
+| `app/browser/tools/mqttStatusMonitor.js` | 26 | Debug | Reduce to 3-4 key state changes |
+| `app/screenSharing/injectedScreenSharing.js` | 22 | Debug | Keep 5-6 essential, remove rest |
+| `app/browser/tools/reactHandler.js` | 21 | Debug | Reduce to errors + key events |
+| `app/mqtt/index.js` | 21 | Mixed | Keep errors, sanitize/remove PII |
+| `app/mainAppWindow/index.js` | 20 | Mixed | Reduce debug, keep errors |
+| `app/browser/preload.js` | 20 | Mixed | Reduce startup verbosity |
+| `app/intune/index.js` | 20 | Debug | Keep errors, remove PII |
+| `app/cacheManager/index.js` | 17 | Debug | Reduce file operation logs |
+| `app/browser/tools/tokenCache.js` | 16 | Debug | Keep errors only |
+| `app/globalShortcuts/index.js` | 11 | Mixed | Keep registration status |
+| `app/browser/tools/mutationTitle.js` | 11 | Debug | Reduce to 2-3 logs |
+| `app/browser/tools/navigationButtons.js` | 10 | Debug | Remove most, keep errors |
+| `app/notifications/service.js` | 9 | Debug | Reduce to errors only |
+| `app/config/index.js` | 9 | Info | Keep config path, reduce rest |
+| `app/browser/tools/activityHub.js` | 9 | Debug | Reduce state logging |
+
+#### Log Level Distribution (App Code)
+
+| Level | Count | Percentage | Assessment |
+|-------|-------|------------|------------|
+| `console.debug` | ~320 | 54% | **Too verbose** - most should be removed |
+| `console.info` | ~95 | 16% | Some could be debug level |
+| `console.warn` | ~85 | 14% | Appropriate |
+| `console.error` | ~75 | 13% | Appropriate |
+| `console.log` | ~15 | 3% | Should be converted to appropriate level |
+
+### Detailed PII Audit by File
+
+#### HIGH RISK - Contains Sensitive Data
+
+| File | Line | Log Statement | PII Type | Action |
+|------|------|---------------|----------|--------|
+| `app/mqtt/index.js` | 69 | `Connecting to broker: ${this.config.brokerUrl}` | Broker URL | **Remove URL** |
+| `app/mqtt/index.js` | 86 | `Subscribed to command topic: ${commandTopic}` | Topic name | **Sanitize** |
+| `app/mqtt/index.js` | 181 | `Published status...on topic: ${topic}` | Topic name | **Sanitize** |
+| `app/mqtt/index.js` | 205 | `Published to topic: ${fullTopic}` | Topic name | **Sanitize** |
+| `app/login/index.js` | 45 | Logs password command | Credentials | **Remove entirely** |
+| `app/certificate/index.js` | 25-27 | Logs cert issuer, fingerprint | Security info | **Remove details** |
+| `app/intune/index.js` | 80-120 | Multiple account logging | Account info | **Reduce to counts** |
+| `app/intune/index.js` | 253 | `SSO credential added` | Auth info | **Remove** |
+| `app/customBackground/index.js` | 74, 89 | `Forwarding '${details.url}' to...` | Custom URLs | **Sanitize** |
+| `app/mainAppWindow/index.js` | 510-511 | DEBUG intercepted URLs | URL + headers | **Remove** |
+
+#### MEDIUM RISK - Could Expose Indirect PII
+
+| File | Line | Concern | Action |
+|------|------|---------|--------|
+| `app/graphApi/index.js` | 103, 133 | API endpoints with queries | Sanitize query params |
+| `app/browser/tools/activityHub.js` | 61 | Logs `document.body.innerHTML` | **Remove - may contain PII** |
+| `app/mainAppWindow/index.js` | 641 | `Requesting to open '${details.url}'` | External URLs | Sanitize |
+| `app/browser/tools/tokenCache.js` | Various | Token cache key logging | Already sanitized (good) |
+
+#### LOW RISK - Safe Logs
+
+- Status indicators (available, busy, away)
+- Feature flags and boolean config
+- Error codes without sensitive context
+- UI state changes (window focus, zoom level)
+- Module initialization confirmations
+
+### Verbosity Reduction Recommendations
+
+#### Tier 1: Remove Entirely (~150 logs)
+
+Logs that provide no value in production:
+
+```javascript
+// REMOVE: Redundant state logging
+console.debug('[MQTT Status] Strategy 0: Checking React internals...');
+console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
+console.debug('[MQTT Status] Strategy 2: Checking me-control button...');
+// ... (26 strategy logs in mqttStatusMonitor.js alone)
+
+// REMOVE: Per-operation file logging
+console.debug("Removed file:", cleanupPath);
+console.debug("Skipping inaccessible file:", ...);
+
+// REMOVE: Navigation button injection details
+console.debug('Navigation buttons already exist');
+console.debug('Found search navigation region...');
+```
+
+#### Tier 2: Demote to Trace/Verbose (~100 logs)
+
+Logs useful only for deep debugging:
+
+```javascript
+// DEMOTE: Screen sharing diagnostics
+console.debug(`[SCREEN_SHARE_DIAG] Stream registered (${activeStreams.length} total active)`);
+
+// DEMOTE: React handler internals
+console.debug('[ReactHandler] Found presenceService:', Object.keys(presenceService));
+
+// DEMOTE: Config loading details
+console.debug("configFile:", configObject.configFile);
+```
+
+#### Tier 3: Keep but Sanitize (~50 logs)
+
+Essential logs that need PII removal:
+
+```javascript
+// SANITIZE: MQTT connection (remove URL)
+console.info('[MQTT] Connected to broker'); // Remove URL
+
+// SANITIZE: Custom background URLs
+console.debug('Forwarding request to custom background service'); // Remove actual URL
+
+// SANITIZE: API errors
+console.error('[API] Request failed:', sanitizedError); // Remove query params
+```
+
+#### Tier 4: Keep As-Is (~290 logs)
+
+Appropriate logs:
+- Errors with safe context
+- Security warnings
+- Feature initialization confirmations
+- Window lifecycle events
+
+## Log Reduction Implementation Plan
+
+### Phase 5: Log Verbosity Reduction (4-6 hours)
+
+**Priority 1 - High volume debug removal:**
+
+1. `app/browser/tools/mqttStatusMonitor.js` - Reduce 26 → 4 logs
+2. `app/screenSharing/injectedScreenSharing.js` - Reduce 22 → 6 logs
+3. `app/browser/tools/reactHandler.js` - Reduce 21 → 8 logs
+4. `app/cacheManager/index.js` - Reduce 17 → 5 logs
+
+**Priority 2 - Consolidate repetitive logs:**
+
+1. Replace per-item logs with summary logs
+2. Use structured logging for batch operations
+3. Add log level configuration per module
+
+**Example transformation:**
+
+```javascript
+// BEFORE: 26 individual debug logs
+console.debug('[MQTT Status] Strategy 0: Checking React internals...');
+console.debug('[MQTT Status] Found presenceService:', keys);
+console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
+// ... 23 more
+
+// AFTER: 2 summarized logs
+console.debug('[MQTT Status] Checking status via strategies: react, css, title');
+console.debug('[MQTT Status] Status detected:', status, 'via:', strategy);
+```
+
+## Configuration Obfuscation (Future Improvement)
+
+### Problem
+
+Sensitive configuration values are logged during startup and debugging:
+
+- MQTT broker URLs with credentials
+- Custom service endpoints
+- SSO configuration details
+- API keys in error messages
+
+### Proposed Solution
+
+Create a configuration sanitizer that masks sensitive fields before logging:
+
+```javascript
+// app/utils/configSanitizer.js
+const SENSITIVE_KEYS = [
+  'brokerUrl', 'mqttPassword', 'mqttUsername',
+  'customBackgroundUrl', 'ssoPassword', 'authToken',
+  'clientSecret', 'apiKey'
+];
+
+function sanitizeConfig(config) {
+  const sanitized = { ...config };
+
+  for (const key of Object.keys(sanitized)) {
+    if (SENSITIVE_KEYS.some(k => key.toLowerCase().includes(k.toLowerCase()))) {
+      sanitized[key] = '[CONFIGURED]';
+    } else if (typeof sanitized[key] === 'object') {
+      sanitized[key] = sanitizeConfig(sanitized[key]);
+    }
+  }
+
+  return sanitized;
+}
+
+module.exports = { sanitizeConfig, SENSITIVE_KEYS };
+```
+
+### Usage
+
+```javascript
+const { sanitizeConfig } = require('./utils/configSanitizer');
+
+// Safe to log
+console.info('Configuration loaded:', sanitizeConfig(config));
+// Output: { brokerUrl: '[CONFIGURED]', mqttUsername: '[CONFIGURED]', trayIcon: true, ... }
+```
+
+### Config Display Options
+
+Consider adding a user-facing config display feature:
+
+```javascript
+// Show config with sensitive values hidden (for support/debugging)
+ipcMain.handle('get-safe-config', () => {
+  return sanitizeConfig(appConfig);
+});
+```
 
 ## PII Redaction Approaches
 
@@ -392,7 +615,8 @@ Priority files requiring review and fixes:
 | Phase 2: Logger Integration | 2-4 hours | HIGH |
 | Phase 3: Fix High-Risk Files | 4-6 hours | HIGH |
 | Phase 4: Documentation | 2-3 hours | MEDIUM |
-| **Total** | **12-19 hours** | |
+| Phase 5: Log Verbosity Reduction | 4-6 hours | MEDIUM |
+| **Total** | **16-25 hours** | |
 
 ## Testing Strategy
 
@@ -460,9 +684,22 @@ This requires more code changes but is more robust long-term.
 ## Recommendations
 
 1. **Immediate:** Implement Phase 1-2 (Sanitization utility + Logger integration)
-2. **Short-term:** Complete Phase 3 (Fix high-risk files)
-3. **Ongoing:** Add logging guidelines to contributing documentation
-4. **Future:** Consider structured logging migration for new code
+2. **Short-term:** Complete Phase 3 (Fix high-risk files - especially MQTT, login, intune)
+3. **Medium-term:** Complete Phase 5 (Reduce verbosity - target 50% reduction in debug logs)
+4. **Ongoing:** Add logging guidelines to contributing documentation and CLAUDE.md
+5. **Future:** Implement config obfuscation utility for safe config display
+6. **Future:** Consider structured logging migration for new code
+
+### Decision Matrix
+
+Based on this research, the recommended approach is:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **PII Redaction Library** | Custom regex utility | Zero dependencies, fast, full control |
+| **Log Reduction Target** | 50% of debug logs | ~150 logs can be removed entirely |
+| **Config Obfuscation** | Future phase | Lower priority than log sanitization |
+| **Structured Logging** | Not now | Too much migration effort for current benefit |
 
 ## References
 
