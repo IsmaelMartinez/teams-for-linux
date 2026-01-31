@@ -14,8 +14,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
-| **Medium** | Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
-| **Medium** | Chat Modal | Requires validation spikes | Medium |
+| **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
+| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Chat Modal Spikes | Requires validation spikes | Small |
 | **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
 | **Medium** | #2065 AppImage update info | PR #2102 awaiting validation | - |
 | **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
@@ -150,9 +150,9 @@ These features need validation spikes before implementation to prove the approac
 
 ### Chat Modal Feature
 
-**Issue:** [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984)
+**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) (Spikes), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spikes-and-gaps.md](../research/chat-modal-spikes-and-gaps.md)
-**Effort:** Medium (if spikes succeed)
+**Effort:** Small (spikes), Medium (Phase 1 if spikes succeed)
 
 **Description:** Lightweight chat modal for quick messaging without navigating away from current Teams view.
 
@@ -191,6 +191,7 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 ### Custom Notification System Phase 2
 
+**Issue:** [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108)
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
 **Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
 **Current Status:** MVP Complete (v2.6.16) - User feedback confirms gaps
@@ -358,12 +359,13 @@ These are long-term improvements that happen incrementally.
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
 3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
 4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+5. **#2109 Chat Modal Spikes** - Validate approach before full implementation
+6. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
 
 ### Future Priorities
 
-7. **Custom Notifications Phase 2** - User feedback confirms gaps; chat/calendar notifications missing
-8. **Chat Modal Spikes** - User confirmed it solves their use case; spikes already written
-9. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+7. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+8. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
 
 ### Principles
 
