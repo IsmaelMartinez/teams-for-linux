@@ -13,8 +13,9 @@ This research investigates implementing PII redaction in Teams for Linux logging
 - Current logging uses `electron-log` v5.4.3 with file logging disabled by default
 - **HIGH-RISK** PII exposure: MQTT credentials, password commands, API endpoints
 - Only one file (`tokenCache.js`) has any sanitization (UUID masking)
-- Several npm libraries exist for PII redaction (redact-pii, @redactpii/node)
-- Implementation effort: **Medium** (8-16 hours across 2-3 phases)
+- Multiple approaches evaluated: custom regex, Microsoft Presidio, PII-PALADIN, @redactpii/node
+- **Recommended:** Custom regex utility (no dependencies, fast, full control)
+- Implementation effort: **Medium** (12-19 hours across 4 phases)
 
 ## Current State Analysis
 
@@ -191,7 +192,97 @@ const cleanMessage = redact(logMessage, {
 });
 ```
 
-### Approach 3: Pino with Built-in Redaction
+### Approach 3: Microsoft Presidio
+
+**Repository:** [microsoft/presidio](https://github.com/microsoft/presidio)
+
+Microsoft Presidio is an open-source framework for identifying and de-identifying sensitive data using Named Entity Recognition (NER), regular expressions, rule-based logic, and checksums.
+
+**Features:**
+
+- Detects PII including credit cards, names, locations, SSNs, phone numbers
+- Multiple de-identification techniques: redaction, masking, anonymization
+- Processes text, images, and structured data
+- Contextual awareness across multiple languages
+
+**Architecture:**
+
+- **Presidio Analyzer** - Detects PII entities
+- **Presidio Anonymizer** - Applies anonymization strategies
+- Runs as Docker containers exposing REST APIs
+
+**Integration for Node.js:**
+
+```javascript
+// Call Presidio REST API from Node.js
+const response = await fetch('http://localhost:5002/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    text: logMessage,
+    language: 'en'
+  })
+});
+```
+
+**Pros:**
+
+- Enterprise-grade, Microsoft-maintained
+- Excellent NER-based detection (catches names, locations, organizations)
+- Highly customizable with custom recognizers
+- MIT licensed
+
+**Cons:**
+
+- Python-based - requires Docker containers for Node.js integration
+- Adds significant infrastructure complexity (2 containers needed)
+- Network latency for each log sanitization call
+- Overkill for logging use case - designed for batch processing
+
+**Verdict:** Not recommended for real-time log sanitization due to architecture mismatch, but excellent for batch log analysis or compliance auditing.
+
+### Approach 4: PII-PALADIN (Node.js NER + Regex)
+
+**Package:** [pii-paladin](https://github.com/jeeem/PII-PALADIN)
+
+A Node.js package combining a pre-trained BERT NER model with regex patterns for comprehensive PII detection.
+
+**Features:**
+
+- Hybrid approach: NER model + regex patterns
+- Detects names, organizations, locations (NER) + SSNs, credit cards, emails, phones (regex)
+- Fully offline - no API calls
+- Simple API: `await censorPII(text)` returns sanitized string
+
+**Usage:**
+
+```javascript
+import { censorPII } from 'pii-paladin';
+
+const text = "Contact John Doe at john.doe@example.com";
+const censored = await censorPII(text);
+// Output: Contact [CENSORED] at [CENSORED]
+```
+
+**Pros:**
+
+- Native Node.js - no Docker required
+- NER catches names that regex misses
+- Fully offline operation
+- Active maintenance (v2.0.2 published recently)
+
+**Cons:**
+
+- **~90MB bundle size** (includes ML models) - significant for Electron app
+- Slower than regex-only (ML inference overhead)
+- Node.js server-side only (not for browser)
+- Does not reliably detect dates or contextually ambiguous PII
+
+**Lighter Alternative:** `pii-paladin-lite` (~5KB) - regex-only version for browsers/smaller footprint.
+
+**Verdict:** Good option if NER-based name detection is critical. Consider `pii-paladin-lite` for smaller footprint.
+
+### Approach 5: Pino with Built-in Redaction
 
 **Package:** [pino](https://github.com/pinojs/pino)
 
@@ -215,7 +306,18 @@ const cleanMessage = redact(logMessage, {
 - More configuration complexity
 - Overkill for current needs
 
-**Not Recommended** for this project due to migration effort.
+**Verdict:** Not recommended for this project due to migration effort.
+
+## Approach Comparison Matrix
+
+| Approach | Bundle Size | Performance | NER Support | Complexity | Recommendation |
+|----------|-------------|-------------|-------------|------------|----------------|
+| Custom Regex Utility | 0 KB | Fast | No | Low | **Recommended** |
+| @redactpii/node | ~50 KB | Fast | No | Low | Good alternative |
+| Microsoft Presidio | Docker | Slow (network) | Yes | High | Not for logging |
+| PII-PALADIN | ~90 MB | Medium | Yes | Medium | If NER needed |
+| PII-PALADIN Lite | ~5 KB | Fast | No | Low | Good alternative |
+| Pino | ~100 KB | Fast | No | High | Not recommended |
 
 ## Recommended Implementation Plan
 
@@ -362,18 +464,13 @@ This requires more code changes but is more robust long-term.
 3. **Ongoing:** Add logging guidelines to contributing documentation
 4. **Future:** Consider structured logging migration for new code
 
-## Clarification Needed
-
-The original request mentioned "personio" - I was unable to find a logging/PII library by this name. Possible interpretations:
-
-- **Pino** (logging library with built-in redaction) - Not recommended due to migration effort
-- **Personio** (HR software company) - May have internal tools but none publicly available
-- **Custom terminology** - Please clarify if this refers to a specific pattern or approach
-
 ## References
 
 ### Libraries
 
+- [Microsoft Presidio](https://github.com/microsoft/presidio) - Enterprise PII detection with NER (Python/Docker)
+- [PII-PALADIN](https://github.com/jeeem/PII-PALADIN) - Node.js NER + regex hybrid (~90MB)
+- [pii-filter](https://github.com/HabaneroCake/pii-filter) - JavaScript PII filter
 - [@redactpii/node](https://www.npmjs.com/package/@redactpii/node) - Fast regex-based PII redaction
 - [redact-pii](https://www.npmjs.com/package/redact-pii) - Original PII redaction library
 - [Pino Redaction](https://github.com/pinojs/pino/blob/main/docs/redaction.md) - Built-in Pino redaction
