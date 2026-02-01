@@ -1,18 +1,30 @@
 # Chat Modal: Prerequisite Spikes and Gap Analysis
 
-**Related:** [Chat Modal Investigation](chat-modal-investigation.md)
+**Related:** [Chat Modal Investigation](chat-modal-investigation.md) | [Spike Results](chat-modal-spike-results.md)
 **Date:** 2025-11-26
-**Status:** Pre-implementation Validation
+**Updated:** 2025-01-31
+**Status:** Ready for Implementation (Deep Link Approach)
 
 ## Executive Summary
 
-Before implementing the chat modal feature, **critical validation spikes** are required. The existing Graph API research shows successful calendar and mail integration, but **chat permissions are unverified**. This document identifies blockers, spikes, and gaps that must be addressed first.
+The validation spikes confirmed that the Chat API is blocked (403 Forbidden), but an alternative approach using People API + Deep Links is viable and validated.
+
+**What works:**
+- People API (`/me/people`) - search/list contacts by relevance
+- Deep link navigation - opens chat with specified user in Teams
+
+**Recommended implementation:**
+1. User search modal using People API
+2. Click to open chat via deep link
+3. Optional: notification clicks open chat with sender
+
+See [Spike Results](chat-modal-spike-results.md) for full validation details.
 
 ## Critical Blockers Requiring Validation
 
 ### 🚨 BLOCKER 1: Chat API Permissions
 
-**Status:** ❌ UNVERIFIED
+**Status:** ❌ CONFIRMED BLOCKER (403 Forbidden)
 
 **Problem:**
 The existing Graph API integration (Issue #1832) successfully uses:
@@ -540,67 +552,32 @@ After Phase 0 spikes:
 
 ---
 
-## Spike Implementation Approach
+## Spike Implementation
 
-### Minimal Test Harness
+The spike test harness has been implemented and is ready to use.
 
-Create a simple test file to run spikes:
+### Implementation Files
 
-```javascript
-// app/graphApi/chatSpikes.js
-const logger = require('electron-log');
-
-class ChatApiSpikes {
-  constructor(graphApiClient) {
-    this.client = graphApiClient;
-  }
-
-  async runAllSpikes() {
-    logger.info('[SPIKE] Starting chat API validation spikes');
-
-    const results = {
-      spike1_permissions: await this.testChatPermissions(),
-      spike2_discovery: await this.testChatDiscovery(),
-      spike3_firstMessage: await this.testFirstMessage(),
-      spike4_userSearch: await this.testUserSearch('test'),
-      spike5_messageFormat: await this.testMessageFormat(),
-      spike6_rateLimits: await this.testRateLimits()
-    };
-
-    logger.info('[SPIKE] All spikes complete', results);
-    return results;
-  }
-
-  async testChatPermissions() {
-    try {
-      const result = await this.client.makeRequest('/me/chats?$top=1');
-      return {
-        success: result.success,
-        status: result.status,
-        hasPermission: result.success === true,
-        error: result.error
-      };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
-
-  // ... other spike methods
-}
-
-module.exports = ChatApiSpikes;
-```
+- **Spike Runner:** `app/graphApi/chatSpikes.js` - Contains all 6 spike tests
+- **IPC Handler:** `app/graphApi/ipcHandlers.js` - Exposes `graph-api-run-chat-spikes` channel
+- **IPC Allowlist:** `app/security/ipcValidator.js` - Channel added to allowlist
 
 ### How to Run Spikes
 
-1. Add spike runner to Graph API client
-2. Expose IPC handler for running spikes from DevTools
-3. Enable Graph API in config
-4. Launch app and sign in
-5. Open DevTools console:
+See [Chat Modal Spike Results](chat-modal-spike-results.md) for detailed instructions.
+
+**Quick Start:**
+
+1. Enable Graph API in config:
+   ```json
+   { "graphApi": { "enabled": true } }
+   ```
+
+2. Launch app, sign in, open DevTools (Ctrl+Shift+I)
+
+3. Run spikes from console:
    ```javascript
-   // Run all chat spikes
-   const results = await window.electronAPI.send('run-chat-spikes');
+   const results = await window.electronAPI.invoke('graph-api-run-chat-spikes');
    console.table(results);
    ```
 

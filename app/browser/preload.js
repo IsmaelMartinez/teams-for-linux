@@ -117,6 +117,22 @@ globalThis.electronAPI = {
     getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
     createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
+    runChatSpikes: () => ipcRenderer.invoke("graph-api-run-chat-spikes"),
+  },
+
+  // Chat deep link navigation (for quick chat access feature)
+  openChatWithUser: (email) => {
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      console.error('Invalid email for chat deep link');
+      return false;
+    }
+    // Use the current Teams base URL (could be teams.cloud.microsoft or teams.microsoft.com)
+    const currentOrigin = globalThis.location.origin;
+    const chatPath = `/l/chat/0/0?users=${encodeURIComponent(email)}`;
+    const chatUrl = `${currentOrigin}${chatPath}`;
+    console.log('[CHAT_LINK] Navigating to chat with:', email, 'URL:', chatUrl);
+    globalThis.location.href = chatUrl;
+    return true;
   },
 
   // System information (safe to expose)
