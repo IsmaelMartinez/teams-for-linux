@@ -56,5 +56,5 @@ Use custom regex-based sanitization utility (`app/utils/logSanitizer.js`) instea
 
 ## Related
 
-- Research: `docs-site/docs/development/research/pii-log-removal-research.md`
 - Implementation: `app/utils/logSanitizer.js`
+- Logger Hook: `app/config/logger.js`
