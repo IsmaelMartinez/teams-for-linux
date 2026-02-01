@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-02-01
 **Current Version:** v2.7.2
 **Status:** Living Document
 
@@ -13,15 +13,35 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
 | **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
-| **High** | PII Log Removal & Verbosity Reduction | Ready to implement | Medium |
+| **High** | PII Log Removal Phases 2-3 | Phase 1 merged, continuing | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
 | **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
-| **Medium** | #2095 appIcon KDE regression | PR #2104 awaiting validation | - |
-| **Medium** | #2065 AppImage update info | PR #2102 awaiting validation | - |
 | **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
-| **Low** | PR #2060 Camera Resolution | Parked - user not responding | - |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
+
+### Planning for v2.7.4
+
+| Item | Description | Status |
+|------|-------------|--------|
+| **#2109** | Quick Chat Access implementation (spikes passed in PR #2111) | In progress |
+| **#2110** | Custom notifications improvements | In progress |
+| **#2112** | Additional feature work | In progress |
+
+### Recently Merged (v2.7.3 prep)
+
+| PR | Description | Status |
+|----|-------------|--------|
+| **#2116** | PII log sanitizer utility (Phase 1) | ✅ Merged |
+| **#2111** | Chat API validation spikes for quick chat feasibility | ✅ Merged |
+| **#2117** | Electron 39.4.0, electron-builder 26.7.0, globals 17.3.0 | ✅ Merged |
+| **#2104** | appIcon KDE fix - Convert window icon to nativeImage | ✅ Merged |
+| **#2060** | Camera resolution and aspect ratio browser tools | ✅ Merged |
+| **#2102** | AppImage extraction fix (no execute permissions) | ✅ Merged |
+| **#2114** | PII log removal research and implementation plan | ✅ Merged |
+| **#2103** | Playwright upgrade to v1.58.1 | ✅ Merged |
+| **#2096** | Fix tray icon rendering on Linux (nativeImage) | ✅ Merged |
+| **#2097** | Yargs v18 and dependency updates | ✅ Merged |
 
 ---
 
@@ -34,12 +54,12 @@ This document outlines the future development direction for Teams for Linux, org
 | **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
 | **PR #2101** | MCAS domain suffix in hostname validation | Pending final checks |
 
-### Awaiting User Validation
+### Recently Resolved
 
-| Item | Description | Notes |
-|------|-------------|-------|
-| **#2095** | `--appIcon` not working in KDE window list | PR #2104 submitted as fix; awaiting user feedback |
-| **#2065** | AppImage update info not working | PR #2102 merged; awaiting user validation of fix |
+| Item | Description | Resolution |
+|------|-------------|------------|
+| **#2095** | `--appIcon` not working in KDE window list | ✅ Fixed by PR #2104 (merged) |
+| **#2065** | AppImage update info not working | ✅ Fixed by PR #2102 (merged) |
 
 ### Blocked (External Dependencies)
 
@@ -57,9 +77,10 @@ This document outlines the future development direction for Teams for Linux, org
 | Item | Description | Notes |
 |------|-------------|-------|
 | **PR #2033** | Logout indicator to tray icon | User not responding |
-| **PR #2060** | Camera resolution/aspect ratio | User not responding |
 | **#2048** | Uninstall instructions | Good first issue for contributors |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
+
+> **Note:** PR #2060 (Camera resolution/aspect ratio) was merged after receiving user response.
 
 ---
 
@@ -148,17 +169,18 @@ These features have completed research and are ready to be built.
 
 **Implementation Phases:**
 
-| Phase | Description | Effort | v2.7.3 Target |
-|-------|-------------|--------|---------------|
-| Phase 1 | Create `logSanitizer.js` utility with regex patterns | 4-6 hrs | ✅ |
-| Phase 2 | Integrate sanitizer with electron-log hooks | 2-4 hrs | ✅ |
-| Phase 3 | Fix high-risk files (MQTT, login, intune, certificate) | 4-6 hrs | ✅ |
+| Phase | Description | Effort | Status |
+|-------|-------------|--------|--------|
+| Phase 1 | Create `logSanitizer.js` utility with regex patterns | 4-6 hrs | ✅ Done (PR #2116) |
+| Phase 2 | Integrate sanitizer with electron-log hooks | 2-4 hrs | In progress |
+| Phase 3 | Fix high-risk files (MQTT, login, intune, certificate) | 4-6 hrs | Pending |
 | Phase 4 | Documentation and CLAUDE.md guidelines | 2-3 hrs | ✅ Done |
-| Phase 5 | Log verbosity reduction (50% debug log removal) | 4-6 hrs | Optional |
+| Phase 5 | Log verbosity reduction (50% debug log removal) | 4-6 hrs | Future |
 
 **v2.7.3 Scope:**
 
-- Phases 1-3 (sanitization utility + high-risk file fixes)
+- Phase 1 complete (PR #2116 merged)
+- Phases 2-3 in progress
 - Phase 4 already complete (CLAUDE.md guidelines added)
 - Phase 5 can be incremental/future
 
@@ -408,21 +430,38 @@ These are long-term improvements that happen incrementally.
 
 ## Implementation Priorities
 
-### Suggested Order (v2.7.3)
+### Completed for v2.7.3
+
+- ✅ **PR #2116** - PII log sanitizer utility (Phase 1)
+- ✅ **PR #2111** - Chat API validation spikes (enables v2.7.4 quick chat)
+- ✅ **PR #2117** - Electron 39.4.0 and dependency updates
+- ✅ **PR #2104** - appIcon KDE fix (nativeImage for window icon)
+- ✅ **PR #2060** - Camera resolution and aspect ratio browser tools
+- ✅ **PR #2102** - AppImage extraction fix
+- ✅ **PR #2114** - PII log removal research and documentation
+- ✅ **PR #2103** - Playwright v1.58.1 upgrade
+- ✅ **PR #2096** - Tray icon rendering fix (nativeImage)
+- ✅ **PR #2097** - Yargs v18 and dependency updates
+
+### Remaining for v2.7.3
 
 1. **Finish PR #2082** - Join meeting dialog (in progress)
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
-3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
-4. **PII Log Removal Phases 1-3** - Security/compliance improvement, sanitization utility + high-risk fixes
-5. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-6. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
-7. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
+3. **PII Log Removal Phases 2-3** - Integrate sanitizer + fix high-risk files
+4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+
+### Planning for v2.7.4
+
+5. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
+6. **#2110** - Custom notifications improvements (in progress)
+7. **#2112** - Additional feature work (in progress)
+8. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
 
 ### Future Priorities
 
-8. **PII Log Removal Phase 5** - Verbosity reduction (incremental)
-9. **Logout Indicator** - Parked; resume only if user responds to PR #2033
-10. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
+9. **PII Log Removal Phase 5** - Verbosity reduction (incremental)
+10. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+11. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
 
 ### Principles
 
