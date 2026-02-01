@@ -255,11 +255,9 @@ These features have completed research and are ready to be built.
 
 ---
 
-## Requires Validation First
+## Ready for Implementation (Spikes Passed)
 
-These features need validation spikes before implementation to prove the approach works.
-
-(No features currently in this section - all pending spikes have been completed.)
+(No features currently in this section - Quick Chat Access has been moved to "Ready for Implementation" above.)
 
 ---
 
