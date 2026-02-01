@@ -103,8 +103,65 @@ function detectPIITypes(message) {
 	return matches;
 }
 
+/**
+ * Recursively sanitizes string values within an object
+ * Preserves object structure while removing PII from string properties
+ * @param {*} obj - The object to sanitize
+ * @param {WeakSet} seen - Internal parameter to track circular references
+ * @returns {*} Sanitized object
+ */
+function sanitizeObject(obj, seen = new WeakSet()) {
+	if (obj === null || typeof obj !== 'object') {
+		return obj;
+	}
+
+	// Handle circular references
+	if (seen.has(obj)) {
+		return '[Circular]';
+	}
+
+	// Handle Error objects - preserve their structure
+	if (obj instanceof Error) {
+		const sanitizedError = new Error(sanitize(obj.message));
+		sanitizedError.name = obj.name;
+		if (obj.stack) {
+			sanitizedError.stack = sanitize(obj.stack);
+		}
+		return sanitizedError;
+	}
+
+	seen.add(obj);
+
+	// Handle arrays
+	if (Array.isArray(obj)) {
+		return obj.map((item) => {
+			if (typeof item === 'string') {
+				return sanitize(item);
+			}
+			if (typeof item === 'object' && item !== null) {
+				return sanitizeObject(item, seen);
+			}
+			return item;
+		});
+	}
+
+	// Handle plain objects
+	const result = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (typeof value === 'string') {
+			result[key] = sanitize(value);
+		} else if (typeof value === 'object' && value !== null) {
+			result[key] = sanitizeObject(value, seen);
+		} else {
+			result[key] = value;
+		}
+	}
+	return result;
+}
+
 module.exports = {
 	sanitize,
+	sanitizeObject,
 	createSanitizer,
 	containsPII,
 	detectPIITypes,

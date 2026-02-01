@@ -1,59 +1,6 @@
 const log = require("electron-log/main");
 const _ = require("lodash");
-const { sanitize } = require("../utils/logSanitizer");
-
-/**
- * Recursively sanitizes string values within an object
- * Preserves object structure while removing PII from string properties
- */
-function sanitizeObject(obj, seen = new WeakSet()) {
-  if (obj === null || typeof obj !== "object") {
-    return obj;
-  }
-
-  // Handle circular references
-  if (seen.has(obj)) {
-    return "[Circular]";
-  }
-
-  // Skip Error objects - preserve their structure
-  if (obj instanceof Error) {
-    const sanitizedError = new Error(sanitize(obj.message));
-    sanitizedError.name = obj.name;
-    if (obj.stack) {
-      sanitizedError.stack = sanitize(obj.stack);
-    }
-    return sanitizedError;
-  }
-
-  seen.add(obj);
-
-  // Handle arrays
-  if (Array.isArray(obj)) {
-    return obj.map((item) => {
-      if (typeof item === "string") {
-        return sanitize(item);
-      }
-      if (typeof item === "object" && item !== null) {
-        return sanitizeObject(item, seen);
-      }
-      return item;
-    });
-  }
-
-  // Handle plain objects
-  const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === "string") {
-      result[key] = sanitize(value);
-    } else if (typeof value === "object" && value !== null) {
-      result[key] = sanitizeObject(value, seen);
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
-}
+const { sanitize, sanitizeObject } = require("../utils/logSanitizer");
 
 exports.init = function (config) {
   if (config) {
