@@ -27,7 +27,7 @@ Manages application settings and configuration synchronization between main and 
 #### [disableAutogain.js](disableAutogain.js)
 Disables microphone auto-gain control by intercepting `getUserMedia` calls and modifying audio constraints. Supports both modern (`autoGainControl`) and legacy (`googAutoGainControl`) MediaStream APIs.
 
-**Configuration**: `disableAutogain: true`
+**Configuration**: `media.microphone.disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
 
 #### [cameraResolution.js](cameraResolution.js)
@@ -36,9 +36,13 @@ Removes or overrides video resolution constraints that Microsoft Teams sets when
 **Configuration**:
 ```json
 {
-  "cameraResolution": {
-    "enabled": true,
-    "mode": "remove"
+  "media": {
+    "camera": {
+      "resolution": {
+        "enabled": true,
+        "mode": "remove"
+      }
+    }
   }
 }
 ```
@@ -50,11 +54,15 @@ Removes or overrides video resolution constraints that Microsoft Teams sets when
 **Override Example**:
 ```json
 {
-  "cameraResolution": {
-    "enabled": true,
-    "mode": "override",
-    "width": 1920,
-    "height": 1080
+  "media": {
+    "camera": {
+      "resolution": {
+        "enabled": true,
+        "mode": "override",
+        "width": 1920,
+        "height": 1080
+      }
+    }
   }
 }
 ```
@@ -67,8 +75,12 @@ Fixes camera video stretching when moving Teams between monitors with different 
 **Configuration**:
 ```json
 {
-  "cameraAspectRatio": {
-    "enabled": true
+  "media": {
+    "camera": {
+      "autoAdjustAspectRatio": {
+        "enabled": true
+      }
+    }
   }
 }
 ```
