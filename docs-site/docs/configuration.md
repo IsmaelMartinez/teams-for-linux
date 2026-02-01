@@ -200,10 +200,35 @@ InTune SSO uses a nested `auth.intune` configuration:
 
 ### Media Settings
 
+Media settings are organized under the `media` configuration object with subgroups for microphone, camera, and video settings.
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
-| `videoMenu` | `boolean` | `false` | Enable menu entry for controlling video elements |
+| `media.microphone.disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
+| `media.camera.resolution.enabled` | `boolean` | `false` | Enable camera resolution control |
+| `media.camera.resolution.mode` | `string` | `"remove"` | Resolution mode: `"remove"` removes Teams' constraints allowing native camera resolution, `"override"` sets specific width/height |
+| `media.camera.resolution.width` | `number` | - | Target width when mode is `"override"` |
+| `media.camera.resolution.height` | `number` | - | Target height when mode is `"override"` |
+| `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints |
+| `media.video.menuEnabled` | `boolean` | `false` | Enable menu entry for controlling video elements (PiP mode, video controls) |
+
+**Example Media Configuration:**
+```json
+{
+  "media": {
+    "microphone": { "disableAutogain": false },
+    "camera": {
+      "resolution": { "enabled": false, "mode": "remove" },
+      "autoAdjustAspectRatio": { "enabled": false }
+    },
+    "video": { "menuEnabled": false }
+  }
+}
+```
+
+> [!NOTE]
+> **Camera resolution overrides:** Using camera resolution override mode can cause laggy or stuttering camera video, resolution drops, or blocking on some systems. If you experience this, try disabling auto brightness adjustment (in your teams camera settings) to reduce or fix the issue. Adjusting GPU-related options (for example `disableGpu` under [Performance & Hardware](#performance--hardware) or [Electron CLI Flags](#electron-cli-flags)) also helps if you would like to retain auto brightness.
+
 
 ### Virtual Backgrounds
 
@@ -394,6 +419,22 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 
 > [!NOTE]
 > The `disableAutogain` option prevents Teams from automatically adjusting your microphone volume. This is particularly useful for users with professional audio equipment, external mixers, or specific hardware configurations where manual gain control is preferred.
+
+> [!WARNING]
+> **Deprecated:** The `disableAutogain` option is deprecated. Please use `media.microphone.disableAutogain` instead.
+
+#### Video Menu Setup
+```json
+{
+  "videoMenu": true
+}
+```
+
+> [!NOTE]
+> The `videoMenu` option enables a Video menu entry for controlling video elements such as Picture-in-Picture mode for shared screens and toggling video controls.
+
+> [!WARNING]
+> **Deprecated:** The `videoMenu` option is deprecated. Please use `media.video.menuEnabled` instead.
 
 #### Custom Notifications Setup
 ```json
