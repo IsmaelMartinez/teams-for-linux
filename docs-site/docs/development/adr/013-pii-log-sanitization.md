@@ -39,9 +39,11 @@ Use custom regex-based sanitization utility (`app/utils/logSanitizer.js`) instea
 - May miss edge cases (regex-only, no NER)
 
 ### Implementation Phases
+
 1. **Done**: Sanitizer utility + tests (`app/utils/logSanitizer.js`)
 2. **Done**: Logger integration via electron-log hooks (`app/config/logger.js`)
-3. **Next**: Apply to high-risk files (MQTT, login, intune)
+3. ~~Apply to high-risk files~~ - **Not needed**: Hook automatically sanitizes all logs
+4. **Optional**: Log verbosity reduction (remove unnecessary debug logs)
 
 ## Alternatives Considered
 
