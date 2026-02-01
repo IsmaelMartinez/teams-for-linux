@@ -1,6 +1,6 @@
 const log = require("electron-log/main");
 const _ = require("lodash");
-const { sanitize, sanitizeObject } = require("../utils/logSanitizer");
+const { sanitizeLogData } = require("../utils/logSanitizer");
 
 exports.init = function (config) {
   if (config) {
@@ -18,15 +18,7 @@ exports.init = function (config) {
 
       // Add PII sanitization hook to all log transports
       log.hooks.push((message) => {
-        message.data = message.data.map((item) => {
-          if (typeof item === "string") {
-            return sanitize(item);
-          }
-          if (typeof item === "object" && item !== null) {
-            return sanitizeObject(item);
-          }
-          return item;
-        });
+        message.data = sanitizeLogData(message.data);
         return message;
       });
 

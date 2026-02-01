@@ -161,9 +161,28 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 	return result;
 }
 
+/**
+ * Sanitizes an array of log message data items
+ * Used by electron-log hook and tests
+ * @param {Array} messageData - Array of log arguments
+ * @returns {Array} Sanitized array
+ */
+function sanitizeLogData(messageData) {
+	return messageData.map((item) => {
+		if (typeof item === 'string') {
+			return sanitize(item);
+		}
+		if (typeof item === 'object' && item !== null) {
+			return sanitizeObject(item);
+		}
+		return item;
+	});
+}
+
 module.exports = {
 	sanitize,
 	sanitizeObject,
+	sanitizeLogData,
 	createSanitizer,
 	containsPII,
 	detectPIITypes,

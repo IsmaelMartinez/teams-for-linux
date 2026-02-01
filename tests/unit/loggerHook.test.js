@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert');
-const { sanitize, sanitizeObject } = require('../../app/utils/logSanitizer');
+const { sanitizeLogData } = require('../../app/utils/logSanitizer');
 
 let passed = 0;
 let failed = 0;
@@ -25,32 +25,16 @@ function describe(groupName, fn) {
 	fn();
 }
 
-/**
- * Simulates the electron-log hook logic from app/config/logger.js
- * This allows testing the hook behavior without requiring Electron
- */
-function simulateLoggerHook(messageData) {
-	return messageData.map((item) => {
-		if (typeof item === 'string') {
-			return sanitize(item);
-		}
-		if (typeof item === 'object' && item !== null) {
-			return sanitizeObject(item);
-		}
-		return item;
-	});
-}
-
 console.log('Logger Hook Integration Tests\n' + '='.repeat(50));
 
 describe('String message sanitization', () => {
 	test('sanitizes email in string message', () => {
-		const result = simulateLoggerHook(['User logged in: john@example.com']);
+		const result = sanitizeLogData(['User logged in: john@example.com']);
 		assert.strictEqual(result[0], 'User logged in: [EMAIL]');
 	});
 
 	test('sanitizes multiple string arguments', () => {
-		const result = simulateLoggerHook(['Email:', 'user@test.com', 'from IP:', '192.168.1.1']);
+		const result = sanitizeLogData(['Email:', 'user@test.com', 'from IP:', '192.168.1.1']);
 		assert.strictEqual(result[0], 'Email:');
 		assert.strictEqual(result[1], '[EMAIL]');
 		assert.strictEqual(result[2], 'from IP:');
@@ -58,7 +42,7 @@ describe('String message sanitization', () => {
 	});
 
 	test('preserves clean strings', () => {
-		const result = simulateLoggerHook(['Application started', 'Version 2.7.2']);
+		const result = sanitizeLogData(['Application started', 'Version 2.7.2']);
 		assert.strictEqual(result[0], 'Application started');
 		assert.strictEqual(result[1], 'Version 2.7.2');
 	});
@@ -66,13 +50,13 @@ describe('String message sanitization', () => {
 
 describe('Object message sanitization', () => {
 	test('sanitizes PII in object properties', () => {
-		const result = simulateLoggerHook([{ email: 'user@example.com', status: 'active' }]);
+		const result = sanitizeLogData([{ email: 'user@example.com', status: 'active' }]);
 		assert.strictEqual(result[0].email, '[EMAIL]');
 		assert.strictEqual(result[0].status, 'active');
 	});
 
 	test('sanitizes nested object properties', () => {
-		const result = simulateLoggerHook([{
+		const result = sanitizeLogData([{
 			user: { email: 'admin@company.com' },
 			connection: { ip: '10.0.0.1' }
 		}]);
@@ -81,12 +65,12 @@ describe('Object message sanitization', () => {
 	});
 
 	test('sanitizes UUID in objects', () => {
-		const result = simulateLoggerHook([{ userId: '12345678-1234-1234-1234-123456789abc' }]);
+		const result = sanitizeLogData([{ userId: '12345678-1234-1234-1234-123456789abc' }]);
 		assert.strictEqual(result[0].userId, '12345678...');
 	});
 
 	test('preserves non-PII object properties', () => {
-		const result = simulateLoggerHook([{ count: 42, status: 'connected', active: true }]);
+		const result = sanitizeLogData([{ count: 42, status: 'connected', active: true }]);
 		assert.strictEqual(result[0].count, 42);
 		assert.strictEqual(result[0].status, 'connected');
 		assert.strictEqual(result[0].active, true);
@@ -95,7 +79,7 @@ describe('Object message sanitization', () => {
 
 describe('Mixed message types', () => {
 	test('handles string and object mix', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'Connection established',
 			{ broker: 'mqtt://user:pass@broker.local', status: 'ok' }
 		]);
@@ -105,21 +89,21 @@ describe('Mixed message types', () => {
 	});
 
 	test('handles numbers unchanged', () => {
-		const result = simulateLoggerHook(['Count:', 42, 'errors']);
+		const result = sanitizeLogData(['Count:', 42, 'errors']);
 		assert.strictEqual(result[0], 'Count:');
 		assert.strictEqual(result[1], 42);
 		assert.strictEqual(result[2], 'errors');
 	});
 
 	test('handles null and undefined', () => {
-		const result = simulateLoggerHook(['Value:', null, undefined]);
+		const result = sanitizeLogData(['Value:', null, undefined]);
 		assert.strictEqual(result[0], 'Value:');
 		assert.strictEqual(result[1], null);
 		assert.strictEqual(result[2], undefined);
 	});
 
 	test('handles boolean values', () => {
-		const result = simulateLoggerHook(['Connected:', true, 'Debug:', false]);
+		const result = sanitizeLogData(['Connected:', true, 'Debug:', false]);
 		assert.strictEqual(result[1], true);
 		assert.strictEqual(result[3], false);
 	});
@@ -127,7 +111,7 @@ describe('Mixed message types', () => {
 
 describe('Teams for Linux realistic scenarios', () => {
 	test('MQTT connection log', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'MQTT connecting to:',
 			{ brokerUrl: 'mqtt://mqttuser:secretpass@home-mqtt.local:1883', clientId: 'teams-linux' }
 		]);
@@ -136,7 +120,7 @@ describe('Teams for Linux realistic scenarios', () => {
 	});
 
 	test('Graph API error log', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'Graph API error:',
 			{ url: 'https://graph.microsoft.com/v1.0/me?$select=mail&access_token=eyJhbGc', code: 401 }
 		]);
@@ -145,7 +129,7 @@ describe('Teams for Linux realistic scenarios', () => {
 	});
 
 	test('SSO authentication log', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'SSO authentication for user:',
 			'admin@company.onmicrosoft.com'
 		]);
@@ -153,7 +137,7 @@ describe('Teams for Linux realistic scenarios', () => {
 	});
 
 	test('Certificate verification log', () => {
-		const result = simulateLoggerHook([{
+		const result = sanitizeLogData([{
 			issuer: 'DigiCert',
 			fingerprint: 'sha256=AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD'
 		}]);
@@ -162,7 +146,7 @@ describe('Teams for Linux realistic scenarios', () => {
 	});
 
 	test('Config file path log', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'Loading config from:',
 			'/home/realusername/.config/teams-for-linux/config.json'
 		]);
@@ -174,7 +158,7 @@ describe('Error and edge cases', () => {
 	test('handles circular reference gracefully', () => {
 		const circular = { name: 'test', email: 'user@example.com' };
 		circular.self = circular;
-		const result = simulateLoggerHook([circular]);
+		const result = sanitizeLogData([circular]);
 		// Circular reference should be replaced with placeholder
 		assert.strictEqual(result[0].name, 'test');
 		assert.strictEqual(result[0].email, '[EMAIL]');
@@ -182,7 +166,7 @@ describe('Error and edge cases', () => {
 	});
 
 	test('handles array in message data', () => {
-		const result = simulateLoggerHook([
+		const result = sanitizeLogData([
 			'Users:',
 			['user1@example.com', 'user2@example.com']
 		]);
@@ -193,13 +177,13 @@ describe('Error and edge cases', () => {
 	});
 
 	test('handles empty array', () => {
-		const result = simulateLoggerHook([]);
+		const result = sanitizeLogData([]);
 		assert.strictEqual(result.length, 0);
 	});
 
 	test('handles Error objects with PII', () => {
 		const error = new Error('Connection failed to user@server.com');
-		const result = simulateLoggerHook([error]);
+		const result = sanitizeLogData([error]);
 		assert.ok(result[0] instanceof Error);
 		assert.ok(result[0].message.includes('[EMAIL]'), `Expected email in error message to be sanitized: ${result[0].message}`);
 	});
@@ -209,7 +193,7 @@ describe('Error and edge cases', () => {
 			'user@example.com': 'status-active',
 			'192.168.1.1': 'connected'
 		};
-		const result = simulateLoggerHook([objWithPIIKeys]);
+		const result = sanitizeLogData([objWithPIIKeys]);
 		// Keys should be sanitized
 		assert.ok('[EMAIL]' in result[0], `Expected email key to be sanitized: ${JSON.stringify(result[0])}`);
 		assert.ok('[IP]' in result[0], `Expected IP key to be sanitized: ${JSON.stringify(result[0])}`);
