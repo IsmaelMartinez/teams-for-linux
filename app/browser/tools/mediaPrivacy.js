@@ -14,8 +14,8 @@ class MediaPrivacy {
 	init(config, ipcRenderer) {
 		this.#ipcRenderer = ipcRenderer;
 
-		if (!config.mqtt?.enabled) {
-			console.debug('[MEDIA_PRIVACY] MQTT not enabled, skipping initialization');
+		if (!config.mqtt?.enabled || !config.mqtt?.enableMediaPrivacy) {
+			console.debug('[MEDIA_PRIVACY] Media privacy not enabled, skipping initialization');
 			return;
 		}
 

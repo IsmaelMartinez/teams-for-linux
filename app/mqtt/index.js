@@ -39,16 +39,15 @@ class MQTTClient extends EventEmitter {
 	 * @returns {string[]} Array of allowed action names
 	 */
 	get allowedActions() {
-		return [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions, ...this.mediaPrivacyActions];
+		const actions = [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions];
+		if (this.config.enableMediaPrivacy) {
+			actions.push(...this.mediaPrivacyActions);
+		}
+		return actions;
 	}
 
-	/**
-	 * Check if action is a media privacy action
-	 * @param {string} action - Action name
-	 * @returns {boolean} True if action is a media privacy action
-	 */
 	isMediaPrivacyAction(action) {
-		return this.mediaPrivacyActions.includes(action);
+		return this.config.enableMediaPrivacy && this.mediaPrivacyActions.includes(action);
 	}
 
 	/**

@@ -97,6 +97,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | `topicPrefix` | `string` | `"teams"` | Topic prefix for all messages |
 | `statusTopic` | `string` | `"status"` | Topic name for status messages (outbound) |
 | `commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty or omit to disable command reception (status publishing only). Set to `"command"` to enable. |
+| `enableMediaPrivacy` | `boolean` | `false` | Enable media privacy commands (`disable-media`, `enable-media`, `query-media-state`). Requires `commandTopic` to be set. |
 | `statusCheckInterval` | `number` | `10000` | Polling fallback interval in milliseconds |
 
 ### Topic Structure
@@ -365,6 +366,10 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 
 :::info Use Case
 Automatically disable camera and microphone when your screen locks for privacy protection during meetings.
+:::
+
+:::warning Configuration Required
+This feature requires explicit opt-in. Set `mqtt.enableMediaPrivacy: true` in your config to enable these commands.
 :::
 
 Teams for Linux exposes MQTT commands that let you integrate screen lock events with media privacy. This follows the **Linux-first philosophy** of providing composable tools that you wire into your own desktop environment.
