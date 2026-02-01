@@ -263,7 +263,7 @@ These features have completed initial implementation. Further phases depend on u
 - ✅ `searchPeople` method added to GraphApiClient
 - ✅ QuickChatModal with user search UI
 - ✅ Deep link navigation to open chat with selected user
-- ✅ Keyboard shortcut (Ctrl+Shift+C by default, configurable)
+- ✅ Keyboard shortcut (Ctrl+Shift+P by default, configurable)
 - ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
 
 **What It Does:**

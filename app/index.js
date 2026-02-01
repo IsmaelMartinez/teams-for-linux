@@ -385,8 +385,12 @@ async function handleAppReady() {
     quickChatManager = new QuickChatManager(config, mainWindow);
     quickChatManager.initialize();
 
+    // Pass quickChatManager to menus for menu item integration
+    mainAppWindow.setQuickChatManager(quickChatManager);
+
     // Register keyboard shortcut for Quick Chat
-    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+C';
+    // Default is Ctrl+Shift+P (P for People) - Ctrl+Shift+C conflicts with Teams calendar
+    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
     if (config.quickChat?.enabled !== false) {
       const registered = globalShortcut.register(quickChatShortcut, () => {
         if (quickChatManager.isEnabled()) {

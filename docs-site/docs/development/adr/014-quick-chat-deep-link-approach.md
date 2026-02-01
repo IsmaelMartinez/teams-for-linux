@@ -164,7 +164,7 @@ Use `msteams://` protocol URLs to open Teams native client.
 
 4. **Keyboard Shortcut**
    - Configurable shortcut to open quick chat modal
-   - Default: Ctrl+Shift+C (configurable)
+   - Default: Ctrl+Shift+P (P for People; Ctrl+Shift+C conflicts with Teams calendar)
 
 ### IPC Channels
 
@@ -182,7 +182,7 @@ Use `msteams://` protocol URLs to open Teams native client.
 {
   "quickChat": {
     "enabled": true,
-    "shortcut": "Ctrl+Shift+C"
+    "shortcut": "Ctrl+Shift+P"
   }
 }
 ```

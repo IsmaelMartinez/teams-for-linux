@@ -14,6 +14,11 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.joinMeeting(),
     },
     {
+      label: "Quick Chat",
+      accelerator: "ctrl+shift+P",
+      click: () => Menus.showQuickChat(),
+    },
+    {
       label: "Refresh",
       accelerator: "ctrl+R",
       click: () => Menus.reload(),

@@ -13,7 +13,7 @@ See [ADR 014](../../docs-site/docs/development/adr/014-quick-chat-deep-link-appr
 - **Contact Search**: Search contacts using Microsoft Graph People API
 - **Deep Link Navigation**: Click a contact to open chat in Teams
 - **Keyboard Navigation**: Arrow keys and Enter for quick access
-- **Keyboard Shortcut**: Configurable shortcut to toggle modal (default: Ctrl+Shift+C)
+- **Keyboard Shortcut**: Configurable shortcut to toggle modal (default: Ctrl+Shift+P)
 
 ## Architecture
 
@@ -32,7 +32,7 @@ app/quickChat/
 {
   "quickChat": {
     "enabled": true,
-    "shortcut": "Ctrl+Shift+C"
+    "shortcut": "Ctrl+Shift+P"
   },
   "graphApi": {
     "enabled": true
