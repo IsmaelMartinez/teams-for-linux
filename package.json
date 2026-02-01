@@ -63,10 +63,10 @@
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.1",
-    "electron": "^39.3.0",
-    "electron-builder": "^26.6.0",
+    "electron": "^39.4.0",
+    "electron-builder": "^26.7.0",
     "eslint": "^9.39.2",
-    "globals": "^17.1.0",
+    "globals": "^17.3.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
