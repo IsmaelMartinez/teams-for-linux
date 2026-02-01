@@ -26,6 +26,10 @@ const testCases = [
   ['https://teams.cloud.microsoft/meet/abc123', true, 'teams.cloud.microsoft meet URL'],
   ['https://teams.cloud.microsoft/l/meetup-join/19:meeting_abc@thread.v2/0', true, 'teams.cloud.microsoft meetup-join URL'],
 
+  // V2 web app format (meeting path in URL fragment)
+  ['https://teams.microsoft.com/v2/?meetingjoin=true#/l/meetup-join/19:meeting_abc.v2/0?context=xyz', true, 'V2 meetingjoin URL with fragment'],
+  ['https://teams.microsoft.com/v2/?meetingjoin=true&anon=true#/l/meetup-join/19:meeting_abc', true, 'V2 meetingjoin URL with extra params'],
+
   // Channel URLs
   ['https://teams.microsoft.com/l/channel/19%3Aabc123%40thread.tacv2/General?groupId=xxx', true, 'Channel URL'],
 
@@ -50,7 +54,7 @@ const testCases = [
   ['https://example.com/meet/abc123', false, 'Wrong domain'],
   ['http://teams.microsoft.com/meet/abc123', false, 'HTTP instead of HTTPS'],
   ['https://teams.microsoft.com/meetup-join/abc123', false, 'Missing /l/ prefix'],
-  ['https://teams.microsoft.com/v2/l/meetup-join/abc123', false, '/v2/ prefix not supported'],
+  ['https://teams.microsoft.com/v2/l/meetup-join/abc123', false, '/v2/l/ path not supported (use v2/?meetingjoin=)'],
   ['https://teams.microsoft.com/l/meetup-join', false, 'Missing trailing slash'],
   ['https://microsoft.com/teams/meet/abc123', false, 'Wrong domain structure'],
 ];
