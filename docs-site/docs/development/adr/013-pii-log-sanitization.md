@@ -6,7 +6,7 @@ id: 013-pii-log-sanitization
 
 ## Status
 
-Implemented (Phase 1)
+Implemented (Phase 2)
 
 ## Context
 
@@ -39,9 +39,9 @@ Use custom regex-based sanitization utility (`app/utils/logSanitizer.js`) instea
 - May miss edge cases (regex-only, no NER)
 
 ### Implementation Phases
-1. **Done**: Sanitizer utility + tests
-2. **Next**: Logger integration via electron-log hooks
-3. **Later**: Apply to high-risk files (MQTT, login, intune)
+1. **Done**: Sanitizer utility + tests (`app/utils/logSanitizer.js`)
+2. **Done**: Logger integration via electron-log hooks (`app/config/logger.js`)
+3. **Next**: Apply to high-risk files (MQTT, login, intune)
 
 ## Alternatives Considered
 
