@@ -27,8 +27,65 @@ Manages application settings and configuration synchronization between main and 
 #### [disableAutogain.js](disableAutogain.js)
 Disables microphone auto-gain control by intercepting `getUserMedia` calls and modifying audio constraints. Supports both modern (`autoGainControl`) and legacy (`googAutoGainControl`) MediaStream APIs.
 
-**Configuration**: `disableAutogain: true`
+**Configuration**: `media.microphone.disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
+
+#### [cameraResolution.js](cameraResolution.js)
+Removes or overrides video resolution constraints that Microsoft Teams sets when accessing the camera. By default, Teams requests 720p which may not be the native or preferred resolution of the camera.
+
+**Configuration**:
+```json
+{
+  "media": {
+    "camera": {
+      "resolution": {
+        "enabled": true,
+        "mode": "remove"
+      }
+    }
+  }
+}
+```
+
+**Modes**:
+- `remove` (default): Removes all resolution constraints, allowing the camera to use its native resolution
+- `override`: Sets camera to a specific resolution specified by `width` and `height`
+
+**Override Example**:
+```json
+{
+  "media": {
+    "camera": {
+      "resolution": {
+        "enabled": true,
+        "mode": "override",
+        "width": 1920,
+        "height": 1080
+      }
+    }
+  }
+}
+```
+
+**Use Case**: Cameras that support higher resolutions than 720p, professional video setups, improving video quality in meetings
+
+#### [cameraAspectRatio.js](cameraAspectRatio.js)
+Fixes camera video stretching when moving Teams between monitors with different orientations (horizontal to vertical or vice versa). Intercepts `getUserMedia` calls to monitor video tracks and reapplies proper aspect ratio constraints to the MediaStreamTrack when window size changes are detected, ensuring remote participants don't see a stretched video feed.
+
+**Configuration**:
+```json
+{
+  "media": {
+    "camera": {
+      "autoAdjustAspectRatio": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+**Use Case**: Multi-monitor setups with different orientations, prevents stretched/distorted camera feed when moving windows between portrait and landscape monitors
 
 #### [wakeLock.js](wakeLock.js)
 Prevents system sleep during meetings and active calls.
@@ -124,9 +181,11 @@ module.exports = { init };
 ### Configuration-Driven
 Tools are conditionally loaded based on configuration settings passed from the main process.
 
-### Logging Standards  
+### Logging Standards
 Tools use consistent logging patterns with tool-specific prefixes:
 - `[DISABLE_AUTOGAIN]` for audio gain control
+- `[CAMERA_RESOLUTION]` for camera resolution control
+- `[CAMERA_ASPECT_RATIO]` for camera aspect ratio fixes
 - `[TRAY_DIAG]` for tray diagnostics
 - `[TOKEN_CACHE]` for authentication caching
 

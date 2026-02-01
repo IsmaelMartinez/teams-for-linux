@@ -254,8 +254,9 @@ function extractYargConfig(configObject, appVersion) {
       },
       disableAutogain: {
         default: false,
-        describe: "A flag indicates whether to disable microphone auto gain control or not",
+        describe: "DEPRECATED: Use media.microphone.disableAutogain instead",
         type: "boolean",
+        deprecated: "Use media.microphone.disableAutogain instead",
       },
       disableGpu: {
         default: false,
@@ -478,8 +479,21 @@ function extractYargConfig(configObject, appVersion) {
       },
       videoMenu: {
         default: false,
-        describe: "Enable menu entry for controlling video elements",
+        describe: "DEPRECATED: Use media.video.menuEnabled instead",
         type: "boolean",
+        deprecated: "Use media.video.menuEnabled instead",
+      },
+      media: {
+        default: {
+          microphone: { disableAutogain: false },
+          camera: {
+            resolution: { enabled: false, mode: "remove" },
+            autoAdjustAspectRatio: { enabled: false },
+          },
+          video: { menuEnabled: false },
+        },
+        describe: "Media settings for microphone, camera, and video",
+        type: "object",
       },
       mqtt: {
         default: {

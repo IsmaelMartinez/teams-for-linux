@@ -68,6 +68,55 @@ Teams for Linux is an Electron-based desktop application that wraps the Microsof
 - Graceful degradation with clear user feedback
 - Use `electron-log` for structured logging
 
+### Logging Guidelines
+
+**CRITICAL: PII Protection**
+
+Never log Personally Identifiable Information (PII) in production code:
+
+```javascript
+// WRONG - logs PII
+console.info(`Connecting to broker: ${brokerUrl}`);
+console.debug(`User email: ${email}`);
+console.error(`Auth failed for: ${username}`);
+
+// CORRECT - no PII
+console.info('[MQTT] Connecting to broker');
+console.debug('[AUTH] Processing user authentication');
+console.error('[AUTH] Authentication failed', { errorCode: err.code });
+```
+
+**Sensitive data that must NEVER be logged:**
+- MQTT broker URLs, usernames, passwords, topics
+- Email addresses, usernames, account IDs
+- Authentication tokens, API keys, credentials
+- Custom service URLs (customBackground, etc.)
+- Certificate fingerprints and issuer details
+- SSO/Intune account information
+- URL query parameters (may contain tokens)
+
+**Logging levels - use appropriately:**
+- `console.error` - Errors requiring attention
+- `console.warn` - Warnings about potential issues
+- `console.info` - Key state changes (startup, connection established)
+- `console.debug` - Development debugging only (use sparingly)
+
+**When adding new logs:**
+1. Ask: "Is this log necessary in production?"
+2. Ask: "Could this log expose sensitive information?"
+3. Prefer fewer, more meaningful logs over verbose debugging
+4. Use structured data without PII: `{ status: 'connected', retryCount: 3 }`
+
+**Debugging with PII (branch PRs only):**
+
+If you need to log sensitive data for debugging during development:
+1. Only add such logs in feature branch PRs
+2. Mark them clearly: `// DEBUG-ONLY: Remove before merge`
+3. Remove ALL debug logs with PII before the PR is merged
+4. Never merge PII-containing logs to main branch
+
+**For detailed logging research**, see `docs-site/docs/development/research/pii-log-removal-research.md`.
+
 **For complete development patterns and guidelines**, see `docs-site/docs/development/contributing.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)).
 
 ## Testing and Quality

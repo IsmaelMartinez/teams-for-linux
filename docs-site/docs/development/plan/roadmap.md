@@ -13,6 +13,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
 | **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
+| **High** | PII Log Removal & Verbosity Reduction | Ready to implement | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
 | **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
@@ -128,6 +129,53 @@ These features have completed research and are ready to be built.
 - Quick access to start/open chat without navigating Teams UI
 - Practical alternative to rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md))
 - Can enhance notification clicks to open chat with sender
+
+---
+
+### PII Log Removal & Verbosity Reduction
+
+**Research:** [pii-log-removal-research.md](../research/pii-log-removal-research.md)
+**Effort:** Medium (16-25 hours across 5 phases)
+**Priority:** High
+
+**Description:** Remove/redact Personally Identifiable Information from logs and reduce excessive logging verbosity. Currently ~590 log statements across 42 files, with HIGH-RISK PII exposure in MQTT credentials, password commands, and API endpoints.
+
+**Key Findings:**
+
+- 54% of logs are `console.debug` - most should be removed
+- Only 1 file has any sanitization (tokenCache.js)
+- HIGH-RISK PII in: MQTT config, login commands, Intune accounts, certificate details
+
+**Implementation Phases:**
+
+| Phase | Description | Effort | v2.7.3 Target |
+|-------|-------------|--------|---------------|
+| Phase 1 | Create `logSanitizer.js` utility with regex patterns | 4-6 hrs | ✅ |
+| Phase 2 | Integrate sanitizer with electron-log hooks | 2-4 hrs | ✅ |
+| Phase 3 | Fix high-risk files (MQTT, login, intune, certificate) | 4-6 hrs | ✅ |
+| Phase 4 | Documentation and CLAUDE.md guidelines | 2-3 hrs | ✅ Done |
+| Phase 5 | Log verbosity reduction (50% debug log removal) | 4-6 hrs | Optional |
+
+**v2.7.3 Scope:**
+
+- Phases 1-3 (sanitization utility + high-risk file fixes)
+- Phase 4 already complete (CLAUDE.md guidelines added)
+- Phase 5 can be incremental/future
+
+**Files Requiring Immediate Attention:**
+
+1. `app/mqtt/index.js` - Broker URLs, usernames, topics
+2. `app/login/index.js` - Password command logging
+3. `app/intune/index.js` - Account info, SSO credentials
+4. `app/certificate/index.js` - Cert fingerprints, issuer details
+5. `app/customBackground/index.js` - Custom service URLs
+
+**Value:**
+
+- GDPR compliance improvement
+- Safer log files for bug reports
+- Reduced log noise for debugging
+- Security best practices
 
 ---
 
@@ -365,14 +413,16 @@ These are long-term improvements that happen incrementally.
 1. **Finish PR #2082** - Join meeting dialog (in progress)
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
 3. **Merge PR #2104** - appIcon KDE fix (awaiting user validation)
-4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-5. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
-6. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
+4. **PII Log Removal Phases 1-3** - Security/compliance improvement, sanitization utility + high-risk fixes
+5. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+6. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
+7. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
 
 ### Future Priorities
 
-7. **Logout Indicator** - Parked; resume only if user responds to PR #2033
-8. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
+8. **PII Log Removal Phase 5** - Verbosity reduction (incremental)
+9. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+10. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
 
 ### Principles
 
