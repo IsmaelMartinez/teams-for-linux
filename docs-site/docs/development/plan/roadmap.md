@@ -54,12 +54,13 @@ This document outlines the future development direction for Teams for Linux, org
 | **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
 | **PR #2101** | MCAS domain suffix in hostname validation | Pending final checks |
 
-### Recently Resolved
+### Awaiting User Validation (Post-Release)
 
-| Item | Description | Resolution |
-|------|-------------|------------|
-| **#2095** | `--appIcon` not working in KDE window list | ✅ Fixed by PR #2104 (merged) |
-| **#2065** | AppImage update info not working | ✅ Fixed by PR #2102 (merged) |
+| Item | Description | Notes |
+|------|-------------|-------|
+| **#2095** | `--appIcon` not working in KDE window list | PR #2104 merged; may still be blocked by Electron |
+| **#2065** | AppImage update info not working | PR #2102 merged; packaging issue, may not be fixable |
+| **#1860** | Camera resolution/aspect ratio issues | PR #2060 merged; needs user testing to confirm fix |
 
 ### Blocked (External Dependencies)
 
@@ -80,7 +81,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **#2048** | Uninstall instructions | Good first issue for contributors |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
-> **Note:** PR #2060 (Camera resolution/aspect ratio) was merged after receiving user response.
+> **Note:** PR #2060 (Camera resolution/aspect ratio) was merged; awaiting user validation that it fixes #1860.
 
 ---
 
