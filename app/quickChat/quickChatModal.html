@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Chat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background-color: #292929;
+            color: #FFFFFF;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #FFFFFF;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #3a3a3a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #6264a7;
+            box-shadow: 0 0 0 2px rgba(98, 100, 167, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: #888888;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .contact-list {
+            list-style: none;
+        }
+
+        .contact-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contact-item:hover {
+            background-color: #3a3a3a;
+        }
+
+        .contact-item:active {
+            background-color: #444444;
+        }
+
+        .contact-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6264a7, #8b8dc9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFFF;
+            flex-shrink: 0;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #FFFFFF;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .contact-email {
+            font-size: 12px;
+            color: #888888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .contact-title {
+            font-size: 11px;
+            color: #666666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .empty-state {
+            padding: 24px;
+            text-align: center;
+            color: #888888;
+            font-size: 13px;
+        }
+
+        .loading-state {
+            padding: 24px;
+            text-align: center;
+            color: #888888;
+            font-size: 13px;
+        }
+
+        .error-state {
+            padding: 16px;
+            text-align: center;
+            color: #e57373;
+            font-size: 13px;
+        }
+
+        footer {
+            padding: 8px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: #666666;
+        }
+
+        footer img {
+            width: 12px;
+            height: 12px;
+            opacity: 0.6;
+        }
+
+        .keyboard-hint {
+            margin-left: auto;
+            color: #555555;
+        }
+
+        kbd {
+            background: #3a3a3a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h2>Quick Chat</h2>
+        <div class="search-container">
+            <input
+                type="text"
+                id="search-input"
+                class="search-input"
+                placeholder="Search contacts..."
+                autocomplete="off"
+                spellcheck="false"
+            >
+        </div>
+    </header>
+
+    <main>
+        <div id="loading" class="loading-state" style="display: none;">
+            Searching...
+        </div>
+        <div id="error" class="error-state" style="display: none;"></div>
+        <div id="empty" class="empty-state">
+            Type to search for contacts
+        </div>
+        <ul id="contacts" class="contact-list" style="display: none;"></ul>
+    </main>
+
+    <footer>
+        <img src="../assets/icons/icon-monochrome-light-16x16.png" alt="logo">
+        <span>Teams for Linux</span>
+        <span class="keyboard-hint"><kbd>Esc</kbd> to close</span>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const contactsList = document.getElementById('contacts');
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const emptyEl = document.getElementById('empty');
+
+        let searchTimeout = null;
+        let currentContacts = [];
+
+        // Get initials from name
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name[0].toUpperCase();
+        }
+
+        // Show state helpers
+        function showLoading() {
+            loadingEl.style.display = 'block';
+            contactsList.style.display = 'none';
+            errorEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            loadingEl.style.display = 'none';
+            contactsList.style.display = 'none';
+            emptyEl.style.display = 'none';
+        }
+
+        function showEmpty(message = 'Type to search for contacts') {
+            emptyEl.textContent = message;
+            emptyEl.style.display = 'block';
+            loadingEl.style.display = 'none';
+            contactsList.style.display = 'none';
+            errorEl.style.display = 'none';
+        }
+
+        function showContacts(contacts) {
+            currentContacts = contacts;
+            contactsList.innerHTML = '';
+
+            if (contacts.length === 0) {
+                showEmpty('No contacts found');
+                return;
+            }
+
+            for (const contact of contacts) {
+                const li = document.createElement('li');
+                li.className = 'contact-item';
+                li.tabIndex = 0;
+
+                const email = contact.scoredEmailAddresses?.[0]?.address ||
+                              contact.userPrincipalName ||
+                              contact.emailAddresses?.[0]?.address || '';
+
+                li.innerHTML = `
+                    <div class="contact-avatar">${getInitials(contact.displayName)}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${escapeHtml(contact.displayName || 'Unknown')}</div>
+                        ${email ? `<div class="contact-email">${escapeHtml(email)}</div>` : ''}
+                        ${contact.jobTitle ? `<div class="contact-title">${escapeHtml(contact.jobTitle)}</div>` : ''}
+                    </div>
+                `;
+
+                li.addEventListener('click', () => openChat(email));
+                li.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        openChat(email);
+                    }
+                });
+
+                contactsList.appendChild(li);
+            }
+
+            contactsList.style.display = 'block';
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openChat(email) {
+            if (!email) {
+                showError('No email address available for this contact');
+                return;
+            }
+            globalThis.quickChatApi.openChat(email);
+            globalThis.quickChatApi.close();
+        }
+
+        // Search with debounce
+        async function performSearch(query) {
+            if (!query || query.length < 2) {
+                showEmpty('Type at least 2 characters to search');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const result = await globalThis.quickChatApi.searchPeople(query);
+
+                if (result.success && result.data?.value) {
+                    showContacts(result.data.value);
+                } else if (result.error) {
+                    if (result.error.includes('Graph API not enabled')) {
+                        showError('Enable Graph API in config to use Quick Chat');
+                    } else {
+                        showError('Search failed: ' + result.error);
+                    }
+                } else {
+                    showContacts([]);
+                }
+            } catch (error) {
+                showError('Search failed: ' + error.message);
+            }
+        }
+
+        // Handle search input
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            if (query.length < 2) {
+                showEmpty(query.length === 0 ? 'Type to search for contacts' : 'Type at least 2 characters to search');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const firstContact = contactsList.querySelector('.contact-item');
+                if (firstContact) {
+                    firstContact.focus();
+                }
+            } else if (e.key === 'Enter' && currentContacts.length > 0) {
+                e.preventDefault();
+                const email = currentContacts[0].scoredEmailAddresses?.[0]?.address ||
+                              currentContacts[0].userPrincipalName || '';
+                if (email) {
+                    openChat(email);
+                }
+            }
+        });
+
+        // Handle arrow key navigation in contacts list
+        contactsList.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = e.target.nextElementSibling;
+                if (next) {
+                    next.focus();
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prev = e.target.previousElementSibling;
+                if (prev) {
+                    prev.focus();
+                } else {
+                    searchInput.focus();
+                }
+            }
+        });
+
+        // Focus search input when modal is shown
+        globalThis.quickChatApi.onFocus(() => {
+            searchInput.value = '';
+            showEmpty('Type to search for contacts');
+            searchInput.focus();
+        });
+
+        // Initial focus
+        searchInput.focus();
+    </script>
+</body>
+
+</html>

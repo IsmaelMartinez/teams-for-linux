@@ -1,7 +1,6 @@
 // Microsoft Graph API IPC Handlers
 
 const logger = require('electron-log');
-const ChatApiSpikes = require('./chatSpikes');
 
 /**
  * Register all Graph API IPC handlers
@@ -41,11 +40,10 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.getMailMessages(options);
   });
 
-  // Run chat API validation spikes for testing chat modal feasibility
-  ipcMain.handle('graph-api-run-chat-spikes', async () => {
+  // Search people using People API (for Quick Chat feature)
+  ipcMain.handle('graph-api-search-people', async (_event, query, options) => {
     if (!graphApiClient) return notEnabled;
-    const spikes = new ChatApiSpikes(graphApiClient);
-    return await spikes.runAllSpikes();
+    return await graphApiClient.searchPeople(query, options);
   });
 
   logger.debug('[GRAPH_API] IPC handlers registered', {

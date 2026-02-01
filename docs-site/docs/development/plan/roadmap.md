@@ -16,7 +16,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PII Log Sanitization | ✅ Complete (all phases) | - |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
-| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
+| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | ✅ Implemented | Small |
 | **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
@@ -111,46 +111,6 @@ These features have completed research and are ready to be built.
 - Privacy protection during meetings
 - Matches Windows Teams client behavior
 - Leverages existing MQTT infrastructure
-
----
-
-### Quick Chat Access
-
-**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
-**Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**Effort:** Small
-**Status:** ✅ Spikes complete - ready for implementation
-
-**Spike Results (2025-01-31):**
-
-- ❌ Chat API (`/me/chats`) - 403 Forbidden (Teams token lacks permissions)
-- ✅ People API (`/me/people`) - Works, returns contacts ranked by interaction
-- ✅ Deep links (`/l/chat/0/0?users=email`) - Works, navigates Teams to chat
-
-**Revised Implementation (Deep Link Approach):**
-
-1. Add `searchPeople` method to GraphApiClient
-2. Create QuickChatModal with user search UI
-3. On user selection, navigate via deep link (`openChatWithUser`)
-4. Add keyboard shortcut to show modal (e.g., Ctrl+Shift+C)
-5. Optional: enhance notification clicks to open chat with sender
-
-**Already Implemented:**
-
-- `window.electronAPI.openChatWithUser(email)` - deep link navigation helper
-
-**Scope (Simplified):**
-
-- Search for contacts via People API
-- Click to open chat (navigates Teams, no inline messaging)
-- No message history display (API blocked)
-- No inline message sending (API blocked)
-
-**Value:**
-
-- Quick access to start/open chat without navigating Teams UI
-- Practical alternative to rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md))
-- Can enhance notification clicks to open chat with sender
 
 ---
 
@@ -291,6 +251,41 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 These features have completed initial implementation. Further phases depend on user requests.
 
+### Quick Chat Access
+
+**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
+**Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
+**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md)
+**Current Status:** ✅ Implemented (v2.7.3)
+
+**Delivered:**
+
+- ✅ `searchPeople` method added to GraphApiClient
+- ✅ QuickChatModal with user search UI
+- ✅ Deep link navigation to open chat with selected user
+- ✅ Keyboard shortcut (Ctrl+Shift+C by default, configurable)
+- ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
+
+**What It Does:**
+
+- Search contacts via People API (ranked by interaction frequency)
+- Click a contact to open chat in Teams (via deep link)
+- Keyboard shortcut toggles the modal
+
+**Limitations (API Blocked):**
+
+- No inline message history (Chat API returns 403)
+- No inline message sending (must use Teams native UI)
+- Page refresh when navigating via deep link
+
+**Phase 2 (If Requested):**
+
+- Enhance notification clicks to open chat with sender
+- Cache recent contacts for faster access
+- Add favorites list
+
+---
+
 ### MQTT Extended Status Phase 2
 
 **Research:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
@@ -364,6 +359,7 @@ These are long-term improvements that happen incrementally.
 - `customNotification.*` - Custom notification system
 - `cacheManagement.*` - Cache management
 - `screenSharingThumbnail.*` - Screen sharing thumbnail
+- `quickChat.*` - Quick chat modal
 
 ---
 
@@ -435,7 +431,7 @@ These are long-term improvements that happen incrementally.
 
 ### Planning for v2.7.4
 
-4. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
+4. ~~**#2109 Quick Chat Access**~~ - ✅ Implemented
 5. **#2110** - Custom notifications improvements (in progress)
 6. **#2112** - Additional feature work (in progress)
 7. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
@@ -465,3 +461,5 @@ These are long-term improvements that happen incrementally.
 
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
+- [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Custom regex sanitizer for log PII redaction
+- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - People API + Deep Links for quick chat access

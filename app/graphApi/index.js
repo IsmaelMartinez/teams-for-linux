@@ -248,6 +248,31 @@ class GraphApiClient {
 
     return await this.makeRequest(endpoint);
   }
+
+  /**
+   * Search people using the People API
+   * Returns contacts ranked by interaction frequency (relevance-based)
+   * @param {string} query - Search query string
+   * @param {object} options - Optional OData query options (top, select)
+   * @returns {Promise<object>} - API response with people list
+   */
+  async searchPeople(query, options = {}) {
+    logger.debug('[GRAPH_API] Searching people');
+
+    const queryOptions = {
+      top: options.top ?? 10,
+      ...options
+    };
+
+    if (query) {
+      queryOptions.search = `"${query}"`;
+    }
+
+    const queryString = this._buildODataQuery(queryOptions);
+    const endpoint = queryString ? `/me/people?${queryString}` : '/me/people';
+
+    return await this.makeRequest(endpoint);
+  }
 }
 
 module.exports = GraphApiClient;

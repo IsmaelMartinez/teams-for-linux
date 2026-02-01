@@ -17,6 +17,7 @@ const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
+const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
@@ -47,6 +48,7 @@ let userStatus = -1;
 let mqttClient = null;
 let mqttMediaStatusService = null;
 let graphApiClient = null;
+let quickChatManager = null;
 
 let player;
 try {
@@ -376,6 +378,28 @@ async function handleAppReady() {
 
   // Register Graph API IPC handlers (always register, handlers check for client availability)
   registerGraphApiHandlers(ipcMain, graphApiClient);
+
+  // Initialize Quick Chat modal (after mainAppWindow is ready)
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow) {
+    quickChatManager = new QuickChatManager(config, mainWindow);
+    quickChatManager.initialize();
+
+    // Register keyboard shortcut for Quick Chat
+    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+C';
+    if (config.quickChat?.enabled !== false) {
+      const registered = globalShortcut.register(quickChatShortcut, () => {
+        if (quickChatManager.isEnabled()) {
+          quickChatManager.toggle();
+        }
+      });
+      if (registered) {
+        console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
+      } else {
+        console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
+      }
+    }
+  }
 
   // Register global shortcuts
   registerGlobalShortcuts(config, mainAppWindow, app);

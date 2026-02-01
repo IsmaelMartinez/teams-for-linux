@@ -25,6 +25,7 @@ This document details all available configuration options for the Teams for Linu
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [MQTT Integration](#mqtt-integration)
   - [Microsoft Graph API](#microsoft-graph-api)
+  - [Quick Chat](#quick-chat)
   - [Performance & Hardware](#performance--hardware)
   - [Cache & Storage](#cache--storage)
   - [Development & Debug](#development--debug)
@@ -349,6 +350,28 @@ All topics use retained messages by default, ensuring subscribers receive the la
 
 > [!NOTE]
 > This feature uses Teams' existing authentication to access Microsoft Graph API endpoints. No additional login required. Currently supports reading user profile, calendar events, and mail messages.
+
+### Quick Chat
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `quickChat.enabled` | `boolean` | `true` | Enable Quick Chat feature for quick contact search and chat access |
+| `quickChat.shortcut` | `string` | `"CommandOrControl+Shift+C"` | Keyboard shortcut to toggle the Quick Chat modal |
+
+```json title="Example Configuration"
+{
+  "quickChat": {
+    "enabled": true,
+    "shortcut": "CommandOrControl+Shift+C"
+  },
+  "graphApi": {
+    "enabled": true
+  }
+}
+```
+
+> [!NOTE]
+> Quick Chat requires Graph API to be enabled for contact search functionality. The modal allows you to quickly search for contacts and open a chat with them. The keyboard shortcut uses Electron accelerator format.
 
 ### Performance & Hardware
 
