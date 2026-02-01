@@ -203,6 +203,20 @@ describe('Error and edge cases', () => {
 		assert.ok(result[0] instanceof Error);
 		assert.ok(result[0].message.includes('[EMAIL]'), `Expected email in error message to be sanitized: ${result[0].message}`);
 	});
+
+	test('sanitizes PII in object keys', () => {
+		const objWithPIIKeys = {
+			'user@example.com': 'status-active',
+			'192.168.1.1': 'connected'
+		};
+		const result = simulateLoggerHook([objWithPIIKeys]);
+		// Keys should be sanitized
+		assert.ok('[EMAIL]' in result[0], `Expected email key to be sanitized: ${JSON.stringify(result[0])}`);
+		assert.ok('[IP]' in result[0], `Expected IP key to be sanitized: ${JSON.stringify(result[0])}`);
+		// Original PII keys should not exist
+		assert.ok(!('user@example.com' in result[0]), 'Original email key should not exist');
+		assert.ok(!('192.168.1.1' in result[0]), 'Original IP key should not exist');
+	});
 });
 
 console.log('\n' + '='.repeat(50));

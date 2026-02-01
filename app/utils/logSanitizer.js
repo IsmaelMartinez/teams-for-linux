@@ -148,12 +148,14 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 	// Handle plain objects
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
+		// Sanitize both keys and values to prevent PII leakage in object keys
+		const sanitizedKey = sanitize(key);
 		if (typeof value === 'string') {
-			result[key] = sanitize(value);
+			result[sanitizedKey] = sanitize(value);
 		} else if (typeof value === 'object' && value !== null) {
-			result[key] = sanitizeObject(value, seen);
+			result[sanitizedKey] = sanitizeObject(value, seen);
 		} else {
-			result[key] = value;
+			result[sanitizedKey] = value;
 		}
 	}
 	return result;
