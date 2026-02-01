@@ -356,9 +356,7 @@ async function handleAppReady() {
 
   for (const setting of menuToggleSettings) {
     if (appConfig.legacyConfigStore.has(setting)) {
-      const storedValue = appConfig.legacyConfigStore.get(setting);
-      console.debug(`Loading ${setting} from persistent store: ${storedValue}`);
-      config[setting] = storedValue;
+      config[setting] = appConfig.legacyConfigStore.get(setting);
     }
   }
 
@@ -417,7 +415,6 @@ async function requestMediaAccess() {
 
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
-  console.debug(`User status changed to '${userStatus}'`);
 
   // Publish status to MQTT if enabled
   if (mqttClient) {
@@ -426,7 +423,6 @@ async function userStatusChangedHandler(_event, options) {
 }
 
 async function setBadgeCountHandler(_event, count) {
-  console.debug(`Badge count set to '${count}'`);
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
   }
@@ -436,7 +432,7 @@ function handleGlobalShortcutDisabled() {
   config.disableGlobalShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
-        console.debug(`Global shortcut ${shortcut} disabled`);
+        // Shortcut disabled - no-op
       });
     }
   });
@@ -446,7 +442,6 @@ function handleGlobalShortcutDisabledRevert() {
   config.disableGlobalShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
-      console.debug(`Global shortcut ${shortcut} unregistered`);
     }
   });
 }

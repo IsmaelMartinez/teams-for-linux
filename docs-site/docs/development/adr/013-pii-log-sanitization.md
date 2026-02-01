@@ -43,7 +43,7 @@ Use custom regex-based sanitization utility (`app/utils/logSanitizer.js`) instea
 1. **Done**: Sanitizer utility + tests (`app/utils/logSanitizer.js`)
 2. **Done**: Logger integration via electron-log hooks (`app/config/logger.js`)
 3. ~~Apply to high-risk files~~ - **Not needed**: Hook automatically sanitizes all logs
-4. **Optional**: Log verbosity reduction (remove unnecessary debug logs)
+4. **Done**: Log verbosity reduction (21% debug log reduction)
 
 ## Alternatives Considered
 
