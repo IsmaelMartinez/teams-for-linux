@@ -207,7 +207,7 @@ Media settings are organized under the `media` configuration object with subgrou
 ```
 
 > [!NOTE]
-> **Camera resolution overrides:** Using camera resolution override mode can cause laggy or stuttering camera video, resolution drops, or blocking on some systems. If you experience this, try disabling auto brightness adjustment (in your camera app or system settings) to reduce or fix the issue. Adjusting GPU-related options (for example `disableGpu` under [Performance & Hardware](#performance--hardware) or [Electron CLI Flags](#electron-cli-flags)) also helps if you would like to retain auto brightness.
+> **Camera resolution overrides:** Using camera resolution override mode can cause laggy or stuttering camera video, resolution drops, or blocking on some systems. If you experience this, try disabling auto brightness adjustment (in your teams camera settings) to reduce or fix the issue. Adjusting GPU-related options (for example `disableGpu` under [Performance & Hardware](#performance--hardware) or [Electron CLI Flags](#electron-cli-flags)) also helps if you would like to retain auto brightness.
 
 
 ### Virtual Backgrounds
