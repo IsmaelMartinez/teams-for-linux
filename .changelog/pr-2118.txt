@@ -1,1 +1,1 @@
-feat: Integrate PII sanitizer with electron-log (Phase 2-5) - by @IsmaelMartinez (#2118)
+feat: Integrate PII sanitizer with electron-log (Phase 2-5) (#2118)

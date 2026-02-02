@@ -188,6 +188,24 @@ describe('Error and edge cases', () => {
 		assert.ok(result[0].message.includes('[EMAIL]'), `Expected email in error message to be sanitized: ${result[0].message}`);
 	});
 
+	test('handles Error objects with custom properties', () => {
+		const error = new Error('API request failed');
+		error.code = 'ECONNREFUSED';
+		error.statusCode = 403;
+		error.endpoint = 'https://api.example.com/users/test@example.com';
+		error.metadata = { userId: 'user-123', email: 'admin@test.com' };
+
+		const result = sanitizeLogData([error]);
+		assert.ok(result[0] instanceof Error, 'Result should be an Error object');
+		assert.strictEqual(result[0].code, 'ECONNREFUSED', 'Non-string properties should be preserved');
+		assert.strictEqual(result[0].statusCode, 403, 'Numeric properties should be preserved');
+		// URL paths with email get sanitized as [PATH], which is correct behavior
+		assert.ok(result[0].endpoint && (result[0].endpoint.includes('[EMAIL]') || result[0].endpoint.includes('[PATH]')),
+			`String properties with PII should be sanitized, got: ${result[0].endpoint}`);
+		assert.ok(result[0].metadata && result[0].metadata.email && result[0].metadata.email.includes('[EMAIL]'),
+			`Nested object properties should be sanitized, got: ${JSON.stringify(result[0].metadata)}`);
+	});
+
 	test('sanitizes PII in object keys', () => {
 		const objWithPIIKeys = {
 			'user@example.com': 'status-active',

@@ -122,15 +122,34 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 
 	// Handle Error objects - preserve their structure
 	if (obj instanceof Error) {
+		// Track this object to avoid circular references via custom properties
+		seen.add(obj);
+
 		const sanitizedError = new Error(sanitize(obj.message));
 		sanitizedError.name = obj.name;
 		if (obj.stack) {
 			sanitizedError.stack = sanitize(obj.stack);
 		}
+
+		// Copy other enumerable properties while sanitizing string values
+		for (const key of Object.keys(obj)) {
+			if (key === 'message' || key === 'name' || key === 'stack') {
+				continue;
+			}
+
+			const value = obj[key];
+
+			if (typeof value === 'string') {
+				sanitizedError[key] = sanitize(value);
+			} else if (typeof value === 'object' && value !== null) {
+				sanitizedError[key] = sanitizeObject(value, seen);
+			} else {
+				sanitizedError[key] = value;
+			}
+		}
+
 		return sanitizedError;
 	}
-
-	seen.add(obj);
 
 	// Handle arrays
 	if (Array.isArray(obj)) {
@@ -145,7 +164,8 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 		});
 	}
 
-	// Handle plain objects
+	// Handle plain objects - add to WeakSet to track circular references
+	seen.add(obj);
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
 		// Sanitize both keys and values to prevent PII leakage in object keys

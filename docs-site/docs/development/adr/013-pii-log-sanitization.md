@@ -6,7 +6,7 @@ id: 013-pii-log-sanitization
 
 ## Status
 
-Implemented (Phase 2)
+Implemented
 
 ## Context
 

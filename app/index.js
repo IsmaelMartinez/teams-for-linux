@@ -432,7 +432,7 @@ function handleGlobalShortcutDisabled() {
   config.disableGlobalShortcuts.map((shortcut) => {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
-        // Shortcut disabled - no-op
+        console.debug(`Global shortcut ${shortcut} disabled`);
       });
     }
   });
