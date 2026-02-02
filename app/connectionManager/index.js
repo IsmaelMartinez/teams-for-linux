@@ -130,9 +130,6 @@ class ConnectionManager {
         method: "https",
         tries: 10,
         networkTest: async () => {
-          console.debug(
-            "Testing network using net.request() for " + this.config.url
-          );
           return await isOnlineHttps(this.config.url);
         },
       },
@@ -143,9 +140,6 @@ class ConnectionManager {
         tries: 5,
         networkTest: async () => {
           const testDomain = new URL(this.config.url).hostname;
-          console.debug(
-            "Testing network using net.resolveHost() for " + testDomain
-          );
           return await isOnlineDns(testDomain);
         },
       },
@@ -156,7 +150,6 @@ class ConnectionManager {
         method: "native",
         tries: 5,
         networkTest: async () => {
-          console.debug("Testing network using net.isOnline()");
           return net.isOnline();
         },
       },
@@ -176,9 +169,6 @@ class ConnectionManager {
       for (let i = 1; i <= onlineCheckMethod.tries; i++) {
         const online = await onlineCheckMethod.networkTest();
         if (online) {
-          console.debug(
-            "Network test successful with method " + onlineCheckMethod.method
-          );
           return true;
         }
         await sleep(500);

@@ -310,34 +310,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize tray icon functionality directly in preload with secure IPC
     if (config.trayIconEnabled) {
-      console.debug("Preload: tray icon is enabled");
-      
-      // Enhanced logging for tray icon timing issue (#1795)
       globalThis.addEventListener("unread-count", (event) => {
         try {
           const count = event.detail?.number;
-          console.debug("Preload: Received unread-count event", {
-            count: count,
-            eventDetail: event.detail,
-            timestamp: new Date().toISOString()
-          });
-          
+
           if (typeof count !== 'number' || count < 0 || count > 9999) {
             console.warn('Preload: Invalid unread count received:', count);
             return;
           }
-          
-          console.debug("Preload: Sending tray-update to main process", {
-            count: count,
-            flash: count > 0 && !config.disableNotificationWindowFlash
-          });
-          
+
           ipcRenderer.send("tray-update", {
             icon: null, // Let main process handle icon rendering
             flash: count > 0 && !config.disableNotificationWindowFlash,
             count: count
           });
-          
+
           ipcRenderer.invoke("set-badge-count", count).catch(err => {
             console.error('Preload: Failed to set badge count:', err);
           });
@@ -345,8 +332,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.error('Preload: Error in tray update handler:', error);
         }
       });
-      
-      console.debug("Preload: Tray icon unread-count event listener registered");
     }
     
     console.log("Preload: Essential tray modules initialized successfully");
@@ -398,11 +383,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Listen for config changes from the main process (e.g., when menu toggles are clicked)
     ipcRenderer.on("config-changed", (_event, configChanges) => {
-      console.debug("Preload: Received config-changed event", configChanges);
       // Update the local config object with the changes
       for (const [key, value] of Object.entries(configChanges)) {
         config[key] = value;
-        console.debug(`Preload: Updated config.${key} to ${value}`);
       }
     });
 

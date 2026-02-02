@@ -103,8 +103,106 @@ function detectPIITypes(message) {
 	return matches;
 }
 
+/**
+ * Recursively sanitizes string values within an object
+ * Preserves object structure while removing PII from string properties
+ * @param {*} obj - The object to sanitize
+ * @param {WeakSet} seen - Internal parameter to track circular references
+ * @returns {*} Sanitized object
+ */
+function sanitizeObject(obj, seen = new WeakSet()) {
+	if (obj === null || typeof obj !== 'object') {
+		return obj;
+	}
+
+	// Handle circular references
+	if (seen.has(obj)) {
+		return '[Circular]';
+	}
+
+	// Handle Error objects - preserve their structure
+	if (obj instanceof Error) {
+		// Track this object to avoid circular references via custom properties
+		seen.add(obj);
+
+		const sanitizedError = new Error(sanitize(obj.message));
+		sanitizedError.name = obj.name;
+		if (obj.stack) {
+			sanitizedError.stack = sanitize(obj.stack);
+		}
+
+		// Copy other enumerable properties while sanitizing string values
+		for (const key of Object.keys(obj)) {
+			if (key === 'message' || key === 'name' || key === 'stack') {
+				continue;
+			}
+
+			const value = obj[key];
+
+			if (typeof value === 'string') {
+				sanitizedError[key] = sanitize(value);
+			} else if (typeof value === 'object' && value !== null) {
+				sanitizedError[key] = sanitizeObject(value, seen);
+			} else {
+				sanitizedError[key] = value;
+			}
+		}
+
+		return sanitizedError;
+	}
+
+	// Handle arrays
+	if (Array.isArray(obj)) {
+		return obj.map((item) => {
+			if (typeof item === 'string') {
+				return sanitize(item);
+			}
+			if (typeof item === 'object' && item !== null) {
+				return sanitizeObject(item, seen);
+			}
+			return item;
+		});
+	}
+
+	// Handle plain objects - add to WeakSet to track circular references
+	seen.add(obj);
+	const result = {};
+	for (const [key, value] of Object.entries(obj)) {
+		// Sanitize both keys and values to prevent PII leakage in object keys
+		const sanitizedKey = sanitize(key);
+		if (typeof value === 'string') {
+			result[sanitizedKey] = sanitize(value);
+		} else if (typeof value === 'object' && value !== null) {
+			result[sanitizedKey] = sanitizeObject(value, seen);
+		} else {
+			result[sanitizedKey] = value;
+		}
+	}
+	return result;
+}
+
+/**
+ * Sanitizes an array of log message data items
+ * Used by electron-log hook and tests
+ * @param {Array} messageData - Array of log arguments
+ * @returns {Array} Sanitized array
+ */
+function sanitizeLogData(messageData) {
+	return messageData.map((item) => {
+		if (typeof item === 'string') {
+			return sanitize(item);
+		}
+		if (typeof item === 'object' && item !== null) {
+			return sanitizeObject(item);
+		}
+		return item;
+	});
+}
+
 module.exports = {
 	sanitize,
+	sanitizeObject,
+	sanitizeLogData,
 	createSanitizer,
 	containsPII,
 	detectPIITypes,

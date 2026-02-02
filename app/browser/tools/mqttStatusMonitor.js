@@ -142,10 +142,8 @@ class MQTTStatusMonitor {
 	 */
 	detectCurrentStatus() {
 		// Strategy 0: Try React internals first (most reliable)
-		console.debug('[MQTT Status] Strategy 0: Checking React internals...');
 		let status = this.detectStatusFromReact();
 		if (status !== null) {
-			console.debug(`[MQTT Status] Status ${status} detected from React internals`);
 			return status;
 		}
 
@@ -153,29 +151,23 @@ class MQTTStatusMonitor {
 		this._logCoreServicesOnce();
 
 		// Strategy 1: Try CSS selectors for direct presence indicators
-		console.debug('[MQTT Status] Strategy 1: Checking CSS selectors...');
 		status = this.detectStatusFromSelectors();
 		if (status !== null) {
 			return status;
 		}
 
 		// Strategy 2: Check me-control button for presence indicator
-		console.debug('[MQTT Status] Strategy 2: Checking me-control button...');
 		status = this.detectStatusFromMeControl();
 		if (status !== null) {
 			return status;
 		}
 
 		// Strategy 3: Check page title (unlikely but kept for compatibility)
-		console.debug('[MQTT Status] Strategy 3: Checking page title...');
-		console.debug('[MQTT Status] Page title:', document.title);
 		status = this.extractStatusFromPageTitle();
 		if (status !== null) {
-			console.debug(`[MQTT Status] Status ${status} detected from page title`);
 			return status;
 		}
 
-		console.debug('[MQTT Status] No status detected from targeted elements');
 		return null;
 	}
 
@@ -214,31 +206,13 @@ class MQTTStatusMonitor {
 		for (const selector of selectors) {
 			const element = document.querySelector(selector);
 			if (element) {
-				this._logElementInfo(selector, element);
 				const status = this.extractStatusFromElement(element);
 				if (status !== null) {
-					console.debug(`[MQTT Status] Status ${status} detected from selector: ${selector}`);
 					return status;
 				}
 			}
 		}
-		console.debug('[MQTT Status] No status found via CSS selectors');
 		return null;
-	}
-
-	/**
-	 * Log element information for debugging
-	 */
-	_logElementInfo(selector, element) {
-		console.debug('[MQTT Status] Found element:', {
-			selector,
-			classList: element.classList.toString(),
-			ariaLabel: element.getAttribute('aria-label'),
-			title: element.getAttribute('title'),
-			textContent: element.textContent?.substring(0, 100),
-			dataTestId: element.dataset?.testid,
-			dataTid: element.dataset?.tid
-		});
 	}
 
 	/**
@@ -252,27 +226,20 @@ class MQTTStatusMonitor {
 		}
 
 		// Look for presence indicator within the me-control
-		const presenceIndicator = meControl.querySelector('[class*="presence"]') || 
+		const presenceIndicator = meControl.querySelector('[class*="presence"]') ||
 								  meControl.querySelector('[data-tid*="presence"]');
 		if (presenceIndicator) {
-			console.debug('[MQTT Status] Found presence indicator in me-control:', {
-				classList: presenceIndicator.classList.toString(),
-				ariaLabel: presenceIndicator.getAttribute('aria-label')
-			});
 			const status = this.extractStatusFromElement(presenceIndicator);
 			if (status !== null) {
-				console.debug(`[MQTT Status] Status ${status} detected from me-control presence indicator`);
 				return status;
 			}
 		}
-		
+
 		// Check the me-control button itself for aria-label with status
 		const meControlAriaLabel = meControl.getAttribute('aria-label') || '';
 		if (meControlAriaLabel) {
-			console.debug('[MQTT Status] me-control aria-label:', meControlAriaLabel);
 			const status = this.mapTextToStatusCode(meControlAriaLabel);
 			if (status !== null) {
-				console.debug(`[MQTT Status] Status ${status} detected from me-control aria-label`);
 				return status;
 			}
 		}
@@ -292,8 +259,6 @@ class MQTTStatusMonitor {
 			if (!presence) {
 				return null;
 			}
-
-			console.debug('[MQTT Status] Got presence from React:', presence);
 
 			// Map presence object to status code
 			// Teams uses various formats, try to handle them all
@@ -316,8 +281,7 @@ class MQTTStatusMonitor {
 			}
 
 			return null;
-		} catch (error) {
-			console.debug('[MQTT Status] Error detecting status from React:', error.message);
+		} catch {
 			return null;
 		}
 	}

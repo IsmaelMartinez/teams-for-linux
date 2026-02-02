@@ -11,7 +11,6 @@ class ReactHandler {
    */
   init(config) {
     this.config = config;
-    console.debug('[ReactHandler] Initialized');
   }
 
   getCommandChangeReportingService() {
@@ -46,41 +45,35 @@ class ReactHandler {
       // Path 1: presenceService
       const presenceService = teams2CoreServices?.presenceService;
       if (presenceService) {
-        console.debug('[ReactHandler] Found presenceService:', Object.keys(presenceService));
-        // Try to get current user presence
-        const selfPresence = presenceService.selfPresence || 
+        const selfPresence = presenceService.selfPresence ||
                             presenceService._selfPresence ||
                             presenceService.currentPresence;
         if (selfPresence) {
           return selfPresence;
         }
       }
-      
+
       // Path 2: clientState presence
       const clientState = teams2CoreServices?.clientState;
       if (clientState) {
-        console.debug('[ReactHandler] Found clientState:', Object.keys(clientState));
         const presence = clientState.presence || clientState._presence;
         if (presence) {
           return presence;
         }
       }
-      
+
       // Path 3: userPresenceService
       const userPresenceService = teams2CoreServices?.userPresenceService;
       if (userPresenceService) {
-        console.debug('[ReactHandler] Found userPresenceService:', Object.keys(userPresenceService));
         return userPresenceService.currentPresence || userPresenceService.selfPresence;
       }
-      
+
       // Path 4: presenceStore or presence in various locations
       const presenceStore = teams2CoreServices?.presenceStore;
       if (presenceStore) {
-        console.debug('[ReactHandler] Found presenceStore');
         return presenceStore.selfPresence || presenceStore.currentUserPresence;
       }
-      
-      console.debug('[ReactHandler] No presence information found in coreServices');
+
       return null;
       
     } catch (error) {

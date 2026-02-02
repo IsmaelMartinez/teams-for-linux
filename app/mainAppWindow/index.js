@@ -507,14 +507,10 @@ function onBeforeRequestHandler(details, callback) {
     // Proceed normally
     callback({});
   } else {
-    console.debug("DEBUG - webRequest to  " + details.url + " intercepted!");
-    console.debug(
-      "Opening the request in a hidden child window for authentication"
-    );
+    // Open request in hidden child window for authentication
     const child = new BrowserWindow({ parent: window, show: false });
     child.loadURL(details.url);
     child.once("ready-to-show", () => {
-      console.debug("Destroying the hidden child window");
       child.destroy();
     });
 
@@ -544,13 +540,7 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
-  console.debug(
-    `testing RegExp onNewWindow ${new RegExp(config.meetupJoinRegEx).test(
-      details.url
-    )}`
-  );
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
-    console.debug("DEBUG - captured meetup-join url");
     if (config.onNewWindowOpenMeetupJoinUrlInApp) {
       window.loadURL(details.url, { userAgent: config.chromeUserAgent });
     }
@@ -559,9 +549,8 @@ function onNewWindow(details) {
     details.url === "about:blank" ||
     details.url === "about:blank#blocked"
   ) {
-    // Increment the counter
+    // Increment the counter for about:blank authentication flow
     aboutBlankRequestCount += 1;
-    console.debug("DEBUG - captured about:blank");
     return { action: "deny" };
   }
 

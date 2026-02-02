@@ -21,39 +21,24 @@ class ActivityHub {
   start() {
     let attemptCount = 0;
     const maxAttempts = 12; // Try for up to 2 minutes
-    
+
     const setup = setInterval(() => {
       attemptCount++;
-      
-      // Enhanced logging for tray icon timing issue (#1795)
-      console.debug(`ActivityHub: Connection attempt ${attemptCount}/${maxAttempts}`);
-      
+
       const commandChangeReportingService = ReactHandler.getCommandChangeReportingService();
       if (commandChangeReportingService) {
         assignEventHandlers(commandChangeReportingService);
-        console.debug("ActivityHub: Events connected successfully", {
-          attempt: attemptCount,
-          timeElapsed: attemptCount * 10000
-        });
+        console.debug("ActivityHub: Events connected successfully");
         clearInterval(setup);
-        
-        // Start periodic authentication state logging for #1357 
+
+        // Start periodic authentication state logging for #1357
         this._startAuthenticationMonitoring();
-      } else {
-        // Log more details about why connection failed
-        console.debug(`ActivityHub: Connection attempt ${attemptCount} failed - ReactHandler validation unsuccessful`);
-        
-        if (attemptCount >= maxAttempts) {
-          console.warn('ActivityHub: Maximum connection attempts reached. Teams internal events may not be available.', {
-            attempts: attemptCount,
-            timeElapsed: attemptCount * 10000,
-            note: 'Tray notifications via title mutation should still work'
-          });
-          clearInterval(setup);
-          
-          // Still start authentication monitoring even if React connection failed
-          this._startAuthenticationMonitoring();
-        }
+      } else if (attemptCount >= maxAttempts) {
+        console.warn('ActivityHub: Maximum connection attempts reached. Teams internal events may not be available.');
+        clearInterval(setup);
+
+        // Still start authentication monitoring even if React connection failed
+        this._startAuthenticationMonitoring();
       }
     }, 10000);
   }
@@ -62,36 +47,30 @@ class ActivityHub {
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
     ReactHandler.logAndAttemptTokenInjection();
-    
+
     // Give Teams a moment to fully initialize, then try manual injection if auto-injection failed
     setTimeout(() => {
       const status = ReactHandler.getTokenCacheStatus();
       if (!status.injected && status.canRetry) {
-        console.debug("[TOKEN_CACHE] Auto-injection may have failed, attempting manual injection");
         ReactHandler.injectTokenCache();
       }
     }, 15000); // 15 seconds after initial monitoring starts
-    
-    // Then log every 5 minutes to track token lifecycle and cache health
+
+    // Periodically check token cache status every 5 minutes
     this._authMonitorInterval = setInterval(() => {
       ReactHandler.logAndAttemptTokenInjection();
-      
-      // Periodically check token cache status
+
       const status = ReactHandler.getTokenCacheStatus();
       if (!status.injected && status.canRetry) {
-        console.debug("[TOKEN_CACHE] Periodic check: Token cache not injected, retrying");
         ReactHandler.injectTokenCache();
       }
-    }, 5 * 60 * 1000); // 5 minutes
-    
-    console.debug("[AUTH_DIAG] Authentication monitoring started - logging every 5 minutes with token cache management");
+    }, 5 * 60 * 1000);
   }
 
   stop() {
     if (this._authMonitorInterval) {
       clearInterval(this._authMonitorInterval);
       this._authMonitorInterval = null;
-      console.debug("[AUTH_DIAG] Authentication monitoring stopped");
     }
   }
 
@@ -99,7 +78,6 @@ class ActivityHub {
     const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
     if (teams2IdleTracker) {
       try {
-        console.debug(`setMachineState teams2 state=${state}`);
         if (state === 1) {
           teams2IdleTracker.handleMonitoredWindowEvent();
         } else {
@@ -115,7 +93,6 @@ class ActivityHub {
     const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
     if (teams2IdleTracker) {
       try {
-        console.debug(`setUserStatus teams2 status=${status}`);
         if (status === 1) {
           teams2IdleTracker.handleMonitoredWindowEvent();
         } else {
@@ -208,9 +185,7 @@ function assignEventHandlers(commandChangeReportingService) {
 
 function handleCallEventEntityCommand(entityCommand) {
   if (entityCommand.entityOptions?.isIncomingCall) {
-    console.debug("IncomingCall", entityCommand);
     if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
-      console.debug("Call is incoming");
       // Gets triggered by incoming call.
       onIncomingCallCreated({
         caller: entityCommand.entityOptions.title,
@@ -218,7 +193,6 @@ function handleCallEventEntityCommand(entityCommand) {
         text: entityCommand.entityOptions.text
       });
     } else {
-      console.debug("Reacted to incoming call");
       // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
       onIncomingCallEnded();
     }

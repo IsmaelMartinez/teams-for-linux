@@ -10,12 +10,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - Ready for Implementation
 
-- **[PII Log Removal Research](pii-log-removal-research.md)** - Remove/redact PII from all logs
-  - 42 files with logging, only 1 has any sanitization
-  - High-risk exposure: MQTT credentials, password commands, API endpoints
-  - Recommended: Custom sanitization utility with regex patterns
-  - **Status:** Research complete, ready to implement (12-19 hours across 4 phases)
-
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
   - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
   - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
@@ -87,6 +81,7 @@ The following research documents have been archived as their features are fully 
 
 | Feature | Implementation Date | Notes |
 |---------|---------------------|-------|
+| PII Log Sanitization | 2026-02-01 | Auto-sanitizes all logs via electron-log hook - See [ADR 013](../adr/013-pii-log-sanitization.md) |
 | MQTT Commands | 2025-11-25 | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
 | Calendar Data Export | 2025-11-29 | MQTT `get-calendar` command |
 | useSystemPicker | 2025-11-24 | Rejected - See [ADR 008](../adr/008-usesystempicker-electron-38.md) |

@@ -13,7 +13,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
 | **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
 | **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
-| **High** | PII Log Removal Phases 2-3 | Phase 1 merged, continuing | Medium |
+| **High** | PII Log Sanitization | ✅ Complete (all phases) | - |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
 | **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
@@ -154,46 +154,31 @@ These features have completed research and are ready to be built.
 
 ---
 
-### PII Log Removal & Verbosity Reduction
+### PII Log Sanitization ✅ Complete
 
-**Research:** [pii-log-removal-research.md](../research/pii-log-removal-research.md)
-**Effort:** Medium (16-25 hours across 5 phases)
-**Priority:** High
+**ADR:** [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md)
+**Status:** ✅ All phases complete
+**Priority:** High (was)
 
-**Description:** Remove/redact Personally Identifiable Information from logs and reduce excessive logging verbosity. Currently ~590 log statements across 42 files, with HIGH-RISK PII exposure in MQTT credentials, password commands, and API endpoints.
+**Description:** Implemented automatic PII sanitization for all logs using electron-log hooks, plus verbosity reduction.
 
-**Key Findings:**
+**Implementation Summary:**
 
-- 54% of logs are `console.debug` - most should be removed
-- Only 1 file has any sanitization (tokenCache.js)
-- HIGH-RISK PII in: MQTT config, login commands, Intune accounts, certificate details
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | Create `logSanitizer.js` utility with regex patterns | ✅ Done (PR #2116) |
+| Phase 2 | Integrate sanitizer with electron-log hooks | ✅ Done |
+| Phase 3 | ~~Fix high-risk files~~ | Not needed (hook handles all logs) |
+| Phase 4 | Documentation and CLAUDE.md guidelines | ✅ Done |
+| Phase 5 | Log verbosity reduction (21% debug log reduction) | ✅ Done |
 
-**Implementation Phases:**
+**Key Components:**
 
-| Phase | Description | Effort | Status |
-|-------|-------------|--------|--------|
-| Phase 1 | Create `logSanitizer.js` utility with regex patterns | 4-6 hrs | ✅ Done (PR #2116) |
-| Phase 2 | Integrate sanitizer with electron-log hooks | 2-4 hrs | In progress |
-| Phase 3 | Fix high-risk files (MQTT, login, intune, certificate) | 4-6 hrs | Pending |
-| Phase 4 | Documentation and CLAUDE.md guidelines | 2-3 hrs | ✅ Done |
-| Phase 5 | Log verbosity reduction (50% debug log removal) | 4-6 hrs | Future |
+- `app/utils/logSanitizer.js` - Core sanitizer with regex patterns for emails, IPs, tokens, UUIDs, etc.
+- `app/config/logger.js` - electron-log hook that automatically sanitizes all log output
+- Comprehensive unit tests covering all PII patterns and edge cases
 
-**v2.7.3 Scope:**
-
-- Phase 1 complete (PR #2116 merged)
-- Phases 2-3 in progress
-- Phase 4 already complete (CLAUDE.md guidelines added)
-- Phase 5 can be incremental/future
-
-**Files Requiring Immediate Attention:**
-
-1. `app/mqtt/index.js` - Broker URLs, usernames, topics
-2. `app/login/index.js` - Password command logging
-3. `app/intune/index.js` - Account info, SSO credentials
-4. `app/certificate/index.js` - Cert fingerprints, issuer details
-5. `app/customBackground/index.js` - Custom service URLs
-
-**Value:**
+**Value Delivered:**
 
 - GDPR compliance improvement
 - Safer log files for bug reports
@@ -446,21 +431,19 @@ These are long-term improvements that happen incrementally.
 
 1. **Finish PR #2082** - Join meeting dialog (in progress)
 2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
-3. **PII Log Removal Phases 2-3** - Integrate sanitizer + fix high-risk files
-4. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
+3. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
 
 ### Planning for v2.7.4
 
-5. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
-6. **#2110** - Custom notifications improvements (in progress)
-7. **#2112** - Additional feature work (in progress)
-8. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
+4. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
+5. **#2110** - Custom notifications improvements (in progress)
+6. **#2112** - Additional feature work (in progress)
+7. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
 
 ### Future Priorities
 
-9. **PII Log Removal Phase 5** - Verbosity reduction (incremental)
-10. **Logout Indicator** - Parked; resume only if user responds to PR #2033
-11. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
+8. **Logout Indicator** - Parked; resume only if user responds to PR #2033
+9. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
 
 ### Principles
 
