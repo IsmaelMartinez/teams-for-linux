@@ -173,16 +173,8 @@ function getEventHandlers(event) {
 function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
     // Handle notification-related events with broader filtering
-    if (e.context) {
-      // Check for chat and calendar notification events (expanded filtering)
-      if (e.context.entityCommand) {
-        handleNotificationEntityCommand(e.context.entityCommand);
-      }
-
-      // Check for notification-related scenarios
-      if (e.context.scenario || e.context.step) {
-        handleNotificationScenario(e.context);
-      }
+    if (e.context?.entityCommand) {
+      handleNotificationEntityCommand(e.context.entityCommand);
     }
 
     // Original call event handling (keep existing logic)
@@ -212,7 +204,7 @@ function handleNotificationEntityCommand(entityCommand) {
 
   // Detect chat/message notifications
   if (isChatNotification(entityCommand)) {
-    console.debug("[ActivityHub] Chat notification detected:", entityCommand);
+    console.debug("[ActivityHub] Chat notification detected");
     onChatNotification({
       title: options.title || options.senderName || 'New Message',
       body: options.text || options.preview || options.message || '',
@@ -225,7 +217,7 @@ function handleNotificationEntityCommand(entityCommand) {
 
   // Detect calendar/meeting invite notifications
   if (isCalendarNotification(entityCommand)) {
-    console.debug("[ActivityHub] Calendar notification detected:", entityCommand);
+    console.debug("[ActivityHub] Calendar notification detected");
     onCalendarNotification({
       title: options.title || options.subject || 'Meeting Invitation',
       body: options.text || options.organizer || '',
@@ -239,33 +231,13 @@ function handleNotificationEntityCommand(entityCommand) {
 
   // Detect activity notifications (mentions, reactions)
   if (isActivityNotification(entityCommand)) {
-    console.debug("[ActivityHub] Activity notification detected:", entityCommand);
+    console.debug("[ActivityHub] Activity notification detected");
     onActivityNotification({
       title: options.title || 'Teams Activity',
       body: options.text || options.preview || '',
       icon: options.mainImage?.src,
       activityType: options.activityType || options.type
     });
-  }
-}
-
-/**
- * Handle notification scenarios from command context
- */
-function handleNotificationScenario(context) {
-  const scenario = (context.scenario || '').toLowerCase();
-  const step = (context.step || '').toLowerCase();
-
-  // Chat message scenarios
-  if (scenario.includes('message') || scenario.includes('chat') ||
-      step.includes('message') || step.includes('chat-notification')) {
-    console.debug("[ActivityHub] Chat scenario detected:", scenario, step);
-  }
-
-  // Calendar/meeting scenarios
-  if (scenario.includes('calendar') || scenario.includes('meeting-invite') ||
-      step.includes('calendar') || step.includes('meeting-notification')) {
-    console.debug("[ActivityHub] Calendar scenario detected:", scenario, step);
   }
 }
 
