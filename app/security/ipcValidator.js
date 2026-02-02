@@ -80,7 +80,11 @@ const allowedChannels = new Set([
   'graph-api-get-calendar-view',
   'graph-api-create-calendar-event',
   'graph-api-get-mail-messages',
-  'graph-api-run-chat-spikes'
+  'graph-api-run-chat-spikes',
+
+  // Join meeting dialog
+  'join-meeting-submit',
+  'join-meeting-cancel'
 ]);
 
 /**

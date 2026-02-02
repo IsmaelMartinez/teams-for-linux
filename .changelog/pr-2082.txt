@@ -1,0 +1,1 @@
+Replace clipboard monitoring with join meeting dialog - by @IsmaelMartinez (#2082)

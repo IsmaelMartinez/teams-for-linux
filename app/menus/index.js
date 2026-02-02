@@ -14,6 +14,7 @@ const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
+const JoinMeetingDialog = require("../joinMeetingDialog");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -25,6 +26,10 @@ class Menus {
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
+    this.joinMeetingDialog = new JoinMeetingDialog(
+      this.window,
+      this.configGroup.startupConfig.meetupJoinRegEx
+    );
     this.initialize();
   }
 
@@ -154,7 +159,6 @@ class Menus {
   onBeforeQuit() {
     console.debug("before-quit");
     this.allowQuit = true;
-    this.stopClipboardMonitoring();
   }
 
   onClose(event) {
@@ -279,72 +283,15 @@ class Menus {
   }
 
   joinMeeting() {
+    let clipboardText = '';
     try {
-      const clipboardText = clipboard.readText();
-      if (this.isValidTeamsMeetingUrl(clipboardText)) {
-        this.joinMeetingWithUrl(clipboardText);
-        return;
-      }
+      clipboardText = clipboard.readText();
     } catch (error) {
-      console.error('Error checking clipboard:', error);
-    }
-    
-    this.startClipboardMonitoring();
-  }
-
-  startClipboardMonitoring() {
-    if (this.clipboardMonitoring?.interval) {
-      return; // Already monitoring
+      console.error('Error reading clipboard:', error);
     }
 
-    this.clipboardMonitoring = {
-      interval: null,
-      lastUrl: null
-    };
-
-    this.clipboardMonitoring.interval = setInterval(() => {
-      this.checkClipboardForMeetingUrl();
-    }, 1000);
-
-    this.showWaitingForUrlDialog();
-  }
-
-  checkClipboardForMeetingUrl() {
-    try {
-      const clipboardText = clipboard.readText();
-      const isValidUrl = this.isValidTeamsMeetingUrl(clipboardText);
-      
-      if (isValidUrl && clipboardText !== this.clipboardMonitoring.lastUrl) {
-        this.clipboardMonitoring.lastUrl = clipboardText;
-        this.joinMeetingWithUrl(clipboardText);
-        this.stopClipboardMonitoring();
-      }
-    } catch (error) {
-      console.error('Error checking clipboard:', error);
-    }
-  }
-
-  isValidTeamsMeetingUrl(text) {
-    if (typeof text !== 'string') {
-      return false;
-    }
-    const teamsUrlPattern = new RegExp(this.configGroup.startupConfig.meetupJoinRegEx);
-    return teamsUrlPattern.test(text);
-  }
-
-  showWaitingForUrlDialog() {
-    dialog.showMessageBox(this.window, {
-      type: 'info',
-      title: 'Waiting for Teams Meeting URL',
-      message: 'Copy a Teams meeting URL to your clipboard',
-      detail: 'The app is monitoring your clipboard for a valid Teams meeting URL. Once you copy one, it will open automatically.',
-      buttons: ['Cancel'],
-      defaultId: 0,
-      cancelId: 0
-    }).then((response) => {
-      if (response.response === 0) {
-        this.stopClipboardMonitoring();
-      }
+    this.joinMeetingDialog.show(clipboardText, (meetingUrl) => {
+      this.joinMeetingWithUrl(meetingUrl);
     });
   }
 
@@ -356,14 +303,6 @@ class Menus {
     } catch (error) {
       console.error('Error loading meeting URL:', error);
       dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
-    }
-  }
-
-  stopClipboardMonitoring() {
-    if (this.clipboardMonitoring && this.clipboardMonitoring.interval) {
-      clearInterval(this.clipboardMonitoring.interval);
-      this.clipboardMonitoring.interval = null;
-      this.clipboardMonitoring.lastUrl = null;
     }
   }
 

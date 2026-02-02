@@ -74,15 +74,26 @@ test('app launches and redirects to Microsoft login', async () => {
     await mainWindow.waitForLoadState('networkidle', { timeout: 30000 });
 
   } finally {
-    // Force kill the app if it exists
+    // Gracefully close the app if it exists
     if (electronApp) {
       try {
-        electronApp.process().kill('SIGTERM');
-        // Wait a moment for the process to fully terminate
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Use a timeout for close to avoid hanging
+        const closePromise = electronApp.close();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Close timeout')), 5000)
+        );
+        await Promise.race([closePromise, timeoutPromise]);
       } catch (error) {
-        // Process may have already exited, which is fine
+        // Process may have already exited or timed out, force kill
         console.debug('Process cleanup:', error.message);
+        try {
+          const pid = electronApp.process()?.pid;
+          if (pid) {
+            process.kill(pid, 'SIGKILL');
+          }
+        } catch {
+          // Ignore kill errors
+        }
       }
     }
 
