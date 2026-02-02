@@ -141,7 +141,7 @@ function chatNotificationHandler(self) {
 
       // Send to custom notification system via IPC
       self.ipcRenderer.send("notification-show-toast", notificationData);
-      console.debug("[ActivityManager] Chat notification sent to custom system");
+      console.debug("[ActivityManager] Chat notification sent to custom system:", data.title);
     }
   };
 }
@@ -165,7 +165,7 @@ function calendarNotificationHandler(self) {
 
       // Send to custom notification system via IPC
       self.ipcRenderer.send("notification-show-toast", notificationData);
-      console.debug("[ActivityManager] Calendar notification sent to custom system");
+      console.debug("[ActivityManager] Calendar notification sent to custom system:", data.title);
     }
   };
 }
@@ -189,7 +189,7 @@ function activityNotificationHandler(self) {
 
       // Send to custom notification system via IPC
       self.ipcRenderer.send("notification-show-toast", notificationData);
-      console.debug("[ActivityManager] Activity notification sent to custom system");
+      console.debug("[ActivityManager] Activity notification sent to custom system:", data.title);
     }
   };
 }
