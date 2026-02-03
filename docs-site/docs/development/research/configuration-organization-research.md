@@ -1578,15 +1578,15 @@ These features were added with nested configuration from day one:
 
 | Configuration Object | Options | Added In |
 |---------------------|---------|----------|
-| `mqtt` | `enabled`, `brokerUrl`, `username`, `password`, `clientId`, `topicPrefix`, `statusTopic`, `commandTopic`, `statusCheckInterval` | PR #1926, #1931, #1986 |
-| `graphApi` | `enabled` | PR #1958 |
-| `customNotification` | `toastDuration` | PR #1979 |
-| `media` | `microphone.disableAutogain`, `camera.resolution.*`, `camera.autoAdjustAspectRatio.*`, `video.menuEnabled` | Incremental |
-| `screenSharing` | `thumbnail.enabled`, `thumbnail.alwaysOnTop`, `lockInhibitionMethod` | Incremental |
-| `auth` | `intune.enabled`, `intune.user` | Incremental |
-| `cacheManagement` | `enabled`, `maxCacheSizeMB`, `cacheCheckIntervalMs` | Original |
-| `logConfig` | `transports.console.level`, `transports.file.level` | Original |
-| `msTeamsProtocols` | `v1`, `v2` | Original |
+| `mqtt` | `mqtt.enabled`, `mqtt.brokerUrl`, `mqtt.username`, `mqtt.password`, `mqtt.clientId`, `mqtt.topicPrefix`, `mqtt.statusTopic`, `mqtt.commandTopic`, `mqtt.statusCheckInterval` | PR #1926, #1931, #1986 |
+| `graphApi` | `graphApi.enabled` | PR #1958 |
+| `customNotification` | `customNotification.toastDuration` | PR #1979 |
+| `media` | `media.microphone.disableAutogain`, `media.camera.resolution.*`, `media.camera.autoAdjustAspectRatio.*`, `media.video.menuEnabled` | Incremental |
+| `screenSharing` | `screenSharing.thumbnail.enabled`, `screenSharing.thumbnail.alwaysOnTop`, `screenSharing.lockInhibitionMethod` | Incremental |
+| `auth` | `auth.intune.enabled`, `auth.intune.user` | Incremental |
+| `cacheManagement` | `cacheManagement.enabled`, `cacheManagement.maxCacheSizeMB`, `cacheManagement.cacheCheckIntervalMs` | Original |
+| `logConfig` | `logConfig.transports.console.level`, `logConfig.transports.file.level` | Original |
+| `msTeamsProtocols` | `msTeamsProtocols.v1`, `msTeamsProtocols.v2` | Original |
 
 **Legacy Backward Compatibility:**
 
