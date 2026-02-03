@@ -26,13 +26,13 @@ Teams for Linux has **66 active configuration options** managed through a flat y
    - `mqtt.brokerUrl`, `mqtt.username`, `mqtt.password`, `mqtt.commandTopic` only apply when `mqtt.enabled: true`
    - `auth.basic.passwordCommand` only applies when `auth.basic.user` is set
    - `auth.intune.user` only applies when `auth.intune.enabled: true`
-   - `screenSharingThumbnail.alwaysOnTop` only applies when `screenSharingThumbnail.enabled: true`
+   - `screenSharing.thumbnail.alwaysOnTop` only applies when `screenSharing.thumbnail.enabled: true`
    - `idleDetection` check intervals only apply when `idleDetection.enabled: true`
 
    **Impact:** This pattern creates complexity where not all implementations need all options. Future Phase 2 work should include validation to warn users when dependent options are set without their parent enabled.
 
 4. **Structural Inconsistency**: Mix of flat options and nested objects without clear pattern:
-   - Good: `mqtt`, `cacheManagement`, `screenSharingThumbnail`, `customNotification`, `graphApi` (nested)
+   - Good: `mqtt`, `cacheManagement`, `screenSharing`, `media`, `auth`, `customNotification`, `graphApi` (nested)
    - Bad: `customBGServiceBaseUrl`, `customBGServiceConfigFetchInterval` (should be nested)
 
 5. **Naming Issues**: Mix of negative (`disableNotifications`) and positive (`trayIconEnabled`) naming, plus some overly verbose names.
@@ -1557,7 +1557,40 @@ Since this research was completed, several improvements have been implemented:
 - [x] Graph API integration added in PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) with new `graphApi` object config
 - [x] MQTT commands feature implemented in PR [#1986](https://github.com/IsmaelMartinez/teams-for-linux/pull/1986) - bidirectional MQTT support with `commandTopic`
 - [x] Badge count control added with `disableBadgeCount` option in PR [#1994](https://github.com/IsmaelMartinez/teams-for-linux/pull/1994)
-- [ ] Documentation reorganization (Phase 1 remaining task)
+- [x] Documentation reorganization (Issue [#2120](https://github.com/IsmaelMartinez/teams-for-linux/issues/2120))
+
+### Migrated Options (Already Using Nested Structure)
+
+The following flat options have been migrated to nested structures and are now deprecated:
+
+| Deprecated Option | New Nested Option | Status |
+|-------------------|-------------------|--------|
+| `screenSharingThumbnail` | `screenSharing.thumbnail` | ✅ Migrated, deprecated warning active |
+| `screenLockInhibitionMethod` | `screenSharing.lockInhibitionMethod` | ✅ Migrated, deprecated warning active |
+| `disableAutogain` | `media.microphone.disableAutogain` | ✅ Migrated, deprecated warning active |
+| `videoMenu` | `media.video.menuEnabled` | ✅ Migrated, deprecated warning active |
+| `ssoInTuneEnabled` | `auth.intune.enabled` | ✅ Migrated, deprecated warning active |
+| `ssoInTuneAuthUser` | `auth.intune.user` | ✅ Migrated, deprecated warning active |
+
+**New Nested Configuration Objects (Added from the start):**
+
+These features were added with nested configuration from day one:
+
+| Configuration Object | Options | Added In |
+|---------------------|---------|----------|
+| `mqtt` | `enabled`, `brokerUrl`, `username`, `password`, `clientId`, `topicPrefix`, `statusTopic`, `commandTopic`, `statusCheckInterval` | PR #1926, #1931, #1986 |
+| `graphApi` | `enabled` | PR #1958 |
+| `customNotification` | `toastDuration` | PR #1979 |
+| `media` | `microphone.disableAutogain`, `camera.resolution.*`, `camera.autoAdjustAspectRatio.*`, `video.menuEnabled` | Incremental |
+| `screenSharing` | `thumbnail.enabled`, `thumbnail.alwaysOnTop`, `lockInhibitionMethod` | Incremental |
+| `auth` | `intune.enabled`, `intune.user` | Incremental |
+| `cacheManagement` | `enabled`, `maxCacheSizeMB`, `cacheCheckIntervalMs` | Original |
+| `logConfig` | `transports.console.level`, `transports.file.level` | Original |
+| `msTeamsProtocols` | `v1`, `v2` | Original |
+
+**Legacy Backward Compatibility:**
+
+All deprecated flat options continue to work via automatic mapping in the application code. Users are shown deprecation warnings at startup when using old options, guiding them to migrate to the new nested format.
 
 The nested configuration structure will:
 - Make related options easier to discover and configure

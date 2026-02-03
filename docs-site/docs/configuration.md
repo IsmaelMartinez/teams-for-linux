@@ -193,10 +193,32 @@ InTune SSO uses a nested `auth.intune` configuration:
 
 ### Screen Sharing
 
+Screen sharing settings are organized under the `screenSharing` configuration object:
+
+```json
+{
+  "screenSharing": {
+    "thumbnail": {
+      "enabled": true,
+      "alwaysOnTop": true
+    },
+    "lockInhibitionMethod": "Electron"
+  }
+}
+```
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `screenSharingThumbnail` | `object` | `{ enabled: true, alwaysOnTop: true }` | Automatically show thumbnail window when screen sharing |
-| `screenLockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
+| `screenSharing.thumbnail.enabled` | `boolean` | `true` | Automatically show thumbnail window when screen sharing |
+| `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
+| `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
+
+**Legacy Options (Deprecated):**
+
+| Old Option | New Option | Notes |
+|------------|------------|-------|
+| `screenSharingThumbnail` | `screenSharing.thumbnail` | Moved to nested structure |
+| `screenLockInhibitionMethod` | `screenSharing.lockInhibitionMethod` | Moved to nested structure |
 
 ### Media Settings
 
@@ -225,6 +247,13 @@ Media settings are organized under the `media` configuration object with subgrou
   }
 }
 ```
+
+**Legacy Options (Deprecated):**
+
+| Old Option | New Option | Notes |
+|------------|------------|-------|
+| `disableAutogain` | `media.microphone.disableAutogain` | Moved to nested structure |
+| `videoMenu` | `media.video.menuEnabled` | Renamed + moved to nested structure |
 
 > [!NOTE]
 > **Camera resolution overrides:** Using camera resolution override mode can cause laggy or stuttering camera video, resolution drops, or blocking on some systems. If you experience this, try disabling auto brightness adjustment (in your teams camera settings) to reduce or fix the issue. Adjusting GPU-related options (for example `disableGpu` under [Performance & Hardware](#performance--hardware) or [Electron CLI Flags](#electron-cli-flags)) also helps if you would like to retain auto brightness.
@@ -413,28 +442,30 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 #### Professional Audio Setup
 ```json
 {
-  "disableAutogain": true
+  "media": {
+    "microphone": {
+      "disableAutogain": true
+    }
+  }
 }
 ```
 
 > [!NOTE]
-> The `disableAutogain` option prevents Teams from automatically adjusting your microphone volume. This is particularly useful for users with professional audio equipment, external mixers, or specific hardware configurations where manual gain control is preferred.
-
-> [!WARNING]
-> **Deprecated:** The `disableAutogain` option is deprecated. Please use `media.microphone.disableAutogain` instead.
+> The `media.microphone.disableAutogain` option prevents Teams from automatically adjusting your microphone volume. This is particularly useful for users with professional audio equipment, external mixers, or specific hardware configurations where manual gain control is preferred.
 
 #### Video Menu Setup
 ```json
 {
-  "videoMenu": true
+  "media": {
+    "video": {
+      "menuEnabled": true
+    }
+  }
 }
 ```
 
 > [!NOTE]
-> The `videoMenu` option enables a Video menu entry for controlling video elements such as Picture-in-Picture mode for shared screens and toggling video controls.
-
-> [!WARNING]
-> **Deprecated:** The `videoMenu` option is deprecated. Please use `media.video.menuEnabled` instead.
+> The `media.video.menuEnabled` option enables a Video menu entry for controlling video elements such as Picture-in-Picture mode for shared screens and toggling video controls.
 
 #### Custom Notifications Setup
 ```json
@@ -477,8 +508,10 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
 {
   "closeAppOnCross": false,
   "disableNotifications": false,
-  "screenSharingThumbnail": {
-    "enabled": true
+  "screenSharing": {
+    "thumbnail": {
+      "enabled": true
+    }
   },
   "customCSSName": "compactDark",
   "auth": {

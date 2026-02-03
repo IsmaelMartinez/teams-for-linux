@@ -1,0 +1,1 @@
+docs: Update documentation for deprecated config options (#2120) - by @IsmaelMartinez (#2122)
