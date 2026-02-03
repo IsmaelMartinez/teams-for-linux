@@ -172,17 +172,16 @@ function getEventHandlers(event) {
 
 function assignEventHandlers(commandChangeReportingService) {
   commandChangeReportingService.observeChanges().subscribe((e) => {
-    // Handle notification-related events with broader filtering
-    if (e.context?.entityCommand) {
-      handleNotificationEntityCommand(e.context.entityCommand);
-    }
-
-    // Original call event handling (keep existing logic)
+    // Only handle events from type ["CommandStart", "ScenarioMarked"]
+    // and context target ["internal-command-handler", "use-command-reporting-callbacks"]
+    // Other events are navigation/UI events that should not trigger notifications
     if (!["CommandStart", "ScenarioMarked"].includes(e.type) ||
       !["internal-command-handler", "use-command-reporting-callbacks"].includes(e.context.target)) {
       return;
     }
+
     if (e.context.entityCommand) {
+      handleNotificationEntityCommand(e.context.entityCommand);
       handleCallEventEntityCommand(e.context.entityCommand);
     } else {
       handleCallEventStep(e.context.step);
@@ -202,9 +201,25 @@ function handleNotificationEntityCommand(entityCommand) {
     return;
   }
 
+  // DEBUG: Log all entity commands to identify spurious notification triggers
+  console.debug("[ActivityHub] Entity command received:", JSON.stringify({
+    type: entityCommand.type,
+    entityOptionsKeys: Object.keys(options),
+    title: options.title,
+    text: options.text,
+    crossClientScenarioName: options.crossClientScenarioName,
+    isChat: options.isChat,
+    isMessage: options.isMessage,
+    isCalendar: options.isCalendar,
+    isMeetingInvite: options.isMeetingInvite,
+    isMention: options.isMention,
+    isReaction: options.isReaction,
+    optionsType: options.type
+  }));
+
   // Detect chat/message notifications
   if (isChatNotification(entityCommand)) {
-    console.debug("[ActivityHub] Chat notification detected");
+    console.debug("[ActivityHub] Chat notification MATCHED");
     onChatNotification({
       title: options.title || options.senderName || 'New Message',
       body: options.text || options.preview || options.message || '',
@@ -217,7 +232,7 @@ function handleNotificationEntityCommand(entityCommand) {
 
   // Detect calendar/meeting invite notifications
   if (isCalendarNotification(entityCommand)) {
-    console.debug("[ActivityHub] Calendar notification detected");
+    console.debug("[ActivityHub] Calendar notification MATCHED");
     onCalendarNotification({
       title: options.title || options.subject || 'Meeting Invitation',
       body: options.text || options.organizer || '',
@@ -231,7 +246,7 @@ function handleNotificationEntityCommand(entityCommand) {
 
   // Detect activity notifications (mentions, reactions)
   if (isActivityNotification(entityCommand)) {
-    console.debug("[ActivityHub] Activity notification detected");
+    console.debug("[ActivityHub] Activity notification MATCHED");
     onActivityNotification({
       title: options.title || 'Teams Activity',
       body: options.text || options.preview || '',

@@ -60,9 +60,10 @@ class CustomNotificationManager {
       }
 
       // Focus main window
-      if (this.#mainWindow && !this.#mainWindow.isDestroyed()) {
-        this.#mainWindow.show();
-        this.#mainWindow.focus();
+      const window = this.#mainWindow?.getWindow?.() || this.#mainWindow;
+      if (window && !window.isDestroyed()) {
+        window.show();
+        window.focus();
       }
     } catch (error) {
       console.error('[CustomNotificationManager] Error handling toast click:', error);
