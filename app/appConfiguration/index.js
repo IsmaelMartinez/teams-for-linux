@@ -1,4 +1,4 @@
-const Store = require("electron-store");
+const { default: Store } = require("electron-store");
 
 // WeakMap-based private fields pattern provides true privacy without relying on newer
 // JavaScript private field syntax (#property). This ensures compatibility with older
