@@ -1,0 +1,1 @@
+Add last updated timestamp to release notes comment - by @IsmaelMartinez (#2125)
