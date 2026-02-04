@@ -206,6 +206,9 @@ function createElectronNotification(options) {
 }
 
 function createCustomNotification(title, options) {
+  // DEBUG: Confirm custom notification path is reached
+  console.debug("[createCustomNotification] Creating toast for:", title);
+
   // Send notification data to main process for custom toast notification
   const notificationData = {
     id: crypto.randomUUID(),
@@ -235,8 +238,27 @@ function createCustomNotification(title, options) {
     console.error("Failed to send custom notification:", e);
   }
 
-  // Return stub object
-  return { onclick: null, onclose: null, onerror: null };
+  // Return Notification-like stub so Teams can manage lifecycle without errors
+  const stub = {
+    onclick: null,
+    onclose: null,
+    onerror: null,
+    onshow: null,
+    close() { if (this.onclose) this.onclose(); },
+    addEventListener(type, listener) {
+      if (type === 'click') this.onclick = listener;
+      else if (type === 'close') this.onclose = listener;
+      else if (type === 'show') this.onshow = listener;
+      else if (type === 'error') this.onerror = listener;
+    },
+    removeEventListener() {},
+    dispatchEvent() { return true; },
+  };
+
+  // Fire the show event asynchronously like a real Notification
+  setTimeout(() => { if (stub.onshow) stub.onshow(); }, 0);
+
+  return stub;
 }
 
 // Override window.Notification immediately before Teams loads
@@ -249,6 +271,14 @@ function createCustomNotification(title, options) {
 
   // Factory function that creates notification objects (avoids "return in constructor" issue)
   function CustomNotification(title, options) {
+    // DEBUG: Log all Notification API calls to trace which notifications Teams fires
+    console.debug("[CustomNotification] Called with:", JSON.stringify({
+      title: title,
+      body: options?.body,
+      type: options?.type,
+      method: notificationConfig?.notificationMethod || "web (config not loaded)"
+    }));
+
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
       // Return dummy object to avoid Teams errors

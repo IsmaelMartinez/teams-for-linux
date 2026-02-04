@@ -10,6 +10,13 @@ exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
     "#download-mobile-app-button, #download-app-button, #get-app-button { display:none; }"
   );
   content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
+
+  // Hide Teams native notification toasts when using custom notification system
+  if (config.notificationMethod === "custom") {
+    content.insertCSS(
+      "[data-testid='notification-wrapper'] { display: none !important; }"
+    );
+  }
 };
 
 exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config) {

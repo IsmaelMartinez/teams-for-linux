@@ -7,6 +7,7 @@ class NotificationToast {
   #positioner;
   #autoCloseTimer;
   #toastDuration;
+  #onClosedCallback;
 
   constructor(data, toastDuration = 5000) {
     this.#toastDuration = toastDuration;
@@ -41,7 +42,14 @@ class NotificationToast {
 
     this.#window.on('closed', () => {
       this.#clearAutoClose();
+      if (this.#onClosedCallback) {
+        this.#onClosedCallback();
+      }
     });
+  }
+
+  onClosed(callback) {
+    this.#onClosedCallback = callback;
   }
 
   getWebContents() {

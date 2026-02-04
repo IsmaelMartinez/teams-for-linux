@@ -176,6 +176,20 @@ When adding or modifying IPC channels, you must:
 3. Run `npm run generate-ipc-docs` to update the auto-generated documentation
 4. The auto-generated docs in `docs-site/docs/development/ipc-api-generated.md` should be committed with your changes
 
+## Runtime Gotchas
+
+### mainAppWindow Is a Module Wrapper
+
+`mainAppWindow` (from `app/mainAppWindow/`) is NOT an Electron BrowserWindow. Call `mainAppWindow.getWindow()` to get the actual BrowserWindow before using methods like `isDestroyed()`, `show()`, `focus()`.
+
+### commandChangeReportingService Event Filtering
+
+When subscribing to `commandChangeReportingService.observeChanges()`, ALWAYS filter events to `["CommandStart", "ScenarioMarked"]` types with targets `["internal-command-handler", "use-command-reporting-callbacks"]`. Without this filter, navigation events (switching chats, opening calendar) will be misidentified as notifications. Do NOT create additional subscribers to this service — use `activityHub.js` as the single subscription point.
+
+### Custom Notification System Architecture
+
+Notification routing flows: `activityHub.js` (event detection) → `activityManager.js` (IPC routing) → `CustomNotificationManager` (toast display). The `window.Notification` override in `preload.js` handles browser-API notifications. Do NOT add separate observers/subscribers to Teams internal services — route everything through `activityHub.js` to avoid duplicate notifications.
+
 ## Critical Module Initialization Requirements
 
 ### Modules Requiring IPC Initialization (Issue #1902)
