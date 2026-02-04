@@ -22,8 +22,6 @@ class CustomNotificationManager {
   }
 
   #handleShowToast(event, data) {
-    console.debug(`[CustomNotificationManager] IPC received, data: ${JSON.stringify({ title: data?.title, body: data?.body, type: data?.type })}`);
-
     if (!data || !data.title) {
       console.warn('[CustomNotificationManager] Invalid notification data, missing title');
       return;
@@ -40,11 +38,10 @@ class CustomNotificationManager {
       // Clean up tracking when toast window closes (handles both manual close and auto-close)
       toast.onClosed(() => {
         this.#activeToasts.delete(toast);
-        console.debug(`[CustomNotificationManager] Toast closed, active count: ${this.#activeToasts.size}`);
       });
 
       toast.show();
-      console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}", active count: ${this.#activeToasts.size}`);
+      console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}"`);
     } catch (error) {
       console.error('[CustomNotificationManager] Error displaying toast:', error);
     }

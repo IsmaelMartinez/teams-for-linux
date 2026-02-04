@@ -201,22 +201,6 @@ function handleNotificationEntityCommand(entityCommand) {
     return;
   }
 
-  // DEBUG: Log all entity commands to identify spurious notification triggers
-  console.debug("[ActivityHub] Entity command received:", JSON.stringify({
-    type: entityCommand.type,
-    entityOptionsKeys: Object.keys(options),
-    title: options.title,
-    text: options.text,
-    crossClientScenarioName: options.crossClientScenarioName,
-    isChat: options.isChat,
-    isMessage: options.isMessage,
-    isCalendar: options.isCalendar,
-    isMeetingInvite: options.isMeetingInvite,
-    isMention: options.isMention,
-    isReaction: options.isReaction,
-    optionsType: options.type
-  }));
-
   // Detect chat/message notifications
   if (isChatNotification(entityCommand)) {
     console.debug("[ActivityHub] Chat notification MATCHED");

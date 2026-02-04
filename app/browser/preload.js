@@ -206,9 +206,6 @@ function createElectronNotification(options) {
 }
 
 function createCustomNotification(title, options) {
-  // DEBUG: Confirm custom notification path is reached
-  console.debug("[createCustomNotification] Creating toast for:", title);
-
   // Send notification data to main process for custom toast notification
   const notificationData = {
     id: crypto.randomUUID(),
@@ -271,14 +268,6 @@ function createCustomNotification(title, options) {
 
   // Factory function that creates notification objects (avoids "return in constructor" issue)
   function CustomNotification(title, options) {
-    // DEBUG: Log all Notification API calls to trace which notifications Teams fires
-    console.debug("[CustomNotification] Called with:", JSON.stringify({
-      title: title,
-      body: options?.body,
-      type: options?.type,
-      method: notificationConfig?.notificationMethod || "web (config not loaded)"
-    }));
-
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
       // Return dummy object to avoid Teams errors
