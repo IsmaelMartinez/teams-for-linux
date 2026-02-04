@@ -390,12 +390,10 @@ async function handleAppReady() {
 
     // Register keyboard shortcut for Quick Chat
     // Default is Ctrl+Shift+P (P for People) - Ctrl+Shift+C conflicts with Teams calendar
-    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
-    if (config.quickChat?.enabled !== false) {
+    if (quickChatManager.isEnabled()) {
+      const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
       const registered = globalShortcut.register(quickChatShortcut, () => {
-        if (quickChatManager.isEnabled()) {
-          quickChatManager.toggle();
-        }
+        quickChatManager.toggle();
       });
       if (registered) {
         console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);

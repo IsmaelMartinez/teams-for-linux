@@ -230,6 +230,14 @@
         let searchTimeout = null;
         let currentContacts = [];
 
+        // Extract email from a contact object (People API response)
+        function getContactEmail(contact) {
+            if (!contact) return '';
+            return contact.scoredEmailAddresses?.[0]?.address ||
+                   contact.userPrincipalName ||
+                   contact.emailAddresses?.[0]?.address || '';
+        }
+
         // Get initials from name
         function getInitials(name) {
             if (!name) return '?';
@@ -278,9 +286,7 @@
                 li.className = 'contact-item';
                 li.tabIndex = 0;
 
-                const email = contact.scoredEmailAddresses?.[0]?.address ||
-                              contact.userPrincipalName ||
-                              contact.emailAddresses?.[0]?.address || '';
+                const email = getContactEmail(contact);
 
                 li.innerHTML = `
                     <div class="contact-avatar">${getInitials(contact.displayName)}</div>
@@ -378,8 +384,7 @@
                 }
             } else if (e.key === 'Enter' && currentContacts.length > 0) {
                 e.preventDefault();
-                const email = currentContacts[0].scoredEmailAddresses?.[0]?.address ||
-                              currentContacts[0].userPrincipalName || '';
+                const email = getContactEmail(currentContacts[0]);
                 if (email) {
                     openChat(email);
                 }

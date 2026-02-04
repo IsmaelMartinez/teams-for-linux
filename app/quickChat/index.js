@@ -60,13 +60,10 @@ class QuickChatManager {
       // Navigate main window to chat with user via deep link
       // Uses the format: {origin}/l/chat/0/0?users={email}
       if (this.#mainWindow && !this.#mainWindow.isDestroyed()) {
-        this.#mainWindow.webContents.executeJavaScript(`
-          (function() {
-            const email = ${JSON.stringify(email)};
-            const chatUrl = window.location.origin + '/l/chat/0/0?users=' + encodeURIComponent(email);
-            window.location.href = chatUrl;
-          })();
-        `);
+        const currentUrl = this.#mainWindow.webContents.getURL();
+        const origin = new URL(currentUrl).origin;
+        const chatUrl = `${origin}/l/chat/0/0?users=${encodeURIComponent(email)}`;
+        this.#mainWindow.webContents.loadURL(chatUrl);
         console.debug('[QuickChat] Navigating to chat');
       }
     } catch (error) {
