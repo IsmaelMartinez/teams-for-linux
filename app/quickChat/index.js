@@ -27,27 +27,15 @@ class QuickChatManager {
     this.#modal = new QuickChatModal(this.#mainWindow);
 
     // Show the Quick Chat modal
-    ipcMain.on('quick-chat:show', this.#handleShow.bind(this));
+    ipcMain.on('quick-chat:show', () => this.show());
 
     // Hide the Quick Chat modal
-    ipcMain.on('quick-chat:hide', this.#handleHide.bind(this));
+    ipcMain.on('quick-chat:hide', () => this.hide());
 
     // Open chat with a user via deep link
     ipcMain.on('quick-chat:open-chat', this.#handleOpenChat.bind(this));
 
     console.info('[QuickChat] Initialized');
-  }
-
-  #handleShow() {
-    if (this.#modal) {
-      this.#modal.show();
-    }
-  }
-
-  #handleHide() {
-    if (this.#modal) {
-      this.#modal.hide();
-    }
   }
 
   #handleOpenChat(_event, email) {

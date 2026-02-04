@@ -236,6 +236,70 @@ function onAppTerminated(signal) {
   }
 }
 
+function initializeMqtt() {
+  mqttClient = new MQTTClient(config);
+
+  async function handleGetCalendarCommand({ startDate, endDate }) {
+    if (!startDate || !endDate) {
+      console.error('[MQTT] get-calendar requires startDate and endDate');
+      return;
+    }
+
+    if (Number.isNaN(Date.parse(startDate)) || Number.isNaN(Date.parse(endDate))) {
+      console.error('[MQTT] get-calendar requires startDate and endDate in valid ISO 8601 format');
+      return;
+    }
+
+    if (!graphApiClient) {
+      console.error('[MQTT] get-calendar failed: Graph API client not initialized');
+      return;
+    }
+
+    console.info(`[MQTT] Fetching calendar events from ${startDate} to ${endDate}`);
+
+    try {
+      const result = await graphApiClient.getCalendarView(startDate, endDate);
+
+      if (result.success) {
+        await mqttClient.publishToTopic('calendar', result);
+        console.info('[MQTT] Calendar data published to teams/calendar topic');
+      } else {
+        console.error('[MQTT] Failed to get calendar:', result.error);
+      }
+    } catch (error) {
+      console.error('[MQTT] Error fetching calendar:', error);
+    }
+  }
+
+  function handleShortcutCommand({ action, shortcut }) {
+    if (!shortcut) return;
+
+    const window = mainAppWindow.getWindow();
+    if (window && !window.isDestroyed()) {
+      sendKeyboardEventToWindow(window, shortcut);
+      console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
+    } else {
+      console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
+    }
+  }
+
+  async function handleMqttCommand(command) {
+    const { action } = command;
+
+    if (action === 'get-calendar') {
+      await handleGetCalendarCommand(command);
+    } else {
+      handleShortcutCommand(command);
+    }
+  }
+
+  mqttClient.on('command', handleMqttCommand);
+  mqttClient.initialize();
+
+  mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
+  mqttMediaStatusService.initialize();
+}
+
 async function handleAppReady() {
   // check for configuration errors
   if (config.error) {
@@ -281,67 +345,7 @@ async function handleAppReady() {
 
   // Initialize MQTT client if enabled
   if (config.mqtt?.enabled) {
-    mqttClient = new MQTTClient(config);
-
-    async function handleGetCalendarCommand({ startDate, endDate }) {
-      if (!startDate || !endDate) {
-        console.error('[MQTT] get-calendar requires startDate and endDate');
-        return;
-      }
-
-      if (Number.isNaN(Date.parse(startDate)) || Number.isNaN(Date.parse(endDate))) {
-        console.error('[MQTT] get-calendar requires startDate and endDate in valid ISO 8601 format');
-        return;
-      }
-
-      if (!graphApiClient) {
-        console.error('[MQTT] get-calendar failed: Graph API client not initialized');
-        return;
-      }
-
-      console.info(`[MQTT] Fetching calendar events from ${startDate} to ${endDate}`);
-
-      try {
-        const result = await graphApiClient.getCalendarView(startDate, endDate);
-
-        if (result.success) {
-          await mqttClient.publishToTopic('calendar', result);
-          console.info('[MQTT] Calendar data published to teams/calendar topic');
-        } else {
-          console.error('[MQTT] Failed to get calendar:', result.error);
-        }
-      } catch (error) {
-        console.error('[MQTT] Error fetching calendar:', error);
-      }
-    }
-
-    function handleShortcutCommand({ action, shortcut }) {
-      if (!shortcut) return;
-
-      const window = mainAppWindow.getWindow();
-      if (window && !window.isDestroyed()) {
-        sendKeyboardEventToWindow(window, shortcut);
-        console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
-      } else {
-        console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
-      }
-    }
-
-    async function handleMqttCommand(command) {
-      const { action } = command;
-
-      if (action === 'get-calendar') {
-        await handleGetCalendarCommand(command);
-      } else {
-        handleShortcutCommand(command);
-      }
-    }
-
-    mqttClient.on('command', handleMqttCommand);
-    mqttClient.initialize();
-
-    mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
-    mqttMediaStatusService.initialize();
+    initializeMqtt();
   }
 
   // Load menu-toggleable settings from persistent store

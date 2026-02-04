@@ -11,11 +11,8 @@ const Positioner = require('electron-positioner');
 class QuickChatModal {
   #window;
   #positioner;
-  #mainWindow;
 
   constructor(mainWindow) {
-    this.#mainWindow = mainWindow;
-
     this.#window = new BrowserWindow({
       parent: mainWindow,
       modal: false,
