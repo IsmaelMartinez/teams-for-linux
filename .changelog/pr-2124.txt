@@ -1,1 +1,1 @@
-docs: Add electron-store upgrade research and implementation plan - by @IsmaelMartinez (#2124)
+docs: Upgrade electron-store to 11.0.2 - by @IsmaelMartinez (#2124)
