@@ -1,0 +1,1 @@
+Fix Teams icon registration by expanding CSP CDN domain allowlist - by @IsmaelMartinez (#2123)
