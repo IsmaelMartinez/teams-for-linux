@@ -6,12 +6,7 @@ contextBridge.exposeInMainWorld('quickChatApi', {
     return ipcRenderer.invoke('graph-api-search-people', query, { top: 10 });
   },
 
-  // Open chat with a user via deep link
-  openChat: (email) => {
-    ipcRenderer.send('quick-chat:open-chat', email);
-  },
-
-  // Send a chat message to a user via IC3 chat service
+  // Send a chat message to a user via Graph API
   sendMessage: (contactInfo, content) => {
     return ipcRenderer.invoke('graph-api-send-chat-message', contactInfo, content);
   },

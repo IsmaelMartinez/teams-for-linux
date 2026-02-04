@@ -5,7 +5,7 @@ const QuickChatModal = require('./QuickChatModal');
  * Quick Chat Manager
  *
  * Manages the Quick Chat modal lifecycle and coordinates with the main window.
- * Provides quick access to chat contacts using People API and deep link navigation.
+ * Provides quick access to chat contacts using People API and inline messaging via Graph API.
  */
 class QuickChatManager {
   #mainWindow;
@@ -32,31 +32,7 @@ class QuickChatManager {
     // Hide the Quick Chat modal
     ipcMain.on('quick-chat:hide', () => this.hide());
 
-    // Open chat with a user via deep link
-    ipcMain.on('quick-chat:open-chat', this.#handleOpenChat.bind(this));
-
     console.info('[QuickChat] Initialized');
-  }
-
-  #handleOpenChat(_event, email) {
-    if (!email) {
-      console.warn('[QuickChat] No email provided for chat navigation');
-      return;
-    }
-
-    try {
-      // Navigate main window to chat with user via deep link
-      // Uses the format: {origin}/l/chat/0/0?users={email}
-      if (this.#mainWindow && !this.#mainWindow.isDestroyed()) {
-        const currentUrl = this.#mainWindow.webContents.getURL();
-        const origin = new URL(currentUrl).origin;
-        const chatUrl = `${origin}/l/chat/0/0?users=${encodeURIComponent(email)}`;
-        this.#mainWindow.webContents.loadURL(chatUrl);
-        console.debug('[QuickChat] Navigating to chat');
-      }
-    } catch (error) {
-      console.error('[QuickChat] Error navigating to chat:', error);
-    }
   }
 
   /**

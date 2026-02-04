@@ -371,7 +371,7 @@ All topics use retained messages by default, ensuring subscribers receive the la
 ```
 
 > [!NOTE]
-> Quick Chat requires Graph API to be enabled for contact search functionality. The modal allows you to quickly search for contacts and open a chat with them. The keyboard shortcut uses Electron accelerator format.
+> Quick Chat requires Graph API to be enabled (`graphApi.enabled: true`) for contact search and inline messaging. The modal allows you to search for contacts, click to compose a message, and send it directly without leaving your current context. The keyboard shortcut uses Electron accelerator format.
 
 ### Performance & Hardware
 

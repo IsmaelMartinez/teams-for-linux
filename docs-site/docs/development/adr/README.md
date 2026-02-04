@@ -37,6 +37,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Accepted | 2026-01-25 | v2.7.1 |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
+| [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -130,12 +131,13 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | Rejected multi-window due to Teams architecture constraints |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | Use People API + Deep Links for quick chat access after Chat API was blocked |
+| [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)
-- Deep links navigate Teams to chat without inline messaging
+- Inline message sending via Graph API ChatMessage.Send scope
+- Chat resolution via Teams entityCommanding + DOM scanning + member verification
 - Keyboard shortcut toggles quick chat modal
-- Alternative solution after multiple windows was rejected
 
 ### Distribution & Packaging
 
@@ -311,8 +313,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 14
-- **Implemented**: 6
+- **Total ADRs**: 15
+- **Implemented**: 7
 - **Accepted**: 3
 - **Proposed**: 1
 - **Rejected**: 4

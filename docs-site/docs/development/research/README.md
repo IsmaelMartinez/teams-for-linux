@@ -82,6 +82,7 @@ The following research documents have been archived as their features are fully 
 | Feature | Implementation Date | Notes |
 |---------|---------------------|-------|
 | PII Log Sanitization | 2026-02-01 | Auto-sanitizes all logs via electron-log hook - See [ADR 013](../adr/013-pii-log-sanitization.md) |
+| Quick Chat Inline Messaging | 2026-02-04 | Hybrid Teams commanding + Graph API for inline chat - See [ADR 015](../adr/015-quick-chat-inline-messaging.md) |
 | MQTT Commands | 2025-11-25 | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
 | Calendar Data Export | 2025-11-29 | MQTT `get-calendar` command |
 | useSystemPicker | 2025-11-24 | Rejected - See [ADR 008](../adr/008-usesystempicker-electron-38.md) |

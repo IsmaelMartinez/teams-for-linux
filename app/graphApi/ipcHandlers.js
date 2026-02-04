@@ -46,7 +46,7 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.searchPeople(query, options);
   });
 
-  // Send a chat message to a user via IC3 chat service
+  // Send a chat message to a user via Graph API
   ipcMain.handle('graph-api-send-chat-message', async (_event, contactInfo, content) => {
     if (!graphApiClient) return notEnabled;
     if (!contactInfo || typeof contactInfo.userId !== 'string' || !contactInfo.userId.trim()) {

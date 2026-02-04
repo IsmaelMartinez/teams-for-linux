@@ -89,8 +89,7 @@ const allowedChannels = new Set([
 
   // Quick Chat modal
   'quick-chat:show',
-  'quick-chat:hide',
-  'quick-chat:open-chat'
+  'quick-chat:hide'
 ]);
 
 /**

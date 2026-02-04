@@ -7,12 +7,7 @@ class GraphApiClient {
     this.baseUrl = 'https://graph.microsoft.com/v1.0';
     this.currentToken = null;
     this.tokenExpiry = null;
-    this.ic3Token = null;
-    this.ic3TokenExpiry = null;
     this.cachedSenderInfo = null;
-    // TODO: Make region dynamic via discover service (currently hardcoded for EU users)
-    this.chatServiceRegion = 'emea';
-    this.chatServiceBaseUrl = `https://teams.cloud.microsoft/api/chatsvc/${this.chatServiceRegion}/v1`;
 
     logger.info('[GRAPH_API] GraphApiClient initialized', {
       enabled: this.enabled,
@@ -287,62 +282,6 @@ class GraphApiClient {
     const endpoint = queryString ? `/me/people?${queryString}` : '/me/people';
 
     return await this.makeRequest(endpoint);
-  }
-
-  /** Acquire an IC3 chat service token (separate from Graph API token) */
-  async acquireIc3Token(forceRefresh = false) {
-    try {
-      if (!this.mainWindow || !this.mainWindow.webContents) {
-        logger.warn('[GRAPH_API] Main window not initialized');
-        return { success: false, error: 'Main window not initialized' };
-      }
-
-      if (!forceRefresh && this.ic3Token && this.ic3TokenExpiry) {
-        const now = Date.now();
-        const expiryTime = new Date(this.ic3TokenExpiry).getTime();
-        const timeUntilExpiry = expiryTime - now;
-
-        if (timeUntilExpiry > 5 * 60 * 1000) {
-          logger.debug('[GRAPH_API] Using cached IC3 token', {
-            timeUntilExpiry: Math.floor(timeUntilExpiry / 1000) + 's'
-          });
-          return {
-            success: true,
-            token: this.ic3Token,
-            fromCache: true,
-            expiry: this.ic3TokenExpiry
-          };
-        }
-      }
-
-      const result = await this.mainWindow.webContents.executeJavaScript(`
-        (async () => {
-          if (window.teamsForLinuxReactHandler && typeof window.teamsForLinuxReactHandler.acquireToken === 'function') {
-            return await window.teamsForLinuxReactHandler.acquireToken('https://ic3.teams.office.com', {
-              forceRenew: ${forceRefresh}
-            });
-          } else {
-            return { success: false, error: 'ReactHandler not available' };
-          }
-        })()
-      `);
-
-      if (result && result.success && result.token) {
-        this.ic3Token = result.token;
-        this.ic3TokenExpiry = result.expiry;
-        logger.debug('[GRAPH_API] IC3 token acquired successfully', {
-          fromCache: result.fromCache,
-          expiry: result.expiry
-        });
-        return result;
-      } else {
-        logger.warn('[GRAPH_API] IC3 token acquisition failed', result);
-        return result || { success: false, error: 'Unknown error' };
-      }
-    } catch (error) {
-      logger.error('[GRAPH_API] IC3 token acquisition error:', error);
-      return { success: false, error: error.message || error.toString() };
-    }
   }
 
   /** Resolve or create a 1:1 chat with a user via Teams internal services */
