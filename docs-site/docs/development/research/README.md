@@ -81,7 +81,6 @@ The following research documents have been archived as their features are fully 
 
 | Feature | Implementation Date | Notes |
 |---------|---------------------|-------|
-| [Electron-Store Upgrade](electron-store-upgrade-research.md) | 2026-02-04 | Upgraded 8.2.0 to 11.0.2 via Node.js 22 `require(esm)` support |
 | PII Log Sanitization | 2026-02-01 | Auto-sanitizes all logs via electron-log hook - See [ADR 013](../adr/013-pii-log-sanitization.md) |
 | MQTT Commands | 2025-11-25 | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
 | Calendar Data Export | 2025-11-29 | MQTT `get-calendar` command |
