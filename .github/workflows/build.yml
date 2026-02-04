@@ -455,7 +455,12 @@ jobs:
 
             body += '---\n\n';
             body += `📝 **Note:** Snap packages (.snap) are built in a [separate workflow](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/snap.yml)\n\n`;
-            body += `[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            body += `[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n\n`;
+
+            // Add last updated timestamp
+            const now = new Date();
+            const updateTime = now.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+            body += `🕐 **Last updated:** ${updateTime}`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
