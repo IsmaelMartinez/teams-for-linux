@@ -16,6 +16,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import readline from 'node:readline';
 import xml2js from 'xml2js';
+import { generateReleaseNotes, formatMarkdown } from './generateReleaseNotes.mjs';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -170,17 +171,66 @@ async function main() {
 
   // 7. Summary
   console.log('\n✅ Release v' + newVersion + ' prepared!');
-  console.log('\n📝 Changes:');
+  console.log('\n📝 File Changes:');
   console.log('   • package.json → ' + newVersion);
   console.log('   • package-lock.json → ' + newVersion);
   console.log('   • appdata.xml → new release entry');
   console.log('   • .changelog/ → ' + files.length + ' files deleted');
-  console.log('\n📋 Next steps:');
+
+  // Generate enhanced release notes summary
+  console.log('\n' + '═'.repeat(60));
+  console.log('📋 RELEASE NOTES PREVIEW');
+  console.log('═'.repeat(60) + '\n');
+
+  // Categorize entries for display
+  const categories = {
+    feat: { label: '🚀 New Features', entries: [] },
+    fix: { label: '🐛 Bug Fixes', entries: [] },
+    docs: { label: '📚 Documentation', entries: [] },
+    deps: { label: '📦 Dependencies', entries: [] },
+    other: { label: '🔧 Other Changes', entries: [] }
+  };
+
+  for (const entry of entries) {
+    const lower = entry.toLowerCase();
+    if (lower.startsWith('feat') || lower.includes('add ') || lower.includes('implement')) {
+      categories.feat.entries.push(entry);
+    } else if (lower.startsWith('fix') || lower.includes('fix ')) {
+      categories.fix.entries.push(entry);
+    } else if (lower.startsWith('docs') || lower.includes('documentation')) {
+      categories.docs.entries.push(entry);
+    } else if (lower.includes('bump') || lower.includes('upgrade') || lower.includes('deps')) {
+      categories.deps.entries.push(entry);
+    } else {
+      categories.other.entries.push(entry);
+    }
+  }
+
+  // Display categorized entries
+  for (const [, cat] of Object.entries(categories)) {
+    if (cat.entries.length > 0) {
+      console.log(cat.label);
+      for (const entry of cat.entries) {
+        console.log(`   • ${entry}`);
+      }
+      console.log('');
+    }
+  }
+
+  // Show documentation links hint
+  console.log('📖 Documentation Links:');
+  console.log('   • Configuration: https://ismaelmartinez.github.io/teams-for-linux/configuration');
+  console.log('   • Troubleshooting: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting');
+  console.log('');
+
+  console.log('═'.repeat(60) + '\n');
+
+  console.log('📋 Next steps:');
   console.log(`   git checkout -b release/v${newVersion}`);
   console.log(`   git add .`);
   console.log(`   git commit -m "chore: release v${newVersion}"`);
   console.log(`   git push -u origin release/v${newVersion}`);
-  console.log(`   gh pr create --title "Release v${newVersion}" --body "Release v${newVersion}"`);
+  console.log(`   gh pr create --title "Release v${newVersion}" --body-file <(npm run generate-release-notes ${newVersion})`);
 
   rl.close();
 }
