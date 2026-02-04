@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - Ready for Implementation
 
+- **[Electron-Store Upgrade Research](electron-store-upgrade-research.md)** - Upgrade electron-store from 8.2.0 to 11.0.2
+  - Node.js 22 `require(esm)` eliminates the ESM migration barrier
+  - One-line code change + version bump is all that's needed
+  - **Status:** Research complete, ready to implement
+
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
   - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
   - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
