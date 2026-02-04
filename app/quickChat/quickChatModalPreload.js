@@ -11,6 +11,11 @@ contextBridge.exposeInMainWorld('quickChatApi', {
     ipcRenderer.send('quick-chat:open-chat', email);
   },
 
+  // Send a chat message to a user via IC3 chat service
+  sendMessage: (contactInfo, content) => {
+    return ipcRenderer.invoke('graph-api-send-chat-message', contactInfo, content);
+  },
+
   // Close the modal
   close: () => {
     ipcRenderer.send('quick-chat:hide');

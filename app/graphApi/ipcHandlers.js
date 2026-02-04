@@ -46,8 +46,20 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.searchPeople(query, options);
   });
 
+  // Send a chat message to a user via IC3 chat service
+  ipcMain.handle('graph-api-send-chat-message', async (_event, contactInfo, content) => {
+    if (!graphApiClient) return notEnabled;
+    if (!contactInfo || typeof contactInfo.userId !== 'string' || !contactInfo.userId.trim()) {
+      return { success: false, error: 'Invalid contact info: userId required' };
+    }
+    if (typeof content !== 'string' || !content.trim()) {
+      return { success: false, error: 'Message content cannot be empty' };
+    }
+    return await graphApiClient.sendChatMessageToUser(contactInfo, content.trim());
+  });
+
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: 6,
+    channels: 7,
     enabled: !!graphApiClient
   });
 }

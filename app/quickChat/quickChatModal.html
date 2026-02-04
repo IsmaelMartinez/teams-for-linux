@@ -185,6 +185,136 @@
             font-family: inherit;
             font-size: 10px;
         }
+
+        .compose-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .compose-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compose-back-btn {
+            background: none;
+            border: none;
+            color: #AAAAAA;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+        .compose-back-btn:hover {
+            background: #3a3a3a;
+            color: #FFFFFF;
+        }
+
+        .compose-recipient {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .compose-recipient-name {
+            font-size: 14px;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compose-recipient-email {
+            font-size: 11px;
+            color: #888888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .compose-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 16px;
+            gap: 10px;
+        }
+
+        .compose-input {
+            flex: 1;
+            width: 100%;
+            padding: 10px 12px;
+            background: #3a3a3a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .compose-input:focus {
+            border-color: #6264a7;
+            box-shadow: 0 0 0 2px rgba(98, 100, 167, 0.3);
+        }
+
+        .compose-input::placeholder {
+            color: #888888;
+        }
+
+        .compose-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .compose-status {
+            font-size: 12px;
+            color: #888888;
+            flex: 1;
+        }
+
+        .compose-status.success {
+            color: #81c784;
+        }
+
+        .compose-status.error {
+            color: #e57373;
+        }
+
+        .compose-send-btn {
+            padding: 8px 20px;
+            background: #6264a7;
+            border: none;
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .compose-send-btn:hover {
+            background: #7577b5;
+        }
+
+        .compose-send-btn:active {
+            background: #5254a0;
+        }
+
+        .compose-send-btn:disabled {
+            background: #444444;
+            color: #888888;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -213,6 +343,28 @@
         </div>
         <ul id="contacts" class="contact-list" style="display: none;"></ul>
     </main>
+
+    <div id="compose-view" class="compose-view">
+        <div class="compose-header">
+            <button id="compose-back" class="compose-back-btn" title="Back to search">&larr;</button>
+            <div class="compose-recipient">
+                <div id="compose-name" class="compose-recipient-name"></div>
+                <div id="compose-email" class="compose-recipient-email"></div>
+            </div>
+        </div>
+        <div class="compose-body">
+            <textarea
+                id="compose-input"
+                class="compose-input"
+                placeholder="Type a message..."
+                rows="4"
+            ></textarea>
+            <div class="compose-footer">
+                <span id="compose-status" class="compose-status"></span>
+                <button id="compose-send" class="compose-send-btn">Send</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <img src="../assets/icons/icon-monochrome-light-16x16.png" alt="logo">
@@ -297,10 +449,12 @@
                     </div>
                 `;
 
-                li.addEventListener('click', () => openChat(email));
+                const displayName = contact.displayName || 'Unknown';
+                const contactId = contact.id;
+                li.addEventListener('click', () => openChat(email, displayName, contactId));
                 li.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
-                        openChat(email);
+                        openChat(email, displayName, contactId);
                     }
                 });
 
@@ -319,13 +473,95 @@
             return div.innerHTML;
         }
 
-        function openChat(email) {
+        // Compose view elements
+        const composeView = document.getElementById('compose-view');
+        const composeName = document.getElementById('compose-name');
+        const composeEmail = document.getElementById('compose-email');
+        const composeInput = document.getElementById('compose-input');
+        const composeStatus = document.getElementById('compose-status');
+        const composeSendBtn = document.getElementById('compose-send');
+        const composeBackBtn = document.getElementById('compose-back');
+        const searchView = document.querySelector('header');
+        const mainView = document.querySelector('main');
+        const footerView = document.querySelector('footer');
+
+        let selectedContact = null;
+
+        function showComposeView(name, email, userId) {
+            selectedContact = { name, email, userId };
+            composeName.textContent = name || email;
+            composeEmail.textContent = email;
+            composeInput.value = '';
+            composeStatus.textContent = '';
+            composeStatus.className = 'compose-status';
+            composeSendBtn.disabled = false;
+
+            searchView.style.display = 'none';
+            mainView.style.display = 'none';
+            footerView.style.display = 'none';
+            composeView.style.display = 'flex';
+            composeInput.focus();
+        }
+
+        function hideComposeView() {
+            selectedContact = null;
+            composeView.style.display = 'none';
+            searchView.style.display = '';
+            mainView.style.display = '';
+            footerView.style.display = '';
+            searchInput.focus();
+
+            // Restore previous contacts if available
+            if (currentContacts.length > 0) {
+                showContacts(currentContacts);
+            }
+        }
+
+        async function sendMessage() {
+            const content = composeInput.value.trim();
+            if (!content || !selectedContact) return;
+
+            composeSendBtn.disabled = true;
+            composeStatus.textContent = 'Sending...';
+            composeStatus.className = 'compose-status';
+
+            try {
+                const contactInfo = { userId: selectedContact.userId, displayName: selectedContact.name };
+                const result = await globalThis.quickChatApi.sendMessage(contactInfo, content);
+                if (result.success) {
+                    composeStatus.textContent = 'Message sent!';
+                    composeStatus.className = 'compose-status success';
+                    composeInput.value = '';
+                    composeSendBtn.disabled = false;
+                } else {
+                    composeStatus.textContent = 'Failed: ' + (result.error || 'Unknown error');
+                    composeStatus.className = 'compose-status error';
+                    composeSendBtn.disabled = false;
+                }
+            } catch (error) {
+                composeStatus.textContent = 'Failed: ' + error.message;
+                composeStatus.className = 'compose-status error';
+                composeSendBtn.disabled = false;
+            }
+        }
+
+        composeSendBtn.addEventListener('click', sendMessage);
+
+        composeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        composeBackBtn.addEventListener('click', hideComposeView);
+
+        function openChat(email, contactName, userId) {
             if (!email) {
                 showError('No email address available for this contact');
                 return;
             }
-            globalThis.quickChatApi.openChat(email);
-            globalThis.quickChatApi.close();
+            showComposeView(contactName, email, userId);
         }
 
         // Search with debounce
@@ -384,9 +620,10 @@
                 }
             } else if (e.key === 'Enter' && currentContacts.length > 0) {
                 e.preventDefault();
-                const email = getContactEmail(currentContacts[0]);
+                const firstContact = currentContacts[0];
+                const email = getContactEmail(firstContact);
                 if (email) {
-                    openChat(email);
+                    openChat(email, firstContact.displayName, firstContact.id);
                 }
             }
         });
@@ -412,6 +649,7 @@
 
         // Focus search input when modal is shown
         globalThis.quickChatApi.onFocus(() => {
+            hideComposeView();
             searchInput.value = '';
             showEmpty('Type to search for contacts');
             searchInput.focus();

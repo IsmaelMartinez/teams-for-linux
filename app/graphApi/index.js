@@ -7,6 +7,12 @@ class GraphApiClient {
     this.baseUrl = 'https://graph.microsoft.com/v1.0';
     this.currentToken = null;
     this.tokenExpiry = null;
+    this.ic3Token = null;
+    this.ic3TokenExpiry = null;
+    this.cachedSenderInfo = null;
+    // TODO: Make region dynamic via discover service (currently hardcoded for EU users)
+    this.chatServiceRegion = 'emea';
+    this.chatServiceBaseUrl = `https://teams.cloud.microsoft/api/chatsvc/${this.chatServiceRegion}/v1`;
 
     logger.info('[GRAPH_API] GraphApiClient initialized', {
       enabled: this.enabled,
@@ -155,6 +161,15 @@ class GraphApiClient {
     }
   }
 
+  _escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   _buildODataQuery(options) {
     const params = new URLSearchParams();
     const supportedParams = {
@@ -272,6 +287,213 @@ class GraphApiClient {
     const endpoint = queryString ? `/me/people?${queryString}` : '/me/people';
 
     return await this.makeRequest(endpoint);
+  }
+
+  /** Acquire an IC3 chat service token (separate from Graph API token) */
+  async acquireIc3Token(forceRefresh = false) {
+    try {
+      if (!this.mainWindow || !this.mainWindow.webContents) {
+        logger.warn('[GRAPH_API] Main window not initialized');
+        return { success: false, error: 'Main window not initialized' };
+      }
+
+      if (!forceRefresh && this.ic3Token && this.ic3TokenExpiry) {
+        const now = Date.now();
+        const expiryTime = new Date(this.ic3TokenExpiry).getTime();
+        const timeUntilExpiry = expiryTime - now;
+
+        if (timeUntilExpiry > 5 * 60 * 1000) {
+          logger.debug('[GRAPH_API] Using cached IC3 token', {
+            timeUntilExpiry: Math.floor(timeUntilExpiry / 1000) + 's'
+          });
+          return {
+            success: true,
+            token: this.ic3Token,
+            fromCache: true,
+            expiry: this.ic3TokenExpiry
+          };
+        }
+      }
+
+      const result = await this.mainWindow.webContents.executeJavaScript(`
+        (async () => {
+          if (window.teamsForLinuxReactHandler && typeof window.teamsForLinuxReactHandler.acquireToken === 'function') {
+            return await window.teamsForLinuxReactHandler.acquireToken('https://ic3.teams.office.com', {
+              forceRenew: ${forceRefresh}
+            });
+          } else {
+            return { success: false, error: 'ReactHandler not available' };
+          }
+        })()
+      `);
+
+      if (result && result.success && result.token) {
+        this.ic3Token = result.token;
+        this.ic3TokenExpiry = result.expiry;
+        logger.debug('[GRAPH_API] IC3 token acquired successfully', {
+          fromCache: result.fromCache,
+          expiry: result.expiry
+        });
+        return result;
+      } else {
+        logger.warn('[GRAPH_API] IC3 token acquisition failed', result);
+        return result || { success: false, error: 'Unknown error' };
+      }
+    } catch (error) {
+      logger.error('[GRAPH_API] IC3 token acquisition error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  }
+
+  /** Resolve or create a 1:1 chat with a user via Teams internal services */
+  async resolveConversation(recipientUserId) {
+    try {
+      if (!this.enabled) {
+        return { success: false, error: 'Graph API is disabled' };
+      }
+
+      if (!this.mainWindow || !this.mainWindow.webContents) {
+        return { success: false, error: 'Main window not initialized' };
+      }
+
+      // Get sender info (cached)
+      if (!this.cachedSenderInfo) {
+        const profileResult = await this.getUserProfile();
+        if (!profileResult.success || !profileResult.data?.id) {
+          return { success: false, error: 'Failed to get sender profile' };
+        }
+        this.cachedSenderInfo = {
+          userId: `8:orgid:${profileResult.data.id}`,
+          aadId: profileResult.data.id,
+          displayName: profileResult.data.displayName
+        };
+      }
+
+      const recipientMri = `8:orgid:${recipientUserId}`;
+
+      // Step 1: Use Teams' entityCommanding to ensure the 1:1 chat exists
+      await this.mainWindow.webContents.executeJavaScript(`
+        (async () => {
+          const handler = window.teamsForLinuxReactHandler;
+          if (!handler) return;
+          const coreServices = handler._getTeams2CoreServices();
+          if (!coreServices) return;
+          const chatCommanding = coreServices.entityCommanding?.chat;
+          if (chatCommanding) await chatCommanding.chatWithUsers(['${recipientMri}']);
+        })()
+      `);
+
+      // Wait for Teams to process the navigation
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Step 2: Collect candidate thread IDs from the DOM
+      const candidates = await this.mainWindow.webContents.executeJavaScript(`
+        (() => {
+          const ids = new Set();
+          document.querySelectorAll('*').forEach(el => {
+            for (const attr of el.attributes) {
+              if (attr.value && attr.value.includes('19:')) {
+                const matches = attr.value.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\\.v2|unq\\.gbl\\.spaces)/gi);
+                for (const m of matches) {
+                  if (!m[0].includes('meeting_')) ids.add(m[0]);
+                }
+              }
+            }
+          });
+          return [...ids];
+        })()
+      `);
+
+      logger.info('[GRAPH_API] Found candidate chat IDs', { count: candidates?.length });
+
+      if (!candidates || candidates.length === 0) {
+        return { success: false, error: 'No chat thread IDs found' };
+      }
+
+      // Step 3: Check each candidate's members to find the 1:1 chat with the target user
+      for (const chatId of candidates) {
+        const membersResult = await this.makeRequest(`/chats/${encodeURIComponent(chatId)}/members`);
+        if (!membersResult.success || !membersResult.data?.value) continue;
+
+        const members = membersResult.data.value;
+
+        // Skip group chats — a 1:1 chat has exactly 2 members
+        if (members.length !== 2) {
+          continue;
+        }
+
+        const hasRecipient = members.some(
+          member => member.userId === recipientUserId
+        );
+
+        if (hasRecipient) {
+          logger.info('[GRAPH_API] Conversation resolved via member check', {
+            chatId: chatId.substring(0, 40) + '...',
+            checkedCount: candidates.indexOf(chatId) + 1
+          });
+          return { success: true, conversationId: chatId };
+        }
+      }
+
+      logger.warn('[GRAPH_API] No chat found containing target user');
+      return { success: false, error: 'Could not find a chat with this user. You may need to start a conversation in Teams first.' };
+    } catch (error) {
+      logger.error('[GRAPH_API] Conversation resolution error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  }
+
+  /** Send a chat message via Graph API (uses ChatMessage.Send scope) */
+  async sendChatMessage(chatId, content) {
+    try {
+      const result = await this.makeRequest(`/chats/${encodeURIComponent(chatId)}/messages`, {
+        method: 'POST',
+        body: {
+          body: {
+            content: this._escapeHtml(content),
+            contentType: 'text'
+          }
+        }
+      });
+
+      if (result.success) {
+        logger.info('[GRAPH_API] Chat message sent via Graph API', {
+          chatId: chatId?.substring(0, 30) + '...'
+        });
+        return { success: true };
+      }
+
+      logger.warn('[GRAPH_API] Send message failed', {
+        chatId: chatId?.substring(0, 30) + '...',
+        status: result.status,
+        error: result.error
+      });
+      return result;
+    } catch (error) {
+      logger.error('[GRAPH_API] Send message error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  }
+
+  /** Send a chat message to a user (orchestrates resolve + send) */
+  async sendChatMessageToUser(contactInfo, content) {
+    try {
+      if (!this.enabled) {
+        return { success: false, error: 'Graph API is disabled' };
+      }
+
+      // Resolve conversation
+      const conversationResult = await this.resolveConversation(contactInfo.userId);
+      if (!conversationResult.success) {
+        return conversationResult;
+      }
+
+      // Send message via Graph API
+      return await this.sendChatMessage(conversationResult.conversationId, content);
+    } catch (error) {
+      logger.error('[GRAPH_API] sendChatMessageToUser error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
   }
 }
 
