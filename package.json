@@ -21,9 +21,8 @@
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint **/*.js",
-    "test:unit": "node --test 'tests/unit/**/*.test.js'",
-    "test:e2e": "playwright test",
     "test:unit": "node tests/unit/logSanitizer.test.js && node tests/unit/loggerHook.test.js",
+    "test:e2e": "playwright test",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
@@ -56,7 +55,7 @@
     "electron-store": "8.2.0",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.23",
-    "mqtt": "^5.14.1",
+    "mqtt": "^5.15.0",
     "node-sound": "^0.0.8",
     "yargs": "^18.0.0"
   },
