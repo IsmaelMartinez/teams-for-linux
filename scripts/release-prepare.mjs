@@ -222,9 +222,16 @@ async function main() {
     console.log('ℹ️  This was a DRY RUN. No files were modified.');
     console.log('   Run without --dry-run to apply changes.\n');
   } else {
+    // Generate release notes BEFORE applying changes (which deletes changelog files)
+    const releaseNotes = generateReleaseNotes();
     applyChanges(pkg, pkgPath, newVersion, updatedXml, appdataPath, files, changelogDir);
     showCompletionSummary(newVersion, files.length);
-    showReleaseNotesPreview(newVersion, '📋 RELEASE NOTES PREVIEW');
+    // Show pre-generated release notes
+    console.log('\n' + '═'.repeat(60));
+    console.log('📋 RELEASE NOTES PREVIEW');
+    console.log('═'.repeat(60) + '\n');
+    console.log(formatMarkdown(releaseNotes, newVersion));
+    console.log('═'.repeat(60) + '\n');
     showNextSteps(newVersion);
   }
 
