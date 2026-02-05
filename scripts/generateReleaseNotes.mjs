@@ -307,7 +307,7 @@ export function formatMarkdown(releaseNotes, version = 'X.X.X') {
       if (electronVersion) {
         // Link to specific version
         const majorVersion = electronVersion.split('.')[0].replace('v', '');
-        lines.push(`- [Electron ${electronVersion} Release Notes](https://releases.electronjs.org/release/${electronVersion.replace('v', 'v')})`);
+        lines.push(`- [Electron ${electronVersion} Release Notes](https://releases.electronjs.org/release/${electronVersion})`);
         lines.push(`  - See [Electron ${majorVersion}.x blog post](https://www.electronjs.org/blog/electron-${majorVersion}-0) for major features`);
       } else {
         lines.push(`- [Electron Releases](https://releases.electronjs.org/)`);
