@@ -170,21 +170,19 @@ function parseEntry(entry) {
     }
   }
 
-  // Heuristic classification based on content
-  if (lowerEntry.includes('add ') || lowerEntry.includes('implement') || lowerEntry.includes('feature')) {
-    return { type: 'feat', description: normalized, original: normalized };
-  }
-  if (lowerEntry.includes('fix') || lowerEntry.includes('resolve') || lowerEntry.includes('correct')) {
-    return { type: 'fix', description: normalized, original: normalized };
-  }
-  if (lowerEntry.includes('doc') || lowerEntry.includes('readme') || lowerEntry.includes('research')) {
-    return { type: 'docs', description: normalized, original: normalized };
-  }
-  if (lowerEntry.includes('upgrade') || lowerEntry.includes('bump') || lowerEntry.includes('update dep')) {
-    return { type: 'deps', description: normalized, original: normalized };
-  }
-  if (lowerEntry.includes('refactor') || lowerEntry.includes('cleanup') || lowerEntry.includes('reorganize')) {
-    return { type: 'refactor', description: normalized, original: normalized };
+  // Heuristic classification based on content keywords
+  const heuristics = [
+    { type: 'feat', keywords: ['add ', 'implement', 'feature'] },
+    { type: 'fix', keywords: ['fix', 'resolve', 'correct'] },
+    { type: 'docs', keywords: ['doc', 'readme', 'research'] },
+    { type: 'deps', keywords: ['upgrade', 'bump', 'update dep'] },
+    { type: 'refactor', keywords: ['refactor', 'cleanup', 'reorganize'] }
+  ];
+
+  for (const { type, keywords } of heuristics) {
+    if (keywords.some(kw => lowerEntry.includes(kw))) {
+      return { type, description: normalized, original: normalized };
+    }
   }
 
   // Default to maintenance
