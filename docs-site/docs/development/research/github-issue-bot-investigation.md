@@ -64,8 +64,8 @@ The repository has **rich structured data** that could inform an intelligent bot
 This might be related to a known issue. Here are some things that could help:
 
 **Possible matches from our troubleshooting guide:**
-- [Blank Page at Login](link) - If you're seeing "Microsoft Teams - initializing"
-- [Application Cache Issues](link) - If this started after an update
+- [Blank Page at Login](../../troubleshooting.md#issue-blank-page-at-login) - If you're seeing "Microsoft Teams - initializing"
+- [Application Cache Issues](../../troubleshooting.md#issue-application-fails-to-launch-after-update) - If this started after an update
 
 **Could you try these steps?**
 1. Clear the application cache: `rm -rf ~/.config/teams-for-linux/Cache`
@@ -125,7 +125,7 @@ If one of these matches your issue, consider adding your details there instead.
 
 **Current status of related features:**
 
-This appears related to our research on [Graph API Integration](link):
+This appears related to our research on [Graph API Integration](graph-api-integration-research.md):
 - **Phase 1** (POC): ✅ Complete
 - **Phases 2-3**: Awaiting user feedback
 
@@ -133,7 +133,7 @@ Your feedback helps prioritize development! A maintainer will review this reques
 
 **If this is a new feature area**, we might create a research spike to investigate feasibility.
 
-*Based on our [Development Roadmap](link) and [Research Documents](link).*
+*Based on our [Development Roadmap](../plan/roadmap.md) and [Research Documents](README.md).*
 ```
 
 For truly new features, the bot could:
