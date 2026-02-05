@@ -229,51 +229,14 @@ async function main() {
     console.log('   • appdata.xml → new release entry');
     console.log('   • .changelog/ → ' + files.length + ' files deleted');
 
-    // Generate enhanced release notes summary
+    // Generate enhanced release notes summary (reuse shared logic)
     console.log('\n' + '═'.repeat(60));
     console.log('📋 RELEASE NOTES PREVIEW');
     console.log('═'.repeat(60) + '\n');
 
-    // Categorize entries for display
-    const categories = {
-      feat: { label: '🚀 New Features', entries: [] },
-      fix: { label: '🐛 Bug Fixes', entries: [] },
-      docs: { label: '📚 Documentation', entries: [] },
-      deps: { label: '📦 Dependencies', entries: [] },
-      other: { label: '🔧 Other Changes', entries: [] }
-    };
-
-    for (const entry of entries) {
-      const lower = entry.toLowerCase();
-      if (lower.startsWith('feat') || lower.includes('add ') || lower.includes('implement')) {
-        categories.feat.entries.push(entry);
-      } else if (lower.startsWith('fix') || lower.includes('fix ')) {
-        categories.fix.entries.push(entry);
-      } else if (lower.startsWith('docs') || lower.includes('documentation')) {
-        categories.docs.entries.push(entry);
-      } else if (lower.includes('bump') || lower.includes('upgrade') || lower.includes('deps')) {
-        categories.deps.entries.push(entry);
-      } else {
-        categories.other.entries.push(entry);
-      }
-    }
-
-    // Display categorized entries
-    for (const [, cat] of Object.entries(categories)) {
-      if (cat.entries.length > 0) {
-        console.log(cat.label);
-        for (const entry of cat.entries) {
-          console.log(`   • ${entry}`);
-        }
-        console.log('');
-      }
-    }
-
-    // Show documentation links hint
-    console.log('📖 Documentation Links:');
-    console.log('   • Configuration: https://ismaelmartinez.github.io/teams-for-linux/configuration');
-    console.log('   • Troubleshooting: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting');
-    console.log('');
+    const releaseNotes = generateReleaseNotes();
+    const formattedNotes = formatMarkdown(releaseNotes, newVersion);
+    console.log(formattedNotes);
 
     console.log('═'.repeat(60) + '\n');
 
