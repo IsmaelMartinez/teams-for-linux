@@ -29,6 +29,7 @@
     "release:prepare": "node scripts/release-prepare.mjs",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "generate-ipc-docs": "node scripts/generateIpcDocs.js",
+    "generate-release-notes": "node scripts/generateReleaseNotes.mjs",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",

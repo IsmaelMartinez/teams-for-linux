@@ -1,0 +1,1 @@
+Add enhanced release notes generation for release workflow - by @IsmaelMartinez (#2128)
