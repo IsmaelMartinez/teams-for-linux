@@ -52,7 +52,7 @@ function toAnchor(section) {
     .toLowerCase()
     .replaceAll('&', '')
     .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '');
+    .replaceAll(/(?:^-|-$)/g, '');
 }
 
 /**
@@ -294,10 +294,13 @@ export function formatMarkdown(releaseNotes, version = 'X.X.X') {
 
   const { detectedLinks } = releaseNotes;
   if (detectedLinks.electron || detectedLinks.configSections.size > 0) {
-    lines.push('---\n', '### 📖 Related Documentation\n');
-    lines.push(...formatElectronLinks(detectedLinks.electron));
-    lines.push(...formatConfigLinks(detectedLinks.configSections));
-    lines.push('');
+    lines.push(
+      '---\n',
+      '### 📖 Related Documentation\n',
+      ...formatElectronLinks(detectedLinks.electron),
+      ...formatConfigLinks(detectedLinks.configSections),
+      ''
+    );
   }
 
   lines.push(...formatQuickLinks());
@@ -333,19 +336,22 @@ export function formatSummary(releaseNotes, version = 'X.X.X') {
     `This release includes **${releaseNotes.total} changes**: ${counts.join(', ')}.\n`
   ];
 
-  lines.push(...formatHighlightedEntries(releaseNotes.categorized.feat?.entries, 'Highlights'));
-  lines.push(...formatHighlightedEntries(releaseNotes.categorized.fix?.entries, 'Bug Fixes'));
+  lines.push(
+    ...formatHighlightedEntries(releaseNotes.categorized.feat?.entries, 'Highlights'),
+    ...formatHighlightedEntries(releaseNotes.categorized.fix?.entries, 'Bug Fixes')
+  );
 
   const { detectedLinks } = releaseNotes;
   if (detectedLinks.electron || detectedLinks.configSections.size > 0) {
-    lines.push('### 📖 Related Documentation\n');
+    const docLinks = ['### 📖 Related Documentation\n'];
     if (detectedLinks.electron && detectedLinks.electron !== 'latest') {
-      lines.push(`- [Electron v${detectedLinks.electron} Release Notes](https://releases.electronjs.org/release/v${detectedLinks.electron})`);
+      docLinks.push(`- [Electron v${detectedLinks.electron} Release Notes](https://releases.electronjs.org/release/v${detectedLinks.electron})`);
     }
     if (detectedLinks.configSections.size > 0) {
-      lines.push(`- [Configuration Reference](${DOCS_BASE_URL}/configuration)`);
+      docLinks.push(`- [Configuration Reference](${DOCS_BASE_URL}/configuration)`);
     }
-    lines.push('');
+    docLinks.push('');
+    lines.push(...docLinks);
   }
 
   return lines.join('\n');
