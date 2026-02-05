@@ -5,8 +5,11 @@
  *
  * Reads changelog entries from .changelog/ directory and generates:
  * 1. Categorized changes (Features, Fixes, Documentation, etc.)
- * 2. Links to relevant documentation for new features
- * 3. Configuration hints for enable/disable options
+ * 2. Auto-detected configuration option changes with links
+ * 3. Electron version update detection with release notes links
+ *
+ * This script dynamically parses docs/configuration.md to detect config options,
+ * requiring no manual maintenance of keyword mappings.
  */
 
 import fs from 'node:fs';
@@ -14,80 +17,6 @@ import path from 'node:path';
 
 // Documentation base URL
 const DOCS_BASE_URL = 'https://ismaelmartinez.github.io/teams-for-linux';
-
-// Mapping of keywords to documentation pages
-const FEATURE_DOCS = {
-  mqtt: {
-    doc: '/mqtt-integration',
-    title: 'MQTT Integration',
-    config: 'mqttHost, mqttPort, mqttTopic'
-  },
-  intune: {
-    doc: '/intune-sso',
-    title: 'Intune SSO',
-    config: 'enableIntuneSso'
-  },
-  'screen sharing': {
-    doc: '/screen-sharing',
-    title: 'Screen Sharing',
-    config: 'screenShareMode'
-  },
-  screensharing: {
-    doc: '/screen-sharing',
-    title: 'Screen Sharing',
-    config: 'screenShareMode'
-  },
-  certificate: {
-    doc: '/certificate',
-    title: 'Certificate Configuration',
-    config: 'customCACertsFingerprints'
-  },
-  notification: {
-    doc: '/configuration#notification-system',
-    title: 'Notification System',
-    config: 'disableNotifications, notificationMethod'
-  },
-  tray: {
-    doc: '/configuration#tray-icon',
-    title: 'Tray Icon',
-    config: 'trayIconEnabled, showBadgeCount'
-  },
-  background: {
-    doc: '/custom-backgrounds',
-    title: 'Custom Backgrounds',
-    config: 'customBGServiceBaseUrl'
-  },
-  calendar: {
-    doc: '/configuration#microsoft-graph-api',
-    title: 'Microsoft Graph API',
-    config: 'calendarExportEnabled, graphClientId'
-  },
-  theme: {
-    doc: '/configuration#theming--appearance',
-    title: 'Theming & Appearance',
-    config: 'customCSSName, followSystemTheme'
-  },
-  idle: {
-    doc: '/configuration#idle--activity-detection',
-    title: 'Idle Detection',
-    config: 'awayOnSystemIdle, appIdleTimeout'
-  },
-  proxy: {
-    doc: '/configuration#network--proxy',
-    title: 'Network & Proxy',
-    config: 'proxyServer'
-  },
-  'multiple instance': {
-    doc: '/multiple-instances',
-    title: 'Multiple Instances',
-    config: 'appTitle, partition'
-  },
-  troubleshoot: {
-    doc: '/troubleshooting',
-    title: 'Troubleshooting Guide',
-    config: null
-  }
-};
 
 // Change type prefixes and their categories
 const CHANGE_TYPES = {
@@ -102,6 +31,116 @@ const CHANGE_TYPES = {
   security: { label: 'Security', emoji: '🔒' },
   deps: { label: 'Dependencies', emoji: '📦' }
 };
+
+/**
+ * Extract all configuration option names from configuration.md
+ * Parses markdown tables to find option names in backticks
+ */
+function extractConfigOptions(docsPath) {
+  const configPath = path.join(docsPath, 'configuration.md');
+
+  if (!fs.existsSync(configPath)) {
+    return { options: new Set(), sections: new Map() };
+  }
+
+  const content = fs.readFileSync(configPath, 'utf8');
+  const options = new Set();
+  const sections = new Map(); // option -> section anchor
+
+  // Track current section
+  let currentSection = '';
+  let currentAnchor = '';
+
+  const lines = content.split('\n');
+
+  for (const line of lines) {
+    // Track markdown headings for section context
+    const headingMatch = line.match(/^#{2,3}\s+(.+)/);
+    if (headingMatch) {
+      currentSection = headingMatch[1].trim();
+      // Convert to anchor format: "Window & UI Behavior" -> "window--ui-behavior"
+      currentAnchor = currentSection
+        .toLowerCase()
+        .replace(/[&]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
+    // Match table rows with option names in backticks
+    // Format: | `optionName` | type | default | description |
+    const tableMatch = line.match(/^\|\s*`([^`]+)`\s*\|/);
+    if (tableMatch) {
+      const optionName = tableMatch[1];
+      // Skip header row markers
+      if (optionName !== 'Option' && !optionName.includes('-')) {
+        options.add(optionName);
+        // Also add the base name for nested options (e.g., "auth" from "auth.intune.enabled")
+        const baseName = optionName.split('.')[0];
+        options.add(baseName);
+        sections.set(optionName, currentAnchor);
+        sections.set(baseName, currentAnchor);
+      }
+    }
+  }
+
+  return { options, sections };
+}
+
+/**
+ * Detect Electron version from changelog entry
+ * Returns version string if found, null otherwise
+ */
+function detectElectronVersion(entry) {
+  const lower = entry.toLowerCase();
+
+  // Match patterns like "electron 39", "electron v39", "electron 39.4.0", "electron to 39"
+  const versionMatch = entry.match(/electron\s*(?:to\s*)?v?(\d+(?:\.\d+(?:\.\d+)?)?)/i);
+  if (versionMatch) {
+    return versionMatch[1];
+  }
+
+  // Check if it mentions electron upgrade/update
+  if (lower.includes('electron') && (lower.includes('upgrade') || lower.includes('update') || lower.includes('bump'))) {
+    return 'latest';
+  }
+
+  return null;
+}
+
+/**
+ * Detect configuration options mentioned in an entry
+ */
+function detectConfigOptions(entry, knownOptions, sections) {
+  const mentioned = [];
+  const lowerEntry = entry.toLowerCase();
+
+  for (const option of knownOptions) {
+    // Check for exact option name (case insensitive)
+    if (lowerEntry.includes(option.toLowerCase())) {
+      const section = sections.get(option);
+      if (section && !mentioned.some(m => m.option === option)) {
+        mentioned.push({ option, section });
+      }
+    }
+  }
+
+  // Also detect common config-related keywords
+  const configKeywords = [
+    { pattern: /\bconfig(?:uration)?\b/i, hint: 'configuration options' },
+    { pattern: /\boption(?:s)?\b/i, hint: 'configuration options' },
+    { pattern: /\bdeprecate(?:d|s)?\b/i, hint: 'deprecated options' },
+    { pattern: /\bdefault(?:s)?\b/i, hint: 'default values' }
+  ];
+
+  for (const { pattern, hint } of configKeywords) {
+    if (pattern.test(entry)) {
+      mentioned.push({ option: null, hint });
+      break; // Only add one generic hint
+    }
+  }
+
+  return mentioned;
+}
 
 /**
  * Parse a changelog entry and extract type and description
@@ -125,7 +164,7 @@ function parseEntry(entry) {
 
   // Try to match prefix keywords
   const lowerEntry = normalized.toLowerCase();
-  for (const [prefix, config] of Object.entries(CHANGE_TYPES)) {
+  for (const prefix of Object.keys(CHANGE_TYPES)) {
     if (lowerEntry.startsWith(prefix)) {
       return { type: prefix, description: normalized, original: normalized };
     }
@@ -153,22 +192,6 @@ function parseEntry(entry) {
 }
 
 /**
- * Find relevant documentation links for an entry
- */
-function findDocLinks(entry) {
-  const links = [];
-  const lowerEntry = entry.toLowerCase();
-
-  for (const [keyword, info] of Object.entries(FEATURE_DOCS)) {
-    if (lowerEntry.includes(keyword)) {
-      links.push(info);
-    }
-  }
-
-  return links;
-}
-
-/**
  * Generate enhanced release notes from changelog entries
  */
 export function generateReleaseNotes(changelogDir = '.changelog') {
@@ -186,11 +209,19 @@ export function generateReleaseNotes(changelogDir = '.changelog') {
     return { error: 'No changelog entries found in .changelog/' };
   }
 
+  // Extract known config options from docs
+  const docsPath = path.join(process.cwd(), 'docs-site', 'docs');
+  const { options: knownOptions, sections } = extractConfigOptions(docsPath);
+
   // Read and parse all entries
   const entries = files.map(file => {
     const content = fs.readFileSync(path.join(fullPath, file), 'utf8').trim();
     const parsed = parseEntry(content);
-    parsed.docLinks = findDocLinks(content);
+
+    // Detect special content
+    parsed.electronVersion = detectElectronVersion(content);
+    parsed.configOptions = detectConfigOptions(content, knownOptions, sections);
+
     return parsed;
   });
 
@@ -209,12 +240,19 @@ export function generateReleaseNotes(changelogDir = '.changelog') {
     categorized[key].entries.push(entry);
   }
 
-  // Collect all unique documentation links
-  const allDocLinks = new Map();
+  // Collect detected links
+  const detectedLinks = {
+    electron: null,
+    configSections: new Set()
+  };
+
   for (const entry of entries) {
-    for (const link of entry.docLinks) {
-      if (!allDocLinks.has(link.doc)) {
-        allDocLinks.set(link.doc, link);
+    if (entry.electronVersion) {
+      detectedLinks.electron = entry.electronVersion;
+    }
+    for (const opt of entry.configOptions) {
+      if (opt.section) {
+        detectedLinks.configSections.add(opt.section);
       }
     }
   }
@@ -222,7 +260,7 @@ export function generateReleaseNotes(changelogDir = '.changelog') {
   return {
     total: entries.length,
     categorized,
-    docLinks: Array.from(allDocLinks.values()),
+    detectedLinks,
     entries
   };
 }
@@ -255,23 +293,49 @@ export function formatMarkdown(releaseNotes, version = 'X.X.X') {
     lines.push('');
   }
 
-  // Add documentation links section if there are relevant docs
-  if (releaseNotes.docLinks.length > 0) {
+  // Add documentation links section
+  const { detectedLinks } = releaseNotes;
+  const hasLinks = detectedLinks.electron || detectedLinks.configSections.size > 0;
+
+  if (hasLinks) {
     lines.push('---\n');
     lines.push('### 📖 Related Documentation\n');
-    lines.push('Learn more about features in this release:\n');
 
-    for (const link of releaseNotes.docLinks) {
-      const configNote = link.config ? ` (config: \`${link.config}\`)` : '';
-      lines.push(`- [${link.title}](${DOCS_BASE_URL}${link.doc})${configNote}`);
+    // Electron release notes
+    if (detectedLinks.electron) {
+      const electronVersion = detectedLinks.electron === 'latest' ? '' : `v${detectedLinks.electron}`;
+      if (electronVersion) {
+        // Link to specific version
+        const majorVersion = electronVersion.split('.')[0].replace('v', '');
+        lines.push(`- [Electron ${electronVersion} Release Notes](https://releases.electronjs.org/release/${electronVersion.replace('v', 'v')})`);
+        lines.push(`  - See [Electron ${majorVersion}.x blog post](https://www.electronjs.org/blog/electron-${majorVersion}-0) for major features`);
+      } else {
+        lines.push(`- [Electron Releases](https://releases.electronjs.org/)`);
+      }
     }
+
+    // Config sections
+    if (detectedLinks.configSections.size > 0) {
+      lines.push(`- Configuration changes in this release:`);
+      for (const section of detectedLinks.configSections) {
+        // Convert anchor back to readable name
+        const readable = section
+          .split('-')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+        lines.push(`  - [${readable}](${DOCS_BASE_URL}/configuration#${section})`);
+      }
+    }
+
     lines.push('');
   }
 
   // Add quick reference footer
   lines.push('---\n');
-  lines.push('**Configuration:** All options can be set via command-line or `config.json`.');
-  lines.push(`See [Configuration Reference](${DOCS_BASE_URL}/configuration) for details.\n`);
+  lines.push('**Quick Links:**');
+  lines.push(`- [Configuration Reference](${DOCS_BASE_URL}/configuration) - All options with defaults`);
+  lines.push(`- [Troubleshooting](${DOCS_BASE_URL}/troubleshooting) - Common issues and solutions`);
+  lines.push(`- [Installation Guide](${DOCS_BASE_URL}/installation) - Setup instructions\n`);
 
   return lines.join('\n');
 }
@@ -326,11 +390,18 @@ export function formatSummary(releaseNotes, version = 'X.X.X') {
   }
 
   // Documentation links
-  if (releaseNotes.docLinks.length > 0) {
+  const { detectedLinks } = releaseNotes;
+  if (detectedLinks.electron || detectedLinks.configSections.size > 0) {
     lines.push('### 📖 Related Documentation\n');
-    for (const link of releaseNotes.docLinks) {
-      lines.push(`- [${link.title}](${DOCS_BASE_URL}${link.doc})`);
+
+    if (detectedLinks.electron && detectedLinks.electron !== 'latest') {
+      lines.push(`- [Electron v${detectedLinks.electron} Release Notes](https://releases.electronjs.org/release/v${detectedLinks.electron})`);
     }
+
+    if (detectedLinks.configSections.size > 0) {
+      lines.push(`- [Configuration Reference](${DOCS_BASE_URL}/configuration)`);
+    }
+
     lines.push('');
   }
 
@@ -352,7 +423,15 @@ if (isMain) {
   const releaseNotes = generateReleaseNotes();
 
   if (json) {
-    console.log(JSON.stringify(releaseNotes, null, 2));
+    // Convert Sets to arrays for JSON serialization
+    const jsonSafe = {
+      ...releaseNotes,
+      detectedLinks: releaseNotes.detectedLinks ? {
+        electron: releaseNotes.detectedLinks.electron,
+        configSections: Array.from(releaseNotes.detectedLinks.configSections || [])
+      } : null
+    };
+    console.log(JSON.stringify(jsonSafe, null, 2));
   } else if (format === 'summary') {
     console.log(formatSummary(releaseNotes, version));
   } else {

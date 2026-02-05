@@ -16,7 +16,6 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import readline from 'node:readline';
 import xml2js from 'xml2js';
-import { generateReleaseNotes, formatMarkdown } from './generateReleaseNotes.mjs';
 
 const rl = readline.createInterface({
   input: process.stdin,
