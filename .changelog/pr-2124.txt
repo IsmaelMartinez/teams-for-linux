@@ -1,1 +1,0 @@
-docs: Upgrade electron-store to 11.0.2 - by @IsmaelMartinez (#2124)
