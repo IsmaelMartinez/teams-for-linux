@@ -22,14 +22,23 @@ The easiest and most reliable method is to use the automated GitHub Actions work
 The workflow will automatically:
 - Validate changelog entries exist
 - Run the release preparation script
+- Generate categorized release notes
 - Create a release branch
 - Commit all changes
-- Create a pull request
+- Create a pull request with detailed release notes
 
 You'll get a PR ready for review and merging. No local setup required.
 
 ### Option B: Using the Script Locally
 
+**Preview what will happen (dry-run mode):**
+```bash
+npm run release:prepare -- patch --dry-run
+```
+
+This shows you exactly what will change without modifying any files.
+
+**Apply the changes:**
 ```bash
 npm run release:prepare patch  # or minor, major, or 2.6.15
 ```
@@ -43,6 +52,7 @@ This will:
 - Review changelog entries
 - Update package.json, package-lock.json, appdata.xml
 - Delete consumed changelog files
+- Show categorized release notes preview
 - Show next steps
 
 Then create release PR:
@@ -51,7 +61,7 @@ git checkout -b release/vX.Y.Z
 git add .
 git commit -m "chore: release vX.Y.Z"
 git push -u origin release/vX.Y.Z
-gh pr create --title "Release vX.Y.Z" --body "Release vX.Y.Z"
+gh pr create --title "Release vX.Y.Z" --body-file <(npm run generate-release-notes X.Y.Z)
 ```
 
 ### Option C: Manual
@@ -109,6 +119,68 @@ Show me the changes."
 
 Then create release PR as above.
 
+## Enhanced Release Notes
+
+The release process automatically generates enhanced release notes that include:
+
+### Categorization
+
+Changes are automatically categorized based on conventional commit prefixes:
+- 🚀 **New Features** - `feat:` prefix or "add", "implement" keywords
+- 🐛 **Bug Fixes** - `fix:` prefix or "fix" keyword
+- 📚 **Documentation** - `docs:` prefix
+- 📦 **Dependencies** - "upgrade", "bump" keywords
+- ♻️ **Code Improvements** - `refactor:` prefix
+- ⚡ **Performance** - `perf:` prefix
+- 🔒 **Security** - `security:` prefix
+- 🔧 **Maintenance** - Other changes
+
+### Auto-Detected Documentation Links
+
+The system automatically detects and links to relevant documentation:
+
+- **Electron updates**: When a changelog entry mentions Electron version changes, links to Electron release notes are included
+- **Configuration changes**: When entries reference configuration options from `docs/configuration.md`, links to the relevant configuration sections are added
+
+### Generate Release Notes Independently
+
+You can generate release notes without running the full release:
+
+```bash
+# Full format with all categories and links
+npm run generate-release-notes
+
+# With specific version
+npm run generate-release-notes -- 2.8.0
+
+# Summary format (shorter)
+npm run generate-release-notes -- --summary
+
+# JSON format (for programmatic use)
+npm run generate-release-notes -- --json
+```
+
+## Dry-Run Mode
+
+Before making any changes, you can preview what will happen:
+
+```bash
+npm run release:prepare -- patch --dry-run
+```
+
+Or with short flag:
+```bash
+npm run release:prepare -- patch -n
+```
+
+Dry-run mode shows:
+- Files that would be updated
+- Version changes (old → new)
+- Changelog files that would be deleted
+- Full release notes preview
+
+No files are modified during dry-run.
+
 ## After PR Merge
 
 When the release PR merges to main:
@@ -138,9 +210,13 @@ Or just create a `.txt` file in `.changelog/` with any text editor.
 ├── pr-123.txt          # Auto-generated
 ├── pr-124.txt          # Auto-generated
 └── manual-*.txt        # Manual entries
+
+scripts/
+├── release-prepare.mjs       # Main release script
+└── generateReleaseNotes.mjs  # Release notes generator
 ```
 
-Each file contains one line:
+Each changelog file contains one line:
 ```
 Add MQTT integration - by @username (#123)
 ```
@@ -150,12 +226,12 @@ Add MQTT integration - by @username (#123)
 ```
 PRs merged → .changelog/*.txt accumulate
      ↓
-Ready to release → Review changelog files
+Ready to release → Preview with --dry-run
      ↓
 Prepare release → Update versions & appdata.xml
      ↓
 Create release PR → Push to release/vX.Y.Z
-     ↓
+     ↓                (PR includes categorized release notes)
 Merge to main → Build triggers automatically
      ↓
 Publish → Draft release, Snap edge
@@ -165,6 +241,11 @@ Promote → Full release, Snap stable
 
 ## Tips
 
+**Preview before releasing:**
+```bash
+npm run release:prepare -- patch --dry-run
+```
+
 **Edit changelog entries:** Just edit the `.txt` files before running `release:prepare`
 
 **Skip entries:** Delete any `.changelog/*.txt` file you don't want in the release
@@ -172,6 +253,11 @@ Promote → Full release, Snap stable
 **Check pending changes:**
 ```bash
 ls .changelog/ && cat .changelog/*
+```
+
+**Preview release notes:**
+```bash
+npm run generate-release-notes
 ```
 
 **See recent commits:**
@@ -183,6 +269,9 @@ git log --oneline --since="2 weeks ago"
 
 - **Decouple merge from release** - Merge freely, release when ready
 - **Bundle multiple PRs** - Accumulate changes before releasing
+- **Preview before committing** - Dry-run mode shows all changes
+- **Auto-categorized notes** - Changes grouped by type automatically
+- **Smart documentation links** - Electron and config changes link to docs
 - **LLM-friendly** - Plain text files, easy for AI to read
 - **Always editable** - Can review and modify before releasing
 - **Full control** - You decide when to ship

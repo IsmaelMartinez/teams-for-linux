@@ -9,6 +9,15 @@
  * 3. Updates package.json and package-lock.json
  * 4. Deletes consumed changelog files
  * 5. Shows summary for review
+ *
+ * Usage:
+ *   npm run release:prepare [version] [--dry-run]
+ *
+ * Examples:
+ *   npm run release:prepare patch           # Bump patch version
+ *   npm run release:prepare 2.8.0           # Set specific version
+ *   npm run release:prepare patch --dry-run # Preview without changes
+ *   npm run release:prepare -- --dry-run    # Preview with prompted version
  */
 
 import fs from 'node:fs';
@@ -16,6 +25,12 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import readline from 'node:readline';
 import xml2js from 'xml2js';
+import { generateReleaseNotes, formatMarkdown } from './generateReleaseNotes.mjs';
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const dryRun = args.includes('--dry-run') || args.includes('-n');
+const versionArg = args.find(a => !a.startsWith('-'));
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -28,6 +43,13 @@ function question(query) {
 
 // Main function
 async function main() {
+  if (dryRun) {
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║                      DRY RUN MODE                          ║');
+    console.log('║         No files will be modified. Preview only.           ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+  }
+
   console.log('🚀 Release Preparation\n');
 
   // 1. Check for changelog files
@@ -64,7 +86,7 @@ async function main() {
   console.log(`📦 Current version: ${currentVersion}`);
 
   // 4. Get version bump from args or prompt
-  let versionAnswer = process.argv[2];
+  let versionAnswer = versionArg;
 
   if (versionAnswer) {
     console.log(`🔢 Version bump: ${versionAnswer}`);
@@ -135,101 +157,133 @@ async function main() {
   const builder = new xml2js.Builder();
   const updatedXml = builder.buildObject(appdata);
 
-  // 6. Update files
-  console.log('\n📝 Updating files...');
+  // 6. Update files (or show what would be updated in dry-run mode)
+  if (dryRun) {
+    console.log('\n📝 Files that WOULD be updated:\n');
+    console.log('   📄 package.json');
+    console.log(`      version: "${currentVersion}" → "${newVersion}"`);
+    console.log('');
+    console.log('   📄 package-lock.json');
+    console.log(`      (via npm install)`);
+    console.log('');
+    console.log('   📄 com.github.IsmaelMartinez.teams_for_linux.appdata.xml');
+    console.log(`      New release entry: v${newVersion} (${releaseDate})`);
+    console.log('');
+    console.log('   🗑️  Changelog files to delete:');
+    for (const file of files) {
+      console.log(`      • .changelog/${file}`);
+    }
+  } else {
+    console.log('\n📝 Updating files...');
 
-  // Update package.json
-  pkg.version = newVersion;
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-  console.log('   ✅ Updated package.json');
+    // Update package.json
+    pkg.version = newVersion;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log('   ✅ Updated package.json');
 
-  // Update package-lock.json via npm install
-  console.log('   ⏳ Running npm install...');
+    // Update package-lock.json via npm install
+    console.log('   ⏳ Running npm install...');
 
-  try {
-    execSync('npm install', {
-      stdio: 'inherit'
-    });
-    console.log('   ✅ Updated package-lock.json');
-  } catch (err) {
-    console.error('   ❌ npm install failed:');
-    console.error('   Exit code:', err.status);
-    console.error('   Signal:', err.signal);
-    throw err;
+    try {
+      execSync('npm install', {
+        stdio: 'inherit'
+      });
+      console.log('   ✅ Updated package-lock.json');
+    } catch (err) {
+      console.error('   ❌ npm install failed:');
+      console.error('   Exit code:', err.status);
+      console.error('   Signal:', err.signal);
+      throw err;
+    }
+
+    // Update appdata.xml
+    fs.writeFileSync(appdataPath, updatedXml);
+    console.log('   ✅ Updated appdata.xml');
+
+    // Delete changelog files
+    for (const file of files) {
+      fs.unlinkSync(path.join(changelogDir, file));
+    }
+    console.log(`   ✅ Deleted ${files.length} changelog files`);
   }
-
-  // Update appdata.xml
-  fs.writeFileSync(appdataPath, updatedXml);
-  console.log('   ✅ Updated appdata.xml');
-
-  // Delete changelog files
-  for (const file of files) {
-    fs.unlinkSync(path.join(changelogDir, file));
-  }
-  console.log(`   ✅ Deleted ${files.length} changelog files`);
 
   // 7. Summary
-  console.log('\n✅ Release v' + newVersion + ' prepared!');
-  console.log('\n📝 File Changes:');
-  console.log('   • package.json → ' + newVersion);
-  console.log('   • package-lock.json → ' + newVersion);
-  console.log('   • appdata.xml → new release entry');
-  console.log('   • .changelog/ → ' + files.length + ' files deleted');
+  if (dryRun) {
+    console.log('\n' + '═'.repeat(60));
+    console.log('📋 RELEASE NOTES PREVIEW (generated from current changelog)');
+    console.log('═'.repeat(60) + '\n');
 
-  // Generate enhanced release notes summary
-  console.log('\n' + '═'.repeat(60));
-  console.log('📋 RELEASE NOTES PREVIEW');
-  console.log('═'.repeat(60) + '\n');
+    // Use the full release notes generator for dry-run
+    const releaseNotes = generateReleaseNotes();
+    const formattedNotes = formatMarkdown(releaseNotes, newVersion);
+    console.log(formattedNotes);
 
-  // Categorize entries for display
-  const categories = {
-    feat: { label: '🚀 New Features', entries: [] },
-    fix: { label: '🐛 Bug Fixes', entries: [] },
-    docs: { label: '📚 Documentation', entries: [] },
-    deps: { label: '📦 Dependencies', entries: [] },
-    other: { label: '🔧 Other Changes', entries: [] }
-  };
+    console.log('═'.repeat(60) + '\n');
+    console.log('ℹ️  This was a DRY RUN. No files were modified.');
+    console.log('   Run without --dry-run to apply changes.\n');
+  } else {
+    console.log('\n✅ Release v' + newVersion + ' prepared!');
+    console.log('\n📝 File Changes:');
+    console.log('   • package.json → ' + newVersion);
+    console.log('   • package-lock.json → ' + newVersion);
+    console.log('   • appdata.xml → new release entry');
+    console.log('   • .changelog/ → ' + files.length + ' files deleted');
 
-  for (const entry of entries) {
-    const lower = entry.toLowerCase();
-    if (lower.startsWith('feat') || lower.includes('add ') || lower.includes('implement')) {
-      categories.feat.entries.push(entry);
-    } else if (lower.startsWith('fix') || lower.includes('fix ')) {
-      categories.fix.entries.push(entry);
-    } else if (lower.startsWith('docs') || lower.includes('documentation')) {
-      categories.docs.entries.push(entry);
-    } else if (lower.includes('bump') || lower.includes('upgrade') || lower.includes('deps')) {
-      categories.deps.entries.push(entry);
-    } else {
-      categories.other.entries.push(entry);
-    }
-  }
+    // Generate enhanced release notes summary
+    console.log('\n' + '═'.repeat(60));
+    console.log('📋 RELEASE NOTES PREVIEW');
+    console.log('═'.repeat(60) + '\n');
 
-  // Display categorized entries
-  for (const [, cat] of Object.entries(categories)) {
-    if (cat.entries.length > 0) {
-      console.log(cat.label);
-      for (const entry of cat.entries) {
-        console.log(`   • ${entry}`);
+    // Categorize entries for display
+    const categories = {
+      feat: { label: '🚀 New Features', entries: [] },
+      fix: { label: '🐛 Bug Fixes', entries: [] },
+      docs: { label: '📚 Documentation', entries: [] },
+      deps: { label: '📦 Dependencies', entries: [] },
+      other: { label: '🔧 Other Changes', entries: [] }
+    };
+
+    for (const entry of entries) {
+      const lower = entry.toLowerCase();
+      if (lower.startsWith('feat') || lower.includes('add ') || lower.includes('implement')) {
+        categories.feat.entries.push(entry);
+      } else if (lower.startsWith('fix') || lower.includes('fix ')) {
+        categories.fix.entries.push(entry);
+      } else if (lower.startsWith('docs') || lower.includes('documentation')) {
+        categories.docs.entries.push(entry);
+      } else if (lower.includes('bump') || lower.includes('upgrade') || lower.includes('deps')) {
+        categories.deps.entries.push(entry);
+      } else {
+        categories.other.entries.push(entry);
       }
-      console.log('');
     }
+
+    // Display categorized entries
+    for (const [, cat] of Object.entries(categories)) {
+      if (cat.entries.length > 0) {
+        console.log(cat.label);
+        for (const entry of cat.entries) {
+          console.log(`   • ${entry}`);
+        }
+        console.log('');
+      }
+    }
+
+    // Show documentation links hint
+    console.log('📖 Documentation Links:');
+    console.log('   • Configuration: https://ismaelmartinez.github.io/teams-for-linux/configuration');
+    console.log('   • Troubleshooting: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting');
+    console.log('');
+
+    console.log('═'.repeat(60) + '\n');
+
+    console.log('📋 Next steps:');
+    console.log(`   git checkout -b release/v${newVersion}`);
+    console.log(`   git add .`);
+    console.log(`   git commit -m "chore: release v${newVersion}"`);
+    console.log(`   git push -u origin release/v${newVersion}`);
+    console.log(`   gh pr create --title "Release v${newVersion}" --body-file <(npm run generate-release-notes ${newVersion})`);
   }
-
-  // Show documentation links hint
-  console.log('📖 Documentation Links:');
-  console.log('   • Configuration: https://ismaelmartinez.github.io/teams-for-linux/configuration');
-  console.log('   • Troubleshooting: https://ismaelmartinez.github.io/teams-for-linux/troubleshooting');
-  console.log('');
-
-  console.log('═'.repeat(60) + '\n');
-
-  console.log('📋 Next steps:');
-  console.log(`   git checkout -b release/v${newVersion}`);
-  console.log(`   git add .`);
-  console.log(`   git commit -m "chore: release v${newVersion}"`);
-  console.log(`   git push -u origin release/v${newVersion}`);
-  console.log(`   gh pr create --title "Release v${newVersion}" --body-file <(npm run generate-release-notes ${newVersion})`);
 
   rl.close();
 }
