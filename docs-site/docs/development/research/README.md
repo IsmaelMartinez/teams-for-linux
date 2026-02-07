@@ -44,6 +44,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Documentation
 
+- **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
+  - Suggests solutions using troubleshooting docs, detects duplicates, requests missing info
+  - Builds on existing Gemini integration pattern from changelog generator
+  - **Status:** Active research, quick wins ready for implementation
+  - Includes smaller immediate improvements (templates, saved replies, label automation)
+
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
