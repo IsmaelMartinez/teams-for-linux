@@ -1,0 +1,1 @@
+docs: Update roadmap for v2.7.4 release plan, archive logout indicator - by @IsmaelMartinez (#2133)
