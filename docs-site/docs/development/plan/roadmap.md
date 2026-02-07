@@ -21,6 +21,7 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Status |
 |------|-------------|--------|
+| **PR #2101** | MCAS domain suffix handling in hostname validation | Ready to merge |
 | **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review (branch ready) |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review (branch ready) |
 | **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | PR in review (mostly working) |
@@ -50,6 +51,7 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Branch | Status |
 |------|-------------|--------|--------|
+| **PR #2101** | MCAS domain suffix in hostname validation | contributor fork | Ready to merge (partial fix) |
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
 | **#2109/PR #2119** | Quick Chat Access - People API, deep links, inline messaging | `claude/document-chat-modal-l0Ty0` | PR in review (mostly working) |
@@ -389,10 +391,11 @@ These features have completed initial implementation. Further phases depend on u
 
 ### v2.7.4 Release Plan
 
-1. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
-2. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
-3. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
-4. **Dependency updates** - Routine maintenance, Electron upgrade if available
+1. **Merge PR #2101** - MCAS domain suffix handling (partial fix, user not responding)
+2. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
+3. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
+4. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
+5. **Dependency updates** - Routine maintenance, Electron upgrade if available
 
 ### Future Priorities
 
