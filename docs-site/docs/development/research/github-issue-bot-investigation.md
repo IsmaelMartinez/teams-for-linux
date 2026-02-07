@@ -72,8 +72,10 @@ This might be related to a known issue. Here are some things that could help:
 2. Restart the application
 
 If this doesn't help, please share:
-- Your debug log (`~/.config/teams-for-linux/logs/main.log`)
+- Your Teams for Linux version (`teams-for-linux --version`)
 - Your package type (AppImage, deb, rpm, snap, flatpak)
+- Console output when running with debug logging:
+  `teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'`
 
 *I'm a bot providing suggestions based on documentation. A maintainer will review this issue.*
 ```
@@ -153,15 +155,15 @@ For truly new features, the bot could:
 ℹ️ To help investigate this issue, could you provide some additional details?
 
 **Missing information:**
-- [ ] Teams for Linux version (`--version` flag)
+- [ ] Teams for Linux version (`teams-for-linux --version`)
 - [ ] Package type (AppImage, deb, rpm, snap, flatpak)
 - [ ] Desktop environment (GNOME, KDE, etc.)
-- [ ] Debug log (`~/.config/teams-for-linux/logs/main.log`)
+- [ ] Debug console output
 
 **How to get debug logs:**
-1. Start the app with `teams-for-linux --enable-logging`
+1. Run: `teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'`
 2. Reproduce the issue
-3. Share the log file (feel free to redact sensitive info)
+3. Copy the relevant console output (feel free to redact sensitive info)
 
 *This information helps us reproduce and fix the issue faster.*
 ```
