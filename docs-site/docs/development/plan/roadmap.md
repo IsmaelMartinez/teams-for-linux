@@ -125,7 +125,7 @@ These features have completed research and are ready to be built.
 **PR:** [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)
 **Branch:** `claude/document-chat-modal-l0Ty0`
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**ADRs:** [ADR-014: Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md), [ADR-015: Inline Messaging](../adr/015-quick-chat-inline-messaging.md)
+**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging) - included in PR #2119
 **Effort:** Small
 **Status:** PR in review - mostly working
 
@@ -241,22 +241,41 @@ These features have MVP implementations and real user feedback identifying gaps.
 **Description:** Intelligent GitHub issue automation to suggest solutions from documentation, detect duplicates, request missing info, and reduce maintainer workload.
 
 **Quick wins ready for implementation:**
+
 - Issue templates improvements
 - Saved replies for common responses
 - Label automation via GitHub Actions
 
 **Full bot (future):**
+
 - AI-powered solution suggestions from troubleshooting docs
 - Duplicate detection via embeddings
 - Enhancement research triggers
 
 ---
 
-### Awaiting User Feedback
+### Configuration Organization
+
+**Research:** [configuration-organization-research.md](../research/configuration-organization-research.md)
+**Current Status:** Phase 1 Complete
+
+**Approach:** New features use nested configuration patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`). Existing flat options migrate opportunistically when modules are refactored.
+
+**Already Using Nested Patterns:**
+
+- `mqtt.*` - MQTT integration
+- `graphApi.*` - Graph API integration
+- `customNotification.*` - Custom notification system
+- `cacheManagement.*` - Cache management
+- `screenSharingThumbnail.*` - Screen sharing thumbnail
+
+---
+
+## Awaiting User Feedback
 
 These features have completed initial implementation. Further phases depend on user requests.
 
-#### MQTT Extended Status Phase 2
+### MQTT Extended Status Phase 2
 
 **Research:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Current Status:** Phase 1 Complete
@@ -277,7 +296,7 @@ These features have completed initial implementation. Further phases depend on u
 
 ---
 
-#### Graph API Enhanced Features
+### Graph API Enhanced Features
 
 **Research:** [graph-api-integration-research.md](../research/graph-api-integration-research.md)
 **Current Status:** Phase 1 POC Complete
@@ -297,23 +316,6 @@ These features have completed initial implementation. Further phases depend on u
 - Retry logic with exponential backoff
 
 **Note:** Presence endpoint returns 403 Forbidden - Teams token lacks `Presence.Read` scope.
-
----
-
-### Configuration Organization
-
-**Research:** [configuration-organization-research.md](../research/configuration-organization-research.md)
-**Current Status:** Phase 1 Complete
-
-**Approach:** New features use nested configuration patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`). Existing flat options migrate opportunistically when modules are refactored.
-
-**Already Using Nested Patterns:**
-
-- `mqtt.*` - MQTT integration
-- `graphApi.*` - Graph API integration
-- `customNotification.*` - Custom notification system
-- `cacheManagement.*` - Cache management
-- `screenSharingThumbnail.*` - Screen sharing thumbnail
 
 ---
 
@@ -420,5 +422,5 @@ These features have completed initial implementation. Further phases depend on u
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
 - [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
-- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
-- [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
+- ADR-014: Quick Chat Deep Link Approach - Deep links for chat navigation (in PR #2119)
+- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals (in PR #2119)
