@@ -1,0 +1,1 @@
+chore(deps): bump webpack from 5.101.3 to 5.105.0 in /docs-site in the npm_and_yarn group across 1 directory (#2134)
