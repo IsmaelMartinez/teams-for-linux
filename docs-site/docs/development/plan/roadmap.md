@@ -12,7 +12,7 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
 | **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Ready to implement | Small |
+| **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
 | **Medium** | GitHub Issue Bot (#2126) | Research complete | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
@@ -23,7 +23,7 @@ This document outlines the future development direction for Teams for Linux, org
 |------|-------------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review (branch ready) |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review (branch ready) |
-| **#2109** | Quick Chat Access - People API search + deep link navigation | Ready to implement |
+| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | PR in review (mostly working) |
 | **Deps** | Dependency updates and Electron upgrade (if available) | Pending |
 
 ### Recently Completed (v2.7.3)
@@ -52,12 +52,12 @@ This document outlines the future development direction for Teams for Linux, org
 |------|-------------|--------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
+| **#2109/PR #2119** | Quick Chat Access - People API, deep links, inline messaging | `claude/document-chat-modal-l0Ty0` | PR in review (mostly working) |
 
 ### Ready to Implement
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **#2109** | Quick Chat Access (People API search + deep link) | Spikes complete, deep link approach validated |
 | **Deps** | Dependency updates | Routine maintenance |
 
 ### Awaiting User Validation (Post v2.7.3)
@@ -122,34 +122,30 @@ These features have completed research and are ready to be built.
 ### Quick Chat Access
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
+**PR:** [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)
+**Branch:** `claude/document-chat-modal-l0Ty0`
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
+**ADRs:** [ADR-014: Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md), [ADR-015: Inline Messaging](../adr/015-quick-chat-inline-messaging.md)
 **Effort:** Small
-**Status:** Ready to implement
+**Status:** PR in review - mostly working
 
-**Spike Results (2025-01-31):**
+**What's Implemented (PR #2119):**
 
-- Chat API (`/me/chats`) - 403 Forbidden (Teams token lacks permissions)
-- People API (`/me/people`) - Works, returns contacts ranked by interaction
-- Deep links (`/l/chat/0/0?users=email`) - Works, navigates Teams to chat
+- `app/quickChat/` module - QuickChatModal with search UI
+- `app/graphApi/index.js` - GraphApiClient with `searchPeople` method
+- People API search for contacts ranked by interaction
+- Deep link navigation to open chats (`openChatWithUser`)
+- Inline message sending via Teams React internals
+- Menu item and keyboard shortcut integration
+- IPC channels registered and allowlisted
+- Configuration and documentation updates
 
-**Revised Implementation (Deep Link Approach):**
-
-1. Add `searchPeople` method to GraphApiClient
-2. Create QuickChatModal with user search UI
-3. On user selection, navigate via deep link (`openChatWithUser`)
-4. Add keyboard shortcut to show modal (e.g., Ctrl+Shift+C)
-5. Optional: enhance notification clicks to open chat with sender
-
-**Already Implemented:**
-
-- `window.electronAPI.openChatWithUser(email)` - deep link navigation helper
-
-**Scope (Simplified):**
+**Scope:**
 
 - Search for contacts via People API
-- Click to open chat (navigates Teams, no inline messaging)
+- Click to open chat (navigates Teams via deep link)
+- Inline message sending (via Teams React internals - see ADR-015)
 - No message history display (API blocked)
-- No inline message sending (API blocked)
 
 **Value:**
 
@@ -391,9 +387,9 @@ These features have completed initial implementation. Further phases depend on u
 
 ### v2.7.4 Release Plan
 
-1. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
-2. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
-3. **Implement Quick Chat Access (#2109)** - People API search + deep link navigation
+1. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
+2. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
+3. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
 4. **Dependency updates** - Routine maintenance, Electron upgrade if available
 
 ### Future Priorities
@@ -424,3 +420,5 @@ These features have completed initial implementation. Further phases depend on u
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
 - [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
+- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
+- [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
