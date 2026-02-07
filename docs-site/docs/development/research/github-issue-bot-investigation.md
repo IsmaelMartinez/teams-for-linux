@@ -610,8 +610,8 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ### Issue Templates
 
-- **[Bug Report Template](/.github/ISSUE_TEMPLATE/bug_report_form.yml)** - Current structure
-- **[Feature Request Template](/.github/ISSUE_TEMPLATE/feature_request_form.yml)** - Current structure
+- **[Bug Report Template](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/.github/ISSUE_TEMPLATE/bug_report_form.yml)** - Current structure
+- **[Feature Request Template](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/.github/ISSUE_TEMPLATE/feature_request_form.yml)** - Current structure
 
 ---
 
