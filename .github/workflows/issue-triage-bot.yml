@@ -1,0 +1,226 @@
+name: Issue Triage Bot
+
+# Analyzes new bug reports for missing information and posts a helpful comment
+# requesting additional details. Part of the GitHub Issue Bot Phase 1 (MVP).
+# See: docs-site/docs/development/research/github-issue-bot-investigation.md
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  check-missing-info:
+    runs-on: ubuntu-latest
+    # Only run for issues labeled as bugs
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    permissions:
+      issues: write
+
+    steps:
+      - name: Analyze issue and request missing information
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const issueBody = context.payload.issue.body || '';
+            const issueUser = context.payload.issue.user.login;
+
+            // Skip bot accounts
+            if (issueUser.includes('[bot]') || issueUser.endsWith('-bot')) {
+              console.log(`Skipping bot account: ${issueUser}`);
+              return;
+            }
+
+            // --- Section Parser ---
+            // GitHub issue forms produce markdown with ### headers for each field.
+            // Each section runs until the next ### header or end of body.
+            function getSection(body, header) {
+              const escaped = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(
+                `### ${escaped}\\s*\\n([\\s\\S]*?)(?=\\n### |$)`
+              );
+              const match = body.match(regex);
+              return match ? match[1].trim() : '';
+            }
+
+            // --- Content Analysis Helpers ---
+            // Strips markdown code fences (triple+ backticks with optional language)
+            function stripFences(text) {
+              return text.replace(/`{3,}[\w]*\n?/g, '').trim();
+            }
+
+            // Checks if reproduction steps / expected behavior contain only
+            // the default numbered template (1. / 2. / 3. / ...) without
+            // any actual user-written descriptions.
+            function isDefaultStepsTemplate(content) {
+              if (!content || content === '_No response_') return true;
+              const cleaned = stripFences(content);
+              if (!cleaned) return true;
+              // Remove numbered list markers and ellipsis, check if anything remains
+              const withoutMarkers = cleaned
+                .replace(/^\s*\d+\.\s*/gm, '')
+                .replace(/\.\.\./g, '')
+                .trim();
+              return withoutMarkers.length === 0;
+            }
+
+            // Checks if debug section contains only the default command template
+            // without any actual log output from the user.
+            function isDebugMissing(content) {
+              if (!content || content === '_No response_') return true;
+              const cleaned = stripFences(content);
+              if (!cleaned) return true;
+              // Remove language identifiers and the default command
+              const withoutDefaults = cleaned
+                .replace(/^bash\s*$/gm, '')
+                .replace(/^markdown\s*$/gm, '')
+                .replace(
+                  /ELECTRON_ENABLE_LOGGING=true\s+teams-for-linux\s+--logConfig='[^']*'/g,
+                  ''
+                )
+                .trim();
+              return withoutDefaults.length === 0;
+            }
+
+            // --- Extract and Analyze Sections ---
+            const canReproduce = getSection(
+              issueBody,
+              'Can you reproduce this bug in the website/PWA?'
+            );
+            const reproSteps = getSection(issueBody, 'Reproduction steps');
+            const expectedBehavior = getSection(issueBody, 'Expected Behavior');
+            const debugOutput = getSection(issueBody, 'Debug');
+
+            const missingItems = [];
+
+            if (isDefaultStepsTemplate(reproSteps)) {
+              missingItems.push({
+                label: 'Reproduction steps',
+                detail:
+                  'Step-by-step instructions to trigger the bug (the more specific, the faster we can investigate)',
+              });
+            }
+
+            if (isDebugMissing(debugOutput)) {
+              missingItems.push({
+                label: 'Debug console output',
+                detail:
+                  'Log output from running the application with debug logging enabled',
+              });
+            }
+
+            if (isDefaultStepsTemplate(expectedBehavior)) {
+              missingItems.push({
+                label: 'Expected behavior',
+                detail:
+                  'A description of what you expected to happen instead',
+              });
+            }
+
+            const isPwaReproducible =
+              canReproduce.toLowerCase().includes('yes');
+
+            // Skip if nothing to report
+            if (missingItems.length === 0 && !isPwaReproducible) {
+              console.log(
+                'Issue has all expected information. No comment needed.'
+              );
+              return;
+            }
+
+            // Safety: check if bot already commented on this issue
+            const { data: comments } =
+              await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+            const BOT_SIGNATURE =
+              "I'm a bot that helps with initial issue triage";
+            if (
+              comments.some(
+                (c) =>
+                  c.user.type === 'Bot' &&
+                  c.body.includes(BOT_SIGNATURE)
+              )
+            ) {
+              console.log(
+                'Bot already commented on this issue. Skipping.'
+              );
+              return;
+            }
+
+            // --- Build Comment ---
+            const parts = [];
+
+            parts.push('👋 Thanks for reporting this issue!\n');
+
+            // PWA reproducibility note
+            if (isPwaReproducible) {
+              parts.push(
+                '> **Note:** You mentioned this bug can also be reproduced in the Teams website/PWA. ' +
+                  'This might indicate the issue is with the Teams web app itself rather than Teams for Linux. ' +
+                  'You could also report it to [Microsoft](https://feedbackportal.microsoft.com/). ' +
+                  "That said, we'll still take a look — there may be something we can do on our end.\n"
+              );
+            }
+
+            // Missing information checklist
+            if (missingItems.length > 0) {
+              parts.push(
+                'To help us investigate, could you provide some additional details?\n'
+              );
+              parts.push('**Missing information:**');
+              for (const item of missingItems) {
+                parts.push(
+                  `- [ ] **${item.label}** — ${item.detail}`
+                );
+              }
+              parts.push('');
+            }
+
+            // Debug instructions (collapsible)
+            if (
+              missingItems.some(
+                (i) => i.label === 'Debug console output'
+              )
+            ) {
+              parts.push(
+                '<details>\n' +
+                  '<summary><b>How to get debug logs</b></summary>\n\n' +
+                  '1. Run the application from the terminal with logging enabled:\n' +
+                  '   ```bash\n' +
+                  "   ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{\"transports\":{\"console\":{\"level\":\"debug\"}}}'\n" +
+                  '   ```\n' +
+                  '2. Reproduce the issue\n' +
+                  '3. Copy the relevant console output\n' +
+                  '4. Feel free to redact any sensitive information (emails, URLs, etc.)\n\n' +
+                  '</details>\n'
+              );
+            }
+
+            // Troubleshooting guide link
+            parts.push(
+              '> **Tip:** You might also find helpful information in our ' +
+                '[Troubleshooting Guide](https://ismaelmartinez.github.io/teams-for-linux/troubleshooting).\n'
+            );
+
+            // Bot disclosure
+            parts.push('---\n');
+            parts.push(
+              "*I'm a bot that helps with initial issue triage. " +
+                'A maintainer will review this issue.*'
+            );
+
+            const commentBody = parts.join('\n');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody,
+            });
+
+            console.log(
+              `Posted missing info comment (${missingItems.length} missing items, PWA reproducible: ${isPwaReproducible})`
+            );
