@@ -1,7 +1,7 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-01
-**Current Version:** v2.7.2
+**Last Updated:** 2026-02-07
+**Current Version:** v2.7.3
 **Status:** Living Document
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
@@ -10,51 +10,59 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| **High** | PR #2082 Join Meeting Dialog | In progress | Nearly done |
-| **High** | PR #2101 MCAS Domain Handling | Pending final checks | Tiny |
-| **High** | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) Screen Lock Media Privacy | Ready to implement | Small |
-| **High** | PII Log Sanitization | ✅ Complete (all phases) | - |
+| **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
+| **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
+| **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
+| **Medium** | GitHub Issue Bot (#2126) | Research complete | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
-| **Medium** | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) Custom Notifications Phase 2 | User feedback confirms gaps | Medium |
-| **Medium** | [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) Quick Chat Access | Spikes complete - deep link approach ready | Small |
-| **Low** | PR #2033 Logout Indicator | Parked - user not responding | - |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
 ### Planning for v2.7.4
 
 | Item | Description | Status |
 |------|-------------|--------|
-| **#2109** | Quick Chat Access implementation (spikes passed in PR #2111) | In progress |
-| **#2110** | Custom notifications improvements | In progress |
-| **#2112** | Additional feature work | In progress |
+| **PR #2101** | MCAS domain suffix handling in hostname validation | Ready to merge |
+| **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review (branch ready) |
+| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review (branch ready) |
+| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | PR in review (mostly working) |
+| **Deps** | Dependency updates and Electron upgrade (if available) | Pending |
 
-### Recently Merged (v2.7.3 prep)
+### Recently Completed (v2.7.3)
 
 | PR | Description | Status |
 |----|-------------|--------|
+| **#2082** | Replace clipboard monitoring with join meeting dialog | ✅ Merged |
+| **#2118** | PII sanitizer integration with electron-log (Phase 2) | ✅ Merged |
+| **#2123** | Fix Teams icon registration - CSP CDN domain allowlist | ✅ Merged |
+| **#2128** | Enhanced release notes generation for release workflow | ✅ Merged |
+| **#2126** | GitHub Issue Bot research and investigation document | ✅ Merged |
+| **#2117** | Electron 39.4.0, electron-builder 26.7.0, globals 17.3.0 | ✅ Merged |
 | **#2116** | PII log sanitizer utility (Phase 1) | ✅ Merged |
 | **#2111** | Chat API validation spikes for quick chat feasibility | ✅ Merged |
-| **#2117** | Electron 39.4.0, electron-builder 26.7.0, globals 17.3.0 | ✅ Merged |
 | **#2104** | appIcon KDE fix - Convert window icon to nativeImage | ✅ Merged |
 | **#2060** | Camera resolution and aspect ratio browser tools | ✅ Merged |
 | **#2102** | AppImage extraction fix (no execute permissions) | ✅ Merged |
-| **#2114** | PII log removal research and implementation plan | ✅ Merged |
-| **#2103** | Playwright upgrade to v1.58.1 | ✅ Merged |
-| **#2096** | Fix tray icon rendering on Linux (nativeImage) | ✅ Merged |
-| **#2097** | Yargs v18 and dependency updates | ✅ Merged |
 
 ---
 
-## Current Focus (v2.7.3)
+## Current Focus (v2.7.4)
 
-### In Progress
+### In Progress - PRs Ready for Review
 
-| Item | Description | Status |
-|------|-------------|--------|
-| **PR #2082** | Replace clipboard monitoring with join meeting dialog (fixes Wayland/Flatpak) | In branch |
-| **PR #2101** | MCAS domain suffix in hostname validation | Pending final checks |
+| Item | Description | Branch | Status |
+|------|-------------|--------|--------|
+| **PR #2101** | MCAS domain suffix in hostname validation | contributor fork | Ready to merge (partial fix) |
+| **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
+| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
+| **#2109/PR #2119** | Quick Chat Access - People API, deep links, inline messaging | `claude/document-chat-modal-l0Ty0` | PR in review (mostly working) |
 
-### Awaiting User Validation (Post-Release)
+### Ready to Implement
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **Deps** | Dependency updates | Routine maintenance |
+
+### Awaiting User Validation (Post v2.7.3)
 
 | Item | Description | Notes |
 |------|-------------|-------|
@@ -77,11 +85,8 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **PR #2033** | Logout indicator to tray icon | User not responding |
 | **#2048** | Uninstall instructions | Good first issue for contributors |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
-
-> **Note:** PR #2060 (Camera resolution/aspect ratio) was merged; awaiting user validation that it fixes #1860.
 
 ---
 
@@ -93,7 +98,9 @@ These features have completed research and are ready to be built.
 
 **Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
 **Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
+**Branch:** `claude/screen-lock-media-privacy-HMTPA`
 **Effort:** Small
+**Status:** PR in review
 
 **Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
 
@@ -117,34 +124,30 @@ These features have completed research and are ready to be built.
 ### Quick Chat Access
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
+**PR:** [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)
+**Branch:** `claude/document-chat-modal-l0Ty0`
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
+**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging) - included in PR #2119
 **Effort:** Small
-**Status:** ✅ Spikes complete - ready for implementation
+**Status:** PR in review - mostly working
 
-**Spike Results (2025-01-31):**
+**What's Implemented (PR #2119):**
 
-- ❌ Chat API (`/me/chats`) - 403 Forbidden (Teams token lacks permissions)
-- ✅ People API (`/me/people`) - Works, returns contacts ranked by interaction
-- ✅ Deep links (`/l/chat/0/0?users=email`) - Works, navigates Teams to chat
+- `app/quickChat/` module - QuickChatModal with search UI
+- `app/graphApi/index.js` - GraphApiClient with `searchPeople` method
+- People API search for contacts ranked by interaction
+- Deep link navigation to open chats (`openChatWithUser`)
+- Inline message sending via Teams React internals
+- Menu item and keyboard shortcut integration
+- IPC channels registered and allowlisted
+- Configuration and documentation updates
 
-**Revised Implementation (Deep Link Approach):**
-
-1. Add `searchPeople` method to GraphApiClient
-2. Create QuickChatModal with user search UI
-3. On user selection, navigate via deep link (`openChatWithUser`)
-4. Add keyboard shortcut to show modal (e.g., Ctrl+Shift+C)
-5. Optional: enhance notification clicks to open chat with sender
-
-**Already Implemented:**
-
-- `window.electronAPI.openChatWithUser(email)` - deep link navigation helper
-
-**Scope (Simplified):**
+**Scope:**
 
 - Search for contacts via People API
-- Click to open chat (navigates Teams, no inline messaging)
+- Click to open chat (navigates Teams via deep link)
+- Inline message sending (via Teams React internals - see ADR-015)
 - No message history display (API blocked)
-- No inline message sending (API blocked)
 
 **Value:**
 
@@ -154,36 +157,16 @@ These features have completed research and are ready to be built.
 
 ---
 
-### PII Log Sanitization ✅ Complete
+### PII Log Sanitization - Complete
 
 **ADR:** [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md)
 **Status:** ✅ All phases complete
-**Priority:** High (was)
-
-**Description:** Implemented automatic PII sanitization for all logs using electron-log hooks, plus verbosity reduction.
-
-**Implementation Summary:**
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| Phase 1 | Create `logSanitizer.js` utility with regex patterns | ✅ Done (PR #2116) |
-| Phase 2 | Integrate sanitizer with electron-log hooks | ✅ Done |
-| Phase 3 | ~~Fix high-risk files~~ | Not needed (hook handles all logs) |
-| Phase 4 | Documentation and CLAUDE.md guidelines | ✅ Done |
-| Phase 5 | Log verbosity reduction (21% debug log reduction) | ✅ Done |
 
 **Key Components:**
 
 - `app/utils/logSanitizer.js` - Core sanitizer with regex patterns for emails, IPs, tokens, UUIDs, etc.
 - `app/config/logger.js` - electron-log hook that automatically sanitizes all log output
 - Comprehensive unit tests covering all PII patterns and edge cases
-
-**Value Delivered:**
-
-- GDPR compliance improvement
-- Safer log files for bug reports
-- Reduced log noise for debugging
-- Security best practices
 
 ---
 
@@ -193,7 +176,7 @@ These features have completed research and are ready to be built.
 **Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Effort:** Tiny
-**Status:** ⏸️ Awaiting user feedback (original requester inactive since Nov 2025)
+**Status:** Awaiting user feedback (original requester inactive since Nov 2025)
 
 **Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
 
@@ -210,42 +193,6 @@ These features have completed research and are ready to be built.
 
 ---
 
-## Parked - Awaiting User Response
-
-### Tray Icon Logout Indicator
-
-**Issue:** [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
-**PR:** [#2033](https://github.com/IsmaelMartinez/teams-for-linux/pull/2033)
-**Research:** [logout-indicator-investigation.md](../research/logout-indicator-investigation.md)
-**Branch:** `origin/claude/analyze-research-spikes-XbYVZ`
-**Status:** ⏸️ PARKED - User not responding to PR
-
-**Description:** Visual indicator on tray icon when logged out of Teams, plus optional notification.
-
-**Work Completed (~50%):**
-
-- ✅ Validation spikes implemented (`authSpikes.js` - 1095 lines)
-- ✅ Auth detection methods added to `reactHandler.js`
-- ✅ Tray icon overlay rendering (`trayIconRenderer.js`)
-- ✅ Configuration structure added
-- ✅ Documentation updated with spike results
-- ❓ Awaiting user testing/validation of the approach
-
-**Work Summary:** Auth detection spike code, tray icon overlay rendering, and configuration structure. See branch for details.
-
-**Next Steps:**
-
-- If no response by end of February 2026, consider closing issue and archiving branch
-- Alternative: Merge as experimental feature behind config flag
-
----
-
-## Ready for Implementation (Spikes Passed)
-
-(No features currently in this section - Quick Chat Access has been moved to "Ready for Implementation" above.)
-
----
-
 ## User Feedback Received - Improvements Needed
 
 These features have MVP implementations and real user feedback identifying gaps.
@@ -255,35 +202,74 @@ These features have MVP implementations and real user feedback identifying gaps.
 **Issue:** [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108)
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
 **Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
-**Current Status:** MVP Complete (v2.6.16) - User feedback confirms gaps
-**Priority:** Medium
+**Branch:** `claude/custom-notifications-phase-2-wirLH`
+**Current Status:** PR in review
+**Priority:** High
 
-**MVP Delivered:**
+**MVP Delivered (v2.6.16):**
 
-- ✅ Meeting notifications (meeting started) - working with Quickshell/Noctalia
-- ✅ Toast notifications with auto-dismiss
-- ✅ Click-to-focus functionality
-- ✅ Configuration via `notificationMethod: "custom"`
+- Meeting notifications (meeting started) - working with Quickshell/Noctalia
+- Toast notifications with auto-dismiss
+- Click-to-focus functionality
+- Configuration via `notificationMethod: "custom"`
 
-**Known Gaps (from #2039):**
+**Phase 2 Implementation (in branch):**
 
-- ❌ **Chat notifications** - Private/group chat messages only appear in internal notification, not system
-- ❌ **Calendar invitations** - Meeting invites bypass system notification handler
-- Different notification types use separate code paths
+- Route chat notifications through custom notification system
+- Route calendar invitation notifications through custom notification system
+- Route activity notifications through custom notification system
+- Fix notification lifecycle and hide native Teams toasts
+- Fix spurious notifications on chat navigation
 
-**Phase 2 Priority Items:**
-
-1. Route chat notifications through custom notification system
-2. Route calendar invitation notifications through custom notification system
-3. Investigate unified notification handling
-
-**Phase 2 Nice-to-Have:**
+**Phase 2 Nice-to-Have (future):**
 
 - Notification center drawer
 - Mark as read/unread
 - Badge count on tray icon
 
 **Status:** User actively using feature, confirmed it helps but incomplete coverage.
+
+---
+
+## Strategic / Future
+
+### GitHub Issue Bot
+
+**Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
+**Status:** Research complete
+**Priority:** Medium
+**Effort:** Medium
+
+**Description:** Intelligent GitHub issue automation to suggest solutions from documentation, detect duplicates, request missing info, and reduce maintainer workload.
+
+**Quick wins ready for implementation:**
+
+- Issue templates improvements
+- Saved replies for common responses
+- Label automation via GitHub Actions
+
+**Full bot (future):**
+
+- AI-powered solution suggestions from troubleshooting docs
+- Duplicate detection via embeddings
+- Enhancement research triggers
+
+---
+
+### Configuration Organization
+
+**Research:** [configuration-organization-research.md](../research/configuration-organization-research.md)
+**Current Status:** Phase 1 Complete
+
+**Approach:** New features use nested configuration patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`). Existing flat options migrate opportunistically when modules are refactored.
+
+**Already Using Nested Patterns:**
+
+- `mqtt.*` - MQTT integration
+- `graphApi.*` - Graph API integration
+- `customNotification.*` - Custom notification system
+- `cacheManagement.*` - Cache management
+- `screenSharingThumbnail.*` - Screen sharing thumbnail
 
 ---
 
@@ -331,43 +317,32 @@ These features have completed initial implementation. Further phases depend on u
 - Error handling improvements
 - Retry logic with exponential backoff
 
-**Phase 3 (Future):**
-
-- Calendar widget/panel
-- Quick actions for meetings
-- Settings UI for Graph API options
-
 **Note:** Presence endpoint returns 403 Forbidden - Teams token lacks `Presence.Read` scope.
 
 ---
 
-## Strategic / Incremental
+## Not Planned / Not Feasible
 
-These are long-term improvements that happen incrementally.
+### Tray Icon Logout Indicator - Archived
 
-### Configuration Organization
+**Issue:** [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
+**PR:** [#2033](https://github.com/IsmaelMartinez/teams-for-linux/pull/2033)
+**Research:** [logout-indicator-investigation.md](../research/logout-indicator-investigation.md)
+**Branch:** `origin/claude/analyze-research-spikes-XbYVZ`
+**Status:** Archived - User not responding
 
-**Research:** [configuration-organization-research.md](../research/configuration-organization-research.md)
-**Current Status:** Phase 1 Complete
+**Reason:** PR #2033 was open for over 3 months with no response from the original requester. Validation spikes were implemented (~50% of the work) but could never be tested by the user who requested the feature. Without user validation, the approach (detecting logout via Teams React internals) remains unproven and risks false positives.
 
-**Approach:** New features use nested configuration patterns from day one (e.g., `mqtt`, `graphApi`, `customNotification`). Existing flat options migrate opportunistically when modules are refactored.
+**Work completed (archived in branch):**
 
-**No Planned:**
+- Auth detection spikes (`authSpikes.js`)
+- Tray icon overlay rendering
+- Configuration structure
+- Documentation
 
-- Comprehensive auto-migration tooling
-- Coordinated migration effort
-
-**Already Using Nested Patterns:**
-
-- `mqtt.*` - MQTT integration
-- `graphApi.*` - Graph API integration
-- `customNotification.*` - Custom notification system
-- `cacheManagement.*` - Cache management
-- `screenSharingThumbnail.*` - Screen sharing thumbnail
+**Reopening:** If a user requests this feature again and is willing to test, the branch preserves all spike code for reuse.
 
 ---
-
-## Not Planned / Not Feasible
 
 ### GNOME Search Provider
 
@@ -414,36 +389,19 @@ These are long-term improvements that happen incrementally.
 
 ## Implementation Priorities
 
-### Completed for v2.7.3
+### v2.7.4 Release Plan
 
-- ✅ **PR #2116** - PII log sanitizer utility (Phase 1)
-- ✅ **PR #2111** - Chat API validation spikes (enables v2.7.4 quick chat)
-- ✅ **PR #2117** - Electron 39.4.0 and dependency updates
-- ✅ **PR #2104** - appIcon KDE fix (nativeImage for window icon)
-- ✅ **PR #2060** - Camera resolution and aspect ratio browser tools
-- ✅ **PR #2102** - AppImage extraction fix
-- ✅ **PR #2114** - PII log removal research and documentation
-- ✅ **PR #2103** - Playwright v1.58.1 upgrade
-- ✅ **PR #2096** - Tray icon rendering fix (nativeImage)
-- ✅ **PR #2097** - Yargs v18 and dependency updates
-
-### Remaining for v2.7.3
-
-1. **Finish PR #2082** - Join meeting dialog (in progress)
-2. **Merge PR #2101** - MCAS domain suffix handling (pending final checks)
-3. **#2106 Screen Lock Media Privacy** - Low risk, high value, builds on existing MQTT
-
-### Planning for v2.7.4
-
-4. **#2109 Quick Chat Access** - Spikes complete, deep link approach ready to build
-5. **#2110** - Custom notifications improvements (in progress)
-6. **#2112** - Additional feature work (in progress)
-7. **#2108 Custom Notifications Phase 2** - Address user-confirmed gaps
+1. **Merge PR #2101** - MCAS domain suffix handling (partial fix, user not responding)
+2. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
+3. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
+4. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
+5. **Dependency updates** - Routine maintenance, Electron upgrade if available
 
 ### Future Priorities
 
-8. **Logout Indicator** - Parked; resume only if user responds to PR #2033
-9. **#2107 MQTT Screen Sharing Status** - Awaiting user feedback from original requester
+5. **GitHub Issue Bot quick wins** - Issue templates, saved replies, label automation
+6. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
+7. **GitHub Issue Bot full implementation** - AI-powered triage automation
 
 ### Principles
 
@@ -451,6 +409,7 @@ These are long-term improvements that happen incrementally.
 - **Start simple:** Build MVP, add complexity only if needed
 - **User-driven:** Implement Phase 2 features only when users request them
 - **Linux-first:** Embrace Unix philosophy - composable tools over monolithic features
+- **Archive stale work:** Don't keep unvalidated features alive indefinitely
 
 ---
 
@@ -465,3 +424,6 @@ These are long-term improvements that happen incrementally.
 
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
+- [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
+- ADR-014: Quick Chat Deep Link Approach - Deep links for chat navigation (in PR #2119)
+- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals (in PR #2119)
