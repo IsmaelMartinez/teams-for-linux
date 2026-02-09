@@ -57,9 +57,13 @@ When reproduction steps and debug output are missing:
 > <details>
 > <summary><b>How to get debug logs</b></summary>
 >
-> 1. Run the application with debug logging enabled, e.g., `teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'`
+> 1. Run the application from the terminal with logging enabled:
+>    ```bash
+>    ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'
+>    ```
 > 2. Reproduce the issue
 > 3. Copy the relevant console output
+> 4. Feel free to redact any sensitive information (emails, URLs, etc.)
 >
 > </details>
 >
