@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-09
 **Current Version:** v2.7.3
 **Status:** Living Document
 
@@ -13,7 +13,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
 | **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
 | **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
-| **Medium** | GitHub Issue Bot (#2126) | Phase 1 in progress | Medium |
+| **Medium** | GitHub Issue Bot (#2126/PR #2135) | Phase 1 complete, Phase 2+ planned | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
@@ -236,15 +236,17 @@ These features have MVP implementations and real user feedback identifying gaps.
 ### GitHub Issue Bot
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
-**Status:** Phase 1 (Information Request Bot) in progress
+**PR:** [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)
+**Status:** Phase 1 complete (PR in review)
 **Priority:** Medium
-**Effort:** Medium
+**Effort:** Medium (per phase)
 
 **Description:** Intelligent GitHub issue automation to suggest solutions from documentation, detect duplicates, request missing info, and reduce maintainer workload.
 
-**Phase 1 — Information Request Bot (in progress):**
+**Phase 1 — Information Request Bot (complete):**
 
 - Workflow: `.github/workflows/issue-triage-bot.yml`
+- Template documentation: `.github/issue-bot/templates/missing-info.md`
 - Detects missing reproduction steps, debug output, and expected behavior in bug reports
 - Notes when bug is reproducible on Teams web/PWA (may be a Microsoft issue)
 - Posts helpful comment with checklist of missing info and debug instructions
@@ -253,9 +255,9 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 **Future phases:**
 
-- Phase 2: Solution suggestions from troubleshooting docs
-- Phase 3: Duplicate detection via embeddings
-- Phase 4: Enhancement context from roadmap/research/ADRs
+- Phase 2: Solution suggestions from troubleshooting docs (AI-powered with Gemini)
+- Phase 3: Duplicate detection via embeddings (RAG system)
+- Phase 4: Enhancement context from roadmap/research/ADRs (AI-assisted)
 
 ---
 
@@ -402,9 +404,9 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-5. **GitHub Issue Bot Phase 1** - Information request bot (in progress)
+5. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
 6. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-7. **GitHub Issue Bot Phases 2-4** - Solution suggestions, duplicate detection, enhancement context
+7. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 
