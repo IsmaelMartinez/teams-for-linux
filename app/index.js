@@ -236,6 +236,18 @@ function onAppTerminated(signal) {
   }
 }
 
+function handleShortcutCommand({ action, shortcut }) {
+  if (!shortcut) return;
+
+  const window = mainAppWindow.getWindow();
+  if (window && !window.isDestroyed()) {
+    sendKeyboardEventToWindow(window, shortcut);
+    console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
+  } else {
+    console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
+  }
+}
+
 function initializeMqtt() {
   mqttClient = new MQTTClient(config);
 
@@ -271,18 +283,6 @@ function initializeMqtt() {
     }
   }
 
-  function handleShortcutCommand({ action, shortcut }) {
-    if (!shortcut) return;
-
-    const window = mainAppWindow.getWindow();
-    if (window && !window.isDestroyed()) {
-      sendKeyboardEventToWindow(window, shortcut);
-      console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
-    } else {
-      console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
-    }
-  }
-
   async function handleMqttCommand(command) {
     const { action } = command;
 
@@ -300,8 +300,7 @@ function initializeMqtt() {
   mqttMediaStatusService.initialize();
 }
 
-async function handleAppReady() {
-  // check for configuration errors
+function showConfigurationDialogs() {
   if (config.error) {
     dialog.showMessageBox({
       title: "Configuration Error",
@@ -311,7 +310,6 @@ async function handleAppReady() {
       message: `Error in config file '${config.error}'.\n Loading default configuration`,
     });
   }
-  // check for configuration warnings
   if (config.warnings && config.warnings.length > 0) {
     dialog.showMessageBox({
       title: "Configuration Warning",
@@ -321,36 +319,9 @@ async function handleAppReady() {
       message: config.warnings.join("\n\n"),
     });
   }
+}
 
-  process.on("SIGTRAP", onAppTerminated);
-  process.on("SIGINT", onAppTerminated);
-  process.on("SIGTERM", onAppTerminated);
-  //Just catch the error
-  process.stdout.on("error", () => {});
-
-  if (config.cacheManagement?.enabled) {
-    const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
-      cacheCheckIntervalMs:
-        config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
-      partition: config.partition, // Pass partition config for dynamic cache paths
-    });
-    cacheManager.start();
-
-    // Stop cache manager on app termination
-    app.on("before-quit", () => {
-      cacheManager.stop();
-    });
-  }
-
-  // Initialize MQTT client if enabled
-  if (config.mqtt?.enabled) {
-    initializeMqtt();
-  }
-
-  // Load menu-toggleable settings from persistent store
-  // These settings can be changed via the application menu and are persisted
-  // across app restarts. The store values override the config file values.
+function loadMenuToggleSettings() {
   const menuToggleSettings = [
     'disableNotifications',
     'disableNotificationSound',
@@ -365,52 +336,81 @@ async function handleAppReady() {
       config[setting] = appConfig.legacyConfigStore.get(setting);
     }
   }
+}
+
+function initializeGraphApiClient() {
+  if (!config.graphApi?.enabled) return;
+
+  graphApiClient = new GraphApiClient(config);
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow) {
+    graphApiClient.initialize(mainWindow);
+    console.debug("[GRAPH_API] Graph API client initialized with main window");
+  } else {
+    console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
+  }
+}
+
+function initializeQuickChat() {
+  const mainWindow = mainAppWindow.getWindow();
+  if (!mainWindow) return;
+
+  quickChatManager = new QuickChatManager(config, mainWindow);
+  quickChatManager.initialize();
+  mainAppWindow.setQuickChatManager(quickChatManager);
+
+  if (quickChatManager.isEnabled()) {
+    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
+    const registered = globalShortcut.register(quickChatShortcut, () => {
+      quickChatManager.toggle();
+    });
+    if (registered) {
+      console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
+    } else {
+      console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
+    }
+  }
+}
+
+function initializeCacheManagement() {
+  if (!config.cacheManagement?.enabled) return;
+
+  const cacheManager = new CacheManager({
+    maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
+    cacheCheckIntervalMs:
+      config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
+    partition: config.partition,
+  });
+  cacheManager.start();
+
+  app.on("before-quit", () => {
+    cacheManager.stop();
+  });
+}
+
+async function handleAppReady() {
+  showConfigurationDialogs();
+
+  process.on("SIGTRAP", onAppTerminated);
+  process.on("SIGINT", onAppTerminated);
+  process.on("SIGTERM", onAppTerminated);
+  process.stdout.on("error", () => {});
+
+  initializeCacheManagement();
+
+  if (config.mqtt?.enabled) {
+    initializeMqtt();
+  }
+
+  loadMenuToggleSettings();
 
   await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
-  // Initialize Graph API client if enabled (after mainAppWindow is ready)
-  if (config.graphApi?.enabled) {
-    graphApiClient = new GraphApiClient(config);
-    const mainWindow = mainAppWindow.getWindow();
-    if (mainWindow) {
-      graphApiClient.initialize(mainWindow);
-      console.debug("[GRAPH_API] Graph API client initialized with main window");
-    } else {
-      console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
-    }
-  }
-
-  // Register Graph API IPC handlers (always register, handlers check for client availability)
+  initializeGraphApiClient();
   registerGraphApiHandlers(ipcMain, graphApiClient);
-
-  // Initialize Quick Chat modal (after mainAppWindow is ready)
-  const mainWindow = mainAppWindow.getWindow();
-  if (mainWindow) {
-    quickChatManager = new QuickChatManager(config, mainWindow);
-    quickChatManager.initialize();
-
-    // Pass quickChatManager to menus for menu item integration
-    mainAppWindow.setQuickChatManager(quickChatManager);
-
-    // Register keyboard shortcut for Quick Chat
-    // Default is Ctrl+Shift+P (P for People) - Ctrl+Shift+C conflicts with Teams calendar
-    if (quickChatManager.isEnabled()) {
-      const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
-      const registered = globalShortcut.register(quickChatShortcut, () => {
-        quickChatManager.toggle();
-      });
-      if (registered) {
-        console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
-      } else {
-        console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
-      }
-    }
-  }
-
-  // Register global shortcuts
+  initializeQuickChat();
   registerGlobalShortcuts(config, mainAppWindow, app);
 
-  // Log IPC Security configuration status
   console.log('🔒 IPC Security: Channel allowlisting enabled');
   console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
 }

@@ -158,11 +158,11 @@ class GraphApiClient {
 
   _escapeHtml(text) {
     return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 
   _buildODataQuery(options) {
@@ -326,13 +326,13 @@ class GraphApiClient {
       await new Promise(r => setTimeout(r, 2000));
 
       // Step 2: Collect candidate thread IDs from the DOM
-      const candidates = await this.mainWindow.webContents.executeJavaScript(`
+      const candidates = await this.mainWindow.webContents.executeJavaScript(String.raw`
         (() => {
           const ids = new Set();
           document.querySelectorAll('*').forEach(el => {
             for (const attr of el.attributes) {
               if (attr.value && attr.value.includes('19:')) {
-                const matches = attr.value.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\\.v2|unq\\.gbl\\.spaces)/gi);
+                const matches = attr.value.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\.v2|unq\.gbl\.spaces)/gi);
                 for (const m of matches) {
                   if (!m[0].includes('meeting_')) ids.add(m[0]);
                 }
