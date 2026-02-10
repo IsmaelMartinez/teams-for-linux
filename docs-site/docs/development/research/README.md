@@ -10,6 +10,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - Ready for Implementation
 
+- **[Wayland/X11 Ozone Platform Investigation](wayland-x11-ozone-platform-investigation.md)** - Force X11 by default due to Electron 38+ Wayland regressions (multiple issues: [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094), [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494))
+  - Electron 38+ changed default to native Wayland causing blank windows, multi-monitor bugs, and crashes
+  - Fix: `--ozone-platform=x11` as `executableArgs` for all Linux packaging formats
+  - Users can override to `--ozone-platform=wayland` or `auto` via command line
+  - **Status:** Research complete, fix implemented
+
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
   - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
   - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
