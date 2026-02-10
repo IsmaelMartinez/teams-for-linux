@@ -17,11 +17,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - Requires Validation Spikes
 
-- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
-  - Visual indicator and notification when logged out
-  - **Status:** Research complete, requires validation spikes before implementation
-  - Estimated effort: 14-22 hours (if spikes succeed)
-
 - **[Chat Modal Investigation](chat-modal-investigation.md)** - Quick chat modal feature
   - Lightweight alternative to multi-window support
   - Uses Microsoft Graph API for chat functionality
@@ -44,6 +39,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Documentation
 
+- **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
+  - Suggests solutions using troubleshooting docs, detects duplicates, requests missing info
+  - Builds on existing Gemini integration pattern from changelog generator
+  - **Status:** Active research, quick wins ready for implementation
+  - Includes smaller immediate improvements (templates, saved replies, label automation)
+
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
@@ -60,6 +61,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Hybrid API + DOM approach for future resilience
 
 ### Archived / Not Feasible
+
+- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - **ARCHIVED**
+  - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
+  - Validation spikes implemented but user never responded to test
+  - Work preserved in branch `claude/analyze-research-spikes-XbYVZ` for potential reuse
 
 - **[Architecture Modernization Research](architecture-modernization-research.md)** - **ARCHIVED**
   - DDD+Plugin approach deemed too complex

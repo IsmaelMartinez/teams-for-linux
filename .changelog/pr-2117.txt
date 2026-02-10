@@ -1,1 +1,0 @@
-Upgrade dependencies: electron, electron-builder, and globals - by @IsmaelMartinez (#2117)
