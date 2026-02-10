@@ -15,7 +15,7 @@ exports = module.exports = (Menus) => ({
     },
     {
       label: "Quick Chat",
-      accelerator: "ctrl+shift+P",
+      // Accelerator omitted - global shortcut is configurable via quickChat.shortcut
       click: () => Menus.showQuickChat(),
     },
     {

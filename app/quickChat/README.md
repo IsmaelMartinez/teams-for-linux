@@ -1,17 +1,17 @@
 # Quick Chat Module
 
-Quick access to chat contacts using People API and deep link navigation.
+Quick access to chat contacts using People API with inline message sending.
 
 ## Overview
 
-This module provides a lightweight modal for quickly searching contacts and opening chats. It was implemented as an alternative to the originally planned Chat API approach, which was blocked due to API permission limitations.
+This module provides a lightweight modal for quickly searching contacts and sending messages. It uses the Microsoft Graph People API for search and inline messaging via Graph API, avoiding the need to navigate the Teams UI.
 
-See [ADR 014](../../docs-site/docs/development/adr/014-quick-chat-deep-link-approach.md) for the decision rationale.
+See [ADR 015](../../docs-site/docs/development/adr/015-quick-chat-inline-messaging.md) for the implementation approach.
 
 ## Features
 
 - **Contact Search**: Search contacts using Microsoft Graph People API
-- **Deep Link Navigation**: Click a contact to open chat in Teams
+- **Inline Messaging**: Send messages directly from the modal via Graph API
 - **Keyboard Navigation**: Arrow keys and Enter for quick access
 - **Keyboard Shortcut**: Configurable shortcut to toggle modal (default: Ctrl+Shift+P)
 
@@ -48,26 +48,27 @@ app/quickChat/
 |---------|------|-------------|
 | `quick-chat:show` | on | Show the modal |
 | `quick-chat:hide` | on | Hide the modal |
-| `quick-chat:open-chat` | on | Navigate to chat with user |
 | `graph-api-search-people` | handle | Search contacts via People API |
+| `graph-api-send-chat-message` | handle | Send message to user via Graph API |
 
 ## How It Works
 
 1. User triggers modal via keyboard shortcut or menu
 2. User types in search box
 3. People API returns contacts ranked by interaction frequency
-4. User clicks contact or presses Enter
-5. Teams navigates to chat with that user via deep link
+4. User clicks contact to open compose view
+5. User types message and sends via Graph API
+6. Message is delivered without leaving the modal
 
 ## Limitations
 
 - No inline message history (Chat API blocked by permissions)
-- No inline message sending (must use Teams native UI)
-- Page refresh occurs when navigating via deep link
 - Requires Graph API to be enabled
+- Requires appropriate Graph API scopes for messaging
 
 ## Related
 
+- [ADR 015: Quick Chat Inline Messaging](../../docs-site/docs/development/adr/015-quick-chat-inline-messaging.md)
 - [ADR 014: Quick Chat Deep Link Approach](../../docs-site/docs/development/adr/014-quick-chat-deep-link-approach.md)
 - [Chat Modal Investigation](../../docs-site/docs/development/research/chat-modal-investigation.md)
 - [Chat Modal Spike Results](../../docs-site/docs/development/research/chat-modal-spike-results.md)

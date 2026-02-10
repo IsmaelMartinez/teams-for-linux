@@ -275,7 +275,9 @@ class GraphApiClient {
     };
 
     if (query) {
-      queryOptions.search = `"${query}"`;
+      // Escape quotes and backslashes in search query
+      const escapedQuery = query.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      queryOptions.search = `"${escapedQuery}"`;
     }
 
     const queryString = this._buildODataQuery(queryOptions);
@@ -295,17 +297,10 @@ class GraphApiClient {
         return { success: false, error: 'Main window not initialized' };
       }
 
-      // Get sender info (cached)
-      if (!this.cachedSenderInfo) {
-        const profileResult = await this.getUserProfile();
-        if (!profileResult.success || !profileResult.data?.id) {
-          return { success: false, error: 'Failed to get sender profile' };
-        }
-        this.cachedSenderInfo = {
-          userId: `8:orgid:${profileResult.data.id}`,
-          aadId: profileResult.data.id,
-          displayName: profileResult.data.displayName
-        };
+      // Validate recipientUserId is a GUID to prevent injection
+      const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!guidRegex.test(recipientUserId)) {
+        return { success: false, error: 'Invalid user ID format' };
       }
 
       const recipientMri = `8:orgid:${recipientUserId}`;
@@ -318,7 +313,7 @@ class GraphApiClient {
           const coreServices = handler._getTeams2CoreServices();
           if (!coreServices) return;
           const chatCommanding = coreServices.entityCommanding?.chat;
-          if (chatCommanding) await chatCommanding.chatWithUsers(['${recipientMri}']);
+          if (chatCommanding) await chatCommanding.chatWithUsers([${JSON.stringify(recipientMri)}]);
         })()
       `);
 
@@ -326,19 +321,30 @@ class GraphApiClient {
       await new Promise(r => setTimeout(r, 2000));
 
       // Step 2: Collect candidate thread IDs from the DOM
+      // Scan specific attributes to reduce performance impact
       const candidates = await this.mainWindow.webContents.executeJavaScript(String.raw`
         (() => {
           const ids = new Set();
-          document.querySelectorAll('*').forEach(el => {
-            for (const attr of el.attributes) {
-              if (attr.value && attr.value.includes('19:')) {
-                const matches = attr.value.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\.v2|unq\.gbl\.spaces)/gi);
+          const maxElements = 1000; // Cap to prevent UI hangs
+          let count = 0;
+
+          // Target specific attributes likely to contain chat IDs
+          const attributesToCheck = ['id', 'data-tid', 'aria-label', 'data-convid'];
+          const elements = document.querySelectorAll('[id], [data-tid], [aria-label], [data-convid]');
+
+          for (const el of elements) {
+            if (++count > maxElements) break;
+
+            for (const attrName of attributesToCheck) {
+              const attrValue = el.getAttribute(attrName);
+              if (attrValue && attrValue.includes('19:')) {
+                const matches = attrValue.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\.v2|unq\.gbl\.spaces)/gi);
                 for (const m of matches) {
                   if (!m[0].includes('meeting_')) ids.add(m[0]);
                 }
               }
             }
-          });
+          }
           return [...ids];
         })()
       `);
@@ -389,7 +395,7 @@ class GraphApiClient {
         method: 'POST',
         body: {
           body: {
-            content: this._escapeHtml(content),
+            content: content,
             contentType: 'text'
           }
         }

@@ -1,1 +1,1 @@
-feat: Implement Quick Chat Access with People API and deep links (#2109) - by @IsmaelMartinez (#2119)
+feat: Implement Quick Chat Access with People API and inline messaging (#2109) - by @IsmaelMartinez (#2119)

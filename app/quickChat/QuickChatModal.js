@@ -6,7 +6,7 @@ const Positioner = require('electron-positioner');
  * Quick Chat Modal Window
  *
  * A modal window for quick access to chat contacts.
- * Uses People API for search and deep links for navigation.
+ * Uses People API for search and inline messaging via Graph API.
  */
 class QuickChatModal {
   #window;

@@ -439,18 +439,44 @@
                 li.tabIndex = 0;
 
                 const email = getContactEmail(contact);
-
-                li.innerHTML = `
-                    <div class="contact-avatar">${getInitials(contact.displayName)}</div>
-                    <div class="contact-info">
-                        <div class="contact-name">${escapeHtml(contact.displayName || 'Unknown')}</div>
-                        ${email ? `<div class="contact-email">${escapeHtml(email)}</div>` : ''}
-                        ${contact.jobTitle ? `<div class="contact-title">${escapeHtml(contact.jobTitle)}</div>` : ''}
-                    </div>
-                `;
-
                 const displayName = contact.displayName || 'Unknown';
                 const contactId = contact.id;
+
+                // Create avatar
+                const avatar = document.createElement('div');
+                avatar.className = 'contact-avatar';
+                avatar.textContent = getInitials(displayName);
+
+                // Create contact info container
+                const contactInfo = document.createElement('div');
+                contactInfo.className = 'contact-info';
+
+                // Create name element
+                const nameEl = document.createElement('div');
+                nameEl.className = 'contact-name';
+                nameEl.textContent = displayName;
+                contactInfo.appendChild(nameEl);
+
+                // Create email element if present
+                if (email) {
+                    const emailEl = document.createElement('div');
+                    emailEl.className = 'contact-email';
+                    emailEl.textContent = email;
+                    contactInfo.appendChild(emailEl);
+                }
+
+                // Create job title element if present
+                if (contact.jobTitle) {
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'contact-title';
+                    titleEl.textContent = contact.jobTitle;
+                    contactInfo.appendChild(titleEl);
+                }
+
+                // Assemble the list item
+                li.appendChild(avatar);
+                li.appendChild(contactInfo);
+
                 li.addEventListener('click', () => openChat(email, displayName, contactId));
                 li.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {

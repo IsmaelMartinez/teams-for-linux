@@ -294,21 +294,21 @@ These features have completed initial implementation. Further phases depend on u
 
 - ✅ `searchPeople` method added to GraphApiClient
 - ✅ QuickChatModal with user search UI
-- ✅ Deep link navigation to open chat with selected user
+- ✅ Inline message sending via Graph API
 - ✅ Keyboard shortcut (Ctrl+Shift+P by default, configurable)
 - ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
 
 **What It Does:**
 
 - Search contacts via People API (ranked by interaction frequency)
-- Click a contact to open chat in Teams (via deep link)
+- Click a contact to open compose view
+- Send messages directly via Graph API without leaving the modal
 - Keyboard shortcut toggles the modal
 
 **Limitations (API Blocked):**
 
 - No inline message history (Chat API returns 403)
-- No inline message sending (must use Teams native UI)
-- Page refresh when navigating via deep link
+- Requires Graph API to be enabled
 
 **Phase 2 (If Requested):**
 
