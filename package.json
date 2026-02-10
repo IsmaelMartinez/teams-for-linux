@@ -138,6 +138,9 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core22",
+      "executableArgs": [
+        "--ozone-platform=x11"
+      ],
       "plugs": [
         "default",
         "audio-record",
