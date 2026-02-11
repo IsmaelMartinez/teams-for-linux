@@ -56,6 +56,9 @@ The feature requires both `graphApi.enabled` and `quickChat.enabled` to be true.
 - Region for the `entityCommanding` service is not dynamically discovered (hardcoded behavior from Teams' own navigation)
 - DOM scanning is inherently fragile — if Teams changes its attribute structure, thread IDs may not be found
 - No inline message history (reading messages still requires `Chat.Read` scope which is unavailable)
+- Messaging depends on an existing 1:1 thread; users must have already chatted with the recipient because `Chat.Create` is unavailable
+- Sending a message to yourself is unsupported and can misroute the message to the last active 1:1 thread
+- External/federated contacts are not reliably supported by the current thread resolution flow
 
 ### Neutral
 

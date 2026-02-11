@@ -65,6 +65,9 @@ app/quickChat/
 - No inline message history (Chat API blocked by permissions)
 - Requires Graph API to be enabled
 - Requires appropriate Graph API scopes for messaging
+- The recipient must already have an existing 1:1 chat with you in Teams (new chat creation is not supported by available token scopes)
+- Sending a message to yourself is not supported and may route the message to the most recent chat instead
+- External/federated contacts are not reliably supported for inline messaging
 
 ## Related
 
