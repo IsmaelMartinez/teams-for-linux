@@ -1,0 +1,1 @@
+docs: add uninstall guide with instructions for all installation methods (#2048) - by @IsmaelMartinez (#2142)
