@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-02-11
 **Current Version:** v2.7.3
-**Status:** Living Document
+**Status:** Living Document — v2.7.4 release nearly ready
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -12,8 +12,10 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
 | **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
-| **Medium** | GitHub Issue Bot (#2126/PR #2135) | Phase 1 complete, Phase 2+ planned | Medium |
+| **High** | X11/Xwayland PR | Pending merge | Small |
+| **Done** | Quick Chat Access (#2109/PR #2119) | ✅ Merged | Small |
+| **Done** | MCAS Domain Suffix (#2101) | ✅ Merged | Small |
+| **Done** | GitHub Issue Bot Phase 1 (#2126/PR #2135) | ✅ Merged | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
@@ -21,13 +23,23 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Status |
 |------|-------------|--------|
-| **PR #2101** | MCAS domain suffix handling in hostname validation | Ready to merge |
-| **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review (branch ready) |
-| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review (branch ready) |
-| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | PR in review (mostly working) |
+| **PR #2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
+| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | ✅ Merged |
+| **PR #2135** | GitHub Issue Triage Bot Phase 1 - information request bot | ✅ Merged |
+| **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review |
+| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review |
+| **X11/Xwayland** | X11/Xwayland related fix | Pending merge |
 | **Deps** | Dependency updates and Electron upgrade (if available) | Pending |
 
-### Recently Completed (v2.7.3)
+### Recently Merged (for v2.7.4)
+
+| PR | Description | Status |
+|----|-------------|--------|
+| **#2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
+| **#2119** | Quick Chat with inline messaging via Graph API (#2109) | ✅ Merged |
+| **#2135** | GitHub Issue Triage Bot Phase 1 (Information Request) | ✅ Merged |
+
+### Previously Completed (v2.7.3)
 
 | PR | Description | Status |
 |----|-------------|--------|
@@ -47,14 +59,13 @@ This document outlines the future development direction for Teams for Linux, org
 
 ## Current Focus (v2.7.4)
 
-### In Progress - PRs Ready for Review
+### In Progress - PRs in Review
 
 | Item | Description | Branch | Status |
 |------|-------------|--------|--------|
-| **PR #2101** | MCAS domain suffix in hostname validation | contributor fork | Ready to merge (partial fix) |
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
-| **#2109/PR #2119** | Quick Chat Access - People API, deep links, inline messaging | `claude/document-chat-modal-l0Ty0` | PR in review (mostly working) |
+| **X11/Xwayland** | X11/Xwayland related fix | TBD | Pending merge |
 
 ### Ready to Implement
 
@@ -121,17 +132,15 @@ These features have completed research and are ready to be built.
 
 ---
 
-### Quick Chat Access
+### Quick Chat Access - Merged
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **PR:** [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)
-**Branch:** `claude/document-chat-modal-l0Ty0`
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging) - included in PR #2119
-**Effort:** Small
-**Status:** PR in review - mostly working
+**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging)
+**Status:** ✅ Merged to main
 
-**What's Implemented (PR #2119):**
+**What's Included:**
 
 - `app/quickChat/` module - QuickChatModal with search UI
 - `app/graphApi/index.js` - GraphApiClient with `searchPeople` method
@@ -148,12 +157,6 @@ These features have completed research and are ready to be built.
 - Click to open chat (navigates Teams via deep link)
 - Inline message sending (via Teams React internals - see ADR-015)
 - No message history display (API blocked)
-
-**Value:**
-
-- Quick access to start/open chat without navigating Teams UI
-- Practical alternative to rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md))
-- Can enhance notification clicks to open chat with sender
 
 ---
 
@@ -237,13 +240,13 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
 **PR:** [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)
-**Status:** Phase 1 complete (PR in review)
+**Status:** Phase 1 ✅ Merged, Phase 2+ planned
 **Priority:** Medium
 **Effort:** Medium (per phase)
 
 **Description:** Intelligent GitHub issue automation to suggest solutions from documentation, detect duplicates, request missing info, and reduce maintainer workload.
 
-**Phase 1 — Information Request Bot (complete):**
+**Phase 1 — Information Request Bot (✅ merged):**
 
 - Workflow: `.github/workflows/issue-triage-bot.yml`
 - Template documentation: `.github/issue-bot/templates/missing-info.md`
@@ -287,22 +290,24 @@ These features have completed initial implementation. Further phases depend on u
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md)
-**Current Status:** ✅ Implemented (v2.7.3)
+**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md), ADR-015 (Inline Messaging)
+**Current Status:** ✅ Merged (PR #2119, for v2.7.4)
 
 **Delivered:**
 
 - ✅ `searchPeople` method added to GraphApiClient
 - ✅ QuickChatModal with user search UI
-- ✅ Inline message sending via Graph API
+- ✅ Deep link navigation to open chats
+- ✅ Inline message sending via Teams React internals
 - ✅ Keyboard shortcut (Ctrl+Shift+P by default, configurable)
 - ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
+- ✅ Menu item integration
 
 **What It Does:**
 
 - Search contacts via People API (ranked by interaction frequency)
-- Click a contact to open compose view
-- Send messages directly via Graph API without leaving the modal
+- Click a contact to open chat via deep link
+- Send messages inline via Teams React internals
 - Keyboard shortcut toggles the modal
 
 **Limitations (API Blocked):**
@@ -432,17 +437,19 @@ These features have completed initial implementation. Further phases depend on u
 
 ### v2.7.4 Release Plan
 
-1. **Merge PR #2101** - MCAS domain suffix handling (partial fix, user not responding)
-2. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
-3. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
-4. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
-5. **Dependency updates** - Routine maintenance, Electron upgrade if available
+1. ~~**Merge PR #2101**~~ - MCAS domain suffix handling — ✅ Merged
+2. ~~**Merge Quick Chat Access PR #2119**~~ - People API search, deep links, inline messaging — ✅ Merged
+3. ~~**Merge GitHub Issue Bot PR #2135**~~ - Phase 1 information request bot — ✅ Merged
+4. **Merge X11/Xwayland PR** - Pending merge
+5. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (PR in review)
+6. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (PR in review)
+7. **Dependency updates** - Routine maintenance, Electron upgrade if available
+8. **Release v2.7.4** - Target after X11 PR merge; most items already merged
 
 ### Future Priorities
 
-6. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
-7. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-8. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+9. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
+10. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 
@@ -466,5 +473,5 @@ These features have completed initial implementation. Further phases depend on u
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
 - [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
-- ADR-014: Quick Chat Deep Link Approach - Deep links for chat navigation (in PR #2119)
-- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals (in PR #2119)
+- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
+- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals
