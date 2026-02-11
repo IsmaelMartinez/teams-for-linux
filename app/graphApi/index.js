@@ -276,7 +276,9 @@ class GraphApiClient {
 
     if (query) {
       // Escape quotes and backslashes in search query
-      const escapedQuery = query.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      const escapedQuery = query
+        .replaceAll('\\', String.raw`\\`)
+        .replaceAll('"', String.raw`\"`);
       queryOptions.search = `"${escapedQuery}"`;
     }
 
