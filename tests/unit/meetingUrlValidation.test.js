@@ -10,9 +10,10 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const defaults = require('../../app/config/defaults');
 
-// The default regex pattern from app/config/index.js
-const meetupJoinRegEx = String.raw`^https://teams\.(?:microsoft|live)\.com/(meet|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team))/`;
+// Use the shared default regex pattern from app/config/defaults.js
+const meetupJoinRegEx = defaults.meetupJoinRegEx;
 
 function isValidTeamsMeetingUrl(text) {
   if (typeof text !== 'string') {
@@ -35,6 +36,12 @@ describe('Teams Meeting URL Validation', () => {
       // Meet format (personal meetings)
       ['https://teams.microsoft.com/meet/user@example.com', 'meet format'],
       ['https://teams.live.com/meet/user@example.com', 'teams.live.com meet'],
+      ['https://teams.cloud.microsoft/meet/abc123', 'teams.cloud.microsoft meet'],
+      ['https://teams.microsoft.com/meet/abc123?p=hashedPasscode', 'meet with passcode'],
+      ['https://teams.live.com/meet/abc123?p=hashedPasscode', 'teams.live.com meet with passcode'],
+
+      // V2 web app format
+      ['https://teams.microsoft.com/v2/?meetingjoin=true#/l/meetup-join/19:meeting_abc.v2/0', 'v2 meetingjoin format'],
 
       // Channel meetings
       ['https://teams.microsoft.com/l/channel/19%3achannel_abc123', 'channel format'],
