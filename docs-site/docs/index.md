@@ -85,5 +85,5 @@ For detailed architecture documentation, see the [Development Guide](development
 - **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
 - **[Installation Guide](installation.md)** - Setup and installation help
 - **[Contributing Guide](development/contributing.md)** - How to contribute to the project
-- 💬 **Chat**: [Matrix room](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- 💬 **Chat**: [Matrix space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)

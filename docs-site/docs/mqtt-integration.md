@@ -113,7 +113,7 @@ Add these options under the `mqtt` key in your `config.json`:
 - **TLS/SSL**: `mqtts://broker.example.com:8883`
 
 :::note WebSocket Support
-While the underlying mqtt.js library supports WebSocket URLs (`ws://` and `wss://`), these have not been tested with Teams for Linux. If you successfully use WebSocket connections, please share your experience on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or in our [Matrix chat](https://matrix.to/#/#teams-for-linux_community:gitter.im).
+While the underlying mqtt.js library supports WebSocket URLs (`ws://` and `wss://`), these have not been tested with Teams for Linux. If you successfully use WebSocket connections, please share your experience on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or in our [Matrix space](https://matrix.to/#/#teams-for-linux-space:matrix.org).
 :::
 
 ## Message Format
@@ -367,7 +367,7 @@ The MQTT integration has been tested with various home automation platforms. How
 If you've successfully integrated Teams for Linux with your home automation system, **please share your configurations** to help other users:
 
 - **[GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)** - Tag as enhancement and share your automation scripts
-- **[Matrix Chat](https://matrix.to/#/#teams-for-linux_community:gitter.im)** - Discuss and share configurations with the community
+- **[Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)** - Discuss and share configurations with the community
 - **Supported Platforms**: Node-RED, n8n, openHAB, Domoticz, and other MQTT-enabled systems
 - **What to Share**:
   - Flow exports for Node-RED/n8n

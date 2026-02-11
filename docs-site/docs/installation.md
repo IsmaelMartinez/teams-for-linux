@@ -274,7 +274,7 @@ After installation:
 
 - **Documentation**: [Full documentation](index.md)
 - **Issues**: [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)
-- **Community**: [Matrix Chat](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- **Community**: [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - **Discussions**: [GitHub Discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions)
 
 ## Related Documentation

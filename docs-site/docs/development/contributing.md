@@ -415,7 +415,7 @@ See [Manual Release Process](manual-release-process.md) for detailed instruction
 
 ### Community Support
 
-- **Matrix Chat**: [#teams-for-linux_community:gitter.im](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- **Matrix Space**: [#teams-for-linux-space:matrix.org](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - **GitHub Discussions**: [Project discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions)
 - **GitHub Issues**: [Bug reports and feature requests](https://github.com/IsmaelMartinez/teams-for-linux/issues)
 
