@@ -11,8 +11,8 @@ The uninstall steps depend on how you originally installed the application. If y
 ### Debian/Ubuntu (apt)
 
 ```bash
-# Remove the application
-sudo apt remove teams-for-linux
+# Remove the application, its configuration, and any orphaned dependencies
+sudo apt purge --autoremove teams-for-linux
 
 # Remove the repository source
 sudo rm /etc/apt/sources.list.d/teams-for-linux-packages.sources
@@ -30,6 +30,9 @@ sudo apt update
 # Remove the application
 sudo dnf remove teams-for-linux
 
+# Clean up orphaned dependencies
+sudo dnf autoremove
+
 # Remove the repository configuration
 sudo rm /etc/yum.repos.d/teams-for-linux.repo
 ```
@@ -40,13 +43,13 @@ sudo rm /etc/yum.repos.d/teams-for-linux.repo
 
 ```bash
 # Using yay
-yay -R teams-for-linux
+yay -Rs teams-for-linux
 
 # Using paru
-paru -R teams-for-linux
+paru -Rs teams-for-linux
 
 # Using pacman directly
-sudo pacman -R teams-for-linux
+sudo pacman -Rs teams-for-linux
 ```
 
 ### Ubuntu (Pacstall)
@@ -58,13 +61,13 @@ pacstall -R teams-for-linux-deb
 ### Snap
 
 ```bash
-sudo snap remove teams-for-linux
+sudo snap remove --purge teams-for-linux
 ```
 
 ### Flatpak
 
 ```bash
-flatpak uninstall com.github.IsmaelMartinez.teams_for_linux
+flatpak uninstall --delete-data com.github.IsmaelMartinez.teams_for_linux
 ```
 
 ## Manual Installations
@@ -72,7 +75,7 @@ flatpak uninstall com.github.IsmaelMartinez.teams_for_linux
 ### Debian/Ubuntu (.deb installed via dpkg)
 
 ```bash
-sudo dpkg -r teams-for-linux
+sudo dpkg -P teams-for-linux
 ```
 
 ### Red Hat/Fedora (.rpm installed via rpm)
@@ -105,7 +108,7 @@ Uninstalling the application does not remove your user data and configuration. T
 
 | Installation type | Configuration directory |
 |-------------------|----------------------|
-| Standard (deb/rpm/AUR) | `~/.config/teams-for-linux` |
+| Standard installations (deb, rpm, AUR, etc.) | `~/.config/teams-for-linux` |
 | Snap | `~/snap/teams-for-linux/current/.config/teams-for-linux/` |
 | Flatpak (user install) | `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` |
 | From source | `~/.config/Electron/` |
