@@ -14,6 +14,11 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.joinMeeting(),
     },
     {
+      label: "Quick Chat",
+      // Accelerator omitted - global shortcut is configurable via quickChat.shortcut
+      click: () => Menus.showQuickChat(),
+    },
+    {
       label: "Refresh",
       accelerator: "ctrl+R",
       click: () => Menus.reload(),

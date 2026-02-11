@@ -7,6 +7,7 @@ class GraphApiClient {
     this.baseUrl = 'https://graph.microsoft.com/v1.0';
     this.currentToken = null;
     this.tokenExpiry = null;
+    this.cachedSenderInfo = null;
 
     logger.info('[GRAPH_API] GraphApiClient initialized', {
       enabled: this.enabled,
@@ -155,6 +156,15 @@ class GraphApiClient {
     }
   }
 
+  _escapeHtml(text) {
+    return text
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
   _buildODataQuery(options) {
     const params = new URLSearchParams();
     const supportedParams = {
@@ -247,6 +257,190 @@ class GraphApiClient {
     const endpoint = queryString ? `/me/messages?${queryString}` : '/me/messages';
 
     return await this.makeRequest(endpoint);
+  }
+
+  /**
+   * Search people using the People API
+   * Returns contacts ranked by interaction frequency (relevance-based)
+   * @param {string} query - Search query string
+   * @param {object} options - Optional OData query options (top, select)
+   * @returns {Promise<object>} - API response with people list
+   */
+  async searchPeople(query, options = {}) {
+    logger.debug('[GRAPH_API] Searching people');
+
+    const queryOptions = {
+      top: options.top ?? 10,
+      ...options
+    };
+
+    if (query) {
+      // Escape quotes and backslashes in search query
+      const escapedQuery = query
+        .replaceAll('\\', String.raw`\\`)
+        .replaceAll('"', String.raw`\"`);
+      queryOptions.search = `"${escapedQuery}"`;
+    }
+
+    const queryString = this._buildODataQuery(queryOptions);
+    const endpoint = queryString ? `/me/people?${queryString}` : '/me/people';
+
+    return await this.makeRequest(endpoint);
+  }
+
+  /** Resolve or create a 1:1 chat with a user via Teams internal services */
+  async resolveConversation(recipientUserId) {
+    try {
+      if (!this.enabled) {
+        return { success: false, error: 'Graph API is disabled' };
+      }
+
+      if (!this.mainWindow || !this.mainWindow.webContents) {
+        return { success: false, error: 'Main window not initialized' };
+      }
+
+      // Validate recipientUserId is a GUID to prevent injection
+      const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!guidRegex.test(recipientUserId)) {
+        return { success: false, error: 'Invalid user ID format' };
+      }
+
+      const recipientMri = `8:orgid:${recipientUserId}`;
+
+      // Step 1: Use Teams' entityCommanding to ensure the 1:1 chat exists
+      await this.mainWindow.webContents.executeJavaScript(`
+        (async () => {
+          const handler = window.teamsForLinuxReactHandler;
+          if (!handler) return;
+          const coreServices = handler._getTeams2CoreServices();
+          if (!coreServices) return;
+          const chatCommanding = coreServices.entityCommanding?.chat;
+          if (chatCommanding) await chatCommanding.chatWithUsers([${JSON.stringify(recipientMri)}]);
+        })()
+      `);
+
+      // Wait for Teams to process the navigation
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Step 2: Collect candidate thread IDs from the DOM
+      // Scan specific attributes to reduce performance impact
+      const candidates = await this.mainWindow.webContents.executeJavaScript(String.raw`
+        (() => {
+          const ids = new Set();
+          const maxElements = 1000; // Cap to prevent UI hangs
+          let count = 0;
+
+          // Target specific attributes likely to contain chat IDs
+          const attributesToCheck = ['id', 'data-tid', 'aria-label', 'data-convid'];
+          const elements = document.querySelectorAll('[id], [data-tid], [aria-label], [data-convid]');
+
+          for (const el of elements) {
+            if (++count > maxElements) break;
+
+            for (const attrName of attributesToCheck) {
+              const attrValue = el.getAttribute(attrName);
+              if (attrValue && attrValue.includes('19:')) {
+                const matches = attrValue.matchAll(/19:[a-zA-Z0-9_-]+@(?:thread\.v2|unq\.gbl\.spaces)/gi);
+                for (const m of matches) {
+                  if (!m[0].includes('meeting_')) ids.add(m[0]);
+                }
+              }
+            }
+          }
+          return [...ids];
+        })()
+      `);
+
+      logger.info('[GRAPH_API] Found candidate chat IDs', { count: candidates?.length });
+
+      if (!candidates || candidates.length === 0) {
+        return { success: false, error: 'No chat thread IDs found' };
+      }
+
+      // Step 3: Check each candidate's members to find the 1:1 chat with the target user
+      for (const chatId of candidates) {
+        const membersResult = await this.makeRequest(`/chats/${encodeURIComponent(chatId)}/members`);
+        if (!membersResult.success || !membersResult.data?.value) continue;
+
+        const members = membersResult.data.value;
+
+        // Skip group chats — a 1:1 chat has exactly 2 members
+        if (members.length !== 2) {
+          continue;
+        }
+
+        const hasRecipient = members.some(
+          member => member.userId === recipientUserId
+        );
+
+        if (hasRecipient) {
+          logger.info('[GRAPH_API] Conversation resolved via member check', {
+            chatId: chatId.substring(0, 40) + '...',
+            checkedCount: candidates.indexOf(chatId) + 1
+          });
+          return { success: true, conversationId: chatId };
+        }
+      }
+
+      logger.warn('[GRAPH_API] No chat found containing target user');
+      return { success: false, error: 'Could not find a chat with this user. You may need to start a conversation in Teams first.' };
+    } catch (error) {
+      logger.error('[GRAPH_API] Conversation resolution error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  }
+
+  /** Send a chat message via Graph API (uses ChatMessage.Send scope) */
+  async sendChatMessage(chatId, content) {
+    try {
+      const result = await this.makeRequest(`/chats/${encodeURIComponent(chatId)}/messages`, {
+        method: 'POST',
+        body: {
+          body: {
+            content: content,
+            contentType: 'text'
+          }
+        }
+      });
+
+      if (result.success) {
+        logger.info('[GRAPH_API] Chat message sent via Graph API', {
+          chatId: chatId?.substring(0, 30) + '...'
+        });
+        return { success: true };
+      }
+
+      logger.warn('[GRAPH_API] Send message failed', {
+        chatId: chatId?.substring(0, 30) + '...',
+        status: result.status,
+        error: result.error
+      });
+      return result;
+    } catch (error) {
+      logger.error('[GRAPH_API] Send message error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  }
+
+  /** Send a chat message to a user (orchestrates resolve + send) */
+  async sendChatMessageToUser(contactInfo, content) {
+    try {
+      if (!this.enabled) {
+        return { success: false, error: 'Graph API is disabled' };
+      }
+
+      // Resolve conversation
+      const conversationResult = await this.resolveConversation(contactInfo.userId);
+      if (!conversationResult.success) {
+        return conversationResult;
+      }
+
+      // Send message via Graph API
+      return await this.sendChatMessage(conversationResult.conversationId, content);
+    } catch (error) {
+      logger.error('[GRAPH_API] sendChatMessageToUser error:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
   }
 }
 

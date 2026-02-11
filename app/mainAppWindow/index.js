@@ -41,6 +41,7 @@ let customBackgroundService = null;
 let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
+let menus = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -283,8 +284,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    const m = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
-    m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
+    menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
   addEventHandlers();
@@ -312,6 +313,12 @@ exports.show = function () {
 
 exports.getWindow = function () {
   return window;
+};
+
+exports.setQuickChatManager = function (quickChatManager) {
+  if (menus) {
+    menus.setQuickChatManager(quickChatManager);
+  }
 };
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {

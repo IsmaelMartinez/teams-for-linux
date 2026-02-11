@@ -80,11 +80,16 @@ const allowedChannels = new Set([
   'graph-api-get-calendar-view',
   'graph-api-create-calendar-event',
   'graph-api-get-mail-messages',
-  'graph-api-run-chat-spikes',
+  'graph-api-search-people',
+  'graph-api-send-chat-message',
 
   // Join meeting dialog
   'join-meeting-submit',
-  'join-meeting-cancel'
+  'join-meeting-cancel',
+
+  // Quick Chat modal
+  'quick-chat:show',
+  'quick-chat:hide'
 ]);
 
 /**

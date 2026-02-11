@@ -275,12 +275,48 @@ These features have MVP implementations and real user feedback identifying gaps.
 - `customNotification.*` - Custom notification system
 - `cacheManagement.*` - Cache management
 - `screenSharingThumbnail.*` - Screen sharing thumbnail
+- `quickChat.*` - Quick chat modal
 
 ---
 
 ## Awaiting User Feedback
 
 These features have completed initial implementation. Further phases depend on user requests.
+
+### Quick Chat Access
+
+**Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
+**Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
+**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md)
+**Current Status:** ✅ Implemented (v2.7.3)
+
+**Delivered:**
+
+- ✅ `searchPeople` method added to GraphApiClient
+- ✅ QuickChatModal with user search UI
+- ✅ Inline message sending via Graph API
+- ✅ Keyboard shortcut (Ctrl+Shift+P by default, configurable)
+- ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
+
+**What It Does:**
+
+- Search contacts via People API (ranked by interaction frequency)
+- Click a contact to open compose view
+- Send messages directly via Graph API without leaving the modal
+- Keyboard shortcut toggles the modal
+
+**Limitations (API Blocked):**
+
+- No inline message history (Chat API returns 403)
+- Requires Graph API to be enabled
+
+**Phase 2 (If Requested):**
+
+- Enhance notification clicks to open chat with sender
+- Cache recent contacts for faster access
+- Add favorites list
+
+---
 
 ### MQTT Extended Status Phase 2
 
@@ -404,9 +440,9 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-5. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
-6. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-7. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+6. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
+7. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
+8. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 

@@ -313,6 +313,16 @@ class Menus {
   showGpuInfo() {
     this.gpuInfoWindow.show();
   }
+
+  setQuickChatManager(quickChatManager) {
+    this.quickChatManager = quickChatManager;
+  }
+
+  showQuickChat() {
+    if (this.quickChatManager && this.quickChatManager.isEnabled()) {
+      this.quickChatManager.toggle();
+    }
+  }
 }
 
 function saveSettingsInternal(_event, arg) {
