@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
       label: 'Getting Started',
       items: [
         'installation',
+        'uninstall',
         'configuration',
         'multiple-instances',
         'intune-sso',
