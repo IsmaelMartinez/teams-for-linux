@@ -14,7 +14,6 @@ This document outlines the future development direction for Teams for Linux, org
 | **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
 | **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
 | **Medium** | GitHub Issue Bot (#2126/PR #2135) | Phase 1 complete, Phase 2+ planned | Medium |
-| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
 ### Planning for v2.7.4
@@ -170,26 +169,14 @@ These features have completed research and are ready to be built.
 
 ---
 
-### MQTT Screen Sharing Status
+### MQTT Screen Sharing Status - Complete
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 **Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
-**Effort:** Tiny
-**Status:** Awaiting user feedback (original requester inactive since Nov 2025)
+**Status:** ✅ Implemented
 
-**Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
-
-**Implementation:**
-
-1. Add MQTT publish call when screen sharing starts/stops
-2. Publish to `{topicPrefix}/screen-sharing` topic with "true"/"false" values
-3. Update documentation
-
-**Value:**
-
-- Completes media status picture for home automation
-- IPC events already exist - just needs wiring
+Wired existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish on `{topicPrefix}/screen-sharing` with retained `"true"`/`"false"` messages. Completes the media status picture for home automation.
 
 ---
 
@@ -441,8 +428,7 @@ These features have completed initial implementation. Further phases depend on u
 ### Future Priorities
 
 6. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
-7. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-8. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+7. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 
