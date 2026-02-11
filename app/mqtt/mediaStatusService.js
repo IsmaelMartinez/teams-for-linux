@@ -27,10 +27,9 @@ class MQTTMediaStatusService {
 		// Publish MQTT status when microphone state changes
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
 
-		// Publish MQTT status when screen sharing starts
-		ipcMain.on('screen-sharing-started', this.#handleScreenSharingStarted.bind(this));
-		// Publish MQTT status when screen sharing stops
-		ipcMain.on('screen-sharing-stopped', this.#handleScreenSharingStopped.bind(this));
+		// Publish MQTT status when screen sharing state changes
+		ipcMain.on('screen-sharing-started', () => this.#handleScreenSharingChanged(true));
+		ipcMain.on('screen-sharing-stopped', () => this.#handleScreenSharingChanged(false));
 
 		app.on('teams-call-connected', this.#handleCallConnected.bind(this));
 		app.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
@@ -62,16 +61,11 @@ class MQTTMediaStatusService {
 		console.debug('[MQTTMediaStatusService] Microphone state changed to', enabled, 'published to', topic);
 	}
 
-	async #handleScreenSharingStarted() {
+	async #handleScreenSharingChanged(isSharing) {
 		const topic = `${this.#topicPrefix}/screen-sharing`;
-		await this.#mqttClient.publish(topic, 'true', { retain: true });
-		console.debug('[MQTTMediaStatusService] Screen sharing started, published to', topic);
-	}
-
-	async #handleScreenSharingStopped() {
-		const topic = `${this.#topicPrefix}/screen-sharing`;
-		await this.#mqttClient.publish(topic, 'false', { retain: true });
-		console.debug('[MQTTMediaStatusService] Screen sharing stopped, published to', topic);
+		await this.#mqttClient.publish(topic, String(isSharing), { retain: true });
+		const state = isSharing ? 'started' : 'stopped';
+		console.debug(`[MQTTMediaStatusService] Screen sharing ${state}, published to`, topic);
 	}
 }
 
