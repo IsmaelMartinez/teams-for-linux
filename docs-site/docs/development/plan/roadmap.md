@@ -85,7 +85,7 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **#2048** | Uninstall instructions | Good first issue for contributors |
+| **#2048** | Uninstall instructions | ✅ Implemented — [Uninstall Guide](../../uninstall.md) |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
 ---

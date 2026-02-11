@@ -269,6 +269,7 @@ After installation:
 2. **[Multiple Instances](multiple-instances.md)** - Set up work and personal profiles
 3. **[Screen Sharing](screen-sharing.md)** - Configure screen capture
 4. **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+5. **[Uninstall Guide](uninstall.md)** - Remove Teams for Linux from your system
 
 ## Support
 
