@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-02-12
 **Current Version:** v2.7.3
-**Status:** Living Document — v2.7.4 release nearly ready
+**Status:** Living Document — v2.7.4 ready to release
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -10,9 +10,11 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
-| **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **High** | X11/Xwayland PR | Pending merge | Small |
+| **Next** | Screen Lock Media Privacy (#2106) | PR in review (post v2.7.4) | Small |
+| **Next** | Custom Notifications Phase 2 (#2108) | PR in review (post v2.7.4) | Medium |
+| **Done** | Force X11 ozone platform (#2139) | ✅ Merged | Small |
+| **Done** | Uninstall guide (#2048/PR #2142) | ✅ Merged | Small |
+| **Done** | Migrate Gitter to Matrix (#2113/PR #2141) | ✅ Merged | Tiny |
 | **Done** | Quick Chat Access (#2109/PR #2119) | ✅ Merged | Small |
 | **Done** | MCAS Domain Suffix (#2101) | ✅ Merged | Small |
 | **Done** | GitHub Issue Bot Phase 1 (#2126/PR #2135) | ✅ Merged | Medium |
@@ -21,20 +23,24 @@ This document outlines the future development direction for Teams for Linux, org
 
 ### Planning for v2.7.4
 
+All items merged. Release ready.
+
 | Item | Description | Status |
 |------|-------------|--------|
 | **PR #2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
-| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | ✅ Merged |
+| **PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | ✅ Merged |
 | **PR #2135** | GitHub Issue Triage Bot Phase 1 - information request bot | ✅ Merged |
-| **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review |
-| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review |
-| **X11/Xwayland** | X11/Xwayland related fix | Pending merge |
-| **Deps** | Dependency updates and Electron upgrade (if available) | Pending |
+| **PR #2139** | Force X11 ozone platform by default on Linux | ✅ Merged |
+| **PR #2141** | Migrate community chat links from Gitter to Matrix | ✅ Merged |
+| **PR #2142** | Add uninstall guide for all installation methods (#2048) | ✅ Merged |
 
 ### Recently Merged (for v2.7.4)
 
 | PR | Description | Status |
 |----|-------------|--------|
+| **#2139** | Force X11 ozone platform by default on Linux | ✅ Merged |
+| **#2141** | Migrate community chat links from Gitter to Matrix (#2113) | ✅ Merged |
+| **#2142** | Add uninstall guide for all installation methods (#2048) | ✅ Merged |
 | **#2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
 | **#2119** | Quick Chat with inline messaging via Graph API (#2109) | ✅ Merged |
 | **#2135** | GitHub Issue Triage Bot Phase 1 (Information Request) | ✅ Merged |
@@ -59,19 +65,21 @@ This document outlines the future development direction for Teams for Linux, org
 
 ## Current Focus (v2.7.4)
 
-### In Progress - PRs in Review
+### In Progress - PRs in Review (for v2.7.5+)
 
 | Item | Description | Branch | Status |
 |------|-------------|--------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
-| **X11/Xwayland** | X11/Xwayland related fix | TBD | Pending merge |
 
 ### Ready to Implement
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **Deps** | Dependency updates | Routine maintenance |
+| **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
+| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
+| **dbus-native** | `@homebridge/dbus-native` 0.7.2 → 0.7.3 | Patch bump — safe |
+| **Docs-site deps** | Docusaurus 3.9.2, React 19.2.4, TS 5.9.3 | Minor/patch — safe |
 
 ### Awaiting User Validation (Post v2.7.3)
 
@@ -96,7 +104,6 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **#2048** | Uninstall instructions | ✅ Implemented — [Uninstall Guide](../../uninstall.md) |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
 ---
@@ -435,21 +442,30 @@ These features have completed initial implementation. Further phases depend on u
 
 ## Implementation Priorities
 
-### v2.7.4 Release Plan
+### v2.7.4 Release Plan — Ready
 
-1. ~~**Merge PR #2101**~~ - MCAS domain suffix handling — ✅ Merged
-2. ~~**Merge Quick Chat Access PR #2119**~~ - People API search, deep links, inline messaging — ✅ Merged
-3. ~~**Merge GitHub Issue Bot PR #2135**~~ - Phase 1 information request bot — ✅ Merged
-4. **Merge X11/Xwayland PR** - Pending merge
-5. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (PR in review)
-6. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (PR in review)
-7. **Dependency updates** - Routine maintenance, Electron upgrade if available
-8. **Release v2.7.4** - Target after X11 PR merge; most items already merged
+All items merged. 9 changelog entries accumulated. Ready for `npm run release:prepare`.
+
+1. ~~**PR #2101**~~ - MCAS domain suffix handling — ✅ Merged
+2. ~~**PR #2119**~~ - Quick Chat Access with inline messaging — ✅ Merged
+3. ~~**PR #2135**~~ - GitHub Issue Bot Phase 1 — ✅ Merged
+4. ~~**PR #2139**~~ - Force X11 ozone platform by default — ✅ Merged
+5. ~~**PR #2141**~~ - Migrate Gitter to Matrix links — ✅ Merged
+6. ~~**PR #2142**~~ - Uninstall guide (#2048) — ✅ Merged
+7. **Release v2.7.4** - All items merged, run release workflow
+
+### v2.7.5+ Candidates
+
+8. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (PR in review)
+9. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (PR in review)
+10. **Electron 40 upgrade** - Major version bump (39.5.1 → 40.4.0), requires testing
+11. **ESLint 10 upgrade** - Major version bump, config changes likely
+12. **Minor dependency updates** - dbus-native 0.7.3, docs-site deps
 
 ### Future Priorities
 
-9. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-10. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+13. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
+14. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 
