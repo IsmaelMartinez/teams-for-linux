@@ -1,1 +1,0 @@
-Force X11 ozone platform by default on Linux - by @IsmaelMartinez (#2139)

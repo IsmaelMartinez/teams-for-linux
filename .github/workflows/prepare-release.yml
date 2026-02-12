@@ -102,6 +102,16 @@ jobs:
         run: |
           git checkout -b "release/v$NEW_VERSION"
 
+      - name: Generate release notes
+        id: release_notes
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.new }}
+        run: |
+          # Generate release notes BEFORE release:prepare deletes .changelog/*.txt files
+          node scripts/generateReleaseNotes.mjs "$NEW_VERSION" > release_notes.md
+          echo "Generated release notes:"
+          cat release_notes.md
+
       - name: Run release preparation script
         env:
           NEW_VERSION: ${{ steps.new_version.outputs.new }}
@@ -120,16 +130,6 @@ jobs:
           NEW_VERSION: ${{ steps.new_version.outputs.new }}
         run: |
           git push -u origin "release/v$NEW_VERSION"
-
-      - name: Generate release notes
-        id: release_notes
-        env:
-          NEW_VERSION: ${{ steps.new_version.outputs.new }}
-        run: |
-          # Generate detailed release notes using the release notes generator
-          node scripts/generateReleaseNotes.mjs "$NEW_VERSION" > release_notes.md
-          echo "Generated release notes:"
-          cat release_notes.md
 
       - name: Create pull request
         env:

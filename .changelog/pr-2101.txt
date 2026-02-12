@@ -1,1 +1,0 @@
-feat: handle Microsoft Cloud App Security (MCAS) domain suffix in hostname validation - by @tvanderpool (#2101)
