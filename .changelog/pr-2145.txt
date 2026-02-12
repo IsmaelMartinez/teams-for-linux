@@ -1,1 +1,0 @@
-Update development roadmap for v2.7.4 release - by @IsmaelMartinez (#2145)
