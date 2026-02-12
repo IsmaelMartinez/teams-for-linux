@@ -67,8 +67,8 @@ All items merged. Release ready.
 |------|-------------|-------|
 | **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
 | **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
-| **dbus-native** | `@homebridge/dbus-native` 0.7.2 → 0.7.3 | Patch bump — safe |
-| **Docs-site deps** | Docusaurus 3.9.2, React 19.2.4, TS 5.9.3 | Minor/patch — safe |
+
+**Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
 
 ### Awaiting User Validation (Post v2.7.3)
 
@@ -455,7 +455,6 @@ All items merged. 9 changelog entries accumulated. Ready for `npm run release:pr
 9. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (PR in review)
 10. **Electron 40 upgrade** - Major version bump (39.5.1 → 40.4.0), requires testing
 11. **ESLint 10 upgrade** - Major version bump, config changes likely
-12. **Minor dependency updates** - dbus-native 0.7.3, docs-site deps
 
 ### Future Priorities
 
