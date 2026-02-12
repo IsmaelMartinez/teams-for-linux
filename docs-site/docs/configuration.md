@@ -326,6 +326,7 @@ When MQTT is enabled, the following topics are automatically published:
 | `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected) |
 | `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
 | `\{topicPrefix\}/microphone` | `"true"` or `"false"` | Microphone on/off state (Phase 2) |
+| `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 
 All topics use retained messages by default, ensuring subscribers receive the last known state immediately upon connecting.
 
