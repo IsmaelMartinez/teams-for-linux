@@ -4,7 +4,7 @@ const { sanitizeLogData } = require("../utils/logSanitizer");
 
 exports.init = function (config) {
   if (config) {
-    if (config == "console") {
+    if (config === "console") {
       console.debug("Initialising logger the default console");
       return;
     } else {
@@ -36,7 +36,7 @@ exports.init = function (config) {
       console.debug("Logger initialised");
     }
   } else {
-    console.log("Overwriting the console functions to disable the logs");
+    console.info("Overwriting the console functions to disable the logs");
     console.log = function () {};
     console.info = function () {};
     console.debug = function () {};

@@ -22,7 +22,7 @@ class TimestampCopyOverride {
         const coreSettings = coreServices.coreSettings;
 
         if (coreSettings.get('compose').disableTimestampOnCopy === this.config.disableTimestampOnCopy) {
-            console.log('Setting disableTimestampOnCopy is correct, stopping polling');
+            console.debug('Setting disableTimestampOnCopy is correct, stopping polling');
             this.stop();
         }
 
