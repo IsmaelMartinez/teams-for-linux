@@ -113,7 +113,7 @@ Add these options under the `mqtt` key in your `config.json`:
 - **TLS/SSL**: `mqtts://broker.example.com:8883`
 
 :::note WebSocket Support
-While the underlying mqtt.js library supports WebSocket URLs (`ws://` and `wss://`), these have not been tested with Teams for Linux. If you successfully use WebSocket connections, please share your experience on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or in our [Matrix space](https://matrix.to/#/#teams-for-linux-space:matrix.org).
+While the underlying mqtt.js library supports WebSocket URLs (`ws://` and `wss://`), these have not been tested with Teams for Linux. If you successfully use WebSocket connections, please share your experience on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or in our [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org).
 :::
 
 ## Message Format
