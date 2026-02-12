@@ -181,25 +181,49 @@ function parseEntry(entry) {
 }
 
 /**
+ * Load changelog entries from .changelog/*.txt files
+ */
+function loadFromChangelogDir(fullPath) {
+  if (!fs.existsSync(fullPath)) return null;
+  const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.txt'));
+  if (files.length === 0) return null;
+  return files.map(file => fs.readFileSync(path.join(fullPath, file), 'utf8').trim());
+}
+
+/**
+ * Fallback: load changelog entries from the latest release in appdata.xml.
+ * Used when .changelog/*.txt files have already been consumed by release:prepare.
+ */
+function loadFromAppdataXml() {
+  const appdataPath = path.join(process.cwd(), 'com.github.IsmaelMartinez.teams_for_linux.appdata.xml');
+  if (!fs.existsSync(appdataPath)) return null;
+
+  const content = fs.readFileSync(appdataPath, 'utf8');
+  const liMatches = [...content.matchAll(/<release[^>]*>[\s\S]*?<ul>([\s\S]*?)<\/ul>/gm)];
+  if (liMatches.length === 0) return null;
+
+  // Take only the first (latest) release block
+  const items = [...liMatches[0][1].matchAll(/<li>(.*?)<\/li>/g)];
+  if (items.length === 0) return null;
+
+  return items.map(m => m[1].trim());
+}
+
+/**
  * Generate enhanced release notes from changelog entries
  */
 export function generateReleaseNotes(changelogDir = '.changelog') {
   const fullPath = path.isAbsolute(changelogDir) ? changelogDir : path.join(process.cwd(), changelogDir);
 
-  if (!fs.existsSync(fullPath)) {
-    return { error: 'No .changelog/ directory found' };
-  }
-
-  const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.txt'));
-  if (files.length === 0) {
-    return { error: 'No changelog entries found in .changelog/' };
+  const rawEntries = loadFromChangelogDir(fullPath) || loadFromAppdataXml();
+  if (!rawEntries) {
+    return { error: 'No changelog entries found in .changelog/ or appdata.xml' };
   }
 
   const docsPath = path.join(process.cwd(), 'docs-site', 'docs');
   const { options: knownOptions, sections } = extractConfigOptions(docsPath);
 
-  const entries = files.map(file => {
-    const content = fs.readFileSync(path.join(fullPath, file), 'utf8').trim();
+  const entries = rawEntries.map(content => {
     const parsed = parseEntry(content);
     parsed.electronVersion = detectElectronVersion(content);
     parsed.configOptions = detectConfigOptions(content, knownOptions, sections);
