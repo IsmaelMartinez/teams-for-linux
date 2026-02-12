@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-09
+**Last Updated:** 2026-02-12
 **Current Version:** v2.7.3
-**Status:** Living Document
+**Status:** Living Document — v2.7.4 ready to release
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -10,24 +10,31 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| **High** | Screen Lock Media Privacy (#2106) | PR in review | Small |
-| **High** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **High** | Quick Chat Access (#2109/PR #2119) | PR in review - mostly working | Small |
-| **Medium** | GitHub Issue Bot (#2126/PR #2135) | Phase 1 complete, Phase 2+ planned | Medium |
+| **Next** | Screen Lock Media Privacy (#2106) | PR in review (post v2.7.4) | Small |
+| **Next** | Custom Notifications Phase 2 (#2108) | PR in review (post v2.7.4) | Medium |
+| **Done** | Force X11 ozone platform (#2139) | ✅ Merged | Small |
+| **Done** | Uninstall guide (#2048/PR #2142) | ✅ Merged | Small |
+| **Done** | Migrate Gitter to Matrix (#2113/PR #2141) | ✅ Merged | Tiny |
+| **Done** | Quick Chat Access (#2109/PR #2119) | ✅ Merged | Small |
+| **Done** | MCAS Domain Suffix (#2101) | ✅ Merged | Small |
+| **Done** | GitHub Issue Bot Phase 1 (#2126/PR #2135) | ✅ Merged | Medium |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
 
 ### Planning for v2.7.4
 
+All items merged. Release ready.
+
 | Item | Description | Status |
 |------|-------------|--------|
-| **PR #2101** | MCAS domain suffix handling in hostname validation | Ready to merge |
-| **#2106** | Screen Lock Media Privacy - MQTT commands for disable/enable media | PR in review (branch ready) |
-| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity notifications | PR in review (branch ready) |
-| **#2109/PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | PR in review (mostly working) |
-| **Deps** | Dependency updates and Electron upgrade (if available) | Pending |
+| **PR #2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
+| **PR #2119** | Quick Chat Access - People API search, deep links, inline messaging | ✅ Merged |
+| **PR #2135** | GitHub Issue Triage Bot Phase 1 - information request bot | ✅ Merged |
+| **PR #2139** | Force X11 ozone platform by default on Linux | ✅ Merged |
+| **PR #2141** | Migrate community chat links from Gitter to Matrix | ✅ Merged |
+| **PR #2142** | Add uninstall guide for all installation methods (#2048) | ✅ Merged |
 
-### Recently Completed (v2.7.3)
+### Previously Completed (v2.7.3)
 
 | PR | Description | Status |
 |----|-------------|--------|
@@ -47,20 +54,21 @@ This document outlines the future development direction for Teams for Linux, org
 
 ## Current Focus (v2.7.4)
 
-### In Progress - PRs Ready for Review
+### In Progress - PRs in Review (for v2.7.5+)
 
 | Item | Description | Branch | Status |
 |------|-------------|--------|--------|
-| **PR #2101** | MCAS domain suffix in hostname validation | contributor fork | Ready to merge (partial fix) |
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
-| **#2109/PR #2119** | Quick Chat Access - People API, deep links, inline messaging | `claude/document-chat-modal-l0Ty0` | PR in review (mostly working) |
 
 ### Ready to Implement
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **Deps** | Dependency updates | Routine maintenance |
+| **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
+| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
+
+**Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
 
 ### Awaiting User Validation (Post v2.7.3)
 
@@ -85,7 +93,6 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **#2048** | Uninstall instructions | ✅ Implemented — [Uninstall Guide](../../uninstall.md) |
 | **#2036** | GNOME 49 notification focus | Likely window manager issue |
 
 ---
@@ -121,17 +128,15 @@ These features have completed research and are ready to be built.
 
 ---
 
-### Quick Chat Access
+### Quick Chat Access - Merged
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **PR:** [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)
-**Branch:** `claude/document-chat-modal-l0Ty0`
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging) - included in PR #2119
-**Effort:** Small
-**Status:** PR in review - mostly working
+**ADRs:** ADR-014 (Deep Link Approach), ADR-015 (Inline Messaging)
+**Status:** ✅ Merged to main
 
-**What's Implemented (PR #2119):**
+**What's Included:**
 
 - `app/quickChat/` module - QuickChatModal with search UI
 - `app/graphApi/index.js` - GraphApiClient with `searchPeople` method
@@ -237,13 +242,13 @@ These features have MVP implementations and real user feedback identifying gaps.
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
 **PR:** [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)
-**Status:** Phase 1 complete (PR in review)
+**Status:** Phase 1 ✅ Merged, Phase 2+ planned
 **Priority:** Medium
 **Effort:** Medium (per phase)
 
 **Description:** Intelligent GitHub issue automation to suggest solutions from documentation, detect duplicates, request missing info, and reduce maintainer workload.
 
-**Phase 1 — Information Request Bot (complete):**
+**Phase 1 — Information Request Bot (✅ merged):**
 
 - Workflow: `.github/workflows/issue-triage-bot.yml`
 - Template documentation: `.github/issue-bot/templates/missing-info.md`
@@ -287,22 +292,24 @@ These features have completed initial implementation. Further phases depend on u
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) (Original request)
 **Research:** [chat-modal-investigation.md](../research/chat-modal-investigation.md), [chat-modal-spike-results.md](../research/chat-modal-spike-results.md)
-**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md)
-**Current Status:** ✅ Implemented (v2.7.3)
+**ADR:** [ADR-014](../adr/014-quick-chat-deep-link-approach.md), ADR-015 (Inline Messaging)
+**Current Status:** ✅ Merged (PR #2119, for v2.7.4)
 
 **Delivered:**
 
 - ✅ `searchPeople` method added to GraphApiClient
 - ✅ QuickChatModal with user search UI
-- ✅ Inline message sending via Graph API
+- ✅ Deep link navigation to open chats
+- ✅ Inline message sending via Teams React internals
 - ✅ Keyboard shortcut (Ctrl+Shift+P by default, configurable)
 - ✅ Configuration options: `quickChat.enabled`, `quickChat.shortcut`
+- ✅ Menu item integration
 
 **What It Does:**
 
 - Search contacts via People API (ranked by interaction frequency)
-- Click a contact to open compose view
-- Send messages directly via Graph API without leaving the modal
+- Click a contact to open chat via deep link
+- Send messages inline via Teams React internals
 - Keyboard shortcut toggles the modal
 
 **Limitations (API Blocked):**
@@ -430,19 +437,29 @@ These features have completed initial implementation. Further phases depend on u
 
 ## Implementation Priorities
 
-### v2.7.4 Release Plan
+### v2.7.4 Release Plan — Ready
 
-1. **Merge PR #2101** - MCAS domain suffix handling (partial fix, user not responding)
-2. **Merge Quick Chat Access PR #2119** - People API search, deep links, inline messaging (mostly working)
-3. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (branch ready)
-4. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (branch ready)
-5. **Dependency updates** - Routine maintenance, Electron upgrade if available
+All items merged. 9 changelog entries accumulated. Ready for `npm run release:prepare`.
+
+1. ~~**PR #2101**~~ - MCAS domain suffix handling — ✅ Merged
+2. ~~**PR #2119**~~ - Quick Chat Access with inline messaging — ✅ Merged
+3. ~~**PR #2135**~~ - GitHub Issue Bot Phase 1 — ✅ Merged
+4. ~~**PR #2139**~~ - Force X11 ozone platform by default — ✅ Merged
+5. ~~**PR #2141**~~ - Migrate Gitter to Matrix links — ✅ Merged
+6. ~~**PR #2142**~~ - Uninstall guide (#2048) — ✅ Merged
+7. **Release v2.7.4** - All items merged, run release workflow
+
+### v2.7.5+ Candidates
+
+8. **Merge Screen Lock Media Privacy PR** - MQTT `disable-media`/`enable-media` commands (PR in review)
+9. **Merge Custom Notifications Phase 2 PR** - Chat, calendar, activity notifications (PR in review)
+10. **Electron 40 upgrade** - Major version bump (39.5.1 → 40.4.0), requires testing
+11. **ESLint 10 upgrade** - Major version bump, config changes likely
 
 ### Future Priorities
 
-6. **GitHub Issue Bot PR #2135** - Phase 1 information request bot (PR in review)
-7. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
-8. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+13. **#2107 MQTT Screen Sharing Status** - Implement if user feedback received
+14. **GitHub Issue Bot Phases 2-4** - Solution suggestions (AI), duplicate detection (embeddings), enhancement context
 
 ### Principles
 
@@ -466,5 +483,5 @@ These features have completed initial implementation. Further phases depend on u
 - [ADR-011: AppImage Update Info](../adr/011-appimage-update-info.md) - AppImage auto-update configuration
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
 - [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
-- ADR-014: Quick Chat Deep Link Approach - Deep links for chat navigation (in PR #2119)
-- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals (in PR #2119)
+- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
+- [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
