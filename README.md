@@ -1,6 +1,6 @@
 # Teams for Linux
 
-[![Gitter chat](https://badges.gitter.im/ismaelmartinez/teams-for-linux.png)](https://gitter.im/teams-for-linux/community "Gitter chat")
+[![Matrix Space](https://img.shields.io/matrix/teams-for-linux-space%3Amatrix.org?server_fqdn=matrix.org&label=Matrix%20Space)](https://matrix.to/#/#teams-for-linux-space:matrix.org "Matrix Space")
 ![](https://img.shields.io/github/release/IsmaelMartinez/teams-for-linux.svg?style=flat)
 ![](https://img.shields.io/github/downloads/IsmaelMartinez/teams-for-linux/total.svg?style=flat)
 ![Build & Release](https://github.com/IsmaelMartinez/teams-for-linux/workflows/Build%20&%20Release/badge.svg)
@@ -82,7 +82,7 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 
 ## Support & Community
 
-- 💬 **Chat**: Join our [Matrix room](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- 💬 **Chat**: Join our [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)
 - 🤝 **Contributing**: See [`CONTRIBUTING.md`](CONTRIBUTING.md)
 

@@ -153,7 +153,7 @@ The project uses **Docusaurus** for documentation:
 - **IPC API**: `docs-site/docs/development/ipc-api.md`
 
 **Community:**
-- **Matrix Chat**: [#teams-for-linux_community:gitter.im](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- **Matrix Space**: [#teams-for-linux-space:matrix.org](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - **Documentation Site**: https://ismaelmartinez.github.io/teams-for-linux/ (web version for humans)
 
 ---
