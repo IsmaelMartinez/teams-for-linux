@@ -34,17 +34,6 @@ All items merged. Release ready.
 | **PR #2141** | Migrate community chat links from Gitter to Matrix | ✅ Merged |
 | **PR #2142** | Add uninstall guide for all installation methods (#2048) | ✅ Merged |
 
-### Recently Merged (for v2.7.4)
-
-| PR | Description | Status |
-|----|-------------|--------|
-| **#2139** | Force X11 ozone platform by default on Linux | ✅ Merged |
-| **#2141** | Migrate community chat links from Gitter to Matrix (#2113) | ✅ Merged |
-| **#2142** | Add uninstall guide for all installation methods (#2048) | ✅ Merged |
-| **#2101** | MCAS domain suffix handling in hostname validation | ✅ Merged |
-| **#2119** | Quick Chat with inline messaging via Graph API (#2109) | ✅ Merged |
-| **#2135** | GitHub Issue Triage Bot Phase 1 (Information Request) | ✅ Merged |
-
 ### Previously Completed (v2.7.3)
 
 | PR | Description | Status |
@@ -164,6 +153,12 @@ These features have completed research and are ready to be built.
 - Click to open chat (navigates Teams via deep link)
 - Inline message sending (via Teams React internals - see ADR-015)
 - No message history display (API blocked)
+
+**Value:**
+
+- Quick access to start/open chat without navigating Teams UI
+- Practical alternative to rejected multiple windows feature ([ADR-010](../adr/010-multiple-windows-support.md))
+- Can enhance notification clicks to open chat with sender
 
 ---
 
@@ -490,4 +485,4 @@ All items merged. 9 changelog entries accumulated. Ready for `npm run release:pr
 - [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
 - [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
 - [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
-- ADR-015: Quick Chat Inline Messaging - Inline messaging via Teams React internals
+- [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
