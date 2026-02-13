@@ -261,7 +261,7 @@ For configuration options, see [Configuration](configuration.md). For developmen
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Since v2.8.0, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by default on all Linux packaging formats. This avoids widespread regressions introduced in Electron 38+ when running as a native Wayland client. See the [Wayland/X11 Investigation](development/research/wayland-x11-ozone-platform-investigation.md) for full details.
+Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by default on all Linux packaging formats. This avoids widespread regressions introduced in Electron 38+ when running as a native Wayland client. See the [Wayland/X11 Investigation](development/research/wayland-x11-ozone-platform-investigation.md) for full details.
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -270,7 +270,7 @@ Since v2.8.0, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Solutions/Workarounds:**
 
-1. **Upgrade to v2.8.0+** — X11 is now forced by default, which resolves this for most users.
+1. **Upgrade to v2.7.4+** — X11 is now forced by default, which resolves this for most users.
 2. **For older versions:** Launch with `--ozone-platform=x11`:
     ```bash
     teams-for-linux --ozone-platform=x11
@@ -284,7 +284,7 @@ Since v2.8.0, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Solutions/Workarounds:**
 
-1. **Upgrade to v2.8.0+** — Forcing X11 mode resolves Wayland window management regressions.
+1. **Upgrade to v2.7.4+** — Forcing X11 mode resolves Wayland window management regressions.
 
 **Related GitHub Issues:** [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094)
 
