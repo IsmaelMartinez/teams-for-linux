@@ -27,15 +27,14 @@ class MediaPrivacy {
 	#setupGetUserMediaTracking() {
 		this.#originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
 
-		const self = this;
-		navigator.mediaDevices.getUserMedia = async function(constraints) {
-			if (self.#isMediaBlocked) {
+		navigator.mediaDevices.getUserMedia = async (constraints) => {
+			if (this.#isMediaBlocked) {
 				console.info('[MEDIA_PRIVACY] Blocking getUserMedia request - media privacy mode active');
 				throw new DOMException('Media privacy mode is active', 'NotAllowedError');
 			}
 
-			const stream = await self.#originalGetUserMedia(constraints);
-			self.#trackStream(stream);
+			const stream = await this.#originalGetUserMedia(constraints);
+			this.#trackStream(stream);
 			return stream;
 		};
 
@@ -90,6 +89,7 @@ class MediaPrivacy {
 		this.#stoppedTracks = [];
 
 		const streamsToStop = this.#getAllMediaStreams();
+		console.debug(`[MEDIA_PRIVACY] Found ${streamsToStop.size} media streams to process`);
 
 		for (const stream of streamsToStop) {
 			for (const track of stream.getTracks()) {
@@ -112,10 +112,10 @@ class MediaPrivacy {
 	#getAllMediaStreams() {
 		const streams = new Set(this.#trackedStreams);
 
-		const videoElements = document.querySelectorAll('video');
-		for (const video of videoElements) {
-			if (video.srcObject instanceof MediaStream) {
-				streams.add(video.srcObject);
+		const mediaElements = document.querySelectorAll('video, audio');
+		for (const element of mediaElements) {
+			if (element.srcObject instanceof MediaStream) {
+				streams.add(element.srcObject);
 			}
 		}
 
