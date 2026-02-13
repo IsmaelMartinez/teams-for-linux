@@ -12,6 +12,7 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **Next** | Screen Lock Media Privacy (#2106) | PR in review | Small |
 | **Next** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
+| **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium |
 | **Ready** | Electron 40 upgrade | Ready to implement | Medium |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
@@ -32,6 +33,7 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Item | Description | Notes |
 |------|-------------|-------|
+| **[#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)** | In-app auto-update via electron-updater for AppImage | [Research](../research/electron-updater-auto-update-research.md); supersedes #2065 |
 | **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
 | **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
 
@@ -42,7 +44,6 @@ This document outlines the future development direction for Teams for Linux, org
 | Item | Description | Notes |
 |------|-------------|-------|
 | **#2095** | `--appIcon` not working in KDE window list | PR #2104 merged in v2.7.3; may still be blocked by Electron |
-| **#2065** | AppImage update info not working | PR #2102 merged in v2.7.3; packaging issue, may not be fixable |
 | **#1860** | Camera resolution/aspect ratio issues | PR #2060 merged in v2.7.3; needs user testing to confirm fix |
 
 ### Blocked (External Dependencies)

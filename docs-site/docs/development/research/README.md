@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - PRs in Review
 
+- **[Electron-Updater Auto-Update Research](electron-updater-auto-update-research.md)** - In-app auto-update via electron-updater for AppImage
+  - Supersedes ADR-011 appimagetool approach (incompatible with electron-builder)
+  - Phase 1: AppImage auto-update using `electron-updater` with GitHub Releases
+  - **Status:** Research complete, ready for implementation
+
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106))
   - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
   - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
