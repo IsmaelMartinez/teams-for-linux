@@ -1,0 +1,1 @@
+Fix version references in Wayland troubleshooting documentation - by @IsmaelMartinez (#2150)
