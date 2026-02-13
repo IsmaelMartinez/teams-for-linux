@@ -360,7 +360,7 @@ function initializeQuickChat() {
   mainAppWindow.setQuickChatManager(quickChatManager);
 
   if (quickChatManager.isEnabled()) {
-    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Shift+P';
+    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Alt+Q';
     const registered = globalShortcut.register(quickChatShortcut, () => {
       quickChatManager.toggle();
     });

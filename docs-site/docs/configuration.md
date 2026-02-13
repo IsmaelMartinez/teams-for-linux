@@ -355,14 +355,14 @@ All topics use retained messages by default, ensuring subscribers receive the la
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `quickChat.enabled` | `boolean` | `true` | Enable Quick Chat feature for quick contact search and chat access |
-| `quickChat.shortcut` | `string` | `"CommandOrControl+Shift+P"` | Keyboard shortcut to toggle the Quick Chat modal |
+| `quickChat.enabled` | `boolean` | `false` | Enable Quick Chat feature for quick contact search and chat access |
+| `quickChat.shortcut` | `string` | `"CommandOrControl+Alt+Q"` | Keyboard shortcut to toggle the Quick Chat modal |
 
 ```json title="Example Configuration"
 {
   "quickChat": {
     "enabled": true,
-    "shortcut": "CommandOrControl+Shift+P"
+    "shortcut": "CommandOrControl+Alt+Q"
   },
   "graphApi": {
     "enabled": true

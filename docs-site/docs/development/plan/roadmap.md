@@ -177,7 +177,7 @@ These features have completed initial implementation. Further phases depend on u
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109)
 **Status:** ✅ Shipped in v2.7.4
 
-**Delivered:** People API search, deep link chat navigation, inline messaging via Teams React internals, keyboard shortcut (Ctrl+Shift+P), menu item integration.
+**Delivered:** People API search, deep link chat navigation, inline messaging via Teams React internals, keyboard shortcut (Ctrl+Alt+Q), menu item integration.
 
 **Phase 2 (If Requested):** Enhance notification clicks to open chat with sender, cache recent contacts, favorites list.
 
