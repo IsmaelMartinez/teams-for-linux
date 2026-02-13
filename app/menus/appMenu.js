@@ -13,11 +13,15 @@ exports = module.exports = (Menus) => ({
       accelerator: "ctrl+J",
       click: () => Menus.joinMeeting(),
     },
-    {
-      label: "Quick Chat",
-      // Accelerator omitted - global shortcut is configurable via quickChat.shortcut
-      click: () => Menus.showQuickChat(),
-    },
+    ...(Menus.configGroup.startupConfig.quickChat?.enabled
+      ? [
+          {
+            label: "Quick Chat",
+            // Accelerator omitted - global shortcut is configurable via quickChat.shortcut
+            click: () => Menus.showQuickChat(),
+          },
+        ]
+      : []),
     {
       label: "Refresh",
       accelerator: "ctrl+R",

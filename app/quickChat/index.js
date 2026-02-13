@@ -14,7 +14,7 @@ class QuickChatManager {
 
   constructor(config, mainWindow) {
     this.#mainWindow = mainWindow;
-    this.#enabled = config?.quickChat?.enabled ?? true;
+    this.#enabled = config?.quickChat?.enabled ?? false;
   }
 
   initialize() {
