@@ -14,6 +14,17 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.5" date="2026-02-13">
+      <description>
+        <ul>
+          <li>Improve code quality: remove PII from logs, fix style issues, clean up ESLint - by @IsmaelMartinez (#2148)</li>
+          <li>chore(deps): bump the npm_and_yarn group across 2 directories with 1 update (#2149)</li>
+          <li>Fix version references in Wayland troubleshooting documentation - by @IsmaelMartinez (#2150)</li>
+          <li>Update roadmap for v2.7.4 release and v2.7.5 planning - by @IsmaelMartinez (#2153)</li>
+          <li>Make Quick Chat feature opt-in via configuration - by @IsmaelMartinez (#2155)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.4" date="2026-02-12">
       <description>
         <ul>
