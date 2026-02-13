@@ -227,7 +227,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     iconChooser = new TrayIconChooser(config);
 
     if (isMac) {
-      console.log("Setting Dock icon for macOS");
+      console.info("Setting Dock icon for macOS");
       let dockIconPath;
       
       // Use custom icon if specified, otherwise use default 256x256 icon for dock
@@ -350,7 +350,7 @@ function applyAppConfiguration(config, window) {
       },
       (result) => {
         console.info(
-          "Loaded certificate: " + certPath + ", result: " + result
+          `[CERT] Client certificate loaded, result: ${result}`
         );
       }
     );
@@ -371,7 +371,7 @@ function applyAppConfiguration(config, window) {
 function applySpellCheckerConfiguration(languages, window) {
   const spellCheckProvider = new SpellCheckProvider(window);
   if (
-    spellCheckProvider.setLanguages(languages).length == 0 &&
+    spellCheckProvider.setLanguages(languages).length === 0 &&
     languages.length > 0
   ) {
     // If failed to set user supplied languages, fallback to system locale.
@@ -634,7 +634,7 @@ function onBeforeInput(_event, input) {
 }
 
 function secureOpenLink(details) {
-  console.debug(`Requesting to open '${details.url}'`);
+  console.debug('[LINK] Requesting to open external link');
   const action = getLinkAction();
 
   if (action === 0) {

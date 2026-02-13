@@ -129,7 +129,7 @@ globalThis.electronAPI = {
     const currentOrigin = globalThis.location.origin;
     const chatPath = `/l/chat/0/0?users=${encodeURIComponent(email)}`;
     const chatUrl = `${currentOrigin}${chatPath}`;
-    console.log('[CHAT_LINK] Navigating to chat with:', email, 'URL:', chatUrl);
+    console.debug('[CHAT_LINK] Navigating to chat via deep link');
     globalThis.location.href = chatUrl;
     return true;
   },
@@ -148,7 +148,7 @@ let notificationConfig = null;
 // Use promise chain instead of async IIFE for SonarQube compatibility
 ipcRenderer.invoke("get-config").then((config) => {
   notificationConfig = config;
-  console.log("Preload: Config loaded for notifications:", {
+  console.debug("Preload: Config loaded for notifications:", {
     notificationMethod: config?.notificationMethod,
     disableNotifications: config?.disableNotifications
   });
@@ -288,15 +288,15 @@ function createCustomNotification(title, options) {
   });
 
   globalThis.Notification = CustomNotification;
-  console.log("Preload: CustomNotification factory initialized");
+  console.debug("Preload: CustomNotification factory initialized");
 })();
 
 // Initialize browser modules after DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log("Preload: DOMContentLoaded, initializing browser modules...");
+  console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");
-    console.log("Preload: Got config:", {
+    console.debug("Preload: Got config:", {
       trayIconEnabled: config?.trayIconEnabled,
       useMutationTitleLogic: config?.useMutationTitleLogic
     });
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
-    console.log("Preload: Essential tray modules initialized successfully");
+    console.debug("Preload: Essential tray modules initialized successfully");
     
     // Initialize other modules safely
     const modules = [
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     
-    console.log(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+    console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
 
     // Initialize ActivityManager
     try {

@@ -411,21 +411,20 @@ async function handleAppReady() {
   initializeQuickChat();
   registerGlobalShortcuts(config, mainAppWindow, app);
 
-  console.log('🔒 IPC Security: Channel allowlisting enabled');
-  console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
+  console.info('[IPC Security] Channel allowlisting enabled');
+  console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
 }
 
-function handleCertificateError() {
-  const arg = {
-    event: arguments[0],
-    webContents: arguments[1],
-    url: arguments[2],
-    error: arguments[3],
-    certificate: arguments[4],
-    callback: arguments[5],
-    config: config,
-  };
-  certificateModule.onAppCertificateError(arg);
+function handleCertificateError(event, webContents, url, error, certificate, callback) {
+  certificateModule.onAppCertificateError({
+    event,
+    webContents,
+    url,
+    error,
+    certificate,
+    callback,
+    config,
+  });
 }
 
 async function requestMediaAccess() {
@@ -459,19 +458,19 @@ async function setBadgeCountHandler(_event, count) {
 }
 
 function handleGlobalShortcutDisabled() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  for (const shortcut of config.disableGlobalShortcuts) {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
         console.debug(`Global shortcut ${shortcut} disabled`);
       });
     }
-  });
+  }
 }
 
 function handleGlobalShortcutDisabledRevert() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  for (const shortcut of config.disableGlobalShortcuts) {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
     }
-  });
+  }
 }
