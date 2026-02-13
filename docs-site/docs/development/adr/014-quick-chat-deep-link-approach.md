@@ -192,8 +192,8 @@ Use `msteams://` protocol URLs to open Teams native client.
 - Issue [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) - Quick Chat Access feature request
 - Issue [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) - Original multiple windows request
 - [ADR 010](010-multiple-windows-support.md) - Multiple windows support rejection
-- [Chat Modal Investigation](../research/chat-modal-investigation.md) - Feature research
-- [Chat Modal Spike Results](../research/chat-modal-spike-results.md) - API validation results
+- Chat Modal Investigation (removed — see git history for original research)
+- Chat Modal Spike Results (removed — Chat API blocked, Deep Links validated)
 
 ## References
 

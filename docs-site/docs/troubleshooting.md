@@ -261,7 +261,7 @@ For configuration options, see [Configuration](configuration.md). For developmen
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by default on all Linux packaging formats. This avoids widespread regressions introduced in Electron 38+ when running as a native Wayland client. See the [Wayland/X11 Investigation](development/research/wayland-x11-ozone-platform-investigation.md) for full details.
+Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by default on all Linux packaging formats. This avoids widespread regressions introduced in Electron 38+ when running as a native Wayland client.
 :::
 
 #### Issue: Blank or black window on Wayland

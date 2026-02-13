@@ -1,6 +1,10 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-**Status:** Active Research
+:::info Phase 1 Shipped
+Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). The bot detects missing reproduction steps and debug output in bug reports. Phases 2-4 (AI-powered suggestions, duplicate detection, enhancement context) are planned for the future.
+:::
+
+**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phases 2-4 planned
 **Date:** February 2026
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant

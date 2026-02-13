@@ -8,32 +8,18 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Active Research - Ready for Implementation
+### Active Research - PRs in Review
 
-- **[Wayland/X11 Ozone Platform Investigation](wayland-x11-ozone-platform-investigation.md)** - Force X11 by default due to Electron 38+ Wayland regressions (multiple issues: [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094), [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494))
-  - Electron 38+ changed default to native Wayland causing blank windows, multi-monitor bugs, and crashes
-  - Fix: `--ozone-platform=x11` as `executableArgs` for all Linux packaging formats
-  - Users can override to `--ozone-platform=wayland` or `auto` via command line
-  - **Status:** Research complete, fix implemented
-
-- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
+- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106))
   - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
   - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
-  - **Status:** Research complete, ready to implement
-
-### Active Research - Requires Validation Spikes
-
-- **[Chat Modal Investigation](chat-modal-investigation.md)** - Quick chat modal feature
-  - Lightweight alternative to multi-window support
-  - Uses Microsoft Graph API for chat functionality
-  - **Status:** Investigation complete, requires API permission validation
-  - Related: [Chat Modal Spikes and Gaps](chat-modal-spikes-and-gaps.md)
-
-### Ongoing Development - Awaiting User Feedback
+  - **Status:** PR in review
 
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
   - **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
-  - **Phase 2 DEFERRED**: Notification center awaiting user feedback
+  - **Phase 2 in review**: Chat, calendar, activity notification routing ([#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108))
+
+### Ongoing Development - Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
   - **Phase 1 Complete**: Infrastructure, documentation, and Last Will Testament
@@ -46,25 +32,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Strategic Documentation
 
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
-  - Suggests solutions using troubleshooting docs, detects duplicates, requests missing info
-  - Builds on existing Gemini integration pattern from changelog generator
-  - **Status:** Active research, quick wins ready for implementation
-  - Includes smaller immediate improvements (templates, saved replies, label automation)
+  - **Phase 1 Complete** (v2.7.4): Information request bot — detects missing info in bug reports
+  - **Future phases**: Solution suggestions (Gemini AI), duplicate detection (embeddings), enhancement context
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
-
-- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Handling changelog for external fork PRs
-  - **Phase 1-2 Complete**: Graceful degradation + release automation workflow
-  - **Phase 3**: Enhanced release notes generation (future)
-  - Related: [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
-
-### Technical Context & Monitoring
-
-- **[DOM Access Investigation](dom-access-investigation.md)** - DOM access requirements and React compatibility
-  - Documents v2.5.2 DOM access restoration and future React compatibility risks
-  - Hybrid API + DOM approach for future resilience
 
 ### Archived / Not Feasible
 
@@ -72,11 +45,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
   - Validation spikes implemented but user never responded to test
   - Work preserved in branch `claude/analyze-research-spikes-XbYVZ` for potential reuse
-
-- **[Architecture Modernization Research](architecture-modernization-research.md)** - **ARCHIVED**
-  - DDD+Plugin approach deemed too complex
-  - Superseded by incremental refactoring (55% reduction in index.js)
-  - See [Contributing Guide](../contributing.md) for current architecture
 
 - **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE**
   - Investigation into enabling Teams auth in system browser
@@ -87,17 +55,21 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - GNOME Shell search integration ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075))
   - Feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor
 
-### Implemented Features (Research Archived)
+### Implemented Features (Research Removed)
 
-The following research documents have been archived as their features are fully implemented:
+Research documents are deleted once a feature is fully shipped. The ADRs and git history preserve the decisions and context.
 
-| Feature | Implementation Date | Notes |
-|---------|---------------------|-------|
-| PII Log Sanitization | 2026-02-01 | Auto-sanitizes all logs via electron-log hook - See [ADR 013](../adr/013-pii-log-sanitization.md) |
-| Quick Chat Inline Messaging | 2026-02-04 | Hybrid Teams commanding + Graph API for inline chat - See [ADR 015](../adr/015-quick-chat-inline-messaging.md) |
-| MQTT Commands | 2025-11-25 | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
-| Calendar Data Export | 2025-11-29 | MQTT `get-calendar` command |
-| useSystemPicker | 2025-11-24 | Rejected - See [ADR 008](../adr/008-usesystempicker-electron-38.md) |
+| Feature | Version | Reference |
+|---------|---------|-----------|
+| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
+| Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
+| External Changelog Generation | v2.7.3 | [Research](external-changelog-generation-research.md), [ADR-005](../adr/005-ai-powered-changelog-generation.md) |
+| PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
+| DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |
+| Architecture Modernization | — | Rejected (DDD too complex) — incremental refactoring adopted instead |
+| MQTT Commands | v2.6.x | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
+| Calendar Data Export | v2.6.x | MQTT `get-calendar` command |
+| useSystemPicker | — | Rejected — [ADR-008](../adr/008-usesystempicker-electron-38.md) |
 
 ## Purpose
 
