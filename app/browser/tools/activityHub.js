@@ -32,6 +32,7 @@ class ActivityHub {
       if (commandChangeReportingService) {
         assignEventHandlers(commandChangeReportingService);
         console.debug("ActivityHub: Events connected successfully");
+        logAvailableServices();
         clearInterval(setup);
 
         // Start periodic authentication state logging for #1357
@@ -126,6 +127,21 @@ class ActivityHub {
   }
 }
 
+/**
+ * Log available Teams core service keys for diagnostics.
+ * Helps discover notification-related services we could tap into.
+ */
+function logAvailableServices() {
+  const keys = ReactHandler.getCoreServiceKeys();
+  if (keys) {
+    const notificationRelated = keys.filter(k =>
+      /notif|toast|alert|message|chat|feed/i.test(k)
+    );
+    console.debug("[ActivityHub] Core service keys (notification-related):", notificationRelated.join(", ") || "none found");
+    console.debug("[ActivityHub] Total core services available:", keys.length);
+  }
+}
+
 function isSupportedEvent(event) {
   return supportedEvents.has(event);
 }
@@ -181,11 +197,27 @@ function assignEventHandlers(commandChangeReportingService) {
     }
 
     if (e.context.entityCommand) {
+      logEntityCommandDiagnostics(e.context.entityCommand);
       handleNotificationEntityCommand(e.context.entityCommand);
       handleCallEventEntityCommand(e.context.entityCommand);
     } else {
       handleCallEventStep(e.context.step);
     }
+  });
+}
+
+/**
+ * Log entity command diagnostics to help discover notification event shapes.
+ * This helps debug cases where notifications are not being detected.
+ */
+function logEntityCommandDiagnostics(entityCommand) {
+  const options = entityCommand.entityOptions || {};
+  console.debug("[ActivityHub] Entity command received:", {
+    type: entityCommand.type,
+    scenario: options.crossClientScenarioName,
+    hasTitle: !!options.title,
+    hasText: !!options.text,
+    optionKeys: Object.keys(options).join(",")
   });
 }
 
@@ -212,6 +244,7 @@ function handleNotificationEntityCommand(entityCommand) {
       messageId: options.messageId,
       senderId: options.senderId
     });
+    return;
   }
 
   // Detect calendar/meeting invite notifications
@@ -226,6 +259,7 @@ function handleNotificationEntityCommand(entityCommand) {
       startTime: options.startTime,
       endTime: options.endTime
     });
+    return;
   }
 
   // Detect activity notifications (mentions, reactions)
@@ -237,11 +271,29 @@ function handleNotificationEntityCommand(entityCommand) {
       icon: options.mainImage?.src,
       activityType: options.activityType || options.type
     });
+    return;
+  }
+
+  // Catch-all: any entity command with a title that wasn't matched above
+  // Teams event shapes vary across versions and orgs, so this ensures
+  // we don't silently drop notifications with unfamiliar properties
+  if (options.title || options.text) {
+    console.debug("[ActivityHub] Unclassified notification (catch-all):", {
+      type: entityCommand.type,
+      scenario: options.crossClientScenarioName
+    });
+    onChatNotification({
+      title: options.title || options.senderName || 'Teams Notification',
+      body: options.text || options.preview || options.message || '',
+      icon: options.mainImage?.src || options.senderImage
+    });
   }
 }
 
 /**
- * Check if entity command represents a chat notification
+ * Check if entity command represents a chat notification.
+ * Teams v2 entity commands for chat messages have: fromUser, text, title,
+ * audioId, emoji, isUrgent, etc. — but NOT type/crossClientScenarioName.
  */
 function isChatNotification(entityCommand) {
   const options = entityCommand.entityOptions || {};
@@ -249,6 +301,9 @@ function isChatNotification(entityCommand) {
   const scenarioName = (options.crossClientScenarioName || '').toLowerCase();
 
   return (
+    // Primary detection: actual Teams v2 chat event shape
+    (options.fromUser !== undefined && (options.title || options.text)) ||
+    // Legacy/fallback detection
     commandType.includes('message') ||
     commandType.includes('chat') ||
     scenarioName.includes('message') ||

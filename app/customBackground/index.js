@@ -32,16 +32,16 @@ class CustomBackground {
     }
 
     const remotePath = httpHelper.joinURLs(customBGUrl.href, "config.json");
-    console.debug(
-      `Fetching custom background configuration from '${remotePath}'`,
-    );
-    httpHelper
-      .getAsync(remotePath)
-      .then(this.onCustomBGServiceConfigDownloadSuccess.bind(this))
-      .catch(this.onCustomBGServiceConfigDownloadFailure.bind(this));
+    console.debug('[CUSTOM_BG] Fetching remote configuration');
+    try {
+      const data = await httpHelper.getAsync(remotePath);
+      this.onCustomBGServiceConfigDownloadSuccess(data);
+    } catch (err) {
+      this.onCustomBGServiceConfigDownloadFailure(err);
+    }
     if (this.config.customBGServiceConfigFetchInterval > 0) {
       setTimeout(
-        this.downloadCustomBGServiceRemoteConfig,
+        () => this.downloadCustomBGServiceRemoteConfig(),
         this.config.customBGServiceConfigFetchInterval * 1000,
       );
     }
@@ -71,7 +71,7 @@ class CustomBackground {
         "",
       );
       const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
-      console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+      console.debug('[CUSTOM_BG] Forwarding v1 background request');
       return { redirectURL: imgUrl };
     }
     // Custom background replace for teams v2
@@ -86,7 +86,7 @@ class CustomBackground {
         "",
       );
       const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
-      console.debug(`Forwarding '${details.url}' to '${imgUrl}'`);
+      console.debug('[CUSTOM_BG] Forwarding v2 background request');
       return { redirectURL: imgUrl };
     }
   }
@@ -118,12 +118,10 @@ class CustomBackground {
     }
     try {
       customBGServiceUrl = new URL("", this.config.customBGServiceBaseUrl);
-      console.debug(
-        `Custom background service url is '${this.config.customBGServiceBaseUrl}'`,
-      );
+      console.debug('[CUSTOM_BG] Custom background service URL configured');
     } catch (err) {
       console.error(
-        `Invalid custom background service url '${this.config.customBGServiceBaseUrl}' \n ${err} \n Updating to default 'http://localhost'`,
+        `[CUSTOM_BG] Invalid custom background service URL, updating to default. Error: ${err.message}`,
       );
       customBGServiceUrl = new URL("", "http://localhost");
     }
@@ -157,7 +155,7 @@ class CustomBackground {
     );
     try {
       const configJSON = JSON.parse(data);
-      for (let config of configJSON) {
+      for (const config of configJSON) {
         setPath(config);
       }
       fs.writeFileSync(downloadPath, JSON.stringify(configJSON));

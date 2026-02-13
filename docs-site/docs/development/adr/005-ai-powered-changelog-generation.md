@@ -231,6 +231,29 @@ permissions:
 3. **Build optimization** - Could detect version changes to skip unnecessary builds
 4. **Multi-repo support** - Could share Gemini API key across multiple repositories
 
+## Amendments
+
+### 2026-02-05: Enhanced Release Notes Generation
+
+**Context:** The original implementation provided good changelog entries but the release notes were a flat list without categorization or documentation links.
+
+**Enhancement:** Added `generateReleaseNotes.mjs` script that:
+- **Categorizes changes** automatically based on conventional commit prefixes (feat, fix, docs, etc.)
+- **Detects Electron updates** and links to Electron release notes
+- **Detects configuration changes** by parsing `docs/configuration.md` and matching option names in changelog entries
+- **Includes documentation links** to relevant sections automatically
+
+**New Features:**
+- `npm run generate-release-notes` - Generate categorized release notes
+- `npm run release:prepare -- --dry-run` - Preview release without making changes
+- PR bodies now include full categorized release notes with documentation links
+
+**Benefits:**
+- No hardcoded keyword mappings to maintain
+- Config options extracted dynamically from documentation
+- Electron version detection is automatic
+- Dry-run mode enables safe preview before committing
+
 ## References
 
 - **Implementation PR:** #1951

@@ -23,6 +23,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run generate-release-info` - Generate release information file
 - `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
 
+**Release:**
+- `npm run release:prepare` - Prepare release (bundle changelogs, update versions)
+- `npm run release:prepare -- --dry-run` - Preview release without making changes
+- `npm run generate-release-notes` - Generate categorized release notes with doc links
+
 ## Project Architecture
 
 Teams for Linux is an Electron-based desktop application that wraps the Microsoft Teams web app. The architecture follows a modular pattern with the main process coordinating various specialized modules.
@@ -276,6 +281,7 @@ When a PR has review comments, address them proactively:
 - **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
 - **Research Index**: `docs-site/docs/development/research/README.md` - Feature research and investigations
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
+- **Release Process**: `docs-site/docs/development/manual-release-process.md` - Release workflow with dry-run and categorized notes
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
 - **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`

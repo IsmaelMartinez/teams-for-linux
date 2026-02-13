@@ -6,8 +6,7 @@ This directory contains technical documentation for Teams for Linux developers a
 
 ### Active Development Docs
 - **[token-cache-architecture.md](token-cache-architecture.md)** - Token cache implementation, secure storage architecture, and authentication persistence
-- **[dom-access-investigation.md](research/dom-access-investigation.md)** - Research and findings on DOM access requirements, React breaking changes, and API feasibility
-- **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls documentation
+- **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls
 - **[ADR-002: Token Cache Secure Storage](adr/002-token-cache-secure-storage.md)** - Architecture decision for secure token storage implementation
 - **[ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md)** - Architecture decision for authentication persistence
 
@@ -17,7 +16,7 @@ When working on Teams for Linux:
 
 1. **Review token cache architecture** for authentication and secure storage patterns
 2. **Read the security architecture** to understand security trade-offs and requirements
-3. **Review DOM access investigation** ([research](research/dom-access-investigation.md)) for context on current implementation choices
+3. **Review research documents** in `research/` for context on current implementation choices
 4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
 6. **Run E2E tests** before submitting PRs with `npm run test:e2e`

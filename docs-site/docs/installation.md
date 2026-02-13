@@ -269,12 +269,13 @@ After installation:
 2. **[Multiple Instances](multiple-instances.md)** - Set up work and personal profiles
 3. **[Screen Sharing](screen-sharing.md)** - Configure screen capture
 4. **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+5. **[Uninstall Guide](uninstall.md)** - Remove Teams for Linux from your system
 
 ## Support
 
 - **Documentation**: [Full documentation](index.md)
 - **Issues**: [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)
-- **Community**: [Matrix Chat](https://matrix.to/#/#teams-for-linux_community:gitter.im)
+- **Community**: [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
 - **Discussions**: [GitHub Discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions)
 
 ## Related Documentation

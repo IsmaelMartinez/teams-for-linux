@@ -41,6 +41,7 @@ let customBackgroundService = null;
 let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
+let menus = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -226,7 +227,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     iconChooser = new TrayIconChooser(config);
 
     if (isMac) {
-      console.log("Setting Dock icon for macOS");
+      console.info("Setting Dock icon for macOS");
       let dockIconPath;
       
       // Use custom icon if specified, otherwise use default 256x256 icon for dock
@@ -283,8 +284,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    const m = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
-    m.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
+    menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
   addEventHandlers();
@@ -312,6 +313,12 @@ exports.show = function () {
 
 exports.getWindow = function () {
   return window;
+};
+
+exports.setQuickChatManager = function (quickChatManager) {
+  if (menus) {
+    menus.setQuickChatManager(quickChatManager);
+  }
 };
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
@@ -343,7 +350,7 @@ function applyAppConfiguration(config, window) {
       },
       (result) => {
         console.info(
-          "Loaded certificate: " + certPath + ", result: " + result
+          `[CERT] Client certificate loaded, result: ${result}`
         );
       }
     );
@@ -364,7 +371,7 @@ function applyAppConfiguration(config, window) {
 function applySpellCheckerConfiguration(languages, window) {
   const spellCheckProvider = new SpellCheckProvider(window);
   if (
-    spellCheckProvider.setLanguages(languages).length == 0 &&
+    spellCheckProvider.setLanguages(languages).length === 0 &&
     languages.length > 0
   ) {
     // If failed to set user supplied languages, fallback to system locale.
@@ -627,7 +634,7 @@ function onBeforeInput(_event, input) {
 }
 
 function secureOpenLink(details) {
-  console.debug(`Requesting to open '${details.url}'`);
+  console.debug('[LINK] Requesting to open external link');
   const action = getLinkAction();
 
   if (action === 0) {

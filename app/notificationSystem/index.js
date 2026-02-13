@@ -1,15 +1,22 @@
 const { ipcMain } = require('electron');
 const NotificationToast = require('./NotificationToast');
 
+// Dedup window in ms — notifications with the same title arriving within
+// this interval are treated as duplicates (activityHub + window.Notification
+// can both fire for the same message).
+const DEDUP_WINDOW_MS = 3000;
+
 class CustomNotificationManager {
   #mainWindow;
   #toastDuration;
   #activeToasts;
+  #recentTitles;
 
   constructor(config, mainWindow) {
     this.#mainWindow = mainWindow;
     this.#toastDuration = config?.customNotification?.toastDuration || 5000;
     this.#activeToasts = new Set();
+    this.#recentTitles = new Map();
   }
 
   initialize() {
@@ -21,9 +28,30 @@ class CustomNotificationManager {
     console.info('[CustomNotificationManager] Initialized and listening on "notification-show-toast" channel');
   }
 
+  #isDuplicate(title) {
+    const now = Date.now();
+    const lastSeen = this.#recentTitles.get(title);
+    if (lastSeen && (now - lastSeen) < DEDUP_WINDOW_MS) {
+      return true;
+    }
+    this.#recentTitles.set(title, now);
+    // Prune old entries to avoid unbounded growth
+    if (this.#recentTitles.size > 50) {
+      for (const [key, ts] of this.#recentTitles) {
+        if (now - ts > DEDUP_WINDOW_MS) this.#recentTitles.delete(key);
+      }
+    }
+    return false;
+  }
+
   #handleShowToast(event, data) {
     if (!data || !data.title) {
       console.warn('[CustomNotificationManager] Invalid notification data, missing title');
+      return;
+    }
+
+    if (this.#isDuplicate(data.title)) {
+      console.debug(`[CustomNotificationManager] Duplicate suppressed: "${data.title}"`);
       return;
     }
 

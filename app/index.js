@@ -17,6 +17,8 @@ const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
+const QuickChatManager = require("./quickChat");
+const configDefaults = require("./config/defaults");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
@@ -47,6 +49,7 @@ let userStatus = -1;
 let mqttClient = null;
 let mqttMediaStatusService = null;
 let graphApiClient = null;
+let quickChatManager = null;
 
 let player;
 try {
@@ -234,8 +237,71 @@ function onAppTerminated(signal) {
   }
 }
 
-async function handleAppReady() {
-  // check for configuration errors
+function handleShortcutCommand({ action, shortcut }) {
+  if (!shortcut) return;
+
+  const window = mainAppWindow.getWindow();
+  if (window && !window.isDestroyed()) {
+    sendKeyboardEventToWindow(window, shortcut);
+    console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
+  } else {
+    console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
+  }
+}
+
+function initializeMqtt() {
+  mqttClient = new MQTTClient(config);
+
+  async function handleGetCalendarCommand({ startDate, endDate }) {
+    if (!startDate || !endDate) {
+      console.error('[MQTT] get-calendar requires startDate and endDate');
+      return;
+    }
+
+    if (Number.isNaN(Date.parse(startDate)) || Number.isNaN(Date.parse(endDate))) {
+      console.error('[MQTT] get-calendar requires startDate and endDate in valid ISO 8601 format');
+      return;
+    }
+
+    if (!graphApiClient) {
+      console.error('[MQTT] get-calendar failed: Graph API client not initialized');
+      return;
+    }
+
+    console.info(`[MQTT] Fetching calendar events from ${startDate} to ${endDate}`);
+
+    try {
+      const result = await graphApiClient.getCalendarView(startDate, endDate);
+
+      if (result.success) {
+        await mqttClient.publishToTopic('calendar', result);
+        console.info('[MQTT] Calendar data published to teams/calendar topic');
+      } else {
+        console.error('[MQTT] Failed to get calendar:', result.error);
+      }
+    } catch (error) {
+      console.error('[MQTT] Error fetching calendar:', error);
+    }
+  }
+
+  async function handleMqttCommand(command) {
+    const { action } = command;
+
+    if (action === 'get-calendar') {
+      await handleGetCalendarCommand(command);
+    } else {
+      handleShortcutCommand(command);
+    }
+  }
+
+  mqttClient.on('command', handleMqttCommand);
+  mqttClient.initialize();
+
+  mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
+  mqttMediaStatusService.initialize();
+}
+
+function showConfigurationDialogs() {
   if (config.error) {
     dialog.showMessageBox({
       title: "Configuration Error",
@@ -245,7 +311,6 @@ async function handleAppReady() {
       message: `Error in config file '${config.error}'.\n Loading default configuration`,
     });
   }
-  // check for configuration warnings
   if (config.warnings && config.warnings.length > 0) {
     dialog.showMessageBox({
       title: "Configuration Warning",
@@ -255,96 +320,9 @@ async function handleAppReady() {
       message: config.warnings.join("\n\n"),
     });
   }
+}
 
-  process.on("SIGTRAP", onAppTerminated);
-  process.on("SIGINT", onAppTerminated);
-  process.on("SIGTERM", onAppTerminated);
-  //Just catch the error
-  process.stdout.on("error", () => {});
-
-  if (config.cacheManagement?.enabled) {
-    const cacheManager = new CacheManager({
-      maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
-      cacheCheckIntervalMs:
-        config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
-      partition: config.partition, // Pass partition config for dynamic cache paths
-    });
-    cacheManager.start();
-
-    // Stop cache manager on app termination
-    app.on("before-quit", () => {
-      cacheManager.stop();
-    });
-  }
-
-  // Initialize MQTT client if enabled
-  if (config.mqtt?.enabled) {
-    mqttClient = new MQTTClient(config);
-
-    async function handleGetCalendarCommand({ startDate, endDate }) {
-      if (!startDate || !endDate) {
-        console.error('[MQTT] get-calendar requires startDate and endDate');
-        return;
-      }
-
-      if (Number.isNaN(Date.parse(startDate)) || Number.isNaN(Date.parse(endDate))) {
-        console.error('[MQTT] get-calendar requires startDate and endDate in valid ISO 8601 format');
-        return;
-      }
-
-      if (!graphApiClient) {
-        console.error('[MQTT] get-calendar failed: Graph API client not initialized');
-        return;
-      }
-
-      console.info(`[MQTT] Fetching calendar events from ${startDate} to ${endDate}`);
-
-      try {
-        const result = await graphApiClient.getCalendarView(startDate, endDate);
-
-        if (result.success) {
-          await mqttClient.publishToTopic('calendar', result);
-          console.info('[MQTT] Calendar data published to teams/calendar topic');
-        } else {
-          console.error('[MQTT] Failed to get calendar:', result.error);
-        }
-      } catch (error) {
-        console.error('[MQTT] Error fetching calendar:', error);
-      }
-    }
-
-    function handleShortcutCommand({ action, shortcut }) {
-      if (!shortcut) return;
-
-      const window = mainAppWindow.getWindow();
-      if (window && !window.isDestroyed()) {
-        sendKeyboardEventToWindow(window, shortcut);
-        console.info(`[MQTT] Executed command '${action}' -> ${shortcut}`);
-      } else {
-        console.warn(`[MQTT] Cannot execute command '${action}': window not available`);
-      }
-    }
-
-    async function handleMqttCommand(command) {
-      const { action } = command;
-
-      if (action === 'get-calendar') {
-        await handleGetCalendarCommand(command);
-      } else {
-        handleShortcutCommand(command);
-      }
-    }
-
-    mqttClient.on('command', handleMqttCommand);
-    mqttClient.initialize();
-
-    mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
-    mqttMediaStatusService.initialize();
-  }
-
-  // Load menu-toggleable settings from persistent store
-  // These settings can be changed via the application menu and are persisted
-  // across app restarts. The store values override the config file values.
+function loadMenuToggleSettings() {
   const menuToggleSettings = [
     'disableNotifications',
     'disableNotificationSound',
@@ -359,43 +337,95 @@ async function handleAppReady() {
       config[setting] = appConfig.legacyConfigStore.get(setting);
     }
   }
+}
+
+function initializeGraphApiClient() {
+  if (!config.graphApi?.enabled) return;
+
+  graphApiClient = new GraphApiClient(config);
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow) {
+    graphApiClient.initialize(mainWindow);
+    console.debug("[GRAPH_API] Graph API client initialized with main window");
+  } else {
+    console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
+  }
+}
+
+function initializeQuickChat() {
+  const mainWindow = mainAppWindow.getWindow();
+  if (!mainWindow) return;
+
+  quickChatManager = new QuickChatManager(config, mainWindow);
+  quickChatManager.initialize();
+  mainAppWindow.setQuickChatManager(quickChatManager);
+
+  if (quickChatManager.isEnabled()) {
+    const quickChatShortcut = config.quickChat?.shortcut || configDefaults.quickChatShortcut;
+    const registered = globalShortcut.register(quickChatShortcut, () => {
+      quickChatManager.toggle();
+    });
+    if (registered) {
+      console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
+    } else {
+      console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
+    }
+  }
+}
+
+function initializeCacheManagement() {
+  if (!config.cacheManagement?.enabled) return;
+
+  const cacheManager = new CacheManager({
+    maxCacheSizeMB: config.cacheManagement?.maxCacheSizeMB || 600,
+    cacheCheckIntervalMs:
+      config.cacheManagement?.cacheCheckIntervalMs || 60 * 60 * 1000,
+    partition: config.partition,
+  });
+  cacheManager.start();
+
+  app.on("before-quit", () => {
+    cacheManager.stop();
+  });
+}
+
+async function handleAppReady() {
+  showConfigurationDialogs();
+
+  process.on("SIGTRAP", onAppTerminated);
+  process.on("SIGINT", onAppTerminated);
+  process.on("SIGTERM", onAppTerminated);
+  process.stdout.on("error", () => {});
+
+  initializeCacheManagement();
+
+  if (config.mqtt?.enabled) {
+    initializeMqtt();
+  }
+
+  loadMenuToggleSettings();
 
   await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
 
-  // Initialize Graph API client if enabled (after mainAppWindow is ready)
-  if (config.graphApi?.enabled) {
-    graphApiClient = new GraphApiClient(config);
-    const mainWindow = mainAppWindow.getWindow();
-    if (mainWindow) {
-      graphApiClient.initialize(mainWindow);
-      console.debug("[GRAPH_API] Graph API client initialized with main window");
-    } else {
-      console.warn("[GRAPH_API] Main window not available, Graph API client not fully initialized");
-    }
-  }
-
-  // Register Graph API IPC handlers (always register, handlers check for client availability)
+  initializeGraphApiClient();
   registerGraphApiHandlers(ipcMain, graphApiClient);
-
-  // Register global shortcuts
+  initializeQuickChat();
   registerGlobalShortcuts(config, mainAppWindow, app);
 
-  // Log IPC Security configuration status
-  console.log('🔒 IPC Security: Channel allowlisting enabled');
-  console.log(`🔒 IPC Security: ${allowedChannels.size} channels allowlisted`);
+  console.info('[IPC Security] Channel allowlisting enabled');
+  console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
 }
 
-function handleCertificateError() {
-  const arg = {
-    event: arguments[0],
-    webContents: arguments[1],
-    url: arguments[2],
-    error: arguments[3],
-    certificate: arguments[4],
-    callback: arguments[5],
-    config: config,
-  };
-  certificateModule.onAppCertificateError(arg);
+function handleCertificateError(event, webContents, url, error, certificate, callback) {
+  certificateModule.onAppCertificateError({
+    event,
+    webContents,
+    url,
+    error,
+    certificate,
+    callback,
+    config,
+  });
 }
 
 async function requestMediaAccess() {
@@ -429,19 +459,19 @@ async function setBadgeCountHandler(_event, count) {
 }
 
 function handleGlobalShortcutDisabled() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  for (const shortcut of config.disableGlobalShortcuts) {
     if (shortcut) {
       globalShortcut.register(shortcut, () => {
         console.debug(`Global shortcut ${shortcut} disabled`);
       });
     }
-  });
+  }
 }
 
 function handleGlobalShortcutDisabledRevert() {
-  config.disableGlobalShortcuts.map((shortcut) => {
+  for (const shortcut of config.disableGlobalShortcuts) {
     if (shortcut) {
       globalShortcut.unregister(shortcut);
     }
-  });
+  }
 }

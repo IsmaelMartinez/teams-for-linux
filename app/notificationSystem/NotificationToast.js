@@ -25,7 +25,7 @@ class NotificationToast {
       resizable: false,
       show: false,
       skipTaskbar: true,
-      transparent: true,
+      backgroundColor: '#2D2D2D',
       webPreferences: {
         preload: path.join(__dirname, 'notificationToastPreload.js'),
         contextIsolation: true,
@@ -62,7 +62,7 @@ class NotificationToast {
     }
 
     this.#positioner.move('bottomRight');
-    this.#window.show();
+    this.#window.showInactive();
 
     this.#autoCloseTimer = setTimeout(() => {
       this.close();

@@ -66,7 +66,7 @@ class MQTTClient extends EventEmitter {
 				options.password = this.config.password;
 			}
 
-			console.info(`[MQTT] Connecting to broker: ${this.config.brokerUrl}`);
+			console.info('[MQTT] Connecting to broker');
 
 			this.client = mqtt.connect(this.config.brokerUrl, options);
 

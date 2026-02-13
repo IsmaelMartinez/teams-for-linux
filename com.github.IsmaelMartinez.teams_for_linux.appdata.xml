@@ -14,6 +14,55 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.5" date="2026-02-13">
+      <description>
+        <ul>
+          <li>Improve code quality: remove PII from logs, fix style issues, clean up ESLint - by @IsmaelMartinez (#2148)</li>
+          <li>chore(deps): bump the npm_and_yarn group across 2 directories with 1 update (#2149)</li>
+          <li>Fix version references in Wayland troubleshooting documentation - by @IsmaelMartinez (#2150)</li>
+          <li>Update roadmap for v2.7.4 release and v2.7.5 planning - by @IsmaelMartinez (#2153)</li>
+          <li>Make Quick Chat feature opt-in via configuration - by @IsmaelMartinez (#2155)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.7.4" date="2026-02-12">
+      <description>
+        <ul>
+          <li>feat: handle Microsoft Cloud App Security (MCAS) domain suffix in hostname validation - by @tvanderpool (#2101)</li>
+          <li>feat: Implement Quick Chat Access with People API and inline messaging (#2109) - by @IsmaelMartinez (#2119)</li>
+          <li>Add GitHub Issue Bot research and investigation document - by @IsmaelMartinez (#2126)</li>
+          <li>docs: Update roadmap for v2.7.4 release plan, archive logout indicator - by @IsmaelMartinez (#2133)</li>
+          <li>chore(deps): bump webpack from 5.101.3 to 5.105.0 in /docs-site in the npm_and_yarn group across 1 directory (#2134)</li>
+          <li>Add GitHub Issue Triage Bot Phase 1 (Information Request) - by @IsmaelMartinez (#2135)</li>
+          <li>Force X11 ozone platform by default on Linux - by @IsmaelMartinez (#2139)</li>
+          <li>docs: Migrate community chat links from Gitter to Matrix space (#2113) - by @IsmaelMartinez (#2141)</li>
+          <li>docs: add uninstall guide with instructions for all installation methods (#2048) - by @IsmaelMartinez (#2142)</li>
+          <li>Update development roadmap for v2.7.4 release - by @IsmaelMartinez (#2145)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.7.3" date="2026-02-05">
+      <description>
+        <ul>
+          <li>feat: add camera resolution and aspect ratio browser tools - by @Brad-Fullwood (#2060)</li>
+          <li>Replace clipboard monitoring with join meeting dialog - by @IsmaelMartinez (#2082)</li>
+          <li>Fix AppImage extraction to work without execute permissions - by @IsmaelMartinez (#2102)</li>
+          <li>Upgrade Playwright to v1.58.1 - by @IsmaelMartinez (#2103)</li>
+          <li>Convert window icon to nativeImage for proper Linux/KDE display - by @IsmaelMartinez (#2104)</li>
+          <li>Update roadmap for v2.7.3 with current priorities and status - by @IsmaelMartinez (#2105)</li>
+          <li>Add chat API validation spikes for chat modal feasibility testing - by @IsmaelMartinez (#2111)</li>
+          <li>docs: Add PII log removal research and implementation plan - by @IsmaelMartinez (#2114)</li>
+          <li>feat: Add PII log sanitizer utility (Phase 1) - by @IsmaelMartinez (#2116)</li>
+          <li>Upgrade dependencies: electron, electron-builder, and globals - by @IsmaelMartinez (#2117)</li>
+          <li>feat: Integrate PII sanitizer with electron-log (Phase 2-5) (#2118)</li>
+          <li>docs: Update documentation for deprecated config options (#2120) - by @IsmaelMartinez (#2122)</li>
+          <li>Fix Teams icon registration by expanding CSP CDN domain allowlist - by @IsmaelMartinez (#2123)</li>
+          <li>docs: Upgrade electron-store to 11.0.2 - by @IsmaelMartinez (#2124)</li>
+          <li>Add last updated timestamp to release notes comment - by @IsmaelMartinez (#2125)</li>
+          <li>Add enhanced release notes generation for release workflow - by @IsmaelMartinez (#2128)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.2" date="2026-01-30">
       <description>
         <ul>

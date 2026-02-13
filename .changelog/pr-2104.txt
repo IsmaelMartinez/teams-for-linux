@@ -1,1 +1,0 @@
-Convert window icon to nativeImage for proper Linux/KDE display - by @IsmaelMartinez (#2104)

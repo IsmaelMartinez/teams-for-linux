@@ -64,7 +64,7 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 
     webFrame.executeJavaScript(`
 			if(!document.getElementById("${customCssId}")) {
-				var style = document.createElement('style');
+				const style = document.createElement('style');
 				style.id = "${customCssId}";
 				style.type = "text/css";
 				style.innerHTML = \u0060${data}\u0060;

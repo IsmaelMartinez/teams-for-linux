@@ -25,6 +25,7 @@ This document details all available configuration options for the Teams for Linu
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [MQTT Integration](#mqtt-integration)
   - [Microsoft Graph API](#microsoft-graph-api)
+  - [Quick Chat](#quick-chat)
   - [Performance & Hardware](#performance--hardware)
   - [Cache & Storage](#cache--storage)
   - [Development & Debug](#development--debug)
@@ -350,6 +351,28 @@ All topics use retained messages by default, ensuring subscribers receive the la
 > [!NOTE]
 > This feature uses Teams' existing authentication to access Microsoft Graph API endpoints. No additional login required. Currently supports reading user profile, calendar events, and mail messages.
 
+### Quick Chat
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `quickChat.enabled` | `boolean` | `false` | Enable Quick Chat feature for quick contact search and chat access |
+| `quickChat.shortcut` | `string` | `"CommandOrControl+Alt+Q"` | Keyboard shortcut to toggle the Quick Chat modal |
+
+```json title="Example Configuration"
+{
+  "quickChat": {
+    "enabled": true,
+    "shortcut": "CommandOrControl+Alt+Q"
+  },
+  "graphApi": {
+    "enabled": true
+  }
+}
+```
+
+> [!NOTE]
+> Quick Chat requires Graph API to be enabled (`graphApi.enabled: true`) for contact search and inline messaging. The modal allows you to search for contacts, click to compose a message, and send it directly without leaving your current context. The keyboard shortcut uses Electron accelerator format.
+
 ### Performance & Hardware
 
 | Option | Type | Default | Description |
@@ -532,7 +555,6 @@ The configuration file can include Electron CLI flags that will be added when th
 ```json
 {
   "electronCLIFlags": [
-    ["ozone-platform", "wayland"],
     "disable-software-rasterizer"
   ]
 }
@@ -540,6 +562,9 @@ The configuration file can include Electron CLI flags that will be added when th
 
 > [!NOTE]
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
+
+> [!WARNING]
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). To override the default X11 mode, pass `--ozone-platform=wayland` or `--ozone-platform=auto` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 

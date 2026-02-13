@@ -1,7 +1,6 @@
 // Microsoft Graph API IPC Handlers
 
 const logger = require('electron-log');
-const ChatApiSpikes = require('./chatSpikes');
 
 /**
  * Register all Graph API IPC handlers
@@ -41,15 +40,26 @@ function registerGraphApiHandlers(ipcMain, graphApiClient) {
     return await graphApiClient.getMailMessages(options);
   });
 
-  // Run chat API validation spikes for testing chat modal feasibility
-  ipcMain.handle('graph-api-run-chat-spikes', async () => {
+  // Search people using People API (for Quick Chat feature)
+  ipcMain.handle('graph-api-search-people', async (_event, query, options) => {
     if (!graphApiClient) return notEnabled;
-    const spikes = new ChatApiSpikes(graphApiClient);
-    return await spikes.runAllSpikes();
+    return await graphApiClient.searchPeople(query, options);
+  });
+
+  // Send a chat message to a user via Graph API
+  ipcMain.handle('graph-api-send-chat-message', async (_event, contactInfo, content) => {
+    if (!graphApiClient) return notEnabled;
+    if (!contactInfo || typeof contactInfo.userId !== 'string' || !contactInfo.userId.trim()) {
+      return { success: false, error: 'Invalid contact info: userId required' };
+    }
+    if (typeof content !== 'string' || !content.trim()) {
+      return { success: false, error: 'Message content cannot be empty' };
+    }
+    return await graphApiClient.sendChatMessageToUser(contactInfo, content.trim());
   });
 
   logger.debug('[GRAPH_API] IPC handlers registered', {
-    channels: 6,
+    channels: 7,
     enabled: !!graphApiClient
   });
 }
