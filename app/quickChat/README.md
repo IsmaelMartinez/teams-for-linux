@@ -13,7 +13,7 @@ See [ADR 015](../../docs-site/docs/development/adr/015-quick-chat-inline-messagi
 - **Contact Search**: Search contacts using Microsoft Graph People API
 - **Inline Messaging**: Send messages directly from the modal via Graph API
 - **Keyboard Navigation**: Arrow keys and Enter for quick access
-- **Keyboard Shortcut**: Configurable shortcut to toggle modal (default: Ctrl+Shift+P)
+- **Keyboard Shortcut**: Configurable shortcut to toggle modal (default: Ctrl+Alt+Q)
 
 ## Architecture
 
@@ -32,7 +32,7 @@ app/quickChat/
 {
   "quickChat": {
     "enabled": true,
-    "shortcut": "Ctrl+Shift+P"
+    "shortcut": "CommandOrControl+Alt+Q"
   },
   "graphApi": {
     "enabled": true

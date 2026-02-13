@@ -35,7 +35,7 @@ The feature requires both `graphApi.enabled` and `quickChat.enabled` to be true.
   },
   "quickChat": {
     "enabled": true,
-    "shortcut": "CommandOrControl+Shift+P"
+    "shortcut": "CommandOrControl+Alt+Q"
   }
 }
 ```

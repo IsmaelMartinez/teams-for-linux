@@ -511,6 +511,14 @@ function extractYargConfig(configObject, appVersion) {
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",
       },
+      quickChat: {
+        default: {
+          enabled: false,
+          shortcut: defaults.quickChatShortcut,
+        },
+        describe: "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
+        type: "object",
+      },
       graphApi: {
         default: {
           enabled: false,
