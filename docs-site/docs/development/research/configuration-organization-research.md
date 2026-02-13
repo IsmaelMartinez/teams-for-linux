@@ -1264,7 +1264,7 @@ The automatic migration in v3.0 addresses several edge cases:
 ### Internal Documentation
 - [Configuration Options](../../configuration.md) - Current user documentation
 - [MQTT Integration](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/mqtt/README.md) - MQTT module documentation
-- [Architecture Modernization Research](./architecture-modernization-research.md) - Related refactoring work
+- Architecture Modernization Research (removed — DDD approach rejected, incremental refactoring adopted)
 
 ### Code References
 - `app/config/index.js` - Main configuration loader (yargs definitions)
