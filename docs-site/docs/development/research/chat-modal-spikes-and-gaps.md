@@ -1,9 +1,13 @@
 # Chat Modal: Prerequisite Spikes and Gap Analysis
 
+:::info Implemented
+This feature shipped as **Quick Chat Access** in v2.7.4 (PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)). The Deep Link approach validated here was the one implemented. See [ADR-014](../adr/014-quick-chat-deep-link-approach.md) for the final decision.
+:::
+
 **Related:** [Chat Modal Investigation](chat-modal-investigation.md) | [Spike Results](chat-modal-spike-results.md)
 **Date:** 2025-11-26
 **Updated:** 2025-01-31
-**Status:** Ready for Implementation (Deep Link Approach)
+**Status:** ✅ Implemented in v2.7.4
 
 ## Executive Summary
 

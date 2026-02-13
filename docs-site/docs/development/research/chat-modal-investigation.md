@@ -1,9 +1,13 @@
 # Chat Modal Feature Investigation
 
+:::info Implemented
+This feature shipped as **Quick Chat Access** in v2.7.4 (PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)). See [ADR-014](../adr/014-quick-chat-deep-link-approach.md) and [ADR-015](../adr/015-quick-chat-inline-messaging.md) for the final approach. The research below captures the original investigation.
+:::
+
 **Related Issue:** [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) - Multiple Windows Investigation
 **Date:** 2025-11-26
 **Updated:** 2025-01-31
-**Status:** Ready for Implementation (Revised Approach)
+**Status:** ✅ Implemented in v2.7.4
 
 ## Validation Update (2025-01-31)
 

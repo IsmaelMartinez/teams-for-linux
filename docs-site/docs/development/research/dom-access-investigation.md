@@ -1,5 +1,9 @@
 # DOM Access Investigation & Future Strategy
 
+:::info Historical Reference
+DOM access was restored in v2.5.2. The hybrid API + DOM approach documented here remains the current strategy. Phase 2 (deeper API integration) will be revisited if Microsoft changes Teams' React internals.
+:::
+
 This document consolidates the research and findings from the DOM access restoration efforts in v2.5.2.
 
 ## Overview

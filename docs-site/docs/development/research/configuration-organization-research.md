@@ -1,9 +1,13 @@
 # Configuration Organization Research
 
+:::info Ongoing — Incremental Migration
+Phase 1 (documentation) complete. New features already use nested patterns (`mqtt.*`, `graphApi.*`, `quickChat.*`, etc.). Flat-to-nested migration happens opportunistically as modules are refactored — no dedicated migration effort planned.
+:::
+
 **Issue**: Configuration improvements and cleanup investigation
 **Created**: 2025-11-09
-**Updated**: 2026-01-18
-**Status**: Phase 1 Complete | Phases 2-3 DEFERRED
+**Updated**: 2026-02-13
+**Status**: Phase 1 Complete | Phases 2-3 happening incrementally
 
 ## Executive Summary
 

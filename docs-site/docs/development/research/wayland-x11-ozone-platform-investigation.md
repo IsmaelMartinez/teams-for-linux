@@ -1,8 +1,12 @@
 # Wayland/X11 Ozone Platform Investigation
 
+:::info Shipped
+Fix shipped in v2.7.4 (PR [#2139](https://github.com/IsmaelMartinez/teams-for-linux/pull/2139)). All Linux packaging formats now force `--ozone-platform=x11` by default. Users can override to Wayland via command line.
+:::
+
 **Issue:** Multiple — see [Related Issues](#related-issues)
 **Investigation Date:** 2026-02-10
-**Status:** Research Complete — Fix Implemented
+**Status:** ✅ Shipped in v2.7.4
 
 ## Executive Summary
 

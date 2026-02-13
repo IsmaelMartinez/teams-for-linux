@@ -1,10 +1,14 @@
 # Custom Notification System Research & Implementation Plan
 
-**Status:** MVP Complete - Phase 2 Planning
+:::tip Phase 2 In Review
+MVP shipped in v2.6.16. Phase 2 (chat, calendar, activity notifications) is in PR review — [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108), branch `claude/custom-notifications-phase-2-wirLH`.
+:::
+
+**Status:** MVP Complete (v2.6.16) | Phase 2 PR in review
 **Date:** November 2025
 **Issue:** Investigation for alternative notification modal system
 **Author:** Claude AI Assistant
-**Dependencies:** Incremental Refactoring Plan Phase 1 (Completed ✓)
+**Dependencies:** Incremental Refactoring Plan Phase 1 (Completed)
 
 ---
 
