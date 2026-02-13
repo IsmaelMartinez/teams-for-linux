@@ -39,23 +39,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
 
-### Technical Context & Monitoring
-
-- **[DOM Access Investigation](dom-access-investigation.md)** - DOM access requirements and React compatibility
-  - Documents v2.5.2 DOM access restoration and future React compatibility risks
-  - Hybrid API + DOM approach for future resilience
-
 ### Archived / Not Feasible
 
 - **[Logout Indicator Investigation](logout-indicator-investigation.md)** - **ARCHIVED**
   - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
   - Validation spikes implemented but user never responded to test
   - Work preserved in branch `claude/analyze-research-spikes-XbYVZ` for potential reuse
-
-- **[Architecture Modernization Research](architecture-modernization-research.md)** - **ARCHIVED**
-  - DDD+Plugin approach deemed too complex
-  - Superseded by incremental refactoring (55% reduction in index.js)
-  - See [Contributing Guide](../contributing.md) for current architecture
 
 - **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE**
   - Investigation into enabling Teams auth in system browser
@@ -66,17 +55,18 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - GNOME Shell search integration ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075))
   - Feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor
 
-### Implemented Features (Research Archived)
+### Implemented Features (Research Removed)
 
-The following research documents have been archived as their features are fully implemented:
+Research documents are deleted once a feature is fully shipped. The ADRs and git history preserve the decisions and context.
 
-| Feature | Version | Notes |
-|---------|---------|-------|
-| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions — [Research](wayland-x11-ozone-platform-investigation.md) |
-| Quick Chat / Chat Modal | v2.7.4 | People API search, deep links, inline messaging — [Research](chat-modal-investigation.md), [Spikes](chat-modal-spike-results.md), [Gaps](chat-modal-spikes-and-gaps.md), [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
-| External Changelog Generation | v2.7.3 | Graceful degradation + release automation + enhanced release notes — [Research](external-changelog-generation-research.md), [ADR-005](../adr/005-ai-powered-changelog-generation.md) |
-| PII Log Sanitization | v2.7.2 | Auto-sanitizes all logs via electron-log hook — [ADR-013](../adr/013-pii-log-sanitization.md) |
-| Quick Chat Inline Messaging | v2.7.4 | Hybrid Teams commanding + Graph API for inline chat — [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
+| Feature | Version | Reference |
+|---------|---------|-----------|
+| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
+| Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
+| External Changelog Generation | v2.7.3 | [Research](external-changelog-generation-research.md), [ADR-005](../adr/005-ai-powered-changelog-generation.md) |
+| PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
+| DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |
+| Architecture Modernization | — | Rejected (DDD too complex) — incremental refactoring adopted instead |
 | MQTT Commands | v2.6.x | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
 | Calendar Data Export | v2.6.x | MQTT `get-calendar` command |
 | useSystemPicker | — | Rejected — [ADR-008](../adr/008-usesystempicker-electron-38.md) |
