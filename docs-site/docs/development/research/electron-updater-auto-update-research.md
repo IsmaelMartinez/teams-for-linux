@@ -79,7 +79,7 @@ For a project of this scale, GitHub download counts are sufficient. Building cus
 
 ## Implementation Reference: Vesktop
 
-[Vesktop](https://github.com/Vencord/Vesktop) (an Electron-based Discord client) provides a clean reference implementation in its `updater.ts`. Key patterns worth adopting:
+[Vesktop](https://github.com/Vencord/Vesktop) (an Electron-based Discord client) provides a clean reference implementation in its [`updater.ts`](https://github.com/Vencord/Vesktop/blob/main/src/main/updater.ts). Key patterns worth adopting:
 
 - **Conditional initialization** — Only initializes the updater when running as AppImage (checks `process.env.APPIMAGE`).
 - **User-controlled updates** — Shows a notification when an update is available; doesn't force-restart.
