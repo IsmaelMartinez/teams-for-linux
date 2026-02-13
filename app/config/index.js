@@ -514,7 +514,7 @@ function extractYargConfig(configObject, appVersion) {
       quickChat: {
         default: {
           enabled: false,
-          shortcut: "CommandOrControl+Alt+Q",
+          shortcut: defaults.quickChatShortcut,
         },
         describe: "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
         type: "object",

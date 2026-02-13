@@ -18,6 +18,7 @@ const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
 const QuickChatManager = require("./quickChat");
+const configDefaults = require("./config/defaults");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
@@ -360,7 +361,7 @@ function initializeQuickChat() {
   mainAppWindow.setQuickChatManager(quickChatManager);
 
   if (quickChatManager.isEnabled()) {
-    const quickChatShortcut = config.quickChat?.shortcut || 'CommandOrControl+Alt+Q';
+    const quickChatShortcut = config.quickChat?.shortcut || configDefaults.quickChatShortcut;
     const registered = globalShortcut.register(quickChatShortcut, () => {
       quickChatManager.toggle();
     });
