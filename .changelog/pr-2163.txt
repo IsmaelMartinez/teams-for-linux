@@ -1,0 +1,1 @@
+docs: add Electron 40 migration research document - by @IsmaelMartinez (#2163)
