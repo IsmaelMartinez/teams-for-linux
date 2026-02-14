@@ -30,8 +30,12 @@ async function generateReleaseInfo(projectRoot = null) {
   }
   const pkgLock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
 
+  // Extract base version by stripping edge/prerelease suffixes (e.g., "2.7.5-edge.gf82a9cc" -> "2.7.5")
+  // The snap edge build appends "-edge.g{SHORT_SHA}" to package.json version
+  const baseVersion = pkg.version.replace(/-edge\.g[0-9a-f]+$/, "");
+
   // Check version consistency between package.json and package-lock.json
-  if (pkgLock.version !== pkg.version) {
+  if (pkgLock.version !== baseVersion) {
     throw new Error(
       `Version mismatch: package.json (${pkg.version}) vs package-lock.json (${pkgLock.version}). Please run "npm install" to update package-lock.json.`
     );
@@ -63,11 +67,12 @@ async function generateReleaseInfo(projectRoot = null) {
 
   const releases = component.releases[0].release;
 
-  // Find matching release for current version
-  const matchingRelease = releases.find((rel) => rel.$.version === pkg.version);
+  // Find matching release for current version (use base version for lookup
+  // since appdata.xml uses the base version without edge/prerelease suffixes)
+  const matchingRelease = releases.find((rel) => rel.$.version === baseVersion);
   if (!matchingRelease) {
     throw new Error(
-      `No release entry found for version ${pkg.version} in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add a release entry for this version.`
+      `No release entry found for version ${baseVersion} in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add a release entry for this version.`
     );
   }
 
@@ -95,7 +100,7 @@ async function generateReleaseInfo(projectRoot = null) {
 
   if (!releaseNotes.trim()) {
     throw new Error(
-      `Release ${pkg.version} has no description/notes in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add release notes to the <description> section for this version.`
+      `Release ${baseVersion} has no description/notes in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add release notes to the <description> section for this version.`
     );
   }
 
@@ -112,7 +117,7 @@ async function generateReleaseInfo(projectRoot = null) {
     versionInfo: {
       packageJson: pkg.version,
       packageLock: pkgLock.version,
-      appdata: pkg.version,
+      appdata: baseVersion,
     },
   };
 }
