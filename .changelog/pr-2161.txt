@@ -1,0 +1,1 @@
+fix: only register quick chat shortcut when enabled and explicitly configured - by @IsmaelMartinez (#2161)
