@@ -6,7 +6,6 @@
 
 const defaults = {
   meetupJoinRegEx: String.raw`^https://teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)/(v2/\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)`,
-  quickChatShortcut: 'CommandOrControl+Alt+Q',
 };
 
 module.exports = defaults;

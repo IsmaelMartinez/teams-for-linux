@@ -18,7 +18,6 @@ const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
 const QuickChatManager = require("./quickChat");
-const configDefaults = require("./config/defaults");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
@@ -360,15 +359,15 @@ function initializeQuickChat() {
   quickChatManager.initialize();
   mainAppWindow.setQuickChatManager(quickChatManager);
 
-  if (quickChatManager.isEnabled()) {
-    const quickChatShortcut = config.quickChat?.shortcut || configDefaults.quickChatShortcut;
+  const quickChatShortcut = config.quickChat?.shortcut;
+  if (quickChatManager.isEnabled() && quickChatShortcut) {
     const registered = globalShortcut.register(quickChatShortcut, () => {
       quickChatManager.toggle();
     });
     if (registered) {
-      console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
+      console.info('[QuickChat] Keyboard shortcut registered');
     } else {
-      console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
+      console.warn('[QuickChat] Failed to register keyboard shortcut');
     }
   }
 }
