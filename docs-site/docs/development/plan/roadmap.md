@@ -12,7 +12,7 @@ This document outlines the future development direction for Teams for Linux, org
 |----------|---------|--------|--------|
 | **Next** | Screen Lock Media Privacy (#2106) | PR in review | Small |
 | **Next** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium |
+| **Next** | AppImage auto-update (#2157) | PR in review | Medium |
 | **Ready** | Electron 40 upgrade | Ready to implement | Medium |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
@@ -28,12 +28,12 @@ This document outlines the future development direction for Teams for Linux, org
 |------|-------------|--------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
+| **#2157** | In-app auto-update via electron-updater for AppImage | `feat/appimage-auto-update` | PR in review |
 
 ### Ready to Implement
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **[#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)** | In-app auto-update via electron-updater for AppImage | [Research](../research/electron-updater-auto-update-research.md); supersedes #2065 |
 | **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
 | **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
 
