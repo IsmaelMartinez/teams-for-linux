@@ -84,6 +84,8 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
+            'development/research/electron-40-migration-research',
+            'development/research/electron-updater-auto-update-research',
             'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/external-browser-authentication-investigation',

@@ -254,6 +254,21 @@ permissions:
 - Electron version detection is automatic
 - Dry-run mode enables safe preview before committing
 
+### 2026-02-14: Snap Release Automation
+
+**Context:** The snap release process had a version ambiguity problem. Every push to main published snaps to the edge channel with the same version number (e.g., `2.7.5`). Post-release merges produced edge snaps with the same version as the release, making it impossible to tell which edge revision matched the actual release when promoting to stable.
+
+**Changes:**
+- **Edge builds now include commit SHA suffix** — Snaps published to edge are versioned as `2.7.5-edge.g1a2b3c4`, making each build uniquely identifiable
+- **New `snap-release.yml` workflow** — Triggered when a GitHub Release is published, builds snaps from the release tag and uploads them to the **candidate** channel using `snapcraft upload --release=candidate`
+- **Three-channel strategy** — edge (dev builds) → candidate (release builds) → stable (manual promotion)
+
+**Benefits:**
+- Clear distinction between development and release snap builds
+- No more version ambiguity when promoting to stable
+- Release builds are automatically published to candidate on GitHub Release
+- Only the manual candidate → stable promotion step remains
+
 ## References
 
 - **Implementation PR:** #1951
