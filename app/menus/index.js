@@ -323,6 +323,11 @@ class Menus {
       this.quickChatManager.toggle();
     }
   }
+
+  checkForUpdates() {
+    const autoUpdater = require('../autoUpdater');
+    autoUpdater.checkForUpdates();
+  }
 }
 
 function saveSettingsInternal(_event, arg) {
