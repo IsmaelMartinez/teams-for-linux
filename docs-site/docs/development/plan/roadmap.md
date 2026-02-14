@@ -156,14 +156,15 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 ### GitHub Issue Bot
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
-**Status:** Phase 1 ✅ Merged (v2.7.4), Phase 2+ planned
+**Status:** Phase 1 ✅ Merged (v2.7.4), Phase 2 ✅ Shipped
 **Priority:** Medium
 
-**Phase 1 Delivered:** Information request bot — detects missing reproduction steps, debug output, and expected behavior in bug reports. Posts helpful comment with checklist.
+**Phase 1 Delivered:** Information request bot — detects missing reproduction steps, debug output, and expected behaviour in bug reports.
+
+**Phase 2 Delivered:** Solution suggester — AI-powered matching against troubleshooting guide and configuration docs using Gemini. Posts a single consolidated comment combining missing info requests and solution suggestions.
 
 **Future phases:**
 
-- Phase 2: Solution suggestions from troubleshooting docs (AI-powered with Gemini)
 - Phase 3: Duplicate detection via embeddings (RAG system)
 - Phase 4: Enhancement context from roadmap/research/ADRs (AI-assisted)
 
@@ -252,7 +253,7 @@ These features have completed initial implementation. Further phases depend on u
 ### Future Priorities
 
 - **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
-- **GitHub Issue Bot Phases 2-4** — Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+- **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
 ### Principles
 
