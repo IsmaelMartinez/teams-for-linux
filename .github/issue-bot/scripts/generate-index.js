@@ -157,7 +157,7 @@ function parseConfiguration(content) {
 			title: guide.title,
 			category: guide.category,
 			description: body.substring(0, 300),
-			solutions: body.substring(0, 500),
+			solutions: body,
 			anchor,
 			docUrl: `${DOCS_BASE_URL}/configuration#${anchor}`,
 			relatedIssues,
