@@ -49,7 +49,7 @@ The `--host-rules` switch is deprecated in favor of `--host-resolver-rules`. A s
 
 **Impact: Low - macOS only**
 
-macOS apps must include `NSAudioCaptureUsageDescription` in `Info.plist` to use `desktopCapturer`. The project's `package.json` already includes `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` in the `mac.extendInfo` build config. **Action: Add `NSAudioCaptureUsageDescription`** to the mac build config for completeness, or disable the `MacCatapLoopbackAudioForScreenShare` feature flag if audio capture from screen share is not needed.
+macOS apps must include `NSAudioCaptureUsageDescription` in `Info.plist` to use `desktopCapturer`. The project's `package.json` already includes `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` in the `mac.extendInfo` build config. **Action: Add `NSAudioCaptureUsageDescription`** to the mac build config for completeness, or disable the `MacCatalystLoopbackAudioForScreenShare` feature flag if audio capture from screen share is not needed.
 
 ---
 
