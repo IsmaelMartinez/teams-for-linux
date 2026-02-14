@@ -402,6 +402,14 @@ Releases use AI-generated changelog entries that accumulate in `.changelog/` dir
 3. **Prepare release** - Update versions and appdata.xml (manually or via `npm run release:prepare`)
 4. **Create release PR** - Push to `release/vX.Y.Z` branch and merge to main
 5. **Build triggers automatically** - On version change in main
+6. **Promote GitHub draft → full release** - Triggers Snap candidate channel and Flatpak
+7. **Promote Snap candidate → stable** - Manual step after testing
+
+:::note Snap Channel Strategy
+- Pushes to main publish snaps to **edge** with a commit SHA suffix (e.g., `2.7.5-edge.g1a2b3c4`)
+- Publishing a GitHub Release automatically builds and publishes to the **candidate** channel
+- Promotion from candidate to **stable** is manual
+:::
 
 See [Manual Release Process](manual-release-process.md) for detailed instructions.
 
