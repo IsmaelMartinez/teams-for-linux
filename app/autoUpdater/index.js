@@ -5,6 +5,7 @@ const { autoUpdater } = require('electron-updater');
 
 let mainWindow = null;
 let isManualCheck = false;
+let isChecking = false;
 
 function initialize(window) {
 	if (!process.env.APPIMAGE) {
@@ -22,6 +23,7 @@ function initialize(window) {
 	autoUpdater.on('error', onError);
 
 	console.info('[AutoUpdater] Checking for updates...');
+	isChecking = true;
 	autoUpdater.checkForUpdates().catch(err => {
 		console.error('[AutoUpdater] Startup check failed:', err.message);
 	});
@@ -29,16 +31,17 @@ function initialize(window) {
 
 function checkForUpdates() {
 	if (!process.env.APPIMAGE) return;
+	if (isChecking) return;
 
+	isChecking = true;
 	isManualCheck = true;
 	autoUpdater.checkForUpdates().catch(err => {
 		console.error('[AutoUpdater] Manual check failed:', err.message);
-		showErrorDialog();
-		isManualCheck = false;
 	});
 }
 
 async function onUpdateAvailable(info) {
+	isChecking = false;
 	isManualCheck = false;
 
 	const currentVersion = app.getVersion();
@@ -63,6 +66,7 @@ async function onUpdateAvailable(info) {
 }
 
 function onUpdateNotAvailable() {
+	isChecking = false;
 	if (isManualCheck) {
 		dialog.showMessageBox(mainWindow, {
 			type: 'info',
@@ -74,6 +78,7 @@ function onUpdateNotAvailable() {
 }
 
 function onError(err) {
+	isChecking = false;
 	console.error('[AutoUpdater] Error:', err.message);
 	if (isManualCheck) {
 		showErrorDialog();
