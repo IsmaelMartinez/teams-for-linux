@@ -34,6 +34,7 @@ process.on('unhandledRejection', (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   const stack = reason instanceof Error ? reason.stack : undefined;
   console.error('[FATAL] Unhandled promise rejection:', { message, stack });
+  process.exit(1);
 });
 
 // Support for E2E testing: use temporary userData directory for clean state

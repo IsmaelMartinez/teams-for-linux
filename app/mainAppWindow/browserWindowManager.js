@@ -247,8 +247,8 @@ class BrowserWindowManager {
    */
   sanitizeCommandArg(value) {
     if (typeof value !== 'string') return '';
-    // Limit argument length and strip control characters (except common whitespace)
-    return value.substring(0, 500).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // Limit argument length and strip all C0 control characters
+    return value.substring(0, 500).replace(/[\x00-\x1F\x7F]/g, '');
   }
 
   assignOnIncomingCallCreatedHandler() {
