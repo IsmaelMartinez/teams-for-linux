@@ -1,0 +1,1 @@
+docs: update plan docs with code quality hardening research and fix sidebar gaps - by @IsmaelMartinez (#2166)
