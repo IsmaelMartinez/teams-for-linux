@@ -1,0 +1,1 @@
+docs: add code quality and hardening research - by @IsmaelMartinez (#2165)
