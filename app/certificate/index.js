@@ -22,12 +22,8 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
       arg.event.preventDefault();
       arg.callback(true);
     } else {
-      console.error("Unknown cert issuer for url: " + arg.url);
-      console.error("Issuer Name: " + unknownIssuerCert.issuerName);
-      console.error(
-        "The unknown certificate fingerprint is: " +
-          unknownIssuerCert.fingerprint
-      );
+      console.error("[CERT] Certificate authority not in allowlist for request");
+      console.error("[CERT] To trust this certificate, add its fingerprint to customCACertsFingerprints in config");
       arg.callback(false);
     }
   } else {

@@ -24,6 +24,18 @@ const IdleMonitor = require("./idle/monitor");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+// Top-level error handlers for crash diagnostics
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught exception:', { message: error.message, stack: error.stack });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : undefined;
+  console.error('[FATAL] Unhandled promise rejection:', { message, stack });
+});
+
 // Support for E2E testing: use temporary userData directory for clean state
 if (process.env.E2E_USER_DATA_DIR) {
   app.setPath("userData", process.env.E2E_USER_DATA_DIR);
@@ -389,30 +401,35 @@ function initializeCacheManagement() {
 }
 
 async function handleAppReady() {
-  showConfigurationDialogs();
+  try {
+    showConfigurationDialogs();
 
-  process.on("SIGTRAP", onAppTerminated);
-  process.on("SIGINT", onAppTerminated);
-  process.on("SIGTERM", onAppTerminated);
-  process.stdout.on("error", () => {});
+    process.on("SIGTRAP", onAppTerminated);
+    process.on("SIGINT", onAppTerminated);
+    process.on("SIGTERM", onAppTerminated);
+    process.stdout.on("error", () => {});
 
-  initializeCacheManagement();
+    initializeCacheManagement();
 
-  if (config.mqtt?.enabled) {
-    initializeMqtt();
+    if (config.mqtt?.enabled) {
+      initializeMqtt();
+    }
+
+    loadMenuToggleSettings();
+
+    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+
+    initializeGraphApiClient();
+    registerGraphApiHandlers(ipcMain, graphApiClient);
+    initializeQuickChat();
+    registerGlobalShortcuts(config, mainAppWindow, app);
+
+    console.info('[IPC Security] Channel allowlisting enabled');
+    console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
+  } catch (error) {
+    console.error('[STARTUP] Fatal error during app initialization:', { message: error.message, stack: error.stack });
+    app.quit();
   }
-
-  loadMenuToggleSettings();
-
-  await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
-
-  initializeGraphApiClient();
-  registerGraphApiHandlers(ipcMain, graphApiClient);
-  initializeQuickChat();
-  registerGlobalShortcuts(config, mainAppWindow, app);
-
-  console.info('[IPC Security] Channel allowlisting enabled');
-  console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
 }
 
 function handleCertificateError(event, webContents, url, error, certificate, callback) {

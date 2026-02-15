@@ -1,5 +1,5 @@
 const { app, ipcMain, BrowserWindow } = require("electron");
-const { execSync } = require("node:child_process");
+const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 
 let isFirstLoginTry = true;
@@ -42,15 +42,18 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(
     if (isFirstLoginTry) {
       isFirstLoginTry = false;
       if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
-        console.debug(
-          `Retrieve password using command : ${ssoBasicAuthPasswordCommand}`,
-        );
+        console.debug('[SSO] Retrieving password using configured command');
         try {
-          const ssoPassword = execSync(ssoBasicAuthPasswordCommand).toString();
+          // Use execFileSync to avoid shell interpretation of the command
+          // Split command string into executable and arguments
+          const parts = ssoBasicAuthPasswordCommand.split(/\s+/);
+          const command = parts[0];
+          const args = parts.slice(1);
+          const ssoPassword = execFileSync(command, args).toString();
           callback(ssoBasicAuthUser, ssoPassword);
         } catch (error) {
           console.error(
-            `Failed to execute ssoBasicAuthPasswordCommand. Status Code: ${error.status} with '${error.message}'`,
+            `[SSO] Failed to execute password command. Status Code: ${error.status}`,
           );
         }
       } else {
