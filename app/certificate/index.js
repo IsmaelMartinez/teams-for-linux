@@ -23,7 +23,10 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
       arg.callback(true);
     } else {
       console.error("[CERT] Certificate authority not in allowlist for request");
-      console.error("[CERT] To trust this certificate, add its fingerprint to customCACertsFingerprints in config");
+      console.error(
+        "[CERT] To trust this certificate, add the following fingerprint to customCACertsFingerprints in config: " +
+          unknownIssuerCert.fingerprint
+      );
       arg.callback(false);
     }
   } else {
