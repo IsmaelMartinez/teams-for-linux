@@ -1,6 +1,6 @@
 # Security Architecture & Considerations
 
-This document outlines the security architecture, design decisions, and compensating controls implemented in Teams for Linux, particularly around the DOM access requirements and security trade-offs made in v2.5.2.
+This document outlines the security architecture, design decisions, and compensating controls implemented in Teams for Linux, particularly around the DOM access requirements and security trade-offs.
 
 ## Security Context
 
@@ -28,7 +28,7 @@ The application faces a fundamental security vs. functionality trade-off:
 - ✅ Implement comprehensive compensating controls
 - ✅ Recommend system-level sandboxing
 
-## Current Security Implementation (v2.5.2)
+## Current Security Implementation
 
 ### Electron Security Configuration
 
@@ -69,8 +69,8 @@ const responseHeaders = {
 
 **Features**:
 - **Channel Allowlisting**: Only legitimate IPC channels are permitted
-- **Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`)
-- **Prototype Pollution Protection**: Guards against object prototype manipulation
+- **Recursive Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`) from payloads at all nesting depths
+- **Prototype Pollution Protection**: Guards against object prototype manipulation with depth-limited recursion (max 10 levels)
 - **Request Validation**: Validates all IPC requests before processing
 
 ```javascript
@@ -79,7 +79,8 @@ function validateIpcChannel(channel, payload = null) {
     console.warn(`[IPC Security] Blocked unauthorized channel: ${channel}`);
     return false;
   }
-  // Payload sanitization logic...
+  sanitizePayload(payload); // Recursive sanitization
+  return true;
 }
 ```
 
@@ -113,6 +114,27 @@ _isAllowedTeamsDomain(hostname) {
 - `sandbox: true` 
 - No DOM access requirements
 - Separate security context
+
+#### 5. Process Error Handlers
+
+**Implementation**: `app/index.js` (top-level)
+
+**Features**:
+- **`uncaughtException` handler**: Logs error details and exits with code 1 (process state unknown after uncaught exception)
+- **`unhandledRejection` handler**: Logs rejection details, allows process to continue (non-fatal)
+- **Startup try/catch**: `handleAppReady()` wrapped with error logging and graceful `app.quit()` on failure
+
+**Protection**: Prevents silent process termination and provides diagnostic output for crash reports.
+
+#### 6. Input Sanitization for External Commands
+
+**Implementation**: `app/mainAppWindow/browserWindowManager.js`
+
+**Features**:
+- **`sanitizeCommandArg()`**: Validates string type, limits length to 500 characters, strips control characters
+- Applied to all incoming call notification arguments (`caller`, `text`, `image`) before passing to `spawn()`
+
+**Protection**: Defense-in-depth against edge cases in user-configured notification commands receiving untrusted data from Teams messages.
 
 ## Recommended User-Level Security
 

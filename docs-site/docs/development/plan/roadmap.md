@@ -15,7 +15,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium | v2.7.7 |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
-| **Ready** | Code quality hardening | Research complete | Small (incremental) | Ongoing |
+| **Ready** | Code quality hardening | Phase 1 complete, CI/CD remaining | Small | Ongoing |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny | — |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
@@ -157,22 +157,23 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 ### Code Quality Hardening
 
 **Research:** [code-quality-hardening-research.md](../research/code-quality-hardening-research.md)
-**Status:** Research complete, ready for incremental implementation
-**Priority:** Medium — best done as small, independent PRs alongside feature work
+**Status:** Phase 1 complete, CI/CD items remaining
+**Priority:** Low — remaining items are infrastructure changes
 
-**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD. None represent urgent issues — the project already has a solid security foundation (IPC allowlisting, CSP headers, MQTT command whitelisting, PII logging guidelines).
+**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD.
 
-**Work Items (independent, can be done in any order):**
+**Phase 1 (Completed):**
 
-1. **Logging hygiene** — Remove PII from debug logs in `mutationTitle`, `notificationSystem`, `certificate` modules (aligning with ADR-013)
-2. **Resilience improvements** — Add `uncaughtException`/`unhandledRejection` handlers, wrap `handleAppReady()`, add try/catch to Graph API IPC handlers
-3. **Input handling** — Switch SSO password retrieval to `execFileSync()`, sanitize notification command arguments
-4. **Renderer cleanup** — Remove unused `globalThis.nodeRequire` and `globalThis.nodeProcess` from preload
-5. **IPC validator** — Add recursive prototype pollution sanitization for nested payloads
-6. **CI/CD** — Add `npm run lint` and `npm audit` to build workflow; consider Dependabot/Renovate
-7. **SECURITY.md** — Update with accurate supported version numbers
+1. ✅ **Logging hygiene** — Removed PII from debug logs in `mutationTitle`, `notificationSystem`, `certificate` modules (aligning with ADR-013). Certificate fingerprint preserved (not PII, needed for config).
+2. ✅ **Resilience improvements** — Added `uncaughtException`/`unhandledRejection` handlers, wrapped `handleAppReady()`, added try/catch to all Graph API IPC handlers
+3. ✅ **Input handling** — Added argument sanitization for incoming call notification command. SSO `execSync` kept (user-controlled config, shell features expected; see research doc for details).
+4. ✅ **Renderer cleanup** — Removed unused `globalThis.nodeRequire` and `globalThis.nodeProcess` from preload
+5. ✅ **IPC validator** — Added recursive prototype pollution sanitization for nested payloads
+6. ✅ **SECURITY.md** — Updated with accurate version numbers (2.7.x) and reporting instructions
 
-**Compatibility:** All items are complementary to the v2.7.7 and v2.8.0 roadmap and can proceed in parallel with feature work.
+**Remaining:**
+
+7. **CI/CD** — Add `npm run lint` and `npm audit` to build workflow; consider Dependabot/Renovate
 
 ---
 
@@ -275,7 +276,7 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-- **Code quality hardening** — Incremental improvements as small PRs; [research complete](../research/code-quality-hardening-research.md)
+- **Code quality hardening** — Phase 1 code changes complete; CI/CD items remaining ([research](../research/code-quality-hardening-research.md))
 - **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
 - **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
