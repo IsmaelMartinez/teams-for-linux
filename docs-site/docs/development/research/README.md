@@ -41,6 +41,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Documentation
 
+- **[Code Quality and Hardening Research](code-quality-hardening-research.md)** - Incremental codebase improvements
+  - Input handling, logging hygiene, resilience gaps, CI additions
+  - Validated by 4-persona review (security, product, maintainer, DevOps)
+  - **Status:** Research complete, ready for incremental implementation
+
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
   - **Phase 1 Complete** (v2.7.4): Information request bot — detects missing info in bug reports
   - **Future phases**: Solution suggestions (Gemini AI), duplicate detection (embeddings), enhancement context
