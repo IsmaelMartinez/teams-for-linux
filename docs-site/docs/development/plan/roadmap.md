@@ -157,7 +157,6 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 
 ### Code Quality Hardening
 
-**Research:** [code-quality-hardening-research.md](../research/code-quality-hardening-research.md)
 **Status:** Complete
 **Priority:** Done
 
@@ -285,7 +284,7 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-- ~~**Code quality hardening**~~ — Complete ([research](../research/code-quality-hardening-research.md))
+- ~~**Code quality hardening**~~ — Complete (Phases 1-3)
 - **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
 - **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
