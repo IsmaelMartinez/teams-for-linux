@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload Playwright test results
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: playwright-test-results
           path: test-results/
@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: teams-for-linux-linux-x64
           path: |
@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: teams-for-linux-linux-arm64
           path: |
@@ -172,7 +172,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: teams-for-linux-linux-armv7l
           path: |
@@ -212,7 +212,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: teams-for-linux-macos-x64
           path: dist/*.dmg
@@ -248,7 +248,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: teams-for-linux-windows-x64
           path: dist/*.exe
