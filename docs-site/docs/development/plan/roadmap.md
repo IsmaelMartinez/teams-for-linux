@@ -29,6 +29,7 @@ This document outlines the future development direction for Teams for Linux, org
 |------|-------------|--------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
+| **#2157** | In-app auto-update via electron-updater for AppImage | `feat/appimage-auto-update` | PR in review |
 
 ### Ready to Implement
 

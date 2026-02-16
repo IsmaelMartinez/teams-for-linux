@@ -54,6 +54,7 @@
     "electron-log": "^5.4.3",
     "electron-positioner": "^4.1.0",
     "electron-store": "11.0.2",
+    "electron-updater": "^6.7.3",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.23",
     "mqtt": "^5.15.0",
