@@ -18,12 +18,25 @@ const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
 const QuickChatManager = require("./quickChat");
-const configDefaults = require("./config/defaults");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
+const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
+
+// Top-level error handlers for crash diagnostics
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught exception:', { message: error.message, stack: error.stack });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : undefined;
+  console.error('[FATAL] Unhandled promise rejection:', { message, stack });
+  process.exit(1);
+});
 
 // Support for E2E testing: use temporary userData directory for clean state
 if (process.env.E2E_USER_DATA_DIR) {
@@ -360,15 +373,15 @@ function initializeQuickChat() {
   quickChatManager.initialize();
   mainAppWindow.setQuickChatManager(quickChatManager);
 
-  if (quickChatManager.isEnabled()) {
-    const quickChatShortcut = config.quickChat?.shortcut || configDefaults.quickChatShortcut;
+  const quickChatShortcut = config.quickChat?.shortcut;
+  if (quickChatManager.isEnabled() && quickChatShortcut) {
     const registered = globalShortcut.register(quickChatShortcut, () => {
       quickChatManager.toggle();
     });
     if (registered) {
-      console.info(`[QuickChat] Keyboard shortcut registered: ${quickChatShortcut}`);
+      console.info('[QuickChat] Keyboard shortcut registered');
     } else {
-      console.warn(`[QuickChat] Failed to register keyboard shortcut: ${quickChatShortcut}`);
+      console.warn('[QuickChat] Failed to register keyboard shortcut');
     }
   }
 }
@@ -389,31 +402,44 @@ function initializeCacheManagement() {
   });
 }
 
-async function handleAppReady() {
-  showConfigurationDialogs();
-
-  process.on("SIGTRAP", onAppTerminated);
-  process.on("SIGINT", onAppTerminated);
-  process.on("SIGTERM", onAppTerminated);
-  process.stdout.on("error", () => {});
-
-  initializeCacheManagement();
-
-  if (config.mqtt?.enabled) {
-    initializeMqtt();
+function initializeAutoUpdater() {
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow) {
+    AutoUpdater.initialize(mainWindow);
   }
+}
 
-  loadMenuToggleSettings();
+async function handleAppReady() {
+  try {
+    showConfigurationDialogs();
 
-  await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+    process.on("SIGTRAP", onAppTerminated);
+    process.on("SIGINT", onAppTerminated);
+    process.on("SIGTERM", onAppTerminated);
+    process.stdout.on("error", () => {});
 
-  initializeGraphApiClient();
-  registerGraphApiHandlers(ipcMain, graphApiClient);
-  initializeQuickChat();
-  registerGlobalShortcuts(config, mainAppWindow, app);
+    initializeCacheManagement();
 
-  console.info('[IPC Security] Channel allowlisting enabled');
-  console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
+    if (config.mqtt?.enabled) {
+      initializeMqtt();
+    }
+
+    loadMenuToggleSettings();
+
+    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+
+    initializeGraphApiClient();
+    registerGraphApiHandlers(ipcMain, graphApiClient);
+    initializeQuickChat();
+    registerGlobalShortcuts(config, mainAppWindow, app);
+    initializeAutoUpdater();
+
+    console.info('[IPC Security] Channel allowlisting enabled');
+    console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
+  } catch (error) {
+    console.error('[STARTUP] Fatal error during app initialization:', { message: error.message, stack: error.stack });
+    app.quit();
+  }
 }
 
 function handleCertificateError(event, webContents, url, error, certificate, callback) {

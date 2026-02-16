@@ -529,6 +529,7 @@ function onBeforeRequestHandler(details, callback) {
 
 function onHeadersReceivedHandler(details, callback) {
   customBackgroundService.onHeadersReceivedHandler(details);
+
   callback({
     responseHeaders: details.responseHeaders,
   });

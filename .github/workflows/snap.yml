@@ -32,6 +32,18 @@ jobs:
       - name: Build
         run: npm ci
 
+      - name: Set edge version with commit SHA
+        if: contains(github.ref, 'main')
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version += '-edge.g${SHA}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Snap edge version: $(node -p "require('./package.json').version")"
+
       - name: Build for Release
         if: contains(github.ref, 'main')
         run: npm run dist:linux:snap -- --publish always
@@ -70,6 +82,18 @@ jobs:
 
       - name: Build
         run: npm ci
+
+      - name: Set edge version with commit SHA
+        if: contains(github.ref, 'main')
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version += '-edge.g${SHA}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Snap edge version: $(node -p "require('./package.json').version")"
 
       - name: Build for Release
         if: contains(github.ref, 'main')
@@ -112,6 +136,18 @@ jobs:
 
       - name: Build
         run: npm ci
+
+      - name: Set edge version with commit SHA
+        if: contains(github.ref, 'main')
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version += '-edge.g${SHA}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Snap edge version: $(node -p "require('./package.json').version")"
 
       - name: Build for Release
         if: contains(github.ref, 'main')

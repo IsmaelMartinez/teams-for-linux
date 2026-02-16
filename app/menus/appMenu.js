@@ -27,6 +27,14 @@ exports = module.exports = (Menus) => ({
       accelerator: "ctrl+R",
       click: () => Menus.reload(),
     },
+    ...(process.env.APPIMAGE
+      ? [
+          {
+            label: "Check for Updates",
+            click: () => Menus.checkForUpdates(),
+          },
+        ]
+      : []),
     {
       label: "Hide",
       accelerator: "ctrl+H",

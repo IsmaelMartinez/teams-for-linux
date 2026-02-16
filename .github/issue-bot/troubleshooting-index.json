@@ -1,0 +1,215 @@
+[
+  {
+    "title": "Application fails to launch after update",
+    "category": "Installation and Updates",
+    "description": "Users report that the application does not start or crashes immediately after an update.",
+    "solutions": "**Clear Application Cache:*Navigate to `~/.config/teams-for-linux/` (Linux) or `%APPDATA%\\teams-for-linux\\` (Windows).\n    Delete the `Cache` and `Code Cache` directories.\n    Restart the application.\n**Reinstall the Application:*Completely uninstall the current version.\n    Download the latest installer from the official GitHub releases page.\n    Perform a clean installation.",
+    "anchor": "issue-application-fails-to-launch-after-update",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-application-fails-to-launch-after-update",
+    "relatedIssues": [
+      "#123",
+      "#456"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "No History after Electron version update",
+    "category": "Installation and Updates",
+    "description": "When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.",
+    "solutions": "**Remove Stored Data:*Removing the stored data in the configuration directory usually resolves the problem.     **Configuration Folder Locations:*| Type of install | Location | Clean-up command |\n    | :----------------------: | :---------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |\n    | Vanilla install | `~/.config/teams-for-linux` | `rm -rf ~/.config/teams-for-linux` |\n    | snap | `~/snap/teams-for-linux/current/.config/teams-for-linux/` | `rm -rf ~/snap/teams-for-linux/current/.config/teams-for-linux/` |\n    | --user installed flatpak | `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` | `rm -rf ~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux` |\n    | From source | `~/.config/Electron/` | `rm -rf ~/.config/Electron/` |",
+    "anchor": "issue-no-history-after-electron-version-update",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-no-history-after-electron-version-update",
+    "relatedIssues": [],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "No Apple Silicon Mac build",
+    "category": "Installation and Updates",
+    "description": "Only Intel Mac builds are provided in GitHub releases, and Apple Silicon Macs cannot run unsigned code without an Apple Developer account.",
+    "solutions": "**Use Intel Build:*The Intel build works on Apple Silicon via emulation (albeit slowly).\n**Build Your Own:*You can build an Apple Silicon version from source, signing it with your own developer keys. This process is free, but the keys will only work on your Mac.     **Steps to Build Your Own:*Download and open Xcode from the App Store.\nIn Xcode, go to Xcode → Settings → Accounts and add your account.\nUnder your account, click Manage Certificates and add an Apple Development certificate.\nCreate a dummy project in Xcode (any project will work) to ensure the certificate is added to your Keychain as trusted.\nIn the repository, run:\n        \n        You should see a signing step in the output (ignore the \"skipped macOS notarization\" warning).\n        The app will be built in the `dist/mac-arm64/` folder. Copy it to your Applications folder.",
+    "anchor": "issue-no-apple-silicon-mac-build",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-no-apple-silicon-mac-build",
+    "relatedIssues": [
+      "#1225"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "No rendering fonts correctly",
+    "category": "User Interface (UI) and User Experience (UX)",
+    "description": "Some users have reported issues with fonts not rendering correctly, appearing as squares.",
+    "solutions": "**Clear Fontconfig Cache:*This issue is related to the fontconfig cache. The above commands will clear it.",
+    "anchor": "issue-no-rendering-fonts-correctly",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-no-rendering-fonts-correctly",
+    "relatedIssues": [
+      "#357"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Window decorations stuck in dark mode on GNOME systems",
+    "category": "User Interface (UI) and User Experience (UX)",
+    "description": "On GNOME desktop environments, Teams for Linux window decorations (title bar, borders) remain in dark mode even when the system theme is set to light mode.",
+    "solutions": "**Update to Latest Version:*Ensure you're using Teams for Linux v2.2.1 or later, which includes Electron 37.2.6 with upstream fixes for GNOME theme handling\n**Temporary Workaround (for older versions):*Run this command while Teams for Linux is running to force light window decorations\n**System Theme Settings:*Ensure your GNOME theme preference is properly set:",
+    "anchor": "issue-window-decorations-stuck-in-dark-mode-on-gnome-systems",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-window-decorations-stuck-in-dark-mode-on-gnome-systems",
+    "relatedIssues": [
+      "#1755"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Microphone not working during calls",
+    "category": "Audio and Video Issues",
+    "description": "Participants cannot hear the user during a call, or the microphone input is very low.",
+    "solutions": "**Check Teams Settings:*Go to Teams Settings -> Devices.\n    Ensure the correct microphone is selected under \"Microphone\".\n    Test the microphone using the \"Make a test call\" feature.\n**Verify System Audio Settings:*Open your operating system's sound settings.\n    Ensure the microphone is enabled, not muted, and its volume is adequately set.\n    Check application-specific permissions for Teams to access the microphone.\n**Restart PulseAudio (Linux):*Open a terminal and run: `pulseaudio -k && pulseaudio --start`\n    Restart Teams for Linux.",
+    "anchor": "issue-microphone-not-working-during-calls",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-microphone-not-working-during-calls",
+    "relatedIssues": [
+      "#789",
+      "#1011"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Unable to log in, stuck on a blank screen after entering credentials",
+    "category": "Login and Authentication",
+    "description": "After entering login credentials, the application displays a blank white or black screen and does not proceed to the main interface.",
+    "solutions": "**Clear Teams Cache and Data:*Close Teams for Linux completely.\n    Navigate to `~/.config/teams-for-linux/` (Linux) or `%APPDATA%\\teams-for-linux\\` (Windows).\n    Delete the entire `Cache`, `Code Cache`, and `Local Storage` directories.\n    Restart the application and attempt to log in again.\n**Check Network and Proxy Settings:*Ensure your internet connection is stable.\n    If you are behind a corporate proxy, ensure it is correctly configured in your system settings and that Teams for Linux can access the internet through it.",
+    "anchor": "issue-unable-to-log-in-stuck-on-a-blank-screen-after-entering-credentials",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-unable-to-log-in-stuck-on-a-blank-screen-after-entering-credentials",
+    "relatedIssues": [
+      "#1212",
+      "#1314"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Oauth Services require internal Electron window",
+    "category": "Login and Authentication",
+    "description": "Some OAuth services (for example, GitHub) require that authentication windows open inside Electron, but by default Teams for Linux opens links in an external browser.",
+    "solutions": "**Use Ctrl+Click:*If you need to open a link within an Electron window, use the `Ctrl+Click` combination.",
+    "anchor": "issue-oauth-services-require-internal-electron-window",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-oauth-services-require-internal-electron-window",
+    "relatedIssues": [],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Blank Page at Login",
+    "category": "Login and Authentication",
+    "description": "Some users report a blank page at login (titled \"Microsoft Teams - initializing\").",
+    "solutions": "**Refresh the Window:*Right-click the Microsoft Teams tray icon and select Refresh (or use Ctrl+R).\n**Clear Application Cache:*Close the application and delete the cache folder:\n        For a Vanilla install: `~/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`\n        For Snap: `~/snap/teams-for-linux/current/.config/teams-for-linux/Partitions/teams-4-linux/Application Cache`\n        For Flatpak: `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/Partitions/teams-4-linux/Application Cache/`\n    If the blank page returns after reloading or closing the app, repeat the cache deletion step.",
+    "anchor": "issue-blank-page-at-login",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-blank-page-at-login",
+    "relatedIssues": [
+      "#171"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "No Desktop Notifications",
+    "category": "Notifications",
+    "description": "Some Linux notification daemons do not fully support the implementation used by Microsoft in their web version, which may result in certain notifications not being shown.",
+    "solutions": "**Check Configuration:*Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.",
+    "anchor": "issue-no-desktop-notifications",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-no-desktop-notifications",
+    "relatedIssues": [],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Blank or black window on Wayland",
+    "category": "Wayland / Display Issues",
+    "description": "The application window appears blank, black, or white when running on a Wayland session. This is caused by Electron 38+ defaulting to native Wayland mode, which has known regressions.",
+    "solutions": "**Upgrade to v2.7.4+*— X11 is now forced by default, which resolves this for most users.\n**For older versions:*Launch with `--ozone-platform=x11`:",
+    "anchor": "issue-blank-or-black-window-on-wayland",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-blank-or-black-window-on-wayland",
+    "relatedIssues": [
+      "#1604",
+      "#1494",
+      "#519",
+      "#504"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Maximized window has gaps or resizes on focus loss",
+    "category": "Wayland / Display Issues",
+    "description": "Since v2.7.0, maximizing the window doesn't fill the screen completely, leaving gaps. The window may also shrink when it loses focus.",
+    "solutions": "**Upgrade to v2.7.4+*— Forcing X11 mode resolves Wayland window management regressions.",
+    "anchor": "issue-maximized-window-has-gaps-or-resizes-on-focus-loss",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-maximized-window-has-gaps-or-resizes-on-focus-loss",
+    "relatedIssues": [
+      "#2094"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Blurry UI or fonts with fractional scaling on Wayland",
+    "category": "Wayland / Display Issues",
+    "description": "Text and UI elements appear blurry when using fractional display scaling (e.g., 125%) on Wayland.",
+    "solutions": "**Override to native Wayland mode*(if you don't experience other Wayland bugs):\n**Edit your `.desktop` file*to make the override permanent — replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.",
+    "anchor": "issue-blurry-ui-or-fonts-with-fractional-scaling-on-wayland",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-blurry-ui-or-fonts-with-fractional-scaling-on-wayland",
+    "relatedIssues": [
+      "#1787"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Spellchecker Not Working",
+    "category": "Other",
+    "description": "The bundled `node_spellchecker` only includes the `en_US` dictionary.",
+    "solutions": "**Enable Local Dictionaries:*Enable the use of local dictionaries by installing Hunspell along with your locale's dictionary. See the instructions at [Atom's spell-check README](https://github.com/atom/spell-check#debian-ubuntu-and-mint).",
+    "anchor": "issue-spellchecker-not-working",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/troubleshooting#issue-spellchecker-not-working",
+    "relatedIssues": [
+      "#28",
+      "#154"
+    ],
+    "source": "troubleshooting"
+  },
+  {
+    "title": "Cache Management configuration",
+    "category": "Cache & Storage",
+    "description": "As of version 2.6.4, the Cache Manager is **disabled by default**. While it was designed to prevent daily logout issues caused by cache overflow (issue #1756), user feedback (issues #1868, #1840 and others) indicated it caused more problems than it solved for most users. You can enable it if you exp",
+    "solutions": "As of version 2.6.4, the Cache Manager is **disabled by default**. While it was designed to prevent daily logout issues caused by cache overflow (issue #1756), user feedback (issues #1868, #1840 and others) indicated it caused more problems than it solved for most users. You can enable it if you experience cache-related authentication issues. The cache management feature automatically cleans cache files when they grow too large and cause token corruption: #### What Gets Cleaned vs Preserved <det",
+    "anchor": "cache-management",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/configuration#cache-management",
+    "relatedIssues": [
+      "#1756",
+      "#1868",
+      "#1840"
+    ],
+    "source": "configuration"
+  },
+  {
+    "title": "Custom Notifications configuration",
+    "category": "Notification System",
+    "description": "The `custom` notification method displays in-app toast notifications instead of OS-level notifications. This is useful when:\n- Your notification daemon is unreliable or not running\n- You experience application freezes with web/electron notifications\n- OS notifications don't work consistently on your",
+    "solutions": "The `custom` notification method displays in-app toast notifications instead of OS-level notifications. This is useful when:\n- Your notification daemon is unreliable or not running\n- You experience application freezes with web/electron notifications\n- OS notifications don't work consistently on your desktop environment\n**Configuration options:**\n- `toastDuration`: Time in milliseconds before toast auto-dismisses (default: 5000ms)\nToasts appear in the bottom-right corner and clicking them focuses",
+    "anchor": "custom-notifications",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/configuration#custom-notifications",
+    "relatedIssues": [],
+    "source": "configuration"
+  },
+  {
+    "title": "Electron CLI Flags and Wayland GPU handling",
+    "category": "Performance & Hardware",
+    "description": "The configuration file can include Electron CLI flags that will be added when the application starts. For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string. The `ozone-platform` f",
+    "solutions": "The configuration file can include Electron CLI flags that will be added when the application starts. For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string. The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). To override the default X11 mode, pass `--ozone-platform=wa",
+    "anchor": "electron-cli-flags-and-wayland-gpu-handling",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/configuration#electron-cli-flags-and-wayland-gpu-handling",
+    "relatedIssues": [],
+    "source": "configuration"
+  },
+  {
+    "title": "Tray Icon Behavior by Desktop Environment",
+    "category": "Tray Icon",
+    "description": "The tray icon functionality varies depending on your Linux desktop environment: #### Visual Badge Support\n- **Unity (Ubuntu 12.04-18.04)**: ✅ Shows visual launcher badges with unread count\n- **KDE Plasma**: ✅ Shows taskbar badge overlays with unread count\n- **GNOME**: ✅ Limited support via extension",
+    "solutions": "The tray icon functionality varies depending on your Linux desktop environment: #### Visual Badge Support\n- **Unity (Ubuntu 12.04-18.04)**: ✅ Shows visual launcher badges with unread count\n- **KDE Plasma**: ✅ Shows taskbar badge overlays with unread count\n- **GNOME**: ✅ Limited support via extensions\n- **Cinnamon/MATE**: ❌ No visual badges - **unread count shown in tooltip only**\n- **XFCE**: ❌ Limited badge support\n- **macOS**: ✅ Dock badges (full support)\n- **Windows**: ✅ Taskbar overlay badges",
+    "anchor": "tray-icon-behavior-by-desktop-environment",
+    "docUrl": "https://ismaelmartinez.github.io/teams-for-linux/configuration#tray-icon-behavior-by-desktop-environment",
+    "relatedIssues": [],
+    "source": "configuration"
+  }
+]

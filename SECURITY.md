@@ -2,19 +2,23 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 2.7.x   | :white_check_mark: |
+| < 2.7   | :x:                |
+
+Only the latest release in the 2.7.x series receives security updates. Users should upgrade to the latest version to benefit from fixes.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security vulnerability in Teams for Linux, please report it responsibly:
 
-Tell them where to go, how often they can expect to get an update on a reported
-vulnerability, what to expect if the vulnerability is accepted or declined, etc.
+1. **Do not** open a public GitHub issue for security vulnerabilities.
+2. Instead, use [GitHub's private vulnerability reporting](https://github.com/IsmaelMartinez/teams-for-linux/security/advisories/new) to submit details confidentially.
+3. Include a description of the vulnerability, steps to reproduce, and any potential impact.
+4. You can expect an initial response within 7 days.
+5. We will work with you to understand the issue and coordinate a fix and disclosure timeline.
+
+## Security Architecture
+
+For details on the application's security controls (IPC validation, CSP headers, PII log sanitization, token encryption), see the [Security Architecture](docs-site/docs/development/security-architecture.md) documentation.

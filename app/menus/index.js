@@ -15,6 +15,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -322,6 +323,10 @@ class Menus {
     if (this.quickChatManager && this.quickChatManager.isEnabled()) {
       this.quickChatManager.toggle();
     }
+  }
+
+  checkForUpdates() {
+    autoUpdaterModule.checkForUpdates();
   }
 }
 

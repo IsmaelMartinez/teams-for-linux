@@ -42,15 +42,14 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(
     if (isFirstLoginTry) {
       isFirstLoginTry = false;
       if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
-        console.debug(
-          `Retrieve password using command : ${ssoBasicAuthPasswordCommand}`,
-        );
+        console.debug('[SSO] Retrieving password using configured command');
         try {
+          // Command comes from user's own config file - shell features (pipes, expansion) are expected
           const ssoPassword = execSync(ssoBasicAuthPasswordCommand).toString();
           callback(ssoBasicAuthUser, ssoPassword);
         } catch (error) {
           console.error(
-            `Failed to execute ssoBasicAuthPasswordCommand. Status Code: ${error.status} with '${error.message}'`,
+            `[SSO] Failed to execute password command. Status Code: ${error.status}`,
           );
         }
       } else {

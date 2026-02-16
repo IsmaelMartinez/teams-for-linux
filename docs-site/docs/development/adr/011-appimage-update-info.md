@@ -6,7 +6,11 @@ id: 011-appimage-update-info
 
 ## Status
 
-✅ Implemented
+⛔ Superseded
+
+**Superseded by**: [Electron-Updater Auto-Update Research](../research/electron-updater-auto-update-research.md)
+
+The appimagetool post-processing approach implemented by this ADR does not produce working results within the electron-builder ecosystem. electron-builder uses its own `AppImageUpdater` class and `latest-linux.yml` metadata, ignoring the standard `.upd_info` ELF section that appimagetool embeds. The CI steps have been removed from `build.yml` and the project will pursue native `electron-updater` auto-updates instead.
 
 ## Context
 

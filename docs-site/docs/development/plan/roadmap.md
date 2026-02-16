@@ -1,25 +1,27 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-13
-**Current Version:** v2.7.4
-**Status:** Living Document — planning v2.7.5
+**Last Updated:** 2026-02-16
+**Current Version:** v2.7.5
+**Status:** Living Document — planning v2.7.7 and v2.8.0
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
 ## Quick Reference
 
-| Priority | Feature | Status | Effort |
-|----------|---------|--------|--------|
-| **Next** | Screen Lock Media Privacy (#2106) | PR in review | Small |
-| **Next** | Custom Notifications Phase 2 (#2108) | PR in review | Medium |
-| **Ready** | Electron 40 upgrade | Ready to implement | Medium |
-| **Ready** | ESLint 10 upgrade | Ready to implement | Small |
-| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny |
-| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small |
+| Priority | Feature | Status | Effort | Target |
+|----------|---------|--------|--------|--------|
+| **Next** | Screen Lock Media Privacy (#2106) | PR in review | Small | v2.7.7 |
+| **Next** | Custom Notifications Phase 2 (#2108) | PR in review | Medium | v2.7.7 |
+| **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium | v2.7.7 |
+| **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
+| **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
+| **Done** | Code quality hardening | Complete (Phase 1 + Phase 2 CI/CD) | Small | Done |
+| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny | — |
+| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
 ---
 
-## Next Release (v2.7.5)
+## Next Patch Release (v2.7.7)
 
 ### PRs in Review
 
@@ -27,13 +29,26 @@ This document outlines the future development direction for Teams for Linux, org
 |------|-------------|--------|--------|
 | **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
 | **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
+| **#2157** | In-app auto-update via electron-updater for AppImage | `feat/appimage-auto-update` | PR in review |
 
 ### Ready to Implement
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **Electron 40** | Electron 39.5.1 → 40.4.0 | Major version bump — requires testing |
-| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — config changes likely |
+| **[#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)** | In-app auto-update via electron-updater for AppImage | [Research](../research/electron-updater-auto-update-research.md); supersedes #2065 |
+
+---
+
+## Next Minor Release (v2.8.0)
+
+Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). It warrants a minor version bump.
+
+### Ready to Implement
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **Electron 40** | Electron 39.5.1 → 40.4.0 (Chromium 144, Node.js 24, V8 14.4) | [Research](../research/electron-40-migration-research.md); no blocking breaking changes |
+| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — flat config already in use, minimal impact |
 
 **Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
 
@@ -42,7 +57,6 @@ This document outlines the future development direction for Teams for Linux, org
 | Item | Description | Notes |
 |------|-------------|-------|
 | **#2095** | `--appIcon` not working in KDE window list | PR #2104 merged in v2.7.3; may still be blocked by Electron |
-| **#2065** | AppImage update info not working | PR #2102 merged in v2.7.3; packaging issue, may not be fixable |
 | **#1860** | Camera resolution/aspect ratio issues | PR #2060 merged in v2.7.3; needs user testing to confirm fix |
 
 ### Blocked (External Dependencies)
@@ -141,17 +155,43 @@ This document outlines the future development direction for Teams for Linux, org
 
 ## Strategic / Future
 
+### Code Quality Hardening
+
+**Research:** [code-quality-hardening-research.md](../research/code-quality-hardening-research.md)
+**Status:** Complete
+**Priority:** Done
+
+**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD. All items have been implemented across two phases.
+
+**Phase 1 (Completed):**
+
+1. ✅ **Logging hygiene** — Removed PII from debug logs in `mutationTitle`, `notificationSystem`, `certificate` modules (aligning with ADR-013). Certificate fingerprint preserved (not PII, needed for config).
+2. ✅ **Resilience improvements** — Added `uncaughtException`/`unhandledRejection` handlers, wrapped `handleAppReady()`, added try/catch to all Graph API IPC handlers
+3. ✅ **Input handling** — Added argument sanitization for incoming call notification command. SSO `execSync` kept (user-controlled config, shell features expected; see research doc for details).
+4. ✅ **Renderer cleanup** — Removed unused `globalThis.nodeRequire` and `globalThis.nodeProcess` from preload
+5. ✅ **IPC validator** — Added recursive prototype pollution sanitization for nested payloads
+6. ✅ **SECURITY.md** — Updated with accurate version numbers (2.7.x) and reporting instructions
+
+**Phase 2 (Completed):**
+
+7. ✅ **CI/CD lint gate** — Added `lint_and_audit` job to build workflow; all platform builds depend on it
+8. ✅ **CI/CD dependency audit** — `npm audit --audit-level=moderate` runs in CI before packaging
+9. ✅ **Dependabot** — Configured for weekly npm updates (minor/patch grouped) and monthly GitHub Actions updates
+
+---
+
 ### GitHub Issue Bot
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
-**Status:** Phase 1 ✅ Merged (v2.7.4), Phase 2+ planned
+**Status:** Phase 1 ✅ Merged (v2.7.4), Phase 2 ✅ Shipped
 **Priority:** Medium
 
-**Phase 1 Delivered:** Information request bot — detects missing reproduction steps, debug output, and expected behavior in bug reports. Posts helpful comment with checklist.
+**Phase 1 Delivered:** Information request bot — detects missing reproduction steps, debug output, and expected behaviour in bug reports.
+
+**Phase 2 Delivered:** Solution suggester — AI-powered matching against troubleshooting guide and configuration docs using Gemini. Posts a single consolidated comment combining missing info requests and solution suggestions.
 
 **Future phases:**
 
-- Phase 2: Solution suggestions from troubleshooting docs (AI-powered with Gemini)
 - Phase 3: Duplicate detection via embeddings (RAG system)
 - Phase 4: Enhancement context from roadmap/research/ADRs (AI-assisted)
 
@@ -223,19 +263,25 @@ These features have completed initial implementation. Further phases depend on u
 
 ## Implementation Priorities
 
-### v2.7.5 Release Plan
+### v2.7.7 Release Plan
 
 1. **Merge Screen Lock Media Privacy PR** — MQTT `disable-media`/`enable-media` commands (#2106)
 2. **Merge Custom Notifications Phase 2 PR** — Chat, calendar, activity notifications (#2108)
-3. **Electron 40 upgrade** — Major version bump (39.5.1 → 40.4.0), requires testing
-4. **ESLint 10 upgrade** — Major version bump, config changes likely
-5. **Routine dependency updates** — Patch/minor bumps
-6. **Release v2.7.5**
+3. **AppImage auto-update** — In-app auto-update via electron-updater (#2157)
+4. **Release v2.7.7**
+
+### v2.8.0 Release Plan
+
+1. **Electron 40 upgrade** — Major version bump (39.5.1 → 40.4.0); [research complete](../research/electron-40-migration-research.md)
+2. **ESLint 10 upgrade** — Major version bump, flat config already in use
+3. **Routine dependency updates** — `@homebridge/dbus-native` 0.7.3 and other patch/minor bumps
+4. **Release v2.8.0**
 
 ### Future Priorities
 
+- ~~**Code quality hardening**~~ — Complete ([research](../research/code-quality-hardening-research.md))
 - **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
-- **GitHub Issue Bot Phases 2-4** — Solution suggestions (AI), duplicate detection (embeddings), enhancement context
+- **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
 ### Principles
 

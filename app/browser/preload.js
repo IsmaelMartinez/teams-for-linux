@@ -138,10 +138,6 @@ globalThis.electronAPI = {
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
 
-// Direct Node.js access for browser tools (requires contextIsolation: false)
-globalThis.nodeRequire = require;
-globalThis.nodeProcess = process;
-
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
 // Config is fetched asynchronously but notification function references it via closure
 let notificationConfig = null;

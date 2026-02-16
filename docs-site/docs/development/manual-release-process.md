@@ -186,12 +186,20 @@ No files are modified during dry-run.
 When the release PR merges to main:
 - Build workflow detects version change
 - Creates GitHub draft release
-- Publishes to Snap edge channel
+- Snap edge channel publishes with a version suffix (e.g., `2.7.5-edge.g1a2b3c4`) to distinguish it from the release build
 
 Then:
-1. Test Snap edge version
-2. Promote GitHub draft → full release (triggers Flatpak)
-3. Manually promote Snap edge → stable
+1. Promote GitHub draft → full release
+   - This triggers Flatpak
+   - This triggers the **Snap Release** workflow, which builds and publishes the release version to the **candidate** channel
+2. Test the Snap candidate version
+3. Manually promote Snap candidate → stable: `snapcraft release teams-for-linux <revision> stable`
+
+:::info Snap Channels
+- **edge** — Every push to main. Versioned with commit SHA suffix (e.g., `2.7.5-edge.g1a2b3c4`)
+- **candidate** — Automatically published when a GitHub Release is published. Uses the clean release version (e.g., `2.7.5`)
+- **stable** — Manual promotion from candidate after testing
+:::
 
 ## Manual Changelog Entries
 
@@ -234,9 +242,11 @@ Create release PR → Push to release/vX.Y.Z
      ↓                (PR includes categorized release notes)
 Merge to main → Build triggers automatically
      ↓
-Publish → Draft release, Snap edge
+Publish → Draft release, Snap edge (with commit SHA suffix)
      ↓
-Promote → Full release, Snap stable
+Promote draft → Full release, Snap candidate, Flatpak
+     ↓
+Test candidate → Promote Snap candidate → stable
 ```
 
 ## Tips

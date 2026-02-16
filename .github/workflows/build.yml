@@ -10,6 +10,27 @@ defaults:
     shell: bash
 
 jobs:
+  lint_and_audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+
   e2e_tests:
     runs-on: ubuntu-latest
 
@@ -43,6 +64,7 @@ jobs:
           retention-days: 7
 
   linux_x64:
+    needs: [lint_and_audit]
     runs-on: ubuntu-latest
 
     steps:
@@ -64,55 +86,6 @@ jobs:
         if: contains(github.ref, 'main')
         run: npm run dist:linux:x64 -- --publish always
 
-      - name: Add AppImage update info
-        if: contains(github.ref, 'main')
-        run: |
-          # Install squashfs-tools for extraction without execute permissions
-          sudo apt-get update && sudo apt-get install -y squashfs-tools
-
-          # Download appimagetool
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-          # Process each x86_64 AppImage
-          for appimage in dist/*x86_64*.AppImage; do
-            if [ -f "$appimage" ]; then
-              echo "Processing $appimage"
-
-              # Extract the AppImage using unsquashfs (doesn't require execute permissions)
-              offset=$(grep -abom 1 'hsqs' "$appimage" | head -1 | cut -d: -f1)
-              unsquashfs -d squashfs-root -offset "$offset" "$appimage"
-
-              # Repack with update info (use --appimage-extract-and-run to avoid FUSE requirement)
-              ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
-                -u "gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*x86_64*.AppImage.zsync" \
-                squashfs-root \
-                "$appimage"
-
-              # Cleanup
-              rm -rf squashfs-root
-
-              echo "Successfully added update info to $appimage"
-            fi
-          done
-
-      - name: Upload AppImage with update info to release
-        if: contains(github.ref, 'main')
-        run: |
-          # Get version from package.json
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-
-          # Upload the repackaged AppImage and zsync file to the release
-          for file in dist/*x86_64*.AppImage dist/*x86_64*.AppImage.zsync; do
-            if [ -f "$file" ]; then
-              echo "Uploading $file to release $TAG"
-              gh release upload "$TAG" "$file" --clobber || echo "Warning: Could not upload $file"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build for PR
         if: "!contains(github.ref, 'main')"
         run: npm run dist:linux:x64 -- --publish never
@@ -131,6 +104,7 @@ jobs:
           compression-level: 6
 
   linux_arm64:
+    needs: [lint_and_audit]
     runs-on: ubuntu-latest
 
     steps:
@@ -156,51 +130,6 @@ jobs:
         if: "!contains(github.ref, 'main')"
         run: npm run dist:linux:arm64 -- --publish never
 
-      - name: Add AppImage update info
-        if: contains(github.ref, 'main')
-        run: |
-          # Install squashfs-tools for cross-architecture extraction
-          sudo apt-get update && sudo apt-get install -y squashfs-tools
-
-          # Download appimagetool
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-          # Process each arm64 AppImage
-          for appimage in dist/*arm64*.AppImage; do
-            if [ -f "$appimage" ]; then
-              echo "Processing $appimage"
-
-              # Extract the AppImage using unsquashfs (works cross-architecture)
-              offset=$(grep -abom 1 'hsqs' "$appimage" | head -1 | cut -d: -f1)
-              unsquashfs -d squashfs-root -offset "$offset" "$appimage"
-
-              # Repack with update info
-              ARCH=aarch64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
-                -u "gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*arm64*.AppImage.zsync" \
-                squashfs-root \
-                "$appimage"
-
-              rm -rf squashfs-root
-              echo "Successfully added update info to $appimage"
-            fi
-          done
-
-      - name: Upload AppImage with update info to release
-        if: contains(github.ref, 'main')
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-
-          for file in dist/*arm64*.AppImage dist/*arm64*.AppImage.zsync; do
-            if [ -f "$file" ]; then
-              echo "Uploading $file to release $TAG"
-              gh release upload "$TAG" "$file" --clobber || echo "Warning: Could not upload $file"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -215,6 +144,7 @@ jobs:
           compression-level: 6
 
   linux_arm:
+    needs: [lint_and_audit]
     runs-on: ubuntu-latest
 
     steps:
@@ -240,51 +170,6 @@ jobs:
         if: "!contains(github.ref, 'main')"
         run: npm run dist:linux:arm -- --publish never
 
-      - name: Add AppImage update info
-        if: contains(github.ref, 'main')
-        run: |
-          # Install squashfs-tools for cross-architecture extraction
-          sudo apt-get update && sudo apt-get install -y squashfs-tools
-
-          # Download appimagetool
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-          # Process each armv7l AppImage
-          for appimage in dist/*armv7l*.AppImage; do
-            if [ -f "$appimage" ]; then
-              echo "Processing $appimage"
-
-              # Extract the AppImage using unsquashfs (works cross-architecture)
-              offset=$(grep -abom 1 'hsqs' "$appimage" | head -1 | cut -d: -f1)
-              unsquashfs -d squashfs-root -offset "$offset" "$appimage"
-
-              # Repack with update info
-              ARCH=armhf ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
-                -u "gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*armv7l*.AppImage.zsync" \
-                squashfs-root \
-                "$appimage"
-
-              rm -rf squashfs-root
-              echo "Successfully added update info to $appimage"
-            fi
-          done
-
-      - name: Upload AppImage with update info to release
-        if: contains(github.ref, 'main')
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
-
-          for file in dist/*armv7l*.AppImage dist/*armv7l*.AppImage.zsync; do
-            if [ -f "$file" ]; then
-              echo "Uploading $file to release $TAG"
-              gh release upload "$TAG" "$file" --clobber || echo "Warning: Could not upload $file"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload PR artifacts
         if: "!contains(github.ref, 'main')"
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -299,6 +184,7 @@ jobs:
           compression-level: 6
 
   dmg:
+    needs: [lint_and_audit]
     runs-on: macos-latest
 
     steps:
@@ -334,6 +220,7 @@ jobs:
           compression-level: 6
 
   exe:
+    needs: [lint_and_audit]
     runs-on: windows-latest
 
     steps:

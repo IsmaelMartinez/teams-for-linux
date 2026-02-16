@@ -92,6 +92,32 @@ const allowedChannels = new Set([
   'quick-chat:hide'
 ]);
 
+const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
+const MAX_SANITIZE_DEPTH = 10;
+
+/**
+ * Recursively sanitizes an object to remove prototype pollution vectors.
+ * @param {any} obj - The object to sanitize
+ * @param {number} depth - Current recursion depth (prevents stack overflow on circular refs)
+ */
+function sanitizePayload(obj, depth = 0) {
+  if (!obj || typeof obj !== 'object' || depth > MAX_SANITIZE_DEPTH) {
+    return;
+  }
+
+  for (const prop of DANGEROUS_PROPS) {
+    if (Object.hasOwn(obj, prop)) {
+      delete obj[prop];
+    }
+  }
+
+  for (const key of Object.keys(obj)) {
+    if (obj[key] && typeof obj[key] === 'object') {
+      sanitizePayload(obj[key], depth + 1);
+    }
+  }
+}
+
 /**
  * Validates an IPC channel request
  * @param {string} channel - The IPC channel name
@@ -104,18 +130,10 @@ function validateIpcChannel(channel, payload = null) {
     console.warn(`[IPC Security] Blocked unauthorized channel: ${channel}`);
     return false;
   }
-  
-  // Basic payload sanitization to prevent prototype pollution
-  if (payload && typeof payload === 'object') {
-    // Use Object.getOwnPropertyDescriptor to safely check and delete dangerous properties
-    const dangerousProps = ['__proto__', 'constructor', 'prototype'];
-    for (const prop of dangerousProps) {
-      if (Object.hasOwn(payload, prop)) {
-        delete payload[prop];
-      }
-    }
-  }
-  
+
+  // Recursive payload sanitization to prevent prototype pollution
+  sanitizePayload(payload);
+
   return true;
 }
 

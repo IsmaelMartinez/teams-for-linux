@@ -34,7 +34,6 @@ class MutationObserverTitle {
       
       // Enhanced debugging for tray icon timing issue (#1795)
       console.debug("MutationTitle: Initial setup", {
-        currentTitle: globalThis.document.title,
         titleElementExists: !!titleElement,
         documentReadyState: document.readyState
       });
@@ -50,7 +49,7 @@ class MutationObserverTitle {
           
           // Limit title length for security
           const sanitizedTitle = title.substring(0, 200);
-          console.debug(`MutationTitle: Title changed to "${sanitizedTitle}"`);
+          console.debug('MutationTitle: Title changed');
           
           // Safely extract number from title with input validation
           const regex = /^\((\d+)\)/;
@@ -59,10 +58,8 @@ class MutationObserverTitle {
           
           // Enhanced debugging for unread count extraction
           console.debug("MutationTitle: Extracting unread count", {
-            title: sanitizedTitle,
-            regexMatch: match,
-            extractedNumber: number,
-            regexPattern: regex.toString()
+            hasMatch: !!match,
+            extractedNumber: number
           });
           
           // Validate extracted number
