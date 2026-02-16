@@ -79,12 +79,30 @@ class NotificationDomObserver {
   }
 
   #extractAndSend(wrapper) {
-    // Log raw DOM for diagnostics (helps refine selectors from user logs)
-    console.debug('[NotificationDomObserver] Wrapper detected, innerHTML length:', wrapper.innerHTML.length);
-    console.debug('[NotificationDomObserver] Raw DOM structure:', wrapper.innerHTML.substring(0, 500));
+    // Log wrapper metadata for diagnostics
+    const attrs = Array.from(wrapper.attributes || []).map(a => `${a.name}="${a.value}"`).join(' ');
+    console.debug('[NotificationDomObserver] Wrapper detected:', {
+      attributes: attrs,
+      childElementCount: wrapper.childElementCount,
+      innerHTMLLength: wrapper.innerHTML.length,
+      computedDisplay: globalThis.getComputedStyle?.(wrapper)?.display,
+      parentTag: wrapper.parentElement?.tagName
+    });
+
+    // Log child element structure (tag names + data-testid) to help refine selectors
+    const childStructure = Array.from(wrapper.querySelectorAll('*')).slice(0, 20).map(el => {
+      const testId = el.getAttribute('data-testid');
+      return testId ? `${el.tagName}[${testId}]` : el.tagName;
+    });
+    console.debug('[NotificationDomObserver] Child structure:', childStructure.join(' > '));
+
+    // Log raw DOM snippet
+    console.debug('[NotificationDomObserver] Raw DOM:', wrapper.innerHTML.substring(0, 500));
 
     const { title, body } = this.#extractText(wrapper);
     const icon = this.#extractIcon(wrapper);
+
+    console.debug('[NotificationDomObserver] Extracted:', { title, body, hasIcon: !!icon });
 
     if (!title && !body) {
       console.debug('[NotificationDomObserver] No text content found in wrapper, skipping');
@@ -140,6 +158,8 @@ class NotificationDomObserver {
         }
       }
     }
+
+    console.debug('[NotificationDomObserver] Structured extraction found', textParts.length, 'text parts:', textParts);
 
     // If structured extraction found nothing, fall back to full textContent
     if (textParts.length === 0) {

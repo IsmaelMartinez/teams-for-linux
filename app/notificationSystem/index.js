@@ -45,13 +45,20 @@ class CustomNotificationManager {
   }
 
   #handleShowToast(event, data) {
+    const source = data?.type || 'unknown';
+    console.debug(`[CustomNotificationManager] Received notification from source="${source}":`, {
+      title: data?.title,
+      hasBody: !!data?.body,
+      hasIcon: !!data?.icon
+    });
+
     if (!data || !data.title) {
       console.warn('[CustomNotificationManager] Invalid notification data, missing title');
       return;
     }
 
     if (this.#isDuplicate(data.title)) {
-      console.debug(`[CustomNotificationManager] Duplicate suppressed: "${data.title}"`);
+      console.debug(`[CustomNotificationManager] Duplicate suppressed (source="${source}"): "${data.title}"`);
       return;
     }
 
@@ -66,10 +73,11 @@ class CustomNotificationManager {
       // Clean up tracking when toast window closes (handles both manual close and auto-close)
       toast.onClosed(() => {
         this.#activeToasts.delete(toast);
+        console.debug(`[CustomNotificationManager] Toast closed: "${data.title}"`);
       });
 
       toast.show();
-      console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}"`);
+      console.debug(`[CustomNotificationManager] Toast displayed (source="${source}"): "${data.title}"`);
     } catch (error) {
       console.error('[CustomNotificationManager] Error displaying toast:', error);
     }

@@ -267,6 +267,13 @@ function createCustomNotification(title, options) {
 
   // Factory function that creates notification objects (avoids "return in constructor" issue)
   function CustomNotification(title, options) {
+    console.debug('[Preload:Notification] new Notification() called:', {
+      title: title?.substring?.(0, 80),
+      hasBody: !!options?.body,
+      hasIcon: !!options?.icon,
+      method: notificationConfig?.notificationMethod || 'web'
+    });
+
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
       // Return dummy object to avoid Teams errors
