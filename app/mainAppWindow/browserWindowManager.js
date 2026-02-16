@@ -67,69 +67,6 @@ class BrowserWindowManager {
   }
 
   /**
-   * Apply Content Security Policy headers to response details for Teams domains.
-   * CSP acts as a compensating control for disabled contextIsolation/sandbox.
-   * Teams requires 'unsafe-eval' and 'unsafe-inline' in script-src because its
-   * bundled JavaScript uses eval() and inline scripts for core functionality.
-   *
-   * @param {Object} details - The request details from onHeadersReceived
-   * @returns {Object} Modified response headers with CSP, or original headers if not a Teams domain
-   */
-  static applyContentSecurityPolicy(details) {
-    // Only apply our CSP to the core Teams web app domains.
-    // Auth/login pages (login.microsoftonline.com) and other Microsoft services
-    // have their own server-side CSP and load resources from CDN domains
-    // (aadcdn.msauth.net, logincdn.msftauth.net, etc.) not in our allowlist.
-    const teamsAppDomains = [
-      'https://teams.cloud.microsoft',
-      'https://teams.microsoft.com',
-      'https://teams.live.com'
-    ];
-
-    // All allowed origins referenced in CSP directives (includes auth domains)
-    const teamsOrigins = [
-      ...teamsAppDomains,
-      'https://outlook.office.com',
-      'https://login.microsoftonline.com'
-    ];
-
-    // CDN domains used by Teams for static assets, scripts, and Fluent UI icons
-    // Issue #2121: Missing office.net domain was causing icon registration failures
-    const teamsCdnDomains = [
-      'https://*.office.com',
-      'https://*.office.net',           // statics.teams.cdn.office.net - Fluent UI icons
-      'https://*.microsoftonline.com',
-      'https://*.sharepoint.com',
-      'https://*.static.microsoft'      // res.public.onecdn.static.microsoft
-    ];
-
-    const isTeamsApp = teamsAppDomains.some(origin => details.url.startsWith(origin));
-
-    if (isTeamsApp) {
-      return {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          [
-            `default-src 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-            `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-            `style-src 'self' 'unsafe-inline' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-            "img-src 'self' data: blob: https: http:;",
-            "media-src 'self' blob: https: mediastream:;",
-            "connect-src 'self' wss: https: blob:;",
-            `font-src 'self' data: ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-            "object-src 'none';",
-            "base-uri 'self';",
-            `form-action 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-            "frame-ancestors 'none';"
-          ].join(' ')
-        ]
-      };
-    }
-
-    return details.responseHeaders;
-  }
-
-  /**
    * Converts an icon path to a nativeImage.
    * On Linux/KDE, the BrowserWindow icon must be a nativeImage for proper
    * display in the window list/panel (similar to tray icon fix in #2096).
@@ -161,9 +98,9 @@ class BrowserWindowManager {
         plugins: true,
         spellcheck: true,
         webviewTag: true,
-        // SECURITY: Disabled for Teams DOM access, compensated by CSP + IPC validation
+        // SECURITY: Disabled for Teams DOM access, compensated by IPC validation
         contextIsolation: false,  // Required for ReactHandler DOM access
-        nodeIntegration: false,   // Secure: preload scripts don't need this  
+        nodeIntegration: false,   // Secure: preload scripts don't need this
         sandbox: false,           // Required for system API access
       },
     });

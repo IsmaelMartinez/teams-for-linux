@@ -528,15 +528,10 @@ function onBeforeRequestHandler(details, callback) {
 }
 
 function onHeadersReceivedHandler(details, callback) {
-  // Apply CSP as compensating control for disabled contextIsolation/sandbox
-  const responseHeaders = BrowserWindowManager.applyContentSecurityPolicy(details);
-
-  // Allow custom background service to modify CSP if enabled
-  const modifiedDetails = { ...details, responseHeaders };
-  customBackgroundService.onHeadersReceivedHandler(modifiedDetails);
+  customBackgroundService.onHeadersReceivedHandler(details);
 
   callback({
-    responseHeaders: modifiedDetails.responseHeaders,
+    responseHeaders: details.responseHeaders,
   });
 }
 
