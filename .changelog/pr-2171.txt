@@ -1,0 +1,1 @@
+Refactor CSP setup to static method and centralize header handling - by @IsmaelMartinez (#2171)
