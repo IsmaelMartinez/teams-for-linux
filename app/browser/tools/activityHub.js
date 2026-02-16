@@ -139,6 +139,37 @@ function logAvailableServices() {
     );
     console.debug("[ActivityHub] Core service keys (notification-related):", notificationRelated.join(", ") || "none found");
     console.debug("[ActivityHub] Total core services available:", keys.length);
+
+    // Inspect notificationsHandler service for future subscription discovery
+    inspectNotificationsHandler();
+  }
+}
+
+/**
+ * Log available methods/properties on the notificationsHandler service.
+ * This diagnostic data helps discover additional subscription points.
+ */
+function inspectNotificationsHandler() {
+  try {
+    const coreServices = ReactHandler.getCoreServiceKeys() ? (() => {
+      const el = document.getElementById("app");
+      const root = el?._reactRootContainer?._internalRoot || el?._reactRootContainer;
+      const props = root?.current?.updateQueue?.baseState?.element?.props;
+      return props?.coreServices || props?.children?.props?.coreServices;
+    })() : null;
+
+    const handler = coreServices?.notificationsHandler;
+    if (!handler) {
+      console.debug("[ActivityHub] notificationsHandler service not found in core services");
+      return;
+    }
+
+    const ownProps = Object.getOwnPropertyNames(handler);
+    const protoProps = Object.getOwnPropertyNames(Object.getPrototypeOf(handler) || {});
+    console.debug("[ActivityHub] notificationsHandler own properties:", ownProps.join(", "));
+    console.debug("[ActivityHub] notificationsHandler prototype methods:", protoProps.join(", "));
+  } catch (err) {
+    console.debug("[ActivityHub] Could not inspect notificationsHandler:", err.message);
   }
 }
 

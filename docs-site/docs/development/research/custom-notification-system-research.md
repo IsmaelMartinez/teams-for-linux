@@ -1,7 +1,7 @@
 # Custom Notification System Research & Implementation Plan
 
-**Status:** Phase 2 Complete - Chat & Calendar Notifications
-**Date:** January 2026
+**Status:** Phase 2.1 - DOM Observer for Notification Interception
+**Date:** February 2026
 **Issue:** Investigation for alternative notification modal system
 **Author:** Claude AI Assistant
 **Dependencies:** Incremental Refactoring Plan Phase 1 (Completed)
@@ -15,7 +15,8 @@ This document tracks the development of a **custom notification modal system** f
 ### Current Status
 
 - ✅ **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
-- ✅ **Phase 2 Complete** (v2.7.3): Chat and calendar notification routing
+- ✅ **Phase 2 Complete** (v2.7.3): Chat and calendar notification routing via `commandChangeReportingService`
+- ✅ **Phase 2.1** (v2.7.5+): DOM MutationObserver for notification banner interception
 - ✅ **Documentation**: Configuration and usage guides updated
 - 🔄 **Next Phase**: Monitoring user feedback for further enhancements
 
@@ -25,6 +26,7 @@ This document tracks the development of a **custom notification modal system** f
 - No critical bugs reported since release
 - System provides reliable alternative for users with OS notification issues
 - Phase 2 adds notification routing for chat messages, calendar invites, and activity notifications
+- **Phase 2.1 finding**: Teams does NOT call `new Notification()` for chat messages in production, and `commandChangeReportingService` entity commands arrive with empty title/text for chat messages. Teams renders in-app banners at `[data-testid='notification-wrapper']` instead, which a DOM MutationObserver can intercept.
 
 ---
 
@@ -99,6 +101,46 @@ app/browser/preload.js                     # MODIFIED: Added notificationObserve
 3. Events are emitted as `chat-notification`, `calendar-notification`, or `activity-notification`
 4. `activityManager.js` handles these events and sends them to main process via `notification-show-toast` IPC
 5. `CustomNotificationManager` displays the toast notification
+
+---
+
+## 2.1. Phase 2.1: DOM Observer for Notification Interception
+
+### Problem Discovery
+
+User testing with a full-day production log revealed that the Phase 2 implementation (chat/calendar routing via `commandChangeReportingService`) fails to show chat notifications in practice. Three root causes were identified:
+
+1. Teams does NOT call `new Notification()` for chat messages. The `window.Notification` override in preload.js never fires for chat messages — it only fires for certain system notifications.
+
+2. `commandChangeReportingService` entity commands arrive with `hasText:false, hasTitle:false` for most chat messages. The entity options contain only system keys like `reportDismissError`, so our `activityHub.js` detection finds nothing to display.
+
+3. Teams DOES render in-app notification banners at `[data-testid='notification-wrapper']`, but our custom notification CSS immediately hides them with `display:none !important`. The user sees zero notifications despite receiving many messages.
+
+### Solution: DOM MutationObserver
+
+A new `notificationDomObserver.js` module watches for Teams notification wrapper elements being added to the DOM. When detected, it extracts the notification content (sender, message, icon) before CSS hides the element, and sends it through the existing custom toast system.
+
+**Files Created:**
+```
+app/browser/tools/notificationDomObserver.js  # DOM MutationObserver module
+```
+
+**How It Works:**
+
+1. A MutationObserver on `document.body` (with `childList: true, subtree: true`) watches for added nodes
+2. When an added node matches or contains `[data-testid='notification-wrapper']`, extraction is scheduled via `requestAnimationFrame` (gives React one frame to populate content)
+3. Text content is extracted heuristically: spans and text-bearing divs are collected, first part becomes title, rest becomes body. An `img` element provides the icon.
+4. The notification is sent via `globalThis.electronAPI.sendNotificationToast()` to the main process
+5. Lightweight 2-second dedup within the observer prevents sending the same notification twice from this source
+6. The existing `CustomNotificationManager.#isDuplicate()` (3-second title-based dedup) prevents duplicates when multiple sources fire for the same notification
+
+**Diagnostic Logging:**
+
+The observer logs raw DOM structure at debug level (`[NotificationDomObserver]` prefix). This helps refine selectors from user-submitted logs without requiring code changes.
+
+**Service Discovery:**
+
+The `logAvailableServices()` function in `activityHub.js` now also inspects the `notificationsHandler` core service (confirmed present in user logs) and logs its available methods/properties. This diagnostic data may reveal additional subscription points for future improvements.
 
 ---
 
@@ -297,17 +339,18 @@ The custom notification system Phase 2 is complete, addressing user feedback abo
 **Completed:**
 1. ✅ MVP (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
 2. ✅ Phase 2 (v2.7.3): Chat, calendar, and activity notification routing
+3. ✅ Phase 2.1 (v2.7.5+): DOM MutationObserver for notification banner interception
 
 **Next Actions:**
-1. Monitor user feedback on Phase 2 implementation
-2. Gather feature requests via GitHub issues/discussions
+1. Monitor user feedback on Phase 2.1 — check for `[NotificationDomObserver]` entries in user logs
+2. Refine DOM selectors based on real-world log data
 3. Consider Notification Center (Phase 3) based on user demand
-4. Consider enhanced toast features based on user feedback
+4. Investigate `notificationsHandler` service methods for native subscription API
 
 **Key Principle:** Continue the "start simple, iterate based on feedback" approach that has proven successful.
 
 ---
 
-**Document Status:** ✅ Phase 2 Complete - Monitoring User Feedback
-**Current Version:** v2.7.3
+**Document Status:** ✅ Phase 2.1 Complete - DOM Observer Added
+**Current Version:** v2.7.5+
 **Related Issue:** #2108 (Phase 2), #2039 (User Feedback)
