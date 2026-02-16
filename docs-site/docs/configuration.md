@@ -356,7 +356,7 @@ All topics use retained messages by default, ensuring subscribers receive the la
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `quickChat.enabled` | `boolean` | `false` | Enable Quick Chat feature for quick contact search and chat access |
-| `quickChat.shortcut` | `string` | `"CommandOrControl+Alt+Q"` | Keyboard shortcut to toggle the Quick Chat modal |
+| `quickChat.shortcut` | `string` | none | Keyboard shortcut to toggle the Quick Chat modal (e.g., `"CommandOrControl+Alt+Q"`) |
 
 ```json title="Example Configuration"
 {
@@ -371,7 +371,7 @@ All topics use retained messages by default, ensuring subscribers receive the la
 ```
 
 > [!NOTE]
-> Quick Chat requires Graph API to be enabled (`graphApi.enabled: true`) for contact search and inline messaging. The modal allows you to search for contacts, click to compose a message, and send it directly without leaving your current context. The keyboard shortcut uses Electron accelerator format.
+> Quick Chat requires Graph API to be enabled (`graphApi.enabled: true`) for contact search and inline messaging. The modal allows you to search for contacts, click to compose a message, and send it directly without leaving your current context. The keyboard shortcut uses Electron accelerator format. No shortcut is registered by default; you must provide one explicitly.
 
 ### Performance & Hardware
 

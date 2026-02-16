@@ -16,13 +16,16 @@ Additionally, the bot notes when the reporter indicated the bug is reproducible 
 
 ## Comment Structure
 
+The missing info section is part of a consolidated comment that may also include Phase 2 solution suggestions. See [suggestion.md](suggestion.md) for the full comment layout.
+
 ```text
-[Greeting]            — Thanks the reporter
-[PWA Notice]          — (conditional) Notes if bug reproduces on Teams web/PWA
-[Missing Info List]   — (conditional) Checkbox list of missing fields
-[Debug Instructions]  — (conditional) Collapsible section with debug logging steps
-[Troubleshooting Tip] — Link to the troubleshooting guide
-[Bot Disclosure]      — Identifies as automated triage bot
+[Greeting]              — Thanks the reporter
+[PWA Notice]            — (conditional) Notes if bug reproduces on Teams web/PWA
+[Solution Suggestions]  — (conditional, Phase 2) AI-matched documentation sections
+[Missing Info List]     — (conditional) Checkbox list of missing fields
+[Debug Instructions]    — (conditional) Collapsible section with debug logging steps
+[Troubleshooting Tip]   — Link to the troubleshooting guide
+[Bot Disclosure]        — Identifies as automated triage bot
 ```
 
 ## Language Guidelines
@@ -69,10 +72,11 @@ When reproduction steps and debug output are missing:
 >
 > ---
 >
-> *I'm a bot that helps with initial issue triage. A maintainer will review this issue.*
+> *I'm a bot that helps with issue triage. Suggestions are based on documentation and may not be exact. A maintainer will review this issue.*
 
 ## Related Files
 
 - **Workflow:** [`.github/workflows/issue-triage-bot.yml`](../../workflows/issue-triage-bot.yml)
+- **Phase 2 template:** [`.github/issue-bot/templates/suggestion.md`](suggestion.md)
 - **Research:** [`docs-site/docs/development/research/github-issue-bot-investigation.md`](../../../docs-site/docs/development/research/github-issue-bot-investigation.md)
 - **Bug Report Template:** [`.github/ISSUE_TEMPLATE/bug_report_form.yml`](../../ISSUE_TEMPLATE/bug_report_form.yml)

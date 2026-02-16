@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Active Research - PRs in Review
 
+- **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.4.0
+  - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
+  - Includes ESLint 10 migration analysis and codebase audit
+  - **Status:** Research complete, ready for implementation
+
 - **[Electron-Updater Auto-Update Research](electron-updater-auto-update-research.md)** - In-app auto-update via electron-updater for AppImage
   - Supersedes ADR-011 appimagetool approach (incompatible with electron-builder)
   - Phase 1: AppImage auto-update using `electron-updater` with GitHub Releases
@@ -36,9 +41,15 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Documentation
 
+- **[Code Quality and Hardening Research](code-quality-hardening-research.md)** - Incremental codebase improvements
+  - Input handling, logging hygiene, resilience gaps, CI additions
+  - Validated by 4-persona review (security, product, maintainer, DevOps)
+  - **Status:** Research complete, ready for incremental implementation
+
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
   - **Phase 1 Complete** (v2.7.4): Information request bot — detects missing info in bug reports
-  - **Future phases**: Solution suggestions (Gemini AI), duplicate detection (embeddings), enhancement context
+  - **Phase 2 Complete**: Solution suggester — AI-powered matching using Gemini; consolidated comment format
+  - **Future phases**: Duplicate detection (embeddings), enhancement context (RAG)
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization

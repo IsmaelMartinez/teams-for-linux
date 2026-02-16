@@ -1,10 +1,10 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-:::info Phase 1 Shipped
-Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). The bot detects missing reproduction steps and debug output in bug reports. Phases 2-4 (AI-powered suggestions, duplicate detection, enhancement context) are planned for the future.
+:::info Phase 2 Shipped
+Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Both phases produce a single consolidated comment per issue. Phases 3-4 (duplicate detection, enhancement context) are planned for the future.
 :::
 
-**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phases 2-4 planned
+**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phases 3-4 planned
 **Date:** February 2026
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant
@@ -301,15 +301,18 @@ Store in `.github/issue-bot/embeddings.json` or external vector DB.
 
 **Value:** Reduces back-and-forth, gets issues to actionable state faster
 
-### Phase 2: Solution Suggester
+### Phase 2: Solution Suggester ✅ Shipped
 
-**Scope:** Match issues against troubleshooting guide
+**Scope:** Match issues against troubleshooting guide and configuration docs using Gemini AI
 
-**Additional Files:**
+**Files:**
 ```
-.github/issue-bot/troubleshooting-index.json  # Pre-processed
-.github/issue-bot/templates/suggestion.md
+.github/issue-bot/troubleshooting-index.json  # Pre-processed index
+.github/issue-bot/scripts/generate-index.js   # Index generator script
+.github/issue-bot/templates/suggestion.md      # Documentation
 ```
+
+**Implementation:** Extended `issue-triage-bot.yml` into a multi-step pipeline. Phase 1 analyses missing info, Phase 2 calls Gemini to match against a pre-processed index of troubleshooting and configuration sections, and a final step posts a single consolidated comment. All untrusted inputs passed via environment variables for security.
 
 **Effort:** 3-5 days
 
@@ -621,6 +624,7 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ---
 
-**Document Status:** 🚧 Phase 1 In Progress
-**Phase 1:** Information Request Bot — implemented in `.github/workflows/issue-triage-bot.yml`
-**Next Review:** After Phase 1 deployment and testing on live issues
+**Document Status:** Phase 2 Complete
+**Phase 1:** Information Request Bot — shipped in v2.7.4
+**Phase 2:** Solution Suggester — AI-powered matching via Gemini, consolidated comment
+**Next Review:** After Phase 2 deployment and testing on live issues

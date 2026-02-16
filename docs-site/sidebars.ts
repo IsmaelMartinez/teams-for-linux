@@ -77,6 +77,11 @@ const sidebars: SidebarsConfig = {
             'development/adr/008-usesystempicker-electron-38',
             'development/adr/009-automated-testing-strategy',
             'development/adr/010-multiple-windows-support',
+            'development/adr/011-appimage-update-info',
+            'development/adr/012-intune-sso-broker-compatibility',
+            'development/adr/013-pii-log-sanitization',
+            'development/adr/014-quick-chat-deep-link-approach',
+            'development/adr/015-quick-chat-inline-messaging',
           ],
         },
         {
@@ -84,6 +89,9 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
+            'development/research/code-quality-hardening-research',
+            'development/research/electron-40-migration-research',
+            'development/research/electron-updater-auto-update-research',
             'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/external-browser-authentication-investigation',
