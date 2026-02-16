@@ -48,9 +48,6 @@ class BrowserWindowManager {
       await defSession.clearStorageData(this.config.clearStorageData);
     }
 
-    // Apply Content Security Policy as compensating control for disabled security features
-    this.setupContentSecurityPolicy();
-
     // Create the window
     this.window = this.createNewBrowserWindow(windowState);
     this.assignEventHandlers();
@@ -69,60 +66,58 @@ class BrowserWindowManager {
     return this.window;
   }
 
-  setupContentSecurityPolicy() {
-    // Content Security Policy as compensating control for disabled contextIsolation/sandbox
-    // This helps mitigate some security risks while maintaining Teams DOM access functionality
-    const webSession = session.fromPartition(this.config.partition);
+  /**
+   * Apply Content Security Policy headers to response details for Teams domains.
+   * CSP acts as a compensating control for disabled contextIsolation/sandbox.
+   * Teams requires 'unsafe-eval' and 'unsafe-inline' in script-src because its
+   * bundled JavaScript uses eval() and inline scripts for core functionality.
+   *
+   * @param {Object} details - The request details from onHeadersReceived
+   * @returns {Object} Modified response headers with CSP, or original headers if not a Teams domain
+   */
+  static applyContentSecurityPolicy(details) {
+    const teamsOrigins = [
+      'https://teams.cloud.microsoft',
+      'https://teams.microsoft.com',
+      'https://teams.live.com',
+      'https://outlook.office.com',
+      'https://login.microsoftonline.com'
+    ];
 
-    webSession.webRequest.onHeadersReceived((details, callback) => {
-      // Only apply CSP to Teams domains, not to all requests
-      const teamsOrigins = [
-        'https://teams.cloud.microsoft',
-        'https://teams.microsoft.com',
-        'https://teams.live.com',
-        'https://outlook.office.com',
-        'https://login.microsoftonline.com'
-      ];
+    // CDN domains used by Teams for static assets, scripts, and Fluent UI icons
+    // Issue #2121: Missing office.net domain was causing icon registration failures
+    const teamsCdnDomains = [
+      'https://*.office.com',
+      'https://*.office.net',           // statics.teams.cdn.office.net - Fluent UI icons
+      'https://*.microsoftonline.com',
+      'https://*.sharepoint.com',
+      'https://*.static.microsoft'      // res.public.onecdn.static.microsoft
+    ];
 
-      // CDN domains used by Teams for static assets, scripts, and Fluent UI icons
-      // Issue #2121: Missing office.net domain was causing icon registration failures
-      const teamsCdnDomains = [
-        'https://*.office.com',
-        'https://*.office.net',           // statics.teams.cdn.office.net - Fluent UI icons
-        'https://*.microsoftonline.com',
-        'https://*.sharepoint.com',
-        'https://*.static.microsoft'      // res.public.onecdn.static.microsoft
-      ];
+    const isTeamsDomain = teamsOrigins.some(origin => details.url.startsWith(origin));
 
-      const isTeamsDomain = teamsOrigins.some(origin => details.url.startsWith(origin));
+    if (isTeamsDomain) {
+      return {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          [
+            `default-src 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
+            `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
+            `style-src 'self' 'unsafe-inline' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
+            "img-src 'self' data: blob: https: http:;",
+            "media-src 'self' blob: https: mediastream:;",
+            "connect-src 'self' wss: https: blob:;",
+            `font-src 'self' data: ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
+            "object-src 'none';",
+            "base-uri 'self';",
+            `form-action 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
+            "frame-ancestors 'none';"
+          ].join(' ')
+        ]
+      };
+    }
 
-      if (isTeamsDomain) {
-        const responseHeaders = {
-          ...details.responseHeaders,
-          'Content-Security-Policy': [
-            [
-              `default-src 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-              `script-src 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-              `style-src 'self' 'unsafe-inline' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-              "img-src 'self' data: blob: https: http:;",
-              "media-src 'self' blob: https: mediastream:;",
-              "connect-src 'self' wss: https: blob:;",
-              `font-src 'self' data: ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-              "object-src 'none';",
-              "base-uri 'self';",
-              `form-action 'self' ${teamsOrigins.join(' ')} ${teamsCdnDomains.join(' ')};`,
-              "frame-ancestors 'none';"
-            ].join(' ')
-          ]
-        };
-
-        callback({ responseHeaders });
-      } else {
-        callback({});
-      }
-    });
-
-    console.debug("Content Security Policy configured as compensating control for disabled security features");
+    return details.responseHeaders;
   }
 
   /**
