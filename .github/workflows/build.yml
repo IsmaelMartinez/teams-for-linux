@@ -5,6 +5,9 @@ env:
 
 on: push
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 defaults:
   run:
     shell: bash
@@ -12,6 +15,8 @@ defaults:
 jobs:
   lint_and_audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Check out Git repository
@@ -33,6 +38,8 @@ jobs:
 
   e2e_tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Check out Git repository
@@ -66,6 +73,8 @@ jobs:
   linux_x64:
     needs: [lint_and_audit]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out Git repository
@@ -106,6 +115,8 @@ jobs:
   linux_arm64:
     needs: [lint_and_audit]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out Git repository
@@ -146,6 +157,8 @@ jobs:
   linux_arm:
     needs: [lint_and_audit]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out Git repository
@@ -186,6 +199,8 @@ jobs:
   dmg:
     needs: [lint_and_audit]
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out Git repository
@@ -222,6 +237,8 @@ jobs:
   exe:
     needs: [lint_and_audit]
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Check out Git repository

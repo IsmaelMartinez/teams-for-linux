@@ -5,7 +5,7 @@ This document identifies areas where the codebase can be incrementally hardened.
 :::
 
 **Created**: 2026-02-15
-**Updated**: 2026-02-16
+**Updated**: 2026-02-17
 **Status**: Complete
 **Method**: Multi-agent review with 4-persona validation (security, product, maintainer, DevOps)
 
@@ -28,6 +28,14 @@ The review also confirmed that several aspects of the codebase are already well-
 1. **Lint and audit in CI** — Added `lint_and_audit` job to `build.yml` that runs `npm run lint` and `npm audit --audit-level=moderate`. All platform build jobs depend on this gate, so lint failures and vulnerable dependencies block packaging.
 
 2. **Dependabot** — Added `.github/dependabot.yml` with weekly npm dependency updates (minor/patch grouped), separate docs-site npm updates, and monthly GitHub Actions updates.
+
+**Phase 3** (workflow permissions and supply chain) addressed GitHub Actions security hardening:
+
+1. **Workflow permissions** — Added top-level `permissions: {}` to all workflow files that lacked it, then granted minimum required permissions at the job level. This follows the principle of least privilege: a compromised or misconfigured action cannot escalate beyond the permissions its job declares.
+
+2. **CODEOWNERS** — Created `.github/CODEOWNERS` requiring maintainer review for changes to workflows, Dependabot config, security code (`app/security/`), and `SECURITY.md`.
+
+3. **npm audit scope evaluation** — Evaluated `--omit=dev` for the CI audit step. Decision: keep auditing all dependencies (including devDependencies) because dev dependencies execute during CI builds and are a supply chain attack vector. See Phase 3 section for rationale.
 
 ---
 
@@ -77,6 +85,46 @@ The project established clear PII logging guidelines in ADR-013 and CLAUDE.md. A
 
 ✅ **Implemented:** SECURITY.md updated from GitHub template boilerplate (5.1.x, 4.0.x) to accurate version numbers (2.7.x), with proper vulnerability reporting instructions via GitHub's private security advisory feature, and a link to the security architecture documentation.
 
+### Workflow Permissions Hardening
+
+✅ **Implemented:** All 9 workflow files in `.github/workflows/` now have explicit top-level `permissions` declarations. Workflows that had no top-level permissions previously inherited the repository default (often read-write for all scopes). Adding `permissions: {}` at the workflow level denies all permissions by default, and each job then declares only the specific permissions it needs.
+
+**Workflow-by-workflow summary:**
+
+| Workflow | Top-Level | Job Permissions |
+|---|---|---|
+| `build.yml` | `permissions: {}` | `contents: read` (lint, e2e); `contents: write` (build jobs that publish releases); `pull-requests: write` + `actions: read` (comment-artifacts) |
+| `changelog-generator.yml` | `permissions: {}` | `contents: write` + `pull-requests: write` (generate-changelog) — already had job-level |
+| `codeql-analysis.yml` | `permissions: {}` | `security-events: write` + `contents: read` (analyze) |
+| `docs.yml` | `permissions: {}` | `contents: read` (build, test-build); `pages: write` + `id-token: write` (deploy) — already had job-level |
+| `issue-triage-bot.yml` | `permissions: {}` | `issues: write` + `contents: read` (triage-and-suggest) — already had job-level |
+| `prepare-release.yml` | `contents: write` + `pull-requests: write` | Single job, top-level is sufficient |
+| `snap-release.yml` | `contents: read` | All jobs only read the repo and publish to Snap Store |
+| `snap.yml` | `permissions: {}` | `contents: read` (snap build jobs); `pull-requests: write` + `actions: read` (comment-artifacts) |
+| `stale.yml` | `permissions: {}` | `issues: write` + `pull-requests: write` (stale) — already had job-level |
+
+### CODEOWNERS
+
+✅ **Implemented:** Created `.github/CODEOWNERS` to require maintainer (`@IsmaelMartinez`) review for changes to sensitive paths:
+
+- `.github/workflows/` — CI/CD pipeline definitions
+- `.github/dependabot.yml` — dependency update configuration
+- `app/security/` — security-critical application code (IPC validator, etc.)
+- `SECURITY.md` — vulnerability reporting policy
+
+### npm Audit Scope Decision
+
+**Evaluated:** Whether to add `--omit=dev` to `npm audit --audit-level=moderate` in the CI pipeline.
+
+**Decision: Keep auditing all dependencies (no `--omit=dev`).**
+
+**Rationale:**
+
+- **devDependencies execute during CI.** Tools like `electron-builder`, `eslint`, and `@playwright/test` run as part of the build and test pipeline. A compromised devDependency can inject malicious code into build artifacts.
+- **Supply chain attacks target devDependencies.** The event-stream incident (2018) demonstrated that attackers deliberately target popular dev packages. Auditing only production deps would miss these.
+- **No current noise.** Both `npm audit` and `npm audit --omit=dev` currently return 0 vulnerabilities. There is no false-positive burden to reduce.
+- **Revisit if needed.** If devDependency audit noise becomes a problem in the future (e.g., a known vulnerability in a dev-only package with no fix available), the `--omit=dev` flag can be added then with a documented exception.
+
 ---
 
 ## What Was Reviewed and Found Sound
@@ -105,7 +153,16 @@ The CI/CD items were implemented separately from the code-level changes in Phase
 1. ✅ Added `lint_and_audit` gate job to `build.yml` (lint + dependency audit)
 2. ✅ Configured Dependabot for npm and GitHub Actions dependency updates
 
-All items from the original research are now complete.
+### Phase 3 (Completed)
+
+Workflow permissions and supply chain hardening:
+
+1. ✅ Added top-level `permissions: {}` to 8 workflows (all except `prepare-release.yml` which already had appropriate top-level permissions)
+2. ✅ Added job-level minimum permissions to all jobs that needed them
+3. ✅ Created `.github/CODEOWNERS` for maintainer review on sensitive paths
+4. ✅ Evaluated `--omit=dev` for npm audit — decided to keep auditing all dependencies (supply chain risk from devDependencies in CI)
+
+All items across all three phases are now complete.
 
 ---
 

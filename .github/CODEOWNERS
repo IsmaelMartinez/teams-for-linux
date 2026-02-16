@@ -1,0 +1,14 @@
+# CODEOWNERS — require maintainer review for sensitive paths
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# CI/CD workflows
+.github/workflows/ @IsmaelMartinez
+
+# Dependabot configuration
+.github/dependabot.yml @IsmaelMartinez
+
+# Security-sensitive application code
+app/security/ @IsmaelMartinez
+
+# Security policy
+SECURITY.md @IsmaelMartinez

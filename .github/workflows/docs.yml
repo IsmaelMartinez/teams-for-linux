@@ -18,6 +18,9 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 defaults:
   run:
     shell: bash
@@ -27,6 +30,8 @@ jobs:
   build:
     name: Build Docusaurus
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -78,6 +83,8 @@ jobs:
   test-build:
     name: Test Build (PR/Branch)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Only run for PRs and non-main branch pushes
     if: github.ref != 'refs/heads/main'
     steps:

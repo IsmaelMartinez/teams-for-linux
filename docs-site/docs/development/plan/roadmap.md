@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-17
 **Current Version:** v2.7.5
 **Status:** Living Document — planning v2.7.7 and v2.8.0
 
@@ -15,7 +15,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium | v2.7.7 |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
-| **Done** | Code quality hardening | Complete (Phase 1 + Phase 2 CI/CD) | Small | Done |
+| **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny | — |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
@@ -161,7 +161,7 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 **Status:** Complete
 **Priority:** Done
 
-**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD. All items have been implemented across two phases.
+**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, CI/CD, and workflow security. All items have been implemented across three phases.
 
 **Phase 1 (Completed):**
 
@@ -177,6 +177,12 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 7. ✅ **CI/CD lint gate** — Added `lint_and_audit` job to build workflow; all platform builds depend on it
 8. ✅ **CI/CD dependency audit** — `npm audit --audit-level=moderate` runs in CI before packaging
 9. ✅ **Dependabot** — Configured for weekly npm updates (minor/patch grouped) and monthly GitHub Actions updates
+
+**Phase 3 (Completed):**
+
+10. ✅ **Workflow permissions** — Added least-privilege `permissions` to all 9 workflow files
+11. ✅ **CODEOWNERS** — Require maintainer review for workflows, Dependabot config, security code, and SECURITY.md
+12. ✅ **npm audit scope** — Evaluated `--omit=dev`; decided to keep auditing all deps (supply chain risk)
 
 ---
 

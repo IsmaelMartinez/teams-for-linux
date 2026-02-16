@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
 
+# Restrict default permissions — jobs only read the repo and publish to Snap Store
+permissions:
+  contents: read
+
 defaults:
   run:
     shell: bash

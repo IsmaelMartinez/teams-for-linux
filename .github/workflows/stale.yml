@@ -4,6 +4,9 @@ on:
     - cron: "30 9 * * *"
   workflow_dispatch:
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 jobs:
   stale:
     runs-on: ubuntu-latest
