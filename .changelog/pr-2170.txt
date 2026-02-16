@@ -1,0 +1,1 @@
+Fix GPU handling for XWayland on Wayland sessions - by @IsmaelMartinez (#2170)
