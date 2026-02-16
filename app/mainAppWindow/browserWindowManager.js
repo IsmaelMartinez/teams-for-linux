@@ -241,15 +241,25 @@ class BrowserWindowManager {
     }
   }
 
+  /**
+   * Sanitizes a string argument for use in spawn() command arguments.
+   * Ensures the value is a string and limits its length to prevent abuse.
+   */
+  sanitizeCommandArg(value) {
+    if (typeof value !== 'string') return '';
+    // Limit argument length and strip all control characters (C0, C1, DEL)
+    return value.substring(0, 500).replaceAll(/\p{Cc}/gu, '');
+  }
+
   assignOnIncomingCallCreatedHandler() {
     return async (e, data) => {
       if (this.config.incomingCallCommand) {
         this.handleOnIncomingCallEnded();
         const commandArgs = [
           ...this.config.incomingCallCommandArgs,
-          data.caller,
-          data.text,
-          data.image,
+          this.sanitizeCommandArg(data.caller),
+          this.sanitizeCommandArg(data.text),
+          this.sanitizeCommandArg(data.image),
         ];
         this.incomingCallCommandProcess = spawn(
           this.config.incomingCallCommand,

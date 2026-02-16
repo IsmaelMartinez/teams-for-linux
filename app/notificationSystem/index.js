@@ -43,7 +43,7 @@ class CustomNotificationManager {
       }.bind(this);
 
       toast.show();
-      console.debug(`[CustomNotificationManager] Toast displayed: "${data.title}"`);
+      console.debug('[CustomNotificationManager] Toast displayed');
     } catch (error) {
       console.error('[CustomNotificationManager] Error displaying toast:', error);
     }
