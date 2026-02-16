@@ -2,7 +2,7 @@
 
 **Date**: 2026-02-13
 **Issue**: [#2065 - AppImage Update Info](https://github.com/IsmaelMartinez/teams-for-linux/issues/2065)
-**Status**: Research Complete
+**Status**: Phase 1 Implemented
 
 ## Background
 

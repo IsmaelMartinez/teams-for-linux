@@ -31,6 +31,7 @@ User-facing features and integrations.
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
+| **Auto Updater** | `app/autoUpdater/` | In-app auto-update for AppImage distributions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/autoUpdater/README.md) |
 | **MQTT** | `app/mqtt/` | MQTT broker integration for status publishing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
 | **Screen Sharing** | `app/screenSharing/` | Native screen/window selection and preview | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/screenSharing/README.md), [User Guide](../screen-sharing.md) |
 | **Custom Background** | `app/customBackground/` | Virtual background management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md), [User Guide](../custom-backgrounds.md) |

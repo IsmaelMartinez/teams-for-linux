@@ -21,6 +21,7 @@ const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
+const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -401,6 +402,13 @@ function initializeCacheManagement() {
   });
 }
 
+function initializeAutoUpdater() {
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow) {
+    AutoUpdater.initialize(mainWindow);
+  }
+}
+
 async function handleAppReady() {
   try {
     showConfigurationDialogs();
@@ -424,6 +432,7 @@ async function handleAppReady() {
     registerGraphApiHandlers(ipcMain, graphApiClient);
     initializeQuickChat();
     registerGlobalShortcuts(config, mainAppWindow, app);
+    initializeAutoUpdater();
 
     console.info('[IPC Security] Channel allowlisting enabled');
     console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);
