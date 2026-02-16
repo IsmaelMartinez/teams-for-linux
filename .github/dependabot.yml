@@ -29,7 +29,7 @@ updates:
           - "patch"
     open-pull-requests-limit: 5
 
-  # GitHub Actions — monthly, pin to commit SHAs for security
+  # GitHub Actions — monthly, check for new action versions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
