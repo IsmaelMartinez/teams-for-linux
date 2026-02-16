@@ -76,10 +76,19 @@ class BrowserWindowManager {
    * @returns {Object} Modified response headers with CSP, or original headers if not a Teams domain
    */
   static applyContentSecurityPolicy(details) {
-    const teamsOrigins = [
+    // Only apply our CSP to the core Teams web app domains.
+    // Auth/login pages (login.microsoftonline.com) and other Microsoft services
+    // have their own server-side CSP and load resources from CDN domains
+    // (aadcdn.msauth.net, logincdn.msftauth.net, etc.) not in our allowlist.
+    const teamsAppDomains = [
       'https://teams.cloud.microsoft',
       'https://teams.microsoft.com',
-      'https://teams.live.com',
+      'https://teams.live.com'
+    ];
+
+    // All allowed origins referenced in CSP directives (includes auth domains)
+    const teamsOrigins = [
+      ...teamsAppDomains,
       'https://outlook.office.com',
       'https://login.microsoftonline.com'
     ];
@@ -94,9 +103,9 @@ class BrowserWindowManager {
       'https://*.static.microsoft'      // res.public.onecdn.static.microsoft
     ];
 
-    const isTeamsDomain = teamsOrigins.some(origin => details.url.startsWith(origin));
+    const isTeamsApp = teamsAppDomains.some(origin => details.url.startsWith(origin));
 
-    if (isTeamsDomain) {
+    if (isTeamsApp) {
       return {
         ...details.responseHeaders,
         'Content-Security-Policy': [
