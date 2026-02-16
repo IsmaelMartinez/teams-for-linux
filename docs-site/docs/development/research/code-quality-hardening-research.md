@@ -5,8 +5,8 @@ This document identifies areas where the codebase can be incrementally hardened.
 :::
 
 **Created**: 2026-02-15
-**Updated**: 2026-02-15
-**Status**: Phase 1 implemented, CI/CD items remaining
+**Updated**: 2026-02-16
+**Status**: Complete
 **Method**: Multi-agent review with 4-persona validation (security, product, maintainer, DevOps)
 
 ## Executive Summary
@@ -23,7 +23,11 @@ The review also confirmed that several aspects of the codebase are already well-
 
 2. **Certificate fingerprint was preserved in logs** — The original recommendation removed the certificate fingerprint from error logs. During review, this was identified as a usability regression: enterprise users need the fingerprint value to configure `customCACertsFingerprints`. A certificate fingerprint identifies a certificate, not a person, so it is not PII. The URL and issuer name (which could reveal organizational details) remain removed.
 
-**Remaining items:** CI/CD additions (lint/audit in build workflow, Dependabot/Renovate).
+**Phase 2** (CI/CD items) was implemented separately, completing all items from the original research:
+
+1. **Lint and audit in CI** — Added `lint_and_audit` job to `build.yml` that runs `npm run lint` and `npm audit --audit-level=moderate`. All platform build jobs depend on this gate, so lint failures and vulnerable dependencies block packaging.
+
+2. **Dependabot** — Added `.github/dependabot.yml` with weekly npm dependency updates (minor/patch grouped), separate docs-site npm updates, and monthly GitHub Actions updates.
 
 ---
 
@@ -65,9 +69,9 @@ The project established clear PII logging guidelines in ADR-013 and CLAUDE.md. A
 
 ### CI/CD Additions
 
-The build workflow (`build.yml`) runs the full build and packaging pipeline but does not include `npm run lint` or `npm audit` steps. Linting is currently only enforced locally via pre-commit hooks. Adding both steps to CI would catch issues earlier and prevent vulnerable dependencies from shipping in releases.
+✅ **Implemented:** The build workflow (`build.yml`) now includes a `lint_and_audit` gate job that runs `npm run lint` and `npm audit --audit-level=moderate` before any platform build jobs execute. All build jobs (`linux_x64`, `linux_arm64`, `linux_arm`, `dmg`, `exe`) depend on this gate via `needs: [lint_and_audit]`.
 
-The project does not currently use Dependabot or Renovate for automated dependency update PRs. Setting up one of these would reduce the manual overhead of tracking dependency updates.
+✅ **Implemented:** Dependabot configured (`.github/dependabot.yml`) for automated dependency update PRs. npm dependencies are checked weekly with minor/patch updates grouped to reduce PR noise. GitHub Actions dependencies are checked monthly. The docs-site has a separate npm update configuration.
 
 ### Documentation Maintenance
 
@@ -94,9 +98,14 @@ All code-level items were implemented in a single PR covering logging hygiene, r
 - **User-controlled inputs are not injection vectors.** The SSO password command comes from the user's own config file. Switching to `execFileSync` with naive whitespace splitting would break legitimate shell features (pipes, expansion, quotes) without preventing any real attack. When the user controls the input, the security boundary is the config file, not the command execution API.
 - **Not all sensitive-looking data is PII.** Certificate fingerprints identify certificates, not people. Removing them from logs creates a usability regression for enterprise users who need the value to configure `customCACertsFingerprints`. The distinction between "data that identifies people" and "data that identifies systems" matters when applying PII guidelines.
 
-### Remaining Work
+### Phase 2 (Completed)
 
-The CI/CD items (lint/audit in build workflow, Dependabot/Renovate) were not part of Phase 1 and remain as future work. These are infrastructure changes rather than code changes and can be addressed independently.
+The CI/CD items were implemented separately from the code-level changes in Phase 1:
+
+1. ✅ Added `lint_and_audit` gate job to `build.yml` (lint + dependency audit)
+2. ✅ Configured Dependabot for npm and GitHub Actions dependency updates
+
+All items from the original research are now complete.
 
 ---
 

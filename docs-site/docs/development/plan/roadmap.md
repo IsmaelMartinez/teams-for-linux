@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-16
 **Current Version:** v2.7.5
 **Status:** Living Document — planning v2.7.7 and v2.8.0
 
@@ -15,7 +15,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium | v2.7.7 |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
-| **Ready** | Code quality hardening | Phase 1 complete, CI/CD remaining | Small | Ongoing |
+| **Done** | Code quality hardening | Complete (Phase 1 + Phase 2 CI/CD) | Small | Done |
 | **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny | — |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
@@ -158,10 +158,10 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 ### Code Quality Hardening
 
 **Research:** [code-quality-hardening-research.md](../research/code-quality-hardening-research.md)
-**Status:** Phase 1 complete, CI/CD items remaining
-**Priority:** Low — remaining items are infrastructure changes
+**Status:** Complete
+**Priority:** Done
 
-**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD.
+**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, and CI/CD. All items have been implemented across two phases.
 
 **Phase 1 (Completed):**
 
@@ -172,9 +172,11 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 5. ✅ **IPC validator** — Added recursive prototype pollution sanitization for nested payloads
 6. ✅ **SECURITY.md** — Updated with accurate version numbers (2.7.x) and reporting instructions
 
-**Remaining:**
+**Phase 2 (Completed):**
 
-7. **CI/CD** — Add `npm run lint` and `npm audit` to build workflow; consider Dependabot/Renovate
+7. ✅ **CI/CD lint gate** — Added `lint_and_audit` job to build workflow; all platform builds depend on it
+8. ✅ **CI/CD dependency audit** — `npm audit --audit-level=moderate` runs in CI before packaging
+9. ✅ **Dependabot** — Configured for weekly npm updates (minor/patch grouped) and monthly GitHub Actions updates
 
 ---
 
@@ -277,7 +279,7 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-- **Code quality hardening** — Phase 1 code changes complete; CI/CD items remaining ([research](../research/code-quality-hardening-research.md))
+- ~~**Code quality hardening**~~ — Complete ([research](../research/code-quality-hardening-research.md))
 - **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
 - **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
