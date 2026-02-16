@@ -41,27 +41,31 @@ class NotificationDomObserver {
     this.#observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
-          if (node.nodeType !== Node.ELEMENT_NODE) continue;
-
-          // Check if the added node itself is a notification wrapper
-          if (node.matches?.(NOTIFICATION_SELECTOR)) {
-            this.#scheduleExtract(node);
-            continue;
-          }
-
-          // Check if any child matches
-          const wrappers = node.querySelectorAll?.(NOTIFICATION_SELECTOR);
-          if (wrappers?.length) {
-            for (const wrapper of wrappers) {
-              this.#scheduleExtract(wrapper);
-            }
-          }
+          this.#processAddedNode(node);
         }
       }
     });
 
     this.#observer.observe(document.body, { childList: true, subtree: true });
     console.debug('[NotificationDomObserver] Observer attached to document.body');
+  }
+
+  #processAddedNode(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    // Check if the added node itself is a notification wrapper
+    if (node.matches?.(NOTIFICATION_SELECTOR)) {
+      this.#scheduleExtract(node);
+      return;
+    }
+
+    // Check if any child matches
+    const wrappers = node.querySelectorAll?.(NOTIFICATION_SELECTOR);
+    if (wrappers?.length) {
+      for (const wrapper of wrappers) {
+        this.#scheduleExtract(wrapper);
+      }
+    }
   }
 
   /**
@@ -91,7 +95,7 @@ class NotificationDomObserver {
 
     // Log child element structure (tag names + data-testid) to help refine selectors
     const childStructure = Array.from(wrapper.querySelectorAll('*')).slice(0, 20).map(el => {
-      const testId = el.getAttribute('data-testid');
+      const testId = el.dataset.testid;
       return testId ? `${el.tagName}[${testId}]` : el.tagName;
     });
     console.debug('[NotificationDomObserver] Child structure:', childStructure.join(' > '));
