@@ -50,7 +50,7 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@homebridge/dbus-native": "0.7.2",
+    "@homebridge/dbus-native": "0.7.3",
     "electron-log": "^5.4.3",
     "electron-positioner": "^4.1.0",
     "electron-store": "11.0.2",
