@@ -41,11 +41,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Strategic Documentation
 
-- **[Code Quality and Hardening Research](code-quality-hardening-research.md)** - Incremental codebase improvements
-  - Input handling, logging hygiene, resilience gaps, CI additions
-  - Validated by 4-persona review (security, product, maintainer, DevOps)
-  - **Status:** Research complete, ready for incremental implementation
-
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
   - **Phase 1 Complete** (v2.7.4): Information request bot — detects missing info in bug reports
   - **Phase 2 Complete**: Solution suggester — AI-powered matching using Gemini; consolidated comment format
@@ -77,6 +72,7 @@ Research documents are deleted once a feature is fully shipped. The ADRs and git
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates, workflow permissions, CODEOWNERS |
 | Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
 | Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
 | External Changelog Generation | v2.7.3 | [Research](external-changelog-generation-research.md), [ADR-005](../adr/005-ai-powered-changelog-generation.md) |

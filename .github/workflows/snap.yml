@@ -2,6 +2,9 @@ name: Snap Build
 
 on: push
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 defaults:
   run:
     shell: bash
@@ -9,6 +12,8 @@ defaults:
 jobs:
   snap:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -63,6 +68,8 @@ jobs:
 
   snap-armv7l:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -114,6 +121,8 @@ jobs:
 
   snap-arm64:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}

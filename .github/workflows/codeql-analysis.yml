@@ -9,10 +9,16 @@ on:
   schedule:
     - cron: '0 17 * * 6'
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
 
     strategy:
       fail-fast: false

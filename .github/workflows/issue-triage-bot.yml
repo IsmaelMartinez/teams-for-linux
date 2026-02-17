@@ -10,6 +10,9 @@ on:
   issues:
     types: [opened]
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 jobs:
   triage-and-suggest:
     runs-on: ubuntu-latest

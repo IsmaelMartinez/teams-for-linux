@@ -11,6 +11,9 @@ on:
     types: [opened, synchronize]
     branches: [main]
 
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
