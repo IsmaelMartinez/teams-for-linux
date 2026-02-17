@@ -1,1 +1,0 @@
-Replace appimagetool post-processing with electron-updater research - by @IsmaelMartinez (#2158)

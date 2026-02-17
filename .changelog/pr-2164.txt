@@ -1,1 +1,0 @@
-Handle edge/prerelease version suffixes in release info generation - by @IsmaelMartinez (#2164)

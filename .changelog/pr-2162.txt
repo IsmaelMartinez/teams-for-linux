@@ -1,1 +1,0 @@
-feat: automate snap release to candidate channel - by @IsmaelMartinez (#2162)

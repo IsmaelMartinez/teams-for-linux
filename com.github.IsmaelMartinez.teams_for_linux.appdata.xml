@@ -14,6 +14,25 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.6" date="2026-02-17">
+      <description>
+        <ul>
+          <li>Replace appimagetool post-processing with electron-updater research - by @IsmaelMartinez (#2158)</li>
+          <li>feat: in-app auto-update for AppImage via electron-updater - by @IsmaelMartinez (#2159)</li>
+          <li>GitHub Issue Bot Phase 2: AI-powered solution suggestions - by @IsmaelMartinez (#2160)</li>
+          <li>fix: only register quick chat shortcut when enabled and explicitly configured - by @IsmaelMartinez (#2161)</li>
+          <li>feat: automate snap release to candidate channel - by @IsmaelMartinez (#2162)</li>
+          <li>docs: add Electron 40 migration research document - by @IsmaelMartinez (#2163)</li>
+          <li>Handle edge/prerelease version suffixes in release info generation - by @IsmaelMartinez (#2164)</li>
+          <li>docs: add code quality and hardening research - by @IsmaelMartinez (#2165)</li>
+          <li>docs: update plan docs with code quality hardening research and fix sidebar gaps - by @IsmaelMartinez (#2166)</li>
+          <li>fix: security hardening phase 1 - PII logging, resilience, input handling - by @IsmaelMartinez (#2167)</li>
+          <li>Refactor CSP setup to static method and centralize header handling - by @IsmaelMartinez (#2171)</li>
+          <li>ci: add lint, audit, and Dependabot to CI/CD pipeline - by @IsmaelMartinez (#2172)</li>
+          <li>Phase 3: Workflow permissions and CODEOWNERS for supply chain security - by @IsmaelMartinez (#2183)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.5" date="2026-02-13">
       <description>
         <ul>
