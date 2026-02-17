@@ -1,1 +1,0 @@
-ci: add lint, audit, and Dependabot to CI/CD pipeline - by @IsmaelMartinez (#2172)

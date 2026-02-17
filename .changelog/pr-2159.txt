@@ -1,1 +1,0 @@
-feat: in-app auto-update for AppImage via electron-updater - by @IsmaelMartinez (#2159)
