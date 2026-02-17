@@ -4,9 +4,8 @@ on:
   release:
     types: [published]
 
-# Restrict default permissions — jobs only read the repo and publish to Snap Store
-permissions:
-  contents: read
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
 
 defaults:
   run:
@@ -15,6 +14,8 @@ defaults:
 jobs:
   snap-candidate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -51,6 +52,8 @@ jobs:
 
   snap-candidate-armv7l:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -84,6 +87,8 @@ jobs:
 
   snap-candidate-arm64:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
