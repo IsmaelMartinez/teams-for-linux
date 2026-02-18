@@ -314,7 +314,8 @@ These features have completed initial implementation. Further phases depend on u
 - ~~**Code quality hardening**~~ — Complete (Phases 1-3)
 - ~~**AppImage auto-update**~~ — Shipped in v2.7.6
 - [**#2107**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) **MQTT Screen Sharing Status** — In progress (PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144))
-- **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
+- ~~**GitHub Issue Bot Phase 3**~~ — Duplicate detection via issue index + Gemini Flash (shipped)
+- **GitHub Issue Bot Phase 4** — Enhancement context (link feature requests to roadmap/research/ADRs)
 
 ### Principles
 
