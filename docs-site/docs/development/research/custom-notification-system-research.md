@@ -1,10 +1,10 @@
 # Custom Notification System Research & Implementation Plan
 
-:::tip Phase 2 In Review
-MVP shipped in v2.6.16. Phase 2 (chat, calendar, activity notifications) is in PR review — [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108), branch `claude/custom-notifications-phase-2-wirLH`.
+:::warning Phase 2 Dropped
+MVP shipped in v2.6.16. Phase 2 (chat, calendar, activity notifications) was attempted but dropped — notifications worked on the maintainer's machine but the user reported receiving no notifications at all. It remains unclear whether the implementation failed in their environment or whether the user's expectations differed from what was delivered. See [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108), [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039).
 :::
 
-**Status:** MVP Complete (v2.6.16) | Phase 2 PR in review
+**Status:** MVP Complete (v2.6.16) | Phase 2 Dropped
 **Date:** November 2025
 **Issue:** Investigation for alternative notification modal system
 **Author:** Claude AI Assistant
@@ -20,13 +20,15 @@ This document tracks the development of a **custom notification modal system** f
 
 - ✅ **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
 - ✅ **Documentation**: Configuration and usage guides updated
-- 🔄 **Next Phase**: Investigating Phase 2 options based on user feedback
+- ❌ **Phase 2 Dropped**: Chat/calendar/activity notification routing did not work for the requesting user
 
-### Key Findings from MVP
+### Key Findings
 
-- Custom BrowserWindow approach works well following the `IncomingCallToast` pattern
-- No critical bugs reported since release
-- System provides reliable alternative for users with OS notification issues
+- Custom BrowserWindow approach works well following the `IncomingCallToast` pattern for meeting notifications
+- Phase 2 notification routing worked reliably on the maintainer's machine during development and testing
+- The requesting user ([#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)) reported receiving no notifications, or their expectations may have differed from what the implementation delivered
+- Root cause is unclear: could be environment-specific (desktop environment, notification daemon, Teams account type) or a mismatch between what was built and what the user needed
+- Issue [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039) closed as not feasible given the ambiguity
 
 ---
 
@@ -258,16 +260,16 @@ Users reported OS-level notifications don't work reliably, especially on Linux:
 
 The custom notification system MVP is complete and provides a working alternative for users experiencing OS notification issues.
 
-**Next Actions:**
-1. Monitor user feedback on the MVP implementation
-2. Gather feature requests via GitHub issues/discussions
-3. Decide on Phase 2 scope based on actual user needs
-4. Implement Phase 2 when justified by user demand
+**Lessons Learned:**
 
-**Key Principle:** Continue the "start simple, iterate based on feedback" approach that made the MVP successful.
+Phase 2 highlighted the difficulty of testing notification routing end-to-end. The implementation worked on the maintainer's machine but failed (or appeared to fail) for the requesting user. Possible explanations include differences in desktop environment notification handling, Teams account type affecting DOM mutation behaviour, or a gap between the user's expectations and the feature's scope. Without clearer diagnostics or more users requesting the feature, further investment is not justified.
+
+**Next Actions:**
+
+If custom notifications beyond meeting toasts are requested again by a different user, the recommended approach would be to first establish a shared understanding of what notifications the user expects, then provide a debug build with diagnostic logging so the user can report exactly what events fire in their environment before writing any routing logic.
 
 ---
 
-**Document Status:** ✅ MVP Complete - Awaiting User Feedback for Phase 2
-**Current Version:** v2.6.16
-**Next Review:** After 2-4 weeks of user feedback collection
+**Document Status:** ✅ MVP Complete | ❌ Phase 2 Dropped
+**Current Version:** v2.7.6
+**Last Updated:** 2026-02-18

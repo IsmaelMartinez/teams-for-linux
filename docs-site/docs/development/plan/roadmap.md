@@ -150,7 +150,7 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 - Click-to-focus functionality
 - Configuration via `notificationMethod: "custom"`
 
-**Phase 2 was attempted but dropped:** The chat, calendar, and activity notification routing did not work correctly for the user. The PR ([#2112](https://github.com/IsmaelMartinez/teams-for-linux/pull/2112)) has been closed. The MVP from v2.6.16 remains available. Phase 2 may be revisited in the future if there is renewed interest or a different approach is identified.
+**Phase 2 was attempted but dropped:** The chat, calendar, and activity notification routing worked on the maintainer's machine but the requesting user reported receiving no notifications at all. It remains unclear whether the implementation failed in their environment or whether their expectations differed from what was built. Issue [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039) has been closed. PR [#2112](https://github.com/IsmaelMartinez/teams-for-linux/pull/2112) has been closed. The MVP from v2.6.16 remains available. Phase 2 may be revisited if a new user requests it, with better diagnostic tooling to understand environment-specific behaviour first.
 
 **Phase 2 Nice-to-Have (future, if revisited):**
 
@@ -284,7 +284,7 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
-| Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — did not work for user | MVP (v2.6.16) remains; may revisit with different approach |
+| Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — worked on maintainer's machine but not for user | MVP (v2.6.16) remains; revisit with diagnostic tooling if requested again |
 | Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch `claude/analyze-research-spikes-XbYVZ`; reopen if requested |
 | GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible via MQTT but poor UX |
 | External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally; no exposed APIs |
