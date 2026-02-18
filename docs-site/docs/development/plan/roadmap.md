@@ -1,7 +1,7 @@
 # Development Roadmap
 
 **Last Updated:** 2026-02-17
-**Current Version:** v2.7.5
+**Current Version:** v2.7.6
 **Status:** Living Document — planning v2.7.7 and v2.8.0
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
@@ -10,32 +10,46 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort | Target |
 |----------|---------|--------|--------|--------|
-| **Next** | Screen Lock Media Privacy (#2106) | PR in review | Small | v2.7.7 |
-| **Next** | Custom Notifications Phase 2 (#2108) | PR in review | Medium | v2.7.7 |
-| **Ready** | AppImage auto-update (#2157) | Ready to implement | Medium | v2.7.7 |
+| **Next** | MQTT Screen Sharing Status (#2107) | PR in progress (partial) | Tiny | v2.7.7 |
+| **Verify** | XWayland GPU fix (#2169) | Awaiting user confirmation | Small | v2.7.7 |
+| **Verify** | --appTitle/--appIcon fix (#2143) | Awaiting user confirmation | Small | v2.7.7 |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
+| **Done** | AppImage auto-update (#2157) | Shipped in v2.7.6 | Medium | Done |
 | **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
-| **Low** | [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) MQTT Screen Sharing Status | Awaiting user feedback | Tiny | — |
+| **Low** | Screen Lock Media Privacy (#2106) | Awaiting user feedback | Small | — |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
 ---
 
 ## Next Patch Release (v2.7.7)
 
-### PRs in Review
+### In Progress
 
 | Item | Description | Branch | Status |
 |------|-------------|--------|--------|
-| **#2106** | Screen Lock Media Privacy - MQTT `disable-media`/`enable-media` commands | `claude/screen-lock-media-privacy-HMTPA` | PR in review |
-| **#2108/#2112** | Custom Notifications Phase 2 - chat, calendar, activity events | `claude/custom-notifications-phase-2-wirLH` | PR in review |
-| **#2157** | In-app auto-update via electron-updater for AppImage | `feat/appimage-auto-update` | PR in review |
+| **#2107/#2144** | MQTT Screen Sharing Status — publish to `{topicPrefix}/screen-sharing` | PR #2144 | Stop event works; start event not firing yet |
 
-### Ready to Implement
+### Awaiting User Confirmation
 
-| Item | Description | Notes |
-|------|-------------|-------|
-| **[#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)** | In-app auto-update via electron-updater for AppImage | [Research](../research/electron-updater-auto-update-research.md); supersedes #2065 |
+These fixes are believed to be resolved but need user validation before closing.
+
+| Item | Description | Status |
+|------|-------------|--------|
+| **#2169/#2170** | XWayland GPU fix — camera broken on Wayland sessions | PR #2170 submitted, likely fixed, awaiting user confirmation |
+| **#2143** | --appTitle and --appIcon not working | Believed fixed, user pinged 2026-02-16, awaiting response |
+
+### Open Bugs (candidates for v2.7.7)
+
+| Issue | Description | Notes |
+|-------|-------------|-------|
+| **#2184** | Can't register Quick Chat keyboard shortcut | Reported 2026-02-17 |
+| **#2186** | App menu incomplete when tray icon disabled | Reported 2026-02-17 |
+| **#2152** | Cannot join meeting with ID and passcode | Meeting join flow broken |
+| **#2131** | MQTT status no longer being detected | MQTT integration regression |
+| **#2140** | New meeting link format (`teams.microsoft.com/meet/...?p=...`) | Microsoft changed URL format |
+| **#2137** | Chat message gets scroll bar | UI rendering issue |
+| **#2025** | Second ringer option causes exception | Incoming call exception |
 
 ---
 
@@ -80,13 +94,33 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 
 ## Feature Details
 
+### MQTT Screen Sharing Status
+
+**Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
+**Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
+**Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
+**Effort:** Tiny
+**Status:** PR #2144 in progress — stop event publishes correctly, start event not yet firing
+
+**Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
+
+**Implementation:**
+
+1. Add MQTT publish call when screen sharing starts/stops
+2. Publish to `{topicPrefix}/screen-sharing` topic with "true"/"false" values
+3. Update documentation
+
+**Current state:** The `screen-sharing-stopped` event fires and publishes correctly. The `screen-sharing-started` event is not being detected yet and needs further investigation.
+
+---
+
 ### Screen Lock Media Privacy
 
 **Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
 **Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
 **Branch:** `claude/screen-lock-media-privacy-HMTPA`
 **Effort:** Small
-**Status:** PR in review
+**Status:** Awaiting user feedback — PR #2110 open but no user traction
 
 **Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
 
@@ -107,8 +141,7 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 **Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
 **Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
 **Branch:** `claude/custom-notifications-phase-2-wirLH`
-**Current Status:** PR in review
-**Priority:** High
+**Status:** Dropped — implementation did not work for the user; PR #2112 closed
 
 **MVP Delivered (v2.6.16):**
 
@@ -117,39 +150,13 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 - Click-to-focus functionality
 - Configuration via `notificationMethod: "custom"`
 
-**Phase 2 Implementation (in branch):**
+**Phase 2 was attempted but dropped:** The chat, calendar, and activity notification routing did not work correctly for the user. The PR (#2112) has been closed. The MVP from v2.6.16 remains available. Phase 2 may be revisited in the future if there is renewed interest or a different approach is identified.
 
-- Route chat notifications through custom notification system
-- Route calendar invitation notifications through custom notification system
-- Route activity notifications through custom notification system
-- Fix notification lifecycle and hide native Teams toasts
-- Fix spurious notifications on chat navigation
-
-**Phase 2 Nice-to-Have (future):**
+**Phase 2 Nice-to-Have (future, if revisited):**
 
 - Notification center drawer
 - Mark as read/unread
 - Badge count on tray icon
-
-**Status:** User actively using feature, confirmed it helps but incomplete coverage.
-
----
-
-### MQTT Screen Sharing Status
-
-**Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
-**Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
-**Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
-**Effort:** Tiny
-**Status:** Awaiting user feedback (original requester inactive since Nov 2025)
-
-**Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
-
-**Implementation:**
-
-1. Add MQTT publish call when screen sharing starts/stops
-2. Publish to `{topicPrefix}/screen-sharing` topic with "true"/"false" values
-3. Update documentation
 
 ---
 
@@ -185,6 +192,17 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 
 ---
 
+### AppImage Auto-Update
+
+**Issue:** [#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)
+**Research:** [electron-updater-auto-update-research.md](../research/electron-updater-auto-update-research.md)
+**Status:** ✅ Shipped in v2.7.6
+**Priority:** Done
+
+In-app auto-update via `electron-updater` for AppImage distributions. Supersedes the earlier ADR-011 `appimagetool` post-processing approach.
+
+---
+
 ### GitHub Issue Bot
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
@@ -216,6 +234,14 @@ Existing flat options migrate opportunistically when modules are refactored.
 ## Awaiting User Feedback
 
 These features have completed initial implementation. Further phases depend on user requests.
+
+### Screen Lock Media Privacy
+
+**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)
+**PR:** #2110 (open, no user traction)
+**Status:** Awaiting user feedback — feature implemented but no users have tested or requested it
+
+---
 
 ### Quick Chat Access
 
@@ -258,6 +284,7 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
+| Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — did not work for user | MVP (v2.6.16) remains; may revisit with different approach |
 | Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch `claude/analyze-research-spikes-XbYVZ`; reopen if requested |
 | GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible via MQTT but poor UX |
 | External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally; no exposed APIs |
@@ -270,9 +297,9 @@ These features have completed initial implementation. Further phases depend on u
 
 ### v2.7.7 Release Plan
 
-1. **Merge Screen Lock Media Privacy PR** — MQTT `disable-media`/`enable-media` commands (#2106)
-2. **Merge Custom Notifications Phase 2 PR** — Chat, calendar, activity notifications (#2108)
-3. **AppImage auto-update** — In-app auto-update via electron-updater (#2157)
+1. **Fix MQTT Screen Sharing start event** — Complete #2144 so both start and stop publish correctly (#2107)
+2. **Confirm user fixes** — Validate #2170 (XWayland GPU/camera) and #2143 (--appTitle/--appIcon) with users
+3. **Triage new bugs** — Assess #2184 (Quick Chat shortcut), #2186 (app menu), #2152 (meeting join), #2131 (MQTT status), #2140 (new meeting links)
 4. **Release v2.7.7**
 
 ### v2.8.0 Release Plan
@@ -285,7 +312,8 @@ These features have completed initial implementation. Further phases depend on u
 ### Future Priorities
 
 - ~~**Code quality hardening**~~ — Complete (Phases 1-3)
-- **#2107 MQTT Screen Sharing Status** — Implement if user feedback received
+- ~~**AppImage auto-update**~~ — Shipped in v2.7.6
+- **#2107 MQTT Screen Sharing Status** — In progress (PR #2144)
 - **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context
 
 ### Principles
