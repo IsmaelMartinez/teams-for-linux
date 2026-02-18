@@ -17,7 +17,6 @@ This document outlines the future development direction for Teams for Linux, org
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
 | **Done** | AppImage auto-update ([#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)) | Shipped in v2.7.6 | Medium | Done |
 | **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
-| **Low** | Screen Lock Media Privacy ([#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)) | Awaiting user feedback | Small | — |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
 ---
@@ -111,27 +110,6 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 3. Update documentation
 
 **Current state:** The `screen-sharing-stopped` event fires and publishes correctly. The `screen-sharing-started` event is not being detected yet and needs further investigation.
-
----
-
-### Screen Lock Media Privacy
-
-**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
-**Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
-**Branch:** `claude/screen-lock-media-privacy-HMTPA`
-**Effort:** Small
-**Status:** Awaiting user feedback — PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) open but no user traction
-
-**Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
-
-**Implementation:**
-
-1. Add `disable-media` and `enable-media` to MQTT allowed actions
-2. Create browser tool (`app/browser/tools/mediaPrivacy.js`) to track and control media streams
-3. Wire MQTT commands to media control functions
-4. Update documentation with user scripts for GNOME, KDE, Cinnamon, i3/sway
-
-**Philosophy:** Linux-first approach - expose commands that users wire into their own D-Bus listeners or systemd hooks. More flexible than trying to detect screen lock across all desktop environments.
 
 ---
 
@@ -235,14 +213,6 @@ Existing flat options migrate opportunistically when modules are refactored.
 
 These features have completed initial implementation. Further phases depend on user requests.
 
-### Screen Lock Media Privacy
-
-**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)
-**PR:** [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) (open, no user traction)
-**Status:** Awaiting user feedback — feature implemented but no users have tested or requested it
-
----
-
 ### Quick Chat Access
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109)
@@ -284,6 +254,7 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
+| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — no user interest | Implementation complete in branch; reopen if requested |
 | Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — worked on maintainer's machine but not for user | MVP (v2.6.16) remains; revisit with diagnostic tooling if requested again |
 | Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch `claude/analyze-research-spikes-XbYVZ`; reopen if requested |
 | GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible via MQTT but poor UX |
