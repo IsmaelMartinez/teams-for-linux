@@ -250,8 +250,6 @@ When creating or updating any markdown documentation in this project (including 
 These markdown standards apply to ALL markdown files in the project:
 - Documentation site (`docs-site/docs/`)
 - Root-level documentation (README, CONTRIBUTING, CLAUDE.md)
-- Task management files (`tasks/`)
-- AI agent instruction files (`.github/instructions/`)
 - Module READMEs in `app/` directories
 
 When updating standards, update this section only. All other files should reference these standards.

@@ -1,8 +1,12 @@
 # External Changelog Generation Research
 
+:::tip Shipped
+Both phases implemented. This document is retained for historical context.
+:::
+
 **Issue**: External fork PRs cannot push changelog files
 **Related**: [ADR-005 - AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md)
-**Status**: Phase 1 Complete (with `pull_request_target` fix), Phase 2 Implemented
+**Status**: Shipped (Phase 1 and Phase 2)
 **Date**: 2025-01-18
 **Updated**: 2026-01-26
 

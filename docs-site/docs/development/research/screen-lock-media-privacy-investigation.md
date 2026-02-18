@@ -1,7 +1,7 @@
 # Screen Lock Media Privacy Investigation
 
-:::tip PR In Review
-Implementation is in PR review — [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106), branch `claude/screen-lock-media-privacy-HMTPA`. MQTT `disable-media`/`enable-media` commands for user scripts.
+:::warning Awaiting User Feedback
+PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) open but no user traction. Feature implemented but no users have tested or requested it. See closure PR [#2189](https://github.com/IsmaelMartinez/teams-for-linux/pull/2189).
 :::
 
 **Issue:** [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015)

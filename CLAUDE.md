@@ -210,9 +210,6 @@ if (modulesRequiringIpc.includes(module.name)) {
 
 ## AI Workflow Instructions
 
-For AI agent workflows (PRD generation, task list generation, task execution):
-- See `.github/instructions/*.instructions.md` for detailed workflow instructions
-- Follow the task execution protocol for systematic implementation
 - Always run tests and linting before commits
 - Update documentation alongside code changes
 
