@@ -1,7 +1,7 @@
 # Screen Lock Media Privacy Investigation
 
 :::info Closed — No User Interest
-Implementation was complete in PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) but closed due to lack of user interest. Issue [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) also closed. The work is preserved in the branch and can be revived if requested.
+Implementation was complete in PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) but closed due to lack of user interest. Issue [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) also closed. The work is preserved in branch `claude/screen-lock-media-privacy-HMTPA` and can be revived if requested.
 :::
 
 **Issue:** [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015)
