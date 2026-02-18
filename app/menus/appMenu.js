@@ -17,9 +17,7 @@ exports = module.exports = (Menus) => ({
       ? [
           {
             label: "Quick Chat",
-            ...(Menus.configGroup.startupConfig.quickChat?.shortcut
-              ? { accelerator: Menus.configGroup.startupConfig.quickChat.shortcut }
-              : {}),
+            accelerator: Menus.configGroup.startupConfig.quickChat?.shortcut || undefined,
             click: () => Menus.showQuickChat(),
           },
         ]
