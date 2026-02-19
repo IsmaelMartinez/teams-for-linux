@@ -24,6 +24,7 @@ class MQTTStatusMonitor {
 		this.pollInterval = null;
 		this.debounceTimer = null;
 		this._loggedCoreServices = false;
+		this._loggedDetection = false;
 
 		// Status keyword mapping for efficient lookup
 		this.statusKeywords = [
@@ -144,6 +145,8 @@ class MQTTStatusMonitor {
 		// Strategy 0: Try React internals first (most reliable)
 		let status = this.detectStatusFromReact();
 		if (status !== null) {
+			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via React internals:', status);
+			this._loggedDetection = true;
 			return status;
 		}
 
@@ -153,18 +156,24 @@ class MQTTStatusMonitor {
 		// Strategy 1: Try CSS selectors for direct presence indicators
 		status = this.detectStatusFromSelectors();
 		if (status !== null) {
+			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via CSS selectors:', status);
+			this._loggedDetection = true;
 			return status;
 		}
 
 		// Strategy 2: Check me-control button for presence indicator
 		status = this.detectStatusFromMeControl();
 		if (status !== null) {
+			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via me-control:', status);
+			this._loggedDetection = true;
 			return status;
 		}
 
 		// Strategy 3: Check page title (unlikely but kept for compatibility)
 		status = this.extractStatusFromPageTitle();
 		if (status !== null) {
+			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via page title:', status);
+			this._loggedDetection = true;
 			return status;
 		}
 
@@ -173,6 +182,7 @@ class MQTTStatusMonitor {
 
 	/**
 	 * Log available core services once for debugging
+	 * Enhanced: also logs sub-keys of presence-related services
 	 */
 	_logCoreServicesOnce() {
 		if (this._loggedCoreServices) {
@@ -180,7 +190,24 @@ class MQTTStatusMonitor {
 		}
 		const serviceKeys = ReactHandler.getCoreServiceKeys();
 		if (serviceKeys) {
-			console.debug('[MQTT Status] Available core services:', serviceKeys);
+			console.info('[MQTT Status Diag] Available core services:', JSON.stringify(serviceKeys));
+
+			// Dump sub-keys of any service containing "presence", "status", or "client"
+			const interestingPatterns = ['presence', 'status', 'client', 'user'];
+			for (const key of serviceKeys) {
+				const lowerKey = key.toLowerCase();
+				if (interestingPatterns.some(p => lowerKey.includes(p))) {
+					try {
+						const service = ReactHandler.getCoreService(key);
+						if (service && typeof service === 'object') {
+							const subKeys = Object.keys(service).slice(0, 30);
+							console.info(`[MQTT Status Diag] Service "${key}" keys:`, JSON.stringify(subKeys));
+						}
+					} catch {
+						// ignore
+					}
+				}
+			}
 			this._loggedCoreServices = true;
 		}
 	}
@@ -200,7 +227,10 @@ class MQTTStatusMonitor {
 			'.ts-presence',
 			'.presence-button',
 			'button[class*="presence"]',
-			'div[class*="presence"]'
+			'div[class*="presence"]',
+			// Broad wildcard selectors (restored from v2.6.18)
+			'[aria-label*="status"]',
+			'[title*="status"]'
 		];
 
 		for (const selector of selectors) {
