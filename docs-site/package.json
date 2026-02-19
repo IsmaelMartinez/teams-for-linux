@@ -45,5 +45,17 @@
   },
   "engines": {
     "node": ">=18.0"
+  },
+  "overrides": {
+    "minimatch": ">=10.2.1",
+    "file-loader": {
+      "schema-utils": "^4.0.0"
+    },
+    "url-loader": {
+      "schema-utils": "^4.0.0"
+    },
+    "null-loader": {
+      "schema-utils": "^4.0.0"
+    }
   }
 }
