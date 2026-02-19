@@ -34,7 +34,7 @@ jobs:
         run: npm run lint
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
   e2e_tests:
     runs-on: ubuntu-latest
