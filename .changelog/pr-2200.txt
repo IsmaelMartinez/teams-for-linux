@@ -1,0 +1,1 @@
+Add dependency overrides to resolve security vulnerabilities - by @IsmaelMartinez (#2200)
