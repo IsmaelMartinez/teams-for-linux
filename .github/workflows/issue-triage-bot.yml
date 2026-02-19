@@ -1,9 +1,11 @@
 name: Issue Triage Bot
 
-# Analyzes new bug reports for missing information and suggests solutions from
-# the troubleshooting guide. Posts a single consolidated comment per issue.
+# Analyzes new bug reports for missing information, suggests solutions from
+# the troubleshooting guide, and detects potential duplicate issues.
+# Posts a single consolidated comment per issue.
 # Phase 1: Missing info detection (v2.7.4)
 # Phase 2: AI-powered solution suggestions via Gemini
+# Phase 3: Duplicate detection against issue index via Gemini
 # See: docs-site/docs/development/research/github-issue-bot-investigation.md
 
 on:
@@ -26,7 +28,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          sparse-checkout: .github/issue-bot/troubleshooting-index.json
+          sparse-checkout: |
+            .github/issue-bot/troubleshooting-index.json
+            .github/issue-bot/issue-index.json
           sparse-checkout-cone-mode: false
 
       - name: Phase 1 - Analyze missing information
@@ -285,6 +289,165 @@ jobs:
               core.setOutput('suggestions_json', '[]');
             }
 
+      - name: Phase 3 - Detect potential duplicates
+        id: phase3
+        if: steps.phase1.outputs.skip != 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_TITLE: ${{ steps.phase1.outputs.issue_title }}
+          ISSUE_BODY: ${{ steps.phase1.outputs.issue_body_truncated }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Skip if Gemini API key is not configured (forks)
+            if (!process.env.GEMINI_API_KEY) {
+              console.log('GEMINI_API_KEY not configured, skipping Phase 3');
+              core.setOutput('duplicates_json', '[]');
+              return;
+            }
+
+            // Read pre-processed issue index
+            const indexPath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              '.github',
+              'issue-bot',
+              'issue-index.json'
+            );
+
+            let issues;
+            try {
+              issues = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+            } catch (e) {
+              console.log('Could not read issue index, skipping Phase 3');
+              core.setOutput('duplicates_json', '[]');
+              return;
+            }
+
+            const currentIssueNumber = parseInt(process.env.ISSUE_NUMBER, 10);
+
+            // Filter out the current issue from candidates
+            const candidates = issues.filter(
+              (i) => i.number !== currentIssueNumber
+            );
+
+            if (candidates.length === 0) {
+              console.log('No candidate issues in index');
+              core.setOutput('duplicates_json', '[]');
+              return;
+            }
+
+            // Use environment variables for untrusted input (avoids injection)
+            const issueTitle = (process.env.ISSUE_TITLE || '').substring(0, 200);
+            const issueBody = (process.env.ISSUE_BODY || '')
+              .replace(/```[\s\S]*?```/g, '')
+              .substring(0, 1500);
+
+            // Build compact issue summaries for the prompt
+            const issueSummaries = candidates
+              .map(
+                (issue) =>
+                  `[#${issue.number}] (${issue.state}) ${issue.title}: ${(issue.summary || '').substring(0, 120)}`
+              )
+              .join('\n');
+
+            const prompt = `You are a helpful assistant for the "Teams for Linux" open source project.
+            Compare this new issue against existing issues to find potential duplicates or closely related reports.
+
+            EXISTING ISSUES:
+            ${issueSummaries}
+
+            NEW ISSUE:
+            Title: ${issueTitle}
+            Body: ${issueBody}
+
+            Return a JSON array of 0-3 matches. Only include issues with a strong semantic connection (same bug, same feature request, clearly overlapping symptoms). Use humble language in the reason field ("might be related", "appears similar", "could be the same issue").
+
+            For each match, estimate a similarity percentage (60-95). Only include matches above 60%.
+
+            Format: [{"number": 123, "reason": "This might be related because...", "similarity": 75}]
+
+            If no issues are similar, return: []
+            Respond with ONLY valid JSON, no other text.`;
+
+            try {
+              const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                      temperature: 0.2,
+                      maxOutputTokens: 400,
+                    },
+                  }),
+                }
+              );
+
+              if (!response.ok) {
+                console.log(`Gemini API returned ${response.status}, skipping duplicates`);
+                core.setOutput('duplicates_json', '[]');
+                return;
+              }
+
+              const data = await response.json();
+              const rawText =
+                data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
+
+              // Extract JSON from response (handle markdown code fences)
+              const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+              if (!jsonMatch) {
+                console.log('No valid JSON array in Gemini response');
+                core.setOutput('duplicates_json', '[]');
+                return;
+              }
+
+              const duplicates = JSON.parse(jsonMatch[0]);
+
+              // Validate structure and bounds
+              const issueNumbers = new Set(candidates.map((i) => i.number));
+              const validated = duplicates
+                .filter(
+                  (d) =>
+                    typeof d.number === 'number' &&
+                    issueNumbers.has(d.number) &&
+                    typeof d.reason === 'string' &&
+                    typeof d.similarity === 'number' &&
+                    d.similarity >= 60 &&
+                    d.similarity <= 100
+                )
+                .slice(0, 3)
+                .map((d) => {
+                  const issue = candidates.find(
+                    (i) => i.number === d.number
+                  );
+                  return {
+                    number: d.number,
+                    title: issue.title,
+                    state: issue.state,
+                    reason: d.reason.substring(0, 200),
+                    similarity: Math.round(d.similarity),
+                    closed_at: issue.closed_at || null,
+                    milestone: issue.milestone || null,
+                  };
+                });
+
+              core.setOutput('duplicates_json', JSON.stringify(validated));
+              console.log(
+                `Phase 3: ${validated.length} potential duplicates found`
+              );
+            } catch (error) {
+              console.log(
+                'Gemini API unavailable, posting without duplicate suggestions'
+              );
+              core.setOutput('duplicates_json', '[]');
+            }
+
       - name: Post consolidated comment
         if: steps.phase1.outputs.skip != 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -292,14 +455,21 @@ jobs:
           MISSING_ITEMS_JSON: ${{ steps.phase1.outputs.missing_items_json }}
           IS_PWA_REPRODUCIBLE: ${{ steps.phase1.outputs.is_pwa_reproducible }}
           SUGGESTIONS_JSON: ${{ steps.phase2.outputs.suggestions_json }}
+          DUPLICATES_JSON: ${{ steps.phase3.outputs.duplicates_json }}
         with:
           script: |
             const missingItems = JSON.parse(process.env.MISSING_ITEMS_JSON || '[]');
             const isPwaReproducible = process.env.IS_PWA_REPRODUCIBLE === 'true';
             const suggestions = JSON.parse(process.env.SUGGESTIONS_JSON || '[]');
+            const duplicates = JSON.parse(process.env.DUPLICATES_JSON || '[]');
 
             // Skip if nothing to report
-            if (missingItems.length === 0 && !isPwaReproducible && suggestions.length === 0) {
+            if (
+              missingItems.length === 0 &&
+              !isPwaReproducible &&
+              suggestions.length === 0 &&
+              duplicates.length === 0
+            ) {
               console.log('Nothing to report. No comment needed.');
               return;
             }
@@ -328,6 +498,49 @@ jobs:
               }
               parts.push(
                 '> These suggestions are based on our documentation and may not be exact matches.\n'
+              );
+            }
+
+            // Duplicate suggestions from Phase 3
+            if (duplicates.length > 0) {
+              const openDups = duplicates.filter(
+                (d) => d.state === 'open'
+              );
+              const closedDups = duplicates.filter(
+                (d) => d.state === 'closed'
+              );
+
+              parts.push(
+                '**This issue might be related to existing discussions:**\n'
+              );
+
+              if (openDups.length > 0) {
+                parts.push('*Potentially related open issues:*');
+                for (const d of openDups) {
+                  parts.push(
+                    `- #${d.number} — "${d.title}" (${d.similarity}% similar) — ${d.reason}`
+                  );
+                }
+                parts.push('');
+              }
+
+              if (closedDups.length > 0) {
+                parts.push(
+                  '*Recently resolved issues that could be relevant:*'
+                );
+                for (const d of closedDups) {
+                  const resolvedNote = d.milestone
+                    ? `Resolved in ${d.milestone}`
+                    : 'Resolved';
+                  parts.push(
+                    `- #${d.number} — "${d.title}" (${resolvedNote}) — ${d.reason}`
+                  );
+                }
+                parts.push('');
+              }
+
+              parts.push(
+                '> If one of these matches your issue, consider adding your details there instead.\n'
               );
             }
 
@@ -389,5 +602,5 @@ jobs:
             });
 
             console.log(
-              `Posted comment (${missingItems.length} missing items, ${suggestions.length} suggestions, PWA: ${isPwaReproducible})`
+              `Posted comment (${missingItems.length} missing items, ${suggestions.length} suggestions, ${duplicates.length} duplicates, PWA: ${isPwaReproducible})`
             );
