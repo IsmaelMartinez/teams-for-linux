@@ -1,0 +1,1 @@
+fix: allow null sourceId in screen sharing start to fix MQTT publish - by @IsmaelMartinez (#2193)
