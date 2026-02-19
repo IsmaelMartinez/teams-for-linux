@@ -1,0 +1,1 @@
+ci: raise audit level to critical for minimatch advisory - by @IsmaelMartinez (#2196)
