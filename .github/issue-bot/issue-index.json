@@ -1,1 +1,1388 @@
-[]
+[
+  {
+    "number": 2186,
+    "title": "[Feat]: Provide complete app menu when tray icon is disabled",
+    "state": "open",
+    "labels": [
+      "enhancement",
+      "awaiting user feedback"
+    ],
+    "summary": "Describe the feature Provide all menu items available on tray menu when tray icon is disabled Motivation Some of us don't like tray icons and set to . When we do it, the menu bar that appears when pre",
+    "created_at": "2026-02-17",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2184,
+    "title": "[Bug]: Can't register Quick Chat keyboard shortcut",
+    "state": "open",
+    "labels": [
+      "bug",
+      "awaiting user feedback"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I configure the Quick Chat feature I'm always getting in the logs and can't use it What package are you using? aur Version 2.7.5",
+    "created_at": "2026-02-17",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2157,
+    "title": "Implement in-app auto-update via electron-updater for AppImage",
+    "state": "open",
+    "labels": [
+      "enhancement",
+      "awaiting user feedback"
+    ],
+    "summary": "Summary Implement native in-app auto-update for AppImage distributions using electron-builder's module. This replaces the appimagetool post-processing approach from ADR-011, which was incompatible wit",
+    "created_at": "2026-02-13",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2131,
+    "title": "[Bug]: MQTT Status No Longer Being Detected",
+    "state": "open",
+    "labels": [
+      "bug",
+      "awaiting user feedback"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug Status Fails to be detected and thus no status updates occur via mqtt What package are you using? Built from source Versi",
+    "created_at": "2026-02-05",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2107,
+    "title": "[Enhancement]: Publish screen sharing status to MQTT",
+    "state": "open",
+    "labels": [
+      "enhancement",
+      "awaiting user feedback"
+    ],
+    "summary": "Summary Wire existing and IPC events to MQTT publish, completing the media status picture for home automation. Motivation - Completes media status picture for home automation (call state + screen shar",
+    "created_at": "2026-01-31",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2025,
+    "title": "[Bug]: Incoming call lead to exception with second ringer option set",
+    "state": "open",
+    "labels": [
+      "bug",
+      "awaiting user feedback"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug I configured a script to run as second ringer notification. In both release, 2.6.18 and 2.6.19, incoming call lead to an ",
+    "created_at": "2025-12-15",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 1943,
+    "title": "[Bug]: Window size broke when changing app",
+    "state": "open",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug When switching between different app the window size get broken What package are you using? flatpak Version 2.6.11 Reprod",
+    "created_at": "2025-11-12",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2108,
+    "title": "[Enhancement]: Custom Notifications Phase 2 - Chat and Calendar notifications",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Summary Route chat and calendar invitation notifications through the custom notification system, addressing gaps identified in user feedback. Motivation MVP (v2.6.16) delivers meeting notifications bu",
+    "created_at": "2026-01-31",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2151,
+    "title": "[Bug]: Brave: Chinese text is not rendering",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Some characters (especially Chinese and Japanese are not rendering at all. Like: 字符显示测试 What package are you using? Built from source",
+    "created_at": "2026-02-13",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2140,
+    "title": "[Feat]: recognize new meeting links like https://teams.microsoft.com/meet/...?p=...",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature I would like teams-for_linux to recognize and open correctly these links Motivation Links like https://teams.microsoft.com/l/meetup-join/... could be copied in a thread and openen",
+    "created_at": "2026-02-11",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2199,
+    "title": "[Bug]: App no longer opens meetings from links or accepts Meeting ID/Password after recent update",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Hi, first of all thank you for your work on this project. I wanted to report a regression that appeared after a recent update. The a",
+    "created_at": "2026-02-19",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2169,
+    "title": "[Bug]: Cam broken during meetings",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I join a meeting with the camera enabled or enable it after joining a meeting I'm getting an unrecoverable error: The logs say: ",
+    "created_at": "2026-02-16",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2152,
+    "title": "[Bug]: cannot join meeting with meeting-id and passcode",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I attempt to join a meeting by entering its ID and passcode (\"Join with an ID\"), teams-for-linux claims the meeting doesn't exis",
+    "created_at": "2026-02-13",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2137,
+    "title": "[Bug]: Chat message gets scroll bar",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Slightly longer messages get an (unnecessary) scroll bar What package are you using? rpm Version 2.7.2 Reproduction steps Expected Be",
+    "created_at": "2026-02-09",
+    "closed_at": "2026-02-19",
+    "milestone": null
+  },
+  {
+    "number": 2011,
+    "title": "[Bug]: Unable to login for Passkey enabled Microsoft Accounts",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug for accounts that are passkey enabled (and has passkey as the default login method), the login screen gets stuck and there are no opt",
+    "created_at": "2025-12-01",
+    "closed_at": "2025-12-07",
+    "milestone": null
+  },
+  {
+    "number": 1879,
+    "title": "[Bug]: teams-for-linux prevents sleep",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked",
+      "Stale"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Sometimes cannot put my computer go to sleep because teams-for-linux inhibits with reason \"Application cleanup before suspend\" What p",
+    "created_at": "2025-10-20",
+    "closed_at": "2026-02-18",
+    "milestone": null
+  },
+  {
+    "number": 2106,
+    "title": "[Enhancement]: MQTT commands for screen lock media privacy",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Summary Add MQTT commands (, , ) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks. Motivation - Privacy protection during meetings when s",
+    "created_at": "2026-01-31",
+    "closed_at": "2026-02-18",
+    "milestone": null
+  },
+  {
+    "number": 2143,
+    "title": "[Bug]: --appTitle and --appIcon do not work",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug The Himmelblau project uses the teams-for-linux appimage to open other office apps. We call teams-for-linux with various ",
+    "created_at": "2026-02-11",
+    "closed_at": "2026-02-18",
+    "milestone": null
+  },
+  {
+    "number": 2039,
+    "title": "[Feat]: Support for Notifications via Quickshell for Teams-for-Linux",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Support for Notifications via Quickshell for Teams-for-Linux Motivation I'm using Noctalia-shell(which is made in QuickShell) on my Hyprland setup and one of the applications not ",
+    "created_at": "2026-01-07",
+    "closed_at": "2026-02-18",
+    "milestone": null
+  },
+  {
+    "number": 1890,
+    "title": "[Feat]: Allow enabling GPU acceleration when running under Wayland",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Since #1826, GPU acceleration is force disabled when running under Wayland. It should be possible to override this. Motivation GPU acceleration can significantly improve performan",
+    "created_at": "2025-10-21",
+    "closed_at": "2025-10-30",
+    "milestone": null
+  },
+  {
+    "number": 1984,
+    "title": "[Feat]: Allow multiple windows for one account",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Add a \"Open in new window\" option to the menu Motivation The Windows client has the option to pop-out/separate a chat, to allow working on multiple chats. Also the Windows client ",
+    "created_at": "2025-11-24",
+    "closed_at": "2026-02-16",
+    "milestone": null
+  },
+  {
+    "number": 2168,
+    "title": "[Bug]: Needs App Restart To Picik Up Audio device",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug The App is not picking up (in devices) a new audio device e.g. Jabra head phones after pluggin it in via USB. I have to restart the ",
+    "created_at": "2026-02-16",
+    "closed_at": "2026-02-16",
+    "milestone": null
+  },
+  {
+    "number": 2036,
+    "title": "[Bug]: Gnome 49 Clicking on notification does not focus window",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "flatpak",
+      "Stale"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? no Describe the bug As the title says What package are you using? flatpak Version 2.6.18 Reproduction steps Expected Behavior Thank you for your amazing ",
+    "created_at": "2026-01-05",
+    "closed_at": "2026-02-16",
+    "milestone": null
+  },
+  {
+    "number": 2147,
+    "title": "[Bug]: Overheating (only) when running Teams for Linux",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "awaiting user feedback"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug Laptop CPU heats up as soon as Temas for Linux is on a call. The normal working temperature for the laptop is 50-60 C. Wh",
+    "created_at": "2026-02-12",
+    "closed_at": "2026-02-15",
+    "milestone": null
+  },
+  {
+    "number": 2154,
+    "title": "[Bug]: App Center Version Hijacks Ctrl + Shift + P",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Hijacks Ctrl + Shift + P What package are you using? deb Version 2.7.3 Reproduction steps The latest/stable 2.7.3 and latest/edge 2.",
+    "created_at": "2026-02-13",
+    "closed_at": "2026-02-15",
+    "milestone": null
+  },
+  {
+    "number": 2065,
+    "title": "[Feat]: add update info to the appimage",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature appimages can be embedded with update information using a file so that updates can be managed by tools such as gear lever. more info Motivation this allows me to update all my app",
+    "created_at": "2026-01-23",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2113,
+    "title": "Move community chat from Gitter to Matrix space",
+    "state": "closed",
+    "labels": [],
+    "summary": "Summary We need to migrate the community chat from the old Gitter-bridged Matrix channel to a new Matrix space where we have admin control. **Current channel:** https://matrix.to/#/#teams-for-linux_co",
+    "created_at": "2026-01-31",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2095,
+    "title": "[Bug]: 2.7.0 application icon in window list/panel on kde",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug --appIcon does not change application general icon (regression which was solved in 2.6: https://github.com/IsmaelMartinez",
+    "created_at": "2026-01-30",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2048,
+    "title": "[Feat]: Add uninstall instructions to readme",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Uninstall instructions to complement install instructions Motivation To uninstall this software it would be nice to follow simple instructions, rather than guessing steps from the",
+    "created_at": "2026-01-15",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 1923,
+    "title": "[Bug]: Screen sharing on Wayland with snap package",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "snap",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Screen sharing doesn't work on Wayland What package are you using? snap Version 2.6.8 (current latest) Reproduction steps On Ubuntu b",
+    "created_at": "2025-11-05",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2132,
+    "title": "[Bug]: 2.7.2 segfault on RHEL8",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug Running either the AppImage or rpm of 2.7.2 segfaults. Flatpak works. What package are you using? rpm Version 2.7.2 Repro",
+    "created_at": "2026-02-06",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2074,
+    "title": "[Bug]: restoring from tray in 2.7.0 creates a very small windows",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug restored window from tray does not remember the previous position and dimensions. the opened window is in the top left an",
+    "created_at": "2026-01-26",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2121,
+    "title": "[Bug]: Chat and calendar icons gone",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug The icons for chat and calendar in the left bar are gone. What package are you using? deb Version 2.7.2 Reproduction steps Expected ",
+    "created_at": "2026-02-02",
+    "closed_at": "2026-02-03",
+    "milestone": null
+  },
+  {
+    "number": 2127,
+    "title": "[Bug]: Loop code block",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When you add a large amount of text to a code block, it changes to “loop block code,” and then the application consumes a lot of reso",
+    "created_at": "2026-02-05",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2130,
+    "title": "[Bug]: VMClass not respected",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug Passing --class=custom_name or --name=custom_name does not make the VMClass What package are you using? AppImage Version ",
+    "created_at": "2026-02-05",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2136,
+    "title": "[Bug]: Teams-for-linux not working gets stuck on waiting for network in ubuntu",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Teams-for-linux not working gets stuck on waiting for network in ubuntu What package are you using? deb Version snap list teams-for-",
+    "created_at": "2026-02-09",
+    "closed_at": "2026-02-10",
+    "milestone": null
+  },
+  {
+    "number": 2094,
+    "title": "[Bug]: Since 2.7.0: Maximized window looks weird",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug Since 2.7.0 maximizing doesn't maximize fully, there's a gap which looks weird and when window loses focus it becomes sma",
+    "created_at": "2026-01-30",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2138,
+    "title": "[Bug]: Screen sharing on XOrg for 2.7.2",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug app got killed when cliks screen sharing What package are you using? deb Version 2.7.2 Reproduction steps Expected Behavior Debug Add",
+    "created_at": "2026-02-10",
+    "closed_at": "2026-02-13",
+    "milestone": null
+  },
+  {
+    "number": 2049,
+    "title": "[Bug]: Can't install on trixie ARMhf due to wrong dependencies",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug dependency list needs update for trixie and newer ubuntu releases due to t64 transition What package are you using? deb Version all ",
+    "created_at": "2026-01-17",
+    "closed_at": "2026-02-11",
+    "milestone": null
+  },
+  {
+    "number": 2078,
+    "title": "[Bug]: Join Meeting function doesn't see Teams meeting URL in the clipboard",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "flatpak"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Join Meeting function doesn't see Teams meeting URL in the clipboard What package are you using? flatpak Version 2.6.19 Reproduction ",
+    "created_at": "2026-01-27",
+    "closed_at": "2026-02-11",
+    "milestone": null
+  },
+  {
+    "number": 1860,
+    "title": "[Bug]: Video x and y dimensions are swapped",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? ~~No~~ Yes, if logged in to teams, if not logged in to teams then no. Describe the bug Video sent from any V4L2 camera has swapped x and y dimensions, \"s",
+    "created_at": "2025-10-03",
+    "closed_at": "2026-02-09",
+    "milestone": null
+  },
+  {
+    "number": 1211,
+    "title": "Crash (segfault, SIGILL) when using proxy with user and password",
+    "state": "closed",
+    "labels": [],
+    "summary": "**Describe the bug** teams-for-linux --proxyServer=host:port crashes (dumps core) and restarts in an infinite loop. The proxy server requires authentication so I expected the user/pass dialog. **To Re",
+    "created_at": "2024-04-19",
+    "closed_at": "2024-05-28",
+    "milestone": null
+  },
+  {
+    "number": 1972,
+    "title": "[Bug]: Microphone doesn't work in meetings (until it does)",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Microphone doesn't work in meetings, reconnecting, muting/unmuting makes it work (and then it works OK untiil next meeting). What pac",
+    "created_at": "2025-11-19",
+    "closed_at": "2026-02-07",
+    "milestone": null
+  },
+  {
+    "number": 2043,
+    "title": "[Bug]: Teams will soon have a new URL",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Teams will soon have a new URL What package are you using? flatpak Version 2.6.18 Reproduction steps Expected Behavior Debug Additio",
+    "created_at": "2026-01-12",
+    "closed_at": "2026-01-23",
+    "milestone": null
+  },
+  {
+    "number": 1987,
+    "title": "[Feat]: Change tray icon color if logged out",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature If the user is not logged in, change the tray icon in some very visible way (e.g. to a red/other color.) Motivation I'm frequently getting logged out because, I believe, I am logg",
+    "created_at": "2025-11-25",
+    "closed_at": "2026-02-01",
+    "milestone": null
+  },
+  {
+    "number": 2041,
+    "title": "[Bug]: Crash during cancel of a screen share",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug The share menu crash the app What package are you using? deb Version 2.6.19 Reproduction steps Expected Behavior Debug Additional con",
+    "created_at": "2026-01-08",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2090,
+    "title": "[Bug]: System tray icon shows as three dots instead of Teams logo after upgrade to 2.7.0",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug After upgrading from version 2.6.18 to 2.7.0/2.7.1, the Teams icon in the system tray (top panel) appears as a generic three-dot men",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 1632,
+    "title": "[Feat]: Add documentation about how to run multiple instances of the app",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "documentation"
+    ],
+    "summary": "Describe the feature Add documentatoin about how to run multiple instances of the app. Motivation Every now an again, someone will ask about been able to run the app in multiple instances. It is possi",
+    "created_at": "2025-03-31",
+    "closed_at": "2025-04-09",
+    "milestone": null
+  },
+  {
+    "number": 2120,
+    "title": "[Bug]: Warning on startup about removal of screenSharingThumbnail",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug There's a warning popup on startup that screenSharingThumnail config option will be removed What package are you using? d",
+    "created_at": "2026-02-02",
+    "closed_at": "2026-02-03",
+    "milestone": null
+  },
+  {
+    "number": 2093,
+    "title": "[Bug]: Login fails for non-microsoft provider",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "duplicate",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Cannot login with 3rd-party Teams provider What package are you using? snap Version 2.7.0 Reproduction steps Expected Behavior Debug ",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2077,
+    "title": "[Bug]: status turns \"away\" after ~3 mins of not interacting with the app",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Starts showing status as \"away\" after about 3 minutes on not interacting with the app window directly. The PWA web app has always be",
+    "created_at": "2026-01-26",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2115,
+    "title": "[Bug]: App crashes immediately when clicking the screen sharing button",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Since the update to version 2.7.0, the application crashes and closes instantly as soon as I click the \"Share content\" button. There ",
+    "created_at": "2026-01-31",
+    "closed_at": "2026-02-01",
+    "milestone": null
+  },
+  {
+    "number": 2109,
+    "title": "[Enhancement]: Chat Modal - Validation Spikes",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Summary Run validation spikes to prove the Chat Modal approach works before full implementation. This is the practical alternative to multiple windows support (rejected in ADR-010). Motivation User fr",
+    "created_at": "2026-01-31",
+    "closed_at": "2026-02-01",
+    "milestone": null
+  },
+  {
+    "number": 2015,
+    "title": "[Feat]: Disable camera and microphone when screen is locked",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature Disable the camera and the microphone when screen is locked Motivation Disable the camera and the microphone when screen is locked. This would greatly increase the privacy in case",
+    "created_at": "2025-12-04",
+    "closed_at": "2026-01-16",
+    "milestone": null
+  },
+  {
+    "number": 2058,
+    "title": "[Bug]: teams-for-linux is ctashing when I click share screen button",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I am clicking share screen button on teams app on linux machine it is crashing and teams is closed. What package are you using? ",
+    "created_at": "2026-01-20",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2091,
+    "title": "[Bug]: when started sharing Teams is crashing repeatedly v2.7.0",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug when started sharing Teams is crashing repeatedly, every atempt What package are you using? deb Version 2..7.0 Reproduction steps Ex",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2047,
+    "title": "[Bug]: Intune SSO regression for broker version > 2.0.1",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug SSO Intune login is not working on new (2.0.2 and higher) versions of Microsoft Identity Broker What package are you usin",
+    "created_at": "2026-01-15",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2099,
+    "title": "[Bug]: MS Teams crashes when I attempt to share my screen during an audio/video call",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug During an audio/video call, when I click the Share Screen button, the MS Teams for Linux app crashes What package are you using? deb ",
+    "created_at": "2026-01-30",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2098,
+    "title": "[Bug]: teams-for-linux 2.7.0 crashes upon screen sharing",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When clicking screen share button my client crashes. Older version worked fine for me. I am using Ubuntu Desktop 22.04. I installed t",
+    "created_at": "2026-01-30",
+    "closed_at": "2026-01-30",
+    "milestone": null
+  },
+  {
+    "number": 2087,
+    "title": "[Bug]: Screen sharing does not work on Ubuntu Linux",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Screen sharing does not work on Ubuntu Linux What package are you using? deb Version 24.04.1 Reproduction steps Expected Behavior De",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-29",
+    "milestone": null
+  },
+  {
+    "number": 2092,
+    "title": "[Bug]: Screen Sharing shuts down Teams!!! 2.7.0",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug On a Teams call, then I click Share. As soon as Screen or Window are clicked Teams shuts down. I had to revert to version 2.6.19 Wha",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-29",
+    "milestone": null
+  },
+  {
+    "number": 2088,
+    "title": "[Bug]: Chat history and chat list loaded partially",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Very often when the software launches, the chat history and the history of messages inside a conversation is not fully loaded What pa",
+    "created_at": "2026-01-29",
+    "closed_at": "2026-01-29",
+    "milestone": null
+  },
+  {
+    "number": 2054,
+    "title": "Fix Dependabot alert #45: tar vulnerability CVE-2026-23745",
+    "state": "closed",
+    "labels": [
+      "blocked",
+      "dependencies"
+    ],
+    "summary": "Issue Dependabot alert #45 reports a high severity vulnerability in the package: - **CVE**: CVE-2026-23745 - **Severity**: High (CVSS 8.2) - **Issue**: Arbitrary File Overwrite and Symlink Poisoning v",
+    "created_at": "2026-01-18",
+    "closed_at": "2026-01-28",
+    "milestone": null
+  },
+  {
+    "number": 1948,
+    "title": "[Bug]: Missing `gpgkey` in repository configuration",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "Stale"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug The file does not have a configured gpgkey value What package are you using? rpm Version N/A -- Issue in with the repo, not the pack",
+    "created_at": "2025-11-14",
+    "closed_at": "2026-01-22",
+    "milestone": null
+  },
+  {
+    "number": 2075,
+    "title": "[Feat]: Gnome search provider for Teams search",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "wontfix"
+    ],
+    "summary": "Describe the feature I imagine a gnome search provider with which I can search files in teams directly from my shell. Motivation It would solve the problem of having to open teams and then searching f",
+    "created_at": "2026-01-26",
+    "closed_at": "2026-01-28",
+    "milestone": null
+  },
+  {
+    "number": 2066,
+    "title": "[Bug]: Intune ssoInTuneAuthUser setting is case-sensitive",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug The config.json setting must have exactly the same case as the Intune client. What package are you using? deb Version 2.6",
+    "created_at": "2026-01-23",
+    "closed_at": "2026-01-24",
+    "milestone": null
+  },
+  {
+    "number": 2071,
+    "title": "[Bug]: No counter for chat messages on dock",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "known issue/workaround"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Unread chat message badge with counter only appears on tray icon, but does not appears in dock What package are you using? flatpak V",
+    "created_at": "2026-01-26",
+    "closed_at": "2026-01-26",
+    "milestone": null
+  },
+  {
+    "number": 2059,
+    "title": "[Bug]: Opening Calendar then navigating somewhere else and then opening it again causes Assertion Error",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Assertion Error : AccountSourceListStore is not initialized What package are you using? aur Version teams-for-linux-2.6.18-1 Reproduc",
+    "created_at": "2026-01-21",
+    "closed_at": "2026-01-24",
+    "milestone": null
+  },
+  {
+    "number": 2055,
+    "title": "[Feat]: Automated Release Preparation Workflow",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Feature Description Implement an automated GitHub Actions workflow that prepares releases with a single click, eliminating manual steps and reducing errors. Motivation Currently, preparing a release r",
+    "created_at": "2026-01-18",
+    "closed_at": "2026-01-23",
+    "milestone": null
+  },
+  {
+    "number": 1995,
+    "title": "[Feat]: Access my calendar data",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature There's a possibility to access my own calendar data and process them further Motivation Hi, I would like to access my calendar data with meetings so that I can convert them to or",
+    "created_at": "2025-11-26",
+    "closed_at": "2026-01-23",
+    "milestone": null
+  },
+  {
+    "number": 2014,
+    "title": "[Bug]: MQTT state always \"do_not_disturb\" and not changing",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug I configured MQTT but the state is set to do_not_disturb on every start of Teams and never updated What package are you u",
+    "created_at": "2025-12-03",
+    "closed_at": "2026-01-23",
+    "milestone": null
+  },
+  {
+    "number": 2062,
+    "title": "[Bug]: Calender not loading showing error",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug here is the error Something went wrong. Please try the recommended action below. Refresh the application Fewer Details UTC Date: 2026",
+    "created_at": "2026-01-22",
+    "closed_at": "2026-01-22",
+    "milestone": null
+  },
+  {
+    "number": 2063,
+    "title": "[Feat]: seprat window like on windows teams",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature when you join a meating it opens it up in the same window as your outher stuff it must open in a new tab that way you do outher stuff while doing the meeting Motivation it makes m",
+    "created_at": "2026-01-22",
+    "closed_at": "2026-01-22",
+    "milestone": null
+  },
+  {
+    "number": 1827,
+    "title": "[Bug]: Idle status not working on Wayland",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked",
+      "Stale"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When using hyprland (wayland), the teams status does not change to \"Away\" when i am AFK for some time. I installed xdg-desktop-portal",
+    "created_at": "2025-09-08",
+    "closed_at": "2026-01-19",
+    "milestone": null
+  },
+  {
+    "number": 2057,
+    "title": "[Feat]: Teams is coming up with new URL - https://teams.cloud.microsoft/",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Teams URL has to be changed Motivation Teams is coming up with new URL - https://teams.cloud.microsoft/ Alternatives Additional context",
+    "created_at": "2026-01-20",
+    "closed_at": "2026-01-20",
+    "milestone": null
+  },
+  {
+    "number": 2044,
+    "title": "[Bug]: Cannot share content",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "snap",
+      "known issue/workaround"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug An error windows appears after clicking on Share What package are you using? snap Version 2.6.18 Reproduction steps Expected Behavior",
+    "created_at": "2026-01-14",
+    "closed_at": "2026-01-20",
+    "milestone": null
+  },
+  {
+    "number": 2021,
+    "title": "[Feat]: Screen sharing share sound",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature When the screen is share, have the capability of share user's sound Motivation Hello. I am wondering if it's possible to share the user's computer sound while sharing the screen, ",
+    "created_at": "2025-12-12",
+    "closed_at": "2026-01-18",
+    "milestone": null
+  },
+  {
+    "number": 2004,
+    "title": "[Epic]: Configuration System Modernization - Three-Phase Migration Plan",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Modernize the configuration system by reorganizing documentation and transitioning from a flat structure to a logical nested structure. Motivation **Research:** See Configuration ",
+    "created_at": "2025-11-30",
+    "closed_at": "2026-01-18",
+    "milestone": null
+  },
+  {
+    "number": 1938,
+    "title": "[Feat]: Extended MQTT status fields",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Send extended states of camera, microphone, in-call/meeting to MQTT broker Motivation While the original great work of @Donnyp751 allows to propagate the Teams availability status",
+    "created_at": "2025-11-11",
+    "closed_at": "2026-01-18",
+    "milestone": null
+  },
+  {
+    "number": 1465,
+    "title": "Video from own webcam is low resolution and pixelated",
+    "state": "closed",
+    "labels": [],
+    "summary": "**Describe the bug** When in a teams meeting, my video from my own webcam is at a very low resolution and quite pixelated. It looks like it's at a much lower resolution than 360p, and downscaled using",
+    "created_at": "2024-10-30",
+    "closed_at": "2024-11-09",
+    "milestone": null
+  },
+  {
+    "number": 1692,
+    "title": "[Bug]: Teams window sharing uses very low resolution",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Sharing a screen uses 192X108 resolution What package are you using? deb Version 2.0.9 Reproduction steps Expected Behavior Debug Add",
+    "created_at": "2025-05-02",
+    "closed_at": "2025-05-13",
+    "milestone": null
+  },
+  {
+    "number": 2013,
+    "title": "[Feat]: revert the way screensharing works to the previous way it worked...",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature The new window-sharing methodology has problems and lacks a feature I often use Motivation a: bug: at the base of the feature, there's nothing bad about it but it's broken * when ",
+    "created_at": "2025-12-02",
+    "closed_at": "2026-01-08",
+    "milestone": null
+  },
+  {
+    "number": 2038,
+    "title": "[Bug]: Face, fingerprint, PIN, security key window not opening",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When passkey/NFC/USB device is enrolled as a 2FA in MSFT account, teams-for-linux app won't open that 2FA modal window What package a",
+    "created_at": "2026-01-06",
+    "closed_at": "2026-01-08",
+    "milestone": null
+  },
+  {
+    "number": 2042,
+    "title": "[Feat]: Add Restart command to menu",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Sometimes the application hangs in \"Waiting for network...\", even though the network is available Motivation When the application hangs in \"Waiting for network....\" there is no wa",
+    "created_at": "2026-01-08",
+    "closed_at": "2026-01-08",
+    "milestone": null
+  },
+  {
+    "number": 2037,
+    "title": "[Bug]: snap 2.6.19 missing camera connection",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Camera connection is not present in snap version. What package are you using? snap Version 2.6.19 Reproduction steps Expected Behavio",
+    "created_at": "2026-01-06",
+    "closed_at": "2026-01-08",
+    "milestone": null
+  },
+  {
+    "number": 1184,
+    "title": "Share Screen not working",
+    "state": "closed",
+    "labels": [
+      "snap",
+      "known issue/workaround",
+      "flatpak"
+    ],
+    "summary": "**Describe the bug** I've installed teams-for-linux from snap on a clean freshly installed Ubuntu 22.04.4 LTS and I'm unable to share screen. **To Reproduce** Steps to reproduce the behavior: 1. Start",
+    "created_at": "2024-04-09",
+    "closed_at": "2024-05-15",
+    "milestone": null
+  },
+  {
+    "number": 2003,
+    "title": "[Feat]: app icon proposal (3D look)",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature Team 4 Linux icon proposal Motivation Hi, Thank you very much for designing this Team4Linux app. I made some modification out of your original icon. Submit here for review. In cas",
+    "created_at": "2025-11-29",
+    "closed_at": "2026-01-05",
+    "milestone": null
+  },
+  {
+    "number": 2028,
+    "title": "[Bug]: Mosquitto will have a configuration for a user service",
+    "state": "closed",
+    "labels": [
+      "question"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug I am am one of the Debian moquitto packagers and I am currently working on a configuration for running mosquitto as a user service. ",
+    "created_at": "2025-12-16",
+    "closed_at": "2026-01-01",
+    "milestone": null
+  },
+  {
+    "number": 1965,
+    "title": "[Feat]: multi-soundcard or secondary ringer option.",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature Enable a secondary ringer option. Motivation In my case, I normally use an USB headphones with a mic for calls, but they are left on the table and you put them on when the call co",
+    "created_at": "2025-11-17",
+    "closed_at": "2025-12-26",
+    "milestone": null
+  },
+  {
+    "number": 2031,
+    "title": "[Bug]: Classic Teams is no longer available",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Classic Teams is no longer available Use Teams on the web or download the latest version of the app. Use Teams on the web(https://te",
+    "created_at": "2025-12-21",
+    "closed_at": "2025-12-21",
+    "milestone": null
+  },
+  {
+    "number": 2027,
+    "title": "[Feat]: keepassxc OTP support",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Add support for keepassxc OTP Motivation Dear community! Would it be possible to add such a support? The keepassxc OTP has an integration for multiple browsers like Google Chrome,",
+    "created_at": "2025-12-16",
+    "closed_at": "2025-12-17",
+    "milestone": null
+  },
+  {
+    "number": 2029,
+    "title": "[Bug]: assitance with multiple instances and wayland kde panel",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug assitance with multiple instances and wayland kde panel What package are you using? flatpak Version 2.6.18 Reproduction s",
+    "created_at": "2025-12-16",
+    "closed_at": "2025-12-17",
+    "milestone": null
+  },
+  {
+    "number": 2026,
+    "title": "[Bug]: sending plain text blocks results in white-on-white",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I sent a block of plain text, I don't see the text, but I can highlight it. The text is white-on-white What package are you usin",
+    "created_at": "2025-12-15",
+    "closed_at": "2025-12-16",
+    "milestone": null
+  },
+  {
+    "number": 2017,
+    "title": "[Feat]: Open login Dialog in external browser",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Open the login Dialog in an external browser in order to use a Password Manager for login Motivation In my company i need to login to my account every week. As i have multiple lin",
+    "created_at": "2025-12-10",
+    "closed_at": "2025-12-12",
+    "milestone": null
+  },
+  {
+    "number": 2016,
+    "title": "[Bug]: Screen sharing not working",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug It is not possible to share screen on snap app What package are you using? snap Version 2.6.18 Reproduction steps Expected Behavior D",
+    "created_at": "2025-12-04",
+    "closed_at": "2025-12-08",
+    "milestone": null
+  },
+  {
+    "number": 1444,
+    "title": "Hide Title Bar",
+    "state": "closed",
+    "labels": [
+      "blocked"
+    ],
+    "summary": "**Is your feature request related to a problem? Please describe.** I'm trying to hide the title-bar in liinux, I know it's possible using electron, just can't find it in this app. I also know there's ",
+    "created_at": "2024-10-12",
+    "closed_at": "2025-01-17",
+    "milestone": null
+  },
+  {
+    "number": 1803,
+    "title": "[Feat]: Recognise virtual cameras like OBS VirtualCam",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "Stale"
+    ],
+    "summary": "Describe the feature self explanatory, make it so the video settings detect virtual cameras as well so they can be selected in the app. Motivation I don't own a physical webcam so I use my phone as an",
+    "created_at": "2025-08-20",
+    "closed_at": "2025-09-26",
+    "milestone": null
+  },
+  {
+    "number": 2010,
+    "title": "[Bug]: Video and audio streams choking during call",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "wontfix",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? (No) Actually, yes, it also happened with the PWA in chromium browser Describe the bug During a video call, there are intermittent freezes affecting vide",
+    "created_at": "2025-12-01",
+    "closed_at": "2025-12-07",
+    "milestone": null
+  },
+  {
+    "number": 1909,
+    "title": "[Bug]: Black bar /artefact when sharing screen",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug When sharing my screen, people tell me that they see artefacts in form of a black bar. This especially occurs, when moving the mouse",
+    "created_at": "2025-10-30",
+    "closed_at": "2025-12-07",
+    "milestone": null
+  },
+  {
+    "number": 1842,
+    "title": "[Feat]: New icon proposal",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Proposal to try new icon Motivation Current icon has a lot of small details that can be a bit unclear, especially as a small icon in tray (especially on dark panels) Because we ca",
+    "created_at": "2025-09-23",
+    "closed_at": "2025-11-05",
+    "milestone": null
+  },
+  {
+    "number": 1991,
+    "title": "[Feat]: Enable/Disable green badge number on icon",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature it consists in the ability to enable and disable the badge number on the application icon in the task dock (Ubuntu 24.04, Gnome) Motivation Usually, this badge number does not app",
+    "created_at": "2025-11-26",
+    "closed_at": "2025-11-28",
+    "milestone": null
+  },
+  {
+    "number": 1832,
+    "title": "[Feat]: Strategic Initiative: Microsoft Graph API Integration - Enhance Teams for Linux with Official APIs",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "authentication",
+      "api-integration",
+      "strategic-initiative"
+    ],
+    "summary": "Executive Summary Following comprehensive investigation (detailed in research docs), we have **CONFIRMED** that Microsoft Graph API integration is both feasible and strategically valuable for Teams fo",
+    "created_at": "2025-09-17",
+    "closed_at": "2025-11-26",
+    "milestone": null
+  },
+  {
+    "number": 1933,
+    "title": "[Feat]: Forward Shortcuts with additional modifier keys",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Instead of Super+Shift+M mute could work with Super+Ctrl+Shift+M Motivation I think we can just let the user choose a key, like Super which is prepended to the shortcuts? Alternat",
+    "created_at": "2025-11-08",
+    "closed_at": "2025-11-26",
+    "milestone": null
+  },
+  {
+    "number": 1977,
+    "title": "[Feat]: Custom Notification System MVP",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Implement an opt-in custom notification system as an alternative to web and Electron notifications for users experiencing OS notification reliability issues, particularly on Linux",
+    "created_at": "2025-11-20",
+    "closed_at": "2025-11-26",
+    "milestone": null
+  },
+  {
+    "number": 1875,
+    "title": "[Feat]: FIDO2 Device Authentication",
+    "state": "closed",
+    "labels": [
+      "enhancement",
+      "blocked",
+      "Stale"
+    ],
+    "summary": "Describe the feature FIDO2 device support; allow to answer 2FA challenge with hardware key Motivation I have a FIDO2 device, to fulfill the MFA challenge. Basically I need to press a button on the dev",
+    "created_at": "2025-10-20",
+    "closed_at": "2025-11-26",
+    "milestone": null
+  },
+  {
+    "number": 977,
+    "title": "Control during screen sharing not available",
+    "state": "closed",
+    "labels": [],
+    "summary": "When a user is sharing the screen with me, they can't grant me control, neither is available on my side a button to \"request control\". I'm using Ubuntu 22.04. Thanks",
+    "created_at": "2023-10-16",
+    "closed_at": "2023-10-18",
+    "milestone": null
+  },
+  {
+    "number": 1954,
+    "title": "[Feat]: Command line refactoring and PR artifact improvements",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Implement Iteration 1 of the incremental refactoring plan, PR testing improvements, and repository enhancements. Motivation Refactoring: Incrementally improve codebase maintainabi",
+    "created_at": "2025-11-16",
+    "closed_at": "2025-11-24",
+    "milestone": null
+  },
+  {
+    "number": 1973,
+    "title": "[Feat]: Implement Documentation Improvements - Quick Reference, Module Index, and ADR Index",
+    "state": "closed",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature This issue tracks implementation of the documentation improvements outlined in . The improvements focus on high-value, low-maintenance additions that significantly enhance both LL",
+    "created_at": "2025-11-19",
+    "closed_at": "2025-11-22",
+    "milestone": null
+  },
+  {
+    "number": 1908,
+    "title": "[Bug]: Notifications disappear almost immediately in KDE Plasma 5",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When Teams for Linux generates a notification, it ignores the KDE settings for notifications (persist for 90 seconds unless dismissed",
+    "created_at": "2025-10-30",
+    "closed_at": "2025-11-22",
+    "milestone": null
+  },
+  {
+    "number": 1234,
+    "title": "Meeting notifications not working with \"new teams\"",
+    "state": "closed",
+    "labels": [
+      "teams-v2",
+      "angular-2-react"
+    ],
+    "summary": "**Describe the bug** Notifications sent to notification-daemon no longer happen with the \"new teams\". This does work - if somewhat erratically - with the \"classic teams\". I have tried both \"web\" and \"",
+    "created_at": "2024-04-29",
+    "closed_at": "2025-11-22",
+    "milestone": null
+  },
+  {
+    "number": 1978,
+    "title": "[Bug]: Screen sharing option is not working in ubuntu 24.0 OS. It is not a OS or other configuration issue.",
+    "state": "closed",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? Yes Describe the bug Screen sharing option is not working in ubuntu 24.0 OS. It is not a OS or other configuration issue. What package are you using? deb",
+    "created_at": "2025-11-20",
+    "closed_at": "2025-11-22",
+    "milestone": null
+  }
+]
