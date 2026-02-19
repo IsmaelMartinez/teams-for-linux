@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-18
-**Current Version:** v2.7.6
-**Status:** Living Document — planning v2.7.7 and v2.8.0
+**Last Updated:** 2026-02-19
+**Current Version:** v2.7.7
+**Status:** Living Document — planning v2.7.8 and v2.8.0
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -10,46 +10,50 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort | Target |
 |----------|---------|--------|--------|--------|
-| **Next** | MQTT Screen Sharing Status ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)) | PR in progress (partial) | Tiny | v2.7.7 |
-| **Verify** | XWayland GPU fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) | Awaiting user confirmation | Small | v2.7.7 |
-| **Verify** | --appTitle/--appIcon fix ([#2143](https://github.com/IsmaelMartinez/teams-for-linux/issues/2143)) | Awaiting user confirmation | Small | v2.7.7 |
+| **Merge** | MQTT Screen Sharing fix ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)) | PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) ready | Tiny | v2.7.8 |
+| **Merge** | App menu tray fix ([#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186)) | PR [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) ready | Small | v2.7.8 |
+| **Merge** | Second ringer fix ([#2025](https://github.com/IsmaelMartinez/teams-for-linux/issues/2025)) | PR [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) ready | Tiny | v2.7.8 |
+| **Merge** | Quick Chat shortcut fix ([#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184)) | PR [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) ready | Small | v2.7.8 |
+| **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.8+ |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
 | **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
+| **Done** | XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) | Shipped in v2.7.7 | Small | Done |
 | **Done** | AppImage auto-update ([#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)) | Shipped in v2.7.6 | Medium | Done |
 | **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
-| **Low** | Screen Lock Media Privacy ([#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)) | Awaiting user feedback | Small | — |
-| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
 ---
 
-## Next Patch Release (v2.7.7)
+## Next Patch Release (v2.7.8)
 
-### In Progress
+### Ready to Merge
 
-| Item | Description | Branch | Status |
-|------|-------------|--------|--------|
-| [**#2107**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)/[**#2144**](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) | MQTT Screen Sharing Status — publish to `{topicPrefix}/screen-sharing` | PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) | Stop event works; start event not firing yet |
+These PRs have been implemented and builds pass. Awaiting user testing/merge.
 
-### Awaiting User Confirmation
+| Item | PR | Description |
+|------|----|-------------|
+| [**#2107**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) | [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | MQTT Screen Sharing — fix null sourceId crash on start event |
+| [**#2186**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) | [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) | App menu — ensure full menu when tray icon disabled |
+| [**#2025**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2025) | [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) | Second ringer — add error handler to prevent exception |
+| [**#2184**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184) | [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) | Quick Chat shortcut — improve messaging and menu integration |
 
-These fixes are believed to be resolved but need user validation before closing.
+### Blocked — Needs User Logs
 
-| Item | Description | Status |
-|------|-------------|--------|
-| [**#2169**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)/[**#2170**](https://github.com/IsmaelMartinez/teams-for-linux/pull/2170) | XWayland GPU fix — camera broken on Wayland sessions | PR [#2170](https://github.com/IsmaelMartinez/teams-for-linux/pull/2170) submitted, likely fixed, awaiting user confirmation |
-| [**#2143**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2143) | --appTitle and --appIcon not working | Believed fixed, user pinged 2026-02-16, awaiting response |
+| Item | PR | Description |
+|------|----|-------------|
+| [**#2131**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131) | [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197) | MQTT status regression — diagnostic build with enhanced logging and restored CSS selectors. Needs user to run the build and share console output so we can identify the correct React service paths for presence detection. |
 
-### Open Bugs (candidates for v2.7.7)
+### Closed / Won't Fix
 
-| Issue | Description | Notes |
-|-------|-------------|-------|
-| [**#2184**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184) | Can't register Quick Chat keyboard shortcut | Reported 2026-02-17 |
-| [**#2186**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) | App menu incomplete when tray icon disabled | Reported 2026-02-17 |
-| [**#2152**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Cannot join meeting with ID and passcode | Meeting join flow broken |
-| [**#2131**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131) | MQTT status no longer being detected | MQTT integration regression |
-| [**#2140**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2140) | New meeting link format (`teams.microsoft.com/meet/...?p=...`) | Microsoft changed URL format |
-| [**#2137**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2137) | Chat message gets scroll bar | UI rendering issue |
-| [**#2025**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2025) | Second ringer option causes exception | Incoming call exception |
+These issues have been closed since the last roadmap update.
+
+| Issue | Resolution |
+|-------|------------|
+| [**#2169**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169) | Fixed in v2.7.7 — XWayland camera crash resolved by skipping fake media UI flag |
+| [**#2143**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2143) | Closed — --appTitle/--appIcon issue resolved |
+| [**#2152**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Closed — meeting ID join is a Microsoft Teams limitation, related to [#675](https://github.com/IsmaelMartinez/teams-for-linux/issues/675) |
+| [**#2140**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2140) | Closed — new meeting link format |
+| [**#2137**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2137) | Closed — chat scrollbar; workaround via `customCSSLocation` config |
+| [**#2106**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — screen lock media privacy; no user interest. PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) also closed. |
 
 ---
 
@@ -66,29 +70,26 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 
 **Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
 
-### Awaiting User Validation
+### Closed Since Last Update
 
-| Item | Description | Notes |
-|------|-------------|-------|
-| [**#2095**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2095) | `--appIcon` not working in KDE window list | PR [#2104](https://github.com/IsmaelMartinez/teams-for-linux/pull/2104) merged in v2.7.3; may still be blocked by Electron |
-| [**#1860**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1860) | Camera resolution/aspect ratio issues | PR [#2060](https://github.com/IsmaelMartinez/teams-for-linux/pull/2060) merged in v2.7.3; needs user testing to confirm fix |
+| Item | Description | Resolution |
+|------|-------------|------------|
+| [**#2095**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2095) | `--appIcon` not working in KDE window list | Closed |
+| [**#1860**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1860) | Camera resolution/aspect ratio issues | Closed |
 
-### Blocked (External Dependencies)
+### Previously Blocked (Now Closed)
 
-| Issue | Description | Blocker |
-|-------|-------------|---------|
-| [**#2094**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094) | Maximized window gap/shrink on focus loss | Electron |
-| [**#2074**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2074) | Window restore from tray appears tiny | Electron |
-| [**#2047**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2047) | Intune SSO regression (broker v2.0.2+) | Microsoft broker; see [ADR-012](../adr/012-intune-sso-broker-compatibility.md) |
-| [**#1972**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1972) | Microphone doesn't work in meetings | External |
-| [**#1923**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1923) | Wayland screen sharing with snap | External |
-| [**#1879**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1879) | App prevents sleep | External |
+All previously blocked external dependency issues have been closed.
 
-### Parked (Awaiting User Response)
-
-| Item | Description | Notes |
-|------|-------------|-------|
-| [**#2036**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2036) | GNOME 49 notification focus | Likely window manager issue |
+| Issue | Description | Resolution |
+|-------|-------------|------------|
+| [**#2094**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094) | Maximized window gap/shrink on focus loss | Closed |
+| [**#2074**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2074) | Window restore from tray appears tiny | Closed |
+| [**#2047**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2047) | Intune SSO regression (broker v2.0.2+) | Closed |
+| [**#1972**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1972) | Microphone doesn't work in meetings | Closed |
+| [**#1923**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1923) | Wayland screen sharing with snap | Closed |
+| [**#1879**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1879) | App prevents sleep | Closed |
+| [**#2036**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2036) | GNOME 49 notification focus | Closed |
 
 ---
 
@@ -100,38 +101,11 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 **Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Effort:** Tiny
-**Status:** PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) in progress — stop event publishes correctly, start event not yet firing
+**Status:** Fix ready in PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) (fixes null sourceId crash on start event). Original PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) still open for the broader feature.
 
 **Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
 
-**Implementation:**
-
-1. Add MQTT publish call when screen sharing starts/stops
-2. Publish to `{topicPrefix}/screen-sharing` topic with "true"/"false" values
-3. Update documentation
-
-**Current state:** The `screen-sharing-stopped` event fires and publishes correctly. The `screen-sharing-started` event is not being detected yet and needs further investigation.
-
----
-
-### Screen Lock Media Privacy
-
-**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) (replaces [#2015](https://github.com/IsmaelMartinez/teams-for-linux/issues/2015))
-**Research:** [screen-lock-media-privacy-investigation.md](../research/screen-lock-media-privacy-investigation.md)
-**Branch:** `claude/screen-lock-media-privacy-HMTPA`
-**Effort:** Small
-**Status:** Awaiting user feedback — PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) open but no user traction
-
-**Description:** Add MQTT commands (`disable-media`, `enable-media`) that users can invoke from their own screen lock scripts to disable camera and microphone when the screen locks.
-
-**Implementation:**
-
-1. Add `disable-media` and `enable-media` to MQTT allowed actions
-2. Create browser tool (`app/browser/tools/mediaPrivacy.js`) to track and control media streams
-3. Wire MQTT commands to media control functions
-4. Update documentation with user scripts for GNOME, KDE, Cinnamon, i3/sway
-
-**Philosophy:** Linux-first approach - expose commands that users wire into their own D-Bus listeners or systemd hooks. More flexible than trying to detect screen lock across all desktop environments.
+**Current state:** PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) fixes the start event crash (null sourceId was being passed to `desktopCapturer.getSources` which threw). Both start and stop events should now work once merged.
 
 ---
 
@@ -235,18 +209,10 @@ Existing flat options migrate opportunistically when modules are refactored.
 
 These features have completed initial implementation. Further phases depend on user requests.
 
-### Screen Lock Media Privacy
-
-**Issue:** [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)
-**PR:** [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) (open, no user traction)
-**Status:** Awaiting user feedback — feature implemented but no users have tested or requested it
-
----
-
 ### Quick Chat Access
 
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109)
-**Status:** ✅ Shipped in v2.7.4
+**Status:** Shipped in v2.7.4
 
 **Delivered:** People API search, deep link chat navigation, inline messaging via Teams React internals, keyboard shortcut (Ctrl+Alt+Q), menu item integration.
 
@@ -284,8 +250,10 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
+| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — no user interest | Implementation complete but untested; PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) closed; reopen if requested |
+| Meeting Join with ID | [#2152](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Microsoft limitation | Related to [#675](https://github.com/IsmaelMartinez/teams-for-linux/issues/675); workaround: use meeting link via clipboard |
 | Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — worked on maintainer's machine but not for user | MVP (v2.6.16) remains; revisit with diagnostic tooling if requested again |
-| Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch `claude/analyze-research-spikes-XbYVZ`; reopen if requested |
+| Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch; reopen if requested |
 | GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible via MQTT but poor UX |
 | External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally; no exposed APIs |
 | Multiple Windows | [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) | Rejected ([ADR-010](../adr/010-multiple-windows-support.md)) | Teams single React context; Quick Chat is the alternative |
@@ -295,12 +263,15 @@ These features have completed initial implementation. Further phases depend on u
 
 ## Implementation Priorities
 
-### v2.7.7 Release Plan
+### v2.7.7 (Shipped 2026-02-19)
 
-1. **Fix MQTT Screen Sharing start event** — Complete [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) so both start and stop publish correctly ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107))
-2. **Confirm user fixes** — Validate [#2170](https://github.com/IsmaelMartinez/teams-for-linux/pull/2170) (XWayland GPU/camera) and [#2143](https://github.com/IsmaelMartinez/teams-for-linux/issues/2143) (--appTitle/--appIcon) with users
-3. **Triage new bugs** — Assess [#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184) (Quick Chat shortcut), [#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) (app menu), [#2152](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) (meeting join), [#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131) (MQTT status), [#2140](https://github.com/IsmaelMartinez/teams-for-linux/issues/2140) (new meeting links)
-4. **Release v2.7.7**
+Included the XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) via PR [#2190](https://github.com/IsmaelMartinez/teams-for-linux/pull/2190), the CI audit level fix ([#2196](https://github.com/IsmaelMartinez/teams-for-linux/pull/2196)), and cleanup ([#2191](https://github.com/IsmaelMartinez/teams-for-linux/pull/2191)).
+
+### v2.7.8 Release Plan
+
+1. **Merge 4 ready PRs** — [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) (MQTT screen sharing), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) (app menu), [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) (second ringer), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) (Quick Chat shortcut)
+2. **Collect user logs for MQTT status** — PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197) has a diagnostic build; once user shares logs, determine fix approach
+3. **Release v2.7.8**
 
 ### v2.8.0 Release Plan
 
@@ -311,11 +282,7 @@ These features have completed initial implementation. Further phases depend on u
 
 ### Future Priorities
 
-- ~~**Code quality hardening**~~ — Complete (Phases 1-3)
-- ~~**AppImage auto-update**~~ — Shipped in v2.7.6
-- [**#2107**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) **MQTT Screen Sharing Status** — In progress (PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144))
-- ~~**GitHub Issue Bot Phase 3**~~ — Duplicate detection via issue index + Gemini Flash (shipped)
-- **GitHub Issue Bot Phase 4** — Enhancement context (link feature requests to roadmap/research/ADRs)
+- **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context (PR [#2192](https://github.com/IsmaelMartinez/teams-for-linux/pull/2192) open for Phase 3)
 
 ### Principles
 
