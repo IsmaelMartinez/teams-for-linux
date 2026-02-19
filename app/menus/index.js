@@ -141,13 +141,15 @@ class Menus {
 
     this.initializeEventHandlers();
 
-    this.tray = new Tray(
-      this.window,
-      menu.submenu,
-      this.iconPath,
-      this.configGroup.startupConfig
-    );
-    this.tray.initialize();
+    if (this.configGroup.startupConfig.trayIconEnabled) {
+      this.tray = new Tray(
+        this.window,
+        menu.submenu,
+        this.iconPath,
+        this.configGroup.startupConfig
+      );
+      this.tray.initialize();
+    }
     this.spellCheckProvider = new SpellCheckProvider(this.window);
   }
 
@@ -168,7 +170,9 @@ class Menus {
       event.preventDefault();
       this.hide();
     } else {
-      this.tray.close();
+      if (this.tray) {
+        this.tray.close();
+      }
       this.window.webContents.session.flushStorageData();
     }
   }
@@ -203,7 +207,9 @@ class Menus {
   updateMenu() {
     const menu = appMenu(this);
     this.window.setMenu(Menu.buildFromTemplate([menu]));
-    this.tray.setContextMenu(menu.submenu);
+    if (this.tray) {
+      this.tray.setContextMenu(menu.submenu);
+    }
 
     // Notify renderer process of config changes that affect renderer behavior
     // This allows menu toggles to take effect immediately without restart
