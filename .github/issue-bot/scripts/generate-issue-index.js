@@ -7,7 +7,7 @@
  * produces compact summaries for duplicate detection via Gemini Flash.
  *
  * Usage:
- *   GITHUB_TOKEN=ghp_xxx node .github/issue-bot/scripts/generate-issue-index.js
+ *   GITHUB_TOKEN=<YOUR_GITHUB_TOKEN> node .github/issue-bot/scripts/generate-issue-index.js
  *
  * Environment variables:
  *   GITHUB_TOKEN      — Required. GitHub token with issues:read scope.
@@ -37,22 +37,48 @@ function getConfig() {
 	return { token, owner, repoName: name };
 }
 
+async function fetchWithRetry(url, headers, retries = 3) {
+	for (let attempt = 1; attempt <= retries; attempt++) {
+		const response = await fetch(url, { headers });
+
+		if (response.ok) {
+			return response;
+		}
+
+		// Handle rate limiting (403 or 429) by waiting for reset
+		if ((response.status === 403 || response.status === 429) && attempt < retries) {
+			const resetHeader = response.headers.get('x-ratelimit-reset');
+			const retryAfter = response.headers.get('retry-after');
+			let waitMs = 60_000; // Default: wait 60 seconds
+
+			if (resetHeader) {
+				waitMs = Math.max(0, (Number(resetHeader) * 1000) - Date.now()) + 1000;
+			} else if (retryAfter) {
+				waitMs = Number(retryAfter) * 1000;
+			}
+
+			// Cap wait at 5 minutes
+			waitMs = Math.min(waitMs, 300_000);
+			console.log(`Rate limited (${response.status}), waiting ${Math.round(waitMs / 1000)}s before retry ${attempt + 1}/${retries}...`);
+			await new Promise((resolve) => setTimeout(resolve, waitMs));
+			continue;
+		}
+
+		throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+	}
+}
+
 async function fetchAllPages(url, token) {
 	const results = [];
 	let nextUrl = url;
+	const headers = {
+		Authorization: `Bearer ${token}`,
+		Accept: 'application/vnd.github+json',
+		'X-GitHub-Api-Version': '2022-11-28',
+	};
 
 	while (nextUrl) {
-		const response = await fetch(nextUrl, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-				Accept: 'application/vnd.github+json',
-				'X-GitHub-Api-Version': '2022-11-28',
-			},
-		});
-
-		if (!response.ok) {
-			throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
-		}
+		const response = await fetchWithRetry(nextUrl, headers);
 
 		const data = await response.json();
 		results.push(...data);
@@ -76,8 +102,9 @@ function sanitizeBody(body) {
 		.replace(/`[^`]+`/g, '')
 		// Remove images
 		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-		// Remove HTML tags
-		.replace(/<[^>]+>/g, '')
+		// Remove HTML tags (including incomplete/unclosed tags)
+		.replace(/<[^>]*>/g, '')
+		.replace(/<[^>]*$/gm, '')
 		// Remove markdown links but keep text
 		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
 		// Remove markdown headers

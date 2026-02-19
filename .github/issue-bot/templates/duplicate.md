@@ -27,7 +27,7 @@ Each entry includes: issue number, title, state, labels, a 200-character body su
 The index regenerates automatically every Monday at 4:00 UTC. To regenerate manually:
 
 ```bash
-GITHUB_TOKEN=ghp_xxx node .github/issue-bot/scripts/generate-issue-index.js
+GITHUB_TOKEN=<YOUR_GITHUB_TOKEN> node .github/issue-bot/scripts/generate-issue-index.js
 ```
 
 Or trigger the workflow manually via the GitHub Actions UI (`update-issue-index.yml` > Run workflow).
