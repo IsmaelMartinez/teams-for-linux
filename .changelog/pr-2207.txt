@@ -1,0 +1,1 @@
+Simplify screen source selection to fix Wayland compatibility - by @IsmaelMartinez (#2207)
