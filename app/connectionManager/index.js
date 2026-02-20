@@ -110,9 +110,14 @@ class ConnectionManager {
           this.window.reload();
         } else {
           console.debug("Loading initial URL...");
-          this.window.loadURL(this.currentUrl, {
-            userAgent: this.config.chromeUserAgent,
-          });
+          try {
+            await this.window.loadURL(this.currentUrl, {
+              userAgent: this.config.chromeUserAgent,
+            });
+          } catch (err) {
+            console.error(`[CONNECTION] Failed to load URL: ${err.message}`);
+            this.debouncedRefresh();
+          }
         }
       } else {
         this.window.setTitle("No internet connection");
@@ -178,6 +183,12 @@ class ConnectionManager {
   }
 }
 
+const { NETWORK_ERROR_PATTERNS } = require("../config/defaults");
+
+// Network errors that should trigger an automatic reconnection attempt.
+// These cover disconnections, network changes, and proxy/tunnel failures.
+const RECOVERABLE_NETWORK_ERRORS = new Set(NETWORK_ERROR_PATTERNS);
+
 function assignOnDidFailLoadEventHandler(cm) {
   return (event, code, description) => {
     console.error(
@@ -185,10 +196,7 @@ function assignOnDidFailLoadEventHandler(cm) {
         event
       )} - ${code} - ${description}`
     );
-    if (
-      description === "ERR_INTERNET_DISCONNECTED" ||
-      description === "ERR_NETWORK_CHANGED"
-    ) {
+    if (RECOVERABLE_NETWORK_ERRORS.has(description)) {
       console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
       cm.debouncedRefresh();
     }
