@@ -53,12 +53,23 @@ function setupScreenSharing(selectedSource) {
 }
 
 function handleScreenSourceSelection(source, callback) {
-  // Use the source directly from the picker instead of calling
-  // desktopCapturer.getSources() again. The redundant call can fail on Wayland
-  // where desktopCapturer is unreliable, preventing the thumbnail window from
-  // being created. See issue #2204.
-  setupScreenSharing(source);
-  callback({ video: source });
+  try {
+    // Use the source directly from the picker instead of calling
+    // desktopCapturer.getSources() again. The redundant call can fail on Wayland
+    // where desktopCapturer is unreliable, preventing the thumbnail window from
+    // being created. See issue #2204.
+    setupScreenSharing(source);
+    callback({ video: source });
+  } catch (error) {
+    console.error("[SCREEN_SHARE] Failed to setup screen sharing:", error);
+    setImmediate(() => {
+      try {
+        callback({});
+      } catch {
+        console.debug("[SCREEN_SHARE] Failed to cancel screen selection after error");
+      }
+    });
+  }
 }
 
 function createScreenSharePreviewWindow() {
