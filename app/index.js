@@ -25,8 +25,29 @@ const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+// Network error patterns that indicate transient connection issues (proxy, tunnel, DNS, etc.)
+// These should not terminate the application — the ConnectionManager will retry automatically.
+const NETWORK_ERROR_PATTERNS = [
+  'ERR_TUNNEL_CONNECTION_FAILED',
+  'ERR_PROXY_CONNECTION_FAILED',
+  'ERR_INTERNET_DISCONNECTED',
+  'ERR_NETWORK_CHANGED',
+  'ERR_CONNECTION_RESET',
+  'ERR_CONNECTION_REFUSED',
+  'ERR_CONNECTION_TIMED_OUT',
+  'ERR_NAME_NOT_RESOLVED',
+];
+
+function isNetworkError(message) {
+  return NETWORK_ERROR_PATTERNS.some(pattern => message.includes(pattern));
+}
+
 // Top-level error handlers for crash diagnostics
 process.on('uncaughtException', (error) => {
+  if (isNetworkError(error.message)) {
+    console.error('[ERROR] Network-related uncaught exception (not terminating):', { message: error.message });
+    return;
+  }
   console.error('[FATAL] Uncaught exception:', { message: error.message, stack: error.stack });
   process.exit(1);
 });
@@ -34,6 +55,10 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   const stack = reason instanceof Error ? reason.stack : undefined;
+  if (isNetworkError(message)) {
+    console.error('[ERROR] Network-related unhandled rejection (not terminating):', { message });
+    return;
+  }
   console.error('[FATAL] Unhandled promise rejection:', { message, stack });
   process.exit(1);
 });
