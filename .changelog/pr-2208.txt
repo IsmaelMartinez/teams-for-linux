@@ -1,0 +1,1 @@
+ci: auto-remove 'awaiting user feedback' label on issue comment - by @IsmaelMartinez (#2208)
