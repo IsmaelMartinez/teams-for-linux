@@ -183,18 +183,11 @@ class ConnectionManager {
   }
 }
 
+const { NETWORK_ERROR_PATTERNS } = require("../config/defaults");
+
 // Network errors that should trigger an automatic reconnection attempt.
 // These cover disconnections, network changes, and proxy/tunnel failures.
-const RECOVERABLE_NETWORK_ERRORS = new Set([
-  "ERR_INTERNET_DISCONNECTED",
-  "ERR_NETWORK_CHANGED",
-  "ERR_TUNNEL_CONNECTION_FAILED",
-  "ERR_PROXY_CONNECTION_FAILED",
-  "ERR_CONNECTION_RESET",
-  "ERR_CONNECTION_REFUSED",
-  "ERR_CONNECTION_TIMED_OUT",
-  "ERR_NAME_NOT_RESOLVED",
-]);
+const RECOVERABLE_NETWORK_ERRORS = new Set(NETWORK_ERROR_PATTERNS);
 
 function assignOnDidFailLoadEventHandler(cm) {
   return (event, code, description) => {
