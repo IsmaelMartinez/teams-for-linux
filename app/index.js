@@ -25,15 +25,31 @@ const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
+
+function isNetworkError(message) {
+  return typeof message === 'string' && NETWORK_ERROR_PATTERNS.some(pattern => message.includes(pattern));
+}
+
 // Top-level error handlers for crash diagnostics
 process.on('uncaughtException', (error) => {
-  console.error('[FATAL] Uncaught exception:', { message: error.message, stack: error.stack });
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+  if (isNetworkError(message)) {
+    console.error('[ERROR] Network-related uncaught exception (not terminating):', { message });
+    return;
+  }
+  console.error('[FATAL] Uncaught exception:', { message, stack });
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   const stack = reason instanceof Error ? reason.stack : undefined;
+  if (isNetworkError(message)) {
+    console.error('[ERROR] Network-related unhandled rejection (not terminating):', { message });
+    return;
+  }
   console.error('[FATAL] Unhandled promise rejection:', { message, stack });
   process.exit(1);
 });
