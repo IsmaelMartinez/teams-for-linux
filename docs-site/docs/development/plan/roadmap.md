@@ -20,6 +20,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Done** | XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) | Shipped in v2.7.7 | Small | Done |
 | **Done** | AppImage auto-update ([#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)) | Shipped in v2.7.6 | Medium | Done |
 | **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
+| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | — |
 
 ---
 
@@ -250,7 +251,7 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
-| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — no user interest | Implementation complete but untested; PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) closed; reopen if requested |
+| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — no user interest | Implementation complete in branch `claude/screen-lock-media-privacy-HMTPA`; reopen if requested |
 | Meeting Join with ID | [#2152](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Microsoft limitation | Related to [#675](https://github.com/IsmaelMartinez/teams-for-linux/issues/675); workaround: use meeting link via clipboard |
 | Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — worked on maintainer's machine but not for user | MVP (v2.6.16) remains; revisit with diagnostic tooling if requested again |
 | Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch; reopen if requested |
