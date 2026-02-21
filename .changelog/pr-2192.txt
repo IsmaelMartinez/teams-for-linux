@@ -1,1 +1,0 @@
-Add Phase 3: Duplicate detection for issue triage bot - by @IsmaelMartinez (#2192)

@@ -14,6 +14,20 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.8" date="2026-02-21">
+      <description>
+        <ul>
+          <li>docs: close screen lock media privacy — no user interest - by @IsmaelMartinez (#2189)</li>
+          <li>Add Phase 3: Duplicate detection for issue triage bot - by @IsmaelMartinez (#2192)</li>
+          <li>fix: add error handler to incoming call command spawn - by @IsmaelMartinez (#2194)</li>
+          <li>Add dependency overrides to resolve security vulnerabilities - by @IsmaelMartinez (#2200)</li>
+          <li>docs: update roadmap after v2.7.7 release - by @IsmaelMartinez (#2201)</li>
+          <li>chore: generate initial issue index for duplicate detection - by @IsmaelMartinez (#2202)</li>
+          <li>Improve network error handling and recovery - by @IsmaelMartinez (#2206)</li>
+          <li>ci: auto-remove 'awaiting user feedback' label on issue comment - by @IsmaelMartinez (#2208)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.7" date="2026-02-19">
       <description>
         <ul>
