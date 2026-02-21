@@ -4,6 +4,7 @@
   let activeMediaTracks = [];
   let uiObserver = null;
   let periodicCheckInterval = null;
+  let streamInactiveHandlers = [];
 
   // Known translations of "Stop sharing" / "Stop presenting" button text.
   // Used as fallback when CSS attribute selectors don't match (non-English locales).
@@ -151,12 +152,14 @@
     }
 
     // Monitor stream inactive event (fires when all tracks end)
-    stream.addEventListener("inactive", () => {
+    const inactiveHandler = () => {
       console.debug("[SCREEN_SHARE_DIAG] Stream became inactive");
       if (isScreenSharing) {
         handleStreamEnd("stream_inactive");
       }
-    });
+    };
+    stream.addEventListener("inactive", inactiveHandler);
+    streamInactiveHandlers.push({ stream, handler: inactiveHandler });
 
     // Start UI monitoring for stop sharing buttons
     startUIMonitoring();
@@ -198,6 +201,12 @@
         console.debug(`[SCREEN_SHARE_DIAG] Sending screen-sharing-stopped event (${reason})`);
         electronAPI.sendScreenSharingStopped();
       }
+
+      // Remove stream inactive listeners to prevent memory leaks
+      for (const { stream, handler } of streamInactiveHandlers) {
+        stream.removeEventListener("inactive", handler);
+      }
+      streamInactiveHandlers = [];
 
       // Clear active streams and tracks
       activeStreams = [];
