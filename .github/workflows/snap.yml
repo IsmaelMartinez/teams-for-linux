@@ -1,6 +1,11 @@
 name: Snap Build
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 # Restrict default permissions — each job declares only what it needs
 permissions: {}
@@ -38,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: Set edge version with commit SHA
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: |
           SHA=$(git rev-parse --short HEAD)
           node -e "
@@ -50,15 +55,15 @@ jobs:
           echo "Snap edge version: $(node -p "require('./package.json').version")"
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:snap -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:snap -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-snap-x64
@@ -91,7 +96,7 @@ jobs:
         run: npm ci
 
       - name: Set edge version with commit SHA
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: |
           SHA=$(git rev-parse --short HEAD)
           node -e "
@@ -103,15 +108,15 @@ jobs:
           echo "Snap edge version: $(node -p "require('./package.json').version")"
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:snap:armv7l -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:snap:armv7l -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-snap-armv7l
@@ -147,7 +152,7 @@ jobs:
         run: npm ci
 
       - name: Set edge version with commit SHA
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: |
           SHA=$(git rev-parse --short HEAD)
           node -e "
@@ -159,15 +164,15 @@ jobs:
           echo "Snap edge version: $(node -p "require('./package.json').version")"
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:snap:arm64 -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:snap:arm64 -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-snap-arm64
@@ -177,7 +182,7 @@ jobs:
 
   comment-artifacts:
     runs-on: ubuntu-latest
-    if: "!contains(github.ref, 'main')"
+    if: github.ref != 'refs/heads/main'
     needs: [snap, snap-armv7l, snap-arm64]
     permissions:
       pull-requests: write
@@ -188,17 +193,24 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Find PR for this branch
-            const branchName = context.ref.replace('refs/heads/', '');
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
-            const pr = prs.find(p => p.head.ref === branchName);
+            // Find PR number — use payload directly for pull_request events,
+            // fall back to branch-based search for push events
+            let prNumber;
+            if (context.payload.pull_request) {
+              prNumber = context.payload.pull_request.number;
+            } else {
+              const branchName = context.ref.replace('refs/heads/', '');
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+              const pr = prs.find(p => p.head.ref === branchName);
+              prNumber = pr?.number;
+            }
 
-            if (!pr) {
-              console.log(`No PR found for branch ${branchName}`);
+            if (!prNumber) {
+              console.log('No PR found for this workflow run');
               return;
             }
 
@@ -247,7 +259,7 @@ jobs:
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: pr.number
+              issue_number: prNumber
             });
 
             const botComment = comments.find(c =>
@@ -265,7 +277,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: pr.number,
+                issue_number: prNumber,
                 body
               });
             }
