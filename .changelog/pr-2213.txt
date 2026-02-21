@@ -1,0 +1,1 @@
+Upgrade Issue Triage Bot to use Gemini 2.5 Flash model - by @IsmaelMartinez (#2213)
