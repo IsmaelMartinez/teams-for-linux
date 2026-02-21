@@ -3,7 +3,12 @@ name: Build & Release
 env:
   GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 # Restrict default permissions — each job declares only what it needs
 permissions: {}
@@ -92,15 +97,15 @@ jobs:
         run: npm run generate-release-info
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:x64 -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:x64 -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-linux-x64
@@ -134,15 +139,15 @@ jobs:
         run: npm run generate-release-info
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:arm64 -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:arm64 -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-linux-arm64
@@ -176,15 +181,15 @@ jobs:
         run: npm run generate-release-info
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:linux:arm -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:linux:arm -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-linux-armv7l
@@ -218,15 +223,15 @@ jobs:
         run: npm run generate-release-info
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:mac:x64 -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:mac:x64 -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-macos-x64
@@ -256,15 +261,15 @@ jobs:
         run: npm run generate-release-info
 
       - name: Build for Release
-        if: contains(github.ref, 'main')
+        if: github.ref == 'refs/heads/main'
         run: npm run dist:windows -- --publish always
 
       - name: Build for PR
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         run: npm run dist:windows -- --publish never
 
       - name: Upload PR artifacts
-        if: "!contains(github.ref, 'main')"
+        if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: teams-for-linux-windows-x64
@@ -274,7 +279,7 @@ jobs:
 
   comment-artifacts:
     runs-on: ubuntu-latest
-    if: "!contains(github.ref, 'main')"
+    if: github.ref != 'refs/heads/main'
     needs: [linux_x64, linux_arm64, linux_arm, dmg, exe]
     permissions:
       pull-requests: write
@@ -285,17 +290,24 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Find PR for this branch
-            const branchName = context.ref.replace('refs/heads/', '');
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
-            const pr = prs.find(p => p.head.ref === branchName);
+            // Find PR number — use payload directly for pull_request events,
+            // fall back to branch-based search for push events
+            let prNumber;
+            if (context.payload.pull_request) {
+              prNumber = context.payload.pull_request.number;
+            } else {
+              const branchName = context.ref.replace('refs/heads/', '');
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+              const pr = prs.find(p => p.head.ref === branchName);
+              prNumber = pr?.number;
+            }
 
-            if (!pr) {
-              console.log(`No PR found for branch ${branchName}`);
+            if (!prNumber) {
+              console.log('No PR found for this workflow run');
               return;
             }
 
@@ -369,7 +381,7 @@ jobs:
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: pr.number
+              issue_number: prNumber
             });
 
             const botComment = comments.find(c =>
@@ -387,7 +399,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: pr.number,
+                issue_number: prNumber,
                 body
               });
             }
