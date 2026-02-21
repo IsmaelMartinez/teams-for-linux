@@ -8,32 +8,22 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Active Research - PRs in Review
+### Ready for Implementation
 
 - **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.4.0
   - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
   - Includes ESLint 10 migration analysis and codebase audit
-  - **Status:** Research complete, ready for implementation
+  - **Status:** Research complete, targeted for v2.8.0
 
-- **[Electron-Updater Auto-Update Research](electron-updater-auto-update-research.md)** - In-app auto-update via electron-updater for AppImage
-  - Supersedes ADR-011 appimagetool approach (incompatible with electron-builder)
-  - Phase 1: AppImage auto-update using `electron-updater` with GitHub Releases
-  - **Status:** Research complete, ready for implementation
+### Awaiting User Feedback
 
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106))
-  - Linux-first philosophy: Expose commands for user scripts (D-Bus listeners, systemd hooks)
-  - Feasible via MQTT commands (`disable-media`, `enable-media`) that users invoke from their own lock scripts
-  - **Status:** PR in review
-
-- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
-  - **MVP Complete** (v2.6.16): Toast notifications with auto-dismiss and click-to-focus
-  - **Phase 2 in review**: Chat, calendar, activity notification routing ([#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108))
-
-### Ongoing Development - Awaiting User Feedback
+  - MQTT commands (`disable-media`, `enable-media`) for user scripts
+  - **Status:** Implemented but no user traction; see closure PR [#2189](https://github.com/IsmaelMartinez/teams-for-linux/pull/2189)
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
-  - **Phase 1 Complete**: Infrastructure, documentation, and Last Will Testament
-  - **Phase 2 DEFERRED**: WebRTC camera/mic monitoring awaiting user feedback
+  - **Phase 1 Shipped**: Infrastructure, LWT, and call state publishing
+  - **Phase 2 Deferred**: WebRTC camera/mic monitoring awaiting user feedback
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
@@ -42,40 +32,36 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Strategic Documentation
 
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
-  - **Phase 1 Complete** (v2.7.4): Information request bot — detects missing info in bug reports
-  - **Phase 2 Complete**: Solution suggester — AI-powered matching using Gemini; consolidated comment format
+  - **Phases 1-2 Shipped**: Information request bot and AI-powered solution suggester
   - **Future phases**: Duplicate detection (embeddings), enhancement context (RAG)
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
-  - **Phases 2-3 DEFERRED**: Nested structure migration happening incrementally
+  - **Phases 2-3**: Nested structure migration happening incrementally
+
+### Shipped (Historical Reference)
+
+These documents are retained for historical context. The features they describe have been fully implemented and released.
+
+- **[Electron-Updater Auto-Update Research](electron-updater-auto-update-research.md)** - Shipped in v2.7.6
+- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Shipped (Phases 1-2)
+- **[Custom Notification System Research](custom-notification-system-research.md)** - MVP shipped in v2.6.16; Phase 2 dropped
 
 ### Archived / Not Feasible
 
-- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - **ARCHIVED**
-  - Tray icon logout indicator ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987))
-  - Validation spikes implemented but user never responded to test
-  - Work preserved in branch `claude/analyze-research-spikes-XbYVZ` for potential reuse
-
-- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE**
-  - Investigation into enabling Teams auth in system browser
-  - **Conclusion:** Not currently feasible - Teams manages auth internally without exposed APIs
-  - Note: `ssoBasicAuthPasswordCommand` is only for proxy/network auth, not Teams login
-
-- **[GNOME Search Provider Investigation](gnome-search-provider-investigation.md)** - **NOT RECOMMENDED**
-  - GNOME Shell search integration ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075))
-  - Feasible via MQTT if Teams is running, but latency (~300-1100ms) makes UX poor
+- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - **ARCHIVED** — user not responding
+- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE** — Teams manages auth internally
+- **[GNOME Search Provider Investigation](gnome-search-provider-investigation.md)** - **NOT RECOMMENDED** — latency too high for acceptable UX
 
 ### Implemented Features (Research Removed)
 
-Research documents are deleted once a feature is fully shipped. The ADRs and git history preserve the decisions and context.
+Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
 | Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates, workflow permissions, CODEOWNERS |
 | Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
 | Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
-| External Changelog Generation | v2.7.3 | [Research](external-changelog-generation-research.md), [ADR-005](../adr/005-ai-powered-changelog-generation.md) |
 | PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
 | DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |
 | Architecture Modernization | — | Rejected (DDD too complex) — incremental refactoring adopted instead |

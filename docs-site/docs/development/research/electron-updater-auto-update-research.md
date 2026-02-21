@@ -1,8 +1,12 @@
 # Electron-Updater Auto-Update Research
 
+:::tip Shipped in v2.7.6
+Feature fully implemented and released. This document is retained for historical context.
+:::
+
 **Date**: 2026-02-13
 **Issue**: [#2065 - AppImage Update Info](https://github.com/IsmaelMartinez/teams-for-linux/issues/2065)
-**Status**: Phase 1 Implemented
+**Status**: Shipped in v2.7.6
 
 ## Background
 

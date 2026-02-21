@@ -45,5 +45,9 @@
   },
   "engines": {
     "node": ">=18.0"
+  },
+  "overrides": {
+    "minimatch": ">=10.2.1",
+    "schema-utils": "^4.0.0"
   }
 }

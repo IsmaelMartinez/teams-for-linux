@@ -1,5 +1,9 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
+:::info Phase 1 Shipped — Phase 2 Awaiting User Feedback
+Infrastructure, LWT, and call state publishing are shipped. Phase 2 (WebRTC camera/mic monitoring) deferred until a user requests it.
+:::
+
 **Date**: 2025-11-12
 **Updated**: 2026-01-18
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)

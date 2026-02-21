@@ -1,6 +1,10 @@
 # Tray Icon Logout Indicator - Research & Implementation Plan
 
-**Status:** Research Complete - Awaiting Spike Validation
+:::danger Archived
+User never responded to validation request. Work preserved in branch `claude/analyze-research-spikes-XbYVZ` but not planned for implementation.
+:::
+
+**Status:** Archived — user not responding
 **Date:** November 2025
 **Issue:** [#1987 - Change tray icon color if logged out](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)
 **Author:** Claude AI Assistant

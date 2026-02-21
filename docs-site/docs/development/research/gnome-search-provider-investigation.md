@@ -1,6 +1,10 @@
 # GNOME Shell Search Provider Investigation
 
-> **Issue:** [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | **Status:** Research Complete
+:::warning Not Recommended
+Feasible but latency too high (~300-1100ms) for acceptable UX. Not planned for implementation.
+:::
+
+> **Issue:** [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | **Status:** Not Recommended
 
 ## Summary
 
