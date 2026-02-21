@@ -1,0 +1,1 @@
+Fix screen sharing detection for non-English locales - by @IsmaelMartinez (#2210)
