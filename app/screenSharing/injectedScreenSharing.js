@@ -2,6 +2,41 @@
   let isScreenSharing = false;
   let activeStreams = [];
   let activeMediaTracks = [];
+  let uiObserver = null;
+  let periodicCheckInterval = null;
+  let streamInactiveHandlers = [];
+
+  // Known translations of "Stop sharing" / "Stop presenting" button text.
+  // Used as fallback when CSS attribute selectors don't match (non-English locales).
+  // Issue #2209: English-only selectors caused thumbnail to never auto-close in French.
+  const STOP_SHARING_TRANSLATIONS = [
+    "stop sharing", "stop presenting",
+    "arrêter le partage", "arrêter la présentation",
+    "freigabe beenden", "präsentation beenden",
+    "dejar de compartir", "dejar de presentar",
+    "parar de compartilhar", "parar de partilhar",
+    "interrompi condivisione", "interrompi presentazione",
+    "delen stoppen", "stoppen met delen",
+    "zatrzymaj udostępnianie",
+    "paylaşmayı durdur",
+    "sluta dela",
+    "slutt å dele",
+    "stop deling",
+    "lopeta jakaminen",
+    "zastavit sdílení",
+    "megosztás leállítása",
+    "opriți partajarea",
+    "停止共享", "停止共用",
+    "共有を停止",
+    "공유 중지",
+    "остановить демонстрацию", "прекратить показ",
+    "إيقاف المشاركة",
+    "зупинити демонстрацію",
+    "หยุดแชร์",
+    "ngừng chia sẻ",
+    "berhenti berbagi",
+    "הפסקת שיתוף",
+  ];
 
   // Helper function to disable audio in screen sharing constraints
   function disableAudioInConstraints(constraints, context) {
@@ -116,8 +151,21 @@
       electronAPI.send("active-screen-share-stream", stream);
     }
 
+    // Monitor stream inactive event (fires when all tracks end)
+    const inactiveHandler = () => {
+      console.debug("[SCREEN_SHARE_DIAG] Stream became inactive");
+      if (isScreenSharing) {
+        handleStreamEnd("stream_inactive");
+      }
+    };
+    stream.addEventListener("inactive", inactiveHandler);
+    streamInactiveHandlers.push({ stream, handler: inactiveHandler });
+
     // Start UI monitoring for stop sharing buttons
     startUIMonitoring();
+
+    // Start periodic fallback check for track state and button detection
+    startPeriodicCheck();
 
     // Track stream and tracks for cleanup when they end
     const trackingVideoTracks = stream.getVideoTracks();
@@ -144,11 +192,21 @@
       isScreenSharing = false;
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing stopped");
 
+      // Clean up monitoring
+      stopPeriodicCheck();
+      stopUIMonitoring();
+
       const electronAPI = globalThis.electronAPI;
       if (electronAPI?.sendScreenSharingStopped) {
         console.debug(`[SCREEN_SHARE_DIAG] Sending screen-sharing-stopped event (${reason})`);
         electronAPI.sendScreenSharingStopped();
       }
+
+      // Remove stream inactive listeners to prevent memory leaks
+      for (const { stream, handler } of streamInactiveHandlers) {
+        stream.removeEventListener("inactive", handler);
+      }
+      streamInactiveHandlers = [];
 
       // Clear active streams and tracks
       activeStreams = [];
@@ -179,25 +237,55 @@
   // Track whether stop button exists in current UI state
   let stopButtonExists = false;
 
+  // Check if a button matches known stop sharing patterns in any language
+  function isStopSharingButton(button) {
+    const text = (button.textContent || "").trim().toLowerCase();
+    const title = (button.getAttribute("title") || "").toLowerCase();
+    const ariaLabel = (button.getAttribute("aria-label") || "").toLowerCase();
+
+    return STOP_SHARING_TRANSLATIONS.some(
+      (pattern) =>
+        text.includes(pattern) ||
+        title.includes(pattern) ||
+        ariaLabel.includes(pattern)
+    );
+  }
+
   // Process discovered stop sharing buttons
   function processStopSharingButtons() {
-    // Look for various "Stop sharing" button patterns
-    const stopButtons = [
-      ...document.querySelectorAll('[data-tid="stop-sharing-button"]'),
-      ...document.querySelectorAll('button[title*="Stop sharing"]'),
-      ...document.querySelectorAll('button[aria-label*="Stop sharing"]'),
-      // More generic patterns
-      ...document.querySelectorAll('button[class*="stop-sharing"]'),
-      ...document.querySelectorAll('[id*="stop-sharing"]'),
-    ];
+    const stopButtons = new Set();
+
+    // Fast path: CSS attribute selectors (language-independent + English)
+    for (const el of document.querySelectorAll(
+      '[data-tid="stop-sharing-button"], ' +
+        'button[class*="stop-sharing"], ' +
+        '[id*="stop-sharing"], ' +
+        'button[title*="Stop sharing"], ' +
+        'button[aria-label*="Stop sharing"], ' +
+        'button[title*="Stop presenting"], ' +
+        'button[aria-label*="Stop presenting"]'
+    )) {
+      stopButtons.add(el);
+    }
+
+    // Fallback: scan buttons for translated text (non-English locales)
+    if (stopButtons.size === 0) {
+      for (const button of document.querySelectorAll("button")) {
+        if (isStopSharingButton(button)) {
+          stopButtons.add(button);
+        }
+      }
+    }
 
     const hadStopButton = stopButtonExists;
-    stopButtonExists = stopButtons.length > 0;
+    stopButtonExists = stopButtons.size > 0;
 
     // If stop button was present but now disappeared while screen sharing is active,
     // the meeting likely ended - trigger cleanup
     if (hadStopButton && !stopButtonExists && isScreenSharing) {
-      console.debug("[SCREEN_SHARE_DIAG] Stop sharing button disappeared - meeting likely ended");
+      console.debug(
+        "[SCREEN_SHARE_DIAG] Stop sharing button disappeared - meeting likely ended"
+      );
       handleStreamEnd("meeting_ended_button_removed");
       return;
     }
@@ -209,19 +297,65 @@
 
   // Start monitoring UI for "Stop sharing" buttons
   function startUIMonitoring() {
+    if (uiObserver) return;
+
     console.debug("[SCREEN_SHARE_DIAG] Starting UI monitoring for stop buttons");
 
-    const observer = new MutationObserver(processStopSharingButtons);
+    uiObserver = new MutationObserver(processStopSharingButtons);
 
-    observer.observe(document.body, {
+    uiObserver.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'data-tid', 'title', 'aria-label']
+      attributeFilter: ["class", "data-tid", "title", "aria-label"],
     });
 
     // Initial check to detect current button state
     processStopSharingButtons();
+  }
+
+  // Stop monitoring UI
+  function stopUIMonitoring() {
+    if (uiObserver) {
+      uiObserver.disconnect();
+      uiObserver = null;
+    }
+    stopButtonExists = false;
+  }
+
+  // Periodic fallback check for track state and button detection
+  function startPeriodicCheck() {
+    if (periodicCheckInterval) return;
+
+    periodicCheckInterval = setInterval(() => {
+      if (!isScreenSharing) {
+        stopPeriodicCheck();
+        return;
+      }
+
+      // Check if all tracked video tracks have ended (catches missed "ended" events)
+      if (
+        activeMediaTracks.length > 0 &&
+        activeMediaTracks.every((t) => t.readyState === "ended")
+      ) {
+        console.debug(
+          "[SCREEN_SHARE_DIAG] Periodic check: all tracks ended"
+        );
+        handleStreamEnd("periodic_check_tracks_ended");
+        return;
+      }
+
+      // Re-run button detection (catches missed mutations)
+      processStopSharingButtons();
+    }, 5000);
+  }
+
+  // Stop periodic check
+  function stopPeriodicCheck() {
+    if (periodicCheckInterval) {
+      clearInterval(periodicCheckInterval);
+      periodicCheckInterval = null;
+    }
   }
 
   // Initialize monitoring when the page is ready
