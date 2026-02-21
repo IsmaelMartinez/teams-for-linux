@@ -6,7 +6,6 @@ const {
   dialog,
   webFrameMain,
   nativeImage,
-  desktopCapturer,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -45,10 +44,6 @@ let menus = null;
 
 const isMac = os.platform() === "darwin";
 
-function findSelectedSource(sources, source) {
-  return sources.find((s) => s.id === source.id);
-}
-
 function setupScreenSharing(selectedSource) {
   // Store the source ID in the screen sharing service
   screenSharingService.setSelectedSource(selectedSource);
@@ -58,41 +53,23 @@ function setupScreenSharing(selectedSource) {
 }
 
 function handleScreenSourceSelection(source, callback) {
-  desktopCapturer
-    .getSources({ types: ["window", "screen"] })
-    .then((sources) => {
-      const selectedSource = findSelectedSource(sources, source);
-      if (selectedSource) {
-        setupScreenSharing(selectedSource);
-        callback({ video: selectedSource });
-      } else {
-        // Source not found - use setImmediate and try-catch to allow retry
-        setImmediate(() => {
-          try {
-            callback({});
-          } catch {
-            console.debug("[SCREEN_SHARE] Selected source not found");
-          }
-        });
+  try {
+    // Use the source directly from the picker instead of calling
+    // desktopCapturer.getSources() again. The redundant call can fail on Wayland
+    // where desktopCapturer is unreliable, preventing the thumbnail window from
+    // being created. See issue #2204.
+    setupScreenSharing(source);
+    callback({ video: source });
+  } catch (error) {
+    console.error("[SCREEN_SHARE] Failed to setup screen sharing:", error);
+    setImmediate(() => {
+      try {
+        callback({});
+      } catch {
+        console.debug("[SCREEN_SHARE] Failed to cancel screen selection after error");
       }
-    })
-    .catch((error) => {
-      // Handle desktopCapturer failures gracefully - can crash on certain hardware
-      // configurations (USB-C docking stations, DisplayLink drivers, etc.)
-      // See issues #2058, #2041
-      console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
-        error: error.message,
-        stack: error.stack,
-        sourceId: source?.id
-      });
-      setImmediate(() => {
-        try {
-          callback({});
-        } catch {
-          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
-        }
-      });
     });
+  }
 }
 
 function createScreenSharePreviewWindow() {
