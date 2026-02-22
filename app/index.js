@@ -80,16 +80,6 @@ let mqttMediaStatusService = null;
 let graphApiClient = null;
 let quickChatManager = null;
 
-let player;
-try {
-  const { NodeSound } = require("node-sound");
-  player = NodeSound.getDefaultPlayer();
-} catch (err) {
-  console.warn(
-    `No audio players found. Audio notifications might not work. ${err}`
-  );
-}
-
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
@@ -100,7 +90,6 @@ const getUserStatus = () => userStatus;
 
 // Initialize notification service with dependencies
 const notificationService = new NotificationService(
-  player,
   config,
   mainAppWindow,
   getUserStatus

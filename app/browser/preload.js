@@ -153,14 +153,23 @@ ipcRenderer.invoke("get-config").then((config) => {
 });
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
-function playNotificationSound(notifSound) {
-  if (globalThis.electronAPI?.playNotificationSound) {
-    try {
-      console.debug("Requesting application to play sound");
-      globalThis.electronAPI.playNotificationSound(notifSound);
-    } catch (e) {
-      console.debug("playNotificationSound failed", e);
+// Plays notification sound via Web Audio API: main process resolves which file to play,
+// renderer reads it and plays via Blob URL to avoid any native audio dependencies.
+async function playNotificationSound(notifSound) {
+  if (!globalThis.electronAPI?.playNotificationSound) return;
+  try {
+    const soundFile = await globalThis.electronAPI.playNotificationSound(notifSound);
+    if (soundFile) {
+      const fsPromises = require('node:fs/promises');
+      const data = await fsPromises.readFile(soundFile);
+      const blob = new Blob([data], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.addEventListener('ended', () => URL.revokeObjectURL(url), { once: true });
+      await audio.play();
     }
+  } catch (e) {
+    console.debug("playNotificationSound failed", e);
   }
 }
 
@@ -188,6 +197,13 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
+  // Play notification sound via Web Audio (same as web/custom methods)
+  playNotificationSound({
+    type: options.type,
+    audio: "default",
+    title: options.title,
+    body: options.body,
+  });
   // Use Electron notification
   if (globalThis.electronAPI?.showNotification) {
     try {

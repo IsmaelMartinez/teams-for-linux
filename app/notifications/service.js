@@ -7,14 +7,12 @@ const USER_STATUS = {
 };
 
 class NotificationService {
-  #soundPlayer;
   #config;
   #mainWindow;
   #getUserStatus;
   #notificationSounds;
 
-  constructor(soundPlayer, config, mainWindow, getUserStatus) {
-    this.#soundPlayer = soundPlayer;
+  constructor(config, mainWindow, getUserStatus) {
     this.#config = config;
     this.#mainWindow = mainWindow;
     this.#getUserStatus = getUserStatus;
@@ -59,14 +57,6 @@ class NotificationService {
     });
 
     try {
-      // Play notification sound if configured (await to catch any errors)
-      await this.#playNotificationSound({
-        type: options.type,
-        audio: "default",
-        title: options.title,
-        body: options.body,
-      });
-
       // Create notification config
       const notificationConfig = {
         title: options.title,
@@ -107,15 +97,14 @@ class NotificationService {
     }
   }
 
-  async #playNotificationSound(options) {
-    console.debug(
-      `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
-    );
+  // Returns the sound file path for the renderer to play via Web Audio, or null if sound is disabled
+  #playNotificationSound(options) {
+    console.debug("[NOTIFICATION] Processing sound request", { type: options.type });
 
-    // Player failed to load or notification sound disabled in config
-    if (!this.#soundPlayer || this.#config.disableNotificationSound) {
-      console.debug("Notification sounds are disabled");
-      return;
+    // Notification sound disabled in config
+    if (this.#config.disableNotificationSound) {
+      console.debug("[NOTIFICATION] Sounds disabled");
+      return null;
     }
 
     // Get current user status via injected function
@@ -127,21 +116,18 @@ class NotificationService {
       userStatus !== USER_STATUS.AVAILABLE &&
       userStatus !== USER_STATUS.UNKNOWN
     ) {
-      console.debug("Notification sounds are disabled when user is not active");
-      return;
+      console.debug("[NOTIFICATION] Sound disabled for non-available status");
+      return null;
     }
 
-    const sound = this.#notificationSounds.find((ns) => {
-      return ns.type === options.type;
-    });
+    const sound = this.#notificationSounds.find((ns) => ns.type === options.type);
 
     if (sound) {
-      console.debug(`Playing file: ${sound.file}`);
-      await this.#soundPlayer.play(sound.file);
-      return;
+      return sound.file;
     }
 
-    console.debug("No notification sound played", this.#soundPlayer, options);
+    console.debug("[NOTIFICATION] No matching sound for type", { type: options.type });
+    return null;
   }
 }
 

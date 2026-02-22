@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-19
-**Current Version:** v2.7.7
-**Status:** Living Document — planning v2.7.8 and v2.8.0
+**Last Updated:** 2026-02-22
+**Current Version:** v2.7.8
+**Status:** Living Document — planning v2.7.9 and v2.8.0
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -16,7 +16,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **Merge** | Quick Chat shortcut fix ([#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184)) | PR [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) ready | Small | v2.7.8 |
 | **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.8+ |
 | **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
-| **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
+| **Done** | ESLint 10 upgrade | Shipped in v2.7.8 | Small | Done |
+| **Done** | Replace node-sound with Web Audio | Shipped in v2.7.8 | Small | Done |
 | **Done** | XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) | Shipped in v2.7.7 | Small | Done |
 | **Done** | AppImage auto-update ([#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)) | Shipped in v2.7.6 | Medium | Done |
 | **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
@@ -67,9 +68,10 @@ Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). I
 | Item | Description | Notes |
 |------|-------------|-------|
 | **Electron 40** | Electron 39.5.1 → 40.4.0 (Chromium 144, Node.js 24, V8 14.4) | [Research](../research/electron-40-migration-research.md); no blocking breaking changes |
-| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — flat config already in use, minimal impact |
 
-**Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
+**Routine dependency updates completed in v2.7.8:** `@homebridge/dbus-native` 0.7.3, `electron-updater` 6.8.3, `electron-builder` 26.8.1, `eslint`/`@eslint/js` 10.0.1 (ESLint 10), removed `node-sound` (replaced with Web Audio API).
+
+**Still pending:** Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3 (docs-site only).
 
 ### Closed Since Last Update
 
@@ -277,9 +279,7 @@ Included the XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/team
 ### v2.8.0 Release Plan
 
 1. **Electron 40 upgrade** — Major version bump (39.5.1 → 40.4.0); [research complete](../research/electron-40-migration-research.md)
-2. **ESLint 10 upgrade** — Major version bump, flat config already in use
-3. **Routine dependency updates** — `@homebridge/dbus-native` 0.7.3 and other patch/minor bumps
-4. **Release v2.8.0**
+2. **Release v2.8.0**
 
 ### Future Priorities
 
