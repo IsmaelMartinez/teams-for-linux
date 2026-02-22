@@ -153,39 +153,16 @@ ipcRenderer.invoke("get-config").then((config) => {
 });
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
-// Plays a notification chime using the Web Audio API. Main process gates playback
-// based on config and user status; the tone itself is generated in the renderer.
-let _audioContext = null;
-
+// Main process gates playback (config/status) and returns a base64 data URI for the
+// WAV file. The renderer plays it with new Audio(dataUri).play() — no AudioContext
+// needed, no Blob URL, no file I/O in the renderer, no autoplay suspension issues.
 async function playNotificationSound(notifSound) {
   if (!globalThis.electronAPI?.playNotificationSound) return;
   try {
-    const shouldPlay = await globalThis.electronAPI.playNotificationSound(notifSound);
-    if (!shouldPlay) return;
-
-    if (!_audioContext) {
-      _audioContext = new AudioContext();
+    const dataUri = await globalThis.electronAPI.playNotificationSound(notifSound);
+    if (dataUri) {
+      await new Audio(dataUri).play();
     }
-    if (_audioContext.state === 'suspended') {
-      await _audioContext.resume();
-    }
-
-    // Simple two-tone notification chime (A5 → C#6)
-    const osc = _audioContext.createOscillator();
-    const gain = _audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(_audioContext.destination);
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, _audioContext.currentTime);
-    osc.frequency.setValueAtTime(1108, _audioContext.currentTime + 0.15);
-
-    gain.gain.setValueAtTime(0, _audioContext.currentTime);
-    gain.gain.linearRampToValueAtTime(0.3, _audioContext.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, _audioContext.currentTime + 0.5);
-
-    osc.start(_audioContext.currentTime);
-    osc.stop(_audioContext.currentTime + 0.5);
   } catch (e) {
     console.debug("playNotificationSound failed", e);
   }

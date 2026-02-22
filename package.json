@@ -82,6 +82,12 @@
         "msteams"
       ]
     },
+    "extraResources": [
+      {
+        "from": "app/assets/sounds",
+        "to": "assets/sounds"
+      }
+    ],
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",
