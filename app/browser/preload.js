@@ -153,15 +153,35 @@ ipcRenderer.invoke("get-config").then((config) => {
 });
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
-// Main process gates playback (config/status) and returns a base64 data URI for the
-// WAV file. The renderer plays it with new Audio(dataUri).play() — no AudioContext
-// needed, no Blob URL, no file I/O in the renderer, no autoplay suspension issues.
+// Main process gates playback (config/status); sound is generated here via Web Audio.
+// Requires the --autoplay-policy=no-user-gesture-required Chromium switch (set in
+// CommandLineManager) so the AudioContext is never suspended between notifications.
+let _audioContext = null;
+
 async function playNotificationSound(notifSound) {
   if (!globalThis.electronAPI?.playNotificationSound) return;
   try {
-    const dataUri = await globalThis.electronAPI.playNotificationSound(notifSound);
-    if (dataUri) {
-      await new Audio(dataUri).play();
+    const shouldPlay = await globalThis.electronAPI.playNotificationSound(notifSound);
+    if (!shouldPlay) return;
+
+    if (!_audioContext) {
+      _audioContext = new AudioContext();
+    }
+
+    // Bell-like chime: fundamental (880 Hz) + octave partial (1760 Hz).
+    // Exponential decay gives a natural resonance instead of an abrupt cut.
+    const now = _audioContext.currentTime;
+    for (const [freq, peak] of [[880, 0.35], [1760, 0.15]]) {
+      const osc = _audioContext.createOscillator();
+      const gain = _audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(_audioContext.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(peak, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      osc.start(now);
+      osc.stop(now + 0.8);
     }
   } catch (e) {
     console.debug("playNotificationSound failed", e);

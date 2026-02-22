@@ -5,6 +5,12 @@ class CommandLineManager {
   static addSwitchesBeforeConfigLoad() {
     app.commandLine.appendSwitch("try-supported-channel-layouts");
 
+    // Allow audio playback without requiring a prior user gesture.
+    // Notification sounds fire in the background (no user gesture) so without
+    // this switch Chromium's autoplay policy suspends the AudioContext after
+    // the first play and rejects subsequent audio on all renderer paths.
+    app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+
     if (app.commandLine.hasSwitch("disable-features")) {
       const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
       if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
