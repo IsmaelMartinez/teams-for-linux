@@ -153,38 +153,14 @@ ipcRenderer.invoke("get-config").then((config) => {
 });
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
-// Main process gates playback (config/status); sound is generated here via Web Audio.
-// Requires the --autoplay-policy=no-user-gesture-required Chromium switch (set in
-// CommandLineManager) so the AudioContext is never suspended between notifications.
-let _audioContext = null;
-
-async function playNotificationSound(notifSound) {
-  if (!globalThis.electronAPI?.playNotificationSound) return;
-  try {
-    const shouldPlay = await globalThis.electronAPI.playNotificationSound(notifSound);
-    if (!shouldPlay) return;
-
-    if (!_audioContext) {
-      _audioContext = new AudioContext();
+function playNotificationSound(notifSound) {
+  if (globalThis.electronAPI?.playNotificationSound) {
+    try {
+      console.debug("Requesting application to play sound");
+      globalThis.electronAPI.playNotificationSound(notifSound);
+    } catch (e) {
+      console.debug("playNotificationSound failed", e);
     }
-
-    // Bell-like chime: fundamental (880 Hz) + octave partial (1760 Hz).
-    // Exponential decay gives a natural resonance instead of an abrupt cut.
-    const now = _audioContext.currentTime;
-    for (const [freq, peak] of [[880, 0.35], [1760, 0.15]]) {
-      const osc = _audioContext.createOscillator();
-      const gain = _audioContext.createGain();
-      osc.connect(gain);
-      gain.connect(_audioContext.destination);
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(peak, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-      osc.start(now);
-      osc.stop(now + 0.8);
-    }
-  } catch (e) {
-    console.debug("playNotificationSound failed", e);
   }
 }
 
@@ -212,13 +188,6 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
-  // Play notification sound via Web Audio (same as web/custom methods)
-  playNotificationSound({
-    type: options.type,
-    audio: "default",
-    title: options.title,
-    body: options.body,
-  });
   // Use Electron notification
   if (globalThis.electronAPI?.showNotification) {
     try {
