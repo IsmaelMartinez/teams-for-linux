@@ -1,0 +1,1 @@
+Replace node-sound with Web Audio API for notifications - by @IsmaelMartinez (#2214)
