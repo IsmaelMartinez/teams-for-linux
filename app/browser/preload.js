@@ -153,21 +153,39 @@ ipcRenderer.invoke("get-config").then((config) => {
 });
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
-// Plays notification sound via Web Audio API: main process resolves which file to play,
-// renderer reads it and plays via Blob URL to avoid any native audio dependencies.
+// Plays a notification chime using the Web Audio API. Main process gates playback
+// based on config and user status; the tone itself is generated in the renderer.
+let _audioContext = null;
+
 async function playNotificationSound(notifSound) {
   if (!globalThis.electronAPI?.playNotificationSound) return;
   try {
-    const soundFile = await globalThis.electronAPI.playNotificationSound(notifSound);
-    if (soundFile) {
-      const fsPromises = require('node:fs/promises');
-      const data = await fsPromises.readFile(soundFile);
-      const blob = new Blob([data], { type: 'audio/wav' });
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.addEventListener('ended', () => URL.revokeObjectURL(url), { once: true });
-      await audio.play();
+    const shouldPlay = await globalThis.electronAPI.playNotificationSound(notifSound);
+    if (!shouldPlay) return;
+
+    if (!_audioContext) {
+      _audioContext = new AudioContext();
     }
+    if (_audioContext.state === 'suspended') {
+      await _audioContext.resume();
+    }
+
+    // Simple two-tone notification chime (A5 → C#6)
+    const osc = _audioContext.createOscillator();
+    const gain = _audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(_audioContext.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, _audioContext.currentTime);
+    osc.frequency.setValueAtTime(1108, _audioContext.currentTime + 0.15);
+
+    gain.gain.setValueAtTime(0, _audioContext.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, _audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, _audioContext.currentTime + 0.5);
+
+    osc.start(_audioContext.currentTime);
+    osc.stop(_audioContext.currentTime + 0.5);
   } catch (e) {
     console.debug("playNotificationSound failed", e);
   }

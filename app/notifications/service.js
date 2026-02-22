@@ -1,5 +1,4 @@
 const { Notification, nativeImage, ipcMain } = require("electron");
-const path = require("node:path");
 
 const USER_STATUS = {
   UNKNOWN: -1,
@@ -10,23 +9,11 @@ class NotificationService {
   #config;
   #mainWindow;
   #getUserStatus;
-  #notificationSounds;
 
   constructor(config, mainWindow, getUserStatus) {
     this.#config = config;
     this.#mainWindow = mainWindow;
     this.#getUserStatus = getUserStatus;
-
-    this.#notificationSounds = [
-      {
-        type: "new-message",
-        file: path.join(config.appPath, "assets/sounds/new_message.wav"),
-      },
-      {
-        type: "meeting-started",
-        file: path.join(config.appPath, "assets/sounds/meeting_started.wav"),
-      },
-    ];
   }
 
   initialize() {
@@ -97,20 +84,15 @@ class NotificationService {
     }
   }
 
-  // Returns the sound file path for the renderer to play via Web Audio, or null if sound is disabled
-  #playNotificationSound(options) {
-    console.debug("[NOTIFICATION] Processing sound request", { type: options.type });
-
-    // Notification sound disabled in config
+  // Returns true if the renderer should play a notification sound, null otherwise
+  #playNotificationSound(_options) {
     if (this.#config.disableNotificationSound) {
       console.debug("[NOTIFICATION] Sounds disabled");
       return null;
     }
 
-    // Get current user status via injected function
     const userStatus = this.#getUserStatus();
 
-    // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)
     if (
       this.#config.disableNotificationSoundIfNotAvailable &&
       userStatus !== USER_STATUS.AVAILABLE &&
@@ -120,14 +102,7 @@ class NotificationService {
       return null;
     }
 
-    const sound = this.#notificationSounds.find((ns) => ns.type === options.type);
-
-    if (sound) {
-      return sound.file;
-    }
-
-    console.debug("[NOTIFICATION] No matching sound for type", { type: options.type });
-    return null;
+    return true;
   }
 }
 
