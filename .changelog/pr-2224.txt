@@ -1,0 +1,1 @@
+chore(deps): bump @easyops-cn/docusaurus-search-local from 0.24.1 to 0.55.0 in /docs-site in the minor-and-patch group (#2224)
