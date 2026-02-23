@@ -47,7 +47,17 @@ class TrayIconRenderer {
       return;
     }
 
-    this.render(count).then((icon) => {
+    this.currentProcessingCount = count;
+    this.render(count).then(({ icon, renderedCount }) => {
+      // Prevent race conditions: check if the count has changed since rendering started
+      if (renderedCount !== this.currentProcessingCount) {
+        console.debug("[TRAY_DIAG] Stale render detected, discarding result", {
+          renderedCount,
+          currentProcessingCount: this.currentProcessingCount
+        });
+        return;
+      }
+
       const renderTime = Date.now() - startTime;
       console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
         count: count,
@@ -61,6 +71,7 @@ class TrayIconRenderer {
       this.ipcRenderer.send("tray-update", {
         icon: icon,
         flash: count > 0 && !this.config.disableNotificationWindowFlash,
+        count: count,
       });
       
       console.debug("[TRAY_DIAG] Tray update IPC sent", {
@@ -69,6 +80,7 @@ class TrayIconRenderer {
         ipcCallTimeMs: Date.now() - ipcStartTime,
         performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
       });
+      this.lastActivityCount = count;
     }).catch((error) => {
       console.error("[TRAY_DIAG] Icon render failed", {
         error: error.message,
@@ -81,7 +93,6 @@ class TrayIconRenderer {
     if (!this.config.disableBadgeCount) {
       this.ipcRenderer.invoke("set-badge-count", count);
     }
-    this.lastActivityCount = count;
   }
 
   render(newActivityCount) {
@@ -94,7 +105,10 @@ class TrayIconRenderer {
       // Add error handling for image loading
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");
-        resolve(this.baseIcon.toDataURL("image/png")); // Fallback to base icon
+        resolve({
+          icon: this.baseIcon.toDataURL("image/png"),
+          renderedCount: newActivityCount
+        }); // Fallback to base icon
       };
       
       image.onload = () =>
@@ -108,7 +122,10 @@ class TrayIconRenderer {
       const dataURL = this.baseIcon.toDataURL("image/png");
       if (!dataURL || dataURL === "data:,") {
         console.error("Base icon toDataURL returned invalid data");
-        resolve(this.baseIcon.toDataURL("image/png")); // Fallback
+        resolve({
+          icon: this.baseIcon.toDataURL("image/png"),
+          renderedCount: newActivityCount
+        }); // Fallback
         return;
       }
       
@@ -137,7 +154,10 @@ class TrayIconRenderer {
       }
     }
     const resizedCanvas = this._getResizeCanvasWithOriginalIconSize(canvas);
-    resolve(resizedCanvas.toDataURL());
+    resolve({
+      icon: resizedCanvas.toDataURL(),
+      renderedCount: newActivityCount
+    });
   }
 
   _getResizeCanvasWithOriginalIconSize(canvas) {
