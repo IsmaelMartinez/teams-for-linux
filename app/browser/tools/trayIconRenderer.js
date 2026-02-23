@@ -44,7 +44,9 @@ class TrayIconRenderer {
         count: 0
       });
       if (!this.config.disableBadgeCount) {
-        this.ipcRenderer.invoke("set-badge-count", 0);
+        await this.ipcRenderer.invoke("set-badge-count", 0).catch(err => 
+          console.debug("[TRAY_DIAG] Failed to set badge count:", err.message)
+        );
       }
       this.#lastActivityCount = 0;
       return;
@@ -96,22 +98,27 @@ class TrayIconRenderer {
     }
     
     if (!this.config.disableBadgeCount) {
-      this.ipcRenderer.invoke("set-badge-count", count);
+      await this.ipcRenderer.invoke("set-badge-count", count).catch(err => 
+        console.debug("[TRAY_DIAG] Failed to set badge count:", err.message)
+      );
     }
   }
 
   render(newActivityCount) {
+    const IMAGE_PNG = "image/png";
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
       canvas.height = 140;
       canvas.width = 140;
       const image = new Image();
       
+      const baseIconData = this.baseIcon.toDataURL(IMAGE_PNG);
+      
       // Add error handling for image loading
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");
         resolve({
-          icon: this.baseIcon.toDataURL("image/png"),
+          icon: baseIconData,
           renderedCount: newActivityCount
         }); // Fallback to base icon
       };
@@ -124,17 +131,16 @@ class TrayIconRenderer {
           resolve,
         );
       
-      const dataURL = this.baseIcon.toDataURL("image/png");
-      if (!dataURL || dataURL === "data:,") {
+      if (!baseIconData || baseIconData === "data:,") {
         console.error("Base icon toDataURL returned invalid data");
         resolve({
-          icon: this.baseIcon.toDataURL("image/png"),
+          icon: baseIconData,
           renderedCount: newActivityCount
         }); // Fallback
         return;
       }
       
-      image.src = dataURL;
+      image.src = baseIconData;
     });
   }
 
@@ -166,14 +172,14 @@ class TrayIconRenderer {
   }
 
   _getResizeCanvasWithOriginalIconSize(canvas) {
-    const resizedCanvas = document.createElement("canvas"),
-      rctx = resizedCanvas.getContext("2d");
+    const resizedCanvas = document.createElement("canvas");
+    const rctx = resizedCanvas.getContext("2d");
 
     resizedCanvas.width = this.iconSize.width;
     resizedCanvas.height = this.iconSize.height;
 
-    const scaleFactorX = this.iconSize.width / canvas.width,
-      scaleFactorY = this.iconSize.height / canvas.height;
+    const scaleFactorX = this.iconSize.width / canvas.width;
+    const scaleFactorY = this.iconSize.height / canvas.height;
     rctx.scale(scaleFactorX, scaleFactorY);
     rctx.drawImage(canvas, 0, 0);
 

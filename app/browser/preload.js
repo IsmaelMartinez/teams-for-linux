@@ -303,12 +303,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       mutationTitle.init(config);
     }
     
-    // Initialize tray icon functionality directly in preload with secure IPC
-    if (config.trayIconEnabled) {
-      // NOTE: unread-count event is handled by trayIconRenderer.js
-      // This redundant listener was causing duplicate IPC traffic and rendering.
-    }
-    
     console.debug("Preload: Essential tray modules initialized successfully");
     
     // Initialize other modules safely
