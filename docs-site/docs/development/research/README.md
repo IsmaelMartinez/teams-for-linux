@@ -10,9 +10,16 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
+- **[setDisplayMediaRequestHandler Research](set-display-media-request-handler-research.md)** - Resolve the screen sharing vs camera conflict on XWayland ([#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217), [#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169))
+  - Explains why `--use-fake-ui-for-media-stream` cannot satisfy both issues simultaneously
+  - Proposes `session.setDisplayMediaRequestHandler()` as the architectural fix
+  - Includes implementation plan reusing existing `ScreenSharingService` infrastructure
+  - **Status:** Research complete, ready to implement
+
 - **[Wayland Optimizations Audit](wayland-optimizations-audit.md)** - Audit of Wayland workarounds and recommendations for simplification ([Issue #2221](https://github.com/IsmaelMartinez/teams-for-linux/issues/2221))
   - Per-flag analysis of all Wayland-specific command-line switches
   - Identifies `WebRTCPipeWireCapturer` as redundant (default since Chromium 110)
+  - Identifies `--use-fake-ui-for-media-stream` conflict — see setDisplayMediaRequestHandler research
   - Tracks upstream blockers for native Wayland migration
   - **Status:** Research complete, immediate cleanup identified
 

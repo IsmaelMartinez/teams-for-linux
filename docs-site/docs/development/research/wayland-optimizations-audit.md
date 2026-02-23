@@ -84,17 +84,17 @@ The project applies several Wayland-specific flags and workarounds. Here is an a
 
 **Location:** `app/startup/commandLine.js` lines 64-71
 
-**What it does:** Bypasses Chromium's internal media permission dialog, auto-granting camera/microphone access without user interaction. Only applied on native Wayland (not XWayland).
+**What it does:** Tells Chromium's `MediaStreamUIController` to auto-approve all media device requests (camera, microphone, display capture) without showing any UI. Currently only applied on native Wayland (the `!isX11Forced` guard on line 69).
 
-**Why it was added:** On native Wayland, the normal Chromium permission dialog had issues with GPU context binding for video capture. The fake UI avoids that codepath.
+**Why it was added:** On native Wayland, Chromium's internal permission dialog caused GPU context binding failures in the video capture service. The flag bypasses that dialog entirely.
 
-**Still needed?** **Questionable.** This flag only applies when running native Wayland (the `!isX11Forced` check on line 69 correctly skips it for XWayland). Since the default is now XWayland, this flag rarely activates in practice. When it does activate (user overrides to native Wayland), there are concerns:
+**Why it was restricted to native Wayland (v2.7.x):** [Issue #2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169) revealed that applying this flag on XWayland causes the video capture service to fail to bind its GPU context provider (`Bind context provider failed`), breaking camera in meetings. The `!isX11Forced` guard was added in PR #2190 to fix this.
 
-- It auto-grants camera/mic permissions without user consent, which is a security/privacy concern
-- The better Electron pattern is `session.setPermissionRequestHandler()` to programmatically handle permissions
-- The GPU context binding issues it works around may no longer apply on Chromium 142+
+**The conflict with issue #2217:** [Issue #2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217) reports screen sharing is broken on XWayland since v2.7.7. The cause is precisely the `!isX11Forced` guard: without the flag, Chromium shows its own internal dialog for `getDisplayMedia()` on XWayland, which either fails silently or triggers duplicate xdg-desktop-portal requests on top of the app's custom source picker. [PR #2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219) proposes re-enabling the flag for XWayland to fix this — but that would directly reintroduce the #2169 camera regression.
 
-**Recommendation:** **Keep for now, but flag for future removal.** It only fires on native Wayland (rare path), and users who override to native Wayland are already opting into a less-stable experience. Consider replacing with `session.setPermissionRequestHandler()` when migrating to native Wayland as default.
+**Root cause of the conflict:** The flag is a blunt instrument that applies to every media request — `getUserMedia()` (camera/mic) and `getDisplayMedia()` (screen sharing) alike. What the app actually needs is to bypass Chromium's dialog only for `getDisplayMedia()`, leaving camera/mic permissions to flow normally so the GPU context binding stays intact.
+
+**Recommendation:** **Do not toggle this flag back and forth.** The correct fix is `session.setDisplayMediaRequestHandler()`, which intercepts `getDisplayMedia()` at the Electron main-process level and can return a source directly — bypassing Chromium's dialog for screen sharing only, without touching the camera/mic permission path at all. See the [setDisplayMediaRequestHandler research](set-display-media-request-handler-research.md) for the full investigation.
 
 ---
 
@@ -161,28 +161,34 @@ The camera/mic crash in #2221 occurs on **both** native Wayland and XWayland, wh
 | `--ozone-platform=x11` (package.json) | **Keep** | Native Wayland GPU still broken upstream |
 | GPU auto-disable conditional logic | **Keep** | Protects users who override to native Wayland |
 | `WebRTCPipeWireCapturer` enable-feature | **Remove** | Default since Chromium 110, flag expired at M120 |
-| `--use-fake-ui-for-media-stream` | **Keep (flag for future)** | Rare path, but safety net for native Wayland users |
+| `--use-fake-ui-for-media-stream` | **Do not toggle** | Conflicts with #2169 (camera) and #2217 (screen sharing) — proper fix is `setDisplayMediaRequestHandler` |
 | `HardwareMediaKeyHandling` disable | **Keep** | Not Wayland-specific, still needed |
 
 ### Immediate Action
 
 1. **Remove `WebRTCPipeWireCapturer`** flag and its associated warning logic from `commandLine.js` lines 50-62. This is safe cleanup.
 2. **Update `electron-40-migration-research.md`** line 168 to note the flag is redundant (not just "still valid").
+3. **Do not merge PR #2219 as-is.** Re-enabling `--use-fake-ui-for-media-stream` for XWayland fixes #2217 (screen sharing) but reintroduces #2169 (camera broken). The right fix is `session.setDisplayMediaRequestHandler()`.
+
+### Near-Term Priority
+
+**Implement `session.setDisplayMediaRequestHandler()`** to resolve the #2169 vs #2217 conflict permanently. This intercepts `getDisplayMedia()` at the Electron main-process level for screen sharing only, leaving camera/mic permissions untouched. The `--use-fake-ui-for-media-stream` flag can then be removed entirely. See the [setDisplayMediaRequestHandler research](set-display-media-request-handler-research.md) for the implementation plan.
 
 ### Medium-Term (When Upstream Stabilizes)
 
 1. **Switch from `--ozone-platform=x11` to `--ozone-platform=auto`** once Chromium's native Wayland GPU support is reliable. Track via [Chromium issue 350117524](https://issues.chromium.org/issues/350117524) and [Electron baseline Wayland specs #48441](https://github.com/electron/electron/issues/48441).
-2. **Replace `--use-fake-ui-for-media-stream`** with `session.setPermissionRequestHandler()` for proper programmatic permission handling.
-3. **Consider `WebRtcPipeWireCamera`** flag for native PipeWire camera support (currently not default, tracked upstream).
-4. **Consider screen sharing modernization**: Migrate from `desktopCapturer.getSources()` to `navigator.mediaDevices.getDisplayMedia()` with `session.setDisplayMediaRequestHandler()`, as other Electron apps (Jitsi Meet) have done.
+2. **Consider `WebRtcPipeWireCamera`** flag for native PipeWire camera support (currently not default, tracked upstream).
 
 ---
 
 ## References
 
 - [Issue #2221 - Camera/mic crash](https://github.com/IsmaelMartinez/teams-for-linux/issues/2221)
+- [Issue #2217 - Screen sharing broken on Wayland/XWayland](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217)
 - [Issue #2169 - Camera broken under XWayland with GPU disabled](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)
 - [PR #2190 - Fix: keep GPU enabled under XWayland](https://github.com/IsmaelMartinez/teams-for-linux/pull/2190)
+- [PR #2219 - Screen sharing regression fix (do not merge as-is)](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219)
+- [setDisplayMediaRequestHandler Research](set-display-media-request-handler-research.md)
 - [Electron 38.0.0 Release (ozone-platform auto default)](https://www.electronjs.org/blog/electron-38-0)
 - [Electron 39.0.0 Release](https://www.electronjs.org/blog/electron-39-0)
 - [Electron #48441 - Baseline Wayland test specs](https://github.com/electron/electron/issues/48441)
