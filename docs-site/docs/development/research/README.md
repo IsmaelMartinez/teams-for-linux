@@ -10,6 +10,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
+- **[Wayland Optimizations Audit](wayland-optimizations-audit.md)** - Audit of Wayland workarounds and recommendations for simplification ([Issue #2221](https://github.com/IsmaelMartinez/teams-for-linux/issues/2221))
+  - Per-flag analysis of all Wayland-specific command-line switches
+  - Identifies `WebRTCPipeWireCapturer` as redundant (default since Chromium 110)
+  - Tracks upstream blockers for native Wayland migration
+  - **Status:** Research complete, immediate cleanup identified
+
 - **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.4.0
   - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
   - Includes ESLint 10 migration analysis and codebase audit
