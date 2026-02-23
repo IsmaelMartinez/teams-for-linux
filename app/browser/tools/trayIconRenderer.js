@@ -1,6 +1,9 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
 class TrayIconRenderer {
+  #lastActivityCount;
+  #currentProcessingCount;
+
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
@@ -13,11 +16,11 @@ class TrayIconRenderer {
     );
   }
 
-  updateActivityCount(event) {
+  async updateActivityCount(event) {
     const count = event.detail.number;
     
     // Skip if count hasn't changed to avoid redundant work
-    if (count === this.lastActivityCount) {
+    if (count === this.#lastActivityCount) {
       console.debug("[TRAY_DIAG] Activity count unchanged, skipping update");
       return;
     }
@@ -26,7 +29,7 @@ class TrayIconRenderer {
     
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
-      previousCount: this.lastActivityCount || 0,
+      previousCount: this.#lastActivityCount || 0,
       timestamp: new Date().toISOString(),
       willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
       suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
@@ -43,17 +46,19 @@ class TrayIconRenderer {
       if (!this.config.disableBadgeCount) {
         this.ipcRenderer.invoke("set-badge-count", 0);
       }
-      this.lastActivityCount = 0;
+      this.#lastActivityCount = 0;
       return;
     }
 
-    this.currentProcessingCount = count;
-    this.render(count).then(({ icon, renderedCount }) => {
+    this.#currentProcessingCount = count;
+    try {
+      const { icon, renderedCount } = await this.render(count);
+      
       // Prevent race conditions: check if the count has changed since rendering started
-      if (renderedCount !== this.currentProcessingCount) {
+      if (renderedCount !== this.#currentProcessingCount) {
         console.debug("[TRAY_DIAG] Stale render detected, discarding result", {
           renderedCount,
-          currentProcessingCount: this.currentProcessingCount
+          currentProcessingCount: this.#currentProcessingCount
         });
         return;
       }
@@ -80,15 +85,15 @@ class TrayIconRenderer {
         ipcCallTimeMs: Date.now() - ipcStartTime,
         performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
       });
-      this.lastActivityCount = count;
-    }).catch((error) => {
+      this.#lastActivityCount = count;
+    } catch (error) {
       console.error("[TRAY_DIAG] Icon render failed", {
         error: error.message,
         count: count,
         elapsedMs: Date.now() - startTime,
         suggestion: "Check canvas creation and image loading in render method"
       });
-    });
+    }
     
     if (!this.config.disableBadgeCount) {
       this.ipcRenderer.invoke("set-badge-count", count);
