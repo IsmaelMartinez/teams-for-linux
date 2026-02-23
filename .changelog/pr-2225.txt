@@ -1,0 +1,1 @@
+docs: add Wayland optimizations audit and research findings - by @IsmaelMartinez (#2225)
