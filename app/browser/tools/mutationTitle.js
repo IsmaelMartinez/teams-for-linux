@@ -1,4 +1,6 @@
 class MutationObserverTitle {
+  #lastNumber = -1;
+
   init(config) {
     if (config.useMutationTitleLogic) {
       console.debug("MutationObserverTitle enabled");
@@ -56,6 +58,13 @@ class MutationObserverTitle {
           const match = regex.exec(sanitizedTitle);
           const number = match ? Number.parseInt(match[1], 10) : 0;
           
+          // Only dispatch if the number has actually changed
+          if (number === this.#lastNumber) {
+            console.debug(`MutationTitle: Number unchanged (${number}), skipping event dispatch`);
+            return;
+          }
+          this.#lastNumber = number;
+
           // Enhanced debugging for unread count extraction
           console.debug("MutationTitle: Extracting unread count", {
             hasMatch: !!match,

@@ -15,6 +15,13 @@ class TrayIconRenderer {
 
   updateActivityCount(event) {
     const count = event.detail.number;
+    
+    // Skip if count hasn't changed to avoid redundant work
+    if (count === this.lastActivityCount) {
+      console.debug("[TRAY_DIAG] Activity count unchanged, skipping update");
+      return;
+    }
+
     const startTime = Date.now();
     
     console.debug("[TRAY_DIAG] Activity count update initiated", {
@@ -25,6 +32,21 @@ class TrayIconRenderer {
       suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
     });
     
+    // Special case for count 0: Use base icon directly to avoid canvas rendering
+    if (count === 0) {
+      console.debug("[TRAY_DIAG] Count is 0, using base icon without rendering");
+      this.ipcRenderer.send("tray-update", {
+        icon: null, // Let main process use the default icon
+        flash: false,
+        count: 0
+      });
+      if (!this.config.disableBadgeCount) {
+        this.ipcRenderer.invoke("set-badge-count", 0);
+      }
+      this.lastActivityCount = 0;
+      return;
+    }
+
     this.render(count).then((icon) => {
       const renderTime = Date.now() - startTime;
       console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
