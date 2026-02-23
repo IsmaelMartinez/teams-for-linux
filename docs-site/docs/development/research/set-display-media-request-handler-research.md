@@ -61,6 +61,21 @@ Without `--use-fake-ui-for-media-stream`, that portal authorization either does 
 
 The `setDisplayMediaRequestHandler` correctly suppresses Chromium's **picker** dialog, but it does not suppress the PipeWire **portal authorization** step that `desktopCapturer.getSources()` needs. These are different things.
 
+**Root cause confirmed via Chromium source code.** WebRTC's `DesktopCapturer::IsRunningUnderWayland()` in `desktop_capturer.cc` controls whether PipeWire or X11 is used for screen capture. Its implementation reads only `XDG_SESSION_TYPE` and `WAYLAND_DISPLAY` from the process environment — it has zero coupling to the ozone platform:
+
+```cpp
+bool DesktopCapturer::IsRunningUnderWayland() {
+  const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+  if (!xdg_session_type || strncmp(xdg_session_type, "wayland", 7) != 0)
+    return false;
+  if (!(getenv("WAYLAND_DISPLAY")))
+    return false;
+  return true;
+}
+```
+
+On a typical Wayland session, both `XDG_SESSION_TYPE=wayland` and `WAYLAND_DISPLAY` are set and inherited by all child processes — including the Electron process running with `--ozone-platform=x11`. So even under XWayland, `IsRunningUnderWayland()` returns `true`, PipeWire is selected as the capture backend, and portal authorization is required. The rendering layer and the capture layer are completely decoupled.
+
 ---
 
 ## The Real Root Cause of #2169
@@ -101,7 +116,7 @@ The core tension is that `--use-fake-ui-for-media-stream` solves two different p
 
 **For camera on XWayland:** The flag causes GPU context corruption in the video capture service when permissions persist across sessions. Without it, camera permissions flow through Chromium's normal path and store correctly.
 
-These two requirements directly contradict each other. There is no known Electron/Chromium API that provides portal authorization for `desktopCapturer.getSources()` without also going through the fake-ui permission path.
+These two requirements directly contradict each other when approached through the fake-ui flag. However, since `IsRunningUnderWayland()` is gated by `options.allow_pipewire()` before the env var check, explicitly disabling `WebRTCPipeWireCapturer` when `isX11Forced` short-circuits the PipeWire backend selection entirely — forcing X11 screen capture without touching the camera/mic permission path at all. See Option F below.
 
 ---
 
@@ -109,11 +124,11 @@ These two requirements directly contradict each other. There is no known Electro
 
 **#2217 (screen sharing broken on XWayland):** Directly caused by removing `--use-fake-ui-for-media-stream` from XWayland. Root cause is empty `desktopCapturer.getSources()` results due to missing PipeWire portal auth. Workaround: switch to `--ozone-platform=wayland`.
 
-**#2222 (microphone not working since v2.7.5):** May have the same root cause as #2217. Without `--use-fake-ui-for-media-stream`, Chromium's normal permission dialog handles microphone. If that dialog fails silently or its permission grants interact badly with XWayland, microphone fails. Microphone goes through `getUserMedia()`, not `getDisplayMedia()`, so the `setDisplayMediaRequestHandler` does not affect it.
+**#2222 (microphone not working since v2.7.5):** Needs debug logs to determine root cause. Microphone goes through `getUserMedia()`, not `getDisplayMedia()`, so the `setDisplayMediaRequestHandler` does not affect it. The injected script in `injectedScreenSharing.js` does hook `getUserMedia()` but only modifies constraints for screen-sharing paths — it does not alter audio-only calls. Whether the normal Chromium permission dialog appears and works correctly on XWayland without `--use-fake-ui-for-media-stream` is unverified.
 
 **#2204 (no thumbnail window when sharing on native Wayland):** User is on `--ozone-platform=wayland`. Under native Wayland, `--use-fake-ui-for-media-stream` IS applied (the `!isX11Forced` guard passes). So screen sharing should work. The missing thumbnail suggests either the `screen-sharing-started` IPC event is not firing, or the preview window creation is failing for another reason. Needs separate investigation.
 
-**#2107 (MQTT screen sharing status):** Depends on `screen-sharing-started`/`screen-sharing-stopped` IPC events fired by `injectedScreenSharing.js`. Any changes to screen sharing that bypass the injected script would break MQTT status.
+**#2107 (MQTT screen sharing status):** Depends on `screen-sharing-started`/`screen-sharing-stopped` IPC events fired by `injectedScreenSharing.js`. Any changes to screen sharing that bypass the injected script would break MQTT status. There is also a pre-existing bug: `injectedScreenSharing.js` calls `electronAPI.sendScreenSharingStarted(null)` (per ADR-001 to preserve the desktopCapturer source ID), but the preload guard in `app/browser/preload.js` rejects `null` with `typeof sourceId === 'string'` — so the `screen-sharing-started` IPC event is currently silently dropped. The MQTT pipeline may already be broken for the `getDisplayMedia` path independent of the Wayland issue.
 
 **#2221 (camera/mic crash):** Crashes on both XWayland and native Wayland. Not explained by the `--use-fake-ui-for-media-stream` conflict. Needs debug logs.
 
@@ -129,9 +144,9 @@ Fixes #2217 (screen sharing) but reintroduces #2169 (camera GPU context corrupti
 
 Would grant `media` permissions through Electron's permission layer rather than Chromium's fake-ui path. Hypothesis: this might avoid the GPU context corruption. Untested. Even if it works for camera, it does not solve the PipeWire portal auth issue for `desktopCapturer.getSources()` on XWayland.
 
-**Option C: Force X11 screen capture path despite PipeWire default**
+**Option C: Force X11 screen capture path via environment override**
 
-Under `--ozone-platform=x11`, the rendering is X11. In theory, `desktopCapturer.getSources()` should use the X11 screen capture path, not PipeWire. The fact that it appears to use PipeWire anyway when `WebRTCPipeWireCapturer` is the default suggests Chromium's capture layer checks `XDG_SESSION_TYPE=wayland` independently of `--ozone-platform`. Possible mitigation: unset `XDG_SESSION_TYPE` before launch, or set it to `x11` in the Electron app process. This would bypass the Wayland-specific code paths in `commandLine.js` entirely and may break other things. Needs investigation.
+Confirmed via Chromium source: `DesktopCapturer::IsRunningUnderWayland()` checks `XDG_SESSION_TYPE` and `WAYLAND_DISPLAY` independently of `--ozone-platform`. Setting `process.env.XDG_SESSION_TYPE = 'x11'` (or unsetting `WAYLAND_DISPLAY`) before Chromium initializes would cause `IsRunningUnderWayland()` to return `false`, routing screen capture through X11. However, this is a blunt instrument — it affects all code in the process that reads `XDG_SESSION_TYPE`, not just screen capture, and could break clipboard, file pickers, or other portal-dependent features.
 
 **Option D: Accept the trade-off and document it**
 
@@ -139,7 +154,25 @@ XWayland: camera works, screen sharing broken. Native Wayland: screen sharing wo
 
 **Option E: Investigate whether `desktopCapturer.getSources()` can be called before any portal auth**
 
-Electron's `desktopCapturer.getSources()` might have different behavior depending on whether it's called from the main process or renderer, and whether the session has already authorized the portal. If the first call to `getSources()` triggers portal auth, a portal auth dialog should appear before the custom picker. The `StreamSelector` could be deferred until portal auth completes. This would require understanding the exact timing of portal auth in Chromium's screen capturer.
+The portal auth is not being triggered at all on XWayland without the fake-ui flag — it returns empty silently rather than showing a portal dialog that times out. Deferring the picker cannot solve the problem because the issue is that auth never happens. Low standalone value.
+
+**Option F: `--disable-features=WebRTCPipeWireCapturer` when `isX11Forced` (most promising)**
+
+The Chromium check that selects PipeWire is:
+
+```cpp
+if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland())
+```
+
+`options.allow_pipewire()` is controlled by the `WebRTCPipeWireCapturer` feature flag. Explicitly disabling it when `isX11Forced` short-circuits the check at the first condition — PipeWire is never selected regardless of `XDG_SESSION_TYPE`. This forces X11 screen capture on XWayland, making `desktopCapturer.getSources()` return results without any portal authorization. Camera and mic permissions are completely unaffected since `--use-fake-ui-for-media-stream` is not involved.
+
+The implementation in `commandLine.js` would be a single line inside the `isX11Forced` branch:
+
+```javascript
+app.commandLine.appendSwitch('disable-features', 'WebRTCPipeWireCapturer');
+```
+
+This is more targeted than the env var override (Option C) because it only affects the screen capture backend, not clipboard, file pickers, or other portal-dependent features. The only risk is on native Wayland — but this flag would only be applied when `isX11Forced` is true, so native Wayland users are unaffected.
 
 ---
 
@@ -147,15 +180,17 @@ Electron's `desktopCapturer.getSources()` might have different behavior dependin
 
 Do not merge PR #2219 (re-enabling `--use-fake-ui-for-media-stream` for XWayland). It fixes one regression (#2217) by reintroducing another (#2169).
 
-The correct next step is **investigation, not implementation**. The specific unknown is: why does `desktopCapturer.getSources()` return empty on XWayland without `--use-fake-ui-for-media-stream`, given that `--ozone-platform=x11` should route capture through X11 rather than PipeWire? Understanding this is prerequisite to any fix.
+The root cause of the `getSources()` empty-result problem is now confirmed: `DesktopCapturer::IsRunningUnderWayland()` selects PipeWire based on `XDG_SESSION_TYPE` and `WAYLAND_DISPLAY` independently of `--ozone-platform`. The most targeted fix is **Option F**: explicitly disable `WebRTCPipeWireCapturer` when `isX11Forced` to force the X11 capture backend on XWayland.
 
-Concrete investigation steps:
+Also review [PR #2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207), which independently removes the redundant second `desktopCapturer.getSources()` call in `handleScreenSourceSelection` — a correct improvement that should be merged regardless of how the #2217 conflict resolves.
 
-1. Add logging in `handleScreenSourceSelection` to count sources returned by `desktopCapturer.getSources()` before the picker opens.
-2. On a XWayland system without `--use-fake-ui-for-media-stream`, check whether `getSources()` returns zero sources or non-empty sources with empty thumbnails.
-3. Check whether the PipeWire portal auth dialog appears (in the compositor/notification tray) when screen sharing is initiated.
-4. Test whether unsetting `XDG_SESSION_TYPE` (so the Wayland code paths in `commandLine.js` are skipped entirely) restores screen sharing on XWayland.
-5. Verify whether `session.setPermissionRequestHandler()` granting `media` permissions prevents the camera GPU context corruption, as a precursor to evaluating option B.
+Concrete next steps:
+
+1. Add diagnostic logging in `app/screenSharing/service.js` inside `#handleGetDesktopCapturerSources` to count how many sources `getSources()` returns when the picker opens (this is where the empty-sources failure actually occurs — `handleScreenSourceSelection` is only reached after a source is selected, so it is unreachable in the failure scenario).
+2. On an XWayland system without `--use-fake-ui-for-media-stream`, confirm whether `getSources()` returns zero sources or non-empty sources with empty thumbnails.
+3. Test Option F: add `app.commandLine.appendSwitch('disable-features', 'WebRTCPipeWireCapturer')` in the `isX11Forced` branch of `commandLine.js`. Verify that `getSources()` returns results and screen sharing works end-to-end without `--use-fake-ui-for-media-stream`.
+4. Verify camera works on first and second launch with Option F applied (the `Bind context provider failed` error must not appear on second launch).
+5. Verify `screen-sharing-started` IPC fires correctly end-to-end — and separately investigate the preload guard bug in `sendScreenSharingStarted` that silently drops `null` values (blocking MQTT status for issue #2107).
 
 ---
 
@@ -163,6 +198,7 @@ Concrete investigation steps:
 
 - [Electron `session.setDisplayMediaRequestHandler()` API docs](https://www.electronjs.org/docs/latest/api/session#sessetdisplaymediarequest-handler-handler)
 - [Electron `session.setPermissionRequestHandler()` API docs](https://www.electronjs.org/docs/latest/api/session#sessetpermissionrequesthandlerhandler)
+- [WebRTC `DesktopCapturer::IsRunningUnderWayland()` source](https://chromium.googlesource.com/external/webrtc/+/master/modules/desktop_capture/desktop_capturer.cc)
 - [Issue #2217 - Screen sharing broken on Wayland/XWayland](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217)
 - [Issue #2222 - Microphone not working in v2.7.5](https://github.com/IsmaelMartinez/teams-for-linux/issues/2222)
 - [Issue #2204 - No thumbnail window when sharing on native Wayland](https://github.com/IsmaelMartinez/teams-for-linux/issues/2204)
@@ -170,9 +206,14 @@ Concrete investigation steps:
 - [Issue #1800 - Audio echo on Wayland/PipeWire](https://github.com/IsmaelMartinez/teams-for-linux/issues/1800)
 - [Issue #2107 - MQTT screen sharing status](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 - [PR #2219 - Screen sharing regression fix (do not merge as-is)](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219)
+- [PR #2207 - Remove redundant second getSources() call in handleScreenSourceSelection](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)
 - [PR #2190 - Fix: keep GPU enabled under XWayland](https://github.com/IsmaelMartinez/teams-for-linux/pull/2190)
 - [PR #1792 - Feature: improved screen sharing (setDisplayMediaRequestHandler added)](https://github.com/IsmaelMartinez/teams-for-linux/pull/1792)
 - [PR #1854 - Attempt to fix audio echo (stream reuse failed, audio disabling used instead)](https://github.com/IsmaelMartinez/teams-for-linux/pull/1854)
+- [Electron #37524 - Desktop Capturer not consistently using PipeWire on Wayland](https://github.com/electron/electron/issues/37524)
+- [Electron #30652 - Redundant app-created screen share dialog on Linux Wayland](https://github.com/electron/electron/issues/30652)
+- [Electron #45198 - desktopCapturer crashing on Linux with XDP when portal is dismissed](https://github.com/electron/electron/issues/45198)
+- [Chromium 40284380 - WebRTCPipeWireCapturer flag expired](https://issues.chromium.org/issues/40284380)
 - [Wayland Optimizations Audit](wayland-optimizations-audit.md)
 - [ADR-001 - desktopCapturer source ID format](../adr/001-desktopcapturer-source-id-format.md)
 - [ADR-008 - useSystemPicker rejection](../adr/008-usesystempicker-electron-38.md)
