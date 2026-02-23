@@ -148,7 +148,6 @@
       console.debug(`[SCREEN_SHARE_DIAG] Not sending stream.id to preserve desktopCapturer source ID`);
 
       electronAPI.sendScreenSharingStarted(null);
-      electronAPI.send("active-screen-share-stream", stream);
     }
 
     // Monitor stream inactive event (fires when all tracks end)

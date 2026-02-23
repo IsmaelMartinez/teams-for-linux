@@ -61,14 +61,18 @@ class CommandLineManager {
         app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
       }
 
-      // Only use fake media stream UI for native Wayland mode.
-      // Under XWayland (X11 forced mode), the normal X11 media permission handling
-      // works correctly. Using fake-ui in XWayland can cause GPU context binding
-      // issues with the video capture service when permissions are persisted.
-      // Ref: https://github.com/IsmaelMartinez/teams-for-linux/issues/2169
-      if (!isX11Forced) {
-        app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
-      }
+      // Use fake media stream UI for all Wayland modes (native and XWayland).
+      //
+      // CRITICAL: This flag is required for screen sharing to work correctly via 
+      // the XDG Desktop Portal / PipeWire on Wayland (#2217). Without it, 
+      // Chromium attempts to show its own internal permission bubble which 
+      // often fails or triggers duplicate portal requests on XWayland.
+      //
+      // NOTE: Using this flag in XWayland can sometimes cause GPU context binding 
+      // issues with the video capture service (camera) when permissions are 
+      // persisted across sessions (#2169). However, broken screen sharing is 
+      // a more severe regression for most users.
+      app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
     }
 
     // Proxy configuration
