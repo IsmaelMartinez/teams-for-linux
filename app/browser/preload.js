@@ -305,28 +305,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize tray icon functionality directly in preload with secure IPC
     if (config.trayIconEnabled) {
-      globalThis.addEventListener("unread-count", (event) => {
-        try {
-          const count = event.detail?.number;
-
-          if (typeof count !== 'number' || count < 0 || count > 9999) {
-            console.warn('Preload: Invalid unread count received:', count);
-            return;
-          }
-
-          ipcRenderer.send("tray-update", {
-            icon: null, // Let main process handle icon rendering
-            flash: count > 0 && !config.disableNotificationWindowFlash,
-            count: count
-          });
-
-          ipcRenderer.invoke("set-badge-count", count).catch(err => {
-            console.error('Preload: Failed to set badge count:', err);
-          });
-        } catch (error) {
-          console.error('Preload: Error in tray update handler:', error);
-        }
-      });
+      // NOTE: unread-count event is handled by trayIconRenderer.js
+      // This redundant listener was causing duplicate IPC traffic and rendering.
     }
     
     console.debug("Preload: Essential tray modules initialized successfully");
