@@ -23,6 +23,9 @@ x-common: &common
     - ./app:/app:ro
   environment: &common-env
     SCREEN_RESOLUTION: "1920x1080x24"
+    # Software rendering -- no physical GPU in containers
+    LIBGL_ALWAYS_SOFTWARE: "1"
+    MESA_GL_VERSION_OVERRIDE: "3.3"
     # Set APP_URL to download an AppImage at startup (e.g. CI artifact or release URL)
     APP_URL: "${APP_URL:-}"
     # Set AUTO_LAUNCH=false to skip auto-starting the app

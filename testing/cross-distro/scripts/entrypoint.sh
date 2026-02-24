@@ -39,18 +39,38 @@ if [ -n "${APP_URL:-}" ] && [ ! -f /app/teams-for-linux.AppImage ] && [ ! -f "${
     fi
 fi
 
+# Electron/Chromium flags required for running inside Docker containers:
+#   --no-sandbox            : no user namespace / seccomp sandbox in container
+#   --disable-gpu           : no physical GPU available, use software rendering
+#   --disable-dev-shm-usage : avoid /dev/shm size issues (even with 2gb shm_size)
+ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage"
+
+# Force software rendering via Mesa (no hardware GPU in container)
+export LIBGL_ALWAYS_SOFTWARE=1
+export MESA_GL_VERSION_OVERRIDE=3.3
+
+# Set XDG_SESSION_TYPE so the app's Wayland detection (commandLine.js) triggers.
+# The built AppImage ships --ozone-platform=x11 via executableArgs. For Wayland
+# testing, start-wayland.sh overrides that with --ozone-platform=wayland. For
+# XWayland testing, the baked-in x11 value is correct (app runs as X11 client).
+if [ "$DISPLAY_SERVER" = "wayland" ] || [ "$DISPLAY_SERVER" = "xwayland" ]; then
+    export XDG_SESSION_TYPE=wayland
+else
+    export XDG_SESSION_TYPE=x11
+fi
+
 # Locate the app: mounted volume -> downloaded -> source checkout
 APP_CMD=""
 if [ -f /app/teams-for-linux.AppImage ]; then
     chmod +x /app/teams-for-linux.AppImage
-    APP_CMD="/app/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox"
+    APP_CMD="/app/teams-for-linux.AppImage --appimage-extract-and-run ${ELECTRON_FLAGS}"
 elif [ -f "${APP_LOCAL_DIR}/teams-for-linux.AppImage" ]; then
-    APP_CMD="${APP_LOCAL_DIR}/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox"
+    APP_CMD="${APP_LOCAL_DIR}/teams-for-linux.AppImage --appimage-extract-and-run ${ELECTRON_FLAGS}"
 elif [ -f /app/teams-for-linux ]; then
     chmod +x /app/teams-for-linux
-    APP_CMD="/app/teams-for-linux --no-sandbox"
+    APP_CMD="/app/teams-for-linux ${ELECTRON_FLAGS}"
 elif [ -d /src ] && [ -f /src/package.json ]; then
-    APP_CMD="npm start --prefix /src -- --no-sandbox"
+    APP_CMD="npm start --prefix /src -- ${ELECTRON_FLAGS}"
 fi
 
 export APP_CMD

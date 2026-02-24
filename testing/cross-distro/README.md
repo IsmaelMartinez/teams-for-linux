@@ -106,16 +106,35 @@ To disable auto-launch and start the desktop only:
 Then launch manually from the terminal inside VNC:
 
 ```bash
-# X11 environments
-/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
+# X11 and XWayland environments
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
+    --no-sandbox --disable-gpu --disable-dev-shm-usage
 
 # Wayland environments (native Wayland rendering)
-/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox \
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
+    --no-sandbox --disable-gpu --disable-dev-shm-usage \
     --enable-features=UseOzonePlatform --ozone-platform=wayland
-
-# XWayland environments (X11 rendering through XWayland)
-/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
 ```
+
+## Electron compatibility
+
+Running Electron inside Docker containers requires specific handling. The entrypoint sets these automatically -- you don't need to configure anything, but here's what's happening under the hood:
+
+| Concern | Solution | Notes |
+|---------|----------|-------|
+| No GPU in container | `--disable-gpu`, `LIBGL_ALWAYS_SOFTWARE=1` | Mesa llvmpipe provides software GL |
+| Shared memory limits | `--disable-dev-shm-usage`, `shm_size: 2gb` | Prevents Chromium crashes |
+| No user namespaces | `--no-sandbox` | Standard for containerized Electron |
+| Wayland detection | `XDG_SESSION_TYPE` set per display server | Triggers app's `commandLine.js` logic |
+| Baked-in ozone flag | AppImage ships `--ozone-platform=x11` | Wayland script overrides with `=wayland` |
+
+### Confidence levels by display server
+
+**X11 (high confidence):** Mirrors the project's CI exactly. The CI runs Electron with `xvfb-run` on Ubuntu -- this is the same setup. Proven to work.
+
+**XWayland (high confidence):** The app sees X11 (its default `--ozone-platform=x11` from `package.json`), running transparently through Sway's XWayland bridge. Functionally identical to X11 from the app's perspective.
+
+**Wayland (medium confidence):** Sway headless + wayvnc + Electron Ozone is a less battle-tested combination in Docker. The app's own Wayland handling (`commandLine.js`) auto-disables GPU and enables PipeWire, which helps. The `--ozone-platform=wayland` CLI override takes precedence over the baked-in `=x11`. If you hit issues here, try X11 first to isolate whether the problem is Wayland-specific.
 
 ## Display server details
 
@@ -126,7 +145,7 @@ Then launch manually from the terminal inside VNC:
 - **VNC server:** x11vnc
 - **Terminal:** xterm
 
-Standard X11 rendering. This is the traditional Linux display path and what most users currently run.
+Standard X11 rendering. This is the traditional Linux display path and what most users currently run. Same as CI.
 
 ### Wayland
 
@@ -134,7 +153,7 @@ Standard X11 rendering. This is the traditional Linux display path and what most
 - **VNC server:** wayvnc
 - **Terminal:** foot
 
-Native Wayland rendering via Electron's Ozone platform. Tests the `--ozone-platform=wayland` code path. XWayland is explicitly disabled to ensure the app runs as a pure Wayland client.
+Native Wayland rendering via Electron's Ozone platform. Tests the `--ozone-platform=wayland` code path. XWayland is explicitly disabled to ensure the app runs as a pure Wayland client. The app auto-detects `XDG_SESSION_TYPE=wayland` and adjusts its GPU/PipeWire settings accordingly.
 
 ### XWayland
 
