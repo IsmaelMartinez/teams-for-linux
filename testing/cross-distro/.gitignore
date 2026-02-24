@@ -1,0 +1,5 @@
+# App binaries mounted into containers
+app/*.AppImage
+app/teams-for-linux
+app/*.deb
+app/*.rpm

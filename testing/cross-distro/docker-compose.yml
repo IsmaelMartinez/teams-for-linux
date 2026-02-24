@@ -1,0 +1,177 @@
+# Cross-Distro Testing for Teams for Linux
+# 4 distros x 3 display servers = 12 test configurations
+#
+# Usage:
+#   docker compose up ubuntu-x11          # Single config
+#   docker compose up ubuntu-x11 fedora-wayland  # Multiple configs
+#
+# Access via browser: http://localhost:<noVNC_PORT>/vnc.html
+# Access via VNC client: localhost:<VNC_PORT>
+
+x-common: &common
+  shm_size: "2gb"
+  security_opt:
+    - seccomp=unconfined
+  cap_add:
+    - SYS_PTRACE
+  volumes:
+    - ./app:/app:ro
+  environment: &common-env
+    SCREEN_RESOLUTION: "1920x1080x24"
+
+# ============================================================
+# Ubuntu 24.04
+# ============================================================
+services:
+  ubuntu-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "6081:6080"
+      - "5901:5900"
+
+  ubuntu-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "6082:6080"
+      - "5902:5900"
+
+  ubuntu-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "6083:6080"
+      - "5903:5900"
+
+  # ============================================================
+  # Fedora 41
+  # ============================================================
+  fedora-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "6084:6080"
+      - "5904:5900"
+
+  fedora-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "6085:6080"
+      - "5905:5900"
+
+  fedora-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "6086:6080"
+      - "5906:5900"
+
+  # ============================================================
+  # Debian Bookworm
+  # ============================================================
+  debian-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "6087:6080"
+      - "5907:5900"
+
+  debian-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "6088:6080"
+      - "5908:5900"
+
+  debian-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "6089:6080"
+      - "5909:5900"
+
+  # ============================================================
+  # Arch Linux
+  # ============================================================
+  arch-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/arch.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "6090:6080"
+      - "5910:5900"
+
+  arch-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/arch.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "6091:6080"
+      - "5911:5900"
+
+  arch-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/arch.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "6092:6080"
+      - "5912:5900"
