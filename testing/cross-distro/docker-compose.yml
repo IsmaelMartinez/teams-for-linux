@@ -23,6 +23,10 @@ x-common: &common
     - ./app:/app:ro
   environment: &common-env
     SCREEN_RESOLUTION: "1920x1080x24"
+    # Set APP_URL to download an AppImage at startup (e.g. CI artifact or release URL)
+    APP_URL: "${APP_URL:-}"
+    # Set AUTO_LAUNCH=false to skip auto-starting the app
+    AUTO_LAUNCH: "${AUTO_LAUNCH:-true}"
 
 # ============================================================
 # Ubuntu 24.04

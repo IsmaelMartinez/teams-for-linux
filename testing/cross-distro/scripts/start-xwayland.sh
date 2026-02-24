@@ -50,11 +50,16 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 if [ -n "$APP_CMD" ]; then
-    echo "[XWayland] Launch app (runs as X11 client via XWayland):"
-    echo "      $APP_CMD"
-    echo ""
-    echo "  Do NOT add --ozone-platform=wayland (app should use XWayland)."
-    echo "  Or launch from the terminal inside the VNC session."
+    if [ "${AUTO_LAUNCH}" = "true" ]; then
+        echo "[XWayland] Auto-launching app (X11 client via XWayland)..."
+        swaymsg exec "$APP_CMD" 2>/dev/null || $APP_CMD &
+    else
+        echo "[XWayland] Launch app (runs as X11 client via XWayland):"
+        echo "      $APP_CMD"
+        echo ""
+        echo "  Do NOT add --ozone-platform=wayland (app should use XWayland)."
+        echo "  Or launch from the terminal inside the VNC session."
+    fi
 fi
 
 echo ""

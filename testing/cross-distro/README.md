@@ -7,23 +7,28 @@ Each configuration runs in a Docker container with a window manager and VNC acce
 ## Prerequisites
 
 - Docker and Docker Compose v2 (Docker Desktop on macOS works fine)
-- A built Teams for Linux AppImage (grab from CI artifacts or build on Linux)
+- An AppImage URL (CI artifact link, GitHub release) **or** a locally built AppImage
 
 Containers are pinned to `linux/amd64` so they run consistently on both Linux hosts and macOS (including Apple Silicon via Rosetta 2).
 
 ## Quick start
 
+The easiest way: provide a URL and the container downloads and launches the app for you.
+
 ```bash
-# Build the app first (from project root)
-npm ci && npm run dist:linux:appimage
-
-# Run a specific configuration
 cd testing/cross-distro
-./run.sh ubuntu x11 ../../dist/teams-for-linux-*.AppImage
 
-# Open in browser
+# Pass a URL -- container downloads the AppImage and auto-launches it
+./run.sh ubuntu x11 --url https://github.com/nicedoc/teams-for-linux/releases/download/v1.0.0/teams-for-linux-1.0.0.AppImage
+
+# Or use a local AppImage
+./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux-*.AppImage
+
+# Open in browser -- Teams is already running
 # http://localhost:6081/vnc.html
 ```
+
+The app auto-launches by default. When you connect via noVNC, Teams is already on screen waiting for login.
 
 ## Available configurations
 
@@ -50,8 +55,14 @@ cd testing/cross-distro
 # Show all configurations and ports
 ./run.sh --list
 
-# Run a single environment
-./run.sh <distro> <display-server> [path-to-appimage]
+# Run with a URL (downloads at container startup, auto-launches)
+./run.sh <distro> <display-server> --url <appimage-url>
+
+# Run with a local AppImage file
+./run.sh <distro> <display-server> --appimage <path>
+
+# Start desktop only, launch app manually from terminal inside VNC
+./run.sh <distro> <display-server> --url <url> --no-launch
 
 # Pre-build all Docker images
 ./run.sh --build-all
@@ -63,11 +74,14 @@ cd testing/cross-distro
 ### Docker Compose directly
 
 ```bash
-# Single service
-docker compose up --build ubuntu-x11
+# With URL -- downloads AppImage at startup
+APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11
 
-# Multiple services in parallel
-docker compose up --build ubuntu-x11 fedora-wayland arch-xwayland
+# Multiple services in parallel (all download the same URL)
+APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11 fedora-wayland arch-xwayland
+
+# Desktop only, no auto-launch
+AUTO_LAUNCH=false docker compose up --build ubuntu-x11
 
 # Stop everything
 docker compose down
@@ -79,20 +93,28 @@ docker compose down
 
 **VNC client:** Connect to `localhost:<VNC_PORT>` (localhost-only, no password required)
 
-### Launching the app inside the container
+### Auto-launch behavior
 
-Once connected via VNC, open a terminal and run:
+By default (`AUTO_LAUNCH=true`), the app starts automatically after the display server is ready. When you connect via noVNC, Teams is already on screen.
+
+To disable auto-launch and start the desktop only:
+
+```bash
+./run.sh ubuntu x11 --url <url> --no-launch
+```
+
+Then launch manually from the terminal inside VNC:
 
 ```bash
 # X11 environments
-/app/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
 
 # Wayland environments (native Wayland rendering)
-/app/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox \
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox \
     --enable-features=UseOzonePlatform --ozone-platform=wayland
 
 # XWayland environments (X11 rendering through XWayland)
-/app/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run --no-sandbox
 ```
 
 ## Display server details
@@ -124,16 +146,28 @@ The app runs as an X11 client through the XWayland compatibility layer. This is 
 
 ## Providing the app binary
 
-### AppImage (recommended)
+### URL download (recommended)
 
-Build the AppImage and pass it to `run.sh`:
+Pass a URL and the container downloads the AppImage at startup. This works with GitHub release URLs, CI artifact links, or any direct download URL.
+
+```bash
+# GitHub release
+./run.sh ubuntu x11 --url https://github.com/nicedoc/teams-for-linux/releases/download/v1.0.0/teams-for-linux.AppImage
+
+# Direct compose (useful for running multiple distros against the same build)
+APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11 fedora-x11 arch-x11
+```
+
+### Local AppImage
+
+Build locally and pass the file path:
 
 ```bash
 npm run dist:linux:appimage
-./run.sh ubuntu x11 ../../dist/teams-for-linux-*.AppImage
+./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux-*.AppImage
 ```
 
-Or copy it manually:
+Or copy it manually into the mount directory:
 
 ```bash
 mkdir -p testing/cross-distro/app
@@ -207,3 +241,37 @@ The `--privileged` flag mentioned in troubleshooting is a last resort and should
 - Userspace differences (library versions, desktop integration, package dependencies) are tested.
 - The `app/` directory in this folder is gitignored. Place your AppImage there for mounting into containers.
 - Each distro image includes all three display server stacks. The `DISPLAY_SERVER` environment variable selects which one to activate at runtime.
+
+## Phase 2 roadmap
+
+Future improvements planned for this testing infrastructure:
+
+### Session token sharing (login once, test everywhere)
+
+Log in to Microsoft Teams once and reuse the session across all test containers. This avoids re-authenticating on each of the 12 configurations.
+
+**Approach:** Mount the Electron `userData` directory (which contains cookies, local storage, and session tokens) as a shared volume across containers.
+
+```bash
+# Phase 2 concept (not yet implemented):
+# 1. Log in on one container
+./run.sh ubuntu x11 --url <url>
+# 2. Log in via VNC, then export session
+docker cp <container>:/home/tester/.config/teams-for-linux ./session-data/
+# 3. Start other containers with shared session
+./run.sh fedora wayland --url <url> --session ./session-data/
+```
+
+**Considerations:**
+- Session tokens may be tied to machine IDs or hardware fingerprints
+- Electron cookie encryption (via Fuse) may prevent cross-instance sharing
+- May need to disable cookie encryption for test builds
+- Token expiry and refresh behavior needs testing across containers
+
+### Pre-built test images on container registry
+
+Publish the base distro images to a container registry (GHCR) so users skip the Docker build step entirely.
+
+### CI integration
+
+Run the cross-distro test matrix in GitHub Actions as a smoke test on PRs, verifying the app at least starts on each configuration.

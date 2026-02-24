@@ -48,10 +48,15 @@ echo "============================================="
 
 if [ -n "$APP_CMD" ]; then
     WAYLAND_APP_CMD="${APP_CMD} --enable-features=UseOzonePlatform --ozone-platform=wayland"
-    echo "[Wayland] Launch app with native Wayland:"
-    echo "      $WAYLAND_APP_CMD"
-    echo ""
-    echo "  Or launch from the foot terminal inside the VNC session."
+    if [ "${AUTO_LAUNCH}" = "true" ]; then
+        echo "[Wayland] Auto-launching app with native Wayland..."
+        swaymsg exec "$WAYLAND_APP_CMD" 2>/dev/null || $WAYLAND_APP_CMD &
+    else
+        echo "[Wayland] Launch app with native Wayland:"
+        echo "      $WAYLAND_APP_CMD"
+        echo ""
+        echo "  Or launch from the foot terminal inside the VNC session."
+    fi
 fi
 
 echo ""

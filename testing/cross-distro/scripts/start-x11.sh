@@ -37,10 +37,15 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 if [ -n "$APP_CMD" ]; then
-    echo "[X11] App available. Launch with:"
-    echo "      $APP_CMD"
-    echo ""
-    echo "  Or launch from the xterm terminal inside the VNC session."
+    if [ "${AUTO_LAUNCH}" = "true" ]; then
+        echo "[X11] Auto-launching app..."
+        $APP_CMD &
+    else
+        echo "[X11] App available. Launch with:"
+        echo "      $APP_CMD"
+        echo ""
+        echo "  Or launch from the xterm terminal inside the VNC session."
+    fi
 fi
 
 echo ""
