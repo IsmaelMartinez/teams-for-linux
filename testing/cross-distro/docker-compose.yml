@@ -9,6 +9,7 @@
 # Access via VNC client: localhost:<VNC_PORT>
 
 x-common: &common
+  platform: linux/amd64
   shm_size: "2gb"
   # seccomp=unconfined is required for Sway/wlroots headless backend to
   # function inside Docker. SYS_PTRACE is needed for Electron's sandbox

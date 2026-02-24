@@ -6,8 +6,10 @@ Each configuration runs in a Docker container with a window manager and VNC acce
 
 ## Prerequisites
 
-- Docker and Docker Compose v2
-- A built Teams for Linux AppImage (or source checkout)
+- Docker and Docker Compose v2 (Docker Desktop on macOS works fine)
+- A built Teams for Linux AppImage (grab from CI artifacts or build on Linux)
+
+Containers are pinned to `linux/amd64` so they run consistently on both Linux hosts and macOS (including Apple Silicon via Rosetta 2).
 
 ## Quick start
 
