@@ -6,7 +6,7 @@
 #   ./run.sh ubuntu x11
 #   ./run.sh ubuntu x11 --appimage ./teams.AppImage
 #   ./run.sh fedora wayland --url https://example.com/teams.AppImage
-#   ./run.sh arch xwayland --no-launch
+#   ./run.sh debian xwayland --no-launch
 #   ./run.sh --list            # Show all configurations
 #   ./run.sh --build-all       # Pre-build all Docker images
 #   ./run.sh --stop-all        # Stop all running containers
@@ -16,7 +16,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-DISTROS=("ubuntu" "fedora" "debian" "arch")
+DISTROS=("ubuntu" "fedora" "debian")
 DISPLAY_SERVERS=("x11" "wayland" "xwayland")
 
 # Port mapping: distro-display -> noVNC port
@@ -43,7 +43,7 @@ Usage:
   ./run.sh --build-all      Pre-build all Docker images
   ./run.sh --stop-all       Stop all running containers
 
-Distros:      ubuntu, fedora, debian, arch
+Distros:      ubuntu, fedora, debian
 Display:      x11, wayland, xwayland
 
 Options:
@@ -59,7 +59,7 @@ Examples:
   ./run.sh fedora wayland --url https://github.com/.../teams-for-linux.AppImage
 
   # Just the desktop, launch app manually from terminal
-  ./run.sh arch xwayland --no-launch
+  ./run.sh debian xwayland --no-launch
 
 The environment is accessible via:
   - Browser (noVNC): http://localhost:<port>/vnc.html

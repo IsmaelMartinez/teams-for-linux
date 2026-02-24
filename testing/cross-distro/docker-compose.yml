@@ -1,5 +1,5 @@
 # Cross-Distro Testing for Teams for Linux
-# 4 distros x 3 display servers = 12 test configurations
+# 3 distros x 3 display servers = 9 test configurations
 #
 # Usage:
 #   docker compose up ubuntu-x11          # Single config
@@ -148,42 +148,3 @@ services:
     ports:
       - "127.0.0.1:6089:6080"
       - "127.0.0.1:5909:5900"
-
-  # ============================================================
-  # Arch Linux
-  # ============================================================
-  arch-x11:
-    <<: *common
-    build:
-      context: .
-      dockerfile: dockerfiles/arch.Dockerfile
-    environment:
-      <<: *common-env
-      DISPLAY_SERVER: x11
-    ports:
-      - "127.0.0.1:6090:6080"
-      - "127.0.0.1:5910:5900"
-
-  arch-wayland:
-    <<: *common
-    build:
-      context: .
-      dockerfile: dockerfiles/arch.Dockerfile
-    environment:
-      <<: *common-env
-      DISPLAY_SERVER: wayland
-    ports:
-      - "127.0.0.1:6091:6080"
-      - "127.0.0.1:5911:5900"
-
-  arch-xwayland:
-    <<: *common
-    build:
-      context: .
-      dockerfile: dockerfiles/arch.Dockerfile
-    environment:
-      <<: *common-env
-      DISPLAY_SERVER: xwayland
-    ports:
-      - "127.0.0.1:6092:6080"
-      - "127.0.0.1:5912:5900"
