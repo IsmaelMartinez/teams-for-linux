@@ -45,7 +45,7 @@ class TrayIconRenderer {
       });
       if (!this.config.disableBadgeCount) {
         await this.ipcRenderer.invoke("set-badge-count", 0).catch(err => 
-          console.debug("[TRAY_DIAG] Failed to set badge count:", err.message)
+          console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
         );
       }
       this.#lastActivityCount = 0;
@@ -99,7 +99,7 @@ class TrayIconRenderer {
     
     if (!this.config.disableBadgeCount) {
       await this.ipcRenderer.invoke("set-badge-count", count).catch(err => 
-        console.debug("[TRAY_DIAG] Failed to set badge count:", err.message)
+        console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
       );
     }
   }

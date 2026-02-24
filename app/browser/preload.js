@@ -17,7 +17,7 @@ globalThis.electronAPI = {
   },
   // Screen sharing events
   sendScreenSharingStarted: (sourceId) => {
-    if (typeof sourceId === 'string' && sourceId.length < 100) {
+    if (sourceId === null || (typeof sourceId === 'string' && sourceId.length < 100)) {
       return ipcRenderer.send("screen-sharing-started", sourceId);
     }
     console.error('Invalid sourceId for screen sharing');
@@ -301,6 +301,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (config.useMutationTitleLogic) {
       const mutationTitle = require("./tools/mutationTitle");
       mutationTitle.init(config);
+    }
+    
+    // Initialize tray icon functionality directly in preload with secure IPC
+    if (config.trayIconEnabled) {
+      // NOTE: unread-count event is handled by trayIconRenderer.js
+      // This redundant listener was causing duplicate IPC traffic and rendering.
     }
     
     console.debug("Preload: Essential tray modules initialized successfully");
