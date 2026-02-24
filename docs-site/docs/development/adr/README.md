@@ -38,6 +38,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
+| [016](016-wayland-command-line-flags.md) | Wayland Command-Line Flag Decisions | ✅ Implemented | 2026-02-24 | v2.7.9+ |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -70,12 +71,14 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | Use `screen:x:y` format throughout screen sharing pipeline for Wayland compatibility |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | Rejected OS native picker due to incomplete Linux Wayland/PipeWire support |
+| [016](016-wayland-command-line-flags.md) | Wayland Command-Line Flag Decisions | Force X11 capture path on XWayland via `--disable-features=WebRTCPipeWireCapturer`; resolves #2217 vs #2169 conflict |
 
 **Key Outcomes:**
 - Fixed Wayland screen sharing preview
 - Standardized source identification
 - Improved cross-platform compatibility
 - Deferred native picker until Linux support available
+- Resolved screen sharing vs camera conflict on XWayland via targeted PipeWire disable
 
 ### Testing & Quality
 
@@ -313,8 +316,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 15
-- **Implemented**: 7
+- **Total ADRs**: 16
+- **Implemented**: 8
 - **Accepted**: 3
 - **Proposed**: 1
 - **Rejected**: 4

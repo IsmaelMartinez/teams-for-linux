@@ -47,26 +47,31 @@ class CommandLineManager {
         config.disableGpu = true;
       }
 
-      console.info("Enabling PipeWire for screen sharing...");
-      if (app.commandLine.hasSwitch("enable-features")) {
-        const features = app.commandLine.getSwitchValue("enable-features").split(",");
-        if (!features.includes("WebRTCPipeWireCapturer")) {
-          console.warn(
-            "enable-features switch already set without WebRTCPipeWireCapturer. " +
-            "Screen sharing on Wayland may not work correctly. " +
-            "Please add WebRTCPipeWireCapturer to your enable-features list."
-          );
+      if (isX11Forced) {
+        // Chromium's DesktopCapturer::IsRunningUnderWayland() selects the PipeWire
+        // capture backend by checking XDG_SESSION_TYPE and WAYLAND_DISPLAY, with no
+        // coupling to --ozone-platform. Under XWayland both env vars remain set, so
+        // PipeWire is selected even though rendering is X11. PipeWire requires
+        // xdg-desktop-portal authorization before getSources() returns any sources,
+        // but without --use-fake-ui-for-media-stream that auth never happens and
+        // getSources() returns empty (issue #2217).
+        //
+        // Explicitly disabling WebRTCPipeWireCapturer forces the X11 screen capture
+        // path, bypassing the portal auth requirement entirely. Camera and mic
+        // permissions are unaffected because this flag only controls the screen
+        // capture backend, not the getUserMedia() permission path (issue #2169).
+        // Ref: ADR-016, https://github.com/IsmaelMartinez/teams-for-linux/issues/2217
+        console.info("Running under XWayland: disabling PipeWire capturer to force X11 screen capture path");
+        const existingDisabled = app.commandLine.getSwitchValue("disable-features");
+        const disabledFeatures = existingDisabled ? existingDisabled.split(",") : [];
+        if (!disabledFeatures.includes("WebRTCPipeWireCapturer")) {
+          disabledFeatures.push("WebRTCPipeWireCapturer");
+          app.commandLine.appendSwitch("disable-features", disabledFeatures.join(","));
         }
       } else {
-        app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
-      }
-
-      // Only use fake media stream UI for native Wayland mode.
-      // Under XWayland (X11 forced mode), the normal X11 media permission handling
-      // works correctly. Using fake-ui in XWayland can cause GPU context binding
-      // issues with the video capture service when permissions are persisted.
-      // Ref: https://github.com/IsmaelMartinez/teams-for-linux/issues/2169
-      if (!isX11Forced) {
+        // Native Wayland: auto-approve all media device requests.
+        // WebRTCPipeWireCapturer is the default since Chromium 110 — no explicit enable needed.
+        // Ref: https://github.com/IsmaelMartinez/teams-for-linux/issues/2169
         app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
       }
     }
