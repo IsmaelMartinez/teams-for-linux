@@ -10,18 +10,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
-- **[setDisplayMediaRequestHandler Research](set-display-media-request-handler-research.md)** - Resolve the screen sharing vs camera conflict on XWayland ([#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217), [#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169))
-  - Explains why `--use-fake-ui-for-media-stream` cannot satisfy both issues simultaneously
-  - Proposes `session.setDisplayMediaRequestHandler()` as the architectural fix
-  - Includes implementation plan reusing existing `ScreenSharingService` infrastructure
-  - **Status:** Research complete, ready to implement
-
-- **[Wayland Optimizations Audit](wayland-optimizations-audit.md)** - Audit of Wayland workarounds and recommendations for simplification ([Issue #2221](https://github.com/IsmaelMartinez/teams-for-linux/issues/2221))
+- **[Wayland Optimizations Audit](wayland-optimizations-audit.md)** - Full audit of Wayland workarounds and the screen sharing vs camera conflict ([#2221](https://github.com/IsmaelMartinez/teams-for-linux/issues/2221), [#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217), [#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169))
   - Per-flag analysis of all Wayland-specific command-line switches
-  - Identifies `WebRTCPipeWireCapturer` as redundant (default since Chromium 110)
-  - Identifies `--use-fake-ui-for-media-stream` conflict — see setDisplayMediaRequestHandler research
+  - Confirms root cause via Chromium source: `DesktopCapturer::IsRunningUnderWayland()` checks `XDG_SESSION_TYPE` independently of `--ozone-platform`
+  - Identifies `--disable-features=WebRTCPipeWireCapturer` when `isX11Forced` as the most targeted fix (Option F)
+  - Documents `sendScreenSharingStarted(null)` preload guard bug affecting MQTT status (#2107)
   - Tracks upstream blockers for native Wayland migration
-  - **Status:** Research complete, immediate cleanup identified
+  - **Status:** Research complete; Option F investigation is the next step
 
 - **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.4.0
   - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
