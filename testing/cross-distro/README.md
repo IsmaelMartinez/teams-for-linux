@@ -76,13 +76,29 @@ With `--no-launch`, start the app from the terminal inside VNC:
     --enable-features=UseOzonePlatform --ozone-platform=wayland
 ```
 
-### Native packages (deb/rpm)
+### Apple Silicon (ARM64 Macs)
+
+AppImage binaries cannot execute under Docker's Rosetta 2 emulation. Use a `.deb` or `.rpm` package instead -- the entrypoint will extract it automatically with `dpkg-deb` or `rpm2cpio` and run the installed binary directly.
 
 ```bash
-docker compose up -d ubuntu-x11
-docker cp dist/teams-for-linux_*.deb ubuntu-x11:/tmp/
-docker exec ubuntu-x11 sudo dpkg -i /tmp/teams-for-linux_*.deb
+# Download the amd64 .deb
+curl -fSL -o app/teams-for-linux.deb \
+  https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.7/teams-for-linux_2.7.7_amd64.deb
+
+# Run normally -- the entrypoint detects and extracts the .deb
+./run.sh ubuntu x11
 ```
+
+For Fedora, use the `.rpm` equivalent:
+
+```bash
+curl -fSL -o app/teams-for-linux.rpm \
+  https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.7/teams-for-linux-2.7.7.x86_64.rpm
+
+./run.sh fedora x11
+```
+
+The entrypoint checks for files in this order: extracted `.deb`/`.rpm` > `.AppImage` > downloaded AppImage > source checkout.
 
 ## Electron in Docker
 
