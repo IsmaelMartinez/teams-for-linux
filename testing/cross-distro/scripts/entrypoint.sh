@@ -62,12 +62,12 @@ fi
 # Locate the app: mounted volume -> downloaded -> source checkout
 APP_CMD=""
 if [ -f /app/teams-for-linux.AppImage ]; then
-    chmod +x /app/teams-for-linux.AppImage
+    chmod +x /app/teams-for-linux.AppImage 2>/dev/null || true
     APP_CMD="/app/teams-for-linux.AppImage --appimage-extract-and-run ${ELECTRON_FLAGS}"
 elif [ -f "${APP_LOCAL_DIR}/teams-for-linux.AppImage" ]; then
     APP_CMD="${APP_LOCAL_DIR}/teams-for-linux.AppImage --appimage-extract-and-run ${ELECTRON_FLAGS}"
 elif [ -f /app/teams-for-linux ]; then
-    chmod +x /app/teams-for-linux
+    chmod +x /app/teams-for-linux 2>/dev/null || true
     APP_CMD="/app/teams-for-linux ${ELECTRON_FLAGS}"
 elif [ -d /src ] && [ -f /src/package.json ]; then
     APP_CMD="npm start --prefix /src -- ${ELECTRON_FLAGS}"
