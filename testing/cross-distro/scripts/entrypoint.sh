@@ -59,9 +59,26 @@ else
     export XDG_SESSION_TYPE=x11
 fi
 
-# Locate the app: mounted volume -> downloaded -> source checkout
+# Extract .deb or .rpm if found in /app (works on Apple Silicon where AppImage cannot)
+if [ -f /app/teams-for-linux.deb ] && [ ! -d "${APP_LOCAL_DIR}/deb-extracted" ]; then
+    echo "[*] Extracting .deb package..."
+    mkdir -p "${APP_LOCAL_DIR}/deb-extracted"
+    dpkg-deb -x /app/teams-for-linux.deb "${APP_LOCAL_DIR}/deb-extracted"
+    echo "[*] Extracted to ${APP_LOCAL_DIR}/deb-extracted"
+elif [ -f /app/teams-for-linux.rpm ] && command -v rpm2cpio &>/dev/null && [ ! -d "${APP_LOCAL_DIR}/rpm-extracted" ]; then
+    echo "[*] Extracting .rpm package..."
+    mkdir -p "${APP_LOCAL_DIR}/rpm-extracted"
+    cd "${APP_LOCAL_DIR}/rpm-extracted" && rpm2cpio /app/teams-for-linux.rpm | cpio -idm 2>/dev/null
+    echo "[*] Extracted to ${APP_LOCAL_DIR}/rpm-extracted"
+fi
+
+# Locate the app: extracted deb/rpm -> AppImage -> downloaded -> source checkout
 APP_CMD=""
-if [ -f /app/teams-for-linux.AppImage ]; then
+if [ -x "${APP_LOCAL_DIR}/deb-extracted/opt/teams-for-linux/teams-for-linux" ]; then
+    APP_CMD="${APP_LOCAL_DIR}/deb-extracted/opt/teams-for-linux/teams-for-linux ${ELECTRON_FLAGS}"
+elif [ -x "${APP_LOCAL_DIR}/rpm-extracted/opt/teams-for-linux/teams-for-linux" ]; then
+    APP_CMD="${APP_LOCAL_DIR}/rpm-extracted/opt/teams-for-linux/teams-for-linux ${ELECTRON_FLAGS}"
+elif [ -f /app/teams-for-linux.AppImage ]; then
     chmod +x /app/teams-for-linux.AppImage 2>/dev/null || true
     APP_CMD="/app/teams-for-linux.AppImage --appimage-extract-and-run ${ELECTRON_FLAGS}"
 elif [ -f "${APP_LOCAL_DIR}/teams-for-linux.AppImage" ]; then
