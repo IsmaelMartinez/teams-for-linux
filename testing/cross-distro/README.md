@@ -19,7 +19,7 @@ The easiest way: provide a URL and the container downloads and launches the app 
 cd testing/cross-distro
 
 # Pass a URL -- container downloads the AppImage and auto-launches it
-./run.sh ubuntu x11 --url https://github.com/nicedoc/teams-for-linux/releases/download/v1.0.0/teams-for-linux-1.0.0.AppImage
+./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v1.0.0/teams-for-linux-1.0.0.AppImage
 
 # Or use a local AppImage
 ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux-*.AppImage
@@ -152,7 +152,7 @@ Pass a URL and the container downloads the AppImage at startup. This works with 
 
 ```bash
 # GitHub release
-./run.sh ubuntu x11 --url https://github.com/nicedoc/teams-for-linux/releases/download/v1.0.0/teams-for-linux.AppImage
+./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v1.0.0/teams-for-linux.AppImage
 
 # Direct compose (useful for running multiple distros against the same build)
 APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11 fedora-x11 arch-x11
