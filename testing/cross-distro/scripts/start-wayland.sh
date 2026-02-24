@@ -26,7 +26,7 @@ swaymsg create_output WLR_HEADLESS 2>/dev/null || true
 swaymsg output HEADLESS-1 resolution "${WIDTH}x${HEIGHT}" 2>/dev/null || true
 
 echo "[Wayland] Starting wayvnc on port ${VNC_PORT}..."
-wayvnc --output=HEADLESS-1 0.0.0.0 "${VNC_PORT}" &
+wayvnc --output=HEADLESS-1 127.0.0.1 "${VNC_PORT}" &
 WAYVNC_PID=$!
 sleep 1
 

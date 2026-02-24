@@ -19,9 +19,12 @@ RUN pacman -Syu --noconfirm && pacman -S --noconfirm \
     && pacman -Scc --noconfirm
 
 # Install noVNC from source (not in official Arch repos)
+# SHA256 verified against https://github.com/novnc/noVNC/releases/tag/v1.5.0
 RUN mkdir -p /usr/share/novnc && \
-    wget -qO- https://github.com/novnc/noVNC/archive/refs/tags/v1.5.0.tar.gz \
-    | tar xz --strip-components=1 -C /usr/share/novnc
+    wget -qO /tmp/novnc.tar.gz https://github.com/novnc/noVNC/archive/refs/tags/v1.5.0.tar.gz && \
+    echo "6a73e41f98388a5348b7902f54b02d177cb73b7e5eb0a7a0dcf688cc2c79b42a  /tmp/novnc.tar.gz" | sha256sum -c - && \
+    tar xzf /tmp/novnc.tar.gz --strip-components=1 -C /usr/share/novnc && \
+    rm /tmp/novnc.tar.gz
 
 # Create non-root user for running the app
 RUN useradd -m -s /bin/bash -G audio,video tester

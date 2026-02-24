@@ -18,7 +18,7 @@ openbox &
 sleep 0.5
 
 echo "[X11] Starting x11vnc on port ${VNC_PORT}..."
-x11vnc -display :1 -forever -shared -nopw -rfbport "${VNC_PORT}" -bg -o /tmp/x11vnc.log
+x11vnc -display :1 -forever -shared -rfbport "${VNC_PORT}" -localhost -bg -o /tmp/x11vnc.log
 sleep 0.5
 
 echo "[X11] Starting noVNC on port ${NOVNC_PORT}..."

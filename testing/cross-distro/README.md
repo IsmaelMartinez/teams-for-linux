@@ -75,7 +75,7 @@ docker compose down
 
 **Browser (noVNC):** Navigate to `http://localhost:<noVNC_PORT>/vnc.html`
 
-**VNC client:** Connect to `localhost:<VNC_PORT>` (no password)
+**VNC client:** Connect to `localhost:<VNC_PORT>` (localhost-only, no password required)
 
 ### Launching the app inside the container
 
@@ -159,7 +159,7 @@ docker exec fedora-x11 sudo rpm -i /tmp/teams-for-linux-*.rpm
 
 ### Sway fails to start
 
-Sway needs the `WLR_BACKENDS=headless` environment variable (set automatically). If it still fails, try running the container with `--privileged`:
+Sway needs the `WLR_BACKENDS=headless` environment variable (set automatically). If it still fails, try running the container with `--privileged` as a last resort. This disables most Docker security isolation, so only use it on a trusted local machine for debugging purposes:
 
 ```bash
 docker compose run --privileged ubuntu-wayland
@@ -190,6 +190,14 @@ The noVNC web server may need a moment to start. Refresh the page after a few se
 ```bash
 docker compose logs ubuntu-x11
 ```
+
+## Security notes
+
+All VNC and noVNC ports are bound to `127.0.0.1` (localhost only) so they are not accessible from the network. The VNC servers inside containers also listen on localhost only.
+
+The containers use `seccomp=unconfined` and `SYS_PTRACE` because Sway's wlroots headless backend and Electron's sandbox require these capabilities. These settings weaken Docker's default isolation, so this environment should only be used on trusted local machines for development and testing purposes.
+
+The `--privileged` flag mentioned in troubleshooting is a last resort and should never be used on shared or production machines.
 
 ## Architecture notes
 
