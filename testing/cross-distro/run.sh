@@ -16,22 +16,32 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-DISTROS=("ubuntu" "fedora" "debian")
-DISPLAY_SERVERS=("x11" "wayland" "xwayland")
+# Port mapping computed from index. Avoids bash 4 associative arrays
+# so the script works on macOS (bash 3.2).
+# Order: ubuntu-x11(0), ubuntu-wayland(1), ubuntu-xwayland(2),
+#         fedora-x11(3), fedora-wayland(4), fedora-xwayland(5),
+#         debian-x11(6), debian-wayland(7), debian-xwayland(8)
+DISTROS="ubuntu fedora debian"
+DISPLAY_SERVERS="x11 wayland xwayland"
+NOVNC_BASE=6081
+VNC_BASE=5901
 
-# Port mapping: distro-display -> noVNC port
-declare -A NOVNC_PORTS
-declare -A VNC_PORTS
-PORT=6081
-VPORT=5901
-for distro in "${DISTROS[@]}"; do
-    for ds in "${DISPLAY_SERVERS[@]}"; do
-        NOVNC_PORTS["${distro}-${ds}"]=$PORT
-        VNC_PORTS["${distro}-${ds}"]=$VPORT
-        ((PORT++))
-        ((VPORT++))
+get_index() {
+    local distro="$1" ds="$2" d_idx=0 ds_idx=0 i=0
+    for d in $DISTROS; do
+        if [ "$d" = "$distro" ]; then d_idx=$i; fi
+        i=$((i + 1))
     done
-done
+    i=0
+    for s in $DISPLAY_SERVERS; do
+        if [ "$s" = "$ds" ]; then ds_idx=$i; fi
+        i=$((i + 1))
+    done
+    echo $(( d_idx * 3 + ds_idx ))
+}
+
+get_novnc_port() { echo $(( NOVNC_BASE + $(get_index "$1" "$2") )); }
+get_vnc_port()   { echo $(( VNC_BASE + $(get_index "$1" "$2") )); }
 
 show_help() {
     cat <<'EOF'
@@ -73,10 +83,9 @@ show_list() {
     echo ""
     printf "%-20s  %-10s  %-10s\n" "SERVICE" "noVNC" "VNC"
     printf "%-20s  %-10s  %-10s\n" "-------" "-----" "---"
-    for distro in "${DISTROS[@]}"; do
-        for ds in "${DISPLAY_SERVERS[@]}"; do
-            key="${distro}-${ds}"
-            printf "%-20s  %-10s  %-10s\n" "$key" "${NOVNC_PORTS[$key]}" "${VNC_PORTS[$key]}"
+    for distro in $DISTROS; do
+        for ds in $DISPLAY_SERVERS; do
+            printf "%-20s  %-10s  %-10s\n" "${distro}-${ds}" "$(get_novnc_port "$distro" "$ds")" "$(get_vnc_port "$distro" "$ds")"
         done
     done
     echo ""
@@ -84,7 +93,7 @@ show_list() {
 
 build_all() {
     echo "[*] Building all Docker images..."
-    for distro in "${DISTROS[@]}"; do
+    for distro in $DISTROS; do
         echo ""
         echo "=== Building ${distro} ==="
         docker compose build "${distro}-x11"
@@ -128,7 +137,7 @@ APPIMAGE_PATH=""
 APP_URL=""
 AUTO_LAUNCH="true"
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case "$1" in
         --appimage)
             APPIMAGE_PATH="$2"
@@ -151,16 +160,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate distro
-if [[ ! " ${DISTROS[*]} " =~ " ${DISTRO} " ]]; then
+valid=false
+for d in $DISTROS; do [ "$d" = "$DISTRO" ] && valid=true; done
+if [ "$valid" = false ]; then
     echo "[!] Invalid distro: ${DISTRO}"
-    echo "    Valid: ${DISTROS[*]}"
+    echo "    Valid: ${DISTROS}"
     exit 1
 fi
 
 # Validate display server
-if [[ ! " ${DISPLAY_SERVERS[*]} " =~ " ${DISPLAY_SERVER} " ]]; then
+valid=false
+for s in $DISPLAY_SERVERS; do [ "$s" = "$DISPLAY_SERVER" ] && valid=true; done
+if [ "$valid" = false ]; then
     echo "[!] Invalid display server: ${DISPLAY_SERVER}"
-    echo "    Valid: ${DISPLAY_SERVERS[*]}"
+    echo "    Valid: ${DISPLAY_SERVERS}"
     exit 1
 fi
 
@@ -180,11 +193,14 @@ if [ -n "$APPIMAGE_PATH" ]; then
     chmod +x "${APP_DIR}/teams-for-linux.AppImage"
 fi
 
+NOVNC_PORT=$(get_novnc_port "$DISTRO" "$DISPLAY_SERVER")
+VNC_PORT=$(get_vnc_port "$DISTRO" "$DISPLAY_SERVER")
+
 echo ""
 echo "============================================="
 echo "  Starting: ${SERVICE}"
-echo "  noVNC:    http://localhost:${NOVNC_PORTS[$SERVICE]}/vnc.html"
-echo "  VNC:      localhost:${VNC_PORTS[$SERVICE]}"
+echo "  noVNC:    http://localhost:${NOVNC_PORT}/vnc.html"
+echo "  VNC:      localhost:${VNC_PORT}"
 if [ -n "$APP_URL" ]; then
 echo "  App URL:  ${APP_URL}"
 fi
@@ -193,11 +209,11 @@ echo "============================================="
 echo ""
 
 # Build env var overrides for docker compose
-COMPOSE_ENV=()
+COMPOSE_ENV=""
 if [ -n "$APP_URL" ]; then
-    COMPOSE_ENV+=(-e "APP_URL=${APP_URL}")
+    COMPOSE_ENV="-e APP_URL=${APP_URL}"
 fi
-COMPOSE_ENV+=(-e "AUTO_LAUNCH=${AUTO_LAUNCH}")
+COMPOSE_ENV="${COMPOSE_ENV} -e AUTO_LAUNCH=${AUTO_LAUNCH}"
 
 # Build and run
-docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
+docker compose run --build --service-ports ${COMPOSE_ENV} "${SERVICE}"
