@@ -208,12 +208,12 @@ echo "  Auto-launch: ${AUTO_LAUNCH}"
 echo "============================================="
 echo ""
 
-# Build env var overrides for docker compose
-COMPOSE_ENV=""
+# Build env var overrides for docker compose (use array to prevent injection)
+COMPOSE_ENV=()
 if [ -n "$APP_URL" ]; then
-    COMPOSE_ENV="-e APP_URL=${APP_URL}"
+    COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
-COMPOSE_ENV="${COMPOSE_ENV} -e AUTO_LAUNCH=${AUTO_LAUNCH}"
+COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )
 
 # Build and run
-docker compose run --build --service-ports ${COMPOSE_ENV} "${SERVICE}"
+docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
