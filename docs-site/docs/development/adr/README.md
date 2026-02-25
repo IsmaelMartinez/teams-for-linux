@@ -38,6 +38,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
+| [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Accepted | 2026-02-25 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -82,12 +83,15 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | Smoke testing with Playwright; comprehensive testing impractical due to MS authentication constraints |
+| [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | Docker-based manual testing across 9 distro/display server combinations via noVNC, hosted on GitHub Codespaces |
 
 **Key Outcomes:**
 - Playwright E2E smoke tests validate app launch and login redirect
 - Tests run in isolated temp directories for clean state
 - Manual testing remains primary quality gate for feature changes
 - Low maintenance approach suitable for volunteer-maintained project
+- 9 cross-distro configurations testable from a browser via Codespaces
+- Apple Silicon limitation documented (V8 4GB heap cap under Rosetta 2)
 
 ### Documentation & Standards
 
@@ -313,9 +317,9 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 15
+- **Total ADRs**: 16
 - **Implemented**: 7
-- **Accepted**: 3
+- **Accepted**: 4
 - **Proposed**: 1
 - **Rejected**: 4
 - **Average length**: ~500 words
