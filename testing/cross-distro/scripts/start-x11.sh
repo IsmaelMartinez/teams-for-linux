@@ -36,13 +36,14 @@ echo "  noVNC: http://localhost:${NOVNC_PORT}/vnc.html"
 echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
+APP_LOG="/tmp/app.log"
 if [ -n "$APP_CMD" ]; then
     if [ "${AUTO_LAUNCH}" = "true" ]; then
-        echo "[X11] Auto-launching app..."
-        $APP_CMD &
+        echo "[X11] Auto-launching app (logs: tail -f ${APP_LOG})..."
+        $APP_CMD > "$APP_LOG" 2>&1 &
     else
         echo "[X11] App available. Launch with:"
-        echo "      $APP_CMD"
+        echo "      $APP_CMD 2>&1 | tee ${APP_LOG}"
         echo ""
         echo "  Or launch from the xterm terminal inside the VNC session."
     fi

@@ -42,8 +42,13 @@ fi
 # Electron/Chromium flags required for running inside Docker containers:
 #   --no-sandbox            : no user namespace / seccomp sandbox in container
 #   --disable-gpu           : no physical GPU available, use software rendering
-#   --disable-dev-shm-usage : avoid /dev/shm size issues (even with 2gb shm_size)
-ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage"
+#   --disable-gpu-compositing : reduce memory from software compositor
+#   --disable-dev-shm-usage : avoid /dev/shm size issues
+#   --disable-features      : disable memory-heavy background features
+#   --js-flags              : V8 heap capped at 4GB by pointer compression
+ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-gpu-compositing --disable-dev-shm-usage"
+ELECTRON_FLAGS="${ELECTRON_FLAGS} --disable-features=SpareRendererForSitePerProcess,BackForwardCache"
+ELECTRON_FLAGS="${ELECTRON_FLAGS} --renderer-process-limit=1 --js-flags=--max-old-space-size=4096"
 
 # Force software rendering via Mesa (no hardware GPU in container)
 export LIBGL_ALWAYS_SOFTWARE=1
