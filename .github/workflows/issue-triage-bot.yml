@@ -239,6 +239,7 @@ jobs:
                     generationConfig: {
                       temperature: 0.3,
                       maxOutputTokens: 500,
+                      responseMimeType: 'application/json',
                     },
                   }),
                 }
@@ -252,16 +253,7 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
-
-              // Extract JSON from response (handle markdown code fences)
-              const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-              if (!jsonMatch) {
-                console.log('No valid JSON array in Gemini response');
-                core.setOutput('suggestions_json', '[]');
-                return;
-              }
-
-              const suggestions = JSON.parse(jsonMatch[0]);
+              const suggestions = JSON.parse(rawText);
 
               // Validate structure and bounds
               const validated = suggestions
@@ -384,6 +376,7 @@ jobs:
                     generationConfig: {
                       temperature: 0.2,
                       maxOutputTokens: 400,
+                      responseMimeType: 'application/json',
                     },
                   }),
                 }
@@ -398,16 +391,7 @@ jobs:
               const data = await response.json();
               const rawText =
                 data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
-
-              // Extract JSON from response (handle markdown code fences)
-              const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-              if (!jsonMatch) {
-                console.log('No valid JSON array in Gemini response');
-                core.setOutput('duplicates_json', '[]');
-                return;
-              }
-
-              const duplicates = JSON.parse(jsonMatch[0]);
+              const duplicates = JSON.parse(rawText);
 
               // Validate structure and bounds
               const issueNumbers = new Set(candidates.map((i) => i.number));

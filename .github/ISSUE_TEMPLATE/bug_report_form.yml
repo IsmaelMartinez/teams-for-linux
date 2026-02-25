@@ -80,7 +80,7 @@ body:
       description: "When possible, please run the application from the terminal with Electron logging enabled and try to reproduce the error."
       value: |
         ```bash
-        ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{}'
+        ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'
         ```
       render: markdown
   - type: textarea
