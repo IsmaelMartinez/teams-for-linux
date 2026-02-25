@@ -102,6 +102,21 @@ class ReactHandler {
   }
 
   /**
+   * Get a specific core service by name for debugging
+   * @param {string} name - Service name
+   * @returns {object|null} The service object or null
+   */
+  getCoreService(name) {
+    if (!this._validateTeamsEnvironment()) return null;
+    try {
+      const teams2CoreServices = this._getTeams2CoreServices();
+      return teams2CoreServices?.[name] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get the status of the token cache injection
    * @returns {object} Status object with injected flag and retry capability
    */
