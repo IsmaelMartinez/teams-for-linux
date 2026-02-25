@@ -1,6 +1,6 @@
 FROM fedora:41
 
-# Electron/Chromium runtime dependencies
+# Electron/Chromium runtime dependencies + non-root user
 RUN dnf install -y \
     gtk3 nss libXScrnSaver libXtst xdg-utils at-spi2-core \
     alsa-lib libdrm mesa-libgbm mesa-dri-drivers \
@@ -15,10 +15,8 @@ RUN dnf install -y \
     # noVNC and utilities
     novnc python3-websockify \
     python3 wget curl procps-ng file fuse3 \
-    && dnf clean all
-
-# Create non-root user for running the app
-RUN useradd -m -s /bin/bash -G audio,video tester \
+    && dnf clean all \
+    && useradd -m -s /bin/bash -G audio,video tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config

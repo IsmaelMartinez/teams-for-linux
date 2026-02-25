@@ -145,6 +145,9 @@ case "${1:-}" in
         show_help
         exit 1
         ;;
+    *)
+        # Valid distro name — fall through to argument parsing below
+        ;;
 esac
 
 DISTRO="$1"

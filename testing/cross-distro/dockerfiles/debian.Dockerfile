@@ -2,7 +2,7 @@ FROM debian:bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Electron/Chromium runtime dependencies
+# Electron/Chromium runtime dependencies + non-root user
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 libnss3 libxss1 libxtst6 xdg-utils at-spi2-core \
     libasound2 libdrm2 libgbm1 mesa-utils libgl1-mesa-dri \
@@ -18,10 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # noVNC and utilities
     novnc websockify \
     python3 wget curl procps file fuse3 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create non-root user for running the app
-RUN useradd -m -s /bin/bash -G audio,video tester \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -s /bin/bash -G audio,video tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config
