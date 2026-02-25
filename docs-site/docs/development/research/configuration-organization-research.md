@@ -1461,7 +1461,6 @@ The automatic migration in v3.0 addresses several edge cases:
     "disableTimestampOnCopy": false
   },
 
-  // Wayland (already implemented as nested)
   "wayland": {
     "xwaylandOptimizations": false
   }
