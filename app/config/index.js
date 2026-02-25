@@ -315,6 +315,12 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
       },
+      enableXWaylandOptimizations: {
+        default: false,
+        describe:
+          "Enable XWayland-specific optimizations: keeps GPU enabled and skips fake media UI flag under XWayland. May fix camera issues but can break screen sharing on some systems.",
+        type: "boolean",
+      },
       enableIncomingCallToast: {
         default: false,
         describe: "Enable incoming call toast",

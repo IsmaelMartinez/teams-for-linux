@@ -32,9 +32,20 @@ class CommandLineManager {
       const ozonePlatform = app.commandLine.getSwitchValue("ozone-platform");
       const isX11Forced = ozonePlatform === "x11";
 
+      // Feature flag: enableXWaylandOptimizations (default: false)
+      // When enabled, XWayland sessions get special handling: GPU stays enabled
+      // and the fake media UI flag is skipped. This can fix camera issues (#2169)
+      // but may break screen sharing (#2217) on some systems.
+      // When disabled (default), XWayland is treated the same as native Wayland.
+      const applyXWaylandOptimizations = isX11Forced && config.enableXWaylandOptimizations;
+
+      if (applyXWaylandOptimizations) {
+        console.info("[Wayland] XWayland optimizations enabled via enableXWaylandOptimizations flag");
+      }
+
       if (config.disableGpuExplicitlySet) {
         console.info(`Running under Wayland, respecting user's disableGpu setting: ${config.disableGpu}`);
-      } else if (isX11Forced) {
+      } else if (applyXWaylandOptimizations) {
         // GPU works correctly under XWayland and must NOT be disabled.
         // The original GPU auto-disable was a workaround for native Wayland
         // rendering issues (blank windows, crashes). Under XWayland, disabling
@@ -61,12 +72,13 @@ class CommandLineManager {
         app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
       }
 
-      // Only use fake media stream UI for native Wayland mode.
-      // Under XWayland (X11 forced mode), the normal X11 media permission handling
-      // works correctly. Using fake-ui in XWayland can cause GPU context binding
-      // issues with the video capture service when permissions are persisted.
-      // Ref: https://github.com/IsmaelMartinez/teams-for-linux/issues/2169
-      if (!isX11Forced) {
+      // Apply fake media stream UI flag for Wayland sessions.
+      // When XWayland optimizations are enabled, this flag is skipped for XWayland
+      // to avoid GPU context binding issues with video capture (#2169).
+      // When XWayland optimizations are disabled (default), this flag is applied
+      // for all Wayland sessions including XWayland, which is needed for screen
+      // sharing to work correctly (#2217).
+      if (!applyXWaylandOptimizations) {
         app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
       }
     }
