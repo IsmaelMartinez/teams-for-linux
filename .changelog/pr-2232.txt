@@ -1,0 +1,1 @@
+Clarify Microsoft Teams web app references in issue triage - by @IsmaelMartinez (#2232)
