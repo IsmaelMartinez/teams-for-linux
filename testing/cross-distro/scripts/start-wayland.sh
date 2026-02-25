@@ -46,9 +46,9 @@ echo "  noVNC: http://localhost:${NOVNC_PORT}/vnc.html"
 echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
-if [ -n "$APP_CMD" ]; then
+if [[ -n "$APP_CMD" ]]; then
     WAYLAND_APP_CMD="${APP_CMD} --enable-features=UseOzonePlatform --ozone-platform=wayland"
-    if [ "${AUTO_LAUNCH}" = "true" ]; then
+    if [[ "${AUTO_LAUNCH}" == "true" ]]; then
         echo "[Wayland] Auto-launching app with native Wayland..."
         swaymsg exec "$WAYLAND_APP_CMD" 2>/dev/null || $WAYLAND_APP_CMD &
     else
@@ -67,7 +67,7 @@ cleanup() {
     kill $NOVNC_PID 2>/dev/null
     kill $WAYVNC_PID 2>/dev/null
     kill $SWAY_PID 2>/dev/null
-    exit 0
+    return 0
 }
 trap cleanup SIGTERM SIGINT
 

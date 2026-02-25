@@ -37,8 +37,8 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 APP_LOG="/tmp/app.log"
-if [ -n "$APP_CMD" ]; then
-    if [ "${AUTO_LAUNCH}" = "true" ]; then
+if [[ -n "$APP_CMD" ]]; then
+    if [[ "${AUTO_LAUNCH}" == "true" ]]; then
         echo "[X11] Auto-launching app (logs: tail -f ${APP_LOG})..."
         $APP_CMD > "$APP_LOG" 2>&1 &
     else
@@ -57,7 +57,7 @@ cleanup() {
     echo "[X11] Shutting down..."
     kill $NOVNC_PID 2>/dev/null
     kill $XVFB_PID 2>/dev/null
-    exit 0
+    return 0
 }
 trap cleanup SIGTERM SIGINT
 

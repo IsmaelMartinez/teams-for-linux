@@ -26,7 +26,7 @@ npx electron-builder --x64 -l AppImage
 
 # Find the built AppImage
 APPIMAGE=$(find "$REPO_ROOT/dist" -maxdepth 1 -name '*.AppImage' -type f | head -1)
-if [ -z "$APPIMAGE" ]; then
+if [[ -z "$APPIMAGE" ]]; then
     echo "[!] Build failed — no AppImage found in dist/"
     exit 1
 fi

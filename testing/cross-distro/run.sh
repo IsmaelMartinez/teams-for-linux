@@ -29,19 +29,29 @@ VNC_BASE=5901
 get_index() {
     local distro="$1" ds="$2" d_idx=0 ds_idx=0 i=0
     for d in $DISTROS; do
-        if [ "$d" = "$distro" ]; then d_idx=$i; fi
+        if [[ "$d" == "$distro" ]]; then d_idx=$i; fi
         i=$((i + 1))
     done
     i=0
     for s in $DISPLAY_SERVERS; do
-        if [ "$s" = "$ds" ]; then ds_idx=$i; fi
+        if [[ "$s" == "$ds" ]]; then ds_idx=$i; fi
         i=$((i + 1))
     done
     echo $(( d_idx * 3 + ds_idx ))
+    return 0
 }
 
-get_novnc_port() { echo $(( NOVNC_BASE + $(get_index "$1" "$2") )); }
-get_vnc_port()   { echo $(( VNC_BASE + $(get_index "$1" "$2") )); }
+get_novnc_port() {
+    local distro="$1" ds="$2"
+    echo $(( NOVNC_BASE + $(get_index "$distro" "$ds") ))
+    return 0
+}
+
+get_vnc_port() {
+    local distro="$1" ds="$2"
+    echo $(( VNC_BASE + $(get_index "$distro" "$ds") ))
+    return 0
+}
 
 show_help() {
     cat <<'EOF'
@@ -75,6 +85,7 @@ The environment is accessible via:
   - Browser (noVNC): http://localhost:<port>/vnc.html
   - VNC client:      localhost:<vnc-port>
 EOF
+    return 0
 }
 
 show_list() {
@@ -89,6 +100,7 @@ show_list() {
         done
     done
     echo ""
+    return 0
 }
 
 build_all() {
@@ -100,12 +112,14 @@ build_all() {
     done
     echo ""
     echo "[*] All images built. (Each distro image is shared across display servers.)"
+    return 0
 }
 
 stop_all() {
     echo "[*] Stopping all containers..."
     docker compose down
     echo "[*] Done."
+    return 0
 }
 
 # Parse global flags
@@ -126,6 +140,11 @@ case "${1:-}" in
         stop_all
         exit 0
         ;;
+    --*)
+        echo "[!] Unknown option: $1"
+        show_help
+        exit 1
+        ;;
 esac
 
 DISTRO="$1"
@@ -137,7 +156,7 @@ APPIMAGE_PATH=""
 APP_URL=""
 AUTO_LAUNCH="true"
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
     case "$1" in
         --appimage)
             APPIMAGE_PATH="$2"
@@ -161,8 +180,8 @@ done
 
 # Validate distro
 valid=false
-for d in $DISTROS; do [ "$d" = "$DISTRO" ] && valid=true; done
-if [ "$valid" = false ]; then
+for d in $DISTROS; do [[ "$d" == "$DISTRO" ]] && valid=true; done
+if [[ "$valid" == false ]]; then
     echo "[!] Invalid distro: ${DISTRO}"
     echo "    Valid: ${DISTROS}"
     exit 1
@@ -170,8 +189,8 @@ fi
 
 # Validate display server
 valid=false
-for s in $DISPLAY_SERVERS; do [ "$s" = "$DISPLAY_SERVER" ] && valid=true; done
-if [ "$valid" = false ]; then
+for s in $DISPLAY_SERVERS; do [[ "$s" == "$DISPLAY_SERVER" ]] && valid=true; done
+if [[ "$valid" == false ]]; then
     echo "[!] Invalid display server: ${DISPLAY_SERVER}"
     echo "    Valid: ${DISPLAY_SERVERS}"
     exit 1
@@ -183,8 +202,8 @@ SERVICE="${DISTRO}-${DISPLAY_SERVER}"
 APP_DIR="${SCRIPT_DIR}/app"
 mkdir -p "$APP_DIR"
 
-if [ -n "$APPIMAGE_PATH" ]; then
-    if [ ! -f "$APPIMAGE_PATH" ]; then
+if [[ -n "$APPIMAGE_PATH" ]]; then
+    if [[ ! -f "$APPIMAGE_PATH" ]]; then
         echo "[!] AppImage not found: ${APPIMAGE_PATH}"
         exit 1
     fi
@@ -201,7 +220,7 @@ echo "============================================="
 echo "  Starting: ${SERVICE}"
 echo "  noVNC:    http://localhost:${NOVNC_PORT}/vnc.html"
 echo "  VNC:      localhost:${VNC_PORT}"
-if [ -n "$APP_URL" ]; then
+if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
@@ -210,7 +229,7 @@ echo ""
 
 # Build env var overrides for docker compose (use array to prevent injection)
 COMPOSE_ENV=()
-if [ -n "$APP_URL" ]; then
+if [[ -n "$APP_URL" ]]; then
     COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
 COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )

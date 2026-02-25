@@ -18,8 +18,8 @@ RUN dnf install -y \
     && dnf clean all
 
 # Create non-root user for running the app
-RUN useradd -m -s /bin/bash -G audio,video tester
-RUN mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
+RUN useradd -m -s /bin/bash -G audio,video tester \
+    && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
