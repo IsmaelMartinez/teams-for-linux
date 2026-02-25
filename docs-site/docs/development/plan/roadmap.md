@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-25
 **Current Version:** v2.7.8
 **Status:** Living Document — planning v2.7.9, v2.8.0, and bot automation improvements
 
@@ -13,7 +13,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Active** | Screen sharing fixes ([#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217), [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219)) | Open PRs under review | Medium | v2.7.9 |
 | **Active** | Custom CSS crash fix ([#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220)) | PR open | Small | v2.7.9 |
 | **Active** | CPU idle optimization ([#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218)) | PR open | Small | v2.7.9 |
-| **Review** | Cross-distro testing environment ([#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226)) | PR open, SonarQube hotspots to resolve | Medium | v2.7.9 |
+| **Review** | Cross-distro testing environment ([#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226)) | PR open, includes Codespaces devcontainer. See [ADR-016](../adr/016-cross-distro-testing-environment.md). | Medium | v2.7.9 |
 | **Review** | Wayland audit and PipeWire ADR ([#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225)) | PR open | Medium | v2.7.9 |
 | **Open** | MQTT Screen Sharing ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)) | PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) and [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) still open | Tiny | v2.7.9 |
 | **Open** | App menu tray fix ([#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186)) | PR [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) still open | Small | v2.7.9 |
@@ -46,7 +46,7 @@ There are currently 13 open issues and 12 open PRs. The open issues cluster arou
 | PR | Description | Status |
 |----|-------------|--------|
 | [#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225) | Disable WebRTCPipeWireCapturer on XWayland; add Wayland audit and ADR-016 | Under review |
-| [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) | Cross-distro testing environment (Docker + VNC) | Under review; SonarQube flagged 4 security hotspots |
+| [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) | Cross-distro testing environment (Docker + VNC + Codespaces devcontainer) | Under review; SonarQube flagged 4 security hotspots |
 | [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) | Electron 39.5.1 to 40.6.0 (Dependabot) | Deferred; not merging yet |
 | [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) | Fix crash when using custom CSS | Under review |
 | [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219) | Screen sharing regression on Wayland/XWayland | Under review |
@@ -129,12 +129,13 @@ Extend the triage bot to surface relevant roadmap items, ADRs, and research docs
 ## Cross-Distro Testing Environment
 
 **PR:** [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226)
+**ADR:** [ADR-016](../adr/016-cross-distro-testing-environment.md)
 **Status:** Under review
 **Effort:** Medium
 
 PR #2226 introduces a Docker-based testing environment with 12 configurations (4 distros x 3 display servers). Each container runs a VNC server so you can interactively test the app on Ubuntu 24.04, Fedora 41, Debian Bookworm, and Arch Linux under X11, Wayland, and XWayland.
 
-The approach is sound and addresses a real gap in the project's testing story. The main limitation, as noted, is that full automated end-to-end testing isn't feasible because the app requires Microsoft authentication, and automating login against Microsoft's services would be both fragile and likely violate their terms of service. That said, the cross-distro environment is valuable for manual regression testing, especially for the display-server-related bugs that have been a recurring theme (screen sharing, camera, Wayland compatibility).
+The environment includes a GitHub Codespaces devcontainer for one-click setup on native x86_64 VMs, along with a `build-and-run.sh` script that builds an AppImage from source and launches the test container. ADR-016 documents the architecture decisions, the Apple Silicon limitation (V8 4GB pointer compression under Rosetta 2 causes OOM crashes post-login), and alternatives considered (Hetzner/DO VPS, GitHub Actions tunnel, cloud testing platforms).
 
 SonarQube's 4 security hotspots have been addressed: all VNC/noVNC ports are bound to `127.0.0.1`, VNC servers listen on localhost only, noVNC download has SHA256 verification, and security trade-offs are documented. Containers are pinned to `linux/amd64` so the environment works on macOS (including Apple Silicon via Rosetta 2) as well as Linux hosts.
 
@@ -331,7 +332,6 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 
 ### Recent ADRs
 
-- [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
-- [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
 - [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
 - [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
+- [ADR-016: Cross-Distro Testing Environment](../adr/016-cross-distro-testing-environment.md) - Docker + noVNC + Codespaces for testing across 9 distro/display server combinations
