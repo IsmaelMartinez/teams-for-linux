@@ -27,6 +27,7 @@ This document details all available configuration options for the Teams for Linu
   - [Microsoft Graph API](#microsoft-graph-api)
   - [Quick Chat](#quick-chat)
   - [Performance & Hardware](#performance--hardware)
+  - [Wayland](#wayland)
   - [Cache & Storage](#cache--storage)
   - [Development & Debug](#development--debug)
   - [Advanced Platform Options](#advanced-platform-options)
@@ -378,8 +379,23 @@ All topics use retained messages by default, ensuring subscribers receive the la
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
-| `enableXWaylandOptimizations` | `boolean` | `false` | Enable XWayland-specific optimizations (keeps GPU enabled and skips fake media UI flag under XWayland). May fix camera issues but can break screen sharing on some systems |
 | `electronCLIFlags` | `array` | `[]` | Electron CLI flags |
+
+### Wayland
+
+Wayland display server settings are organized under the `wayland` configuration object:
+
+```json
+{
+  "wayland": {
+    "xwaylandOptimizations": false
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wayland.xwaylandOptimizations` | `boolean` | `false` | Enable XWayland-specific optimizations: keeps GPU enabled and skips fake media UI flag under XWayland. May fix camera issues but can break screen sharing on some systems |
 
 ### Cache & Storage
 
@@ -431,7 +447,9 @@ When running under XWayland (Wayland session with `--ozone-platform=x11`), the a
 
 ```json
 {
-  "enableXWaylandOptimizations": true
+  "wayland": {
+    "xwaylandOptimizations": true
+  }
 }
 ```
 

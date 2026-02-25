@@ -32,15 +32,15 @@ class CommandLineManager {
       const ozonePlatform = app.commandLine.getSwitchValue("ozone-platform");
       const isX11Forced = ozonePlatform === "x11";
 
-      // Feature flag: enableXWaylandOptimizations (default: false)
+      // Feature flag: wayland.xwaylandOptimizations (default: false)
       // When enabled, XWayland sessions get special handling: GPU stays enabled
       // and the fake media UI flag is skipped. This can fix camera issues (#2169)
       // but may break screen sharing (#2217) on some systems.
       // When disabled (default), XWayland is treated the same as native Wayland.
-      const applyXWaylandOptimizations = isX11Forced && config.enableXWaylandOptimizations;
+      const applyXWaylandOptimizations = isX11Forced && config.wayland?.xwaylandOptimizations;
 
       if (applyXWaylandOptimizations) {
-        console.info("[Wayland] XWayland optimizations enabled via enableXWaylandOptimizations flag");
+        console.info("[Wayland] XWayland optimizations enabled via wayland.xwaylandOptimizations flag");
       }
 
       if (config.disableGpuExplicitlySet) {

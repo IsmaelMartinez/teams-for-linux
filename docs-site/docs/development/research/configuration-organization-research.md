@@ -1459,6 +1459,11 @@ The automatic migration in v3.0 addresses several edge cases:
     "emulateWinChromiumPlatform": false,
     "spellCheckerLanguages": [],
     "disableTimestampOnCopy": false
+  },
+
+  // Wayland (already implemented as nested)
+  "wayland": {
+    "xwaylandOptimizations": false
   }
 }
 ```
