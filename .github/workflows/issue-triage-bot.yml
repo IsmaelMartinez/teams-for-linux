@@ -118,7 +118,7 @@ jobs:
             // --- Extract and Analyze Sections ---
             const canReproduce = getSection(
               issueBody,
-              'Can you reproduce this bug in the website/PWA?'
+              'Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)?'
             );
             const reproSteps = getSection(issueBody, 'Reproduction steps');
             const expectedBehavior = getSection(issueBody, 'Expected Behavior');
@@ -481,9 +481,9 @@ jobs:
             // PWA reproducibility note
             if (isPwaReproducible) {
               parts.push(
-                '> **Note:** You mentioned this bug can also be reproduced in the Teams website/PWA. ' +
-                  'This might indicate the issue is with the Teams web app itself rather than Teams for Linux. ' +
-                  'You could also report it to [Microsoft](https://feedbackportal.microsoft.com/). ' +
+                '> **Note:** You mentioned this bug also occurs on the [Microsoft Teams web app](https://teams.microsoft.com). ' +
+                  'This suggests the issue may be with Microsoft Teams itself rather than Teams for Linux. ' +
+                  'You could also report it to [Microsoft Feedback Portal](https://feedbackportal.microsoft.com/). ' +
                   "That said, we'll still take a look — there may be something we can do on our end.\n"
               );
             }

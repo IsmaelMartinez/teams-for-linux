@@ -9,8 +9,8 @@ body:
   - type: dropdown
     id: can-reproduce-pwa
     attributes:
-      label: Can you reproduce this bug in the website/PWA?
-      description: "If you can reproduce the bug in the website/PWA, it's likely a bug in the web app. Please report it to Microsoft instead"
+      label: Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)?
+      description: "Try opening https://teams.microsoft.com in your browser and check if the same issue occurs there. If it does, it's likely a Microsoft Teams bug rather than a Teams for Linux bug — please also report it to Microsoft at https://feedbackportal.microsoft.com/"
       options:
         - "Yes"
         - "No"
