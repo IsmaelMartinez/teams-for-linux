@@ -98,6 +98,12 @@ fi
 export APP_CMD
 export AUTO_LAUNCH="${AUTO_LAUNCH:-true}"
 
+# Test mode: start display server and run Playwright tests instead of the app
+if [[ "${RUN_TESTS:-false}" == "true" ]]; then
+    echo "[*] Test mode: running Playwright tests..."
+    exec /usr/local/bin/run-tests.sh
+fi
+
 case "${DISPLAY_SERVER}" in
     x11)
         echo "[*] Starting X11 environment..."

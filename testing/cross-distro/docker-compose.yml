@@ -23,6 +23,8 @@ x-common: &common
     - ./app:/app:ro
     # Persist login session and app config across container restarts
     - ./session:/home/tester/.config/teams-for-linux
+    # Mount project source for running Playwright tests inside the container
+    - ../../:/src:ro
   environment: &common-env
     SCREEN_RESOLUTION: "1920x1080x24"
     # Software rendering -- no physical GPU in containers

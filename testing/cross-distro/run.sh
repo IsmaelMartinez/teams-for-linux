@@ -70,6 +70,7 @@ Options:
   --appimage <path>   Copy a local AppImage into the container
   --url <url>         Download AppImage from URL at container startup
   --no-launch         Don't auto-launch the app (just start the desktop)
+  --test              Run Playwright authenticated tests (requires prior login)
 
 Examples:
   # Local AppImage
@@ -158,6 +159,7 @@ shift 2
 APPIMAGE_PATH=""
 APP_URL=""
 AUTO_LAUNCH="true"
+RUN_TESTS="false"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -171,6 +173,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-launch)
             AUTO_LAUNCH="false"
+            shift
+            ;;
+        --test)
+            RUN_TESTS="true"
             shift
             ;;
         *)
@@ -227,6 +233,9 @@ if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
+if [[ "$RUN_TESTS" == "true" ]]; then
+echo "  Mode:        PLAYWRIGHT TESTS"
+fi
 echo "============================================="
 echo ""
 
@@ -236,6 +245,9 @@ if [[ -n "$APP_URL" ]]; then
     COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
 COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )
+if [[ "$RUN_TESTS" == "true" ]]; then
+    COMPOSE_ENV+=( -e "RUN_TESTS=true" )
+fi
 
 # Build and run
 docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
