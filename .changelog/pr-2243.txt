@@ -1,0 +1,1 @@
+Add system tray troubleshooting guide and snap confinement fix - by @IsmaelMartinez (#2243)
