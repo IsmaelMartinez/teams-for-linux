@@ -45,4 +45,4 @@ echo "  Launching app..."
 echo ""
 
 cd "$PROJECT_ROOT"
-E2E_USER_DATA_DIR="$SESSION_DIR" npm start
+E2E_USER_DATA_DIR="$(cd "$SESSION_DIR" && pwd)" npm start

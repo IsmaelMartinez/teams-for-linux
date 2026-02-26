@@ -23,6 +23,7 @@
     "lint": "eslint **/*.js",
     "test:unit": "node tests/unit/logSanitizer.test.js && node tests/unit/loggerHook.test.js",
     "test:e2e": "playwright test",
+    "test:authenticated": "playwright test --config playwright.authenticated.config.js",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
