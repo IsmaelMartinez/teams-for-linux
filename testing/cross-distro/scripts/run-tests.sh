@@ -42,10 +42,12 @@ cp "${SRC_DIR}/package.json" "${SRC_DIR}/package-lock.json" "$WORK_DIR/"
 cd "$WORK_DIR"
 npm ci --ignore-scripts 2>&1 | tail -3
 
-# Symlink the source directories that tests need
+# Copy test files and config so they resolve @playwright/test from the
+# workspace node_modules (not /src/node_modules). Symlink app/ since it's
+# larger and doesn't import @playwright/test.
 ln -sf "${SRC_DIR}/app" "$WORK_DIR/app"
-ln -sf "${SRC_DIR}/tests" "$WORK_DIR/tests"
-ln -sf "${SRC_DIR}/playwright.authenticated.config.js" "$WORK_DIR/playwright.authenticated.config.js"
+cp -r "${SRC_DIR}/tests" "$WORK_DIR/tests"
+cp "${SRC_DIR}/playwright.authenticated.config.js" "$WORK_DIR/playwright.authenticated.config.js"
 
 echo "[*] Starting display server for tests..."
 
