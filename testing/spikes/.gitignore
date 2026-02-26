@@ -1,0 +1,2 @@
+# Persisted login session data (contains auth cookies/tokens)
+.test-session/

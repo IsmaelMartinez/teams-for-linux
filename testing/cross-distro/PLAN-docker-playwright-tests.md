@@ -1,257 +1,181 @@
-# Plan: Docker Playwright Testing with Persisted Session
+# Plan: Automated Post-Auth Playwright Testing for Electron Upgrades
 
 ## Problem
 
 Electron upgrades are the main pain point for Teams for Linux. They can break
 screen sharing, display server compatibility, and other complex features. Today,
-validating these requires fully manual testing via noVNC. The existing Playwright
-smoke tests only cover pre-auth flow (app launch → MS login redirect) because
+validating these requires fully manual testing. The existing Playwright smoke
+tests only cover the pre-auth flow (app launch → MS login redirect) because
 Microsoft's authentication wall blocks automated testing of post-auth features.
 
 ## Core Idea
 
-**Login once manually, then run automated Playwright tests against the
-authenticated app using the persisted session.**
+Login once manually, then run automated Playwright tests against the
+authenticated app using the persisted session.
 
-The cross-distro Docker environment already persists the login session in
-`./session/`. After a one-time manual login via noVNC, Playwright can relaunch
-the app with that saved session and run tests against the fully authenticated
-Teams interface.
+The app already supports `E2E_USER_DATA_DIR` to override its userData path
+(`app/index.js:58`). If we point that at a directory where a real login session
+has been saved, Playwright can relaunch the app and it should come back
+authenticated — no manual login needed for subsequent test runs.
+
+## Strategy: macOS-First, Docker Later
+
+### Why macOS first
+
+The cross-distro Docker environment runs `linux/amd64` containers. On Apple
+Silicon Macs, V8's 4GB pointer compression limit under Rosetta 2 causes the
+app to OOM-crash ~2-3 minutes after login (documented in ADR-016). This makes
+Docker unusable for interactive testing on the development machine.
+
+Running Playwright natively on macOS avoids this entirely: no Docker, no
+Rosetta, no memory limits. The tests validate whether Electron upgrades break
+core functionality — which is the primary goal.
+
+### When to add Docker/Linux testing
+
+Once the macOS test suite works, it can be reused in:
+
+- **GitHub Codespaces** — native x86_64, the devcontainer already forwards
+  noVNC ports 6081-6089, 120 free core-hours/month
+- **GitHub Actions** — for CI with a stored session (requires encrypted
+  secrets)
+- **Linux VPS** — if Codespaces proves insufficient (~$5-10/month on
+  Hetzner/DigitalOcean)
+
+The Playwright tests themselves are portable. Only the launch config (electron
+flags, session path) differs between macOS and Docker.
 
 ## Architecture
 
 ```text
-Phase 1: Manual Login (one-time)
-┌──────────────────────────────────────────┐
-│  Docker Container                        │
-│  ┌────────┐  ┌────────────────────────┐  │
-│  │ Xvfb / │  │  Teams for Linux       │  │
-│  │ Sway   │  │  (Electron)            │  │
-│  └────────┘  └────────────────────────┘  │
-│  ┌────────┐                              │
-│  │ noVNC  │ ← You log in here            │
-│  └────────┘                              │
-│  ./session/ ← session cookies saved      │
-└──────────────────────────────────────────┘
+Phase 1: Manual Login (one-time per session expiry)
+┌──────────────────────────────────────┐
+│  macOS (native)                      │
+│                                      │
+│  npm start                           │
+│  → App launches, you log in          │
+│  → Session saved to ./test-session/  │
+└──────────────────────────────────────┘
 
 Phase 2: Automated Tests (repeatable)
-┌──────────────────────────────────────────┐
-│  Docker Container                        │
-│  ┌────────┐  ┌────────────────────────┐  │
-│  │ Xvfb / │  │  Teams for Linux       │  │
-│  │ Sway   │  │  (launched by          │  │
-│  └────────┘  │   Playwright)          │  │
-│              └────────────────────────┘  │
-│  ┌────────────────────────────────────┐  │
-│  │  Playwright Test Runner            │  │
-│  │  - Uses saved session from Phase 1 │  │
-│  │  - Runs screen sharing tests       │  │
-│  │  - Reports pass/fail               │  │
-│  └────────────────────────────────────┘  │
-│  ./session/ ← reused from Phase 1       │
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  macOS (native)                      │
+│                                      │
+│  npx playwright test                 │
+│  → Launches app with saved session   │
+│  → App loads already authenticated   │
+│  → Tests run against Teams UI        │
+│  → Reports pass/fail                 │
+└──────────────────────────────────────┘
 ```
-
-## Critical Review: Untested Assumptions
-
-Before writing real test code, three assumptions must be validated.
-
-### Assumption 1: Session reuse after app restart actually works
-
-The entire plan hinges on "Playwright relaunches the app with the saved
-`./session/` dir and it comes back authenticated." But Microsoft tokens might:
-
-- Be tied to the specific Electron process/session
-- Expire quickly (especially refresh tokens under certain tenant policies)
-- Require re-auth after app restart (Teams sometimes does this)
-
-**This is the single biggest risk.** If session reuse doesn't work reliably,
-the whole approach needs rethinking (e.g., CDP connection to running app
-instead).
-
-### Assumption 2: desktopCapturer works in Docker with Xvfb/Sway
-
-The plan assumes Xvfb provides a virtual display that
-`desktopCapturer.getSources()` can see. But modern Electron/Chromium
-increasingly uses **PipeWire + XDG Desktop Portal** for screen capture on
-Linux. Inside Docker, there's likely no PipeWire daemon or portal running.
-This could mean desktopCapturer returns zero sources, making screen sharing
-tests impossible without additional plumbing (installing PipeWire, etc.).
-
-### Assumption 3: What "screen sharing test" even means
-
-In Teams, you can only share your screen **during a call**. You can't just
-open a screen sharing picker from the main interface. So what exactly are we
-testing? Options:
-
-- Testing the Electron-side `desktopCapturer` API in isolation (not through
-  Teams UI)
-- Testing that the app doesn't crash when screen sharing is invoked
-- A test meeting to join (requires a second account or a test meeting link)
-
-### CDP vs Session-Reuse: Still an open question
-
-The session-reuse approach (Playwright launches a fresh Electron process with
-saved session) gives full Playwright Electron API access. But CDP connection
-to a running app avoids the session reuse question entirely — you log in, then
-Playwright connects to the already-running app. The tradeoff is losing
-`electronApp.evaluate()`. Worth deciding after Spike 1 results.
 
 ## Required Spikes (Before Implementation)
 
-### Spike 1: Session reuse (~10 min)
+Three spikes to validate the approach. All runnable on macOS right now.
 
-1. Start container: `./run.sh ubuntu x11`
-2. Login via noVNC
-3. Kill the app from xterm (not the container)
-4. Relaunch the app from xterm
+### Spike 1: Session reuse after app restart
+
+The entire approach depends on this. Steps:
+
+1. Launch the app with a custom userData dir:
+   `E2E_USER_DATA_DIR=./test-session npm start`
+2. Log in to Teams manually
+3. Close the app (Cmd+Q)
+4. Relaunch with same dir:
+   `E2E_USER_DATA_DIR=./test-session npm start`
 5. Does it come back authenticated or hit the login wall?
-6. Stop and restart the container entirely — still authenticated?
 
-**If this fails:** pivot to CDP approach (connect to running app).
+Script: `testing/spikes/spike-1-session-reuse.sh`
 
-### Spike 2: desktopCapturer in Docker (~15 min)
+**If this fails:** pivot to CDP approach (Playwright connects to an
+already-running, already-authenticated app via Chrome DevTools Protocol).
 
-Write a tiny Electron script:
+### Spike 2: desktopCapturer returns sources on macOS
 
-```javascript
-const { app, desktopCapturer } = require('electron');
-app.whenReady().then(async () => {
-  const sources = await desktopCapturer.getSources({
-    types: ['screen', 'window']
-  });
-  console.log('Sources found:', sources.length);
-  sources.forEach(s => console.log(` - ${s.name} (${s.id})`));
-  app.quit();
-});
-```
+Verify that `desktopCapturer.getSources()` works and returns screen/window
+sources. This is the API that screen sharing depends on.
 
-Run it inside the container on X11 and Wayland. If it returns zero sources,
-investigate PipeWire/xdg-desktop-portal.
+Script: `testing/spikes/spike-2-desktop-capturer.js`
 
-### Spike 3: Playwright launching Electron in container (~10 min)
+Run with: `npx electron testing/spikes/spike-2-desktop-capturer.js`
 
-1. Install Node.js in the container: `apt install nodejs npm`
-2. Mount the project source
-3. Run the existing smoke test inside the container:
-   `npx playwright test`
-4. Does Playwright + Electron work in this Docker environment?
+macOS may prompt for Screen Recording permission — that's expected and
+actually tests the permission flow too.
+
+### Spike 3: Playwright can launch and interact with authenticated app
+
+Use Playwright's Electron API to launch the app with the saved session from
+Spike 1, wait for it to load, and verify it's authenticated (not on the
+login page).
+
+Script: `testing/spikes/spike-3-playwright-launch.js`
+
+Run with: `node testing/spikes/spike-3-playwright-launch.js`
 
 ## Implementation Steps (Post-Spikes)
 
-### Step 1: Install Node.js + Playwright in Docker images
+### Step 1: Playwright config and test helpers for authenticated tests
 
-Add `nodejs` and `npm` to the three Dockerfiles. Playwright and test scripts
-are mounted from the host via a new volume.
+A new Playwright config separate from the smoke tests:
 
-**Changes:**
+- `playwright.authenticated.config.js` — points to `tests/e2e/authenticated/`,
+  uses `E2E_USER_DATA_DIR` for session, longer timeouts
+- `tests/e2e/authenticated/helpers.js` — shared launch helper
 
-- `dockerfiles/ubuntu.Dockerfile` — add `nodejs npm` packages
-- `dockerfiles/fedora.Dockerfile` — add `nodejs npm` packages
-- `dockerfiles/debian.Dockerfile` — add `nodejs npm` packages
-- `docker-compose.yml` — add volume mount: `../../:/src:ro`
+### Step 2: Authenticated app launch test
 
-### Step 2: Create Docker-specific Playwright config and test helpers
+`tests/e2e/authenticated/app-ready.spec.js` — the baseline test:
 
-**New files:**
+- Launch app with saved session
+- Verify it does NOT redirect to login
+- Verify Teams main UI renders (chat list, calendar, etc.)
+- This test must pass before any other authenticated test
 
-- `testing/cross-distro/playwright.docker.config.js` — Docker-specific
-  config (persisted session dir, Docker electron flags, longer timeouts)
-- `tests/e2e/docker/test-utils.js` — shared helpers (launch app with
-  session, Docker electron flags, wait-for-teams-ready)
+### Step 3: Screen sharing test
 
-### Step 3: Write the screen sharing test
+`tests/e2e/authenticated/screen-sharing.spec.js`:
 
-**New file:** `tests/e2e/docker/screen-sharing.spec.js`
+- Verify `desktopCapturer.getSources()` returns sources via
+  `electronApp.evaluate()`
+- If possible, trigger screen share flow and verify no crash
 
-What we can validate in Docker:
+### Step 4: Additional regression tests
 
-- `desktopCapturer` API returns sources (virtual display)
-- Screen sharing UI elements render (if in a call)
-- No crashes or console errors during the flow
+- `window-management.spec.js` — resize, minimize/restore, tray behavior
+- `notification.spec.js` — notification permission and display
+- More as needed based on what Electron upgrades tend to break
 
-What we cannot validate:
+### Step 5: npm script and documentation
 
-- Actual meeting screen sharing (requires two participants)
-- Network quality of the shared stream
+- Add `npm run test:authenticated` script
+- Document the login-once-then-test workflow in the testing README
 
-### Step 4: Add a `--test` flag to `run.sh`
+### Step 6 (Later): Docker/Codespaces integration
 
-```bash
-# Phase 1: Login manually (one-time)
-./run.sh ubuntu x11
+Adapt the test suite for the cross-distro Docker environment:
 
-# Phase 2: Run tests (repeatable)
-./run.sh ubuntu x11 --test
-
-# Run specific test
-./run.sh ubuntu x11 --test screen-sharing
-
-# Run across configs
-./run.sh ubuntu wayland --test
-./run.sh fedora x11 --test
-```
-
-### Step 5: Create test mode entrypoint
-
-**New file:** `testing/cross-distro/scripts/run-tests.sh`
-
-1. Starts display server (Xvfb/Sway) but not the app
-2. Checks `./session/` has valid session data
-3. Runs `npx playwright test` with the Docker config
-4. Exits with the test exit code
-
-### Step 6: Additional test scenarios
-
-- `app-launch-authenticated.spec.js` — app starts authenticated, main UI
-  renders
-- `window-management.spec.js` — resize, minimize/restore, second window
-- `display-server.spec.js` — ozone platform detection on Wayland vs X11
-
-### Step 7: Documentation
-
-Update `testing/cross-distro/README.md` with the login-once-then-test
-workflow, how to write new tests, and session expiry troubleshooting.
+- Docker-specific electron flags (`--no-sandbox`, `--disable-gpu`, etc.)
+- `--test` flag on `run.sh`
+- Tests run inside the container against Linux display servers
 
 ## Electron Upgrade Testing Workflow
 
-The primary use case. When upgrading Electron (e.g., 39 → 40):
+When upgrading Electron (e.g., 39 → 40):
 
-1. Build with new Electron: `npm run dist:linux`
-2. Copy to `testing/cross-distro/app/`
-3. Login: `./run.sh ubuntu x11`
-4. Run tests: `./run.sh ubuntu x11 --test`
-5. Test other configs: `./run.sh ubuntu wayland --test`, etc.
-6. Fix failures, rebuild, repeat
-
-Turns an entirely manual process (9 configs × N features) into:
-manual login + automated regression checks.
-
-## Risks and Mitigations
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Teams DOM changes break selectors | Tests fail on unrelated changes | Focus on Electron APIs, not Teams DOM |
-| Session tokens expire | Tests fail with auth errors | Pre-flight session check; re-login is quick |
-| Tests are flaky in Docker | False failures | Conservative timeouts, retry logic |
-| Playwright version conflicts | Install issues | Pin version, `npx playwright install --with-deps` |
+1. Check out the Electron upgrade branch
+2. `npm ci`
+3. If no saved session: `E2E_USER_DATA_DIR=./test-session npm start`, log in,
+   close
+4. `npm run test:authenticated`
+5. If tests pass: confidence the upgrade doesn't break core functionality
+6. For Linux-specific validation: use Codespaces with the Docker environment
 
 ## Open Questions
 
-1. **Screen sharing scope**: Test desktopCapturer API in isolation, or attempt
-   joining a test meeting?
-2. **CI integration**: Manual trigger only, or also GitHub Actions? (CI needs
-   encrypted session tokens as secrets.)
-3. **Source vs built app**: Test against `npm start` or built AppImage?
-   AppImage is closer to real usage but slower to iterate.
-
-## This Work Should Be Done Locally
-
-This is exploratory and Docker-heavy. The spikes require:
-
-- Starting containers and interacting via noVNC
-- Manual Microsoft login
-- Observing real behavior (does desktopCapturer work? does session persist?)
-
-Best done as a collaborative local session: you drive the terminal, we iterate
-on scripts and tests together based on spike results.
+1. **Screen sharing scope**: Test `desktopCapturer` API in isolation, or try
+   to trigger the full Teams screen sharing flow? The latter requires being in
+   a call.
+2. **Session expiry handling**: How long do Microsoft tokens last? Should the
+   test runner detect expired sessions and prompt for re-login?
+3. **CI integration**: Worth storing encrypted session tokens in GitHub Secrets
+   for automated CI runs, or keep this as a manual developer workflow?
