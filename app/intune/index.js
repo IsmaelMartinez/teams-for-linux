@@ -89,7 +89,7 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
       return;
     }
 
-    if (ssoInTuneAuthUser == "") {
+    if (!ssoInTuneAuthUser) {
       inTuneAccount = response.accounts[0];
       console.debug("[INTUNE_DIAG] Using first available InTune account", {
         accountType: inTuneAccount.accountType || "unknown",

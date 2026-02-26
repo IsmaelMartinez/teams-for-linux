@@ -217,7 +217,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
   const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user || config.ssoInTuneAuthUser;
+  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);
