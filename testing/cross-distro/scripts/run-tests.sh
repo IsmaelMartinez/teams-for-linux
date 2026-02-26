@@ -42,6 +42,10 @@ cp "${SRC_DIR}/package.json" "${SRC_DIR}/package-lock.json" "$WORK_DIR/"
 cd "$WORK_DIR"
 npm ci --ignore-scripts 2>&1 | tail -3
 
+# Electron binary is needed by Playwright but --ignore-scripts skips it
+echo "[*] Installing Electron binary..."
+node node_modules/electron/install.js 2>&1 | tail -3
+
 # Copy test files and config so they resolve @playwright/test from the
 # workspace node_modules (not /src/node_modules). Symlink app/ since it's
 # larger and doesn't import @playwright/test.
