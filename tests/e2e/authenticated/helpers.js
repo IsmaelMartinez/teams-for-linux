@@ -14,13 +14,39 @@ async function launchAuthenticatedApp(sessionDir) {
     args.push('--no-sandbox');
   }
 
+  // Docker containers need extra Electron/Chromium flags for headless rendering
+  if (process.env.DOCKER_TEST === 'true') {
+    args.push(
+      '--no-sandbox',
+      '--disable-gpu',
+      '--disable-gpu-compositing',
+      '--disable-dev-shm-usage',
+      '--disable-features=SpareRendererForSitePerProcess,BackForwardCache',
+      '--renderer-process-limit=1',
+      '--js-flags=--max-old-space-size=4096',
+    );
+
+    // Wayland needs ozone-platform flag; XWayland uses X11 protocol
+    if (process.env.DISPLAY_SERVER === 'wayland') {
+      args.push('--ozone-platform=wayland');
+    }
+  }
+
+  const launchEnv = {
+    ...process.env,
+    E2E_USER_DATA_DIR: sessionDir,
+    NODE_ENV: 'development',
+  };
+
+  // Software rendering in Docker (no GPU)
+  if (process.env.DOCKER_TEST === 'true') {
+    launchEnv.LIBGL_ALWAYS_SOFTWARE = '1';
+    launchEnv.MESA_GL_VERSION_OVERRIDE = '3.3';
+  }
+
   const electronApp = await electron.launch({
     args,
-    env: {
-      ...process.env,
-      E2E_USER_DATA_DIR: sessionDir,
-      NODE_ENV: 'development',
-    },
+    env: launchEnv,
     timeout: 30000,
   });
 
@@ -32,10 +58,11 @@ async function launchAuthenticatedApp(sessionDir) {
  * Returns the Page object for the main window.
  */
 async function waitForTeamsWindow(electronApp) {
-  await electronApp.firstWindow({ timeout: 30000 });
+  const isDocker = process.env.DOCKER_TEST === 'true';
+  await electronApp.firstWindow({ timeout: isDocker ? 60000 : 30000 });
 
-  // Give the app time to create all windows and navigate
-  await new Promise(resolve => setTimeout(resolve, 8000));
+  // Give the app time to create all windows and navigate (longer in Docker)
+  await new Promise(resolve => setTimeout(resolve, isDocker ? 15000 : 8000));
 
   const windows = electronApp.windows();
 

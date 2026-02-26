@@ -18,6 +18,15 @@ echo "  Display Server: ${DISPLAY_SERVER}"
 echo "  Session dir:    ${SESSION_DIR}"
 echo "============================================="
 
+# Start D-Bus session bus (Electron needs it for IPC)
+if command -v dbus-launch &>/dev/null; then
+    eval "$(dbus-launch --sh-syntax)"
+    export DBUS_SESSION_BUS_ADDRESS
+fi
+
+# Tell helpers.js we're inside Docker
+export DOCKER_TEST=true
+
 # Check source is mounted
 if [[ ! -f "${SRC_DIR}/package.json" ]]; then
     echo "[!] Source not mounted at ${SRC_DIR}. Check docker-compose volumes."
@@ -58,16 +67,13 @@ echo "[*] Starting display server for tests..."
 # Start the display server in the background (tests need it but not noVNC)
 case "${DISPLAY_SERVER}" in
     x11)
-        WIDTH=$(echo "$SCREEN_RESOLUTION" | cut -dx -f1)
-        HEIGHT=$(echo "$SCREEN_RESOLUTION" | cut -dx -f2)
-        DEPTH=$(echo "$SCREEN_RESOLUTION" | cut -dx -f3)
         Xvfb :1 -screen 0 "${SCREEN_RESOLUTION}" -ac +extension GLX +render -noreset &
         DISPLAY_PID=$!
-        sleep 1
+        sleep 2
         export DISPLAY=:1
-        # Start a window manager (some Electron operations need one)
+        # Start a window manager (Electron needs one for window management)
         openbox &
-        sleep 0.5
+        sleep 1
         ;;
     wayland)
         export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-tester}"
@@ -78,10 +84,21 @@ case "${DISPLAY_SERVER}" in
         export XDG_SESSION_TYPE=wayland
         sway &
         DISPLAY_PID=$!
-        sleep 2
-        # Create virtual output
+        # Wait for the Wayland socket to appear
+        echo "[*] Waiting for Wayland socket..."
+        for i in $(seq 1 20); do
+            SOCKET=$(ls "$XDG_RUNTIME_DIR"/wayland-* 2>/dev/null | head -1 | xargs -r basename)
+            if [[ -n "$SOCKET" ]]; then break; fi
+            sleep 0.5
+        done
+        if [[ -z "$SOCKET" ]]; then
+            echo "[!] Wayland socket not found in $XDG_RUNTIME_DIR after 10s"
+            ls -la "$XDG_RUNTIME_DIR/" 2>/dev/null
+            exit 1
+        fi
+        export WAYLAND_DISPLAY="$SOCKET"
+        echo "[*] Found Wayland socket: $WAYLAND_DISPLAY"
         swaymsg create_output WLR_HEADLESS 2>/dev/null || true
-        export WAYLAND_DISPLAY=wayland-1
         ;;
     xwayland)
         export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-tester}"
@@ -92,9 +109,22 @@ case "${DISPLAY_SERVER}" in
         export XDG_SESSION_TYPE=wayland
         sway &
         DISPLAY_PID=$!
-        sleep 2
+        # Wait for the Wayland socket (Sway creates it)
+        echo "[*] Waiting for Wayland socket..."
+        for i in $(seq 1 20); do
+            SOCKET=$(ls "$XDG_RUNTIME_DIR"/wayland-* 2>/dev/null | head -1 | xargs -r basename)
+            if [[ -n "$SOCKET" ]]; then break; fi
+            sleep 0.5
+        done
+        if [[ -z "$SOCKET" ]]; then
+            echo "[!] Wayland socket not found in $XDG_RUNTIME_DIR after 10s"
+            ls -la "$XDG_RUNTIME_DIR/" 2>/dev/null
+            exit 1
+        fi
+        export WAYLAND_DISPLAY="$SOCKET"
+        echo "[*] Found Wayland socket: $WAYLAND_DISPLAY"
         swaymsg create_output WLR_HEADLESS 2>/dev/null || true
-        # XWayland sets DISPLAY automatically via Sway
+        # XWayland: Electron runs as X11 client through Sway's XWayland
         export DISPLAY=:0
         ;;
 esac
