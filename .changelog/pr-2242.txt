@@ -1,0 +1,1 @@
+Improve Intune authentication user validation logic - by @IsmaelMartinez (#2242)
