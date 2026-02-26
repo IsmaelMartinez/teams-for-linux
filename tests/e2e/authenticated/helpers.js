@@ -19,6 +19,7 @@ async function launchAuthenticatedApp(sessionDir) {
     env: {
       ...process.env,
       E2E_USER_DATA_DIR: sessionDir,
+      NODE_ENV: 'development',
     },
     timeout: 30000,
   });
