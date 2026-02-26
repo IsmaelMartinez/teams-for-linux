@@ -311,6 +311,33 @@ The `electronCLIFlags` config option (`config.json`) **cannot** override `--ozon
 
 ---
 
+### System Tray
+
+#### Issue: Tray icon shows "..." (three dots) instead of the Teams logo (Snap)
+
+**Description:** On GNOME-based desktops (Ubuntu, Fedora, etc.), the system tray shows "..." instead of the Teams icon. This primarily affects the **Snap** package.
+
+**Potential Causes:**
+
+* Electron uses the StatusNotifierItem (SNI) D-Bus protocol for tray icons on Linux. When the icon is passed as a file path, the GNOME AppIndicator extension must read that file from disk.
+* Snap's strict confinement (AppArmor) prevents the host desktop environment from accessing files inside the snap sandbox, so the extension cannot load the icon and falls back to "...".
+* This is a known upstream limitation tracked in [electron/electron#26854](https://github.com/electron/electron/issues/26854) and [gnome-shell-extension-appindicator#544](https://github.com/ubuntu/gnome-shell-extension-appindicator/issues/544).
+
+**Solutions/Workarounds:**
+
+1. **Use a non-Snap package:** The `.deb`, `.rpm`, `.AppImage`, and `.tar.gz` packages do not have sandbox restrictions and display the tray icon correctly.
+
+2. **Update the AppIndicator extension:** Newer versions of the [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/) GNOME extension have improved icon handling. Update it via GNOME Extensions or your package manager.
+
+3. **Set a custom icon from a host-accessible path:** Use the `--appIcon` flag to point to an icon file outside the snap sandbox:
+    ```bash
+    teams-for-linux --appIcon=/usr/share/icons/hicolor/96x96/apps/teams-for-linux.png
+    ```
+
+**Related GitHub Issues:** [#2239](https://github.com/IsmaelMartinez/teams-for-linux/issues/2239), [#2090](https://github.com/IsmaelMartinez/teams-for-linux/issues/2090), [#1681](https://github.com/IsmaelMartinez/teams-for-linux/issues/1681)
+
+---
+
 ### Other
 
 #### Issue: Spellchecker Not Working

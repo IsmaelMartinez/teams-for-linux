@@ -152,6 +152,7 @@
         "removable-media",
         "screen-inhibit-control",
         "system-observe",
+        "unity7",
         "upower-observe"
       ],
       "publish": [
