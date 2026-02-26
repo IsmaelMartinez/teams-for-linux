@@ -8,6 +8,13 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
  * The app should load already authenticated (no login required).
  */
 async function launchAuthenticatedApp(sessionDir) {
+  console.log(`[helpers] PROJECT_ROOT: ${PROJECT_ROOT}`);
+  console.log(`[helpers] sessionDir: ${sessionDir}`);
+  console.log(`[helpers] DOCKER_TEST: ${process.env.DOCKER_TEST}`);
+  console.log(`[helpers] DISPLAY_SERVER: ${process.env.DISPLAY_SERVER}`);
+  console.log(`[helpers] DISPLAY: ${process.env.DISPLAY}`);
+  console.log(`[helpers] WAYLAND_DISPLAY: ${process.env.WAYLAND_DISPLAY}`);
+
   const args = [path.join(PROJECT_ROOT, 'app/index.js')];
 
   if (process.env.CI) {
@@ -44,6 +51,8 @@ async function launchAuthenticatedApp(sessionDir) {
     launchEnv.MESA_GL_VERSION_OVERRIDE = '3.3';
   }
 
+  console.log(`[helpers] Electron args: ${args.join(' ')}`);
+
   const electronApp = await electron.launch({
     args,
     env: launchEnv,
@@ -59,12 +68,20 @@ async function launchAuthenticatedApp(sessionDir) {
  */
 async function waitForTeamsWindow(electronApp) {
   const isDocker = process.env.DOCKER_TEST === 'true';
-  await electronApp.firstWindow({ timeout: isDocker ? 60000 : 30000 });
+  const firstWindow = await electronApp.firstWindow({ timeout: isDocker ? 60000 : 30000 });
+
+  console.log(`[helpers] First window URL: ${firstWindow.url()}`);
 
   // Give the app time to create all windows and navigate (longer in Docker)
-  await new Promise(resolve => setTimeout(resolve, isDocker ? 15000 : 8000));
+  const waitTime = isDocker ? 15000 : 8000;
+  console.log(`[helpers] Waiting ${waitTime}ms for navigation...`);
+  await new Promise(resolve => setTimeout(resolve, waitTime));
 
   const windows = electronApp.windows();
+  console.log(`[helpers] Total windows: ${windows.length}`);
+  for (const w of windows) {
+    console.log(`[helpers]   Window URL: ${w.url()}`);
+  }
 
   const teamsHostnames = [
     'teams.cloud.microsoft',
@@ -80,6 +97,10 @@ async function waitForTeamsWindow(electronApp) {
       return false;
     }
   });
+
+  if (!mainWindow) {
+    console.log('[helpers] No Teams window found. Hostnames expected:', teamsHostnames.join(', '));
+  }
 
   return mainWindow || null;
 }

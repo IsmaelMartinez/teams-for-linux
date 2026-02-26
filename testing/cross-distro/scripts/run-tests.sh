@@ -41,6 +41,11 @@ if [[ ! -d "${SESSION_DIR}" ]] || [[ ! -f "${SESSION_DIR}/Cookies" && ! -d "${SE
     exit 1
 fi
 
+# Diagnostic: show session directory contents
+echo "[*] Session directory contents:"
+ls -la "${SESSION_DIR}/" | head -20
+echo "[*] Session dir permissions: $(stat -c '%U:%G %a' "${SESSION_DIR}" 2>/dev/null || stat -f '%Su:%Sg %Lp' "${SESSION_DIR}" 2>/dev/null)"
+
 # Install dependencies from the mounted source into a writable location.
 # /src is mounted read-only, so we copy package files and install locally.
 WORK_DIR="/home/tester/test-workspace"
