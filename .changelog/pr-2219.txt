@@ -1,1 +1,0 @@
-fix: screen sharing regression on Wayland/XWayland - by @bkohler (#2219)

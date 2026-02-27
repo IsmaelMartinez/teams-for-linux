@@ -1,1 +1,0 @@
-Simplify Gemini API JSON parsing with responseMimeType - by @IsmaelMartinez (#2233)
