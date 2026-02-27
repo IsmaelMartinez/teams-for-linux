@@ -1,0 +1,1 @@
+fix: resolve SonarQube code smells across codebase - by @IsmaelMartinez (#2247)
