@@ -102,12 +102,13 @@ elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
     echo "    in Docker (read-only mount, host-platform node_modules)."
     echo ""
     echo "    Provide an app binary using one of these methods:"
-    echo "      --url <release-url>   Download an AppImage at startup"
+    echo "      --latest              Download the latest GitHub release automatically"
+    echo "      --url <release-url>   Download an AppImage from a specific URL"
     echo "      --appimage <path>     Copy a local AppImage into the container"
     echo "      Place a .deb or .rpm in testing/cross-distro/app/"
     echo ""
     echo "    Example:"
-    echo "      ./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.9/teams-for-linux-2.7.9.AppImage"
+    echo "      ./run.sh ubuntu x11 --latest"
     APP_CMD=""
 fi
 

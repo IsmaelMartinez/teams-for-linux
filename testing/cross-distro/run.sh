@@ -70,6 +70,7 @@ Display:      x11, wayland, xwayland
 Options:
   --appimage <path>   Copy a local AppImage into the container
   --url <url>         Download AppImage from URL at container startup
+  --latest            Download the latest GitHub release AppImage automatically
   --no-launch         Don't auto-launch the app (just start the desktop)
   --login             Create a login session using the test Electron binary
                       (log in via noVNC, then Ctrl+C to save)
@@ -80,10 +81,13 @@ Workflow for authenticated tests:
   2. ./run.sh ubuntu x11 --test      # Run tests against saved session
 
 Examples:
+  # Latest release (easiest)
+  ./run.sh ubuntu x11 --latest
+
   # Local AppImage (manual testing via noVNC)
   ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux.AppImage
 
-  # Download from URL (e.g. CI artifact link, GitHub release)
+  # Download from specific URL
   ./run.sh fedora wayland --url https://github.com/.../teams-for-linux.AppImage
 
   # Just the desktop, launch app manually from terminal
@@ -165,6 +169,7 @@ shift 2
 # Parse options
 APPIMAGE_PATH=""
 APP_URL=""
+APP_LATEST="false"
 AUTO_LAUNCH="true"
 RUN_TESTS="false"
 RUN_LOGIN="false"
@@ -178,6 +183,10 @@ while [[ $# -gt 0 ]]; do
         --url)
             APP_URL="$2"
             shift 2
+            ;;
+        --latest)
+            APP_LATEST="true"
+            shift
             ;;
         --no-launch)
             AUTO_LAUNCH="false"
@@ -226,6 +235,26 @@ if [[ "$valid" == false ]]; then
 fi
 
 SERVICE="${DISTRO}-${DISPLAY_SERVER}"
+
+# Resolve --latest to an actual URL via the GitHub API
+if [[ "$APP_LATEST" == "true" ]]; then
+    if [[ -n "$APP_URL" ]] || [[ -n "$APPIMAGE_PATH" ]]; then
+        echo "[!] --latest cannot be combined with --url or --appimage." >&2
+        exit 1
+    fi
+    echo "[*] Fetching latest release URL from GitHub..."
+    GITHUB_REPO="IsmaelMartinez/teams-for-linux"
+    APP_URL=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
+        | grep -o '"browser_download_url": *"[^"]*\.AppImage"' \
+        | head -1 \
+        | cut -d'"' -f4)
+    if [[ -z "$APP_URL" ]]; then
+        echo "[!] Could not find an AppImage in the latest release." >&2
+        echo "    Use --url <url> to specify a download URL manually." >&2
+        exit 1
+    fi
+    echo "[*] Resolved: ${APP_URL}"
+fi
 
 # Set up app directory for mounting
 APP_DIR="${SCRIPT_DIR}/app"

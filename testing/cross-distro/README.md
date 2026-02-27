@@ -14,8 +14,8 @@ Containers are `linux/amd64`, working on both Linux and macOS (Apple Silicon via
 ```bash
 cd testing/cross-distro
 
-# From URL (downloads and auto-launches)
-./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v1.0.0/teams-for-linux-1.0.0.AppImage
+# Latest release (easiest -- fetches URL from GitHub API)
+./run.sh ubuntu x11 --latest
 
 # From local AppImage
 ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux-*.AppImage
@@ -45,7 +45,8 @@ cd testing/cross-distro
 
 # Options
 --appimage <path>   Local AppImage file
---url <url>         Download URL
+--url <url>         Download from specific URL
+--latest            Download latest GitHub release automatically
 --no-launch         Start desktop only (launch app manually)
 
 # Utility
@@ -81,9 +82,9 @@ With `--no-launch`, start the app from the terminal inside VNC:
 AppImage binaries cannot execute under Docker's Rosetta 2 emulation. Use a `.deb` or `.rpm` package instead -- the entrypoint will extract it automatically with `dpkg-deb` or `rpm2cpio` and run the installed binary directly.
 
 ```bash
-# Download the amd64 .deb
+# Download the amd64 .deb (replace VERSION with the actual release tag)
 curl -fSL -o app/teams-for-linux.deb \
-  https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.7/teams-for-linux_2.7.7_amd64.deb
+  "https://github.com/IsmaelMartinez/teams-for-linux/releases/latest/download/teams-for-linux_VERSION_amd64.deb"
 
 # Run normally -- the entrypoint detects and extracts the .deb
 ./run.sh ubuntu x11
@@ -93,7 +94,7 @@ For Fedora, use the `.rpm` equivalent:
 
 ```bash
 curl -fSL -o app/teams-for-linux.rpm \
-  https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.7/teams-for-linux-2.7.7.x86_64.rpm
+  "https://github.com/IsmaelMartinez/teams-for-linux/releases/latest/download/teams-for-linux-VERSION.x86_64.rpm"
 
 ./run.sh fedora x11
 ```
