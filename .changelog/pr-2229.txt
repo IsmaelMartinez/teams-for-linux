@@ -1,0 +1,1 @@
+Add XWayland optimizations configuration option - by @IsmaelMartinez (#2229)

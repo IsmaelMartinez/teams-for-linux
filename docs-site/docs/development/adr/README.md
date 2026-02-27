@@ -39,6 +39,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Accepted | 2026-02-25 | N/A |
+| [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -109,12 +110,14 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | Use Gemini 2.0 Flash for automated changelog generation with release-pr workflow |
+| [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | Move PR artifact commenting to a workflow_run-triggered workflow to support fork PRs |
 
 **Key Outcomes:**
 - Decoupled merging from releasing
 - AI-generated concise changelog entries (60 chars avg vs 165 manual)
 - Quality score: 9.0/10 on validation testing
 - Zero cost (uses Gemini API free tier)
+- Fork PRs receive artifact download comments without 403 permission errors
 
 ### MQTT & Integration
 
@@ -317,8 +320,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 16
-- **Implemented**: 7
+- **Total ADRs**: 17
+- **Implemented**: 8
 - **Accepted**: 4
 - **Proposed**: 1
 - **Rejected**: 4
