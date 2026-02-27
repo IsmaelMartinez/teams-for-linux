@@ -34,7 +34,7 @@ versions have incompatible cookie databases.
 A `run-all-tests.sh` script runs all 9 configurations sequentially and reports
 a summary of pass/fail results.
 
-### Test results (run on Codespaces with v2.7.8 AppImage session)
+### Test results (run on Codespaces with v2.7.9 AppImage session)
 
 | Configuration      | Result | Notes                                    |
 |--------------------|--------|------------------------------------------|

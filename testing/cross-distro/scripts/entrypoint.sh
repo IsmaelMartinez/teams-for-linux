@@ -107,7 +107,7 @@ elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
     echo "      Place a .deb or .rpm in testing/cross-distro/app/"
     echo ""
     echo "    Example:"
-    echo "      ./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.8/teams-for-linux-2.7.8.AppImage"
+    echo "      ./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.9/teams-for-linux-2.7.9.AppImage"
     APP_CMD=""
 fi
 
