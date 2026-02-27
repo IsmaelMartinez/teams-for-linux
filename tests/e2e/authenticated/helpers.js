@@ -31,6 +31,9 @@ async function launchAuthenticatedApp(sessionDir) {
       '--disable-features=SpareRendererForSitePerProcess,BackForwardCache',
       '--renderer-process-limit=1',
       '--js-flags=--max-old-space-size=4096',
+      // Match entrypoint.sh: plaintext cookie storage so sessions persist
+      // across different D-Bus sessions in Docker
+      '--password-store=basic',
     );
 
     // Wayland needs ozone-platform flag; XWayland uses X11 protocol

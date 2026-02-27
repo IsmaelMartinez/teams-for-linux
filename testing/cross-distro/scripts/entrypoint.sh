@@ -49,6 +49,10 @@ fi
 ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-gpu-compositing --disable-dev-shm-usage"
 ELECTRON_FLAGS="${ELECTRON_FLAGS} --disable-features=SpareRendererForSitePerProcess,BackForwardCache"
 ELECTRON_FLAGS="${ELECTRON_FLAGS} --renderer-process-limit=1 --js-flags=--max-old-space-size=4096"
+# Use plaintext cookie storage so sessions persist across different D-Bus sessions.
+# Without this, Chromium encrypts cookies via the system keyring (gnome-keyring/kwallet)
+# which differs between the manual-login and automated-test D-Bus sessions.
+ELECTRON_FLAGS="${ELECTRON_FLAGS} --password-store=basic"
 
 # Force software rendering via Mesa (no hardware GPU in container)
 export LIBGL_ALWAYS_SOFTWARE=1
