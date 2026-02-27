@@ -70,10 +70,16 @@ Options:
   --appimage <path>   Copy a local AppImage into the container
   --url <url>         Download AppImage from URL at container startup
   --no-launch         Don't auto-launch the app (just start the desktop)
-  --test              Run Playwright authenticated tests (requires prior login)
+  --login             Create a login session using the test Electron binary
+                      (log in via noVNC, then Ctrl+C to save)
+  --test              Run Playwright authenticated tests (requires --login first)
+
+Workflow for authenticated tests:
+  1. ./run.sh ubuntu x11 --login     # Log in via noVNC, then Ctrl+C
+  2. ./run.sh ubuntu x11 --test      # Run tests against saved session
 
 Examples:
-  # Local AppImage
+  # Local AppImage (manual testing via noVNC)
   ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux.AppImage
 
   # Download from URL (e.g. CI artifact link, GitHub release)
@@ -160,6 +166,7 @@ APPIMAGE_PATH=""
 APP_URL=""
 AUTO_LAUNCH="true"
 RUN_TESTS="false"
+RUN_LOGIN="false"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -173,6 +180,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-launch)
             AUTO_LAUNCH="false"
+            shift
+            ;;
+        --login)
+            RUN_LOGIN="true"
             shift
             ;;
         --test)
@@ -233,7 +244,9 @@ if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
-if [[ "$RUN_TESTS" == "true" ]]; then
+if [[ "$RUN_LOGIN" == "true" ]]; then
+echo "  Mode:        LOGIN (create session for tests)"
+elif [[ "$RUN_TESTS" == "true" ]]; then
 echo "  Mode:        PLAYWRIGHT TESTS"
 fi
 echo "============================================="
@@ -245,7 +258,9 @@ if [[ -n "$APP_URL" ]]; then
     COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
 COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )
-if [[ "$RUN_TESTS" == "true" ]]; then
+if [[ "$RUN_LOGIN" == "true" ]]; then
+    COMPOSE_ENV+=( -e "RUN_LOGIN=true" )
+elif [[ "$RUN_TESTS" == "true" ]]; then
     COMPOSE_ENV+=( -e "RUN_TESTS=true" )
 fi
 

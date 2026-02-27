@@ -1,17 +1,27 @@
 #!/bin/bash
 # Run Playwright authenticated tests inside a Docker container.
-# This script is called by the entrypoint when RUN_TESTS=true.
+# This script is called by the entrypoint when RUN_TESTS=true or RUN_LOGIN=true.
 #
-# It starts the display server (Xvfb/Sway), installs npm dependencies
-# from the mounted source, then runs the authenticated test suite.
-# The container exits with the test exit code.
+# Modes:
+#   RUN_LOGIN=true  - Install workspace Electron, start display + noVNC, launch
+#                     the app so the user can log in via browser. Session persists.
+#   RUN_TESTS=true  - Install workspace Electron, start display (no noVNC), run
+#                     Playwright tests against the persisted session.
+#
+# Both modes use the SAME Electron binary (from npm ci) so the session format
+# is guaranteed to be compatible between login and test runs.
 set -e
 
 SESSION_DIR="/home/tester/.config/teams-for-linux"
 SRC_DIR="/src"
 
+MODE="test"
+if [[ "${RUN_LOGIN:-false}" == "true" ]]; then
+    MODE="login"
+fi
+
 echo "============================================="
-echo "  Running Playwright Tests"
+echo "  Playwright Test Runner (mode: ${MODE})"
 echo "============================================="
 echo "  Distro:         $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
 echo "  Display Server: ${DISPLAY_SERVER}"
@@ -33,18 +43,16 @@ if [[ ! -f "${SRC_DIR}/package.json" ]]; then
     exit 1
 fi
 
-# Check session exists
-if [[ ! -d "${SESSION_DIR}" ]] || [[ ! -f "${SESSION_DIR}/Cookies" && ! -d "${SESSION_DIR}/Partitions" ]]; then
-    echo "[!] No login session found in ${SESSION_DIR}."
-    echo "    Run the container normally first and log in via noVNC,"
-    echo "    then re-run with --test."
-    exit 1
+# In test mode, verify session exists
+if [[ "$MODE" == "test" ]]; then
+    if [[ ! -d "${SESSION_DIR}" ]] || [[ ! -f "${SESSION_DIR}/Cookies" && ! -d "${SESSION_DIR}/Partitions" ]]; then
+        echo "[!] No login session found in ${SESSION_DIR}."
+        echo "    Run with --login first to create a session, then re-run with --test."
+        exit 1
+    fi
+    echo "[*] Session directory contents:"
+    ls -la "${SESSION_DIR}/" | head -20
 fi
-
-# Diagnostic: show session directory contents
-echo "[*] Session directory contents:"
-ls -la "${SESSION_DIR}/" | head -20
-echo "[*] Session dir permissions: $(stat -c '%U:%G %a' "${SESSION_DIR}" 2>/dev/null || stat -f '%Su:%Sg %Lp' "${SESSION_DIR}" 2>/dev/null)"
 
 # Install dependencies from the mounted source into a writable location.
 # /src is mounted read-only, so we copy package files and install locally.
@@ -67,18 +75,30 @@ ln -sf "${SRC_DIR}/app" "$WORK_DIR/app"
 cp -r "${SRC_DIR}/tests" "$WORK_DIR/tests"
 cp "${SRC_DIR}/playwright.authenticated.config.js" "$WORK_DIR/playwright.authenticated.config.js"
 
-echo "[*] Starting display server for tests..."
+echo "[*] Starting display server..."
 
-# Start the display server in the background (tests need it but not noVNC)
+# Software rendering env vars
+export LIBGL_ALWAYS_SOFTWARE=1
+export MESA_GL_VERSION_OVERRIDE=3.3
+
+# Start the display server
 case "${DISPLAY_SERVER}" in
     x11)
         Xvfb :1 -screen 0 "${SCREEN_RESOLUTION}" -ac +extension GLX +render -noreset &
         DISPLAY_PID=$!
         sleep 2
         export DISPLAY=:1
-        # Start a window manager (Electron needs one for window management)
         openbox &
         sleep 1
+
+        if [[ "$MODE" == "login" ]]; then
+            echo "[*] Starting VNC + noVNC for login..."
+            x11vnc -display :1 -forever -shared -rfbport "${VNC_PORT}" -localhost -bg -o /tmp/x11vnc.log
+            sleep 0.5
+            websockify --web="${NOVNC_PATH}" "${NOVNC_PORT}" "localhost:${VNC_PORT}" &
+            NOVNC_PID=$!
+            sleep 0.5
+        fi
         ;;
     wayland)
         export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-tester}"
@@ -89,7 +109,6 @@ case "${DISPLAY_SERVER}" in
         export XDG_SESSION_TYPE=wayland
         sway &
         DISPLAY_PID=$!
-        # Wait for the Wayland socket to appear
         echo "[*] Waiting for Wayland socket..."
         for i in $(seq 1 20); do
             SOCKET=$(ls "$XDG_RUNTIME_DIR"/wayland-* 2>/dev/null | head -1 | xargs -r basename)
@@ -104,6 +123,17 @@ case "${DISPLAY_SERVER}" in
         export WAYLAND_DISPLAY="$SOCKET"
         echo "[*] Found Wayland socket: $WAYLAND_DISPLAY"
         swaymsg create_output WLR_HEADLESS 2>/dev/null || true
+
+        if [[ "$MODE" == "login" ]]; then
+            echo "[*] Starting wayvnc + noVNC for login..."
+            swaymsg output HEADLESS-1 resolution "$(echo "$SCREEN_RESOLUTION" | cut -dx -f1)x$(echo "$SCREEN_RESOLUTION" | cut -dx -f2)" 2>/dev/null || true
+            wayvnc --output=HEADLESS-1 127.0.0.1 "${VNC_PORT}" &
+            WAYVNC_PID=$!
+            sleep 1
+            websockify --web="${NOVNC_PATH}" "${NOVNC_PORT}" "localhost:${VNC_PORT}" &
+            NOVNC_PID=$!
+            sleep 0.5
+        fi
         ;;
     xwayland)
         export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-tester}"
@@ -114,7 +144,6 @@ case "${DISPLAY_SERVER}" in
         export XDG_SESSION_TYPE=wayland
         sway &
         DISPLAY_PID=$!
-        # Wait for the Wayland socket (Sway creates it)
         echo "[*] Waiting for Wayland socket..."
         for i in $(seq 1 20); do
             SOCKET=$(ls "$XDG_RUNTIME_DIR"/wayland-* 2>/dev/null | head -1 | xargs -r basename)
@@ -129,24 +158,83 @@ case "${DISPLAY_SERVER}" in
         export WAYLAND_DISPLAY="$SOCKET"
         echo "[*] Found Wayland socket: $WAYLAND_DISPLAY"
         swaymsg create_output WLR_HEADLESS 2>/dev/null || true
-        # XWayland: Electron runs as X11 client through Sway's XWayland
         export DISPLAY=:0
+
+        if [[ "$MODE" == "login" ]]; then
+            echo "[*] Starting wayvnc + noVNC for login..."
+            swaymsg output HEADLESS-1 resolution "$(echo "$SCREEN_RESOLUTION" | cut -dx -f1)x$(echo "$SCREEN_RESOLUTION" | cut -dx -f2)" 2>/dev/null || true
+            wayvnc --output=HEADLESS-1 127.0.0.1 "${VNC_PORT}" &
+            WAYVNC_PID=$!
+            sleep 1
+            websockify --web="${NOVNC_PATH}" "${NOVNC_PORT}" "localhost:${VNC_PORT}" &
+            NOVNC_PID=$!
+            sleep 0.5
+        fi
         ;;
 esac
 
 echo "[*] Display server ready."
+
+# ============================================================
+# LOGIN MODE: launch the app with noVNC so the user can log in
+# ============================================================
+if [[ "$MODE" == "login" ]]; then
+    ELECTRON_BIN="$WORK_DIR/node_modules/.bin/electron"
+    ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-gpu-compositing --disable-dev-shm-usage"
+    ELECTRON_FLAGS="${ELECTRON_FLAGS} --disable-features=SpareRendererForSitePerProcess,BackForwardCache"
+    ELECTRON_FLAGS="${ELECTRON_FLAGS} --renderer-process-limit=1 --js-flags=--max-old-space-size=4096"
+    ELECTRON_FLAGS="${ELECTRON_FLAGS} --password-store=basic"
+
+    if [[ "${DISPLAY_SERVER}" == "wayland" ]]; then
+        ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=wayland"
+    fi
+
+    echo ""
+    echo "============================================="
+    echo "  Login Mode Ready"
+    echo "  noVNC: http://localhost:${NOVNC_PORT}/vnc.html"
+    echo "  VNC:   localhost:${VNC_PORT}"
+    echo ""
+    echo "  Log into Teams, wait for it to fully load,"
+    echo "  then press Ctrl+C to save the session."
+    echo "============================================="
+    echo ""
+
+    APP_LOG="/tmp/app.log"
+    E2E_USER_DATA_DIR="${SESSION_DIR}" NODE_ENV=development \
+        $ELECTRON_BIN $WORK_DIR/app/index.js $ELECTRON_FLAGS > "$APP_LOG" 2>&1 &
+    APP_PID=$!
+
+    cleanup() {
+        echo ""
+        echo "[*] Stopping app (saving session)..."
+        kill $APP_PID 2>/dev/null
+        sleep 3
+        echo "[*] Session saved to ${SESSION_DIR}"
+        ls -la "${SESSION_DIR}/" 2>/dev/null | head -10
+        ls -la "${SESSION_DIR}/Partitions/teams-4-linux/" 2>/dev/null | head -5
+        kill $DISPLAY_PID 2>/dev/null
+        kill ${NOVNC_PID:-0} ${WAYVNC_PID:-0} 2>/dev/null
+    }
+    trap cleanup SIGTERM SIGINT
+
+    wait $APP_PID 2>/dev/null || true
+    cleanup
+    exit 0
+fi
+
+# ============================================================
+# TEST MODE: run Playwright tests against persisted session
+# ============================================================
 echo "[*] Running authenticated tests..."
 echo ""
 
-# Point tests at the persisted session
 export E2E_SESSION_DIR="${SESSION_DIR}"
 
-# Run the tests
 cd "$WORK_DIR"
 npx playwright test --config playwright.authenticated.config.js "$@"
 TEST_EXIT=$?
 
-# Cleanup
 kill $DISPLAY_PID 2>/dev/null || true
 
 exit $TEST_EXIT

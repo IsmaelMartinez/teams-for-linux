@@ -114,6 +114,12 @@ fi
 export APP_CMD
 export AUTO_LAUNCH="${AUTO_LAUNCH:-true}"
 
+# Login mode: install workspace Electron, start noVNC, launch app for login
+if [[ "${RUN_LOGIN:-false}" == "true" ]]; then
+    echo "[*] Login mode: launching app with test Electron for session creation..."
+    exec /usr/local/bin/run-tests.sh
+fi
+
 # Test mode: start display server and run Playwright tests instead of the app
 if [[ "${RUN_TESTS:-false}" == "true" ]]; then
     echo "[*] Test mode: running Playwright tests..."
