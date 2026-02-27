@@ -96,7 +96,19 @@ elif [[ -f /app/teams-for-linux ]]; then
     chmod +x /app/teams-for-linux 2>/dev/null || true
     APP_CMD="/app/teams-for-linux ${ELECTRON_FLAGS}"
 elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
-    APP_CMD="npm start --prefix /src -- ${ELECTRON_FLAGS}"
+    # /src is mounted read-only and its node_modules are from the host platform.
+    # Running npm start would fail with EROFS trying to reconcile them.
+    echo "[!] No app binary found. /src is available but cannot run from source"
+    echo "    in Docker (read-only mount, host-platform node_modules)."
+    echo ""
+    echo "    Provide an app binary using one of these methods:"
+    echo "      --url <release-url>   Download an AppImage at startup"
+    echo "      --appimage <path>     Copy a local AppImage into the container"
+    echo "      Place a .deb or .rpm in testing/cross-distro/app/"
+    echo ""
+    echo "    Example:"
+    echo "      ./run.sh ubuntu x11 --url https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v2.7.8/teams-for-linux-2.7.8.AppImage"
+    APP_CMD=""
 fi
 
 export APP_CMD
