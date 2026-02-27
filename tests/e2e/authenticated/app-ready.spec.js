@@ -32,8 +32,9 @@ test.describe('Authenticated app launch', () => {
     const mainWindow = await waitForTeamsWindow(electronApp);
     expect(mainWindow).toBeTruthy();
 
-    // Wait for the page to reach a stable network state
-    await mainWindow.waitForLoadState('networkidle', { timeout: 60000 });
+    // Teams maintains constant WebSocket activity so networkidle never
+    // triggers. Use domcontentloaded instead.
+    await mainWindow.waitForLoadState('domcontentloaded', { timeout: 60000 });
 
     // Verify no crash errors in the page
     const crashIndicators = await mainWindow.locator('text=/something went wrong/i').count();
