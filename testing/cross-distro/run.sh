@@ -184,10 +184,18 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --login)
+            if [[ "$RUN_TESTS" == "true" ]]; then
+                echo "[!] --login and --test are mutually exclusive." >&2
+                exit 1
+            fi
             RUN_LOGIN="true"
             shift
             ;;
         --test)
+            if [[ "$RUN_LOGIN" == "true" ]]; then
+                echo "[!] --login and --test are mutually exclusive." >&2
+                exit 1
+            fi
             RUN_TESTS="true"
             shift
             ;;
