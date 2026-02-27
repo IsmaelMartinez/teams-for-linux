@@ -89,15 +89,9 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
       return;
     }
 
-    if (!ssoInTuneAuthUser) {
-      inTuneAccount = response.accounts[0];
-      console.debug("[INTUNE_DIAG] Using first available InTune account", {
-        accountType: inTuneAccount.accountType || "unknown",
-        totalAvailable: response.accounts.length
-      });
-    } else {
+    if (ssoInTuneAuthUser) {
       // Case-insensitive comparison for email addresses
-      const requestedUserLower = ssoInTuneAuthUser?.toLowerCase();
+      const requestedUserLower = ssoInTuneAuthUser.toLowerCase();
       for (const account of response.accounts) {
         if (account.username?.toLowerCase() === requestedUserLower) {
           inTuneAccount = account;
@@ -114,6 +108,12 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
           suggestion: "Either configure the requested user in Identity Broker or use one of the available accounts"
         });
       }
+    } else {
+      inTuneAccount = response.accounts[0];
+      console.debug("[INTUNE_DIAG] Using first available InTune account", {
+        accountType: inTuneAccount.accountType || "unknown",
+        totalAvailable: response.accounts.length
+      });
     }
 
     if (inTuneAccount) {

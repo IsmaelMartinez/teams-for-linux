@@ -202,7 +202,7 @@ describe('Error and edge cases', () => {
 		// URL paths with email get sanitized as [PATH], which is correct behavior
 		assert.ok(result[0].endpoint && (result[0].endpoint.includes('[EMAIL]') || result[0].endpoint.includes('[PATH]')),
 			`String properties with PII should be sanitized, got: ${result[0].endpoint}`);
-		assert.ok(result[0].metadata && result[0].metadata.email && result[0].metadata.email.includes('[EMAIL]'),
+		assert.ok(result[0].metadata?.email?.includes('[EMAIL]'),
 			`Nested object properties should be sanitized, got: ${JSON.stringify(result[0].metadata)}`);
 	});
 

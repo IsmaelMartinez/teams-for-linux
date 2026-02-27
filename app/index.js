@@ -442,7 +442,9 @@ async function handleAppReady() {
 
     loadMenuToggleSettings();
 
-    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+    const customBackground = new CustomBackground(app, config);
+    customBackground.initialize();
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);

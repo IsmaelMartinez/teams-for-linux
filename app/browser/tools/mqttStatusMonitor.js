@@ -233,6 +233,15 @@ class MQTTStatusMonitor {
 			'[title*="status"]'
 		];
 
+		return this._findStatusFromElements(selectors);
+	}
+
+	/**
+	 * Find status by querying DOM selectors in order
+	 * @param {string[]} selectors - CSS selectors to query
+	 * @returns {number|null} Status code or null if not detected
+	 */
+	_findStatusFromElements(selectors) {
 		for (const selector of selectors) {
 			const element = document.querySelector(selector);
 			if (element) {
