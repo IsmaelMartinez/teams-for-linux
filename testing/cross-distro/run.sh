@@ -62,6 +62,7 @@ Usage:
   ./run.sh --list           Show all configurations and ports
   ./run.sh --build-all      Pre-build all Docker images
   ./run.sh --stop-all       Stop all running containers
+  ./run-all-tests.sh        Run tests across all 9 configurations
 
 Distros:      ubuntu, fedora, debian
 Display:      x11, wayland, xwayland
