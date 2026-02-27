@@ -50,8 +50,6 @@ if [[ "$MODE" == "test" ]]; then
         echo "    Run with --login first to create a session, then re-run with --test."
         exit 1
     fi
-    echo "[*] Session directory contents:"
-    ls -la "${SESSION_DIR}/" | head -20
 fi
 
 # Install dependencies from the mounted source into a writable location.

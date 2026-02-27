@@ -26,20 +26,20 @@ test.describe('Window management', () => {
     expect(dimensions.innerHeight).toBeGreaterThan(300);
   });
 
-  test('app recovers from minimize/restore cycle', async ({}, testInfo) => {
+  test('app is responsive and has no crash indicators', async ({}, testInfo) => {
     const sessionDir = testInfo.project.use.sessionDir;
     electronApp = await launchAuthenticatedApp(sessionDir);
 
     const mainWindow = await waitForTeamsWindow(electronApp);
     expect(mainWindow).toBeTruthy();
 
-    await mainWindow.waitForLoadState('networkidle', { timeout: 60000 });
+    // Teams maintains constant WebSocket activity so networkidle never
+    // triggers. Use domcontentloaded instead.
+    await mainWindow.waitForLoadState('domcontentloaded', { timeout: 60000 });
 
-    // The page should still be responsive after load
     const url = mainWindow.url();
     expect(url).toContain('teams');
 
-    // Verify no crash indicators
     const crashCount = await mainWindow.locator('text=/something went wrong/i').count();
     expect(crashCount).toBe(0);
   });
