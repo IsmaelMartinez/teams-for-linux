@@ -141,16 +141,15 @@ globalThis.electronAPI = {
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
 // Config is fetched asynchronously but notification function references it via closure
 let notificationConfig = null;
-try {
-  const config = await ipcRenderer.invoke("get-config");
+ipcRenderer.invoke("get-config").then((config) => {
   notificationConfig = config;
   console.debug("Preload: Config loaded for notifications:", {
     notificationMethod: config?.notificationMethod,
     disableNotifications: config?.disableNotifications
   });
-} catch (err) {
+}).catch((err) => {
   console.error("Preload: Failed to load config for notifications:", err);
-}
+});
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {

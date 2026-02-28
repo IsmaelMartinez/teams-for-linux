@@ -64,7 +64,7 @@ function createSanitizer(customPatterns = {}, customReplacements = {}) {
 		let sanitized = sanitize(message);
 		for (const [name, pattern] of Object.entries(customPatterns)) {
 			const replacement = customReplacements[name] || '[REDACTED]';
-			sanitized = sanitized.replaceAll(pattern, replacement);
+			sanitized = sanitized.replace(pattern, replacement);
 		}
 		return sanitized;
 	};
