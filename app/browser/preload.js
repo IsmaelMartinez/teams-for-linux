@@ -163,6 +163,12 @@ function playNotificationSound(notifSound) {
   }
 }
 
+function signalNotificationShown() {
+  globalThis.dispatchEvent(new CustomEvent("teams-notification-shown", {
+    detail: { timestamp: Date.now() },
+  }));
+}
+
 function createWebNotification(classicNotification, title, options) {
   // Play notification sound
   const notifSound = {
@@ -260,15 +266,20 @@ function createCustomNotification(title, options) {
     const method = notificationConfig?.notificationMethod || "web";
 
     if (method === "custom") {
-      return createCustomNotification(title, options);
+      const result = createCustomNotification(title, options);
+      signalNotificationShown();
+      return result;
     }
 
     if (method === "web") {
       const notification = createWebNotification(classicNotification, title, options);
+      signalNotificationShown();
       return notification || { onclick: null, onclose: null, onerror: null };
     }
 
-    return createElectronNotification(options);
+    const result = createElectronNotification(options);
+    signalNotificationShown();
+    return result;
   }
 
   // Add static methods to factory function

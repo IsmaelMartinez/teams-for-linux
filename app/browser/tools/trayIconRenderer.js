@@ -1,8 +1,13 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
+// Suppress flash for this duration after a real notification is shown to prevent
+// duplicate alerts on GNOME/Wayland where flashFrame triggers a notification banner.
+const FLASH_SUPPRESS_MS = 2000;
+
 class TrayIconRenderer {
   #lastActivityCount;
   #currentProcessingCount;
+  #lastNotificationTime = 0;
 
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
@@ -13,6 +18,10 @@ class TrayIconRenderer {
     globalThis.addEventListener(
       "unread-count",
       this.updateActivityCount.bind(this),
+    );
+    globalThis.addEventListener(
+      "teams-notification-shown",
+      (e) => { this.#lastNotificationTime = e.detail.timestamp; },
     );
   }
 
@@ -75,9 +84,10 @@ class TrayIconRenderer {
       });
       
       const ipcStartTime = Date.now();
+      const recentNotification = (Date.now() - this.#lastNotificationTime) < FLASH_SUPPRESS_MS;
       this.ipcRenderer.send("tray-update", {
         icon: icon,
-        flash: count > 0 && !this.config.disableNotificationWindowFlash,
+        flash: count > 0 && !this.config.disableNotificationWindowFlash && !recentNotification,
         count: count,
       });
       
