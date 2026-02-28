@@ -1,10 +1,10 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-:::info Phase 2 Shipped
-Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Both phases produce a single consolidated comment per issue. Phases 3-4 (duplicate detection, enhancement context) are planned for the future.
+:::info Phase 3 Shipped
+Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. All three phases produce a single consolidated comment per issue. Phase 4 (enhancement context) is planned for the future.
 :::
 
-**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phases 3-4 planned
+**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Phase 4 planned
 **Date:** February 2026
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant
@@ -318,16 +318,19 @@ Store in `.github/issue-bot/embeddings.json` or external vector DB.
 
 **Value:** Resolves common issues without maintainer intervention
 
-### Phase 3: Duplicate Detector
+### Phase 3: Duplicate Detector ✅ Shipped
 
-**Scope:** Compare new issues against open/recent closed issues
+**Scope:** Compare new issues against open/recent closed issues using Gemini Flash
 
-**Additional Files:**
+**Files:**
 ```
-.github/issue-bot/issue-embeddings.json  # Generated weekly
-.github/workflows/update-embeddings.yml   # Weekly cron job
-.github/issue-bot/templates/duplicate.md
+.github/issue-bot/issue-index.json              # Pre-processed issue index (generated weekly)
+.github/issue-bot/scripts/generate-issue-index.js  # Index generator script
+.github/workflows/update-issue-index.yml         # Weekly cron job (Monday 4:00 UTC)
+.github/issue-bot/templates/duplicate.md         # Documentation
 ```
+
+**Implementation:** Extended `issue-triage-bot.yml` with a Phase 3 step that reads a pre-processed index of open and recently closed issues (last 90 days), sends compact summaries to Gemini Flash (temperature 0.2), and returns 0-3 matches with similarity percentages. Uses the same hybrid approach as Phase 2: pre-processed JSON index + Gemini Flash matching at runtime. No embedding API needed. The index is regenerated weekly by a cron workflow.
 
 **Effort:** 1 week
 
@@ -624,7 +627,8 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ---
 
-**Document Status:** Phase 2 Complete
+**Document Status:** Phase 3 Complete
 **Phase 1:** Information Request Bot — shipped in v2.7.4
 **Phase 2:** Solution Suggester — AI-powered matching via Gemini, consolidated comment
-**Next Review:** After Phase 2 deployment and testing on live issues
+**Phase 3:** Duplicate Detector — Issue index + Gemini Flash matching, weekly cron regeneration
+**Next Review:** After Phase 3 deployment and testing on live issues

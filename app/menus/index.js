@@ -322,7 +322,7 @@ class Menus {
   }
 
   showQuickChat() {
-    if (this.quickChatManager && this.quickChatManager.isEnabled()) {
+    if (this.quickChatManager?.isEnabled()) {
       this.quickChatManager.toggle();
     }
   }

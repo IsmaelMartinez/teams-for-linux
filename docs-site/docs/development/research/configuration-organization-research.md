@@ -1459,6 +1459,10 @@ The automatic migration in v3.0 addresses several edge cases:
     "emulateWinChromiumPlatform": false,
     "spellCheckerLanguages": [],
     "disableTimestampOnCopy": false
+  },
+
+  "wayland": {
+    "xwaylandOptimizations": false
   }
 }
 ```

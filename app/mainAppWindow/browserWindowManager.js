@@ -206,6 +206,10 @@ class BrowserWindowManager {
           this.config.incomingCallCommand,
           commandArgs
         );
+        this.incomingCallCommandProcess.on('error', (err) => {
+          console.error('[IncomingCall] Failed to execute incoming call command', { code: err.code });
+          this.incomingCallCommandProcess = null;
+        });
       }
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);

@@ -18,7 +18,7 @@ function applyCameraAspectRatioPatch() {
    * Fix aspect ratio on a video track by reapplying proper constraints
    */
   async function fixVideoTrackAspectRatio(track) {
-    if (!track || track.readyState !== "live") {
+    if (track?.readyState !== "live") {
       return;
     }
 

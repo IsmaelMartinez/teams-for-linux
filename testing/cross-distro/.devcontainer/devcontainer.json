@@ -1,0 +1,21 @@
+{
+  "name": "Cross-Distro Testing",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [6081, 6082, 6083, 6084, 6085, 6086, 6087, 6088, 6089],
+  "portsAttributes": {
+    "6081": { "label": "ubuntu-x11", "onAutoForward": "notify" },
+    "6082": { "label": "ubuntu-wayland", "onAutoForward": "notify" },
+    "6083": { "label": "ubuntu-xwayland", "onAutoForward": "notify" },
+    "6084": { "label": "fedora-x11", "onAutoForward": "notify" },
+    "6085": { "label": "fedora-wayland", "onAutoForward": "notify" },
+    "6086": { "label": "fedora-xwayland", "onAutoForward": "notify" },
+    "6087": { "label": "debian-x11", "onAutoForward": "notify" },
+    "6088": { "label": "debian-wayland", "onAutoForward": "notify" },
+    "6089": { "label": "debian-xwayland", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "cd testing/cross-distro && echo 'Ready. Run: ./run.sh ubuntu x11'",
+  "remoteUser": "vscode"
+}

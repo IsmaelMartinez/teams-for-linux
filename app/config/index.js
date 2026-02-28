@@ -535,6 +535,13 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Authentication configuration (currently supports Intune SSO)",
         type: "object",
       },
+      wayland: {
+        default: {
+          xwaylandOptimizations: false,
+        },
+        describe: "Wayland display server configuration. xwaylandOptimizations: keeps GPU enabled and skips fake media UI flag under XWayland (may fix camera issues but can break screen sharing)",
+        type: "object",
+      },
     })
     .help()
     .parse(process.argv.slice(1));

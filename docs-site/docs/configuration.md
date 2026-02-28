@@ -27,6 +27,7 @@ This document details all available configuration options for the Teams for Linu
   - [Microsoft Graph API](#microsoft-graph-api)
   - [Quick Chat](#quick-chat)
   - [Performance & Hardware](#performance--hardware)
+  - [Wayland](#wayland)
   - [Cache & Storage](#cache--storage)
   - [Development & Debug](#development--debug)
   - [Advanced Platform Options](#advanced-platform-options)
@@ -380,6 +381,22 @@ All topics use retained messages by default, ensuring subscribers receive the la
 | `disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
 | `electronCLIFlags` | `array` | `[]` | Electron CLI flags |
 
+### Wayland
+
+Wayland display server settings are organized under the `wayland` configuration object:
+
+```json
+{
+  "wayland": {
+    "xwaylandOptimizations": false
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wayland.xwaylandOptimizations` | `boolean` | `false` | Enable XWayland-specific optimizations: keeps GPU enabled and skips fake media UI flag under XWayland. May fix camera issues but can break screen sharing on some systems |
+
 ### Cache & Storage
 
 | Option | Type | Default | Description |
@@ -423,6 +440,26 @@ teams-for-linux --disableGpu=false
 ```
 
 If you don't set this option at all (via config file or CLI), GPU will be disabled automatically on Wayland. This smart default ensures the app works out of the box while allowing power users to optimize performance.
+:::
+
+:::note XWayland Optimizations
+When running under XWayland (Wayland session with `--ozone-platform=x11`), the app treats it the same as native Wayland by default. If you experience **camera issues** under XWayland (e.g., camera crash on second launch), you can enable XWayland-specific optimizations:
+
+```json
+{
+  "wayland": {
+    "xwaylandOptimizations": true
+  }
+}
+```
+
+When enabled, this flag:
+- Keeps GPU acceleration enabled under XWayland (instead of auto-disabling)
+- Skips the `--use-fake-ui-for-media-stream` Chromium flag under XWayland
+
+> **Warning:** Enabling this may break screen sharing on XWayland for some systems. Only enable it if you are experiencing camera problems.
+
+**Related issues:** [#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169), [#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217)
 :::
 
 ## Usage Examples & Guides

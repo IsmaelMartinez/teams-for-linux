@@ -1,0 +1,152 @@
+# Cross-Distro Testing for Teams for Linux
+# 3 distros x 3 display servers = 9 test configurations
+#
+# Usage:
+#   docker compose up ubuntu-x11          # Single config
+#   docker compose up ubuntu-x11 fedora-wayland  # Multiple configs
+#
+# Access via browser: http://localhost:<noVNC_PORT>/vnc.html
+# Access via VNC client: localhost:<VNC_PORT>
+
+x-common: &common
+  platform: linux/amd64
+  shm_size: "4gb"
+  # seccomp=unconfined is required for Sway/wlroots headless backend to
+  # function inside Docker. SYS_PTRACE is needed for Electron's sandbox
+  # and crash reporter. These weaken container isolation, so ports are
+  # bound to localhost only (see below).
+  security_opt:
+    - seccomp=unconfined
+  cap_add:
+    - SYS_PTRACE
+  volumes:
+    - ./app:/app:ro
+    # Persist login session and app config across container restarts
+    - ./session:/home/tester/.config/teams-for-linux
+  environment: &common-env
+    SCREEN_RESOLUTION: "1920x1080x24"
+    # Software rendering -- no physical GPU in containers
+    LIBGL_ALWAYS_SOFTWARE: "1"
+    MESA_GL_VERSION_OVERRIDE: "3.3"
+    # Set APP_URL to download an AppImage at startup (e.g. CI artifact or release URL)
+    APP_URL: "${APP_URL:-}"
+    # Set AUTO_LAUNCH=false to skip auto-starting the app
+    AUTO_LAUNCH: "${AUTO_LAUNCH:-true}"
+
+# ============================================================
+# Ubuntu 24.04
+# ============================================================
+services:
+  ubuntu-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "127.0.0.1:6081:6080"
+      - "127.0.0.1:5901:5900"
+
+  ubuntu-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "127.0.0.1:6082:6080"
+      - "127.0.0.1:5902:5900"
+
+  ubuntu-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/ubuntu.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "127.0.0.1:6083:6080"
+      - "127.0.0.1:5903:5900"
+
+  # ============================================================
+  # Fedora 41
+  # ============================================================
+  fedora-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "127.0.0.1:6084:6080"
+      - "127.0.0.1:5904:5900"
+
+  fedora-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "127.0.0.1:6085:6080"
+      - "127.0.0.1:5905:5900"
+
+  fedora-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/fedora.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "127.0.0.1:6086:6080"
+      - "127.0.0.1:5906:5900"
+
+  # ============================================================
+  # Debian Bookworm
+  # ============================================================
+  debian-x11:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: x11
+    ports:
+      - "127.0.0.1:6087:6080"
+      - "127.0.0.1:5907:5900"
+
+  debian-wayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: wayland
+    ports:
+      - "127.0.0.1:6088:6080"
+      - "127.0.0.1:5908:5900"
+
+  debian-xwayland:
+    <<: *common
+    build:
+      context: .
+      dockerfile: dockerfiles/debian.Dockerfile
+    environment:
+      <<: *common-env
+      DISPLAY_SERVER: xwayland
+    ports:
+      - "127.0.0.1:6089:6080"
+      - "127.0.0.1:5909:5900"

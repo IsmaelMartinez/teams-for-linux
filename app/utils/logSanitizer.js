@@ -13,7 +13,7 @@ const PII_PATTERNS = {
 	accessToken: /(?:access[_-]?token)[=:]\s*['"]?[^'"\s]+['"]?/gi,
 	refreshToken: /(?:refresh[_-]?token)[=:]\s*['"]?[^'"\s]+['"]?/gi,
 	clientSecret: /(?:client[_-]?secret)[=:]\s*['"]?[^'"\s]+['"]?/gi,
-	certFingerprint: /(?:fingerprint|sha1|sha256)[=:]\s*['"]?[a-fA-F0-9:]{40,}['"]?/gi,
+	certFingerprint: /(?:fingerprint|sha1|sha256)[=:]\s*['"]?[a-f0-9:]{40,}['"]?/gi,
 	userPath: /(?:\/home\/|\/Users\/|C:\\Users\\)[^\s/\\]+/gi,
 };
 
@@ -33,23 +33,23 @@ function sanitize(message) {
 	let sanitized = message;
 
 	// Order matters: specific patterns before general ones
-	sanitized = sanitized.replace(PII_PATTERNS.mqttUrl, '$1[CREDENTIALS]@');
-	sanitized = sanitized.replace(PII_PATTERNS.bearerToken, 'Bearer [TOKEN]');
-	sanitized = sanitized.replace(PII_PATTERNS.password, 'password=[REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.authHeader, 'Authorization: [REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.apiKey, 'api_key=[REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.accessToken, 'access_token=[REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.refreshToken, 'refresh_token=[REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.clientSecret, 'client_secret=[REDACTED]');
-	sanitized = sanitized.replace(PII_PATTERNS.certFingerprint, (match) => {
+	sanitized = sanitized.replaceAll(PII_PATTERNS.mqttUrl, '$1[CREDENTIALS]@');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.bearerToken, 'Bearer [TOKEN]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.password, 'password=[REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.authHeader, 'Authorization: [REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.apiKey, 'api_key=[REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.accessToken, 'access_token=[REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.refreshToken, 'refresh_token=[REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.clientSecret, 'client_secret=[REDACTED]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.certFingerprint, (match) => {
 		const prefix = match.split(/[=:]/)[0];
 		return `${prefix}=[FINGERPRINT]`;
 	});
-	sanitized = sanitized.replace(PII_PATTERNS.email, '[EMAIL]');
-	sanitized = sanitized.replace(PII_PATTERNS.uuid, (match) => `${match.slice(0, 8)}...`);
-	sanitized = sanitized.replace(PII_PATTERNS.ipAddress, '[IP]');
-	sanitized = sanitized.replace(PII_PATTERNS.urlQueryParams, '?[PARAMS]');
-	sanitized = sanitized.replace(PII_PATTERNS.userPath, (match) => {
+	sanitized = sanitized.replaceAll(PII_PATTERNS.email, '[EMAIL]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.uuid, (match) => `${match.slice(0, 8)}...`);
+	sanitized = sanitized.replaceAll(PII_PATTERNS.ipAddress, '[IP]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.urlQueryParams, '?[PARAMS]');
+	sanitized = sanitized.replaceAll(PII_PATTERNS.userPath, (match) => {
 		if (match.startsWith('/home/')) return '/home/[USER]';
 		if (match.startsWith('/Users/')) return '/Users/[USER]';
 		if (match.toLowerCase().startsWith('c:\\users\\')) return 'C:\\Users\\[USER]';
@@ -104,6 +104,47 @@ function detectPIITypes(message) {
 }
 
 /**
+ * Sanitize a single value based on its type
+ * @param {*} value - The value to sanitize
+ * @param {WeakSet} seen - Circular reference tracker
+ * @returns {*} Sanitized value
+ */
+function sanitizeValue(value, seen) {
+	if (typeof value === 'string') {
+		return sanitize(value);
+	}
+	if (typeof value === 'object' && value !== null) {
+		return sanitizeObject(value, seen);
+	}
+	return value;
+}
+
+/**
+ * Sanitize an Error object, preserving its structure
+ * @param {Error} obj - The Error to sanitize
+ * @param {WeakSet} seen - Circular reference tracker
+ * @returns {Error} Sanitized Error
+ */
+function sanitizeError(obj, seen) {
+	seen.add(obj);
+
+	const sanitizedError = new Error(sanitize(obj.message));
+	sanitizedError.name = obj.name;
+	if (obj.stack) {
+		sanitizedError.stack = sanitize(obj.stack);
+	}
+
+	for (const key of Object.keys(obj)) {
+		if (key === 'message' || key === 'name' || key === 'stack') {
+			continue;
+		}
+		sanitizedError[key] = sanitizeValue(obj[key], seen);
+	}
+
+	return sanitizedError;
+}
+
+/**
  * Recursively sanitizes string values within an object
  * Preserves object structure while removing PII from string properties
  * @param {*} obj - The object to sanitize
@@ -115,68 +156,23 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 		return obj;
 	}
 
-	// Handle circular references
 	if (seen.has(obj)) {
 		return '[Circular]';
 	}
 
-	// Handle Error objects - preserve their structure
 	if (obj instanceof Error) {
-		// Track this object to avoid circular references via custom properties
-		seen.add(obj);
-
-		const sanitizedError = new Error(sanitize(obj.message));
-		sanitizedError.name = obj.name;
-		if (obj.stack) {
-			sanitizedError.stack = sanitize(obj.stack);
-		}
-
-		// Copy other enumerable properties while sanitizing string values
-		for (const key of Object.keys(obj)) {
-			if (key === 'message' || key === 'name' || key === 'stack') {
-				continue;
-			}
-
-			const value = obj[key];
-
-			if (typeof value === 'string') {
-				sanitizedError[key] = sanitize(value);
-			} else if (typeof value === 'object' && value !== null) {
-				sanitizedError[key] = sanitizeObject(value, seen);
-			} else {
-				sanitizedError[key] = value;
-			}
-		}
-
-		return sanitizedError;
+		return sanitizeError(obj, seen);
 	}
 
-	// Handle arrays
 	if (Array.isArray(obj)) {
-		return obj.map((item) => {
-			if (typeof item === 'string') {
-				return sanitize(item);
-			}
-			if (typeof item === 'object' && item !== null) {
-				return sanitizeObject(item, seen);
-			}
-			return item;
-		});
+		return obj.map((item) => sanitizeValue(item, seen));
 	}
 
-	// Handle plain objects - add to WeakSet to track circular references
+	// Handle plain objects
 	seen.add(obj);
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
-		// Sanitize both keys and values to prevent PII leakage in object keys
-		const sanitizedKey = sanitize(key);
-		if (typeof value === 'string') {
-			result[sanitizedKey] = sanitize(value);
-		} else if (typeof value === 'object' && value !== null) {
-			result[sanitizedKey] = sanitizeObject(value, seen);
-		} else {
-			result[sanitizedKey] = value;
-		}
+		result[sanitize(key)] = sanitizeValue(value, seen);
 	}
 	return result;
 }

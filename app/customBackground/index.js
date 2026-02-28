@@ -10,9 +10,14 @@ class CustomBackground {
     this.app = app;
     this.config = config;
     if (this.isCustomBackgroundEnabled()) {
-      this.downloadCustomBGServiceRemoteConfig();
       // Get list of custom background images for Teams meetings
       ipcMain.handle("get-custom-bg-list", this.handleGetCustomBGList);
+    }
+  }
+
+  initialize() {
+    if (this.isCustomBackgroundEnabled()) {
+      this.downloadCustomBGServiceRemoteConfig();
     }
   }
 

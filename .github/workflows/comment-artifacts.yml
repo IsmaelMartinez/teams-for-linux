@@ -1,0 +1,258 @@
+name: Comment PR Artifacts
+
+# This workflow runs in the context of the BASE repository, which gives it
+# write access to post PR comments — even for PRs from forks.
+# The pull_request event token for fork PRs is read-only, so comment jobs
+# must use workflow_run to get the necessary permissions.
+on:
+  workflow_run:
+    workflows: ["Build & Release", "Snap Build"]
+    types:
+      - completed
+
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
+jobs:
+  comment-build-artifacts:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.name == 'Build & Release'
+    permissions:
+      pull-requests: write
+      actions: read
+
+    steps:
+      - name: Comment on PR with artifact links
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const headSha = context.payload.workflow_run.head_sha;
+
+            // Find PR number — try workflow_run.pull_requests first,
+            // fall back to searching by head SHA (needed for fork PRs)
+            let prNumber;
+            if (context.payload.workflow_run.pull_requests.length > 0) {
+              prNumber = context.payload.workflow_run.pull_requests[0].number;
+            } else {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100
+              });
+              const pr = prs.find(p => p.head.sha === headSha);
+              prNumber = pr?.number;
+            }
+
+            if (!prNumber) {
+              console.log('No PR found for this workflow run');
+              return;
+            }
+
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
+
+            const buildArtifacts = artifacts.artifacts.filter(a =>
+              !a.name.includes('test-results') && !a.name.includes('playwright')
+            );
+
+            if (buildArtifacts.length === 0) {
+              console.log('No build artifacts found');
+              return;
+            }
+
+            // Group artifacts by platform
+            const linuxX64 = buildArtifacts.find(a => a.name.includes('linux-x64'));
+            const linuxArm64 = buildArtifacts.find(a => a.name.includes('linux-arm64'));
+            const linuxArmv7l = buildArtifacts.find(a => a.name.includes('linux-armv7l'));
+            const macos = buildArtifacts.find(a => a.name.includes('macos'));
+            const windows = buildArtifacts.find(a => a.name.includes('windows'));
+
+            let body = '## 📦 PR Build Artifacts\n\n✅ **Build successful!** Download artifacts:\n\n';
+
+            // Linux section
+            body += '### 🐧 Linux\n\n';
+            if (linuxX64) {
+              const sizeMB = (linuxX64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**x86_64** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxX64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${linuxX64.id})\n\n`;
+            }
+            if (linuxArm64) {
+              const sizeMB = (linuxArm64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**arm64** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${linuxArm64.id})\n\n`;
+            }
+            if (linuxArmv7l) {
+              const sizeMB = (linuxArmv7l.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**armv7l** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
+              body += `- [${linuxArmv7l.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${linuxArmv7l.id})\n\n`;
+            }
+
+            // macOS section
+            if (macos) {
+              const sizeMB = (macos.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += '### 🍎 macOS\n\n';
+              body += `**x86_64** (${sizeMB} MB) - Contains: .dmg\n`;
+              body += `- [${macos.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${macos.id})\n\n`;
+            }
+
+            // Windows section
+            if (windows) {
+              const sizeMB = (windows.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += '### 🪟 Windows\n\n';
+              body += `**x86_64** (${sizeMB} MB) - Contains: .exe installer\n`;
+              body += `- [${windows.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${windows.id})\n\n`;
+            }
+
+            body += '---\n\n';
+            body += `📝 **Note:** Snap packages (.snap) are built in a [separate workflow](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/snap.yml)\n\n`;
+            body += `[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})\n\n`;
+
+            // Add last updated timestamp
+            const now = new Date();
+            const updateTime = now.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+            body += `🕐 **Last updated:** ${updateTime}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('## 📦 PR Build Artifacts')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+            }
+
+  comment-snap-artifacts:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.name == 'Snap Build'
+    permissions:
+      pull-requests: write
+      actions: read
+
+    steps:
+      - name: Comment on PR with snap artifacts
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const headSha = context.payload.workflow_run.head_sha;
+
+            // Find PR number — try workflow_run.pull_requests first,
+            // fall back to searching by head SHA (needed for fork PRs)
+            let prNumber;
+            if (context.payload.workflow_run.pull_requests.length > 0) {
+              prNumber = context.payload.workflow_run.pull_requests[0].number;
+            } else {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100
+              });
+              const pr = prs.find(p => p.head.sha === headSha);
+              prNumber = pr?.number;
+            }
+
+            if (!prNumber) {
+              console.log('No PR found for this workflow run');
+              return;
+            }
+
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
+
+            const snapArtifacts = artifacts.artifacts.filter(a => a.name.includes('snap'));
+
+            if (snapArtifacts.length === 0) {
+              console.log('No snap artifacts found');
+              return;
+            }
+
+            // Group artifacts by architecture
+            const snapX64 = snapArtifacts.find(a => a.name.includes('snap-x64'));
+            const snapArm64 = snapArtifacts.find(a => a.name.includes('snap-arm64'));
+            const snapArmv7l = snapArtifacts.find(a => a.name.includes('snap-armv7l'));
+
+            let body = '## 📦 PR Snap Build Artifacts\n\n';
+            body += '✅ **Snap builds successful!** Download artifacts:\n\n';
+            body += '### 🐧 Linux Snap Packages\n\n';
+
+            if (snapX64) {
+              const sizeMB = (snapX64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**x86_64** (${sizeMB} MB)\n`;
+              body += `- [${snapX64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${snapX64.id})\n\n`;
+            }
+            if (snapArm64) {
+              const sizeMB = (snapArm64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**arm64** (${sizeMB} MB)\n`;
+              body += `- [${snapArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${snapArm64.id})\n\n`;
+            }
+            if (snapArmv7l) {
+              const sizeMB = (snapArmv7l.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**armv7l** (${sizeMB} MB)\n`;
+              body += `- [${snapArmv7l.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${snapArmv7l.id})\n\n`;
+            }
+
+            body += '---\n\n';
+            body += `📝 **Note:** Other package formats (.deb, .rpm, .AppImage, .dmg, .exe) are built in the [main workflow](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/workflows/build.yml)\n\n`;
+            body += `[View workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('## 📦 PR Snap Build Artifacts')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+            }

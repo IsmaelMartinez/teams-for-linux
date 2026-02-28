@@ -30,8 +30,9 @@ Solution suggestions appear in the consolidated comment between the PWA notice a
 ```text
 [Greeting]              — Thanks the reporter
 [PWA Notice]            — (conditional) Notes if bug reproduces on Teams web/PWA
-[Solution Suggestions]  — (conditional) AI-matched documentation sections
-[Missing Info List]     — (conditional) Checkbox list of missing fields
+[Solution Suggestions]  — (conditional, Phase 2) AI-matched documentation sections
+[Duplicate Suggestions] — (conditional, Phase 3) Potentially related issues
+[Missing Info List]     — (conditional, Phase 1) Checkbox list of missing fields
 [Debug Instructions]    — (conditional) Collapsible section with debug logging steps
 [Troubleshooting Tip]   — Link to the troubleshooting guide
 [Bot Disclosure]        — Identifies as automated triage bot
@@ -103,4 +104,5 @@ When a user reports a blank screen after login and is missing debug output:
 - **Index generator:** [`.github/issue-bot/scripts/generate-index.js`](../scripts/generate-index.js)
 - **Pre-processed index:** [`.github/issue-bot/troubleshooting-index.json`](../troubleshooting-index.json)
 - **Phase 1 template:** [`.github/issue-bot/templates/missing-info.md`](missing-info.md)
+- **Phase 3 template:** [`.github/issue-bot/templates/duplicate.md`](duplicate.md)
 - **Research:** [`docs-site/docs/development/research/github-issue-bot-investigation.md`](../../../docs-site/docs/development/research/github-issue-bot-investigation.md)

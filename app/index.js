@@ -25,15 +25,31 @@ const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
+
+function isNetworkError(message) {
+  return typeof message === 'string' && NETWORK_ERROR_PATTERNS.some(pattern => message.includes(pattern));
+}
+
 // Top-level error handlers for crash diagnostics
 process.on('uncaughtException', (error) => {
-  console.error('[FATAL] Uncaught exception:', { message: error.message, stack: error.stack });
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+  if (isNetworkError(message)) {
+    console.error('[ERROR] Network-related uncaught exception (not terminating):', { message });
+    return;
+  }
+  console.error('[FATAL] Uncaught exception:', { message, stack });
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   const stack = reason instanceof Error ? reason.stack : undefined;
+  if (isNetworkError(message)) {
+    console.error('[ERROR] Network-related unhandled rejection (not terminating):', { message });
+    return;
+  }
   console.error('[FATAL] Unhandled promise rejection:', { message, stack });
   process.exit(1);
 });
@@ -379,9 +395,9 @@ function initializeQuickChat() {
       quickChatManager.toggle();
     });
     if (registered) {
-      console.info('[QuickChat] Keyboard shortcut registered');
+      console.info('[QuickChat] Global keyboard shortcut registered (works even when app is not focused)');
     } else {
-      console.warn('[QuickChat] Failed to register keyboard shortcut');
+      console.info('[QuickChat] Global shortcut not available; keyboard shortcut works via application menu when app is focused');
     }
   }
 }
@@ -426,7 +442,9 @@ async function handleAppReady() {
 
     loadMenuToggleSettings();
 
-    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+    const customBackground = new CustomBackground(app, config);
+    customBackground.initialize();
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);

@@ -15,6 +15,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Includes ESLint 10 migration analysis and codebase audit
   - **Status:** Research complete, targeted for v2.8.0
 
+- **[Notification Sound Overhaul Research](notification-sound-overhaul-research.md)** - Replace `node-sound`, consolidate notification config
+  - Evaluates Web Audio, data URI, and system command approaches
+  - Proposes phased plan: replace native addon, add custom sounds, Web Audio fallback
+  - **Status:** Research complete, targeted for v2.8.0
+
 ### Awaiting User Feedback
 
 - **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106))

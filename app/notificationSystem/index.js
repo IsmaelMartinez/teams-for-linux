@@ -22,7 +22,7 @@ class CustomNotificationManager {
   }
 
   #handleShowToast(event, data) {
-    if (!data || !data.title) {
+    if (!data?.title) {
       console.warn('[CustomNotificationManager] Invalid notification data, missing title');
       return;
     }
