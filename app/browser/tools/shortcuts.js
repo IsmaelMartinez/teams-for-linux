@@ -84,6 +84,13 @@ function keyDownEventHandler(event) {
     return;
   }
 
+  // Only process shortcuts when a modifier key (Ctrl or Alt) is held,
+  // since all shortcuts require one. This avoids interfering with normal
+  // text input (e.g. the ":" emoji picker trigger in Teams).
+  if (!event.ctrlKey && !event.altKey) {
+    return;
+  }
+
   fireEvent(event, keyName);
 }
 
