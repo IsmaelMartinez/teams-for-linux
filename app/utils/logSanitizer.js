@@ -1,10 +1,10 @@
 'use strict';
 
 const PII_PATTERNS = {
-	email: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
+	email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
 	uuid: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
 	password: /password["']?\s*[=:]\s*["']?[^"',}\s]+["']?/gi,
-	bearerToken: /bearer\s+[a-zA-Z0-9._\-]+/gi,
+	bearerToken: /bearer\s+[a-zA-Z0-9._-]+/gi,
 	ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
 	mqttUrl: /(mqtts?:\/\/)[^:]+:[^@]+@/gi,
 	urlQueryParams: /\?[^"'\s]+/g,
