@@ -81,7 +81,7 @@ async function fetchAllPages(url, token) {
 	while (nextUrl) {
 		const response = await fetchWithRetry(nextUrl, headers);
 		const data = await response.json();
-		results.push(...data);
+		results.push(...(Array.isArray(data) ? data : data.items || []));
 
 		const linkHeader = response.headers.get('link') || '';
 		const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
@@ -112,27 +112,17 @@ async function main() {
 
 	console.log(`Scanning bot comments from the last ${lookbackDays} days...`);
 
-	// Fetch issues updated in the lookback window (both open and closed)
+	// Use search API to find issues with bot comments directly
 	const baseUrl = `https://api.github.com/repos/${owner}/${repoName}/issues`;
-	const openIssues = await fetchAllPages(
-		`${baseUrl}?state=open&since=${sinceISO}&per_page=100&sort=updated&direction=desc`,
-		token
-	);
-	const closedIssues = await fetchAllPages(
-		`${baseUrl}?state=closed&since=${sinceISO}&per_page=100&sort=updated&direction=desc`,
-		token
-	);
-
-	// Filter to actual issues (not PRs)
-	const allIssues = [...openIssues, ...closedIssues].filter((i) => !i.pull_request);
-
-	// Deduplicate by issue number
-	const seen = new Set();
-	const issues = allIssues.filter((i) => {
-		if (seen.has(i.number)) return false;
-		seen.add(i.number);
-		return true;
+	const searchParams = new URLSearchParams({
+		q: `repo:${owner}/${repoName} is:issue "${BOT_SIGNATURE}" in:comments updated:>=${sinceISO}`,
+		per_page: '100',
+		sort: 'updated',
+		direction: 'desc',
 	});
+	const searchUrl = `https://api.github.com/search/issues?${searchParams.toString()}`;
+
+	const issues = await fetchAllPages(searchUrl, token);
 
 	console.log(`Found ${issues.length} issues to scan for bot comments`);
 
@@ -162,8 +152,11 @@ async function main() {
 		// Fetch reactions on the bot comment
 		const reactions = await fetchReactions(owner, repoName, botComment.id, token);
 
-		const up = reactions.filter((r) => r.content === '+1').length;
-		const down = reactions.filter((r) => r.content === '-1').length;
+		const { up, down } = reactions.reduce((counts, r) => {
+			if (r.content === '+1') counts.up++;
+			else if (r.content === '-1') counts.down++;
+			return counts;
+		}, { up: 0, down: 0 });
 
 		thumbsUp += up;
 		thumbsDown += down;
