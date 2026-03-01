@@ -29,6 +29,28 @@ DISPLAY_SERVERS="x11 wayland xwayland"
 NOVNC_BASE=6081
 VNC_BASE=5901
 
+validate_distro() {
+    local distro="$1"
+    local valid=false
+    for d in $DISTROS; do [[ "$d" == "$distro" ]] && valid=true; done
+    if [[ "$valid" == false ]]; then
+        echo "[!] Invalid distro: ${distro}"
+        echo "    Valid: ${DISTROS}"
+        exit 1
+    fi
+}
+
+validate_display_server() {
+    local ds="$1"
+    local valid=false
+    for s in $DISPLAY_SERVERS; do [[ "$s" == "$ds" ]] && valid=true; done
+    if [[ "$valid" == false ]]; then
+        echo "[!] Invalid display server: ${ds}"
+        echo "    Valid: ${DISPLAY_SERVERS}"
+        exit 1
+    fi
+}
+
 get_index() {
     local distro="$1" ds="$2" d_idx=0 ds_idx=0 i=0
     for d in $DISTROS; do
@@ -144,10 +166,18 @@ parse_group_options() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --appimage)
+                if [[ -z "${2:-}" || "$2" =~ ^-- ]]; then
+                    echo "[!] Missing argument for $1" >&2
+                    exit 1
+                fi
                 APPIMAGE_PATH="$2"
                 shift 2
                 ;;
             --url)
+                if [[ -z "${2:-}" || "$2" =~ ^-- ]]; then
+                    echo "[!] Missing argument for $1" >&2
+                    exit 1
+                fi
                 APP_URL="$2"
                 shift 2
                 ;;
@@ -234,14 +264,7 @@ case "${1:-}" in
         DISTRO="$2"
         shift 2
 
-        # Validate distro
-        valid=false
-        for d in $DISTROS; do [[ "$d" == "$DISTRO" ]] && valid=true; done
-        if [[ "$valid" == false ]]; then
-            echo "[!] Invalid distro: ${DISTRO}"
-            echo "    Valid: ${DISTROS}"
-            exit 1
-        fi
+        validate_distro "$DISTRO"
 
         parse_group_options "$@"
 
@@ -258,14 +281,7 @@ case "${1:-}" in
         DISPLAY_SERVER="$2"
         shift 2
 
-        # Validate display server
-        valid=false
-        for s in $DISPLAY_SERVERS; do [[ "$s" == "$DISPLAY_SERVER" ]] && valid=true; done
-        if [[ "$valid" == false ]]; then
-            echo "[!] Invalid display server: ${DISPLAY_SERVER}"
-            echo "    Valid: ${DISPLAY_SERVERS}"
-            exit 1
-        fi
+        validate_display_server "$DISPLAY_SERVER"
 
         parse_group_options "$@"
 
@@ -310,66 +326,14 @@ DISTRO="$1"
 DISPLAY_SERVER="$2"
 shift 2
 
-# Parse options
-APPIMAGE_PATH=""
-APP_URL=""
-AUTO_LAUNCH="true"
+parse_group_options "$@"
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --appimage)
-            APPIMAGE_PATH="$2"
-            shift 2
-            ;;
-        --url)
-            APP_URL="$2"
-            shift 2
-            ;;
-        --no-launch)
-            AUTO_LAUNCH="false"
-            shift
-            ;;
-        *)
-            # Legacy: positional arg is treated as appimage path
-            APPIMAGE_PATH="$1"
-            shift
-            ;;
-    esac
-done
-
-# Validate distro
-valid=false
-for d in $DISTROS; do [[ "$d" == "$DISTRO" ]] && valid=true; done
-if [[ "$valid" == false ]]; then
-    echo "[!] Invalid distro: ${DISTRO}"
-    echo "    Valid: ${DISTROS}"
-    exit 1
-fi
-
-# Validate display server
-valid=false
-for s in $DISPLAY_SERVERS; do [[ "$s" == "$DISPLAY_SERVER" ]] && valid=true; done
-if [[ "$valid" == false ]]; then
-    echo "[!] Invalid display server: ${DISPLAY_SERVER}"
-    echo "    Valid: ${DISPLAY_SERVERS}"
-    exit 1
-fi
+validate_distro "$DISTRO"
+validate_display_server "$DISPLAY_SERVER"
 
 SERVICE="${DISTRO}-${DISPLAY_SERVER}"
 
-# Set up app directory for mounting
-APP_DIR="${SCRIPT_DIR}/app"
-mkdir -p "$APP_DIR"
-
-if [[ -n "$APPIMAGE_PATH" ]]; then
-    if [[ ! -f "$APPIMAGE_PATH" ]]; then
-        echo "[!] AppImage not found: ${APPIMAGE_PATH}"
-        exit 1
-    fi
-    echo "[*] Copying AppImage to mount directory..."
-    cp "$APPIMAGE_PATH" "${APP_DIR}/teams-for-linux.AppImage"
-    chmod +x "${APP_DIR}/teams-for-linux.AppImage"
-fi
+setup_appimage
 
 NOVNC_PORT=$(get_novnc_port "$DISTRO" "$DISPLAY_SERVER")
 VNC_PORT=$(get_vnc_port "$DISTRO" "$DISPLAY_SERVER")
