@@ -39,6 +39,7 @@ x-common: &common
 services:
   ubuntu-x11:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -51,6 +52,7 @@ services:
 
   ubuntu-wayland:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -63,6 +65,7 @@ services:
 
   ubuntu-xwayland:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -78,6 +81,7 @@ services:
   # ============================================================
   fedora-x11:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -90,6 +94,7 @@ services:
 
   fedora-wayland:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -102,6 +107,7 @@ services:
 
   fedora-xwayland:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -117,6 +123,7 @@ services:
   # ============================================================
   debian-x11:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile
@@ -129,6 +136,7 @@ services:
 
   debian-wayland:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile
@@ -141,6 +149,7 @@ services:
 
   debian-xwayland:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile

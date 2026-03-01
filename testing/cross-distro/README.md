@@ -54,7 +54,30 @@ cd testing/cross-distro
 ./run.sh --stop-all     Stop all containers
 ```
 
-Docker Compose directly:
+### Grouped runs (parallel)
+
+Run multiple configurations simultaneously using `docker compose up`. Each distro
+image is built once and shared across its display server variants, saving disk space
+and build time.
+
+```bash
+# All 3 display servers for one distro (builds 1 image, runs 3 containers)
+./run.sh --run-distro ubuntu
+./run.sh --run-distro fedora --url https://example.com/teams.AppImage
+
+# All 3 distros with one display server (builds 3 images, runs 3 containers)
+./run.sh --run-display x11
+./run.sh --run-display wayland --no-launch
+
+# All 9 configurations (builds 3 images, runs 9 containers)
+./run.sh --run-all
+./run.sh --run-all --url https://example.com/teams.AppImage --no-launch
+```
+
+Grouped runs accept the same `--url`, `--appimage`, and `--no-launch` options.
+Press `Ctrl+C` to stop all containers in the group.
+
+### Docker Compose directly
 
 ```bash
 APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11 fedora-wayland
@@ -142,3 +165,4 @@ The entrypoint handles these automatically:
 - Containers share the host kernel; only userspace differences (libs, packages) are tested
 - The `app/` directory is gitignored -- place AppImages there for mounting
 - Each image includes all three display server stacks; `DISPLAY_SERVER` env var selects at runtime
+- Only 3 Docker images are built (one per distro) -- the 9 services share them via explicit image tags, saving disk space in devcontainers

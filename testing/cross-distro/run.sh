@@ -10,6 +10,9 @@
 #   ./run.sh --list            # Show all configurations
 #   ./run.sh --build-all       # Pre-build all Docker images
 #   ./run.sh --stop-all        # Stop all running containers
+#   ./run.sh --run-distro ubuntu         # Run all display servers for a distro
+#   ./run.sh --run-display x11           # Run all distros with one display server
+#   ./run.sh --run-all                   # Run all 9 configurations
 
 set -e
 
@@ -59,6 +62,9 @@ Cross-Distro Testing for Teams for Linux
 
 Usage:
   ./run.sh <distro> <display-server> [options]
+  ./run.sh --run-distro <distro> [options]   Run all display servers for a distro
+  ./run.sh --run-display <display> [options]  Run all distros with a display server
+  ./run.sh --run-all [options]               Run all 9 configurations
   ./run.sh --list           Show all configurations and ports
   ./run.sh --build-all      Pre-build all Docker images
   ./run.sh --stop-all       Stop all running containers
@@ -72,11 +78,17 @@ Options:
   --no-launch         Don't auto-launch the app (just start the desktop)
 
 Examples:
-  # Local AppImage
+  # Single configuration
   ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux.AppImage
 
-  # Download from URL (e.g. CI artifact link, GitHub release)
-  ./run.sh fedora wayland --url https://github.com/.../teams-for-linux.AppImage
+  # All display servers for one distro (3 containers in parallel)
+  ./run.sh --run-distro ubuntu --url https://github.com/.../teams.AppImage
+
+  # All distros with one display server (3 containers in parallel)
+  ./run.sh --run-display x11
+
+  # All 9 configurations in parallel
+  ./run.sh --run-all --no-launch
 
   # Just the desktop, launch app manually from terminal
   ./run.sh debian xwayland --no-launch
@@ -122,6 +134,84 @@ stop_all() {
     return 0
 }
 
+# Parse group options (--url, --no-launch, --appimage) from remaining args.
+# Sets APP_URL, AUTO_LAUNCH, and APPIMAGE_PATH variables.
+parse_group_options() {
+    APPIMAGE_PATH=""
+    APP_URL=""
+    AUTO_LAUNCH="true"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --appimage)
+                APPIMAGE_PATH="$2"
+                shift 2
+                ;;
+            --url)
+                APP_URL="$2"
+                shift 2
+                ;;
+            --no-launch)
+                AUTO_LAUNCH="false"
+                shift
+                ;;
+            *)
+                echo "[!] Unknown option: $1"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Copy AppImage into the app/ mount directory if --appimage was specified.
+setup_appimage() {
+    local app_dir="${SCRIPT_DIR}/app"
+    mkdir -p "$app_dir"
+
+    if [[ -n "${APPIMAGE_PATH:-}" ]]; then
+        if [[ ! -f "$APPIMAGE_PATH" ]]; then
+            echo "[!] AppImage not found: ${APPIMAGE_PATH}"
+            exit 1
+        fi
+        echo "[*] Copying AppImage to mount directory..."
+        cp "$APPIMAGE_PATH" "${app_dir}/teams-for-linux.AppImage"
+        chmod +x "${app_dir}/teams-for-linux.AppImage"
+    fi
+}
+
+# Run multiple services in parallel using docker compose up.
+# Arguments: list of service names (e.g. "ubuntu-x11 ubuntu-wayland")
+run_group() {
+    local services=("$@")
+
+    setup_appimage
+
+    echo ""
+    echo "============================================="
+    echo "  Starting ${#services[@]} configurations in parallel"
+    echo "============================================="
+    for svc in "${services[@]}"; do
+        local distro="${svc%-*}"
+        local ds="${svc##*-}"
+        local novnc
+        novnc=$(get_novnc_port "$distro" "$ds")
+        printf "  %-20s http://localhost:%s/vnc.html\n" "${svc}" "${novnc}"
+    done
+    if [[ -n "${APP_URL:-}" ]]; then
+        echo "  App URL:  ${APP_URL}"
+    fi
+    echo "  Auto-launch: ${AUTO_LAUNCH}"
+    echo "============================================="
+    echo ""
+
+    # Export env vars so docker compose picks them up via ${APP_URL:-} and
+    # ${AUTO_LAUNCH:-true} defined in docker-compose.yml
+    export APP_URL="${APP_URL:-}"
+    export AUTO_LAUNCH="${AUTO_LAUNCH}"
+
+    docker compose up --build "${services[@]}"
+}
+
 # Parse global flags
 case "${1:-}" in
     -h|--help|"")
@@ -140,15 +230,81 @@ case "${1:-}" in
         stop_all
         exit 0
         ;;
+    --run-distro)
+        DISTRO="$2"
+        shift 2
+
+        # Validate distro
+        valid=false
+        for d in $DISTROS; do [[ "$d" == "$DISTRO" ]] && valid=true; done
+        if [[ "$valid" == false ]]; then
+            echo "[!] Invalid distro: ${DISTRO}"
+            echo "    Valid: ${DISTROS}"
+            exit 1
+        fi
+
+        parse_group_options "$@"
+
+        # Build service list: all display servers for this distro
+        SERVICES=()
+        for ds in $DISPLAY_SERVERS; do
+            SERVICES+=("${DISTRO}-${ds}")
+        done
+
+        run_group "${SERVICES[@]}"
+        exit 0
+        ;;
+    --run-display)
+        DISPLAY_SERVER="$2"
+        shift 2
+
+        # Validate display server
+        valid=false
+        for s in $DISPLAY_SERVERS; do [[ "$s" == "$DISPLAY_SERVER" ]] && valid=true; done
+        if [[ "$valid" == false ]]; then
+            echo "[!] Invalid display server: ${DISPLAY_SERVER}"
+            echo "    Valid: ${DISPLAY_SERVERS}"
+            exit 1
+        fi
+
+        parse_group_options "$@"
+
+        # Build service list: all distros for this display server
+        SERVICES=()
+        for distro in $DISTROS; do
+            SERVICES+=("${distro}-${DISPLAY_SERVER}")
+        done
+
+        run_group "${SERVICES[@]}"
+        exit 0
+        ;;
+    --run-all)
+        shift
+
+        parse_group_options "$@"
+
+        # Build service list: all 9 configurations
+        SERVICES=()
+        for distro in $DISTROS; do
+            for ds in $DISPLAY_SERVERS; do
+                SERVICES+=("${distro}-${ds}")
+            done
+        done
+
+        run_group "${SERVICES[@]}"
+        exit 0
+        ;;
     --*)
         echo "[!] Unknown option: $1"
         show_help
         exit 1
         ;;
     *)
-        # Valid distro name — fall through to argument parsing below
+        # Valid distro name — fall through to single-service mode below
         ;;
 esac
+
+# ---- Single-service mode (original behavior) ----
 
 DISTRO="$1"
 DISPLAY_SERVER="$2"
