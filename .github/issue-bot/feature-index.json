@@ -1,0 +1,524 @@
+[
+  {
+    "topic": "Screen sharing fixes (#2217, #2219)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Open PRs under review",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Custom CSS crash fix (#2220)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "CPU idle optimization (#2218)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Cross-distro testing environment (#2226)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR open, includes Codespaces devcontainer. See ADR-016.",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Wayland audit and PipeWire ADR (#2225)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "MQTT Screen Sharing (#2107)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR #2193 and #2144 still open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "App menu tray fix (#2186)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR #2195 still open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Quick Chat shortcut fix (#2184)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR #2188 still open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Screen source selection simplification (#2207)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "PR open",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "MQTT status regression (#2131)",
+    "status": "deferred",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Diagnostic build in PR #2197, needs user logs",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Bot automation (Batch 1)",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Index refresh, accuracy feedback, changelog model fix",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Bot automation (Batch 2)",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Enhancement triage: context, feasibility, misclassification",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Electron 40 upgrade",
+    "status": "deferred",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Research complete, not urgent",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Notification sound overhaul",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Research complete",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Issue triage bot Phase 3 (duplicate detection)",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Shipped",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "ESLint 10 upgrade",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Shipped in v2.7.8",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Screen sharing locale fix",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Shipped post-v2.7.8 (#2210)",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Code quality hardening",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Complete (Phases 1-3)",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "MQTT Extended Status Phase 2",
+    "status": "deferred",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
+    "summary": "Awaiting user feedback",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Screen Lock Media Privacy",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Closed --- no user interest",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Meeting Join with ID",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Microsoft limitation",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Custom Notifications Phase 2",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Dropped --- worked on maintainer's machine but not for user",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Tray Icon Logout Indicator",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Archived --- user not responding",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "GNOME Search Provider",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Latency too high (~300-1100ms)",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "External Browser Auth",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Not feasible",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "Multiple Windows",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Rejected (ADR-010)",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "useSystemPicker",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/plan/roadmap.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap#not-planned--not-feasible",
+    "summary": "Rejected (ADR-008)",
+    "source": "roadmap",
+    "last_updated": "2026-03-01"
+  },
+  {
+    "topic": "ADR 001: Use desktopCapturer Source ID Format for Screen Sharing",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/001-desktopcapturer-source-id-format.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/001-desktopcapturer-source-id-format",
+    "summary": "When implementing screen sharing preview windows in Teams for Linux, we need to identify which screen or window the user selected for sharing. There are two potential identifiers available:",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR-002: Token Cache Secure Storage Implementation",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/002-token-cache-secure-storage.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/002-token-cache-secure-storage",
+    "summary": "Microsoft Teams for Linux users experienced frequent authentication interruptions requiring manual re-login approximately every 24 hours, after system sleep/wake cycles, and after application restarts",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR-003: Token Refresh Implementation Strategy",
+    "status": "investigating",
+    "doc_path": "docs-site/docs/development/adr/003-token-refresh-implementation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/003-token-refresh-implementation",
+    "summary": "Following the successful implementation of secure token cache storage (ADR-002), we needed to develop a mechanism for proactive token refresh to prevent authentication interruptions. Through proof-of-",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 004: agents.md Standard Investigation and Rejection",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/adr/004-agents-md-standard-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/004-agents-md-standard-investigation",
+    "summary": "The project currently uses multiple instruction files for AI coding assistants:",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 005: Use AI-Powered Changelog Generation with Gemini",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/005-ai-powered-changelog-generation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/005-ai-powered-changelog-generation",
+    "summary": "The current release process forces one release per merge to main, which doesn't work well with high-velocity AI-assisted development. The workflow was:",
+    "last_updated": "2026-03-01",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 006: CLI Argument Parsing Library Decision",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/006-cli-argument-parsing-library.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/006-cli-argument-parsing-library",
+    "summary": "Teams for Linux uses  for CLI argument parsing. We evaluated whether to:",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 007: Embedded MQTT Broker Decision",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/adr/007-embedded-mqtt-broker.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/007-embedded-mqtt-broker",
+    "summary": "With MQTT commands implementation planned, we evaluated whether to bundle an embedded MQTT broker (Aedes) in the Electron app to simplify user setup.",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 008: useSystemPicker Feature for Electron 38",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/adr/008-usesystempicker-electron-38.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/008-usesystempicker-electron-38",
+    "summary": "Electron 38 introduced  option for , allowing apps to defer screen/window selection to the OS native picker instead of custom dialogs. This feature could provide better UX by leveraging OS-level capab",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 009: Automated Testing Strategy",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/009-automated-testing-strategy.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/009-automated-testing-strategy",
+    "summary": "Teams for Linux required a testing strategy to ensure application stability and prevent regressions. As an Electron application wrapping Microsoft Teams, several constraints affected the testing appro",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 010: Multiple Windows Support for Single Account",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/adr/010-multiple-windows-support.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/010-multiple-windows-support",
+    "summary": "Issue #1984 requested the ability to open multiple windows for a single account, similar to the native Windows Teams client's pop-out functionality for chats and meetings.",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 011: AppImage Update Information for Third-Party Update Managers",
+    "status": "investigating",
+    "doc_path": "docs-site/docs/development/adr/011-appimage-update-info.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/011-appimage-update-info",
+    "summary": "Teams for Linux distributes AppImage builds for Linux users. A feature request (Issue #2065) proposed embedding update metadata into AppImage releases to enable third-party update managers like Gear L",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 012: Intune SSO Broker Version Compatibility",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/012-intune-sso-broker-compatibility.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/012-intune-sso-broker-compatibility",
+    "summary": "The Intune SSO feature in Teams for Linux stopped working with Microsoft Identity Broker versions 2.0.2 and newer. Users reported the error:",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 013: PII Log Sanitization",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/013-pii-log-sanitization.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/013-pii-log-sanitization",
+    "summary": "The codebase has ~590 log statements across 42 files. Audit revealed HIGH-RISK PII exposure in MQTT credentials, password commands, and API endpoints. Only one file () had any sanitization. File loggi",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 014: Quick Chat Access via Deep Links",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/014-quick-chat-deep-link-approach.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/014-quick-chat-deep-link-approach",
+    "summary": "Issue #2109 (originally #1984) requested quick access to chat functionality without requiring full navigation through the Teams UI.",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 015: Quick Chat Inline Messaging",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/015-quick-chat-inline-messaging.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/015-quick-chat-inline-messaging",
+    "summary": "ADR 014 documented the Quick Chat feature using People API + deep links for contact search and chat navigation. That approach worked but had significant limitations: no inline message sending, no inli",
+    "last_updated": "2026-02-14",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 016: Cross-Distro Testing Environment",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/016-cross-distro-testing-environment.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/016-cross-distro-testing-environment",
+    "summary": "Teams for Linux runs across multiple Linux distributions (Ubuntu, Fedora, Debian) and display servers (X11, Wayland, XWayland). Users report issues specific to certain distro/display server combinatio",
+    "last_updated": "2026-02-25",
+    "source": "adr"
+  },
+  {
+    "topic": "ADR 017: Use workflow_run for PR Artifact Comments",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/adr/017-workflow-run-pr-comments.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/adr/017-workflow-run-pr-comments",
+    "summary": "The  and  GitHub Actions workflows each contained a  job that posted build artifact download links as a comment on the associated pull request. This worked for PRs from branches within the same reposi",
+    "last_updated": "2026-02-26",
+    "source": "adr"
+  },
+  {
+    "topic": "AI Automation Review and Enhancement Proposals",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/ai-automation-review-and-enhancements.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/ai-automation-review-and-enhancements",
+    "summary": "This document is a review of the current AI automation and a set of enhancement proposals. Batch 1 (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) has been impleme",
+    "last_updated": "2026-03-01",
+    "source": "research"
+  },
+  {
+    "topic": "Configuration Organization Research",
+    "status": "deferred",
+    "doc_path": "docs-site/docs/development/research/configuration-organization-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/configuration-organization-research",
+    "summary": "Teams for Linux has 66 active configuration options managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattere",
+    "last_updated": "2026-02-26",
+    "source": "research"
+  },
+  {
+    "topic": "Custom Notification System Research & Implementation Plan",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/custom-notification-system-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/custom-notification-system-research",
+    "summary": "MVP shipped in v2.6.16. Phase 2 (chat, calendar, activity notifications) was attempted but dropped — notifications worked on the maintainer's machine but the user reported receiving no notifications a",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "Electron 40 Migration Research",
+    "status": "planned",
+    "doc_path": "docs-site/docs/development/research/electron-40-migration-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/electron-40-migration-research",
+    "summary": "The Electron 39 to 40 upgrade is a relatively clean migration with no blocking breaking changes for this project. The primary areas requiring attention are: native module recompilation (Node.js 22 to ",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "Electron-Updater Auto-Update Research",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/electron-updater-auto-update-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/electron-updater-auto-update-research",
+    "summary": "Feature fully implemented and released. This document is retained for historical context.",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "External Browser Authentication Investigation",
+    "status": "investigating",
+    "doc_path": "docs-site/docs/development/research/external-browser-authentication-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/external-browser-authentication-investigation",
+    "summary": "Issue: #2017",
+    "last_updated": "2026-02-14",
+    "source": "research"
+  },
+  {
+    "topic": "External Changelog Generation Research",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/external-changelog-generation-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/external-changelog-generation-research",
+    "summary": "Both phases implemented. This document is retained for historical context.",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "GitHub Issue Bot Research & Implementation Plan",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/github-issue-bot-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/github-issue-bot-investigation",
+    "summary": "Phase 1 (Information Request Bot) shipped in v2.7.4 (PR #2135). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Du",
+    "last_updated": "2026-03-01",
+    "source": "research"
+  },
+  {
+    "topic": "GNOME Shell Search Provider Investigation",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/research/gnome-search-provider-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/gnome-search-provider-investigation",
+    "summary": "Request: Search Teams files directly from GNOME Shell overview.",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "Microsoft Graph API Integration Research",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/graph-api-integration-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/graph-api-integration-research",
+    "summary": "Graph API integration is in production since v2.7.4. Token acquisition, People API, and calendar/mail endpoints are used by Quick Chat Access (PR #2119). Phase 2+ features remain unstarted — awaiting ",
+    "last_updated": "2026-02-14",
+    "source": "research"
+  },
+  {
+    "topic": "Tray Icon Logout Indicator - Research & Implementation Plan",
+    "status": "rejected",
+    "doc_path": "docs-site/docs/development/research/logout-indicator-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/logout-indicator-investigation",
+    "summary": "User never responded to validation request. Work preserved in branch  but not planned for implementation.",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "MQTT Extended Status Investigation (Issue #1938)",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/mqtt-extended-status-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/mqtt-extended-status-investigation",
+    "summary": "Infrastructure, LWT, and call state publishing are shipped. Phase 2 (WebRTC camera/mic monitoring) deferred until a user requests it.",
+    "last_updated": "2026-02-18",
+    "source": "research"
+  },
+  {
+    "topic": "Notification Sound Overhaul Research",
+    "status": "shipped",
+    "doc_path": "docs-site/docs/development/research/notification-sound-overhaul-research.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/notification-sound-overhaul-research",
+    "summary": "Research complete. Targeted for v2.8.0 release.",
+    "last_updated": "2026-02-22",
+    "source": "research"
+  },
+  {
+    "topic": "Screen Lock Media Privacy Investigation",
+    "status": "investigating",
+    "doc_path": "docs-site/docs/development/research/screen-lock-media-privacy-investigation.md",
+    "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/screen-lock-media-privacy-investigation",
+    "summary": "This document investigates the feasibility of implementing automatic camera and microphone disabling when the user's screen is locked - a privacy feature that exists in the Windows Teams client. The i",
+    "last_updated": "2026-02-21",
+    "source": "research"
+  }
+]

@@ -21,7 +21,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | Screen source selection simplification ([#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)) | PR open | Medium | v2.7.9 |
 | **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.9+ |
 | **Done** | Bot automation (Batch 1) | Index refresh, accuracy feedback, changelog model fix | Small | v2.7.9 |
-| **Ready** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.9+ |
+| **Done** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.9+ |
 | **Deferred** | Electron 40 upgrade | Research complete, not urgent | Medium | v2.8.0+ |
 | **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Done** | Issue triage bot Phase 3 (duplicate detection) | Shipped | Small | Done |
@@ -120,21 +120,27 @@ New `tally-bot-feedback.js` script and `bot-accuracy-report.yml` workflow. Runs 
 
 Migrated `changelog-generator.yml` from `gemini-2.0-flash-exp` to `gemini-2.5-flash`. All AI automation systems now use the same stable model. ADR-005 updated with a new amendment documenting the rationale.
 
-### Batch 2 — Clear next major step
+### Batch 2 — Implemented
 
 #### Phase 4: Enhancement Triage (Context, Feasibility, Misclassification)
 
-**Status:** Ready to implement (after Batch 1)
+**Status:** Implemented
 **Effort:** Medium-Large
-**Priority:** High
+**Priority:** Done
 
-The triage bot currently only fires on `bug`-labelled issues. Enhancement requests get no automated assistance. Phase 4 extends the bot to `enhancement`-labelled issues with three capabilities:
+The triage bot now fires on both `bug` and `enhancement`-labelled issues. Enhancement requests receive automated context from the project's roadmap, ADRs, and research documents. Three new capabilities were added:
 
-1. **Context surfacing** — Link the request to existing roadmap items, ADRs, and research docs so the reporter immediately sees where the project stands.
-2. **Feasibility signal** — Flag when an enhancement has already been investigated and found infeasible (ADR rejection, Electron limitation, upstream dependency) so the maintainer doesn't re-investigate. Language: "We explored this area previously and documented our findings" with a link, never "rejected."
-3. **Misclassification detection** — Detect when something filed as an enhancement is actually a bug (e.g., "Feature request: make notifications work") or vice versa. Suggest a label correction, never auto-relabel.
+1. **Context surfacing** — Links enhancement requests to existing roadmap items, ADRs, and research docs so the reporter immediately sees where the project stands. Uses a pre-processed `feature-index.json` (58 entries from roadmap, 17 ADRs, 14 research docs) matched via Gemini 2.5 Flash.
+2. **Feasibility signal** — Flags when an enhancement has already been investigated and found infeasible, using humble language: "We explored this and documented our findings" with a link, never "rejected."
+3. **Misclassification detection** — Runs on both bug and enhancement issues. Uses Gemini 2.5 Flash (temperature 0.15) to classify issues and only surfaces a suggestion when the classification disagrees with the applied label AND confidence >= 80%. Never auto-relabels.
 
-Requires building a `feature-index.json` mapping keywords/topics to roadmap entries, ADRs, and research docs. The existing `generate-index.js` pattern can be extended. Misclassification detection should use high-confidence Gemini matching (temperature 0.1-0.2) to avoid false positives.
+**Implementation details:**
+- New `generate-feature-index.js` script parses roadmap, ADRs, and research docs into a compact JSON index with topic, status, doc_path, doc_url, summary, last_updated, and source fields
+- New `update-feature-index.yml` workflow runs weekly (Monday 4:30 UTC, offset from issue index) plus manual dispatch
+- Extended `issue-triage-bot.yml` with Phase 4a (enhancement context + feasibility) and Phase 4b (misclassification detection) steps
+- Bug issues continue through existing Phases 1-3 plus the new misclassification check
+- Enhancement issues go through Phase 4a (context) plus Phase 4b (misclassification)
+- Consolidated comment updated to include enhancement context, feasibility notes, and label suggestions
 
 ### Batch 3 — When Phase 4 is stable
 
@@ -231,14 +237,14 @@ All three phases completed: logging hygiene, resilience improvements, input hand
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
 **Review:** [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md)
-**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Batch 1 ✅ | Batch 2-3 planned
+**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Batch 1 ✅, Batch 2 ✅ | Batch 3 planned
 **Priority:** Active (improving)
 
 Phase 1 delivered missing info detection. Phase 2 delivered AI-powered solution suggestions via Gemini. Phase 3 delivered duplicate detection against an issue index using Gemini 2.5 Flash. The bot was upgraded to Gemini 2.5 Flash in PR [#2213](https://github.com/IsmaelMartinez/teams-for-linux/pull/2213). The auto-remove awaiting feedback label workflow was added in PR [#2208](https://github.com/IsmaelMartinez/teams-for-linux/pull/2208).
 
-A full review of all AI automation systems was completed in March 2026. Batch 1 has been implemented:
+A full review of all AI automation systems was completed in March 2026:
 - **Batch 1 (Done):** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
-- **Batch 2:** Enhancement triage — Phase 4 (context, feasibility, misclassification detection)
+- **Batch 2 (Done):** Enhancement triage — Phase 4 (context surfacing, feasibility signal, misclassification detection). Feature index generator + weekly workflow + extended triage bot.
 - **Batch 3:** Pre-research prompt generator (Phase 3.2, depends on Phase 4 feature index)
 
 See the "Bot Automation Improvements" section above for details.
@@ -328,7 +334,7 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 2. **Merge bug fixes** --- [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) (custom CSS crash), [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) (CPU idle), remaining v2.7.8 carry-over PRs ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188))
 3. **Land cross-distro testing** --- merge PR [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) after addressing SonarQube hotspots
 4. **Bot automation Batch 1** --- ✅ changelog model consolidation, real-time issue index refresh (Phase 3.1), bot accuracy feedback loop
-5. **Bot automation Batch 2** --- Phase 4 enhancement triage (context, feasibility, misclassification detection)
+5. **Bot automation Batch 2** --- ✅ Phase 4 enhancement triage (context, feasibility, misclassification detection)
 6. **Release v2.7.9**
 
 ### v2.8.0 Release Plan (Deferred)

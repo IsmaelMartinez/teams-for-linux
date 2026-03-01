@@ -1,10 +1,10 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-:::info Phase 3 Shipped + Batch 1 Complete
-Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. All three phases produce a single consolidated comment per issue. **Batch 1** improvements shipped: real-time issue index refresh (Phase 3.1), bot accuracy feedback loop, and changelog model consolidation. Phase 4 (enhancement context) is planned next.
+:::info Phase 4 Shipped + Batch 2 Complete
+Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. **Phase 4** (Enhancement Triage) extends the bot to `enhancement`-labelled issues with context surfacing, feasibility signals, and misclassification detection. All phases produce a single consolidated comment per issue. **Batch 1** improvements shipped: real-time issue index refresh (Phase 3.1), bot accuracy feedback loop, and changelog model consolidation. **Batch 2** shipped: Phase 4 enhancement triage.
 :::
 
-**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Batch 1 ✅ | Phase 4 planned
+**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Batch 1 ✅ | Phase 4 ✅ Shipped (Batch 2)
 **Date:** February 2026
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant
@@ -336,19 +336,22 @@ Store in `.github/issue-bot/embeddings.json` or external vector DB.
 
 **Value:** Consolidates discussion, reduces duplicate investigation
 
-### Phase 4: Enhancement Context
+### Phase 4: Enhancement Triage ✅ Shipped (Batch 2)
 
-**Scope:** Link feature requests to roadmap/research/ADRs
+**Scope:** Enhancement context surfacing, feasibility signaling, misclassification detection
 
 **Additional Files:**
 ```
-.github/issue-bot/feature-index.json  # Roadmap + research mapping
-.github/issue-bot/templates/enhancement.md
+.github/issue-bot/feature-index.json                    # Pre-processed feature index (generated weekly)
+.github/issue-bot/scripts/generate-feature-index.js     # Feature index generator script
+.github/workflows/update-feature-index.yml              # Weekly cron job (Monday 4:30 UTC)
 ```
+
+**Implementation:** Extended `issue-triage-bot.yml` to fire on both `bug` and `enhancement` labels. For enhancement issues, Phase 4a reads a pre-processed feature index (58 entries from roadmap, 17 ADRs, 14 research docs) and sends compact summaries to Gemini 2.5 Flash (temperature 0.3) to match 0-3 relevant features/ADRs/research docs with feasibility flags. Phase 4b (misclassification detection) runs on BOTH bug and enhancement issues, classifying via Gemini 2.5 Flash (temperature 0.15) and only surfacing suggestions when classification disagrees with the applied label AND confidence >= 80%. The consolidated comment was updated with enhancement-specific sections (context matches, feasibility notes, roadmap links) and label correction hints.
 
 **Effort:** 3-5 days
 
-**Value:** Saves maintainer time explaining "already investigated" or "planned"
+**Value:** Saves maintainer time explaining "already investigated" or "planned"; catches mislabelled issues
 
 ### Phase 5: Research Trigger (Optional)
 
@@ -627,9 +630,10 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ---
 
-**Document Status:** Batch 1 Complete
+**Document Status:** Batch 2 Complete
 **Phase 1:** Information Request Bot — shipped in v2.7.4
 **Phase 2:** Solution Suggester — AI-powered matching via Gemini, consolidated comment
 **Phase 3:** Duplicate Detector — Issue index + Gemini Flash matching, real-time + weekly regeneration
 **Batch 1:** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
-**Next:** Batch 2 — Phase 4 enhancement triage (context, feasibility, misclassification)
+**Phase 4:** Enhancement Triage — Feature index + Gemini Flash context surfacing, feasibility signal, misclassification detection
+**Next:** Batch 3 — Pre-research prompt generator (Phase 3.2, depends on Phase 4 feature index)
