@@ -28,6 +28,7 @@ DISTROS="ubuntu fedora debian"
 DISPLAY_SERVERS="x11 wayland xwayland"
 NOVNC_BASE=6081
 VNC_BASE=5901
+SEPARATOR="============================================="
 
 validate_distro() {
     local distro="$1"
@@ -38,6 +39,7 @@ validate_distro() {
         echo "    Valid: ${DISTROS}"
         exit 1
     fi
+    return 0
 }
 
 validate_display_server() {
@@ -49,6 +51,7 @@ validate_display_server() {
         echo "    Valid: ${DISPLAY_SERVERS}"
         exit 1
     fi
+    return 0
 }
 
 get_index() {
@@ -164,21 +167,24 @@ parse_group_options() {
     AUTO_LAUNCH="true"
 
     while [[ $# -gt 0 ]]; do
-        case "$1" in
+        local key="$1"
+        case "$key" in
             --appimage)
-                if [[ -z "${2:-}" || "$2" =~ ^-- ]]; then
-                    echo "[!] Missing argument for $1" >&2
+                local next="${2:-}"
+                if [[ -z "$next" || "$next" =~ ^-- ]]; then
+                    echo "[!] Missing argument for $key" >&2
                     exit 1
                 fi
-                APPIMAGE_PATH="$2"
+                APPIMAGE_PATH="$next"
                 shift 2
                 ;;
             --url)
-                if [[ -z "${2:-}" || "$2" =~ ^-- ]]; then
-                    echo "[!] Missing argument for $1" >&2
+                local next="${2:-}"
+                if [[ -z "$next" || "$next" =~ ^-- ]]; then
+                    echo "[!] Missing argument for $key" >&2
                     exit 1
                 fi
-                APP_URL="$2"
+                APP_URL="$next"
                 shift 2
                 ;;
             --no-launch)
@@ -186,11 +192,12 @@ parse_group_options() {
                 shift
                 ;;
             *)
-                echo "[!] Unknown option: $1"
+                echo "[!] Unknown option: $key"
                 exit 1
                 ;;
         esac
     done
+    return 0
 }
 
 # Copy AppImage into the app/ mount directory if --appimage was specified.
@@ -207,6 +214,7 @@ setup_appimage() {
         cp "$APPIMAGE_PATH" "${app_dir}/teams-for-linux.AppImage"
         chmod +x "${app_dir}/teams-for-linux.AppImage"
     fi
+    return 0
 }
 
 # Run multiple services in parallel using docker compose up.
@@ -217,9 +225,9 @@ run_group() {
     setup_appimage
 
     echo ""
-    echo "============================================="
+    echo "$SEPARATOR"
     echo "  Starting ${#services[@]} configurations in parallel"
-    echo "============================================="
+    echo "$SEPARATOR"
     for svc in "${services[@]}"; do
         local distro="${svc%-*}"
         local ds="${svc##*-}"
@@ -231,7 +239,7 @@ run_group() {
         echo "  App URL:  ${APP_URL}"
     fi
     echo "  Auto-launch: ${AUTO_LAUNCH}"
-    echo "============================================="
+    echo "$SEPARATOR"
     echo ""
 
     # Export env vars so docker compose picks them up via ${APP_URL:-} and
@@ -240,6 +248,7 @@ run_group() {
     export AUTO_LAUNCH="${AUTO_LAUNCH}"
 
     docker compose up --build "${services[@]}"
+    return 0
 }
 
 # Parse global flags
@@ -339,7 +348,7 @@ NOVNC_PORT=$(get_novnc_port "$DISTRO" "$DISPLAY_SERVER")
 VNC_PORT=$(get_vnc_port "$DISTRO" "$DISPLAY_SERVER")
 
 echo ""
-echo "============================================="
+echo "$SEPARATOR"
 echo "  Starting: ${SERVICE}"
 echo "  noVNC:    http://localhost:${NOVNC_PORT}/vnc.html"
 echo "  VNC:      localhost:${VNC_PORT}"
@@ -347,7 +356,7 @@ if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
-echo "============================================="
+echo "$SEPARATOR"
 echo ""
 
 # Build env var overrides for docker compose (use array to prevent injection)
