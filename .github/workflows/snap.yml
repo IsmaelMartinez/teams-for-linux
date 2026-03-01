@@ -29,7 +29,7 @@ jobs:
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
 
       - name: Install and initialize LXD
-        uses: canonical/setup-lxd@62cd335190e2b612b427db9319ea6b59ab1691f8 # main
+        uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main
 
       - name: Check out Git repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -138,7 +138,7 @@ jobs:
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
 
       - name: Install and initialize LXD
-        uses: canonical/setup-lxd@62cd335190e2b612b427db9319ea6b59ab1691f8 # main
+        uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main
 
       - name: Check out Git repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
