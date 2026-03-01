@@ -68,8 +68,8 @@ The project has four distinct AI automation systems in production:
 **No Feedback Loop on Bot Accuracy**
 - There's no mechanism to track whether the bot's suggestions were helpful. The research doc mentions success metrics (20% bug resolution, 30% duplicate reduction) but there's no instrumentation to measure them. This is worth investigating before expanding the bot's scope.
 
-**Changelog Model Drift**
-- The changelog generator uses `gemini-2.0-flash-exp` while the triage bot uses `gemini-2.5-flash`. This is fine functionally but worth noting for maintenance — if one model is deprecated, the other may follow.
+**Changelog Model at Risk**
+- The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model that could be deprecated at any time. The triage bot already moved to `gemini-2.5-flash` (stable). The ADR originally referenced `gemini-2.0-flash-thinking-exp-1219`, which is yet another experimental variant. It is surprising this still works — aligning to the stable model should be treated as preventive maintenance, not a low-priority item.
 
 **Issue Index Coverage**
 - The index includes open issues and issues closed in the last 90 days. Issues older than 90 days that resurface (e.g., recurring regressions) won't be matched. This is an acceptable trade-off for index size, but worth noting.
@@ -145,50 +145,76 @@ The following are research-level proposals. Each one describes what the enhancem
 
 **Effort:** Small (1 day for the reaction-counting script, ongoing for data collection)
 
-### 2.4 Enhancement Context from Roadmap/Research/ADRs (Phase 4)
+### 2.4 Enhancement Triage — Context, Feasibility, and Misclassification (Phase 4)
 
-**Already in roadmap.** Expanded here with research questions.
+**Already in roadmap as "Enhancement Context".** Expanded here significantly based on the observation that the bot currently only handles `bug`-labelled issues while enhancement requests need three things the current pipeline doesn't provide.
 
-**What:** Extend the triage bot to surface relevant roadmap items, ADRs, and research docs when an issue touches a known area. For example, if someone files a feature request about screen sharing, the bot notes that ADR-008 (useSystemPicker) and ADR-016 (Wayland audit) are relevant context.
+**What:** Extend the triage bot to fire on `enhancement`-labelled issues with three capabilities:
 
-**Why:** Saves the maintainer time explaining "we already investigated this" or "this is planned." Gives the reporter immediate context about where the project stands on their request.
+1. **Context surfacing** — Link the request to existing roadmap items, ADRs, and research docs so the reporter immediately sees where the project stands on their area.
+2. **Feasibility signal** — Flag when an enhancement has already been investigated and found infeasible (ADR rejection, Electron limitation, upstream dependency) so the maintainer doesn't re-investigate.
+3. **Misclassification detection** — Detect when something filed as an enhancement is actually a bug (e.g., "Feature request: make notifications work" is a bug), or when a bug report is actually a feature request (e.g., "Bug: there's no dark mode toggle"). Suggest a label correction rather than applying it automatically.
+
+**Why:** The project receives a mix of bugs and enhancements. Currently:
+- Bugs get full 3-phase triage; enhancements get nothing
+- Maintainer time is spent explaining "we already looked into this" or "this isn't feasible because of Electron limitations"
+- Misclassified issues waste triage effort — a bug treated as an enhancement doesn't get the missing-info check, and an enhancement treated as a bug gets irrelevant troubleshooting suggestions
 
 **Research needed:**
-- **Index generation:** Similar to the troubleshooting index, build a `feature-index.json` that maps keywords/topics to roadmap entries, ADRs, and research docs. The existing `generate-index.js` pattern can be extended.
-- **Trigger scope:** Should this run on all issues, or only those with the `enhancement` label? Running on all issues increases coverage but also increases false positive risk.
-- **Matching accuracy:** Keyword matching may be sufficient for ADRs (they have clear titles and scopes). Gemini matching might be overkill here. Research whether a simpler approach works.
-- **Comment format:** Should enhancement context be part of the existing consolidated comment, or a separate comment? If integrated, the bot comment could get long. If separate, it's two bot comments per issue.
-- **Stale context risk:** What if a roadmap entry is outdated? The bot would surface stale information. Need to ensure the feature index references the latest state.
+
+*Context surfacing:*
+- **Feature index generation:** Build a `feature-index.json` mapping keywords/topics to roadmap entries, ADRs, and research docs. The existing `generate-index.js` pattern can be extended. Each entry needs: topic, status (planned/investigating/rejected/shipped), document link, and a one-line summary.
+- **Matching approach:** ADRs have clear titles and scopes — keyword matching may be sufficient. Roadmap items are more ambiguous; Gemini matching would be more reliable. Research whether a two-tier approach works (keyword first, Gemini as fallback for low-confidence matches).
+- **Stale context risk:** What if a roadmap entry is outdated? The bot would surface stale information. The feature index should include a `last_updated` field so the bot can caveat old entries.
+
+*Feasibility checking:*
+- **What counts as "infeasible"?** ADRs that rejected an approach, research docs that concluded "not possible with current Electron APIs", roadmap items marked "Not Planned / Not Feasible". These need to be tagged in the feature index.
+- **Language is critical.** Never say "rejected" or "impossible." Say "We explored this area previously and documented our findings" with a link. The reporter may have new information that changes the calculus.
+- **Partial feasibility:** Some features are feasible in part but not fully. The bot should note "Phase 1 of this was shipped, later phases are awaiting feedback" rather than a binary feasible/infeasible.
+
+*Misclassification detection:*
+- **Heuristic approach:** Check if an enhancement issue body contains bug-report language (e.g., "stopped working", "used to work", "broke after update", "error", "crash") or if a bug issue body contains enhancement language (e.g., "would be nice", "feature request", "could you add", "it would be great if").
+- **AI-assisted approach:** Add a Gemini step that classifies the issue as bug/enhancement/question based on content, then compare against the applied label. If they disagree, suggest the correct label.
+- **Output format:** "This appears to describe a bug rather than a feature request. If so, re-labelling it as `bug` would help us apply the right triage process." Never auto-relabel.
+- **False positive tolerance:** Misclassification detection should have high precision (few false positives) even if recall is lower. A wrong suggestion here is worse than missing a misclassified issue.
+
+*Workflow integration:*
+- **Trigger scope:** Add `enhancement` to the label condition: `contains(labels, 'bug') || contains(labels, 'enhancement')`. Bug issues continue through the existing 3 phases; enhancement issues go through new enhancement-specific phases.
+- **Phase 1 variant for enhancements:** Check for missing motivation, missing use case, and missing description of alternatives considered (the feature request template fields).
+- **Comment format:** Same consolidated comment pattern. Enhancement context, feasibility notes, duplicate matches, and any misclassification hint all go in one comment.
 
 **Guardrails:**
 - Same humble language as the existing bot ("We've previously investigated this area...")
-- Never say "rejected" — say "We explored this and documented our findings in [ADR link]"
+- Never say "rejected" or "infeasible" — say "We explored this and documented our findings in [ADR link]"
+- Never auto-relabel. Only suggest: "This might be a bug report — re-labelling as `bug` would enable additional triage checks"
 - Include a note that the roadmap is a living document and may have changed
 - Limit to 3 context items per issue to avoid overwhelming the reporter
 - Only trigger on issues, not PRs
+- Misclassification suggestions should require high confidence (Gemini temperature 0.1-0.2)
 
-**Effort:** Medium (3-5 days)
-**Dependency:** Ideally, measure bot accuracy (2.3) before expanding scope
+**Effort:** Medium-Large (4-6 days, broken into sub-steps)
+**Dependency:** Ideally, measure bot accuracy (2.3) before expanding scope. The real-time index refresh (2.1) also helps since enhancement duplicates are common.
 
 ### 2.5 Changelog Model Consolidation
 
-**New proposal — minor maintenance item.**
+**Preventive maintenance — should not be deferred.**
 
-**What:** Align the changelog generator to use the same Gemini model as the triage bot (2.5 Flash), or at least document the rationale for using different models.
+**What:** Align the changelog generator to use the same Gemini model as the triage bot (`gemini-2.5-flash`).
 
-**Why:** The changelog generator uses `gemini-2.0-flash-exp` (an experimental model) while the triage bot uses `gemini-2.5-flash` (a stable release). Experimental models may be deprecated without notice. Aligning on a stable model reduces maintenance risk.
+**Why:** The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model. The ADR originally referenced yet another variant (`gemini-2.0-flash-thinking-exp-1219`). Experimental models get deprecated without notice — it is surprising this one still works. The triage bot already moved to `gemini-2.5-flash` (stable) without issues. This is a when-not-if breakage waiting to happen.
 
 **Research needed:**
 - Test 5-10 changelog entries with `gemini-2.5-flash` and compare quality against the current `gemini-2.0-flash-exp` output
-- Check if the `responseMimeType` feature (used in the triage bot) would benefit the changelog generator too
+- Check if the `responseMimeType` feature (used in the triage bot) would benefit the changelog generator too (structured JSON output instead of raw text)
 - Verify the free tier quota is still sufficient with both systems on the same model
+- Update ADR-005 to reflect the model change
 
 **Guardrails:**
 - Don't change the model without testing quality first
 - Keep the PR title fallback in case the API fails
-- This is a low-priority maintenance item, not urgent
+- Update the ADR to document the migration rationale
 
-**Effort:** Tiny (1 hour of testing + a one-line change)
+**Effort:** Tiny (1 hour of testing + a one-line change in the workflow + ADR update)
 
 ---
 
@@ -196,15 +222,31 @@ The following are research-level proposals. Each one describes what the enhancem
 
 Based on impact, risk, and dependencies:
 
-| Priority | Proposal | Rationale |
-|----------|----------|-----------|
-| 1 | **2.1 Real-Time Index Refresh** | Highest impact, smallest effort, already planned |
-| 2 | **2.3 Bot Accuracy Feedback Loop** | Establishes measurement before expansion |
-| 3 | **2.5 Changelog Model Consolidation** | Quick maintenance win |
-| 4 | **2.2 Pre-Research Prompt Generator** | Valuable but medium effort; benefits from accuracy data |
-| 5 | **2.4 Enhancement Context (Phase 4)** | Largest scope; should wait for accuracy feedback |
+### Batch 1 — Small, clear next steps (can be done in any order)
 
-This order follows the project's own principles: validate first, start simple, measure before expanding.
+| Priority | Proposal | Effort | Rationale |
+|----------|----------|--------|-----------|
+| 1 | **2.1 Real-Time Index Refresh** | Small | Highest impact on duplicate detection, smallest effort, already planned |
+| 2 | **2.3 Bot Accuracy Feedback Loop** | Small | Establishes measurement before expanding scope |
+| 3 | **2.5 Changelog Model Consolidation** | Tiny | Preventive maintenance — the experimental model could break at any time |
+
+These three are independent and low-risk. They could be done in parallel or in sequence. Priority 3 is arguably the most time-sensitive since the model could be deprecated without warning.
+
+### Batch 2 — Clear next step
+
+| Priority | Proposal | Effort | Rationale |
+|----------|----------|--------|-----------|
+| 4 | **2.4 Enhancement Triage (Phase 4)** | Medium-Large | The bot currently ignores all enhancement issues. This closes the biggest functional gap: context, feasibility, and misclassification detection. Benefits from accuracy data (2.3) and real-time index (2.1). |
+
+Phase 4 is the natural next major step. The project receives a mix of bugs and enhancements, and the enhancement side gets no automated help. The misclassification detection is particularly valuable — a bug filed as an enhancement misses the entire triage pipeline today.
+
+### Batch 3 — When Phase 4 is stable
+
+| Priority | Proposal | Effort | Rationale |
+|----------|----------|--------|-----------|
+| 5 | **2.2 Pre-Research Prompt Generator** | Medium | Valuable but depends on having the feature index (built in Phase 4) and confidence in the bot's accuracy |
+
+This builds on top of the feature index created for Phase 4. It's less urgent because it's a maintainer-facing tool (triggered by label), not a user-facing improvement.
 
 ---
 
