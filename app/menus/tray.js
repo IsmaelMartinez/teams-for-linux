@@ -44,15 +44,14 @@ class ApplicationTray {
   }
 
   showAndFocusWindow() {
-    if (this.window.isMinimized()) {
-      this.window.restore();
-      this.window.focus();
-    } else if (!this.window.isVisible()) {
-      this.window.show();
-      this.window.focus();
-    } else if (this.window.isFocused()) {
+    if (this.window.isFocused()) {
       this.window.hide();
     } else {
+      if (this.window.isMinimized()) {
+        this.window.restore();
+      } else if (!this.window.isVisible()) {
+        this.window.show();
+      }
       this.window.focus();
     }
   }
