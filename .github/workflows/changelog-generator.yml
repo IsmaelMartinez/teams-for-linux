@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Detect fork status and check changelog existence
         id: setup
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const headRepo = context.payload.pull_request.head.repo.full_name;
@@ -74,7 +74,7 @@ jobs:
       - name: Generate summary with Gemini
         if: steps.setup.outputs.changelog_exists == 'false'
         id: gemini
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         with:
@@ -128,7 +128,7 @@ jobs:
       - name: Post-process summary
         if: steps.setup.outputs.changelog_exists == 'false'
         id: final
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             let summary = `${{ steps.gemini.outputs.summary }}`;
@@ -170,7 +170,7 @@ jobs:
 
       - name: Comment on PR (internal)
         if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             github.rest.issues.createComment({
@@ -182,7 +182,7 @@ jobs:
 
       - name: Comment on PR (external fork)
         if: steps.setup.outputs.is_external_fork == 'true' && steps.setup.outputs.changelog_exists == 'false'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
