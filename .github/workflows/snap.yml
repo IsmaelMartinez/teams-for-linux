@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-x64
           path: dist/*.snap
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-armv7l
           path: dist/*.snap
@@ -173,7 +173,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-arm64
           path: dist/*.snap
