@@ -15,7 +15,7 @@ This document is a review of the current AI automation and a set of enhancement 
 
 ### 1.1 What's Running
 
-The project has four distinct AI automation systems in production:
+The project has the following automation systems in production:
 
 | System | Shipped | Model | Trigger | Status |
 |--------|---------|-------|---------|--------|
