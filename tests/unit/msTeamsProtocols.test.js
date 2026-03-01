@@ -11,8 +11,8 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 
 // Default patterns from app/config/index.js
-const v1Pattern = new RegExp("^msteams:/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)");
-const v2Pattern = new RegExp("^msteams://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)");
+const v1Pattern = /^msteams:\/(?:meet\/|l\/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)\/)/;
+const v2Pattern = /^msteams:\/\/teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)\/(?:meet\/|l\/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)\/)/;
 
 describe('msTeamsProtocols v1 pattern', () => {
   describe('Valid v1 links - should match', () => {
@@ -122,18 +122,18 @@ describe('msTeamsProtocols v2 pattern', () => {
   });
 });
 
+// Simulates the URL transformation logic from app/mainAppWindow/index.js
+const baseUrl = 'https://teams.cloud.microsoft';
+
+function transformV1(arg) {
+  return baseUrl + arg.substring(8, arg.length);
+}
+
+function transformV2(arg) {
+  return arg.replace('msteams', 'https');
+}
+
 describe('processArgs URL transformation', () => {
-  // Simulates the URL transformation logic from app/mainAppWindow/index.js
-  const baseUrl = 'https://teams.cloud.microsoft';
-
-  function transformV1(arg) {
-    return baseUrl + arg.substring(8, arg.length);
-  }
-
-  function transformV2(arg) {
-    return arg.replace('msteams', 'https');
-  }
-
   it('v1 short meet link transforms correctly', () => {
     const input = 'msteams:/meet/abc123?p=passcode';
     const expected = 'https://teams.cloud.microsoft/meet/abc123?p=passcode';
