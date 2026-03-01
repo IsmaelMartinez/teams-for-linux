@@ -37,8 +37,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Strategic Documentation
 
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
-  - **Phases 1-2 Shipped**: Information request bot and AI-powered solution suggester
-  - **Future phases**: Duplicate detection (embeddings), enhancement context (RAG)
+  - **Phases 1-3 Shipped**: Information request bot, AI-powered solution suggester, duplicate detection
+  - **Phase 4 planned**: Enhancement triage (context, feasibility, misclassification detection)
+
+- **[AI Automation Review and Enhancements](ai-automation-review-and-enhancements.md)** - Review of all AI automation systems and enhancement proposals
+  - Reviews changelog generator, issue triage bot (3 phases), issue index, Claude Code integration
+  - Proposes: real-time index refresh, bot accuracy feedback loop, changelog model consolidation, enhancement triage (Phase 4), pre-research prompt generator
+  - **Status:** Proposal — awaiting maintainer review
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization

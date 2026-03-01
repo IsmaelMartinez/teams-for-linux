@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-03-01
 **Current Version:** v2.7.8
 **Status:** Living Document — planning v2.7.9, v2.8.0, and bot automation improvements
 
@@ -20,7 +20,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | Quick Chat shortcut fix ([#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184)) | PR [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) still open | Small | v2.7.9 |
 | **Open** | Screen source selection simplification ([#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)) | PR open | Medium | v2.7.9 |
 | **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.9+ |
-| **Ready** | Bot automation improvements | Issue index refresh, pre-research prompt generator | Medium | v2.7.9 |
+| **Ready** | Bot automation (Batch 1) | Index refresh, accuracy feedback, changelog model fix | Small | v2.7.9 |
+| **Ready** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.9+ |
 | **Deferred** | Electron 40 upgrade | Research complete, not urgent | Medium | v2.8.0+ |
 | **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Done** | Issue triage bot Phase 3 (duplicate detection) | Shipped | Small | Done |
@@ -92,37 +93,61 @@ There are currently 13 open issues and 12 open PRs. The open issues cluster arou
 
 ## Bot Automation Improvements
 
-The issue triage bot has been running since v2.7.4 with three phases shipped (missing info detection, solution suggestions, duplicate detection). The issue index workflow runs weekly on Mondays. There are three improvements planned.
+The issue triage bot has been running since v2.7.4 with three phases shipped (missing info detection, solution suggestions, duplicate detection). The issue index workflow runs weekly on Mondays. A full review of all AI automation systems was completed in March 2026 — see [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md) for the detailed proposal.
 
-### Phase 3.1: Real-Time Issue Index Refresh
+### Batch 1 — Small, clear next steps (independent, any order)
+
+#### Phase 3.1: Real-Time Issue Index Refresh
 
 **Status:** Ready to implement
 **Effort:** Small
 **Priority:** High
 
-The current issue index is regenerated weekly via a scheduled workflow. This means if two users report the same bug within hours of each other, the duplicate detection has no knowledge of the first report when the second one arrives. The fix is to also trigger the `update-issue-index` workflow on the `issues: [opened, closed, reopened]` events so the index is refreshed every time an issue changes state. This way the triage bot always compares against the most current set of issues.
+The current issue index is regenerated weekly via a scheduled workflow. This means if two users report the same bug within hours of each other, the duplicate detection has no knowledge of the first report when the second one arrives. The fix is to also trigger the `update-issue-index` workflow on the `issues: [opened, closed, reopened]` events so the index is refreshed every time an issue changes state. Alternatively, the triage bot itself can append the new issue to the index inline during its run (avoiding a race condition entirely).
 
-The implementation is a one-line change to the `update-issue-index.yml` workflow triggers, plus adding a short delay or `workflow_run` dependency so the new issue is included in the index before the triage bot reads it. Alternatively, the triage bot itself can append the new issue to the index inline during its run (avoiding a race condition entirely).
-
-### Phase 3.2: Pre-Research Prompt Generator
+#### Bot Accuracy Feedback Loop
 
 **Status:** Ready to implement
+**Effort:** Small
+**Priority:** High
+
+There is no mechanism to track whether the triage bot's suggestions are helpful. Before expanding the bot's scope (Phase 4), we need to measure accuracy. Proposal: use GitHub reactions on bot comments (thumbs up/down) with a periodic script that tallies them, and/or track issue resolution time after bot comment. This establishes a baseline before expanding.
+
+#### Changelog Model Consolidation
+
+**Status:** Ready to implement (preventive maintenance)
+**Effort:** Tiny
+**Priority:** High (time-sensitive)
+
+The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model that could be deprecated at any time. The triage bot already moved to `gemini-2.5-flash` (stable) without issues. The ADR originally referenced `gemini-2.0-flash-thinking-exp-1219`, yet another experimental variant. This is a when-not-if breakage. The fix is a one-line model change in the workflow after verifying output quality is equivalent, plus updating ADR-005.
+
+### Batch 2 — Clear next major step
+
+#### Phase 4: Enhancement Triage (Context, Feasibility, Misclassification)
+
+**Status:** Ready to implement (after Batch 1)
+**Effort:** Medium-Large
+**Priority:** High
+
+The triage bot currently only fires on `bug`-labelled issues. Enhancement requests get no automated assistance. Phase 4 extends the bot to `enhancement`-labelled issues with three capabilities:
+
+1. **Context surfacing** — Link the request to existing roadmap items, ADRs, and research docs so the reporter immediately sees where the project stands.
+2. **Feasibility signal** — Flag when an enhancement has already been investigated and found infeasible (ADR rejection, Electron limitation, upstream dependency) so the maintainer doesn't re-investigate. Language: "We explored this area previously and documented our findings" with a link, never "rejected."
+3. **Misclassification detection** — Detect when something filed as an enhancement is actually a bug (e.g., "Feature request: make notifications work") or vice versa. Suggest a label correction, never auto-relabel.
+
+Requires building a `feature-index.json` mapping keywords/topics to roadmap entries, ADRs, and research docs. The existing `generate-index.js` pattern can be extended. Misclassification detection should use high-confidence Gemini matching (temperature 0.1-0.2) to avoid false positives.
+
+### Batch 3 — When Phase 4 is stable
+
+#### Phase 3.2: Pre-Research Prompt Generator
+
+**Status:** Ready to implement (after Phase 4)
 **Effort:** Medium
 **Priority:** Medium
 
-A new GitHub Action (or a standalone script) that generates a structured pre-research prompt for new issues. The idea is that when an issue comes in and the maintainer wants to investigate, they can trigger a workflow (manually or via label) that produces a detailed prompt. This prompt can then be fed to an AI assistant (Claude Code, Gemini, etc.) to do the initial codebase exploration, identify relevant files, check related issues, and propose an investigation plan.
-
-The generated prompt would include the issue title and body, relevant module paths from the module index, related issues from the issue index, applicable troubleshooting entries, and configuration options that might be involved. It would also include a clear disclaimer that the output is meant as a starting point and will be reviewed by the maintainer before any action is taken.
+A GitHub Action triggered by label (e.g., `needs-research`) that generates a structured investigation prompt for new issues. The prompt aggregates context from the issue body, module index, issue index, troubleshooting entries, configuration docs, and related ADRs. This builds on the feature index created for Phase 4. Output is a Markdown comment on the issue with collapsible sections — a starting point for investigation, not a decision.
 
 This fits the project's "validate first" principle: the prompt is generated automatically, but a human reviews both the prompt and the resulting analysis before anything is implemented.
-
-### Phase 4: Enhancement Context from Roadmap/Research/ADRs
-
-**Status:** Future
-**Effort:** Medium
-**Priority:** Low
-
-Extend the triage bot to surface relevant roadmap items, ADRs, and research docs when an issue touches a known area. For example, if someone files a feature request about screen sharing, the bot could note that ADR-008 (useSystemPicker) and ADR-016 (Wayland audit) are relevant context.
 
 ---
 
@@ -206,12 +231,18 @@ All three phases completed: logging hygiene, resilience improvements, input hand
 ### GitHub Issue Bot
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
-**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅ (duplicate detection shipped)
+**Review:** [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md)
+**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅ | Batch 1-3 planned
 **Priority:** Active (improving)
 
 Phase 1 delivered missing info detection. Phase 2 delivered AI-powered solution suggestions via Gemini. Phase 3 delivered duplicate detection against an issue index using Gemini 2.5 Flash. The bot was upgraded to Gemini 2.5 Flash in PR [#2213](https://github.com/IsmaelMartinez/teams-for-linux/pull/2213). The auto-remove awaiting feedback label workflow was added in PR [#2208](https://github.com/IsmaelMartinez/teams-for-linux/pull/2208).
 
-Next steps are the real-time index refresh (Phase 3.1), pre-research prompt generator (Phase 3.2), and enhancement context (Phase 4). See the "Bot Automation Improvements" section above for details.
+A full review of all AI automation systems was completed in March 2026. Next steps are organized in batches:
+- **Batch 1:** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
+- **Batch 2:** Enhancement triage — Phase 4 (context, feasibility, misclassification detection)
+- **Batch 3:** Pre-research prompt generator (Phase 3.2, depends on Phase 4 feature index)
+
+See the "Bot Automation Improvements" section above for details.
 
 ---
 
@@ -297,8 +328,9 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 1. **Stabilise screen sharing and Wayland** --- review and merge PRs [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219), [#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225), [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)
 2. **Merge bug fixes** --- [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) (custom CSS crash), [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) (CPU idle), remaining v2.7.8 carry-over PRs ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188))
 3. **Land cross-distro testing** --- merge PR [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) after addressing SonarQube hotspots
-4. **Bot automation** --- implement real-time issue index refresh (Phase 3.1) and pre-research prompt generator (Phase 3.2)
-5. **Release v2.7.9**
+4. **Bot automation Batch 1** --- changelog model consolidation (preventive, time-sensitive), real-time issue index refresh (Phase 3.1), bot accuracy feedback loop
+5. **Bot automation Batch 2** --- Phase 4 enhancement triage (context, feasibility, misclassification detection)
+6. **Release v2.7.9**
 
 ### v2.8.0 Release Plan (Deferred)
 
@@ -308,7 +340,7 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 
 ### Future Priorities
 
-- **Bot Phase 4** --- enhancement context from roadmap/research/ADRs
+- **Bot Phase 3.2** --- pre-research prompt generator (depends on Phase 4 feature index and accuracy data)
 - **Cross-distro testing CI** --- build Docker images in CI to catch Dockerfile regressions
 - **Automated smoke tests** --- verify app launches in the cross-distro environment (pre-auth only)
 
