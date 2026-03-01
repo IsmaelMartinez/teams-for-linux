@@ -20,7 +20,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | Quick Chat shortcut fix ([#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184)) | PR [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) still open | Small | v2.7.9 |
 | **Open** | Screen source selection simplification ([#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)) | PR open | Medium | v2.7.9 |
 | **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.9+ |
-| **Ready** | Bot automation (Batch 1) | Index refresh, accuracy feedback, changelog model fix | Small | v2.7.9 |
+| **Done** | Bot automation (Batch 1) | Index refresh, accuracy feedback, changelog model fix | Small | v2.7.9 |
 | **Ready** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.9+ |
 | **Deferred** | Electron 40 upgrade | Research complete, not urgent | Medium | v2.8.0+ |
 | **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
@@ -95,31 +95,30 @@ There are currently 13 open issues and 12 open PRs. The open issues cluster arou
 
 The issue triage bot has been running since v2.7.4 with three phases shipped (missing info detection, solution suggestions, duplicate detection). The issue index workflow runs weekly on Mondays. A full review of all AI automation systems was completed in March 2026 — see [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md) for the detailed proposal.
 
-### Batch 1 — Small, clear next steps (independent, any order)
+### Batch 1 — Implemented
+
+All three Batch 1 items have been implemented. See the [AI Automation Review](../research/ai-automation-review-and-enhancements.md) for details.
 
 #### Phase 3.1: Real-Time Issue Index Refresh
 
-**Status:** Ready to implement
+**Status:** Implemented
 **Effort:** Small
-**Priority:** High
 
-The current issue index is regenerated weekly via a scheduled workflow. This means if two users report the same bug within hours of each other, the duplicate detection has no knowledge of the first report when the second one arrives. The fix is to also trigger the `update-issue-index` workflow on the `issues: [opened, closed, reopened]` events so the index is refreshed every time an issue changes state. Alternatively, the triage bot itself can append the new issue to the index inline during its run (avoiding a race condition entirely).
+Added `issues: [opened, closed, reopened]` triggers to `update-issue-index.yml` with a concurrency group (`cancel-in-progress: true`) to prevent conflicts. The weekly full rebuild is kept as a safety net. The 7-day blind spot for duplicate detection is eliminated.
 
 #### Bot Accuracy Feedback Loop
 
-**Status:** Ready to implement
+**Status:** Implemented
 **Effort:** Small
-**Priority:** High
 
-There is no mechanism to track whether the triage bot's suggestions are helpful. Before expanding the bot's scope (Phase 4), we need to measure accuracy. Proposal: use GitHub reactions on bot comments (thumbs up/down) with a periodic script that tallies them, and/or track issue resolution time after bot comment. This establishes a baseline before expanding.
+New `tally-bot-feedback.js` script and `bot-accuracy-report.yml` workflow. Runs monthly (1st of month at 5:00 UTC) and tallies thumbs-up/down reactions on bot comments plus quick resolution rates (issues closed within 48h). Report is committed to `.github/issue-bot/accuracy-report.json`. This establishes the baseline needed before expanding to Batch 2 (Phase 4 enhancement triage).
 
 #### Changelog Model Consolidation
 
-**Status:** Ready to implement (preventive maintenance)
+**Status:** Implemented
 **Effort:** Tiny
-**Priority:** High (time-sensitive)
 
-The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model that could be deprecated at any time. The triage bot already moved to `gemini-2.5-flash` (stable) without issues. The ADR originally referenced `gemini-2.0-flash-thinking-exp-1219`, yet another experimental variant. This is a when-not-if breakage. The fix is a one-line model change in the workflow after verifying output quality is equivalent, plus updating ADR-005.
+Migrated `changelog-generator.yml` from `gemini-2.0-flash-exp` to `gemini-2.5-flash`. All AI automation systems now use the same stable model. ADR-005 updated with a new amendment documenting the rationale.
 
 ### Batch 2 — Clear next major step
 
@@ -232,13 +231,13 @@ All three phases completed: logging hygiene, resilience improvements, input hand
 
 **Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
 **Review:** [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md)
-**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅ | Batch 1-3 planned
+**Status:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Batch 1 ✅ | Batch 2-3 planned
 **Priority:** Active (improving)
 
 Phase 1 delivered missing info detection. Phase 2 delivered AI-powered solution suggestions via Gemini. Phase 3 delivered duplicate detection against an issue index using Gemini 2.5 Flash. The bot was upgraded to Gemini 2.5 Flash in PR [#2213](https://github.com/IsmaelMartinez/teams-for-linux/pull/2213). The auto-remove awaiting feedback label workflow was added in PR [#2208](https://github.com/IsmaelMartinez/teams-for-linux/pull/2208).
 
-A full review of all AI automation systems was completed in March 2026. Next steps are organized in batches:
-- **Batch 1:** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
+A full review of all AI automation systems was completed in March 2026. Batch 1 has been implemented:
+- **Batch 1 (Done):** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
 - **Batch 2:** Enhancement triage — Phase 4 (context, feasibility, misclassification detection)
 - **Batch 3:** Pre-research prompt generator (Phase 3.2, depends on Phase 4 feature index)
 
@@ -328,7 +327,7 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 1. **Stabilise screen sharing and Wayland** --- review and merge PRs [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219), [#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225), [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)
 2. **Merge bug fixes** --- [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) (custom CSS crash), [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) (CPU idle), remaining v2.7.8 carry-over PRs ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188))
 3. **Land cross-distro testing** --- merge PR [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) after addressing SonarQube hotspots
-4. **Bot automation Batch 1** --- changelog model consolidation (preventive, time-sensitive), real-time issue index refresh (Phase 3.1), bot accuracy feedback loop
+4. **Bot automation Batch 1** --- ✅ changelog model consolidation, real-time issue index refresh (Phase 3.1), bot accuracy feedback loop
 5. **Bot automation Batch 2** --- Phase 4 enhancement triage (context, feasibility, misclassification detection)
 6. **Release v2.7.9**
 

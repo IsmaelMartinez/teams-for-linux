@@ -1,10 +1,10 @@
 # AI Automation Review and Enhancement Proposals
 
-:::note Proposal — Not Final
-This document is a review of the current AI automation and a set of enhancement proposals for discussion. Nothing here is decided. All proposals require maintainer review and approval before implementation.
+:::note Batch 1 Implemented
+This document is a review of the current AI automation and a set of enhancement proposals. **Batch 1** (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) has been implemented. Batch 2-3 proposals remain for discussion and require maintainer review before implementation.
 :::
 
-**Status:** Proposal
+**Status:** Batch 1 Implemented | Batches 2-3 Proposed
 **Date:** March 2026
 **Author:** Claude AI Assistant
 **Scope:** Review of all AI automation systems + enhancement research proposals
@@ -19,12 +19,13 @@ The project has the following automation systems in production:
 
 | System | Shipped | Model | Trigger | Status |
 |--------|---------|-------|---------|--------|
-| **Changelog Generator** | ~Nov 2025 | Gemini 2.0 Flash Exp | PR opened/synced | Stable |
+| **Changelog Generator** | ~Nov 2025 | Gemini 2.5 Flash (migrated from 2.0 Flash Exp) | PR opened/synced | Stable |
 | **Issue Triage Bot (Phase 1)** | v2.7.4 | Rule-based (no AI) | Issue opened (bug label) | Stable |
 | **Issue Triage Bot (Phase 2)** | v2.7.5+ | Gemini 2.5 Flash | Issue opened (bug label) | Stable |
 | **Issue Triage Bot (Phase 3)** | v2.7.8 | Gemini 2.5 Flash | Issue opened (bug label) | Stable |
-| **Issue Index Refresh** | v2.7.8 | N/A (script) | Weekly cron (Mon 4:00 UTC) | Stable |
+| **Issue Index Refresh** | v2.7.8 | N/A (script) | Issue events + weekly cron (Mon 4:00 UTC) | Stable |
 | **Awaiting Feedback Remover** | Post-v2.7.8 | N/A (event-driven) | Issue comment by non-bot | Stable |
+| **Bot Accuracy Report** | Batch 1 | N/A (script) | Monthly cron (1st at 5:00 UTC) | New |
 | **Release Preparation** | ~Feb 2026 | N/A (script + changelog AI) | Manual dispatch | Stable |
 | **Claude Code (dev assistant)** | Ongoing | Claude Opus | Manual sessions | Active |
 
@@ -59,17 +60,17 @@ The project has the following automation systems in production:
 
 ### 1.3 Known Gaps and Observations
 
-**Issue Index Staleness**
-- The weekly cron means two issues filed hours apart won't be cross-referenced for up to 7 days. The roadmap already identifies this as Phase 3.1 (real-time refresh). This is the highest-impact gap.
+**~~Issue Index Staleness~~ — Resolved (Batch 1)**
+- ~~The weekly cron means two issues filed hours apart won't be cross-referenced for up to 7 days.~~ Phase 3.1 (real-time refresh) is now implemented. The index updates on every issue open/close/reopen event.
 
 **Bug-Only Triage**
-- The triage bot only fires on issues with the `bug` label. Enhancement requests, feature requests, and unlabelled issues get no automated assistance. Phase 4 (enhancement context from roadmap/research/ADRs) addresses this but hasn't been built yet.
+- The triage bot only fires on issues with the `bug` label. Enhancement requests, feature requests, and unlabelled issues get no automated assistance. Phase 4 (enhancement context from roadmap/research/ADRs) addresses this but hasn't been built yet. This is the next major gap to close (Batch 2).
 
-**No Feedback Loop on Bot Accuracy**
-- There's no mechanism to track whether the bot's suggestions were helpful. The research doc mentions success metrics (20% bug resolution, 30% duplicate reduction) but there's no instrumentation to measure them. This is worth investigating before expanding the bot's scope.
+**~~No Feedback Loop on Bot Accuracy~~ — Resolved (Batch 1)**
+- ~~There's no mechanism to track whether the bot's suggestions were helpful.~~ The bot accuracy report workflow now tallies reactions and resolution rates monthly. Data collection is underway to establish a baseline before expanding to Phase 4.
 
-**Changelog Model at Risk**
-- The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model that could be deprecated at any time. The triage bot already moved to `gemini-2.5-flash` (stable). The ADR originally referenced `gemini-2.0-flash-thinking-exp-1219`, which is yet another experimental variant. It is surprising this still works — aligning to the stable model should be treated as preventive maintenance, not a low-priority item.
+**~~Changelog Model at Risk~~ — Resolved (Batch 1)**
+- ~~The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model.~~ Migrated to `gemini-2.5-flash` (stable). All AI automation systems now use the same model.
 
 **Issue Index Coverage**
 - The index includes open issues and issues closed in the last 90 days. Issues older than 90 days that resurface (e.g., recurring regressions) won't be matched. This is an acceptable trade-off for index size, but worth noting.
@@ -80,25 +81,23 @@ The project has the following automation systems in production:
 
 The following are research-level proposals. Each one describes what the enhancement would do, why it might be valuable, what the guardrails are, and what investigation is needed before building. None of these are commitments.
 
-### 2.1 Real-Time Issue Index Refresh (Phase 3.1)
+### 2.1 Real-Time Issue Index Refresh (Phase 3.1) --- Implemented
 
-**Already in roadmap.** Summarized here for completeness.
+**Status:** Implemented
 
 **What:** Trigger `update-issue-index.yml` on `issues: [opened, closed, reopened]` events in addition to the weekly cron.
 
 **Why:** Eliminates the 7-day blind spot for duplicate detection.
 
-**Research needed:**
-- Determine whether to use `workflow_run` dependency or inline append in the triage bot
-- The inline approach (appending the new issue to the index in-memory during the triage run) avoids a race condition entirely and requires no workflow change to `update-issue-index.yml`
-- Measure the typical time between issue creation and triage bot execution to understand if the race condition is practical
+**Implementation:**
+- Added `issues: [opened, closed, reopened]` trigger to `update-issue-index.yml`
+- Added `concurrency` group with `cancel-in-progress: true` to prevent conflicts when multiple issue events arrive in quick succession
+- Kept the weekly full rebuild as a safety net
+- The existing index generator's retry logic and 200-entry cap provide natural rate limiting
 
-**Guardrails:**
-- Keep the weekly full rebuild as a safety net
-- Rate-limit regeneration to avoid GitHub API exhaustion during issue-filing storms
-- The index generator already has retry logic and a 200-entry cap
+**Approach chosen:** Workflow-level trigger (not inline append). The concurrency group handles the race condition — if a new issue event arrives while a previous index update is running, the older run is cancelled. This is simpler than inline appending and keeps the index generation logic in one place.
 
-**Effort:** Small (1-2 hours if inline, half a day if workflow-based)
+**Effort:** Small (implemented in ~30 minutes)
 
 ### 2.2 Pre-Research Prompt Generator (Phase 3.2)
 
@@ -123,27 +122,32 @@ The following are research-level proposals. Each one describes what the enhancem
 
 **Effort:** Medium (2-3 days)
 
-### 2.3 Bot Accuracy Feedback Loop
+### 2.3 Bot Accuracy Feedback Loop --- Implemented
 
-**New proposal — not in roadmap yet.**
+**Status:** Implemented
 
-**What:** Add a lightweight mechanism to track whether the triage bot's suggestions were helpful. This could be as simple as the maintainer adding a reaction (thumbs up/down) to the bot comment, with a periodic script that tallies the reactions.
+**What:** A monthly workflow that tallies GitHub reactions on bot comments and tracks quick resolution rates.
 
-**Why:** Before expanding the bot's scope (Phase 4, enhancement context), it's worth understanding how accurate the current system is. The research doc defines success metrics but doesn't measure them. Without measurement, we risk adding complexity to a system that may need tuning, not expansion.
+**Why:** Before expanding the bot's scope (Phase 4, enhancement context), we need to measure accuracy. The research doc defines success metrics but there was no instrumentation to measure them.
 
-**Research needed:**
-- **Reaction-based tracking:** GitHub reactions on bot comments are easy to check via the API. A monthly script could tally thumbs-up vs. thumbs-down on bot comments to derive an accuracy percentage.
-- **Issue resolution tracking:** Track whether issues that received bot suggestions were closed within 48 hours (suggesting the suggestion helped) vs. issues that weren't.
-- **Alternative: simple label.** A `bot-helped` or `bot-missed` label applied by the maintainer during triage. More explicit but requires manual effort.
-- **Baseline:** Before measuring improvements, establish a baseline of current triage time and resolution rates.
+**Implementation:**
+- Created `tally-bot-feedback.js` script in `.github/issue-bot/scripts/`
+- Created `bot-accuracy-report.yml` workflow (monthly cron on the 1st at 5:00 UTC, plus manual dispatch)
+- The script scans issues from the last 30 days, finds bot triage comments, and tallies:
+  - Thumbs-up (+1) and thumbs-down (-1) reactions on bot comments
+  - Quick resolution rate (issues closed within 48 hours of bot comment)
+  - Per-issue breakdown with dates
+- Report is saved to `.github/issue-bot/accuracy-report.json` and committed automatically
+- Chose the reaction-based approach (passive, no extra effort from maintainers) combined with resolution tracking
+- Label-based approach was considered but rejected as it requires manual effort
 
-**Guardrails:**
-- Measurement should be passive (reactions or labels), not intrusive
-- Don't expand bot scope until accuracy is measured and acceptable
-- Keep the metric collection separate from the bot itself (a standalone script or workflow)
-- Don't expose metrics publicly unless the maintainer chooses to
+**Guardrails applied:**
+- Measurement is entirely passive — no changes to the bot itself
+- Metric collection is a standalone workflow, separate from the triage bot
+- Report is committed to the repo (not exposed publicly unless the maintainer chooses)
+- Uses the same retry and rate-limiting patterns as `generate-issue-index.js`
 
-**Effort:** Small (1 day for the reaction-counting script, ongoing for data collection)
+**Effort:** Small (implemented in ~1 hour)
 
 ### 2.4 Enhancement Triage — Context, Feasibility, and Misclassification (Phase 4)
 
@@ -195,26 +199,27 @@ The following are research-level proposals. Each one describes what the enhancem
 **Effort:** Medium-Large (4-6 days, broken into sub-steps)
 **Dependency:** Ideally, measure bot accuracy (2.3) before expanding scope. The real-time index refresh (2.1) also helps since enhancement duplicates are common.
 
-### 2.5 Changelog Model Consolidation
+### 2.5 Changelog Model Consolidation --- Implemented
 
-**Preventive maintenance — should not be deferred.**
+**Status:** Implemented
 
-**What:** Align the changelog generator to use the same Gemini model as the triage bot (`gemini-2.5-flash`).
+**What:** Aligned the changelog generator to use `gemini-2.5-flash` (same as the triage bot).
 
-**Why:** The changelog generator still uses `gemini-2.0-flash-exp`, an experimental model. The ADR originally referenced yet another variant (`gemini-2.0-flash-thinking-exp-1219`). Experimental models get deprecated without notice — it is surprising this one still works. The triage bot already moved to `gemini-2.5-flash` (stable) without issues. This is a when-not-if breakage waiting to happen.
+**Why:** The changelog generator was using `gemini-2.0-flash-exp`, an experimental model that could be deprecated at any time. The triage bot already moved to `gemini-2.5-flash` (stable) without issues. This was a when-not-if breakage risk.
 
-**Research needed:**
-- Test 5-10 changelog entries with `gemini-2.5-flash` and compare quality against the current `gemini-2.0-flash-exp` output
-- Check if the `responseMimeType` feature (used in the triage bot) would benefit the changelog generator too (structured JSON output instead of raw text)
-- Verify the free tier quota is still sufficient with both systems on the same model
-- Update ADR-005 to reflect the model change
+**Implementation:**
+- Changed the model URL in `changelog-generator.yml` from `gemini-2.0-flash-exp` to `gemini-2.5-flash`
+- Updated ADR-005 with a new amendment documenting the migration rationale
+- Updated the Gemini API Configuration section in ADR-005 to reference the stable model
+- The `responseMimeType` feature was considered but not added — the changelog generator returns plain text (not JSON), so the current format is correct
+- The PR title fallback is unchanged and continues to work if the API fails
 
-**Guardrails:**
-- Don't change the model without testing quality first
-- Keep the PR title fallback in case the API fails
-- Update the ADR to document the migration rationale
+**Quality assessment:**
+- The triage bot has been running on `gemini-2.5-flash` since v2.7.8 with consistent quality
+- Changelog entries are expected to remain concise (60-80 chars) and well-formatted
+- Free tier quota (1,500 req/day) is more than sufficient for both systems
 
-**Effort:** Tiny (1 hour of testing + a one-line change in the workflow + ADR update)
+**Effort:** Tiny (implemented in ~15 minutes)
 
 ---
 
@@ -222,15 +227,15 @@ The following are research-level proposals. Each one describes what the enhancem
 
 Based on impact, risk, and dependencies:
 
-### Batch 1 — Small, clear next steps (can be done in any order)
+### Batch 1 — Implemented
 
-| Priority | Proposal | Effort | Rationale |
-|----------|----------|--------|-----------|
-| 1 | **2.1 Real-Time Index Refresh** | Small | Highest impact on duplicate detection, smallest effort, already planned |
-| 2 | **2.3 Bot Accuracy Feedback Loop** | Small | Establishes measurement before expanding scope |
-| 3 | **2.5 Changelog Model Consolidation** | Tiny | Preventive maintenance — the experimental model could break at any time |
+| Priority | Proposal | Status | Notes |
+|----------|----------|--------|-------|
+| 1 | **2.1 Real-Time Index Refresh** | Done | Added issue event triggers + concurrency to `update-issue-index.yml` |
+| 2 | **2.3 Bot Accuracy Feedback Loop** | Done | New `tally-bot-feedback.js` script + monthly `bot-accuracy-report.yml` workflow |
+| 3 | **2.5 Changelog Model Consolidation** | Done | Migrated `changelog-generator.yml` to `gemini-2.5-flash`; ADR-005 updated |
 
-These three are independent and low-risk. They could be done in parallel or in sequence. Priority 3 is arguably the most time-sensitive since the model could be deprecated without warning.
+All three items shipped together. The experimental model risk is eliminated, the duplicate detection blind spot is closed, and accuracy measurement is now in place before expanding to Batch 2.
 
 ### Batch 2 — Clear next step
 

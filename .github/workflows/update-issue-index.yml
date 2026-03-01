@@ -3,12 +3,27 @@ name: Update Issue Index
 # Regenerates the issue-index.json file used by the issue triage bot (Phase 3)
 # to detect potential duplicate issues. Fetches open issues and recently closed
 # issues from the GitHub API and produces a compact JSON index.
+#
+# Triggers:
+#   - Weekly full rebuild (Monday 4:00 UTC) as a safety net
+#   - Real-time on issue state changes (opened, closed, reopened) so the
+#     duplicate detector always has fresh data (Phase 3.1)
+#   - Manual dispatch for testing
+#
 # See: docs-site/docs/development/research/github-issue-bot-investigation.md
 
 on:
   schedule:
     - cron: '0 4 * * 1' # Weekly, Monday at 4:00 UTC
+  issues:
+    types: [opened, closed, reopened]
   workflow_dispatch: # Manual trigger for testing
+
+# Only one index update at a time — if a new issue event arrives while the
+# previous run is still going, cancel the older run to avoid conflicts.
+concurrency:
+  group: update-issue-index
+  cancel-in-progress: true
 
 # Restrict default permissions — each job declares only what it needs
 permissions: {}

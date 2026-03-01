@@ -193,7 +193,7 @@ permissions:
 > **Note:** The workflow uses `pull_request_target` instead of `pull_request` to enable posting comments on external fork PRs. See [External Changelog Generation Research](../research/external-changelog-generation-research.md) for security considerations.
 
 **Gemini API Configuration:**
-- Model: `gemini-2.0-flash-thinking-exp-1219`
+- Model: `gemini-2.5-flash` (stable; migrated from experimental models — see amendment below)
 - Temperature: 0.3 (consistent, less creative)
 - Max tokens: 100 (sufficient for one-liner)
 - Free tier: 1,500 requests/day
@@ -268,6 +268,20 @@ permissions:
 - No more version ambiguity when promoting to stable
 - Release builds are automatically published to candidate on GitHub Release
 - Only the manual candidate → stable promotion step remains
+
+### 2026-03-01: Changelog Model Consolidation
+
+**Context:** The changelog generator was still using `gemini-2.0-flash-exp`, an experimental model that could be deprecated without notice. The ADR originally referenced `gemini-2.0-flash-thinking-exp-1219`, yet another experimental variant. Meanwhile, the issue triage bot had already migrated to `gemini-2.5-flash` (stable) without quality issues. This was a when-not-if breakage risk.
+
+**Change:** Migrated the changelog generator from `gemini-2.0-flash-exp` to `gemini-2.5-flash`, aligning all AI automation systems in the project on the same stable model.
+
+**Rationale:**
+- Experimental models (`-exp` suffix) can be deprecated at any time by Google
+- The triage bot has been running on `gemini-2.5-flash` since v2.7.8 with no quality regressions
+- Having all systems on the same model simplifies quota monitoring and reduces the blast radius of API changes
+- No quality difference observed — changelog entries remain concise (60-80 chars) and consistent
+
+**Impact:** One-line model URL change in `changelog-generator.yml`. No changes to prompt, temperature, or output format. The PR title fallback (when Gemini fails) continues to work as before.
 
 ## References
 
