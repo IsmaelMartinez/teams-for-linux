@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -43,10 +44,14 @@ jobs:
       - name: Generate feature index
         run: node .github/issue-bot/scripts/generate-feature-index.js
 
-      - name: Commit and push if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/issue-bot/feature-index.json
-          git diff --staged --quiet || git commit -m "chore: update feature index for enhancement triage"
-          git push
+      - name: Create PR if index changed
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: 'chore: update feature index for enhancement triage'
+          title: 'chore: update feature index for enhancement triage'
+          body: |
+            Automated update of `.github/issue-bot/feature-index.json` for the
+            triage bot's enhancement context matching (Phase 4a).
+          branch: chore/update-feature-index
+          add-paths: .github/issue-bot/feature-index.json
+          delete-branch: true
