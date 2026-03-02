@@ -169,22 +169,17 @@ parse_group_options() {
     while [[ $# -gt 0 ]]; do
         local key="$1"
         case "$key" in
-            --appimage)
+            --appimage|--url)
                 local next="${2:-}"
                 if [[ -z "$next" || "$next" =~ ^-- ]]; then
                     echo "[!] Missing argument for $key" >&2
                     exit 1
                 fi
-                APPIMAGE_PATH="$next"
-                shift 2
-                ;;
-            --url)
-                local next="${2:-}"
-                if [[ -z "$next" || "$next" =~ ^-- ]]; then
-                    echo "[!] Missing argument for $key" >&2
-                    exit 1
+                if [[ "$key" == "--appimage" ]]; then
+                    APPIMAGE_PATH="$next"
+                else
+                    APP_URL="$next"
                 fi
-                APP_URL="$next"
                 shift 2
                 ;;
             --no-launch)
