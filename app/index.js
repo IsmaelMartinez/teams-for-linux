@@ -395,9 +395,9 @@ function initializeQuickChat() {
       quickChatManager.toggle();
     });
     if (registered) {
-      console.info('[QuickChat] Keyboard shortcut registered');
+      console.info('[QuickChat] Global keyboard shortcut registered (works even when app is not focused)');
     } else {
-      console.warn('[QuickChat] Failed to register keyboard shortcut');
+      console.info('[QuickChat] Global shortcut not available; keyboard shortcut works via application menu when app is focused');
     }
   }
 }
@@ -442,7 +442,9 @@ async function handleAppReady() {
 
     loadMenuToggleSettings();
 
-    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+    const customBackground = new CustomBackground(app, config);
+    customBackground.initialize();
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);

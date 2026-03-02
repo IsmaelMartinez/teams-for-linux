@@ -44,12 +44,10 @@ if [[ ! -f "${SRC_DIR}/package.json" ]]; then
 fi
 
 # In test mode, verify session exists
-if [[ "$MODE" == "test" ]]; then
-    if [[ ! -d "${SESSION_DIR}" ]] || [[ ! -f "${SESSION_DIR}/Cookies" && ! -d "${SESSION_DIR}/Partitions" ]]; then
-        echo "[!] No login session found in ${SESSION_DIR}."
-        echo "    Run with --login first to create a session, then re-run with --test."
-        exit 1
-    fi
+if [[ "$MODE" == "test" ]] && { [[ ! -d "${SESSION_DIR}" ]] || [[ ! -f "${SESSION_DIR}/Cookies" && ! -d "${SESSION_DIR}/Partitions" ]]; }; then
+    echo "[!] No login session found in ${SESSION_DIR}."
+    echo "    Run with --login first to create a session, then re-run with --test."
+    exit 1
 fi
 
 # Install dependencies from the mounted source into a writable location.
@@ -169,6 +167,10 @@ case "${DISPLAY_SERVER}" in
             sleep 0.5
         fi
         ;;
+    *)
+        echo "[!] Unknown display server: ${DISPLAY_SERVER}"
+        exit 1
+        ;;
 esac
 
 echo "[*] Display server ready."
@@ -213,6 +215,7 @@ if [[ "$MODE" == "login" ]]; then
         ls -la "${SESSION_DIR}/Partitions/teams-4-linux/" 2>/dev/null | head -5
         kill $DISPLAY_PID 2>/dev/null
         kill ${NOVNC_PID:-0} ${WAYVNC_PID:-0} 2>/dev/null
+        return 0
     }
     trap cleanup SIGTERM SIGINT
 

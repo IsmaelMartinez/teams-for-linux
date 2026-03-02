@@ -10,10 +10,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
-- **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.4.0
+- **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.6.0
   - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
-  - Includes ESLint 10 migration analysis and codebase audit
-  - **Status:** Research complete, targeted for v2.8.0
+  - ESLint 10 section already shipped in v2.7.8
+  - **Status:** Research complete, deferred to v2.8.0 (staying on Electron 39 for stability)
 
 - **[Notification Sound Overhaul Research](notification-sound-overhaul-research.md)** - Replace `node-sound`, consolidate notification config
   - Evaluates Web Audio, data URI, and system command approaches
@@ -22,13 +22,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Awaiting User Feedback
 
-- **[Screen Lock Media Privacy Investigation](screen-lock-media-privacy-investigation.md)** - Auto-disable camera/mic on screen lock ([Issue #2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106))
-  - MQTT commands (`disable-media`, `enable-media`) for user scripts
-  - **Status:** Implemented but no user traction; see closure PR [#2189](https://github.com/IsmaelMartinez/teams-for-linux/pull/2189)
-
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
   - **Phase 1 Shipped**: Infrastructure, LWT, and call state publishing
   - **Phase 2 Deferred**: WebRTC camera/mic monitoring awaiting user feedback
+  - **Screen sharing:** PRs [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) and [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) open for MQTT screen sharing status
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
@@ -37,26 +34,26 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Strategic Documentation
 
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
-  - **Phases 1-2 Shipped**: Information request bot and AI-powered solution suggester
-  - **Future phases**: Duplicate detection (embeddings), enhancement context (RAG)
+  - **Phases 1-3 Shipped**: Information request bot, AI-powered solution suggester, duplicate detection
+  - **Batch 1 Shipped**: Real-time index refresh, accuracy feedback loop, changelog model consolidation
+  - **Phase 4 planned**: Enhancement triage (context, feasibility, misclassification detection)
+
+- **[AI Automation Review and Enhancements](ai-automation-review-and-enhancements.md)** - Review of all AI automation systems and enhancement proposals
+  - Reviews changelog generator, issue triage bot (3 phases), issue index, Claude Code integration
+  - **Batch 1 Implemented**: Real-time index refresh, bot accuracy feedback loop, changelog model consolidation
+  - **Batch 2 Next**: Enhancement triage (Phase 4)
+  - **Batch 3 Future**: Pre-research prompt generator (Phase 3.2)
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3**: Nested structure migration happening incrementally
 
-### Shipped (Historical Reference)
+### Shipped (Retained for Reference)
 
-These documents are retained for historical context. The features they describe have been fully implemented and released.
-
-- **[Electron-Updater Auto-Update Research](electron-updater-auto-update-research.md)** - Shipped in v2.7.6
-- **[External Changelog Generation Research](external-changelog-generation-research.md)** - Shipped (Phases 1-2)
-- **[Custom Notification System Research](custom-notification-system-research.md)** - MVP shipped in v2.6.16; Phase 2 dropped
-
-### Archived / Not Feasible
-
-- **[Logout Indicator Investigation](logout-indicator-investigation.md)** - **ARCHIVED** — user not responding
-- **[External Browser Authentication Investigation](external-browser-authentication-investigation.md)** - **NOT FEASIBLE** — Teams manages auth internally
-- **[GNOME Search Provider Investigation](gnome-search-provider-investigation.md)** - **NOT RECOMMENDED** — latency too high for acceptable UX
+- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
+  - **MVP shipped** in v2.6.16: toast notifications with auto-dismiss and click-to-focus
+  - **Phase 2 dropped**: notifications worked on maintainer's machine but not for the requesting user
+  - Retained because future requests for custom notifications should reference the lessons learned here
 
 ### Implemented Features (Research Removed)
 
@@ -64,34 +61,25 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
-| Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates, workflow permissions, CODEOWNERS |
+| Electron-Updater Auto-Update | v2.7.6 | [ADR-011](../adr/011-appimage-update-info.md); research covered electron-updater integration |
+| External Changelog Generation | v2.7.x | [ADR-005](../adr/005-ai-powered-changelog-generation.md); fork detection + release automation shipped |
+| Screen Lock Media Privacy | --- | Closed ([#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)); no user interest; work preserved in branch |
+| Tray Icon Logout Indicator | --- | Archived ([#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987)); user not responding; work preserved in branch |
+| External Browser Authentication | --- | Not feasible; Teams manages OAuth internally ([#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)) |
+| GNOME Search Provider | --- | Not recommended; latency too high for acceptable UX ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075)) |
+| Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates |
 | Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
 | Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
 | PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
 | DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |
-| Architecture Modernization | — | Rejected (DDD too complex) — incremental refactoring adopted instead |
+| Architecture Modernization | --- | Rejected (DDD too complex) --- incremental refactoring adopted instead |
 | MQTT Commands | v2.6.x | Bidirectional MQTT support for toggle-mute, toggle-video, etc. |
 | Calendar Data Export | v2.6.x | MQTT `get-calendar` command |
-| useSystemPicker | — | Rejected — [ADR-008](../adr/008-usesystempicker-electron-38.md) |
+| useSystemPicker | --- | Rejected --- [ADR-008](../adr/008-usesystempicker-electron-38.md) |
 
 ## Purpose
 
-These documents capture:
-
-- **Strategic insights** that inform development decisions
-- **Comprehensive analysis** that might not fit in traditional documentation
-- **Research findings** that provide objective evaluation of project components
-- **Context and rationale** for major feature decisions
-- **Investigation results** for proposed features and technologies
-
-## Target Audience
-
-These research documents are intended for:
-
-- **Project maintainers** making strategic decisions
-- **Contributors** understanding the broader context of features
-- **Future developers** needing historical context
-- **Documentation** of the decision-making process for major features
+These documents capture strategic insights, comprehensive analysis, research findings, and context that inform development decisions and provide rationale for major features.
 
 ## Document Lifecycle
 
@@ -100,8 +88,8 @@ Research documents follow this lifecycle:
 1. **Active Research Phase**: Document findings, analysis, and recommendations
 2. **Decision Phase**: Use research to inform final decisions (implemented or rejected)
 3. **Archive Phase**: Move content to appropriate location after decision:
-   - **Implemented features**: Create ADR if significant, update feature docs
-   - **Rejected features**: Create/update ADR with concise decision record
+   - **Implemented features**: Create ADR if significant, update feature docs, delete research
+   - **Rejected features**: Create/update ADR with concise decision record, delete research
    - **Superseded research**: Close with reference to superseding document
 4. **History**: Git commit history preserves full investigation context
 

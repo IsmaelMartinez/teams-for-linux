@@ -17,7 +17,9 @@
 
 const { app, desktopCapturer, BrowserWindow } = require('electron');
 
-app.whenReady().then(async () => {
+(async () => {
+	await app.whenReady();
+
 	console.log('');
 	console.log('=============================================');
 	console.log('  Spike 2: desktopCapturer');
@@ -55,4 +57,4 @@ app.whenReady().then(async () => {
 	console.log('');
 	win.close();
 	app.quit();
-});
+})();

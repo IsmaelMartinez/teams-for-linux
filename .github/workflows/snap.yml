@@ -29,13 +29,13 @@ jobs:
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
 
       - name: Install and initialize LXD
-        uses: canonical/setup-lxd@62cd335190e2b612b427db9319ea6b59ab1691f8 # main
+        uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main
 
       - name: Check out Git repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install Node.js and NPM
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: 22
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-x64
           path: dist/*.snap
@@ -88,7 +88,7 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install Node.js and NPM
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: 22
 
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-armv7l
           path: dist/*.snap
@@ -138,13 +138,13 @@ jobs:
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
 
       - name: Install and initialize LXD
-        uses: canonical/setup-lxd@62cd335190e2b612b427db9319ea6b59ab1691f8 # main
+        uses: canonical/setup-lxd@d492474f6c8ceed1b716bb34c8f575a428871c70 # main
 
       - name: Check out Git repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install Node.js and NPM
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: 22
 
@@ -173,7 +173,7 @@ jobs:
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: teams-for-linux-snap-arm64
           path: dist/*.snap

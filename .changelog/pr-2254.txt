@@ -1,0 +1,1 @@
+chore(deps): bump actions/github-script from 7.0.1 to 8.0.0 (#2254)

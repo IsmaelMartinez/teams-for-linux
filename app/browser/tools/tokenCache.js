@@ -212,7 +212,7 @@ class TeamsTokenCache {
    */
   _initializeSecureStorage() {
     try {
-      this._useSecureStorage = safeStorage && safeStorage.isEncryptionAvailable();
+      this._useSecureStorage = safeStorage?.isEncryptionAvailable() ?? false;
       console.debug('[TOKEN_CACHE] Secure storage', this._useSecureStorage ? 'available' : 'not available');
       
     } catch (error) {

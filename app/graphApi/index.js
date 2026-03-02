@@ -26,7 +26,7 @@ class GraphApiClient {
 
   async acquireToken(forceRefresh = false) {
     try {
-      if (!this.mainWindow || !this.mainWindow.webContents) {
+      if (!this.mainWindow?.webContents) {
         logger.warn('[GRAPH_API] Main window not initialized');
         return { success: false, error: 'Main window not initialized' };
       }
@@ -62,7 +62,7 @@ class GraphApiClient {
         })()
       `);
 
-      if (result && result.success && result.token) {
+      if (result?.success && result?.token) {
         this.currentToken = result.token;
         this.tokenExpiry = result.expiry;
 
@@ -295,7 +295,7 @@ class GraphApiClient {
         return { success: false, error: 'Graph API is disabled' };
       }
 
-      if (!this.mainWindow || !this.mainWindow.webContents) {
+      if (!this.mainWindow?.webContents) {
         return { success: false, error: 'Main window not initialized' };
       }
 
@@ -353,7 +353,7 @@ class GraphApiClient {
 
       logger.info('[GRAPH_API] Found candidate chat IDs', { count: candidates?.length });
 
-      if (!candidates || candidates.length === 0) {
+      if (!candidates?.length) {
         return { success: false, error: 'No chat thread IDs found' };
       }
 

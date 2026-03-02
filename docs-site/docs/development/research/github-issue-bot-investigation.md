@@ -1,10 +1,10 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-:::info Phase 3 Shipped
-Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. All three phases produce a single consolidated comment per issue. Phase 4 (enhancement context) is planned for the future.
+:::info Phase 3 Shipped + Batch 1 Complete
+Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. All three phases produce a single consolidated comment per issue. **Batch 1** improvements shipped: real-time issue index refresh (Phase 3.1), bot accuracy feedback loop, and changelog model consolidation. Phase 4 (enhancement context) is planned next.
 :::
 
-**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Phase 4 planned
+**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Batch 1 ✅ | Phase 4 planned
 **Date:** February 2026
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant
@@ -627,8 +627,9 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ---
 
-**Document Status:** Phase 3 Complete
+**Document Status:** Batch 1 Complete
 **Phase 1:** Information Request Bot — shipped in v2.7.4
 **Phase 2:** Solution Suggester — AI-powered matching via Gemini, consolidated comment
-**Phase 3:** Duplicate Detector — Issue index + Gemini Flash matching, weekly cron regeneration
-**Next Review:** After Phase 3 deployment and testing on live issues
+**Phase 3:** Duplicate Detector — Issue index + Gemini Flash matching, real-time + weekly regeneration
+**Batch 1:** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
+**Next:** Batch 2 — Phase 4 enhancement triage (context, feasibility, misclassification)

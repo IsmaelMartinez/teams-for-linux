@@ -180,8 +180,8 @@ The project uses two Chromium feature flags in `app/startup/commandLine.js`:
 | Package | Current | Target | Breaking Changes |
 |---------|---------|--------|------------------|
 | Electron | 39.5.1 | 40.4.0 | See above |
-| ESLint | 9.39.2 | 10.x | See ESLint section below |
-| @eslint/js | 9.39.2 | 10.x | Tied to ESLint major |
+| ESLint | 9.39.2 | 10.x | Already shipped in v2.7.8 |
+| @eslint/js | 9.39.2 | 10.x | Already shipped in v2.7.8 |
 
 ### Minor/Patch Bumps (Low Risk)
 
@@ -191,7 +191,11 @@ The project uses two Chromium feature flags in `app/startup/commandLine.js`:
 
 ---
 
-## ESLint 10 Migration
+## ESLint 10 Migration --- Already Shipped
+
+:::tip Shipped in v2.7.8
+ESLint 10 was migrated independently ahead of Electron 40, as a separate PR in v2.7.8.
+:::
 
 ESLint 10.0.0 was released on 2026-02-06. Key changes:
 
@@ -267,12 +271,14 @@ Minor internal change. The `NO_COLOR` environment variable is now respected more
 - [ ] Verify Chromium feature flags (`WebRTCPipeWireCapturer`, `HardwareMediaKeyHandling`)
 - [ ] Check for TLS handshake errors with corporate infrastructure (OpenSSL 3.5)
 
-### ESLint 10 (Can Be Separate PR)
+### ESLint 10 --- Already Shipped (v2.7.8)
 
-- [ ] Update `eslint` and `@eslint/js` to 10.x
-- [ ] Update `globals` package if needed
-- [ ] Run `npm run lint` and fix any new violations
-- [ ] Verify `eslint.config.mjs` works without modification
+ESLint 10 was migrated independently in v2.7.8 (shipped 2026-02-21). No issues encountered. The flat config (`eslint.config.mjs`) required no changes.
+
+- [x] Update `eslint` and `@eslint/js` to 10.x
+- [x] Update `globals` package if needed
+- [x] Run `npm run lint` and fix any new violations
+- [x] Verify `eslint.config.mjs` works without modification
 
 ### Routine Dependency Updates (Can Be Separate PR)
 

@@ -1,1 +1,0 @@
-fix: restore CSS selectors and add diagnostic logging for MQTT status - by @IsmaelMartinez (#2197)

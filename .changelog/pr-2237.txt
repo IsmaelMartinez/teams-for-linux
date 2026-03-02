@@ -1,1 +1,0 @@
-Refactor artifact commenting to use workflow_run event - by @IsmaelMartinez (#2237)

@@ -14,6 +14,29 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.9" date="2026-02-27">
+      <description>
+        <ul>
+          <li>Improve Quick Chat keyboard shortcut messaging and menu integration - by @IsmaelMartinez (#2188)</li>
+          <li>fix: restore CSS selectors and add diagnostic logging for MQTT status - by @IsmaelMartinez (#2197)</li>
+          <li>Fix screen sharing detection for non-English locales - by @IsmaelMartinez (#2210)</li>
+          <li>Improve CI workflow triggers and PR artifact detection - by @IsmaelMartinez (#2212)</li>
+          <li>Upgrade Issue Triage Bot to use Gemini 2.5 Flash model - by @IsmaelMartinez (#2213)</li>
+          <li>Replace node-sound with Web Audio API for notifications - by @IsmaelMartinez (#2214)</li>
+          <li>fix: screen sharing regression on Wayland/XWayland - by @bkohler (#2219)</li>
+          <li>chore(deps): bump @easyops-cn/docusaurus-search-local from 0.24.1 to 0.55.0 in /docs-site in the minor-and-patch group (#2224)</li>
+          <li>Add cross-distro testing environment for Teams for Linux - by @IsmaelMartinez (#2226)</li>
+          <li>docs: update roadmap for v2.7.9 planning - by @IsmaelMartinez (#2227)</li>
+          <li>Add XWayland optimizations configuration option - by @IsmaelMartinez (#2229)</li>
+          <li>Clarify Microsoft Teams web app references in issue triage - by @IsmaelMartinez (#2232)</li>
+          <li>Simplify Gemini API JSON parsing with responseMimeType - by @IsmaelMartinez (#2233)</li>
+          <li>Refactor artifact commenting to use workflow_run event - by @IsmaelMartinez (#2237)</li>
+          <li>chore(deps-dev): bump minimatch from 3.1.2 to 3.1.5 (#2240)</li>
+          <li>chore(deps): bump minimatch from 10.2.2 to 10.2.4 in /docs-site (#2241)</li>
+          <li>Improve Intune authentication user validation logic - by @IsmaelMartinez (#2242)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.8" date="2026-02-21">
       <description>
         <ul>

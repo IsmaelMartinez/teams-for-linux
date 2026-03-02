@@ -141,7 +141,6 @@ globalThis.electronAPI = {
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
 // Config is fetched asynchronously but notification function references it via closure
 let notificationConfig = null;
-// Use promise chain instead of async IIFE for SonarQube compatibility
 ipcRenderer.invoke("get-config").then((config) => {
   notificationConfig = config;
   console.debug("Preload: Config loaded for notifications:", {
@@ -373,10 +372,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 try {
   globalThis.addEventListener("unhandledrejection", (event) => {
     try {
-      const reason = event && event.reason;
+      const reason = event?.reason;
       const errorData = {
-        message: reason && reason.message ? String(reason.message).substring(0, 1000) : String(reason).substring(0, 1000),
-        stack: reason && reason.stack ? String(reason.stack).substring(0, 5000) : null,
+        message: reason?.message ? String(reason.message).substring(0, 1000) : String(reason).substring(0, 1000),
+        stack: reason?.stack ? String(reason.stack).substring(0, 5000) : null,
         timestamp: Date.now(),
         // Keep the raw reason only when it's a plain object to avoid huge payloads
         reason: typeof reason === "object" && reason !== null ? reason : null,
@@ -392,12 +391,12 @@ try {
   globalThis.addEventListener("error", (event) => {
     try {
       const errorData = {
-        message: event && event.message ? String(event.message).substring(0, 1000) : '',
-        filename: event && event.filename ? String(event.filename).substring(0, 200) : '',
-        lineno: event && typeof event.lineno === 'number' ? event.lineno : 0,
-        colno: event && typeof event.colno === 'number' ? event.colno : 0,
+        message: event?.message ? String(event.message).substring(0, 1000) : '',
+        filename: event?.filename ? String(event.filename).substring(0, 200) : '',
+        lineno: typeof event?.lineno === 'number' ? event.lineno : 0,
+        colno: typeof event?.colno === 'number' ? event.colno : 0,
         timestamp: Date.now(),
-        errorStack: event && event.error && event.error.stack ? String(event.error.stack).substring(0, 5000) : null,
+        errorStack: event?.error?.stack ? String(event.error.stack).substring(0, 5000) : null,
       };
       
       ipcRenderer.send("window-error", errorData);

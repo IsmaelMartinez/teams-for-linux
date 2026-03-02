@@ -30,7 +30,7 @@ echo "  Spike 1: Session Reuse"
 echo "============================================="
 echo ""
 
-if [ -f "$SESSION_DIR/Cookies" ] || [ -d "$SESSION_DIR/Partitions" ]; then
+if [[ -f "$SESSION_DIR/Cookies" ]] || [[ -d "$SESSION_DIR/Partitions" ]]; then
     echo "  Session directory has existing data."
     echo "  If the app loads without asking you to log in, session reuse WORKS."
 else

@@ -64,11 +64,11 @@ async function waitForTeamsWindow(electronApp) {
   const isDocker = process.env.DOCKER_TEST === 'true';
   await electronApp.firstWindow({ timeout: isDocker ? 60000 : 30000 });
 
-  const teamsHostnames = [
+  const teamsHostnames = new Set([
     'teams.cloud.microsoft',
     'teams.microsoft.com',
     'teams.live.com',
-  ];
+  ]);
 
   // Poll for the Teams window instead of a fixed delay. The app may create
   // multiple windows (toast, login redirect) before the main Teams window
@@ -80,7 +80,7 @@ async function waitForTeamsWindow(electronApp) {
     const mainWindow = windows.find(w => {
       try {
         const hostname = new URL(w.url()).hostname;
-        return teamsHostnames.includes(hostname);
+        return teamsHostnames.has(hostname);
       } catch {
         return false;
       }
