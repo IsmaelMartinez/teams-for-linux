@@ -266,7 +266,9 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
-              const suggestions = JSON.parse(rawText);
+              // Extract JSON array from response, stripping any prose wrapping
+              const arrayMatch = rawText.match(/\[[\s\S]*\]/);
+              const suggestions = JSON.parse(arrayMatch ? arrayMatch[0] : '[]');
 
               // Validate structure and bounds
               const validated = suggestions
@@ -404,7 +406,9 @@ jobs:
               const data = await response.json();
               const rawText =
                 data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
-              const duplicates = JSON.parse(rawText);
+              // Extract JSON array from response, stripping any prose wrapping
+              const arrayMatch = rawText.match(/\[[\s\S]*\]/);
+              const duplicates = JSON.parse(arrayMatch ? arrayMatch[0] : '[]');
 
               // Validate structure and bounds
               const issueNumbers = new Set(candidates.map((i) => i.number));
@@ -543,7 +547,9 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
-              const matches = JSON.parse(rawText);
+              // Extract JSON array from response, stripping any prose wrapping
+              const arrayMatch = rawText.match(/\[[\s\S]*\]/);
+              const matches = JSON.parse(arrayMatch ? arrayMatch[0] : '[]');
 
               // Validate structure and bounds
               const validated = matches
@@ -646,7 +652,9 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
-              const result = JSON.parse(rawText);
+              // Extract JSON object from response, stripping any prose wrapping
+              const objMatch = rawText.match(/\{[\s\S]*\}/);
+              const result = JSON.parse(objMatch ? objMatch[0] : '{}');
 
               // Validate structure
               const validClasses = ['bug', 'enhancement', 'question'];
