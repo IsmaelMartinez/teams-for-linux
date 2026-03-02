@@ -266,6 +266,7 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
+              console.log(`Phase 2 raw response (first 500 chars): ${rawText.substring(0, 500)}`);
               // Extract JSON array from response, stripping any prose wrapping
               const arrayMatch = rawText.match(/\[[\s\S]*\]/);
               const suggestions = JSON.parse(arrayMatch ? arrayMatch[0] : '[]');
@@ -547,6 +548,7 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[]';
+              console.log(`Phase 4a raw response (first 500 chars): ${rawText.substring(0, 500)}`);
               // Extract JSON array from response, stripping any prose wrapping
               const arrayMatch = rawText.match(/\[[\s\S]*\]/);
               const matches = JSON.parse(arrayMatch ? arrayMatch[0] : '[]');
@@ -652,9 +654,11 @@ jobs:
 
               const data = await response.json();
               const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
+              console.log(`Phase 4b raw response (first 500 chars): ${rawText.substring(0, 500)}`);
               // Extract JSON object from response, stripping any prose wrapping
               const objMatch = rawText.match(/\{[\s\S]*\}/);
               const result = JSON.parse(objMatch ? objMatch[0] : '{}');
+              console.log(`Phase 4b parsed: classification=${result.classification}, confidence=${result.confidence}, reason=${typeof result.reason}`);
 
               // Validate structure
               const validClasses = ['bug', 'enhancement', 'question'];
@@ -663,7 +667,7 @@ jobs:
                 typeof result.confidence !== 'number' ||
                 typeof result.reason !== 'string'
               ) {
-                console.log('Invalid classification result, skipping');
+                console.log(`Invalid classification result — classification: ${JSON.stringify(result.classification)}, confidence: ${JSON.stringify(result.confidence)}, reason type: ${typeof result.reason}`);
                 core.setOutput('misclassification_json', '{}');
                 return;
               }
