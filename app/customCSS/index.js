@@ -60,7 +60,7 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 				const style = document.createElement('style');
 				style.id = "${customCssId}";
 				style.type = "text/css";
-				style.innerHTML = \u0060${data}\u0060;
+				style.textContent = \u0060${data}\u0060;
 				document.head.appendChild(style);
 			}
 		`);
