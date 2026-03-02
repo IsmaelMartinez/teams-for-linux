@@ -290,7 +290,7 @@ jobs:
               core.setOutput('suggestions_json', JSON.stringify(validated));
               console.log(`Phase 2: ${validated.length} matching documentation sections`);
             } catch (error) {
-              console.log('Gemini API unavailable, posting without suggestions');
+              console.log(`Gemini API unavailable (Phase 2): ${error.message}`);
               core.setOutput('suggestions_json', '[]');
             }
 
@@ -440,7 +440,7 @@ jobs:
               );
             } catch (error) {
               console.log(
-                'Gemini API unavailable, posting without duplicate suggestions'
+                `Gemini API unavailable (Phase 3): ${error.message}`
               );
               core.setOutput('duplicates_json', '[]');
             }
@@ -569,7 +569,7 @@ jobs:
               core.setOutput('context_json', JSON.stringify(validated));
               console.log(`Phase 4a: ${validated.length} matching features/ADRs/research docs`);
             } catch (error) {
-              console.log('Gemini API unavailable, posting without enhancement context');
+              console.log(`Gemini API unavailable (Phase 4a): ${error.message}`);
               core.setOutput('context_json', '[]');
             }
 
@@ -677,7 +677,7 @@ jobs:
                 console.log(`Phase 4b: No misclassification (classified as ${result.classification}, confidence ${result.confidence}%)`);
               }
             } catch (error) {
-              console.log('Gemini API unavailable, posting without misclassification check');
+              console.log(`Gemini API unavailable (Phase 4b): ${error.message}`);
               core.setOutput('misclassification_json', '{}');
             }
 
