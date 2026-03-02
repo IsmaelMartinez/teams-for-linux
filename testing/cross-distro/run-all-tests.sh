@@ -13,6 +13,7 @@ cd "$SCRIPT_DIR"
 DISTROS="ubuntu fedora debian"
 DISPLAY_SERVERS="x11 wayland xwayland"
 CLEANUP=false
+readonly SEPARATOR="============================================="
 
 if [[ "${1:-}" == "--cleanup" ]]; then
     CLEANUP=true
@@ -26,11 +27,11 @@ if [[ ! -d "./session" ]] || [[ ! -d "./session/Partitions" ]]; then
 fi
 
 echo ""
-echo "============================================="
+echo "$SEPARATOR"
 echo "  Running All Authenticated Tests"
 echo "  Configurations: $(echo $DISTROS | wc -w | tr -d ' ') distros x $(echo $DISPLAY_SERVERS | wc -w | tr -d ' ') display servers"
 echo "  Cleanup after:  ${CLEANUP}"
-echo "============================================="
+echo "$SEPARATOR"
 echo ""
 
 PASSED=0
@@ -43,9 +44,9 @@ for distro in $DISTROS; do
         TOTAL=$((TOTAL + 1))
         SERVICE="${distro}-${ds}"
         echo ""
-        echo "========================================"
+        echo "$SEPARATOR"
         echo "  [$TOTAL/9] ${SERVICE}"
-        echo "========================================"
+        echo "$SEPARATOR"
 
         if ./run.sh "$distro" "$ds" --test 2>&1; then
             PASSED=$((PASSED + 1))
@@ -59,9 +60,9 @@ for distro in $DISTROS; do
 done
 
 echo ""
-echo "============================================="
+echo "$SEPARATOR"
 echo "  Results: ${PASSED} passed, ${FAILED} failed (out of ${TOTAL})"
-echo "============================================="
+echo "$SEPARATOR"
 
 if [[ -n "$ERRORS" ]]; then
     echo ""
