@@ -49,6 +49,10 @@ fi
 ELECTRON_FLAGS="--no-sandbox --disable-gpu --disable-gpu-compositing --disable-dev-shm-usage"
 ELECTRON_FLAGS="${ELECTRON_FLAGS} --disable-features=SpareRendererForSitePerProcess,BackForwardCache"
 ELECTRON_FLAGS="${ELECTRON_FLAGS} --renderer-process-limit=1 --js-flags=--max-old-space-size=4096"
+# Use plaintext cookie storage so sessions persist across different D-Bus sessions.
+# Without this, Chromium encrypts cookies via the system keyring (gnome-keyring/kwallet)
+# which differs between the manual-login and automated-test D-Bus sessions.
+ELECTRON_FLAGS="${ELECTRON_FLAGS} --password-store=basic"
 
 # Force software rendering via Mesa (no hardware GPU in container)
 export LIBGL_ALWAYS_SOFTWARE=1
@@ -92,11 +96,36 @@ elif [[ -f /app/teams-for-linux ]]; then
     chmod +x /app/teams-for-linux 2>/dev/null || true
     APP_CMD="/app/teams-for-linux ${ELECTRON_FLAGS}"
 elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
-    APP_CMD="npm start --prefix /src -- ${ELECTRON_FLAGS}"
+    # /src is mounted read-only and its node_modules are from the host platform.
+    # Running npm start would fail with EROFS trying to reconcile them.
+    echo "[!] No app binary found. /src is available but cannot run from source"
+    echo "    in Docker (read-only mount, host-platform node_modules)."
+    echo ""
+    echo "    Provide an app binary using one of these methods:"
+    echo "      --latest              Download the latest GitHub release automatically"
+    echo "      --url <release-url>   Download an AppImage from a specific URL"
+    echo "      --appimage <path>     Copy a local AppImage into the container"
+    echo "      Place a .deb or .rpm in testing/cross-distro/app/"
+    echo ""
+    echo "    Example:"
+    echo "      ./run.sh ubuntu x11 --latest"
+    APP_CMD=""
 fi
 
 export APP_CMD
 export AUTO_LAUNCH="${AUTO_LAUNCH:-true}"
+
+# Login mode: install workspace Electron, start noVNC, launch app for login
+if [[ "${RUN_LOGIN:-false}" == "true" ]]; then
+    echo "[*] Login mode: launching app with test Electron for session creation..."
+    exec /usr/local/bin/run-tests.sh
+fi
+
+# Test mode: start display server and run Playwright tests instead of the app
+if [[ "${RUN_TESTS:-false}" == "true" ]]; then
+    echo "[*] Test mode: running Playwright tests..."
+    exec /usr/local/bin/run-tests.sh
+fi
 
 case "${DISPLAY_SERVER}" in
     x11)

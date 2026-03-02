@@ -54,10 +54,11 @@ class BrowserWindowManager {
 
     windowState.manage(this.window);
 
-    this.window.eval = globalThis.eval = function () {
-      // eslint-disable-line no-eval
-      throw new Error("Sorry, this app does not support window.eval().");
-    };
+    if (process.env.E2E_TESTING !== 'true') {
+      this.window.eval = globalThis.eval = function () { // eslint-disable-line no-eval
+        throw new Error("Sorry, this app does not support window.eval().");
+      };
+    }
 
     this.incomingCallToast = new IncomingCallToast((action) => {
       this.window.webContents.send("incoming-call-action", action);

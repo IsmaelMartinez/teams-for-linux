@@ -287,4 +287,4 @@ To be explicit about boundaries:
 - [GitHub Issue Bot Research](github-issue-bot-investigation.md) — Original research and implementation plan
 - [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md) — Changelog system decisions
 - [Development Roadmap](../plan/roadmap.md) — Current priorities and feature status
-- [External Changelog Generation Research](external-changelog-generation-research.md) — Fork PR handling
+- [ADR-005: AI-Powered Changelog Generation](../adr/005-ai-powered-changelog-generation.md) — Changelog system and fork PR handling

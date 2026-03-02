@@ -190,7 +190,7 @@ permissions:
   pull-requests: write
 ```
 
-> **Note:** The workflow uses `pull_request_target` instead of `pull_request` to enable posting comments on external fork PRs. See [External Changelog Generation Research](../research/external-changelog-generation-research.md) for security considerations.
+> **Note:** The workflow uses `pull_request_target` instead of `pull_request` to enable posting comments on external fork PRs. This ensures the `GITHUB_TOKEN` has write permissions and access to repository secrets. The workflow only uses PR metadata for Gemini API calls and never checks out or executes code from external forks.
 
 **Gemini API Configuration:**
 - Model: `gemini-2.5-flash` (stable; migrated from experimental models — see amendment below)

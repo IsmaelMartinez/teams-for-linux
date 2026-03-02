@@ -13,16 +13,21 @@ x-common: &common
   shm_size: "4gb"
   # seccomp=unconfined is required for Sway/wlroots headless backend to
   # function inside Docker. SYS_PTRACE is needed for Electron's sandbox
-  # and crash reporter. These weaken container isolation, so ports are
-  # bound to localhost only (see below).
+  # and crash reporter. SYS_ADMIN and SYS_NICE are needed for Sway on
+  # Fedora 41+ (wlroots process management). These weaken container
+  # isolation, so ports are bound to localhost only (see below).
   security_opt:
     - seccomp=unconfined
   cap_add:
     - SYS_PTRACE
+    - SYS_ADMIN
+    - SYS_NICE
   volumes:
     - ./app:/app:ro
     # Persist login session and app config across container restarts
     - ./session:/home/tester/.config/teams-for-linux
+    # Mount project source for running Playwright tests inside the container
+    - ../../:/src:ro
   environment: &common-env
     SCREEN_RESOLUTION: "1920x1080x24"
     # Software rendering -- no physical GPU in containers
@@ -39,6 +44,7 @@ x-common: &common
 services:
   ubuntu-x11:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -51,6 +57,7 @@ services:
 
   ubuntu-wayland:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -63,6 +70,7 @@ services:
 
   ubuntu-xwayland:
     <<: *common
+    image: cross-distro-ubuntu
     build:
       context: .
       dockerfile: dockerfiles/ubuntu.Dockerfile
@@ -78,6 +86,7 @@ services:
   # ============================================================
   fedora-x11:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -90,6 +99,7 @@ services:
 
   fedora-wayland:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -102,6 +112,7 @@ services:
 
   fedora-xwayland:
     <<: *common
+    image: cross-distro-fedora
     build:
       context: .
       dockerfile: dockerfiles/fedora.Dockerfile
@@ -117,6 +128,7 @@ services:
   # ============================================================
   debian-x11:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile
@@ -129,6 +141,7 @@ services:
 
   debian-wayland:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile
@@ -141,6 +154,7 @@ services:
 
   debian-xwayland:
     <<: *common
+    image: cross-distro-debian
     build:
       context: .
       dockerfile: dockerfiles/debian.Dockerfile

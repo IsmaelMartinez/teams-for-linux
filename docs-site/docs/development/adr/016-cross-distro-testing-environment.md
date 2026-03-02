@@ -6,7 +6,7 @@ id: 016-cross-distro-testing-environment
 
 ## Status
 
-Accepted
+✅ Implemented (v2.7.9)
 
 ## Context
 
