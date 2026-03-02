@@ -1,0 +1,1 @@
+fix: add error details to triage bot Gemini API catch blocks - by @IsmaelMartinez (#2270)
