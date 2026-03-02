@@ -10,7 +10,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 async function launchAuthenticatedApp(sessionDir) {
   const args = [path.join(PROJECT_ROOT, 'app/index.js')];
 
-  if (process.env.CI) {
+  if (process.env.CI && process.env.DOCKER_TEST !== 'true') {
     args.push('--no-sandbox');
   }
 
@@ -38,7 +38,7 @@ async function launchAuthenticatedApp(sessionDir) {
   const launchEnv = {
     ...process.env,
     E2E_USER_DATA_DIR: sessionDir,
-    NODE_ENV: 'development',
+    E2E_TESTING: 'true',
   };
 
   // Software rendering in Docker (no GPU)

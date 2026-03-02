@@ -28,11 +28,7 @@ echo "  Display Server: ${DISPLAY_SERVER}"
 echo "  Session dir:    ${SESSION_DIR}"
 echo "============================================="
 
-# Start D-Bus session bus (Electron needs it for IPC)
-if command -v dbus-launch &>/dev/null; then
-    eval "$(dbus-launch --sh-syntax)"
-    export DBUS_SESSION_BUS_ADDRESS
-fi
+# D-Bus session bus is inherited from entrypoint.sh (via exec).
 
 # Tell helpers.js we're inside Docker
 export DOCKER_TEST=true
@@ -201,12 +197,15 @@ if [[ "$MODE" == "login" ]]; then
     echo ""
 
     APP_LOG="/tmp/app.log"
-    E2E_USER_DATA_DIR="${SESSION_DIR}" NODE_ENV=development \
+    USER_STOPPED=false
+
+    E2E_USER_DATA_DIR="${SESSION_DIR}" E2E_TESTING=true \
         $ELECTRON_BIN $WORK_DIR/app/index.js $ELECTRON_FLAGS > "$APP_LOG" 2>&1 &
     APP_PID=$!
 
     cleanup() {
         echo ""
+        USER_STOPPED=true
         echo "[*] Stopping app (saving session)..."
         kill $APP_PID 2>/dev/null
         sleep 3
@@ -219,7 +218,18 @@ if [[ "$MODE" == "login" ]]; then
     }
     trap cleanup SIGTERM SIGINT
 
-    wait $APP_PID 2>/dev/null || true
+    wait $APP_PID 2>/dev/null
+    APP_EXIT=$?
+
+    if [[ "$USER_STOPPED" == false ]]; then
+        echo ""
+        echo "[!] App exited unexpectedly (exit code: ${APP_EXIT})."
+        echo "    The session may not be valid. Check ${APP_LOG} for details."
+        kill $DISPLAY_PID 2>/dev/null
+        kill ${NOVNC_PID:-0} ${WAYVNC_PID:-0} 2>/dev/null
+        exit 1
+    fi
+
     cleanup
     exit 0
 fi

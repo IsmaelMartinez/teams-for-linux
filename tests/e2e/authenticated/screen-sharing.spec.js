@@ -22,7 +22,7 @@ test.describe('Screen sharing', () => {
     const mainWindow = await waitForTeamsWindow(electronApp);
     expect(mainWindow).toBeTruthy();
 
-    // With NODE_ENV=development, the eval override is skipped so
+    // With E2E_TESTING=true, the eval override is skipped so
     // electronApp.evaluate() works in the main process context.
     const sources = await electronApp.evaluate(async ({ desktopCapturer }) => {
       const results = await desktopCapturer.getSources({

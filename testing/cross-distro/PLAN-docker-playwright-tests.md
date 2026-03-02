@@ -58,7 +58,7 @@ a summary of pass/fail results.
 
 The session MUST be created by the same Electron binary that runs the tests.
 `--password-store=basic` is required so cookies are not tied to a specific D-Bus
-session. `NODE_ENV=development` is needed to bypass the code-evaluation override
+session. `E2E_TESTING=true` is needed to bypass the code-evaluation override
 in browserWindowManager.js. Teams never reaches `networkidle` due to constant
 WebSocket activity, so all tests use `domcontentloaded`. The `desktopCapturer`
 test is skipped on pure Wayland because it needs an X11 display.
