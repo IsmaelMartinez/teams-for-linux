@@ -15,7 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const DOCS_ROOT = path.join(REPO_ROOT, 'docs-site', 'docs');
@@ -44,8 +44,8 @@ function stripBasicMarkdown(str) {
  */
 function getLastUpdated(filePath) {
 	try {
-		const result = execSync(
-			'git log -1 --format=%aI -- ' + JSON.stringify(filePath),
+		const result = execFileSync(
+			'git', ['log', '-1', '--format=%aI', '--', filePath],
 			{ cwd: REPO_ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
 		).trim();
 		if (result) return result.substring(0, 10);
