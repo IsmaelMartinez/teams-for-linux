@@ -21,7 +21,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | App menu without tray ([#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195)) | PR open, carry-over from v2.7.8 | Small | v2.7.10 |
 | **Open** | MQTT null sourceId fix ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193)) | PR open, carry-over from v2.7.8 | Tiny | v2.7.10 |
 | **Open** | MQTT screen sharing feature ([#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144)) | PR open | Small | v2.7.10+ |
-| **Ready** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.10+ |
+| **Done** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.10+ |
 | **Deferred** | Electron 40 upgrade ([#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223)) | [Research complete](../research/electron-40-migration-research.md), staying on Electron 39 for stability | Medium | v2.8.0 |
 | **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
@@ -89,17 +89,17 @@ The goal for v2.7.10 is stability. Stay on Electron 39, merge accumulated bug fi
 
 The issue triage bot has been running since v2.7.4 with three phases shipped (missing info detection, solution suggestions, duplicate detection). The issue index workflow runs on issue events and weekly as a safety net. A full review of all AI automation systems was completed in March 2026 --- see [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md) for the detailed proposal. Batch 1 was implemented in v2.7.9.
 
-### Batch 2 --- Next Major Step
+### Batch 2 --- Implemented
 
 #### Phase 4: Enhancement Triage (Context, Feasibility, Misclassification)
 
-**Status:** Ready to implement
+**Status:** Implemented
 **Effort:** Medium-Large
-**Priority:** High
+**Priority:** Done
 
-The triage bot currently only fires on `bug`-labelled issues. Enhancement requests get no automated assistance. Phase 4 extends the bot to `enhancement`-labelled issues with three capabilities: context surfacing (linking requests to roadmap items, ADRs, and research docs), feasibility signals (flagging when an enhancement has been investigated and found infeasible), and misclassification detection (detecting when something filed as an enhancement is actually a bug or vice versa, suggesting a label correction without auto-relabelling).
+The triage bot now fires on both `bug` and `enhancement`-labelled issues. Enhancement requests receive automated context from the project's roadmap, ADRs, and research documents. Three new capabilities were added: context surfacing (linking requests to existing roadmap items, ADRs, and research docs via a pre-processed `feature-index.json` matched via Gemini 2.5 Flash), feasibility signals (flagging when an enhancement has been investigated and found infeasible, using humble language with a link to the relevant doc), and misclassification detection (classifying issues with Gemini 2.5 Flash at temperature 0.15 and suggesting a label correction only when confidence >= 80%, never auto-relabelling).
 
-Requires building a `feature-index.json` mapping keywords/topics to roadmap entries, ADRs, and research docs. The existing `generate-index.js` pattern can be extended.
+A new `generate-feature-index.js` script parses roadmap, ADRs, and research docs into a compact JSON index. A new `update-feature-index.yml` workflow runs weekly (Monday 4:30 UTC) plus manual dispatch. The `issue-triage-bot.yml` was extended with Phase 4a (enhancement context + feasibility) and Phase 4b (misclassification detection) steps.
 
 ### Batch 3 --- When Phase 4 is Stable
 
@@ -206,8 +206,7 @@ Included screen sharing Wayland regression fix (#2219), locale detection fix (#2
 
 ### Future Priorities
 
-- **Bot Batch 2** --- Phase 4 enhancement triage (context, feasibility, misclassification)
-- **Bot Batch 3** --- pre-research prompt generator (depends on Phase 4 feature index)
+- **Bot Batch 3** --- pre-research prompt generator (depends on Phase 4 feature index, now available)
 - **Cross-distro testing CI** --- build Docker images in CI to catch Dockerfile regressions
 - **Automated smoke tests** --- verify app launches in the cross-distro environment (pre-auth only)
 

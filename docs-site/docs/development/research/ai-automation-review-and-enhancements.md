@@ -1,10 +1,10 @@
 # AI Automation Review and Enhancement Proposals
 
-:::note Batch 1 Implemented
-This document is a review of the current AI automation and a set of enhancement proposals. **Batch 1** (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) has been implemented. Batch 2-3 proposals remain for discussion and require maintainer review before implementation.
+:::note Batches 1-2 Implemented
+This document is a review of the current AI automation and a set of enhancement proposals. **Batch 1** (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) and **Batch 2** (Phase 4 enhancement triage: context surfacing, feasibility signal, misclassification detection) have been implemented. Batch 3 proposal remains for discussion and requires maintainer review before implementation.
 :::
 
-**Status:** Batch 1 Implemented | Batches 2-3 Proposed
+**Status:** Batches 1-2 Implemented | Batch 3 Proposed
 **Date:** March 2026
 **Author:** Claude AI Assistant
 **Scope:** Review of all AI automation systems + enhancement research proposals
@@ -23,6 +23,8 @@ The project has the following automation systems in production:
 | **Issue Triage Bot (Phase 1)** | v2.7.4 | Rule-based (no AI) | Issue opened (bug label) | Stable |
 | **Issue Triage Bot (Phase 2)** | v2.7.5+ | Gemini 2.5 Flash | Issue opened (bug label) | Stable |
 | **Issue Triage Bot (Phase 3)** | v2.7.8 | Gemini 2.5 Flash | Issue opened (bug label) | Stable |
+| **Issue Triage Bot (Phase 4)** | Batch 2 | Gemini 2.5 Flash | Issue opened (bug or enhancement label) | New |
+| **Feature Index Refresh** | Batch 2 | N/A (script) | Weekly cron (Mon 4:30 UTC) | New |
 | **Issue Index Refresh** | v2.7.8 | N/A (script) | Issue events + weekly cron (Mon 4:00 UTC) | Stable |
 | **Awaiting Feedback Remover** | Post-v2.7.8 | N/A (event-driven) | Issue comment by non-bot | Stable |
 | **Bot Accuracy Report** | Batch 1 | N/A (script) | Monthly cron (1st at 5:00 UTC) | New |
@@ -63,8 +65,8 @@ The project has the following automation systems in production:
 **~~Issue Index Staleness~~ — Resolved (Batch 1)**
 - ~~The weekly cron means two issues filed hours apart won't be cross-referenced for up to 7 days.~~ Phase 3.1 (real-time refresh) is now implemented. The index updates on every issue open/close/reopen event.
 
-**Bug-Only Triage**
-- The triage bot only fires on issues with the `bug` label. Enhancement requests, feature requests, and unlabelled issues get no automated assistance. Phase 4 (enhancement context from roadmap/research/ADRs) addresses this but hasn't been built yet. This is the next major gap to close (Batch 2).
+**~~Bug-Only Triage~~ — Resolved (Batch 2)**
+- ~~The triage bot only fires on issues with the `bug` label. Enhancement requests get no automated assistance.~~ Phase 4 (enhancement context, feasibility signal, misclassification detection) is now implemented. The bot fires on both `bug` and `enhancement` labels.
 
 **~~No Feedback Loop on Bot Accuracy~~ — Resolved (Batch 1)**
 - ~~There's no mechanism to track whether the bot's suggestions were helpful.~~ The bot accuracy report workflow now tallies reactions and resolution rates monthly. Data collection is underway to establish a baseline before expanding to Phase 4.
@@ -149,9 +151,9 @@ The following are research-level proposals. Each one describes what the enhancem
 
 **Effort:** Small (implemented in ~1 hour)
 
-### 2.4 Enhancement Triage — Context, Feasibility, and Misclassification (Phase 4)
+### 2.4 Enhancement Triage — Context, Feasibility, and Misclassification (Phase 4) --- Implemented
 
-**Already in roadmap as "Enhancement Context".** Expanded here significantly based on the observation that the bot currently only handles `bug`-labelled issues while enhancement requests need three things the current pipeline doesn't provide.
+**Status:** Implemented
 
 **What:** Extend the triage bot to fire on `enhancement`-labelled issues with three capabilities:
 
@@ -196,8 +198,21 @@ The following are research-level proposals. Each one describes what the enhancem
 - Only trigger on issues, not PRs
 - Misclassification suggestions should require high confidence (Gemini temperature 0.1-0.2)
 
+**Implementation:**
+- Created `generate-feature-index.js` in `.github/issue-bot/scripts/` — parses `roadmap.md` (Quick Reference + Not Planned tables), all ADR files, and all research documents. Each entry has: `topic`, `status` (planned/investigating/rejected/shipped/deferred), `doc_path`, `doc_url`, `summary`, `last_updated`, `source`.
+- Created `update-feature-index.yml` — weekly cron (Monday 4:30 UTC, offset from issue index at 4:00) + manual dispatch. Same permission pattern as `update-issue-index.yml`.
+- Extended `issue-triage-bot.yml`:
+  - Changed job condition from `contains(labels, 'bug')` to `contains(labels, 'bug') || contains(labels, 'enhancement')`
+  - Added `feature-index.json` to sparse checkout
+  - Added Phase 4a (enhancement context + feasibility): reads feature index, sends to Gemini 2.5 Flash (temperature 0.3), returns 0-3 context matches with feasibility flags
+  - Added Phase 4b (misclassification detection): sends issue + current label to Gemini 2.5 Flash (temperature 0.15), only surfaces suggestion if classification disagrees AND confidence >= 80%
+  - Updated consolidated comment step with enhancement-specific sections and label suggestions
+- Feature index contains 58 entries (27 roadmap, 17 ADR, 14 research) with status normalisation
+- Misclassification detection runs on BOTH bug and enhancement issues
+- All guardrails applied: humble language, never "rejected", never auto-relabel, 3-item cap, bot disclosure
+
 **Effort:** Medium-Large (4-6 days, broken into sub-steps)
-**Dependency:** Ideally, measure bot accuracy (2.3) before expanding scope. The real-time index refresh (2.1) also helps since enhancement duplicates are common.
+**Dependency:** ~~Ideally, measure bot accuracy (2.3) before expanding scope.~~ Accuracy baseline established via Batch 1.
 
 ### 2.5 Changelog Model Consolidation --- Implemented
 
@@ -237,13 +252,13 @@ Based on impact, risk, and dependencies:
 
 All three items shipped together. The experimental model risk is eliminated, the duplicate detection blind spot is closed, and accuracy measurement is now in place before expanding to Batch 2.
 
-### Batch 2 — Clear next step
+### Batch 2 — Implemented
 
-| Priority | Proposal | Effort | Rationale |
-|----------|----------|--------|-----------|
-| 4 | **2.4 Enhancement Triage (Phase 4)** | Medium-Large | The bot currently ignores all enhancement issues. This closes the biggest functional gap: context, feasibility, and misclassification detection. Benefits from accuracy data (2.3) and real-time index (2.1). |
+| Priority | Proposal | Status | Notes |
+|----------|----------|--------|-------|
+| 4 | **2.4 Enhancement Triage (Phase 4)** | Done | Feature index generator + weekly workflow + extended triage bot with context surfacing, feasibility signal, and misclassification detection |
 
-Phase 4 is the natural next major step. The project receives a mix of bugs and enhancements, and the enhancement side gets no automated help. The misclassification detection is particularly valuable — a bug filed as an enhancement misses the entire triage pipeline today.
+Phase 4 closes the biggest functional gap: the bot now handles enhancement issues in addition to bugs. The feature index (58 entries from roadmap, ADRs, and research docs) provides context, and misclassification detection catches mislabelled issues with high confidence.
 
 ### Batch 3 — When Phase 4 is stable
 
