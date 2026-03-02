@@ -8,7 +8,7 @@ Research complete. Targeted for v2.8.0 release.
 **Status:** Research complete
 **Issue:** Replace `node-sound` native addon, consolidate notification sound configuration
 **Author:** Claude AI Assistant
-**Related:** [Custom Notification System Research](custom-notification-system-research.md), [Configuration Organization Research](configuration-organization-research.md)
+**Related:** [Custom Notification System Research](custom-notification-system-research.md), [Configuration Organization Research](configuration-organization-research.md), [Electron 40 Migration Research](electron-40-migration-research.md)
 
 ---
 

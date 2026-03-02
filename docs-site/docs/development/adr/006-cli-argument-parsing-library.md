@@ -6,7 +6,7 @@ id: 006-cli-argument-parsing-library
 
 ## Status
 
-Accepted
+✅ Implemented
 
 ## Context
 

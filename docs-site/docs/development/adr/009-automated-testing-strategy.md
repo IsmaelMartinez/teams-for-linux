@@ -6,7 +6,7 @@ id: 009-automated-testing-strategy
 
 ## Status
 
-✅ Accepted
+✅ Implemented
 
 ## Context
 
