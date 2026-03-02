@@ -93,6 +93,7 @@ Usage:
   ./run.sh --list           Show all configurations and ports
   ./run.sh --build-all      Pre-build all Docker images
   ./run.sh --stop-all       Stop all running containers
+  ./run-all-tests.sh        Run tests across all 9 configurations
 
 Distros:      ubuntu, fedora, debian
 Display:      x11, wayland, xwayland
@@ -100,11 +101,25 @@ Display:      x11, wayland, xwayland
 Options:
   --appimage <path>   Copy a local AppImage into the container
   --url <url>         Download AppImage from URL at container startup
+  --latest            Download the latest GitHub release AppImage automatically
   --no-launch         Don't auto-launch the app (just start the desktop)
+  --login             Create a login session using the test Electron binary
+                      (log in via noVNC, then Ctrl+C to save)
+  --test              Run Playwright authenticated tests (requires --login first)
+
+Workflow for authenticated tests:
+  1. ./run.sh ubuntu x11 --login     # Log in via noVNC, then Ctrl+C
+  2. ./run.sh ubuntu x11 --test      # Run tests against saved session
 
 Examples:
-  # Single configuration
+  # Latest release (easiest)
+  ./run.sh ubuntu x11 --latest
+
+  # Local AppImage (manual testing via noVNC)
   ./run.sh ubuntu x11 --appimage ../../dist/teams-for-linux.AppImage
+
+  # Download from specific URL
+  ./run.sh fedora wayland --url https://github.com/.../teams-for-linux.AppImage
 
   # All display servers for one distro (3 containers in parallel)
   ./run.sh --run-distro ubuntu --url https://github.com/.../teams.AppImage
@@ -330,12 +345,80 @@ DISTRO="$1"
 DISPLAY_SERVER="$2"
 shift 2
 
-parse_group_options "$@"
+# Parse single-service options (extends group options with --latest, --login, --test)
+APPIMAGE_PATH=""
+APP_URL=""
+APP_LATEST="false"
+AUTO_LAUNCH="true"
+RUN_TESTS="false"
+RUN_LOGIN="false"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --appimage)
+            APPIMAGE_PATH="$2"
+            shift 2
+            ;;
+        --url)
+            APP_URL="$2"
+            shift 2
+            ;;
+        --latest)
+            APP_LATEST="true"
+            shift
+            ;;
+        --no-launch)
+            AUTO_LAUNCH="false"
+            shift
+            ;;
+        --login)
+            if [[ "$RUN_TESTS" == "true" ]]; then
+                echo "[!] --login and --test are mutually exclusive." >&2
+                exit 1
+            fi
+            RUN_LOGIN="true"
+            shift
+            ;;
+        --test)
+            if [[ "$RUN_LOGIN" == "true" ]]; then
+                echo "[!] --login and --test are mutually exclusive." >&2
+                exit 1
+            fi
+            RUN_TESTS="true"
+            shift
+            ;;
+        *)
+            # Legacy: positional arg is treated as appimage path
+            APPIMAGE_PATH="$1"
+            shift
+            ;;
+    esac
+done
 
 validate_distro "$DISTRO"
 validate_display_server "$DISPLAY_SERVER"
 
 SERVICE="${DISTRO}-${DISPLAY_SERVER}"
+
+# Resolve --latest to an actual URL via the GitHub API
+if [[ "$APP_LATEST" == "true" ]]; then
+    if [[ -n "$APP_URL" || -n "$APPIMAGE_PATH" ]]; then
+        echo "[!] --latest cannot be combined with --url or --appimage." >&2
+        exit 1
+    fi
+    echo "[*] Fetching latest release URL from GitHub..."
+    GITHUB_REPO="IsmaelMartinez/teams-for-linux"
+    APP_URL=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
+        | grep -o '"browser_download_url": *"[^"]*\.AppImage"' \
+        | head -1 \
+        | cut -d'"' -f4)
+    if [[ -z "$APP_URL" ]]; then
+        echo "[!] Could not find an AppImage in the latest release." >&2
+        echo "    Use --url <url> to specify a download URL manually." >&2
+        exit 1
+    fi
+    echo "[*] Resolved: ${APP_URL}"
+fi
 
 setup_appimage
 
@@ -351,6 +434,11 @@ if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
+if [[ "$RUN_LOGIN" == "true" ]]; then
+echo "  Mode:        LOGIN (create session for tests)"
+elif [[ "$RUN_TESTS" == "true" ]]; then
+echo "  Mode:        PLAYWRIGHT TESTS"
+fi
 echo "$SEPARATOR"
 echo ""
 
@@ -360,6 +448,11 @@ if [[ -n "$APP_URL" ]]; then
     COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
 COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )
+if [[ "$RUN_LOGIN" == "true" ]]; then
+    COMPOSE_ENV+=( -e "RUN_LOGIN=true" )
+elif [[ "$RUN_TESTS" == "true" ]]; then
+    COMPOSE_ENV+=( -e "RUN_TESTS=true" )
+fi
 
 # Build and run
 docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
