@@ -13,9 +13,11 @@
  * Expected result (failure): "FAIL — app redirected to login"
  */
 
-const { _electron: electron } = require('playwright');
-const path = require('node:path');
+import { _electron as electron } from 'playwright';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const SESSION_DIR = path.join(__dirname, '.test-session');
 
@@ -100,47 +102,45 @@ async function closeApp(electronApp) {
 	}
 }
 
-(async () => {
+console.log('');
+console.log('=============================================');
+console.log('  Spike 3: Playwright + Authenticated Launch');
+console.log('=============================================');
+console.log('');
+console.log(`  Session dir: ${SESSION_DIR}`);
+console.log('');
+
+let electronApp;
+
+try {
+	console.log('  Launching Electron via Playwright...');
+	electronApp = await electron.launch({
+		args: [path.join(PROJECT_ROOT, 'app/index.js')],
+		env: {
+			...process.env,
+			E2E_USER_DATA_DIR: SESSION_DIR,
+		},
+		timeout: 30000,
+	});
+
+	console.log('  Waiting for main window...');
+	await electronApp.firstWindow({ timeout: 30000 });
+
+	// Give the app time to create all windows and navigate
+	await new Promise(resolve => setTimeout(resolve, 8000));
+
+	const windows = electronApp.windows();
+	console.log(`  Windows found: ${windows.length}`);
+
+	const result = classifyWindows(windows);
 	console.log('');
-	console.log('=============================================');
-	console.log('  Spike 3: Playwright + Authenticated Launch');
-	console.log('=============================================');
-	console.log('');
-	console.log(`  Session dir: ${SESSION_DIR}`);
-	console.log('');
+	reportAuthResult(result);
 
-	let electronApp;
+	await testDesktopCapturer(electronApp);
+} catch (err) {
+	console.log(`  ERROR: ${err.message}`);
+} finally {
+	await closeApp(electronApp);
+}
 
-	try {
-		console.log('  Launching Electron via Playwright...');
-		electronApp = await electron.launch({
-			args: [path.join(PROJECT_ROOT, 'app/index.js')],
-			env: {
-				...process.env,
-				E2E_USER_DATA_DIR: SESSION_DIR,
-			},
-			timeout: 30000,
-		});
-
-		console.log('  Waiting for main window...');
-		await electronApp.firstWindow({ timeout: 30000 });
-
-		// Give the app time to create all windows and navigate
-		await new Promise(resolve => setTimeout(resolve, 8000));
-
-		const windows = electronApp.windows();
-		console.log(`  Windows found: ${windows.length}`);
-
-		const result = classifyWindows(windows);
-		console.log('');
-		reportAuthResult(result);
-
-		await testDesktopCapturer(electronApp);
-	} catch (err) {
-		console.log(`  ERROR: ${err.message}`);
-	} finally {
-		await closeApp(electronApp);
-	}
-
-	console.log('');
-})();
+console.log('');

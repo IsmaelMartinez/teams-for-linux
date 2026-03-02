@@ -14,19 +14,20 @@ set -e
 
 SESSION_DIR="/home/tester/.config/teams-for-linux"
 SRC_DIR="/src"
+readonly SEPARATOR="============================================="
 
 MODE="test"
 if [[ "${RUN_LOGIN:-false}" == "true" ]]; then
     MODE="login"
 fi
 
-echo "============================================="
+echo "$SEPARATOR"
 echo "  Playwright Test Runner (mode: ${MODE})"
-echo "============================================="
+echo "$SEPARATOR"
 echo "  Distro:         $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
 echo "  Display Server: ${DISPLAY_SERVER}"
 echo "  Session dir:    ${SESSION_DIR}"
-echo "============================================="
+echo "$SEPARATOR"
 
 # D-Bus session bus is inherited from entrypoint.sh (via exec).
 
@@ -186,14 +187,14 @@ if [[ "$MODE" == "login" ]]; then
     fi
 
     echo ""
-    echo "============================================="
+    echo "$SEPARATOR"
     echo "  Login Mode Ready"
     echo "  noVNC: http://localhost:${NOVNC_PORT}/vnc.html"
     echo "  VNC:   localhost:${VNC_PORT}"
     echo ""
     echo "  Log into Teams, wait for it to fully load,"
     echo "  then press Ctrl+C to save the session."
-    echo "============================================="
+    echo "$SEPARATOR"
     echo ""
 
     APP_LOG="/tmp/app.log"
