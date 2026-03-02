@@ -10,10 +10,10 @@
   },
   {
     "topic": "Custom CSS crash fix (#2220)",
-    "status": "planned",
+    "status": "shipped",
     "doc_path": "docs-site/docs/development/plan/roadmap.md",
     "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
-    "summary": "PR open",
+    "summary": "Merged",
     "source": "roadmap",
     "last_updated": "2026-03-01"
   },

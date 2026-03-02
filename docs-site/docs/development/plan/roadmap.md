@@ -11,7 +11,7 @@ This document outlines the future development direction for Teams for Linux, org
 | Priority | Feature | Status | Effort | Target |
 |----------|---------|--------|--------|--------|
 | **Active** | Screen sharing fixes ([#2217](https://github.com/IsmaelMartinez/teams-for-linux/issues/2217), [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219)) | Open PRs under review | Medium | v2.7.9 |
-| **Active** | Custom CSS crash fix ([#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220)) | PR open | Small | v2.7.9 |
+| **Done** | Custom CSS crash fix ([#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220)) | Merged | Small | v2.7.9 |
 | **Active** | CPU idle optimization ([#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218)) | PR open | Small | v2.7.9 |
 | **Review** | Cross-distro testing environment ([#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226)) | PR open, includes Codespaces devcontainer. See [ADR-016](../adr/016-cross-distro-testing-environment.md). | Medium | v2.7.9 |
 | **Review** | Wayland audit and PipeWire ADR ([#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225)) | PR open | Medium | v2.7.9 |
@@ -49,7 +49,7 @@ There are currently 13 open issues and 12 open PRs. The open issues cluster arou
 | [#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225) | Disable WebRTCPipeWireCapturer on XWayland; add Wayland audit and ADR-016 | Under review |
 | [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) | Cross-distro testing environment (Docker + VNC + Codespaces devcontainer) | Under review; SonarQube flagged 4 security hotspots |
 | [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) | Electron 39.5.1 to 40.6.0 (Dependabot) | Deferred; not merging yet |
-| [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) | Fix crash when using custom CSS | Under review |
+| [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) | Fix crash when using custom CSS | Merged |
 | [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219) | Screen sharing regression on Wayland/XWayland | Under review |
 | [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) | Optimise idle CPU usage (title-flapping overhead) | Under review |
 | [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Simplify screen source selection for Wayland compatibility | Under review |
@@ -81,6 +81,7 @@ There are currently 13 open issues and 12 open PRs. The open issues cluster arou
 
 | PR | Description | Merged |
 |----|-------------|--------|
+| [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) | Fix crash when using custom CSS | 2026-03-02 |
 | [#2210](https://github.com/IsmaelMartinez/teams-for-linux/pull/2210) | Fix screen sharing detection for non-English locales | 2026-02-23 |
 | [#2214](https://github.com/IsmaelMartinez/teams-for-linux/pull/2214) | Update dependencies; add autoplay fix and sound overhaul research | 2026-02-22 |
 | [#2213](https://github.com/IsmaelMartinez/teams-for-linux/pull/2213) | Upgrade Issue Triage Bot to Gemini 2.5 Flash | 2026-02-22 |
@@ -331,7 +332,7 @@ Included the second ringer fix ([#2194](https://github.com/IsmaelMartinez/teams-
 ### v2.7.9 Release Plan
 
 1. **Stabilise screen sharing and Wayland** --- review and merge PRs [#2219](https://github.com/IsmaelMartinez/teams-for-linux/pull/2219), [#2225](https://github.com/IsmaelMartinez/teams-for-linux/pull/2225), [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)
-2. **Merge bug fixes** --- [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) (custom CSS crash), [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) (CPU idle), remaining v2.7.8 carry-over PRs ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188))
+2. **Merge bug fixes** --- ✅ [#2220](https://github.com/IsmaelMartinez/teams-for-linux/pull/2220) (custom CSS crash), [#2218](https://github.com/IsmaelMartinez/teams-for-linux/pull/2218) (CPU idle), remaining v2.7.8 carry-over PRs ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188))
 3. **Land cross-distro testing** --- merge PR [#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226) after addressing SonarQube hotspots
 4. **Bot automation Batch 1** --- ✅ changelog model consolidation, real-time issue index refresh (Phase 3.1), bot accuracy feedback loop
 5. **Bot automation Batch 2** --- ✅ Phase 4 enhancement triage (context, feasibility, misclassification detection)
