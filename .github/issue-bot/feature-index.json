@@ -100,7 +100,7 @@
   },
   {
     "topic": "Bot automation (Batch 2)",
-    "status": "planned",
+    "status": "shipped",
     "doc_path": "docs-site/docs/development/plan/roadmap.md",
     "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/plan/roadmap",
     "summary": "Enhancement triage: context, feasibility, misclassification",
@@ -400,7 +400,7 @@
     "status": "shipped",
     "doc_path": "docs-site/docs/development/research/ai-automation-review-and-enhancements.md",
     "doc_url": "https://ismaelmartinez.github.io/teams-for-linux/development/research/ai-automation-review-and-enhancements",
-    "summary": "This document is a review of the current AI automation and a set of enhancement proposals. Batch 1 (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) has been impleme",
+    "summary": "This document is a review of the current AI automation and a set of enhancement proposals. Batch 1 (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) and Batch 2 (Pha",
     "last_updated": "2026-03-01",
     "source": "research"
   },

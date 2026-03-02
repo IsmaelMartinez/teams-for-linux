@@ -29,24 +29,35 @@ const MAX_ENTRIES = 100;
 const SUMMARY_MAX_LENGTH = 200;
 
 /**
+ * Strip markdown link and bold syntax from a string.
+ */
+function stripBasicMarkdown(str) {
+	return (str || '')
+		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+		.replace(/\*\*([^*]+)\*\*/g, '$1')
+		.trim();
+}
+
+/**
  * Get the last commit date for a file via git log.
  * Falls back to file mtime if git is unavailable.
  */
 function getLastUpdated(filePath) {
 	try {
 		const result = execSync(
-			`git log -1 --format=%aI -- "${filePath}"`,
+			'git log -1 --format=%aI -- ' + JSON.stringify(filePath),
 			{ cwd: REPO_ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
 		).trim();
 		if (result) return result.substring(0, 10);
-	} catch {
-		// git not available — fall back to file mtime
+	} catch (e) {
+		console.log(`git log failed for ${path.basename(filePath)}: ${e.message}`);
 	}
 
 	try {
 		const stat = fs.statSync(filePath);
 		return stat.mtime.toISOString().substring(0, 10);
-	} catch {
+	} catch (e) {
+		console.log(`stat failed for ${path.basename(filePath)}: ${e.message}`);
 		return null;
 	}
 }
@@ -104,13 +115,11 @@ function extractSummary(content, maxLen = SUMMARY_MAX_LENGTH) {
 		}
 		if (trimmed.startsWith('**Status') || trimmed.startsWith('**Date') || trimmed.startsWith('**Author') || trimmed.startsWith('**Scope')) continue;
 		// Remove markdown formatting for the summary
-		const plain = trimmed
-			.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-			.replace(/\*\*([^*]+)\*\*/g, '$1')
+		const plain = stripBasicMarkdown(trimmed)
 			.replace(/\*([^*]+)\*/g, '$1')
 			.replace(/`[^`]+`/g, '')
 			.trim();
-		if (plain.length > 10) return plain.substring(0, maxLen);
+		if (plain) return plain.substring(0, maxLen);
 	}
 	return '';
 }
@@ -132,20 +141,14 @@ function parseRoadmap(content) {
 			const cells = tableLines[i].split('|').map((c) => c.trim()).filter(Boolean);
 			if (cells.length < 4) continue;
 			const [statusRaw, featureRaw, descRaw] = cells;
-			const feature = featureRaw
-				.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-				.replace(/\*\*([^*]+)\*\*/g, '$1')
-				.trim();
+			const feature = stripBasicMarkdown(featureRaw);
 			// Use the status column (Priority) as primary signal; only fall back
 			// to the description if the status column is ambiguous.
 			const statusFromColumn = normaliseStatus(statusRaw);
 			const status = statusFromColumn !== 'investigating'
 				? statusFromColumn
 				: normaliseStatus(descRaw);
-			const summary = descRaw
-				.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-				.replace(/\*\*([^*]+)\*\*/g, '$1')
-				.trim()
+			const summary = stripBasicMarkdown(descRaw)
 				.substring(0, SUMMARY_MAX_LENGTH);
 			if (feature) {
 				entries.push({
@@ -168,13 +171,8 @@ function parseRoadmap(content) {
 			const cells = tableLines[i].split('|').map((c) => c.trim()).filter(Boolean);
 			if (cells.length < 3) continue;
 			const [featureRaw, , reasonRaw] = cells;
-			const feature = featureRaw
-				.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-				.replace(/\*\*([^*]+)\*\*/g, '$1')
-				.trim();
-			const reason = (reasonRaw || '')
-				.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-				.trim()
+			const feature = stripBasicMarkdown(featureRaw);
+			const reason = stripBasicMarkdown(reasonRaw)
 				.substring(0, SUMMARY_MAX_LENGTH);
 			if (feature) {
 				entries.push({
