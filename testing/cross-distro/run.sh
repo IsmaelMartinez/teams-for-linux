@@ -28,7 +28,7 @@ DISTROS="ubuntu fedora debian"
 DISPLAY_SERVERS="x11 wayland xwayland"
 NOVNC_BASE=6081
 VNC_BASE=5901
-SEPARATOR="============================================="
+readonly SEPARATOR="============================================="
 
 validate_distro() {
     local distro="$1"
