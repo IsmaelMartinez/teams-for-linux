@@ -72,6 +72,10 @@ pacstall -I teams-for-linux-deb
 sudo snap install teams-for-linux
 ```
 
+:::tip Update Frequency
+Flatpak is the slowest update channel — it only receives a new version after the release has reached 100% across all other channels. Snap stable is the next slowest, with manual promotion after testing. If you prefer fewer update notifications, these are good choices. See the [Release Cadence](development/manual-release-process.md#release-cadence) section for details.
+:::
+
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/teams-for-linux)
 
 ### Flathub
