@@ -280,6 +280,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   );
 
+  // Explicitly grant all permission checks so that navigator.permissions.query()
+  // reports "granted" for camera/microphone. Without this, Teams' calling module
+  // may fail to initialise because Electron's default permissionCheck can return
+  // an unexpected state for media queries (#2221).
+  window.webContents.session.setPermissionCheckHandler(() => true);
+
   // Initialize connection manager
   connectionManager = new ConnectionManager();
 
