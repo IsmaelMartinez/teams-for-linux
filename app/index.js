@@ -34,6 +34,10 @@ function isNetworkError(message) {
   // during network-triggered operations (e.g., reload after network recovery).
   // These are transient and should not terminate the app.
   if (message.includes('Object has been destroyed')) return true;
+  // "Script failed to execute" occurs when executeJavaScript runs on a page where
+  // APIs are unavailable (e.g., Chrome error pages after ERR_NAME_NOT_RESOLVED).
+  // This is a symptom of network failure, not a fatal error.
+  if (message.includes('Script failed to execute')) return true;
   return false;
 }
 

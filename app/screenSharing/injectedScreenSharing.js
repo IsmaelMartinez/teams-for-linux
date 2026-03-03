@@ -51,6 +51,12 @@
 
   // Monitor for screen sharing streams and detect when they stop
   function monitorScreenSharing() {
+    // Guard against missing mediaDevices API (e.g. on Chrome error pages)
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      console.debug("[SCREEN_SHARE_DIAG] navigator.mediaDevices.getDisplayMedia not available, skipping");
+      return;
+    }
+
     // Hook into getDisplayMedia for screen sharing
     const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(
       navigator.mediaDevices
