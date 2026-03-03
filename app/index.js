@@ -489,7 +489,7 @@ async function userStatusChangedHandler(_event, options) {
     try {
       await mqttClient.publishStatus(userStatus);
     } catch (error) {
-      console.error('[MQTT] Failed to publish status:', { message: error.message });
+      console.error('[MQTT] Failed to publish status:', error);
     }
   }
 }
