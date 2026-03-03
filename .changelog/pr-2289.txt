@@ -1,0 +1,1 @@
+Add explicit permission check handler for media queries - by @IsmaelMartinez (#2289)
