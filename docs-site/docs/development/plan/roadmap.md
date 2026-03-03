@@ -22,6 +22,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | MQTT null sourceId fix ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193)) | PR open, carry-over from v2.7.8 | Tiny | v2.7.10 |
 | **Open** | MQTT screen sharing feature ([#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144)) | PR open | Small | v2.7.10+ |
 | **Done** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.10+ |
+| **Active** | Bot migration to GitHub App | Standalone service, one-click install, see [triage-bot repo](https://github.com/IsmaelMartinez/github-issue-triage-bot) | Medium | v2.7.10+ |
 | **Deferred** | Electron 40 upgrade ([#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223)) | [Research complete](../research/electron-40-migration-research.md), staying on Electron 39 for stability | Medium | v2.8.0 |
 | **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
@@ -87,28 +88,46 @@ The goal for v2.7.10 is stability. Stay on Electron 39, merge accumulated bug fi
 
 ## Bot Automation Improvements
 
-The issue triage bot has been running since v2.7.4 with three phases shipped (missing info detection, solution suggestions, duplicate detection). The issue index workflow runs on issue events and weekly as a safety net. A full review of all AI automation systems was completed in March 2026 --- see [AI Automation Review and Enhancements](../research/ai-automation-review-and-enhancements.md) for the detailed proposal. Batch 1 was implemented in v2.7.9.
+The issue triage bot has been extracted into a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot). It runs on Google Cloud Run backed by Neon PostgreSQL with pgvector for vector similarity search and Gemini 2.5 Flash for LLM generation. All four phases are implemented and validated on the test repo.
+
+The standalone service replaces the inline JavaScript and GitHub Actions workflows that shipped in v2.7.4 through v2.7.9. See the triage bot repo's `docs/adr/` for architecture decision records covering the Go service, Gemini, Neon, Cloud Run, Terraform, and GitHub App integration.
 
 ### Batch 2 --- Implemented
-
-#### Phase 4: Enhancement Triage (Context, Feasibility, Misclassification)
 
 **Status:** Implemented
 **Effort:** Medium-Large
 **Priority:** Done
 
-The triage bot now fires on both `bug` and `enhancement`-labelled issues. Enhancement requests receive automated context from the project's roadmap, ADRs, and research documents. Three new capabilities were added: context surfacing (linking requests to existing roadmap items, ADRs, and research docs via a pre-processed `feature-index.json` matched via Gemini 2.5 Flash), feasibility signals (flagging when an enhancement has been investigated and found infeasible, using humble language with a link to the relevant doc), and misclassification detection (classifying issues with Gemini 2.5 Flash at temperature 0.15 and suggesting a label correction only when confidence >= 80%, never auto-relabelling).
+The triage bot now fires on both `bug` and `enhancement`-labelled issues. All four phases are implemented in the standalone Go service: missing info detection, solution suggestions from troubleshooting docs, duplicate detection from issue history, enhancement context from roadmap/ADRs/research docs, and misclassification detection.
 
-A new `generate-feature-index.js` script parses roadmap, ADRs, and research docs into a compact JSON index. A new `update-feature-index.yml` workflow runs weekly (Monday 4:30 UTC) plus manual dispatch. The `issue-triage-bot.yml` was extended with Phase 4a (enhancement context + feasibility) and Phase 4b (misclassification detection) steps.
+### Migration to GitHub App
 
-### Batch 3 --- When Phase 4 is Stable
+**Status:** In progress
+**Effort:** Medium
+**Priority:** Active
+
+The triage bot is being converted from a webhook + PAT integration to a registered GitHub App. This gives teams-for-linux one-click installation with no secrets to configure and no workflow files to maintain. The bot authenticates as itself (not as a user) with granular permissions (Issues read/write only).
+
+Once the GitHub App is registered and tested on `triage-bot-test-repo`, the migration for teams-for-linux is:
+
+1. Install the GitHub App on this repository
+2. Disable the old triage bot workflows (`.github/workflows/issue-*`)
+3. Optionally remove the old bot scripts and JSON indexes from `.github/issue-bot/`
+
+The old workflows should be kept for one week as a fallback before deletion.
+
+### Remaining work in the triage bot repo
+
+Data seeding (all 1,356 issues, feature index), a public dashboard for bot activity transparency, and the GitHub App registration itself. See the triage bot repo's `docs/plans/` for the detailed implementation plan.
+
+### Batch 3 --- When GitHub App is Stable
 
 #### Phase 3.2: Pre-Research Prompt Generator
 
-**Status:** Ready to implement (after Phase 4)
+**Status:** Ready to implement (after GitHub App migration)
 **Effort:** Medium
 
-A GitHub Action triggered by label (e.g., `needs-research`) that generates a structured investigation prompt for new issues. Builds on the feature index created for Phase 4. Output is a Markdown comment on the issue with collapsible sections --- a starting point for investigation, not a decision.
+A capability of the triage bot (not a separate GitHub Action) that generates structured investigation prompts for issues labelled `needs-research`. Builds on the feature index and roadmap data already seeded in the database.
 
 ---
 
@@ -206,6 +225,7 @@ Included screen sharing Wayland regression fix (#2219), locale detection fix (#2
 
 ### Future Priorities
 
+- **Bot migration** --- Complete GitHub App conversion, install on teams-for-linux, remove old bot workflows
 - **Bot Batch 3** --- pre-research prompt generator (depends on Phase 4 feature index, now available)
 - **Cross-distro testing CI** --- build Docker images in CI to catch Dockerfile regressions
 - **Automated smoke tests** --- verify app launches in the cross-distro environment (pre-auth only)
