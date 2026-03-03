@@ -164,6 +164,11 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Sets the user status as away when system goes idle",
         type: "boolean",
       },
+      forceIdleState: {
+        default: false,
+        describe: "Force system to report idle according to local sattefile (/tmp/teams-for-linux-idle-state-$USER, workaround for Wayland/Hyprland where powerMonitor doesn't work)",
+        type: "boolean",
+      },
       chromeUserAgent: {
         default: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
         describe: "Google Chrome User Agent",
