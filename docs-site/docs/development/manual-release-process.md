@@ -1,5 +1,42 @@
 # Release Process
 
+## Release Cadence
+
+Teams for Linux does not follow a fixed release schedule. Instead, releases are driven by what has changed and how urgent those changes are. The general approach is to batch changes into meaningful releases while keeping users safe from security issues and regressions.
+
+### What triggers a release
+
+Releases fall into a few broad categories, roughly ordered by urgency:
+
+**Immediate releases** happen for runtime security vulnerabilities in dependencies and regressions that break core functionality (calls, login, screen sharing). These go out as soon as the fix is verified because the cost of waiting outweighs the noise of an extra update.
+
+**Batched releases** are the normal pattern. Feature work, non-critical bug fixes, and build-time dependency updates accumulate until there is a meaningful set of changes worth shipping. This is typically weekly to bi-weekly, though the interval varies depending on what is in flight.
+
+**Pre-releases** are occasionally published to test significant changes (Electron upgrades, Wayland fixes) before promoting to stable. These are tagged as pre-release on GitHub and only reach snap edge subscribers automatically.
+
+### Periods of higher frequency
+
+There are times when releases come faster than usual. This typically happens when hunting platform-specific bugs (such as chrome/wayland compatibility issues) where a fix for one configuration can break another, requiring rapid iteration. The npm ecosystem also generates security advisories frequently; runtime-affecting ones ship immediately while build-time-only ones get batched.
+
+### Distribution channels and update frequency
+
+Not all installation methods receive updates at the same pace. If frequent updates are a concern, choosing a slower channel can help:
+
+| Channel | Update frequency | Notes |
+|---------|-----------------|-------|
+| Flatpak (Flathub) | Slowest | Only updated after the release has reached 100% across all other channels |
+| Snap stable | Slow | Manual promotion after testing on candidate |
+| Snap candidate | On GitHub Release publish | Automatic, good for early adopters |
+| deb/rpm repositories | On GitHub Release publish | Gets every release promptly |
+| AppImage | On GitHub Release publish | Supports in-app auto-update |
+| Snap edge | Every push to main | Development channel, not for general use |
+
+Users who find updates too frequent can switch to Flatpak or Snap stable for a more measured experience, or simply adjust their OS update-check interval (for example, from daily to weekly).
+
+### The soft promise
+
+The project aims to balance shipping fixes quickly with respecting users' time. Security and regressions will always be fast-tracked, but feature work and non-critical improvements will be batched together rather than shipped individually. The goal is meaningful releases, not frequent ones.
+
 ## Overview
 
 PRs automatically get AI-generated changelog entries in `.changelog/pr-XXX.txt` files. When ready to release, bundle these changelogs into a version update.
