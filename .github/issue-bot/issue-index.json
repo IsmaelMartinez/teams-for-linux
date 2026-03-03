@@ -1,5 +1,29 @@
 [
   {
+    "number": 2292,
+    "title": "[Bug]: --appTitle and -appIcon for Wayland",
+    "state": "open",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)? Not applicable Describe the bug with the icon and title is not displayed What package are you using? Built from",
+    "created_at": "2026-03-03",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 2290,
+    "title": "[Feat]: Add real time speaking indicator to confirm microphone input is working",
+    "state": "open",
+    "labels": [
+      "enhancement"
+    ],
+    "summary": "Describe the feature Add a clear, real time “speaking” indicator in the call UI that lights up when the currently selected microphone input is non silent. The goal is a simple visual confirmation that",
+    "created_at": "2026-03-03",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
     "number": 2267,
     "title": "[Bug]: 'TrustedHTML' error with custom css",
     "state": "open",
@@ -40,7 +64,8 @@
     "title": "[Bug]: Something went wrong during Calls",
     "state": "open",
     "labels": [
-      "bug"
+      "bug",
+      "awaiting user feedback"
     ],
     "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I join a meeting or initiate a call (incoming calls, too), the error in the screen shots happens and sometimes after some action",
     "created_at": "2026-02-25",
@@ -78,8 +103,7 @@
     "title": "[Bug]: Crash when using camera or microphone",
     "state": "open",
     "labels": [
-      "bug",
-      "awaiting user feedback"
+      "bug"
     ],
     "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When trying to participate in a meeting or issue an audio or video call, Teams shows the \"something went wrong\" screen and ceases to ",
     "created_at": "2026-02-23",
@@ -129,7 +153,8 @@
     "title": "[Bug]: Cam broken during meetings",
     "state": "open",
     "labels": [
-      "bug"
+      "bug",
+      "blocked"
     ],
     "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When I join a meeting with the camera enabled or enable it after joining a meeting I'm getting an unrecoverable error: The logs say: ",
     "created_at": "2026-02-16",
@@ -161,6 +186,19 @@
     "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug When switching between different app the window size get broken What package are you using? flatpak Version 2.6.11 Reprod",
     "created_at": "2025-11-12",
     "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 802,
+    "title": "Cannot sign in with security key",
+    "state": "closed",
+    "labels": [
+      "help wanted",
+      "blocked"
+    ],
+    "summary": "**Describe the bug** Our environment requires MS sign-in via a multi-factor security key. This works in Chrome on Linux when logging into Teams and Outlook, but does not work in **To Reproduce** Steps",
+    "created_at": "2023-05-04",
+    "closed_at": "2023-05-25",
     "milestone": null
   },
   {
