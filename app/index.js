@@ -258,12 +258,8 @@ function onRenderProcessGone(event, webContents, details) {
   app.quit();
 }
 
-function onAppTerminated(signal) {
-  if (signal === "SIGTERM") {
-    process.abort();
-  } else {
-    app.quit();
-  }
+function onAppTerminated() {
+  app.quit();
 }
 
 function handleShortcutCommand({ action, shortcut }) {
@@ -492,7 +488,11 @@ async function userStatusChangedHandler(_event, options) {
 
   // Publish status to MQTT if enabled
   if (mqttClient) {
-    await mqttClient.publishStatus(userStatus);
+    try {
+      await mqttClient.publishStatus(userStatus);
+    } catch (error) {
+      console.error('[MQTT] Failed to publish status:', error);
+    }
   }
 }
 
