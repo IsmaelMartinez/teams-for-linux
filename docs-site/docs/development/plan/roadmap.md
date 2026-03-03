@@ -96,6 +96,7 @@ The standalone service replaces the inline JavaScript and GitHub Actions workflo
 
 **Status:** Implemented
 **Effort:** Medium-Large
+**Priority:** Done
 
 The triage bot now fires on both `bug` and `enhancement`-labelled issues. All four phases are implemented in the standalone Go service: missing info detection, solution suggestions from troubleshooting docs, duplicate detection from issue history, enhancement context from roadmap/ADRs/research docs, and misclassification detection.
 
@@ -103,7 +104,7 @@ The triage bot now fires on both `bug` and `enhancement`-labelled issues. All fo
 
 **Status:** In progress
 **Effort:** Medium
-**Priority:** High
+**Priority:** Active
 
 The triage bot is being converted from a webhook + PAT integration to a registered GitHub App. This gives teams-for-linux one-click installation with no secrets to configure and no workflow files to maintain. The bot authenticates as itself (not as a user) with granular permissions (Issues read/write only).
 
