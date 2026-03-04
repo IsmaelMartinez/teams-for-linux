@@ -1,40 +1,111 @@
 const { ipcMain, powerMonitor } = require("electron");
+const fs = require("fs");
 
 class IdleMonitor {
   #config;
   #getUserStatus;
   #idleTimeUserStatus = -1;
+  #stateFilePath;
+  #lastStateFileOverride = null;
 
   constructor(config, getUserStatus) {
     this.#config = config;
     this.#getUserStatus = getUserStatus;
+    this.#stateFilePath = `/tmp/teams-for-linux-idle-state-${process.env.USER}`;
   }
 
   initialize() {
     // Get system idle state to sync with Teams presence
-    console.info('--------------------------------------------------  IDLE INIT -------------------------');
     ipcMain.handle("get-system-idle-state", this.#handleGetSystemIdleState.bind(this));
+    
+    // Setup cleanup handler for state file
+    process.on('exit', this.#cleanupStateFile.bind(this));
+    process.on('SIGINT', () => {
+      this.#cleanupStateFile();
+      process.exit(0);
+    });
+    process.on('SIGTERM', () => {
+      this.#cleanupStateFile();
+      process.exit(0);
+    });
+  }
+
+  #cleanupStateFile() {
+    if (this.#config.forceIdleState) {
+      try {
+        if (fs.existsSync(this.#stateFilePath)) {
+          fs.unlinkSync(this.#stateFilePath);
+          console.debug('[IDLE] Cleaned up state file on exit');
+        }
+      } catch (err) {
+        // Ignore cleanup errors
+      }
+    }
+  }
+
+  #getStateFileOverride() {
+    try {
+      if (fs.existsSync(this.#stateFilePath)) {
+        const content = fs.readFileSync(this.#stateFilePath, 'utf8').trim();
+        
+        if (content === 'inactive') {
+          return 'idle';
+        } else if (content === 'active') {
+          return 'active';
+        } else {
+          console.warn(`[IDLE] Unknown state file content: '${content}', ignoring`);
+          return null;
+        }
+      }
+    } catch (err) {
+      console.warn(`[IDLE] Failed to read state file: ${err.message}`);
+    }
+    
+    return null; // No override
   }
 
   async #handleGetSystemIdleState() {
 
-    console.info('----- GET IDLE STATE -----');
-
-    // If forceIdleState is enabled, always return idle
+    // If forceIdleState is enabled, check state file for override
     if (this.#config.forceIdleState) {
-      console.info('[IDLE] Force idle mode enabled - always reporting idle state');
+      const stateFileOverride = this.#getStateFileOverride();
       
-      // Set userIdle status on first transition if not already set
-      if (this.#idleTimeUserStatus === -1) {
-        this.#idleTimeUserStatus = this.#getUserStatus();
-        console.debug(`[IDLE] Force idle: capturing user status at idle transition: ${this.#idleTimeUserStatus}`);
+      // Log only on state transitions
+      if (stateFileOverride !== this.#lastStateFileOverride) {
+        if (stateFileOverride !== null) {
+          console.info(`[IDLE] State file override: ${stateFileOverride}`);
+        } else {
+          console.info('[IDLE] State file override: none (file absent or invalid)');
+        }
+        this.#lastStateFileOverride = stateFileOverride;
       }
       
-      return {
-        system: "idle",
-        userIdle: this.#idleTimeUserStatus,
-        userCurrent: this.#getUserStatus(),
-      };
+      if (stateFileOverride === 'idle') {
+        // Force idle state
+        if (this.#idleTimeUserStatus === -1) {
+          this.#idleTimeUserStatus = this.#getUserStatus();
+        }
+        
+        return {
+          system: "idle",
+          userIdle: this.#idleTimeUserStatus,
+          userCurrent: this.#getUserStatus(),
+        };
+      } else if (stateFileOverride === 'active') {
+        // Force active state
+        if (this.#idleTimeUserStatus !== -1) {
+          console.debug(`[IDLE] State file active: transitioning from idle to active`);
+          this.#idleTimeUserStatus = -1;
+        }
+        
+        return {
+          system: "active",
+          userIdle: -1,
+          userCurrent: this.#getUserStatus(),
+        };
+      }
+      
+      // If forceIdleState is enabled but no state file exists, fall through to powerMonitor
     }
 
     const systemIdleState = powerMonitor.getSystemIdleState(
