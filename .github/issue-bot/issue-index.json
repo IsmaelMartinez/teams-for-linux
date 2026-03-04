@@ -1,5 +1,17 @@
 [
   {
+    "number": 2300,
+    "title": "[Bug]: Tray icon unread count completely bugged",
+    "state": "open",
+    "labels": [
+      "bug"
+    ],
+    "summary": "Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)? No Describe the bug The unread count keeps going from 1 to 0 for each chat message I type What package are you ",
+    "created_at": "2026-03-04",
+    "closed_at": null,
+    "milestone": null
+  },
+  {
     "number": 2296,
     "title": "[Bug]: Calendar appears blank the first time I visit it each day",
     "state": "open",
@@ -13,13 +25,12 @@
   },
   {
     "number": 2293,
-    "title": "[Bug]: teams keeps reloading if https://svccoat-my.sharepoint.com is not reachable",
+    "title": "[Bug]: teams keeps reloading if https://*.sharepoint.com is not reachable",
     "state": "open",
     "labels": [
-      "bug",
-      "awaiting user feedback"
+      "bug"
     ],
-    "summary": "Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)? No Describe the bug Teams for linux keeps reloading/refreshing, the logs say it does not reach svccoat-my.share",
+    "summary": "Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)? No Describe the bug Teams for linux keeps reloading/refreshing, the logs say it does not reach .sharepoint.com ",
     "created_at": "2026-03-03",
     "closed_at": null,
     "milestone": null
@@ -116,8 +127,7 @@
     "title": "[Feat]: short teams links - 2140 - how to pass them to teams-for-linux on the command line?",
     "state": "open",
     "labels": [
-      "enhancement",
-      "awaiting user feedback"
+      "enhancement"
     ],
     "summary": "Describe the feature Need the correct command line parameter for short meeting links in versions 2.7.3 and later Motivation Hi Ismael, I just stumbled across the first new style meeting links and foun",
     "created_at": "2026-02-24",
@@ -129,8 +139,7 @@
     "title": "[Bug]: Crash when using camera or microphone",
     "state": "open",
     "labels": [
-      "bug",
-      "awaiting user feedback"
+      "bug"
     ],
     "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug When trying to participate in a meeting or issue an audio or video call, Teams shows the \"something went wrong\" screen and ceases to ",
     "created_at": "2026-02-23",
@@ -207,12 +216,24 @@
     "state": "open",
     "labels": [
       "bug",
-      "blocked",
-      "awaiting user feedback"
+      "blocked"
     ],
     "summary": "Can you reproduce this bug in the website/PWA? Not applicable Describe the bug When switching between different app the window size get broken What package are you using? flatpak Version 2.6.11 Reprod",
     "created_at": "2025-11-12",
     "closed_at": null,
+    "milestone": null
+  },
+  {
+    "number": 1972,
+    "title": "[Bug]: Microphone doesn't work in meetings (until it does)",
+    "state": "closed",
+    "labels": [
+      "bug",
+      "blocked"
+    ],
+    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Microphone doesn't work in meetings, reconnecting, muting/unmuting makes it work (and then it works OK untiil next meeting). What pac",
+    "created_at": "2025-11-19",
+    "closed_at": "2026-02-07",
     "milestone": null
   },
   {
@@ -237,19 +258,6 @@
     "summary": "Can you reproduce this bug on the Microsoft Teams web app (https://teams.microsoft.com)? Yes Describe the bug In Settings > General > Language and regional formats, switching time and date formats has",
     "created_at": "2026-03-03",
     "closed_at": "2026-03-03",
-    "milestone": null
-  },
-  {
-    "number": 1972,
-    "title": "[Bug]: Microphone doesn't work in meetings (until it does)",
-    "state": "closed",
-    "labels": [
-      "bug",
-      "blocked"
-    ],
-    "summary": "Can you reproduce this bug in the website/PWA? No Describe the bug Microphone doesn't work in meetings, reconnecting, muting/unmuting makes it work (and then it works OK untiil next meeting). What pac",
-    "created_at": "2025-11-19",
-    "closed_at": "2026-02-07",
     "milestone": null
   },
   {
