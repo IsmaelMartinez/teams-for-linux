@@ -125,8 +125,6 @@ Once the GitHub App is installed on teams-for-linux and confirmed working, remov
 - `.github/workflows/update-feature-index.yml`
 - `.github/issue-bot/` directory (scripts, indexes, templates)
 
-Keep the old workflows disabled for one week as a fallback before deletion.
-
 ### Remaining work in the triage bot repo
 
 Data seeding (all 1,356 issues, feature index), a public dashboard for bot activity transparency, and the GitHub App registration itself. See the triage bot repo's `docs/plans/` for the detailed implementation plan.
