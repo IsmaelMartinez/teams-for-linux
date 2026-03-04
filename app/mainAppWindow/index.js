@@ -540,8 +540,24 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
+function expandConnectSrcCSP(details) {
+  const cspHeader = details.responseHeaders["content-security-policy"];
+  if (!cspHeader?.[0]) return;
+
+  const policies = cspHeader[0].split(";");
+  const connectIdx = policies.findIndex((p) => p.includes("connect-src"));
+  if (connectIdx < 0) return;
+
+  const augloopDomain = "wss://augloop.office.com";
+  if (!policies[connectIdx].includes(augloopDomain)) {
+    policies[connectIdx] = `${policies[connectIdx]} ${augloopDomain}`;
+    cspHeader[0] = policies.join(";");
+  }
+}
+
 function onHeadersReceivedHandler(details, callback) {
   customBackgroundService.onHeadersReceivedHandler(details);
+  expandConnectSrcCSP(details);
 
   callback({
     responseHeaders: details.responseHeaders,

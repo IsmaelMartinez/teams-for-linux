@@ -20,6 +20,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Proposes phased plan: replace native addon, add custom sounds, Web Audio fallback
   - **Status:** Research complete, targeted for v2.8.0
 
+### Requires Validation First
+
+- **[Auth Expiry Detection and Calendar Resilience](auth-expiry-calendar-resilience-research.md)** - Prevent blank calendar on first daily visit
+  - Three spikes: proactive token refresh (ADR-003), console-based auth failure detection, calendar iframe recovery
+  - CSP fix for `wss://augloop.office.com` ready to ship independently
+  - **Status:** Spikes defined, awaiting validation. Related to [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296)
+
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
