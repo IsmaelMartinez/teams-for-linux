@@ -1,6 +1,6 @@
 const { BrowserWindow } = require('electron');
 const path = require('node:path');
-const Positioner = require('electron-positioner');
+const { moveWindow } = require('../utils/windowPositioner');
 
 /**
  * Quick Chat Modal Window
@@ -10,7 +10,6 @@ const Positioner = require('electron-positioner');
  */
 class QuickChatModal {
   #window;
-  #positioner;
 
   constructor(mainWindow) {
     this.#window = new BrowserWindow({
@@ -35,7 +34,6 @@ class QuickChatModal {
     });
 
     this.#window.loadFile(path.join(__dirname, 'quickChatModal.html'));
-    this.#positioner = new Positioner(this.#window);
 
     // Hide on blur (clicking outside)
     this.#window.on('blur', () => {
@@ -60,7 +58,7 @@ class QuickChatModal {
     }
 
     // Position near the main window's top-right
-    this.#positioner.move('topRight');
+    moveWindow(this.#window, 'topRight');
     this.#window.show();
     this.#window.focus();
 

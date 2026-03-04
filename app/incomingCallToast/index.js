@@ -1,6 +1,6 @@
 const { BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
-const Positioner = require('electron-positioner');
+const { moveWindow } = require('../utils/windowPositioner');
 
 class IncomingCallToast {
 
@@ -23,7 +23,6 @@ class IncomingCallToast {
             }
         });
         this.toast.loadFile(path.join(__dirname, 'incomingCallToast.html'));
-        this.positioner = new Positioner(this.toast);
         // Handle incoming call actions (accept/decline)
         ipcMain.on('incoming-call-action', (event, action) => {
             this.hide();
@@ -36,7 +35,7 @@ class IncomingCallToast {
     show(data) {
         // Signal from toast window that it's ready to be displayed
         ipcMain.once('incoming-call-toast-ready', () => {
-            this.positioner.move('bottomRight');
+            moveWindow(this.toast, 'bottomRight');
             this.toast.show();
         });
         this.toast.webContents.send('incoming-call-toast-init', data);
