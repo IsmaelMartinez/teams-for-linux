@@ -20,6 +20,14 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Proposes phased plan: replace native addon, add custom sounds, Web Audio fallback
   - **Status:** Research complete, targeted for v2.8.0
 
+### Requires Validation
+
+- **[Speaking Indicator Research](speaking-indicator-research.md)** - Real-time microphone speaking indicator during calls
+  - Intercepts `getUserMedia()` + `AudioContext`/`AnalyserNode` for audio level detection
+  - In-page DOM overlay with speaking/silent/muted states
+  - Activates dormant `microphone-state-changed` IPC channel for MQTT integration
+  - **Status:** Research complete, validation spikes created. Run spikes to confirm feasibility.
+
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
