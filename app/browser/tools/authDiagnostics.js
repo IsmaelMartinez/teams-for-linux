@@ -26,13 +26,13 @@ function checkTokenExpiry() {
 
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.includes('expiry_AuthService')) {
-        expiryTimestamp = parseInt(localStorage.getItem(key), 10);
+      if (key?.includes('expiry_AuthService')) {
+        expiryTimestamp = Number.parseInt(localStorage.getItem(key), 10);
         break;
       }
     }
 
-    if (expiryTimestamp === null || isNaN(expiryTimestamp)) {
+    if (expiryTimestamp === null || Number.isNaN(expiryTimestamp)) {
       console.debug('[AUTH_DIAG] Token expiry check: no valid expiry_AuthService found');
       return;
     }
@@ -57,7 +57,7 @@ function interceptConsoleForAuthFailures() {
 
   function checkMessage(args) {
     try {
-      const message = args.map((a) => String(a)).join(' ');
+      const message = args.map(String).join(' ');
       if (!authPattern.test(message)) return;
 
       _authFailureCount++;
@@ -73,8 +73,8 @@ function interceptConsoleForAuthFailures() {
           totalCount: _authFailureCount
         });
       }
-    } catch {
-      // Diagnostic code must never break the app
+    } catch (error) {
+      console.debug('[AUTH_DIAG] Error in console interception:', error.message);
     }
   }
 
