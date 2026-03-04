@@ -1,14 +1,14 @@
 # GitHub Issue Bot Research & Implementation Plan
 
-:::info Phase 4 Shipped + Batch 2 Complete
-Phase 1 (Information Request Bot) shipped in v2.7.4 (PR [#2135](https://github.com/IsmaelMartinez/teams-for-linux/pull/2135)). Phase 2 (Solution Suggester) adds AI-powered matching against the troubleshooting guide and configuration docs using Gemini. Phase 3 (Duplicate Detector) compares new issues against a pre-processed index of open and recently closed issues via Gemini Flash. **Phase 4** (Enhancement Triage) extends the bot to `enhancement`-labelled issues with context surfacing, feasibility signals, and misclassification detection. All phases produce a single consolidated comment per issue. **Batch 1** improvements shipped: real-time issue index refresh (Phase 3.1), bot accuracy feedback loop, and changelog model consolidation. **Batch 2** shipped: Phase 4 enhancement triage.
+:::info Migrated to Standalone GitHub App
+All bot functionality has been migrated to a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot), deployed as a GitHub App on Google Cloud Run with Neon PostgreSQL (pgvector) and Gemini 2.5 Flash. This research document is kept for historical reference of the investigation and learning journey. The old GitHub Actions workflows and `.github/issue-bot/` scripts in this repo are superseded by the standalone service. See the triage bot repo's `docs/adr/` for architecture decisions covering Go, Gemini, Neon, Cloud Run, Terraform, and GitHub App integration.
 :::
 
-**Status:** Phase 1 ✅ Shipped (v2.7.4) | Phase 2 ✅ Shipped | Phase 3 ✅ Shipped | Batch 1 ✅ | Phase 4 ✅ Shipped (Batch 2)
-**Date:** February 2026
+**Status:** Migrated to standalone GitHub App ([github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot))
+**Date:** February 2026 (research) | March 2026 (migration)
 **Issue:** Investigation for intelligent GitHub issue automation
 **Author:** Claude AI Assistant
-**Dependencies:** None (builds on existing infrastructure)
+**Dependencies:** None (standalone service)
 
 ---
 
@@ -630,10 +630,6 @@ An intelligent GitHub issue bot could significantly reduce maintainer workload w
 
 ---
 
-**Document Status:** Batch 2 Complete
-**Phase 1:** Information Request Bot — shipped in v2.7.4
-**Phase 2:** Solution Suggester — AI-powered matching via Gemini, consolidated comment
-**Phase 3:** Duplicate Detector — Issue index + Gemini Flash matching, real-time + weekly regeneration
-**Batch 1:** Real-time index refresh (Phase 3.1), bot accuracy feedback loop, changelog model consolidation
-**Phase 4:** Enhancement Triage — Feature index + Gemini Flash context surfacing, feasibility signal, misclassification detection
-**Next:** Batch 3 — Pre-research prompt generator (Phase 3.2, depends on Phase 4 feature index)
+**Document Status:** Historical reference (migrated to standalone GitHub App)
+**Phases 1-4:** All implemented and validated via GitHub Actions, then migrated to [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot) as a standalone Go service on Cloud Run.
+**Current home:** The triage bot repo contains the production implementation, architecture decisions, and future plans (including Batch 3 pre-research prompt generator).

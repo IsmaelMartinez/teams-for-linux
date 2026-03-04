@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-02
+**Last Updated:** 2026-03-04
 **Current Version:** v2.7.9 (pre-release, Electron 39.5.1)
 **Status:** Living Document --- stabilising on Electron 39, planning v2.7.10 and v2.8.0
 
@@ -115,6 +115,15 @@ Once the GitHub App is registered and tested on `triage-bot-test-repo`, the migr
 3. Optionally remove the old bot scripts and JSON indexes from `.github/issue-bot/`
 
 The old workflows should be kept for one week as a fallback before deletion.
+
+### Cleanup of old bot files in this repo
+
+Once the GitHub App is installed on teams-for-linux and confirmed working, remove the superseded files:
+
+- `.github/workflows/issue-triage-bot.yml`
+- `.github/workflows/update-issue-index.yml`
+- `.github/workflows/update-feature-index.yml`
+- `.github/issue-bot/` directory (scripts, indexes, templates)
 
 ### Remaining work in the triage bot repo
 
