@@ -189,6 +189,29 @@ The CSP fix should ship independently and immediately, as it addresses a separat
 
 ---
 
+## 7. Diagnostic Logging for User Validation
+
+An `authDiagnostics` module has been added to `app/browser/tools/authDiagnostics.js` that captures spike-relevant data during normal usage. All diagnostic output uses the `[AUTH_DIAG]` prefix and is captured by electron-log when file logging is enabled.
+
+The module monitors three signals. First, it checks the `expiry_AuthService` timestamp in localStorage every 5 minutes and at startup, logging `expiresInMinutes` and `isExpired` without any PII. Second, it intercepts `console.error` and `console.warn` for `InteractionRequired` and `AADSTS` error patterns, debouncing the detection to avoid log spam (30-second window). Third, it uses a MutationObserver to detect when the calendar iframe from `outlook.office.com/hosted/calendar` is added to the DOM, then monitors its load/error events.
+
+To collect diagnostic data from the issue reporter, ask them to enable file logging by adding the following to their config:
+
+```json
+{
+  "logConfig": {
+    "transports": {
+      "console": { "level": "info" },
+      "file": { "level": "debug" }
+    }
+  }
+}
+```
+
+The log file will be at `~/.config/teams-for-linux/logs/main.log` (or `~/snap/teams-for-linux/current/.config/teams-for-linux/logs/main.log` for snap). After using the app for a day, the log file will contain the complete timeline of auth state changes, failure detections, and calendar iframe events — enough to validate all three spikes without implementing the full features. All PII is automatically sanitized by the existing log sanitizer.
+
+---
+
 ## Related Documentation
 
 - [ADR-003: Token Refresh Implementation Strategy](../adr/003-token-refresh-implementation.md) - Detailed design for proactive token refresh
