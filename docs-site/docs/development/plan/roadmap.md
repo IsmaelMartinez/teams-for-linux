@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-02-19
-**Current Version:** v2.7.7
-**Status:** Living Document — planning v2.7.8 and v2.8.0
+**Last Updated:** 2026-03-02
+**Current Version:** v2.7.9 (pre-release, Electron 39.5.1)
+**Status:** Living Document --- stabilising on Electron 39, planning v2.7.10 and v2.8.0
 
 This document outlines the future development direction for Teams for Linux, organized by priority and readiness for implementation.
 
@@ -10,86 +10,146 @@ This document outlines the future development direction for Teams for Linux, org
 
 | Priority | Feature | Status | Effort | Target |
 |----------|---------|--------|--------|--------|
-| **Merge** | MQTT Screen Sharing fix ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)) | PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) ready | Tiny | v2.7.8 |
-| **Merge** | App menu tray fix ([#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186)) | PR [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) ready | Small | v2.7.8 |
-| **Merge** | Second ringer fix ([#2025](https://github.com/IsmaelMartinez/teams-for-linux/issues/2025)) | PR [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) ready | Tiny | v2.7.8 |
-| **Merge** | Quick Chat shortcut fix ([#2184](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184)) | PR [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) ready | Small | v2.7.8 |
-| **Blocked** | MQTT status regression ([#2131](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131)) | Diagnostic build in PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197), needs user logs | Medium | v2.7.8+ |
-| **Ready** | Electron 40 upgrade | Research complete | Medium | v2.8.0 |
-| **Ready** | ESLint 10 upgrade | Ready to implement | Small | v2.8.0 |
-| **Done** | XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) | Shipped in v2.7.7 | Small | Done |
-| **Done** | AppImage auto-update ([#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)) | Shipped in v2.7.6 | Medium | Done |
-| **Done** | Code quality hardening | Complete (Phases 1-3) | Small | Done |
+| **Active** | Emoji colon input fix ([#2251](https://github.com/IsmaelMartinez/teams-for-linux/pull/2251)) | PR open | Small | v2.7.10 |
+| **Active** | Network loss resilience ([#2249](https://github.com/IsmaelMartinez/teams-for-linux/pull/2249)) | PR open | Small | v2.7.10 |
+| **Active** | App termination / MQTT error handling ([#2234](https://github.com/IsmaelMartinez/teams-for-linux/pull/2234)) | PR open, overlaps with #2249 | Small | v2.7.10 |
+| **Active** | SonarCloud run.sh fixes ([#2262](https://github.com/IsmaelMartinez/teams-for-linux/pull/2262)) | PR open | Tiny | v2.7.10 |
+| **Active** | Authenticated Playwright tests ([#2245](https://github.com/IsmaelMartinez/teams-for-linux/pull/2245)) | PR open | Medium | v2.7.10 |
+| **Review** | Tray window toggle ([#2253](https://github.com/IsmaelMartinez/teams-for-linux/pull/2253)) | PR open, addresses [#2215](https://github.com/IsmaelMartinez/teams-for-linux/issues/2215) | Small | v2.7.10 |
+| **Review** | Short Teams links support ([#2250](https://github.com/IsmaelMartinez/teams-for-linux/pull/2250)) | PR open, addresses [#2228](https://github.com/IsmaelMartinez/teams-for-linux/issues/2228) | Small | v2.7.10 |
+| **Review** | Screen source selection simplification ([#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207)) | PR open, carry-over | Medium | v2.7.10 |
+| **Open** | App menu without tray ([#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195)) | PR open, carry-over from v2.7.8 | Small | v2.7.10 |
+| **Open** | MQTT null sourceId fix ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193)) | PR open, carry-over from v2.7.8 | Tiny | v2.7.10 |
+| **Open** | MQTT screen sharing feature ([#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144)) | PR open | Small | v2.7.10+ |
+| **Done** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.10+ |
+| **Active** | Bot migration to GitHub App | Standalone service, one-click install, see [triage-bot repo](https://github.com/IsmaelMartinez/github-issue-triage-bot) | Medium | v2.7.10+ |
+| **Deferred** | Electron 40 upgrade ([#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223)) | [Research complete](../research/electron-40-migration-research.md), staying on Electron 39 for stability | Medium | v2.8.0 |
+| **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
+| **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
 
 ---
 
-## Next Patch Release (v2.7.8)
+## Current State (Post v2.7.9)
 
-### Ready to Merge
+v2.7.9 was released as a pre-release on 2026-02-27 and included screen sharing fixes (Wayland regression, locale detection), Quick Chat shortcut improvements, Intune auth improvements, MQTT diagnostic logging, cross-distro testing environment, parallel test execution modes, SonarQube code smell fixes, and bot automation Batch 1 (real-time index refresh, accuracy feedback loop, changelog model consolidation). Several Dependabot PRs for GitHub Actions were also merged (upload-artifact, upload-pages-artifact, setup-node, setup-lxd, github-script).
 
-These PRs have been implemented and builds pass. Awaiting user testing/merge.
+A user has raised concerns about release frequency ([#2235](https://github.com/IsmaelMartinez/teams-for-linux/issues/2235)) requesting a slower cadence. The plan for v2.7.10 is to take a more measured approach: accumulate bug fixes and stability improvements, stay on Electron 39, and release when there's a meaningful batch of changes rather than rapid incremental releases.
 
-| Item | PR | Description |
-|------|----|-------------|
-| [**#2107**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) | [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | MQTT Screen Sharing — fix null sourceId crash on start event |
-| [**#2186**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) | [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) | App menu — ensure full menu when tray icon disabled |
-| [**#2025**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2025) | [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) | Second ringer — add error handler to prevent exception |
-| [**#2184**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2184) | [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) | Quick Chat shortcut — improve messaging and menu integration |
-
-### Blocked — Needs User Logs
-
-| Item | PR | Description |
-|------|----|-------------|
-| [**#2131**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2131) | [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197) | MQTT status regression — diagnostic build with enhanced logging and restored CSS selectors. Needs user to run the build and share console output so we can identify the correct React service paths for presence detection. |
-
-### Closed / Won't Fix
-
-These issues have been closed since the last roadmap update.
-
-| Issue | Resolution |
-|-------|------------|
-| [**#2169**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169) | Fixed in v2.7.7 — XWayland camera crash resolved by skipping fake media UI flag |
-| [**#2143**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2143) | Closed — --appTitle/--appIcon issue resolved |
-| [**#2152**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Closed — meeting ID join is a Microsoft Teams limitation, related to [#675](https://github.com/IsmaelMartinez/teams-for-linux/issues/675) |
-| [**#2140**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2140) | Closed — new meeting link format |
-| [**#2137**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2137) | Closed — chat scrollbar; workaround via `customCSSLocation` config |
-| [**#2106**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — screen lock media privacy; no user interest. PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) also closed. |
+There are currently 12 open issues and 12 open PRs. The open issues centre around calls/media (#2231 calls failing, #2169 camera broken), notifications (#2248 duplicate alerts), network resilience (#2246 network loss crash), and input (#2216 emoji colon). Many previously tracked issues have been closed: #2217 (screen sharing), #2222/#2221 (mic/camera), #2209/#2204 (thumbnails), #2203 (file upload), #2184 (Quick Chat shortcut), #2131 (MQTT status).
 
 ---
 
-## Next Minor Release (v2.8.0)
+## Next Patch Release (v2.7.10)
 
-Electron 40 is a major dependency upgrade (new Chromium, new Node.js, new V8). It warrants a minor version bump.
+The goal for v2.7.10 is stability. Stay on Electron 39, merge accumulated bug fixes, land the authenticated Playwright tests, and let the release bake before moving to Electron 40.
 
-### Ready to Implement
+### Open PRs to Review/Merge
+
+| PR | Description | Status |
+|----|-------------|--------|
+| [#2251](https://github.com/IsmaelMartinez/teams-for-linux/pull/2251) | Skip shortcut processing when no modifier keys held (emoji colon fix) | Open, addresses [#2216](https://github.com/IsmaelMartinez/teams-for-linux/issues/2216) |
+| [#2249](https://github.com/IsmaelMartinez/teams-for-linux/pull/2249) | Improve window lifecycle handling and network error resilience | Open, addresses [#2246](https://github.com/IsmaelMartinez/teams-for-linux/issues/2246) |
+| [#2234](https://github.com/IsmaelMartinez/teams-for-linux/pull/2234) | Simplify app termination and add MQTT error handling | Open, review together with #2249 for overlap |
+| [#2262](https://github.com/IsmaelMartinez/teams-for-linux/pull/2262) | Resolve SonarCloud issues in run.sh | Open |
+| [#2253](https://github.com/IsmaelMartinez/teams-for-linux/pull/2253) | Tray window toggle with minimize/restore support | Open, addresses [#2215](https://github.com/IsmaelMartinez/teams-for-linux/issues/2215) |
+| [#2250](https://github.com/IsmaelMartinez/teams-for-linux/pull/2250) | Expand MS Teams protocol regex for all deep link types | Open, addresses [#2228](https://github.com/IsmaelMartinez/teams-for-linux/issues/2228) |
+| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Simplify screen source selection for Wayland compatibility | Carry-over from v2.7.9 cycle |
+| [#2245](https://github.com/IsmaelMartinez/teams-for-linux/pull/2245) | Authenticated Playwright tests with Docker login workflow | Open, extends cross-distro testing |
+| [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) | App menu when tray icon disabled | Carry-over from v2.7.8, addresses [#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) |
+| [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | MQTT screen sharing null sourceId fix | Carry-over from v2.7.8, addresses [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) |
+| [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) | Publish screen sharing status to MQTT (broader feature) | Open, addresses [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) |
+| [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) | Electron 39.5.1 to 40.6.0 (Dependabot) | Deferred to v2.8.0 |
+
+### Open Issues
+
+| Issue | Description | Labels |
+|-------|-------------|--------|
+| [#2248](https://github.com/IsmaelMartinez/teams-for-linux/issues/2248) | Duplicate alerts for first message, missing content for subsequent | bug, awaiting feedback |
+| [#2246](https://github.com/IsmaelMartinez/teams-for-linux/issues/2246) | Crashes on network loss | bug, awaiting feedback |
+| [#2235](https://github.com/IsmaelMartinez/teams-for-linux/issues/2235) | Request for slower release cadence | enhancement |
+| [#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231) | Something went wrong during calls | bug |
+| [#2230](https://github.com/IsmaelMartinez/teams-for-linux/issues/2230) | index.js crash | bug, awaiting feedback |
+| [#2228](https://github.com/IsmaelMartinez/teams-for-linux/issues/2228) | Short Teams links on command line | enhancement, awaiting feedback |
+| [#2216](https://github.com/IsmaelMartinez/teams-for-linux/issues/2216) | Emoji input via colon not possible | bug, awaiting feedback |
+| [#2215](https://github.com/IsmaelMartinez/teams-for-linux/issues/2215) | Click tray icon to switch to opened window | enhancement, awaiting feedback |
+| [#2186](https://github.com/IsmaelMartinez/teams-for-linux/issues/2186) | App menu when tray icon disabled | enhancement, awaiting feedback |
+| [#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169) | Camera broken during meetings | bug |
+| [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107) | Publish screen sharing status to MQTT | enhancement, awaiting feedback |
+| [#1943](https://github.com/IsmaelMartinez/teams-for-linux/issues/1943) | Window size broke when changing app | bug, blocked |
+
+### v2.7.10 Release Plan
+
+1. **Merge bug fixes** --- #2251 (emoji colon), #2249 (network loss), #2234 (app termination), #2262 (SonarCloud run.sh). Review #2234 and #2249 together for overlap. (#2220 custom CSS crash already merged.)
+2. **Merge feature PRs** --- #2253 (tray toggle), #2250 (short Teams links), #2207 (screen source selection), #2195 (app menu without tray), #2193/#2144 (MQTT screen sharing).
+3. **Land authenticated Playwright tests** --- merge #2245 to extend cross-distro testing with login-gated test scenarios.
+4. **Release v2.7.10** --- measured pace, accumulate changes before releasing.
+
+---
+
+## Bot Automation Improvements
+
+The issue triage bot has been extracted into a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot). It runs on Google Cloud Run backed by Neon PostgreSQL with pgvector for vector similarity search and Gemini 2.5 Flash for LLM generation. All four phases are implemented and validated on the test repo.
+
+The standalone service replaces the inline JavaScript and GitHub Actions workflows that shipped in v2.7.4 through v2.7.9. See the triage bot repo's `docs/adr/` for architecture decision records covering the Go service, Gemini, Neon, Cloud Run, Terraform, and GitHub App integration.
+
+### Batch 2 --- Implemented
+
+**Status:** Implemented
+**Effort:** Medium-Large
+**Priority:** Done
+
+The triage bot now fires on both `bug` and `enhancement`-labelled issues. All four phases are implemented in the standalone Go service: missing info detection, solution suggestions from troubleshooting docs, duplicate detection from issue history, enhancement context from roadmap/ADRs/research docs, and misclassification detection.
+
+### Migration to GitHub App
+
+**Status:** In progress
+**Effort:** Medium
+**Priority:** Active
+
+The triage bot is being converted from a webhook + PAT integration to a registered GitHub App. This gives teams-for-linux one-click installation with no secrets to configure and no workflow files to maintain. The bot authenticates as itself (not as a user) with granular permissions (Issues read/write only).
+
+Once the GitHub App is registered and tested on `triage-bot-test-repo`, the migration for teams-for-linux is:
+
+1. Install the GitHub App on this repository
+2. Disable the old triage bot workflows (`.github/workflows/issue-*`)
+3. Optionally remove the old bot scripts and JSON indexes from `.github/issue-bot/`
+
+The old workflows should be kept for one week as a fallback before deletion.
+
+### Remaining work in the triage bot repo
+
+Data seeding (all 1,356 issues, feature index), a public dashboard for bot activity transparency, and the GitHub App registration itself. See the triage bot repo's `docs/plans/` for the detailed implementation plan.
+
+### Batch 3 --- When GitHub App is Stable
+
+#### Phase 3.2: Pre-Research Prompt Generator
+
+**Status:** Ready to implement (after GitHub App migration)
+**Effort:** Medium
+
+A capability of the triage bot (not a separate GitHub Action) that generates structured investigation prompts for issues labelled `needs-research`. Builds on the feature index and roadmap data already seeded in the database.
+
+---
+
+## Cross-Distro Testing Environment
+
+**ADR:** [ADR-016](../adr/016-cross-distro-testing-environment.md)
+**Status:** Shipped in v2.7.9 ([#2226](https://github.com/IsmaelMartinez/teams-for-linux/pull/2226)), with parallel execution modes ([#2261](https://github.com/IsmaelMartinez/teams-for-linux/pull/2261))
+
+The Docker-based testing environment supports 12 configurations (4 distros x 3 display servers) with VNC for interactive testing. Containers are pinned to `linux/amd64` and work on macOS (including Apple Silicon via Rosetta 2) and Linux. PR #2245 extends this with authenticated Playwright tests that run inside the Docker containers.
+
+Future improvements: pre-built images in a container registry, CI job for Dockerfile regression testing, smoke tests that verify app launch (pre-auth only).
+
+---
+
+## Next Minor Release (v2.8.0) --- Deferred
+
+Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). The research is complete and there are no blocking breaking changes, but the priority is stabilising on Electron 39 first. The Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) remains open and will be merged after v2.7.10 has been out and confirmed stable.
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **Electron 40** | Electron 39.5.1 → 40.4.0 (Chromium 144, Node.js 24, V8 14.4) | [Research](../research/electron-40-migration-research.md); no blocking breaking changes |
-| **ESLint 10** | ESLint/`@eslint/js` 9.39.2 → 10.0.x | Major version bump — flat config already in use, minimal impact |
-
-**Routine dependency updates** (patch/minor, low risk): `@homebridge/dbus-native` 0.7.3, Docusaurus 3.9.2, React 19.2.4, TypeScript 5.9.3.
-
-### Closed Since Last Update
-
-| Item | Description | Resolution |
-|------|-------------|------------|
-| [**#2095**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2095) | `--appIcon` not working in KDE window list | Closed |
-| [**#1860**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1860) | Camera resolution/aspect ratio issues | Closed |
-
-### Previously Blocked (Now Closed)
-
-All previously blocked external dependency issues have been closed.
-
-| Issue | Description | Resolution |
-|-------|-------------|------------|
-| [**#2094**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094) | Maximized window gap/shrink on focus loss | Closed |
-| [**#2074**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2074) | Window restore from tray appears tiny | Closed |
-| [**#2047**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2047) | Intune SSO regression (broker v2.0.2+) | Closed |
-| [**#1972**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1972) | Microphone doesn't work in meetings | Closed |
-| [**#1923**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1923) | Wayland screen sharing with snap | Closed |
-| [**#1879**](https://github.com/IsmaelMartinez/teams-for-linux/issues/1879) | App prevents sleep | Closed |
-| [**#2036**](https://github.com/IsmaelMartinez/teams-for-linux/issues/2036) | GNOME 49 notification focus | Closed |
+| **Electron 40** | Electron 39.5.1 to 40.6.0 | [Research](../research/electron-40-migration-research.md); Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) open |
+| **Notification sound overhaul** | Replace `node-sound` native addon, add custom sound config | [Research](../research/notification-sound-overhaul-research.md); phased approach |
 
 ---
 
@@ -98,110 +158,8 @@ All previously blocked external dependency issues have been closed.
 ### MQTT Screen Sharing Status
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
-**Original Request:** [#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938) by @vbartik
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
-**Effort:** Tiny
-**Status:** Fix ready in PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) (fixes null sourceId crash on start event). Original PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) still open for the broader feature.
-
-**Description:** Wire existing `screen-sharing-started` and `screen-sharing-stopped` IPC events to MQTT publish.
-
-**Current state:** PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) fixes the start event crash (null sourceId was being passed to `desktopCapturer.getSources` which threw). Both start and stop events should now work once merged.
-
----
-
-### Custom Notification System Phase 2
-
-**Issue:** [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108)
-**Research:** [custom-notification-system-research.md](../research/custom-notification-system-research.md)
-**Feedback:** [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039)
-**Branch:** `claude/custom-notifications-phase-2-wirLH`
-**Status:** Dropped — implementation did not work for the user; PR [#2112](https://github.com/IsmaelMartinez/teams-for-linux/pull/2112) closed
-
-**MVP Delivered (v2.6.16):**
-
-- Meeting notifications (meeting started) - working with Quickshell/Noctalia
-- Toast notifications with auto-dismiss
-- Click-to-focus functionality
-- Configuration via `notificationMethod: "custom"`
-
-**Phase 2 was attempted but dropped:** The chat, calendar, and activity notification routing worked on the maintainer's machine but the requesting user reported receiving no notifications at all. It remains unclear whether the implementation failed in their environment or whether their expectations differed from what was built. Issue [#2039](https://github.com/IsmaelMartinez/teams-for-linux/issues/2039) has been closed. PR [#2112](https://github.com/IsmaelMartinez/teams-for-linux/pull/2112) has been closed. The MVP from v2.6.16 remains available. Phase 2 may be revisited if a new user requests it, with better diagnostic tooling to understand environment-specific behaviour first.
-
-**Phase 2 Nice-to-Have (future, if revisited):**
-
-- Notification center drawer
-- Mark as read/unread
-- Badge count on tray icon
-
----
-
-## Strategic / Future
-
-### Code Quality Hardening
-
-**Status:** Complete
-**Priority:** Done
-
-**Description:** A comprehensive codebase review identified incremental improvements across input handling, logging hygiene, resilience, CI/CD, and workflow security. All items have been implemented across three phases.
-
-**Phase 1 (Completed):**
-
-1. ✅ **Logging hygiene** — Removed PII from debug logs in `mutationTitle`, `notificationSystem`, `certificate` modules (aligning with ADR-013). Certificate fingerprint preserved (not PII, needed for config).
-2. ✅ **Resilience improvements** — Added `uncaughtException`/`unhandledRejection` handlers, wrapped `handleAppReady()`, added try/catch to all Graph API IPC handlers
-3. ✅ **Input handling** — Added argument sanitization for incoming call notification command. SSO `execSync` kept (user-controlled config, shell features expected; see research doc for details).
-4. ✅ **Renderer cleanup** — Removed unused `globalThis.nodeRequire` and `globalThis.nodeProcess` from preload
-5. ✅ **IPC validator** — Added recursive prototype pollution sanitization for nested payloads
-6. ✅ **SECURITY.md** — Updated with accurate version numbers (2.7.x) and reporting instructions
-
-**Phase 2 (Completed):**
-
-7. ✅ **CI/CD lint gate** — Added `lint_and_audit` job to build workflow; all platform builds depend on it
-8. ✅ **CI/CD dependency audit** — `npm audit --audit-level=moderate` runs in CI before packaging
-9. ✅ **Dependabot** — Configured for weekly npm updates (minor/patch grouped) and monthly GitHub Actions updates
-
-**Phase 3 (Completed):**
-
-10. ✅ **Workflow permissions** — Added least-privilege `permissions` to all 9 workflow files
-11. ✅ **CODEOWNERS** — Require maintainer review for workflows, Dependabot config, security code, and SECURITY.md
-12. ✅ **npm audit scope** — Evaluated `--omit=dev`; decided to keep auditing all deps (supply chain risk)
-
----
-
-### AppImage Auto-Update
-
-**Issue:** [#2157](https://github.com/IsmaelMartinez/teams-for-linux/issues/2157)
-**Research:** [electron-updater-auto-update-research.md](../research/electron-updater-auto-update-research.md)
-**Status:** ✅ Shipped in v2.7.6
-**Priority:** Done
-
-In-app auto-update via `electron-updater` for AppImage distributions. Supersedes the earlier ADR-011 `appimagetool` post-processing approach.
-
----
-
-### GitHub Issue Bot
-
-**Research:** [github-issue-bot-investigation.md](../research/github-issue-bot-investigation.md)
-**Status:** Phase 1 ✅ Merged (v2.7.4), Phase 2 ✅ Shipped
-**Priority:** Medium
-
-**Phase 1 Delivered:** Information request bot — detects missing reproduction steps, debug output, and expected behaviour in bug reports.
-
-**Phase 2 Delivered:** Solution suggester — AI-powered matching against troubleshooting guide and configuration docs using Gemini. Posts a single consolidated comment combining missing info requests and solution suggestions.
-
-**Future phases:**
-
-- Phase 3: Duplicate detection via embeddings (RAG system)
-- Phase 4: Enhancement context from roadmap/research/ADRs (AI-assisted)
-
----
-
-### Configuration Organization
-
-**Research:** [configuration-organization-research.md](../research/configuration-organization-research.md)
-**Status:** Ongoing — new features use nested patterns from day one
-
-**Already Using Nested Patterns:** `mqtt.*`, `graphApi.*`, `customNotification.*`, `cacheManagement.*`, `screenSharingThumbnail.*`, `quickChat.*`
-
-Existing flat options migrate opportunistically when modules are refactored.
+**Status:** PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) fixes null sourceId crash. PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) open for the broader feature.
 
 ---
 
@@ -214,35 +172,21 @@ These features have completed initial implementation. Further phases depend on u
 **Issue:** [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109)
 **Status:** Shipped in v2.7.4
 
-**Delivered:** People API search, deep link chat navigation, inline messaging via Teams React internals, keyboard shortcut (Ctrl+Alt+Q), menu item integration.
-
-**Phase 2 (If Requested):** Enhance notification clicks to open chat with sender, cache recent contacts, favorites list.
-
----
+Phase 2 (if requested): notification click-to-chat, recent contacts cache, favorites list.
 
 ### MQTT Extended Status Phase 2
 
 **Research:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Status:** Phase 1 Complete
 
-**Phase 1 Delivered:** Generic `publish()` method, LWT for connection state, call state (`in-call`) publishing.
-
-**Phase 2 (If Requested):** WebRTC monitoring for camera/microphone state, granular media state (`camera`, `microphone` topics).
-
-**Trigger:** User confirms they need granular camera/mic state in addition to call state for RGB LED automation.
-
----
+Phase 2 (if requested): WebRTC monitoring for camera/microphone state, granular media state topics. Trigger: user confirms they need granular camera/mic state for RGB LED automation.
 
 ### Graph API Enhanced Features
 
 **Research:** [graph-api-integration-research.md](../research/graph-api-integration-research.md)
 **Status:** Phase 1 POC Complete
 
-**Phase 1 Delivered:** Token acquisition, calendar endpoints, mail endpoints, IPC handlers.
-
-**Phase 2 (If Requested):** Calendar sync with desktop notifications, mail preview notifications, retry logic with exponential backoff.
-
-**Note:** Presence endpoint returns 403 Forbidden — Teams token lacks `Presence.Read` scope.
+Phase 2 (if requested): calendar sync with desktop notifications, mail preview notifications, retry logic. Note: Presence endpoint returns 403 --- Teams token lacks `Presence.Read` scope.
 
 ---
 
@@ -250,47 +194,50 @@ These features have completed initial implementation. Further phases depend on u
 
 | Feature | Issue | Reason | Notes |
 |---------|-------|--------|-------|
-| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed — no user interest | Implementation complete but untested; PR [#2110](https://github.com/IsmaelMartinez/teams-for-linux/pull/2110) closed; reopen if requested |
-| Meeting Join with ID | [#2152](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Microsoft limitation | Related to [#675](https://github.com/IsmaelMartinez/teams-for-linux/issues/675); workaround: use meeting link via clipboard |
-| Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped — worked on maintainer's machine but not for user | MVP (v2.6.16) remains; revisit with diagnostic tooling if requested again |
-| Tray Icon Logout Indicator | [#1987](https://github.com/IsmaelMartinez/teams-for-linux/issues/1987) | Archived — user not responding | Work preserved in branch; reopen if requested |
-| GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible via MQTT but poor UX |
-| External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally; no exposed APIs |
-| Multiple Windows | [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) | Rejected ([ADR-010](../adr/010-multiple-windows-support.md)) | Teams single React context; Quick Chat is the alternative |
-| useSystemPicker | — | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Incomplete Linux Wayland/PipeWire support in Electron; reconsider when improved |
+| Screen Lock Media Privacy | [#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106) | Closed --- no user interest | Reopen if requested |
+| Meeting Join with ID | [#2152](https://github.com/IsmaelMartinez/teams-for-linux/issues/2152) | Microsoft limitation | Workaround: use meeting link via clipboard |
+| Custom Notifications Phase 2 | [#2108](https://github.com/IsmaelMartinez/teams-for-linux/issues/2108) | Dropped --- didn't work for the user | MVP (v2.6.16) remains |
+| GNOME Search Provider | [#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075) | Latency too high (~300-1100ms) | Technically feasible but poor UX |
+| External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally |
+| Multiple Windows | [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) | Rejected ([ADR-010](../adr/010-multiple-windows-support.md)) | Quick Chat is the alternative |
+| useSystemPicker | --- | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Reconsider when Electron improves Linux support |
 
 ---
 
 ## Implementation Priorities
 
-### v2.7.7 (Shipped 2026-02-19)
+### v2.7.9 (Pre-release 2026-02-27)
 
-Included the XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) via PR [#2190](https://github.com/IsmaelMartinez/teams-for-linux/pull/2190), the CI audit level fix ([#2196](https://github.com/IsmaelMartinez/teams-for-linux/pull/2196)), and cleanup ([#2191](https://github.com/IsmaelMartinez/teams-for-linux/pull/2191)).
+Included screen sharing Wayland regression fix (#2219), locale detection fix (#2210), Quick Chat shortcut improvements (#2188), Intune auth improvements (#2242), MQTT diagnostic logging (#2197), cross-distro testing environment (#2226, #2261), SonarQube fixes (#2247), bot automation Batch 1 (#2259, #2260), and multiple dependency/CI updates.
 
-### v2.7.8 Release Plan
+### v2.7.10 Release Plan
 
-1. **Merge 4 ready PRs** — [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) (MQTT screen sharing), [#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195) (app menu), [#2194](https://github.com/IsmaelMartinez/teams-for-linux/pull/2194) (second ringer), [#2188](https://github.com/IsmaelMartinez/teams-for-linux/pull/2188) (Quick Chat shortcut)
-2. **Collect user logs for MQTT status** — PR [#2197](https://github.com/IsmaelMartinez/teams-for-linux/pull/2197) has a diagnostic build; once user shares logs, determine fix approach
-3. **Release v2.7.8**
+1. **Bug fixes** --- emoji colon input (#2251), network loss resilience (#2249), app termination (#2234), SonarCloud run.sh (#2262)
+2. **Feature PRs** --- tray toggle (#2253), short Teams links (#2250), screen source selection (#2207), app menu without tray (#2195), MQTT screen sharing (#2193, #2144)
+3. **Authenticated Playwright tests** --- Docker login workflow and test scenarios (#2245)
+4. **Measured release** --- accumulate changes, let them bake before releasing
 
-### v2.8.0 Release Plan
+### v2.8.0 Release Plan (Deferred)
 
-1. **Electron 40 upgrade** — Major version bump (39.5.1 → 40.4.0); [research complete](../research/electron-40-migration-research.md)
-2. **ESLint 10 upgrade** — Major version bump, flat config already in use
-3. **Routine dependency updates** — `@homebridge/dbus-native` 0.7.3 and other patch/minor bumps
-4. **Release v2.8.0**
+1. **Electron 40 upgrade** --- merge when v2.7.10 is stable and confirmed
+2. **Notification sound overhaul** --- bundle with the Electron upgrade if timing aligns
+3. **Release v2.8.0**
 
 ### Future Priorities
 
-- **GitHub Issue Bot Phases 3-4** — Duplicate detection (embeddings), enhancement context (PR [#2192](https://github.com/IsmaelMartinez/teams-for-linux/pull/2192) open for Phase 3)
+- **Bot migration** --- Complete GitHub App conversion, install on teams-for-linux, remove old bot workflows
+- **Bot Batch 3** --- pre-research prompt generator (depends on Phase 4 feature index, now available)
+- **Cross-distro testing CI** --- build Docker images in CI to catch Dockerfile regressions
+- **Automated smoke tests** --- verify app launches in the cross-distro environment (pre-auth only)
 
 ### Principles
 
 - **Validate first:** Run spikes before implementing complex features
 - **Start simple:** Build MVP, add complexity only if needed
 - **User-driven:** Implement Phase 2 features only when users request them
-- **Linux-first:** Embrace Unix philosophy — composable tools over monolithic features
-- **Archive stale work:** Don't keep unvalidated features alive indefinitely
+- **Linux-first:** Embrace Unix philosophy --- composable tools over monolithic features
+- **Measured releases:** Accumulate meaningful changes rather than rapid incremental releases ([#2235](https://github.com/IsmaelMartinez/teams-for-linux/issues/2235))
+- **Automate triage, not decisions:** Bots surface information; maintainers decide
 
 ---
 
@@ -303,7 +250,6 @@ Included the XWayland camera fix ([#2169](https://github.com/IsmaelMartinez/team
 
 ### Recent ADRs
 
-- [ADR-012: Intune SSO Broker Compatibility](../adr/012-intune-sso-broker-compatibility.md) - Microsoft Identity Broker v2.0.2+ compatibility
-- [ADR-013: PII Log Sanitization](../adr/013-pii-log-sanitization.md) - Automatic PII sanitization for all logs
 - [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
 - [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
+- [ADR-016: Cross-Distro Testing Environment](../adr/016-cross-distro-testing-environment.md) - Docker + noVNC + Codespaces for testing

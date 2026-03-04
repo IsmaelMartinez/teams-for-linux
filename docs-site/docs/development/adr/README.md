@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2025-12-13
+last_updated: 2026-03-02
 tags: [adr, architecture, decisions]
 ---
 
@@ -28,16 +28,18 @@ Architecture Decision Records capture important architectural decisions along wi
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
-| [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | 🚧 Proposed | 2025-11-19 | N/A |
+| [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | ✅ Implemented | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
-| [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Accepted | 2025-12-13 | N/A |
+| [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Implemented | 2025-12-13 | v2.7.4+ |
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
 | [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | ✅ Implemented | 2026-01-25 | v2.7.1 |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Accepted | 2026-01-25 | v2.7.1 |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
+| [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
+| [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -82,12 +84,15 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | Smoke testing with Playwright; comprehensive testing impractical due to MS authentication constraints |
+| [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | Docker-based manual testing across 9 distro/display server combinations via noVNC, hosted on GitHub Codespaces |
 
 **Key Outcomes:**
 - Playwright E2E smoke tests validate app launch and login redirect
 - Tests run in isolated temp directories for clean state
 - Manual testing remains primary quality gate for feature changes
 - Low maintenance approach suitable for volunteer-maintained project
+- 9 cross-distro configurations testable from a browser via Codespaces
+- Apple Silicon limitation documented (V8 4GB heap cap under Rosetta 2)
 
 ### Documentation & Standards
 
@@ -105,12 +110,14 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | Use Gemini 2.0 Flash for automated changelog generation with release-pr workflow |
+| [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | Move PR artifact commenting to a workflow_run-triggered workflow to support fork PRs |
 
 **Key Outcomes:**
 - Decoupled merging from releasing
 - AI-generated concise changelog entries (60 chars avg vs 165 manual)
 - Quality score: 9.0/10 on validation testing
 - Zero cost (uses Gemini API free tier)
+- Fork PRs receive artifact download comments without 403 permission errors
 
 ### MQTT & Integration
 
@@ -313,10 +320,10 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 15
-- **Implemented**: 7
-- **Accepted**: 3
-- **Proposed**: 1
+- **Total ADRs**: 17
+- **Implemented**: 11
+- **Accepted**: 2
+- **Proposed**: 0
 - **Rejected**: 4
 - **Average length**: ~500 words
 - **Topics covered**: 9 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security)

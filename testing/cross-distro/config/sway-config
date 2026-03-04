@@ -1,0 +1,70 @@
+# Minimal Sway config for cross-distro testing
+# This is used for both Wayland and XWayland test environments
+
+# Use Mod4 (Super/Windows key) as modifier
+set $mod Mod4
+
+# Terminal emulator
+set $term foot
+
+# Font
+font pango:monospace 11
+
+# Window borders
+default_border pixel 2
+default_floating_border pixel 2
+
+# Colors (subtle dark theme for testing visibility)
+client.focused          #4c7899 #285577 #ffffff #2e9ef4 #285577
+client.unfocused        #333333 #222222 #888888 #292d2e #222222
+
+# Basic keybindings
+bindsym $mod+Return exec $term
+bindsym $mod+Shift+q kill
+bindsym $mod+d exec $term
+bindsym $mod+Shift+e exit
+
+# Focus movement
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move windows
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Workspaces
+bindsym $mod+1 workspace 1
+bindsym $mod+2 workspace 2
+bindsym $mod+Shift+1 move container to workspace 1
+bindsym $mod+Shift+2 move container to workspace 2
+
+# Resize mode
+mode "resize" {
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# Toggle fullscreen
+bindsym $mod+f fullscreen
+
+# Toggle floating
+bindsym $mod+Shift+space floating toggle
+
+# Status bar
+bar {
+    position top
+    status_command echo "Cross-Distro Test | $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"') | $DISPLAY_SERVER"
+    colors {
+        statusline #ffffff
+        background #323232
+    }
+}

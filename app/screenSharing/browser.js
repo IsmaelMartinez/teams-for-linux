@@ -76,7 +76,7 @@ function createPreview(properties) {
   imageContainerElement.style.cssText = "position: relative; min-height: 108px; background: #2d2d2d; border-radius: 4px; display: flex; align-items: center; justify-content: center;";
 
   const thumbnailUrl = properties.source.thumbnailDataUrl;
-  if (thumbnailUrl && thumbnailUrl.startsWith("data:")) {
+  if (thumbnailUrl?.startsWith("data:")) {
     const imgElement = document.createElement("img");
     imgElement.dataset.id = properties.source.id;
     imgElement.title = properties.source.name;

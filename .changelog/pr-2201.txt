@@ -1,1 +1,0 @@
-docs: update roadmap after v2.7.7 release - by @IsmaelMartinez (#2201)

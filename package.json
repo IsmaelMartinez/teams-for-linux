@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.7.7",
+  "version": "2.7.9",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -23,6 +23,7 @@
     "lint": "eslint **/*.js",
     "test:unit": "node tests/unit/logSanitizer.test.js && node tests/unit/loggerHook.test.js",
     "test:e2e": "playwright test",
+    "test:authenticated": "playwright test --config playwright.authenticated.config.js",
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
@@ -50,11 +51,11 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@homebridge/dbus-native": "0.7.2",
+    "@homebridge/dbus-native": "0.7.3",
     "electron-log": "^5.4.3",
     "electron-positioner": "^4.1.0",
     "electron-store": "11.0.2",
-    "electron-updater": "^6.7.3",
+    "electron-updater": "^6.8.3",
     "electron-window-state": "5.0.3",
     "lodash": "^4.17.23",
     "mqtt": "^5.15.0",
@@ -62,13 +63,13 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@electron/fuses": "^2.0.0",
-    "@eslint/js": "^9.39.2",
+    "@electron/fuses": "^2.1.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "1.58.2",
-    "electron": "39.5.1",
-    "electron-builder": "^26.7.0",
-    "eslint": "^9.39.2",
-    "globals": "^17.3.0",
+    "electron": "39.7.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.0.2",
+    "globals": "^17.4.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },

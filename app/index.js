@@ -28,7 +28,17 @@ const isMac = os.platform() === "darwin";
 const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
 
 function isNetworkError(message) {
-  return typeof message === 'string' && NETWORK_ERROR_PATTERNS.some(pattern => message.includes(pattern));
+  if (typeof message !== 'string') return false;
+  if (NETWORK_ERROR_PATTERNS.some(pattern => message.includes(pattern))) return true;
+  // "Object has been destroyed" errors can occur when the window is destroyed
+  // during network-triggered operations (e.g., reload after network recovery).
+  // These are transient and should not terminate the app.
+  if (message.includes('Object has been destroyed')) return true;
+  // "Script failed to execute" occurs when executeJavaScript runs on a page where
+  // APIs are unavailable (e.g., Chrome error pages after ERR_NAME_NOT_RESOLVED).
+  // This is a symptom of network failure, not a fatal error.
+  if (message.includes('Script failed to execute')) return true;
+  return false;
 }
 
 // Top-level error handlers for crash diagnostics
@@ -258,12 +268,8 @@ function onRenderProcessGone(event, webContents, details) {
   app.quit();
 }
 
-function onAppTerminated(signal) {
-  if (signal === "SIGTERM") {
-    process.abort();
-  } else {
-    app.quit();
-  }
+function onAppTerminated() {
+  app.quit();
 }
 
 function handleShortcutCommand({ action, shortcut }) {
@@ -395,9 +401,9 @@ function initializeQuickChat() {
       quickChatManager.toggle();
     });
     if (registered) {
-      console.info('[QuickChat] Keyboard shortcut registered');
+      console.info('[QuickChat] Global keyboard shortcut registered (works even when app is not focused)');
     } else {
-      console.warn('[QuickChat] Failed to register keyboard shortcut');
+      console.info('[QuickChat] Global shortcut not available; keyboard shortcut works via application menu when app is focused');
     }
   }
 }
@@ -442,7 +448,9 @@ async function handleAppReady() {
 
     loadMenuToggleSettings();
 
-    await mainAppWindow.onAppReady(appConfig, new CustomBackground(app, config), screenSharingService);
+    const customBackground = new CustomBackground(app, config);
+    customBackground.initialize();
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);
@@ -490,7 +498,11 @@ async function userStatusChangedHandler(_event, options) {
 
   // Publish status to MQTT if enabled
   if (mqttClient) {
-    await mqttClient.publishStatus(userStatus);
+    try {
+      await mqttClient.publishStatus(userStatus);
+    } catch (error) {
+      console.error('[MQTT] Failed to publish status:', error);
+    }
   }
 }
 

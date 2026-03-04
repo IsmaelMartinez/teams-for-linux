@@ -139,7 +139,7 @@ describe('User path sanitization', () => {
 	runExactTests([
 		['Linux home paths', 'Config at /home/johndoe/.config/teams', 'Config at /home/[USER]/.config/teams'],
 		['macOS user paths', 'File: /Users/johnsmith/Documents/file.txt', 'File: /Users/[USER]/Documents/file.txt'],
-		['Windows user paths', 'Path: C:\\Users\\JohnDoe\\AppData\\Local', 'Path: C:\\Users\\[USER]\\AppData\\Local'],
+		['Windows user paths', String.raw`Path: C:\Users\JohnDoe\AppData\Local`, String.raw`Path: C:\Users\[USER]\AppData\Local`],
 	]);
 });
 

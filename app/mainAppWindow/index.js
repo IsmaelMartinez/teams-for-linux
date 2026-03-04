@@ -194,7 +194,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
   const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user || config.ssoInTuneAuthUser;
+  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);
@@ -362,14 +362,25 @@ function applySpellCheckerConfiguration(languages, window) {
 
 function onDidFinishLoad() {
   console.debug("did-finish-load");
+
+  // Skip script injection on Chrome error pages (e.g. chrome-error://chromewebdata/)
+  // which appear when navigation fails due to network errors like ERR_NAME_NOT_RESOLVED.
+  // Injecting scripts into these pages causes crashes because APIs like
+  // navigator.mediaDevices are unavailable.
+  const currentUrl = window.webContents.getURL();
+  if (!currentUrl.startsWith("https://")) {
+    console.debug(`[CONNECTION] Skipping script injection on non-Teams page: ${currentUrl.split("?")[0]}`);
+    return;
+  }
+
   window.webContents.executeJavaScript(`
 			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
-		`);
+		`).catch(() => {});
   window.webContents.executeJavaScript(`
 			tryAgainLink = document.getElementById('try-again-link');
 			tryAgainLink && tryAgainLink.click()
-		`);
+		`).catch(() => {});
 
   // Inject browser functionality
   injectScreenSharingLogic();
@@ -388,7 +399,9 @@ function injectScreenSharingLogic() {
   );
   try {
     const script = fs.readFileSync(scriptPath, "utf8");
-    window.webContents.executeJavaScript(script);
+    window.webContents.executeJavaScript(script).catch((err) => {
+      console.error("[SCREEN_SHARE] Failed to execute injected script:", err.message);
+    });
   } catch (err) {
     console.error("Failed to load injected screen sharing script:", err);
   }

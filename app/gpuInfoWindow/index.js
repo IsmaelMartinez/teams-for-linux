@@ -54,7 +54,7 @@ class GpuInfoWindow {
   }
 
   isVisible() {
-    return this.window && this.window.isVisible();
+    return this.window?.isVisible() ?? false;
   }
 }
 

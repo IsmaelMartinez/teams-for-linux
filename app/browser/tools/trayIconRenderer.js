@@ -1,6 +1,9 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
 class TrayIconRenderer {
+  #lastActivityCount;
+  #currentProcessingCount;
+
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
@@ -13,19 +16,55 @@ class TrayIconRenderer {
     );
   }
 
-  updateActivityCount(event) {
+  async updateActivityCount(event) {
     const count = event.detail.number;
+    
+    // Skip if count hasn't changed to avoid redundant work
+    if (count === this.#lastActivityCount) {
+      console.debug("[TRAY_DIAG] Activity count unchanged, skipping update");
+      return;
+    }
+
     const startTime = Date.now();
     
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
-      previousCount: this.lastActivityCount || 0,
+      previousCount: this.#lastActivityCount || 0,
       timestamp: new Date().toISOString(),
       willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
       suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
     });
     
-    this.render(count).then((icon) => {
+    // Special case for count 0: Use base icon directly to avoid canvas rendering
+    if (count === 0) {
+      console.debug("[TRAY_DIAG] Count is 0, using base icon without rendering");
+      this.ipcRenderer.send("tray-update", {
+        icon: null, // Let main process use the default icon
+        flash: false,
+        count: 0
+      });
+      if (!this.config.disableBadgeCount) {
+        await this.ipcRenderer.invoke("set-badge-count", 0).catch(err => 
+          console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
+        );
+      }
+      this.#lastActivityCount = 0;
+      return;
+    }
+
+    this.#currentProcessingCount = count;
+    try {
+      const { icon, renderedCount } = await this.render(count);
+      
+      // Prevent race conditions: check if the count has changed since rendering started
+      if (renderedCount !== this.#currentProcessingCount) {
+        console.debug("[TRAY_DIAG] Stale render detected, discarding result", {
+          renderedCount,
+          currentProcessingCount: this.#currentProcessingCount
+        });
+        return;
+      }
+
       const renderTime = Date.now() - startTime;
       console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
         count: count,
@@ -39,6 +78,7 @@ class TrayIconRenderer {
       this.ipcRenderer.send("tray-update", {
         icon: icon,
         flash: count > 0 && !this.config.disableNotificationWindowFlash,
+        count: count,
       });
       
       console.debug("[TRAY_DIAG] Tray update IPC sent", {
@@ -47,32 +87,40 @@ class TrayIconRenderer {
         ipcCallTimeMs: Date.now() - ipcStartTime,
         performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
       });
-    }).catch((error) => {
+      this.#lastActivityCount = count;
+    } catch (error) {
       console.error("[TRAY_DIAG] Icon render failed", {
         error: error.message,
         count: count,
         elapsedMs: Date.now() - startTime,
         suggestion: "Check canvas creation and image loading in render method"
       });
-    });
+    }
     
     if (!this.config.disableBadgeCount) {
-      this.ipcRenderer.invoke("set-badge-count", count);
+      await this.ipcRenderer.invoke("set-badge-count", count).catch(err => 
+        console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
+      );
     }
-    this.lastActivityCount = count;
   }
 
   render(newActivityCount) {
+    const IMAGE_PNG = "image/png";
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
       canvas.height = 140;
       canvas.width = 140;
       const image = new Image();
       
+      const baseIconData = this.baseIcon.toDataURL(IMAGE_PNG);
+      
       // Add error handling for image loading
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");
-        resolve(this.baseIcon.toDataURL("image/png")); // Fallback to base icon
+        resolve({
+          icon: baseIconData,
+          renderedCount: newActivityCount
+        }); // Fallback to base icon
       };
       
       image.onload = () =>
@@ -83,14 +131,16 @@ class TrayIconRenderer {
           resolve,
         );
       
-      const dataURL = this.baseIcon.toDataURL("image/png");
-      if (!dataURL || dataURL === "data:,") {
+      if (!baseIconData || baseIconData === "data:,") {
         console.error("Base icon toDataURL returned invalid data");
-        resolve(this.baseIcon.toDataURL("image/png")); // Fallback
+        resolve({
+          icon: baseIconData,
+          renderedCount: newActivityCount
+        }); // Fallback
         return;
       }
       
-      image.src = dataURL;
+      image.src = baseIconData;
     });
   }
 
@@ -115,18 +165,21 @@ class TrayIconRenderer {
       }
     }
     const resizedCanvas = this._getResizeCanvasWithOriginalIconSize(canvas);
-    resolve(resizedCanvas.toDataURL());
+    resolve({
+      icon: resizedCanvas.toDataURL(),
+      renderedCount: newActivityCount
+    });
   }
 
   _getResizeCanvasWithOriginalIconSize(canvas) {
-    const resizedCanvas = document.createElement("canvas"),
-      rctx = resizedCanvas.getContext("2d");
+    const resizedCanvas = document.createElement("canvas");
+    const rctx = resizedCanvas.getContext("2d");
 
     resizedCanvas.width = this.iconSize.width;
     resizedCanvas.height = this.iconSize.height;
 
-    const scaleFactorX = this.iconSize.width / canvas.width,
-      scaleFactorY = this.iconSize.height / canvas.height;
+    const scaleFactorX = this.iconSize.width / canvas.width;
+    const scaleFactorY = this.iconSize.height / canvas.height;
     rctx.scale(scaleFactorX, scaleFactorY);
     rctx.drawImage(canvas, 0, 0);
 

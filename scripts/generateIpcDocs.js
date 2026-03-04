@@ -132,7 +132,7 @@ function generateMarkdown(channels) {
     return acc;
   }, {});
 
-  const sortedCategories = Object.keys(channelsByCategory).sort();
+  const sortedCategories = Object.keys(channelsByCategory).sort((a, b) => a.localeCompare(b));
 
   let markdown = `# IPC API Reference (Auto-Generated)
 

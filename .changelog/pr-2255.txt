@@ -1,0 +1,1 @@
+chore(deps): bump canonical/setup-lxd from 62cd335190e2b612b427db9319ea6b59ab1691f8 to d492474f6c8ceed1b716bb34c8f575a428871c70 (#2255)
