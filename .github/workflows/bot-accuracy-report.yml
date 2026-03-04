@@ -1,0 +1,44 @@
+name: Bot Accuracy Report
+
+# Tallies reactions on issue triage bot comments to measure accuracy.
+# Tracks thumbs-up/down reactions and quick resolution rates to establish
+# a baseline before expanding the bot's scope.
+# See: docs-site/docs/development/research/ai-automation-review-and-enhancements.md
+
+on:
+  schedule:
+    - cron: '0 5 1 * *' # Monthly, 1st of month at 5:00 UTC
+  workflow_dispatch: # Manual trigger for testing
+
+# Restrict default permissions — each job declares only what it needs
+permissions: {}
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '22'
+
+      - name: Generate accuracy report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOOKBACK_DAYS: '30'
+        run: node .github/issue-bot/scripts/tally-bot-feedback.js
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/issue-bot/accuracy-report.json
+          git diff --staged --quiet || git commit -m "chore: update bot accuracy report"
+          git push

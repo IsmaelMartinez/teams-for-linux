@@ -55,7 +55,7 @@ class ConnectionManager {
       powerMonitor.removeListener("resume", boundRefresh);
     }
 
-    if (boundDidFailLoad && this.window?.webContents) {
+    if (boundDidFailLoad && this.isWindowAvailable() && this.window.webContents) {
       this.window.webContents.removeListener("did-fail-load", boundDidFailLoad);
     }
 
@@ -83,8 +83,12 @@ class ConnectionManager {
     _ConnectionManager_refreshTimeout.set(this, timeout);
   }
 
+  isWindowAvailable() {
+    return this.window && !this.window.isDestroyed();
+  }
+
   async refresh() {
-    if (!this.window) {
+    if (!this.isWindowAvailable()) {
       console.warn("Window is not available. Cannot refresh.");
       return;
     }
@@ -104,10 +108,23 @@ class ConnectionManager {
       this.window?.setTitle("Waiting for network...");
       console.debug("Waiting for network...");
       const connected = await this.isOnline();
+
+      // Re-check window availability after async isOnline() call,
+      // as the window may have been destroyed during the network check
+      if (!this.isWindowAvailable()) {
+        console.warn("[CONNECTION] Window was destroyed during network check. Aborting refresh.");
+        return;
+      }
+
       if (connected) {
         if (hasUrl) {
           console.debug("Reloading current page...");
-          this.window.reload();
+          try {
+            this.window.reload();
+          } catch (err) {
+            console.error(`[CONNECTION] Failed to reload page: ${err.message}`);
+            this.debouncedRefresh();
+          }
         } else {
           console.debug("Loading initial URL...");
           try {
@@ -120,7 +137,7 @@ class ConnectionManager {
           }
         }
       } else {
-        this.window.setTitle("No internet connection");
+        this.window?.setTitle("No internet connection");
         console.error("No internet connection");
       }
     } finally {

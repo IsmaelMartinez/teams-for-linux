@@ -3,12 +3,27 @@ name: Update Issue Index
 # Regenerates the issue-index.json file used by the issue triage bot (Phase 3)
 # to detect potential duplicate issues. Fetches open issues and recently closed
 # issues from the GitHub API and produces a compact JSON index.
+#
+# Triggers:
+#   - Weekly full rebuild (Monday 4:00 UTC) as a safety net
+#   - Real-time on issue state changes (opened, closed, reopened) so the
+#     duplicate detector always has fresh data (Phase 3.1)
+#   - Manual dispatch for testing
+#
 # See: docs-site/docs/development/research/github-issue-bot-investigation.md
 
 on:
   schedule:
     - cron: '0 4 * * 1' # Weekly, Monday at 4:00 UTC
+  issues:
+    types: [opened, closed, reopened]
   workflow_dispatch: # Manual trigger for testing
+
+# Only one index update at a time — if a new issue event arrives while the
+# previous run is still going, cancel the older run to avoid conflicts.
+concurrency:
+  group: update-issue-index
+  cancel-in-progress: true
 
 # Restrict default permissions — each job declares only what it needs
 permissions: {}
@@ -18,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
       issues: read
 
     steps:
@@ -25,7 +41,7 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
 
@@ -34,10 +50,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node .github/issue-bot/scripts/generate-issue-index.js
 
-      - name: Commit and push if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/issue-bot/issue-index.json
-          git diff --staged --quiet || git commit -m "chore: update issue index for duplicate detection"
-          git push
+      - name: Create PR if index changed
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: 'chore: update issue index for duplicate detection'
+          title: 'chore: update issue index for duplicate detection'
+          body: |
+            Automated update of `.github/issue-bot/issue-index.json` for the
+            triage bot's duplicate detection (Phase 3).
+          branch: chore/update-issue-index
+          add-paths: .github/issue-bot/issue-index.json
+          delete-branch: true

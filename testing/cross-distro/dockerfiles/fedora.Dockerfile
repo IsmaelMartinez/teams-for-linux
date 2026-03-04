@@ -14,6 +14,8 @@ RUN dnf install -y \
     sway foot wayvnc xorg-x11-server-Xwayland \
     # noVNC and utilities
     novnc python3-websockify \
+    # Node.js for running Playwright tests inside the container
+    nodejs npm \
     python3 wget curl procps-ng file fuse3 \
     && dnf clean all \
     && useradd -m -s /bin/bash -G audio,video tester \
@@ -24,6 +26,7 @@ COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/start-x11.sh /usr/local/bin/start-x11.sh
 COPY scripts/start-wayland.sh /usr/local/bin/start-wayland.sh
 COPY scripts/start-xwayland.sh /usr/local/bin/start-xwayland.sh
+COPY scripts/run-tests.sh /usr/local/bin/run-tests.sh
 COPY config/sway-config /home/tester/.config/sway/config
 RUN chmod +x /usr/local/bin/*.sh && chown -R tester:tester /home/tester/.config
 

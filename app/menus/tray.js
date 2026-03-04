@@ -44,8 +44,16 @@ class ApplicationTray {
   }
 
   showAndFocusWindow() {
-    this.window.show();
-    this.window.focus();
+    if (this.window.isFocused()) {
+      this.window.hide();
+    } else {
+      if (this.window.isMinimized()) {
+        this.window.restore();
+      } else if (!this.window.isVisible()) {
+        this.window.show();
+      }
+      this.window.focus();
+    }
   }
 
   updateTrayImage(iconUrl, flash, count) {
