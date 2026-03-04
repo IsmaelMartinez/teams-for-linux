@@ -1,0 +1,1 @@
+Skip shortcut processing when no modifier keys are held - by @IsmaelMartinez (#2251)
