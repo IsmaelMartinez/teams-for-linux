@@ -1,19 +1,14 @@
-name: Update Feature Index
+name: Update Feature Index (Disabled)
 
-# Regenerates the feature-index.json file used by the issue triage bot (Phase 4)
-# to provide enhancement context from roadmap, ADRs, and research documents.
-# Parses local markdown files — no external API calls needed.
-#
-# Triggers:
-#   - Weekly rebuild (Monday 4:30 UTC, offset from issue index at 4:00)
-#   - Manual dispatch for testing
+# DISABLED: Migrated to standalone GitHub App at
+# https://github.com/IsmaelMartinez/github-issue-triage-bot
+# The standalone service manages its own feature index in Neon PostgreSQL.
+# Safe to delete once the GitHub App is confirmed working.
 #
 # See: docs-site/docs/development/research/github-issue-bot-investigation.md
 
 on:
-  schedule:
-    - cron: '30 4 * * 1' # Weekly, Monday at 4:30 UTC
-  workflow_dispatch: # Manual trigger for testing
+  workflow_dispatch: # Keep manual trigger only, for emergency use
 
 # Only one index update at a time
 concurrency:
@@ -25,6 +20,8 @@ permissions: {}
 
 jobs:
   update-index:
+    # Disabled — migrated to GitHub App
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: write

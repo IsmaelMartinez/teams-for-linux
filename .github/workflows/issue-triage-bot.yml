@@ -1,11 +1,13 @@
-name: Issue Triage Bot
+name: Issue Triage Bot (Disabled)
 
+# DISABLED: Migrated to standalone GitHub App at
+# https://github.com/IsmaelMartinez/github-issue-triage-bot
+# This workflow is kept temporarily as a fallback reference.
+# Safe to delete once the GitHub App is confirmed working.
+#
+# Original description:
 # Analyzes new bug reports and enhancement requests with AI-powered triage.
 # Posts a single consolidated comment per issue.
-# Phase 1: Missing info detection for bugs (v2.7.4)
-# Phase 2: AI-powered solution suggestions for bugs via Gemini 2.5 Flash
-# Phase 3: Duplicate detection against issue index via Gemini 2.5 Flash
-# Phase 4: Enhancement context + feasibility, misclassification detection
 # See: docs-site/docs/development/research/github-issue-bot-investigation.md
 
 on:
@@ -18,10 +20,8 @@ permissions: {}
 jobs:
   triage-and-suggest:
     runs-on: ubuntu-latest
-    # Run for issues labeled as bug OR enhancement
-    if: >-
-      contains(github.event.issue.labels.*.name, 'bug') ||
-      contains(github.event.issue.labels.*.name, 'enhancement')
+    # Disabled — migrated to GitHub App
+    if: false
     permissions:
       issues: write
       contents: read
