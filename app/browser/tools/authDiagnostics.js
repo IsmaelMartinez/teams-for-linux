@@ -1,10 +1,13 @@
-// Auth Diagnostics Module
+// Auth Diagnostics & Calendar Recovery Module
 // Captures diagnostic data for auth expiry detection and calendar resilience spikes.
+// When a blank calendar is detected (iframe loads multiple times), triggers a recovery reload.
 // All output uses [AUTH_DIAG] prefix and is captured by electron-log when file logging is enabled.
 // See: docs-site/docs/development/research/auth-expiry-calendar-resilience-research.md
 
 const TOKEN_EXPIRY_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const AUTH_FAILURE_DEBOUNCE_MS = 30_000; // 30 seconds
+const MULTI_LOAD_WINDOW_MS = 30_000; // Window to detect multiple iframe loads as a failure signal
+const RECOVERY_DELAY_MS = 15_000; // Delay after detecting multi-load before reloading iframe
 
 let _authFailureCount = 0;
 let _lastAuthFailureTime = 0;
@@ -91,6 +94,10 @@ function interceptConsoleForAuthFailures() {
 
 function observeCalendarIframe() {
   const calendarPattern = /outlook\.office\.com\/hosted\/calendar|outlook\.office365\.com\/hosted\/calendar/;
+  let loadCount = 0;
+  let firstLoadTime = 0;
+  let hasRecovered = false;
+  let isRecoveryReload = false;
 
   function onIframeFound(iframe) {
     const src = iframe.src || '';
@@ -99,7 +106,31 @@ function observeCalendarIframe() {
     console.info('[AUTH_DIAG] Calendar iframe detected');
 
     iframe.addEventListener('load', () => {
-      console.info('[AUTH_DIAG] Calendar iframe loaded');
+      if (isRecoveryReload) {
+        isRecoveryReload = false;
+        console.info('[AUTH_DIAG] Calendar iframe recovery reload completed');
+        return;
+      }
+
+      loadCount++;
+      const now = Date.now();
+      console.info('[AUTH_DIAG] Calendar iframe loaded', { loadCount });
+
+      if (loadCount === 1) {
+        firstLoadTime = now;
+      }
+
+      // Two loads within the window means the first attempt failed and Teams retried.
+      // Schedule a recovery reload after services have had time to settle.
+      if (loadCount >= 2 && !hasRecovered && (now - firstLoadTime) < MULTI_LOAD_WINDOW_MS) {
+        hasRecovered = true;
+        console.info('[AUTH_DIAG] Calendar multi-load detected, scheduling recovery reload');
+        setTimeout(() => {
+          isRecoveryReload = true;
+          console.info('[AUTH_DIAG] Reloading calendar iframe for recovery');
+          iframe.src = iframe.src;
+        }, RECOVERY_DELAY_MS);
+      }
     });
 
     iframe.addEventListener('error', () => {

@@ -4,8 +4,8 @@
 Three spikes need validation before implementation decisions can be made.
 :::
 
-**Date:** 2026-03-04
-**Status:** Spikes defined, awaiting validation
+**Date:** 2026-03-04 (updated 2026-03-05)
+**Status:** Calendar recovery implemented; auth spikes awaiting validation
 **Issue:** [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) - Calendar blank on first visit each day
 **Author:** Claude AI Assistant
 **Related:** [ADR-003: Token Refresh Implementation](../adr/003-token-refresh-implementation.md), [Configuration Organization Research](configuration-organization-research.md)
@@ -14,9 +14,11 @@ Three spikes need validation before implementation decisions can be made.
 
 ## Executive Summary
 
-Users report that the calendar page appears blank on the first visit each day, requiring a manual page refresh or re-login to recover. Investigation reproduced the issue and identified a complete failure chain: Microsoft auth tokens expire after ~24 hours, Teams' silent token renewal fails with `InteractionRequired` errors for several minutes, the `CalendarSyncJob` fails during this window because it receives empty JSON responses, and the calendar iframe renders blank content.
+Users report that the calendar page appears blank on the first visit each day, requiring a manual page refresh or navigation away and back to recover. Initial investigation hypothesized that expired auth tokens caused the blank calendar, but user-submitted debug logs from March 2026 revealed a different root cause: a startup race condition where the calendar iframe loads before background services (service discovery, service workers, auth state) have fully initialized.
 
-The core problem is that Teams for Linux has no mechanism to detect auth token expiry or to trigger re-authentication proactively. The existing `connectionManager` handles network-level failures (DNS, connectivity) but is unaware of auth-level failures. This research defines three spikes to validate different approaches: proactive token refresh to prevent the problem, reactive auth failure detection to trigger recovery, and calendar-specific iframe reload as a targeted fallback.
+The calendar's boot script (`HostedCalendarFunctionalBoot`) preloads shell scripts that are never consumed because the prerequisite services haven't settled yet. The iframe then self-reloads once (Teams' internal retry), but that also fails for the same reason. The user's workaround of navigating to Chat and back works because the second visit creates a fresh iframe after all services are ready.
+
+A calendar iframe recovery mechanism has been implemented: the `authDiagnostics` module detects when the iframe loads twice within a short window (the multi-load signal), then schedules a delayed reload after services have settled. The original auth-related spikes remain relevant for the separate expired-token scenario and are awaiting user validation.
 
 ---
 
@@ -136,64 +138,51 @@ If Spike 1 succeeds (proactive refresh prevents expiry), Spike 2 becomes a safet
 
 ---
 
-## 4. Spike 3: Calendar Iframe Recovery
+## 4. Spike 3: Calendar Iframe Recovery (Implemented)
 
-### Hypothesis
+### Hypothesis (Updated)
 
-When auth tokens expire and recovery occurs (either via Spike 1's proactive refresh or Spike 2's reload), the calendar iframe may still display stale blank content because the iframe loaded during the auth failure window. A targeted iframe reload, triggered after auth recovery is confirmed, would restore calendar functionality without requiring a full page reload.
+User-submitted debug logs revealed that the blank calendar occurs even with valid auth tokens (57 minutes remaining, no `InteractionRequired` errors). The root cause is a startup race condition: the calendar iframe loads before background services (service discovery, service workers) have finished initializing. The calendar's `HostedCalendarFunctionalBoot` script preloads 4 shell scripts that are never consumed, and the iframe self-reloads once (Teams' internal retry) but fails again for the same reason.
 
-### What to Validate
+The recovery mechanism detects this multi-load pattern and triggers a delayed reload after services have settled.
 
-The spike needs to confirm that the calendar iframe can be identified reliably in the Teams DOM, that reloading the iframe after auth recovery causes it to re-fetch data successfully, and that Teams' React reconciliation doesn't fight the iframe reload (e.g., by reverting it to the blank state).
+### Evidence from Debug Logs
 
-### Validation Steps
+The following timeline from the reporter's logs illustrates the race condition. The calendar iframe first loaded at T+11s after page load start, but service workers were still installing until T+14s and the Discover API had returned errors for `groupsServiceV2`, `searchService`, and `consumerLicenses` at T+4s. The iframe loaded a second time at T+24s (Teams' internal retry), but the same preloaded scripts went unconsumed again. Both loads produced the `HostedCalendarFunctionalBoot` error "Setting overlaysContent is only supported from the top level browsing context", and 9 `ApiError: Unacceptable or no response` errors from the SharePoint service worker occurred between the loads.
 
-1. Identify the calendar iframe DOM selector. During investigation, the calendar was observed loading from `outlook.office.com/hosted/calendar/view/week`. Validate that this URL pattern is consistent and that the iframe can be found via `document.querySelector('iframe[src*="outlook.office.com/hosted/calendar"]')`.
+### Implementation
 
-2. After auth recovery is detected (either by Spike 1's successful refresh or Spike 2's reload completing), execute a script in the renderer that finds the calendar iframe and sets `iframe.src = iframe.src` to trigger a reload.
+The `authDiagnostics` module in `app/browser/tools/authDiagnostics.js` now includes calendar iframe recovery. When the calendar iframe fires its `load` event twice within a 30-second window, the module interprets this as a failed initialization (the iframe's own retry mechanism kicked in) and schedules a recovery reload after a 15-second delay. The delay allows background services to fully settle before the iframe attempts to boot again.
 
-3. Test whether the reloaded iframe renders calendar data correctly, and whether the React component tree detects the iframe reload and interferes with it.
+The recovery fires only once per page load to avoid reload loops. A flag tracks whether the reload was triggered by the recovery mechanism so that the recovery-triggered load event is not counted as another failure signal.
 
-### Success Criteria
+### Remaining Validation Needed
 
-The calendar iframe reloads successfully after auth recovery, displays the user's calendar data, and Teams' React framework does not revert or break the reloaded iframe. The reload is invisible to the user (no flash or navigation).
-
-### Failure Criteria
-
-The spike fails if the iframe selector is unreliable across Teams updates, if React's virtual DOM reconciliation reverts the iframe reload, or if the reloaded iframe triggers a new auth failure loop. Any of these would indicate that a full page reload (as in Spike 2) is the only reliable recovery mechanism for the calendar.
-
-### Implementation Location
-
-Script injection: `app/browser/tools/reactHandler.js` or a dedicated calendar recovery module.
-Trigger: Connected to Spike 1 or Spike 2's recovery signal.
-
-### Estimated Effort
-
-Low (0.5-1 day). The iframe manipulation is simple to implement. The risk is entirely in whether Teams' React framework cooperates, which can only be validated through testing.
+The implementation needs user testing to confirm that the delayed reload successfully renders the calendar, and that Teams' React reconciliation does not interfere with the iframe reload. If React reverts the iframe state, a full page reload via `connectionManager.refresh()` would be needed instead.
 
 ---
 
-## 5. CSP Fix (Immediate)
+## 5. CSP Fix (Implemented, Cosmetic)
 
-During investigation of issue #2296, CSP violations for `wss://augloop.office.com` WebSocket connections were observed in the debug logs. The Teams server-side CSP `connect-src` directive does not include this augloop domain, causing the browser to block co-authoring and real-time collaboration WebSocket connections.
+During investigation of issue #2296, CSP violations for `wss://augloop.office.com` WebSocket connections were observed in the debug logs. A fix was implemented in `app/mainAppWindow/index.js` via the `expandConnectSrcCSP` function, which appends `wss://augloop.office.com` to the `connect-src` CSP directive in response headers.
 
-A fix has been implemented in `app/mainAppWindow/index.js` via the `expandConnectSrcCSP` function, which appends `wss://augloop.office.com` to the `connect-src` CSP directive in response headers. This fix is independent of the three spikes and can ship immediately. It follows the same pattern used by `customBackground` for modifying CSP headers.
+User-submitted logs revealed that the CSP violations are on the `Content-Security-Policy-Report-Only` header, not the enforcing `Content-Security-Policy` header. The policy text explicitly states "The policy is report-only, so the violation has been logged but no further action has been taken." This means the augloop WebSocket connections were never actually blocked — the violations are log noise only. The server-side report-only policy already includes `wss://*.augloop.office.com`, but the bare domain `wss://augloop.office.com` doesn't match the wildcard pattern, hence the report. Our fix targets the enforcing header and is harmless but does not suppress the report-only violations.
 
 ---
 
 ## 6. Recommended Implementation Order
 
-The spikes should be validated in the order presented. Spike 1 (proactive token refresh) addresses the root cause and prevents the blank calendar entirely. If Spike 1 validates successfully, Spike 2 becomes a safety net for edge cases and Spike 3 may not be needed at all. If Spike 1 fails (e.g., the correlation object is no longer accessible), Spike 2 becomes the primary approach and Spike 3 provides targeted recovery for the calendar specifically.
+Spike 3 (calendar iframe recovery) has been implemented and should be validated first, as it addresses the race condition observed in user-submitted logs — which is the most commonly reported scenario. The reporter should test whether the delayed iframe reload resolves the blank calendar on first visit.
 
-The CSP fix should ship independently and immediately, as it addresses a separate issue observed in the same debug session.
+Spikes 1 and 2 remain relevant for a separate failure mode: expired auth tokens after overnight idle, where `InteractionRequired` errors cause the calendar (and other features) to fail. These spikes require a user who can reproduce the expired-token scenario and share logs showing `AADSTS50058` or `InteractionRequired` errors. They are complementary to Spike 3 rather than competing with it.
 
 ---
 
 ## 7. Diagnostic Logging for User Validation
 
-An `authDiagnostics` module has been added to `app/browser/tools/authDiagnostics.js` that captures spike-relevant data during normal usage. All diagnostic output uses the `[AUTH_DIAG]` prefix and is captured by electron-log when file logging is enabled.
+The `authDiagnostics` module at `app/browser/tools/authDiagnostics.js` captures diagnostic data and performs calendar iframe recovery. All diagnostic output uses the `[AUTH_DIAG]` prefix and is captured by electron-log when file logging is enabled.
 
-The module monitors three signals. First, it checks the `expiry_AuthService` timestamp in localStorage every 5 minutes and at startup, logging `expiresInMinutes` and `isExpired` without any PII. Second, it intercepts `console.error` and `console.warn` for `InteractionRequired` and `AADSTS` error patterns, debouncing the detection to avoid log spam (30-second window). Third, it uses a MutationObserver to detect when the calendar iframe from `outlook.office.com/hosted/calendar` is added to the DOM, then monitors its load/error events.
+The module monitors three signals and performs one recovery action. First, it checks the `expiry_AuthService` timestamp in localStorage every 5 minutes and at startup. Note: user-submitted logs showed this key may not be accessible from the main page context (it appears to live in a web worker scope), so this check may log "no valid expiry_AuthService found" even when tokens are valid. Second, it intercepts `console.error` and `console.warn` for `InteractionRequired` and `AADSTS` error patterns, debouncing the detection to avoid log spam (30-second window). Third, it uses a MutationObserver to detect when the calendar iframe from `outlook.office.com/hosted/calendar` is added to the DOM, monitors its load/error events, and triggers a recovery reload if the iframe loads multiple times within 30 seconds (indicating a failed initialization). The recovery reload fires once after a 15-second delay to give background services time to settle.
 
 To collect diagnostic data from the issue reporter, ask them to enable file logging by adding the following to their config:
 
