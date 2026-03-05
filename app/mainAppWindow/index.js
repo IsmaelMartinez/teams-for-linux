@@ -549,7 +549,8 @@ function expandConnectSrcCSP(details) {
   if (connectIdx < 0) return;
 
   const augloopDomain = "wss://augloop.office.com";
-  if (!policies[connectIdx].includes(augloopDomain)) {
+  const existingTokens = policies[connectIdx].split(/\s+/);
+  if (!existingTokens.includes(augloopDomain)) {
     policies[connectIdx] = `${policies[connectIdx]} ${augloopDomain}`;
     cspHeader[0] = policies.join(";");
   }
