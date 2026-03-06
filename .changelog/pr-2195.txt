@@ -1,0 +1,1 @@
+fix: ensure complete app menu when tray icon is disabled - by @IsmaelMartinez (#2195)
