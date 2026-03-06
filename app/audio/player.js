@@ -5,15 +5,22 @@ const os = require('node:os');
 
 const simpleArgs = (f) => [f];
 
-const PLAYERS = os.platform() === 'darwin'
-  ? [{ cmd: 'afplay', args: simpleArgs }]
-  : os.platform() === 'win32'
-    ? [{ cmd: 'powershell', args: (f) => ['-c', '(New-Object System.Media.SoundPlayer $args[0]).PlaySync()', '-args', f] }]
-    : [
-      { cmd: 'paplay', args: simpleArgs },
-      { cmd: 'pw-play', args: simpleArgs },
-      { cmd: 'aplay', args: simpleArgs },
-    ];
+function getPlatformPlayers() {
+  const platform = os.platform();
+  if (platform === 'darwin') {
+    return [{ cmd: 'afplay', args: simpleArgs }];
+  }
+  if (platform === 'win32') {
+    return [{ cmd: 'powershell', args: (f) => ['-c', '(New-Object System.Media.SoundPlayer $args[0]).PlaySync()', '-args', f] }];
+  }
+  return [
+    { cmd: 'paplay', args: simpleArgs },
+    { cmd: 'pw-play', args: simpleArgs },
+    { cmd: 'aplay', args: simpleArgs },
+  ];
+}
+
+const PLAYERS = getPlatformPlayers();
 
 let detectionPromise = null;
 
