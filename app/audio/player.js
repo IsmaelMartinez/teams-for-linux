@@ -3,45 +3,48 @@
 const { execFile } = require('node:child_process');
 const os = require('node:os');
 
+const simpleArgs = (f) => [f];
+
 const PLAYERS = os.platform() === 'darwin'
-  ? [{ cmd: 'afplay', args: (f) => [f] }]
+  ? [{ cmd: 'afplay', args: simpleArgs }]
   : os.platform() === 'win32'
-    ? [{ cmd: 'powershell', args: (f) => ['-c', `(New-Object System.Media.SoundPlayer '${f}').PlaySync()`] }]
+    ? [{ cmd: 'powershell', args: (f) => ['-c', '(New-Object System.Media.SoundPlayer $args[0]).PlaySync()', '-args', f] }]
     : [
-      { cmd: 'paplay', args: (f) => [f] },
-      { cmd: 'pw-play', args: (f) => [f] },
-      { cmd: 'aplay', args: (f) => [f] },
+      { cmd: 'paplay', args: simpleArgs },
+      { cmd: 'pw-play', args: simpleArgs },
+      { cmd: 'aplay', args: simpleArgs },
     ];
 
-let resolvedPlayer = null;
-let detectionDone = false;
+let detectionPromise = null;
 
 function detectPlayer() {
-  if (detectionDone) return Promise.resolve(resolvedPlayer);
+  if (detectionPromise) return detectionPromise;
 
   const which = os.platform() === 'win32' ? 'where' : 'which';
 
-  return new Promise((resolve) => {
-    let remaining = PLAYERS.length;
-    if (remaining === 0) {
-      detectionDone = true;
+  detectionPromise = new Promise((resolve) => {
+    if (PLAYERS.length === 0) {
       resolve(null);
       return;
     }
 
-    for (const player of PLAYERS) {
-      execFile(which, [player.cmd], (err) => {
-        if (!err && !resolvedPlayer) {
-          resolvedPlayer = player;
+    const results = new Array(PLAYERS.length).fill(null);
+    let remaining = PLAYERS.length;
+
+    for (let i = 0; i < PLAYERS.length; i++) {
+      execFile(which, [PLAYERS[i].cmd], (err) => {
+        if (!err) {
+          results[i] = PLAYERS[i];
         }
         remaining--;
         if (remaining === 0) {
-          detectionDone = true;
-          resolve(resolvedPlayer);
+          resolve(results.find(Boolean) || null);
         }
       });
     }
   });
+
+  return detectionPromise;
 }
 
 function createPlayer() {

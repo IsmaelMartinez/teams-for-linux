@@ -4,114 +4,49 @@
 Evaluates all production dependencies for replacement, removal, or retention.
 :::
 
-**Date:** 2026-03-04
-**Status:** Review complete
+**Date:** 2026-03-04 (review), 2026-03-06 (implemented)
+**Status:** All three replacements implemented
 **Author:** Claude AI Assistant
 
 ---
 
 ## Executive Summary
 
-Teams for Linux has 9 production dependencies. This review evaluates each for maintenance status, necessity, and replacement options. Three dependencies have clear action items: `node-sound` (replace), `lodash` (remove), and `electron-positioner` (replace). The remaining six are well-justified and should be retained.
+Teams for Linux had 9 production dependencies. This review evaluated each for maintenance status, necessity, and replacement options. Three dependencies had clear action items: `node-sound` (replace), `lodash` (remove), and `electron-positioner` (replace). All three have been implemented — the project now has 6 production dependencies.
 
 ---
 
 ## Dependencies with Recommended Actions
 
-### 1. `node-sound` (v0.0.8) — REPLACE
+### 1. `node-sound` (v0.0.8) — REPLACED
 
-**Current use:** Plays WAV notification sounds via system audio commands (`paplay`, `aplay`, `afplay`).
-**Files:** `app/index.js`, `app/notifications/service.js`
+**Status:** Implemented 2026-03-06
 
-**Problems:**
+**Previous use:** Played WAV notification sounds via system audio commands (`paplay`, `aplay`, `afplay`).
 
-- Unmaintained — no updates since initial release
-- Requires native compilation via `node-gyp`
-- Complicates Electron upgrades (must recompile against each new Node.js ABI)
-- Opaque error handling
+**Replacement:** `app/audio/player.js` — uses `child_process.execFile` to detect and invoke system audio commands (`paplay`, `pw-play`, `aplay` on Linux; `afplay` on macOS; PowerShell `SoundPlayer` on Windows). Player detection runs in parallel with priority ordering, results are cached via a shared promise. The `NotificationService` interface is unchanged.
 
-**Recommendation:** Replace with direct `execFile` calls (Strategy D from the [Notification Sound Overhaul Research](notification-sound-overhaul-research.md)). This is a Phase 1 change — create `app/audio/player.js` that detects available system audio commands at startup and plays files using `child_process.execFile`. The `NotificationService` interface stays identical. This is already researched and ready for implementation in v2.8.0.
-
-**Effort:** Low. Behavior-preserving refactor, ~100 lines of new code.
+**Security hardening applied:** PowerShell invocation passes file paths as `$args[0]` rather than interpolating into the command string, preventing command injection. Detection uses promise caching to prevent duplicate child process spawning on concurrent calls. A prototype pollution guard was added to the `mergeWith` helper.
 
 ---
 
-### 2. `lodash` (v4.17.23) — REMOVE
+### 2. `lodash` (v4.17.23) — REMOVED
 
-**Current use:** A single call to `_.mergeWith()` in `app/config/logger.js`.
+**Status:** Implemented 2026-03-06
 
-```javascript
-_.mergeWith(log, config, (obj, src) =>
-  typeof obj === "function" ? Object.assign(obj, src) : undefined,
-);
-```
+**Previous use:** A single call to `_.mergeWith()` in `app/config/logger.js`.
 
-**Problems:**
-
-- Entire lodash library (~600KB unpacked) imported for one function
-- The specific merge behavior can be replicated with a small helper function
-
-**Recommendation:** Replace with a local `mergeWith` implementation. The merge logic is straightforward — deep merge objects, with a custom callback for function properties. A 15-20 line recursive function handles this without any dependency.
-
-**Replacement code sketch:**
-
-```javascript
-function mergeWith(target, source, customizer) {
-  for (const key of Object.keys(source)) {
-    const customResult = customizer(target[key], source[key], key);
-    if (customResult !== undefined) {
-      target[key] = customResult;
-    } else if (
-      source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
-      target[key] && typeof target[key] === 'object' && !Array.isArray(target[key])
-    ) {
-      mergeWith(target[key], source[key], customizer);
-    } else {
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-```
-
-**Effort:** Very low. Single file change + remove dependency.
+**Replacement:** Inline `mergeWith` function in `app/config/logger.js` (~15 lines). Deep merges objects with a customizer callback, matching the Lodash semantics used. Includes a prototype pollution guard (`__proto__`, `constructor`, `prototype` keys are skipped).
 
 ---
 
-### 3. `electron-positioner` (v4.1.0) — REPLACE (inline)
+### 3. `electron-positioner` (v4.1.0) — REPLACED
 
-**Current use:** Positions popup windows (notification toast, incoming call toast, quick chat modal) at screen corners using `positioner.move('bottomRight')` or `positioner.move('topRight')`.
-**Files:** `app/incomingCallToast/index.js`, `app/mainAppWindow/notificationSystem/NotificationToast.js`, `app/quickChat/QuickChatModal.js`
+**Status:** Implemented 2026-03-06
 
-**Problems:**
+**Previous use:** Positioned popup windows at screen corners using `positioner.move('bottomRight')` or `positioner.move('topRight')`.
 
-- Unmaintained — last published 7+ years ago
-- Small utility (~100 lines) that wraps Electron's built-in `screen.getDisplayMatching()` API
-- Only two position values are used: `bottomRight` and `topRight`
-
-**Recommendation:** Replace with a small utility using Electron's built-in `screen` API. The two needed positions can be calculated in ~20 lines:
-
-```javascript
-const { screen } = require('electron');
-
-function moveWindow(window, position) {
-  const bounds = window.getBounds();
-  const display = screen.getDisplayMatching(bounds);
-  const workArea = display.workArea;
-
-  const positions = {
-    topRight: { x: workArea.x + workArea.width - bounds.width, y: workArea.y },
-    bottomRight: { x: workArea.x + workArea.width - bounds.width, y: workArea.y + workArea.height - bounds.height },
-  };
-
-  const coords = positions[position];
-  if (coords) {
-    window.setPosition(coords.x, coords.y, false);
-  }
-}
-```
-
-**Effort:** Low. Create a small utility module and update three files.
+**Replacement:** `app/utils/windowPositioner.js` (~25 lines) — uses Electron's built-in `screen.getDisplayMatching()` API to calculate `topRight` and `bottomRight` positions. Updated three consumers: `app/incomingCallToast/index.js`, `app/notificationSystem/NotificationToast.js`, `app/quickChat/QuickChatModal.js`.
 
 ---
 
@@ -226,11 +161,11 @@ function moveWindow(window, position) {
 
 ## Summary
 
-| Dependency | Version | Action | Effort | Rationale |
+| Dependency | Version | Action | Status | Rationale |
 |---|---|---|---|---|
-| `node-sound` | 0.0.8 | **Replace** | Low | Unmaintained native addon; use `execFile` instead |
-| `lodash` | 4.17.23 | **Remove** | Very low | Only one function used; inline it |
-| `electron-positioner` | 4.1.0 | **Replace** | Low | Unmaintained; inline with Electron's `screen` API |
+| `node-sound` | 0.0.8 | **Replaced** | Done | `app/audio/player.js` using `execFile` |
+| `lodash` | 4.17.23 | **Removed** | Done | Inline `mergeWith` in `app/config/logger.js` |
+| `electron-positioner` | 4.1.0 | **Replaced** | Done | `app/utils/windowPositioner.js` using Electron `screen` API |
 | `@homebridge/dbus-native` | 0.7.3 | Keep | — | Essential for Intune SSO, pure JS, maintained |
 | `electron-log` | 5.4.3 | Keep | — | Structured logging with PII hooks, maintained |
 | `electron-store` | 11.0.2 | Keep | — | Safe persistent storage, maintained |
@@ -238,11 +173,3 @@ function moveWindow(window, position) {
 | `electron-window-state` | 5.0.3 | Keep | — | Window state persistence, stable API |
 | `mqtt` | 5.15.0 | Keep | — | MQTT protocol support, maintained |
 | `yargs` | 18.0.0 | Keep | — | CLI/config parsing for 60+ options, maintained |
-
-## Implementation Priority
-
-1. **lodash removal** — smallest change, immediate size reduction (~600KB unpacked)
-2. **node-sound replacement** — already researched, ready for v2.8.0
-3. **electron-positioner replacement** — low effort, removes unmaintained dependency
-
-All three can be done independently and in parallel.
