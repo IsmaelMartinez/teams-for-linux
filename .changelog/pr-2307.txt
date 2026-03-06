@@ -1,1 +1,1 @@
-Remove - by @IsmaelMartinez (#2307)
+Remove old triage bot infrastructure - by @IsmaelMartinez (#2307)
