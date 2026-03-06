@@ -1,10 +1,10 @@
 # AI Automation Review and Enhancement Proposals
 
-:::note Batches 1-2 Implemented
-This document is a review of the current AI automation and a set of enhancement proposals. **Batch 1** (real-time index refresh, bot accuracy feedback loop, changelog model consolidation) and **Batch 2** (Phase 4 enhancement triage: context surfacing, feasibility signal, misclassification detection) have been implemented. Batch 3 proposal remains for discussion and requires maintainer review before implementation.
+:::note Migrated to Standalone GitHub App
+The issue triage bot has been migrated from in-repo GitHub Actions workflows to a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot), deployed as a GitHub App on Google Cloud Run. All bot workflows and scripts have been removed from this repository. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) for the migration decision. This document is retained for historical reference of the enhancement proposals and investigation journey. Batch 3 (pre-research prompt generator) will be implemented in the bot repo.
 :::
 
-**Status:** Batches 1-2 Implemented | Batch 3 Proposed
+**Status:** Migrated to standalone GitHub App | Batch 3 to be implemented in bot repo
 **Date:** March 2026
 **Author:** Claude AI Assistant
 **Scope:** Review of all AI automation systems + enhancement research proposals
