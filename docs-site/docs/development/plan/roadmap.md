@@ -23,7 +23,8 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | MQTT screen sharing feature ([#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144)) | PR open | Small | v2.7.10+ |
 | **Done** | Bot migration to GitHub App | Standalone service, old workflows removed, see [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) | Medium | v2.7.10 |
 | **Deferred** | Electron 40 upgrade ([#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223)) | [Research complete](../research/electron-40-migration-research.md), staying on Electron 39 for stability | Medium | v2.8.0 |
-| **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
+| **Done** | Dependency cleanup (lodash, node-sound, electron-positioner) | [Implemented](../research/dependency-review-2026.md) | Low | v2.8.0 |
+| **Ready** | Notification sound overhaul Phase 2 (custom sounds config) | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
 
 ---
@@ -115,7 +116,8 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 | Item | Description | Notes |
 |------|-------------|-------|
 | **Electron 40** | Electron 39.5.1 to 40.6.0 | [Research](../research/electron-40-migration-research.md); Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) open |
-| **Notification sound overhaul** | Replace `node-sound` native addon, add custom sound config | [Research](../research/notification-sound-overhaul-research.md); phased approach |
+| **Dependency cleanup** | Removed `lodash`, `node-sound`, `electron-positioner` | [Implemented](../research/dependency-review-2026.md); reduces to 6 production deps |
+| **Notification sound overhaul Phase 2** | Custom sound configuration | [Research](../research/notification-sound-overhaul-research.md); Phase 1 (player replacement) done |
 
 ---
 
