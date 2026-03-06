@@ -1,1 +1,1 @@
-Remove un - by @IsmaelMartinez (#2306)
+Remove unmaintained dependencies and inline their functionality - by @IsmaelMartinez (#2306)
