@@ -106,9 +106,12 @@ function observeCalendarIframe() {
     console.info('[AUTH_DIAG] Calendar iframe detected');
 
     iframe.addEventListener('load', () => {
-      if (isRecoveryReload) {
-        isRecoveryReload = false;
-        console.info('[AUTH_DIAG] Calendar iframe recovery reload completed');
+      // After recovery, ignore all further load events on this iframe
+      if (hasRecovered) {
+        if (isRecoveryReload) {
+          isRecoveryReload = false;
+          console.info('[AUTH_DIAG] Calendar iframe recovery reload completed');
+        }
         return;
       }
 
