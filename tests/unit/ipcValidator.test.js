@@ -38,7 +38,7 @@ describe('IPC Validator - Payload sanitisation', () => {
 	it('removes __proto__ from payloads', () => {
 		const payload = JSON.parse('{"__proto__": {"isAdmin": true}, "name": "test"}');
 		validateIpcChannel('get-config', payload);
-		assert.strictEqual(payload.__proto__?.isAdmin, undefined);
+		assert.ok(!Object.hasOwn(payload, '__proto__'));
 		assert.strictEqual(payload.name, 'test');
 	});
 
@@ -59,7 +59,7 @@ describe('IPC Validator - Payload sanitisation', () => {
 	it('sanitises nested objects recursively', () => {
 		const payload = JSON.parse('{"data": {"nested": {"__proto__": {"isAdmin": true}}, "value": 1}}');
 		validateIpcChannel('get-config', payload);
-		assert.strictEqual(payload.data.nested.__proto__?.isAdmin, undefined);
+		assert.ok(!Object.hasOwn(payload.data.nested, '__proto__'));
 		assert.strictEqual(payload.data.value, 1);
 	});
 
@@ -71,7 +71,7 @@ describe('IPC Validator - Payload sanitisation', () => {
 			current.child = { level: i };
 			current = current.child;
 		}
-		current.__proto__ = { isAdmin: true };
+		Object.defineProperty(current, '__proto__', { value: { isAdmin: true }, configurable: true, enumerable: true });
 
 		validateIpcChannel('get-config', obj);
 		// At depth > 10, sanitisation stops, so the deep __proto__ may remain
