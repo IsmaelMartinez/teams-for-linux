@@ -207,13 +207,13 @@ const { NETWORK_ERROR_PATTERNS } = require("../config/defaults");
 const RECOVERABLE_NETWORK_ERRORS = new Set(NETWORK_ERROR_PATTERNS);
 
 function assignOnDidFailLoadEventHandler(cm) {
-  return (event, code, description) => {
+  return (event, code, description, validatedURL, isMainFrame) => {
     console.error(
       `assignOnDidFailLoadEventHandler : ${JSON.stringify(
         event
       )} - ${code} - ${description}`
     );
-    if (RECOVERABLE_NETWORK_ERRORS.has(description)) {
+    if (isMainFrame && RECOVERABLE_NETWORK_ERRORS.has(description)) {
       console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
       cm.debouncedRefresh();
     }
