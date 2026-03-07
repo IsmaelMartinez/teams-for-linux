@@ -31,6 +31,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
   - **Phases 2-3**: Enhanced features and user-facing UI not started
 
+### Reference
+
+- **[Codebase Review (March 2026)](codebase-review-2026.md)** - Code quality, maintainability, performance, and DX review
+  - Covers architecture, testing gaps, performance overhead, and developer experience
+  - Covers minor menus `this` binding issue, DOM observer overhead, and testing gaps
+  - **Status:** Review complete, findings being addressed incrementally
+
 ### Historical (Migrated)
 
 - **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation (historical)
