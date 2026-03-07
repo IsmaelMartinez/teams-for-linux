@@ -277,18 +277,19 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
       total: authCookies.length,
     });
 
-    let removedCount = 0;
-    for (const cookie of cookiesToRemove) {
+    const results = await Promise.all(cookiesToRemove.map(async (cookie) => {
       try {
         const protocol = cookie.secure ? 'https' : 'http';
         const domain = cookie.domain.startsWith('.') ? cookie.domain.substring(1) : cookie.domain;
         const url = `${protocol}://${domain}${cookie.path || '/'}`;
         await windowSession.cookies.remove(url, cookie.name);
-        removedCount++;
+        return true;
       } catch (err) {
         console.warn('[AUTH_RECOVERY] Failed to remove cookie:', { name: cookie.name, error: err.message });
+        return false;
       }
-    }
+    }));
+    const removedCount = results.filter(r => r).length;
 
     console.info(`[AUTH_RECOVERY] Cleaned ${removedCount}/${cookiesToRemove.length} auth cookies`);
     return { cleaned: removedCount, total: authCookies.length, expired: expired.length };
@@ -324,7 +325,7 @@ async function triggerAuthRecovery() {
         return keysToRemove.length;
       })()
     `);
-    console.info('[AUTH_RECOVERY] Cleared ' + cleared + ' localStorage auth entries');
+    console.info('[AUTH_RECOVERY] Cleared localStorage auth entries', { count: cleared });
   } catch (err) {
     console.warn('[AUTH_RECOVERY] Failed to clear localStorage:', err.message);
   }
@@ -424,11 +425,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // When Teams can't refresh tokens silently (e.g., after overnight idle),
   // it logs InteractionRequired. We detect this, clear stale auth state,
   // and reload to force a clean interactive login.
+  const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'AuthFailed'];
+  // Only trust auth failure signals from Teams/Microsoft origins
+  const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
   let authRecoveryTriggered = false;
   window.webContents.on('console-message', (event) => {
     if (authRecoveryTriggered) return;
     const message = event.message || '';
-    if (!message.includes('InteractionRequired') && !message.includes('AuthFailed')) return;
+    if (!AUTH_FAILURE_PATTERNS.some(p => message.includes(p))) return;
+
+    // Verify the message originates from a trusted Microsoft source
+    const sourceId = event.sourceId || '';
+    if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
 
     authRecoveryTriggered = true;
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
