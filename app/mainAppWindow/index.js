@@ -209,6 +209,132 @@ function createScreenSharePreviewWindow() {
   });
 }
 
+// Microsoft auth domains whose cookies should be checked/cleaned
+const AUTH_DOMAINS = [
+  'login.microsoftonline.com',
+  'login.microsoft.com',
+  'teams.microsoft.com',
+  'teams.cloud.microsoft',
+  'microsoft.com',
+  'office.com',
+  'office365.com',
+  'live.com',
+  'microsoftonline.com',
+];
+
+// Azure AD / MSAL / SharePoint auth cookie names
+const AUTH_COOKIE_NAMES = new Set([
+  'ESTSAUTH',
+  'ESTSAUTHPERSISTENT',
+  'ESTSAUTHLIGHT',
+  'SignInStateCookie',
+  'AADSSO',
+  'buid',
+  'fpc',
+  'x-ms-gateway-slice',
+  'stsservicecookie',
+  'CCState',
+  'FedAuth',
+  'rtFa',
+]);
+
+// localStorage key patterns for MSAL/Teams auth tokens
+const AUTH_LOCAL_STORAGE_PATTERNS = [
+  'tmp.auth.v1.', 'refresh_token', 'msal.token', 'msal.',
+  'EncryptionKey', 'authSessionId', 'LogoutState',
+  'accessToken', 'idtoken', 'Account', 'Authority', 'ClientInfo',
+  'secure_teams_'
+];
+
+/**
+ * Checks session cookies for Microsoft auth domains and removes expired
+ * or all auth cookies. When forceCleanAll is true, removes all auth cookies
+ * to force a fresh interactive login.
+ * @returns {{ cleaned: number, total: number, expired: number }}
+ */
+async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
+  try {
+    const allCookies = await windowSession.cookies.get({});
+    const nowSeconds = Date.now() / 1000;
+
+    const authCookies = allCookies.filter(cookie => {
+      const domain = (cookie.domain || '').replace(/^\./, '');
+      const isAuthDomain = AUTH_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
+      return isAuthDomain && AUTH_COOKIE_NAMES.has(cookie.name);
+    });
+
+    const expired = authCookies.filter(c => c.expirationDate && c.expirationDate < nowSeconds);
+    const cookiesToRemove = forceCleanAll ? authCookies : expired;
+
+    if (cookiesToRemove.length === 0) {
+      console.debug('[AUTH_RECOVERY] Cookie check:', { total: authCookies.length, expired: expired.length });
+      return { cleaned: 0, total: authCookies.length, expired: expired.length };
+    }
+
+    console.info('[AUTH_RECOVERY] Cleaning auth cookies:', {
+      mode: forceCleanAll ? 'force-all' : 'expired-only',
+      removing: cookiesToRemove.length,
+      total: authCookies.length,
+    });
+
+    let removedCount = 0;
+    for (const cookie of cookiesToRemove) {
+      try {
+        const protocol = cookie.secure ? 'https' : 'http';
+        const domain = cookie.domain.startsWith('.') ? cookie.domain.substring(1) : cookie.domain;
+        const url = `${protocol}://${domain}${cookie.path || '/'}`;
+        await windowSession.cookies.remove(url, cookie.name);
+        removedCount++;
+      } catch (err) {
+        console.warn('[AUTH_RECOVERY] Failed to remove cookie:', { name: cookie.name, error: err.message });
+      }
+    }
+
+    console.info(`[AUTH_RECOVERY] Cleaned ${removedCount}/${cookiesToRemove.length} auth cookies`);
+    return { cleaned: removedCount, total: authCookies.length, expired: expired.length };
+  } catch (error) {
+    console.error('[AUTH_RECOVERY] Cookie check failed:', error.message);
+    return { cleaned: 0, total: 0, expired: 0 };
+  }
+}
+
+/**
+ * Clears stale auth state (localStorage tokens + cookies) and reloads
+ * the page to force a fresh interactive login.
+ */
+async function triggerAuthRecovery() {
+  console.info('[AUTH_RECOVERY] Clearing auth state and reloading...');
+
+  // Clear localStorage auth tokens via renderer
+  try {
+    const patternsJson = JSON.stringify(AUTH_LOCAL_STORAGE_PATTERNS);
+    const cleared = await window.webContents.executeJavaScript(`
+      (function() {
+        const patterns = ${patternsJson};
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && patterns.some(p => key.includes(p))) {
+            keysToRemove.push(key);
+          }
+        }
+        for (const key of keysToRemove) {
+          localStorage.removeItem(key);
+        }
+        return keysToRemove.length;
+      })()
+    `);
+    console.info('[AUTH_RECOVERY] Cleared ' + cleared + ' localStorage auth entries');
+  } catch (err) {
+    console.warn('[AUTH_RECOVERY] Failed to clear localStorage:', err.message);
+  }
+
+  await cleanExpiredAuthCookies(window.webContents.session, true);
+
+  console.info('[AUTH_RECOVERY] Reloading for fresh auth...');
+  window.loadURL(config.url, { userAgent: config.chromeUserAgent });
+}
+
 exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
@@ -289,6 +415,27 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   }
 
   addEventHandlers();
+
+  // Clean expired auth cookies before loading Teams to prevent the
+  // "We need you to sign in again" stale banner (#2296)
+  await cleanExpiredAuthCookies(window.webContents.session);
+
+  // Monitor renderer console for MSAL silent auth failures.
+  // When Teams can't refresh tokens silently (e.g., after overnight idle),
+  // it logs InteractionRequired. We detect this, clear stale auth state,
+  // and reload to force a clean interactive login.
+  let authRecoveryTriggered = false;
+  window.webContents.on('console-message', (event) => {
+    if (authRecoveryTriggered) return;
+    const message = event.message || '';
+    if (!message.includes('InteractionRequired') && !message.includes('AuthFailed')) return;
+
+    authRecoveryTriggered = true;
+    console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
+
+    // Delay to let Teams' own retry mechanism attempt recovery first
+    setTimeout(() => triggerAuthRecovery(), 5000);
+  });
 
   login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
 
@@ -608,6 +755,20 @@ function onWindowClosed() {
 
 function addEventHandlers() {
   customBackgroundService.initializeCustomBGServiceURL();
+
+  // After resuming from sleep, check if auth cookies expired during suspend.
+  // Electron on Linux lacks OS-level auth brokers (WAM/Keychain) that browsers
+  // use to transparently refresh tokens, so we handle expiry ourselves.
+  const { powerMonitor } = require("electron");
+  powerMonitor.on("resume", async () => {
+    console.debug('[AUTH_RECOVERY] System resumed, checking auth cookies');
+    const result = await cleanExpiredAuthCookies(window.webContents.session);
+    if (result.expired > 0) {
+      console.info('[AUTH_RECOVERY] Expired cookies found after resume, triggering recovery');
+      await triggerAuthRecovery();
+    }
+  });
+
   window.on("page-title-updated", onPageTitleUpdated);
   window.webContents.setWindowOpenHandler(onNewWindow);
   window.webContents.session.webRequest.onBeforeRequest(
