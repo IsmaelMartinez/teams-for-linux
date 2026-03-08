@@ -219,7 +219,7 @@ setup_appimage() {
     # tester user UID varies across distro images (packages may claim UID 1000).
     # World-writable ensures any container's tester user can write to it.
     mkdir -p "${SCRIPT_DIR}/session"
-    chmod a+rwx "${SCRIPT_DIR}/session" 2>/dev/null || true
+    chmod a+rwx "${SCRIPT_DIR}/session" || echo "[!] Warning: Failed to set permissions on ${SCRIPT_DIR}/session. This may cause issues."
 
     if [[ -n "${APPIMAGE_PATH:-}" ]]; then
         if [[ ! -f "$APPIMAGE_PATH" ]]; then
