@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs npm \
     python3 wget curl procps file fuse3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -m -s /bin/bash -G audio,video tester \
+    && useradd -m -s /bin/bash -G audio,video -u 1000 tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config

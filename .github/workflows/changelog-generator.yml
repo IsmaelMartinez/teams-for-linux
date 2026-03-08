@@ -109,7 +109,10 @@ jobs:
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
                       temperature: 0.3,
-                      maxOutputTokens: 50
+                      maxOutputTokens: 256,
+                      thinkingConfig: {
+                        thinkingBudget: 0
+                      }
                     }
                   })
                 }

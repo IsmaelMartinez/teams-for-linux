@@ -245,6 +245,7 @@ fi
 # different UID. Make everything world-accessible.
 chmod -R a+rwX "${SESSION_DIR}" || echo "[!] Warning: Failed to set permissions on ${SESSION_DIR}. This may cause issues."
 
+
 # Remove stale Chromium singleton files left by previous Electron processes.
 # These persist when Electron is killed (SIGKILL) or across container restarts,
 # and cause "App already running" / Permission Denied errors.
