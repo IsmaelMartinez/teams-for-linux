@@ -214,6 +214,10 @@ parse_group_options() {
 setup_appimage() {
     local app_dir="${SCRIPT_DIR}/app"
     mkdir -p "$app_dir"
+    # Pre-create session directory so Docker doesn't create it as root.
+    # When Docker creates a missing bind-mount source, it's owned by root:root
+    # with mode 755, which prevents the container's tester user from writing.
+    mkdir -p "${SCRIPT_DIR}/session"
 
     if [[ -n "${APPIMAGE_PATH:-}" ]]; then
         if [[ ! -f "$APPIMAGE_PATH" ]]; then
@@ -454,5 +458,5 @@ elif [[ "$RUN_TESTS" == "true" ]]; then
     COMPOSE_ENV+=( -e "RUN_TESTS=true" )
 fi
 
-# Build and run
-docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
+# Build and run (--rm removes the container after exit to prevent orphans)
+docker compose run --rm --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
