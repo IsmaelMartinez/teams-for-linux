@@ -134,6 +134,7 @@ case "${DISPLAY_SERVER}" in
         chmod 700 "$XDG_RUNTIME_DIR"
         export WLR_BACKENDS=headless
         export WLR_LIBINPUT_NO_DEVICES=1
+        export WLR_RENDERER=pixman
         export XDG_SESSION_TYPE=wayland
         sway &
         DISPLAY_PID=$!
@@ -151,7 +152,27 @@ case "${DISPLAY_SERVER}" in
         export WAYLAND_DISPLAY="$SOCKET"
         echo "[*] Found Wayland socket: $WAYLAND_DISPLAY"
         swaymsg create_output WLR_HEADLESS 2>/dev/null || true
-        export DISPLAY=:0
+
+        # Wait for XWayland to create its X11 socket. Newer wlroots (0.18+,
+        # shipped by Fedora 41) defers XWayland startup, so the Wayland socket
+        # may be ready before the X11 display exists.
+        echo "[*] Waiting for XWayland display..."
+        X_DISPLAY=""
+        for i in $(seq 1 20); do
+            X_SOCKET=$(ls /tmp/.X11-unix/X* 2>/dev/null | head -1)
+            if [[ -n "$X_SOCKET" ]]; then
+                X_DISPLAY=":$(basename "$X_SOCKET" | sed 's/^X//')"
+                break
+            fi
+            sleep 0.5
+        done
+        if [[ -z "$X_DISPLAY" ]]; then
+            echo "[!] XWayland display not found in /tmp/.X11-unix/ after 10s"
+            ls -la /tmp/.X11-unix/ 2>/dev/null
+            exit 1
+        fi
+        export DISPLAY="$X_DISPLAY"
+        echo "[*] Found XWayland display: $DISPLAY"
 
         if [[ "$MODE" == "login" ]]; then
             echo "[*] Starting wayvnc + noVNC for login..."
