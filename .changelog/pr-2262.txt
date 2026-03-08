@@ -1,1 +1,0 @@
-fix: resolve SonarCloud issues in run.sh - by @IsmaelMartinez (#2262)
