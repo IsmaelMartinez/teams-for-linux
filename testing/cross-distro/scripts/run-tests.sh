@@ -238,6 +238,12 @@ fi
 # ============================================================
 # TEST MODE: run Playwright tests against persisted session
 # ============================================================
+
+# Remove stale Chromium singleton files left by previous Electron processes.
+# These persist when Electron is killed (SIGKILL) or across container restarts,
+# and cause "App already running" / Permission Denied errors.
+rm -f "${SESSION_DIR}/SingletonLock" "${SESSION_DIR}/SingletonSocket" "${SESSION_DIR}/SingletonCookie"
+
 echo "[*] Running authenticated tests..."
 echo ""
 

@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs npm \
     python3 wget curl procps file fuse3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -m -s /bin/bash -G audio,video tester \
+    && useradd -m -s /bin/bash -G audio,video -u 1000 tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config
@@ -30,6 +30,7 @@ COPY scripts/start-x11.sh /usr/local/bin/start-x11.sh
 COPY scripts/start-wayland.sh /usr/local/bin/start-wayland.sh
 COPY scripts/start-xwayland.sh /usr/local/bin/start-xwayland.sh
 COPY scripts/run-tests.sh /usr/local/bin/run-tests.sh
+COPY scripts/sway-status.sh /usr/local/bin/sway-status.sh
 COPY config/sway-config /home/tester/.config/sway/config
 RUN chmod +x /usr/local/bin/*.sh && chown -R tester:tester /home/tester/.config
 
