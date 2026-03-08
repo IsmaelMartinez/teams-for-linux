@@ -239,6 +239,12 @@ fi
 # TEST MODE: run Playwright tests against persisted session
 # ============================================================
 
+# Ensure session directory is writable by this container's tester user.
+# The tester UID varies across distro images because installed packages may
+# claim UID 1000, so the session files from --login may be owned by a
+# different UID. Make everything world-accessible.
+chmod -R a+rwX "${SESSION_DIR}" 2>/dev/null || true
+
 # Remove stale Chromium singleton files left by previous Electron processes.
 # These persist when Electron is killed (SIGKILL) or across container restarts,
 # and cause "App already running" / Permission Denied errors.
