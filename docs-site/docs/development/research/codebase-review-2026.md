@@ -18,7 +18,7 @@ The repository is in good shape for a community-maintained Electron wrapper. The
 
 ## Performance: DOM Observers and Polling
 
-Three patterns create unnecessary CPU overhead during normal use, and especially during meetings.
+Three patterns may create CPU overhead during normal use, especially during meetings. These need hands-on evaluation before any changes — Teams' React DOM is unpredictable and the observers may be necessary for reliable functionality.
 
 ### MutationObservers on document.body
 
@@ -104,8 +104,8 @@ The ADR practice is exemplary with 18 records covering all major decisions. The 
 
 The work that would have the most immediate impact falls into three categories.
 
-Quick fixes that prevent regressions: wire all unit tests into the `test:unit` script, add tests for ipcValidator/certificate/MQTT, add `e2e_tests` to the CI build dependency chain, create a PR template.
+Quick fixes that prevent regressions (partially addressed in PR #2312): unit test auto-discovery and tests for ipcValidator/certificate/MQTT are done. Remaining: add `e2e_tests` to the CI build dependency chain, create a PR template.
 
-Performance improvements for meetings: scope or remove the body-level MutationObservers, add backoff to timestampCopyOverride, fix the nativeTheme listener leak.
+Performance evaluation for meetings: investigate whether the body-level MutationObservers, timestampCopyOverride polling, and nativeTheme listener registration are necessary for reliable functionality before making changes. Teams' React DOM is unpredictable and these may be required.
 
 Structural improvements for long-term maintainability: convert `mainAppWindow/index.js` to a class, standardise on `#private` fields, consolidate notification sound logic, fix Graph API logging to go through the sanitised pipeline.
