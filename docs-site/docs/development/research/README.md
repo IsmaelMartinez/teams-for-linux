@@ -35,7 +35,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 - **[Codebase Review (March 2026)](codebase-review-2026.md)** - Code quality, maintainability, performance, and DX review
   - Covers architecture, testing gaps, performance overhead, and developer experience
-  - Covers minor menus `this` binding issue, DOM observer overhead, and testing gaps
+  - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
   - **Status:** Review complete, findings being addressed incrementally
 
 ### Historical (Migrated)

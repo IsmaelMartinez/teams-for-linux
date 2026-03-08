@@ -12,13 +12,7 @@ Comprehensive review of code quality, maintainability, performance, and develope
 
 ## Executive Summary
 
-The repository is in good shape for a community-maintained Electron wrapper. The recent refactoring of `app/index.js` has been largely successful, the documentation is extensive (18 ADRs, module READMEs in all 27 directories, thorough config docs), and the CI/CD pipeline builds for 6 platforms across 3 architectures. The review identified actionable improvements in five areas: a live bug in the menus module, performance overhead from DOM observers during meetings, testing gaps for key modules, a few architectural inconsistencies, and some developer experience papercuts.
-
----
-
-## Menus: `this` Binding in Save/Restore Settings
-
-In `app/menus/index.js` at lines 335-355, the `saveSettingsInternal` and `restoreSettingsInternal` functions are standalone functions (not class methods) that reference `this.window`. They are passed as callbacks to `ipcMain.once()`. When Node's EventEmitter invokes these callbacks, `this` is set to the `ipcMain` object rather than the `Menus` instance. In practice, `dialog.showMessageBoxSync(undefined, ...)` works in current Electron versions (it shows a parentless dialog), so the feature functions correctly. However, this is technically incorrect and could break if Electron tightens validation. Worth fixing as a minor cleanup — either convert these to class methods or close over the window reference.
+The repository is in good shape for a community-maintained Electron wrapper. The recent refactoring of `app/index.js` has been largely successful, the documentation is extensive (18 ADRs, module READMEs in all 27 directories, thorough config docs), and the CI/CD pipeline builds for 6 platforms across 3 architectures. The review identified actionable improvements in four areas: performance overhead from DOM observers during meetings, testing gaps for key modules, a few architectural inconsistencies, and some developer experience papercuts.
 
 ---
 
@@ -110,7 +104,7 @@ The ADR practice is exemplary with 18 records covering all major decisions. The 
 
 The work that would have the most immediate impact falls into three categories.
 
-Quick fixes that prevent regressions: fix the `this` binding in menus, wire all unit tests into the `test:unit` script, add tests for ipcValidator/certificate/MQTT, add `e2e_tests` to the CI build dependency chain, create a PR template.
+Quick fixes that prevent regressions: wire all unit tests into the `test:unit` script, add tests for ipcValidator/certificate/MQTT, add `e2e_tests` to the CI build dependency chain, create a PR template.
 
 Performance improvements for meetings: scope or remove the body-level MutationObservers, add backoff to timestampCopyOverride, fix the nativeTheme listener leak.
 
