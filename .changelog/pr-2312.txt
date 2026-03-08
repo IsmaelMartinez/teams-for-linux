@@ -1,1 +1,1 @@
-Add unit - by @IsmaelMartinez (#2312)
+Add codebase review, unit tests for security modules, and fix changelog generator - by @IsmaelMartinez (#2312)
