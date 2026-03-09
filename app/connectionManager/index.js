@@ -207,15 +207,15 @@ const { NETWORK_ERROR_PATTERNS } = require("../config/defaults");
 const RECOVERABLE_NETWORK_ERRORS = new Set(NETWORK_ERROR_PATTERNS);
 
 function assignOnDidFailLoadEventHandler(cm) {
-  return (event, code, description) => {
-    console.error(
-      `assignOnDidFailLoadEventHandler : ${JSON.stringify(
-        event
-      )} - ${code} - ${description}`
-    );
-    if (RECOVERABLE_NETWORK_ERRORS.has(description)) {
-      console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
-      cm.debouncedRefresh();
+  return (event, code, description, validatedURL, isMainFrame) => {
+    if (isMainFrame) {
+      console.error(`[CONNECTION] Main frame failed to load: ${description} (code: ${code})`);
+      if (RECOVERABLE_NETWORK_ERRORS.has(description)) {
+        console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
+        cm.debouncedRefresh();
+      }
+    } else {
+      console.warn(`[CONNECTION] Sub-frame failed to load: ${description} (code: ${code})`);
     }
   };
 }
