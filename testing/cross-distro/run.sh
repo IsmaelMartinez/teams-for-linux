@@ -214,10 +214,12 @@ parse_group_options() {
 setup_appimage() {
     local app_dir="${SCRIPT_DIR}/app"
     mkdir -p "$app_dir"
-    # Pre-create session directory so Docker doesn't create it as root.
-    # When Docker creates a missing bind-mount source, it's owned by root:root
-    # with mode 755, which prevents the container's tester user from writing.
+    # Pre-create session directory and make it world-writable.
+    # Docker creates missing bind-mount sources as root:root 755, and the
+    # tester user UID varies across distro images (packages may claim UID 1000).
+    # World-writable ensures any container's tester user can write to it.
     mkdir -p "${SCRIPT_DIR}/session"
+    chmod a+rwx "${SCRIPT_DIR}/session" || echo "[!] Warning: Failed to set permissions on ${SCRIPT_DIR}/session. This may cause issues."
 
     if [[ -n "${APPIMAGE_PATH:-}" ]]; then
         if [[ ! -f "$APPIMAGE_PATH" ]]; then
