@@ -1,1 +1,0 @@
-docs: update roadmap with triage bot GitHub App migration - by @IsmaelMartinez (#2288)

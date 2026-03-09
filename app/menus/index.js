@@ -170,9 +170,7 @@ class Menus {
       event.preventDefault();
       this.hide();
     } else {
-      if (this.tray) {
-        this.tray.close();
-      }
+      this.tray?.close();
       this.window.webContents.session.flushStorageData();
     }
   }
@@ -207,9 +205,7 @@ class Menus {
   updateMenu() {
     const menu = appMenu(this);
     this.window.setMenu(Menu.buildFromTemplate([menu]));
-    if (this.tray) {
-      this.tray.setContextMenu(menu.submenu);
-    }
+    this.tray?.setContextMenu(menu.submenu);
 
     // Notify renderer process of config changes that affect renderer behavior
     // This allows menu toggles to take effect immediately without restart

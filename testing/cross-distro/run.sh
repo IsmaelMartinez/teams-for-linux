@@ -214,6 +214,12 @@ parse_group_options() {
 setup_appimage() {
     local app_dir="${SCRIPT_DIR}/app"
     mkdir -p "$app_dir"
+    # Pre-create session directory and make it world-writable.
+    # Docker creates missing bind-mount sources as root:root 755, and the
+    # tester user UID varies across distro images (packages may claim UID 1000).
+    # World-writable ensures any container's tester user can write to it.
+    mkdir -p "${SCRIPT_DIR}/session"
+    chmod a+rwx "${SCRIPT_DIR}/session" || echo "[!] Warning: Failed to set permissions on ${SCRIPT_DIR}/session. This may cause issues."
 
     if [[ -n "${APPIMAGE_PATH:-}" ]]; then
         if [[ ! -f "$APPIMAGE_PATH" ]]; then
@@ -454,5 +460,5 @@ elif [[ "$RUN_TESTS" == "true" ]]; then
     COMPOSE_ENV+=( -e "RUN_TESTS=true" )
 fi
 
-# Build and run
-docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
+# Build and run (--rm removes the container after exit to prevent orphans)
+docker compose run --rm --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"

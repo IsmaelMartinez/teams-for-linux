@@ -14,6 +14,44 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.10" date="2026-03-08">
+      <description>
+        <ul>
+          <li>fix: ensure complete app menu when tray icon is disabled - by @IsmaelMartinez (#2195)</li>
+          <li>Fix crash when using custom CSS - by @KrissN (#2220)</li>
+          <li>Simplify app termination and add MQTT error handling - by @IsmaelMartinez (#2234)</li>
+          <li>Add authenticated Playwright tests with Docker login workflow - by @IsmaelMartinez (#2245)</li>
+          <li>fix: resolve SonarQube code smells across codebase - by @IsmaelMartinez (#2247)</li>
+          <li>Improve window lifecycle handling and network error resilience - by @IsmaelMartinez (#2249)</li>
+          <li>Improve tray window toggle behavior with minimize/restore support - by @IsmaelMartinez (#2253)</li>
+          <li>chore(deps): bump actions/github-script from 7.0.1 to 8.0.0 (#2254)</li>
+          <li>chore(deps): bump canonical/setup-lxd from 62cd335190e2b612b427db9319ea6b59ab1691f8 to d492474f6c8ceed1b716bb34c8f575a428871c70 (#2255)</li>
+          <li>chore(deps): bump actions/setup-node from 4.4.0 to 6.2.0 (#2256)</li>
+          <li>chore(deps): bump actions/upload-artifact from 4.6.2 to 7.0.0 (#2257)</li>
+          <li>chore(deps): bump actions/upload-pages-artifact from 3.0.1 to 4.0.0 (#2258)</li>
+          <li>docs: Add AI automation review and enhancement proposals - by @IsmaelMartinez (#2259)</li>
+          <li>Implement Batch 1 bot automation improvements - by @IsmaelMartinez (#2260)</li>
+          <li>Add grouped parallel execution modes for cross-distro testing - by @IsmaelMartinez (#2261)</li>
+          <li>fix: resolve SonarCloud issues in run.sh - by @IsmaelMartinez (#2262)</li>
+          <li>Add AI - by @IsmaelMartinez (#2264)</li>
+          <li>docs: Clean up roadmap, research docs, and ADR statuses - by @IsmaelMartinez (#2265)</li>
+          <li>Update - by @IsmaelMartinez (#2266)</li>
+          <li>fix: add error details to triage bot Gemini API catch blocks - by @IsmaelMartinez (#2270)</li>
+          <li>fix: add JSON extraction and increase maxOutputTokens for triage bot - by @IsmaelMartinez (#2275)</li>
+          <li>Fix (#2278)</li>
+          <li>Debug: - by @IsmaelMartinez (#2280)</li>
+          <li>Fix: - by @IsmaelMartinez (#2282)</li>
+          <li>Docs - by @IsmaelMartinez (#2286)</li>
+          <li>docs: update roadmap with triage bot GitHub App migration - by @IsmaelMartinez (#2288)</li>
+          <li>chore: disable old triage bot workflows, migrated to GitHub App - by @IsmaelMartinez (#2302)</li>
+          <li>Update (#2303)</li>
+          <li>Fix: - by @IsmaelMartinez (#2305)</li>
+          <li>Remove unmaintained dependencies and inline their functionality - by @IsmaelMartinez (#2306)</li>
+          <li>Remove old triage bot infrastructure - by @IsmaelMartinez (#2307)</li>
+          <li>Bump (#2309)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.9" date="2026-02-27">
       <description>
         <ul>

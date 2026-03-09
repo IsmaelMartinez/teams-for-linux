@@ -31,18 +31,22 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
   - **Phases 2-3**: Enhanced features and user-facing UI not started
 
-### Strategic Documentation
+### Reference
 
-- **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation
-  - **Phases 1-3 Shipped**: Information request bot, AI-powered solution suggester, duplicate detection
-  - **Batch 1 Shipped**: Real-time index refresh, accuracy feedback loop, changelog model consolidation
-  - **Phase 4 planned**: Enhancement triage (context, feasibility, misclassification detection)
+- **[Codebase Review (March 2026)](codebase-review-2026.md)** - Code quality, maintainability, performance, and DX review
+  - Covers architecture, testing gaps, performance overhead, and developer experience
+  - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
+  - **Status:** Review complete, findings being addressed incrementally
 
-- **[AI Automation Review and Enhancements](ai-automation-review-and-enhancements.md)** - Review of all AI automation systems and enhancement proposals
-  - Reviews changelog generator, issue triage bot (3 phases), issue index, Claude Code integration
-  - **Batch 1 Implemented**: Real-time index refresh, bot accuracy feedback loop, changelog model consolidation
-  - **Batch 2 Next**: Enhancement triage (Phase 4)
-  - **Batch 3 Future**: Pre-research prompt generator (Phase 3.2)
+### Historical (Migrated)
+
+- **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation (historical)
+  - All four phases implemented and migrated to standalone GitHub App
+  - See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot)
+
+- **[AI Automation Review and Enhancements](ai-automation-review-and-enhancements.md)** - Review of all AI automation systems (historical)
+  - Batches 1-2 implemented; triage bot migrated to standalone GitHub App
+  - Batch 3 (pre-research prompt generator) to be implemented in the bot repo
 
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization

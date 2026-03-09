@@ -62,7 +62,7 @@ bindsym $mod+Shift+space floating toggle
 # Status bar
 bar {
     position top
-    status_command echo "Cross-Distro Test | $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"') | $DISPLAY_SERVER"
+    status_command /usr/local/bin/sway-status.sh
     colors {
         statusline #ffffff
         background #323232
