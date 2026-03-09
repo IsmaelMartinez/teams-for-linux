@@ -1,1 +1,0 @@
-fix: recover from stale auth state on startup and after sleep (#2296) - by @IsmaelMartinez (#2311)
