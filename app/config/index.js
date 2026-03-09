@@ -486,7 +486,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       media: {
         default: {
-          microphone: { disableAutogain: false },
+          microphone: { disableAutogain: false, speakingIndicator: false },
           camera: {
             resolution: { enabled: false, mode: "remove" },
             autoAdjustAspectRatio: { enabled: false },

@@ -26,7 +26,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Done** | Dependency cleanup (lodash, node-sound, electron-positioner) | [Implemented](../research/dependency-review-2026.md) | Low | v2.8.0 |
 | **Ready** | Notification sound overhaul Phase 2 (custom sounds config) | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
-| **Requires Validation** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | [Research complete](../research/speaking-indicator-research.md), spikes created | Medium | v2.8.0+ |
+| **Done** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | [Implemented](../research/speaking-indicator-research.md), Phase 1 MVP | Medium | v2.8.0+ |
 
 ---
 
@@ -132,22 +132,19 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 
 ---
 
-## Requires Validation First
+## Implemented
 
 ### Speaking Indicator
 
 **Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
 **Research:** [speaking-indicator-research.md](../research/speaking-indicator-research.md)
-**Status:** Research complete, validation spikes created
+**Status:** Phase 1 MVP implemented 2026-03-09
 
 Real-time visual indicator during calls confirming microphone input is working. Uses `getUserMedia()` interception (proven pattern from `disableAutogain.js`) + `AudioContext`/`AnalyserNode` for audio level detection. Renders a small in-page overlay with speaking/silent/muted states. Also activates the dormant `microphone-state-changed` IPC channel for MQTT home automation.
 
-**Validation spikes** (in `spikes/speaking-indicator/`):
-1. `spike-audio-analyser.js` --- AudioContext + AnalyserNode overhead and correctness
-2. `spike-getUserMedia-chain.js` --- Four-layer getUserMedia patch composition
-3. `spike-track-mute-detection.js` --- Track mute/unmute event reliability
-
-**Next steps:** Run spikes in a live Teams call, confirm CPU/memory overhead is acceptable, then implement Phase 1 MVP.
+**Module:** `app/browser/tools/speakingIndicator.js`
+**Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
+**Phase 2 (if requested):** Configurable threshold, position, MQTT speaking topic.
 
 ---
 

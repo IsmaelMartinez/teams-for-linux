@@ -42,6 +42,7 @@ User-facing features and integrations.
 | **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
 | **Graph API** | `app/graphApi/` | Microsoft Graph API integration for calendar and mail | [Research](./research/graph-api-integration-research.md) |
+| **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Real-time microphone input overlay during calls | [Research](./research/speaking-indicator-research.md) |
 
 ## System Integration Modules
 
