@@ -65,7 +65,7 @@
     "@playwright/test": "1.58.2",
     "electron": "39.7.0",
     "electron-builder": "^26.8.1",
-    "eslint": "^10.0.2",
+    "eslint": "^10.0.3",
     "globals": "^17.4.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
