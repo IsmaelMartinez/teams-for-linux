@@ -1,6 +1,23 @@
 const log = require("electron-log/main");
-const _ = require("lodash");
 const { sanitizeLogData } = require("../utils/logSanitizer");
+
+function mergeWith(target, source, customizer) {
+  for (const key of Object.keys(source)) {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
+    const customResult = customizer(target[key], source[key], key);
+    if (customResult !== undefined) {
+      target[key] = customResult;
+    } else if (
+      source[key] && typeof source[key] === "object" && !Array.isArray(source[key]) &&
+      target[key] && typeof target[key] === "object" && !Array.isArray(target[key])
+    ) {
+      mergeWith(target[key], source[key], customizer);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
 
 exports.init = function (config) {
   if (config) {
@@ -11,7 +28,7 @@ exports.init = function (config) {
       console.debug(
         `Initialising logger with config: ${JSON.stringify(config)}`,
       );
-      _.mergeWith(log, config, (obj, src) =>
+      mergeWith(log, config, (obj, src) =>
         typeof obj === "function" ? Object.assign(obj, src) : undefined,
       );
       log.initialize();

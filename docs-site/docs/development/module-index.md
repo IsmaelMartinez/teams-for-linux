@@ -60,6 +60,8 @@ Supporting infrastructure, utilities, and cross-cutting concerns.
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
+| **Audio** | `app/audio/` | Sound playback via system audio commands (`paplay`, `aplay`, `afplay`) | — |
+| **Utils** | `app/utils/` | Shared utilities (window positioning, log sanitization) | — |
 | **Helpers** | `app/helpers/` | Shared utility functions and common logic | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/helpers/README.md) |
 | **Cache Manager** | `app/cacheManager/` | Application cache handling | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/cacheManager/README.md) |
 | **Config** | `app/config/` | Configuration file loading and parsing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/config/README.md) |

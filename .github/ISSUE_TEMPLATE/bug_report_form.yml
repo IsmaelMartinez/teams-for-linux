@@ -83,6 +83,8 @@ body:
         ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'
         ```
       render: markdown
+    validations:
+      required: true
   - type: textarea
     id: additional-context
     attributes:

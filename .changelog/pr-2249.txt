@@ -1,1 +1,0 @@
-Improve window lifecycle handling and network error resilience - by @IsmaelMartinez (#2249)

@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-02
+**Last Updated:** 2026-03-04
 **Current Version:** v2.7.9 (pre-release, Electron 39.5.1)
 **Status:** Living Document --- stabilising on Electron 39, planning v2.7.10 and v2.8.0
 
@@ -21,10 +21,10 @@ This document outlines the future development direction for Teams for Linux, org
 | **Open** | App menu without tray ([#2195](https://github.com/IsmaelMartinez/teams-for-linux/pull/2195)) | PR open, carry-over from v2.7.8 | Small | v2.7.10 |
 | **Open** | MQTT null sourceId fix ([#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193)) | PR open, carry-over from v2.7.8 | Tiny | v2.7.10 |
 | **Open** | MQTT screen sharing feature ([#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144)) | PR open | Small | v2.7.10+ |
-| **Done** | Bot automation (Batch 2) | Enhancement triage: context, feasibility, misclassification | Medium-Large | v2.7.10+ |
-| **Active** | Bot migration to GitHub App | Standalone service, one-click install, see [triage-bot repo](https://github.com/IsmaelMartinez/github-issue-triage-bot) | Medium | v2.7.10+ |
+| **Done** | Bot migration to GitHub App | Standalone service, old workflows removed, see [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) | Medium | v2.7.10 |
 | **Deferred** | Electron 40 upgrade ([#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223)) | [Research complete](../research/electron-40-migration-research.md), staying on Electron 39 for stability | Medium | v2.8.0 |
-| **Ready** | Notification sound overhaul | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
+| **Done** | Dependency cleanup (lodash, node-sound, electron-positioner) | [Implemented](../research/dependency-review-2026.md) | Low | v2.8.0 |
+| **Ready** | Notification sound overhaul Phase 2 (custom sounds config) | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
 | **Requires Validation** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | [Research complete](../research/speaking-indicator-research.md), spikes created | Medium | v2.8.0+ |
 
@@ -87,48 +87,15 @@ The goal for v2.7.10 is stability. Stay on Electron 39, merge accumulated bug fi
 
 ---
 
-## Bot Automation Improvements
+## Bot Automation
 
-The issue triage bot has been extracted into a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot). It runs on Google Cloud Run backed by Neon PostgreSQL with pgvector for vector similarity search and Gemini 2.5 Flash for LLM generation. All four phases are implemented and validated on the test repo.
+The issue triage bot has been migrated to a standalone Go service at [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot), deployed as a registered GitHub App on Google Cloud Run with Neon PostgreSQL (pgvector) and Gemini 2.5 Flash. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) for the migration decision.
 
-The standalone service replaces the inline JavaScript and GitHub Actions workflows that shipped in v2.7.4 through v2.7.9. See the triage bot repo's `docs/adr/` for architecture decision records covering the Go service, Gemini, Neon, Cloud Run, Terraform, and GitHub App integration.
-
-### Batch 2 --- Implemented
-
-**Status:** Implemented
-**Effort:** Medium-Large
-**Priority:** Done
-
-The triage bot now fires on both `bug` and `enhancement`-labelled issues. All four phases are implemented in the standalone Go service: missing info detection, solution suggestions from troubleshooting docs, duplicate detection from issue history, enhancement context from roadmap/ADRs/research docs, and misclassification detection.
-
-### Migration to GitHub App
-
-**Status:** In progress
-**Effort:** Medium
-**Priority:** Active
-
-The triage bot is being converted from a webhook + PAT integration to a registered GitHub App. This gives teams-for-linux one-click installation with no secrets to configure and no workflow files to maintain. The bot authenticates as itself (not as a user) with granular permissions (Issues read/write only).
-
-Once the GitHub App is registered and tested on `triage-bot-test-repo`, the migration for teams-for-linux is:
-
-1. Install the GitHub App on this repository
-2. Disable the old triage bot workflows (`.github/workflows/issue-*`)
-3. Optionally remove the old bot scripts and JSON indexes from `.github/issue-bot/`
-
-The old workflows should be kept for one week as a fallback before deletion.
+All four phases are running in the standalone service: missing info detection, solution suggestions, duplicate detection, enhancement context surfacing, and misclassification detection. The old GitHub Actions workflows and `.github/issue-bot/` directory have been removed from this repository.
 
 ### Remaining work in the triage bot repo
 
-Data seeding (all 1,356 issues, feature index), a public dashboard for bot activity transparency, and the GitHub App registration itself. See the triage bot repo's `docs/plans/` for the detailed implementation plan.
-
-### Batch 3 --- When GitHub App is Stable
-
-#### Phase 3.2: Pre-Research Prompt Generator
-
-**Status:** Ready to implement (after GitHub App migration)
-**Effort:** Medium
-
-A capability of the triage bot (not a separate GitHub Action) that generates structured investigation prompts for issues labelled `needs-research`. Builds on the feature index and roadmap data already seeded in the database.
+Data seeding (all 1,356 issues, feature index), a public dashboard for bot activity transparency, and Batch 3 (pre-research prompt generator for issues labelled `needs-research`). See the triage bot repo's `docs/plans/` for the detailed implementation plan.
 
 ---
 
@@ -150,7 +117,8 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 | Item | Description | Notes |
 |------|-------------|-------|
 | **Electron 40** | Electron 39.5.1 to 40.6.0 | [Research](../research/electron-40-migration-research.md); Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) open |
-| **Notification sound overhaul** | Replace `node-sound` native addon, add custom sound config | [Research](../research/notification-sound-overhaul-research.md); phased approach |
+| **Dependency cleanup** | Removed `lodash`, `node-sound`, `electron-positioner` | [Implemented](../research/dependency-review-2026.md); reduces to 6 production deps |
+| **Notification sound overhaul Phase 2** | Custom sound configuration | [Research](../research/notification-sound-overhaul-research.md); Phase 1 (player replacement) done |
 
 ---
 
@@ -245,8 +213,7 @@ Included screen sharing Wayland regression fix (#2219), locale detection fix (#2
 
 ### Future Priorities
 
-- **Bot migration** --- Complete GitHub App conversion, install on teams-for-linux, remove old bot workflows
-- **Bot Batch 3** --- pre-research prompt generator (depends on Phase 4 feature index, now available)
+- **Bot Batch 3** --- pre-research prompt generator (to be implemented in the [triage bot repo](https://github.com/IsmaelMartinez/github-issue-triage-bot))
 - **Cross-distro testing CI** --- build Docker images in CI to catch Dockerfile regressions
 - **Automated smoke tests** --- verify app launches in the cross-distro environment (pre-auth only)
 
@@ -270,6 +237,6 @@ Included screen sharing Wayland regression fix (#2219), locale detection fix (#2
 
 ### Recent ADRs
 
-- [ADR-014: Quick Chat Deep Link Approach](../adr/014-quick-chat-deep-link-approach.md) - Deep links for chat navigation
-- [ADR-015: Quick Chat Inline Messaging](../adr/015-quick-chat-inline-messaging.md) - Inline messaging via Teams React internals
 - [ADR-016: Cross-Distro Testing Environment](../adr/016-cross-distro-testing-environment.md) - Docker + noVNC + Codespaces for testing
+- [ADR-017: workflow_run for PR Artifact Comments](../adr/017-workflow-run-pr-comments.md) - Fork PR support for artifact comments
+- [ADR-018: Issue Triage Bot GitHub App Migration](../adr/018-issue-triage-bot-github-app-migration.md) - Migration from in-repo workflows to standalone service
