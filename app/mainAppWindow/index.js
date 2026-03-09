@@ -289,7 +289,7 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
         return false;
       }
     }));
-    const removedCount = results.filter(r => r).length;
+    const removedCount = results.filter(Boolean).length;
 
     console.info(`[AUTH_RECOVERY] Cleaned ${removedCount}/${cookiesToRemove.length} auth cookies`);
     return { cleaned: removedCount, total: authCookies.length, expired: expired.length };
