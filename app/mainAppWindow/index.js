@@ -44,6 +44,7 @@ let connectionManager = null;
 let menus = null;
 let lastSilentAuthReloadTime = 0;
 const SILENT_AUTH_RELOAD_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+const SILENT_AUTH_RELOAD_DELAY_MS = 10 * 1000; // 10 seconds
 
 const isMac = os.platform() === "darwin";
 
@@ -626,18 +627,25 @@ function onDidFrameFinishLoad(
   // so it renders blank. A delayed reload gives the auth system time to settle
   // and the second load typically succeeds.
   if (wf?.url) {
-    const frameUrl = wf.url;
-    const now = Date.now();
-    if (frameUrl.includes('error=interaction_required') && frameUrl.includes('/auth')
-      && (now - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
-      lastSilentAuthReloadTime = now;
-      console.info('[AUTH_RECOVERY] Silent SSO failure detected in auth sub-frame, scheduling reload');
-      setTimeout(() => {
-        if (window && !window.isDestroyed()) {
-          console.info('[AUTH_RECOVERY] Reloading page to recover from silent SSO failure');
-          window.reload();
-        }
-      }, 10000);
+    try {
+      const parsedUrl = new URL(wf.url);
+      // The error param is in the hash fragment (#error=interaction_required), not query string
+      const hashParams = new URLSearchParams(parsedUrl.hash.substring(1));
+      const now = Date.now();
+      if (hashParams.get('error') === 'interaction_required'
+        && parsedUrl.pathname.includes('/auth')
+        && (now - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
+        lastSilentAuthReloadTime = now;
+        console.info('[AUTH_RECOVERY] Silent SSO failure detected in auth sub-frame, scheduling reload');
+        setTimeout(() => {
+          if (window && !window.isDestroyed()) {
+            console.info('[AUTH_RECOVERY] Reloading page to recover from silent SSO failure');
+            window.reload();
+          }
+        }, SILENT_AUTH_RELOAD_DELAY_MS);
+      }
+    } catch {
+      // Not a valid URL, ignore
     }
   }
 }
