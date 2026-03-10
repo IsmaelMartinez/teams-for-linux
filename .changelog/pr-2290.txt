@@ -1,1 +1,0 @@
-feat: add speaking indicator overlay showing local audio capture during calls (#2290)
