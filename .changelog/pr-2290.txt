@@ -1,1 +1,1 @@
-feat: add speaking indicator overlay for microphone monitoring during calls (#2290)
+feat: add speaking indicator overlay showing local audio capture during calls (#2290)

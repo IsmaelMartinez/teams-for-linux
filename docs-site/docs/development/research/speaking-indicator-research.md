@@ -1,12 +1,12 @@
 # Speaking Indicator Research (Issue #2290)
 
-:::tip Validated - Ready for Implementation
-All three validation spikes passed on 2026-03-09. Core approach confirmed feasible.
+:::tip Implemented (Phase 1)
+Speaking/silent detection implemented (2026-03-10). Mute detection not feasible with current Teams architecture --- deferred to Phase 2.
 :::
 
 **Date:** 2026-03-04
 **Validated:** 2026-03-09
-**Status:** Validated, ready for implementation
+**Status:** Phase 1 implemented (speaking/silent only; mute detection deferred)
 **Issue:** [#2290 - Add real-time speaking indicator to confirm microphone input is working](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
 **Author:** Claude AI Assistant
 **Related:** [MQTT Extended Status Investigation](mqtt-extended-status-investigation.md), [Notification Sound Overhaul Research](notification-sound-overhaul-research.md)
@@ -17,7 +17,7 @@ All three validation spikes passed on 2026-03-09. Core approach confirmed feasib
 
 Users cannot reliably confirm their microphone is working during Teams calls without asking others. Desktop environment indicators (e.g., PipeWire volume meters) show global microphone input rather than the device specifically selected by Teams, and they don't reflect the app's mute state. This research evaluates approaches for adding a real-time speaking indicator that responds to the microphone stream Teams is actually using.
 
-The recommended approach intercepts `getUserMedia()` (a proven pattern already used by `disableAutogain.js` and `injectedScreenSharing.js`), creates a lightweight `AudioContext` + `AnalyserNode` to monitor volume levels, and renders a small floating overlay inside the Teams window during active calls. This also wires up the dormant `microphone-state-changed` IPC channel for MQTT integration.
+The implemented approach intercepts `getUserMedia()` (a proven pattern already used by `disableAutogain.js` and `injectedScreenSharing.js`), creates a lightweight `AudioContext` + `AnalyserNode` to monitor volume levels, and renders a small floating overlay inside the Teams window during active calls. The overlay shows two states: speaking (green, pulsing) and silent (grey). Mute detection was investigated but is not feasible with current Teams architecture (see Section 3).
 
 ---
 
@@ -111,20 +111,16 @@ Key properties:
 - **Lightweight**: FFT is hardware-accelerated; sampling at 10fps adds negligible CPU
 - **Standard API**: Available in all Chromium-based browsers (Electron included)
 
-### Mute State Detection
+### Mute State Detection (Not Feasible)
 
-Teams mutes the microphone by setting `audioTrack.enabled = false` on the `MediaStreamTrack`. This is observable:
+Live testing (2026-03-10) revealed that Teams does not expose mute state through any standard Web API. Four approaches were investigated and all failed:
 
-```javascript
-// Polling approach (simple, reliable)
-const isMuted = !audioTrack.enabled;
+1. `audioTrack.enabled` polling: Teams never toggles `track.enabled` when muting. The property remains `true` even when the user is muted in Teams.
+2. All-zero audio frame detection: Teams keeps the local audio pipeline active when muted. The `AnalyserNode` continues to receive ambient noise data (non-zero values), making silence indistinguishable from mute.
+3. `RTCPeerConnection.prototype.addTrack` / `RTCRtpSender.prototype.replaceTrack` interception: Teams never calls `replaceTrack` when muting or unmuting. It was only called once to add the initial track.
+4. `commandChangeReportingService.observeChanges()` (React internals): No mute/unmute commands appear in the observable stream. Only render lifecycle commands are emitted (e.g., `render_prejoin`, `render_call`, `render_disconnecting`).
 
-// Event approach (if available)
-audioTrack.addEventListener('mute', () => { /* track was muted */ });
-audioTrack.addEventListener('unmute', () => { /* track was unmuted */ });
-```
-
-When muted, the indicator should show a distinct "muted" state rather than "silent".
+Teams handles mute at an internal calling SDK level that is not exposed through any standard Web API or React internal service available in the renderer process. Mute detection remains an open research question for Phase 2.
 
 ### Stream Lifecycle Management
 
@@ -198,22 +194,17 @@ Ship the in-page overlay first (Approach A). If users request tray/MQTT integrat
 **New module:** `app/browser/tools/speakingIndicator.js`
 
 1. **getUserMedia interception** --- Wrap `navigator.mediaDevices.getUserMedia()` to capture audio streams (same pattern as `disableAutogain.js`)
-2. **Audio analysis** --- Create `AudioContext` + `AnalyserNode` per audio stream; sample RMS at ~10fps via `requestAnimationFrame`
-3. **Mute detection** --- Monitor `audioTrack.enabled` property and `mute`/`unmute` events
-4. **DOM overlay** --- Inject a small fixed-position indicator element; toggle CSS classes for speaking/silent/muted states
-5. **Lifecycle** --- Start monitoring on `call-connected`; stop and clean up on `call-disconnected` and track `ended` events
-6. **Configuration** --- New config option `speakingIndicator` (boolean, default `false`)
+2. **Audio analysis** --- Create `AudioContext` + `AnalyserNode` per audio stream; sample RMS at ~10fps via `setInterval`
+3. **DOM overlay** --- Inject a small fixed-position indicator element; toggle CSS classes for speaking (green) / silent (grey) states
+4. **Lifecycle** --- Start monitoring on `call-connected`; stop and clean up on `call-disconnected` and track `ended` events
+5. **Configuration** --- New config option `media.microphone.speakingIndicator` (boolean, default `false`)
 
-**Module registration in `preload.js`:**
-- Add to modules array
-- Add to `modulesRequiringIpc` set (needed for call lifecycle events via IPC, and for sending `microphone-state-changed`)
-
-**IPC integration:**
-- Send `microphone-state-changed` events to activate the dormant MQTT channel
-- Listen for `call-connected`/`call-disconnected` to control monitoring lifecycle
+**Note:** Mute detection was investigated and found not feasible (see Section 3). The overlay shows two states only: speaking and silent. The `microphone-state-changed` IPC channel remains dormant pending a viable mute detection approach.
 
 ### Phase 2: Enhanced Features (If Requested)
 
+- **Mute detection** --- Requires finding a way to detect Teams internal mute state (all four approaches tested in Phase 1 failed; see Section 3)
+- Wire up `microphone-state-changed` IPC channel once mute detection is viable
 - Configurable silence threshold (`speakingIndicator.threshold`)
 - Configurable position (`speakingIndicator.position`)
 - Optional speaking state publishing to MQTT (`{topicPrefix}/speaking`)
@@ -266,7 +257,7 @@ The flat boolean form (`speakingIndicator: true`) is simpler and follows the pat
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | getUserMedia patch ordering conflicts | Low | Medium | Each existing patch wraps the previous; new patch follows same pattern. Spike validates composition. |
-| Teams uses non-standard mute mechanism | Low | Medium | Primary detection via `track.enabled`; fallback to AnalyserNode silence detection (muted = sustained silence) |
+| Teams uses non-standard mute mechanism | **Confirmed** | Medium | Mute detection deferred to Phase 2. Four approaches tested and all failed (see Section 3). |
 | AudioContext creation blocked | Very Low | High | `--autoplay-policy=no-user-gesture-required` already set; spike validates |
 | DOM overlay obscured by Teams UI | Low | Low | High z-index + fixed positioning; configurable position as escape hatch |
 | Stream lifecycle leaks | Medium | Medium | Defensive cleanup in track `ended` and stream `inactive` events; periodic garbage collection check |
@@ -323,20 +314,18 @@ Screen share constraint detection also validated correctly (`isScreenShare=true`
 
 ### Spike 3: Track Mute Detection (PARTIAL PASS 2/4)
 
-Confirmed that `track.enabled` polling reliably detects mute state changes. The `mute`/`unmute` events do not fire in Chromium for programmatic `enabled` toggles, which is expected behaviour.
+The spike confirmed that `track.enabled` polling detects programmatic `enabled` toggles in isolation. However, live testing (2026-03-10) proved this does not work with Teams: the app never toggles `track.enabled` when muting. See Section 3 for full details on mute detection approaches that were tested and failed.
 
 | Check | Result |
 |-------|--------|
-| track.enabled changes detected via polling | PASS (2 changes detected) |
+| track.enabled changes detected via polling | PASS (spike only; fails with real Teams) |
 | mute event fired | FAIL (expected in Chromium) |
 | unmute event fired | FAIL (expected in Chromium) |
 | Track still alive after monitoring | PASS |
 
-**Recommendation:** Use `track.enabled` polling as primary mute detection. Do not rely on `mute`/`unmute` events. As a secondary approach, sustained silence detected via `AnalyserNode` can serve as a mute proxy.
-
 ### Conclusion
 
-All critical checks passed. The implementation can proceed with confidence using `AudioContext` + `AnalyserNode` for audio level detection and `track.enabled` polling for mute state.
+Audio level detection via `AudioContext` + `AnalyserNode` works reliably for speaking/silent states. Mute detection is not feasible with current Teams architecture and is deferred to Phase 2.
 
 ---
 
@@ -348,9 +337,10 @@ All critical checks passed. The implementation can proceed with confidence using
 
 1. ~~Run validation spikes to confirm technical feasibility~~ (Done 2026-03-09)
 2. ~~Implement Phase 1 MVP as a new browser tool module~~ (Done 2026-03-09)
-3. ~~Wire up dormant `microphone-state-changed` IPC channel~~ (Done 2026-03-09)
+3. ~~Investigate mute detection~~ (Done 2026-03-10 --- not feasible, see Section 3)
 4. ~~Add `speakingIndicator` config option~~ (Done 2026-03-09)
 5. Test with PipeWire, PulseAudio, and ALSA audio backends
+6. Research alternative mute detection approaches for Phase 2
 
 ---
 

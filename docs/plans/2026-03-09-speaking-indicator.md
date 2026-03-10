@@ -4,7 +4,7 @@
 
 **Goal:** Add a real-time speaking indicator overlay during Teams calls so users can confirm their microphone is working without asking others.
 
-**Architecture:** New browser tool module `speakingIndicator.js` intercepts `getUserMedia()` to capture audio streams, creates `AudioContext` + `AnalyserNode` for volume monitoring at ~10fps, and renders a fixed-position DOM overlay with speaking/silent/muted states. The module sends `microphone-state-changed` IPC events to activate the dormant MQTT channel. Config lives under `media.microphone.speakingIndicator` (boolean, default `false`).
+**Architecture:** New browser tool module `speakingIndicator.js` intercepts `getUserMedia()` to capture audio streams, creates `AudioContext` + `AnalyserNode` for volume monitoring at ~10fps, and renders a fixed-position DOM overlay with speaking (green) / silent (grey) states. Config lives under `media.microphone.speakingIndicator` (boolean, default `false`). Mute detection was investigated but is not feasible with current Teams architecture (see research doc).
 
 **Tech Stack:** Web Audio API (AudioContext, AnalyserNode), getUserMedia interception, DOM overlay with CSS animations, Electron IPC.
 

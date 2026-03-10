@@ -77,7 +77,7 @@ describe('SpeakingIndicator', () => {
 	});
 
 	it('does not patch getUserMedia when disabled', () => {
-		const originalGetUserMedia = setupGlobals();
+		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
 		const refBefore = global.navigator.mediaDevices.getUserMedia;
 
@@ -92,15 +92,11 @@ describe('SpeakingIndicator', () => {
 	});
 
 	it('patches getUserMedia when enabled', () => {
-		const originalGetUserMedia = setupGlobals();
+		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
 		const refBefore = global.navigator.mediaDevices.getUserMedia;
-		const mockIpcRenderer = { send: mock.fn() };
 
-		instance.init(
-			{ media: { microphone: { speakingIndicator: true } } },
-			mockIpcRenderer,
-		);
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
 		assert.notStrictEqual(
 			global.navigator.mediaDevices.getUserMedia,
@@ -110,56 +106,44 @@ describe('SpeakingIndicator', () => {
 		cleanup();
 	});
 
-	it('sends microphone-state-changed IPC with boolean enabled value', async () => {
-		// Set up a track whose enabled property we can toggle
-		let trackEnabled = true;
+	it('registers call lifecycle events on activityHub', () => {
+		setupGlobals();
+		const { instance, mockActivityHub } = loadSpeakingIndicator();
+
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
+
+		const events = mockActivityHub.on.mock.calls.map(call => call.arguments[0]);
+		assert.ok(events.includes('call-connected'), 'should register call-connected handler');
+		assert.ok(events.includes('call-disconnected'), 'should register call-disconnected handler');
+		cleanup();
+	});
+
+	it('starts audio analysis when getUserMedia is called during a call', async () => {
 		const mockTrack = {
-			get enabled() { return trackEnabled; },
+			enabled: true,
 			addEventListener: mock.fn(),
 		};
 		const mockStream = {
 			getAudioTracks: () => [mockTrack],
 		};
 
-		// Set up globals with getUserMedia returning our mock stream BEFORE init
 		setupGlobals(mock.fn(async () => mockStream));
 		const { instance, mockActivityHub } = loadSpeakingIndicator();
-		const mockIpcRenderer = { send: mock.fn() };
 
-		instance.init(
-			{ media: { microphone: { speakingIndicator: true } } },
-			mockIpcRenderer,
-		);
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
-		// Retrieve the patched getUserMedia (init wraps our mock)
-		const patchedGetUserMedia = global.navigator.mediaDevices.getUserMedia;
-
-		// Simulate activityHub emitting call-connected
+		// Simulate call-connected
 		const callConnectedHandler = mockActivityHub.on.mock.calls
 			.find(call => call.arguments[0] === 'call-connected');
-		assert.ok(callConnectedHandler, 'should register call-connected handler');
-		callConnectedHandler.arguments[1](); // fire call-connected
+		callConnectedHandler.arguments[1]();
 
-		// Trigger patched getUserMedia with audio so onAudioStreamAcquired fires
-		await patchedGetUserMedia({ audio: true });
+		// Trigger getUserMedia so audio monitoring starts
+		await global.navigator.mediaDevices.getUserMedia({ audio: true });
 
-		// Now mute polling is active. Toggle track.enabled to simulate mute.
-		trackEnabled = false;
-
-		// Wait for the mute poll interval to fire (200ms + buffer)
-		await new Promise(resolve => setTimeout(resolve, 350));
-
-		// Verify IPC was called with channel and boolean value
-		const sendCalls = mockIpcRenderer.send.mock.calls;
-		const micStateCall = sendCalls.find(
-			call => call.arguments[0] === 'microphone-state-changed'
-		);
-		assert.ok(micStateCall, 'should send microphone-state-changed IPC');
-		assert.strictEqual(
-			micStateCall.arguments[1],
-			false,
-			'should send boolean false (track.enabled) as the payload'
-		);
+		// Verify the track's ended listener was registered
+		const endedCall = mockTrack.addEventListener.mock.calls
+			.find(call => call.arguments[0] === 'ended');
+		assert.ok(endedCall, 'should register ended listener on audio track');
 
 		cleanup();
 	});

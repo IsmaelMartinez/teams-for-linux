@@ -1,29 +1,30 @@
 /**
  * Speaking Indicator Browser Tool
  *
- * Provides a visual overlay indicator showing microphone state during Teams calls.
- * Intercepts getUserMedia to monitor audio levels via AnalyserNode and detects
- * mute state by polling track.enabled. Listens for call lifecycle events from
- * activityHub to show/hide the overlay automatically.
+ * Provides a visual overlay showing whether the local microphone is capturing
+ * audio during Teams calls. Intercepts getUserMedia to monitor audio levels
+ * via AnalyserNode. Listens for call lifecycle events from activityHub to
+ * show/hide the overlay automatically.
+ *
+ * NOTE: This monitors the local audio pipeline only. It confirms the mic is
+ * physically capturing sound, but cannot detect Teams' internal mute state.
+ * When muted in Teams, the dot may still pulse green because the local stream
+ * continues to flow. Mute detection requires further research (see #2290).
  *
  * Overlay states:
- * - Green (pulsing): actively speaking
- * - Grey: silent / not speaking
- * - Red: microphone muted
+ * - Green (pulsing): microphone is capturing audio
+ * - Grey: microphone is silent / not capturing audio
  */
 const activityHub = require('./activityHub');
 
 const LOG_PREFIX = '[SPEAKING_INDICATOR]';
 const SILENCE_THRESHOLD = 15;
 const AUDIO_SAMPLE_INTERVAL_MS = 100;
-const MUTE_POLL_INTERVAL_MS = 200;
 const OVERLAY_ID = 'speaking-indicator-overlay';
 const STYLES_ID = 'speaking-indicator-styles';
 
 class SpeakingIndicator {
-	#ipcRenderer = null;
 	#inCall = false;
-	#isMuted = false;
 	#isSpeaking = false;
 	#audioContext = null;
 	#analyser = null;
@@ -32,15 +33,12 @@ class SpeakingIndicator {
 	#currentTrack = null;
 	#pendingStream = null;
 	#audioInterval = null;
-	#muteInterval = null;
 
-	init(config, ipcRenderer) {
+	init(config) {
 		const enabled = config.media?.microphone?.speakingIndicator;
 		if (!enabled) {
 			return;
 		}
-
-		this.#ipcRenderer = ipcRenderer;
 
 		try {
 			this.#patchGetUserMedia();
@@ -75,7 +73,6 @@ class SpeakingIndicator {
 			// If a stream was captured before call-connected, start monitoring it now
 			if (this.#pendingStream && !this.#audioContext) {
 				this.#startAudioAnalysis(this.#pendingStream);
-				this.#startMutePolling(this.#currentTrack);
 				this.#pendingStream = null;
 			}
 		});
@@ -108,7 +105,6 @@ class SpeakingIndicator {
 
 		if (this.#inCall) {
 			this.#startAudioAnalysis(stream);
-			this.#startMutePolling(track);
 			console.debug(`${LOG_PREFIX} Audio monitoring started`);
 		} else {
 			// Store for when call-connected fires
@@ -130,13 +126,12 @@ class SpeakingIndicator {
 		this.#dataArray = new Uint8Array(this.#analyser.frequencyBinCount);
 
 		this.#audioInterval = setInterval(() => {
-			if (!this.#inCall || this.#isMuted) {
+			if (!this.#inCall) {
 				return;
 			}
 
 			this.#analyser.getByteFrequencyData(this.#dataArray);
 
-			// Calculate RMS (same approach validated in spike)
 			let sumOfSquares = 0;
 			for (let i = 0; i < this.#dataArray.length; i++) {
 				sumOfSquares += this.#dataArray[i] * this.#dataArray[i];
@@ -152,39 +147,10 @@ class SpeakingIndicator {
 		}, AUDIO_SAMPLE_INTERVAL_MS);
 	}
 
-	#startMutePolling(track) {
-		let lastEnabled = track.enabled;
-
-		this.#muteInterval = setInterval(() => {
-			if (!this.#inCall) {
-				return;
-			}
-
-			const currentEnabled = track.enabled;
-			if (currentEnabled !== lastEnabled) {
-				lastEnabled = currentEnabled;
-				this.#isMuted = !currentEnabled;
-				console.debug(`${LOG_PREFIX} Mute state changed: ${this.#isMuted ? 'muted' : 'unmuted'}`);
-
-				// Send boolean 'enabled' to match MQTTMediaStatusService handler signature
-				if (this.#ipcRenderer) {
-					this.#ipcRenderer.send('microphone-state-changed', currentEnabled);
-				}
-
-				this.#updateOverlayState();
-			}
-		}, MUTE_POLL_INTERVAL_MS);
-	}
-
 	#stopMonitoring() {
 		if (this.#audioInterval) {
 			clearInterval(this.#audioInterval);
 			this.#audioInterval = null;
-		}
-
-		if (this.#muteInterval) {
-			clearInterval(this.#muteInterval);
-			this.#muteInterval = null;
 		}
 
 		if (this.#source) {
@@ -209,7 +175,6 @@ class SpeakingIndicator {
 		this.#dataArray = null;
 		this.#currentTrack = null;
 		this.#isSpeaking = false;
-		this.#isMuted = false;
 	}
 
 	#showOverlay() {
@@ -247,11 +212,9 @@ class SpeakingIndicator {
 			return;
 		}
 
-		overlay.classList.remove('speaking', 'silent', 'muted');
+		overlay.classList.remove('speaking', 'silent');
 
-		if (this.#isMuted) {
-			overlay.classList.add('muted');
-		} else if (this.#isSpeaking) {
+		if (this.#isSpeaking) {
 			overlay.classList.add('speaking');
 		} else {
 			overlay.classList.add('silent');
@@ -283,9 +246,6 @@ class SpeakingIndicator {
 			}
 			#${OVERLAY_ID}.silent {
 				background-color: #555;
-			}
-			#${OVERLAY_ID}.muted {
-				background-color: #f44336;
 			}
 			@keyframes speaking-pulse {
 				0%, 100% { transform: scale(1); opacity: 1; }
