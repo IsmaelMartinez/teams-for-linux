@@ -1,12 +1,12 @@
 # Speaking Indicator Research (Issue #2290)
 
-:::tip Implemented (Phase 1)
-Speaking/silent detection implemented (2026-03-10). Mute detection not feasible with current Teams architecture --- deferred to Phase 2.
+:::tip Implemented (Phase 2 complete)
+Full implementation with speaking/silent/muted detection (2026-03-10). Phase 1 getUserMedia/AnalyserNode approach superseded by RTCPeerConnection.getStats() audioLevel. See ADR-019.
 :::
 
 **Date:** 2026-03-04
-**Validated:** 2026-03-09
-**Status:** Phase 1 implemented (speaking/silent only; mute detection deferred)
+**Validated:** 2026-03-09, 2026-03-10
+**Status:** Fully implemented — three states (speaking/silent/muted) via WebRTC getStats()
 **Issue:** [#2290 - Add real-time speaking indicator to confirm microphone input is working](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
 **Author:** Claude AI Assistant
 **Related:** [MQTT Extended Status Investigation](mqtt-extended-status-investigation.md), [Notification Sound Overhaul Research](notification-sound-overhaul-research.md)
@@ -111,16 +111,17 @@ Key properties:
 - **Lightweight**: FFT is hardware-accelerated; sampling at 10fps adds negligible CPU
 - **Standard API**: Available in all Chromium-based browsers (Electron included)
 
-### Mute State Detection (Not Feasible)
+### Mute State Detection (Solved via WebRTC getStats)
 
-Live testing (2026-03-10) revealed that Teams does not expose mute state through any standard Web API. Four approaches were investigated and all failed:
+Live testing (2026-03-10) with spike instrumentation confirmed that `RTCPeerConnection.getStats()` exposes a `media-source` stat containing `audioLevel` — the actual audio level of the signal Teams feeds into the WebRTC encoder. This reflects Teams' internal mute state:
 
-1. `audioTrack.enabled` polling: Teams never toggles `track.enabled` when muting. The property remains `true` even when the user is muted in Teams.
-2. All-zero audio frame detection: Teams keeps the local audio pipeline active when muted. The `AnalyserNode` continues to receive ambient noise data (non-zero values), making silence indistinguishable from mute.
-3. `RTCPeerConnection.prototype.addTrack` / `RTCRtpSender.prototype.replaceTrack` interception: Teams never calls `replaceTrack` when muting or unmuting. It was only called once to add the initial track.
-4. `commandChangeReportingService.observeChanges()` (React internals): No mute/unmute commands appear in the observable stream. Only render lifecycle commands are emitted (e.g., `render_prejoin`, `render_call`, `render_disconnecting`).
+- **Muted**: `audioLevel = 0.00000` exactly (Teams zeroes the signal completely)
+- **Silent**: `audioLevel` small non-zero value (ambient mic noise)
+- **Speaking**: `audioLevel` 0.01–0.45 range
 
-Teams handles mute at an internal calling SDK level that is not exposed through any standard Web API or React internal service available in the renderer process. Mute detection remains an open research question for Phase 2.
+The Phase 1 `getUserMedia`/`AnalyserNode` approach was superseded. See [ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md) and [Mute Detection Spikes](mute-detection-spikes.md) for full spike data and rationale.
+
+The four Phase 1 approaches that failed (track.enabled, zero-frame detection, replaceTrack, React internals) failed because they all targeted the wrong layer — the raw microphone stream rather than what Teams actually transmits. The WebRTC stats API reads post-processing, making it the correct layer.
 
 ### Stream Lifecycle Management
 
@@ -337,15 +338,17 @@ Audio level detection via `AudioContext` + `AnalyserNode` works reliably for spe
 
 1. ~~Run validation spikes to confirm technical feasibility~~ (Done 2026-03-09)
 2. ~~Implement Phase 1 MVP as a new browser tool module~~ (Done 2026-03-09)
-3. ~~Investigate mute detection~~ (Done 2026-03-10 --- not feasible, see Section 3)
+3. ~~Investigate mute detection~~ (Done 2026-03-10 --- solved via WebRTC getStats, see ADR-019)
 4. ~~Add `speakingIndicator` config option~~ (Done 2026-03-09)
-5. Test with PipeWire, PulseAudio, and ALSA audio backends
-6. Research alternative mute detection approaches for Phase 2
+5. ~~Implement Phase 2 --- full mute/silent/speaking detection~~ (Done 2026-03-10)
+6. Test with PipeWire, PulseAudio, and ALSA audio backends
+7. Wire `microphone-state-changed` IPC channel for MQTT publishing (optional, if requested)
 
 ---
 
 ## Related Documentation
 
+- [Mute Detection Spikes](mute-detection-spikes.md) --- Phase 2 spike scripts and testing strategy
 - [MQTT Extended Status Investigation](mqtt-extended-status-investigation.md) --- Phase 2 WebRTC monitoring
 - [Notification Sound Overhaul Research](notification-sound-overhaul-research.md) --- AudioContext validation
 - [Module Index](../module-index.md) --- Browser tool modules

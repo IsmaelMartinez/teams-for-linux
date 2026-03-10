@@ -22,11 +22,15 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Requires Validation
 
-- **[Speaking Indicator Research](speaking-indicator-research.md)** - Real-time microphone speaking indicator during calls
-  - Intercepts `getUserMedia()` + `AudioContext`/`AnalyserNode` for audio level detection
-  - In-page DOM overlay with speaking/silent/muted states
-  - Activates dormant `microphone-state-changed` IPC channel for MQTT integration
-  - **Status:** Research complete, validation spikes created. Run spikes to confirm feasibility.
+- **[Speaking Indicator Research](speaking-indicator-research.md)** - Real-time microphone speaking indicator during calls (Phase 1 implemented)
+  - Phase 1 shipped: getUserMedia interception + AnalyserNode overlay (speaking/silent)
+  - Phase 2 in progress: mute detection spikes under investigation
+  - **Status:** Phase 1 complete. See [Mute Detection Spikes](mute-detection-spikes.md) for Phase 2.
+
+- **[Mute Detection Spikes](mute-detection-spikes.md)** - Phase 2 spike scripts for Teams mute state detection
+  - Four spike approaches: WebRTC getStats, AudioContext graph interception, AudioWorklet PCM analysis, RTCRtpSender monitoring
+  - Tests whether mute is detectable via Web Audio API / WebRTC API surface
+  - **Status:** Spikes written, awaiting manual testing in a live Teams call
 
 ### Awaiting User Feedback
 

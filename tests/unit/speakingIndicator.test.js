@@ -3,36 +3,24 @@
 const { describe, it, beforeEach, mock } = require('node:test');
 const assert = require('node:assert');
 
-// Path to the module under test and its dependency
 const speakingIndicatorPath = require.resolve('../../app/browser/tools/speakingIndicator');
 const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
 
-function createMockAudioContext() {
-	return {
-		createAnalyser: () => ({
-			fftSize: 0,
-			smoothingTimeConstant: 0,
-			frequencyBinCount: 128,
-			getByteFrequencyData: mock.fn(),
-		}),
-		createMediaStreamSource: () => ({
-			connect: mock.fn(),
-			disconnect: mock.fn(),
-		}),
-		close: mock.fn(),
-	};
+function makeStatsReport(audioLevel) {
+	const entries = [
+		{ type: 'media-source', kind: 'audio', audioLevel },
+	];
+	return { forEach: (fn) => entries.forEach(fn) };
 }
 
-function setupGlobals(getUserMediaImpl) {
-	const originalGetUserMedia = getUserMediaImpl || mock.fn(async () => ({ getAudioTracks: () => [] }));
-	global.navigator = {
-		mediaDevices: {
-			getUserMedia: originalGetUserMedia,
-		},
+function setupGlobals() {
+	const originalRTC = function RTCPeerConnection() {
+		this.connectionState = 'connected';
+		this.getStats = mock.fn(async () => makeStatsReport(0));
 	};
-	// Use a real constructor function so `new AudioContext()` works
-	global.AudioContext = function AudioContext() {
-		return createMockAudioContext();
+	originalRTC.prototype = {};
+	global.window = {
+		RTCPeerConnection: originalRTC,
 	};
 	global.document = {
 		getElementById: mock.fn(() => null),
@@ -46,18 +34,16 @@ function setupGlobals(getUserMediaImpl) {
 		head: { appendChild: mock.fn() },
 		body: { appendChild: mock.fn() },
 	};
-	return originalGetUserMedia;
+	return originalRTC;
 }
 
 function loadSpeakingIndicator() {
-	// Inject mock activityHub into require cache before loading
 	const mockActivityHub = { on: mock.fn(), off: mock.fn() };
 	require.cache[activityHubPath] = {
 		id: activityHubPath,
 		exports: mockActivityHub,
 		loaded: true,
 	};
-	// Clear speakingIndicator from cache so we get a fresh singleton
 	delete require.cache[speakingIndicatorPath];
 	const instance = require(speakingIndicatorPath);
 	return { instance, mockActivityHub };
@@ -66,8 +52,7 @@ function loadSpeakingIndicator() {
 function cleanup() {
 	delete require.cache[speakingIndicatorPath];
 	delete require.cache[activityHubPath];
-	delete global.navigator;
-	delete global.AudioContext;
+	delete global.window;
 	delete global.document;
 }
 
@@ -76,32 +61,32 @@ describe('SpeakingIndicator', () => {
 		cleanup();
 	});
 
-	it('does not patch getUserMedia when disabled', () => {
+	it('does not patch RTCPeerConnection when disabled', () => {
 		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
-		const refBefore = global.navigator.mediaDevices.getUserMedia;
+		const refBefore = global.window.RTCPeerConnection;
 
 		instance.init({ media: { microphone: { speakingIndicator: false } } });
 
 		assert.strictEqual(
-			global.navigator.mediaDevices.getUserMedia,
+			global.window.RTCPeerConnection,
 			refBefore,
-			'getUserMedia should remain unchanged when speakingIndicator is disabled'
+			'RTCPeerConnection should remain unchanged when speakingIndicator is disabled'
 		);
 		cleanup();
 	});
 
-	it('patches getUserMedia when enabled', () => {
+	it('patches RTCPeerConnection when enabled', () => {
 		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
-		const refBefore = global.navigator.mediaDevices.getUserMedia;
+		const refBefore = global.window.RTCPeerConnection;
 
 		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
 		assert.notStrictEqual(
-			global.navigator.mediaDevices.getUserMedia,
+			global.window.RTCPeerConnection,
 			refBefore,
-			'getUserMedia should be replaced when speakingIndicator is enabled'
+			'RTCPeerConnection should be replaced when speakingIndicator is enabled'
 		);
 		cleanup();
 	});
@@ -118,33 +103,37 @@ describe('SpeakingIndicator', () => {
 		cleanup();
 	});
 
-	it('starts audio analysis when getUserMedia is called during a call', async () => {
-		const mockTrack = {
-			enabled: true,
-			addEventListener: mock.fn(),
-		};
-		const mockStream = {
-			getAudioTracks: () => [mockTrack],
-		};
-
-		setupGlobals(mock.fn(async () => mockStream));
-		const { instance, mockActivityHub } = loadSpeakingIndicator();
-
+	it('captures RTCPeerConnection instances when patched', () => {
+		setupGlobals();
+		const { instance } = loadSpeakingIndicator();
 		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
-		// Simulate call-connected
-		const callConnectedHandler = mockActivityHub.on.mock.calls
-			.find(call => call.arguments[0] === 'call-connected');
-		callConnectedHandler.arguments[1]();
+		// Creating a peer connection should be captured
+		const pc = new global.window.RTCPeerConnection();
+		assert.ok(pc, 'RTCPeerConnection should still be constructable after patching');
+		cleanup();
+	});
 
-		// Trigger getUserMedia so audio monitoring starts
-		await global.navigator.mediaDevices.getUserMedia({ audio: true });
+	it('shows overlay when audio stats are detected on a peer connection', async () => {
+		const origRTC = setupGlobals();
+		// Make getStats return a non-zero audioLevel so the overlay appears
+		origRTC.prototype.getStats = async () => ({
+			forEach: (fn) => fn({ type: 'media-source', kind: 'audio', audioLevel: 0.05 }),
+		});
 
-		// Verify the track's ended listener was registered
-		const endedCall = mockTrack.addEventListener.mock.calls
-			.find(call => call.arguments[0] === 'ended');
-		assert.ok(endedCall, 'should register ended listener on audio track');
+		const { instance } = loadSpeakingIndicator();
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
+		// Create a peer connection — this starts polling
+		new global.window.RTCPeerConnection();
+
+		// Wait for one poll cycle
+		await new Promise(r => setTimeout(r, 200));
+
+		assert.ok(
+			global.document.body.appendChild.mock.calls.length > 0,
+			'overlay should appear when audio stats with non-zero audioLevel are detected'
+		);
 		cleanup();
 	});
 });

@@ -1,38 +1,39 @@
 /**
  * Speaking Indicator Browser Tool
  *
- * Provides a visual overlay showing whether the local microphone is capturing
- * audio during Teams calls. Intercepts getUserMedia to monitor audio levels
- * via AnalyserNode. Listens for call lifecycle events from activityHub to
- * show/hide the overlay automatically.
+ * Provides a visual overlay showing microphone state during Teams calls.
+ * Intercepts RTCPeerConnection and polls getStats() every 150ms to read
+ * media-source.audioLevel — the actual audio level Teams feeds into the
+ * WebRTC encoder, reflecting its internal mute state.
  *
- * NOTE: This monitors the local audio pipeline only. It confirms the mic is
- * physically capturing sound, but cannot detect Teams' internal mute state.
- * When muted in Teams, the dot may still pulse green because the local stream
- * continues to flow. Mute detection requires further research (see #2290).
+ * The overlay is driven entirely by WebRTC stats rather than call lifecycle
+ * events (call-connected/call-disconnected), making it resilient to changes
+ * in Teams' internal React event emission. It appears automatically when
+ * audio stats are detected and disappears when all connections close.
  *
  * Overlay states:
- * - Green (pulsing): microphone is capturing audio
- * - Grey: microphone is silent / not capturing audio
+ * - Green (pulsing): speaking — audio is being transmitted
+ * - Grey: silent — mic is open but quiet
+ * - Red: muted — Teams has zeroed the audio signal
+ *
+ * See ADR-019 for the rationale behind using getStats() audioLevel.
  */
 const activityHub = require('./activityHub');
 
 const LOG_PREFIX = '[SPEAKING_INDICATOR]';
-const SILENCE_THRESHOLD = 15;
-const AUDIO_SAMPLE_INTERVAL_MS = 100;
+const POLL_INTERVAL_MS = 150;
+const SPEAKING_THRESHOLD = 0.01;  // audioLevel above this → speaking
+const MUTED_LEVEL = 0.0001;       // audioLevel below this → muted (Teams zeroes signal exactly)
 const OVERLAY_ID = 'speaking-indicator-overlay';
 const STYLES_ID = 'speaking-indicator-styles';
 
 class SpeakingIndicator {
-	#inCall = false;
-	#isSpeaking = false;
-	#audioContext = null;
-	#analyser = null;
-	#source = null;
-	#dataArray = null;
-	#currentTrack = null;
-	#pendingStream = null;
-	#audioInterval = null;
+	#state = 'silent'; // 'speaking' | 'silent' | 'muted'
+	#peerConnections = [];
+	#pollInterval = null;
+	#polling = false;
+	#overlayVisible = false;
+	#hasSeenAudio = false; // true once audioLevel > 0 — prevents pre-join zeros reading as muted
 
 	init(config) {
 		const enabled = config.media?.microphone?.speakingIndicator;
@@ -41,7 +42,7 @@ class SpeakingIndicator {
 		}
 
 		try {
-			this.#patchGetUserMedia();
+			this.#patchRTCPeerConnection();
 			this.#registerCallEvents();
 			console.info(`${LOG_PREFIX} Initialized`);
 		} catch (error) {
@@ -49,135 +50,141 @@ class SpeakingIndicator {
 		}
 	}
 
-	#patchGetUserMedia() {
-		const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+	#patchRTCPeerConnection() {
+		const Orig = window.RTCPeerConnection;
+		if (!Orig) {
+			console.warn(`${LOG_PREFIX} RTCPeerConnection not available`);
+			return;
+		}
+
 		const self = this;
-
-		navigator.mediaDevices.getUserMedia = function getUserMedia(constraints) {
-			return original(constraints).then((stream) => {
-				if (constraints?.audio) {
-					self.#onAudioStreamAcquired(stream);
-				}
-				return stream;
-			});
-		};
-
-		console.debug(`${LOG_PREFIX} Patched getUserMedia`);
+		function PatchedRTC(...args) {
+			const pc = new Orig(...args);
+			self.#peerConnections.push(pc);
+			console.info(`${LOG_PREFIX} RTCPeerConnection created (total: ${self.#peerConnections.length})`);
+			if (!self.#pollInterval) {
+				self.#startPolling();
+			}
+			return pc;
+		}
+		PatchedRTC.prototype = Orig.prototype;
+		Object.setPrototypeOf(PatchedRTC, Orig);
+		window.RTCPeerConnection = PatchedRTC;
+		console.info(`${LOG_PREFIX} Patched RTCPeerConnection`);
 	}
 
 	#registerCallEvents() {
+		// call-disconnected used as a cleanup hint only — the poll loop is the
+		// primary driver of overlay visibility.
 		activityHub.on('call-connected', () => {
-			console.info(`${LOG_PREFIX} Call connected`);
-			this.#inCall = true;
-			this.#showOverlay();
-			// If a stream was captured before call-connected, start monitoring it now
-			if (this.#pendingStream && !this.#audioContext) {
-				this.#startAudioAnalysis(this.#pendingStream);
-				this.#pendingStream = null;
-			}
+			console.info(`${LOG_PREFIX} call-connected event received`);
 		});
 
 		activityHub.on('call-disconnected', () => {
-			console.info(`${LOG_PREFIX} Call disconnected`);
-			this.#inCall = false;
-			this.#pendingStream = null;
-			this.#stopMonitoring();
+			console.info(`${LOG_PREFIX} call-disconnected event received, clearing connections`);
+			this.#peerConnections = [];
+			this.#hasSeenAudio = false;
+			this.#stopPolling();
 			this.#hideOverlay();
 		});
 	}
 
-	#onAudioStreamAcquired(stream) {
-		const audioTracks = stream.getAudioTracks();
-		if (audioTracks.length === 0) {
+	#startPolling() {
+		this.#pollInterval = setInterval(() => { this.#poll(); }, POLL_INTERVAL_MS);
+		console.info(`${LOG_PREFIX} Polling started`);
+	}
+
+	#stopPolling() {
+		if (this.#pollInterval) {
+			clearInterval(this.#pollInterval);
+			this.#pollInterval = null;
+		}
+		this.#polling = false;
+		this.#state = 'silent';
+		console.info(`${LOG_PREFIX} Polling stopped`);
+	}
+
+	async #poll() {
+		if (this.#polling) {
+			return;
+		}
+		this.#polling = true;
+
+		// Remove closed connections
+		this.#peerConnections = this.#peerConnections.filter(
+			pc => pc.connectionState !== 'closed'
+		);
+
+		if (this.#peerConnections.length === 0) {
+			this.#polling = false;
+			if (this.#overlayVisible) {
+				console.info(`${LOG_PREFIX} No active connections, hiding overlay`);
+				this.#hideOverlay();
+			}
 			return;
 		}
 
-		// Clean up previous monitoring before starting new (handles device switching)
-		this.#stopMonitoring();
+		let foundAudioStats = false;
 
-		const track = audioTracks[0];
-		this.#currentTrack = track;
+		try {
+			for (const pc of this.#peerConnections) {
+				let report;
+				try {
+					report = await pc.getStats();
+				} catch {
+					continue;
+				}
 
-		track.addEventListener('ended', () => {
-			console.debug(`${LOG_PREFIX} Audio track ended`);
-			this.#stopMonitoring();
-		});
+				report.forEach(stat => {
+					if (stat.type !== 'media-source' || stat.kind !== 'audio') {
+						return;
+					}
+					const level = stat.audioLevel;
+					if (typeof level !== 'number') {
+						return;
+					}
 
-		if (this.#inCall) {
-			this.#startAudioAnalysis(stream);
-			console.debug(`${LOG_PREFIX} Audio monitoring started`);
-		} else {
-			// Store for when call-connected fires
-			this.#pendingStream = stream;
-			console.debug(`${LOG_PREFIX} Audio stream captured, waiting for call-connected`);
-		}
-	}
+					foundAudioStats = true;
 
-	#startAudioAnalysis(stream) {
-		this.#audioContext = new AudioContext();
-		this.#analyser = this.#audioContext.createAnalyser();
-		this.#analyser.fftSize = 256;
-		this.#analyser.smoothingTimeConstant = 0.3;
+					if (level >= MUTED_LEVEL) {
+						this.#hasSeenAudio = true;
+					}
 
-		this.#source = this.#audioContext.createMediaStreamSource(stream);
-		this.#source.connect(this.#analyser);
-		// Do NOT connect to destination — avoids feedback loop
+					// Only interpret zero as muted once we've seen non-zero audio.
+					// Before that, zero means the connection is still setting up (pre-join).
+					const newState = level >= SPEAKING_THRESHOLD ? 'speaking'
+						: (level < MUTED_LEVEL && this.#hasSeenAudio) ? 'muted'
+							: 'silent';
 
-		this.#dataArray = new Uint8Array(this.#analyser.frequencyBinCount);
+					if (newState !== this.#state) {
+						console.info(`${LOG_PREFIX} State: ${this.#state} → ${newState} (audioLevel=${level.toFixed(5)})`);
+						this.#state = newState;
+						if (this.#overlayVisible) {
+							this.#updateOverlay();
+						}
+					}
+				});
 
-		this.#audioInterval = setInterval(() => {
-			if (!this.#inCall) {
-				return;
+				if (foundAudioStats) {
+					break; // Use the first connection that has audio stats
+				}
 			}
-
-			this.#analyser.getByteFrequencyData(this.#dataArray);
-
-			let sumOfSquares = 0;
-			for (let i = 0; i < this.#dataArray.length; i++) {
-				sumOfSquares += this.#dataArray[i] * this.#dataArray[i];
-			}
-			const rms = Math.sqrt(sumOfSquares / this.#dataArray.length);
-
-			const wasSpeaking = this.#isSpeaking;
-			this.#isSpeaking = rms > SILENCE_THRESHOLD;
-
-			if (wasSpeaking !== this.#isSpeaking) {
-				this.#updateOverlayState();
-			}
-		}, AUDIO_SAMPLE_INTERVAL_MS);
-	}
-
-	#stopMonitoring() {
-		if (this.#audioInterval) {
-			clearInterval(this.#audioInterval);
-			this.#audioInterval = null;
+		} finally {
+			this.#polling = false;
 		}
 
-		if (this.#source) {
-			try {
-				this.#source.disconnect();
-			} catch {
-				// Already disconnected
-			}
-			this.#source = null;
+		if (foundAudioStats && !this.#overlayVisible) {
+			console.info(`${LOG_PREFIX} Audio stats detected, showing overlay`);
+			this.#showOverlay();
+		} else if (!foundAudioStats && this.#overlayVisible) {
+			console.info(`${LOG_PREFIX} No audio stats found, hiding overlay`);
+			this.#hideOverlay();
 		}
-
-		if (this.#audioContext) {
-			try {
-				this.#audioContext.close();
-			} catch {
-				// Already closed
-			}
-			this.#audioContext = null;
-		}
-
-		this.#analyser = null;
-		this.#dataArray = null;
-		this.#currentTrack = null;
-		this.#isSpeaking = false;
 	}
 
 	#showOverlay() {
+		this.#overlayVisible = true;
+
 		if (document.getElementById(OVERLAY_ID)) {
 			return;
 		}
@@ -186,13 +193,16 @@ class SpeakingIndicator {
 
 		const overlay = document.createElement('div');
 		overlay.id = OVERLAY_ID;
-		overlay.classList.add('silent');
+		overlay.classList.add(this.#state);
 		document.body.appendChild(overlay);
 
-		console.debug(`${LOG_PREFIX} Overlay shown`);
+		console.info(`${LOG_PREFIX} Overlay shown (state: ${this.#state})`);
 	}
 
 	#hideOverlay() {
+		this.#overlayVisible = false;
+		this.#state = 'silent';
+
 		const overlay = document.getElementById(OVERLAY_ID);
 		if (overlay) {
 			overlay.remove();
@@ -203,22 +213,17 @@ class SpeakingIndicator {
 			styles.remove();
 		}
 
-		console.debug(`${LOG_PREFIX} Overlay hidden`);
+		console.info(`${LOG_PREFIX} Overlay hidden`);
 	}
 
-	#updateOverlayState() {
+	#updateOverlay() {
 		const overlay = document.getElementById(OVERLAY_ID);
 		if (!overlay) {
 			return;
 		}
 
-		overlay.classList.remove('speaking', 'silent');
-
-		if (this.#isSpeaking) {
-			overlay.classList.add('speaking');
-		} else {
-			overlay.classList.add('silent');
-		}
+		overlay.classList.remove('speaking', 'silent', 'muted');
+		overlay.classList.add(this.#state);
 	}
 
 	#injectStyles() {
@@ -246,6 +251,9 @@ class SpeakingIndicator {
 			}
 			#${OVERLAY_ID}.silent {
 				background-color: #555;
+			}
+			#${OVERLAY_ID}.muted {
+				background-color: #c62828;
 			}
 			@keyframes speaking-pulse {
 				0%, 100% { transform: scale(1); opacity: 1; }

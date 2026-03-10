@@ -41,6 +41,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
+| [019](019-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | ✅ Implemented | 2026-03-10 | v2.8.0+ |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -142,12 +143,14 @@ Architecture Decision Records capture important architectural decisions along wi
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | Rejected multi-window due to Teams architecture constraints |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | Use People API + Deep Links for quick chat access after Chat API was blocked |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
+| [019](019-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | Use `RTCPeerConnection.getStats()` media-source.audioLevel to detect Teams mute state and speaking activity |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)
 - Inline message sending via Graph API ChatMessage.Send scope
 - Chat resolution via Teams entityCommanding + DOM scanning + member verification
 - Keyboard shortcut toggles quick chat modal
+- Teams mute state reliably detected via `media-source.audioLevel = 0.0` in WebRTC stats (three overlay states: speaking/silent/muted)
 
 ### Distribution & Packaging
 
@@ -323,8 +326,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 18
-- **Implemented**: 12
+- **Total ADRs**: 19
+- **Implemented**: 13
 - **Accepted**: 2
 - **Proposed**: 0
 - **Rejected**: 4
