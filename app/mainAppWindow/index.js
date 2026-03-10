@@ -42,6 +42,8 @@ let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
+let lastSilentAuthReloadTime = 0;
+const SILENT_AUTH_RELOAD_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
 const isMac = os.platform() === "darwin";
 
@@ -616,6 +618,28 @@ function onDidFrameFinishLoad(
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
   customCSS.onDidFrameFinishLoad(wf, config);
+
+  // Detect silent SSO failure in auth sub-frames (#2296).
+  // When Azure AD can't refresh tokens silently (e.g., overnight expiry),
+  // it redirects the auth iframe to a URL containing error=interaction_required.
+  // The calendar iframe (outlook.office.com) depends on this auth succeeding,
+  // so it renders blank. A delayed reload gives the auth system time to settle
+  // and the second load typically succeeds.
+  if (wf?.url) {
+    const frameUrl = wf.url;
+    const now = Date.now();
+    if (frameUrl.includes('error=interaction_required') && frameUrl.includes('/auth')
+      && (now - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
+      lastSilentAuthReloadTime = now;
+      console.info('[AUTH_RECOVERY] Silent SSO failure detected in auth sub-frame, scheduling reload');
+      setTimeout(() => {
+        if (window && !window.isDestroyed()) {
+          console.info('[AUTH_RECOVERY] Reloading page to recover from silent SSO failure');
+          window.reload();
+        }
+      }, 10000);
+    }
+  }
 }
 
 function restoreWindow() {
