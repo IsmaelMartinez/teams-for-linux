@@ -51,26 +51,30 @@ class SpeakingIndicator {
 	}
 
 	#patchRTCPeerConnection() {
-		const Orig = window.RTCPeerConnection;
+		const Orig = globalThis.RTCPeerConnection;
 		if (!Orig) {
 			console.warn(`${LOG_PREFIX} RTCPeerConnection not available`);
 			return;
 		}
 
-		const self = this;
+		const onCreated = this.#onPeerConnectionCreated.bind(this);
 		function PatchedRTC(...args) {
 			const pc = new Orig(...args);
-			self.#peerConnections.push(pc);
-			console.info(`${LOG_PREFIX} RTCPeerConnection created (total: ${self.#peerConnections.length})`);
-			if (!self.#pollInterval) {
-				self.#startPolling();
-			}
+			onCreated(pc);
 			return pc;
 		}
 		PatchedRTC.prototype = Orig.prototype;
 		Object.setPrototypeOf(PatchedRTC, Orig);
-		window.RTCPeerConnection = PatchedRTC;
+		globalThis.RTCPeerConnection = PatchedRTC;
 		console.info(`${LOG_PREFIX} Patched RTCPeerConnection`);
+	}
+
+	#onPeerConnectionCreated(pc) {
+		this.#peerConnections.push(pc);
+		console.info(`${LOG_PREFIX} RTCPeerConnection created (total: ${this.#peerConnections.length})`);
+		if (!this.#pollInterval) {
+			this.#startPolling();
+		}
 	}
 
 	#registerCallEvents() {
@@ -152,9 +156,14 @@ class SpeakingIndicator {
 
 					// Only interpret zero as muted once we've seen non-zero audio.
 					// Before that, zero means the connection is still setting up (pre-join).
-					const newState = level >= SPEAKING_THRESHOLD ? 'speaking'
-						: (level < MUTED_LEVEL && this.#hasSeenAudio) ? 'muted'
-							: 'silent';
+					let newState;
+					if (level >= SPEAKING_THRESHOLD) {
+						newState = 'speaking';
+					} else if (level < MUTED_LEVEL && this.#hasSeenAudio) {
+						newState = 'muted';
+					} else {
+						newState = 'silent';
+					}
 
 					if (newState !== this.#state) {
 						console.info(`${LOG_PREFIX} State: ${this.#state} → ${newState} (audioLevel=${level.toFixed(5)})`);
