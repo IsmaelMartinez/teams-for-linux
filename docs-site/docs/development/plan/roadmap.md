@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-10
 **Current Version:** v2.7.10 (Electron 39.5.1)
 **Status:** Living Document --- stabilising on Electron 39, preparing v2.7.11
 
@@ -28,7 +28,7 @@ The primary focus for the v2.7.x line. Auth recovery after sleep, network error 
 
 ### Media and Calls
 
-Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator feature is being researched ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) to help users confirm their microphone is actually working during calls.
+Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) has been implemented using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls — ready for user testing in v2.7.11.
 
 Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) and call failures ([#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231)) are upstream-blocked and depend on Chromium/Electron improvements.
 
@@ -48,7 +48,7 @@ Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting
 
 ## Next Patch Release (v2.7.11)
 
-v2.7.11 continues the stability theme. Several bug fix PRs with passing CI are ready to merge covering emoji colon input, short Teams deep links, MQTT screen sharing fixes, and media permission handling. The speaking indicator research ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) may also land as an experimental feature for user testing.
+v2.7.11 continues the stability theme with several bug fixes (emoji colon input, short Teams deep links, MQTT screen sharing, media permission handling) plus the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as a new user-testable feature using WebRTC `getStats()` for three-state mute/speaking detection.
 
 ---
 
