@@ -82,10 +82,7 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 
 ## Project Activity
 
-<!-- TODO: Replace the hash below with the actual Repobeats embed hash.
-     Visit https://repobeats.axiom.co/, sign in with GitHub, select
-     IsmaelMartinez/teams-for-linux, and copy the generated hash. -->
-![Alt](https://repobeats.axiom.co/api/embed/YOUR_HASH_HERE.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/e63dcc8b154ee5f4490674818df091c243b041b7.svg "Repobeats analytics image")
 
 ## Support & Community
 
