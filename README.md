@@ -80,6 +80,13 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 | **[Custom Backgrounds](https://ismaelmartinez.github.io/teams-for-linux/custom-backgrounds)** | Video call backgrounds setup |
 | **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/contributing)** | Development setup and contribution guidelines |
 
+## Project Activity
+
+<!-- TODO: Replace the hash below with the actual Repobeats embed hash.
+     Visit https://repobeats.axiom.co/, sign in with GitHub, select
+     IsmaelMartinez/teams-for-linux, and copy the generated hash. -->
+![Alt](https://repobeats.axiom.co/api/embed/YOUR_HASH_HERE.svg "Repobeats analytics image")
+
 ## Support & Community
 
 - 💬 **Chat**: Join our [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
