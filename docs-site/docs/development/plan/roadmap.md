@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-10
+**Last Updated:** 2026-03-11
 **Current Version:** v2.7.10 (Electron 39.5.1)
 **Status:** Living Document --- stabilising on Electron 39, preparing v2.7.11
 
@@ -89,6 +89,8 @@ Shipped in v2.7.4 ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/iss
 | External Browser Auth | [#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017) | Not feasible | Teams manages OAuth internally |
 | Multiple Windows | [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984) | Rejected ([ADR-010](../adr/010-multiple-windows-support.md)) | Quick Chat is the alternative |
 | useSystemPicker | --- | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Reconsider when Electron improves Linux support |
+| Disable Chat Spellcheck | [#2304](https://github.com/IsmaelMartinez/teams-for-linux/issues/2304) | Not feasible | Spellcheck is controlled by Teams/Chromium, not the wrapper; existing `spellCheckerLanguages` config is the extent of our control |
+| Formatting View on Compose | [#2318](https://github.com/IsmaelMartinez/teams-for-linux/issues/2318) | Not feasible | Teams UI internals; no API or injection point to control compose view state |
 
 ---
 
