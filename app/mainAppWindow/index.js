@@ -44,7 +44,7 @@ let connectionManager = null;
 let menus = null;
 let lastSilentAuthReloadTime = 0;
 const SILENT_AUTH_RELOAD_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-const SILENT_AUTH_RELOAD_DELAY_MS = 10 * 1000; // 10 seconds
+const SILENT_AUTH_RELOAD_DELAY_MS = 3 * 1000; // 3 seconds
 
 const isMac = os.platform() === "darwin";
 
