@@ -42,14 +42,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Historical (Migrated)
 
-- **[GitHub Issue Bot Investigation](github-issue-bot-investigation.md)** - Intelligent GitHub issue automation (historical)
-  - All four phases implemented and migrated to standalone GitHub App
-  - See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot)
-
-- **[AI Automation Review and Enhancements](ai-automation-review-and-enhancements.md)** - Review of all AI automation systems (historical)
-  - Batches 1-2 implemented; triage bot migrated to standalone GitHub App
-  - Batch 3 (pre-research prompt generator) to be implemented in the bot repo
-
 - **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
   - **Phase 1 Complete**: Documentation reorganization
   - **Phases 2-3**: Nested structure migration happening incrementally
@@ -67,6 +59,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Issue Triage Bot | v2.7.x | All four phases implemented; migrated to standalone Go service. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot) |
 | Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps |
 | Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [ADR-019](../adr/019-speaking-indicator-webrtc-getstats.md) |
 | Electron-Updater Auto-Update | v2.7.6 | [ADR-011](../adr/011-appimage-update-info.md); research covered electron-updater integration |
