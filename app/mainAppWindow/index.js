@@ -525,7 +525,7 @@ function applyAppConfiguration(config, window) {
 
 function applySpellCheckerConfiguration(config, window) {
   // Support both new (spellChecker.enabled) and legacy config
-  const enabled = config?.spellChecker?.enabled !== false;
+  const enabled = String(config?.spellChecker?.enabled) !== "false";
 
   if (!enabled) {
     window.webContents.session.setSpellCheckerEnabled(false);
