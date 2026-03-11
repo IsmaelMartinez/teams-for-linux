@@ -39,9 +39,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
   - **Status:** Review complete, findings being addressed incrementally
 
-- **[Dependency Review (March 2026)](dependency-review-2026.md)** - Production dependency evaluation and cleanup
-  - Evaluated all 9 production deps; replaced/removed 3 (`node-sound`, `lodash`, `electron-positioner`)
-  - **Status:** Fully implemented in v2.7.10; retained as reference for future dependency decisions
 
 ### Historical (Migrated)
 
@@ -70,7 +67,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
-| Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps. See [dependency-review-2026.md](dependency-review-2026.md) |
+| Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps |
 | Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [ADR-019](../adr/019-speaking-indicator-webrtc-getstats.md) |
 | Electron-Updater Auto-Update | v2.7.6 | [ADR-011](../adr/011-appimage-update-info.md); research covered electron-updater integration |
 | External Changelog Generation | v2.7.x | [ADR-005](../adr/005-ai-powered-changelog-generation.md); fork detection + release automation shipped |
