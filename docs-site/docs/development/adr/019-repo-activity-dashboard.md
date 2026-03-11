@@ -41,7 +41,7 @@ Repobeats generates a single SVG image that updates automatically and displays c
 ```markdown
 ## Project Activity
 
-![Alt](https://repobeats.axiom.co/api/embed/{hash}.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/HASH.svg "Repobeats analytics image")
 ```
 
 ## Consequences
