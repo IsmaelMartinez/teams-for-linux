@@ -148,5 +148,5 @@ GitHub provides Insights tabs for every repository (Contributors, Traffic, Commi
 ## References
 
 - [GitHub Actions Performance Metrics GA announcement](https://github.blog/changelog/2025-03-14-actions-performance-metrics-are-generally-available-and-enterprise-level-metrics-are-in-public-preview/)
-- [Repobeats overview on Open {re}Source](https://openresource.dev/articles/repobeats/)
+- [Repobeats overview on Open reSource](https://openresource.dev/articles/repobeats/)
 - [OSSInsight: Scalable GitHub Analysis (VLDB paper)](https://dl.acm.org/doi/10.14778/3685800.3685865)
