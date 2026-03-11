@@ -122,7 +122,7 @@ Screen sharing fixes (Wayland regression, locale detection), Quick Chat shortcut
 
 ## Related Documentation
 
-- [Research Index](../research/README.md) --- Detailed research documents
-- [ADR Index](../adr/README.md) --- Architecture decision records
-- [Contributing Guide](../contributing.md) --- Development guidelines
-- [Module Index](../module-index.md) --- Codebase structure
+- [Research Index](../research/README.md) - Detailed research documents
+- [ADR Index](../adr/README.md) - Architecture decision records
+- [Contributing Guide](../contributing.md) - Development guidelines
+- [Module Index](../module-index.md) - Codebase structure
