@@ -41,6 +41,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | 🚧 Proposed | 2026-03-11 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -121,6 +122,15 @@ Architecture Decision Records capture important architectural decisions along wi
 - Zero cost (uses Gemini API free tier)
 - Fork PRs receive artifact download comments without 403 permission errors
 - Issue triage bot runs as a standalone GitHub App with one-click installation and no in-repo workflow files
+
+### Community & Metrics
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | Use Repobeats for embeddable repo activity visualization in README and docs |
+
+**Key Outcomes:**
+- Pending decision approval
 
 ### MQTT & Integration
 
@@ -323,13 +333,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 18
+- **Total ADRs**: 19
 - **Implemented**: 12
 - **Accepted**: 2
-- **Proposed**: 0
+- **Proposed**: 1
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 9 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security)
+- **Topics covered**: 10 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security, Community & Metrics)
 
 ## Related Documentation
 
