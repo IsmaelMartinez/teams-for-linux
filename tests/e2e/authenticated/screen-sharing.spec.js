@@ -8,13 +8,15 @@ test.describe('Screen sharing', () => {
     await closeApp(electronApp);
   });
 
-  // desktopCapturer.getSources() requires an X11 display. On pure Wayland
-  // (no XWayland) there is no X display, so the call crashes the Electron
-  // main process with "Unable to open display". Skip on pure Wayland.
+  // desktopCapturer.getSources() requires an X11 display with GPU compositing.
+  // - Pure Wayland: no X display, crashes with "Unable to open display".
+  // - XWayland in headless Docker (e.g. Fedora 41 wlroots 0.18 + pixman):
+  //   glamor can't get GBM interfaces, so desktopCapturer returns empty results.
+  // Only runs on X11 where a real (or Xvfb) X server provides full compositing.
   test('desktopCapturer returns screen and window sources', async ({}, testInfo) => {
     // eslint-disable-next-line playwright/no-skipped-test
-    test.skip(process.env.DISPLAY_SERVER === 'wayland',
-      'desktopCapturer needs X11 display (unavailable on pure Wayland)');
+    test.skip(process.env.DISPLAY_SERVER !== 'x11',
+      'desktopCapturer requires X11 with compositing (fails on Wayland and headless XWayland)');
 
     const sessionDir = testInfo.project.use.sessionDir;
     electronApp = await launchAuthenticatedApp(sessionDir);

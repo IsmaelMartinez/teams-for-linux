@@ -40,6 +40,8 @@ Architecture Decision Records capture important architectural decisions along wi
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
+| [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -111,6 +113,7 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | Use Gemini 2.0 Flash for automated changelog generation with release-pr workflow |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | Move PR artifact commenting to a workflow_run-triggered workflow to support fork PRs |
+| [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | Migrate triage bot from in-repo GitHub Actions to standalone Go service as a GitHub App |
 
 **Key Outcomes:**
 - Decoupled merging from releasing
@@ -118,6 +121,18 @@ Architecture Decision Records capture important architectural decisions along wi
 - Quality score: 9.0/10 on validation testing
 - Zero cost (uses Gemini API free tier)
 - Fork PRs receive artifact download comments without 403 permission errors
+- Issue triage bot runs as a standalone GitHub App with one-click installation and no in-repo workflow files
+
+### Community & Metrics
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | Use Repobeats for embeddable repo activity visualization in README and docs |
+
+**Key Outcomes:**
+- Repobeats SVG embed added to project README for at-a-glance activity stats
+- Zero maintenance: hosted service updates automatically
+- No CI/CD cost or GitHub Actions minutes consumed
 
 ### MQTT & Integration
 
@@ -320,13 +335,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 17
-- **Implemented**: 11
-- **Accepted**: 2
+- **Total ADRs**: 19
+- **Implemented**: 12
+- **Accepted**: 3
 - **Proposed**: 0
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 9 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security)
+- **Topics covered**: 10 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security, Community & Metrics)
 
 ## Related Documentation
 

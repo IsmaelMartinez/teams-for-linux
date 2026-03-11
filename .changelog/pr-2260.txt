@@ -1,1 +1,0 @@
-Implement Batch 1 bot automation improvements - by @IsmaelMartinez (#2260)

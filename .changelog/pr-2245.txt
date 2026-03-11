@@ -1,1 +1,0 @@
-Add authenticated Playwright tests with Docker login workflow - by @IsmaelMartinez (#2245)

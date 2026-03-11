@@ -1,1 +1,0 @@
-Simplify app termination and add MQTT error handling - by @IsmaelMartinez (#2234)

@@ -103,6 +103,7 @@ Options:
   --url <url>         Download AppImage from URL at container startup
   --latest            Download the latest GitHub release AppImage automatically
   --no-launch         Don't auto-launch the app (just start the desktop)
+  --flags "<flags>"   Extra flags to pass to the app (e.g. "--spellChecker.enabled=false")
   --login             Create a login session using the test Electron binary
                       (log in via noVNC, then Ctrl+C to save)
   --test              Run Playwright authenticated tests (requires --login first)
@@ -174,17 +175,18 @@ stop_all() {
     return 0
 }
 
-# Parse group options (--url, --no-launch, --appimage) from remaining args.
-# Sets APP_URL, AUTO_LAUNCH, and APPIMAGE_PATH variables.
+# Parse group options (--url, --no-launch, --appimage, --flags) from remaining args.
+# Sets APP_URL, AUTO_LAUNCH, APPIMAGE_PATH, and APP_FLAGS variables.
 parse_group_options() {
     APPIMAGE_PATH=""
     APP_URL=""
     AUTO_LAUNCH="true"
+    APP_FLAGS=""
 
     while [[ $# -gt 0 ]]; do
         local key="$1"
         case "$key" in
-            --appimage|--url)
+            --appimage|--url|--flags)
                 local next="${2:-}"
                 if [[ -z "$next" || "$next" =~ ^-- ]]; then
                     echo "[!] Missing argument for $key" >&2
@@ -192,6 +194,8 @@ parse_group_options() {
                 fi
                 if [[ "$key" == "--appimage" ]]; then
                     APPIMAGE_PATH="$next"
+                elif [[ "$key" == "--flags" ]]; then
+                    APP_FLAGS="$next"
                 else
                     APP_URL="$next"
                 fi
@@ -214,6 +218,12 @@ parse_group_options() {
 setup_appimage() {
     local app_dir="${SCRIPT_DIR}/app"
     mkdir -p "$app_dir"
+    # Pre-create session directory and make it world-writable.
+    # Docker creates missing bind-mount sources as root:root 755, and the
+    # tester user UID varies across distro images (packages may claim UID 1000).
+    # World-writable ensures any container's tester user can write to it.
+    mkdir -p "${SCRIPT_DIR}/session"
+    chmod a+rwx "${SCRIPT_DIR}/session" || echo "[!] Warning: Failed to set permissions on ${SCRIPT_DIR}/session. This may cause issues."
 
     if [[ -n "${APPIMAGE_PATH:-}" ]]; then
         if [[ ! -f "$APPIMAGE_PATH" ]]; then
@@ -252,10 +262,10 @@ run_group() {
     echo "$SEPARATOR"
     echo ""
 
-    # Export env vars so docker compose picks them up via ${APP_URL:-} and
-    # ${AUTO_LAUNCH:-true} defined in docker-compose.yml
+    # Export env vars so docker compose picks them up
     export APP_URL="${APP_URL:-}"
     export AUTO_LAUNCH="${AUTO_LAUNCH}"
+    export APP_FLAGS="${APP_FLAGS:-}"
 
     docker compose up --build "${services[@]}"
     return 0
@@ -345,9 +355,10 @@ DISTRO="$1"
 DISPLAY_SERVER="$2"
 shift 2
 
-# Parse single-service options (extends group options with --latest, --login, --test)
+# Parse single-service options (extends group options with --latest, --login, --test, --flags)
 APPIMAGE_PATH=""
 APP_URL=""
+APP_FLAGS=""
 APP_LATEST="false"
 AUTO_LAUNCH="true"
 RUN_TESTS="false"
@@ -361,6 +372,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --url)
             APP_URL="$2"
+            shift 2
+            ;;
+        --flags)
+            APP_FLAGS="$2"
             shift 2
             ;;
         --latest)
@@ -434,6 +449,9 @@ if [[ -n "$APP_URL" ]]; then
 echo "  App URL:  ${APP_URL}"
 fi
 echo "  Auto-launch: ${AUTO_LAUNCH}"
+if [[ -n "$APP_FLAGS" ]]; then
+echo "  App flags:   ${APP_FLAGS}"
+fi
 if [[ "$RUN_LOGIN" == "true" ]]; then
 echo "  Mode:        LOGIN (create session for tests)"
 elif [[ "$RUN_TESTS" == "true" ]]; then
@@ -448,11 +466,14 @@ if [[ -n "$APP_URL" ]]; then
     COMPOSE_ENV+=( -e "APP_URL=${APP_URL}" )
 fi
 COMPOSE_ENV+=( -e "AUTO_LAUNCH=${AUTO_LAUNCH}" )
+if [[ -n "$APP_FLAGS" ]]; then
+    COMPOSE_ENV+=( -e "APP_FLAGS=${APP_FLAGS}" )
+fi
 if [[ "$RUN_LOGIN" == "true" ]]; then
     COMPOSE_ENV+=( -e "RUN_LOGIN=true" )
 elif [[ "$RUN_TESTS" == "true" ]]; then
     COMPOSE_ENV+=( -e "RUN_TESTS=true" )
 fi
 
-# Build and run
-docker compose run --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"
+# Build and run (--rm removes the container after exit to prevent orphans)
+docker compose run --rm --build --service-ports "${COMPOSE_ENV[@]}" "${SERVICE}"

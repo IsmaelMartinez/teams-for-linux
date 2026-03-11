@@ -1,10 +1,9 @@
 const { BrowserWindow } = require('electron');
 const path = require('node:path');
-const Positioner = require('electron-positioner');
+const { moveWindow } = require('../utils/windowPositioner');
 
 class NotificationToast {
   #window;
-  #positioner;
   #autoCloseTimer;
   #toastDuration;
 
@@ -33,7 +32,6 @@ class NotificationToast {
     });
 
     this.#window.loadFile(path.join(__dirname, 'notificationToast.html'));
-    this.#positioner = new Positioner(this.#window);
 
     this.#window.webContents.once('did-finish-load', () => {
       this.#window.webContents.send('notification-toast-init', data);
@@ -53,7 +51,7 @@ class NotificationToast {
       return;
     }
 
-    this.#positioner.move('bottomRight');
+    moveWindow(this.#window, 'bottomRight');
     this.#window.show();
 
     this.#autoCloseTimer = setTimeout(() => {

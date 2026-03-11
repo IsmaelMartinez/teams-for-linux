@@ -90,15 +90,8 @@ let mqttMediaStatusService = null;
 let graphApiClient = null;
 let quickChatManager = null;
 
-let player;
-try {
-  const { NodeSound } = require("node-sound");
-  player = NodeSound.getDefaultPlayer();
-} catch (err) {
-  console.warn(
-    `No audio players found. Audio notifications might not work. ${err}`
-  );
-}
+const { createPlayer } = require("./audio/player");
+const player = createPlayer();
 
 const certificateModule = require("./certificate");
 const CacheManager = require("./cacheManager");
