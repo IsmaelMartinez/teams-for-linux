@@ -1579,6 +1579,7 @@ The following flat options have been migrated to nested structures and are now d
 | `videoMenu` | `media.video.menuEnabled` | ✅ Migrated, deprecated warning active |
 | `ssoInTuneEnabled` | `auth.intune.enabled` | ✅ Migrated, deprecated warning active |
 | `ssoInTuneAuthUser` | `auth.intune.user` | ✅ Migrated, deprecated warning active |
+| `spellCheckerLanguages` | `spellChecker.languages` | ✅ Migrated, deprecated warning active |
 
 **New Nested Configuration Objects (Added from the start):**
 
@@ -1592,6 +1593,7 @@ These features were added with nested configuration from day one:
 | `media` | `microphone.disableAutogain`, `camera.resolution.*`, `camera.autoAdjustAspectRatio.*`, `video.menuEnabled` | Incremental |
 | `screenSharing` | `thumbnail.enabled`, `thumbnail.alwaysOnTop`, `lockInhibitionMethod` | Incremental |
 | `auth` | `intune.enabled`, `intune.user` | Incremental |
+| `spellChecker` | `enabled`, `languages` | Issue #2304 |
 | `cacheManagement` | `enabled`, `maxCacheSizeMB`, `cacheCheckIntervalMs` | Original |
 | `logConfig` | `transports.console.level`, `transports.file.level` | Original |
 | `msTeamsProtocols` | `v1`, `v2` | Original |

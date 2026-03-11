@@ -97,7 +97,7 @@ class BrowserWindowManager {
         partition: this.config.partition,
         preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
-        spellcheck: true,
+        spellcheck: this.config?.spellChecker?.enabled !== false,
         webviewTag: true,
         // SECURITY: Disabled for Teams DOM access, compensated by IPC validation
         contextIsolation: false,  // Required for ReactHandler DOM access

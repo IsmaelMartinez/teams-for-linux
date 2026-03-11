@@ -494,7 +494,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
 };
 
 function applyAppConfiguration(config, window) {
-  applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
+  applySpellCheckerConfiguration(config, window);
 
   const certPath = config.clientCertPath;
   if (certPath) {
@@ -523,7 +523,22 @@ function applyAppConfiguration(config, window) {
   }
 }
 
-function applySpellCheckerConfiguration(languages, window) {
+function applySpellCheckerConfiguration(config, window) {
+  // Support both new (spellChecker.enabled) and legacy config
+  const enabled = config?.spellChecker?.enabled !== false;
+
+  if (!enabled) {
+    window.webContents.session.setSpellCheckerEnabled(false);
+    console.debug("Spellchecker is disabled via configuration");
+    return;
+  }
+
+  // Support both new (spellChecker.languages) and legacy (spellCheckerLanguages) config paths
+  const languages =
+    config?.spellChecker?.languages?.length > 0
+      ? config.spellChecker.languages
+      : config?.spellCheckerLanguages ?? [];
+
   const spellCheckProvider = new SpellCheckProvider(window);
   if (
     spellCheckProvider.setLanguages(languages).length === 0 &&

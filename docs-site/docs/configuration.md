@@ -421,7 +421,8 @@ Wayland display server settings are organized under the `wayland` configuration 
 |--------|------|---------|-------------|
 | `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36` | Google Chrome User Agent |
 | `emulateWinChromiumPlatform` | `boolean` | `false` | Use windows platform information in chromium (helpful if MFA app doesn't support Linux) |
-| `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |
+| `spellChecker` | `object` | `{ enabled: true, languages: [] }` | Spell checker configuration. Set `enabled: false` to fully disable spellcheck. Use `languages` to specify language codes. |
+| `spellCheckerLanguages` | `array` | `[]` | **Deprecated**: Use `spellChecker.languages` instead. Array of languages for the spell checker. |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
 
 :::note Wayland GPU Handling

@@ -416,10 +416,20 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
         choices: ["Electron", "WakeLockSentinel"],
       },
+      spellChecker: {
+        default: {
+          enabled: true,
+          languages: [],
+        },
+        describe:
+          "Spell checker configuration. enabled: enable or disable the spell checker. languages: array of language codes for the spell checker.",
+        type: "object",
+      },
       spellCheckerLanguages: {
         default: [],
+        deprecated: "Use spellChecker.languages instead. This option will be removed in a future version.",
         describe:
-          "Array of languages to use with Electron's spell checker (experimental)",
+          "[DEPRECATED] Use spellChecker.languages instead. Array of languages to use with Electron's spell checker.",
         type: "array",
       },
       ssoBasicAuthUser: {
