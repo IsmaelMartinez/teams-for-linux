@@ -112,6 +112,10 @@ elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
     APP_CMD=""
 fi
 
+if [[ -n "$APP_CMD" ]] && [[ -n "${APP_FLAGS:-}" ]]; then
+    APP_CMD="${APP_CMD} ${APP_FLAGS}"
+fi
+
 export APP_CMD
 export AUTO_LAUNCH="${AUTO_LAUNCH:-true}"
 

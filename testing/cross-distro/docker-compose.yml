@@ -37,6 +37,8 @@ x-common: &common
     APP_URL: "${APP_URL:-}"
     # Set AUTO_LAUNCH=false to skip auto-starting the app
     AUTO_LAUNCH: "${AUTO_LAUNCH:-true}"
+    # Extra flags to pass to the app (e.g. --spellChecker.enabled=false)
+    APP_FLAGS: "${APP_FLAGS:-}"
 
 # ============================================================
 # Ubuntu 24.04

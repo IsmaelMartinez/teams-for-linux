@@ -48,6 +48,7 @@ cd testing/cross-distro
 --url <url>         Download from specific URL
 --latest            Download latest GitHub release automatically
 --no-launch         Start desktop only (launch app manually)
+--flags "<flags>"   Extra flags to pass to the app
 
 # Utility
 ./run.sh --list         Show all configurations
@@ -75,7 +76,7 @@ and build time.
 ./run.sh --run-all --url https://example.com/teams.AppImage --no-launch
 ```
 
-Grouped runs accept the same `--url`, `--appimage`, and `--no-launch` options.
+Grouped runs accept the same `--url`, `--appimage`, `--no-launch`, and `--flags` options.
 Press `Ctrl+C` to stop all containers in the group.
 
 ### Docker Compose directly
@@ -83,6 +84,7 @@ Press `Ctrl+C` to stop all containers in the group.
 ```bash
 APP_URL=https://example.com/teams.AppImage docker compose up --build ubuntu-x11 fedora-wayland
 AUTO_LAUNCH=false docker compose up --build ubuntu-x11
+APP_FLAGS="--logConfig.transports.console.level=debug" docker compose up --build ubuntu-x11
 ```
 
 ### Manual app launch
