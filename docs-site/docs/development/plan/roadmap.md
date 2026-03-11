@@ -123,7 +123,7 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 
 ## Feature Details
 
-### MQTT Screen Sharing Status
+### MQTT Screen Sharing Status - Complete
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)

@@ -10,6 +10,7 @@ const { app, ipcMain } = require('electron');
  * - {topicPrefix}/camera - Camera on/off state
  * - {topicPrefix}/microphone - Microphone on/off state
  * - {topicPrefix}/in-call - Active call state
+ * - {topicPrefix}/screen-sharing - Screen sharing active state
  */
 class MQTTMediaStatusService {
 	#mqttClient;
@@ -25,6 +26,10 @@ class MQTTMediaStatusService {
 		ipcMain.on('camera-state-changed', this.#handleCameraChanged.bind(this));
 		// Publish MQTT status when microphone state changes
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
+
+		// Publish MQTT status when screen sharing state changes
+		ipcMain.on('screen-sharing-started', () => this.#handleScreenSharingChanged(true));
+		ipcMain.on('screen-sharing-stopped', () => this.#handleScreenSharingChanged(false));
 
 		app.on('teams-call-connected', this.#handleCallConnected.bind(this));
 		app.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
@@ -54,6 +59,13 @@ class MQTTMediaStatusService {
 		const topic = `${this.#topicPrefix}/microphone`;
 		await this.#mqttClient.publish(topic, String(enabled), { retain: true });
 		console.debug('[MQTTMediaStatusService] Microphone state changed to', enabled, 'published to', topic);
+	}
+
+	async #handleScreenSharingChanged(isSharing) {
+		const topic = `${this.#topicPrefix}/screen-sharing`;
+		await this.#mqttClient.publish(topic, String(isSharing), { retain: true });
+		const state = isSharing ? 'started' : 'stopped';
+		console.debug(`[MQTTMediaStatusService] Screen sharing ${state}, published to`, topic);
 	}
 }
 
