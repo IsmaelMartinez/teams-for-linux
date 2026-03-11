@@ -23,9 +23,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
-  - **Phase 1 Shipped**: Infrastructure, LWT, and call state publishing
-  - **Phase 2 Deferred**: WebRTC camera/mic monitoring awaiting user feedback
-  - **Screen sharing:** PRs [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) and [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) open for MQTT screen sharing status
+  - **Phase 1 Shipped**: Infrastructure, LWT, call state, camera, microphone, and screen sharing topics
+  - **Screen sharing null sourceId fix**: PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) landing in v2.7.11
+  - **Screen sharing broader feature**: PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) awaiting user confirmation ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107))
+  - **Phase 2 Deferred**: Reliable mute/speaking state via WebRTC `getStats()` is now proven (see speaking indicator ADR-019); wiring to MQTT awaits user demand
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
@@ -37,6 +38,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Covers architecture, testing gaps, performance overhead, and developer experience
   - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
   - **Status:** Review complete, findings being addressed incrementally
+
+- **[Dependency Review (March 2026)](dependency-review-2026.md)** - Production dependency evaluation and cleanup
+  - Evaluated all 9 production deps; replaced/removed 3 (`node-sound`, `lodash`, `electron-positioner`)
+  - **Status:** Fully implemented in v2.7.10; retained as reference for future dependency decisions
 
 ### Historical (Migrated)
 
@@ -65,6 +70,8 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps. See [dependency-review-2026.md](dependency-review-2026.md) |
+| Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [ADR-019](../adr/019-speaking-indicator-webrtc-getstats.md) |
 | Electron-Updater Auto-Update | v2.7.6 | [ADR-011](../adr/011-appimage-update-info.md); research covered electron-updater integration |
 | External Changelog Generation | v2.7.x | [ADR-005](../adr/005-ai-powered-changelog-generation.md); fork detection + release automation shipped |
 | Screen Lock Media Privacy | --- | Closed ([#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)); no user interest; work preserved in branch |
