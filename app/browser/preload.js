@@ -167,7 +167,12 @@ function createNotificationStub() {
       else if (type === 'show') this.onshow = listener;
       else if (type === 'error') this.onerror = listener;
     },
-    removeEventListener() {},
+    removeEventListener(type, listener) {
+      if (type === 'click' && (!listener || this.onclick === listener)) this.onclick = null;
+      else if (type === 'close' && (!listener || this.onclose === listener)) this.onclose = null;
+      else if (type === 'show' && (!listener || this.onshow === listener)) this.onshow = null;
+      else if (type === 'error' && (!listener || this.onerror === listener)) this.onerror = null;
+    },
     dispatchEvent() { return true; },
   };
   // Fire the show event asynchronously like a real Notification
