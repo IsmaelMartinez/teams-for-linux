@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-11
+**Last Updated:** 2026-03-12
 **Current Version:** v2.7.10 (Electron 39.5.1)
 **Status:** Living Document --- stabilising on Electron 39, preparing v2.7.11
 
@@ -38,7 +38,7 @@ Wayland support is improving incrementally. Screen source selection has been sim
 
 ### MQTT Integration
 
-The MQTT integration is mature for presence status, media state, and inbound commands. The remaining work is a null sourceId fix for screen sharing publish and the broader screen sharing status feature ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107), awaiting user feedback). Phase 2 extended status (granular WebRTC camera/mic monitoring) is parked until users confirm they need it.
+The MQTT integration is mature for presence status, media state, inbound commands, and now screen sharing status ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107), shipped). Phase 2 extended status (granular WebRTC camera/mic monitoring for reliable mute state) is parked until users confirm they need it.
 
 ### Testing Infrastructure
 
@@ -48,7 +48,7 @@ Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting
 
 ## Next Patch Release (v2.7.11)
 
-v2.7.11 continues the stability theme with several bug fixes (emoji colon input, short Teams deep links, MQTT screen sharing, media permission handling) plus the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as a new user-testable feature using WebRTC `getStats()` for three-state mute/speaking detection.
+v2.7.11 continues the stability theme with bug fixes (short Teams deep links, media permission handling, MQTT screen sharing null sourceId) plus the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as a new user-testable feature using WebRTC `getStats()` for three-state mute/speaking detection.
 
 ---
 

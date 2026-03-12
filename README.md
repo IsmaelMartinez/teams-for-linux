@@ -80,6 +80,10 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 | **[Custom Backgrounds](https://ismaelmartinez.github.io/teams-for-linux/custom-backgrounds)** | Video call backgrounds setup |
 | **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/contributing)** | Development setup and contribution guidelines |
 
+## Project Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/e63dcc8b154ee5f4490674818df091c243b041b7.svg "Repobeats analytics image")
+
 ## Support & Community
 
 - 💬 **Chat**: Join our [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
