@@ -1,0 +1,1 @@
+Fix: Ensure all notification methods return a Notification-like stub for Teams. - by @IsmaelMartinez (#2329)
