@@ -151,6 +151,30 @@ ipcRenderer.invoke("get-config").then((config) => {
   console.error("Preload: Failed to load config for notifications:", err);
 });
 
+// Create a Notification-like stub so Teams can manage lifecycle without errors.
+// Without addEventListener/close/dispatchEvent, Teams' internal state machine
+// breaks after the first notification, causing subsequent ones to stop firing.
+function createNotificationStub() {
+  const stub = {
+    onclick: null,
+    onclose: null,
+    onerror: null,
+    onshow: null,
+    close() { if (this.onclose) this.onclose(); },
+    addEventListener(type, listener) {
+      if (type === 'click') this.onclick = listener;
+      else if (type === 'close') this.onclose = listener;
+      else if (type === 'show') this.onshow = listener;
+      else if (type === 'error') this.onerror = listener;
+    },
+    removeEventListener() {},
+    dispatchEvent() { return true; },
+  };
+  // Fire the show event asynchronously like a real Notification
+  setTimeout(() => { if (stub.onshow) stub.onshow(); }, 0);
+  return stub;
+}
+
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {
   if (globalThis.electronAPI?.playNotificationSound) {
@@ -180,10 +204,9 @@ function createWebNotification(classicNotification, title, options) {
       return new classicNotification(title, options);
     } catch (err) {
       console.debug("Could not create native notification:", err);
-      return null;
     }
   }
-  return null;
+  return createNotificationStub();
 }
 
 function createElectronNotification(options) {
@@ -195,8 +218,7 @@ function createElectronNotification(options) {
       console.debug("showNotification failed", e);
     }
   }
-  // Return stub object for Electron notifications
-  return { onclick: null, onclose: null, onerror: null };
+  return createNotificationStub();
 }
 
 function createCustomNotification(title, options) {
@@ -229,8 +251,7 @@ function createCustomNotification(title, options) {
     console.error("Failed to send custom notification:", e);
   }
 
-  // Return stub object
-  return { onclick: null, onclose: null, onerror: null };
+  return createNotificationStub();
 }
 
 // Override window.Notification immediately before Teams loads
@@ -245,8 +266,7 @@ function createCustomNotification(title, options) {
   function CustomNotification(title, options) {
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
-      // Return dummy object to avoid Teams errors
-      return { onclick: null, onclose: null, onerror: null };
+      return createNotificationStub();
     }
 
     options = options || {};
@@ -264,8 +284,7 @@ function createCustomNotification(title, options) {
     }
 
     if (method === "web") {
-      const notification = createWebNotification(classicNotification, title, options);
-      return notification || { onclick: null, onclose: null, onerror: null };
+      return createWebNotification(classicNotification, title, options);
     }
 
     return createElectronNotification(options);
