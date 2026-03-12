@@ -433,8 +433,11 @@ async function discoverDevices() {
       .trim()
       .split("\n")
       .filter((line) => line.length > 0)
-      .map((line) => line.split(":")[0].trim())
-      .filter((devPath) => devPath.startsWith("/dev/"));
+      .map((line) => {
+        const match = line.match(/^(\/dev\/\S+)/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean);
   } catch {
     return [];
   }
@@ -589,9 +592,14 @@ async function getAssertion(options) {
 
   const authData = Buffer.from(lines[0], "base64");
   const signature = Buffer.from(lines[1], "base64");
-  const credentialId = lines.length >= 3
-    ? base64urlEncode(Buffer.from(lines[2], "base64"))
-    : (options.allowCredentials?.[0]?.id || "");
+  let credentialId;
+  if (lines.length >= 3) {
+    credentialId = base64urlEncode(Buffer.from(lines[2], "base64"));
+  } else if (options.allowCredentials && options.allowCredentials.length === 1) {
+    credentialId = options.allowCredentials[0].id;
+  } else {
+    throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
+  }
   const userHandle = lines.length >= 4
     ? base64urlEncode(Buffer.from(lines[3], "base64"))
     : null;
@@ -671,22 +679,22 @@ contextBridge.exposeInMainWorld("api", {
   <body>
     <h3>Security Key PIN</h3>
     <p>Enter the PIN for your FIDO2 security key to continue signing in.</p>
-    <form onsubmit="handleSubmit(event)">
+    <form id="pin-form">
       <input type="password" id="pin" placeholder="PIN" autofocus autocomplete="off" />
       <div class="buttons">
-        <button type="button" class="secondary" onclick="handleCancel()">Cancel</button>
+        <button type="button" class="secondary" id="cancel-btn">Cancel</button>
         <button type="submit" class="primary">OK</button>
       </div>
     </form>
     <script>
-      function handleSubmit(event) {
+      document.getElementById("pin-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const pin = document.getElementById("pin").value;
         if (pin) globalThis.api.submitPin(pin);
-      }
-      function handleCancel() {
+      });
+      document.getElementById("cancel-btn").addEventListener("click", () => {
         globalThis.api.cancelPin();
-      }
+      });
     </script>
   </body>
 </html>
@@ -1006,26 +1014,24 @@ function init(config, ipcRenderer) {
 /**
  * Convert ArrayBuffer/Uint8Array fields to base64url for IPC transport.
  */
+// NOTE: These browser-side base64url helpers intentionally duplicate the logic
+// in app/webauthn/helpers.js because the renderer uses browser APIs (btoa/atob,
+// ArrayBuffer) while the main process uses Node.js Buffer. Keep both in sync.
 function bufferToBase64url(buffer) {
   const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 /**
  * Convert base64url string to ArrayBuffer.
  */
-function base64urlToBuffer(str) {
-  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (base64.length % 4 !== 0) base64 += "=";
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+function base64urlToBuffer(base64url) {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const binStr = atob(base64);
+  const bytes = Uint8Array.from(binStr, (c) => c.charCodeAt(0));
   return bytes.buffer;
 }
 
