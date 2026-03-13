@@ -183,7 +183,7 @@ class MQTTStatusMonitor {
 	 */
 	detectStatusFromSelectors() {
 		const selectors = [
-			// Teams presence badge (current as of Mar 2026)
+			// Current primary selector for the Teams presence badge
 			'[data-tid="me-control-avatar-presence"]',
 			// Older Teams v2 selectors (kept for compatibility)
 			'[data-tid="me-control-presence-icon"]',
