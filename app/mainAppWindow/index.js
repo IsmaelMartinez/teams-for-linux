@@ -425,15 +425,15 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // navigator.permissions.query() reports "granted" for camera/microphone.
   // Without this, Teams' calling module may fail to initialise because
   // Electron's default permissionCheck can return an unexpected state (#2221).
-  const trustedOrigins = [
+  const trustedOrigins = new Set([
     'https://teams.microsoft.com',
     'https://teams.live.com',
     'https://teams.cloud.microsoft',
-  ];
+  ]);
   window.webContents.session.setPermissionCheckHandler(
     (_webContents, _permission, requestingOrigin) => {
       try {
-        return trustedOrigins.includes(new URL(requestingOrigin).origin);
+        return trustedOrigins.has(new URL(requestingOrigin).origin);
       } catch {
         return false;
       }
