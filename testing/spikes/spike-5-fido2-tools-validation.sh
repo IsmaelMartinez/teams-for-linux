@@ -45,6 +45,11 @@ fail()    { echo -e "${RED}FAIL:${NC} $1"; }
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
+section "Security note"
+echo "This script redacts cryptographic output (attestation certs, signatures,"
+echo "credential IDs) so the results are safe to paste into a public GitHub comment."
+echo "Only line counts, byte lengths, and format metadata are shown."
+
 section "Environment"
 echo "Date:    $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "Distro:  $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
@@ -161,19 +166,20 @@ else
 fi
 
 echo ""
-echo "Raw stdout from fido2-cred:"
-echo "---"
-cat "$CRED_STDOUT"
-echo "---"
-echo ""
 
 CRED_LINES=$(wc -l < "$CRED_STDOUT")
 echo "Number of output lines: $CRED_LINES"
 echo ""
 
-echo "stderr during credential creation:"
+# NOTE: We intentionally do NOT dump raw fido2-cred output here.
+# The x509 attestation certificate (line 3) can fingerprint the specific
+# hardware key (model, batch, sometimes serial). The line-by-line analysis
+# below shows enough to validate format without exposing sensitive material.
+
+echo "stderr during credential creation (PIN prompt format only):"
 echo "---"
-cat "$CRED_STDERR"
+# Only show the PIN prompt line, not any other stderr content
+grep -i "pin" "$CRED_STDERR" 2>/dev/null || echo "(no PIN-related output)"
 echo "---"
 echo ""
 
@@ -205,7 +211,7 @@ while IFS= read -r line; do
 
   echo "  Line $LINE_NUM: length=$LINE_LEN, base64=$IS_BASE64"
   echo "    Expected: $EXPECTED"
-  echo "    Content:  ${line:0:80}$([ $LINE_LEN -gt 80 ] && echo '...')"
+  echo "    Preview:  ${line:0:16}... (truncated, not safe to share full value)"
   echo ""
 done < "$CRED_STDOUT"
 
@@ -238,7 +244,7 @@ if [ -n "$CRED_ID_B64" ]; then
 ${RP_ID}
 ${CRED_ID_HEX}
 "
-  echo "  credId (hex):   ${CRED_ID_HEX:0:40}..."
+  echo "  credId:         present (${#CRED_ID_HEX} hex chars, not shown)"
 fi
 echo ""
 
@@ -285,19 +291,18 @@ else
 fi
 
 echo ""
-echo "Raw stdout from fido2-assert:"
-echo "---"
-cat "$ASSERT_STDOUT"
-echo "---"
-echo ""
 
 ASSERT_LINES=$(wc -l < "$ASSERT_STDOUT")
 echo "Number of output lines: $ASSERT_LINES"
 echo ""
 
-echo "stderr during assertion:"
+# NOTE: Same as above — do not dump raw assertion output.
+# The signature and authenticator data are bound to a dummy RP and random
+# challenge, but there's no reason to expose them publicly.
+
+echo "stderr during assertion (PIN prompt format only):"
 echo "---"
-cat "$ASSERT_STDERR"
+grep -i "pin" "$ASSERT_STDERR" 2>/dev/null || echo "(no PIN-related output)"
 echo "---"
 echo ""
 
@@ -326,7 +331,7 @@ while IFS= read -r line; do
 
   echo "  Line $LINE_NUM: length=$LINE_LEN, base64=$IS_BASE64"
   echo "    Expected: $EXPECTED"
-  echo "    Content:  ${line:0:80}$([ $LINE_LEN -gt 80 ] && echo '...')"
+  echo "    Preview:  ${line:0:16}... (truncated)"
   echo ""
 done < "$ASSERT_STDOUT"
 
@@ -336,14 +341,16 @@ echo ""
 
 for f in "$CRED_STDERR" "$ASSERT_STDERR"; do
   FNAME=$(basename "$f")
-  CONTENT=$(cat "$f")
-  if [ -n "$CONTENT" ]; then
-    echo "  $FNAME:"
-    echo "    '$CONTENT'"
-    if echo "$CONTENT" | grep -q "Enter PIN for"; then
-      ok "PIN prompt matches expected pattern: 'Enter PIN for'"
+  # Only check for the PIN prompt pattern, don't dump full stderr
+  # (stderr may contain device paths or other identifying info)
+  PIN_LINE=$(grep -i "pin" "$f" 2>/dev/null || true)
+  if [ -n "$PIN_LINE" ]; then
+    echo "  $FNAME contains PIN prompt: yes"
+    if echo "$PIN_LINE" | grep -q "Enter PIN for"; then
+      ok "PIN prompt matches expected pattern: 'Enter PIN for /dev/...'"
     else
-      warn "PIN prompt does NOT contain 'Enter PIN for' — plan's detection logic may need adjustment"
+      warn "PIN prompt does NOT match 'Enter PIN for' — plan's detection logic may need adjustment"
+      echo "    Pattern found: $(echo "$PIN_LINE" | sed 's|/dev/[^ ]*|/dev/[REDACTED]|g')"
     fi
     echo ""
   fi
