@@ -743,7 +743,7 @@ function relaxCspForAuthPages(responseHeaders, url) {
   for (let i = 0; i < values.length; i++) {
     // Only touch script-src directives that do not already allow eval
     if (values[i].includes('script-src') && !values[i].includes("'unsafe-eval'")) {
-      values[i] = values[i].replace(/script-src\s/, "script-src 'unsafe-eval' ");
+      values[i] = values[i].replace(/(^|;\s*)script-src\s/, "$1script-src 'unsafe-eval' ");
     }
   }
 }
