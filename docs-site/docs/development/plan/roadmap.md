@@ -26,6 +26,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Done** | Dependency cleanup (lodash, node-sound, electron-positioner) | [Implemented](../research/dependency-review-2026.md) | Low | v2.8.0 |
 | **Ready** | Notification sound overhaul Phase 2 (custom sounds config) | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
+| **Done** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | Implemented ([PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299)), full speaking/silent/muted via WebRTC getStats | Medium | v2.7.11 |
 
 ---
 
@@ -128,6 +129,21 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
 **Status:** PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) fixes null sourceId crash. PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) open for the broader feature.
+
+---
+
+## Implemented
+
+### Speaking Indicator
+
+**Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
+**Status:** Implemented in [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299), landing in v2.7.11
+
+Real-time visual indicator during calls showing microphone state via `RTCPeerConnection.getStats()` `media-source.audioLevel`. Three states: speaking (green), silent (grey), muted (red). Teams zeroes `audioLevel` to exactly 0.0 when muted, making detection reliable and unambiguous.
+
+**Module:** `app/browser/tools/speakingIndicator.js`
+**Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
+**If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
 
 ---
 

@@ -321,6 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
+      { name: "speakingIndicator", path: "./tools/speakingIndicator" },
       { name: "cameraResolution", path: "./tools/cameraResolution" },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
