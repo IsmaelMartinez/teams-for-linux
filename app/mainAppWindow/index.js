@@ -695,8 +695,63 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
+// Teams domains where we preserve the original CSP unchanged
+const TEAMS_DOMAINS = [
+  'teams.cloud.microsoft',
+  'teams.microsoft.com',
+  'teams.live.com',
+  'statics.teams.cdn.office.net',
+];
+
+/**
+ * Checks whether a URL belongs to a Teams domain.
+ * Also handles Microsoft Cloud App Security (MCAS) proxy suffix.
+ */
+function isTeamsDomain(url) {
+  try {
+    let hostname = new URL(url).hostname;
+    // Strip MCAS proxy suffix (e.g., teams.cloud.microsoft.mcas.ms)
+    if (hostname.endsWith('.mcas.ms')) {
+      hostname = hostname.slice(0, -8);
+    }
+    return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Relaxes the enforcing CSP for non-Teams domains so that third-party SSO
+ * providers (e.g. Symantec VIP) whose Angular/jQuery UI relies on dynamic
+ * code evaluation can function when contextIsolation is disabled (#2326).
+ *
+ * NOTE: This intentionally adds the CSP 'unsafe-eval' token to the
+ * script-src directive of non-Teams responses only.  This is required
+ * because the shared V8 context (contextIsolation: false) enforces the
+ * page's CSP, which blocks eval and breaks SSO login flows.
+ */
+function relaxCspForAuthPages(responseHeaders, url) {
+  if (isTeamsDomain(url)) return;
+
+  // Header names may arrive in any casing
+  const cspKey = Object.keys(responseHeaders).find(
+    k => k.toLowerCase() === 'content-security-policy'
+  );
+  if (!cspKey) return;
+
+  const values = responseHeaders[cspKey];
+  for (let i = 0; i < values.length; i++) {
+    // Only touch script-src directives that do not already allow eval
+    if (values[i].includes('script-src') && !values[i].includes("'unsafe-eval'")) {
+      values[i] = values[i].replace(/script-src\s/, "script-src 'unsafe-eval' ");
+    }
+  }
+}
+
 function onHeadersReceivedHandler(details, callback) {
   customBackgroundService.onHeadersReceivedHandler(details);
+
+  relaxCspForAuthPages(details.responseHeaders, details.url);
 
   callback({
     responseHeaders: details.responseHeaders,
