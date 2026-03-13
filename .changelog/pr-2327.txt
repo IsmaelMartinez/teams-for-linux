@@ -1,1 +1,1 @@
-Add WebAuthn/FIDO2 implementation plan for Linux security keys - by @IsmaelMartinez (#2327)
+docs: add WebAuthn/FIDO2 implementation plan for Linux security keys - by @IsmaelMartinez (#2327)

@@ -1,1 +1,1 @@
-Add repository health analysis for Feb-Mar 2026 - by @IsmaelMartinez (#2324)
+docs: add repository health analysis for Feb-Mar 2026 - by @IsmaelMartinez (#2324)

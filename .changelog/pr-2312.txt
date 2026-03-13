@@ -1,1 +1,1 @@
-Add codebase review, unit tests for security modules, and fix changelog generator - by @IsmaelMartinez (#2312)
+chore: add codebase review, unit tests for security modules, and fix changelog generator - by @IsmaelMartinez (#2312)
