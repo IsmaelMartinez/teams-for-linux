@@ -1,0 +1,1 @@
+Add speaking indicator with mute detection using WebRTC stats. - by @IsmaelMartinez (#2299)
