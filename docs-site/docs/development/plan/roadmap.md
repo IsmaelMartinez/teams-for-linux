@@ -26,7 +26,7 @@ This document outlines the future development direction for Teams for Linux, org
 | **Done** | Dependency cleanup (lodash, node-sound, electron-positioner) | [Implemented](../research/dependency-review-2026.md) | Low | v2.8.0 |
 | **Ready** | Notification sound overhaul Phase 2 (custom sounds config) | [Research complete](../research/notification-sound-overhaul-research.md) | Medium | v2.8.0+ |
 | **Low** | MQTT Extended Status Phase 2 | Awaiting user feedback | Small | --- |
-| **Done** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | [Implemented](../research/speaking-indicator-research.md), full speaking/silent/muted via WebRTC getStats ([ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md)) | Medium | v2.8.0+ |
+| **Done** | Speaking Indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) | [Implemented](../research/speaking-indicator-research.md), full speaking/silent/muted via WebRTC getStats ([ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md)) | Medium | v2.8.0+ |
 
 ---
 
@@ -124,7 +124,7 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 
 ## Feature Details
 
-### MQTT Screen Sharing Status
+### MQTT Screen Sharing Status - Complete
 
 **Issue:** [#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)
 **Related:** [mqtt-extended-status-investigation.md](../research/mqtt-extended-status-investigation.md)
@@ -140,7 +140,7 @@ Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). T
 **Research:** [speaking-indicator-research.md](../research/speaking-indicator-research.md)
 **Status:** Fully implemented 2026-03-10
 
-Real-time visual indicator during calls showing microphone state via `RTCPeerConnection.getStats()` `media-source.audioLevel`. Three states: speaking (green), silent (grey), muted (red). Teams zeroes `audioLevel` to exactly 0.0 when muted, making detection reliable and unambiguous. See [ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md).
+Real-time visual indicator during calls showing microphone state via `RTCPeerConnection.getStats()` `media-source.audioLevel`. Three states: speaking (green), silent (grey), muted (red). Teams zeroes `audioLevel` to exactly 0.0 when muted, making detection reliable and unambiguous. See [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md).
 
 **Module:** `app/browser/tools/speakingIndicator.js`
 **Config:** `media.microphone.speakingIndicator` (boolean, default `false`)

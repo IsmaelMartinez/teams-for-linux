@@ -3,7 +3,7 @@
 **Date:** 2026-03-10
 **Status:** Complete — Spike A confirmed, implemented in production
 **Parent Research:** [Speaking Indicator Research](speaking-indicator-research.md)
-**ADR:** [ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md)
+**ADR:** [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md)
 **Issue:** [#2290 - Add real-time speaking indicator](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
 
 ---
@@ -145,7 +145,7 @@ The spikes were integrated directly into the app via `muteDetectionSpike.js` (si
 
 **Spike D — No signal observed:** No `replaceTrack` or `setParameters` calls during mute/unmute. Packet rate drops to ~4 pps (DTX comfort noise) when muted, but this is indistinguishable from natural silence without `audioLevel`. Not usable as a standalone mute signal.
 
-**Conclusion:** Spike A is the production solution. See [ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md) for the full decision record. The `speakingIndicator.js` module was rewritten to use this approach.
+**Conclusion:** Spike A is the production solution. See [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md) for the full decision record. The `speakingIndicator.js` module was rewritten to use this approach.
 
 ---
 

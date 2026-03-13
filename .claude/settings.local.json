@@ -20,5 +20,9 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github"
-  ]
+  ],
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  }
 }

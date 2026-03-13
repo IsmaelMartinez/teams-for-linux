@@ -41,7 +41,8 @@ Architecture Decision Records capture important architectural decisions along wi
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
-| [019](019-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | ✅ Implemented | 2026-03-10 | v2.8.0+ |
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
+| [020](020-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | ✅ Implemented | 2026-03-10 | v2.7.11 |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -123,6 +124,17 @@ Architecture Decision Records capture important architectural decisions along wi
 - Fork PRs receive artifact download comments without 403 permission errors
 - Issue triage bot runs as a standalone GitHub App with one-click installation and no in-repo workflow files
 
+### Community & Metrics
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | Use Repobeats for embeddable repo activity visualization in README and docs |
+
+**Key Outcomes:**
+- Repobeats SVG embed added to project README for at-a-glance activity stats
+- Zero maintenance: hosted service updates automatically
+- No CI/CD cost or GitHub Actions minutes consumed
+
 ### MQTT & Integration
 
 | ADR | Title | Summary |
@@ -143,7 +155,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | Rejected multi-window due to Teams architecture constraints |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | Use People API + Deep Links for quick chat access after Chat API was blocked |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
-| [019](019-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | Use `RTCPeerConnection.getStats()` media-source.audioLevel to detect Teams mute state and speaking activity |
+| [020](020-webrtc-getstats-audio-level-detection.md) | WebRTC getStats() for Microphone State Detection | Use `RTCPeerConnection.getStats()` media-source.audioLevel to detect Teams mute state and speaking activity |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)
@@ -326,13 +338,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 19
+- **Total ADRs**: 20
 - **Implemented**: 13
-- **Accepted**: 2
+- **Accepted**: 3
 - **Proposed**: 0
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 9 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security)
+- **Topics covered**: 10 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security, Community & Metrics)
 
 ## Related Documentation
 

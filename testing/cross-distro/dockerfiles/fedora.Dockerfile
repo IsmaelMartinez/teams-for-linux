@@ -18,7 +18,7 @@ RUN dnf install -y \
     nodejs npm \
     python3 wget curl procps-ng file fuse3 \
     && dnf clean all \
-    && useradd -m -s /bin/bash -G audio,video -u 1000 tester \
+    && useradd -m -s /bin/bash -G audio,video tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
 
 # Copy scripts and config

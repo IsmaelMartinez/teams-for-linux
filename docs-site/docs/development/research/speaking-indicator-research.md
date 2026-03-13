@@ -1,7 +1,7 @@
 # Speaking Indicator Research (Issue #2290)
 
 :::tip Implemented (Phase 2 complete)
-Full implementation with speaking/silent/muted detection (2026-03-10). Phase 1 getUserMedia/AnalyserNode approach superseded by RTCPeerConnection.getStats() audioLevel. See ADR-019.
+Full implementation with speaking/silent/muted detection (2026-03-10). Phase 1 getUserMedia/AnalyserNode approach superseded by RTCPeerConnection.getStats() audioLevel. See ADR-020.
 :::
 
 **Date:** 2026-03-04
@@ -119,7 +119,7 @@ Live testing (2026-03-10) with spike instrumentation confirmed that `RTCPeerConn
 - **Silent**: `audioLevel` small non-zero value (ambient mic noise)
 - **Speaking**: `audioLevel` 0.01–0.45 range
 
-The Phase 1 `getUserMedia`/`AnalyserNode` approach was superseded. See [ADR-019](../adr/019-webrtc-getstats-audio-level-detection.md) and [Mute Detection Spikes](mute-detection-spikes.md) for full spike data and rationale.
+The Phase 1 `getUserMedia`/`AnalyserNode` approach was superseded. See [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md) and [Mute Detection Spikes](mute-detection-spikes.md) for full spike data and rationale.
 
 The four Phase 1 approaches that failed (track.enabled, zero-frame detection, replaceTrack, React internals) failed because they all targeted the wrong layer — the raw microphone stream rather than what Teams actually transmits. The WebRTC stats API reads post-processing, making it the correct layer.
 
@@ -338,7 +338,7 @@ Audio level detection via `AudioContext` + `AnalyserNode` works reliably for spe
 
 1. ~~Run validation spikes to confirm technical feasibility~~ (Done 2026-03-09)
 2. ~~Implement Phase 1 MVP as a new browser tool module~~ (Done 2026-03-09)
-3. ~~Investigate mute detection~~ (Done 2026-03-10 --- solved via WebRTC getStats, see ADR-019)
+3. ~~Investigate mute detection~~ (Done 2026-03-10 --- solved via WebRTC getStats, see ADR-020)
 4. ~~Add `speakingIndicator` config option~~ (Done 2026-03-09)
 5. ~~Implement Phase 2 --- full mute/silent/speaking detection~~ (Done 2026-03-10)
 6. Test with PipeWire, PulseAudio, and ALSA audio backends

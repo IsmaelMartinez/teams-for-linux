@@ -16,7 +16,7 @@
  * - Grey: silent — mic is open but quiet
  * - Red: muted — Teams has zeroed the audio signal
  *
- * See ADR-019 for the rationale behind using getStats() audioLevel.
+ * See ADR-020 for the rationale behind using getStats() audioLevel.
  */
 const activityHub = require('./activityHub');
 

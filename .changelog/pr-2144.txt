@@ -1,0 +1,1 @@
+feat: publish screen sharing status to MQTT (#2107) - by @IsmaelMartinez (#2144)

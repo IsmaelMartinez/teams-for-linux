@@ -4,16 +4,22 @@
  * Monitors Teams user status and sends updates to the main process via IPC
  * for MQTT publishing to home automation systems.
  *
+ * IMPORTANT: This detection is inherently fragile. It relies on DOM scraping
+ * because Teams' React internals don't expose presence services and the
+ * Graph API /me/presence endpoint returns 403 (Teams token lacks Presence.Read
+ * scope). When Microsoft changes their DOM structure, selectors will break.
+ * See: docs-site/docs/development/research/graph-api-integration-research.md
+ *
  * Status Detection Strategy:
- * 1. Try React internals first (most reliable)
- * 2. Uses MutationObserver for real-time DOM changes (debounced)
- * 3. Polls periodically as fallback (configurable interval)
- * 4. Checks multiple selectors and strategies for robustness
+ * 1. CSS selectors targeting known Teams presence elements
+ * 2. Me-control avatar button with presence badge
+ * 3. Page title (unlikely fallback)
+ * Uses MutationObserver for real-time DOM changes (debounced) and polls
+ * periodically as a fallback.
  *
  * Status Codes:
  * 1 = Available, 2 = Busy, 3 = Do Not Disturb, 4 = Away, 5 = Be Right Back
  */
-const ReactHandler = require('./reactHandler');
 
 class MQTTStatusMonitor {
 	init(config, ipcRenderer) {
@@ -23,7 +29,6 @@ class MQTTStatusMonitor {
 		this.observer = null;
 		this.pollInterval = null;
 		this.debounceTimer = null;
-		this._loggedCoreServices = false;
 		this._loggedDetection = false;
 
 		// Status keyword mapping for efficient lookup
@@ -137,34 +142,23 @@ class MQTTStatusMonitor {
 
 	/**
 	 * Detect current Teams status from UI
-	 * Uses multiple strategies for robustness
+	 * Uses multiple DOM strategies — all inherently fragile (see file header)
 	 *
 	 * @returns {number|null} Status code (1-5) or null if not detected
 	 */
 	detectCurrentStatus() {
-		// Strategy 0: Try React internals first (most reliable)
-		let status = this.detectStatusFromReact();
-		if (status !== null) {
-			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via React internals:', status);
-			this._loggedDetection = true;
-			return status;
-		}
-
-		// Log available core services for debugging (once)
-		this._logCoreServicesOnce();
-
 		// Strategy 1: Try CSS selectors for direct presence indicators
-		status = this.detectStatusFromSelectors();
+		let status = this.detectStatusFromSelectors();
 		if (status !== null) {
-			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via CSS selectors:', status);
+			if (!this._loggedDetection) console.info('[MQTT Status] Detected via CSS selectors:', status);
 			this._loggedDetection = true;
 			return status;
 		}
 
-		// Strategy 2: Check me-control button for presence indicator
+		// Strategy 2: Check me-control avatar button for presence indicator
 		status = this.detectStatusFromMeControl();
 		if (status !== null) {
-			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via me-control:', status);
+			if (!this._loggedDetection) console.info('[MQTT Status] Detected via me-control:', status);
 			this._loggedDetection = true;
 			return status;
 		}
@@ -172,7 +166,7 @@ class MQTTStatusMonitor {
 		// Strategy 3: Check page title (unlikely but kept for compatibility)
 		status = this.extractStatusFromPageTitle();
 		if (status !== null) {
-			if (!this._loggedDetection) console.info('[MQTT Status Diag] Detected via page title:', status);
+			if (!this._loggedDetection) console.info('[MQTT Status] Detected via page title:', status);
 			this._loggedDetection = true;
 			return status;
 		}
@@ -181,56 +175,28 @@ class MQTTStatusMonitor {
 	}
 
 	/**
-	 * Log available core services once for debugging
-	 * Enhanced: also logs sub-keys of presence-related services
-	 */
-	_logCoreServicesOnce() {
-		if (this._loggedCoreServices) {
-			return;
-		}
-		const serviceKeys = ReactHandler.getCoreServiceKeys();
-		if (serviceKeys) {
-			console.info('[MQTT Status Diag] Available core services:', JSON.stringify(serviceKeys));
-
-			// Dump sub-keys of any service containing "presence", "status", or "client"
-			const interestingPatterns = ['presence', 'status', 'client', 'user'];
-			for (const key of serviceKeys) {
-				const lowerKey = key.toLowerCase();
-				if (interestingPatterns.some(p => lowerKey.includes(p))) {
-					try {
-						const service = ReactHandler.getCoreService(key);
-						if (service && typeof service === 'object') {
-							const subKeys = Object.keys(service).slice(0, 30);
-							console.info(`[MQTT Status Diag] Service "${key}" keys:`, JSON.stringify(subKeys));
-						}
-					} catch {
-						// ignore
-					}
-				}
-			}
-			this._loggedCoreServices = true;
-		}
-	}
-
-	/**
 	 * Detect status from CSS selectors
+	 * Note: CSS attribute selectors are case-sensitive by default, so we use
+	 * the 'i' flag for aria-label/title/class matching to handle different
+	 * locales and varying capitalisation in Teams' DOM.
 	 * @returns {number|null} Status code or null if not detected
 	 */
 	detectStatusFromSelectors() {
 		const selectors = [
-			// Teams v2 specific selectors
+			// Current primary selector for the Teams presence badge
+			'[data-tid="me-control-avatar-presence"]',
+			// Older Teams v2 selectors (kept for compatibility)
 			'[data-tid="me-control-presence-icon"]',
 			'[data-tid="presence-indicator"]',
-			// General presence selectors
 			'[data-testid="presence-status"]',
 			'[data-tid="my-status-button"]',
-			'.ts-presence',
-			'.presence-button',
-			'button[class*="presence"]',
-			'div[class*="presence"]',
-			// Broad wildcard selectors (restored from v2.6.18)
-			'[aria-label*="status"]',
-			'[title*="status"]'
+			// Class-based selectors (case-insensitive to match e.g. fui-PresenceBadge)
+			'button[class*="presence" i]',
+			'div[class*="presence" i]',
+			'.fui-PresenceBadge',
+			// Broad wildcard selectors (case-insensitive for locale support)
+			'[aria-label*="status" i]',
+			'[title*="status" i]'
 		];
 
 		return this._findStatusFromElements(selectors);
@@ -255,17 +221,19 @@ class MQTTStatusMonitor {
 	}
 
 	/**
-	 * Detect status from me-control button
+	 * Detect status from me-control avatar button
 	 * @returns {number|null} Status code or null if not detected
 	 */
 	detectStatusFromMeControl() {
-		const meControl = document.querySelector('[data-tid="me-control-button"]');
+		// Try both current and older data-tid values
+		const meControl = document.querySelector('[data-tid="me-control-avatar-trigger"]') ||
+						  document.querySelector('[data-tid="me-control-button"]');
 		if (!meControl) {
 			return null;
 		}
 
-		// Look for presence indicator within the me-control
-		const presenceIndicator = meControl.querySelector('[class*="presence"]') ||
+		// Look for presence indicator within the me-control (case-insensitive)
+		const presenceIndicator = meControl.querySelector('[class*="presence" i]') ||
 								  meControl.querySelector('[data-tid*="presence"]');
 		if (presenceIndicator) {
 			const status = this.extractStatusFromElement(presenceIndicator);
@@ -284,45 +252,6 @@ class MQTTStatusMonitor {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Detect status from React internals
-	 * This is more reliable than DOM scraping as it accesses Teams' internal state
-	 *
-	 * @returns {number|null} Status code (1-5) or null if not detected
-	 */
-	detectStatusFromReact() {
-		try {
-			const presence = ReactHandler.getUserPresence();
-			if (!presence) {
-				return null;
-			}
-
-			// Map presence object to status code
-			// Teams uses various formats, try to handle them all
-			const presenceStatus = presence.availability || 
-								   presence.status || 
-								   presence.presenceStatus ||
-								   presence;
-
-			if (typeof presenceStatus === 'number') {
-				// Direct numeric status
-				if (presenceStatus >= 1 && presenceStatus <= 5) {
-					return presenceStatus;
-				}
-			}
-
-			if (typeof presenceStatus === 'string') {
-				// Map string status to numeric code
-				const statusText = presenceStatus.toLowerCase();
-				return this.mapTextToStatusCode(statusText);
-			}
-
-			return null;
-		} catch {
-			return null;
-		}
 	}
 
 	/**
@@ -357,13 +286,6 @@ class MQTTStatusMonitor {
 	 */
 	extractStatusFromPageTitle() {
 		return this.mapTextToStatusCode(document.title);
-	}
-
-	/**
-	 * Scan entire document for status keywords
-	 */
-	scanForStatusText() {
-		return this.mapTextToStatusCode(document.body.textContent);
 	}
 
 	/**
