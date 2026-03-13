@@ -432,7 +432,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   ];
   window.webContents.session.setPermissionCheckHandler(
     (_webContents, _permission, requestingOrigin) => {
-      return trustedOrigins.some((o) => requestingOrigin.startsWith(o));
+      try {
+        return trustedOrigins.includes(new URL(requestingOrigin).origin);
+      } catch {
+        return false;
+      }
     }
   );
 
