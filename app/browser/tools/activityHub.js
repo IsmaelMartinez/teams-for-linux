@@ -43,18 +43,33 @@ class ActivityHub {
     }, 10000);
   }
 
-  // Monitor authentication state and initialize token cache for #1357
+  // Monitor authentication state and initialize token cache for #1357, #2296
   _startAuthenticationMonitoring() {
     // Log authentication state immediately (this will trigger token cache injection if needed)
     ReactHandler.logAndAttemptTokenInjection();
 
-    // Give Teams a moment to fully initialize, then try manual injection if auto-injection failed
-    setTimeout(() => {
+    // Rapid retry loop during the critical startup window (#2296).
+    // The calendar iframe (outlook.office.com) loads ~10s after page load and needs
+    // the token cache injected before it authenticates. Retry every 3s for 30s.
+    let rapidRetryCount = 0;
+    const maxRapidRetries = 10;
+    this._rapidRetryInterval = setInterval(() => {
+      rapidRetryCount++;
       const status = ReactHandler.getTokenCacheStatus();
-      if (!status.injected && status.canRetry) {
+      if (status.injected) {
+        console.debug('[AUTH_RECOVERY] Token cache injected successfully');
+        clearInterval(this._rapidRetryInterval);
+        this._rapidRetryInterval = null;
+        return;
+      }
+      if (status.canRetry) {
         ReactHandler.injectTokenCache();
       }
-    }, 15000); // 15 seconds after initial monitoring starts
+      if (rapidRetryCount >= maxRapidRetries) {
+        clearInterval(this._rapidRetryInterval);
+        this._rapidRetryInterval = null;
+      }
+    }, 3000);
 
     // Periodically check token cache status every 5 minutes
     this._authMonitorInterval = setInterval(() => {
@@ -68,6 +83,10 @@ class ActivityHub {
   }
 
   stop() {
+    if (this._rapidRetryInterval) {
+      clearInterval(this._rapidRetryInterval);
+      this._rapidRetryInterval = null;
+    }
     if (this._authMonitorInterval) {
       clearInterval(this._authMonitorInterval);
       this._authMonitorInterval = null;
