@@ -138,6 +138,24 @@ globalThis.electronAPI = {
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
 
+// Override navigator.permissions.query() so media permissions always report
+// "granted". Electron's setPermissionCheckHandler controls the native layer,
+// but the Permissions API in the renderer may still return "prompt" or
+// "denied" depending on the Chromium version. Teams' calling component checks
+// this during _getInitialState and crashes if the state isn't "granted" (#2221).
+if (navigator.permissions?.query) {
+  const originalPermissionsQuery = navigator.permissions.query.bind(navigator.permissions);
+  const grantedPermissions = new Set(['camera', 'microphone', 'display-capture', 'notifications']);
+
+  navigator.permissions.query = async function(descriptor) {
+    if (grantedPermissions.has(descriptor?.name)) {
+      // Return a minimal PermissionStatus-like object with 'granted' state
+      return { state: 'granted', onchange: null, addEventListener: () => {}, removeEventListener: () => {} };
+    }
+    return originalPermissionsQuery(descriptor);
+  };
+}
+
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
 // Config is fetched asynchronously but notification function references it via closure
 let notificationConfig = null;

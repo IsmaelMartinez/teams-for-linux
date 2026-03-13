@@ -407,6 +407,35 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   );
 
+  // Grant media permission requests (camera, microphone, display-capture) so
+  // that Teams' calling component can access devices without a prompt dialog.
+  // Without this, Electron's default behaviour may block or prompt for
+  // permissions, causing the calling module to fail during initialisation (#2221).
+  const allowedPermissions = new Set([
+    'media', 'mediaKeySystem', 'display-capture', 'notifications',
+    'clipboard-read', 'clipboard-sanitized-write',
+  ]);
+  window.webContents.session.setPermissionRequestHandler(
+    (_webContents, permission, callback) => {
+      callback(allowedPermissions.has(permission));
+    }
+  );
+
+  // Grant permission checks for trusted Teams origins so that
+  // navigator.permissions.query() reports "granted" for camera/microphone.
+  // Without this, Teams' calling module may fail to initialise because
+  // Electron's default permissionCheck can return an unexpected state (#2221).
+  const trustedOrigins = [
+    'https://teams.microsoft.com',
+    'https://teams.live.com',
+    'https://teams.cloud.microsoft',
+  ];
+  window.webContents.session.setPermissionCheckHandler(
+    (_webContents, _permission, requestingOrigin) => {
+      return trustedOrigins.some((o) => requestingOrigin.startsWith(o));
+    }
+  );
+
   // Initialize connection manager
   connectionManager = new ConnectionManager();
 
