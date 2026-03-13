@@ -60,6 +60,21 @@ The notification sound overhaul Phase 2 (custom sound configuration, [research c
 
 ---
 
+## Implemented
+
+### Speaking Indicator
+
+**Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
+**Status:** Implemented in [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299), landing in v2.7.11
+
+Real-time visual indicator during calls showing microphone state via `RTCPeerConnection.getStats()` `media-source.audioLevel`. Three states: speaking (green), silent (grey), muted (red). Teams zeroes `audioLevel` to exactly 0.0 when muted, making detection reliable and unambiguous.
+
+**Module:** `app/browser/tools/speakingIndicator.js`
+**Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
+**If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
+
+---
+
 ## Awaiting User Feedback
 
 These features have completed initial implementation. Further phases depend on user requests.
