@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-13
 **Current Version:** v2.7.10 (Electron 39.5.1)
-**Status:** Living Document --- stabilising on Electron 39, preparing v2.7.11
+**Status:** Living Document --- stabilising on Electron 39, v2.7.11 ready to release
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs --- see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) and [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) for granular tracking.
 
@@ -28,9 +28,9 @@ The primary focus for the v2.7.x line. Auth recovery after sleep, network error 
 
 ### Media and Calls
 
-Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) has been implemented using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls — ready for user testing in v2.7.11.
+Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) has been implemented using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls — landing in v2.7.11 for user testing.
 
-Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) and call failures ([#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231)) are upstream-blocked and depend on Chromium/Electron improvements.
+Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) and call failures ([#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231)) are upstream-blocked and depend on Chromium/Electron improvements. New reports of meeting join replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322)) and xdg-open not working with newer meeting URLs ([#2323](https://github.com/IsmaelMartinez/teams-for-linux/issues/2323)) are under investigation.
 
 ### Wayland Compatibility
 
@@ -48,7 +48,7 @@ Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting
 
 ## Next Patch Release (v2.7.11)
 
-v2.7.11 continues the stability theme with bug fixes (short Teams deep links, media permission handling, MQTT screen sharing null sourceId) plus the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as a new user-testable feature using WebRTC `getStats()` for three-state mute/speaking detection.
+v2.7.11 is ready to release. It brings: null sourceId fix for MQTT screen sharing publish, short Teams deep link support across all link types, explicit media permission check handling, and the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as an experimental feature using WebRTC `getStats()` for three-state mute/speaking detection. Auth state recovery improvements (v2.7.10 pre-release) are also bundled.
 
 ---
 
@@ -91,6 +91,7 @@ Shipped in v2.7.4 ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/iss
 | useSystemPicker | --- | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Reconsider when Electron improves Linux support |
 | Disable Chat Spellcheck | [#2304](https://github.com/IsmaelMartinez/teams-for-linux/issues/2304) | Not feasible | Spellcheck is controlled by Teams/Chromium, not the wrapper; existing `spellCheckerLanguages` config is the extent of our control |
 | Formatting View on Compose | [#2318](https://github.com/IsmaelMartinez/teams-for-linux/issues/2318) | Not feasible | Teams UI internals; no API or injection point to control compose view state |
+| Symantec SSO / contextIsolation | [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326) | Not feasible | `contextIsolation=false` is required for Teams web app internals; cannot be toggled per-phase |
 
 ---
 
