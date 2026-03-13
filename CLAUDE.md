@@ -213,6 +213,17 @@ if (modulesRequiringIpc.includes(module.name)) {
 - Always run tests and linting before commits
 - Update documentation alongside code changes
 
+### Creating Pull Requests
+
+When opening a PR that resolves a GitHub issue, always include a `closes #NNN` (or `fixes #NNN` / `resolves #NNN`) line in the PR body. This is required for the automated changelog generator to link the issue in release notes — the `closingIssuesReferences` GraphQL field only captures issues referenced this way.
+
+Example PR body footer:
+```
+closes #2293
+```
+
+Without this, the release notes will show the PR but not the originating issue, reducing traceability for users looking up bug reports.
+
 ### Responding to PR Review Comments
 
 When a PR has review comments, address them proactively:
