@@ -31,7 +31,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 Shipped**: Infrastructure, LWT, call state, camera, microphone, and screen sharing topics
   - **Screen sharing null sourceId fix**: PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) landing in v2.7.11
   - **Screen sharing broader feature**: PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) awaiting user confirmation ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107))
-  - **Phase 2 Deferred**: Reliable mute/speaking state via WebRTC `getStats()` is now proven (see speaking indicator [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md)); wiring to MQTT awaits user demand
+  - **Phase 2 Deferred**: Reliable mute/speaking state via WebRTC `getStats()` is now proven (see speaking indicator [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299)); wiring to MQTT awaits user demand
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
   - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
@@ -73,7 +73,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 |---------|---------|-----------|
 | Issue Triage Bot | v2.7.x | All four phases implemented; migrated to standalone Go service. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot) |
 | Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps |
-| Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [ADR-020](../adr/020-webrtc-getstats-audio-level-detection.md) |
+| Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |
 | Electron-Updater Auto-Update | v2.7.6 | [ADR-011](../adr/011-appimage-update-info.md); research covered electron-updater integration |
 | External Changelog Generation | v2.7.x | [ADR-005](../adr/005-ai-powered-changelog-generation.md); fork detection + release automation shipped |
 | Screen Lock Media Privacy | --- | Closed ([#2106](https://github.com/IsmaelMartinez/teams-for-linux/issues/2106)); no user interest; work preserved in branch |
