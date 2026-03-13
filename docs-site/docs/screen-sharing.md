@@ -8,7 +8,7 @@ When you start screen sharing, a selection dialog appears showing available scre
 
 ### Screen Sharing Thumbnail Settings
 
-To find your config file [see the “Configuration” section](configuration#configuration-locations)
+To find your config file [see the “Configuration” section](configuration.md#configuration-locations)
 
 ```json
 {
