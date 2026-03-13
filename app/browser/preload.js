@@ -209,9 +209,10 @@ function createWebNotification(classicNotification, title, options) {
       return new classicNotification(title, options);
     } catch (err) {
       console.debug("Could not create native notification:", err);
+      return null;
     }
   }
-  return createNotificationStub();
+  return null;
 }
 
 function createElectronNotification(options) {
@@ -271,7 +272,8 @@ function createCustomNotification(title, options) {
   function CustomNotification(title, options) {
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
-      return createNotificationStub();
+      // Return dummy object to avoid Teams errors
+      return { onclick: null, onclose: null, onerror: null };
     }
 
     options = options || {};
@@ -289,7 +291,8 @@ function createCustomNotification(title, options) {
     }
 
     if (method === "web") {
-      return createWebNotification(classicNotification, title, options);
+      const notification = createWebNotification(classicNotification, title, options);
+      return notification || { onclick: null, onclose: null, onerror: null };
     }
 
     return createElectronNotification(options);
