@@ -1,0 +1,1 @@
+Fix: Grant media permissions to prevent call crashes in Teams - by @IsmaelMartinez (#2331)
