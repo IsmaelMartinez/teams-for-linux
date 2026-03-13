@@ -42,7 +42,7 @@ User-facing features and integrations.
 | **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
 | **Graph API** | `app/graphApi/` | Microsoft Graph API integration for calendar and mail | [Research](./research/graph-api-integration-research.md) |
-| **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Visual overlay showing microphone state during calls (speaking/silent/muted) via RTCPeerConnection.getStats() | [Research](./research/speaking-indicator-research.md) · [ADR-020](./adr/020-webrtc-getstats-audio-level-detection.md) |
+| **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Visual overlay showing microphone state during calls (speaking/silent/muted) via RTCPeerConnection.getStats() | [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |
 
 ## System Integration Modules
 
