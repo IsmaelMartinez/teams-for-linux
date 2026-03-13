@@ -146,17 +146,54 @@ jobs:
             // Add PR number
             summary = `${summary} (#${prNum})`;
 
+            // Fetch issues closed by this PR via GraphQL (REST doesn't expose closingIssuesReferences)
+            const closingLines = [];
+            try {
+              const query = `query($owner: String!, $repo: String!, $prNum: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $prNum) {
+                    closingIssuesReferences(first: 10) {
+                      nodes { number title url }
+                    }
+                  }
+                }
+              }`;
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                prNum: prNum
+              });
+              const issues = result.repository.pullRequest.closingIssuesReferences.nodes;
+              for (const issue of issues) {
+                closingLines.push(`closes: #${issue.number} ${issue.url} ${issue.title}`);
+              }
+              if (issues.length > 0) {
+                console.log(`Linked issues: ${issues.map(i => '#' + i.number).join(', ')}`);
+              }
+            } catch (error) {
+              console.log(`Could not fetch closing issues (non-fatal): ${error.message}`);
+            }
+
+            const fileContent = [summary, ...closingLines].join('\n');
             core.setOutput('final_summary', summary);
-            console.log(`Final: ${summary}`);
+            core.setOutput('file_content', fileContent);
+            console.log(`Final: ${fileContent}`);
 
       - name: Save changelog entry (internal PRs only)
         if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
-        run: |
-          mkdir -p .changelog
-          echo "${{ steps.final.outputs.final_summary }}" > .changelog/pr-${{ github.event.pull_request.number }}.txt
-
-          echo "✅ Created: .changelog/pr-${{ github.event.pull_request.number }}.txt"
-          cat .changelog/pr-${{ github.event.pull_request.number }}.txt
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          FILE_CONTENT: ${{ steps.final.outputs.file_content }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const prNum = context.payload.pull_request.number;
+            const filePath = path.join(process.env.GITHUB_WORKSPACE, '.changelog', `pr-${prNum}.txt`);
+            fs.mkdirSync(path.dirname(filePath), { recursive: true });
+            fs.writeFileSync(filePath, process.env.FILE_CONTENT + '\n');
+            console.log(`✅ Created: .changelog/pr-${prNum}.txt`);
+            console.log(process.env.FILE_CONTENT);
 
       - name: Commit changelog file to PR branch (internal PRs only)
         if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'

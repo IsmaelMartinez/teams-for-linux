@@ -54,7 +54,8 @@ function loadChangelogEntries() {
     return { error: 'No changelog entries found in .changelog/' };
   }
   const entries = files.map(file => {
-    const content = fs.readFileSync(path.join(changelogDir, file), 'utf8').trim();
+    // Take only the first line — subsequent lines may contain structured metadata (closes: #NNN ...)
+    const content = fs.readFileSync(path.join(changelogDir, file), 'utf8').trim().split('\n')[0];
     console.log(`   • ${content}`);
     return content;
   });
