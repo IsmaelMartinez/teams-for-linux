@@ -34,7 +34,7 @@ class SpeakingIndicator {
 	#pollInterval = null;
 	#polling = false;
 	#overlayVisible = false;
-	#hasSeenAudio = false; // true once audioLevel > 0 — prevents pre-join zeros reading as muted
+	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
 
 	init(config) {
 		const enabled = config.media?.microphone?.speakingIndicator;
@@ -95,7 +95,7 @@ class SpeakingIndicator {
 	}
 
 	#startPolling() {
-		this.#pollInterval = setInterval(() => { this.#poll(); }, POLL_INTERVAL_MS);
+		this.#pollInterval = setInterval(() => { this.#poll().catch(() => {}); }, POLL_INTERVAL_MS);
 		console.info(`${LOG_PREFIX} Polling started`);
 	}
 
@@ -122,10 +122,9 @@ class SpeakingIndicator {
 
 		if (this.#peerConnections.length === 0) {
 			this.#polling = false;
-			if (this.#overlayVisible) {
-				console.info(`${LOG_PREFIX} No active connections, hiding overlay`);
-				this.#hideOverlay();
-			}
+			console.info(`${LOG_PREFIX} No active connections, stopping polling`);
+			this.#stopPolling();
+			this.#hideOverlay();
 			return;
 		}
 

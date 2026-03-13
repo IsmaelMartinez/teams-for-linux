@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it, beforeEach, mock } = require('node:test');
+const { describe, it, beforeEach, afterEach, mock } = require('node:test');
 const assert = require('node:assert');
 
 const speakingIndicatorPath = require.resolve('../../app/browser/tools/speakingIndicator');
@@ -13,10 +13,15 @@ function makeStatsReport(audioLevel) {
 	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
 }
 
+let createdPeerConnections = [];
+let getStatsFn = async () => makeStatsReport(0);
+
 function setupGlobals() {
+	createdPeerConnections = [];
 	const originalRTC = function RTCPeerConnection() {
 		this.connectionState = 'connected';
-		this.getStats = mock.fn(async () => makeStatsReport(0));
+		this.getStats = (...args) => getStatsFn.call(this, ...args);
+		createdPeerConnections.push(this);
 	};
 	originalRTC.prototype = {};
 	globalThis.RTCPeerConnection = originalRTC;
@@ -47,15 +52,27 @@ function loadSpeakingIndicator() {
 	return { instance, mockActivityHub };
 }
 
+function closePeerConnections() {
+	for (const pc of createdPeerConnections) {
+		pc.connectionState = 'closed';
+	}
+}
+
 function cleanup() {
+	closePeerConnections();
 	delete require.cache[speakingIndicatorPath];
 	delete require.cache[activityHubPath];
 	delete globalThis.RTCPeerConnection;
 	delete globalThis.document;
+	getStatsFn = async () => makeStatsReport(0);
 }
 
 describe('SpeakingIndicator', () => {
 	beforeEach(() => {
+		cleanup();
+	});
+
+	afterEach(() => {
 		cleanup();
 	});
 
@@ -71,7 +88,6 @@ describe('SpeakingIndicator', () => {
 			refBefore,
 			'RTCPeerConnection should remain unchanged when speakingIndicator is disabled'
 		);
-		cleanup();
 	});
 
 	it('patches RTCPeerConnection when enabled', () => {
@@ -86,7 +102,6 @@ describe('SpeakingIndicator', () => {
 			refBefore,
 			'RTCPeerConnection should be replaced when speakingIndicator is enabled'
 		);
-		cleanup();
 	});
 
 	it('registers call lifecycle events on activityHub', () => {
@@ -98,7 +113,6 @@ describe('SpeakingIndicator', () => {
 		const events = new Set(mockActivityHub.on.mock.calls.map(call => call.arguments[0]));
 		assert.ok(events.has('call-connected'), 'should register call-connected handler');
 		assert.ok(events.has('call-disconnected'), 'should register call-disconnected handler');
-		cleanup();
 	});
 
 	it('captures RTCPeerConnection instances when patched', () => {
@@ -108,15 +122,12 @@ describe('SpeakingIndicator', () => {
 
 		const pc = new globalThis.RTCPeerConnection();
 		assert.ok(pc, 'RTCPeerConnection should still be constructable after patching');
-		cleanup();
 	});
 
 	it('shows overlay when audio stats are detected on a peer connection', async () => {
-		const origRTC = setupGlobals();
-		// Make getStats return a non-zero audioLevel so the overlay appears
-		origRTC.prototype.getStats = async () => ({
-			forEach: (fn) => fn({ type: 'media-source', kind: 'audio', audioLevel: 0.05 }),
-		});
+		setupGlobals();
+		// Override getStatsFn so instances return non-zero audioLevel
+		getStatsFn = async () => makeStatsReport(0.05);
 
 		const { instance } = loadSpeakingIndicator();
 		instance.init({ media: { microphone: { speakingIndicator: true } } });
@@ -132,6 +143,5 @@ describe('SpeakingIndicator', () => {
 			globalThis.document.body.appendChild.mock.calls.length > 0,
 			'overlay should appear when audio stats with non-zero audioLevel are detected'
 		);
-		cleanup();
 	});
 });
