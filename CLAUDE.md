@@ -120,7 +120,7 @@ If you need to log sensitive data for debugging during development:
 3. Remove ALL debug logs with PII before the PR is merged
 4. Never merge PII-containing logs to main branch
 
-**For detailed logging research**, see `docs-site/docs/development/research/pii-log-removal-research.md`.
+**For detailed logging research**, see `docs-site/docs/development/adr/013-pii-log-sanitization.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/adr/013-pii-log-sanitization)).
 
 **For complete development patterns and guidelines**, see `docs-site/docs/development/contributing.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)).
 
@@ -139,7 +139,7 @@ The project uses Playwright for end-to-end testing:
 - Tests start with completely clean state (no cookies, cache, storage)
 - Validates complete app launch flow and Microsoft login redirect
 
-**For full testing strategy**, see `docs-site/docs/development/research/automated-testing-strategy.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/research/automated-testing-strategy)).
+**For full testing strategy**, see `docs-site/docs/development/adr/009-automated-testing-strategy.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/adr/009-automated-testing-strategy)).
 
 ### Quality Checks
 

@@ -3,7 +3,7 @@
 This guide provides solutions to common problems encountered with Teams for Linux, organized by category for quick reference.
 
 :::tip
-For configuration options, see [Configuration](configuration.md). For development information, see the IPC API documentation *(coming soon)*.
+For configuration options, see [Configuration](configuration.md). For development information, see the [IPC API documentation](development/ipc-api.md).
 :::
 
 ## Quick Reference
@@ -40,8 +40,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
     *   Completely uninstall the current version.
     *   Download the latest installer from the official GitHub releases page.
     *   Perform a clean installation.
-
-**Related GitHub Issues:** [Link to relevant issues, e.g., #123, #456]
 
 #### Issue: No History after Electron version update
 
@@ -177,8 +175,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
     *   Open a terminal and run: `pulseaudio -k && pulseaudio --start`
     *   Restart Teams for Linux.
 
-**Related GitHub Issues:** [Link to relevant issues, e.g., #789, #1011]
-
 ---
 
 ### Login and Authentication
@@ -203,8 +199,6 @@ For configuration options, see [Configuration](configuration.md). For developmen
 2.  **Check Network and Proxy Settings:**
     *   Ensure your internet connection is stable.
     *   If you are behind a corporate proxy, ensure it is correctly configured in your system settings and that Teams for Linux can access the internet through it.
-
-**Related GitHub Issues:** [Link to relevant issues, e.g., #1212, #1314]
 
 #### Issue: Oauth Services require internal Electron window
 
