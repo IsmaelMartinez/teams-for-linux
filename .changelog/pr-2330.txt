@@ -1,0 +1,1 @@
+Fix: Relax CSP for non-Teams SSO to unblock eval-dependent login - by @IsmaelMartinez (#2330)
