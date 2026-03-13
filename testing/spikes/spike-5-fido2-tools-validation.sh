@@ -36,10 +36,10 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-section() { echo -e "\n${BLUE}=== $1 ===${NC}\n"; }
-ok()      { echo -e "${GREEN}OK:${NC} $1"; }
-warn()    { echo -e "${YELLOW}WARN:${NC} $1"; }
-fail()    { echo -e "${RED}FAIL:${NC} $1"; }
+section() { local msg="$1"; echo -e "\n${BLUE}=== ${msg} ===${NC}\n"; return 0; }
+ok()      { local msg="$1"; echo -e "${GREEN}OK:${NC} ${msg}"; return 0; }
+warn()    { local msg="$1"; echo -e "${YELLOW}WARN:${NC} ${msg}"; return 0; }
+fail()    { local msg="$1"; echo -e "${RED}FAIL:${NC} ${msg}"; return 0; }
 
 # Temp files for capturing output
 TMPDIR=$(mktemp -d)
@@ -79,7 +79,7 @@ echo "$DEVICE_OUTPUT"
 echo "---"
 echo ""
 
-if [ -z "$DEVICE_OUTPUT" ]; then
+if [[ -z "$DEVICE_OUTPUT" ]]; then
   fail "No output from fido2-token -L. Is your security key plugged in?"
   echo "Plug in your FIDO2 USB key and run this script again."
   exit 1
@@ -88,7 +88,7 @@ fi
 # Parse device path — this tests our regex assumption
 DEVICE=$(echo "$DEVICE_OUTPUT" | head -1 | grep -oP '^/dev/\S+' || true)
 
-if [ -z "$DEVICE" ]; then
+if [[ -z "$DEVICE" ]]; then
   # Fallback: try the colon-split approach from the original plan
   DEVICE=$(echo "$DEVICE_OUTPUT" | head -1 | cut -d: -f1 | tr -d ' ')
   warn "Regex /dev/\\S+ didn't match. Colon-split extracted: '$DEVICE'"
@@ -216,7 +216,7 @@ while IFS= read -r line; do
 done < "$CRED_STDOUT"
 
 # Extract credential ID for the assertion test
-if [ "$CRED_LINES" -ge 5 ]; then
+if [[ "$CRED_LINES" -ge 5 ]]; then
   CRED_ID_B64=$(sed -n '5p' "$CRED_STDOUT")
   ok "Credential ID found on line 5"
 else
@@ -238,7 +238,7 @@ ${RP_ID}
 "
 
 # If we have a credential ID, add it
-if [ -n "$CRED_ID_B64" ]; then
+if [[ -n "$CRED_ID_B64" ]]; then
   CRED_ID_HEX=$(echo "$CRED_ID_B64" | base64 -d | xxd -p | tr -d '\n')
   ASSERT_INPUT="${ASSERT_HASH}
 ${RP_ID}
@@ -251,7 +251,7 @@ echo ""
 ASSERT_STDOUT="$TMPDIR/assert_stdout.txt"
 ASSERT_STDERR="$TMPDIR/assert_stderr.txt"
 
-if [ "$CRED_USED_PIN" = true ]; then
+if [[ "$CRED_USED_PIN" = true ]]; then
   echo "--- Testing WITH PIN (fido2-assert -G -h -v $DEVICE) ---"
   echo ""
   echo "Enter your PIN again, then touch your key."
@@ -344,7 +344,7 @@ for f in "$CRED_STDERR" "$ASSERT_STDERR"; do
   # Only check for the PIN prompt pattern, don't dump full stderr
   # (stderr may contain device paths or other identifying info)
   PIN_LINE=$(grep -i "pin" "$f" 2>/dev/null || true)
-  if [ -n "$PIN_LINE" ]; then
+  if [[ -n "$PIN_LINE" ]]; then
     echo "  $FNAME contains PIN prompt: yes"
     if echo "$PIN_LINE" | grep -q "Enter PIN for"; then
       ok "PIN prompt matches expected pattern: 'Enter PIN for /dev/...'"
@@ -356,7 +356,7 @@ for f in "$CRED_STDERR" "$ASSERT_STDERR"; do
   fi
 done
 
-if [ "$CRED_USED_PIN" = false ]; then
+if [[ "$CRED_USED_PIN" = false ]]; then
   warn "Key did not require PIN, so PIN prompt format was not tested."
   echo "  If you have a PIN-protected key, set a PIN with: fido2-token -S $DEVICE"
 fi
@@ -371,24 +371,24 @@ echo "fido2-assert output lines: $ASSERT_LINES (plan expects 2-4)"
 echo ""
 
 ISSUES=0
-if [ "$CRED_LINES" -lt 4 ]; then
+if [[ "$CRED_LINES" -lt 4 ]]; then
   fail "fido2-cred produced fewer than 4 lines — plan's parsing will break"
   ISSUES=$((ISSUES + 1))
 fi
-if [ "$ASSERT_LINES" -lt 2 ]; then
+if [[ "$ASSERT_LINES" -lt 2 ]]; then
   fail "fido2-assert produced fewer than 2 lines — plan's parsing will break"
   ISSUES=$((ISSUES + 1))
 fi
-if [ "$CRED_LINES" -gt 5 ]; then
+if [[ "$CRED_LINES" -gt 5 ]]; then
   warn "fido2-cred produced more than 5 lines — extra lines may need investigation"
   ISSUES=$((ISSUES + 1))
 fi
-if [ "$ASSERT_LINES" -gt 4 ]; then
+if [[ "$ASSERT_LINES" -gt 4 ]]; then
   warn "fido2-assert produced more than 4 lines — extra lines may need investigation"
   ISSUES=$((ISSUES + 1))
 fi
 
-if [ "$ISSUES" -eq 0 ]; then
+if [[ "$ISSUES" -eq 0 ]]; then
   echo -e "${GREEN}All output format assumptions validated successfully.${NC}"
 else
   echo -e "${YELLOW}$ISSUES issue(s) found — see details above.${NC}"
