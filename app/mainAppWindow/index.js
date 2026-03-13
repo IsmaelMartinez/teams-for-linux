@@ -629,64 +629,49 @@ function onDidFrameFinishLoad(
   if (wf?.url) {
     try {
       const frameUrl = new URL(wf.url);
-      const isCalendarFrame = frameUrl.hostname.includes('outlook.office.com')
+      const isCalendarFrame = (frameUrl.hostname === 'outlook.office.com'
+        || frameUrl.hostname.endsWith('.outlook.office.com'))
         && frameUrl.pathname.includes('/calendar');
-      const now = Date.now();
       if (isCalendarFrame
-        && (now - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
-        // Check after a delay to give the calendar time to render content
-        setTimeout(() => {
-          if (!window || window.isDestroyed()) return;
-          window.webContents.executeJavaScript(`
-            (function() {
-              const frames = document.querySelectorAll('iframe');
-              for (const frame of frames) {
-                try {
-                  if (frame.src && frame.src.includes('outlook.office.com') && frame.src.includes('/calendar')) {
-                    const rect = frame.getBoundingClientRect();
-                    return { found: true, width: rect.width, height: rect.height, visible: rect.width > 0 && rect.height > 0 };
-                  }
-                } catch(e) { /* cross-origin, skip */ }
-              }
-              return { found: false };
-            })()
-          `).then(result => {
-            if (!result?.found || !result.visible) return;
-            // Calendar iframe is visible but we check if Teams shows an error state
-            // by looking for empty/error content in the main Teams calendar view
-            window.webContents.executeJavaScript(`
-              (function() {
-                // Check if the Teams calendar container has rendered meaningful content.
-                // When auth fails, the calendar area is present but empty/shows a spinner indefinitely.
-                const calendarView = document.querySelector('[data-tid="calendar-view"]') ||
-                  document.querySelector('[data-app-name="Calendar"]') ||
-                  document.querySelector('.calendar-container');
-                if (!calendarView) return { hasCalendarView: false };
-                const hasContent = calendarView.querySelectorAll('[data-tid]').length > 3;
-                return { hasCalendarView: true, hasContent: hasContent, childCount: calendarView.children.length };
-              })()
-            `).then(calResult => {
-              if (calResult?.hasCalendarView && !calResult?.hasContent) {
-                const reloadNow = Date.now();
-                if ((reloadNow - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
-                  lastSilentAuthReloadTime = reloadNow;
-                  console.info('[AUTH_RECOVERY] Blank calendar detected, scheduling reload');
-                  setTimeout(() => {
-                    if (window && !window.isDestroyed()) {
-                      console.info('[AUTH_RECOVERY] Reloading page to recover from blank calendar');
-                      window.reload();
-                    }
-                  }, SILENT_AUTH_RELOAD_DELAY_MS);
-                }
-              }
-            }).catch(() => {});
-          }).catch(() => {});
-        }, 10000); // Wait 10s for calendar to render before checking
+        && (Date.now() - lastSilentAuthReloadTime) > SILENT_AUTH_RELOAD_COOLDOWN_MS) {
+        setTimeout(() => checkForBlankCalendar(), 10000);
       }
     } catch {
       // Not a valid URL, ignore
     }
   }
+}
+
+// Check whether the Teams calendar view rendered meaningful content (#2296).
+// Called on a delay after a calendar iframe finishes loading. If the calendar
+// container exists but has no content (blank), triggers a one-time reload.
+async function checkForBlankCalendar() {
+  if (!window || window.isDestroyed()) return;
+
+  const calendarStatus = await window.webContents.executeJavaScript(`
+    (function() {
+      const calendarView = document.querySelector('[data-tid="calendar-view"]') ||
+        document.querySelector('[data-app-name="Calendar"]') ||
+        document.querySelector('.calendar-container');
+      if (!calendarView) return { hasCalendarView: false };
+      const hasContent = calendarView.querySelectorAll('[data-tid]').length > 3;
+      return { hasCalendarView: true, hasContent: hasContent };
+    })()
+  `).catch(() => null);
+
+  if (!calendarStatus?.hasCalendarView || calendarStatus.hasContent) return;
+
+  const now = Date.now();
+  if ((now - lastSilentAuthReloadTime) <= SILENT_AUTH_RELOAD_COOLDOWN_MS) return;
+
+  lastSilentAuthReloadTime = now;
+  console.info('[AUTH_RECOVERY] Blank calendar detected, scheduling reload');
+  setTimeout(() => {
+    if (window && !window.isDestroyed()) {
+      console.info('[AUTH_RECOVERY] Reloading page to recover from blank calendar');
+      window.reload();
+    }
+  }, SILENT_AUTH_RELOAD_DELAY_MS);
 }
 
 function restoreWindow() {
