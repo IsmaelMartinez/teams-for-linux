@@ -1,1 +1,1 @@
-Add speaking indicator with mute detection using WebRTC stats. - by @IsmaelMartinez (#2299)
+feat: add real-time speaking indicator with three-state mute detection via WebRTC getStats() - by @IsmaelMartinez (#2299)

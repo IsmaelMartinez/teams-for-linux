@@ -1,1 +1,1 @@
-Expand MS Teams protocol regex to support all deep link types - by @IsmaelMartinez (#2250)
+fix: expand MS Teams protocol regex to support all deep link types - by @IsmaelMartinez (#2250)

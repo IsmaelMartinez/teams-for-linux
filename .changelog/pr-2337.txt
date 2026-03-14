@@ -1,1 +1,1 @@
-Update: Bump undici to 7.24.1 in docs-site (includes security fixes) (#2337)
+chore(deps): bump undici to 7.24.1 in docs-site (includes security fixes) (#2337)
