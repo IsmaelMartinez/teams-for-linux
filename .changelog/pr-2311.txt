@@ -1,1 +1,0 @@
-Fix: Improve auth state recovery to prevent stale sign-in banners - by @IsmaelMartinez (#2311)

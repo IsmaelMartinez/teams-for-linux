@@ -1,1 +1,0 @@
-Fix: Use world-writable session dir for cross-distro test compatibility - by @IsmaelMartinez (#2315)

@@ -14,6 +14,30 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.11" date="2026-03-14">
+      <description>
+        <ul>
+          <li>feat: publish screen sharing status to MQTT (#2107) - by @IsmaelMartinez (#2144)</li>
+          <li>fix: expand MS Teams protocol regex to support all deep link types - by @IsmaelMartinez (#2250)</li>
+          <li>feat: add real-time speaking indicator with three-state mute detection via WebRTC getStats() - by @IsmaelMartinez (#2299)</li>
+          <li>chore(deps-dev): bump tar from 7.5.9 to 7.5.10 (#2308)</li>
+          <li>fix: only reload on main frame network errors, not sub-frames - by @IsmaelMartinez (#2310)</li>
+          <li>Fix: Improve auth state recovery to prevent stale sign-in banners - by @IsmaelMartinez (#2311)</li>
+          <li>chore: add codebase review, unit tests for security modules, and fix changelog generator - by @IsmaelMartinez (#2312)</li>
+          <li>Fix cross-distro test failures and improve test environment consistency. - by @IsmaelMartinez (#2314)</li>
+          <li>Fix: Use world-writable session dir for cross-distro test compatibility - by @IsmaelMartinez (#2315)</li>
+          <li>chore(deps-dev): bump eslint from 10.0.2 to 10.0.3 (#2316)</li>
+          <li>docs: restructure roadmap to thematic sections and add changelog pipeline enhancements - by @IsmaelMartinez (#2317)</li>
+          <li>Fix: Add --flags option and resolve UID conflict in Dockerfiles - by @IsmaelMartinez (#2321)</li>
+          <li>docs: add repository health analysis for Feb-Mar 2026 - by @IsmaelMartinez (#2324)</li>
+          <li>docs: add WebAuthn/FIDO2 implementation plan for Linux security keys - by @IsmaelMartinez (#2327)</li>
+          <li>Fix: Update MQTT status selectors and remove broken React presence detection - by @IsmaelMartinez (#2333)</li>
+          <li>Fix: Update documentation links and remove template placeholders - by @IsmaelMartinez (#2336)</li>
+          <li>chore(deps): bump undici to 7.24.1 in docs-site (includes security fixes) (#2337)</li>
+          <li>Fix: Replace regex with split to avoid backtracking issues - by @IsmaelMartinez (#2338)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.10" date="2026-03-08">
       <description>
         <ul>
