@@ -155,12 +155,12 @@ const input = [
     userIdHex,
 ].join("\n") + "\n";
 
-// CORRECT (validated):
+// CORRECT (validated — fido2-tools expects standard base64, not base64url):
 const input = [
     clientDataHash.toString("base64"),
     sanitizeForFido2(options.rpId),
     sanitizeForFido2(options.userName),
-    base64urlEncode(base64urlDecode(options.userId)),
+    base64urlDecode(options.userId).toString("base64"),
 ].join("\n") + "\n";
 ```
 
