@@ -1,0 +1,1 @@
+docs: restructure roadmap to thematic sections and add changelog pipeline enhancements - by @IsmaelMartinez (#2317)

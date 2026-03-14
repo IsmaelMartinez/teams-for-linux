@@ -181,13 +181,29 @@ function parseEntry(entry) {
 }
 
 /**
- * Load changelog entries from .changelog/*.txt files
+ * Load changelog entries from .changelog/*.txt files.
+ * Files may contain a single line (legacy) or multiple lines where
+ * additional lines starting with "closes: " carry linked issue metadata:
+ *   closes: #123 https://github.com/.../issues/123 Issue title here
  */
 function loadFromChangelogDir(fullPath) {
   if (!fs.existsSync(fullPath)) return null;
   const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.txt'));
   if (files.length === 0) return null;
-  return files.map(file => fs.readFileSync(path.join(fullPath, file), 'utf8').trim());
+  return files.map(file => {
+    const raw = fs.readFileSync(path.join(fullPath, file), 'utf8').trim();
+    const lines = raw.split(/\r?\n/).map(l => l.trim());
+    const content = lines[0];
+    const closingIssues = lines.slice(1)
+      .filter(l => l.startsWith('closes: '))
+      .map(l => {
+        const match = l.match(/^closes:\s+(#\d+)\s+(https?:\/\/\S+)\s+(.+)$/);
+        if (!match) return null;
+        return { ref: match[1], url: match[2], title: match[3] };
+      })
+      .filter(Boolean);
+    return { content, closingIssues };
+  });
 }
 
 /**
@@ -223,10 +239,14 @@ export function generateReleaseNotes(changelogDir = '.changelog') {
   const docsPath = path.join(process.cwd(), 'docs-site', 'docs');
   const { options: knownOptions, sections } = extractConfigOptions(docsPath);
 
-  const entries = rawEntries.map(content => {
+  const entries = rawEntries.map(item => {
+    // Support both legacy string entries (from appdata fallback) and enriched objects
+    const content = typeof item === 'string' ? item : item.content;
+    const closingIssues = typeof item === 'string' ? [] : (item.closingIssues || []);
     const parsed = parseEntry(content);
     parsed.electronVersion = detectElectronVersion(content);
     parsed.configOptions = detectConfigOptions(content, knownOptions, sections);
+    parsed.closingIssues = closingIssues;
     return parsed;
   });
 
@@ -259,7 +279,14 @@ function formatCategorizedEntries(categorized) {
     const category = categorized[key];
     if (!category) continue;
     lines.push(`### ${category.emoji} ${category.label}\n`);
-    category.entries.forEach(entry => lines.push(`- ${entry.original}`));
+    category.entries.forEach(entry => {
+      let line = `- ${entry.original}`;
+      if (entry.closingIssues && entry.closingIssues.length > 0) {
+        const links = entry.closingIssues.map(i => `[${i.ref}](${i.url})`).join(', ');
+        line += ` (${links})`;
+      }
+      lines.push(line);
+    });
     lines.push('');
   }
   return lines;

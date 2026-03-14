@@ -20,6 +20,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Proposes phased plan: replace native addon, add custom sounds, Web Audio fallback
   - **Status:** Research complete, targeted for v2.8.0
 
+- **[MQTT Microphone State via Speaking Indicator](mqtt-microphone-state-research.md)** - Publish speaking/silent/muted state to MQTT
+  - Wires existing speaking indicator WebRTC detection into MQTT via `microphone-state-changed` IPC
+  - Completes original request from #1938 (@vbartik's RGB LED home automation)
+  - **Status:** Research complete, ready for implementation (depends on PR #2299 merged)
+
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
@@ -39,6 +44,9 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
   - **Status:** Review complete, findings being addressed incrementally
 
+- **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.
+
+
 
 ### Historical (Migrated)
 
@@ -47,6 +55,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phases 2-3**: Nested structure migration happening incrementally
 
 ### Shipped (Retained for Reference)
+
+- **[Issue-PR Release Linking Research](issue-pr-release-linking-research.md)** - Linking GitHub issues to PRs in the release notes pipeline
+  - GraphQL `closingIssuesReferences` query; updated `.changelog/` file format with `closes:` metadata; four files changed
+  - **Status:** Implemented in v2.7.11 (PR #2317)
 
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
   - **MVP shipped** in v2.6.16: toast notifications with auto-dismiss and click-to-focus

@@ -1,7 +1,7 @@
 # Configuration Organization Research
 
 :::info Ongoing — Incremental Migration
-Phase 1 (documentation) complete. New features already use nested patterns (`mqtt.*`, `graphApi.*`, `quickChat.*`, etc.). Flat-to-nested migration happens opportunistically as modules are refactored — no dedicated migration effort planned.
+Phase 1 (documentation) complete. New features use nested patterns from day one. Six flat options already deprecated with nested replacements active (`screenSharingThumbnail`, `screenLockInhibitionMethod`, `disableAutogain`, `videoMenu`, `ssoInTuneEnabled`, `ssoInTuneAuthUser`). Remaining flat options migrate opportunistically as modules are refactored — no dedicated migration effort planned.
 :::
 
 **Issue**: Configuration improvements and cleanup investigation
@@ -1566,6 +1566,11 @@ Since this research was completed, several improvements have been implemented:
 - [x] MQTT commands feature implemented in PR [#1986](https://github.com/IsmaelMartinez/teams-for-linux/pull/1986) - bidirectional MQTT support with `commandTopic`
 - [x] Badge count control added with `disableBadgeCount` option in PR [#1994](https://github.com/IsmaelMartinez/teams-for-linux/pull/1994)
 - [x] Documentation reorganization (Issue [#2120](https://github.com/IsmaelMartinez/teams-for-linux/issues/2120))
+- [x] `screenSharing` nested object added; `screenSharingThumbnail` and `screenLockInhibitionMethod` deprecated
+- [x] `media` nested object added; `disableAutogain` and `videoMenu` deprecated
+- [x] `auth.intune` nested object added; `ssoInTuneEnabled` and `ssoInTuneAuthUser` deprecated
+- [x] `quickChat` nested object added from the start
+- [x] `wayland` nested object added from the start
 
 ### Migrated Options (Already Using Nested Structure)
 
@@ -1595,6 +1600,8 @@ These features were added with nested configuration from day one:
 | `cacheManagement` | `enabled`, `maxCacheSizeMB`, `cacheCheckIntervalMs` | Original |
 | `logConfig` | `transports.console.level`, `transports.file.level` | Original |
 | `msTeamsProtocols` | `v1`, `v2` | Original |
+| `quickChat` | `enabled` | Incremental |
+| `wayland` | `xwaylandOptimizations` | Incremental |
 
 **Legacy Backward Compatibility:**
 
@@ -1607,12 +1614,7 @@ The nested configuration structure will:
 - Improve maintainability for developers
 - Create better user experience with logical grouping
 
-**Next Steps:**
-1. Create GitHub issue for Phase 1 completion (documentation reorganization)
-2. Update docs-site/docs/configuration.md with reorganized categories
-3. Plan Phase 2 implementation for future release
-
-**Future Considerations (Beyond Phase 3):**
+**Future Considerations:**
 - **Sensitive Data Security**: Move sensitive configuration (e.g., `clientCertPassword`, MQTT credentials) outside of config.json and implement encryption
   - Separate secure storage for credentials
   - Integration with system keyring/secret service
