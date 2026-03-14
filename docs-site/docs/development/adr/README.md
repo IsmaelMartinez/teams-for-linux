@@ -42,6 +42,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
+| [020](020-fido2-webauthn-support.md) | FIDO2 and WebAuthn Support on Linux | ✅ Implemented | 2026-03-14 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -59,6 +60,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | Configurable token refresh mechanism to proactively renew authentication before expiry |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | Direct D-Bus invocation for Microsoft Identity Broker version compatibility |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
+| [020](020-fido2-webauthn-support.md) | FIDO2 and WebAuthn Support on Linux | Proxy WebAuthn via monkey-patching and fido2-tools CLI on Linux |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -67,6 +69,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Configurable refresh intervals
 - Support for Microsoft Identity Broker versions ≤ 2.0.1 and > 2.0.1
 - PII sanitization with zero dependencies, UUIDs correlatable for debugging
+- Linux users can authenticate to Entra ID using FIDO2 hardware security keys
 
 ### Screen Sharing
 
@@ -335,8 +338,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 19
-- **Implemented**: 12
+- **Total ADRs**: 20
+- **Implemented**: 13
 - **Accepted**: 3
 - **Proposed**: 0
 - **Rejected**: 4

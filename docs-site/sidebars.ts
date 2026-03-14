@@ -84,6 +84,9 @@ const sidebars: SidebarsConfig = {
             'development/adr/015-quick-chat-inline-messaging',
             'development/adr/016-cross-distro-testing-environment',
             'development/adr/017-workflow-run-pr-comments',
+            'development/adr/018-issue-triage-bot-github-app-migration',
+            'development/adr/019-repo-activity-dashboard',
+            'development/adr/020-fido2-webauthn-support',
           ],
         },
         {

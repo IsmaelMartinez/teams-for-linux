@@ -180,6 +180,27 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
 | `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
+#### WebAuthn / FIDO2 Security Keys
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux. Requires `fido2-tools` system package. On macOS and Windows, Electron handles WebAuthn natively. |
+
+**Example:**
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true
+    }
+  }
+}
+```
+
+:::note
+Linux users must install fido2-tools: `sudo apt install fido2-tools` (Debian/Ubuntu) or `sudo dnf install fido2-tools` (Fedora).
+:::
+
 #### Certificates
 
 | Option | Type | Default | Description |
