@@ -136,6 +136,112 @@ git commit -m "spike: add WebAuthn/FIDO2 support validation test (#802)"
 
 ---
 
+## Community Validation Results (2026-03-13)
+
+Community member rlavriv ([#2332](https://github.com/IsmaelMartinez/teams-for-linux/issues/2332)) ran the spike-5 validation script on Arch Linux (kernel 6.19.6) with a YubiKey OTP+FIDO+CCID (vendor 0x1050, product 0x0407) and fido2-tools v1.16.0. The test exposed several critical bugs in the plan's assumptions about fido2-tools input/output formats.
+
+### Bug 1: Input encoding — hex vs base64
+
+The plan sends `clientDataHash` and `userId` as hex strings. fido2-tools expects base64-encoded input. The Yubico documentation for [fido2-cred INPUT FORMAT](https://developers.yubico.com/libfido2/Manuals/fido2-cred.html#INPUT_FORMAT) specifies base64. The initial run failed immediately with "input error" until rlavriv corrected the encoding.
+
+This affects `createCredential()` in `fido2Backend.js`:
+
+```javascript
+// WRONG (plan's current code):
+const input = [
+    clientDataHash.toString("hex"),
+    sanitizeForFido2(options.rpId),
+    sanitizeForFido2(options.userName),
+    userIdHex,
+].join("\n") + "\n";
+
+// CORRECT (validated — fido2-tools expects standard base64, not base64url):
+const input = [
+    clientDataHash.toString("base64"),
+    sanitizeForFido2(options.rpId),
+    sanitizeForFido2(options.userName),
+    base64urlDecode(options.userId).toString("base64"),
+].join("\n") + "\n";
+```
+
+The same bug affects `getAssertion()`, where `clientDataHash` and credential IDs are sent as hex.
+
+### Bug 2: Device path trailing colon
+
+`fido2-token -L` outputs `/dev/hidraw11: vendor=0x1050, product=0x0407 (...)`. The plan's regex captures the trailing colon as part of the device path, causing all subsequent commands to fail. rlavriv fixed the regex to use a lookahead: `grep -oP '^/dev/\S+(?=:)'`.
+
+This affects `discoverDevices()` in `fido2Backend.js`. The Node.js code needs the same fix.
+
+### Bug 3: fido2-cred output format is 7 lines, not 4-5
+
+The plan assumed `fido2-cred -M -h` outputs 4-5 lines: `format, authData, x509cert, signature, [credId]`. The actual output from fido2-tools v1.16.0 is 7 lines because it echoes back the input before the credential data:
+
+```
+Line 1: clientDataHash (echoed back, base64)
+Line 2: rpId (echoed back, plain text)
+Line 3: format string (e.g. "packed")
+Line 4: authData (base64, 212 bytes decoded)
+Line 5: credId (base64, 64 bytes decoded)
+Line 6: signature (base64, 71 bytes decoded)
+Line 7: x509 certificate (base64, 722 bytes decoded)
+```
+
+The plan's parsing code indexes from line 0, expecting `lines[0]` to be the format string. In reality, `lines[0]` is the echoed clientDataHash and the format is at `lines[2]`. All line indices in `createCredential()` need shifting by +2, and the field order after the echo differs from the plan's assumption (credId comes before signature and x509, not after).
+
+Corrected parsing (to be validated with more devices/versions):
+
+```javascript
+const lines = stdout.trim().split("\n");
+// Skip echoed input lines (clientDataHash + rpId)
+const dataLines = lines.slice(2);
+if (dataLines.length < 4) {
+    throw new Error("NotAllowedError: Unexpected fido2-cred output format");
+}
+const fmt = dataLines[0].trim();           // "packed" or "none"
+const authData = Buffer.from(dataLines[1], "base64");  // authData
+const credId = Buffer.from(dataLines[2], "base64");    // credId
+const signature = Buffer.from(dataLines[3], "base64"); // signature
+const x5c = dataLines.length >= 5
+    ? Buffer.from(dataLines[4], "base64")              // x509 cert
+    : null;
+```
+
+### Bug 4: fido2-assert failed entirely
+
+The assertion step (`fido2-assert -G -h`) produced 0 output lines and failed with "input error". This is almost certainly the same base64-vs-hex input encoding bug from Bug 1. The assertion input also sends `clientDataHash` and credential IDs as hex, which fido2-assert rejects. rlavriv did not get to debug the assertion step further after fixing credential creation.
+
+This needs to be re-tested with corrected base64 input encoding. The assertion output format may also differ from the plan's assumption (the plan expects `authData, signature, [credId], [userHandle]` but the real output may include echoed input lines like fido2-cred does).
+
+### Bug 5: PIN prompt detection
+
+The plan expected stderr to contain "Enter PIN for" when a PIN is required. The actual stderr output was just "fido2-assert: input error" (because the command failed before reaching the PIN stage). PIN prompt detection remains unvalidated. rlavriv's key did not require a PIN for credential creation but the assertion step never got far enough to test PIN behaviour.
+
+### Validated environment
+
+| Field | Value |
+|-------|-------|
+| Distro | Arch Linux |
+| Kernel | 6.19.6-arch1-1 |
+| fido2-tools version | 1.16.0 |
+| Device | YubiKey OTP+FIDO+CCID (0x1050:0x0407) |
+| Device path | /dev/hidraw11 |
+| PIN required | No (for credential creation) |
+
+### Impact on implementation
+
+The core approach (monkey-patch navigator.credentials, route via IPC to fido2-tools CLI) is validated — credential creation succeeded with a real YubiKey once the input encoding was corrected. However, the `fido2Backend.js` code in this plan needs substantial fixes before implementation:
+
+1. All input encoding must change from hex to base64
+2. Device path parsing must strip the trailing colon
+3. Output parsing must account for echoed input lines (offset +2)
+4. Field order in fido2-cred output differs from plan (credId before signature/x5c)
+5. fido2-assert needs re-testing with corrected input encoding
+6. PIN prompt detection is unvalidated and may need a different approach
+
+rlavriv has shared an updated validation script with these fixes applied. The next step is to update the spike script with rlavriv's corrections and get a second validation run covering the assertion step and PIN behaviour.
+
+---
+
 ## Chunk 2: Helpers and configuration
 
 This chunk creates the shared utilities and wires up the configuration, with no functional changes to the app yet.

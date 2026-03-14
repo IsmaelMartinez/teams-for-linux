@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-13
-**Current Version:** v2.7.10 (Electron 39.5.1)
-**Status:** Living Document --- stabilising on Electron 39, v2.7.11 ready to release
+**Last Updated:** 2026-03-14
+**Current Version:** v2.7.11 (Electron 39.5.1)
+**Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs --- see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) and [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) for granular tracking.
 
@@ -42,19 +42,69 @@ The MQTT integration is mature for presence status, media state, inbound command
 
 ### Testing Infrastructure
 
-Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 12 configurations (4 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. Future improvements include pre-built container images, CI regression testing for Dockerfiles, and pre-auth smoke tests.
+Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 9 configurations (3 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. The infrastructure works well for Ubuntu (7/7 tests pass on X11 and XWayland, 6/6 on Wayland) but Fedora and Debian remain unvalidated. The current focus is closing these gaps and connecting cross-distro testing to the CI pipeline so it gates builds rather than running as a separate manual workflow.
 
 ---
 
-## Next Patch Release (v2.7.11)
+## Open PRs --- Awaiting User Validation
 
-v2.7.11 is ready to release. It brings: null sourceId fix for MQTT screen sharing publish, short Teams deep link support across all link types, explicit media permission check handling, and the speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) as an experimental feature using WebRTC `getStats()` for three-state mute/speaking detection. Auth state recovery improvements (v2.7.10 pre-release) are also bundled.
+Seven PRs are open, all awaiting community testing. Six are authored by the maintainer and have only automated bot reviews (gemini-code-assist). No human reviewers have tested the proposed fixes on their setups. These PRs address real user-reported bugs, but the reporters haven't returned to validate.
+
+| PR | Fix | Linked Issue | Age |
+|----|-----|-------------|-----|
+| [#2331](https://github.com/IsmaelMartinez/teams-for-linux/pull/2331) | Media permissions for call crashes | Call crashes | 1 day |
+| [#2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) | CSP relaxation for third-party SSO | [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326) | 1 day |
+| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | 2 days |
+| [#2319](https://github.com/IsmaelMartinez/teams-for-linux/pull/2319) | SSO reload for blank calendar | [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) | 4 days |
+| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | 3 weeks |
+| [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | Null sourceId for MQTT publish | MQTT screen share | 3 weeks |
+| [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) | Electron 40 bump (Dependabot) | v2.8.0 | 3 weeks |
+
+Decision needed: self-merge the fixes where confidence is high, or wait for user validation. The cross-distro testing improvements below would partly address this by letting the maintainer validate across environments without needing reporter feedback.
+
+---
+
+## Next Up: Testing Infrastructure and Dev Experience
+
+These are the next priorities --- work the maintainer can drive without waiting on external feedback.
+
+### Phase 1 --- Cross-Distro Testing Hardening
+
+The `testing/cross-distro/` setup has strong foundations (Docker Compose, 9 configurations, authenticated Playwright, `run-all-tests.sh`) but several gaps need closing before it becomes a reliable validation tool for Electron upgrades and PR testing.
+
+**Fix Fedora session incompatibility.** Fedora's npm installs a different Node.js/Electron version, so sessions created on Ubuntu are incompatible. The fix is to pin the Electron version across all Dockerfiles or run `--login` separately per distro. Pinning is simpler and should be tried first --- add an `ELECTRON_VERSION` build arg to the Dockerfiles so all three distros install the same binary.
+
+**Validate Debian.** Debian was never tested (Codespace disk ran out). Run the full suite locally and fix any issues. Debian Bookworm is a conservative base and should be the easiest to get working.
+
+**Expand the authenticated test suite.** The current 6-7 tests cover app launch, screen sharing basics, and window management, but the features that actually break during Electron upgrades (notifications, media permissions, SSO recovery) are untested. Add tests for the notification stub interface, permission check handler responses, and auth recovery after token expiry.
+
+**Clean up the PLAN document.** The `PLAN-docker-playwright-tests.md` has stale open questions and status from February. Either fold the remaining decisions into this roadmap and delete the file, or update it to reflect current state.
+
+### Phase 2 --- CI Integration
+
+**Gate builds on E2E tests.** Currently `linux_x64` packaging depends only on `lint_and_audit`. The `e2e_tests` job runs but failures don't block packaging or merges. Add `e2e_tests` to the `needs` list for packaging jobs.
+
+**Add a CI smoke test for Dockerfiles.** A lightweight GitHub Actions job that builds the three Docker images and verifies they start without errors. This catches Dockerfile regressions (broken package installs, missing dependencies) before they reach manual testing.
+
+**Add `.nvmrc`.** Pin the Node version (currently 22) so contributors and CI use the same version. The Dockerfiles should reference this too.
+
+### Phase 3 --- Dev Experience Quick Wins
+
+**PR template.** The codebase review flagged this as missing. A simple template ensuring PRs reference issues, describe testing done, and note any doc updates.
+
+**Evaluate release-please.** The [project management tools research](../research/project-management-tools-research.md) identified release-please as the single highest-leverage improvement for automating version bumps, changelog generation, and tag creation from conventional commits. The current manual release process (`npm run release:prepare`) works but doesn't scale. Worth a spike to see how it fits with the existing changelog generator workflow.
+
+**Stale bot tuning.** A stale bot workflow exists (`.github/workflows/stale.yml`) but the "awaiting user feedback" issues suggest it may need tuning --- issues where the reporter goes silent should get auto-closed after a reasonable period rather than sitting open indefinitely.
+
+**Beads --- bookmarked, not needed yet.** [Beads](https://github.com/steveyegge/beads) (`@beads/bd`, v0.60.0) is a git-backed task graph for AI agent memory across sessions. With Opus 4.6's 1M token context window and auto-compaction, multi-step features like cross-distro testing or FIDO2 can fit in a single extended session, reducing the need for cross-session handovers. The current workflow (CLAUDE.md + memory directory + roadmap) covers the remaining cases well. Revisit if workflows regularly exceed what 1M tokens can hold. See the [project management tools research](../research/project-management-tools-research.md) for the full evaluation.
 
 ---
 
 ## Next Minor Release (v2.8.0) --- Deferred
 
-Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). The [research is complete](../research/electron-40-migration-research.md) and there are no blocking breaking changes, but the priority is stabilising on Electron 39 first. The Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) remains open and will be merged after the v2.7.x line is confirmed stable.
+Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). The [research is complete](../research/electron-40-migration-research.md) and there are no blocking breaking changes, but the priority is stabilising on Electron 39 and hardening the testing infrastructure first. The cross-distro test suite should be fully working across all 9 configurations before attempting this upgrade, as Electron upgrades are the primary use case for that infrastructure.
+
+The Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) remains open and will be merged after the v2.7.x line is confirmed stable and the testing infrastructure is ready.
 
 The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with the Electron upgrade if timing aligns.
 
@@ -118,7 +168,7 @@ The issue triage bot has been migrated to a standalone Go service ([github-issue
 
 ### Cross-Distro Testing
 
-Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 12 configurations with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Future: pre-built images, CI regression testing, pre-auth smoke tests.
+Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Current state: Ubuntu passes all tests, Fedora fails due to session incompatibility (different Electron version), Debian untested. See "Phase 1 --- Cross-Distro Testing Hardening" above for the plan to close these gaps.
 
 ### Configuration Modernization
 
@@ -127,6 +177,10 @@ New features use nested config patterns from day one (`mqtt.*`, `graphApi.*`, `c
 ---
 
 ## Release History
+
+### v2.7.11 (2026-03-14)
+
+Null sourceId fix for MQTT screen sharing publish, short Teams deep link support, explicit media permission check handling, speaking indicator as experimental feature, auth state recovery improvements, restructured roadmap and enhanced changelog pipeline.
 
 ### v2.7.10 (2026-03-06)
 

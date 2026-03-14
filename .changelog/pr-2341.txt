@@ -1,0 +1,2 @@
+Update roadmap and FIDO2 research with community validation results. - by @IsmaelMartinez (#2341)
+closes: #2332 https://github.com/IsmaelMartinez/teams-for-linux/issues/2332 Help wanted: validate fido2-tools output on Linux (#802)
