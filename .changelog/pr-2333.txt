@@ -1,1 +1,0 @@
-Fix: Update MQTT status selectors and remove broken React presence detection - by @IsmaelMartinez (#2333)

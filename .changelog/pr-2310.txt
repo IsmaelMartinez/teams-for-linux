@@ -1,1 +1,0 @@
-fix: only reload on main frame network errors, not sub-frames - by @IsmaelMartinez (#2310)

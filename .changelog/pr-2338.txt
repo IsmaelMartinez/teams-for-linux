@@ -1,1 +1,0 @@
-Fix: Replace regex with split to avoid backtracking issues - by @IsmaelMartinez (#2338)
