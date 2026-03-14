@@ -197,9 +197,12 @@ function loadFromChangelogDir(fullPath) {
     const closingIssues = lines.slice(1)
       .filter(l => l.startsWith('closes: '))
       .map(l => {
-        const match = l.match(/^closes:\s+(#\d+)\s+(https?:\/\/\S+)\s+(.+)$/);
-        if (!match) return null;
-        return { ref: match[1], url: match[2], title: match[3] };
+        const parts = l.slice('closes: '.length).split(' ');
+        const ref = parts[0];
+        const url = parts[1];
+        const title = parts.slice(2).join(' ');
+        if (!ref?.startsWith('#') || !url?.startsWith('http')) return null;
+        return { ref, url, title };
       })
       .filter(Boolean);
     return { content, closingIssues };
