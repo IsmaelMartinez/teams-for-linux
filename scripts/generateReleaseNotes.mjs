@@ -192,14 +192,16 @@ function loadFromChangelogDir(fullPath) {
   if (files.length === 0) return null;
   return files.map(file => {
     const raw = fs.readFileSync(path.join(fullPath, file), 'utf8').trim();
-    const lines = raw.split('\n');
+    const lines = raw.split(/\r?\n/).map(l => l.trim());
     const content = lines[0];
     const closingIssues = lines.slice(1)
       .filter(l => l.startsWith('closes: '))
       .map(l => {
-        const parts = l.slice('closes: '.length).split(' ');
-        return { ref: parts[0], url: parts[1], title: parts.slice(2).join(' ') };
-      });
+        const match = l.match(/^closes:\s+(#\d+)\s+(https?:\/\/\S+)\s+(.+)$/);
+        if (!match) return null;
+        return { ref: match[1], url: match[2], title: match[3] };
+      })
+      .filter(Boolean);
     return { content, closingIssues };
   });
 }

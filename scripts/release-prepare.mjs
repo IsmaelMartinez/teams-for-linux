@@ -55,7 +55,7 @@ function loadChangelogEntries() {
   }
   const entries = files.map(file => {
     // Take only the first line — subsequent lines may contain structured metadata (closes: #NNN ...)
-    const content = fs.readFileSync(path.join(changelogDir, file), 'utf8').trim().split('\n')[0];
+    const content = fs.readFileSync(path.join(changelogDir, file), 'utf8').trim().split(/\r?\n/)[0].trim();
     console.log(`   • ${content}`);
     return content;
   });

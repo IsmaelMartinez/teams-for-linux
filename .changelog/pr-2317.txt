@@ -1,1 +1,1 @@
-Update roadmap to thematic sections and current release plans. - by @IsmaelMartinez (#2317)
+docs: restructure roadmap to thematic sections and add changelog pipeline enhancements - by @IsmaelMartinez (#2317)
