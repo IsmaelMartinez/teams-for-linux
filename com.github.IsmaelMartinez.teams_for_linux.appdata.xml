@@ -14,6 +14,14 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.12" date="2026-03-15">
+      <description>
+        <ul>
+          <li>Update roadmap and FIDO2 research with community validation results. - by @IsmaelMartinez (#2341)</li>
+          <li>Fix: Bump Electron to 39.8.2 to patch critical Skia vulnerability (CVE-2026-3909) - by @IsmaelMartinez (#2342)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.11" date="2026-03-14">
       <description>
         <ul>
