@@ -1,0 +1,1 @@
+Fix: Bump Electron to 39.8.2 to patch critical Skia vulnerability (CVE-2026-3909) - by @IsmaelMartinez (#2342)
