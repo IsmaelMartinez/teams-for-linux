@@ -18,7 +18,7 @@ echo "[smoke] Checking container: ${CONTAINER} (timeout: ${TIMEOUT}s)"
 
 # Phase 1: Wait for the log file to exist (app download + startup)
 ELAPSED=0
-while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     # Check container is still running
     if ! docker inspect --format='{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q true; then
         echo "[smoke] FAIL: Container ${CONTAINER} is not running"
@@ -36,13 +36,13 @@ while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
     ELAPSED=$((ELAPSED + POLL_INTERVAL))
 done
 
-if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+if [[ "$ELAPSED" -ge "$TIMEOUT" ]]; then
     echo "[smoke] FAIL: Log file ${LOG_FILE} not found after ${TIMEOUT}s"
     exit 1
 fi
 
 # Phase 2: Poll the log file for the login URL marker
-while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     if ! docker inspect --format='{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q true; then
         echo "[smoke] FAIL: Container ${CONTAINER} stopped unexpectedly"
         docker exec "$CONTAINER" cat "$LOG_FILE" 2>/dev/null | tail -30 || true
