@@ -22,7 +22,7 @@ while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     # Check container is still running
     if ! docker inspect --format='{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q true; then
         echo "[smoke] FAIL: Container ${CONTAINER} is not running"
-        docker logs "$CONTAINER" 2>&1 | tail -30
+        docker logs "$CONTAINER" 2>&1 | tail -30 || true
         exit 1
     fi
 
