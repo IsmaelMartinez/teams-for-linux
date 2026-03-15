@@ -45,13 +45,13 @@ A new script `testing/cross-distro/scripts/smoke-check.sh` encapsulates the heal
 Usage: smoke-check.sh <container-name> [timeout-seconds]
 ```
 
-The check uses `docker exec` rather than `docker logs` because the app's stdout/stderr is redirected to `/tmp/app.log` inside the container by the display server start scripts (e.g. `start-x11.sh` line 43: `$APP_CMD > "$APP_LOG" 2>&1 &`). On Wayland/XWayland, the app is launched via `swaymsg exec`, which further detaches it from the container's PID 1. The app output never reaches `docker logs`.
+The check uses `docker exec` rather than `docker logs` because the app's stdout/stderr is redirected to `/tmp/app.log` inside the container. On X11, this already works (`start-x11.sh` line 43: `$APP_CMD > "$APP_LOG" 2>&1 &`). On Wayland and XWayland, the app is currently launched via `swaymsg exec` with no log redirection — a prerequisite for this design is modifying `start-wayland.sh` and `start-xwayland.sh` to redirect app output to `/tmp/app.log` consistently, e.g. `swaymsg exec "bash -c '$APP_CMD > /tmp/app.log 2>&1'"`. This also fixes a debugging gap in the existing scripts (no app logs on Wayland makes manual troubleshooting harder).
 
 ### Report
 
-Each matrix job appears as a separate check in the GitHub Actions UI (e.g. "ubuntu / x11", "fedora / wayland"). Pass/fail is immediately visible without expanding any logs.
+Each matrix job appears as a separate check in the GitHub Actions UI (e.g. "smoke (ubuntu, x11)", "smoke (fedora, wayland)"). Pass/fail is immediately visible without expanding any logs.
 
-A final `report` job runs after all matrix jobs complete (using `if: always()` and `needs: [smoke-test]`). It reads the `needs` context to determine which jobs passed or failed and writes a markdown summary table to `$GITHUB_STEP_SUMMARY` showing all 9 configurations and their status in one view.
+Each matrix job writes its own result (distro, display, pass/fail) to `$GITHUB_STEP_SUMMARY` as a single table row. Since GitHub Actions aggregates step summaries from all jobs in a workflow run, the combined view shows a complete 9-row table on the workflow run page without needing a separate report job. This avoids the limitation that `needs.<job>.result` for matrix jobs only provides the aggregate result, not per-entry results.
 
 ### Docker configuration for CI
 
