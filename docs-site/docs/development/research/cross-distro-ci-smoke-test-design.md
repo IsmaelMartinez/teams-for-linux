@@ -6,11 +6,30 @@
 
 ## Problem
 
-The `testing/cross-distro/` Docker-based testing environment works well for manual validation but has no CI integration. The app is only tested on `ubuntu-latest` in CI (via `build.yml`). Dockerfile regressions, distro-specific library changes, and display server incompatibilities go undetected until someone manually runs `./run.sh`.
+The `tests/cross-distro/` Docker-based testing environment works well for manual validation but has no CI integration. The app is only tested on `ubuntu-latest` in CI (via `build.yml`). Dockerfile regressions, distro-specific library changes, and display server incompatibilities go undetected until someone manually runs `./run.sh`.
 
 ## Solution
 
 A new GitHub Actions workflow (`cross-distro-smoke.yml`) that runs on every push to `main`. It builds the three Docker images (Ubuntu 24.04, Fedora 41, Debian Bookworm) and verifies the app starts successfully across all 9 distro/display-server configurations (3 distros x 3 display servers: x11, wayland, xwayland).
+
+## Prerequisite: Test directory restructuring
+
+Before implementing the CI workflow, consolidate all test-related directories under `tests/`:
+
+- Move `tests/cross-distro/` → `tests/cross-distro/`
+- Delete `testing/spikes/` (stale spike files from previous iterations)
+- Keep `tests/spikes/` as a convention for future spikes if needed
+- Remove the now-empty `testing/` directory
+
+Add npm scripts to the root `package.json` so cross-distro commands can be run from the project root, consistent with `npm run test:e2e` and `npm run test:unit`:
+
+```json
+"cross-distro": "cd tests/cross-distro && ./run.sh",
+"cross-distro:list": "cd tests/cross-distro && ./run.sh --list",
+"cross-distro:smoke": "cd tests/cross-distro && ./scripts/smoke-check.sh"
+```
+
+Update all references to the old path in: `CLAUDE.md`, `docs-site/docs/development/plan/roadmap.md`, `docs-site/docs/development/adr/016-cross-distro-testing-environment.md`, `docker-compose.yml` volume mounts (`../../:/src:ro` stays the same depth), and this spec.
 
 ## Design
 
@@ -30,7 +49,7 @@ Since each matrix job runs on its own GitHub Actions runner VM, there are no con
 
 1. Check out the repository.
 2. Resolve the latest release AppImage URL via the GitHub API (`gh release view --json assets`). This replaces the `--latest` flag from `run.sh`, which is a host-side convenience and not available inside `docker run`.
-3. Build the Docker image for the matrix distro using the existing Dockerfile (`testing/cross-distro/dockerfiles/{distro}.Dockerfile`). Tag it as `cross-distro-{distro}`.
+3. Build the Docker image for the matrix distro using the existing Dockerfile (`tests/cross-distro/dockerfiles/{distro}.Dockerfile`). Tag it as `cross-distro-{distro}`.
 4. Start the container in detached mode with `DISPLAY_SERVER` set to the matrix display value and `APP_URL` set to the resolved AppImage URL. Mount no volumes (no session, no source — this is a cold-start smoke test).
 5. Run a smoke check: use `docker exec` to poll the app's log file (`/tmp/app.log`) inside the container for up to 120 seconds, looking for `login.microsoftonline.com` in the output (the same assertion as the existing `smoke.spec.js` — the app launched, loaded Teams, and redirected to login).
 6. If the marker is found, pass. If the container exits or the timeout expires, fail.
@@ -39,7 +58,7 @@ Since each matrix job runs on its own GitHub Actions runner VM, there are no con
 
 ### Smoke check script
 
-A new script `testing/cross-distro/scripts/smoke-check.sh` encapsulates the health check logic. It accepts a container name and a timeout, uses `docker exec` to read `/tmp/app.log` inside the container, and exits 0 on success or 1 on failure. This script can also be used locally outside of CI.
+A new script `tests/cross-distro/scripts/smoke-check.sh` encapsulates the health check logic. It accepts a container name and a timeout, uses `docker exec` to read `/tmp/app.log` inside the container, and exits 0 on success or 1 on failure. This script can also be used locally outside of CI.
 
 ```
 Usage: smoke-check.sh <container-name> [timeout-seconds]
