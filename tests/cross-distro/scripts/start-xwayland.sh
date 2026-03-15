@@ -50,9 +50,10 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
+    APP_LOG="/tmp/app.log"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
-        echo "[XWayland] Auto-launching app (X11 client via XWayland)..."
-        swaymsg exec "$APP_CMD" 2>/dev/null || $APP_CMD &
+        echo "[XWayland] Auto-launching app (X11 client via XWayland, logs: tail -f ${APP_LOG})..."
+        bash -c "$APP_CMD > $APP_LOG 2>&1" &
     else
         echo "[XWayland] Launch app (runs as X11 client via XWayland):"
         echo "      $APP_CMD"

@@ -48,9 +48,10 @@ echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
     WAYLAND_APP_CMD="${APP_CMD} --enable-features=UseOzonePlatform --ozone-platform=wayland"
+    APP_LOG="/tmp/app.log"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
-        echo "[Wayland] Auto-launching app with native Wayland..."
-        swaymsg exec "$WAYLAND_APP_CMD" 2>/dev/null || $WAYLAND_APP_CMD &
+        echo "[Wayland] Auto-launching app with native Wayland (logs: tail -f ${APP_LOG})..."
+        bash -c "$WAYLAND_APP_CMD > $APP_LOG 2>&1" &
     else
         echo "[Wayland] Launch app with native Wayland:"
         echo "      $WAYLAND_APP_CMD"
