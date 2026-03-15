@@ -16,7 +16,7 @@ A new GitHub Actions workflow (`cross-distro-smoke.yml`) that runs on every push
 
 Before implementing the CI workflow, consolidate all test-related directories under `tests/`:
 
-- Move `tests/cross-distro/` → `tests/cross-distro/`
+- Move `testing/cross-distro/` → `tests/cross-distro/`
 - Delete `testing/spikes/` (stale spike files from previous iterations)
 - Keep `tests/spikes/` as a convention for future spikes if needed
 - Remove the now-empty `testing/` directory
