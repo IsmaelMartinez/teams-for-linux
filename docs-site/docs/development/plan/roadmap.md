@@ -70,7 +70,7 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 ### Phase 1 --- Cross-Distro Testing Hardening
 
-The `testing/cross-distro/` setup has strong foundations (Docker Compose, 9 configurations, authenticated Playwright, `run-all-tests.sh`) but several gaps need closing before it becomes a reliable validation tool for Electron upgrades and PR testing.
+The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 configurations, authenticated Playwright, `run-all-tests.sh`) but several gaps need closing before it becomes a reliable validation tool for Electron upgrades and PR testing.
 
 **Fix Fedora session incompatibility.** Fedora's npm installs a different Node.js/Electron version, so sessions created on Ubuntu are incompatible. The fix is to pin the Electron version across all Dockerfiles or run `--login` separately per distro. Pinning is simpler and should be tried first --- add an `ELECTRON_VERSION` build arg to the Dockerfiles so all three distros install the same binary.
 

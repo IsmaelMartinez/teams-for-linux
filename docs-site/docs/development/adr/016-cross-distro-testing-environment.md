@@ -20,7 +20,7 @@ Use Docker containers with VNC/noVNC for cross-distro manual testing, hosted via
 
 The environment supports three app delivery methods: `.deb`/`.rpm` packages (extracted at runtime via `dpkg-deb`/`rpm2cpio`), AppImage (with `--appimage-extract-and-run`), and source checkout (via `npm start`). Login session state is persisted via a mounted volume at `./session/`.
 
-For hosting, use GitHub Codespaces as the primary environment. Codespaces provides native x86_64 Linux VMs with Docker-in-Docker support, port forwarding for noVNC access, and 120 free core-hours/month on the free plan. A `.devcontainer/devcontainer.json` is included in the `testing/cross-distro/` directory to support one-click setup.
+For hosting, use GitHub Codespaces as the primary environment. Codespaces provides native x86_64 Linux VMs with Docker-in-Docker support, port forwarding for noVNC access, and 120 free core-hours/month on the free plan. A `.devcontainer/devcontainer.json` is included in the `tests/cross-distro/` directory to support one-click setup.
 
 ## Consequences
 
