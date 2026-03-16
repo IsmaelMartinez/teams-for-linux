@@ -1,0 +1,1 @@
+Add CodeRabbit AI for automated code reviews. - by @IsmaelMartinez (#2348)
