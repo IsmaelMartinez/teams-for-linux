@@ -721,29 +721,25 @@ function isTeamsDomain(url) {
 }
 
 /**
- * Relaxes the enforcing CSP for non-Teams domains so that third-party SSO
+ * Strips all CSP headers for non-Teams domains so that third-party SSO
  * providers (e.g. Symantec VIP) whose Angular/jQuery UI relies on dynamic
- * code evaluation can function when contextIsolation is disabled (#2326).
+ * code evaluation and nonce-less script loading can function when
+ * contextIsolation is disabled (#2326).
  *
- * NOTE: This intentionally adds the CSP 'unsafe-eval' token to the
- * script-src directive of non-Teams responses only.  This is required
- * because the shared V8 context (contextIsolation: false) enforces the
- * page's CSP, which blocks eval and breaks SSO login flows.
+ * Simply adding 'unsafe-eval' to script-src is insufficient because pages
+ * using 'strict-dynamic' with nonces (like Symantec VIP) cause the browser
+ * to ignore scheme-source allowlists (http:/https:), blocking scripts that
+ * lack the nonce even when they are same-origin.  Stripping the CSP header
+ * entirely is the only reliable HTTP-level fix.
  */
-function relaxCspForAuthPages(responseHeaders, url) {
+function stripCspForAuthPages(responseHeaders, url) {
   if (isTeamsDomain(url)) return;
 
-  // Header names may arrive in any casing
-  const cspKey = Object.keys(responseHeaders).find(
-    k => k.toLowerCase() === 'content-security-policy'
-  );
-  if (!cspKey) return;
-
-  const values = responseHeaders[cspKey];
-  for (let i = 0; i < values.length; i++) {
-    // Only touch script-src directives that do not already allow eval
-    if (values[i].includes('script-src') && !values[i].includes("'unsafe-eval'")) {
-      values[i] = values[i].replace(/(^|;\s*)script-src\s/, "$1script-src 'unsafe-eval' ");
+  // Delete both enforcing and report-only CSP headers (case-insensitive)
+  for (const key of Object.keys(responseHeaders)) {
+    const lower = key.toLowerCase();
+    if (lower === 'content-security-policy' || lower === 'content-security-policy-report-only') {
+      delete responseHeaders[key];
     }
   }
 }
@@ -751,7 +747,7 @@ function relaxCspForAuthPages(responseHeaders, url) {
 function onHeadersReceivedHandler(details, callback) {
   customBackgroundService.onHeadersReceivedHandler(details);
 
-  relaxCspForAuthPages(details.responseHeaders, details.url);
+  stripCspForAuthPages(details.responseHeaders, details.url);
 
   callback({
     responseHeaders: details.responseHeaders,
