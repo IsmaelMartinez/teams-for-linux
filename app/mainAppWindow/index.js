@@ -695,7 +695,7 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
-// Teams domains where we preserve the original CSP unchanged
+// Teams domains whose enforcing CSP we never touch
 const TEAMS_DOMAINS = [
   'teams.cloud.microsoft',
   'teams.microsoft.com',
@@ -710,7 +710,6 @@ const TEAMS_DOMAINS = [
 function isTeamsDomain(url) {
   try {
     let hostname = new URL(url).hostname;
-    // Strip MCAS proxy suffix (e.g., teams.cloud.microsoft.mcas.ms)
     if (hostname.endsWith('.mcas.ms')) {
       hostname = hostname.slice(0, -8);
     }
@@ -721,31 +720,60 @@ function isTeamsDomain(url) {
 }
 
 /**
- * Strips all CSP headers for non-Teams domains so that third-party SSO
- * providers (e.g. Symantec VIP) whose Angular/jQuery UI relies on dynamic
- * code evaluation and nonce-less script loading can function when
- * contextIsolation is disabled (#2326).
+ * Checks whether a URL's hostname matches any of the configured CSP bypass
+ * domains. Supports both exact matches and subdomain matches.
+ */
+function isCspBypassDomain(url) {
+  const bypassDomains = config?.auth?.cspBypassDomains;
+  if (!Array.isArray(bypassDomains) || bypassDomains.length === 0) return false;
+
+  try {
+    const hostname = new URL(url).hostname;
+    return bypassDomains.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Handles CSP headers for non-Teams domains (#2326).
  *
- * Simply adding 'unsafe-eval' to script-src is insufficient because pages
- * using 'strict-dynamic' with nonces (like Symantec VIP) cause the browser
- * to ignore scheme-source allowlists (http:/https:), blocking scripts that
- * lack the nonce even when they are same-origin.  Stripping the CSP header
- * entirely is the only reliable HTTP-level fix.
+ * Two behaviours:
+ *  1. Report-only CSP headers are always stripped for non-Teams domains.
+ *     With contextIsolation disabled the shared V8 context erroneously
+ *     enforces report-only policies as blocking, breaking SSO flows
+ *     that rely on dynamic code or nonce-less scripts (e.g. Symantec VIP).
+ *
+ *  2. Enforcing CSP headers are stripped only for domains explicitly listed
+ *     in auth.cspBypassDomains, giving users an opt-in escape hatch for
+ *     SSO providers whose enforcing CSP is incompatible.
  */
 function stripCspForAuthPages(responseHeaders, url) {
   if (isTeamsDomain(url)) return;
 
-  // Delete both enforcing and report-only CSP headers (case-insensitive)
+  const shouldBypassEnforcing = isCspBypassDomain(url);
+
   for (const key of Object.keys(responseHeaders)) {
     const lower = key.toLowerCase();
-    if (lower === 'content-security-policy' || lower === 'content-security-policy-report-only') {
+    if (lower === 'content-security-policy-report-only') {
+      try {
+        console.debug(`[CSP] Stripping report-only header from: ${new URL(url).hostname}`);
+      } catch { /* ignore */ }
+      delete responseHeaders[key];
+    } else if (lower === 'content-security-policy') {
       try {
         const hostname = new URL(url).hostname;
-        console.debug(`[CSP] Stripping ${lower} header from: ${hostname}`);
+        if (shouldBypassEnforcing) {
+          console.debug(`[CSP] Stripping enforcing header from: ${hostname} (in auth.cspBypassDomains)`);
+          delete responseHeaders[key];
+        } else {
+          console.debug(`[CSP] Found enforcing CSP from: ${hostname} (add to auth.cspBypassDomains to bypass)`);
+        }
       } catch {
-        // ignore URL parse errors for logging
+        if (shouldBypassEnforcing) {
+          delete responseHeaders[key];
+        }
       }
-      delete responseHeaders[key];
     }
   }
 }

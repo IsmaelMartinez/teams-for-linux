@@ -236,6 +236,34 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 ---
 
+#### Issue: Third-Party SSO Login Fails (e.g. Symantec VIP)
+
+**Description:** Users with third-party SSO providers like Symantec VIP see a broken or blank login page. Console logs may show `EvalError` or Content Security Policy violations referencing `strict-dynamic` or `nonce-` directives.
+
+**Cause:** With `contextIsolation` disabled (required for Teams DOM access), Electron erroneously enforces report-only CSP headers as blocking policies. Some SSO providers also send enforcing CSP headers that block their own scripts from loading.
+
+**Solutions/Workarounds:**
+
+Report-only CSP headers are automatically stripped for non-Teams domains since v2.7.13. If the SSO provider also sends enforcing CSP headers, add their domains to `auth.cspBypassDomains` in your config:
+
+```json
+{
+  "auth": {
+    "cspBypassDomains": ["login.vip.symantec.com"]
+  }
+}
+```
+
+To find which domains to add, run with debug logging and look for `[CSP] Found enforcing CSP from:` messages:
+
+```bash
+ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'
+```
+
+**Related GitHub Issues:** [Issue #2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
+
+---
+
 ### Notifications
 
 #### Issue: No Desktop Notifications

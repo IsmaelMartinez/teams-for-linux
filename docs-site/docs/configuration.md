@@ -180,6 +180,28 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
 | `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
+#### CSP Bypass for Third-Party SSO
+
+Some third-party SSO providers (e.g. Symantec VIP) serve pages with Content Security Policy headers that are incompatible with Electron's `contextIsolation: false` setting. Report-only CSP headers on non-Teams domains are automatically stripped since they are erroneously enforced as blocking in this context. For SSO providers that send enforcing CSP headers, you can list their domains in `auth.cspBypassDomains` to strip those as well.
+
+To identify which domains need bypassing, run the app with debug logging enabled and look for `[CSP] Found enforcing CSP from: <hostname>` messages:
+
+```bash
+ELECTRON_ENABLE_LOGGING=true teams-for-linux --logConfig='{"transports":{"console":{"level":"debug"}}}'
+```
+
+```json
+{
+  "auth": {
+    "cspBypassDomains": ["login.vip.symantec.com", "idp.example.com"]
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auth.cspBypassDomains` | `string[]` | `[]` | Domains whose enforcing CSP headers should be stripped to allow SSO login |
+
 #### Certificates
 
 | Option | Type | Default | Description |

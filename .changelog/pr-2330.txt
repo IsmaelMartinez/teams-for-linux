@@ -1,1 +1,1 @@
-Fix: Relax CSP for non-Teams SSO to unblock eval-dependent login - by @IsmaelMartinez (#2330)
+Fix: Strip report-only CSP for non-Teams domains and add auth.cspBypassDomains for SSO login - by @IsmaelMartinez (#2330)
