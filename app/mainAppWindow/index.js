@@ -748,32 +748,40 @@ function isCspBypassDomain(url) {
  *     in auth.cspBypassDomains, giving users an opt-in escape hatch for
  *     SSO providers whose enforcing CSP is incompatible.
  */
+function getHostname(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+function handleReportOnlyCsp(responseHeaders, key, hostname) {
+  console.debug(`[CSP] Stripping report-only header from: ${hostname ?? 'unknown'}`);
+  delete responseHeaders[key];
+}
+
+function handleEnforcingCsp(responseHeaders, key, hostname, shouldBypass) {
+  if (shouldBypass) {
+    console.debug(`[CSP] Stripping enforcing header from: ${hostname ?? 'unknown'} (in auth.cspBypassDomains)`);
+    delete responseHeaders[key];
+  } else if (hostname) {
+    console.debug(`[CSP] Found enforcing CSP from: ${hostname} (add to auth.cspBypassDomains to bypass)`);
+  }
+}
+
 function stripCspForAuthPages(responseHeaders, url) {
   if (isTeamsDomain(url)) return;
 
   const shouldBypassEnforcing = isCspBypassDomain(url);
+  const hostname = getHostname(url);
 
   for (const key of Object.keys(responseHeaders)) {
     const lower = key.toLowerCase();
     if (lower === 'content-security-policy-report-only') {
-      try {
-        console.debug(`[CSP] Stripping report-only header from: ${new URL(url).hostname}`);
-      } catch { /* ignore */ }
-      delete responseHeaders[key];
+      handleReportOnlyCsp(responseHeaders, key, hostname);
     } else if (lower === 'content-security-policy') {
-      try {
-        const hostname = new URL(url).hostname;
-        if (shouldBypassEnforcing) {
-          console.debug(`[CSP] Stripping enforcing header from: ${hostname} (in auth.cspBypassDomains)`);
-          delete responseHeaders[key];
-        } else {
-          console.debug(`[CSP] Found enforcing CSP from: ${hostname} (add to auth.cspBypassDomains to bypass)`);
-        }
-      } catch {
-        if (shouldBypassEnforcing) {
-          delete responseHeaders[key];
-        }
-      }
+      handleEnforcingCsp(responseHeaders, key, hostname, shouldBypassEnforcing);
     }
   }
 }
