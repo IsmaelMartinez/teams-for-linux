@@ -739,6 +739,12 @@ function stripCspForAuthPages(responseHeaders, url) {
   for (const key of Object.keys(responseHeaders)) {
     const lower = key.toLowerCase();
     if (lower === 'content-security-policy' || lower === 'content-security-policy-report-only') {
+      try {
+        const hostname = new URL(url).hostname;
+        console.debug(`[CSP] Stripping ${lower} header from: ${hostname}`);
+      } catch {
+        // ignore URL parse errors for logging
+      }
       delete responseHeaders[key];
     }
   }
