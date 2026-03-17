@@ -135,10 +135,10 @@ Real-time visual indicator during calls showing microphone state via `RTCPeerCon
 **Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
 **If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
 
-### Third-Party SSO CSP Bypass - Complete
+### Third-Party SSO CSP Bypass - In Progress
 
 **Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
-**Status:** Implemented in [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330), landing in v2.7.13
+**Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
 
 Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. This was previously listed as "Not Feasible" since `contextIsolation` cannot be toggled per-phase without breaking tray icons and IPC.
 
