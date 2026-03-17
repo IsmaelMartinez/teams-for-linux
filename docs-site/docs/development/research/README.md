@@ -39,11 +39,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Reference
 
-- **[Codebase Review (March 2026)](codebase-review-2026.md)** - Code quality, maintainability, performance, and DX review
-  - Covers architecture, testing gaps, performance overhead, and developer experience
-  - Covers DOM observer overhead, testing gaps, and architectural inconsistencies
-  - **Status:** Review complete, findings being addressed incrementally
-
 - **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.
 
 
@@ -56,10 +51,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Shipped (Retained for Reference)
 
-- **[Issue-PR Release Linking Research](issue-pr-release-linking-research.md)** - Linking GitHub issues to PRs in the release notes pipeline
-  - GraphQL `closingIssuesReferences` query; updated `.changelog/` file format with `closes:` metadata; four files changed
-  - **Status:** Implemented in v2.7.11 (PR #2317)
-
 - **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
   - **MVP shipped** in v2.6.16: toast notifications with auto-dismiss and click-to-focus
   - **Phase 2 dropped**: notifications worked on maintainer's machine but not for the requesting user
@@ -71,6 +62,8 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Issue-PR Release Linking | v2.7.11 | GraphQL `closingIssuesReferences` query; `closes:` metadata in changelog files. See [PR #2317](https://github.com/IsmaelMartinez/teams-for-linux/pull/2317) |
+| Codebase Review (March 2026) | v2.7.x | Code quality, maintainability, performance, and DX review; findings addressed incrementally |
 | Issue Triage Bot | v2.7.x | All four phases implemented; migrated to standalone Go service. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot) |
 | Dependency Cleanup | v2.7.10 | Removed `node-sound`, `lodash`, `electron-positioner`; project now has 6 production deps |
 | Speaking Indicator | v2.7.11 | WebRTC `getStats()` for three-state mute/speaking detection. See [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |

@@ -112,17 +112,14 @@ The notification sound overhaul Phase 2 (custom sound configuration, [research c
 
 ## Implemented
 
-### Third-Party SSO CSP Bypass - In Progress
+### Third-Party SSO CSP Fix
 
 **Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
 **Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
 
-Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. This was previously listed as "Not Feasible" since `contextIsolation` cannot be toggled per-phase without breaking tray icons and IPC.
+Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. Report-only CSP headers are now automatically stripped for all non-Teams domains (safe, since they should never block). No user configuration is needed. Validated by the reporting user.
 
-The fix takes a two-pronged approach: report-only CSP headers are automatically stripped for all non-Teams domains (safe, since they should never block), and a new `auth.cspBypassDomains` config option lets users list domains whose enforcing CSP headers should also be stripped. The Symantec VIP case works without any user configuration. Validated by the reporting user.
-
-**Config:** `auth.cspBypassDomains` (string array, default `[]`)
-**Docs:** [Configuration](../../configuration.md#csp-bypass-for-third-party-sso), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
+**Docs:** [Configuration](../../configuration.md#third-party-sso-and-csp), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
 
 ### Speaking Indicator
 
@@ -134,18 +131,6 @@ Real-time visual indicator during calls showing microphone state via `RTCPeerCon
 **Module:** `app/browser/tools/speakingIndicator.js`
 **Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
 **If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
-
-### Third-Party SSO CSP Bypass - In Progress
-
-**Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
-**Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
-
-Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. This was previously listed as "Not Feasible" since `contextIsolation` cannot be toggled per-phase without breaking tray icons and IPC.
-
-The fix takes a two-pronged approach: report-only CSP headers are automatically stripped for all non-Teams domains (safe, since they should never block), and a new `auth.cspBypassDomains` config option lets users list domains whose enforcing CSP headers should also be stripped. The Symantec VIP case works without any user configuration. Validated by the reporting user.
-
-**Config:** `auth.cspBypassDomains` (string array, default `[]`)
-**Docs:** [Configuration](../../configuration.md#csp-bypass-for-third-party-sso), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
 
 ---
 

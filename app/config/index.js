@@ -531,9 +531,8 @@ function extractYargConfig(configObject, appVersion) {
             enabled: false,
             user: "",
           },
-          cspBypassDomains: [],
         },
-        describe: "Authentication configuration (Intune SSO, CSP bypass for third-party SSO domains)",
+        describe: "Authentication configuration (Intune SSO)",
         type: "object",
       },
       wayland: {

@@ -720,68 +720,26 @@ function isTeamsDomain(url) {
 }
 
 /**
- * Checks whether a URL's hostname matches any of the configured CSP bypass
- * domains. Supports both exact matches and subdomain matches.
- */
-function isCspBypassDomain(url) {
-  const bypassDomains = config?.auth?.cspBypassDomains;
-  if (!Array.isArray(bypassDomains) || bypassDomains.length === 0) return false;
-
-  try {
-    const hostname = new URL(url).hostname;
-    return bypassDomains.some(d => hostname === d || hostname.endsWith('.' + d));
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Handles CSP headers for non-Teams domains (#2326).
+ * Strips report-only CSP headers for non-Teams domains (#2326).
  *
- * Two behaviours:
- *  1. Report-only CSP headers are always stripped for non-Teams domains.
- *     With contextIsolation disabled the shared V8 context erroneously
- *     enforces report-only policies as blocking, breaking SSO flows
- *     that rely on dynamic code or nonce-less scripts (e.g. Symantec VIP).
- *
- *  2. Enforcing CSP headers are stripped only for domains explicitly listed
- *     in auth.cspBypassDomains, giving users an opt-in escape hatch for
- *     SSO providers whose enforcing CSP is incompatible.
+ * With contextIsolation disabled the shared V8 context erroneously
+ * enforces report-only policies as blocking, breaking SSO flows
+ * that rely on dynamic code or nonce-less scripts (e.g. Symantec VIP).
+ * Report-only headers are safe to strip since they should never block.
  */
-function getHostname(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return null;
-  }
-}
-
-function handleReportOnlyCsp(responseHeaders, key, hostname) {
-  console.debug(`[CSP] Stripping report-only header from: ${hostname ?? 'unknown'}`);
-  delete responseHeaders[key];
-}
-
-function handleEnforcingCsp(responseHeaders, key, hostname, shouldBypass) {
-  if (shouldBypass) {
-    console.debug(`[CSP] Stripping enforcing header from: ${hostname ?? 'unknown'} (in auth.cspBypassDomains)`);
-    delete responseHeaders[key];
-  } else if (hostname) {
-    console.debug(`[CSP] Found enforcing CSP from: ${hostname} (add to auth.cspBypassDomains to bypass)`);
-  }
-}
-
 function stripCspForAuthPages(responseHeaders, url) {
   if (isTeamsDomain(url)) return;
 
-  const shouldBypassEnforcing = isCspBypassDomain(url);
-  const hostname = getHostname(url);
-
   for (const key of Object.keys(responseHeaders)) {
-    const lower = key.toLowerCase();
-    if (lower === 'content-security-policy-report-only') {
-      handleReportOnlyCsp(responseHeaders, key, hostname);
-    } else if (lower === 'content-security-policy') {
-      handleEnforcingCsp(responseHeaders, key, hostname, shouldBypassEnforcing);
+    if (key.toLowerCase() === 'content-security-policy-report-only') {
+      let hostname;
+      try {
+        hostname = new URL(url).hostname;
+      } catch {
+        hostname = 'unknown';
+      }
+      console.debug(`[CSP] Stripping report-only header from: ${hostname}`);
+      delete responseHeaders[key];
     }
   }
 }
