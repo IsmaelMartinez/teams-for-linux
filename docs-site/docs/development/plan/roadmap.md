@@ -1,7 +1,7 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-14
-**Current Version:** v2.7.11 (Electron 39.5.1)
+**Last Updated:** 2026-03-17
+**Current Version:** v2.7.12 (Electron 39.8.2)
 **Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs --- see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) and [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) for granular tracking.
@@ -112,6 +112,18 @@ The notification sound overhaul Phase 2 (custom sound configuration, [research c
 
 ## Implemented
 
+### Third-Party SSO CSP Bypass - In Progress
+
+**Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
+**Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
+
+Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. This was previously listed as "Not Feasible" since `contextIsolation` cannot be toggled per-phase without breaking tray icons and IPC.
+
+The fix takes a two-pronged approach: report-only CSP headers are automatically stripped for all non-Teams domains (safe, since they should never block), and a new `auth.cspBypassDomains` config option lets users list domains whose enforcing CSP headers should also be stripped. The Symantec VIP case works without any user configuration. Validated by the reporting user.
+
+**Config:** `auth.cspBypassDomains` (string array, default `[]`)
+**Docs:** [Configuration](../../configuration.md#csp-bypass-for-third-party-sso), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
+
 ### Speaking Indicator
 
 **Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
@@ -122,6 +134,18 @@ Real-time visual indicator during calls showing microphone state via `RTCPeerCon
 **Module:** `app/browser/tools/speakingIndicator.js`
 **Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
 **If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
+
+### Third-Party SSO CSP Bypass - Complete
+
+**Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
+**Status:** Implemented in [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330), landing in v2.7.13
+
+Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. This was previously listed as "Not Feasible" since `contextIsolation` cannot be toggled per-phase without breaking tray icons and IPC.
+
+The fix takes a two-pronged approach: report-only CSP headers are automatically stripped for all non-Teams domains (safe, since they should never block), and a new `auth.cspBypassDomains` config option lets users list domains whose enforcing CSP headers should also be stripped. The Symantec VIP case works without any user configuration. Validated by the reporting user.
+
+**Config:** `auth.cspBypassDomains` (string array, default `[]`)
+**Docs:** [Configuration](../../configuration.md#csp-bypass-for-third-party-sso), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
 
 ---
 
@@ -156,7 +180,6 @@ Shipped in v2.7.4 ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/iss
 | useSystemPicker | --- | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Reconsider when Electron improves Linux support |
 | Disable Chat Spellcheck | [#2304](https://github.com/IsmaelMartinez/teams-for-linux/issues/2304) | Not feasible | Spellcheck is controlled by Teams/Chromium, not the wrapper; existing `spellCheckerLanguages` config is the extent of our control |
 | Formatting View on Compose | [#2318](https://github.com/IsmaelMartinez/teams-for-linux/issues/2318) | Not feasible | Teams UI internals; no API or injection point to control compose view state |
-| Symantec SSO / contextIsolation | [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326) | Not feasible | `contextIsolation=false` is required for Teams web app internals; cannot be toggled per-phase |
 
 ---
 
