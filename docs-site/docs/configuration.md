@@ -180,6 +180,10 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
 | `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
+#### Third-Party SSO and CSP
+
+Report-only Content Security Policy headers are automatically stripped for all non-Teams domains. This is necessary because Electron's `contextIsolation: false` setting (required for Teams DOM access) erroneously enforces report-only CSP as blocking, which breaks third-party SSO providers like Symantec VIP. No configuration is needed.
+
 #### Certificates
 
 | Option | Type | Default | Description |

@@ -91,12 +91,10 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            'development/research/codebase-review-2026',
             'development/research/configuration-organization-research',
             'development/research/custom-notification-system-research',
             'development/research/electron-40-migration-research',
             'development/research/graph-api-integration-research',
-            'development/research/issue-pr-release-linking-research',
             'development/research/mqtt-extended-status-investigation',
             'development/research/mqtt-microphone-state-research',
             'development/research/notification-sound-overhaul-research',

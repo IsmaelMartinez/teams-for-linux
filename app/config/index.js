@@ -532,7 +532,7 @@ function extractYargConfig(configObject, appVersion) {
             user: "",
           },
         },
-        describe: "Authentication configuration (currently supports Intune SSO)",
+        describe: "Authentication configuration (Intune SSO)",
         type: "object",
       },
       wayland: {

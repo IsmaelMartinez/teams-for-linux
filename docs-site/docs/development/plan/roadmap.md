@@ -1,7 +1,7 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-14
-**Current Version:** v2.7.11 (Electron 39.5.1)
+**Last Updated:** 2026-03-17
+**Current Version:** v2.7.12 (Electron 39.8.2)
 **Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs --- see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) and [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) for granular tracking.
@@ -112,6 +112,15 @@ The notification sound overhaul Phase 2 (custom sound configuration, [research c
 
 ## Implemented
 
+### Third-Party SSO CSP Fix
+
+**Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
+**Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
+
+Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. Report-only CSP headers are now automatically stripped for all non-Teams domains (safe, since they should never block). No user configuration is needed. Validated by the reporting user.
+
+**Docs:** [Configuration](../../configuration.md#third-party-sso-and-csp), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
+
 ### Speaking Indicator
 
 **Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
@@ -156,7 +165,6 @@ Shipped in v2.7.4 ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/iss
 | useSystemPicker | --- | Rejected ([ADR-008](../adr/008-usesystempicker-electron-38.md)) | Reconsider when Electron improves Linux support |
 | Disable Chat Spellcheck | [#2304](https://github.com/IsmaelMartinez/teams-for-linux/issues/2304) | Not feasible | Spellcheck is controlled by Teams/Chromium, not the wrapper; existing `spellCheckerLanguages` config is the extent of our control |
 | Formatting View on Compose | [#2318](https://github.com/IsmaelMartinez/teams-for-linux/issues/2318) | Not feasible | Teams UI internals; no API or injection point to control compose view state |
-| Symantec SSO / contextIsolation | [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326) | Not feasible | `contextIsolation=false` is required for Teams web app internals; cannot be toggled per-phase |
 
 ---
 

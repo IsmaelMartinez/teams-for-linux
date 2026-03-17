@@ -1,0 +1,1 @@
+Fix: Strip report-only CSP for non-Teams domains and add auth.cspBypassDomains for SSO login - by @IsmaelMartinez (#2330)
