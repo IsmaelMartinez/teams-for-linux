@@ -22,7 +22,6 @@ const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
-const WebAuthn = require("./webauthn");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -445,11 +444,6 @@ async function handleAppReady() {
     const customBackground = new CustomBackground(app, config);
     customBackground.initialize();
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
-
-    // Initialize WebAuthn/FIDO2 hardware security key support (Linux only)
-    if (process.platform === "linux" && config.auth?.webauthn?.enabled) {
-      await WebAuthn.initialize();
-    }
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);
