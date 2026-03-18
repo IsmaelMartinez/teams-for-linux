@@ -408,6 +408,19 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Proxy Server with format address:port",
         type: "string",
       },
+      webRTCIPHandlingPolicy: {
+        describe:
+          "WebRTC IP handling policy to control which network interfaces are used for ICE candidates. " +
+          "Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route " +
+          "(e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing.",
+        type: "string",
+        choices: [
+          "default",
+          "default_public_and_private_interfaces",
+          "default_public_interface_only",
+          "disable_non_proxied_udp",
+        ],
+      },
       screenLockInhibitionMethod: {
         default: "Electron",
         deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
