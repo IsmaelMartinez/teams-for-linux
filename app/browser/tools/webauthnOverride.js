@@ -98,7 +98,10 @@ function bufferToBase64url(buffer) {
  * Convert base64url string to ArrayBuffer.
  */
 function base64urlToBuffer(base64url) {
-  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  while (base64.length % 4 !== 0) {
+    base64 += "=";
+  }
   const binStr = atob(base64);
   const bytes = Uint8Array.from(binStr, (c) => c.charCodeAt(0));
   return bytes.buffer;
