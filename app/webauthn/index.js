@@ -62,7 +62,13 @@ async function initialize() {
 
   // Handle credential creation requests from renderer
   ipcMain.handle("webauthn:create", async (event, options) => {
-    const origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
+    let origin;
+    try {
+      origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
+    } catch {
+      console.warn("[WEBAUTHN] Blocked create request: could not determine origin");
+      return { success: false, error: "SecurityError: could not determine origin" };
+    }
 
     if (!isAllowedOrigin(origin)) {
       console.warn("[WEBAUTHN] Blocked create request from unexpected origin");
@@ -83,7 +89,13 @@ async function initialize() {
 
   // Handle assertion requests from renderer
   ipcMain.handle("webauthn:get", async (event, options) => {
-    const origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
+    let origin;
+    try {
+      origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
+    } catch {
+      console.warn("[WEBAUTHN] Blocked get request: could not determine origin");
+      return { success: false, error: "SecurityError: could not determine origin" };
+    }
 
     if (!isAllowedOrigin(origin)) {
       console.warn("[WEBAUTHN] Blocked get request from unexpected origin");
