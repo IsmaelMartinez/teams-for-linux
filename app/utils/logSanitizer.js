@@ -144,8 +144,11 @@ function sanitizeError(obj, seen) {
 	return sanitizedError;
 }
 
-const SENSITIVE_KEYS = [
+const LOWER_CASE_SENSITIVE_KEYS = [
 	'password',
+    'token',
+    'secret',
+    'key',
 ];
 
 /**
@@ -178,8 +181,8 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 	for (const [key, value] of Object.entries(obj)) {
 		const sanitizedKey = sanitize(key);
 		const lowerCaseKey = key.toLowerCase();
-		const isSensitive = SENSITIVE_KEYS.some(k =>
-			lowerCaseKey.includes(k.toLowerCase())
+		const isSensitive = LOWER_CASE_SENSITIVE_KEYS.some(k =>
+			lowerCaseKey.includes(k)
 		);
 		if (isSensitive) {
 			result[sanitizedKey] = '[REDACTED]';

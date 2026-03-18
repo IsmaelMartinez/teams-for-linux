@@ -205,7 +205,7 @@ describe('Teams for Linux scenarios', () => {
 	]);
 });
 
-describe('sanitizeObject password key handling', () => {
+describe('sanitizeObject sensitive key handling', () => {
 	test('redacts password key value', () => {
 		const result = sanitizeObject({ username: 'admin', password: 'secret123' });
 		assert.strictEqual(result.password, '[REDACTED]');
@@ -215,6 +215,32 @@ describe('sanitizeObject password key handling', () => {
 		const result = sanitizeObject({ PASSWORD: 'secret', Password: 'secret2' });
 		assert.strictEqual(result.PASSWORD, '[REDACTED]');
 		assert.strictEqual(result.Password, '[REDACTED]');
+	});
+	test('redacts token key value', () => {
+		const result = sanitizeObject({ access_token: 'eyJhbGciOiJIUzI1NiJ9', refresh_token: 'rt_abc123' });
+		assert.strictEqual(result.access_token, '[REDACTED]');
+		assert.strictEqual(result.refresh_token, '[REDACTED]');
+	});
+	test('redacts token key case-insensitively', () => {
+		const result = sanitizeObject({ TOKEN: 'secret', Token: 'secret2' });
+		assert.strictEqual(result.TOKEN, '[REDACTED]');
+		assert.strictEqual(result.Token, '[REDACTED]');
+	});
+	test('redacts secret key value', () => {
+		const result = sanitizeObject({ client_secret: 'super_secret_value', secret: 'mysecret' });
+		assert.strictEqual(result.client_secret, '[REDACTED]');
+		assert.strictEqual(result.secret, '[REDACTED]');
+	});
+	test('redacts secret key case-insensitively', () => {
+		const result = sanitizeObject({ SECRET: 'value', Secret: 'value2' });
+		assert.strictEqual(result.SECRET, '[REDACTED]');
+		assert.strictEqual(result.Secret, '[REDACTED]');
+	});
+	test('redacts key-containing keys (api_key, secret_key, etc.)', () => {
+		const result = sanitizeObject({ api_key: 'sk_live_abc', secret_key: 'sk_secret_xyz', public_key: 'pk_public' });
+		assert.strictEqual(result.api_key, '[REDACTED]');
+		assert.strictEqual(result.secret_key, '[REDACTED]');
+		assert.strictEqual(result.public_key, '[REDACTED]');
 	});
 	test('redacts nested password key', () => {
 		const result = sanitizeObject({ user: { name: 'admin', password: 'supersecret' } });
@@ -227,9 +253,15 @@ describe('sanitizeObject password key handling', () => {
 		assert.strictEqual(result[1].password, '[REDACTED]');
 		assert.strictEqual(result[0].type, 'user');
 	});
-	test('preserves other keys unchanged', () => {
-		const result = sanitizeObject({ email: 'user@example.com', token: 'abc123', id: 123 });
+	test('redacts token in array of objects', () => {
+		const result = sanitizeObject([{ name: 'user1', access_token: 'token1' }, { name: 'user2', token: 'token2' }]);
+		assert.strictEqual(result[0].access_token, '[REDACTED]');
+		assert.strictEqual(result[1].token, '[REDACTED]');
+	});
+	test('preserves non-sensitive keys unchanged', () => {
+		const result = sanitizeObject({ email: 'user@example.com', name: 'John', id: 123 });
 		assert.strictEqual(result.email, '[EMAIL]');
+		assert.strictEqual(result.name, 'John');
 		assert.strictEqual(result.id, 123);
 	});
 	test('handles password with empty string value', () => {
@@ -247,6 +279,20 @@ describe('sanitizeObject password key handling', () => {
 		assert.strictEqual(result.password, '[REDACTED]');
 		assert.strictEqual(result.name, 'test');
 		assert.strictEqual(result.self, '[Circular]');
+	});
+	test('handles mixed sensitive keys', () => {
+		const result = sanitizeObject({
+			username: 'admin',
+			password: 'pass123',
+			access_token: 'token_abc',
+			client_secret: 'secret_xyz',
+			api_key: 'key_123'
+		});
+		assert.strictEqual(result.username, 'admin');
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.access_token, '[REDACTED]');
+		assert.strictEqual(result.client_secret, '[REDACTED]');
+		assert.strictEqual(result.api_key, '[REDACTED]');
 	});
 });
 
