@@ -229,22 +229,16 @@ The plan expected stderr to contain "Enter PIN for" when a PIN is required. The 
 
 ### Impact on implementation
 
-The core approach (monkey-patch navigator.credentials, route via IPC to fido2-tools CLI) is validated — credential creation succeeded with a real YubiKey once the input encoding was corrected.
+The core approach (monkey-patch navigator.credentials, route via IPC to fido2-tools CLI) is validated — credential creation succeeded with a real YubiKey once the input encoding was corrected. However, the `fido2Backend.js` code in this plan needs substantial fixes before implementation:
 
-**Plan code updated (2026-03-18):** The code blocks in Chunks 3-5 below now incorporate all validated fixes. Bugs 1-4 are resolved in the plan code. Bug 5 (PIN prompt detection) and the assertion echo-offset heuristic remain unvalidated and are marked defensively in the code.
-
-Summary of fixes applied to plan code:
-
-1. ~~All input encoding must change from hex to base64~~ Fixed in `createCredential()` and `getAssertion()`
-2. ~~Device path parsing must strip the trailing colon~~ Fixed regex to `/^(\/dev\/\S+?):/`
-3. ~~Output parsing must account for echoed input lines (offset +2)~~ Fixed with `lines.slice(2)` in `createCredential()`
-4. ~~Field order in fido2-cred output differs from plan (credId before signature/x5c)~~ Fixed: fmt, authData, credId, signature, x509
-5. fido2-assert echo detection uses a defensive heuristic (check if `lines[1]` matches rpId) — needs validation
+1. All input encoding must change from hex to base64
+2. Device path parsing must strip the trailing colon
+3. Output parsing must account for echoed input lines (offset +2)
+4. Field order in fido2-cred output differs from plan (credId before signature/x5c)
+5. fido2-assert needs re-testing with corrected input encoding
 6. PIN prompt detection is unvalidated and may need a different approach
-7. `bufferToBase64url` now processes in chunks to avoid stack overflow on large buffers
-8. `discoverDevices` now logs errors instead of swallowing them silently
 
-**Remaining validation needed:** A second test run with corrected base64 encoding for `fido2-assert` (assertion step), and PIN behaviour with a key that has a PIN set. rlavriv's updated script is available in #2332.
+rlavriv has shared an updated validation script with these fixes applied. The next step is to update the spike script with rlavriv's corrections and get a second validation run covering the assertion step and PIN behaviour.
 
 ---
 
@@ -541,19 +535,16 @@ async function isAvailable() {
 async function discoverDevices() {
   try {
     const { stdout } = await execFileAsync("fido2-token", ["-L"]);
-    // fido2-token -L output: "/dev/hidraw11: vendor=0x1050, product=0x0407 (...)"
-    // The device path has a trailing colon that must be stripped (Bug 2, validated by rlavriv).
     return stdout
       .trim()
       .split("\n")
       .filter((line) => line.length > 0)
       .map((line) => {
-        const match = line.match(/^(\/dev\/\S+?):/);
+        const match = line.match(/^(\/dev\/\S+)/);
         return match ? match[1] : null;
       })
       .filter(Boolean);
-  } catch (err) {
-    console.error("[WEBAUTHN] Failed to discover FIDO2 devices:", err.message);
+  } catch {
     return [];
   }
 }
@@ -584,12 +575,12 @@ async function createCredential(options) {
   const clientDataJSON = generateClientDataJSON("webauthn.create", challengeBytes, options.origin);
   const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
 
-  // fido2-tools expect standard base64, not hex (Bug 1, validated by rlavriv).
+  const userIdHex = Buffer.from(base64urlDecode(options.userId)).toString("hex");
   const input = [
-    clientDataHash.toString("base64"),
+    clientDataHash.toString("hex"),
     sanitizeForFido2(options.rpId),
     sanitizeForFido2(options.userName),
-    base64urlDecode(options.userId).toString("base64"),
+    userIdHex,
   ].join("\n") + "\n";
 
   const args = ["-M", "-h"];
@@ -615,30 +606,24 @@ async function createCredential(options) {
   );
 
   const lines = stdout.trim().split("\n");
-  // fido2-cred v1.16.0+ echoes back the first two input lines (clientDataHash + rpId)
-  // before the credential data (Bug 3, validated by rlavriv on Arch Linux).
-  // Skip the echoed input to reach the actual credential output.
-  const dataLines = lines.slice(2);
-  if (dataLines.length < 4) {
+  if (lines.length < 4) {
     throw new Error("NotAllowedError: Unexpected fido2-cred output format");
   }
 
-  // Validated field order (fido2-tools v1.16.0): fmt, authData, credId, signature, x509
-  const fmt = dataLines[0].trim();
-  const authData = Buffer.from(dataLines[1], "base64");
-  const credId = Buffer.from(dataLines[2], "base64");
-  const signature = Buffer.from(dataLines[3], "base64");
-  const x5c = dataLines.length >= 5
-    ? Buffer.from(dataLines[4], "base64")
-    : null;
+  const authData = Buffer.from(lines[1], "base64");
+  const credId = lines.length >= 5
+    ? Buffer.from(lines[4], "base64")
+    : authData.subarray(55, 55 + authData[53] * 256 + authData[54]);
 
   // Build a proper CBOR-encoded attestation object.
+  // fido2-cred outputs: format, authData, x509 cert, signature (each base64 on separate lines).
   // The attestation object is a CBOR map: { fmt, attStmt, authData }.
+  const fmt = lines[0].trim();
   const attStmt = fmt === "none"
     ? {}
     : {
-        ...(x5c ? { x5c: [x5c] } : {}),
-        sig: signature,
+        x5c: [Buffer.from(lines[2], "base64")],
+        sig: Buffer.from(lines[3], "base64"),
       };
   const attestationObject = cborEncode({ fmt, attStmt, authData });
 
@@ -678,12 +663,11 @@ async function getAssertion(options) {
   const clientDataJSON = generateClientDataJSON("webauthn.get", challengeBytes, options.origin);
   const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
 
-  // fido2-tools expect standard base64, not hex (Bug 4, same as Bug 1).
-  const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];
+  const inputLines = [clientDataHash.toString("hex"), sanitizeForFido2(options.rpId)];
 
   if (options.allowCredentials && options.allowCredentials.length > 0) {
     for (const cred of options.allowCredentials) {
-      inputLines.push(base64urlDecode(cred.id).toString("base64"));
+      inputLines.push(Buffer.from(base64urlDecode(cred.id)).toString("hex"));
     }
   }
 
@@ -708,29 +692,22 @@ async function getAssertion(options) {
   );
 
   const lines = stdout.trim().split("\n");
-  // fido2-assert may echo back input lines like fido2-cred does (Bug 3 pattern).
-  // The assertion output contains authData and signature as base64 — detect echoed
-  // input by checking if the first line matches our rpId (second input line).
-  // If echoed, skip the input lines. This is defensive — needs further validation
-  // with more fido2-tools versions (Bug 4/5 partially unvalidated).
-  const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
-  const dataLines = lines.slice(echoOffset);
-  if (dataLines.length < 2) {
+  if (lines.length < 2) {
     throw new Error("NotAllowedError: Unexpected fido2-assert output format");
   }
 
-  const authData = Buffer.from(dataLines[0], "base64");
-  const signature = Buffer.from(dataLines[1], "base64");
+  const authData = Buffer.from(lines[0], "base64");
+  const signature = Buffer.from(lines[1], "base64");
   let credentialId;
-  if (dataLines.length >= 3) {
-    credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
+  if (lines.length >= 3) {
+    credentialId = base64urlEncode(Buffer.from(lines[2], "base64"));
   } else if (options.allowCredentials && options.allowCredentials.length === 1) {
     credentialId = options.allowCredentials[0].id;
   } else {
     throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
   }
-  const userHandle = dataLines.length >= 4
-    ? base64urlEncode(Buffer.from(dataLines[3], "base64"))
+  const userHandle = lines.length >= 4
+    ? base64urlEncode(Buffer.from(lines[3], "base64"))
     : null;
 
   return {
@@ -1148,13 +1125,7 @@ function init(config, ipcRenderer) {
 // ArrayBuffer) while the main process uses Node.js Buffer. Keep both in sync.
 function bufferToBase64url(buffer) {
   const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
-  // Process in chunks to avoid "Maximum call stack size exceeded" with large buffers.
-  const CHUNK_SIZE = 8192;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK_SIZE));
-  }
-  return btoa(binary)
+  return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");

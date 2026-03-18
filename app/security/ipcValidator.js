@@ -89,13 +89,7 @@ const allowedChannels = new Set([
 
   // Quick Chat modal
   'quick-chat:show',
-  'quick-chat:hide',
-
-  // WebAuthn / FIDO2 security key support
-  'webauthn:create',
-  'webauthn:get',
-  'webauthn:pin-submit',
-  'webauthn:pin-cancel',
+  'quick-chat:hide'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
