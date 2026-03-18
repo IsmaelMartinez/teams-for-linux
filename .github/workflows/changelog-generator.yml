@@ -274,7 +274,12 @@ jobs:
               core.setOutput('exists', 'true');
               console.log('Changelog already exists on main, skipping');
             } catch (e) {
-              core.setOutput('exists', 'false');
+              if (e.status === 404) {
+                core.setOutput('exists', 'false');
+                console.log('Changelog not found on main, will create');
+              } else {
+                throw new Error(`Failed to check changelog on main: ${e.status || 'unknown'} ${e.message}`);
+              }
             }
 
       - name: Create changelog file on main
@@ -291,11 +296,13 @@ jobs:
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber
+              issue_number: prNumber,
+              per_page: 100
             });
 
-            const changelogComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Changelog entry generated')
+            const changelogComment = [...comments].reverse().find(c =>
+              c.user?.login === 'github-actions[bot]' &&
+              c.body?.includes('Changelog entry generated')
             );
 
             if (changelogComment) {
@@ -349,6 +356,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               path: `.changelog/pr-${prNumber}.txt`,
+              branch: 'main',
               message: `chore: add changelog entry for PR #${prNumber}`,
               content: contentBase64,
               committer: {
