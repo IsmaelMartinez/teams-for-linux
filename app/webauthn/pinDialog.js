@@ -62,7 +62,9 @@ function requestPin(parentWindow) {
       ipcMain.removeListener("webauthn:pin-cancel", onCancel);
     };
 
+    // Receive PIN from the PIN dialog when user submits the form
     ipcMain.on("webauthn:pin-submit", onSubmit);
+    // Receive cancellation from the PIN dialog when user clicks Cancel or closes the window
     ipcMain.on("webauthn:pin-cancel", onCancel);
 
     win.on("closed", () => {
