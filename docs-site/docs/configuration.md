@@ -139,6 +139,41 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appIdleTimeoutCheckInterval` | `number` | `10` | Poll interval in seconds to check if idle timeout is reached |
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
 
+#### Force Idle State (Wayland/Hyprland Workaround)
+
+For systems where Electron's `powerMonitor` doesn't work correctly (e.g., Wayland/Hyprland), you can force the idle state using a state file:
+
+```json
+{
+  "idleDetection": {
+    "forceState": false,
+    "stateFile": "/tmp/teams-for-linux-idle-state-$USER"
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `idleDetection.forceState` | `boolean` | `false` | Enable state file-based idle state control |
+| `idleDetection.stateFile` | `string` | `/tmp/teams-for-linux-idle-state-$USER` | Path to state file (supports `$USER` expansion) |
+
+**Usage:**
+
+When `idleDetection.forceState` is `true`, the app reads the state file to determine idle state:
+
+```bash
+# Force idle state
+echo inactive > /tmp/teams-for-linux-idle-state-$USER
+
+# Force active state
+echo active > /tmp/teams-for-linux-idle-state-$USER
+
+# Remove file to use automatic detection
+rm /tmp/teams-for-linux-idle-state-$USER
+```
+
+The state file is automatically cleaned up when the app exits.
+
 ### Authentication & SSO
 
 | Option | Type | Default | Description |
