@@ -256,6 +256,7 @@ async function createCredential(options) {
   const attStmt = fmt === "none"
     ? {}
     : {
+      ...(fmt === "packed" ? { alg: chosenAlg } : {}),
       ...(x5c ? { x5c: [x5c] } : {}),
       sig: signature,
     };

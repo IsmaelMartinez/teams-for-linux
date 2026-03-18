@@ -12,17 +12,26 @@
 
 function init(config, ipcRenderer) {
   if (process.platform !== "linux") {
+    console.debug("[WEBAUTHN] Skipping: not Linux");
     return;
   }
 
-  if (!config?.auth?.webauthn?.enabled || !ipcRenderer) {
+  if (!config?.auth?.webauthn?.enabled) {
+    console.debug("[WEBAUTHN] Skipping: auth.webauthn.enabled is not true");
+    return;
+  }
+
+  if (!ipcRenderer) {
+    console.warn("[WEBAUTHN] Skipping: ipcRenderer not available");
     return;
   }
 
   if (!navigator.credentials?.create || !navigator.credentials?.get) {
-    console.warn("[WEBAUTHN] navigator.credentials not available");
+    console.warn("[WEBAUTHN] Skipping: navigator.credentials.create/get not available");
     return;
   }
+
+  console.info("[WEBAUTHN] Patching navigator.credentials (preload, main frame)");
 
   const originalCreate = navigator.credentials.create.bind(navigator.credentials);
   const originalGet = navigator.credentials.get.bind(navigator.credentials);
@@ -32,18 +41,21 @@ function init(config, ipcRenderer) {
       return originalCreate(options);
     }
 
-    console.debug("[WEBAUTHN] Intercepting credentials.create()");
+    console.info("[WEBAUTHN] Intercepting credentials.create() from", window.location.origin);
 
     try {
       const serialized = serializeCreateOptions(options.publicKey);
       const result = await ipcRenderer.invoke("webauthn:create", serialized);
 
       if (!result.success) {
+        console.error("[WEBAUTHN] credentials.create() failed:", result.error);
         throw mapError(result.error);
       }
 
+      console.info("[WEBAUTHN] credentials.create() succeeded");
       return reconstructCreateResponse(result.data);
     } catch (err) {
+      console.error("[WEBAUTHN] credentials.create() error:", err.message);
       if (err instanceof DOMException) throw err;
       throw new DOMException(err.message, "NotAllowedError");
     }
@@ -54,24 +66,47 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
-    console.debug("[WEBAUTHN] Intercepting credentials.get()");
+    console.info("[WEBAUTHN] Intercepting credentials.get() from", window.location.origin);
 
     try {
       const serialized = serializeGetOptions(options.publicKey);
       const result = await ipcRenderer.invoke("webauthn:get", serialized);
 
       if (!result.success) {
+        console.error("[WEBAUTHN] credentials.get() failed:", result.error);
         throw mapError(result.error);
       }
 
+      console.info("[WEBAUTHN] credentials.get() succeeded");
       return reconstructGetResponse(result.data);
     } catch (err) {
+      console.error("[WEBAUTHN] credentials.get() error:", err.message);
       if (err instanceof DOMException) throw err;
       throw new DOMException(err.message, "NotAllowedError");
     }
   };
 
+  // Layer 2 relay: listen for postMessage from subframes that were injected
+  // via executeJavaScript in the main process. This bridges the gap between
+  // frames (no ipcRenderer) and the main process (needs IPC).
+  window.addEventListener("message", async (event) => {
+    if (event.data?.type !== "webauthn-request") return;
+    const { id, channel, data } = event.data;
+    console.info("[WEBAUTHN] Relaying subframe request:", channel);
+    try {
+      const result = await ipcRenderer.invoke(channel, data);
+      if (result.success) {
+        event.source.postMessage({ type: "webauthn-response", id, result: result.data }, "*");
+      } else {
+        event.source.postMessage({ type: "webauthn-response", id, error: result.error }, "*");
+      }
+    } catch (err) {
+      event.source.postMessage({ type: "webauthn-response", id, error: err.message }, "*");
+    }
+  });
+
   console.info("[WEBAUTHN] navigator.credentials patched for hardware security key support");
+  console.info("[WEBAUTHN] postMessage relay registered for subframe support");
 }
 
 /**
