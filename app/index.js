@@ -448,7 +448,7 @@ async function handleAppReady() {
 
     // Initialize WebAuthn/FIDO2 hardware security key support (Linux only)
     if (process.platform === "linux" && config.auth?.webauthn?.enabled) {
-      await WebAuthn.initialize();
+      await WebAuthn.initialize(mainAppWindow.getWindow());
     }
 
     initializeGraphApiClient();
