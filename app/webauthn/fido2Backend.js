@@ -205,8 +205,11 @@ async function createCredential(options) {
   }
 
   // Map RP's preferred algorithm to fido2-cred type argument.
-  let chosenAlg = -7; // default ES256
+  // Per WebAuthn Level 2, if pubKeyCredParams is provided and no algorithm is
+  // supported, the operation must fail with NotSupportedError.
+  let chosenAlg = -7; // default ES256 when RP doesn't specify
   if (options.pubKeyCredParams && options.pubKeyCredParams.length > 0) {
+    chosenAlg = null;
     for (const param of options.pubKeyCredParams) {
       const fido2Type = coseAlgToFido2Type(param.alg);
       if (fido2Type) {
@@ -214,6 +217,9 @@ async function createCredential(options) {
         chosenAlg = param.alg;
         break;
       }
+    }
+    if (chosenAlg === null) {
+      throw new Error("NotSupportedError: No supported public-key algorithm in pubKeyCredParams");
     }
   }
 
