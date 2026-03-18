@@ -187,10 +187,11 @@ async function createCredential(options) {
   const lines = stdout.trim().split("\n");
   // fido2-cred v1.16.0+ echoes back the first two input lines (clientDataHash + rpId)
   // before the credential data (validated by rlavriv on Arch Linux).
-  // Skip the echoed input to reach the actual credential output.
-  const dataLines = lines.slice(2);
+  // Detect echoed input by checking if the second line matches rpId.
+  const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
+  const dataLines = lines.slice(echoOffset);
   if (dataLines.length < 4) {
-    throw new Error("NotAllowedError: Unexpected fido2-cred output format");
+    throw new Error(`NotAllowedError: Unexpected fido2-cred output format. Expected at least 4 data lines, got ${dataLines.length}.`);
   }
 
   // Validated field order (fido2-tools v1.16.0): fmt, authData, credId, signature, x509
@@ -284,7 +285,7 @@ async function getAssertion(options) {
   const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
   const dataLines = lines.slice(echoOffset);
   if (dataLines.length < 2) {
-    throw new Error("NotAllowedError: Unexpected fido2-assert output format");
+    throw new Error(`NotAllowedError: Unexpected fido2-assert output format. Expected at least 2 lines, got ${dataLines.length}.`);
   }
 
   const authData = Buffer.from(dataLines[0], "base64");
