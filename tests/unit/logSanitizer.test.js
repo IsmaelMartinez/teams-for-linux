@@ -217,7 +217,7 @@ describe('sanitizeObject sensitive key handling', () => {
 		assert.strictEqual(result.Password, '[REDACTED]');
 	});
 	test('redacts token key value', () => {
-		const result = sanitizeObject({ access_token: 'eyJhbGciOiJIUzI1NiJ9', refresh_token: 'rt_abc123' });
+		const result = sanitizeObject({ access_token: 'access_token_fixture', refresh_token: 'refresh_token_fixture' });
 		assert.strictEqual(result.access_token, '[REDACTED]');
 		assert.strictEqual(result.refresh_token, '[REDACTED]');
 	});
@@ -237,7 +237,7 @@ describe('sanitizeObject sensitive key handling', () => {
 		assert.strictEqual(result.Secret, '[REDACTED]');
 	});
 	test('redacts key-containing keys (api_key, secret_key, etc.)', () => {
-		const result = sanitizeObject({ api_key: 'sk_live_abc', secret_key: 'sk_secret_xyz', public_key: 'pk_public' });
+		const result = sanitizeObject({ api_key: 'api_key_fixture', secret_key: 'secret_key_fixture', public_key: 'public_key_fixture' });
 		assert.strictEqual(result.api_key, '[REDACTED]');
 		assert.strictEqual(result.secret_key, '[REDACTED]');
 		assert.strictEqual(result.public_key, '[REDACTED]');
