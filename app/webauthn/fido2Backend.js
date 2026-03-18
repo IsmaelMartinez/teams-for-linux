@@ -129,6 +129,43 @@ async function discoverDevices() {
 }
 
 /**
+ * Resolve the first connected FIDO2 device, or throw.
+ * v1 limitation: only the first device is used. Multi-device selection is a future enhancement.
+ * @returns {Promise<string>} Device path
+ */
+async function resolveDevice() {
+  const devices = await discoverDevices();
+  if (devices.length === 0) {
+    throw new Error("NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.");
+  }
+  return devices[0];
+}
+
+/**
+ * Map a COSE algorithm number to fido2-cred type string.
+ * @param {number} alg - COSE algorithm identifier
+ * @returns {string|null} fido2-tools type string or null if unsupported
+ */
+function coseAlgToFido2Type(alg) {
+  const map = { [-7]: "es256", [-35]: "es384", [-257]: "rs256", [-8]: "eddsa" };
+  return map[alg] || null;
+}
+
+/**
+ * Prepare clientDataJSON and its SHA-256 hash from challenge and origin.
+ * @param {string} type - "webauthn.create" or "webauthn.get"
+ * @param {string} challenge - base64url-encoded challenge
+ * @param {string} origin - Request origin
+ * @returns {{ clientDataJSON: Buffer, clientDataHash: Buffer }}
+ */
+function prepareClientData(type, challenge, origin) {
+  const challengeBytes = base64urlDecode(challenge);
+  const clientDataJSON = generateClientDataJSON(type, challengeBytes, origin);
+  const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
+  return { clientDataJSON, clientDataHash };
+}
+
+/**
  * Create a FIDO2 credential using a hardware security key.
  *
  * @param {object} options - WebAuthn create options (serialized from renderer)
@@ -140,19 +177,13 @@ async function discoverDevices() {
  * @param {string} options.origin - Request origin
  * @param {number} [options.timeout] - Timeout in seconds
  * @param {object} [options.authenticatorSelection] - Authenticator requirements
+ * @param {Array} [options.pubKeyCredParams] - Allowed algorithms
  * @param {Function|null} [options.pinCallback] - Async function that returns PIN string
  * @returns {Promise<object>} Credential creation result
  */
 async function createCredential(options) {
-  const devices = await discoverDevices();
-  if (devices.length === 0) {
-    throw new Error("NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.");
-  }
-
-  const device = devices[0];
-  const challengeBytes = base64urlDecode(options.challenge);
-  const clientDataJSON = generateClientDataJSON("webauthn.create", challengeBytes, options.origin);
-  const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
+  const device = await resolveDevice();
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
 
   // fido2-tools expect standard base64, not hex (validated by rlavriv).
   const input = [
@@ -168,20 +199,31 @@ async function createCredential(options) {
     args.push("-r");
   }
 
-  if (
-    options.authenticatorSelection?.userVerification === "required" ||
-    options.authenticatorSelection?.userVerification === "preferred"
-  ) {
+  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
+  if (options.authenticatorSelection?.userVerification === "required") {
     args.push("-v");
+  }
+
+  // Map RP's preferred algorithm to fido2-cred type argument.
+  let chosenAlg = -7; // default ES256
+  if (options.pubKeyCredParams && options.pubKeyCredParams.length > 0) {
+    for (const param of options.pubKeyCredParams) {
+      const fido2Type = coseAlgToFido2Type(param.alg);
+      if (fido2Type) {
+        args.push("-t", fido2Type);
+        chosenAlg = param.alg;
+        break;
+      }
+    }
   }
 
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
-  const needsPin = args.includes("-v");
+  // Always pass PIN callback — spawnFido2 only uses it when prompted.
   const { stdout } = await spawnFido2(
     "fido2-cred", args, input, timeoutMs,
-    needsPin ? options.pinCallback : null,
+    options.pinCallback || null,
   );
 
   const lines = stdout.trim().split("\n");
@@ -221,7 +263,7 @@ async function createCredential(options) {
     authenticatorData: base64urlEncode(authData),
     type: "public-key",
     transports: ["usb"],
-    publicKeyAlgorithm: -7,
+    publicKeyAlgorithm: chosenAlg,
   };
 }
 
@@ -239,15 +281,8 @@ async function createCredential(options) {
  * @returns {Promise<object>} Assertion result
  */
 async function getAssertion(options) {
-  const devices = await discoverDevices();
-  if (devices.length === 0) {
-    throw new Error("NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.");
-  }
-
-  const device = devices[0];
-  const challengeBytes = base64urlDecode(options.challenge);
-  const clientDataJSON = generateClientDataJSON("webauthn.get", challengeBytes, options.origin);
-  const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
+  const device = await resolveDevice();
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin);
 
   // fido2-tools expect standard base64, not hex (same as createCredential).
   const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];
@@ -262,20 +297,18 @@ async function getAssertion(options) {
 
   const args = ["-G", "-h"];
 
-  if (
-    options.userVerification === "required" ||
-    options.userVerification === "preferred"
-  ) {
+  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
+  if (options.userVerification === "required") {
     args.push("-v");
   }
 
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
-  const needsPin = args.includes("-v");
+  // Always pass PIN callback — spawnFido2 only uses it when prompted.
   const { stdout } = await spawnFido2(
     "fido2-assert", args, input, timeoutMs,
-    needsPin ? options.pinCallback : null,
+    options.pinCallback || null,
   );
 
   const lines = stdout.trim().split("\n");
