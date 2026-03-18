@@ -15,11 +15,11 @@ function init(config, ipcRenderer) {
     return;
   }
 
-  if (!config.auth?.webauthn?.enabled) {
+  if (!config?.auth?.webauthn?.enabled || !ipcRenderer) {
     return;
   }
 
-  if (!navigator.credentials) {
+  if (!navigator.credentials?.create || !navigator.credentials?.get) {
     console.warn("[WEBAUTHN] navigator.credentials not available");
     return;
   }
