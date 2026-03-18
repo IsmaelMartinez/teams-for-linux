@@ -196,6 +196,16 @@ Report-only Content Security Policy headers are automatically stripped for all n
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `webRTCIPHandlingPolicy` | `string` | `null` | Controls which network interfaces WebRTC uses for ICE candidate gathering. Choices: `default`, `default_public_and_private_interfaces`, `default_public_interface_only`, `disable_non_proxied_udp` |
+
+> [!NOTE]
+> **`webRTCIPHandlingPolicy`** is useful on systems with multiple network interfaces (e.g. WiFi for internet and a secondary Ethernet adapter with no internet gateway). Without this option, WebRTC advertises all interfaces as ICE candidates, which can cause asymmetric STUN routing and drop calls to **OnHold**. Setting it to `default_public_interface_only` restricts ICE gathering to the interface holding the default route only.
+>
+> ```json
+> {
+>   "webRTCIPHandlingPolicy": "default_public_interface_only"
+> }
+> ```
 
 ### Screen Sharing
 
