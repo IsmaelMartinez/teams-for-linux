@@ -11,7 +11,9 @@ class IdleMonitor {
   constructor(config, getUserStatus) {
     this.#config = config;
     this.#getUserStatus = getUserStatus;
-    this.#stateFilePath = `/tmp/teams-for-linux-idle-state-${process.env.USER}`;
+    // Expand $USER in the state file path
+    const stateFilePath = config.idleDetection?.stateFile || "/tmp/teams-for-linux-idle-state-$USER";
+    this.#stateFilePath = stateFilePath.replace('$USER', process.env.USER);
   }
 
   initialize() {
@@ -31,7 +33,7 @@ class IdleMonitor {
   }
 
   #cleanupStateFile() {
-    if (this.#config.forceIdleState) {
+    if (this.#config.idleDetection?.forceState) {
       try {
         if (fs.existsSync(this.#stateFilePath)) {
           fs.unlinkSync(this.#stateFilePath);
@@ -66,8 +68,8 @@ class IdleMonitor {
 
   async #handleGetSystemIdleState() {
 
-    // If forceIdleState is enabled, check state file for override
-    if (this.#config.forceIdleState) {
+    // If forceState is enabled, check state file for override
+    if (this.#config.idleDetection?.forceState) {
       const stateFileOverride = this.#getStateFileOverride();
       
       // Log only on state transitions
@@ -105,7 +107,7 @@ class IdleMonitor {
         };
       }
       
-      // If forceIdleState is enabled but no state file exists, fall through to powerMonitor
+      // If forceState is enabled but no state file exists, fall through to powerMonitor
     }
 
     const systemIdleState = powerMonitor.getSystemIdleState(
