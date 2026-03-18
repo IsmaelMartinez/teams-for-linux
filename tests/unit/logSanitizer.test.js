@@ -217,33 +217,33 @@ describe('sanitizeObject sensitive key handling', () => {
 		assert.strictEqual(result.Password, '[REDACTED]');
 	});
 	test('redacts token key value', () => {
-		const result = sanitizeObject({ access_token: 'access_token_fixture', refresh_token: 'refresh_token_fixture' });
+		const result = sanitizeObject({ access_token: 'fake-access-token-123', refresh_token: 'fake-refresh-token-456' });
 		assert.strictEqual(result.access_token, '[REDACTED]');
 		assert.strictEqual(result.refresh_token, '[REDACTED]');
 	});
 	test('redacts token key case-insensitively', () => {
-		const result = sanitizeObject({ TOKEN: 'secret', Token: 'secret2' });
+		const result = sanitizeObject({ TOKEN: 'fake-token-abc', Token: 'fake-token-def' });
 		assert.strictEqual(result.TOKEN, '[REDACTED]');
 		assert.strictEqual(result.Token, '[REDACTED]');
 	});
 	test('redacts secret key value', () => {
-		const result = sanitizeObject({ client_secret: 'super_secret_value', secret: 'mysecret' });
+		const result = sanitizeObject({ client_secret: 'fake-client-secret-xyz', secret: 'fake-secret-123' });
 		assert.strictEqual(result.client_secret, '[REDACTED]');
 		assert.strictEqual(result.secret, '[REDACTED]');
 	});
 	test('redacts secret key case-insensitively', () => {
-		const result = sanitizeObject({ SECRET: 'value', Secret: 'value2' });
+		const result = sanitizeObject({ SECRET: 'fake-secret-value', Secret: 'fake-secret-value-2' });
 		assert.strictEqual(result.SECRET, '[REDACTED]');
 		assert.strictEqual(result.Secret, '[REDACTED]');
 	});
 	test('redacts key-containing keys (api_key, secret_key, etc.)', () => {
-		const result = sanitizeObject({ api_key: 'api_key_fixture', secret_key: 'secret_key_fixture', public_key: 'public_key_fixture' });
+		const result = sanitizeObject({ api_key: 'fake-api-key', secret_key: 'fake-secret-key', public_key: 'fake-public-key' });
 		assert.strictEqual(result.api_key, '[REDACTED]');
 		assert.strictEqual(result.secret_key, '[REDACTED]');
 		assert.strictEqual(result.public_key, '[REDACTED]');
 	});
 	test('redacts nested password key', () => {
-		const result = sanitizeObject({ user: { name: 'admin', password: 'supersecret' } });
+		const result = sanitizeObject({ user: { name: 'admin', password: 'fake-password-123' } });
 		assert.strictEqual(result.user.password, '[REDACTED]');
 		assert.strictEqual(result.user.name, 'admin');
 	});
