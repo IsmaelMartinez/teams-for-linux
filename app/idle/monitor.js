@@ -1,7 +1,15 @@
 const { ipcMain, powerMonitor } = require("electron");
-const fs = require("fs");
+const fs = require("node:fs");
 
 class IdleMonitor {
+  // State file content values (what users write in the state file)
+  static #STATE_FILE_INACTIVE = 'inactive';
+  static #STATE_FILE_ACTIVE = 'active';
+  
+  // System state values (what the system returns and uses internally)
+  static #SYSTEM_STATE_IDLE = 'idle';
+  static #SYSTEM_STATE_ACTIVE = 'active';
+
   #config;
   #getUserStatus;
   #idleTimeUserStatus = -1;
@@ -13,7 +21,7 @@ class IdleMonitor {
     this.#getUserStatus = getUserStatus;
     // Expand $USER in the state file path
     const stateFilePath = config.idleDetection?.stateFile || "/tmp/teams-for-linux-idle-state-$USER";
-    this.#stateFilePath = stateFilePath.replace('$USER', process.env.USER);
+    this.#stateFilePath = stateFilePath.replace('$USER', process.env.USER || process.env.USERNAME || 'unknown');
   }
 
   initialize() {
@@ -22,13 +30,9 @@ class IdleMonitor {
     
     // Setup cleanup handler for state file
     process.on('exit', this.#cleanupStateFile.bind(this));
-    process.on('SIGINT', () => {
-      this.#cleanupStateFile();
-      process.exit(0);
-    });
-    process.on('SIGTERM', () => {
-      this.#cleanupStateFile();
-      process.exit(0);
+    
+    ['SIGINT', 'SIGTERM'].forEach(signal => {
+      process.on(signal, () => process.exit(0));
     });
   }
 
@@ -40,7 +44,7 @@ class IdleMonitor {
           console.debug('[IDLE] Cleaned up state file on exit');
         }
       } catch (err) {
-        // Ignore cleanup errors
+        console.debug(`[IDLE] Failed to cleanup state file: ${err.message}`);
       }
     }
   }
@@ -50,10 +54,10 @@ class IdleMonitor {
       if (fs.existsSync(this.#stateFilePath)) {
         const content = fs.readFileSync(this.#stateFilePath, 'utf8').trim();
         
-        if (content === 'inactive') {
-          return 'idle';
-        } else if (content === 'active') {
-          return 'active';
+        if (content === IdleMonitor.#STATE_FILE_INACTIVE) {
+          return IdleMonitor.#SYSTEM_STATE_IDLE;
+        } else if (content === IdleMonitor.#STATE_FILE_ACTIVE) {
+          return IdleMonitor.#SYSTEM_STATE_ACTIVE;
         } else {
           console.warn(`[IDLE] Unknown state file content: '${content}', ignoring`);
           return null;
@@ -66,47 +70,56 @@ class IdleMonitor {
     return null; // No override
   }
 
+  #handleStateFileOverride() {
+    const stateFileOverride = this.#getStateFileOverride();
+    
+    // Log only on state transitions
+    if (stateFileOverride !== this.#lastStateFileOverride) {
+      if (stateFileOverride === null) {
+        console.info('[IDLE] State file override: none (file absent or invalid)');
+      } else {
+        console.info(`[IDLE] State file override: ${stateFileOverride}`);
+      }
+      this.#lastStateFileOverride = stateFileOverride;
+    }
+    
+    if (stateFileOverride === IdleMonitor.#SYSTEM_STATE_IDLE) {
+      // Force idle state
+      if (this.#idleTimeUserStatus === -1) {
+        this.#idleTimeUserStatus = this.#getUserStatus();
+      }
+      
+      return {
+        system: IdleMonitor.#SYSTEM_STATE_IDLE,
+        userIdle: this.#idleTimeUserStatus,
+        userCurrent: this.#getUserStatus(),
+      };
+    } else if (stateFileOverride === IdleMonitor.#SYSTEM_STATE_ACTIVE) {
+      // Force active state
+      if (this.#idleTimeUserStatus !== -1) {
+        console.debug(`[IDLE] State file active: transitioning from idle to active`);
+        this.#idleTimeUserStatus = -1;
+      }
+      
+      return {
+        system: IdleMonitor.#SYSTEM_STATE_ACTIVE,
+        userIdle: -1,
+        userCurrent: this.#getUserStatus(),
+      };
+    }
+    
+    // No override - return null to indicate fall through to powerMonitor
+    return null;
+  }
+
   async #handleGetSystemIdleState() {
 
     // If forceState is enabled, check state file for override
     if (this.#config.idleDetection?.forceState) {
-      const stateFileOverride = this.#getStateFileOverride();
-      
-      // Log only on state transitions
-      if (stateFileOverride !== this.#lastStateFileOverride) {
-        if (stateFileOverride !== null) {
-          console.info(`[IDLE] State file override: ${stateFileOverride}`);
-        } else {
-          console.info('[IDLE] State file override: none (file absent or invalid)');
-        }
-        this.#lastStateFileOverride = stateFileOverride;
+      const stateFileResult = this.#handleStateFileOverride();
+      if (stateFileResult !== null) {
+        return stateFileResult;
       }
-      
-      if (stateFileOverride === 'idle') {
-        // Force idle state
-        if (this.#idleTimeUserStatus === -1) {
-          this.#idleTimeUserStatus = this.#getUserStatus();
-        }
-        
-        return {
-          system: "idle",
-          userIdle: this.#idleTimeUserStatus,
-          userCurrent: this.#getUserStatus(),
-        };
-      } else if (stateFileOverride === 'active') {
-        // Force active state
-        if (this.#idleTimeUserStatus !== -1) {
-          console.debug(`[IDLE] State file active: transitioning from idle to active`);
-          this.#idleTimeUserStatus = -1;
-        }
-        
-        return {
-          system: "active",
-          userIdle: -1,
-          userCurrent: this.#getUserStatus(),
-        };
-      }
-      
       // If forceState is enabled but no state file exists, fall through to powerMonitor
     }
 
@@ -122,7 +135,7 @@ class IdleMonitor {
         this.#config.appActiveCheckInterval
       }s, IdleTime: ${powerMonitor.getSystemIdleTime()}s, IdleState: '${systemIdleState}'`;
 
-    if (systemIdleState === "active") {
+    if (systemIdleState === IdleMonitor.#SYSTEM_STATE_ACTIVE) {
       if (this.#idleTimeUserStatus !== -1) {
         console.debug(`GetSystemIdleState => ${logDetails()}`);
         this.#idleTimeUserStatus = -1;
