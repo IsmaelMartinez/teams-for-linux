@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert');
-const { sanitize, containsPII, detectPIITypes, createSanitizer } = require('../../app/utils/logSanitizer');
+const { sanitize, sanitizeObject, containsPII, detectPIITypes, createSanitizer } = require('../../app/utils/logSanitizer');
 
 let passed = 0;
 let failed = 0;
@@ -203,6 +203,51 @@ describe('Teams for Linux scenarios', () => {
 		['certificate', 'Verified: fingerprint=AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD', ['[FINGERPRINT]']],
 		['config path', 'Loading from /home/realusername/.config/teams-for-linux/config.json', ['/home/[USER]']],
 	]);
+});
+
+describe('sanitizeObject password key handling', () => {
+	test('redacts password key value', () => {
+		const result = sanitizeObject({ username: 'admin', password: 'secret123' });
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.username, 'admin');
+	});
+	test('redacts password key case-insensitively', () => {
+		const result = sanitizeObject({ PASSWORD: 'secret', Password: 'secret2' });
+		assert.strictEqual(result.PASSWORD, '[REDACTED]');
+		assert.strictEqual(result.Password, '[REDACTED]');
+	});
+	test('redacts nested password key', () => {
+		const result = sanitizeObject({ user: { name: 'admin', password: 'supersecret' } });
+		assert.strictEqual(result.user.password, '[REDACTED]');
+		assert.strictEqual(result.user.name, 'admin');
+	});
+	test('redacts password in array of objects', () => {
+		const result = sanitizeObject([{ type: 'user', password: 'pass1' }, { type: 'admin', password: 'pass2' }]);
+		assert.strictEqual(result[0].password, '[REDACTED]');
+		assert.strictEqual(result[1].password, '[REDACTED]');
+		assert.strictEqual(result[0].type, 'user');
+	});
+	test('preserves other keys unchanged', () => {
+		const result = sanitizeObject({ email: 'user@example.com', token: 'abc123', id: 123 });
+		assert.strictEqual(result.email, '[EMAIL]');
+		assert.strictEqual(result.id, 123);
+	});
+	test('handles password with empty string value', () => {
+		const result = sanitizeObject({ password: '' });
+		assert.strictEqual(result.password, '[REDACTED]');
+	});
+	test('handles password with special characters', () => {
+		const result = sanitizeObject({ password: 'p@$$w0rd!#%^&*()' });
+		assert.strictEqual(result.password, '[REDACTED]');
+	});
+	test('handles circular reference with password', () => {
+		const obj = { password: 'secret', name: 'test' };
+		obj.self = obj;
+		const result = sanitizeObject(obj);
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.name, 'test');
+		assert.strictEqual(result.self, '[Circular]');
+	});
 });
 
 console.log('\n' + '='.repeat(50));

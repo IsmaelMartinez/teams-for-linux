@@ -144,6 +144,10 @@ function sanitizeError(obj, seen) {
 	return sanitizedError;
 }
 
+const SENSITIVE_KEYS = [
+    'password',
+];
+
 /**
  * Recursively sanitizes string values within an object
  * Preserves object structure while removing PII from string properties
@@ -172,7 +176,15 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 	seen.add(obj);
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
-		result[sanitize(key)] = sanitizeValue(value, seen);
+		const sanitizedKey = sanitize(key);
+		const isSensitive = SENSITIVE_KEYS.some(k =>
+			key.toLowerCase().includes(k.toLowerCase())
+		);
+		if (isSensitive) {
+			result[sanitizedKey] = '[REDACTED]';
+		} else {
+			result[sanitizedKey] = sanitizeValue(value, seen);
+		}
 	}
 	return result;
 }
