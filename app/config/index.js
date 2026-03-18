@@ -561,8 +561,11 @@ function extractYargConfig(configObject, appVersion) {
             enabled: false,
             user: "",
           },
+          webauthn: {
+            enabled: false,
+          },
         },
-        describe: "Authentication configuration (Intune SSO)",
+        describe: "Authentication configuration (Intune SSO, WebAuthn/FIDO2 security keys)",
         type: "object",
       },
       multiAccount: {
