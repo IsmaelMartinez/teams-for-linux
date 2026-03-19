@@ -114,7 +114,7 @@ function injectIntoFrame(wf) {
   // The injected script patches navigator.credentials in the frame and uses
   // postMessage to communicate with the parent frame (which has ipcRenderer).
   // The parent preload listens for these messages and relays them via IPC.
-  wf.executeJavaScript(`
+  wf.executeJavaScript(String.raw`
     (function() {
       if (window.__webauthnOverrideInjected) return;
       window.__webauthnOverrideInjected = true;

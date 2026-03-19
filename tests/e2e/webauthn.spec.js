@@ -32,7 +32,7 @@ test.describe("WebAuthn FIDO2 Support", () => {
     const page = await app.firstWindow();
     await page.waitForLoadState("domcontentloaded");
 
-    const hasPKC = await page.evaluate(() => typeof window.PublicKeyCredential !== "undefined");
+    const hasPKC = await page.evaluate(() => globalThis.PublicKeyCredential !== undefined);
     expect(hasPKC).toBe(true);
 
     const hasCreate = await page.evaluate(() => typeof navigator.credentials?.create === "function");

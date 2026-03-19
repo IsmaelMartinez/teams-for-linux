@@ -15,8 +15,8 @@
 function base64urlEncode(buffer) {
   return buffer
     .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
     .replace(/=+$/, "");
 }
 
@@ -26,7 +26,7 @@ function base64urlEncode(buffer) {
  * @returns {Buffer}
  */
 function base64urlDecode(str) {
-  let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  let base64 = str.replaceAll("-", "+").replaceAll("_", "/");
   while (base64.length % 4 !== 0) {
     base64 += "=";
   }
