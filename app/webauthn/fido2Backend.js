@@ -166,6 +166,46 @@ function prepareClientData(type, challenge, origin) {
 }
 
 /**
+ * Select the best supported algorithm from pubKeyCredParams and add the -t flag.
+ * Returns the chosen COSE algorithm number, or -7 (ES256) if none specified.
+ * Throws NotSupportedError if params are provided but none are supported.
+ *
+ * @param {Array|undefined} pubKeyCredParams
+ * @param {string[]} args - fido2-cred args to push -t into
+ * @returns {number} COSE algorithm identifier
+ */
+function selectAlgorithm(pubKeyCredParams, args) {
+  if (!pubKeyCredParams || pubKeyCredParams.length === 0) {
+    return -7; // default ES256
+  }
+  for (const param of pubKeyCredParams) {
+    const fido2Type = coseAlgToFido2Type(param.alg);
+    if (fido2Type) {
+      args.push("-t", fido2Type);
+      return param.alg;
+    }
+  }
+  throw new Error("NotSupportedError: No supported public-key algorithm in pubKeyCredParams");
+}
+
+/**
+ * Build fido2-cred args from authenticator selection options.
+ * @param {object|undefined} authSel - authenticatorSelection from WebAuthn options
+ * @returns {string[]} args array
+ */
+function buildCredArgs(authSel) {
+  const args = ["-M", "-h"];
+  if (authSel?.residentKey === "required") {
+    args.push("-r");
+  }
+  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
+  if (authSel?.userVerification === "required") {
+    args.push("-v");
+  }
+  return args;
+}
+
+/**
  * Create a FIDO2 credential using a hardware security key.
  *
  * @param {object} options - WebAuthn create options (serialized from renderer)
@@ -196,36 +236,8 @@ async function createCredential(options) {
     base64urlDecode(options.userId).toString("base64"),
   ].join("\n") + "\n";
 
-  const args = ["-M", "-h"];
-
-  if (options.authenticatorSelection?.residentKey === "required") {
-    args.push("-r");
-  }
-
-  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
-  if (options.authenticatorSelection?.userVerification === "required") {
-    args.push("-v");
-  }
-
-  // Map RP's preferred algorithm to fido2-cred type argument.
-  // Per WebAuthn Level 2, if pubKeyCredParams is provided and no algorithm is
-  // supported, the operation must fail with NotSupportedError.
-  let chosenAlg = -7; // default ES256 when RP doesn't specify
-  if (options.pubKeyCredParams && options.pubKeyCredParams.length > 0) {
-    chosenAlg = null;
-    for (const param of options.pubKeyCredParams) {
-      const fido2Type = coseAlgToFido2Type(param.alg);
-      if (fido2Type) {
-        args.push("-t", fido2Type);
-        chosenAlg = param.alg;
-        break;
-      }
-    }
-    if (chosenAlg === null) {
-      throw new Error("NotSupportedError: No supported public-key algorithm in pubKeyCredParams");
-    }
-  }
-
+  const args = buildCredArgs(options.authenticatorSelection);
+  const chosenAlg = selectAlgorithm(options.pubKeyCredParams, args);
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
@@ -340,7 +352,7 @@ async function getAssertion(options) {
   let credentialId;
   if (dataLines.length >= 3) {
     credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
-  } else if (options.allowCredentials && options.allowCredentials.length === 1) {
+  } else if (options.allowCredentials?.length === 1) {
     credentialId = options.allowCredentials[0].id;
   } else {
     throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");

@@ -41,7 +41,7 @@ function init(config, ipcRenderer) {
       return originalCreate(options);
     }
 
-    console.info("[WEBAUTHN] Intercepting credentials.create() from", window.location.origin);
+    console.info("[WEBAUTHN] Intercepting credentials.create() from", globalThis.location.origin);
 
     try {
       const serialized = serializeCreateOptions(options.publicKey);
@@ -66,7 +66,7 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
-    console.info("[WEBAUTHN] Intercepting credentials.get() from", window.location.origin);
+    console.info("[WEBAUTHN] Intercepting credentials.get() from", globalThis.location.origin);
 
     try {
       const serialized = serializeGetOptions(options.publicKey);
@@ -135,11 +135,11 @@ function bufferToBase64url(buffer) {
   const CHUNK_SIZE = 8192;
   let binary = "";
   for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK_SIZE));
+    binary += String.fromCodePoint(...bytes.subarray(i, i + CHUNK_SIZE));
   }
   return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
     .replace(/=+$/, "");
 }
 
@@ -147,12 +147,12 @@ function bufferToBase64url(buffer) {
  * Convert base64url string to ArrayBuffer.
  */
 function base64urlToBuffer(base64url) {
-  let base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  let base64 = base64url.replaceAll("-", "+").replaceAll("_", "/");
   while (base64.length % 4 !== 0) {
     base64 += "=";
   }
   const binStr = atob(base64);
-  const bytes = Uint8Array.from(binStr, (c) => c.charCodeAt(0));
+  const bytes = Uint8Array.from(binStr, (c) => c.codePointAt(0));
   return bytes.buffer;
 }
 
