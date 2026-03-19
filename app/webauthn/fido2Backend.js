@@ -47,11 +47,14 @@ function spawnFido2(cmd, args, input, timeoutMs, pinCallback) {
       // Detect PIN prompt from fido2-tools: "Enter PIN for /dev/hidrawN:"
       if (!pinHandled && pinCallback && chunk.includes("Enter PIN for")) {
         pinHandled = true;
+        console.info("[WEBAUTHN] PIN prompt detected on stderr, collecting PIN via callback");
         pinCallback()
           .then((pin) => {
+            console.info("[WEBAUTHN] Writing PIN to fido2-tools stdin");
             proc.stdin.write(pin + "\n");
           })
-          .catch(() => {
+          .catch((err) => {
+            console.warn("[WEBAUTHN] PIN callback failed:", err.message);
             rejected = true;
             proc.kill("SIGTERM");
             reject(new Error("NotAllowedError: PIN entry cancelled by user"));
