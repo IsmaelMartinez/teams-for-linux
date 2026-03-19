@@ -144,6 +144,13 @@ function sanitizeError(obj, seen) {
 	return sanitizedError;
 }
 
+const LOWER_CASE_SENSITIVE_KEYS = [
+	'password',
+    'token',
+    'secret',
+    'key',
+];
+
 /**
  * Recursively sanitizes string values within an object
  * Preserves object structure while removing PII from string properties
@@ -172,7 +179,16 @@ function sanitizeObject(obj, seen = new WeakSet()) {
 	seen.add(obj);
 	const result = {};
 	for (const [key, value] of Object.entries(obj)) {
-		result[sanitize(key)] = sanitizeValue(value, seen);
+		const sanitizedKey = sanitize(key);
+		const lowerCaseKey = key.toLowerCase();
+		const isSensitive = LOWER_CASE_SENSITIVE_KEYS.some(k =>
+			lowerCaseKey.includes(k)
+		);
+		if (isSensitive) {
+			result[sanitizedKey] = '[REDACTED]';
+		} else {
+			result[sanitizedKey] = sanitizeValue(value, seen);
+		}
 	}
 	return result;
 }
