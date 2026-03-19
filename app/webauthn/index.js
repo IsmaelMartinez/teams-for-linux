@@ -18,7 +18,7 @@
 
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
-const { requestPinPreCollect, requestPinDomInject, requestPinModal } = require("./pinDialog");
+const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
@@ -57,15 +57,10 @@ async function collectPin(sender) {
     if (errA.message === "PIN entry cancelled") throw errA;
   }
 
-  // Strategy B: DOM injection into Teams page
-  try {
-    return await requestPinDomInject(parentWindow);
-  } catch (errB) {
-    console.warn("[WEBAUTHN:PIN] Strategy B failed:", errB.message);
-    if (errB.message === "PIN entry cancelled") throw errB;
-  }
+  // Strategy B (dom-inject) was removed — PIN exposed to page JS context
+  // with contextIsolation: false, making it readable by third-party scripts.
 
-  // Strategy C: modal dialog (original approach)
+  // Strategy C: modal dialog (fallback)
   return requestPinModal(parentWindow);
 }
 
@@ -201,7 +196,7 @@ function injectIntoFrame(wf) {
 
       function ipcInvoke(channel, data) {
         return new Promise((resolve, reject) => {
-          const id = Math.random().toString(36).slice(2);
+          const id = crypto.randomUUID();
           function onMsg(e) {
             if (e.data?.type === "webauthn-response" && e.data.id === id) {
               window.removeEventListener("message", onMsg);
