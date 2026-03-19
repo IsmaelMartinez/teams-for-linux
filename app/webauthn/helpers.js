@@ -63,7 +63,7 @@ function generateClientDataJSON(type, challengeBytes, origin) {
  */
 function sanitizeForFido2(value, maxLength = 500) {
   if (typeof value !== "string") return "";
-  return value.replace(/[\x00-\x1f\x7f]/g, "").substring(0, maxLength);
+  return value.replaceAll(/[\x00-\x1f\x7f]/g, "").substring(0, maxLength);
 }
 
 module.exports = { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 };
