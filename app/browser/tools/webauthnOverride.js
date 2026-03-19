@@ -89,19 +89,33 @@ function init(config, ipcRenderer) {
   // Layer 2 relay: listen for postMessage from subframes that were injected
   // via executeJavaScript in the main process. This bridges the gap between
   // frames (no ipcRenderer) and the main process (needs IPC).
+  const ALLOWED_RELAY_ORIGINS = new Set([
+    "https://login.microsoftonline.com",
+    "https://login.microsoft.com",
+    "https://login.live.com",
+  ]);
+
   window.addEventListener("message", async (event) => {
     if (event.data?.type !== "webauthn-request") return;
+    if (!ALLOWED_RELAY_ORIGINS.has(event.origin)) {
+      console.warn("[WEBAUTHN] Blocked relay from untrusted origin:", event.origin);
+      return;
+    }
     const { id, channel, data } = event.data;
-    console.info("[WEBAUTHN] Relaying subframe request:", channel);
+    if (channel !== "webauthn:create" && channel !== "webauthn:get") {
+      console.warn("[WEBAUTHN] Blocked relay for unexpected channel:", channel);
+      return;
+    }
+    console.info("[WEBAUTHN] Relaying subframe request:", channel, "from", event.origin);
     try {
       const result = await ipcRenderer.invoke(channel, data);
       if (result.success) {
-        event.source.postMessage({ type: "webauthn-response", id, result: result.data }, "*");
+        event.source.postMessage({ type: "webauthn-response", id, result: result.data }, event.origin);
       } else {
-        event.source.postMessage({ type: "webauthn-response", id, error: result.error }, "*");
+        event.source.postMessage({ type: "webauthn-response", id, error: result.error }, event.origin);
       }
     } catch (err) {
-      event.source.postMessage({ type: "webauthn-response", id, error: err.message }, "*");
+      event.source.postMessage({ type: "webauthn-response", id, error: err.message }, event.origin);
     }
   });
 

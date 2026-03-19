@@ -183,6 +183,9 @@ function prepareClientData(type, challenge, origin) {
  */
 async function createCredential(options) {
   const device = await resolveDevice();
+  console.info("[WEBAUTHN] createCredential: device=%s, rpId=%s, userVerification=%s",
+    device, options.rpId, options.authenticatorSelection?.userVerification);
+
   const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
 
   // fido2-tools expect standard base64, not hex (validated by rlavriv).
@@ -289,6 +292,9 @@ async function createCredential(options) {
  */
 async function getAssertion(options) {
   const device = await resolveDevice();
+  console.info("[WEBAUTHN] getAssertion: device=%s, rpId=%s, userVerification=%s, allowCredentials=%d",
+    device, options.rpId, options.userVerification, options.allowCredentials?.length || 0);
+
   const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin);
 
   // fido2-tools expect standard base64, not hex (same as createCredential).
@@ -310,6 +316,7 @@ async function getAssertion(options) {
   }
 
   args.push(device);
+  console.info("[WEBAUTHN] getAssertion: running fido2-assert with args:", args.filter(a => !a.startsWith("/dev")).join(" "));
 
   const timeoutMs = (options.timeout || 60) * 1000;
   // Always pass PIN callback — spawnFido2 only uses it when prompted.
