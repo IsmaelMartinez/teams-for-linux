@@ -1,0 +1,2789 @@
+{
+  "timestamp": "2026-03-19T01:37:18.741Z",
+  "repository": "IsmaelMartinez/teams-for-linux",
+  "meta": {
+    "description": "Unofficial Microsoft Teams for Linux client",
+    "language": "JavaScript",
+    "stars": 4515,
+    "forks": 321,
+    "watchers": 50,
+    "open_issues_count": 27,
+    "default_branch": "main",
+    "license": "GPL-3.0",
+    "topics": [
+      "electron",
+      "linux",
+      "microsoft",
+      "teams"
+    ],
+    "created_at": "2018-10-03T20:35:27Z",
+    "pushed_at": "2026-03-18T22:21:49Z",
+    "archived": false
+  },
+  "issues": {
+    "open": [
+      {
+        "number": 2358,
+        "title": "[Bug]: In-Call detection of the MQTT Integration does not detect a hang-up of hang-up button in the small popup",
+        "author": "vb-linetco",
+        "labels": [
+          "bug"
+        ],
+        "reactions": 0,
+        "comments": 4,
+        "created_at": "2026-03-18T12:33:49Z",
+        "updated_at": "2026-03-18T22:50:30Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2354,
+        "title": "[Feat]: Hide \"Unlock Premium\" Button",
+        "author": "hashworks",
+        "labels": [
+          "enhancement"
+        ],
+        "reactions": 0,
+        "comments": 1,
+        "created_at": "2026-03-18T10:00:10Z",
+        "updated_at": "2026-03-18T10:20:30Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2349,
+        "title": "[Feat]:  Add `webRTCIPHandlingPolicy` config option to fix calls dropping to OnHold on multi-interface systems",
+        "author": "Vagrantin",
+        "labels": [
+          "enhancement"
+        ],
+        "reactions": 0,
+        "comments": 3,
+        "created_at": "2026-03-18T08:14:46Z",
+        "updated_at": "2026-03-18T10:05:38Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2351,
+        "title": "fix: changelog generator fails with SyntaxError on fork PRs",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "reactions": 0,
+        "comments": 0,
+        "created_at": "2026-03-18T09:59:14Z",
+        "updated_at": "2026-03-18T09:59:14Z",
+        "assignees": [],
+        "milestone": null
+      },
+      {
+        "number": 2345,
+        "title": "[Bug]: App is Crashing when someone is calling me",
+        "author": "ariel-rivo",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "reactions": 0,
+        "comments": 6,
+        "created_at": "2026-03-16T11:40:06Z",
+        "updated_at": "2026-03-17T16:07:24Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2326,
+        "title": "[Bug]: Cant login with symantec login due to contextIsolation",
+        "author": "osatien",
+        "labels": [
+          "bug",
+          "ready",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 6,
+        "created_at": "2026-03-12T09:31:35Z",
+        "updated_at": "2026-03-17T07:41:21Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2335,
+        "title": "[Bug]: Fedora 43, can't type",
+        "author": "ewm76903",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "reactions": 0,
+        "comments": 6,
+        "created_at": "2026-03-13T21:03:02Z",
+        "updated_at": "2026-03-15T15:52:51Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2169,
+        "title": "[Bug]: Cam broken during meetings",
+        "author": "GrzegorzKozub",
+        "labels": [
+          "bug",
+          "blocked",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 30,
+        "created_at": "2026-02-16T08:26:45Z",
+        "updated_at": "2026-03-15T09:44:12Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2248,
+        "title": "[Bug]: Duplicate notifications for first message and missing content for subsequent ones",
+        "author": "SoldierRMB",
+        "labels": [
+          "bug",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 9,
+        "created_at": "2026-02-28T06:23:43Z",
+        "updated_at": "2026-03-13T12:16:30Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2323,
+        "title": "[Bug]: xdg-open doesn't work with newer teams meeting urls",
+        "author": "dmoebius",
+        "labels": [
+          "bug",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 1,
+        "created_at": "2026-03-11T10:13:57Z",
+        "updated_at": "2026-03-13T08:59:10Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2322,
+        "title": "[Bug]: action \"Join meeting\" replaces whole window content",
+        "author": "dmoebius",
+        "labels": [
+          "bug",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 1,
+        "created_at": "2026-03-11T10:05:34Z",
+        "updated_at": "2026-03-13T08:59:00Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2296,
+        "title": "[Bug]: Calendar appears blank the first time I visit it each day",
+        "author": "pjdjr",
+        "labels": [
+          "bug",
+          "awaiting user feedback"
+        ],
+        "reactions": 1,
+        "comments": 22,
+        "created_at": "2026-03-03T13:28:15Z",
+        "updated_at": "2026-03-13T08:58:41Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 802,
+        "title": "Cannot sign in with security key",
+        "author": "jat255",
+        "labels": [
+          "help wanted",
+          "authentication"
+        ],
+        "reactions": 2,
+        "comments": 26,
+        "created_at": "2023-05-04T15:26:09Z",
+        "updated_at": "2026-03-13T07:46:03Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2228,
+        "title": "[Feat]: short teams links - 2140 - how to pass them to teams-for-linux on the command line?",
+        "author": "aral-matrix",
+        "labels": [
+          "enhancement",
+          "blocked"
+        ],
+        "reactions": 0,
+        "comments": 16,
+        "created_at": "2026-02-24T09:46:15Z",
+        "updated_at": "2026-03-12T22:32:38Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 1827,
+        "title": "[Bug]: Idle status not working on Wayland",
+        "author": "Spritkopf",
+        "labels": [
+          "bug",
+          "blocked",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 28,
+        "created_at": "2025-09-08T11:43:13Z",
+        "updated_at": "2026-03-11T07:43:52Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 1943,
+        "title": "[Bug]: Window size broke when changing app",
+        "author": "AndreaRicchi",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "reactions": 2,
+        "comments": 22,
+        "created_at": "2025-11-12T09:07:38Z",
+        "updated_at": "2026-03-04T15:02:56Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
+      {
+        "number": 2292,
+        "title": "[Bug]: --appTitle and -appIcon for Wayland",
+        "author": "Srylax",
+        "labels": [
+          "bug",
+          "awaiting user feedback"
+        ],
+        "reactions": 0,
+        "comments": 2,
+        "created_at": "2026-03-03T11:38:41Z",
+        "updated_at": "2026-03-03T14:19:11Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      }
+    ],
+    "recently_closed": [
+      {
+        "number": 2231,
+        "title": "[Bug]: Something went wrong during Calls",
+        "author": "elhennig",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-18T10:04:14Z",
+        "created_at": "2026-02-25T11:02:06Z"
+      },
+      {
+        "number": 2221,
+        "title": "[Bug]: Crash when using camera or microphone",
+        "author": "lynix",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-18T08:20:46Z",
+        "created_at": "2026-02-23T13:40:34Z"
+      },
+      {
+        "number": 2346,
+        "title": "[Bug]:",
+        "author": "Tarzzan",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-16T14:28:22Z",
+        "created_at": "2026-03-16T13:02:35Z"
+      },
+      {
+        "number": 2332,
+        "title": "Help wanted: validate fido2-tools output on Linux (#802)",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "help wanted"
+        ],
+        "closed_at": "2026-03-14T22:15:31Z",
+        "created_at": "2026-03-13T07:40:57Z"
+      },
+      {
+        "number": 2290,
+        "title": "[Feat]: Add real time speaking indicator to confirm microphone input is working",
+        "author": "Mgrmjp",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-14T09:08:51Z",
+        "created_at": "2026-03-03T11:30:58Z"
+      },
+      {
+        "number": 2293,
+        "title": "[Bug]: teams keeps reloading if https://*.sharepoint.com is not reachable",
+        "author": "Schinnerl-at",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-14T09:08:19Z",
+        "created_at": "2026-03-03T12:21:30Z"
+      },
+      {
+        "number": 2328,
+        "title": "[Bug]: MQTT status never published - all detection strategies fail",
+        "author": "FloEdelmann",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-14T09:07:48Z",
+        "created_at": "2026-03-12T22:43:43Z"
+      },
+      {
+        "number": 2107,
+        "title": "[Enhancement]: Publish screen sharing status to MQTT",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-14T09:06:23Z",
+        "created_at": "2026-01-31T07:49:28Z"
+      },
+      {
+        "number": 2334,
+        "title": "[Bug]: Documentation has broken links",
+        "author": "rbeldin",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-14T08:57:09Z",
+        "created_at": "2026-03-13T15:52:55Z"
+      },
+      {
+        "number": 2154,
+        "title": "[Bug]: App Center Version Hijacks Ctrl + Shift + P",
+        "author": "sarahpoulin",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-15T11:06:49Z",
+        "created_at": "2026-02-13T14:05:18Z"
+      },
+      {
+        "number": 438,
+        "title": "Multi-tenant feature",
+        "author": "jijojosephk",
+        "labels": [
+          "enhancement",
+          "hacktoberfest",
+          "Stale"
+        ],
+        "closed_at": "2024-10-21T09:36:12Z",
+        "created_at": "2021-06-28T06:14:36Z"
+      },
+      {
+        "number": 2216,
+        "title": "[Bug]: Entering emojis/emoticons/smileys not possible by starting with colon \":\"",
+        "author": "M-Bab",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-11T09:30:05Z",
+        "created_at": "2026-02-23T10:37:41Z"
+      },
+      {
+        "number": 2304,
+        "title": "[Feat]: Add option to disable the chat Spellcheck",
+        "author": "alinmiron",
+        "labels": [
+          "enhancement",
+          "blocked"
+        ],
+        "closed_at": "2026-03-11T09:37:52Z",
+        "created_at": "2026-03-05T08:27:38Z"
+      },
+      {
+        "number": 1875,
+        "title": "[Feat]: FIDO2 Device Authentication",
+        "author": "ivy-rew",
+        "labels": [
+          "enhancement",
+          "blocked",
+          "Stale"
+        ],
+        "closed_at": "2025-11-26T09:38:55Z",
+        "created_at": "2025-10-20T09:08:50Z"
+      },
+      {
+        "number": 2318,
+        "title": "[Feat]: when composing message, enable Formatting view if configured so",
+        "author": "doka380",
+        "labels": [
+          "enhancement",
+          "blocked"
+        ],
+        "closed_at": "2026-03-11T07:35:09Z",
+        "created_at": "2026-03-10T14:13:23Z"
+      },
+      {
+        "number": 986,
+        "title": "Disabled context isolation is a security hole/please enable",
+        "author": "Thaodan",
+        "labels": [
+          "help wanted",
+          "known issue/workaround",
+          "Stale"
+        ],
+        "closed_at": "2025-08-15T16:15:01Z",
+        "created_at": "2023-10-19T21:07:31Z"
+      },
+      {
+        "number": 1184,
+        "title": "Share Screen not working",
+        "author": "floriangrousset",
+        "labels": [
+          "snap",
+          "known issue/workaround",
+          "flatpak"
+        ],
+        "closed_at": "2024-05-15T06:16:51Z",
+        "created_at": "2024-04-09T01:29:16Z"
+      },
+      {
+        "number": 2267,
+        "title": "[Bug]: 'TrustedHTML' error with custom css",
+        "author": "nneul",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-08T07:52:34Z",
+        "created_at": "2026-03-02T14:28:04Z"
+      },
+      {
+        "number": 2132,
+        "title": "[Bug]: 2.7.2 segfault on RHEL8",
+        "author": "dwbotsch",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-13T07:45:01Z",
+        "created_at": "2026-02-06T19:20:20Z"
+      },
+      {
+        "number": 2204,
+        "title": "[Bug]: No thumbnail windows when sharing screen",
+        "author": "bss-markus-schulze",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:49:19Z",
+        "created_at": "2026-02-20T08:14:13Z"
+      },
+      {
+        "number": 2246,
+        "title": "[Bug]: Crashes on network loss",
+        "author": "shoncharenko",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-08T20:15:18Z",
+        "created_at": "2026-02-27T13:03:55Z"
+      },
+      {
+        "number": 2230,
+        "title": "[Bug]: index.js",
+        "author": "s-b-repo",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-08T07:50:33Z",
+        "created_at": "2026-02-25T09:40:29Z"
+      },
+      {
+        "number": 2215,
+        "title": "[Feat]: Click tray icon to switch to opened window",
+        "author": "bannmann",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-08T07:55:28Z",
+        "created_at": "2026-02-23T07:38:10Z"
+      },
+      {
+        "number": 2186,
+        "title": "[Feat]: Provide complete app menu when tray icon is disabled",
+        "author": "GrzegorzKozub",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-08T07:53:04Z",
+        "created_at": "2026-02-17T08:27:11Z"
+      },
+      {
+        "number": 2300,
+        "title": "[Bug]: Tray icon unread count completely bugged",
+        "author": "Shadowfury22",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-06T09:32:52Z",
+        "created_at": "2026-03-04T15:13:50Z"
+      },
+      {
+        "number": 1972,
+        "title": "[Bug]: Microphone doesn't work in meetings (until it does)",
+        "author": "jmunsin",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "closed_at": "2026-02-07T08:55:25Z",
+        "created_at": "2025-11-19T07:16:53Z"
+      },
+      {
+        "number": 2297,
+        "title": "[Bug]: teams-for-linux icon on top bar is now 3 dots",
+        "author": "pjdjr",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-03T14:59:30Z",
+        "created_at": "2026-03-03T13:59:07Z"
+      },
+      {
+        "number": 2295,
+        "title": "[Bug]: Failure to change regional time and date formats",
+        "author": "thegreyshadow",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-03T14:42:22Z",
+        "created_at": "2026-03-03T12:36:24Z"
+      },
+      {
+        "number": 2235,
+        "title": "[Feat]: Can we please chill with the updates?",
+        "author": "anthroid",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-03T07:09:29Z",
+        "created_at": "2026-02-25T20:44:00Z"
+      },
+      {
+        "number": 2284,
+        "title": "[Feat]: Add MQTT support for publishing Teams status",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T19:24:33Z",
+        "created_at": "2026-03-02T19:23:04Z"
+      },
+      {
+        "number": 2283,
+        "title": "[Bug]: Screen sharing shows black screen on Wayland",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T19:24:31Z",
+        "created_at": "2026-03-02T19:22:59Z"
+      },
+      {
+        "number": 2281,
+        "title": "[Feat]: Add MQTT support for publishing Teams status",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T19:22:48Z",
+        "created_at": "2026-03-02T19:05:38Z"
+      },
+      {
+        "number": 2279,
+        "title": "[Bug]: Screen sharing shows black screen on Wayland",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T19:06:27Z",
+        "created_at": "2026-03-02T16:35:56Z"
+      },
+      {
+        "number": 2277,
+        "title": "[Feat]: Add notification sound customization",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T16:29:06Z",
+        "created_at": "2026-03-02T16:27:45Z"
+      },
+      {
+        "number": 2276,
+        "title": "[Bug]: Application crashes when using custom CSS with invalid path",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T16:29:05Z",
+        "created_at": "2026-03-02T16:27:41Z"
+      },
+      {
+        "number": 2274,
+        "title": "[Feat]: Support for custom notification sounds",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T16:14:55Z",
+        "created_at": "2026-03-02T16:13:31Z"
+      },
+      {
+        "number": 2273,
+        "title": "[Bug]: Custom CSS causes crash on startup",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T16:14:53Z",
+        "created_at": "2026-03-02T16:13:25Z"
+      },
+      {
+        "number": 2272,
+        "title": "[Feat]: Support for custom notification sounds",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T16:13:14Z",
+        "created_at": "2026-03-02T16:06:45Z"
+      },
+      {
+        "number": 2271,
+        "title": "[Bug]: Custom CSS causes crash on startup",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T16:13:10Z",
+        "created_at": "2026-03-02T16:06:40Z"
+      },
+      {
+        "number": 2268,
+        "title": "[Bug]: Application crashes when loading custom CSS file",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-02T16:05:32Z",
+        "created_at": "2026-03-02T15:19:42Z"
+      },
+      {
+        "number": 2269,
+        "title": "[Feat]: Custom notification sounds per channel or contact",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-02T16:05:23Z",
+        "created_at": "2026-03-02T15:19:48Z"
+      },
+      {
+        "number": 2252,
+        "title": "[Feat]: Meeting invitations from hyperlink automatically open Teams-for-Linux",
+        "author": "adrummer354",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-03-01T08:42:30Z",
+        "created_at": "2026-02-28T18:45:06Z"
+      },
+      {
+        "number": 2239,
+        "title": "[Bug]: Tray Icon missing on Ubuntu 24.04.4",
+        "author": "Bartwillemsen",
+        "labels": [
+          "bug",
+          "wontfix",
+          "snap"
+        ],
+        "closed_at": "2026-02-27T09:29:59Z",
+        "created_at": "2026-02-26T15:06:18Z"
+      },
+      {
+        "number": 2209,
+        "title": "[Bug]: thumbnail windows never autocloses",
+        "author": "dlecan",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:42:45Z",
+        "created_at": "2026-02-20T17:40:58Z"
+      },
+      {
+        "number": 2184,
+        "title": "[Bug]: Can't register Quick Chat keyboard shortcut",
+        "author": "GrzegorzKozub",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:49:34Z",
+        "created_at": "2026-02-17T07:37:25Z"
+      },
+      {
+        "number": 2238,
+        "title": "[Bug]: Intune requires account",
+        "author": "joakim-tjernlund",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:43:33Z",
+        "created_at": "2026-02-26T12:58:06Z"
+      },
+      {
+        "number": 2236,
+        "title": "[Bug]: Meetings are temporarily unavailable",
+        "author": "dhalucario",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:44:22Z",
+        "created_at": "2026-02-26T08:27:07Z"
+      },
+      {
+        "number": 2131,
+        "title": "[Bug]: MQTT Status No Longer Being Detected",
+        "author": "manofcolombia",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:42:29Z",
+        "created_at": "2026-02-05T16:29:52Z"
+      },
+      {
+        "number": 2217,
+        "title": "[Bug]: Screen sharing broken",
+        "author": "hendrikiseke1979",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-27T12:41:43Z",
+        "created_at": "2026-02-23T11:20:29Z"
+      },
+      {
+        "number": 2011,
+        "title": "[Bug]: Unable to login for Passkey enabled Microsoft Accounts",
+        "author": "bensonrlee",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2025-12-07T11:07:25Z",
+        "created_at": "2025-12-01T16:16:25Z"
+      },
+      {
+        "number": 2203,
+        "title": "[Bug]: Uploading files with special characters in filename freezes client or results in 0-byte upload",
+        "author": "rejwenn",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-25T08:27:41Z",
+        "created_at": "2026-02-20T07:11:01Z"
+      },
+      {
+        "number": 2222,
+        "title": "[Bug]: Microphone not working in 2.7.5",
+        "author": "lsdijk",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-24T17:53:24Z",
+        "created_at": "2026-02-23T15:02:52Z"
+      },
+      {
+        "number": 2138,
+        "title": "[Bug]: Screen sharing on XOrg for 2.7.2",
+        "author": "mrkaczor83",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-13T07:12:32Z",
+        "created_at": "2026-02-10T08:06:42Z"
+      },
+      {
+        "number": 1860,
+        "title": "[Bug]: Video x and y dimensions are swapped",
+        "author": "rburcham",
+        "labels": [
+          "bug",
+          "known issue/workaround"
+        ],
+        "closed_at": "2026-02-09T23:39:51Z",
+        "created_at": "2025-10-03T18:02:21Z"
+      },
+      {
+        "number": 2157,
+        "title": "Implement in-app auto-update via electron-updater for AppImage",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-21T10:42:15Z",
+        "created_at": "2026-02-13T22:22:42Z"
+      },
+      {
+        "number": 2205,
+        "title": "[Bug]: Proxy configured via config.json crashes app",
+        "author": "moritzdietz",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-21T09:36:36Z",
+        "created_at": "2026-02-20T08:58:36Z"
+      },
+      {
+        "number": 2025,
+        "title": "[Bug]: Incoming call lead to exception with second ringer option set",
+        "author": "elhennig",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-21T07:16:39Z",
+        "created_at": "2025-12-15T14:46:30Z"
+      },
+      {
+        "number": 2147,
+        "title": "[Bug]: Overheating (only) when running Teams for Linux",
+        "author": "Mint-me123",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-15T16:27:37Z",
+        "created_at": "2026-02-12T12:06:50Z"
+      },
+      {
+        "number": 2108,
+        "title": "[Enhancement]: Custom Notifications Phase 2 - Chat and Calendar notifications",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-19T22:06:16Z",
+        "created_at": "2026-01-31T08:03:16Z"
+      },
+      {
+        "number": 2151,
+        "title": "[Bug]: Brave: Chinese text is not rendering",
+        "author": "BerriJ",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "closed_at": "2026-02-19T22:04:41Z",
+        "created_at": "2026-02-13T10:26:38Z"
+      },
+      {
+        "number": 2140,
+        "title": "[Feat]: recognize new meeting links like https://teams.microsoft.com/meet/...?p=...",
+        "author": "AlecEc",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-19T22:04:14Z",
+        "created_at": "2026-02-11T16:53:46Z"
+      },
+      {
+        "number": 2199,
+        "title": "[Bug]: App no longer opens meetings from links or accepts Meeting ID/Password after recent update",
+        "author": "robertofca23",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-19T22:02:45Z",
+        "created_at": "2026-02-19T18:07:45Z"
+      },
+      {
+        "number": 2152,
+        "title": "[Bug]: cannot join meeting with meeting-id and passcode",
+        "author": "Yarny0",
+        "labels": [
+          "bug",
+          "known issue/workaround",
+          "blocked"
+        ],
+        "closed_at": "2026-02-19T17:14:27Z",
+        "created_at": "2026-02-13T11:26:06Z"
+      },
+      {
+        "number": 2137,
+        "title": "[Bug]: Chat message gets scroll bar",
+        "author": "Jaffex",
+        "labels": [
+          "bug",
+          "blocked"
+        ],
+        "closed_at": "2026-02-19T15:02:30Z",
+        "created_at": "2026-02-09T10:09:25Z"
+      },
+      {
+        "number": 1879,
+        "title": "[Bug]: teams-for-linux prevents sleep",
+        "author": "leflamm",
+        "labels": [
+          "bug",
+          "blocked",
+          "Stale"
+        ],
+        "closed_at": "2026-02-18T09:48:30Z",
+        "created_at": "2025-10-20T16:52:55Z"
+      },
+      {
+        "number": 2106,
+        "title": "[Enhancement]: MQTT commands for screen lock media privacy",
+        "author": "IsmaelMartinez",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-18T06:47:36Z",
+        "created_at": "2026-01-31T07:49:25Z"
+      },
+      {
+        "number": 2143,
+        "title": "[Bug]: --appTitle and --appIcon do not work",
+        "author": "dmulder",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-02-18T06:45:06Z",
+        "created_at": "2026-02-11T22:24:58Z"
+      },
+      {
+        "number": 2039,
+        "title": "[Feat]: Support for Notifications via Quickshell for Teams-for-Linux",
+        "author": "inittux111",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-18T06:44:35Z",
+        "created_at": "2026-01-07T11:05:54Z"
+      },
+      {
+        "number": 1890,
+        "title": "[Feat]: Allow enabling GPU acceleration when running under Wayland",
+        "author": "mirenradia",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2025-10-30T09:56:24Z",
+        "created_at": "2025-10-21T13:59:02Z"
+      },
+      {
+        "number": 1984,
+        "title": "[Feat]: Allow multiple windows for one account",
+        "author": "borkhuis-cnh",
+        "labels": [
+          "enhancement"
+        ],
+        "closed_at": "2026-02-16T22:06:14Z",
+        "created_at": "2025-11-24T08:36:02Z"
+      },
+      {
+        "number": 2168,
+        "title": "[Bug]: Needs App Restart To Picik Up Audio device",
+        "author": "rahulfedora",
+        "labels": [
+          "bug",
+          "known issue/workaround",
+          "blocked"
+        ],
+        "closed_at": "2026-02-16T15:15:03Z",
+        "created_at": "2026-02-16T05:04:02Z"
+      },
+      {
+        "number": 2036,
+        "title": "[Bug]: Gnome 49 Clicking on notification does not focus window",
+        "author": "speakradmin",
+        "labels": [
+          "bug",
+          "flatpak",
+          "Stale"
+        ],
+        "closed_at": "2026-02-16T09:49:28Z",
+        "created_at": "2026-01-05T13:23:06Z"
+      }
+    ]
+  },
+  "pull_requests": {
+    "recently_merged": [
+      {
+        "number": 2352,
+        "title": "fix: resolve script injection in changelog generator and auto-create changelog for fork PRs",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-18T11:10:18Z"
+      },
+      {
+        "number": 2356,
+        "title": "Revert \"feat(webauthn): FIDO2 hardware security key support for Linux (#802)\"",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-18T11:09:20Z"
+      },
+      {
+        "number": 2353,
+        "title": "feat(webauthn): FIDO2 hardware security key support for Linux (#802)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-18T11:01:43Z"
+      },
+      {
+        "number": 2330,
+        "title": "fix: relax CSP for non-Teams SSO pages to unblock eval-dependent login",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-17T07:41:01Z"
+      },
+      {
+        "number": 2348,
+        "title": "chore: add CodeRabbit configuration",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-16T23:41:01Z"
+      },
+      {
+        "number": 2344,
+        "title": "feat: cross-distro CI smoke test and test directory restructuring",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-15T22:10:31Z"
+      },
+      {
+        "number": 2343,
+        "title": "Release v2.7.12",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-15T09:05:00Z"
+      },
+      {
+        "number": 2342,
+        "title": "fix(deps): bump electron 39.7.0 → 39.8.2 (CVE-2026-3909)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-15T08:54:56Z"
+      },
+      {
+        "number": 2341,
+        "title": "docs: update roadmap and FIDO2 research with validation results",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-14T22:08:59Z"
+      },
+      {
+        "number": 2339,
+        "title": "Release v2.7.11",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-14T08:56:08Z"
+      },
+      {
+        "number": 2338,
+        "title": "fix: replace regex closes: parser with split to avoid backtracking",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-14T08:52:18Z"
+      },
+      {
+        "number": 2317,
+        "title": "docs: restructure roadmap around themes",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-14T08:39:38Z"
+      },
+      {
+        "number": 2337,
+        "title": "chore(deps): bump undici from 7.22.0 to 7.24.1 in /docs-site",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-13T23:47:47Z"
+      },
+      {
+        "number": 2336,
+        "title": "docs: fix broken links and remove template placeholders",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-13T23:41:33Z"
+      },
+      {
+        "number": 2299,
+        "title": "feat: speaking indicator with mute detection via WebRTC getStats()",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-13T23:15:23Z"
+      },
+      {
+        "number": 2250,
+        "title": "Expand MS Teams protocol regex to support all deep link types",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-13T11:32:33Z"
+      },
+      {
+        "number": 2333,
+        "title": "fix: update MQTT status selectors and remove dead React detection",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-13T11:24:35Z"
+      },
+      {
+        "number": 2327,
+        "title": "docs: WebAuthn/FIDO2 implementation plan (#802)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-13T11:02:10Z"
+      },
+      {
+        "number": 2144,
+        "title": "feat: publish screen sharing status to MQTT (#2107)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-11T22:04:51Z"
+      },
+      {
+        "number": 2325,
+        "title": "chore(deps-dev): bump tar from 7.5.10 to 7.5.11",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-11T21:44:27Z"
+      },
+      {
+        "number": 2324,
+        "title": "docs: add repository health analysis for Feb-Mar 2026",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-11T17:04:49Z"
+      },
+      {
+        "number": 2321,
+        "title": "fix(testing): add --flags option and fix UID conflict in Dockerfiles",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-11T09:52:05Z"
+      },
+      {
+        "number": 2316,
+        "title": "chore(deps-dev): bump eslint from 10.0.2 to 10.0.3 in the minor-and-patch group",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-09T20:36:25Z"
+      },
+      {
+        "number": 2311,
+        "title": "fix: recover from stale auth state on startup and after sleep (#2296)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-09T20:36:06Z"
+      },
+      {
+        "number": 2308,
+        "title": "chore(deps-dev): bump tar from 7.5.9 to 7.5.10",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-09T16:31:45Z"
+      },
+      {
+        "number": 2310,
+        "title": "fix: only reload on main frame network errors, not sub-frames",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-09T10:39:25Z"
+      },
+      {
+        "number": 2315,
+        "title": "fix: use world-writable session dir for cross-distro tests",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-09T09:18:21Z"
+      },
+      {
+        "number": 2314,
+        "title": "fix: resolve cross-distro test failures from SingletonLock permissions",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-08T20:16:11Z"
+      },
+      {
+        "number": 2312,
+        "title": "chore: add codebase review research and unit tests for key modules",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-08T10:38:52Z"
+      },
+      {
+        "number": 2313,
+        "title": "Release v2.7.10",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-08T00:42:18Z"
+      },
+      {
+        "number": 2195,
+        "title": "fix: ensure complete app menu when tray icon is disabled",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-06T23:18:30Z"
+      },
+      {
+        "number": 2306,
+        "title": "Remove unmaintained dependencies and inline their functionality",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-06T16:18:51Z"
+      },
+      {
+        "number": 2309,
+        "title": "chore(deps): bump dompurify from 3.3.1 to 3.3.2 in /docs-site",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-06T16:09:10Z"
+      },
+      {
+        "number": 2307,
+        "title": "chore: remove old triage bot infrastructure, add ADR-018",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-06T09:38:54Z"
+      },
+      {
+        "number": 2305,
+        "title": "fix: make debug logs mandatory in bug report template",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-05T22:32:27Z"
+      },
+      {
+        "number": 2303,
+        "title": "chore(deps): bump svgo from 3.3.2 to 3.3.3 in /docs-site",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-04T23:40:18Z"
+      },
+      {
+        "number": 2302,
+        "title": "chore: disable old triage bot workflows, migrated to GitHub App",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-04T23:05:01Z"
+      },
+      {
+        "number": 2294,
+        "title": "chore: update issue index for duplicate detection",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-03T17:17:06Z"
+      },
+      {
+        "number": 2291,
+        "title": "chore: update issue index for duplicate detection",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-03T12:14:31Z"
+      },
+      {
+        "number": 2249,
+        "title": "Improve window lifecycle handling and network error resilience",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-03T09:20:36Z"
+      },
+      {
+        "number": 2288,
+        "title": "docs: update roadmap with triage bot GitHub App migration",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-03T07:57:00Z"
+      },
+      {
+        "number": 2287,
+        "title": "chore: update issue index for duplicate detection",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-03T07:10:55Z"
+      },
+      {
+        "number": 2286,
+        "title": "docs: document release cadence and update frequency",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-03T07:07:41Z"
+      },
+      {
+        "number": 2234,
+        "title": "Simplify app termination and add MQTT error handling",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-03T06:55:15Z"
+      },
+      {
+        "number": 2253,
+        "title": "Improve tray window toggle behavior with minimize/restore support",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T19:46:05Z"
+      },
+      {
+        "number": 2278,
+        "title": "chore(deps): bump @easyops-cn/docusaurus-search-local from 0.55.0 to 0.55.1 in /docs-site in the minor-and-patch group",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-03-02T19:45:20Z"
+      },
+      {
+        "number": 2285,
+        "title": "chore: update issue index for duplicate detection",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-03-02T19:34:06Z"
+      },
+      {
+        "number": 2282,
+        "title": "fix: use create-pull-request for index updates, increase Phase 4b tokens",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T19:13:19Z"
+      },
+      {
+        "number": 2280,
+        "title": "debug: add raw response logging to triage bot",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T19:01:59Z"
+      },
+      {
+        "number": 2275,
+        "title": "fix: add JSON extraction and increase maxOutputTokens for triage bot",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T16:27:06Z"
+      },
+      {
+        "number": 2270,
+        "title": "fix: add error details to triage bot Gemini API catch blocks",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T16:04:52Z"
+      },
+      {
+        "number": 2264,
+        "title": "Add Phase 4 enhancement triage to issue bot (context, feasibility, misclassification)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T15:18:35Z"
+      },
+      {
+        "number": 2245,
+        "title": "Add authenticated Playwright tests with Docker login workflow",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T14:38:43Z"
+      },
+      {
+        "number": 2266,
+        "title": "chore: update dependencies, electron to 39.7.0",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T13:39:52Z"
+      },
+      {
+        "number": 2262,
+        "title": "fix: resolve SonarCloud issues in run.sh",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T08:53:06Z"
+      },
+      {
+        "number": 2265,
+        "title": "docs: Clean up roadmap, research docs, and ADR statuses",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-02T08:52:29Z"
+      },
+      {
+        "number": 2220,
+        "title": "Fix crash when using custom CSS",
+        "author": "KrissN",
+        "labels": [],
+        "merged_at": "2026-03-02T07:42:32Z"
+      },
+      {
+        "number": 2261,
+        "title": "Add grouped parallel execution modes for cross-distro testing",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-01T23:21:02Z"
+      },
+      {
+        "number": 2260,
+        "title": "Implement Batch 1 bot automation improvements",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-01T23:03:42Z"
+      },
+      {
+        "number": 2259,
+        "title": "docs: Add AI automation review and enhancement proposals",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-03-01T22:32:29Z"
+      },
+      {
+        "number": 2258,
+        "title": "chore(deps): bump actions/upload-pages-artifact from 3.0.1 to 4.0.0",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "github_actions"
+        ],
+        "merged_at": "2026-03-01T21:22:37Z"
+      },
+      {
+        "number": 2257,
+        "title": "chore(deps): bump actions/upload-artifact from 4.6.2 to 7.0.0",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "github_actions"
+        ],
+        "merged_at": "2026-03-01T21:21:59Z"
+      },
+      {
+        "number": 2256,
+        "title": "chore(deps): bump actions/setup-node from 4.4.0 to 6.2.0",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "github_actions"
+        ],
+        "merged_at": "2026-03-01T21:21:47Z"
+      },
+      {
+        "number": 2255,
+        "title": "chore(deps): bump canonical/setup-lxd from 62cd335190e2b612b427db9319ea6b59ab1691f8 to d492474f6c8ceed1b716bb34c8f575a428871c70",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "github_actions"
+        ],
+        "merged_at": "2026-03-01T21:21:33Z"
+      },
+      {
+        "number": 2254,
+        "title": "chore(deps): bump actions/github-script from 7.0.1 to 8.0.0",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "github_actions"
+        ],
+        "merged_at": "2026-03-01T21:21:13Z"
+      },
+      {
+        "number": 2247,
+        "title": "fix: resolve SonarQube code smells across codebase",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-28T08:24:50Z"
+      },
+      {
+        "number": 2226,
+        "title": "Add cross-distro testing environment for Teams for Linux",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-25T13:56:50Z"
+      },
+      {
+        "number": 2244,
+        "title": "Release v2.7.9",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-27T12:33:06Z"
+      },
+      {
+        "number": 2188,
+        "title": "Improve Quick Chat keyboard shortcut messaging and menu integration",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-27T12:27:04Z"
+      },
+      {
+        "number": 2242,
+        "title": "Improve Intune authentication user validation logic",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-27T12:22:04Z"
+      },
+      {
+        "number": 2240,
+        "title": "chore(deps-dev): bump minimatch from 3.1.2 to 3.1.5",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-02-26T23:34:13Z"
+      },
+      {
+        "number": 2241,
+        "title": "chore(deps): bump minimatch from 10.2.2 to 10.2.4 in /docs-site",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-02-26T23:31:22Z"
+      },
+      {
+        "number": 2237,
+        "title": "Refactor artifact commenting to use workflow_run event",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-26T23:17:13Z"
+      },
+      {
+        "number": 2229,
+        "title": "Add XWayland optimizations configuration option",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-26T22:18:14Z"
+      },
+      {
+        "number": 2219,
+        "title": "fix: screen sharing regression on Wayland/XWayland",
+        "author": "bkohler",
+        "labels": [],
+        "merged_at": "2026-02-24T18:03:45Z"
+      },
+      {
+        "number": 2233,
+        "title": "Simplify Gemini API JSON parsing with responseMimeType",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-25T13:58:10Z"
+      },
+      {
+        "number": 2232,
+        "title": "Clarify Microsoft Teams web app references in issue triage",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-25T13:57:27Z"
+      },
+      {
+        "number": 2197,
+        "title": "fix: restore CSS selectors and add diagnostic logging for MQTT status",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-24T21:03:03Z"
+      },
+      {
+        "number": 2227,
+        "title": "docs: update roadmap for v2.7.9 planning",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-24T18:05:57Z"
+      },
+      {
+        "number": 2224,
+        "title": "chore(deps): bump @easyops-cn/docusaurus-search-local from 0.24.1 to 0.55.0 in /docs-site in the minor-and-patch group",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-02-23T17:01:52Z"
+      },
+      {
+        "number": 2210,
+        "title": "Fix screen sharing detection for non-English locales",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-23T17:00:25Z"
+      },
+      {
+        "number": 2214,
+        "title": "Update dependencies; add autoplay fix and sound overhaul research",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-22T17:11:40Z"
+      },
+      {
+        "number": 2213,
+        "title": "Upgrade Issue Triage Bot to use Gemini 2.5 Flash model",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-22T07:52:22Z"
+      },
+      {
+        "number": 2212,
+        "title": "Improve CI workflow triggers and PR artifact detection",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-21T09:22:00Z"
+      },
+      {
+        "number": 2211,
+        "title": "Release v2.7.8",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-21T08:54:53Z"
+      },
+      {
+        "number": 2189,
+        "title": "docs: close screen lock media privacy — no user interest",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-21T07:30:43Z"
+      },
+      {
+        "number": 2194,
+        "title": "fix: add error handler to incoming call command spawn",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-21T07:16:11Z"
+      },
+      {
+        "number": 2208,
+        "title": "ci: auto-remove 'awaiting user feedback' label on issue comment",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-20T21:19:14Z"
+      },
+      {
+        "number": 2206,
+        "title": "Improve network error handling and recovery",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-20T17:05:44Z"
+      },
+      {
+        "number": 2202,
+        "title": "chore: generate initial issue index for duplicate detection",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-19T23:29:51Z"
+      },
+      {
+        "number": 2200,
+        "title": "Add dependency overrides to resolve security vulnerabilities",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-19T23:25:23Z"
+      },
+      {
+        "number": 2192,
+        "title": "Add Phase 3: Duplicate detection for issue triage bot",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-19T23:16:38Z"
+      },
+      {
+        "number": 2201,
+        "title": "docs: update roadmap after v2.7.7 release",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-19T23:03:30Z"
+      },
+      {
+        "number": 2198,
+        "title": "Release v2.7.7",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-19T17:15:41Z"
+      },
+      {
+        "number": 2196,
+        "title": "ci: raise audit level to critical for minimatch advisory",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-19T17:08:31Z"
+      },
+      {
+        "number": 2190,
+        "title": "fix: camera crash on XWayland by skipping fake media UI flag (#2169)",
+        "author": "GrzegorzKozub",
+        "labels": [],
+        "merged_at": "2026-02-19T17:07:15Z"
+      },
+      {
+        "number": 2191,
+        "title": "chore: remove unused agentic files and audit research docs",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-18T22:30:49Z"
+      },
+      {
+        "number": 2187,
+        "title": "docs: update roadmap for v2.7.7 planning",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-18T06:02:22Z"
+      },
+      {
+        "number": 2185,
+        "title": "Release v2.7.6",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-17T12:40:09Z"
+      },
+      {
+        "number": 2183,
+        "title": "Phase 3: Workflow permissions and CODEOWNERS for supply chain security",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-17T07:44:51Z"
+      },
+      {
+        "number": 2171,
+        "title": "Refactor CSP setup to static method and centralize header handling",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-16T22:59:06Z"
+      },
+      {
+        "number": 2172,
+        "title": "ci: add lint, audit, and Dependabot to CI/CD pipeline",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-16T21:44:20Z"
+      },
+      {
+        "number": 2167,
+        "title": "fix: security hardening phase 1 - PII logging, resilience, input handling",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-16T11:19:17Z"
+      },
+      {
+        "number": 2159,
+        "title": "feat: in-app auto-update for AppImage via electron-updater",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-16T10:20:08Z"
+      },
+      {
+        "number": 2166,
+        "title": "docs: update plan docs with code quality hardening research and fix sidebar gaps",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-15T11:48:36Z"
+      },
+      {
+        "number": 2165,
+        "title": "docs: add code quality and hardening research",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-15T09:30:30Z"
+      },
+      {
+        "number": 2160,
+        "title": "GitHub Issue Bot Phase 2: AI-powered solution suggestions",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-14T22:59:30Z"
+      },
+      {
+        "number": 2164,
+        "title": "Handle edge/prerelease version suffixes in release info generation",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-14T22:49:17Z"
+      },
+      {
+        "number": 2163,
+        "title": "docs: add Electron 40 migration research document",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-14T22:28:47Z"
+      },
+      {
+        "number": 2161,
+        "title": "fix: only register quick chat shortcut when enabled and explicitly configured",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-14T22:20:28Z"
+      },
+      {
+        "number": 2162,
+        "title": "feat: automate snap release to candidate channel",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-14T11:55:00Z"
+      },
+      {
+        "number": 2158,
+        "title": "Replace appimagetool post-processing with electron-updater research",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-13T22:43:47Z"
+      },
+      {
+        "number": 2156,
+        "title": "Release v2.7.5",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-13T15:25:29Z"
+      },
+      {
+        "number": 2155,
+        "title": "Make Quick Chat feature opt-in via configuration",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-13T15:14:12Z"
+      },
+      {
+        "number": 2153,
+        "title": "Update roadmap for v2.7.4 release and v2.7.5 planning",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-13T14:55:41Z"
+      },
+      {
+        "number": 2149,
+        "title": "chore(deps): bump the npm_and_yarn group across 2 directories with 1 update",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-02-13T07:54:24Z"
+      },
+      {
+        "number": 2150,
+        "title": "Fix version references in Wayland troubleshooting documentation",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-13T07:53:41Z"
+      },
+      {
+        "number": 2148,
+        "title": "Improve code quality: remove PII from logs, fix style issues, clean up ESLint",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-13T07:07:00Z"
+      },
+      {
+        "number": 2146,
+        "title": "Release v2.7.4",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-12T22:48:00Z"
+      },
+      {
+        "number": 2145,
+        "title": "Update development roadmap for v2.7.4 release",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-12T10:40:15Z"
+      },
+      {
+        "number": 2139,
+        "title": "Force X11 ozone platform by default on Linux",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-12T07:55:37Z"
+      },
+      {
+        "number": 2141,
+        "title": "docs: Migrate community chat links from Gitter to Matrix space (#2113)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-12T07:54:27Z"
+      },
+      {
+        "number": 2142,
+        "title": "docs: add uninstall guide with instructions for all installation methods (#2048)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-11T22:56:06Z"
+      },
+      {
+        "number": 2101,
+        "title": "feat: handle Microsoft Cloud App Security (MCAS) domain suffix in hostname validation",
+        "author": "tvanderpool",
+        "labels": [],
+        "merged_at": "2026-02-11T16:30:51Z"
+      },
+      {
+        "number": 2119,
+        "title": "feat: Quick Chat with inline messaging via Graph API (#2109)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-11T16:30:29Z"
+      },
+      {
+        "number": 2135,
+        "title": "Add GitHub Issue Triage Bot Phase 1 (Information Request)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-10T05:21:32Z"
+      },
+      {
+        "number": 2133,
+        "title": "docs: Update roadmap for v2.7.4 release plan, archive logout indicator",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-08T11:21:25Z"
+      },
+      {
+        "number": 2134,
+        "title": "chore(deps): bump webpack from 5.101.3 to 5.105.0 in /docs-site in the npm_and_yarn group across 1 directory",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-02-07T20:12:50Z"
+      },
+      {
+        "number": 2126,
+        "title": "Add GitHub Issue Bot research and investigation document",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-07T11:35:40Z"
+      },
+      {
+        "number": 2129,
+        "title": "Release v2.7.3",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-02-05T10:13:18Z"
+      },
+      {
+        "number": 2128,
+        "title": "Add enhanced release notes generation for release workflow",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-05T06:50:45Z"
+      },
+      {
+        "number": 2125,
+        "title": "Add last updated timestamp to release notes comment",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-04T22:34:36Z"
+      },
+      {
+        "number": 2123,
+        "title": "Fix Teams icon registration by expanding CSP CDN domain allowlist",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-04T17:10:50Z"
+      },
+      {
+        "number": 2124,
+        "title": "docs: Add electron-store upgrade research and implementation plan",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-04T17:10:12Z"
+      },
+      {
+        "number": 2122,
+        "title": "docs: Update documentation for deprecated config options (#2120)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-03T07:42:40Z"
+      },
+      {
+        "number": 2082,
+        "title": "Replace clipboard monitoring with join meeting dialog",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-02T19:51:57Z"
+      },
+      {
+        "number": 2118,
+        "title": "feat: Integrate PII sanitizer with electron-log (Phase 2)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-02T10:17:40Z"
+      },
+      {
+        "number": 2060,
+        "title": "feat: add camera resolution and aspect ratio browser tools",
+        "author": "Brad-Fullwood",
+        "labels": [],
+        "merged_at": "2026-02-01T05:38:27Z"
+      },
+      {
+        "number": 2117,
+        "title": "Upgrade dependencies: electron, electron-builder, and globals",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-01T12:09:15Z"
+      },
+      {
+        "number": 2111,
+        "title": "Add chat API validation spikes for chat modal feasibility testing",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-01T06:57:27Z"
+      },
+      {
+        "number": 2116,
+        "title": "feat: Add PII log sanitizer utility (Phase 1)",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-01T06:23:37Z"
+      },
+      {
+        "number": 2104,
+        "title": "Convert window icon to nativeImage for proper Linux/KDE display",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-02-01T06:14:55Z"
+      },
+      {
+        "number": 2114,
+        "title": "docs: Add PII log removal research and implementation plan",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-31T11:39:51Z"
+      },
+      {
+        "number": 2105,
+        "title": "Update roadmap for v2.7.3 with current priorities and status",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-31T08:07:55Z"
+      },
+      {
+        "number": 2102,
+        "title": "Fix AppImage extraction to work without execute permissions",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-31T07:14:54Z"
+      },
+      {
+        "number": 2103,
+        "title": "Upgrade Playwright to v1.58.1",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-31T07:13:45Z"
+      },
+      {
+        "number": 2100,
+        "title": "Release v2.7.2",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-01-30T15:24:18Z"
+      },
+      {
+        "number": 2068,
+        "title": "Add screen sharing configuration and improve hardware compatibility",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-30T14:36:13Z"
+      },
+      {
+        "number": 2096,
+        "title": "Fix tray icon rendering on Linux by always using nativeImage",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-30T14:35:53Z"
+      },
+      {
+        "number": 2097,
+        "title": "Upgrade yargs to v18 and update dependencies",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-30T10:37:55Z"
+      },
+      {
+        "number": 2006,
+        "title": "Implement Calendar Data Export Feature",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-11T11:21:33Z"
+      },
+      {
+        "number": 2069,
+        "title": "Fix Intune SSO for Microsoft Identity Broker > 2.0.1",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-30T09:14:26Z"
+      },
+      {
+        "number": 2086,
+        "title": "Release v2.7.1",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-01-29T00:02:49Z"
+      },
+      {
+        "number": 2085,
+        "title": "Fix: update reference to core services due to upstream change (#2077)",
+        "author": "bastidest",
+        "labels": [],
+        "merged_at": "2026-01-28T21:51:53Z"
+      },
+      {
+        "number": 2084,
+        "title": "chore(deps): bump tar from 6.2.1 to 7.5.7 in the npm_and_yarn group across 1 directory",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-01-28T20:16:51Z"
+      },
+      {
+        "number": 2083,
+        "title": "Remove references to mqtt-commands-implementation research doc",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-28T09:32:32Z"
+      },
+      {
+        "number": 2081,
+        "title": "docs: Add GNOME Shell search provider investigation research",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-28T08:06:35Z"
+      },
+      {
+        "number": 2079,
+        "title": "Add development roadmap and reorganize research documentation",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-28T07:53:15Z"
+      },
+      {
+        "number": 2080,
+        "title": "fix(ci): use unsquashfs for cross-architecture ARM AppImage extraction",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-28T07:26:02Z"
+      },
+      {
+        "number": 2076,
+        "title": "Fix username matching for intune auth to not be case-sensitive",
+        "author": "vizius-jps",
+        "labels": [],
+        "merged_at": "2026-01-27T07:03:02Z"
+      },
+      {
+        "number": 2067,
+        "title": "Add AppImage update info to Linux builds for third-party managers",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-26T08:52:17Z"
+      },
+      {
+        "number": 2070,
+        "title": "Support changelog generation for external fork PRs",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-26T07:30:47Z"
+      },
+      {
+        "number": 2046,
+        "title": "Update default teams link",
+        "author": "XCroatoanX",
+        "labels": [],
+        "merged_at": "2026-01-23T07:01:53Z"
+      },
+      {
+        "number": 2064,
+        "title": "Release v2.7.0",
+        "author": "github-actions[bot]",
+        "labels": [],
+        "merged_at": "2026-01-23T07:31:05Z"
+      },
+      {
+        "number": 2061,
+        "title": "chore(deps): bump the npm_and_yarn group across 2 directories with 1 update",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-01-23T06:56:36Z"
+      },
+      {
+        "number": 2056,
+        "title": "feat: add automated release preparation workflow",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-18T17:53:40Z"
+      },
+      {
+        "number": 2052,
+        "title": "Fix changelog generation for external repositories",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-18T14:13:38Z"
+      },
+      {
+        "number": 2053,
+        "title": "docs: update research documentation status and remove outdated files",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-18T10:58:46Z"
+      },
+      {
+        "number": 2051,
+        "title": "Fix SonarQube security issue in changelog workflow",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-18T10:03:34Z"
+      },
+      {
+        "number": 2050,
+        "title": "ci: restore armv7l snap build",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-18T09:50:50Z"
+      },
+      {
+        "number": 2045,
+        "title": "Update dependencies for Electron 39",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-14T14:13:29Z"
+      },
+      {
+        "number": 2040,
+        "title": "Fix Electron 39 snap permissions issue",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-07T12:56:19Z"
+      },
+      {
+        "number": 2020,
+        "title": "chore: upgrade Electron from 37.9.0 to 39.2.6",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2026-01-06T00:12:15Z"
+      },
+      {
+        "number": 2035,
+        "title": "chore(deps): bump qs from 6.13.0 to 6.14.1 in /docs-site in the npm_and_yarn group across 1 directory",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-01-05T12:21:21Z"
+      },
+      {
+        "number": 2034,
+        "title": "chore(deps): bump the npm_and_yarn group across 2 directories with 1 update",
+        "author": "dependabot[bot]",
+        "labels": [
+          "dependencies",
+          "javascript"
+        ],
+        "merged_at": "2026-01-02T02:15:08Z"
+      },
+      {
+        "number": 2032,
+        "title": "fix: MQTT status stuck on do_not_disturb",
+        "author": "IsmaelMartinez",
+        "labels": [],
+        "merged_at": "2025-12-28T01:51:21Z"
+      }
+    ]
+  },
+  "labels": [
+    {
+      "name": "angular-2-react",
+      "description": "",
+      "color": "05E2DE"
+    },
+    {
+      "name": "api-integration",
+      "description": null,
+      "color": "ededed"
+    },
+    {
+      "name": "app-image",
+      "description": "Issue is related to AppImage only",
+      "color": "CEBC1E"
+    },
+    {
+      "name": "arch-linux",
+      "description": "Issue specific to Arch Linux",
+      "color": "5DCF82"
+    },
+    {
+      "name": "authentication",
+      "description": "Related to authentication",
+      "color": "02c2ed"
+    },
+    {
+      "name": "awaiting user feedback",
+      "description": "Waiting for user to confirm they still need this feature",
+      "color": "fbca04"
+    },
+    {
+      "name": "blocked",
+      "description": "This issue depends on external projects",
+      "color": "ff6b7c"
+    },
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "CI",
+      "description": "Continuous Integration",
+      "color": "961A8A"
+    },
+    {
+      "name": "dependencies",
+      "description": "Pull requests that update a dependency file",
+      "color": "0366d6"
+    },
+    {
+      "name": "documentation",
+      "description": "Missing documentation or improving needed",
+      "color": "c2e0c6"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "fedora",
+      "description": "Issue specific to Fedora Linux",
+      "color": "043753"
+    },
+    {
+      "name": "flatpak",
+      "description": "Issue related to flatpak build",
+      "color": "FBCA04"
+    },
+    {
+      "name": "gentoo",
+      "description": "Issue specific to Gentoo Linux",
+      "color": "6E6AD4"
+    },
+    {
+      "name": "github_actions",
+      "description": "Pull requests that update GitHub Actions code",
+      "color": "000000"
+    },
+    {
+      "name": "GNOME Desktop",
+      "description": "Issue specific to GNOME DE",
+      "color": "5319e7"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "hacktoberfest",
+      "description": "Community support is welcome",
+      "color": "ce6c2f"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "inactive",
+      "description": "No positive response from the reporter",
+      "color": "706E3B"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "javascript",
+      "description": "Pull requests that update javascript code",
+      "color": "168700"
+    },
+    {
+      "name": "known issue/workaround",
+      "description": "Workaround available in the know_issues.md file",
+      "color": "fcdfc4"
+    },
+    {
+      "name": "not an issue",
+      "description": "Not really an issue or not much we can do here",
+      "color": "cf9be8"
+    },
+    {
+      "name": "openSUSE",
+      "description": "Issue specific to openSUSE Linux",
+      "color": "7FD104"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "ready",
+      "description": "There is a fix in develop branch (and snap edge). Soon to be released",
+      "color": "86f98e"
+    },
+    {
+      "name": "refactoring",
+      "description": null,
+      "color": "aaaaaa"
+    },
+    {
+      "name": "snap",
+      "description": "Related to snap package",
+      "color": "e95420"
+    },
+    {
+      "name": "Stale",
+      "description": null,
+      "color": "ededed"
+    },
+    {
+      "name": "strategic-initiative",
+      "description": null,
+      "color": "ededed"
+    },
+    {
+      "name": "teams-v2",
+      "description": "",
+      "color": "A2CB2F"
+    },
+    {
+      "name": "ubuntu",
+      "description": "Issue specific to Ubuntu Linux",
+      "color": "CFE26C"
+    },
+    {
+      "name": "wayland",
+      "description": "Related to wayland display protocol",
+      "color": "006b75"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "milestones": [
+    {
+      "title": "0.1.8",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    },
+    {
+      "title": "0.1.9",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "due_on": null
+    },
+    {
+      "title": "1.0.37",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    },
+    {
+      "title": "1.0.38",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    },
+    {
+      "title": "1.0.39",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    },
+    {
+      "title": "1.0.40",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    },
+    {
+      "title": "1.0.43",
+      "state": "closed",
+      "open_issues": 0,
+      "closed_issues": 1,
+      "due_on": null
+    }
+  ],
+  "releases": [
+    {
+      "tag": "v2.7.12",
+      "name": "2.7.12",
+      "published_at": "2026-03-15T09:40:15Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.11",
+      "name": "2.7.11",
+      "published_at": "2026-03-14T09:05:25Z",
+      "prerelease": true,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.10",
+      "name": "2.7.10",
+      "published_at": "2026-03-08T07:49:49Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.9",
+      "name": "2.7.9",
+      "published_at": "2026-02-27T12:38:13Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.8",
+      "name": "2.7.8",
+      "published_at": "2026-02-21T09:36:11Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.7",
+      "name": "2.7.7",
+      "published_at": "2026-02-19T22:00:11Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.6",
+      "name": "2.7.6",
+      "published_at": "2026-02-17T17:12:15Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.5",
+      "name": "2.7.5",
+      "published_at": "2026-02-13T15:30:37Z",
+      "prerelease": false,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.4",
+      "name": "2.7.4",
+      "published_at": "2026-02-12T22:53:14Z",
+      "prerelease": true,
+      "draft": false
+    },
+    {
+      "tag": "v2.7.3",
+      "name": "2.7.3",
+      "published_at": "2026-02-05T14:31:08Z",
+      "prerelease": false,
+      "draft": false
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Build & Release",
+      "path": ".github/workflows/build.yml",
+      "state": "active"
+    },
+    {
+      "name": "CodeQL",
+      "path": ".github/workflows/codeql-analysis.yml",
+      "state": "active"
+    },
+    {
+      "name": "Snap Build",
+      "path": ".github/workflows/snap.yml",
+      "state": "active"
+    },
+    {
+      "name": "Close stale issues and PR",
+      "path": ".github/workflows/stale.yml",
+      "state": "active"
+    },
+    {
+      "name": "Dependabot Updates",
+      "path": "dynamic/dependabot/dependabot-updates",
+      "state": "active"
+    },
+    {
+      "name": "pages-build-deployment",
+      "path": "dynamic/pages/pages-build-deployment",
+      "state": "active"
+    },
+    {
+      "name": "Deploy Docusaurus Documentation",
+      "path": ".github/workflows/docs.yml",
+      "state": "active"
+    },
+    {
+      "name": "Generate Changelog Entry",
+      "path": ".github/workflows/changelog-generator.yml",
+      "state": "active"
+    },
+    {
+      "name": "Copilot code review",
+      "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      "state": "active"
+    },
+    {
+      "name": "Prepare Release",
+      "path": ".github/workflows/prepare-release.yml",
+      "state": "active"
+    },
+    {
+      "name": "Snap Release",
+      "path": ".github/workflows/snap-release.yml",
+      "state": "active"
+    },
+    {
+      "name": "Remove awaiting feedback label on comment",
+      "path": ".github/workflows/remove-awaiting-feedback.yml",
+      "state": "active"
+    },
+    {
+      "name": "Comment PR Artifacts",
+      "path": ".github/workflows/comment-artifacts.yml",
+      "state": "active"
+    },
+    {
+      "name": "Cross-Distro Smoke Test",
+      "path": ".github/workflows/cross-distro-smoke.yml",
+      "state": "active"
+    }
+  ],
+  "roadmap": null,
+  "package": {
+    "version": "2.7.12",
+    "dependencies": [
+      "@homebridge/dbus-native",
+      "electron-log",
+      "electron-store",
+      "electron-updater",
+      "electron-window-state",
+      "mqtt",
+      "yargs"
+    ],
+    "devDependencies": [
+      "@electron/fuses",
+      "@eslint/js",
+      "@playwright/test",
+      "electron",
+      "electron-builder",
+      "eslint",
+      "globals",
+      "http-server",
+      "xml2js"
+    ]
+  },
+  "summary": {
+    "repo": "4515 stars, 321 forks",
+    "open_issues": 17,
+    "blocked_issues": 6,
+    "awaiting_feedback": 8,
+    "recently_closed": 72,
+    "recently_merged_prs": 176,
+    "bot_prs": 38,
+    "human_prs": 138,
+    "unique_contributors": 11,
+    "releases": 10,
+    "latest_release": "v2.7.12",
+    "top_open_labels": [
+      "bug (12)",
+      "awaiting user feedback (8)",
+      "blocked (6)",
+      "enhancement (3)",
+      "ready (1)"
+    ],
+    "high_reaction_issues": [
+      "#802: Cannot sign in with security key (2)",
+      "#1943: [Bug]: Window size broke when changing app (2)"
+    ],
+    "stale_awaiting_feedback": [
+      "#2292: [Bug]: --appTitle and -appIcon for Wayland (15d)"
+    ]
+  }
+}
