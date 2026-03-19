@@ -18,7 +18,7 @@
 
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
-const { requestPin } = require("./pinDialog");
+const { requestPinPreCollect, requestPinDomInject, requestPinModal } = require("./pinDialog");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
@@ -40,20 +40,42 @@ function isAllowedOrigin(origin) {
 }
 
 /**
- * Create a PIN callback that shows the PIN dialog attached to the sender's window.
- * @param {Electron.WebContents} sender - The webContents that sent the IPC request
- * @returns {Function} Async function that returns the PIN string
+ * Collect PIN using a fallback chain of strategies.
+ * Tries A (pre-collect) → B (dom-inject) → C (modal-dialog).
+ *
+ * @param {Electron.WebContents} sender
+ * @returns {Promise<string>}
  */
-function createPinCallback(sender) {
-  return () => {
-    const parentWindow = BrowserWindow.fromWebContents(sender);
-    return requestPin(parentWindow);
-  };
+async function collectPin(sender) {
+  const parentWindow = BrowserWindow.fromWebContents(sender);
+
+  // Strategy A: standalone window, pre-collect
+  try {
+    return await requestPinPreCollect(parentWindow);
+  } catch (errA) {
+    console.warn("[WEBAUTHN:PIN] Strategy A failed:", errA.message);
+    if (errA.message === "PIN entry cancelled") throw errA;
+  }
+
+  // Strategy B: DOM injection into Teams page
+  try {
+    return await requestPinDomInject(parentWindow);
+  } catch (errB) {
+    console.warn("[WEBAUTHN:PIN] Strategy B failed:", errB.message);
+    if (errB.message === "PIN entry cancelled") throw errB;
+  }
+
+  // Strategy C: modal dialog (original approach)
+  return requestPinModal(parentWindow);
 }
 
 /**
  * Handle a webauthn:create or webauthn:get IPC request.
  * Shared logic for both channels to reduce duplication.
+ *
+ * For operations requiring userVerification, the PIN is collected upfront
+ * (Strategy A) before spawning fido2-tools, avoiding the async stderr race.
+ *
  * @param {string} operation - "create" or "get"
  * @param {Electron.IpcMainInvokeEvent} event
  * @param {object} options
@@ -75,7 +97,24 @@ async function handleWebauthnRequest(operation, event, options) {
   console.info(`[WEBAUTHN] Processing ${operation} request from ${origin}`);
 
   try {
-    const pinCallback = createPinCallback(event.sender);
+    // Determine if UV is required (PIN will be needed)
+    const uvRequired = operation === "create"
+      ? options.authenticatorSelection?.userVerification === "required"
+      : options.userVerification === "required";
+
+    let preCollectedPin = null;
+    if (uvRequired) {
+      console.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
+      preCollectedPin = await collectPin(event.sender);
+      console.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
+    }
+
+    // Create a PIN callback — for Strategy A, returns the pre-collected PIN immediately.
+    // For non-UV operations, provides a fallback chain if fido2-tools unexpectedly prompts.
+    const pinCallback = preCollectedPin
+      ? () => Promise.resolve(preCollectedPin)
+      : () => collectPin(event.sender);
+
     const result = operation === "create"
       ? await fido2Backend.createCredential({ ...options, origin, pinCallback })
       : await fido2Backend.getAssertion({ ...options, origin, pinCallback });
