@@ -226,8 +226,11 @@ echo ""
 echo "=== Step 5: Running fido2-assert -G ==="
 
 # Build the fido2-assert command arguments.
-# Matches fido2Backend.js: args = ["-G", "-h"], then optionally "-v", then device.
-ASSERT_ARGS=("-G" "-h")
+# Matches fido2Backend.js: args = ["-G", "-r"], then optionally "-v", then device.
+# -r enables resident/discoverable credential mode (required for Microsoft Entra ID).
+# -h (hmac-secret) is intentionally omitted — it prevents resident assertions
+# from working without an explicit credential ID (validated by rlavriv, fido2-tools 1.16.0).
+ASSERT_ARGS=("-G" "-r")
 
 # Always include -v (user verification) since Microsoft Entra ID requires it
 # for FIDO2 sign-in. The user will be prompted for their PIN interactively.
