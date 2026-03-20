@@ -66,6 +66,16 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
+    // Do not intercept conditional mediation (passkey autofill probes).
+    // Microsoft's login page calls credentials.get({ mediation: "conditional" })
+    // on page load to check for discoverable credentials. This is an ambient
+    // check that should be handled natively, not routed to fido2-tools which
+    // would immediately trigger device discovery and a PIN dialog.
+    if (options.mediation === "conditional") {
+      console.debug("[WEBAUTHN] Skipping conditional mediation (passkey autofill)");
+      return originalGet(options);
+    }
+
     console.info("[WEBAUTHN] Intercepting credentials.get() from", globalThis.location.origin);
 
     try {
