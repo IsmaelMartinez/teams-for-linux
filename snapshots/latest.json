@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-03-19T01:37:32.454Z",
+  "timestamp": "2026-03-20T14:51:29.961Z",
   "repository": "IsmaelMartinez/teams-for-linux",
   "meta": {
     "description": "Unofficial Microsoft Teams for Linux client",
     "language": "JavaScript",
-    "stars": 4515,
+    "stars": 4519,
     "forks": 321,
     "watchers": 50,
-    "open_issues_count": 27,
+    "open_issues_count": 26,
     "default_branch": "main",
     "license": "GPL-3.0",
     "topics": [
@@ -17,11 +17,27 @@
       "teams"
     ],
     "created_at": "2018-10-03T20:35:27Z",
-    "pushed_at": "2026-03-19T01:37:20Z",
+    "pushed_at": "2026-03-19T23:39:55Z",
     "archived": false
   },
   "issues": {
     "open": [
+      {
+        "number": 2296,
+        "title": "[Bug]: Calendar appears blank the first time I visit it each day",
+        "author": "pjdjr",
+        "labels": [
+          "bug"
+        ],
+        "reactions": 1,
+        "comments": 23,
+        "created_at": "2026-03-03T13:28:15Z",
+        "updated_at": "2026-03-20T12:52:11Z",
+        "assignees": [
+          "IsmaelMartinez"
+        ],
+        "milestone": null
+      },
       {
         "number": 2358,
         "title": "[Bug]: In-Call detection of the MQTT Integration does not detect a hang-up of hang-up button in the small popup",
@@ -30,9 +46,9 @@
           "bug"
         ],
         "reactions": 0,
-        "comments": 4,
+        "comments": 6,
         "created_at": "2026-03-18T12:33:49Z",
-        "updated_at": "2026-03-18T22:50:30Z",
+        "updated_at": "2026-03-19T22:19:52Z",
         "assignees": [
           "IsmaelMartinez"
         ],
@@ -46,9 +62,9 @@
           "enhancement"
         ],
         "reactions": 0,
-        "comments": 1,
+        "comments": 3,
         "created_at": "2026-03-18T10:00:10Z",
-        "updated_at": "2026-03-18T10:20:30Z",
+        "updated_at": "2026-03-19T10:47:58Z",
         "assignees": [
           "IsmaelMartinez"
         ],
@@ -204,23 +220,6 @@
         "milestone": null
       },
       {
-        "number": 2296,
-        "title": "[Bug]: Calendar appears blank the first time I visit it each day",
-        "author": "pjdjr",
-        "labels": [
-          "bug",
-          "awaiting user feedback"
-        ],
-        "reactions": 1,
-        "comments": 22,
-        "created_at": "2026-03-03T13:28:15Z",
-        "updated_at": "2026-03-13T08:58:41Z",
-        "assignees": [
-          "IsmaelMartinez"
-        ],
-        "milestone": null
-      },
-      {
         "number": 802,
         "title": "Cannot sign in with security key",
         "author": "jat255",
@@ -309,14 +308,24 @@
     ],
     "recently_closed": [
       {
-        "number": 2231,
-        "title": "[Bug]: Something went wrong during Calls",
-        "author": "elhennig",
+        "number": 2217,
+        "title": "[Bug]: Screen sharing broken",
+        "author": "hendrikiseke1979",
         "labels": [
           "bug"
         ],
-        "closed_at": "2026-03-18T10:04:14Z",
-        "created_at": "2026-02-25T11:02:06Z"
+        "closed_at": "2026-02-27T12:41:43Z",
+        "created_at": "2026-02-23T11:20:29Z"
+      },
+      {
+        "number": 2293,
+        "title": "[Bug]: teams keeps reloading if https://*.sharepoint.com is not reachable",
+        "author": "Schinnerl-at",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-14T09:08:19Z",
+        "created_at": "2026-03-03T12:21:30Z"
       },
       {
         "number": 2221,
@@ -327,6 +336,16 @@
         ],
         "closed_at": "2026-03-18T08:20:46Z",
         "created_at": "2026-02-23T13:40:34Z"
+      },
+      {
+        "number": 2231,
+        "title": "[Bug]: Something went wrong during Calls",
+        "author": "elhennig",
+        "labels": [
+          "bug"
+        ],
+        "closed_at": "2026-03-18T10:04:14Z",
+        "created_at": "2026-02-25T11:02:06Z"
       },
       {
         "number": 2346,
@@ -357,16 +376,6 @@
         ],
         "closed_at": "2026-03-14T09:08:51Z",
         "created_at": "2026-03-03T11:30:58Z"
-      },
-      {
-        "number": 2293,
-        "title": "[Bug]: teams keeps reloading if https://*.sharepoint.com is not reachable",
-        "author": "Schinnerl-at",
-        "labels": [
-          "bug"
-        ],
-        "closed_at": "2026-03-14T09:08:19Z",
-        "created_at": "2026-03-03T12:21:30Z"
       },
       {
         "number": 2328,
@@ -802,16 +811,6 @@
         "created_at": "2026-02-05T16:29:52Z"
       },
       {
-        "number": 2217,
-        "title": "[Bug]: Screen sharing broken",
-        "author": "hendrikiseke1979",
-        "labels": [
-          "bug"
-        ],
-        "closed_at": "2026-02-27T12:41:43Z",
-        "created_at": "2026-02-23T11:20:29Z"
-      },
-      {
         "number": 2011,
         "title": "[Bug]: Unable to login for Passkey enabled Microsoft Accounts",
         "author": "bensonrlee",
@@ -1039,23 +1038,18 @@
         ],
         "closed_at": "2026-02-16T15:15:03Z",
         "created_at": "2026-02-16T05:04:02Z"
-      },
-      {
-        "number": 2036,
-        "title": "[Bug]: Gnome 49 Clicking on notification does not focus window",
-        "author": "speakradmin",
-        "labels": [
-          "bug",
-          "flatpak",
-          "Stale"
-        ],
-        "closed_at": "2026-02-16T09:49:28Z",
-        "created_at": "2026-01-05T13:23:06Z"
       }
     ]
   },
   "pull_requests": {
     "recently_merged": [
+      {
+        "number": 2359,
+        "title": "feat: properly sanitize object values having sensitive keys",
+        "author": "hrzlgnm",
+        "labels": [],
+        "merged_at": "2026-03-19T09:05:17Z"
+      },
       {
         "number": 2352,
         "title": "fix: resolve script injection in changelog generator and auto-create changelog for fork PRs",
@@ -2760,20 +2754,20 @@
     ]
   },
   "summary": {
-    "repo": "4515 stars, 321 forks",
+    "repo": "4519 stars, 321 forks",
     "open_issues": 17,
     "blocked_issues": 6,
-    "awaiting_feedback": 8,
-    "recently_closed": 72,
-    "recently_merged_prs": 176,
+    "awaiting_feedback": 7,
+    "recently_closed": 71,
+    "recently_merged_prs": 177,
     "bot_prs": 38,
-    "human_prs": 138,
-    "unique_contributors": 11,
+    "human_prs": 139,
+    "unique_contributors": 12,
     "releases": 10,
     "latest_release": "v2.7.12",
     "top_open_labels": [
       "bug (12)",
-      "awaiting user feedback (8)",
+      "awaiting user feedback (7)",
       "blocked (6)",
       "enhancement (3)",
       "ready (1)"
@@ -2783,7 +2777,7 @@
       "#1943: [Bug]: Window size broke when changing app (2)"
     ],
     "stale_awaiting_feedback": [
-      "#2292: [Bug]: --appTitle and -appIcon for Wayland (15d)"
+      "#2292: [Bug]: --appTitle and -appIcon for Wayland (17d)"
     ]
   }
 }
