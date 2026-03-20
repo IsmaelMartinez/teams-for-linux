@@ -323,7 +323,11 @@ async function getAssertion(options) {
 
   const input = inputLines.join("\n") + "\n";
 
-  const args = ["-G", "-h"];
+  // -r enables resident/discoverable credential mode (required for Microsoft
+  // Entra ID FIDO2 sign-in with YubiKeys). Validated by rlavriv on fido2-tools 1.16.0.
+  // -h (hmac-secret) is intentionally omitted — it prevents resident assertions
+  // from working without an explicit credential ID.
+  const args = ["-G", "-r"];
 
   // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
   if (options.userVerification === "required") {
