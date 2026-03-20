@@ -104,15 +104,9 @@ async function handleWebauthnRequest(operation, event, options) {
       console.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
-    // Create a PIN callback — for Strategy A, returns the pre-collected PIN immediately.
-    // For non-UV operations, provides a fallback chain if fido2-tools unexpectedly prompts.
-    const pinCallback = preCollectedPin
-      ? () => Promise.resolve(preCollectedPin)
-      : () => collectPin(event.sender);
-
     const result = operation === "create"
-      ? await fido2Backend.createCredential({ ...options, origin, pinCallback })
-      : await fido2Backend.getAssertion({ ...options, origin, pinCallback });
+      ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
+      : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
     console.info(`[WEBAUTHN] ${operation} succeeded`);
     return { success: true, data: result };
   } catch (err) {
