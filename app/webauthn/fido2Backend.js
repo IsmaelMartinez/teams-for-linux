@@ -20,10 +20,10 @@ const execFileAsync = promisify(execFile);
  * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
  *
- * PIN handling: fido2-tools prompt for PIN on /dev/tty (not stderr) when
- * spawned without a terminal, making stderr detection unreliable. Instead,
- * when a PIN is provided, it is appended as the last stdin line and stdin
- * is closed, letting the tool read it directly from the input stream.
+ * PIN handling: fido2-tools use readpassphrase() which tries /dev/tty first.
+ * To force stdin-based PIN input, the child is spawned detached (setsid on
+ * Linux) so open("/dev/tty") fails and readpassphrase falls back to stdin.
+ * The PIN is appended as the last stdin line, then stdin is closed.
  *
  * @param {string} cmd - Command to run
  * @param {string[]} args - Command arguments (device should already be included)
@@ -33,7 +33,14 @@ const execFileAsync = promisify(execFile);
  */
 function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(cmd, args);
+    // Detach the child process so it has no controlling terminal.
+    // fido2-tools use readpassphrase() which tries /dev/tty first for PIN
+    // input. With detached: true, open("/dev/tty") fails and the tool
+    // falls back to reading PIN from stdin, where we pipe it.
+    const proc = spawn(cmd, args, {
+      detached: true,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
     let stdout = "";
     let stderr = "";
     let rejected = false;
@@ -41,7 +48,9 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
     const timeout = setTimeout(() => {
       if (!rejected) {
         rejected = true;
-        proc.kill("SIGKILL");
+        // Kill the process group (negative PID) since detached: true
+        // creates a new session/group.
+        try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
         reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
       }
     }, timeoutMs);
