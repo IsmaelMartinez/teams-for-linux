@@ -224,6 +224,7 @@ function injectIntoFrame(wf) {
 
       navigator.credentials.get = async function(opts) {
         if (!opts?.publicKey) return origGet(opts);
+        if (opts.mediation === "conditional") return origGet(opts);
         console.info("[WEBAUTHN:frame] Intercepting credentials.get()");
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
