@@ -17,52 +17,40 @@ const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFid
 const execFileAsync = promisify(execFile);
 
 /**
- * Run a fido2 command with stdin input and optional PIN support.
+ * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
  *
- * PIN handling: when spawned without a terminal, fido2-tools fall back to
- * reading the PIN from stdin (prompt on stderr). This function detects the
- * PIN prompt on stderr and calls pinCallback to collect it from the user.
+ * PIN handling: fido2-tools prompt for PIN on /dev/tty (not stderr) when
+ * spawned without a terminal, making stderr detection unreliable. Instead,
+ * when a PIN is provided, it is appended as the last stdin line and stdin
+ * is closed, letting the tool read it directly from the input stream.
  *
  * @param {string} cmd - Command to run
- * @param {string[]} args - Command arguments
- * @param {string} input - Stdin input (credential parameters)
+ * @param {string[]} args - Command arguments (device should already be included)
+ * @param {string[]} inputLines - Stdin input lines (credential parameters)
  * @param {number} timeoutMs - Process timeout in milliseconds
- * @param {Function|null} pinCallback - Async function that returns PIN string, or null if no PIN expected
+ * @param {string|null} pin - Pre-collected PIN string, or null if no PIN needed
  */
-function spawnFido2(cmd, args, input, timeoutMs, pinCallback) {
+function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(cmd, args, { timeout: timeoutMs });
+    const proc = spawn(cmd, args);
     let stdout = "";
     let stderr = "";
-    let pinHandled = false;
     let rejected = false;
 
-    proc.stdout.on("data", (data) => { stdout += data.toString(); });
-
-    proc.stderr.on("data", (data) => {
-      const chunk = data.toString();
-      stderr += chunk;
-
-      // Detect PIN prompt from fido2-tools: "Enter PIN for /dev/hidrawN:"
-      if (!pinHandled && pinCallback && chunk.includes("Enter PIN for")) {
-        pinHandled = true;
-        console.info("[WEBAUTHN] PIN prompt detected on stderr, collecting PIN via callback");
-        pinCallback()
-          .then((pin) => {
-            console.info("[WEBAUTHN] Writing PIN to fido2-tools stdin");
-            proc.stdin.write(pin + "\n");
-          })
-          .catch((err) => {
-            console.warn("[WEBAUTHN] PIN callback failed:", err.message);
-            rejected = true;
-            proc.kill("SIGTERM");
-            reject(new Error("NotAllowedError: PIN entry cancelled by user"));
-          });
+    const timeout = setTimeout(() => {
+      if (!rejected) {
+        rejected = true;
+        proc.kill("SIGKILL");
+        reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
       }
-    });
+    }, timeoutMs);
+
+    proc.stdout.on("data", (data) => { stdout += data.toString(); });
+    proc.stderr.on("data", (data) => { stderr += data.toString(); });
 
     proc.on("close", (code) => {
+      clearTimeout(timeout);
       if (rejected) return;
       if (code === 0) {
         resolve({ stdout });
@@ -72,13 +60,17 @@ function spawnFido2(cmd, args, input, timeoutMs, pinCallback) {
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timeout);
       if (!rejected) reject(err);
     });
 
-    // Write credential parameters to stdin.
-    // Do NOT end stdin — fido2-tools will read PIN from stdin if needed.
-    // The process exits naturally once the FIDO2 operation completes.
-    proc.stdin.write(input);
+    // Build stdin: credential parameters, then PIN if provided, then close.
+    const allLines = [...inputLines];
+    if (pin) {
+      allLines.push(pin.trim());
+    }
+    proc.stdin.write(allLines.join("\n") + "\n");
+    proc.stdin.end();
   });
 }
 
@@ -232,22 +224,21 @@ async function createCredential(options) {
   const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
 
   // fido2-tools expect standard base64, not hex (validated by rlavriv).
-  const input = [
+  const inputLines = [
     clientDataHash.toString("base64"),
     sanitizeForFido2(options.rpId),
     sanitizeForFido2(options.userName),
     base64urlDecode(options.userId).toString("base64"),
-  ].join("\n") + "\n";
+  ];
 
   const args = buildCredArgs(options.authenticatorSelection);
   const chosenAlg = selectAlgorithm(options.pubKeyCredParams, args);
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
-  // Always pass PIN callback — spawnFido2 only uses it when prompted.
   const { stdout } = await spawnFido2(
-    "fido2-cred", args, input, timeoutMs,
-    options.pinCallback || null,
+    "fido2-cred", args, inputLines, timeoutMs,
+    options.preCollectedPin || null,
   );
 
   const lines = stdout.trim().split("\n");
@@ -315,19 +306,23 @@ async function getAssertion(options) {
   // fido2-tools expect standard base64, not hex (same as createCredential).
   const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];
 
-  if (options.allowCredentials && options.allowCredentials.length > 0) {
-    for (const cred of options.allowCredentials) {
-      inputLines.push(base64urlDecode(cred.id).toString("base64"));
-    }
+  const hasAllowCredentials = options.allowCredentials && options.allowCredentials.length > 0;
+  if (hasAllowCredentials) {
+    // fido2-assert accepts one credential ID on line 3. Use the first one
+    // (servers list them in preference order). The tool selects which
+    // credential on the device matches.
+    inputLines.push(base64urlDecode(options.allowCredentials[0].id).toString("base64"));
   }
 
-  const input = inputLines.join("\n") + "\n";
+  const args = ["-G"];
 
-  // -r enables resident/discoverable credential mode (required for Microsoft
-  // Entra ID FIDO2 sign-in with YubiKeys). Validated by rlavriv on fido2-tools 1.16.0.
-  // -h (hmac-secret) is intentionally omitted — it prevents resident assertions
-  // from working without an explicit credential ID.
-  const args = ["-G", "-r"];
+  // -r (resident/discoverable) is only needed when the server doesn't specify
+  // which credentials to use. When allowCredentials is provided, the server
+  // has selected specific credentials — don't use -r or it conflicts.
+  // Validated by rlavriv on fido2-tools 1.16.0 with YubiKey.
+  if (!hasAllowCredentials) {
+    args.push("-r");
+  }
 
   // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
   if (options.userVerification === "required") {
@@ -338,10 +333,9 @@ async function getAssertion(options) {
   console.info("[WEBAUTHN] getAssertion: running fido2-assert with args:", args.filter(a => !a.startsWith("/dev")).join(" "));
 
   const timeoutMs = (options.timeout || 60) * 1000;
-  // Always pass PIN callback — spawnFido2 only uses it when prompted.
   const { stdout } = await spawnFido2(
-    "fido2-assert", args, input, timeoutMs,
-    options.pinCallback || null,
+    "fido2-assert", args, inputLines, timeoutMs,
+    options.preCollectedPin || null,
   );
 
   const lines = stdout.trim().split("\n");
