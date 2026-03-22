@@ -39,6 +39,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Reference
 
+- **[Electron Alternatives Research](electron-alternatives-research.md)** - Evaluation of Tauri, NW.js, CEF, Neutralinojs, and others as potential Electron replacements
+  - Chromium rendering requirement eliminates most alternatives; remaining options offer no advantage
+  - **Status:** Not planned; Electron remains the only viable framework for wrapping Teams
+
 - **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.
 
 
