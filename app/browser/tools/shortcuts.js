@@ -46,11 +46,15 @@ function initInternal() {
   whenWindowReady(addEventListeners);
 }
 
-function whenWindowReady(callback) {
+const MAX_READY_RETRIES = 30;
+
+function whenWindowReady(callback, attempt = 0) {
   if (globalThis.window) {
     callback();
+  } else if (attempt >= MAX_READY_RETRIES) {
+    console.warn('[SHORTCUTS] Window not available after', MAX_READY_RETRIES, 'attempts, giving up');
   } else {
-    setTimeout(() => whenWindowReady(callback), 1000);
+    setTimeout(() => whenWindowReady(callback, attempt + 1), 1000);
   }
 }
 
@@ -69,12 +73,14 @@ function addEventListeners() {
   });
 }
 
-function whenIframeReady(callback) {
+function whenIframeReady(callback, attempt = 0) {
   const iframe = globalThis.document.getElementsByTagName("iframe")[0];
   if (iframe) {
     callback(iframe);
+  } else if (attempt >= MAX_READY_RETRIES) {
+    console.warn('[SHORTCUTS] Iframe not available after', MAX_READY_RETRIES, 'attempts, giving up');
   } else {
-    setTimeout(() => whenIframeReady(callback), 1000);
+    setTimeout(() => whenIframeReady(callback, attempt + 1), 1000);
   }
 }
 

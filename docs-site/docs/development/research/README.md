@@ -10,6 +10,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
+- **[System Performance Research](system-performance-research.md)** - Renderer overhead, main process I/O, and metrics infrastructure
+  - Identifies 10 performance-sensitive patterns (MutationObserver sprawl, polling, sequential I/O)
+  - Proposes lightweight startup/memory instrumentation with zero dependencies
+  - **Status:** Research complete, prioritized implementation plan included
+
 - **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.6.0
   - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
   - ESLint 10 section already shipped in v2.7.8
