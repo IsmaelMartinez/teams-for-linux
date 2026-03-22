@@ -23,7 +23,11 @@ const execFileAsync = promisify(execFile);
  * PIN handling: fido2-tools use readpassphrase() which tries /dev/tty first.
  * To force stdin-based PIN input, the child is spawned detached (setsid on
  * Linux) so open("/dev/tty") fails and readpassphrase falls back to stdin.
- * The PIN is appended as the last stdin line, then stdin is closed.
+ *
+ * PIN handling: credential parameters are written to stdin first, then we
+ * monitor stderr for the "Enter PIN for" prompt. Only when that prompt
+ * appears do we write the pre-collected PIN. This avoids the race condition
+ * of writing PIN too early (which caused "invalid PIN length" errors).
  *
  * @param {string} cmd - Command to run
  * @param {string[]} args - Command arguments (device should already be included)
@@ -44,6 +48,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
     let stdout = "";
     let stderr = "";
     let rejected = false;
+    let pinWritten = false;
 
     const timeout = setTimeout(() => {
       if (!rejected) {
@@ -56,7 +61,20 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
     }, timeoutMs);
 
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
-    proc.stderr.on("data", (data) => { stderr += data.toString(); });
+
+    proc.stderr.on("data", (data) => {
+      const chunk = data.toString();
+      stderr += chunk;
+
+      // Detect the PIN prompt: "Enter PIN for /dev/hidrawN:"
+      // Only when the tool is ready for PIN input do we write it.
+      if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
+        pinWritten = true;
+        console.info("[WEBAUTHN] PIN prompt detected, writing PIN (%d chars)", pin.trim().length);
+        proc.stdin.write(pin.trim() + "\n");
+        proc.stdin.end();
+      }
+    });
 
     proc.on("close", (code) => {
       clearTimeout(timeout);
@@ -73,22 +91,14 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
       if (!rejected) reject(err);
     });
 
-    // Build stdin: credential parameters (newline-terminated), then PIN if
-    // provided. The PIN is written as a separate chunk because fido2-tools
-    // use readpassphrase() to read it — which reads until newline or EOF.
-    // Writing everything in one joined string caused "invalid PIN length"
-    // errors because the tool consumed bytes at unpredictable boundaries.
+    // Write credential parameters to stdin. Do NOT close stdin yet —
+    // fido2-tools will prompt for PIN on stderr when ready, and we
+    // write the PIN then (see stderr handler above).
     const paramBlock = inputLines.join("\n") + "\n";
     proc.stdin.write(paramBlock);
-    if (pin) {
-      // Small delay to let fido2-tools finish reading credential parameters
-      // and switch to PIN reading mode (readpassphrase).
-      setTimeout(() => {
-        console.info("[WEBAUTHN] Writing PIN to stdin (%d chars)", pin.trim().length);
-        proc.stdin.write(pin.trim() + "\n");
-        proc.stdin.end();
-      }, 100);
-    } else {
+
+    // If no PIN is needed, close stdin so the tool doesn't hang waiting.
+    if (!pin) {
       proc.stdin.end();
     }
   });
