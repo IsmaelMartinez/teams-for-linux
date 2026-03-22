@@ -275,7 +275,11 @@ ipcMain.handle('get-perf-metrics', () => ({
 ```
 
 This adds no dependencies and produces structured logs compatible with the existing
-`electron-log` infrastructure.
+`electron-log` infrastructure. Since `electron-log` intercepts `console.*` calls in
+production, all `[PERF]`-prefixed messages are automatically written to the log file
+(typically `~/.config/teams-for-linux/logs/main.log`). No additional transport
+configuration is needed — developers and users can grep for `[PERF]` in the existing
+log output to review startup timings and memory trends.
 
 ## Implementation Priority
 
