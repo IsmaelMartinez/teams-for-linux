@@ -49,16 +49,20 @@ page fires its ready event. If polling is unavoidable, use exponential backoff c
 
 #### 2. Multiple full-subtree MutationObservers on document.body
 
-Two independent MutationObservers both watch `document.body` with `{ subtree: true }`:
+Two independent MutationObservers both watch `document.body` with `{ childList: true, subtree: true }`:
 
 | Observer | File | Lines | Extra |
 |----------|------|-------|-------|
-| MQTT status monitor | `app/browser/tools/mqttStatusMonitor.js` | 98–102 | Also polls every 10 s (line 114) |
-| Screen sharing UI | `app/screenSharing/injectedScreenSharing.js` | 311–315 | Also polls every 5 s (line 335) |
+| MQTT status monitor | `app/browser/tools/mqttStatusMonitor.js` | 98–103 | Also polls every 10 s (line 114) |
+| Screen sharing UI | `app/screenSharing/injectedScreenSharing.js` | 311–316 | Also polls every 5 s (line 335) |
 
-Every DOM mutation anywhere in the page fires callbacks for both observers. The Teams web app
-is mutation-heavy (React reconciliation, chat messages, presence updates), so this is a
-significant source of overhead.
+Both observers use `attributeFilter` arrays to limit which attribute changes trigger callbacks
+(MQTT filters on `class`, `aria-label`, `title`, `data-testid`; screen sharing on `class`,
+`data-tid`, `title`, `aria-label`). This mitigates attribute-triggered overhead, but the
+primary cost comes from `childList: true` combined with `subtree: true` — every node
+insertion or removal anywhere in the page (React reconciliation, chat messages, presence
+updates) fires callbacks for both observers. The Teams web app is mutation-heavy, so this
+remains a significant source of overhead.
 
 **Recommendation:**
 - Consolidate into a single shared `MutationObserver` dispatcher that fans out to subscribers.
@@ -154,13 +158,21 @@ avoid extra `stat` calls, then parallelize child directory traversal.
 
 **File:** `app/mainAppWindow/index.js`
 
-Multiple `.on()` listeners are attached to `webContents`, `session.webRequest`, and IPC
-channels but never explicitly removed when the window is destroyed. While Electron garbage
-collects most of these, explicit cleanup prevents edge cases during window recreation
-(e.g., after a crash restart).
+Multiple `.on()` listeners are registered but never removed. Notably, listeners on global
+singletons persist beyond window lifetime:
 
-**Recommendation:** Store listener references and call `removeListener()` or
-`removeAllListeners()` in the window `closed` event handler.
+- `nativeTheme.on("updated", ...)` — line 590
+- `powerMonitor.on("resume", ...)` — line 822
+- `window.webContents.on("did-finish-load" | "did-frame-finish-load" | "did-navigate" | "did-navigate-in-page", ...)` — lines 845–852
+
+The `onWindowClosed` handler (line 799) sets `window = null` and calls `app.quit()` but does
+not remove any listeners. Since the app quits immediately this is benign in the current flow,
+but the `nativeTheme` and `powerMonitor` listeners would leak if the window were ever
+recreated without a full restart (e.g., after a crash recovery or future multi-window support).
+
+**Recommendation:** Store listener references and call `removeListener()` in the window
+`closed` event handler, particularly for global singleton listeners (`nativeTheme`,
+`powerMonitor`).
 
 ---
 
