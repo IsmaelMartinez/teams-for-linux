@@ -73,13 +73,24 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
       if (!rejected) reject(err);
     });
 
-    // Build stdin: credential parameters, then PIN if provided, then close.
-    const allLines = [...inputLines];
+    // Build stdin: credential parameters (newline-terminated), then PIN if
+    // provided. The PIN is written as a separate chunk because fido2-tools
+    // use readpassphrase() to read it — which reads until newline or EOF.
+    // Writing everything in one joined string caused "invalid PIN length"
+    // errors because the tool consumed bytes at unpredictable boundaries.
+    const paramBlock = inputLines.join("\n") + "\n";
+    proc.stdin.write(paramBlock);
     if (pin) {
-      allLines.push(pin.trim());
+      // Small delay to let fido2-tools finish reading credential parameters
+      // and switch to PIN reading mode (readpassphrase).
+      setTimeout(() => {
+        console.info("[WEBAUTHN] Writing PIN to stdin (%d chars)", pin.trim().length);
+        proc.stdin.write(pin.trim() + "\n");
+        proc.stdin.end();
+      }, 100);
+    } else {
+      proc.stdin.end();
     }
-    proc.stdin.write(allLines.join("\n") + "\n");
-    proc.stdin.end();
   });
 }
 
