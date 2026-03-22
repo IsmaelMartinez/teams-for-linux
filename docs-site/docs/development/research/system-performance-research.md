@@ -109,25 +109,16 @@ count (the outer check exists in the caller, but the render pipeline itself shou
 
 ### MEDIUM — Main Process and I/O
 
-#### 5. Recursive setTimeout without retry limits
+#### 5. Recursive setTimeout without retry limits --- IMPLEMENTED
 
 **File:** `app/browser/tools/shortcuts.js:49–55, 72–79`
 
-```javascript
-function whenWindowReady(callback) {
-    if (globalThis.window) {
-        callback();
-    } else {
-        setTimeout(() => whenWindowReady(callback), 1000);
-    }
-}
-```
+Both `whenWindowReady()` and `whenIframeReady()` polled every 1 second with no maximum retry
+count. If the window or iframe never appeared (e.g., a load failure), these polled forever.
 
-Both `whenWindowReady()` and `whenIframeReady()` poll every 1 second with no maximum retry
-count. If the window or iframe never appears (e.g., a load failure), these poll forever.
-
-**Recommendation:** Add a maximum retry count (e.g., 30 attempts = 30 seconds). Log a warning
-and stop if the limit is reached. Consider exponential backoff.
+**Fix applied:** Added `MAX_READY_RETRIES = 30` (30 seconds). Both functions now accept an
+`attempt` counter and log a warning via `console.warn` when the limit is reached instead of
+polling indefinitely.
 
 ---
 
@@ -289,7 +280,7 @@ log output to review startup timings and memory trends.
 | 2 | Cache tray icon resources (item 4) | Low | Medium — eliminates redundant canvas/toDataURL work |
 | 3 | Replace timestamp polling with observer (item 1) | Low | Medium — removes continuous 1 s timer |
 | 4 | Parallelize offline detection (item 8) | Low | Medium — reduces worst-case block from 10 s to ~2 s |
-| 5 | Add retry limits to shortcuts.js (item 5) | Low | Low — prevents unbounded polling on error paths |
+| ~~5~~ | ~~Add retry limits to shortcuts.js (item 5)~~ | ~~Low~~ | ~~Low~~ — **Implemented** |
 | 6 | Parallelize cache size calculation (item 6) | Medium | Low — only runs hourly, but blocks event loop |
 | 7 | Add startup/memory instrumentation | Low | Diagnostic — enables measuring future improvements |
 

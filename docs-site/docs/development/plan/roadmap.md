@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-22
 **Current Version:** v2.7.12 (Electron 39.8.2)
 **Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
@@ -25,6 +25,8 @@ This document outlines the development direction for Teams for Linux. It focuses
 ### Stability and Reliability
 
 The primary focus for the v2.7.x line. Auth recovery after sleep, network error scoping (only reload on main-frame failures, not sub-frames), and media permission handling are the key areas. The goal is a solid, dependable experience before considering major dependency upgrades.
+
+A [system performance audit](../research/system-performance-research.md) identified 10 performance-sensitive patterns across renderer-side browser tools, main-process I/O, and network handling. Item 5 (unbounded polling in shortcuts.js) has been fixed. The remaining high-priority items --- consolidating MutationObservers (items 2/3), caching tray icon resources (item 4), replacing timestamp polling (item 1), and parallelising offline detection (item 8) --- are low-to-medium effort and can be addressed opportunistically during the v2.7.x line.
 
 ### Media and Calls
 
