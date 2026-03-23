@@ -1,20 +1,23 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const defaultHiddenSelectors = [
+  "#download-mobile-app-button",
+  "#download-app-button",
+  "#get-app-button",
+  "[data-tid^='more-options-menu-premium-button']",
+  "[data-tid='more-options-header'] > div:first-child",
+  "[data-tid='more-options-header'] > span:not(.fui-Button__icon)",
+].join(", ");
+const defaultHideCss = `${defaultHiddenSelectors} { display: none !important; }`;
+const zoetropeCss = ".zoetrope { animation-iteration-count: 1 !important; }";
+
 exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
   const customCssLocation = getCustomCssLocation(config);
   if (customCssLocation) {
     applyCustomCSSToContent(content, customCssLocation);
   }
-  const hiddenSelectors = [
-    "#download-mobile-app-button",
-    "#download-app-button",
-    "#get-app-button",
-    "[data-tid='more-options-menu-premium-button']",
-    "[data-tid='more-options-header'] > div:first-child",
-  ].join(", ");
-  content.insertCSS(`${hiddenSelectors} { display: none !important; }`);
-  content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
+  applyDefaultCSSToContent(content);
 };
 
 exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config) {
@@ -22,6 +25,7 @@ exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config) {
   if (customCssLocation) {
     applyCustomCSSToFrame(webFrame, customCssLocation);
   }
+  applyDefaultCSSToFrame(webFrame);
 };
 
 function getCustomCssLocation(config) {
@@ -39,6 +43,11 @@ function applyCustomCSSToContent(content, cssLocation) {
       content.insertCSS(data);
     }
   });
+}
+
+function applyDefaultCSSToContent(content) {
+  content.insertCSS(defaultHideCss);
+  content.insertCSS(zoetropeCss);
 }
 
 /**
@@ -70,4 +79,17 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 			}
 		`);
   });
+}
+
+function applyDefaultCSSToFrame(webFrame) {
+  const cssContent = JSON.stringify(`${defaultHideCss}\n${zoetropeCss}`);
+  webFrame.executeJavaScript(`
+			if (!document.getElementById("tfl-default-css-style")) {
+				const style = document.createElement('style');
+				style.id = "tfl-default-css-style";
+				style.type = "text/css";
+				style.textContent = ${cssContent};
+				document.head.appendChild(style);
+			}
+		`);
 }
