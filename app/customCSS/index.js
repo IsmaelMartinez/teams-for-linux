@@ -6,9 +6,14 @@ exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
   if (customCssLocation) {
     applyCustomCSSToContent(content, customCssLocation);
   }
-  content.insertCSS(
-    "#download-mobile-app-button, #download-app-button, #get-app-button, [data-tid='more-options-menu-premium-button'], [data-tid='more-options-header'] > div:first-child { display:none !important; }"
-  );
+  const hiddenSelectors = [
+    "#download-mobile-app-button",
+    "#download-app-button",
+    "#get-app-button",
+    "[data-tid='more-options-menu-premium-button']",
+    "[data-tid='more-options-header'] > div:first-child",
+  ].join(", ");
+  content.insertCSS(`${hiddenSelectors} { display: none !important; }`);
   content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
 };
 
