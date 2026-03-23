@@ -50,7 +50,7 @@ Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting
 
 ## Open PRs
 
-Eight PRs are open. Three have all CI checks passing and no review blockers (merge candidates). Two have CI failures needing investigation. One has reviewer-requested changes. Two are long-running feature PRs.
+As of 2026-03-23, eight PRs are open. Three have all CI checks passing and no review blockers (merge candidates). Two have CI failures needing investigation. One has reviewer-requested changes. Two are long-running feature PRs.
 
 | PR | Fix | Linked Issue | CI | Review |
 |----|-----|-------------|-----|--------|
@@ -58,10 +58,10 @@ Eight PRs are open. Three have all CI checks passing and no review blockers (mer
 | [#2319](https://github.com/IsmaelMartinez/teams-for-linux/pull/2319) | SSO reload for blank calendar | [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) | pass | --- |
 | [#2331](https://github.com/IsmaelMartinez/teams-for-linux/pull/2331) | Media permissions for call crashes | Call crashes | pass | --- |
 | [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) | Electron 41.0.2 bump (Dependabot) | v2.8.0 | pass | --- |
+| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | fail | --- |
+| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | fail | --- |
 | [#2350](https://github.com/IsmaelMartinez/teams-for-linux/pull/2350) | `webRTCIPHandlingPolicy` config | [#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349) | fail | changes requested |
 | [#2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357) | FIDO2 hardware security key support | [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) | fail | --- |
-| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | fail | --- |
-| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | fail | --- |
 
 Decision needed: #2193, #2319, and #2331 are merge candidates (CI green, no blockers). #2207 is 31 days old with CI failures and may need rebasing or closing. #2347 (Electron 41) supersedes the previous #2223 (Electron 40, now closed).
 
