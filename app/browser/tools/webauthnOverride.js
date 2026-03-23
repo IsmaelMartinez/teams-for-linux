@@ -235,30 +235,46 @@ function reconstructCreateResponse(data) {
 
 function reconstructGetResponse(data) {
   const rawId = base64urlToBuffer(data.rawId);
-  return {
+  const authDataBuf = base64urlToBuffer(data.authenticatorData);
+  const clientDataBuf = base64urlToBuffer(data.clientDataJson);
+  const sigBuf = base64urlToBuffer(data.signature);
+  const userHandleBuf = data.userHandle ? base64urlToBuffer(data.userHandle) : null;
+
+  const response = {
+    authenticatorData: authDataBuf,
+    clientDataJSON: clientDataBuf,
+    signature: sigBuf,
+    userHandle: userHandleBuf,
+    // Some implementations check for these methods on AuthenticatorAssertionResponse
+    getAuthenticatorData: () => authDataBuf,
+  };
+
+  const credential = {
     id: data.credentialId,
     rawId: rawId,
     type: data.type,
     authenticatorAttachment: "cross-platform",
-    response: {
-      authenticatorData: base64urlToBuffer(data.authenticatorData),
-      clientDataJSON: base64urlToBuffer(data.clientDataJson),
-      signature: base64urlToBuffer(data.signature),
-      userHandle: data.userHandle ? base64urlToBuffer(data.userHandle) : null,
-    },
+    response,
     getClientExtensionResults: () => ({}),
     toJSON: () => ({
       id: data.credentialId,
       rawId: data.rawId,
       type: data.type,
+      authenticatorAttachment: "cross-platform",
+      clientExtensionResults: {},
       response: {
         authenticatorData: data.authenticatorData,
         clientDataJSON: data.clientDataJson,
         signature: data.signature,
-        userHandle: data.userHandle,
+        userHandle: data.userHandle || null,
       },
     }),
   };
+
+  console.info("[WEBAUTHN] Reconstructed get response: id=%s, authData=%d bytes, sig=%d bytes",
+    data.credentialId?.substring(0, 10) + "...", authDataBuf.byteLength, sigBuf.byteLength);
+
+  return credential;
 }
 
 /**

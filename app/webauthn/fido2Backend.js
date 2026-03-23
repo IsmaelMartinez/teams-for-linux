@@ -337,19 +337,12 @@ async function getAssertion(options) {
   const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];
 
   const hasAllowCredentials = options.allowCredentials && options.allowCredentials.length > 0;
-  if (hasAllowCredentials) {
-    // fido2-assert accepts one credential ID on line 3. Use the first one
-    // (servers list them in preference order). The tool selects which
-    // credential on the device matches.
-    inputLines.push(base64urlDecode(options.allowCredentials[0].id).toString("base64"));
-  }
 
   const args = ["-G"];
 
   // -r (resident/discoverable) is only needed when the server doesn't specify
   // which credentials to use. When allowCredentials is provided, the server
   // has selected specific credentials — don't use -r or it conflicts.
-  // Validated by rlavriv on fido2-tools 1.16.0 with YubiKey.
   if (!hasAllowCredentials) {
     args.push("-r");
   }
@@ -360,18 +353,59 @@ async function getAssertion(options) {
   }
 
   args.push(device);
-  console.info("[WEBAUTHN] getAssertion: running fido2-assert with args:", args.filter(a => !a.startsWith("/dev")).join(" "));
 
   const timeoutMs = (options.timeout || 60) * 1000;
+
+  // When multiple allowCredentials are provided, try each one until fido2-assert
+  // succeeds. The server lists all registered credentials, but only one will
+  // match the key that's plugged in (marcovr's bug: first credential may not
+  // be the one on the device).
+  if (hasAllowCredentials) {
+    let lastError;
+    for (const cred of options.allowCredentials) {
+      const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
+      console.info("[WEBAUTHN] getAssertion: trying credential %d/%d, args: %s",
+        options.allowCredentials.indexOf(cred) + 1, options.allowCredentials.length,
+        args.filter(a => !a.startsWith("/dev")).join(" "));
+      try {
+        const { stdout } = await spawnFido2(
+          "fido2-assert", args, credInputLines, timeoutMs,
+          options.preCollectedPin || null,
+        );
+        return parseAssertionOutput(stdout, options, clientDataJSON);
+      } catch (err) {
+        console.info("[WEBAUTHN] getAssertion: credential %d failed: %s",
+          options.allowCredentials.indexOf(cred) + 1, err.message);
+        lastError = err;
+        // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
+        if (!err.message.includes("NO_CREDENTIALS")) {
+          throw err; // Other errors (bad PIN, timeout) should not be retried
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  // No allowCredentials — use resident key mode
+  console.info("[WEBAUTHN] getAssertion: resident key mode, args: %s",
+    args.filter(a => !a.startsWith("/dev")).join(" "));
   const { stdout } = await spawnFido2(
     "fido2-assert", args, inputLines, timeoutMs,
     options.preCollectedPin || null,
   );
+  return parseAssertionOutput(stdout, options, clientDataJSON);
+}
 
+/**
+ * Parse fido2-assert stdout into a structured assertion result.
+ * @param {string} stdout - Raw stdout from fido2-assert
+ * @param {object} options - Original assertion options (for rpId, allowCredentials)
+ * @param {Buffer} clientDataJSON - The clientDataJSON buffer
+ * @returns {object} Assertion result
+ */
+function parseAssertionOutput(stdout, options, clientDataJSON) {
   const lines = stdout.trim().split("\n");
   // fido2-assert may echo back input lines like fido2-cred does.
-  // Detect echoed input by checking if the second line matches our rpId.
-  // This is defensive — needs further validation with more fido2-tools versions.
   const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
   const dataLines = lines.slice(echoOffset);
   if (dataLines.length < 2) {
