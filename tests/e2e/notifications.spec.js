@@ -20,37 +20,28 @@ import { join } from 'node:path';
 
 async function launchApp(notificationMethod) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-notif-'));
-  const args = [
-    './app/index.js',
-    `--notificationMethod=${notificationMethod}`,
-    ...(process.env.CI ? ['--no-sandbox'] : []),
-  ];
-
   const electronApp = await electron.launch({
-    args,
+    args: [
+      './app/index.js',
+      `--notificationMethod=${notificationMethod}`,
+      ...(process.env.CI ? ['--no-sandbox'] : []),
+    ],
     env: { ...process.env, E2E_USER_DATA_DIR: userDataDir },
     timeout: 30000,
   });
-
   return { electronApp, userDataDir };
 }
 
 async function getMainWindow(electronApp) {
   await electronApp.firstWindow({ timeout: 30000 });
   await new Promise(resolve => setTimeout(resolve, 4000));
-
   const windows = electronApp.windows();
   return windows.find(w => {
-    const url = w.url();
     try {
-      const hostname = new URL(url).hostname;
-      return hostname === 'teams.cloud.microsoft' ||
-        hostname === 'teams.microsoft.com' ||
-        hostname === 'teams.live.com' ||
-        hostname === 'login.microsoftonline.com';
-    } catch {
-      return false;
-    }
+      const hostname = new URL(w.url()).hostname;
+      return ['teams.cloud.microsoft', 'teams.microsoft.com',
+        'teams.live.com', 'login.microsoftonline.com'].includes(hostname);
+    } catch { return false; }
   });
 }
 
@@ -62,10 +53,8 @@ async function cleanup(electronApp, userDataDir) {
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
       ]);
     } catch {
-      try {
-        const pid = electronApp.process()?.pid;
-        if (pid) process.kill(pid, 'SIGKILL');
-      } catch { /* ignore */ }
+      try { if (electronApp.process()?.pid) process.kill(electronApp.process().pid, 'SIGKILL'); }
+      catch { /* ignore */ }
     }
   }
   if (userDataDir) {
@@ -73,57 +62,65 @@ async function cleanup(electronApp, userDataDir) {
   }
 }
 
-test.describe('Notification override', () => {
+// Shared browser-side function to inspect a Notification stub's shape.
+// Serialised as a string so it can be passed to evaluate() without duplication.
+function checkStubShape() {
+  const n = new window.Notification('Test', { body: 'test body' });
+  return {
+    hasAddEventListener: typeof n.addEventListener === 'function',
+    hasRemoveEventListener: typeof n.removeEventListener === 'function',
+    hasClose: typeof n.close === 'function',
+    hasDispatchEvent: typeof n.dispatchEvent === 'function',
+    hasOnclick: 'onclick' in n,
+    hasOnclose: 'onclose' in n,
+    hasOnerror: 'onerror' in n,
+    hasOnshow: 'onshow' in n,
+  };
+}
 
-  test.describe('electron method', () => {
-    let electronApp, userDataDir, mainWindow;
+// Factory: creates a describe block for a given notificationMethod with
+// shared beforeEach (launch app) and afterEach (cleanup).  Returns the
+// mainWindow via a context object so individual tests stay concise.
+function describeMethod(method, testsFn) {
+  test.describe(`${method} method`, () => {
+    const ctx = {};
 
     test.beforeEach(async () => {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
+      const { electronApp, userDataDir } = await launchApp(method);
+      Object.assign(ctx, { electronApp, userDataDir });
+      ctx.mainWindow = await getMainWindow(electronApp);
+      expect(ctx.mainWindow).toBeTruthy();
+      await ctx.mainWindow.waitForLoadState('load', { timeout: 30000 });
     });
 
     test.afterEach(async () => {
-      await cleanup(electronApp, userDataDir);
+      await cleanup(ctx.electronApp, ctx.userDataDir);
     });
 
+    testsFn(ctx);
+  });
+}
+
+test.describe('Notification override', () => {
+
+  describeMethod('electron', (ctx) => {
     test('window.Notification is overridden with correct static API', async () => {
-      const permissionValue = await mainWindow.evaluate(() => window.Notification.permission);
+      const permissionValue = await ctx.mainWindow.evaluate(() => window.Notification.permission);
       expect(permissionValue).toBe('granted');
 
-      const requestResult = await mainWindow.evaluate(() => window.Notification.requestPermission());
+      const requestResult = await ctx.mainWindow.evaluate(() => window.Notification.requestPermission());
       expect(requestResult).toBe('granted');
     });
 
-    test('returns stub with lifecycle methods', async () => {
-      const stubShape = await mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test body' });
-        return {
-          hasAddEventListener: typeof n.addEventListener === 'function',
-          hasRemoveEventListener: typeof n.removeEventListener === 'function',
-          hasClose: typeof n.close === 'function',
-          hasDispatchEvent: typeof n.dispatchEvent === 'function',
-          hasOnclick: 'onclick' in n,
-          hasOnclose: 'onclose' in n,
-          hasOnerror: 'onerror' in n,
-          hasOnshow: 'onshow' in n,
-        };
-      });
-
-      expect(stubShape.hasAddEventListener).toBe(true);
-      expect(stubShape.hasRemoveEventListener).toBe(true);
-      expect(stubShape.hasClose).toBe(true);
-      expect(stubShape.hasDispatchEvent).toBe(true);
-      expect(stubShape.hasOnclick).toBe(true);
-      expect(stubShape.hasOnclose).toBe(true);
-      expect(stubShape.hasOnerror).toBe(true);
-      expect(stubShape.hasOnshow).toBe(true);
+    test('returns stub with all lifecycle methods and callbacks', async () => {
+      const shape = await ctx.mainWindow.evaluate(checkStubShape);
+      for (const value of Object.values(shape)) {
+        expect(value).toBe(true);
+      }
     });
 
     test('addEventListener wires up callbacks correctly', async () => {
-      const result = await mainWindow.evaluate(() => {
+      const result = await ctx.mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         let clickFired = false;
         let closeFired = false;
@@ -142,7 +139,7 @@ test.describe('Notification override', () => {
     });
 
     test('removeEventListener clears callbacks', async () => {
-      const result = await mainWindow.evaluate(() => {
+      const result = await ctx.mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         const handler = () => {};
 
@@ -160,7 +157,7 @@ test.describe('Notification override', () => {
     });
 
     test('close() triggers onclose callback', async () => {
-      const closeFired = await mainWindow.evaluate(() => {
+      const closeFired = await ctx.mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         let fired = false;
         n.addEventListener('close', () => { fired = true; });
@@ -172,7 +169,7 @@ test.describe('Notification override', () => {
     });
 
     test('fires show event asynchronously', async () => {
-      const showFired = await mainWindow.evaluate(async () => {
+      const showFired = await ctx.mainWindow.evaluate(async () => {
         const n = new window.Notification('Test', { body: 'test' });
         let fired = false;
         n.addEventListener('show', () => { fired = true; });
@@ -184,7 +181,7 @@ test.describe('Notification override', () => {
     });
 
     test('multiple notifications can be created sequentially', async () => {
-      const result = await mainWindow.evaluate(() => {
+      const result = await ctx.mainWindow.evaluate(() => {
         const stubs = [];
         for (let i = 0; i < 5; i++) {
           const n = new window.Notification(`Test ${i}`, { body: `body ${i}` });
@@ -204,61 +201,22 @@ test.describe('Notification override', () => {
     });
   });
 
-  test.describe('custom method', () => {
-    let electronApp, userDataDir, mainWindow;
-
-    test.beforeEach(async () => {
-      ({ electronApp, userDataDir } = await launchApp('custom'));
-      mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-    });
-
-    test.afterEach(async () => {
-      await cleanup(electronApp, userDataDir);
-    });
-
+  describeMethod('custom', (ctx) => {
     test('returns stub with lifecycle methods', async () => {
-      const stubShape = await mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test body' });
-        return {
-          hasAddEventListener: typeof n.addEventListener === 'function',
-          hasRemoveEventListener: typeof n.removeEventListener === 'function',
-          hasClose: typeof n.close === 'function',
-          hasDispatchEvent: typeof n.dispatchEvent === 'function',
-        };
-      });
-
-      expect(stubShape.hasAddEventListener).toBe(true);
-      expect(stubShape.hasRemoveEventListener).toBe(true);
-      expect(stubShape.hasClose).toBe(true);
-      expect(stubShape.hasDispatchEvent).toBe(true);
+      const shape = await ctx.mainWindow.evaluate(checkStubShape);
+      expect(shape.hasAddEventListener).toBe(true);
+      expect(shape.hasRemoveEventListener).toBe(true);
+      expect(shape.hasClose).toBe(true);
+      expect(shape.hasDispatchEvent).toBe(true);
     });
   });
 
-  test.describe('web method', () => {
-    let electronApp, userDataDir, mainWindow;
-
-    test.beforeEach(async () => {
-      ({ electronApp, userDataDir } = await launchApp('web'));
-      mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-    });
-
-    test.afterEach(async () => {
-      await cleanup(electronApp, userDataDir);
-    });
-
+  describeMethod('web', (ctx) => {
     test('does not break native Notification lifecycle', async () => {
-      const result = await mainWindow.evaluate(() => {
+      const result = await ctx.mainWindow.evaluate(() => {
         try {
           const n = new window.Notification('Test', { body: 'test body' });
-          return {
-            didNotThrow: true,
-            type: typeof n,
-            hasOnclick: 'onclick' in n,
-          };
+          return { didNotThrow: true, type: typeof n, hasOnclick: 'onclick' in n };
         } catch (e) {
           return { didNotThrow: false, error: e.message };
         }
