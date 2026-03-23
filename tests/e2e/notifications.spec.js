@@ -32,17 +32,23 @@ async function launchApp(notificationMethod) {
   return { electronApp, userDataDir };
 }
 
+const TEAMS_HOSTNAMES = ['teams.cloud.microsoft', 'teams.microsoft.com',
+  'teams.live.com', 'login.microsoftonline.com'];
+
 async function getMainWindow(electronApp) {
   await electronApp.firstWindow({ timeout: 30000 });
-  await new Promise(resolve => setTimeout(resolve, 4000));
-  const windows = electronApp.windows();
-  return windows.find(w => {
-    try {
-      const hostname = new URL(w.url()).hostname;
-      return ['teams.cloud.microsoft', 'teams.microsoft.com',
-        'teams.live.com', 'login.microsoftonline.com'].includes(hostname);
-    } catch { return false; }
-  });
+  const deadline = Date.now() + 30000;
+
+  while (Date.now() < deadline) {
+    const mainWindow = electronApp.windows().find(w => {
+      try { return TEAMS_HOSTNAMES.includes(new URL(w.url()).hostname); }
+      catch { return false; }
+    });
+    if (mainWindow) return mainWindow;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  return null;
 }
 
 async function cleanup(electronApp, userDataDir) {
