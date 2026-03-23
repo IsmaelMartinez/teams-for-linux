@@ -1,0 +1,1 @@
+Update flatted dependency to 3.4.2, including fix for CWE-1321 (#2362)
