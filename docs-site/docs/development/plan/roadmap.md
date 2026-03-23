@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-22
+**Last Updated:** 2026-03-23
 **Current Version:** v2.7.12 (Electron 39.8.2)
 **Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
@@ -48,21 +48,22 @@ Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting
 
 ---
 
-## Open PRs --- Awaiting User Validation
+## Open PRs
 
-Seven PRs are open, all awaiting community testing. Six are authored by the maintainer and have only automated bot reviews (gemini-code-assist). No human reviewers have tested the proposed fixes on their setups. These PRs address real user-reported bugs, but the reporters haven't returned to validate.
+As of 2026-03-23, eight PRs are open. Three have all CI checks passing and no review blockers (merge candidates). Two have CI failures needing investigation. One has reviewer-requested changes. Two are long-running feature PRs.
 
-| PR | Fix | Linked Issue | Age |
-|----|-----|-------------|-----|
-| [#2331](https://github.com/IsmaelMartinez/teams-for-linux/pull/2331) | Media permissions for call crashes | Call crashes | 1 day |
-| [#2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) | CSP relaxation for third-party SSO | [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326) | 1 day |
-| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | 2 days |
-| [#2319](https://github.com/IsmaelMartinez/teams-for-linux/pull/2319) | SSO reload for blank calendar | [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) | 4 days |
-| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | 3 weeks |
-| [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | Null sourceId for MQTT publish | MQTT screen share | 3 weeks |
-| [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) | Electron 40 bump (Dependabot) | v2.8.0 | 3 weeks |
+| PR | Fix | Linked Issue | CI | Review |
+|----|-----|-------------|-----|--------|
+| [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | Null sourceId for MQTT publish | MQTT screen share | pass | --- |
+| [#2319](https://github.com/IsmaelMartinez/teams-for-linux/pull/2319) | SSO reload for blank calendar | [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) | pass | --- |
+| [#2331](https://github.com/IsmaelMartinez/teams-for-linux/pull/2331) | Media permissions for call crashes | Call crashes | pass | --- |
+| [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) | Electron 41.0.2 bump (Dependabot) | v2.8.0 | pass | --- |
+| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | fail | --- |
+| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | fail | --- |
+| [#2350](https://github.com/IsmaelMartinez/teams-for-linux/pull/2350) | `webRTCIPHandlingPolicy` config | [#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349) | fail | changes requested |
+| [#2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357) | FIDO2 hardware security key support | [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) | fail | --- |
 
-Decision needed: self-merge the fixes where confidence is high, or wait for user validation. The cross-distro testing improvements below would partly address this by letting the maintainer validate across environments without needing reporter feedback.
+Decision needed: #2193, #2319, and #2331 are merge candidates (CI green, no blockers). #2207 is 31 days old with CI failures and may need rebasing or closing. #2347 (Electron 41) supersedes the previous #2223 (Electron 40, now closed).
 
 ---
 
@@ -104,9 +105,9 @@ The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 config
 
 ## Next Minor Release (v2.8.0) --- Deferred
 
-Electron 40 is a major dependency upgrade (Chromium 144, Node.js 24, V8 14.4). The [research is complete](../research/electron-40-migration-research.md) and there are no blocking breaking changes, but the priority is stabilising on Electron 39 and hardening the testing infrastructure first. The cross-distro test suite should be fully working across all 9 configurations before attempting this upgrade, as Electron upgrades are the primary use case for that infrastructure.
+Electron 41 is a major dependency upgrade (Chromium 146, Node.js 24). The [Electron 40 research](../research/electron-40-migration-research.md) covers the migration path through Electron 40 (Chromium 144, Node.js 24, V8 14.4) and remains relevant. The priority is stabilising on Electron 39 and hardening the testing infrastructure first. The cross-distro test suite should be fully working across all 9 configurations before attempting this upgrade, as Electron upgrades are the primary use case for that infrastructure.
 
-The Dependabot PR [#2223](https://github.com/IsmaelMartinez/teams-for-linux/pull/2223) remains open and will be merged after the v2.7.x line is confirmed stable and the testing infrastructure is ready.
+The Dependabot PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) (Electron 41.0.2) supersedes the previous #2223 (Electron 40, now closed). It will be merged after the v2.7.x line is confirmed stable and the testing infrastructure is ready.
 
 The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with the Electron upgrade if timing aligns.
 
@@ -117,7 +118,7 @@ The notification sound overhaul Phase 2 (custom sound configuration, [research c
 ### Third-Party SSO CSP Fix
 
 **Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
-**Status:** [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) open, validated by user, targeting v2.7.13
+**Status:** Merged in [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) (2026-03-17), targeting v2.7.13
 
 Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. Report-only CSP headers are now automatically stripped for all non-Teams domains (safe, since they should never block). No user configuration is needed. Validated by the reporting user.
 
