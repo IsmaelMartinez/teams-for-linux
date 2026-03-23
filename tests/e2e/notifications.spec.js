@@ -18,9 +18,6 @@ import { join } from 'node:path';
  * containers.
  */
 
-const LIFECYCLE_METHODS = ['addEventListener', 'removeEventListener', 'close', 'dispatchEvent'];
-const CALLBACK_PROPERTIES = ['onclick', 'onclose', 'onerror', 'onshow'];
-
 async function launchApp(notificationMethod) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-notif-'));
   const args = [
@@ -40,11 +37,9 @@ async function launchApp(notificationMethod) {
 
 async function getMainWindow(electronApp) {
   await electronApp.firstWindow({ timeout: 30000 });
-  // Wait for windows to settle
   await new Promise(resolve => setTimeout(resolve, 4000));
 
   const windows = electronApp.windows();
-  // Find a window with a real page (not about:blank)
   return windows.find(w => {
     const url = w.url();
     try {
@@ -79,36 +74,30 @@ async function cleanup(electronApp, userDataDir) {
 }
 
 test.describe('Notification override', () => {
-  test('window.Notification is overridden with correct static API', async () => {
-    let electronApp, userDataDir;
-    try {
+
+  test.describe('electron method', () => {
+    let electronApp, userDataDir, mainWindow;
+
+    test.beforeEach(async () => {
       ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
+      mainWindow = await getMainWindow(electronApp);
       expect(mainWindow).toBeTruthy();
-
       await mainWindow.waitForLoadState('load', { timeout: 30000 });
+    });
 
-      // Check static API
+    test.afterEach(async () => {
+      await cleanup(electronApp, userDataDir);
+    });
+
+    test('window.Notification is overridden with correct static API', async () => {
       const permissionValue = await mainWindow.evaluate(() => window.Notification.permission);
       expect(permissionValue).toBe('granted');
 
       const requestResult = await mainWindow.evaluate(() => window.Notification.requestPermission());
       expect(requestResult).toBe('granted');
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('electron method returns stub with lifecycle methods', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
-      // Create a notification and inspect the returned object
+    test('returns stub with lifecycle methods', async () => {
       const stubShape = await mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test body' });
         return {
@@ -131,20 +120,9 @@ test.describe('Notification override', () => {
       expect(stubShape.hasOnclose).toBe(true);
       expect(stubShape.hasOnerror).toBe(true);
       expect(stubShape.hasOnshow).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('electron stub addEventListener wires up callbacks correctly', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
+    test('addEventListener wires up callbacks correctly', async () => {
       const result = await mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         let clickFired = false;
@@ -153,7 +131,6 @@ test.describe('Notification override', () => {
         n.addEventListener('click', () => { clickFired = true; });
         n.addEventListener('close', () => { closeFired = true; });
 
-        // Simulate Teams calling onclick/onclose
         if (n.onclick) n.onclick();
         if (n.onclose) n.onclose();
 
@@ -162,20 +139,9 @@ test.describe('Notification override', () => {
 
       expect(result.clickFired).toBe(true);
       expect(result.closeFired).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('electron stub removeEventListener clears callbacks', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
+    test('removeEventListener clears callbacks', async () => {
       const result = await mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         const handler = () => {};
@@ -191,20 +157,9 @@ test.describe('Notification override', () => {
 
       expect(result.hadHandler).toBe(true);
       expect(result.cleared).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('electron stub close() triggers onclose callback', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
+    test('close() triggers onclose callback', async () => {
       const closeFired = await mainWindow.evaluate(() => {
         const n = new window.Notification('Test', { body: 'test' });
         let fired = false;
@@ -214,108 +169,21 @@ test.describe('Notification override', () => {
       });
 
       expect(closeFired).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('electron stub fires show event asynchronously', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
+    test('fires show event asynchronously', async () => {
       const showFired = await mainWindow.evaluate(async () => {
         const n = new window.Notification('Test', { body: 'test' });
         let fired = false;
         n.addEventListener('show', () => { fired = true; });
-        // Wait for the async setTimeout(0) to fire
         await new Promise(resolve => setTimeout(resolve, 50));
         return fired;
       });
 
       expect(showFired).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
+    });
 
-  test('custom method returns stub with lifecycle methods', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('custom'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
-      const stubShape = await mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test body' });
-        return {
-          hasAddEventListener: typeof n.addEventListener === 'function',
-          hasRemoveEventListener: typeof n.removeEventListener === 'function',
-          hasClose: typeof n.close === 'function',
-          hasDispatchEvent: typeof n.dispatchEvent === 'function',
-        };
-      });
-
-      expect(stubShape.hasAddEventListener).toBe(true);
-      expect(stubShape.hasRemoveEventListener).toBe(true);
-      expect(stubShape.hasClose).toBe(true);
-      expect(stubShape.hasDispatchEvent).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
-
-  test('web method does not break native Notification lifecycle', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('web'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
-      // For web method, verify the override exists and returns something
-      // (either a real Notification or a bare fallback). The key assertion is
-      // that calling new Notification() does not throw.
-      const result = await mainWindow.evaluate(() => {
-        try {
-          const n = new window.Notification('Test', { body: 'test body' });
-          return {
-            didNotThrow: true,
-            type: typeof n,
-            hasOnclick: 'onclick' in n,
-          };
-        } catch (e) {
-          return { didNotThrow: false, error: e.message };
-        }
-      });
-
-      expect(result.didNotThrow).toBe(true);
-      expect(result.type).toBe('object');
-      expect(result.hasOnclick).toBe(true);
-    } finally {
-      await cleanup(electronApp, userDataDir);
-    }
-  });
-
-  test('multiple notifications can be created sequentially', async () => {
-    let electronApp, userDataDir;
-    try {
-      ({ electronApp, userDataDir } = await launchApp('electron'));
-      const mainWindow = await getMainWindow(electronApp);
-      expect(mainWindow).toBeTruthy();
-
-      await mainWindow.waitForLoadState('load', { timeout: 30000 });
-
-      // This is the core regression test: Teams creates multiple notifications
-      // in sequence. If the stub is missing lifecycle methods, Teams' state
-      // machine breaks and stops calling new Notification() after the first.
+    test('multiple notifications can be created sequentially', async () => {
       const result = await mainWindow.evaluate(() => {
         const stubs = [];
         for (let i = 0; i < 5; i++) {
@@ -333,8 +201,72 @@ test.describe('Notification override', () => {
         expect(stub.hasAddEventListener).toBe(true);
         expect(stub.hasClose).toBe(true);
       }
-    } finally {
+    });
+  });
+
+  test.describe('custom method', () => {
+    let electronApp, userDataDir, mainWindow;
+
+    test.beforeEach(async () => {
+      ({ electronApp, userDataDir } = await launchApp('custom'));
+      mainWindow = await getMainWindow(electronApp);
+      expect(mainWindow).toBeTruthy();
+      await mainWindow.waitForLoadState('load', { timeout: 30000 });
+    });
+
+    test.afterEach(async () => {
       await cleanup(electronApp, userDataDir);
-    }
+    });
+
+    test('returns stub with lifecycle methods', async () => {
+      const stubShape = await mainWindow.evaluate(() => {
+        const n = new window.Notification('Test', { body: 'test body' });
+        return {
+          hasAddEventListener: typeof n.addEventListener === 'function',
+          hasRemoveEventListener: typeof n.removeEventListener === 'function',
+          hasClose: typeof n.close === 'function',
+          hasDispatchEvent: typeof n.dispatchEvent === 'function',
+        };
+      });
+
+      expect(stubShape.hasAddEventListener).toBe(true);
+      expect(stubShape.hasRemoveEventListener).toBe(true);
+      expect(stubShape.hasClose).toBe(true);
+      expect(stubShape.hasDispatchEvent).toBe(true);
+    });
+  });
+
+  test.describe('web method', () => {
+    let electronApp, userDataDir, mainWindow;
+
+    test.beforeEach(async () => {
+      ({ electronApp, userDataDir } = await launchApp('web'));
+      mainWindow = await getMainWindow(electronApp);
+      expect(mainWindow).toBeTruthy();
+      await mainWindow.waitForLoadState('load', { timeout: 30000 });
+    });
+
+    test.afterEach(async () => {
+      await cleanup(electronApp, userDataDir);
+    });
+
+    test('does not break native Notification lifecycle', async () => {
+      const result = await mainWindow.evaluate(() => {
+        try {
+          const n = new window.Notification('Test', { body: 'test body' });
+          return {
+            didNotThrow: true,
+            type: typeof n,
+            hasOnclick: 'onclick' in n,
+          };
+        } catch (e) {
+          return { didNotThrow: false, error: e.message };
+        }
+      });
+
+      expect(result.didNotThrow).toBe(true);
+      expect(result.type).toBe('object');
+      expect(result.hasOnclick).toBe(true);
+    });
   });
 });
