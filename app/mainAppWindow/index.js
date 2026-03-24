@@ -388,6 +388,15 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
+  // Restrict WebRTC ICE candidate gathering to the interface with the default
+  // route, preventing secondary interfaces (e.g. an ethernet adapter with no
+  // internet gateway) from being advertised, which causes asymmetric STUN
+  // replies and drops calls to OnHold.
+  if (config.network.webRTCIPHandlingPolicy) {
+    console.info(`[WebRTC] IP handling policy applied`);
+    window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
+  }
+
   window.webContents.session.setDisplayMediaRequestHandler(
     (_request, callback) => {
       streamSelector.show((source) => {
