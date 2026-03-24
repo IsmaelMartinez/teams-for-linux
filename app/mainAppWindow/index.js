@@ -392,9 +392,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // route, preventing secondary interfaces (e.g. an ethernet adapter with no
   // internet gateway) from being advertised, which causes asymmetric STUN
   // replies and drops calls to OnHold.
-  if (config.webRTCIPHandlingPolicy) {
-    console.info(`Setting WebRTC IP handling policy to '${config.webRTCIPHandlingPolicy}'`);
-    window.webContents.setWebRTCIPHandlingPolicy(config.webRTCIPHandlingPolicy);
+  if (config.network.webRTCIPHandlingPolicy) {
+    console.info(`Setting WebRTC IP handling policy to '${config.network.webRTCIPHandlingPolicy}'`);
+    window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
   }
 
   window.webContents.session.setDisplayMediaRequestHandler(
