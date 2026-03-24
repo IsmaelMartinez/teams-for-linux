@@ -19,7 +19,9 @@ describe('customCSS default injected rules', () => {
 		assert.match(injectedRule, /\[data-tid\^='more-options-menu-premium-button']/);
 		assert.match(injectedRule, /\[data-tid='more-options-header'] > div:first-child/);
 		assert.match(injectedRule, /\[data-tid='more-options-header'] > span:not\(\.fui-Button__icon\)/);
-		assert.doesNotMatch(injectedRule, /\[data-tid='more-options-header']\s*\{/);
+		assert.match(injectedRule, /\[data-tid='more-options-header']\s*\{[^}]*min-width:\s*0\s*!important;[^}]*width:\s*auto\s*!important;[^}]*gap:\s*0\s*!important;/);
+		assert.match(injectedRule, /\[data-tid\^='more-options-menu-premium-button']\s*\+\s*\[role='separator']\s*\{[^}]*display:\s*none\s*!important;/);
+		assert.doesNotMatch(injectedRule, /\[data-tid='more-options-header']\s*\{\s*display:\s*none/i);
 	});
 
 	it('loads custom CSS when customCSSLocation is provided', async () => {

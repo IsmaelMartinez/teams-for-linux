@@ -9,7 +9,11 @@ const defaultHiddenSelectors = [
   "[data-tid='more-options-header'] > div:first-child",
   "[data-tid='more-options-header'] > span:not(.fui-Button__icon)",
 ].join(", ");
-const defaultHideCss = `${defaultHiddenSelectors} { display: none !important; }`;
+const hiddenSelectorsCss = `${defaultHiddenSelectors} { display: none !important; }`;
+const moreOptionsHeaderLayoutCss = "[data-tid='more-options-header'] { min-width: 0 !important; width: auto !important; gap: 0 !important; }";
+const premiumMenuSeparatorCss = "[data-tid^='more-options-menu-premium-button'] + [role='separator'] { display: none !important; }";
+const premiumMenuTopBorderCss = "[data-tid^='more-options-menu-premium-button'] + [role='menuitem'] { border-top: none !important; margin-top: 0 !important; }";
+const defaultHideCss = `${hiddenSelectorsCss}\n${moreOptionsHeaderLayoutCss}\n${premiumMenuSeparatorCss}\n${premiumMenuTopBorderCss}`;
 const zoetropeCss = ".zoetrope { animation-iteration-count: 1 !important; }";
 
 exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
