@@ -32,8 +32,8 @@ async function launchApp(notificationMethod) {
   return { electronApp, userDataDir };
 }
 
-const TEAMS_HOSTNAMES = ['teams.cloud.microsoft', 'teams.microsoft.com',
-  'teams.live.com', 'login.microsoftonline.com'];
+const TEAMS_HOSTNAMES = new Set(['teams.cloud.microsoft', 'teams.microsoft.com',
+  'teams.live.com', 'login.microsoftonline.com']);
 
 async function getMainWindow(electronApp) {
   await electronApp.firstWindow({ timeout: 30000 });
@@ -41,7 +41,7 @@ async function getMainWindow(electronApp) {
 
   while (Date.now() < deadline) {
     const mainWindow = electronApp.windows().find(w => {
-      try { return TEAMS_HOSTNAMES.includes(new URL(w.url()).hostname); }
+      try { return TEAMS_HOSTNAMES.has(new URL(w.url()).hostname); }
       catch { return false; }
     });
     if (mainWindow) return mainWindow;
@@ -71,7 +71,7 @@ async function cleanup(electronApp, userDataDir) {
 // Shared browser-side function to inspect a Notification stub's shape.
 // Serialised as a string so it can be passed to evaluate() without duplication.
 function checkStubShape() {
-  const n = new window.Notification('Test', { body: 'test body' });
+  const n = new globalThis.Notification('Test', { body: 'test body' });
   return {
     hasAddEventListener: typeof n.addEventListener === 'function',
     hasRemoveEventListener: typeof n.removeEventListener === 'function',
@@ -110,11 +110,11 @@ function describeMethod(method, testsFn) {
 test.describe('Notification override', () => {
 
   describeMethod('electron', (ctx) => {
-    test('window.Notification is overridden with correct static API', async () => {
-      const permissionValue = await ctx.mainWindow.evaluate(() => window.Notification.permission);
+    test('Notification is overridden with correct static API', async () => {
+      const permissionValue = await ctx.mainWindow.evaluate(() => globalThis.Notification.permission);
       expect(permissionValue).toBe('granted');
 
-      const requestResult = await ctx.mainWindow.evaluate(() => window.Notification.requestPermission());
+      const requestResult = await ctx.mainWindow.evaluate(() => globalThis.Notification.requestPermission());
       expect(requestResult).toBe('granted');
     });
 
@@ -127,7 +127,7 @@ test.describe('Notification override', () => {
 
     test('addEventListener wires up callbacks correctly', async () => {
       const result = await ctx.mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test' });
+        const n = new globalThis.Notification('Test', { body: 'test' });
         let clickFired = false;
         let closeFired = false;
 
@@ -146,7 +146,7 @@ test.describe('Notification override', () => {
 
     test('removeEventListener clears callbacks', async () => {
       const result = await ctx.mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test' });
+        const n = new globalThis.Notification('Test', { body: 'test' });
         const handler = () => {};
 
         n.addEventListener('click', handler);
@@ -164,7 +164,7 @@ test.describe('Notification override', () => {
 
     test('close() triggers onclose callback', async () => {
       const closeFired = await ctx.mainWindow.evaluate(() => {
-        const n = new window.Notification('Test', { body: 'test' });
+        const n = new globalThis.Notification('Test', { body: 'test' });
         let fired = false;
         n.addEventListener('close', () => { fired = true; });
         n.close();
@@ -176,7 +176,7 @@ test.describe('Notification override', () => {
 
     test('fires show event asynchronously', async () => {
       const showFired = await ctx.mainWindow.evaluate(async () => {
-        const n = new window.Notification('Test', { body: 'test' });
+        const n = new globalThis.Notification('Test', { body: 'test' });
         let fired = false;
         n.addEventListener('show', () => { fired = true; });
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -190,7 +190,7 @@ test.describe('Notification override', () => {
       const result = await ctx.mainWindow.evaluate(() => {
         const stubs = [];
         for (let i = 0; i < 5; i++) {
-          const n = new window.Notification(`Test ${i}`, { body: `body ${i}` });
+          const n = new globalThis.Notification(`Test ${i}`, { body: `body ${i}` });
           stubs.push({
             hasAddEventListener: typeof n.addEventListener === 'function',
             hasClose: typeof n.close === 'function',
@@ -221,7 +221,7 @@ test.describe('Notification override', () => {
     test('does not break native Notification lifecycle', async () => {
       const result = await ctx.mainWindow.evaluate(() => {
         try {
-          const n = new window.Notification('Test', { body: 'test body' });
+          const n = new globalThis.Notification('Test', { body: 'test body' });
           return { didNotThrow: true, type: typeof n, hasOnclick: 'onclick' in n };
         } catch (e) {
           return { didNotThrow: false, error: e.message };
