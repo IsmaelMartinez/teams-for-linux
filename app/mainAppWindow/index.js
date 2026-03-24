@@ -393,7 +393,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // internet gateway) from being advertised, which causes asymmetric STUN
   // replies and drops calls to OnHold.
   if (config.network.webRTCIPHandlingPolicy) {
-    console.info(`Setting WebRTC IP handling policy to '${config.network.webRTCIPHandlingPolicy}'`);
+    console.info(`[WebRTC] IP handling policy applied`);
     window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
   }
 
