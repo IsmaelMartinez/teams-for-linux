@@ -1,0 +1,1 @@
+Fix: Update picomatch to 4.0.4, addressing security vulnerabilities. (#2372)
