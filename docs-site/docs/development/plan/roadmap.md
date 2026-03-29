@@ -26,7 +26,7 @@ This document outlines the development direction for Teams for Linux. It focuses
 
 The primary focus for the v2.7.x line. Auth recovery after sleep, network error scoping (only reload on main-frame failures, not sub-frames), and media permission handling are the key areas. The goal is a solid, dependable experience before considering major dependency upgrades.
 
-Recent fixes in v2.7.13 address login persistence after session expiry ([#2364](https://github.com/IsmaelMartinez/teams-for-linux/issues/2364)) and third-party SSO login failures ([#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)). Auth recovery on system resume is now less aggressive, letting Teams' MSAL handle re-authentication rather than nuking all cookies.
+Login persistence after session expiry ([#2364](https://github.com/IsmaelMartinez/teams-for-linux/issues/2364)) and third-party SSO failures ([#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)) are addressed. Remaining auth work: validate that the less-aggressive resume recovery path handles all org-policy session lengths correctly, and investigate the `[TOKEN_CACHE] Secure storage not available` issue on KDE/KWallet where `safeStorage` should be called via IPC from the main process.
 
 A [system performance audit](../research/system-performance-research.md) identified 10 performance-sensitive patterns across renderer-side browser tools, main-process I/O, and network handling. Item 5 (unbounded polling in shortcuts.js) has been fixed. The remaining high-priority items --- consolidating MutationObservers (items 2/3), caching tray icon resources (item 4), replacing timestamp polling (item 1), and parallelising offline detection (item 8) --- are low-to-medium effort and can be addressed opportunistically during the v2.7.x line.
 
@@ -34,7 +34,7 @@ A [system performance audit](../research/system-performance-research.md) identif
 
 Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) is available using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls.
 
-The new `webRTCIPHandlingPolicy` config option ([#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349)) fixes call drops on multi-interface systems by restricting ICE candidate gathering to the default route.
+Call drops on multi-interface systems ([#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349)) are addressed via a `webRTCIPHandlingPolicy` config option. Users with VPN + physical NIC setups should test with `"default_public_interface_only"` and report back.
 
 MQTT in-call detection doesn't detect hang-ups from the small popup window ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)). Root cause identified: the popup tear-down doesn't fire through Teams' React `commandChangeReportingService`. The fix requires adding a WebRTC-based polling fallback in `activityHub.js`, following the pattern already proven in `speakingIndicator.js`.
 
@@ -52,7 +52,7 @@ The MQTT integration is mature for presence status, media state, inbound command
 
 ### Notifications
 
-The notification system was overhauled in v2.7.13 with lifecycle stubs that let Teams manage notification state correctly ([#2248](https://github.com/IsmaelMartinez/teams-for-linux/issues/2248)). A remaining quirk where the first notification shows a `(N)` title prefix ([#2367](https://github.com/IsmaelMartinez/teams-for-linux/issues/2367)) has a fix in PR [#2377](https://github.com/IsmaelMartinez/teams-for-linux/pull/2377).
+The notification lifecycle is now stable ([#2248](https://github.com/IsmaelMartinez/teams-for-linux/issues/2248)). Remaining: the first notification after launch can show a `(N)` title prefix ([#2367](https://github.com/IsmaelMartinez/teams-for-linux/issues/2367)) --- fix in PR [#2377](https://github.com/IsmaelMartinez/teams-for-linux/pull/2377), awaiting user validation.
 
 ### Testing Infrastructure
 
