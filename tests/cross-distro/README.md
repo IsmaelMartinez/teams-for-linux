@@ -12,7 +12,7 @@ Containers are `linux/amd64`, working on both Linux and macOS (Apple Silicon via
 ## Quick start
 
 ```bash
-cd testing/cross-distro
+cd tests/cross-distro
 
 # Latest release (easiest -- fetches URL from GitHub API)
 ./run.sh ubuntu x11 --latest
