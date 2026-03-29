@@ -238,6 +238,10 @@ const AUTH_COOKIE_NAMES = new Set([
   'rtFa',
 ]);
 
+// Auth cookies preserved during force-clean recovery so the Microsoft
+// account chooser stays prefilled after session expiry (issue #2364).
+const PRESERVE_ON_RECOVERY = new Set(['ESTSAUTHPERSISTENT']);
+
 // localStorage key patterns for MSAL/Teams auth tokens
 const AUTH_LOCAL_STORAGE_PATTERNS = [
   'tmp.auth.v1.', 'refresh_token', 'msal.token', 'msal.',
@@ -248,8 +252,9 @@ const AUTH_LOCAL_STORAGE_PATTERNS = [
 
 /**
  * Checks session cookies for Microsoft auth domains and removes expired
- * or all auth cookies. When forceCleanAll is true, removes all auth cookies
- * to force a fresh interactive login.
+ * or removable auth cookies. When forceCleanAll is true, removes all auth
+ * cookies except those in PRESERVE_ON_RECOVERY (e.g. ESTSAUTHPERSISTENT)
+ * so the next interactive login can still show the remembered-account banner.
  * @returns {{ cleaned: number, total: number, expired: number }}
  */
 async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
@@ -264,10 +269,6 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     });
 
     const expired = authCookies.filter(c => c.expirationDate && c.expirationDate < nowSeconds);
-    // When force-cleaning, preserve ESTSAUTHPERSISTENT — it is Microsoft's
-    // long-lived session cookie that enables the prefilled "sign in" banner
-    // after session expiry. Removing it forces a cold login. (issue #2364)
-    const PRESERVE_ON_RECOVERY = new Set(['ESTSAUTHPERSISTENT']);
     const cookiesToRemove = forceCleanAll
       ? authCookies.filter(c => !PRESERVE_ON_RECOVERY.has(c.name))
       : expired;
