@@ -187,15 +187,11 @@ test.describe('Notification override', () => {
     });
 
     test('strips unread count prefix from notification title', async () => {
-      const result = await ctx.mainWindow.evaluate(() => {
-        const n = new globalThis.Notification('(1) Alice', { body: 'Hey there' });
-        return { title: n.title ?? '(1) Alice' };
+      // Verify the notification can be created with a prefixed title without error
+      await ctx.mainWindow.evaluate(() => {
+        new globalThis.Notification('(1) Alice', { body: 'Hey there' });
       });
-      // The title passed to the factory should have the "(1) " prefix stripped.
-      // Since electron/custom methods return stubs without a .title property,
-      // verify indirectly: the options.title set inside the factory uses the
-      // sanitised value, which is what the main process receives.
-      // We test the regex directly for certainty:
+      // The regex used inside CustomNotification strips the "(N) " prefix:
       const stripped = '(1) Alice'.replace(/^\(\d+\)\s+/, '');
       expect(stripped).toBe('Alice');
     });
