@@ -276,6 +276,12 @@ function createCustomNotification(title, options) {
       return { onclick: null, onclose: null, onerror: null };
     }
 
+    // Strip "(N) " unread-count prefix that Teams sometimes passes as the
+    // notification title on the first notification after launch (issue #2367)
+    if (typeof title === 'string' && title.startsWith('(')) {
+      title = title.replace(/^\(\d+\)\s+/, '');
+    }
+
     options = options || {};
     options.icon = options.icon || ICON_BASE64;
     options.title = options.title || title;
