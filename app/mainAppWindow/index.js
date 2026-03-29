@@ -264,7 +264,13 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     });
 
     const expired = authCookies.filter(c => c.expirationDate && c.expirationDate < nowSeconds);
-    const cookiesToRemove = forceCleanAll ? authCookies : expired;
+    // When force-cleaning, preserve ESTSAUTHPERSISTENT — it is Microsoft's
+    // long-lived session cookie that enables the prefilled "sign in" banner
+    // after session expiry. Removing it forces a cold login. (issue #2364)
+    const PRESERVE_ON_RECOVERY = new Set(['ESTSAUTHPERSISTENT']);
+    const cookiesToRemove = forceCleanAll
+      ? authCookies.filter(c => !PRESERVE_ON_RECOVERY.has(c.name))
+      : expired;
 
     if (cookiesToRemove.length === 0) {
       console.debug('[AUTH_RECOVERY] Cookie check:', { total: authCookies.length, expired: expired.length });
@@ -832,8 +838,12 @@ function addEventHandlers() {
     console.debug('[AUTH_RECOVERY] System resumed, checking auth cookies');
     const result = await cleanExpiredAuthCookies(window.webContents.session);
     if (result.expired > 0) {
-      console.info('[AUTH_RECOVERY] Expired cookies found after resume, triggering recovery');
-      await triggerAuthRecovery();
+      console.info('[AUTH_RECOVERY] Cleaned expired cookies after resume', {
+        cleaned: result.cleaned,
+        expired: result.expired,
+      });
+      // Let Teams' own MSAL retry handle re-authentication rather than
+      // triggering full recovery which clears all auth state (issue #2364)
     }
   });
 
