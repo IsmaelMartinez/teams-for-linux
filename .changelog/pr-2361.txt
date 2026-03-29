@@ -1,1 +1,0 @@
-Update roadmap with current PRs, releases, and Electron upgrade status. - by @IsmaelMartinez (#2361)

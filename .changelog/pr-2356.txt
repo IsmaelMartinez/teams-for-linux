@@ -1,1 +1,0 @@
-Revert FIDO2 hardware security key support for Linux - by @IsmaelMartinez (#2356)

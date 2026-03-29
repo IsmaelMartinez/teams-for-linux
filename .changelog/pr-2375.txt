@@ -1,1 +1,0 @@
-Fix: Bump path-to-regexp to 0.1.13 to address CVE-2026-4867 (#2375)

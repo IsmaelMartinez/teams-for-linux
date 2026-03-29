@@ -1,1 +1,0 @@
-Update picomatch to 2.3.2 to fix security vulnerabilities. (#2371)
