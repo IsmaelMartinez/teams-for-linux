@@ -278,7 +278,7 @@ function createCustomNotification(title, options) {
 
     // Strip "(N) " unread-count prefix that Teams sometimes passes as the
     // notification title on the first notification after launch (issue #2367)
-    if (typeof title === 'string') {
+    if (typeof title === 'string' && title.startsWith('(')) {
       title = title.replace(/^\(\d+\)\s+/, '');
     }
 
