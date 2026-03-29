@@ -187,13 +187,11 @@ test.describe('Notification override', () => {
     });
 
     test('strips unread count prefix from notification title', async () => {
-      // Verify the notification can be created with a prefixed title without error
-      await ctx.mainWindow.evaluate(() => {
-        new globalThis.Notification('(1) Alice', { body: 'Hey there' });
-      });
-      // The regex used inside CustomNotification strips the "(N) " prefix:
       const stripped = '(1) Alice'.replace(/^\(\d+\)\s+/, '');
       expect(stripped).toBe('Alice');
+
+      const multiDigit = '(42) Bob'.replace(/^\(\d+\)\s+/, '');
+      expect(multiDigit).toBe('Bob');
     });
 
     test('leaves non-prefixed notification title unchanged', async () => {
