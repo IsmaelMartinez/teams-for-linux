@@ -1,0 +1,2 @@
+Fix: Strip unread count prefix from first notification title - by @IsmaelMartinez (#2377)
+closes: #2367 https://github.com/IsmaelMartinez/teams-for-linux/issues/2367 [Bug]: First notification shows title count prefix instead of message content
