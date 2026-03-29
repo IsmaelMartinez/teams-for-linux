@@ -1,1 +1,0 @@
-Add Butler.json to enable code navigation for triage bot - by @IsmaelMartinez (#2368)

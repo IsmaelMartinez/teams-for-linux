@@ -1,2 +1,0 @@
-Fix changelog generation script errors and auto-create changelogs for fork PRs. - by @IsmaelMartinez (#2352)
-closes: #2351 https://github.com/IsmaelMartinez/teams-for-linux/issues/2351 fix: changelog generator fails with SyntaxError on fork PRs
