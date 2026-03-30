@@ -114,7 +114,7 @@ Phase 2: Automated Tests (repeatable, all configs)
 When upgrading Electron (e.g., 39 to 40):
 
 1. Check out the Electron upgrade branch
-2. `cd testing/cross-distro`
+2. `cd tests/cross-distro`
 3. `./run.sh ubuntu x11 --login` --- log in via noVNC, then Ctrl+C
 4. `./run-all-tests.sh` --- runs all 9 configurations
 5. If tests pass: confidence the upgrade does not break core functionality

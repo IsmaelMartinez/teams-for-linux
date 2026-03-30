@@ -16,6 +16,6 @@
     "6088": { "label": "debian-wayland", "onAutoForward": "notify" },
     "6089": { "label": "debian-xwayland", "onAutoForward": "notify" }
   },
-  "postCreateCommand": "cd testing/cross-distro && echo 'Ready. Run: ./run.sh ubuntu x11'",
+  "postCreateCommand": "cd tests/cross-distro && echo 'Ready. Run: ./run.sh ubuntu x11'",
   "remoteUser": "vscode"
 }

@@ -1,10 +1,10 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-23
-**Current Version:** v2.7.12 (Electron 39.8.2)
+**Last Updated:** 2026-03-29
+**Current Version:** v2.7.13 (Electron 39.8.2)
 **Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
 
-This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs --- see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) and [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) for granular tracking.
+This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
 ---
 
@@ -26,44 +26,37 @@ This document outlines the development direction for Teams for Linux. It focuses
 
 The primary focus for the v2.7.x line. Auth recovery after sleep, network error scoping (only reload on main-frame failures, not sub-frames), and media permission handling are the key areas. The goal is a solid, dependable experience before considering major dependency upgrades.
 
+Login persistence after session expiry ([#2364](https://github.com/IsmaelMartinez/teams-for-linux/issues/2364)) and third-party SSO failures ([#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)) are addressed. Remaining auth work: validate that the less-aggressive resume recovery path handles all org-policy session lengths correctly, and investigate the `[TOKEN_CACHE] Secure storage not available` issue on KDE/KWallet where `safeStorage` should be called via IPC from the main process.
+
 A [system performance audit](../research/system-performance-research.md) identified 10 performance-sensitive patterns across renderer-side browser tools, main-process I/O, and network handling. Item 5 (unbounded polling in shortcuts.js) has been fixed. The remaining high-priority items --- consolidating MutationObservers (items 2/3), caching tray icon resources (item 4), replacing timestamp polling (item 1), and parallelising offline detection (item 8) --- are low-to-medium effort and can be addressed opportunistically during the v2.7.x line.
 
 ### Media and Calls
 
-Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) has been implemented using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls — landing in v2.7.11 for user testing.
+Camera and microphone issues remain the most common user-reported bugs. Recent work adds explicit permission check handling so the browser correctly reports "granted" for media queries. A speaking indicator ([#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)) is available using WebRTC `getStats()` to give users three-state feedback (speaking, silent, muted) during calls.
 
-Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) and call failures ([#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231)) are upstream-blocked and depend on Chromium/Electron improvements. New reports of meeting join replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322)) and xdg-open not working with newer meeting URLs ([#2323](https://github.com/IsmaelMartinez/teams-for-linux/issues/2323)) are under investigation.
+Call drops on multi-interface systems ([#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349)) are addressed via a `webRTCIPHandlingPolicy` config option. Users with VPN + physical NIC setups should test with `"default_public_interface_only"` and report back.
+
+MQTT in-call detection doesn't detect hang-ups from the small popup window ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)). Root cause identified: the popup tear-down doesn't fire through Teams' React `commandChangeReportingService`. The fix requires adding a WebRTC-based polling fallback in `activityHub.js`, following the pattern already proven in `speakingIndicator.js`.
+
+Meeting join replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322)) has been investigated --- all three code paths that handle meeting URLs call `window.loadURL()`, destroying the Teams SPA. Fix approach TBD (auto-navigate back vs separate BrowserWindow).
+
+Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-for-linux/issues/2169)) and call failures ([#2231](https://github.com/IsmaelMartinez/teams-for-linux/issues/2231)) are upstream-blocked and depend on Chromium/Electron improvements.
 
 ### Wayland Compatibility
 
-Wayland support is improving incrementally. Screen source selection has been simplified for better Wayland compatibility, and short Teams deep links now work across all link types. Idle status on Wayland ([#1827](https://github.com/IsmaelMartinez/teams-for-linux/issues/1827)) remains blocked on Electron's `powerMonitor` API not supporting Wayland idle detection natively.
+Wayland support is improving incrementally. Screen source selection has been simplified for better Wayland compatibility, and short Teams deep links now work across all link types. Idle status on Wayland ([#1827](https://github.com/IsmaelMartinez/teams-for-linux/issues/1827)) remains blocked on Electron's `powerMonitor` API not supporting Wayland idle detection natively. A forced idle override option is now available as a workaround.
 
 ### MQTT Integration
 
-The MQTT integration is mature for presence status, media state, inbound commands, and now screen sharing status ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107), shipped). Phase 2 extended status (granular WebRTC camera/mic monitoring for reliable mute state) is parked until users confirm they need it.
+The MQTT integration is mature for presence status, media state, inbound commands, and screen sharing status ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)). Phase 2 extended status (granular WebRTC camera/mic monitoring for reliable mute state) is parked until users confirm they need it. A feature request for incoming call MQTT topics ([#2370](https://github.com/IsmaelMartinez/teams-for-linux/issues/2370)) has been filed.
+
+### Notifications
+
+The notification lifecycle is now stable ([#2248](https://github.com/IsmaelMartinez/teams-for-linux/issues/2248)). Remaining: the first notification after launch can show a `(N)` title prefix ([#2367](https://github.com/IsmaelMartinez/teams-for-linux/issues/2367)) --- fix in PR [#2377](https://github.com/IsmaelMartinez/teams-for-linux/pull/2377), awaiting user validation.
 
 ### Testing Infrastructure
 
 Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 9 configurations (3 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. The infrastructure works well for Ubuntu (7/7 tests pass on X11 and XWayland, 6/6 on Wayland) but Fedora and Debian remain unvalidated. The current focus is closing these gaps and connecting cross-distro testing to the CI pipeline so it gates builds rather than running as a separate manual workflow.
-
----
-
-## Open PRs
-
-As of 2026-03-23, eight PRs are open. Three have all CI checks passing and no review blockers (merge candidates). Two have CI failures needing investigation. One has reviewer-requested changes. Two are long-running feature PRs.
-
-| PR | Fix | Linked Issue | CI | Review |
-|----|-----|-------------|-----|--------|
-| [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) | Null sourceId for MQTT publish | MQTT screen share | pass | --- |
-| [#2319](https://github.com/IsmaelMartinez/teams-for-linux/pull/2319) | SSO reload for blank calendar | [#2296](https://github.com/IsmaelMartinez/teams-for-linux/issues/2296) | pass | --- |
-| [#2331](https://github.com/IsmaelMartinez/teams-for-linux/pull/2331) | Media permissions for call crashes | Call crashes | pass | --- |
-| [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) | Electron 41.0.2 bump (Dependabot) | v2.8.0 | pass | --- |
-| [#2207](https://github.com/IsmaelMartinez/teams-for-linux/pull/2207) | Wayland screen sharing simplification | Wayland compat | fail | --- |
-| [#2329](https://github.com/IsmaelMartinez/teams-for-linux/pull/2329) | Notification lifecycle stubs | Notification errors | fail | --- |
-| [#2350](https://github.com/IsmaelMartinez/teams-for-linux/pull/2350) | `webRTCIPHandlingPolicy` config | [#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349) | fail | changes requested |
-| [#2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357) | FIDO2 hardware security key support | [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) | fail | --- |
-
-Decision needed: #2193, #2319, and #2331 are merge candidates (CI green, no blockers). #2207 is 31 days old with CI failures and may need rebasing or closing. #2347 (Electron 41) supersedes the previous #2223 (Electron 40, now closed).
 
 ---
 
@@ -99,8 +92,6 @@ The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 config
 
 **Stale bot tuning.** A stale bot workflow exists (`.github/workflows/stale.yml`) but the "awaiting user feedback" issues suggest it may need tuning --- issues where the reporter goes silent should get auto-closed after a reasonable period rather than sitting open indefinitely.
 
-**Beads --- bookmarked, not needed yet.** [Beads](https://github.com/steveyegge/beads) (`@beads/bd`, v0.60.0) is a git-backed task graph for AI agent memory across sessions. With Opus 4.6's 1M token context window and auto-compaction, multi-step features like cross-distro testing or FIDO2 can fit in a single extended session, reducing the need for cross-session handovers. The current workflow (CLAUDE.md + memory directory + roadmap) covers the remaining cases well. Revisit if workflows regularly exceed what 1M tokens can hold. See the [project management tools research](../research/project-management-tools-research.md) for the full evaluation.
-
 ---
 
 ## Next Minor Release (v2.8.0) --- Deferred
@@ -110,30 +101,6 @@ Electron 41 is a major dependency upgrade (Chromium 146, Node.js 24). The [Elect
 The Dependabot PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) (Electron 41.0.2) supersedes the previous #2223 (Electron 40, now closed). It will be merged after the v2.7.x line is confirmed stable and the testing infrastructure is ready.
 
 The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with the Electron upgrade if timing aligns.
-
----
-
-## Implemented
-
-### Third-Party SSO CSP Fix
-
-**Issue:** [#2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
-**Status:** Merged in [PR #2330](https://github.com/IsmaelMartinez/teams-for-linux/pull/2330) (2026-03-17), targeting v2.7.13
-
-Users with third-party SSO providers (e.g. Symantec VIP) were unable to log in because Electron's `contextIsolation: false` erroneously enforces report-only CSP headers as blocking policies. Report-only CSP headers are now automatically stripped for all non-Teams domains (safe, since they should never block). No user configuration is needed. Validated by the reporting user.
-
-**Docs:** [Configuration](../../configuration.md#third-party-sso-and-csp), [Troubleshooting](../../troubleshooting.md#issue-third-party-sso-login-fails-eg-symantec-vip)
-
-### Speaking Indicator
-
-**Issue:** [#2290](https://github.com/IsmaelMartinez/teams-for-linux/issues/2290)
-**Status:** Implemented in [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299), landing in v2.7.11
-
-Real-time visual indicator during calls showing microphone state via `RTCPeerConnection.getStats()` `media-source.audioLevel`. Three states: speaking (green), silent (grey), muted (red). Teams zeroes `audioLevel` to exactly 0.0 when muted, making detection reliable and unambiguous.
-
-**Module:** `app/browser/tools/speakingIndicator.js`
-**Config:** `media.microphone.speakingIndicator` (boolean, default `false`)
-**If requested:** Configurable threshold, position, MQTT `microphone-state-changed` IPC publishing.
 
 ---
 
@@ -184,22 +151,6 @@ Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). D
 ### Configuration Modernization
 
 New features use nested config patterns from day one (`mqtt.*`, `graphApi.*`, `customNotification.*`, `screenSharing.*`, `auth.*`, `media.*`). Existing flat options migrate opportunistically when modules are refactored --- no dedicated migration effort planned. See the [configuration organization research](../research/configuration-organization-research.md) for the full analysis and proposed nested structures.
-
----
-
-## Release History
-
-### v2.7.11 (2026-03-14)
-
-Null sourceId fix for MQTT screen sharing publish, short Teams deep link support, explicit media permission check handling, speaking indicator as experimental feature, auth state recovery improvements, restructured roadmap and enhanced changelog pipeline.
-
-### v2.7.10 (2026-03-06)
-
-Stability release focused on reliability and testing infrastructure. Key changes: network error resilience (main-frame only reloads), app termination and MQTT error handling, tray window toggle, app menu when tray disabled, emoji colon input fix, authenticated Playwright tests, cross-distro test improvements, and bot migration cleanup.
-
-### v2.7.9 (2026-02-27, pre-release)
-
-Screen sharing fixes (Wayland regression, locale detection), Quick Chat shortcut improvements, Intune auth improvements, MQTT diagnostic logging, cross-distro testing environment, parallel test execution, SonarQube fixes, and bot automation Batch 1.
 
 ---
 
