@@ -146,57 +146,30 @@ class ConnectionManager {
   }
 
   async isOnline() {
-    const onlineCheckMethods = [
-      {
-        // Perform an actual HTTPS request, similar to loading the Teams app.
-        method: "https",
-        tries: 10,
-        networkTest: async () => {
-          return await isOnlineHttps(this.config.url);
-        },
-      },
-      {
-        // Sometimes too optimistic, might be false-positive where an HTTP proxy is
-        // mandatory but not reachable yet.
-        method: "dns",
-        tries: 5,
-        networkTest: async () => {
-          const testDomain = new URL(this.config.url).hostname;
-          return await isOnlineDns(testDomain);
-        },
-      },
-      {
-        // Sounds good but be careful, too optimistic in my experience; and at the contrary,
-        // might also be false negative where no DNS is available for internet domains, but
-        // an HTTP proxy is actually available and working.
-        method: "native",
-        tries: 5,
-        networkTest: async () => {
-          return net.isOnline();
-        },
-      },
-      {
-        // That's more an escape gate in case all methods are broken, it disables
-        // the network test (assumes we're online).
-        method: "none",
-        tries: 1,
-        networkTest: async () => {
-          console.warn("Network test is disabled, assuming online.");
-          return true;
-        },
-      },
-    ];
+    const testUrl = this.config.url;
+    const testDomain = new URL(testUrl).hostname;
 
-    for (const onlineCheckMethod of onlineCheckMethods) {
-      for (let i = 1; i <= onlineCheckMethod.tries; i++) {
-        const online = await onlineCheckMethod.networkTest();
-        if (online) {
-          return true;
-        }
-        await sleep(500);
+    // Helper: retry a check up to `tries` times, reject if all fail
+    const withRetries = (fn, tries) => async () => {
+      for (let i = 0; i < tries; i++) {
+        if (await fn()) return true;
+        if (i < tries - 1) await sleep(500);
       }
+      throw new Error("offline");
+    };
+
+    try {
+      // Run all three checks in parallel — first to succeed wins
+      return await Promise.any([
+        withRetries(() => isOnlineHttps(testUrl), 3)(),
+        withRetries(() => isOnlineDns(testDomain), 3)(),
+        withRetries(() => Promise.resolve(net.isOnline()), 3)(),
+      ]);
+    } catch {
+      // All checks failed — escape hatch: assume online to avoid blocking startup
+      console.warn("[CONNECTION] All network checks failed, assuming online.");
+      return true;
     }
-    return false;
   }
 }
 
@@ -230,12 +203,9 @@ function isOnlineHttps(testUrl) {
       url: testUrl,
       method: "HEAD",
     });
-    req.on("response", () => {
-      resolve(true);
-    });
-    req.on("error", () => {
-      resolve(false);
-    });
+    const timer = setTimeout(() => resolve(false), 5000);
+    req.on("response", () => { clearTimeout(timer); resolve(true); });
+    req.on("error", () => { clearTimeout(timer); resolve(false); });
     req.end();
   });
 }

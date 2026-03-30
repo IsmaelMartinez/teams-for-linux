@@ -2,7 +2,7 @@
 
 /**
  * Generate release info according to electron-builder ReleaseInfo interface
- * from com.github.IsmaelMartinez.teams_for_linux.appdata.xml file, ensuring version consistency across package files.
+ * from com.github.ariel-rivo.outlook_for_linux.appdata.xml file, ensuring version consistency across package files.
  *
  * ReleaseInfo interface: https://www.electron.build/app-builder-lib.interface.releaseinfo
  */
@@ -25,7 +25,7 @@ async function generateReleaseInfo(projectRoot = null) {
   const lockPath = path.join(root, "package-lock.json");
   if (!fs.existsSync(lockPath)) {
     throw new Error(
-      'package-lock.json not found. Please run "npm install" to generate package-lock.json'
+      'package-lock.json not found. Please run "npm install" to generate package-lock.json',
     );
   }
   const pkgLock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
@@ -37,18 +37,18 @@ async function generateReleaseInfo(projectRoot = null) {
   // Check version consistency between package.json and package-lock.json
   if (pkgLock.version !== baseVersion) {
     throw new Error(
-      `Version mismatch: package.json (${pkg.version}) vs package-lock.json (${pkgLock.version}). Please run "npm install" to update package-lock.json.`
+      `Version mismatch: package.json (${pkg.version}) vs package-lock.json (${pkgLock.version}). Please run "npm install" to update package-lock.json.`,
     );
   }
 
-  // Load com.github.IsmaelMartinez.teams_for_linux.appdata.xml
+  // Load com.github.ariel-rivo.outlook_for_linux.appdata.xml
   const appdataPath = path.join(
     root,
-    "com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
+    "com.github.ariel-rivo.outlook_for_linux.appdata.xml",
   );
   if (!fs.existsSync(appdataPath)) {
     throw new Error(
-      "com.github.IsmaelMartinez.teams_for_linux.appdata.xml not found."
+      "com.github.ariel-rivo.outlook_for_linux.appdata.xml not found.",
     );
   }
   const appdataContent = fs.readFileSync(appdataPath, "utf8");
@@ -61,7 +61,7 @@ async function generateReleaseInfo(projectRoot = null) {
   const component = result.component;
   if (!component?.releases?.[0]?.release) {
     throw new Error(
-      "No releases found in com.github.IsmaelMartinez.teams_for_linux.appdata.xml."
+      "No releases found in com.github.ariel-rivo.outlook_for_linux.appdata.xml.",
     );
   }
 
@@ -72,7 +72,7 @@ async function generateReleaseInfo(projectRoot = null) {
   const matchingRelease = releases.find((rel) => rel.$.version === baseVersion);
   if (!matchingRelease) {
     throw new Error(
-      `No release entry found for version ${baseVersion} in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add a release entry for this version.`
+      `No release entry found for version ${baseVersion} in com.github.ariel-rivo.outlook_for_linux.appdata.xml. Please add a release entry for this version.`,
     );
   }
 
@@ -100,7 +100,7 @@ async function generateReleaseInfo(projectRoot = null) {
 
   if (!releaseNotes.trim()) {
     throw new Error(
-      `Release ${baseVersion} has no description/notes in com.github.IsmaelMartinez.teams_for_linux.appdata.xml. Please add release notes to the <description> section for this version.`
+      `Release ${baseVersion} has no description/notes in com.github.ariel-rivo.outlook_for_linux.appdata.xml. Please add release notes to the <description> section for this version.`,
     );
   }
 
@@ -132,11 +132,11 @@ if (require.main === module) {
       console.log(`   package.json: ${versionInfo.packageJson}`);
       console.log(`   package-lock.json: ${versionInfo.packageLock}`);
       console.log(
-        `   com.github.IsmaelMartinez.teams_for_linux.appdata.xml: ${versionInfo.appdata} (with release notes)`
+        `   com.github.ariel-rivo.outlook_for_linux.appdata.xml: ${versionInfo.appdata} (with release notes)`,
       );
       console.log("");
       console.log(
-        "📋 Generated Release Info (electron-builder ReleaseInfo interface):"
+        "📋 Generated Release Info (electron-builder ReleaseInfo interface):",
       );
       console.log("");
       console.log(JSON.stringify(releaseInfo, null, 2));

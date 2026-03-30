@@ -118,12 +118,12 @@
     </main>
     <footer>
         <img src="../assets/icons/icon-monochrome-light-16x16.png" alt="logo">
-        <span>Teams for Linux</span>
+        <span>Outlook for Linux</span>
     </footer>
 
     <script>
         globalThis.notificationApi.onNotificationToastInit((data) => {
-            document.getElementById('title').innerText = data.title || 'Teams';
+            document.getElementById('title').innerText = data.title || 'Outlook';
             document.getElementById('body').innerText = data.body || '';
         });
 

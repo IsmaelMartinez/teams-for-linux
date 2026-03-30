@@ -1,9 +1,9 @@
 /*
-From https://userstyles.org/styles/164548/condensed-microsoft-teams-for-dark-theme
+From https://userstyles.org/styles/164548/condensed-microsoft-outlook-for-dark-theme
 */
 
 /*
- * microsoft_teams_condensed_dark.css
+ * microsoft_outlook_condensed_dark.css
  * Generated on 2018-10-21 22:49:20
  */
 
@@ -16,7 +16,7 @@ From https://userstyles.org/styles/164548/condensed-microsoft-teams-for-dark-the
   max-width: 100% !important;
 }
 
-/* Same for team-chat 
+/* Same for team-chat
     (I copied this huge list of selectors given by firefox Developper tool, I don't
     exactly understand if they are all relevant )
 */

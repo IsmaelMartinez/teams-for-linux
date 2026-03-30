@@ -1,7 +1,16 @@
 'use strict';
 
 const { dialog, app } = require('electron');
-const { autoUpdater } = require('electron-updater');
+
+// Lazy-load electron-updater to avoid "not a valid semver" crash in dev mode
+// (electron-updater validates the app version at import time)
+let _autoUpdater = null;
+function getAutoUpdater() {
+	if (!_autoUpdater) {
+		_autoUpdater = require('electron-updater').autoUpdater;
+	}
+	return _autoUpdater;
+}
 
 let mainWindow = null;
 let isManualCheck = false;
@@ -15,16 +24,17 @@ function initialize(window) {
 
 	mainWindow = window;
 
-	autoUpdater.autoDownload = false;
-	autoUpdater.autoInstallOnAppQuit = false;
+	const updater = getAutoUpdater();
+	updater.autoDownload = false;
+	updater.autoInstallOnAppQuit = false;
 
-	autoUpdater.on('update-available', onUpdateAvailable);
-	autoUpdater.on('update-not-available', onUpdateNotAvailable);
-	autoUpdater.on('error', onError);
+	updater.on('update-available', onUpdateAvailable);
+	updater.on('update-not-available', onUpdateNotAvailable);
+	updater.on('error', onError);
 
 	console.info('[AutoUpdater] Checking for updates...');
 	isChecking = true;
-	autoUpdater.checkForUpdates().catch(err => {
+	updater.checkForUpdates().catch(err => {
 		console.error('[AutoUpdater] Startup check failed:', err.message);
 	});
 }
@@ -35,7 +45,7 @@ function checkForUpdates() {
 
 	isChecking = true;
 	isManualCheck = true;
-	autoUpdater.checkForUpdates().catch(err => {
+	getAutoUpdater().checkForUpdates().catch(err => {
 		console.error('[AutoUpdater] Manual check failed:', err.message);
 	});
 }
@@ -56,8 +66,8 @@ async function onUpdateAvailable(info) {
 
 	if (response.response === 0) {
 		try {
-			await autoUpdater.downloadUpdate();
-			autoUpdater.quitAndInstall();
+			await getAutoUpdater().downloadUpdate();
+			getAutoUpdater().quitAndInstall();
 		} catch (err) {
 			console.error('[AutoUpdater] Download failed:', err.message);
 			showErrorDialog();

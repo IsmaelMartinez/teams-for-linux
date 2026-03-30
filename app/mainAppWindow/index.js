@@ -18,6 +18,7 @@ const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
 const ConnectionManager = require("../connectionManager");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
+const outlookNotificationModule = require("../notification");
 const os = require("node:os");
 const path = require("node:path");
 
@@ -83,13 +84,15 @@ function handleScreenSourceSelection(source, callback) {
       console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
         error: error.message,
         stack: error.stack,
-        sourceId: source?.id
+        sourceId: source?.id,
       });
       setImmediate(() => {
         try {
           callback({});
         } catch {
-          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
+          console.debug(
+            "[SCREEN_SHARE] Failed to complete screen selection callback",
+          );
         }
       });
     });
@@ -113,21 +116,26 @@ function createScreenSharePreviewWindow() {
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
     existingWindow: previewWindow && !previewWindow.isDestroyed(),
     activeSource: activeSource,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   if (!thumbnailConfig.enabled) {
-    console.debug("[SCREEN_SHARE_DIAG] Preview window disabled in configuration");
+    console.debug(
+      "[SCREEN_SHARE_DIAG] Preview window disabled in configuration",
+    );
     return;
   }
 
   // Don't create duplicate windows - this is critical for preventing echo
   if (previewWindow && !previewWindow.isDestroyed()) {
-    console.warn("[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing", {
-      riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
-      action: "focusing existing window instead of creating new",
-      windowId: previewWindow.id
-    });
+    console.warn(
+      "[SCREEN_SHARE_DIAG] Preview window already exists, focusing existing",
+      {
+        riskLevel: "MEDIUM - multiple preview windows could cause audio issues",
+        action: "focusing existing window instead of creating new",
+        windowId: previewWindow.id,
+      },
+    );
     previewWindow.focus();
     return;
   }
@@ -135,7 +143,7 @@ function createScreenSharePreviewWindow() {
   console.debug("[SCREEN_SHARE_DIAG] Creating new preview window", {
     dimensions: "320x180",
     alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
-    partition: "persist:teams-for-linux-session"
+    partition: "persist:outlook-for-linux-session",
   });
 
   const newPreviewWindow = new BrowserWindow({
@@ -152,9 +160,9 @@ function createScreenSharePreviewWindow() {
         __dirname,
         "..",
         "screenSharing",
-        "previewWindowPreload.js"
+        "previewWindowPreload.js",
       ),
-      partition: "persist:teams-for-linux-session",
+      partition: "persist:outlook-for-linux-session",
     },
   });
 
@@ -165,11 +173,11 @@ function createScreenSharePreviewWindow() {
   console.debug("[SCREEN_SHARE_DIAG] Preview BrowserWindow created", {
     windowId: windowId,
     creationTimeMs: Date.now() - startTime,
-    alwaysOnTop: thumbnailConfig.alwaysOnTop || false
+    alwaysOnTop: thumbnailConfig.alwaysOnTop || false,
   });
 
   newPreviewWindow.loadFile(
-    path.join(__dirname, "..", "screenSharing", "previewWindow.html")
+    path.join(__dirname, "..", "screenSharing", "previewWindow.html"),
   );
 
   newPreviewWindow.once("ready-to-show", () => {
@@ -177,7 +185,7 @@ function createScreenSharePreviewWindow() {
       windowId: windowId,
       totalCreationTimeMs: Date.now() - startTime,
       focused: newPreviewWindow.isFocused(),
-      visible: newPreviewWindow.isVisible()
+      visible: newPreviewWindow.isVisible(),
     });
     newPreviewWindow.show();
   });
@@ -186,13 +194,13 @@ function createScreenSharePreviewWindow() {
   newPreviewWindow.on("focus", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window gained focus", {
       windowId: windowId,
-      potentialIssue: "Focus on preview might interfere with main Teams window"
+      potentialIssue: "Focus on preview might interfere with main Teams window",
     });
   });
 
   newPreviewWindow.on("blur", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window lost focus", {
-      windowId: windowId
+      windowId: windowId,
     });
   });
 
@@ -201,7 +209,7 @@ function createScreenSharePreviewWindow() {
     console.debug("[SCREEN_SHARE_DIAG] Preview window closed", {
       windowId: windowId,
       hadActiveSource: !!closedSource,
-      closedSource: closedSource
+      closedSource: closedSource,
     });
     // Clear both preview window and selected source when window closes
     screenSharingService.setPreviewWindow(null);
@@ -211,31 +219,32 @@ function createScreenSharePreviewWindow() {
 
 // Microsoft auth domains whose cookies should be checked/cleaned
 const AUTH_DOMAINS = [
-  'login.microsoftonline.com',
-  'login.microsoft.com',
-  'teams.microsoft.com',
-  'teams.cloud.microsoft',
-  'microsoft.com',
-  'office.com',
-  'office365.com',
-  'live.com',
-  'microsoftonline.com',
+  "login.microsoftonline.com",
+  "login.microsoft.com",
+  "outlook.office.com",
+  "outlook.office365.com",
+  "outlook.live.com",
+  "microsoft.com",
+  "office.com",
+  "office365.com",
+  "live.com",
+  "microsoftonline.com",
 ];
 
 // Azure AD / MSAL / SharePoint auth cookie names
 const AUTH_COOKIE_NAMES = new Set([
-  'ESTSAUTH',
-  'ESTSAUTHPERSISTENT',
-  'ESTSAUTHLIGHT',
-  'SignInStateCookie',
-  'AADSSO',
-  'buid',
-  'fpc',
-  'x-ms-gateway-slice',
-  'stsservicecookie',
-  'CCState',
-  'FedAuth',
-  'rtFa',
+  "ESTSAUTH",
+  "ESTSAUTHPERSISTENT",
+  "ESTSAUTHLIGHT",
+  "SignInStateCookie",
+  "AADSSO",
+  "buid",
+  "fpc",
+  "x-ms-gateway-slice",
+  "stsservicecookie",
+  "CCState",
+  "FedAuth",
+  "rtFa",
 ]);
 
 // Auth cookies preserved during force-clean recovery so the Microsoft
@@ -244,10 +253,19 @@ const PRESERVE_ON_RECOVERY = new Set(['ESTSAUTHPERSISTENT']);
 
 // localStorage key patterns for MSAL/Teams auth tokens
 const AUTH_LOCAL_STORAGE_PATTERNS = [
-  'tmp.auth.v1.', 'refresh_token', 'msal.token', 'msal.',
-  'EncryptionKey', 'authSessionId', 'LogoutState',
-  'accessToken', 'idtoken', 'Account', 'Authority', 'ClientInfo',
-  'secure_teams_'
+  "tmp.auth.v1.",
+  "refresh_token",
+  "msal.token",
+  "msal.",
+  "EncryptionKey",
+  "authSessionId",
+  "LogoutState",
+  "accessToken",
+  "idtoken",
+  "Account",
+  "Authority",
+  "ClientInfo",
+  "secure_outlook_",
 ];
 
 /**
@@ -262,46 +280,64 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     const allCookies = await windowSession.cookies.get({});
     const nowSeconds = Date.now() / 1000;
 
-    const authCookies = allCookies.filter(cookie => {
-      const domain = (cookie.domain || '').replace(/^\./, '');
-      const isAuthDomain = AUTH_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
+    const authCookies = allCookies.filter((cookie) => {
+      const domain = (cookie.domain || "").replace(/^\./, "");
+      const isAuthDomain = AUTH_DOMAINS.some(
+        (d) => domain === d || domain.endsWith("." + d),
+      );
       return isAuthDomain && AUTH_COOKIE_NAMES.has(cookie.name);
     });
 
-    const expired = authCookies.filter(c => c.expirationDate && c.expirationDate < nowSeconds);
-    const cookiesToRemove = forceCleanAll
-      ? authCookies.filter(c => !PRESERVE_ON_RECOVERY.has(c.name))
-      : expired;
+    const expired = authCookies.filter(
+      (c) => c.expirationDate && c.expirationDate < nowSeconds,
+    );
+    const cookiesToRemove = forceCleanAll ? authCookies : expired;
 
     if (cookiesToRemove.length === 0) {
-      console.debug('[AUTH_RECOVERY] Cookie check:', { total: authCookies.length, expired: expired.length });
+      console.debug("[AUTH_RECOVERY] Cookie check:", {
+        total: authCookies.length,
+        expired: expired.length,
+      });
       return { cleaned: 0, total: authCookies.length, expired: expired.length };
     }
 
-    console.info('[AUTH_RECOVERY] Cleaning auth cookies:', {
-      mode: forceCleanAll ? 'force-all' : 'expired-only',
+    console.info("[AUTH_RECOVERY] Cleaning auth cookies:", {
+      mode: forceCleanAll ? "force-all" : "expired-only",
       removing: cookiesToRemove.length,
       total: authCookies.length,
     });
 
-    const results = await Promise.all(cookiesToRemove.map(async (cookie) => {
-      try {
-        const protocol = cookie.secure ? 'https' : 'http';
-        const domain = cookie.domain.startsWith('.') ? cookie.domain.substring(1) : cookie.domain;
-        const url = `${protocol}://${domain}${cookie.path || '/'}`;
-        await windowSession.cookies.remove(url, cookie.name);
-        return true;
-      } catch (err) {
-        console.warn('[AUTH_RECOVERY] Failed to remove cookie:', { name: cookie.name, error: err.message });
-        return false;
-      }
-    }));
+    const results = await Promise.all(
+      cookiesToRemove.map(async (cookie) => {
+        try {
+          const protocol = cookie.secure ? "https" : "http";
+          const domain = cookie.domain.startsWith(".")
+            ? cookie.domain.substring(1)
+            : cookie.domain;
+          const url = `${protocol}://${domain}${cookie.path || "/"}`;
+          await windowSession.cookies.remove(url, cookie.name);
+          return true;
+        } catch (err) {
+          console.warn("[AUTH_RECOVERY] Failed to remove cookie:", {
+            name: cookie.name,
+            error: err.message,
+          });
+          return false;
+        }
+      }),
+    );
     const removedCount = results.filter(Boolean).length;
 
-    console.info(`[AUTH_RECOVERY] Cleaned ${removedCount}/${cookiesToRemove.length} auth cookies`);
-    return { cleaned: removedCount, total: authCookies.length, expired: expired.length };
+    console.info(
+      `[AUTH_RECOVERY] Cleaned ${removedCount}/${cookiesToRemove.length} auth cookies`,
+    );
+    return {
+      cleaned: removedCount,
+      total: authCookies.length,
+      expired: expired.length,
+    };
   } catch (error) {
-    console.error('[AUTH_RECOVERY] Cookie check failed:', error.message);
+    console.error("[AUTH_RECOVERY] Cookie check failed:", error.message);
     return { cleaned: 0, total: 0, expired: 0 };
   }
 }
@@ -311,7 +347,7 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
  * the page to force a fresh interactive login.
  */
 async function triggerAuthRecovery() {
-  console.info('[AUTH_RECOVERY] Clearing auth state and reloading...');
+  console.info("[AUTH_RECOVERY] Clearing auth state and reloading...");
 
   // Clear localStorage auth tokens via renderer
   try {
@@ -332,18 +368,24 @@ async function triggerAuthRecovery() {
         return keysToRemove.length;
       })()
     `);
-    console.info('[AUTH_RECOVERY] Cleared localStorage auth entries', { count: cleared });
+    console.info("[AUTH_RECOVERY] Cleared localStorage auth entries", {
+      count: cleared,
+    });
   } catch (err) {
-    console.warn('[AUTH_RECOVERY] Failed to clear localStorage:', err.message);
+    console.warn("[AUTH_RECOVERY] Failed to clear localStorage:", err.message);
   }
 
   await cleanExpiredAuthCookies(window.webContents.session, true);
 
-  console.info('[AUTH_RECOVERY] Reloading for fresh auth...');
+  console.info("[AUTH_RECOVERY] Reloading for fresh auth...");
   window.loadURL(config.url, { userAgent: config.chromeUserAgent });
 }
 
-exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService) {
+exports.onAppReady = async function onAppReady(
+  configGroup,
+  customBackground,
+  sharingService,
+) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
   customBackgroundService = customBackground;
@@ -351,7 +393,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
   const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
+  const intuneUser =
+    config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);
@@ -363,20 +406,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     if (isMac) {
       console.info("Setting Dock icon for macOS");
       let dockIconPath;
-      
+
       // Use custom icon if specified, otherwise use default 256x256 icon for dock
       if (config.appIcon && config.appIcon.trim() !== "") {
         dockIconPath = config.appIcon;
       } else {
         dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
       }
-      
+
       const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
-      
+
       if (iconSize.width < 128) {
         console.warn(
-          `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
+          `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`,
         );
         // Resize the icon to meet macOS dock requirements
         const resizedIcon = icon.resize({ width: 128, height: 128 });
@@ -401,7 +444,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // replies and drops calls to OnHold.
   if (config.network.webRTCIPHandlingPolicy) {
     console.info(`[WebRTC] IP handling policy applied`);
-    window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
+    window.webContents.setWebRTCIPHandlingPolicy(
+      config.network.webRTCIPHandlingPolicy,
+    );
   }
 
   window.webContents.session.setDisplayMediaRequestHandler(
@@ -420,15 +465,23 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
           });
         }
       });
-    }
+    },
   );
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
+    menus = new Menus(
+      window,
+      configGroup,
+      iconChooser.getFile(),
+      connectionManager,
+    );
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
+
+    // Initialize Outlook notification module with window, icon, and menus (for badge updates)
+    outlookNotificationModule.init(window, iconChooser.getFile(), menus);
   }
 
   addEventHandlers();
@@ -438,30 +491,40 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   await cleanExpiredAuthCookies(window.webContents.session);
 
   // Monitor renderer console for MSAL silent auth failures.
-  // When Teams can't refresh tokens silently (e.g., after overnight idle),
+  // When Outlook can't refresh tokens silently (e.g., after overnight idle),
   // it logs InteractionRequired. We detect this, clear stale auth state,
   // and reload to force a clean interactive login.
-  const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'AuthFailed'];
-  // Only trust auth failure signals from Teams/Microsoft origins
-  const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
+  const AUTH_FAILURE_PATTERNS = ["InteractionRequired", "AuthFailed"];
+  // Only trust auth failure signals from Outlook/Microsoft origins
+  const TRUSTED_AUTH_SOURCES = [
+    "outlook.office.com",
+    "outlook.office365.com",
+    "outlook.live.com",
+    "login.microsoftonline.com",
+  ];
   let authRecoveryTriggered = false;
-  window.webContents.on('console-message', (event) => {
+  window.webContents.on("console-message", (event) => {
     if (authRecoveryTriggered) return;
-    const message = event.message || '';
-    if (!AUTH_FAILURE_PATTERNS.some(p => message.includes(p))) return;
+    const message = event.message || "";
+    if (!AUTH_FAILURE_PATTERNS.some((p) => message.includes(p))) return;
 
     // Verify the message originates from a trusted Microsoft source
-    const sourceId = event.sourceId || '';
-    if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
+    const sourceId = event.sourceId || "";
+    if (sourceId && !TRUSTED_AUTH_SOURCES.some((s) => sourceId.includes(s)))
+      return;
 
     authRecoveryTriggered = true;
-    console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
+    console.info("[AUTH_RECOVERY] Auth failure detected, scheduling recovery");
 
     // Delay to let Teams' own retry mechanism attempt recovery first
     setTimeout(() => triggerAuthRecovery(), 5000);
   });
 
-  login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
+  login.handleLoginDialogTry(
+    window,
+    config.ssoBasicAuthUser,
+    config.ssoBasicAuthPasswordCommand,
+  );
 
   const url = processArgs(process.argv);
   connectionManager.start(url, {
@@ -520,10 +583,8 @@ function applyAppConfiguration(config, window) {
         password: config.clientCertPassword || "",
       },
       (result) => {
-        console.info(
-          `[CERT] Client certificate loaded, result: ${result}`
-        );
-      }
+        console.info(`[CERT] Client certificate loaded, result: ${result}`);
+      },
     );
   }
   window.webContents.setUserAgent(config.chromeUserAgent);
@@ -563,18 +624,28 @@ function onDidFinishLoad() {
   // navigator.mediaDevices are unavailable.
   const currentUrl = window.webContents.getURL();
   if (!currentUrl.startsWith("https://")) {
-    console.debug(`[CONNECTION] Skipping script injection on non-Teams page: ${currentUrl.split("?")[0]}`);
+    console.debug(
+      `[CONNECTION] Skipping script injection on non-Teams page: ${currentUrl.split("?")[0]}`,
+    );
     return;
   }
 
-  window.webContents.executeJavaScript(`
+  window.webContents
+    .executeJavaScript(
+      `
 			openBrowserButton = document.querySelector('[data-tid=joinOnWeb]');
 			openBrowserButton && openBrowserButton.click();
-		`).catch(() => {});
-  window.webContents.executeJavaScript(`
+		`,
+    )
+    .catch(() => {});
+  window.webContents
+    .executeJavaScript(
+      `
 			tryAgainLink = document.getElementById('try-again-link');
 			tryAgainLink && tryAgainLink.click()
-		`).catch(() => {});
+		`,
+    )
+    .catch(() => {});
 
   // Inject browser functionality
   injectScreenSharingLogic();
@@ -589,12 +660,15 @@ function injectScreenSharingLogic() {
     __dirname,
     "..",
     "screenSharing",
-    "injectedScreenSharing.js"
+    "injectedScreenSharing.js",
   );
   try {
     const script = fs.readFileSync(scriptPath, "utf8");
     window.webContents.executeJavaScript(script).catch((err) => {
-      console.error("[SCREEN_SHARE] Failed to execute injected script:", err.message);
+      console.error(
+        "[SCREEN_SHARE] Failed to execute injected script:",
+        err.message,
+      );
     });
   } catch (err) {
     console.error("Failed to load injected screen sharing script:", err);
@@ -606,13 +680,13 @@ function initSystemThemeFollow(config) {
     nativeTheme.on("updated", () => {
       window.webContents.send(
         "system-theme-changed",
-        nativeTheme.shouldUseDarkColors
+        nativeTheme.shouldUseDarkColors,
       );
     });
     setTimeout(() => {
       window.webContents.send(
         "system-theme-changed",
-        nativeTheme.shouldUseDarkColors
+        nativeTheme.shouldUseDarkColors,
       );
     }, 2500);
   }
@@ -622,7 +696,7 @@ function onDidFrameFinishLoad(
   event,
   isMainFrame,
   frameProcessId,
-  frameRoutingId
+  frameRoutingId,
 ) {
   console.debug("did-frame-finish-load", event, isMainFrame);
 
@@ -649,44 +723,133 @@ function restoreWindow() {
 }
 
 /**
- * Processes command line arguments to extract Teams URLs and protocol handlers.
- * Handles both msteams:// protocol links and HTTPS URLs that match the Teams domain pattern.
- * This enables deep linking into Teams conversations, meetings, and channels.
+ * Processes command line arguments to extract Outlook URLs and protocol handlers.
+ * Handles both msoutlook:// protocol links and HTTPS URLs that match the Outlook domain pattern.
+ * This enables deep linking into Outlook mail, calendar, and contacts.
  *
  * @param {string[]} args - Command line arguments to process
  * @returns {string|null} Processed URL to navigate to, or null if no valid URL found
  */
+/**
+ * Converts a mailto: URI into an Outlook deep-link compose URL.
+ * e.g. mailto:user@example.com?subject=Hello&body=World
+ *   → https://outlook.office.com/mail/deeplink/compose?to=...&subject=...&body=...
+ */
+function convertMailtoToOutlookURL(mailto) {
+  try {
+    const parsed = new URL(mailto);
+    const to = parsed.pathname;
+    const subject = parsed.searchParams.get("subject") || "";
+    const body = parsed.searchParams.get("body") || "";
+    return (
+      `https://outlook.office.com/mail/deeplink/compose` +
+      `?to=${encodeURIComponent(to)}` +
+      `&subject=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Opens a compose window for the given Outlook URL.
+ */
+function openComposeWindow(url) {
+  const composeWindow = new BrowserWindow({
+    width: 900,
+    height: 700,
+    webPreferences: {
+      partition: config.partition,
+      contextIsolation: false,
+      nodeIntegration: false,
+      spellcheck: true,
+      preload: path.join(__dirname, "..", "browser", "preload-secondary.js"),
+    },
+    parent: window,
+    show: false,
+  });
+  setupSecondaryWindowHandlers(composeWindow);
+  composeWindow.loadURL(url, { userAgent: config.chromeUserAgent });
+  composeWindow.once("ready-to-show", () => composeWindow.show());
+  return composeWindow;
+}
+
 function processArgs(args) {
-  // Legacy Teams protocol format: msteams:/l/meetup-join/...
-  const v1msTeams = new RegExp(config.msTeamsProtocols.v1);
-  // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
-  const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
+  // Legacy Outlook protocol format: msoutlook:/mail/...
+  const v1msOutlook = new RegExp(config.msOutlookProtocols.v1);
+  // Modern Outlook protocol format: msoutlook://outlook.office.com/mail/...
+  const v2msOutlook = new RegExp(config.msOutlookProtocols.v2);
   console.debug("processArgs:", args);
   for (const arg of args) {
     console.debug(
       `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
-        arg
-      )}`
+        arg,
+      )}`,
     );
+    if (arg.startsWith("mailto:")) {
+      console.debug("A mailto: argument received, opening compose window");
+      const composeUrl = convertMailtoToOutlookURL(arg);
+      if (composeUrl) {
+        openComposeWindow(composeUrl);
+      }
+      return null;
+    }
     if (new RegExp(config.meetupJoinRegEx).test(arg)) {
       console.debug("A url argument received with https protocol");
       window.show();
       return arg;
     }
-    if (v1msTeams.test(arg)) {
-      console.debug("A url argument received with msteams v1 protocol");
+    if (v1msOutlook.test(arg)) {
+      console.debug("A url argument received with msoutlook v1 protocol");
       window.show();
-      return config.url + arg.substring(8, arg.length);
+      return config.url + arg.substring(10, arg.length);
     }
-    if (v2msTeams.test(arg)) {
-      console.debug("A url argument received with msteams v2 protocol");
+    if (v2msOutlook.test(arg)) {
+      console.debug("A url argument received with msoutlook v2 protocol");
       window.show();
-      return arg.replace("msteams", "https");
+      return arg.replace("msoutlook", "https");
     }
   }
 }
 
+const TELEMETRY_HOSTNAMES = new Set([
+  "events.data.microsoft.com",
+  "browser.pipe.aria.microsoft.com",
+  "vortex.data.microsoft.com",
+]);
+
+function isTelemetryUrl(url) {
+  try {
+    const { hostname, pathname } = new URL(url);
+    if (TELEMETRY_HOSTNAMES.has(hostname)) return true;
+    if (pathname.startsWith("/api/v2/track") || pathname.startsWith("/collect"))
+      return true;
+    if (
+      hostname.includes("telemetry") ||
+      hostname.includes("analytics") ||
+      hostname.includes("collector")
+    )
+      return true;
+  } catch {
+    // ignore invalid URLs
+  }
+  return false;
+}
+
 function onBeforeRequestHandler(details, callback) {
+  // Block telemetry requests to reduce network overhead and CSP noise
+  if (isTelemetryUrl(details.url)) {
+    callback({ cancel: true });
+    return;
+  }
+
+  // Always allow Outlook URLs to load
+  if (isOutlookDomain(details.url)) {
+    callback({});
+    return;
+  }
+
   const customBackgroundRedirect =
     customBackgroundService.beforeRequestHandlerRedirectUrl(details);
 
@@ -698,38 +861,52 @@ function onBeforeRequestHandler(details, callback) {
     // Proceed normally
     callback({});
   } else {
-    // Open request in hidden child window for authentication
-    const child = new BrowserWindow({ parent: window, show: false });
-    child.loadURL(details.url);
-    child.once("ready-to-show", () => {
-      child.destroy();
-    });
-
+    // Open the request externally
+    console.debug("[REQUEST] Intercepted external request");
+    shell.openExternal(details.url);
     // decrement the counter
     aboutBlankRequestCount -= 1;
     callback({ cancel: true });
   }
 }
 
-// Teams domains whose enforcing CSP we never touch
-const TEAMS_DOMAINS = [
-  'teams.cloud.microsoft',
-  'teams.microsoft.com',
-  'teams.live.com',
-  'statics.teams.cdn.office.net',
+// Outlook domains whose enforcing CSP we never touch
+const OUTLOOK_DOMAINS = [
+  "outlook.office.com",
+  "outlook.office365.com",
+  "outlook.live.com",
+  "res.public.onecdn.static.microsoft",
+  "addin.insights.static.microsoft",
+  "substrate.office.com",
 ];
 
 /**
- * Checks whether a URL belongs to a Teams domain.
+ * Checks whether a URL belongs to an Outlook domain or is an Outlook deep link.
  * Also handles Microsoft Cloud App Security (MCAS) proxy suffix.
  */
-function isTeamsDomain(url) {
+function isOutlookDomain(url) {
   try {
-    let hostname = new URL(url).hostname;
-    if (hostname.endsWith('.mcas.ms')) {
+    const urlObj = new URL(url);
+    let hostname = urlObj.hostname;
+    if (hostname.endsWith(".mcas.ms")) {
       hostname = hostname.slice(0, -8);
     }
-    return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    if (OUTLOOK_DOMAINS.some(
+      (d) => hostname === d || hostname.endsWith("." + d),
+    )) {
+      return true;
+    }
+
+    // Also check for specific Outlook deep link paths
+    const outlookPaths = [
+      "/mail/deeplink/compose",
+      "/mail/0/deeplink/compose",
+      "/calendar/deeplink",
+      "/mail/inbox/id/",
+      "/mail/sentitems/id/",
+    ];
+    const pathname = urlObj.pathname.toLowerCase();
+    return outlookPaths.some((p) => pathname.includes(p));
   } catch {
     return false;
   }
@@ -744,15 +921,15 @@ function isTeamsDomain(url) {
  * Report-only headers are safe to strip since they should never block.
  */
 function stripCspForAuthPages(responseHeaders, url) {
-  if (isTeamsDomain(url)) return;
+  if (isOutlookDomain(url)) return;
 
   for (const key of Object.keys(responseHeaders)) {
-    if (key.toLowerCase() === 'content-security-policy-report-only') {
+    if (key.toLowerCase() === "content-security-policy-report-only") {
       let hostname;
       try {
         hostname = new URL(url).hostname;
       } catch {
-        hostname = 'unknown';
+        hostname = "unknown";
       }
       console.debug(`[CSP] Stripping report-only header from: ${hostname}`);
       delete responseHeaders[key];
@@ -792,7 +969,32 @@ function onNewWindow(details) {
     details.url === "about:blank" ||
     details.url === "about:blank#blocked"
   ) {
-    // Increment the counter for about:blank authentication flow
+    // Outlook uses about:blank for compose windows — detect via window features
+    const isComposeWindow = details.features && (
+      details.features.includes("width=800") ||
+      details.features.includes("resizable=1")
+    );
+
+    if (isComposeWindow) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          width: 800,
+          height: 700,
+          show: true,
+          autoHideMenuBar: true,
+          webPreferences: {
+            partition: config.partition,
+            contextIsolation: false,
+            sandbox: false,
+            spellcheck: true,
+            preload: path.join(__dirname, "..", "browser", "preload-secondary.js"),
+          },
+        },
+      };
+    }
+
+    // Regular about:blank for external links / auth flow
     aboutBlankRequestCount += 1;
     return { action: "deny" };
   }
@@ -808,7 +1010,11 @@ function onNavigationChanged() {
   if (window?.webContents?.navigationHistory) {
     const canGoBack = window.webContents.navigationHistory.canGoBack();
     const canGoForward = window.webContents.navigationHistory.canGoForward();
-    window.webContents.send("navigation-state-changed", canGoBack, canGoForward);
+    window.webContents.send(
+      "navigation-state-changed",
+      canGoBack,
+      canGoForward,
+    );
   }
 }
 
@@ -828,6 +1034,31 @@ function onWindowClosed() {
   app.quit();
 }
 
+/**
+ * Attaches context-menu and external-link handlers to a secondary window.
+ * Called for both directly-created compose windows and windows created via window.open().
+ */
+function setupSecondaryWindowHandlers(win) {
+  if (menus) {
+    const menuAdapter = {
+      window: win,
+      spellCheckProvider: menus.spellCheckProvider,
+      onSpellCheckerLanguageChanged: menus.onSpellCheckerLanguageChanged,
+    };
+    win.webContents.on("context-menu", Menus.assignContextMenuHandler(menuAdapter));
+  }
+  win.webContents.setWindowOpenHandler((details) => {
+    if (
+      details.url !== "about:blank" &&
+      details.url !== "about:blank#blocked" &&
+      !isOutlookDomain(details.url)
+    ) {
+      openInBrowser(details);
+    }
+    return { action: "deny" };
+  });
+}
+
 function addEventHandlers() {
   customBackgroundService.initializeCustomBGServiceURL();
 
@@ -836,31 +1067,32 @@ function addEventHandlers() {
   // use to transparently refresh tokens, so we handle expiry ourselves.
   const { powerMonitor } = require("electron");
   powerMonitor.on("resume", async () => {
-    console.debug('[AUTH_RECOVERY] System resumed, checking auth cookies');
+    console.debug("[AUTH_RECOVERY] System resumed, checking auth cookies");
     const result = await cleanExpiredAuthCookies(window.webContents.session);
     if (result.expired > 0) {
-      console.info('[AUTH_RECOVERY] Cleaned expired cookies after resume', {
-        cleaned: result.cleaned,
-        expired: result.expired,
-      });
-      // Let Teams' own MSAL retry handle re-authentication rather than
-      // triggering full recovery which clears all auth state (issue #2364)
+      console.info(
+        "[AUTH_RECOVERY] Expired cookies found after resume, triggering recovery",
+      );
+      await triggerAuthRecovery();
     }
   });
 
   window.on("page-title-updated", onPageTitleUpdated);
   window.webContents.setWindowOpenHandler(onNewWindow);
+  window.webContents.on("did-create-window", (createdWindow) => {
+    setupSecondaryWindowHandlers(createdWindow);
+  });
   window.webContents.session.webRequest.onBeforeRequest(
     { urls: ["https://*/*"] },
-    onBeforeRequestHandler
+    onBeforeRequestHandler,
   );
   window.webContents.session.webRequest.onHeadersReceived(
     { urls: ["https://*/*"] },
-    onHeadersReceivedHandler
+    onHeadersReceivedHandler,
   );
   window.webContents.session.webRequest.onBeforeSendHeaders(
     getWebRequestFilterFromURL(),
-    onBeforeSendHeadersHandler
+    onBeforeSendHeadersHandler,
   );
   window.webContents.on("did-finish-load", onDidFinishLoad);
   window.webContents.on("did-frame-finish-load", onDidFrameFinishLoad);
@@ -885,10 +1117,37 @@ function getWebRequestFilterFromURL() {
 
 function onBeforeInput(_event, input) {
   isControlPressed = input.control;
+
+  // Ctrl+Home: navigate back to Outlook home (recovery for stuck/broken sessions)
+  if (input.control && input.key === "Home" && window) {
+    window.webContents.loadURL(config.url);
+  }
 }
 
 function secureOpenLink(details) {
-  console.debug('[LINK] Requesting to open external link');
+  // Allow Outlook windows (compose, calendar, etc.) to open in Electron automatically
+  if (isOutlookDomain(details.url)) {
+    console.debug("[LINK] Outlook window detected, allowing in Electron");
+    removePopupWindowMenu();
+    return {
+      action: "allow",
+      overrideBrowserWindowOptions: {
+        width: 1000,
+        height: 800,
+        show: true,
+        autoHideMenuBar: true,
+        webPreferences: {
+          partition: config.partition,
+          contextIsolation: false,
+          sandbox: false,
+          spellcheck: true,
+          preload: path.join(__dirname, "..", "browser", "preload-secondary.js"),
+        },
+      },
+    };
+  }
+
+  console.debug("[LINK] Requesting to open external link");
   const action = getLinkAction();
 
   if (action === 0) {
@@ -921,7 +1180,7 @@ function openInBrowser(details) {
     execFile(
       config.defaultURLHandler.trim(),
       [details.url],
-      openInBrowserErrorHandler
+      openInBrowserErrorHandler,
     );
   }
 }

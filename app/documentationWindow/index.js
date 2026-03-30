@@ -1,5 +1,5 @@
-const { BrowserWindow } = require('electron');
-const path = require('node:path');
+const { BrowserWindow } = require("electron");
+const path = require("node:path");
 
 class DocumentationWindow {
   window = null;
@@ -17,7 +17,7 @@ class DocumentationWindow {
 
     // Create new documentation window
     this.window = new BrowserWindow({
-      title: 'Teams for Linux - Documentation',
+      title: "Outlook for Linux - Documentation",
       width: 1200,
       height: 800,
       minWidth: 800,
@@ -33,16 +33,16 @@ class DocumentationWindow {
     });
 
     // Load the documentation HTML file
-    this.window.loadFile(path.join(__dirname, 'documentation.html'));
+    this.window.loadFile(path.join(__dirname, "documentation.html"));
 
     // Show window when ready
-    this.window.once('ready-to-show', () => {
+    this.window.once("ready-to-show", () => {
       this.window.show();
       this.window.focus();
     });
 
     // Clean up when window is closed
-    this.window.on('closed', () => {
+    this.window.on("closed", () => {
       this.window = null;
     });
   }

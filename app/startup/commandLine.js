@@ -11,6 +11,9 @@ class CommandLineManager {
     // the first play and rejects subsequent audio on all renderer paths.
     app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
+    // Force native Wayland rendering (no X11/XWayland)
+    app.commandLine.appendSwitch("ozone-platform", "wayland");
+
     if (app.commandLine.hasSwitch("disable-features")) {
       const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
       if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
@@ -25,9 +28,7 @@ class CommandLineManager {
   }
 
   static addSwitchesAfterConfigLoad(config) {
-    if (process.env.XDG_SESSION_TYPE === "wayland") {
-      this.#configureWayland(config);
-    }
+    this.#configureWayland(config);
 
     // Proxy configuration
     if (config.proxyServer) {
@@ -58,11 +59,11 @@ class CommandLineManager {
     this.addElectronCLIFlags(config);
   }
 
-  // Wayland display server configuration.
-  // Handles three independent concerns:
-  //   1. PipeWire — always enabled for screen sharing
-  //   2. GPU — auto-disabled unless user overrides or XWayland optimizations are on
-  //   3. Fake media UI — applied unless XWayland optimizations skip it
+  // Wayland display server configuration (native Wayland only — no X11/XWayland).
+  // Handles three concerns:
+  //   1. PipeWire — required for screen sharing on Wayland
+  //   2. GPU — enabled by default; respects explicit user override (disableGpu: true) for blank window fallback
+  //   3. Fake media UI — required for screen sharing on Wayland
   static #configureWayland(config) {
     // 1. PipeWire is always required for screen sharing on Wayland
     if (app.commandLine.hasSwitch("enable-features")) {
@@ -79,33 +80,14 @@ class CommandLineManager {
       app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
     }
 
-    // Detect XWayland: ozone-platform=x11 forces X11 rendering on a Wayland session.
-    // The runtime check is needed because the same config file is used for both
-    // native Wayland and XWayland sessions.
-    const isXWayland = app.commandLine.getSwitchValue("ozone-platform") === "x11";
-    const xwaylandOptimizations = isXWayland && config.wayland?.xwaylandOptimizations;
-
-    if (xwaylandOptimizations) {
-      console.info("[Wayland] XWayland optimizations enabled (wayland.xwaylandOptimizations)");
-    }
-
-    // 2. GPU handling: respect explicit user setting, otherwise auto-configure.
-    //    Native Wayland auto-disables GPU to prevent blank windows.
-    //    XWayland with optimizations keeps GPU enabled for camera support (#2169).
+    // 2. GPU: enabled by default for performance; user can override with disableGpu: true
+    //    in their config file if they experience blank windows on their compositor.
     if (config.disableGpuExplicitlySet) {
       console.info(`[Wayland] Respecting user's disableGpu setting: ${config.disableGpu}`);
-    } else if (xwaylandOptimizations) {
-      console.info("[Wayland] XWayland mode: keeping GPU enabled");
-    } else {
-      console.info("[Wayland] Disabling GPU composition (default)");
-      config.disableGpu = true;
     }
 
-    // 3. Fake media UI: needed for screen sharing (#2217), but breaks camera
-    //    under XWayland (#2169). Only skip when XWayland optimizations are on.
-    if (!xwaylandOptimizations) {
-      app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
-    }
+    // 3. Required for screen sharing on Wayland.
+    app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
   }
 
   static addElectronCLIFlags(config) {

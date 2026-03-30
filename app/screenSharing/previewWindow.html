@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teams for Linux - Screen Share Preview</title>
+    <title>Outlook for Linux - Screen Share Preview</title>
     <style>
         body {
             font-family: sans-serif;
@@ -16,7 +16,7 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-        
+
         #screen-share-video {
             width: 100%;
             height: 100%;
@@ -53,13 +53,13 @@
 
                     if (isActive) {
                         statusOverlay.textContent = 'Screen Share Active';
-                        document.title = 'Teams for Linux - Screen is being shared';
+                        document.title = 'Outlook for Linux - Screen is being shared';
 
                         const sourceId = await globalThis.electronAPI.getScreenShareStream();
                         const screenSize = await globalThis.electronAPI.getScreenShareScreen();
-                        
+
                         console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
-                        
+
                         if (sourceId) {
                             const stream = await navigator.mediaDevices.getUserMedia({
                                 audio: false,
@@ -74,23 +74,23 @@
                                     }
                                 }
                             });
-                            
+
                             videoElement.srcObject = stream;
                             videoElement.style.display = 'block';
-                            
+
                             // Wait for video metadata to load to get actual dimensions
                             videoElement.addEventListener('loadedmetadata', () => {
                                 const videoWidth = videoElement.videoWidth;
                                 const videoHeight = videoElement.videoHeight;
-                                
+
                                 if (videoWidth && videoHeight) {
                                     // Calculate thumbnail size while maintaining aspect ratio
                                     const maxWidth = 400;
                                     const maxHeight = 300;
                                     const aspectRatio = videoWidth / videoHeight;
-                                    
+
                                     let windowWidth, windowHeight;
-                                    
+
                                     // Scale to thumbnail size maintaining aspect ratio
                                     if (aspectRatio > maxWidth / maxHeight) {
                                         // Video is wider - fit to max width
@@ -101,14 +101,14 @@
                                         windowHeight = maxHeight;
                                         windowWidth = maxHeight * aspectRatio;
                                     }
-                                    
+
                                     // Ensure minimum size
                                     windowWidth = Math.max(windowWidth, 200);
                                     windowHeight = Math.max(windowHeight, 120);
-                                    
+
                                     // Add space for status overlay
                                     windowHeight += 20;
-                                    
+
                                     // Resize window to thumbnail size
                                     if (globalThis.electronAPI.resizeWindow) {
                                         globalThis.electronAPI.resizeWindow({
@@ -116,7 +116,7 @@
                                             height: Math.round(windowHeight)
                                         });
                                     }
-                                    
+
                                     console.debug('Resizing preview to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
                                 }
                             }, { once: true });
@@ -127,7 +127,7 @@
                         }
                     } else {
                         statusOverlay.textContent = 'Screen Share Inactive';
-                        document.title = 'Teams for Linux - Nothing is being shared';
+                        document.title = 'Outlook for Linux - Nothing is being shared';
                         videoElement.srcObject = null;
                         videoElement.style.display = 'none';
                     }
@@ -141,7 +141,7 @@
 
             // Initial status and stream update
             updateStatusAndStream();
-            
+
             // Listen for screen sharing status changes
             if (globalThis?.electronAPI?.onScreenSharingStatusChanged) {
                 globalThis.electronAPI.onScreenSharingStatusChanged(() => {

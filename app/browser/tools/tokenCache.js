@@ -27,7 +27,7 @@ class TeamsTokenCache {
     
     // Secure storage setup
     this._useSecureStorage = false;
-    this._securePrefix = 'secure_teams_';
+    this._securePrefix = 'secure_outlook_';
     
     this._initializeSecureStorage();
     

@@ -1,5 +1,16 @@
 const { ipcRenderer } = require("electron");
 
+// Intercept contextmenu on editable targets before Outlook's capture-phase handler
+// so Chromium sends ShowContextMenu (enabling cut/copy/paste/spell-check via Electron's
+// context-menu event). Non-editable targets (links, mailboxes) are left alone so
+// Outlook's custom context menus continue to work there.
+window.addEventListener('contextmenu', (e) => {
+  const t = e.target;
+  if (t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') {
+    e.stopImmediatePropagation();
+  }
+}, true);
+
 // Note: IPC validation handled by main process, no need for duplicate validation here
 globalThis.electronAPI = {
   desktopCapture: {
@@ -119,13 +130,45 @@ globalThis.electronAPI = {
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
   },
 
+  // Outlook email notification from DOM observer
+  showEmailNotification: (data) => {
+    if (!data || typeof data !== 'object') {
+      return Promise.reject(new Error('Invalid email notification data'));
+    }
+    return ipcRenderer.invoke("show-email-notification", data);
+  },
+
+  // Outlook reminder notification from DOM observer
+  showReminderNotification: (data) => {
+    if (!data || typeof data !== 'object') {
+      return Promise.reject(new Error('Invalid reminder notification data'));
+    }
+    return ipcRenderer.invoke("show-reminder-notification", data);
+  },
+
+  // Update unread email count from DOM observer
+  updateUnreadCount: (count) => {
+    if (typeof count !== 'number' || count < 0) {
+      return Promise.reject(new Error('Invalid unread count'));
+    }
+    return ipcRenderer.invoke("update-unread-count", count);
+  },
+
+  // Update active reminder count from DOM observer
+  updateReminderCount: (count) => {
+    if (typeof count !== 'number' || count < 0) {
+      return Promise.reject(new Error('Invalid reminder count'));
+    }
+    return ipcRenderer.invoke("update-reminder-count", count);
+  },
+
   // Chat deep link navigation (for quick chat access feature)
   openChatWithUser: (email) => {
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       console.error('Invalid email for chat deep link');
       return false;
     }
-    // Use the current Teams base URL (could be teams.cloud.microsoft or teams.microsoft.com)
+    // Use the current Outlook base URL (could be outlook.office.com or outlook.live.com)
     const currentOrigin = globalThis.location.origin;
     const chatPath = `/l/chat/0/0?users=${encodeURIComponent(email)}`;
     const chatUrl = `${currentOrigin}${chatPath}`;
@@ -135,7 +178,7 @@ globalThis.electronAPI = {
   },
 
   // System information (safe to expose)
-  sessionType: process.env.XDG_SESSION_TYPE || "x11",
+  sessionType: "wayland",
 };
 
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
@@ -383,6 +426,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error("Preload: ActivityManager failed to initialize:", err.message);
     }
 
+    // Initialize Outlook-specific notification interception (email/reminder DOM observers)
+    if (!config.disableNotifications) {
+      initOutlookNotificationInterception();
+      setupUnreadCountObserver();
+      setupReminderCountObserver();
+    }
+
     // Listen for config changes from the main process (e.g., when menu toggles are clicked)
     ipcRenderer.on("config-changed", (_event, configChanges) => {
       // Update the local config object with the changes
@@ -434,4 +484,281 @@ try {
   });
 } catch (err) {
   console.debug("Error handler setup failed:", err);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Outlook-specific notification interception
+// Detects email and reminder notifications from Outlook's DOM, plus unread/reminder counts.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Initialize MutationObserver to intercept Outlook notification elements
+ */
+function initOutlookNotificationInterception() {
+  const setupObserver = () => {
+    const notificationPane = document.querySelector('[data-app-section="NotificationPane"]');
+
+    if (notificationPane) {
+      console.debug('[Outlook Notifications] Found NotificationPane, setting up observer');
+      observeNotificationPane(notificationPane);
+    } else {
+      console.debug('[Outlook Notifications] NotificationPane not found, observing body');
+      observeForNotificationPane();
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(setupObserver, 2000));
+  } else {
+    setTimeout(setupObserver, 2000);
+  }
+}
+
+function observeForNotificationPane() {
+  const bodyObserver = new MutationObserver(() => {
+    const notificationPane = document.querySelector('[data-app-section="NotificationPane"]');
+    if (notificationPane) {
+      bodyObserver.disconnect();
+      observeNotificationPane(notificationPane);
+    }
+  });
+
+  if (document.body) {
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+  } else {
+    setTimeout(observeForNotificationPane, 1000);
+  }
+}
+
+function observeNotificationPane(notificationPane) {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          processNotificationElement(node);
+        }
+      });
+    }
+  });
+
+  observer.observe(notificationPane, { childList: true, subtree: true });
+  console.debug('[Outlook Notifications] Observer attached to NotificationPane');
+}
+
+function processNotificationElement(element) {
+  // Check for reminder notifications (divs with timeuntildisplaystring attribute)
+  const reminderDivs = element.querySelectorAll
+    ? [...element.querySelectorAll('[timeuntildisplaystring]')]
+    : [];
+
+  if (element.hasAttribute && element.hasAttribute('timeuntildisplaystring')) {
+    reminderDivs.push(element);
+  }
+
+  for (const reminderDiv of reminderDivs) {
+    const reminderData = extractReminderData(reminderDiv);
+    if (reminderData) {
+      console.debug('[Outlook Notifications] Reminder detected:', reminderData.subject);
+      globalThis.electronAPI.showReminderNotification(reminderData);
+    }
+  }
+
+  // Check for email notifications (buttons with aria-label)
+  const emailButtons = element.querySelectorAll
+    ? [...element.querySelectorAll('button[aria-label]'),
+       ...(element.matches?.('button[aria-label]') ? [element] : [])]
+    : [];
+
+  if (element.tagName === 'BUTTON' && element.hasAttribute('aria-label')) {
+    emailButtons.push(element);
+  }
+
+  for (const button of emailButtons) {
+    if (isEmailNotification(button)) {
+      const ariaLabel = button.getAttribute('aria-label') || '';
+      const emailData = extractEmailData(button, ariaLabel);
+      if (emailData) {
+        console.debug('[Outlook Notifications] Email detected:', emailData.subject);
+        globalThis.electronAPI.showEmailNotification(emailData);
+      }
+    }
+  }
+}
+
+/**
+ * Check if button is an email notification by Outlook DOM structure
+ * Email notifications have: .ZJg8d (sender), .KTZ84 (subject), .mrxI1 (body)
+ */
+function isEmailNotification(button) {
+  return !!(button.querySelector('.ZJg8d') && button.querySelector('.KTZ84') && button.querySelector('.mrxI1'));
+}
+
+/**
+ * Extract email data from notification button
+ */
+function extractEmailData(button, ariaLabel) {
+  const senderElement = button.querySelector('.ZJg8d > div:first-child');
+  const sender = senderElement?.textContent?.trim();
+
+  const subjectElement = button.querySelector('.KTZ84');
+  const subject = subjectElement?.textContent?.trim();
+
+  const bodyElement = button.querySelector('.mrxI1');
+  let messageBody = '';
+
+  if (bodyElement) {
+    const fullText = bodyElement.textContent;
+    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
+    const lines = fullText.split('\n');
+    const cleanLines = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (emailRegex.test(trimmed)) break;
+      if (/\d{4}\./.test(trimmed) || /\d{1,2},\s*\d{4}/.test(trimmed)) break;
+      if (/:\s*$/.test(trimmed) && trimmed.length < 50) break;
+      if (trimmed && cleanLines.length < 3) {
+        cleanLines.push(trimmed);
+      } else if (cleanLines.length >= 3) {
+        break;
+      }
+    }
+
+    messageBody = cleanLines.join('\n');
+  }
+
+  const formattedAddress = sender || (() => {
+    const colonIndex = ariaLabel.indexOf(':');
+    return colonIndex > -1 ? ariaLabel.substring(colonIndex + 1).trim() : 'Unknown';
+  })();
+
+  return {
+    address: formattedAddress,
+    subject: subject || 'New message',
+    body: messageBody
+  };
+}
+
+/**
+ * Extract reminder data from DOM element attributes
+ */
+function extractReminderData(element) {
+  const subject = element.getAttribute('subject') || '';
+  if (!subject) return null;
+
+  return {
+    subject,
+    location: element.getAttribute('location') || '',
+    timeUntil: element.getAttribute('timeuntildisplaystring') || '',
+    startTime: element.getAttribute('starttimedisplaystring') || '',
+    reminderType: element.getAttribute('remindertype') || 'Reminder'
+  };
+}
+
+/**
+ * Setup observer to watch Outlook's unread email counter (.WIYG1.Mt2TB elements)
+ */
+function setupUnreadCountObserver() {
+  try {
+    let debounceTimer;
+    const debouncedCheck = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(checkUnreadCount, 100);
+    };
+
+    const checkUnreadCount = () => {
+      try {
+        const unreadElements = document.querySelectorAll('.WIYG1.Mt2TB');
+        let totalCount = 0;
+        for (const element of unreadElements) {
+          if (element.closest('[aria-labelledby="favoritesRoot"]')) continue;
+          totalCount += parseInt(element.textContent) || 0;
+        }
+        globalThis.electronAPI.updateUnreadCount(totalCount);
+      } catch (e) {
+        console.error('[Unread Counter] Error:', e);
+      }
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      let relevantMutation = false;
+      for (const mutation of mutations) {
+        for (const nodeList of [mutation.addedNodes, mutation.removedNodes]) {
+          if (!nodeList) continue;
+          for (const node of nodeList) {
+            if (node.nodeType === 1 && (node.classList?.contains('WIYG1') ||
+                node.querySelector?.('.WIYG1.Mt2TB'))) {
+              relevantMutation = true;
+            }
+          }
+        }
+        if (mutation.type === 'characterData' && mutation.target.parentElement?.classList.contains('WIYG1')) {
+          relevantMutation = true;
+        }
+      }
+      if (relevantMutation) debouncedCheck();
+    });
+
+    const targetNode = document.documentElement || document;
+    observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
+
+    // Poll for initial elements
+    let attempts = 0;
+    const pollForElements = () => {
+      if (document.querySelectorAll('.WIYG1.Mt2TB').length > 0) {
+        checkUnreadCount();
+      } else if (attempts < 20) {
+        attempts++;
+        setTimeout(pollForElements, 500);
+      }
+    };
+    setTimeout(pollForElements, 1000);
+  } catch (e) {
+    console.error('[Unread Counter] Setup error:', e);
+  }
+}
+
+/**
+ * Setup observer to watch for active reminders (elements with timeuntildisplaystring)
+ */
+function setupReminderCountObserver() {
+  try {
+    let debounceTimer;
+    const debouncedCheck = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(checkReminderCount, 100);
+    };
+
+    const checkReminderCount = () => {
+      try {
+        const totalCount = document.querySelectorAll('[timeuntildisplaystring]').length;
+        globalThis.electronAPI.updateReminderCount(totalCount);
+      } catch (e) {
+        console.error('[Reminder Counter] Error:', e);
+      }
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      let relevantMutation = false;
+      for (const mutation of mutations) {
+        for (const nodeList of [mutation.addedNodes, mutation.removedNodes]) {
+          if (!nodeList) continue;
+          for (const node of nodeList) {
+            if (node.nodeType === 1 && (node.hasAttribute?.('timeuntildisplaystring') ||
+                node.querySelector?.('[timeuntildisplaystring]'))) {
+              relevantMutation = true;
+            }
+          }
+        }
+      }
+      if (relevantMutation) debouncedCheck();
+    });
+
+    const targetNode = document.documentElement || document;
+    observer.observe(targetNode, { childList: true, subtree: true });
+
+    setTimeout(checkReminderCount, 1000);
+  } catch (e) {
+    console.error('[Reminder Counter] Setup error:', e);
+  }
 }

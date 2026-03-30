@@ -4,12 +4,12 @@ const path = require("node:path");
 const electron = require("electron");
 
 /**
- * Cache Management Module for Teams for Linux
+ * Cache Management Module for Outlook for Linux
  * Addresses issue #1756: Daily logout due to cache overflow
  *
  * This module provides automatic cache cleanup to prevent OAuth token corruption
  * caused by Electron/Chromium cache growing too large (typically >500MB).
- * 
+ *
  * IMPORTANT: Preserves IndexedDB and WebStorage to maintain Teams authentication
  * tokens and prevent 24-hour forced re-authentication cycles.
  */
@@ -24,7 +24,7 @@ class CacheManager {
 
     // Extract partition name from config (e.g., "persist:teams-4-linux" -> "teams-4-linux")
     this.partitionName = this.extractPartitionName(
-      config.partition || "persist:teams-4-linux"
+      config.partition || "persist:teams-4-linux",
     );
   }
 
@@ -74,7 +74,7 @@ class CacheManager {
   }
 
   /**
-   * Get the total size of the Teams for Linux cache directory
+   * Get the total size of the Outlook for Linux cache directory
    */
   async getCacheSize() {
     try {
@@ -134,13 +134,13 @@ class CacheManager {
         this.userDataPath,
         "Partitions",
         this.partitionName,
-        "GPUCache"
+        "GPUCache",
       ),
       path.join(
         this.userDataPath,
         "Partitions",
         this.partitionName,
-        "Code Cache"
+        "Code Cache",
       ),
       // ✅ EXCLUDED: IndexedDB and WebStorage preserve Teams authentication tokens
       // Removing these directories was causing 24-hour re-authentication cycles
@@ -163,7 +163,7 @@ class CacheManager {
           console.debug("Removed file:", cleanupPath);
         }
       } catch (error) {
-        if (error.code === 'ENOENT') {
+        if (error.code === "ENOENT") {
           console.debug("Path does not exist, skipping:", cleanupPath);
         } else {
           console.warn("Failed to clean path:", {
@@ -192,7 +192,7 @@ class CacheManager {
           try {
             await fsp.rmdir(filePath);
           } catch (error) {
-            if (error.code === 'ENOTEMPTY') {
+            if (error.code === "ENOTEMPTY") {
               console.debug("Directory not empty, skipping rmdir:", filePath);
             } else {
               console.warn("Failed to remove directory:", {
@@ -243,7 +243,7 @@ class CacheManager {
         }
       }
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         return 0; // Path does not exist, size is 0
       } else {
         console.debug("Error accessing path:", {
@@ -280,7 +280,7 @@ class CacheManager {
       const fullPath = path.join(this.userDataPath, pathName);
       if (fs.existsSync(fullPath)) {
         const sizeMB = Math.round(
-          (await this.getDirSize(fullPath)) / (1024 * 1024)
+          (await this.getDirSize(fullPath)) / (1024 * 1024),
         );
         stats.paths[pathName] = `${sizeMB}MB`;
       }
@@ -290,11 +290,11 @@ class CacheManager {
     const partitionPath = path.join(
       this.userDataPath,
       "Partitions",
-      this.partitionName
+      this.partitionName,
     );
     if (fs.existsSync(partitionPath)) {
       const sizeMB = Math.round(
-        (await this.getDirSize(partitionPath)) / (1024 * 1024)
+        (await this.getDirSize(partitionPath)) / (1024 * 1024),
       );
       stats.paths[`Partitions/${this.partitionName}`] = `${sizeMB}MB`;
     }

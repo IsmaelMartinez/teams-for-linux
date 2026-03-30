@@ -236,9 +236,13 @@ class ReactHandler {
   }
 
   _validateDomain() {
-    const isTeamsDomain = this._isAllowedTeamsDomain(globalThis.location.hostname);
-    if (!isTeamsDomain) {
-      console.warn('ReactHandler: Not in Teams domain context');
+    const isAllowed = this._isAllowedOutlookDomain(globalThis.location.hostname);
+    if (!isAllowed) {
+      // Only log once to avoid spamming the console
+      if (!this._domainWarningShown) {
+        console.debug('ReactHandler: Not in a supported domain context (Teams React internals not available)');
+        this._domainWarningShown = true;
+      }
       return false;
     }
     return true;
@@ -255,7 +259,6 @@ class ReactHandler {
   _validateAppElement() {
     const appElement = document.getElementById("app");
     if (!appElement) {
-      console.warn('ReactHandler: Teams app element not found');
       return false;
     }
     return true;
@@ -287,12 +290,12 @@ class ReactHandler {
    * @param {string} hostname - The hostname to validate
    * @returns {boolean} - True if hostname is a legitimate Teams domain
    */
-  _isAllowedTeamsDomain(hostname) {
-    // List of valid Teams domains
+  _isAllowedOutlookDomain(hostname) {
+    // List of valid Outlook domains
     const allowedDomains = [
-      'teams.cloud.microsoft',
-      'teams.microsoft.com',
-      'teams.live.com'
+      'outlook.office.com',
+      'outlook.office365.com',
+      'outlook.live.com'
     ];
 
     // Handle Microsoft Cloud App Security (MCAS) suffix. eg: teams.cloud.microsoft.mcas.ms

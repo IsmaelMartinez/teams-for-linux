@@ -5,28 +5,12 @@ const { generateReleaseInfo } = require("./generateReleaseInfo");
 const { generateDebianChangelog } = require("./generateDebianChangelog");
 
 function getAppFileName(context) {
-  const productFileName = context.packager.appInfo.productFilename;
-
-  switch (context.electronPlatformName) {
-    case "win32":
-      return `${productFileName}.exe`;
-    case "darwin":
-      return `${productFileName}.app`;
-    case "mas":
-      return `${productFileName}.app`;
-    case "linux":
-      return context.packager.executableName;
-    default:
-      return "";
-  }
+  return context.packager.executableName;
 }
 
 exports.default = async function afterPack(context) {
   try {
-    // Ensure release info is generated for Linux publishing
-    if (context.electronPlatformName === "linux") {
-      await generateReleaseInfoForLinux();
-    }
+    await generateReleaseInfoForLinux();
 
     const appPath = `${context.appOutDir}/${getAppFileName(context)}`;
     await chmod(appPath, 0o755);

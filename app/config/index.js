@@ -10,7 +10,7 @@ function getConfigFilePath(configPath) {
 }
 
 function getSystemConfigFilePath() {
-  return "/etc/teams-for-linux/config.json";
+  return "/etc/outlook-for-linux/config.json";
 }
 
 function checkConfigFileExistence(configPath) {
@@ -41,11 +41,11 @@ function populateConfigObjectFromFile(configObject, configPath) {
       systemConfig = getSystemConfigFile();
       hasSystemConfig = true;
       console.info(
-        "System-wide config loaded from /etc/teams-for-linux/config.json"
+        "System-wide config loaded from /etc/outlook-for-linux/config.json",
       );
     } catch (e) {
       console.warn(
-        "Error loading system-wide config file, ignoring:\n" + e.message
+        "Error loading system-wide config file, ignoring:\n" + e.message,
       );
     }
   }
@@ -59,7 +59,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
       configObject.configError = e.message;
       console.warn(
         "Error in user config file, using system config or defaults:\n" +
-          configObject.configError
+          configObject.configError,
       );
     }
   }
@@ -71,7 +71,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
 
     if (hasUserConfig && hasSystemConfig) {
       console.info(
-        "Using merged configuration: system-wide config overridden by user config"
+        "Using merged configuration: system-wide config overridden by user config",
       );
     } else if (hasUserConfig) {
       console.info("Using user configuration");
@@ -80,7 +80,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
     }
   } else {
     console.warn(
-      "No config file found (user or system-wide), using default values"
+      "No config file found (user or system-wide), using default values",
     );
   }
 }
@@ -116,14 +116,15 @@ function extractYargConfig(configObject, appVersion) {
           enabled: true,
           alwaysOnTop: true,
         },
-        deprecated: "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
+        deprecated:
+          "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
         describe:
           "[DEPRECATED] Use screenSharing.thumbnail instead. Controls the thumbnail preview window during active screen sharing.",
         type: "object",
       },
       appIcon: {
         default: "",
-        describe: "Teams app icon to show in the tray",
+        describe: "Outlook app icon to show in the tray",
         type: "string",
       },
       appIconType: {
@@ -145,7 +146,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "number",
       },
       appTitle: {
-        default: "Microsoft Teams",
+        default: "Microsoft Outlook",
         describe: "A text to be suffixed with page title",
         type: "string",
       },
@@ -167,9 +168,10 @@ function extractYargConfig(configObject, appVersion) {
       idleDetection: {
         default: {
           forceState: false,
-          stateFile: "/tmp/teams-for-linux-idle-state-$USER",
+          stateFile: "/tmp/outlook-for-linux-idle-state-$USER",
         },
-        describe: "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support.",
+        describe:
+          "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support.",
         type: "object",
       },
       chromeUserAgent: {
@@ -371,7 +373,7 @@ function extractYargConfig(configObject, appVersion) {
       },
       meetupJoinRegEx: {
         default: defaults.meetupJoinRegEx,
-        describe: "Regex for Teams meetup-join and related links",
+        describe: "Regex for Outlook deep links (mail, calendar, etc.)",
         type: "string",
       },
       menubar: {
@@ -396,8 +398,7 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           toastDuration: 5000,
         },
-        describe:
-          "Custom in-app notification system configuration",
+        describe: "Custom in-app notification system configuration",
         type: "object",
       },
       onNewWindowOpenMeetupJoinUrlInApp: {
@@ -407,7 +408,7 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       partition: {
-        default: "persist:teams-4-linux",
+        default: "persist:outlook-4-linux",
         describe: "BrowserWindow webpreferences partition",
         type: "string",
       },
@@ -417,21 +418,22 @@ function extractYargConfig(configObject, appVersion) {
         type: "string",
       },
       network: {
-	default: {
-		webRTCIPHandlingPolicy: null,
-	},
-      	describe:
-	  "Network configuration. " +
-    	  "webRTCIPHandlingPolicy: WebRTC IP handling policy to control which network interfaces are used for ICE candidates. " +
-    	  "Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route " +
-    	  "(e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. " +
-    	  "Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. " +
-    	  "Disabled by default (opt-in).",
-	type: "object",
+        default: {
+          webRTCIPHandlingPolicy: null,
+        },
+        describe:
+          "Network configuration. " +
+          "webRTCIPHandlingPolicy: WebRTC IP handling policy to control which network interfaces are used for ICE candidates. " +
+          "Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route " +
+          "(e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. " +
+          "Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. " +
+          "Disabled by default (opt-in).",
+        type: "object",
       },
       screenLockInhibitionMethod: {
         default: "Electron",
-        deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
+        deprecated:
+          "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
         describe:
           "[DEPRECATED] Use screenSharing.lockInhibitionMethod instead. Screen lock inhibition method (Electron/WakeLockSentinel).",
         type: "string",
@@ -470,18 +472,18 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Enable tray icon",
         type: "boolean",
       },
-      msTeamsProtocols: {
+      msOutlookProtocols: {
         default: {
-          v1: "^msteams:/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
-          v2: String.raw`^msteams://teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)`,
+          v1: "^msoutlook:/(?:mail/|calendar/|people/|tasks/|files/)",
+          v2: String.raw`^msoutlook://outlook\.(?:office\.com|live\.com|cloud\.microsoft)/(?:mail/|calendar/|people/|tasks/|files/)`,
         },
         describe:
-          "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
+          "Regular expressions for Microsoft Outlook protocol links (v1 and v2).",
         type: "object",
       },
       url: {
-        default: "https://teams.cloud.microsoft",
-        describe: "Microsoft Teams URL",
+        default: "https://outlook.office.com/",
+        describe: "Microsoft Outlook URL",
         type: "string",
       },
       useMutationTitleLogic: {
@@ -523,27 +525,30 @@ function extractYargConfig(configObject, appVersion) {
           brokerUrl: "",
           username: "",
           password: "",
-          clientId: "teams-for-linux",
-          topicPrefix: "teams",
+          clientId: "outlook-for-linux",
+          topicPrefix: "outlook",
           statusTopic: "status",
           commandTopic: "",
           statusCheckInterval: 10000,
         },
-        describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
+        describe:
+          "MQTT configuration for publishing Outlook status updates and receiving action commands",
         type: "object",
       },
       quickChat: {
         default: {
           enabled: false,
         },
-        describe: "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
+        describe:
+          "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
         type: "object",
       },
       graphApi: {
         default: {
           enabled: false,
         },
-        describe: "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
+        describe:
+          "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
         type: "object",
       },
       auth: {
@@ -560,7 +565,8 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           xwaylandOptimizations: false,
         },
-        describe: "Wayland display server configuration. xwaylandOptimizations: keeps GPU enabled and skips fake media UI flag under XWayland (may fix camera issues but can break screen sharing)",
+        describe:
+          "Wayland display server configuration. xwaylandOptimizations: keeps GPU enabled and skips fake media UI flag under XWayland (may fix camera issues but can break screen sharing)",
         type: "object",
       },
     })
@@ -602,7 +608,10 @@ function argv(configPath, appVersion) {
   populateConfigObjectFromFile(configObject, configPath);
 
   // yargs v18: extractYargConfig now returns both the instance and parsed config
-  const { yargsInstance, parsedConfig: config } = extractYargConfig(configObject, appVersion);
+  const { yargsInstance, parsedConfig: config } = extractYargConfig(
+    configObject,
+    appVersion,
+  );
 
   if (configObject.configError) {
     config["error"] = configObject.configError;
@@ -614,7 +623,7 @@ function argv(configPath, appVersion) {
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
       console.info(
-        `Config file ${filename} changed ${event}. Relaunching app...`
+        `Config file ${filename} changed ${event}. Relaunching app...`,
       );
       ipcMain.emit("config-file-changed");
     });
@@ -622,8 +631,11 @@ function argv(configPath, appVersion) {
 
   // Track whether disableGpu was explicitly set via CLI or config file
   // This allows Wayland detection to use smart defaults while respecting user preferences
-  const wasSetInCli = process.argv.some(arg => arg.startsWith('--disableGpu'));
-  const wasSetInFile = configObject.configFile && "disableGpu" in configObject.configFile;
+  const wasSetInCli = process.argv.some((arg) =>
+    arg.startsWith("--disableGpu"),
+  );
+  const wasSetInFile =
+    configObject.configFile && "disableGpu" in configObject.configFile;
   config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
 
   logger.init(config.logConfig);

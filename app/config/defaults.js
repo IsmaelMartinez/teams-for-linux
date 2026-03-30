@@ -18,7 +18,7 @@ const NETWORK_ERROR_PATTERNS = [
 ];
 
 const defaults = {
-  meetupJoinRegEx: String.raw`^https://teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)/(v2/\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)`,
+  meetupJoinRegEx: String.raw`^https://outlook\.(?:office\.com|office365\.com|live\.com|cloud\.microsoft)/(?:mail/|calendar/|people/|tasks/|files/)`,
   NETWORK_ERROR_PATTERNS,
 };
 

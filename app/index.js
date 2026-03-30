@@ -6,6 +6,14 @@ const {
   systemPreferences,
   nativeImage,
 } = require("electron");
+
+// Set app name BEFORE anything else so Electron uses the correct config path
+// (e.g. ~/.config/Microsoft Outlook/ instead of ~/.config/Electron/)
+app.name = "Microsoft Outlook";
+if (process.platform === "linux") {
+  app.setDesktopName("outlook-for-linux.desktop");
+}
+
 const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
@@ -17,6 +25,7 @@ const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
+const outlookNotificationModule = require("./notification");
 const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
@@ -125,9 +134,13 @@ if (isMac) {
   requestMediaAccess();
 }
 
-const protocolClient = "msteams";
+const protocolClient = "msoutlook";
 if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
   app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+}
+
+if (!app.isDefaultProtocolClient("mailto", process.execPath)) {
+  app.setAsDefaultProtocolClient("mailto", process.execPath);
 }
 
 if (gotTheLock) {
@@ -195,6 +208,24 @@ if (gotTheLock) {
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   // Set application badge count (dock/taskbar notification)
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+
+  // Outlook-specific notification handlers
+  // Handle email notification detected from Outlook's DOM
+  ipcMain.handle("show-email-notification", (_event, notification) => {
+    outlookNotificationModule.showEmailNotification(notification);
+  });
+  // Handle reminder notification detected from Outlook's DOM
+  ipcMain.handle("show-reminder-notification", (_event, notification) => {
+    outlookNotificationModule.showReminderNotification(notification);
+  });
+  // Handle unread email count update from Outlook's DOM observer
+  ipcMain.handle("update-unread-count", (_event, count) => {
+    outlookNotificationModule.updateBadgeFromUnreadCount(count);
+  });
+  // Handle active reminder count update from Outlook's DOM observer
+  ipcMain.handle("update-reminder-count", (_event, count) => {
+    outlookNotificationModule.updateBadgeFromReminderCount(count);
+  });
   // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;

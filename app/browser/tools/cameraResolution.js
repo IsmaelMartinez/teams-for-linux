@@ -1,7 +1,7 @@
 /**
  * CameraResolution Browser Tool
  *
- * Removes or overrides video resolution constraints that Microsoft Teams sets
+ * Removes or overrides video resolution constraints that Microsoft Outlook sets
  * when accessing the camera. By default, Teams requests 720p which may not be
  * the native or preferred resolution of the camera.
  *
@@ -70,7 +70,7 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
 
     console.debug(
       "[CAMERA_RESOLUTION] Original video constraints:",
-      JSON.stringify(constraints.video)
+      JSON.stringify(constraints.video),
     );
 
     if (mode === "remove") {
@@ -94,7 +94,7 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
         }
       }
       console.debug(
-        "[CAMERA_RESOLUTION] Removed resolution constraints, camera will use native resolution"
+        "[CAMERA_RESOLUTION] Removed resolution constraints, camera will use native resolution",
       );
     } else if (mode === "override" && targetWidth && targetHeight) {
       // Override with user-specified resolution
@@ -110,13 +110,13 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
         video.height = { ideal: targetHeight };
       }
       console.debug(
-        `[CAMERA_RESOLUTION] Overriding resolution to ${targetWidth}x${targetHeight}`
+        `[CAMERA_RESOLUTION] Overriding resolution to ${targetWidth}x${targetHeight}`,
       );
     }
 
     console.debug(
       "[CAMERA_RESOLUTION] Modified video constraints:",
-      JSON.stringify(constraints.video)
+      JSON.stringify(constraints.video),
     );
   }
 
@@ -125,7 +125,7 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
       const original = object[name];
       object[name] = createNewFunction(original);
       console.debug(
-        `[CAMERA_RESOLUTION] Patched ${object.constructor?.name || "object"}.${name}`
+        `[CAMERA_RESOLUTION] Patched ${object.constructor?.name || "object"}.${name}`,
       );
     }
   }
@@ -165,11 +165,11 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
         }
         return original.call(this, constraints);
       };
-    }
+    },
   );
 
   console.debug(
-    `[CAMERA_RESOLUTION] Successfully initialized - mode: ${mode}${mode === "override" ? `, target: ${targetWidth}x${targetHeight}` : ""}`
+    `[CAMERA_RESOLUTION] Successfully initialized - mode: ${mode}${mode === "override" ? `, target: ${targetWidth}x${targetHeight}` : ""}`,
   );
 };
 
@@ -188,11 +188,11 @@ function init(config) {
     const mode = resolutionConfig.mode || "remove";
     if (mode === "remove") {
       console.info(
-        "[CAMERA_RESOLUTION] Camera resolution constraints will be removed"
+        "[CAMERA_RESOLUTION] Camera resolution constraints will be removed",
       );
     } else {
       console.info(
-        `[CAMERA_RESOLUTION] Camera resolution will be set to ${resolutionConfig.width}x${resolutionConfig.height}`
+        `[CAMERA_RESOLUTION] Camera resolution will be set to ${resolutionConfig.width}x${resolutionConfig.height}`,
       );
     }
   } catch (error) {

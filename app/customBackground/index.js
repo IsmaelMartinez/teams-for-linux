@@ -37,7 +37,7 @@ class CustomBackground {
     }
 
     const remotePath = httpHelper.joinURLs(customBGUrl.href, "config.json");
-    console.debug('[CUSTOM_BG] Fetching remote configuration');
+    console.debug("[CUSTOM_BG] Fetching remote configuration");
     try {
       const data = await httpHelper.getAsync(remotePath);
       this.onCustomBGServiceConfigDownloadSuccess(data);
@@ -68,15 +68,15 @@ class CustomBackground {
     // Custom background for teams v1
     if (
       details.url.startsWith(
-        "https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/",
+        "https://statics.teams.cdn.office.net/outlook-for-linux/custom-bg/",
       )
     ) {
       const reqUrl = details.url.replace(
-        "https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/",
+        "https://statics.teams.cdn.office.net/outlook-for-linux/custom-bg/",
         "",
       );
       const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
-      console.debug('[CUSTOM_BG] Forwarding v1 background request');
+      console.debug("[CUSTOM_BG] Forwarding v1 background request");
       return { redirectURL: imgUrl };
     }
     // Custom background replace for teams v2
@@ -91,7 +91,7 @@ class CustomBackground {
         "",
       );
       const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
-      console.debug('[CUSTOM_BG] Forwarding v2 background request');
+      console.debug("[CUSTOM_BG] Forwarding v2 background request");
       return { redirectURL: imgUrl };
     }
   }
@@ -123,7 +123,7 @@ class CustomBackground {
     }
     try {
       customBGServiceUrl = new URL("", this.config.customBGServiceBaseUrl);
-      console.debug('[CUSTOM_BG] Custom background service URL configured');
+      console.debug("[CUSTOM_BG] Custom background service URL configured");
     } catch (err) {
       console.error(
         `[CUSTOM_BG] Invalid custom background service URL, updating to default. Error: ${err.message}`,
@@ -176,22 +176,20 @@ class CustomBackground {
 }
 
 function setPath(cfg) {
-  if (!cfg.src.startsWith("/teams-for-linux/custom-bg/")) {
-    cfg.src = httpHelper.joinURLs("/teams-for-linux/custom-bg/", cfg.src);
+  if (!cfg.src.startsWith("/outlook-for-linux/custom-bg/")) {
+    cfg.src = httpHelper.joinURLs("/outlook-for-linux/custom-bg/", cfg.src);
   }
 
-  if (!cfg.thumb_src.startsWith("/teams-for-linux/custom-bg/")) {
+  if (!cfg.thumb_src.startsWith("/outlook-for-linux/custom-bg/")) {
     cfg.thumb_src = httpHelper.joinURLs(
-      "/teams-for-linux/custom-bg/",
+      "/outlook-for-linux/custom-bg/",
       cfg.thumb_src,
     );
   }
 }
 
 function setConnectSrcSecurityPolicy(policies) {
-  const connectsrcIndex = policies.findIndex(
-    (f) => f.includes("connect-src"),
-  );
+  const connectsrcIndex = policies.findIndex((f) => f.includes("connect-src"));
   if (connectsrcIndex >= 0) {
     policies[connectsrcIndex] =
       policies[connectsrcIndex] + ` ${customBGServiceUrl.origin}`;

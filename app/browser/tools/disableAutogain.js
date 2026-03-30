@@ -1,7 +1,7 @@
 /**
  * DisableAutogain Browser Tool
  *
- * Automatically disables microphone auto gain control in Microsoft Teams web interface.
+ * Automatically disables microphone auto gain control in Microsoft Outlook web interface.
  * This tool intercepts getUserMedia calls and modifies audio constraints to prevent
  * automatic gain adjustment, providing users with manual control over microphone levels.
  *
@@ -40,9 +40,11 @@ function setConstraint(constraint, name, value) {
 }
 
 const applyDisableAutogainPatch = function () {
-
   function disableAutogain(constraints) {
-    console.debug("[DISABLE_AUTOGAIN] Automatically disabling auto gain control", constraints);
+    console.debug(
+      "[DISABLE_AUTOGAIN] Automatically disabling auto gain control",
+      constraints,
+    );
     if (constraints?.audio) {
       if (typeof constraints.audio !== "object") {
         constraints.audio = {};
@@ -70,7 +72,9 @@ const applyDisableAutogainPatch = function () {
     if (name in object) {
       const original = object[name];
       object[name] = createNewFunction(original);
-      console.debug(`[DISABLE_AUTOGAIN] Patched ${object.constructor?.name || 'object'}.${name}`);
+      console.debug(
+        `[DISABLE_AUTOGAIN] Patched ${object.constructor?.name || "object"}.${name}`,
+      );
     }
   }
 
@@ -107,7 +111,7 @@ const applyDisableAutogainPatch = function () {
   );
 
   console.debug(
-    "[DISABLE_AUTOGAIN] Successfully initialized - microphone auto gain control disabled"
+    "[DISABLE_AUTOGAIN] Successfully initialized - microphone auto gain control disabled",
   );
 };
 
@@ -117,14 +121,17 @@ const applyDisableAutogainPatch = function () {
  */
 function init(config) {
   // Support both new nested config and deprecated flat config
-  const enabled = config.media?.microphone?.disableAutogain || config.disableAutogain;
+  const enabled =
+    config.media?.microphone?.disableAutogain || config.disableAutogain;
   if (!enabled) {
     return;
   }
 
   try {
     applyDisableAutogainPatch();
-    console.info("[DISABLE_AUTOGAIN] Microphone auto gain control has been disabled");
+    console.info(
+      "[DISABLE_AUTOGAIN] Microphone auto gain control has been disabled",
+    );
   } catch (error) {
     console.error("[DISABLE_AUTOGAIN] Failed to initialize:", error);
   }

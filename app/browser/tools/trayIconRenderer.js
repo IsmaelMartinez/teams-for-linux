@@ -1,4 +1,4 @@
-const { nativeImage } = require("electron");
+const fs = require("node:fs");
 const TrayIconChooser = require("./trayIconChooser");
 class TrayIconRenderer {
   #lastActivityCount;
@@ -8,8 +8,10 @@ class TrayIconRenderer {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
     const iconChooser = new TrayIconChooser(config);
-    this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
-    this.iconSize = this.baseIcon.getSize();
+    const iconPath = iconChooser.getFile();
+    const svgContent = fs.readFileSync(iconPath, "utf8");
+    this._baseIconDataURL = "data:image/svg+xml;base64," + Buffer.from(svgContent).toString("base64");
+    this.iconSize = { width: 96, height: 96 };
     globalThis.addEventListener(
       "unread-count",
       this.updateActivityCount.bind(this),
@@ -30,9 +32,7 @@ class TrayIconRenderer {
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
       previousCount: this.#lastActivityCount || 0,
-      timestamp: new Date().toISOString(),
       willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
-      suggestion: "Monitor renderTimeMs and totalTimeMs for performance issues"
     });
     
     // Special case for count 0: Use base icon directly to avoid canvas rendering
@@ -69,9 +69,6 @@ class TrayIconRenderer {
       console.debug("[TRAY_DIAG] Icon render completed, sending tray update", {
         count: count,
         renderTimeMs: renderTime,
-        iconDataLength: icon?.length || 0,
-        willFlash: count > 0 && !this.config.disableNotificationWindowFlash,
-        performanceNote: renderTime > 100 ? "Slow icon rendering detected" : "Normal rendering speed"
       });
       
       const ipcStartTime = Date.now();
@@ -84,8 +81,6 @@ class TrayIconRenderer {
       console.debug("[TRAY_DIAG] Tray update IPC sent", {
         count: count,
         totalTimeMs: Date.now() - startTime,
-        ipcCallTimeMs: Date.now() - ipcStartTime,
-        performanceNote: (Date.now() - startTime) > 200 ? "Slow tray update detected" : "Normal tray update speed"
       });
       this.#lastActivityCount = count;
     } catch (error) {
@@ -93,7 +88,6 @@ class TrayIconRenderer {
         error: error.message,
         count: count,
         elapsedMs: Date.now() - startTime,
-        suggestion: "Check canvas creation and image loading in render method"
       });
     }
     
@@ -105,15 +99,14 @@ class TrayIconRenderer {
   }
 
   render(newActivityCount) {
-    const IMAGE_PNG = "image/png";
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
       canvas.height = 140;
       canvas.width = 140;
       const image = new Image();
       
-      const baseIconData = this.baseIcon.toDataURL(IMAGE_PNG);
-      
+      const baseIconData = this._baseIconDataURL;
+
       // Add error handling for image loading
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");

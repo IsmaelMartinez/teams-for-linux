@@ -1,4 +1,5 @@
 const { Tray, Menu, ipcMain, nativeImage } = require("electron");
+const fs = require("node:fs");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
@@ -64,11 +65,79 @@ class ApplicationTray {
 
       this.tray.setImage(image);
       this.window.flashFrame(flash);
-      
+
       // Update tooltip to show unread count
       const baseTitle = this.config.appTitle;
       const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
       this.tray.setToolTip(tooltip);
+    }
+  }
+
+  /**
+   * Update the tray icon with a color-coded badge count
+   * @param {number} count - Number to display on the badge
+   * @param {string} type - 'email' (red) or 'reminder' (orange)
+   */
+  async updateBadge(count, type = 'email') {
+    if (!this.tray || this.tray.isDestroyed()) return;
+
+    if (count > 0 && this.window && this.window.webContents) {
+      const badgeColor = type === 'reminder' ? '#FF6600' : '#FF0000';
+      const tooltipText = type === 'reminder'
+        ? `Microsoft Outlook - ${count} active reminder${count > 1 ? 's' : ''}`
+        : `Microsoft Outlook - ${count} unread email${count > 1 ? 's' : ''}`;
+
+      const svgContent = fs.readFileSync(this.iconPath, "utf8");
+      const iconDataURL = "data:image/svg+xml;base64," + Buffer.from(svgContent).toString("base64");
+
+      try {
+        const dataURL = await this.window.webContents.executeJavaScript(
+          `(function(iconSrc, color, count) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 140;
+            canvas.height = 140;
+            const ctx = canvas.getContext('2d');
+
+            const image = new Image();
+            image.src = iconSrc;
+
+            return new Promise((resolve) => {
+              image.onload = () => {
+                ctx.drawImage(image, 0, 0, 140, 140);
+
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(95, 50, 45, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                const displayText = count > 9 ? '9+' : count.toString();
+                const fontSize = count > 9 ? 58 : 70;
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold ' + fontSize + 'px Arial';
+                ctx.fillText(displayText, 95, 50);
+
+                resolve(canvas.toDataURL());
+              };
+            });
+          })(${JSON.stringify(iconDataURL)}, ${JSON.stringify(badgeColor)}, ${count})`
+        );
+
+        const image = nativeImage.createFromDataURL(dataURL);
+        this.tray.setImage(image);
+        this.tray.setToolTip(tooltipText);
+      } catch (err) {
+        console.error('[Tray] Failed to render badge:', err);
+      }
+    } else {
+      this.tray.setImage(this.getIconImage(this.iconPath));
+      this.tray.setToolTip('Microsoft Outlook');
     }
   }
 
