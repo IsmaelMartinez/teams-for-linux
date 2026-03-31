@@ -55,11 +55,15 @@
     "protocols": [
       {
         "name": "Microsoft Outlook",
-        "schemes": ["msoutlook"]
+        "schemes": [
+          "msoutlook"
+        ]
       },
       {
         "name": "Mail",
-        "schemes": ["mailto"]
+        "schemes": [
+          "mailto"
+        ]
       }
     ],
     "extraResources": [
@@ -142,5 +146,10 @@
       ]
     },
     "afterPack": "scripts/afterpack.js"
+  },
+  "author": {
+    "name": "ariel-rivo",
+    "email": "191101378+ariel-rivo@users.noreply.github.com",
+    "url": "https://github.com/ariel-rivo"
   }
 }
