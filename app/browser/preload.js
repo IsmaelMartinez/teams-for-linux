@@ -4,12 +4,20 @@ const { ipcRenderer } = require("electron");
 // so Chromium sends ShowContextMenu (enabling cut/copy/paste/spell-check via Electron's
 // context-menu event). Non-editable targets (links, mailboxes) are left alone so
 // Outlook's custom context menus continue to work there.
-window.addEventListener('contextmenu', (e) => {
-  const t = e.target;
-  if (t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') {
-    e.stopImmediatePropagation();
-  }
-}, true);
+window.addEventListener(
+  "contextmenu",
+  (e) => {
+    const t = e.target;
+    if (
+      t.isContentEditable ||
+      t.tagName === "INPUT" ||
+      t.tagName === "TEXTAREA"
+    ) {
+      e.stopImmediatePropagation();
+    }
+  },
+  true,
+);
 
 // Note: IPC validation handled by main process, no need for duplicate validation here
 globalThis.electronAPI = {
@@ -18,8 +26,8 @@ globalThis.electronAPI = {
       ipcRenderer
         .invoke("choose-desktop-media", sources)
         .then((streamId) => cb(streamId))
-        .catch(err => {
-          console.error('Desktop media choice failed:', err);
+        .catch((err) => {
+          console.error("Desktop media choice failed:", err);
           cb(null);
         });
       return Date.now();
@@ -28,10 +36,13 @@ globalThis.electronAPI = {
   },
   // Screen sharing events
   sendScreenSharingStarted: (sourceId) => {
-    if (sourceId === null || (typeof sourceId === 'string' && sourceId.length < 100)) {
+    if (
+      sourceId === null ||
+      (typeof sourceId === "string" && sourceId.length < 100)
+    ) {
       return ipcRenderer.send("screen-sharing-started", sourceId);
     }
-    console.error('Invalid sourceId for screen sharing');
+    console.error("Invalid sourceId for screen sharing");
   },
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
@@ -46,29 +57,29 @@ globalThis.electronAPI = {
 
   // Notifications with input validation
   showNotification: (options) => {
-    if (!options || typeof options !== 'object') {
-      return Promise.reject(new Error('Invalid notification options'));
+    if (!options || typeof options !== "object") {
+      return Promise.reject(new Error("Invalid notification options"));
     }
     return ipcRenderer.invoke("show-notification", options);
   },
   playNotificationSound: (options) => {
-    if (options && typeof options !== 'object') {
-      return Promise.reject(new Error('Invalid sound options'));
+    if (options && typeof options !== "object") {
+      return Promise.reject(new Error("Invalid sound options"));
     }
     return ipcRenderer.invoke("play-notification-sound", options);
   },
   sendNotificationToast: (data) => {
-    if (!data || typeof data !== 'object') {
-      throw new Error('Invalid notification toast data');
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid notification toast data");
     }
     ipcRenderer.send("notification-show-toast", data);
   },
 
   // Badge count with validation
   setBadgeCount: (count) => {
-    if (typeof count !== 'number' || count < 0 || count > 9999) {
-      console.error('Invalid badge count:', count);
-      return Promise.reject(new Error('Invalid badge count'));
+    if (typeof count !== "number" || count < 0 || count > 9999) {
+      console.error("Invalid badge count:", count);
+      return Promise.reject(new Error("Invalid badge count"));
     }
     return ipcRenderer.invoke("set-badge-count", count);
   },
@@ -80,8 +91,8 @@ globalThis.electronAPI = {
 
   // Theme events
   onSystemThemeChanged: (callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Invalid callback for theme changed');
+    if (typeof callback !== "function") {
+      console.error("Invalid callback for theme changed");
       return;
     }
     return ipcRenderer.on("system-theme-changed", callback);
@@ -89,22 +100,22 @@ globalThis.electronAPI = {
 
   // User status with validation
   setUserStatus: (data) => {
-    if (!data || typeof data !== 'object') {
-      return Promise.reject(new Error('Invalid user status data'));
+    if (!data || typeof data !== "object") {
+      return Promise.reject(new Error("Invalid user status data"));
     }
     return ipcRenderer.invoke("user-status-changed", data);
   },
 
   // Zoom with validation
   getZoomLevel: (partition) => {
-    if (typeof partition !== 'string' || partition.length > 100) {
-      return Promise.reject(new Error('Invalid partition'));
+    if (typeof partition !== "string" || partition.length > 100) {
+      return Promise.reject(new Error("Invalid partition"));
     }
     return ipcRenderer.invoke("get-zoom-level", partition);
   },
   saveZoomLevel: (data) => {
-    if (!data || typeof data !== 'object' || typeof data.level !== 'number') {
-      return Promise.reject(new Error('Invalid zoom data'));
+    if (!data || typeof data !== "object" || typeof data.level !== "number") {
+      return Promise.reject(new Error("Invalid zoom data"));
     }
     return ipcRenderer.invoke("save-zoom-level", data);
   },
@@ -114,8 +125,8 @@ globalThis.electronAPI = {
   navigateForward: () => ipcRenderer.send("navigate-forward"),
   getNavigationState: () => ipcRenderer.invoke("get-navigation-state"),
   onNavigationStateChanged: (callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Invalid callback for navigation state changed');
+    if (typeof callback !== "function") {
+      console.error("Invalid callback for navigation state changed");
       return;
     }
     return ipcRenderer.on("navigation-state-changed", callback);
@@ -124,55 +135,59 @@ globalThis.electronAPI = {
   // Microsoft Graph API
   graphApi: {
     getUserProfile: () => ipcRenderer.invoke("graph-api-get-user-profile"),
-    getCalendarEvents: (options) => ipcRenderer.invoke("graph-api-get-calendar-events", options),
-    getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
-    createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
-    getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
+    getCalendarEvents: (options) =>
+      ipcRenderer.invoke("graph-api-get-calendar-events", options),
+    getCalendarView: (start, end, options) =>
+      ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
+    createCalendarEvent: (event) =>
+      ipcRenderer.invoke("graph-api-create-calendar-event", event),
+    getMailMessages: (options) =>
+      ipcRenderer.invoke("graph-api-get-mail-messages", options),
   },
 
   // Outlook email notification from DOM observer
   showEmailNotification: (data) => {
-    if (!data || typeof data !== 'object') {
-      return Promise.reject(new Error('Invalid email notification data'));
+    if (!data || typeof data !== "object") {
+      return Promise.reject(new Error("Invalid email notification data"));
     }
     return ipcRenderer.invoke("show-email-notification", data);
   },
 
   // Outlook reminder notification from DOM observer
   showReminderNotification: (data) => {
-    if (!data || typeof data !== 'object') {
-      return Promise.reject(new Error('Invalid reminder notification data'));
+    if (!data || typeof data !== "object") {
+      return Promise.reject(new Error("Invalid reminder notification data"));
     }
     return ipcRenderer.invoke("show-reminder-notification", data);
   },
 
   // Update unread email count from DOM observer
   updateUnreadCount: (count) => {
-    if (typeof count !== 'number' || count < 0) {
-      return Promise.reject(new Error('Invalid unread count'));
+    if (typeof count !== "number" || count < 0) {
+      return Promise.reject(new Error("Invalid unread count"));
     }
     return ipcRenderer.invoke("update-unread-count", count);
   },
 
   // Update active reminder count from DOM observer
   updateReminderCount: (count) => {
-    if (typeof count !== 'number' || count < 0) {
-      return Promise.reject(new Error('Invalid reminder count'));
+    if (typeof count !== "number" || count < 0) {
+      return Promise.reject(new Error("Invalid reminder count"));
     }
     return ipcRenderer.invoke("update-reminder-count", count);
   },
 
   // Chat deep link navigation (for quick chat access feature)
   openChatWithUser: (email) => {
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      console.error('Invalid email for chat deep link');
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      console.error("Invalid email for chat deep link");
       return false;
     }
     // Use the current Outlook base URL (could be outlook.office.com or outlook.live.com)
     const currentOrigin = globalThis.location.origin;
     const chatPath = `/l/chat/0/0?users=${encodeURIComponent(email)}`;
     const chatUrl = `${currentOrigin}${chatPath}`;
-    console.debug('[CHAT_LINK] Navigating to chat via deep link');
+    console.debug("[CHAT_LINK] Navigating to chat via deep link");
     globalThis.location.href = chatUrl;
     return true;
   },
@@ -184,15 +199,18 @@ globalThis.electronAPI = {
 // Fetch config and override Notification immediately (matching v2.2.1 pattern)
 // Config is fetched asynchronously but notification function references it via closure
 let notificationConfig = null;
-ipcRenderer.invoke("get-config").then((config) => {
-  notificationConfig = config;
-  console.debug("Preload: Config loaded for notifications:", {
-    notificationMethod: config?.notificationMethod,
-    disableNotifications: config?.disableNotifications
+ipcRenderer
+  .invoke("get-config")
+  .then((config) => {
+    notificationConfig = config;
+    console.debug("Preload: Config loaded for notifications:", {
+      notificationMethod: config?.notificationMethod,
+      disableNotifications: config?.disableNotifications,
+    });
+  })
+  .catch((err) => {
+    console.error("Preload: Failed to load config for notifications:", err);
   });
-}).catch((err) => {
-  console.error("Preload: Failed to load config for notifications:", err);
-});
 
 // Create a Notification-like stub so Teams can manage lifecycle without errors.
 // Without addEventListener/close/dispatchEvent, Teams' internal state machine
@@ -203,23 +221,33 @@ function createNotificationStub() {
     onclose: null,
     onerror: null,
     onshow: null,
-    close() { if (this.onclose) this.onclose(); },
+    close() {
+      if (this.onclose) this.onclose();
+    },
     addEventListener(type, listener) {
-      if (type === 'click') this.onclick = listener;
-      else if (type === 'close') this.onclose = listener;
-      else if (type === 'show') this.onshow = listener;
-      else if (type === 'error') this.onerror = listener;
+      if (type === "click") this.onclick = listener;
+      else if (type === "close") this.onclose = listener;
+      else if (type === "show") this.onshow = listener;
+      else if (type === "error") this.onerror = listener;
     },
     removeEventListener(type, listener) {
-      if (type === 'click' && (!listener || this.onclick === listener)) this.onclick = null;
-      else if (type === 'close' && (!listener || this.onclose === listener)) this.onclose = null;
-      else if (type === 'show' && (!listener || this.onshow === listener)) this.onshow = null;
-      else if (type === 'error' && (!listener || this.onerror === listener)) this.onerror = null;
+      if (type === "click" && (!listener || this.onclick === listener))
+        this.onclick = null;
+      else if (type === "close" && (!listener || this.onclose === listener))
+        this.onclose = null;
+      else if (type === "show" && (!listener || this.onshow === listener))
+        this.onshow = null;
+      else if (type === "error" && (!listener || this.onerror === listener))
+        this.onerror = null;
     },
-    dispatchEvent() { return true; },
+    dispatchEvent() {
+      return true;
+    },
   };
   // Fire the show event asynchronously like a real Notification
-  setTimeout(() => { if (stub.onshow) stub.onshow(); }, 0);
+  setTimeout(() => {
+    if (stub.onshow) stub.onshow();
+  }, 0);
   return stub;
 }
 
@@ -276,7 +304,7 @@ function createCustomNotification(title, options) {
     id: crypto.randomUUID(),
     timestamp: Date.now(),
     title: title,
-    body: options.body || '',
+    body: options.body || "",
     icon: options.icon,
   };
 
@@ -305,9 +333,9 @@ function createCustomNotification(title, options) {
 
 // Override window.Notification immediately before Teams loads
 // Using factory function pattern instead of class to avoid "return in constructor" anti-pattern
-(function() {
+(function () {
   const ICON_BASE64 =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAdhwAAHYcBj+XxZQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAZSSURBVHic7ZtbbBRVGMf/35nZ3RZoacPuQgqRGC6KRCUGTYWIiCRCqiGEFlEpRowYAvRFo4G2uMhu1Zj4YGMMJiRGUmhttYECvpjIRSJKguFiakBCuARpdy30QunuzsznQ3crdK8zO7tDZH8vnT3nfJfznducM6dAnvsbstL4uh1scwa6ZwmNpgCAJvhqwOnu/OptCufKB0sCsLnBP1OovAWgZQBKRmXfAHifJlHDR1tc57LtS24DwEy12wMeELYAkFOUDhPQ4K1zbgMRZ8ul3AWAmWq9gSYAr+gRI2C3t865OltBkLKhNB610sZtIGw0IProM0cG+ehPnx423SnkqAcMj3mcBWAzqEIh0GPeemenmX4BqcehKUQmPKOVBwCZCe8BeCNZoeXVx9yaItcQUAFgRiT5HIgPkKQ2tu+a3z1aJus9YN0Otrm6A10ASjNUddPvdroTLZHLX/21ihk7ARQlkO9n5rV7m8vb7kwUGTqVkold3Y8g88oDQIkz0D0rXkak8i1IXHkAKCKib5etOl55Z2LWA6AylZmlS2ixupZXH3NHWj6d3kxEtLOq6qRrRKdZziVCCJi2fGkax+jSFLkGyVt+NMVhKbQp+iPrASDmv83SJRFfi9EPvKhbEdGITNZXgT+1QGfZoNoLiPFJHIIs2eEoKAZRwjbpkbSJ8ZbBaQbcmh59yHoPaPXMDgHiYNJCzFCUIIJDfYnLEO3zeEiJJ23ArREZeWnVQZek2b9kYAmAsQaUpeSvC9dHmdegcS+gXsGYMaWYVPY4ZNkORQ0lUhEm1hoS5F0AMEenSxeiDyJS+RXIUuXjQgJClILEFAz0d+H6tVPD6bFzXKQ8vN569/n4ebxfr3kGdUSfRaTlrUEanhYGb/mTlWry1Tq3J8okSW0E0K/Daq8G0Rj9IZDLlh8FRfZimqbFyw6D8IGvzlmdbCfYvmt+NzOvRXpzARPR2o49cwPRhKxPggboAdHXBJ7tq3N9mM42eG9zeRszrwSQZBZFLxFVtu9+6vs7E3OyGUqGw1G4CCQ9CFDALuOyTXWeTTDbJ2Vvc3lbVdXJw2EptAlCVIB5JgCA6Bwz9msQjR27/2v5KFSx4sekEW5rWgiH3dixQTCkovK1Q0nLHPhusaXnkil7gCACGXRRGBXMIZYPgRcqPmYAeHj28NvpuKKJacsqioqbN/vR7b8BTrSExoWuEfMuWR23NWUABm8r0LTYIVBQcHfa0JAaU2YoGJtmJrIswuksAQjo6urRIcllTHhfkQZS94DVbx6Nm966ayEKC4eDoKqMytWHdDhgLiXji3QGYBiN8Pq9uAzqRpaNTdIETPpfBCAT8gGw2gGryQfAagesJh8Aqx2wmnwArHbAavIBsNoBq8kHwGoHrMbwgYjGPHKMr+8w4t7CcABeXpOVKzu55p/7fQhcua8DwOATAsAtyxxg3cf/5ton7BEg/GCVA+FgzKUtQyT4tJaK3x3hy0eEsEnrQWgDMGCKN2nArCA0dA2DA6cBAJTh9wNV1R0AjYANra0rVbljz3MBAFUZeQBg/rPvXtLU4AN6ZGy2wsjfMRnZVhRdQ4mJuaa9ufwXwMQXIbtkj//9Ph5EsNkKUTimFHb7WIwd5xxJN8KtwWC6RcMg1LQ3l38RTTDty9CUaU+3KMHbz2eiQ5bshuSCodBJAE+kKPYzaWJ9e8uTZ++yachiHLQCqYVD1EjMDr2yJARk2QFHQbER033uqa6FPT23pgviKpA2h5gmA5CYcRFEZ1goe/Y2zTsT17YRi4l4a8Ohb1RNqdYrV1hYgpLSqcaMMj7zbXW9Y0zY5M2QbJc8YCS86TQaIoGCgvEoHj/ZqMmgqimNqYsl8SET4XjUev1bwdhmtt64ENf76tzeTFSY/ipsU5wNAH4zW28cTvldrk8yVWJ6ADweUgjqKgaumq07CgNXQeIlM/67LCubIW/9pIsCvIiBmLu9JtAlsVjiq5twxQxlWdsNeuvd54nkeQAfN0snAydsqpi7feuEP8zSmdXtsK+u9JLf7VpAIB+A2xmoGgST164OLPB4Jpg6tHJ2i8nj8ZeFZd4MpjUA0n3juQlCs00RPrMrHiXn17g2fX7eUdRfshgaLyXQLAAPAYjuhkIAOsF0GkI90lfct7+xZkbaL/p58ujnX2ufCTgt/KXpAAAAAElFTkSuQmCC";
+    'data:image/png;base64,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';
 
   const classicNotification = globalThis.Notification;
 
@@ -334,7 +362,11 @@ function createCustomNotification(title, options) {
     }
 
     if (method === "web") {
-      const notification = createWebNotification(classicNotification, title, options);
+      const notification = createWebNotification(
+        classicNotification,
+        title,
+        options,
+      );
       return notification || { onclick: null, onclose: null, onerror: null };
     }
 
@@ -342,14 +374,14 @@ function createCustomNotification(title, options) {
   }
 
   // Add static methods to factory function
-  CustomNotification.requestPermission = async function() {
+  CustomNotification.requestPermission = async function () {
     return "granted";
   };
 
-  Object.defineProperty(CustomNotification, 'permission', {
-    get: function() {
+  Object.defineProperty(CustomNotification, "permission", {
+    get: function () {
       return "granted";
-    }
+    },
   });
 
   globalThis.Notification = CustomNotification;
@@ -357,29 +389,29 @@ function createCustomNotification(title, options) {
 })();
 
 // Initialize browser modules after DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");
     console.debug("Preload: Got config:", {
       trayIconEnabled: config?.trayIconEnabled,
-      useMutationTitleLogic: config?.useMutationTitleLogic
+      useMutationTitleLogic: config?.useMutationTitleLogic,
     });
-    
+
     // Initialize title monitoring using existing module
     if (config.useMutationTitleLogic) {
       const mutationTitle = require("./tools/mutationTitle");
       mutationTitle.init(config);
     }
-    
+
     // Initialize tray icon functionality directly in preload with secure IPC
     if (config.trayIconEnabled) {
       // NOTE: unread-count event is handled by trayIconRenderer.js
       // This redundant listener was causing duplicate IPC traffic and rendering.
     }
-    
+
     console.debug("Preload: Essential tray modules initialized successfully");
-    
+
     // Initialize other modules safely
     const modules = [
       { name: "zoom", path: "./tools/zoom" },
@@ -395,11 +427,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "cameraResolution", path: "./tools/cameraResolution" },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "framelessTweaks", path: "./tools/frameless" }
+      { name: "framelessTweaks", path: "./tools/frameless" },
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"]);
+    const modulesRequiringIpc = new Set([
+      "settings",
+      "theme",
+      "trayIconRenderer",
+      "mqttStatusMonitor",
+    ]);
 
     let successCount = 0;
     for (const module of modules) {
@@ -415,15 +452,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(`Preload: Failed to load ${module.name}:`, err.message);
       }
     }
-    
-    console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+
+    console.info(
+      `Preload: ${successCount}/${modules.length} browser modules initialized successfully`,
+    );
 
     // Initialize ActivityManager
     try {
       const ActivityManager = require("./notifications/activityManager");
       new ActivityManager(ipcRenderer, config).start();
     } catch (err) {
-      console.error("Preload: ActivityManager failed to initialize:", err.message);
+      console.error(
+        "Preload: ActivityManager failed to initialize:",
+        err.message,
+      );
     }
 
     // Initialize Outlook-specific notification interception (email/reminder DOM observers)
@@ -440,7 +482,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         config[key] = value;
       }
     });
-
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }
@@ -452,13 +493,15 @@ try {
     try {
       const reason = event?.reason;
       const errorData = {
-        message: reason?.message ? String(reason.message).substring(0, 1000) : String(reason).substring(0, 1000),
+        message: reason?.message
+          ? String(reason.message).substring(0, 1000)
+          : String(reason).substring(0, 1000),
         stack: reason?.stack ? String(reason.stack).substring(0, 5000) : null,
         timestamp: Date.now(),
         // Keep the raw reason only when it's a plain object to avoid huge payloads
         reason: typeof reason === "object" && reason !== null ? reason : null,
       };
-      
+
       ipcRenderer.send("unhandled-rejection", errorData);
     } catch (err) {
       console.debug("Unhandled rejection forwarding failed:", err);
@@ -469,14 +512,18 @@ try {
   globalThis.addEventListener("error", (event) => {
     try {
       const errorData = {
-        message: event?.message ? String(event.message).substring(0, 1000) : '',
-        filename: event?.filename ? String(event.filename).substring(0, 200) : '',
-        lineno: typeof event?.lineno === 'number' ? event.lineno : 0,
-        colno: typeof event?.colno === 'number' ? event.colno : 0,
+        message: event?.message ? String(event.message).substring(0, 1000) : "",
+        filename: event?.filename
+          ? String(event.filename).substring(0, 200)
+          : "",
+        lineno: typeof event?.lineno === "number" ? event.lineno : 0,
+        colno: typeof event?.colno === "number" ? event.colno : 0,
         timestamp: Date.now(),
-        errorStack: event?.error?.stack ? String(event.error.stack).substring(0, 5000) : null,
+        errorStack: event?.error?.stack
+          ? String(event.error.stack).substring(0, 5000)
+          : null,
       };
-      
+
       ipcRenderer.send("window-error", errorData);
     } catch (err) {
       console.debug("Window error forwarding failed:", err);
@@ -496,19 +543,27 @@ try {
  */
 function initOutlookNotificationInterception() {
   const setupObserver = () => {
-    const notificationPane = document.querySelector('[data-app-section="NotificationPane"]');
+    const notificationPane = document.querySelector(
+      '[data-app-section="NotificationPane"]',
+    );
 
     if (notificationPane) {
-      console.debug('[Outlook Notifications] Found NotificationPane, setting up observer');
+      console.debug(
+        "[Outlook Notifications] Found NotificationPane, setting up observer",
+      );
       observeNotificationPane(notificationPane);
     } else {
-      console.debug('[Outlook Notifications] NotificationPane not found, observing body');
+      console.debug(
+        "[Outlook Notifications] NotificationPane not found, observing body",
+      );
       observeForNotificationPane();
     }
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(setupObserver, 2000));
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () =>
+      setTimeout(setupObserver, 2000),
+    );
   } else {
     setTimeout(setupObserver, 2000);
   }
@@ -516,7 +571,9 @@ function initOutlookNotificationInterception() {
 
 function observeForNotificationPane() {
   const bodyObserver = new MutationObserver(() => {
-    const notificationPane = document.querySelector('[data-app-section="NotificationPane"]');
+    const notificationPane = document.querySelector(
+      '[data-app-section="NotificationPane"]',
+    );
     if (notificationPane) {
       bodyObserver.disconnect();
       observeNotificationPane(notificationPane);
@@ -533,7 +590,7 @@ function observeForNotificationPane() {
 function observeNotificationPane(notificationPane) {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      mutation.addedNodes.forEach(node => {
+      mutation.addedNodes.forEach((node) => {
         if (node.nodeType === Node.ELEMENT_NODE) {
           processNotificationElement(node);
         }
@@ -542,43 +599,53 @@ function observeNotificationPane(notificationPane) {
   });
 
   observer.observe(notificationPane, { childList: true, subtree: true });
-  console.debug('[Outlook Notifications] Observer attached to NotificationPane');
+  console.debug(
+    "[Outlook Notifications] Observer attached to NotificationPane",
+  );
 }
 
 function processNotificationElement(element) {
   // Check for reminder notifications (divs with timeuntildisplaystring attribute)
   const reminderDivs = element.querySelectorAll
-    ? [...element.querySelectorAll('[timeuntildisplaystring]')]
+    ? [...element.querySelectorAll("[timeuntildisplaystring]")]
     : [];
 
-  if (element.hasAttribute && element.hasAttribute('timeuntildisplaystring')) {
+  if (element.hasAttribute && element.hasAttribute("timeuntildisplaystring")) {
     reminderDivs.push(element);
   }
 
   for (const reminderDiv of reminderDivs) {
     const reminderData = extractReminderData(reminderDiv);
     if (reminderData) {
-      console.debug('[Outlook Notifications] Reminder detected:', reminderData.subject);
+      console.debug(
+        "[Outlook Notifications] Reminder detected:",
+        reminderData.subject,
+      );
       globalThis.electronAPI.showReminderNotification(reminderData);
     }
   }
 
   // Check for email notifications (buttons with aria-label)
   const emailButtons = element.querySelectorAll
-    ? [...element.querySelectorAll('button[aria-label]'),
-       ...(element.matches?.('button[aria-label]') ? [element] : [])]
+    ? [
+        ...element.querySelectorAll("button[aria-label]"),
+        ...(element.matches?.("button[aria-label]") ? [element] : []),
+      ]
     : [];
 
-  if (element.tagName === 'BUTTON' && element.hasAttribute('aria-label')) {
+  if (element.tagName === "BUTTON" && element.hasAttribute("aria-label")) {
     emailButtons.push(element);
   }
 
   for (const button of emailButtons) {
     if (isEmailNotification(button)) {
-      const ariaLabel = button.getAttribute('aria-label') || '';
+      const ariaLabel = button.getAttribute("aria-label") || "";
       const emailData = extractEmailData(button, ariaLabel);
       if (emailData) {
-        console.debug('[Outlook Notifications] Email detected:', emailData.subject);
+        console.debug(
+          "[Outlook Notifications] Email detected:",
+          emailData.subject,
+        );
         globalThis.electronAPI.showEmailNotification(emailData);
       }
     }
@@ -590,26 +657,30 @@ function processNotificationElement(element) {
  * Email notifications have: .ZJg8d (sender), .KTZ84 (subject), .mrxI1 (body)
  */
 function isEmailNotification(button) {
-  return !!(button.querySelector('.ZJg8d') && button.querySelector('.KTZ84') && button.querySelector('.mrxI1'));
+  return !!(
+    button.querySelector(".ZJg8d") &&
+    button.querySelector(".KTZ84") &&
+    button.querySelector(".mrxI1")
+  );
 }
 
 /**
  * Extract email data from notification button
  */
 function extractEmailData(button, ariaLabel) {
-  const senderElement = button.querySelector('.ZJg8d > div:first-child');
+  const senderElement = button.querySelector(".ZJg8d > div:first-child");
   const sender = senderElement?.textContent?.trim();
 
-  const subjectElement = button.querySelector('.KTZ84');
+  const subjectElement = button.querySelector(".KTZ84");
   const subject = subjectElement?.textContent?.trim();
 
-  const bodyElement = button.querySelector('.mrxI1');
-  let messageBody = '';
+  const bodyElement = button.querySelector(".mrxI1");
+  let messageBody = "";
 
   if (bodyElement) {
     const fullText = bodyElement.textContent;
     const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
-    const lines = fullText.split('\n');
+    const lines = fullText.split("\n");
     const cleanLines = [];
 
     for (const line of lines) {
@@ -624,18 +695,22 @@ function extractEmailData(button, ariaLabel) {
       }
     }
 
-    messageBody = cleanLines.join('\n');
+    messageBody = cleanLines.join("\n");
   }
 
-  const formattedAddress = sender || (() => {
-    const colonIndex = ariaLabel.indexOf(':');
-    return colonIndex > -1 ? ariaLabel.substring(colonIndex + 1).trim() : 'Unknown';
-  })();
+  const formattedAddress =
+    sender ||
+    (() => {
+      const colonIndex = ariaLabel.indexOf(":");
+      return colonIndex > -1
+        ? ariaLabel.substring(colonIndex + 1).trim()
+        : "Unknown";
+    })();
 
   return {
     address: formattedAddress,
-    subject: subject || 'New message',
-    body: messageBody
+    subject: subject || "New message",
+    body: messageBody,
   };
 }
 
@@ -643,15 +718,15 @@ function extractEmailData(button, ariaLabel) {
  * Extract reminder data from DOM element attributes
  */
 function extractReminderData(element) {
-  const subject = element.getAttribute('subject') || '';
+  const subject = element.getAttribute("subject") || "";
   if (!subject) return null;
 
   return {
     subject,
-    location: element.getAttribute('location') || '',
-    timeUntil: element.getAttribute('timeuntildisplaystring') || '',
-    startTime: element.getAttribute('starttimedisplaystring') || '',
-    reminderType: element.getAttribute('remindertype') || 'Reminder'
+    location: element.getAttribute("location") || "",
+    timeUntil: element.getAttribute("timeuntildisplaystring") || "",
+    startTime: element.getAttribute("starttimedisplaystring") || "",
+    reminderType: element.getAttribute("remindertype") || "Reminder",
   };
 }
 
@@ -668,7 +743,7 @@ function setupUnreadCountObserver() {
 
     const checkUnreadCount = () => {
       try {
-        const unreadElements = document.querySelectorAll('.WIYG1.Mt2TB');
+        const unreadElements = document.querySelectorAll(".WIYG1.Mt2TB");
         let totalCount = 0;
         for (const element of unreadElements) {
           if (element.closest('[aria-labelledby="favoritesRoot"]')) continue;
@@ -676,7 +751,7 @@ function setupUnreadCountObserver() {
         }
         globalThis.electronAPI.updateUnreadCount(totalCount);
       } catch (e) {
-        console.error('[Unread Counter] Error:', e);
+        console.error("[Unread Counter] Error:", e);
       }
     };
 
@@ -686,13 +761,19 @@ function setupUnreadCountObserver() {
         for (const nodeList of [mutation.addedNodes, mutation.removedNodes]) {
           if (!nodeList) continue;
           for (const node of nodeList) {
-            if (node.nodeType === 1 && (node.classList?.contains('WIYG1') ||
-                node.querySelector?.('.WIYG1.Mt2TB'))) {
+            if (
+              node.nodeType === 1 &&
+              (node.classList?.contains("WIYG1") ||
+                node.querySelector?.(".WIYG1.Mt2TB"))
+            ) {
               relevantMutation = true;
             }
           }
         }
-        if (mutation.type === 'characterData' && mutation.target.parentElement?.classList.contains('WIYG1')) {
+        if (
+          mutation.type === "characterData" &&
+          mutation.target.parentElement?.classList.contains("WIYG1")
+        ) {
           relevantMutation = true;
         }
       }
@@ -700,12 +781,16 @@ function setupUnreadCountObserver() {
     });
 
     const targetNode = document.documentElement || document;
-    observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
+    observer.observe(targetNode, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
     // Poll for initial elements
     let attempts = 0;
     const pollForElements = () => {
-      if (document.querySelectorAll('.WIYG1.Mt2TB').length > 0) {
+      if (document.querySelectorAll(".WIYG1.Mt2TB").length > 0) {
         checkUnreadCount();
       } else if (attempts < 20) {
         attempts++;
@@ -714,7 +799,7 @@ function setupUnreadCountObserver() {
     };
     setTimeout(pollForElements, 1000);
   } catch (e) {
-    console.error('[Unread Counter] Setup error:', e);
+    console.error("[Unread Counter] Setup error:", e);
   }
 }
 
@@ -731,10 +816,12 @@ function setupReminderCountObserver() {
 
     const checkReminderCount = () => {
       try {
-        const totalCount = document.querySelectorAll('[timeuntildisplaystring]').length;
+        const totalCount = document.querySelectorAll(
+          "[timeuntildisplaystring]",
+        ).length;
         globalThis.electronAPI.updateReminderCount(totalCount);
       } catch (e) {
-        console.error('[Reminder Counter] Error:', e);
+        console.error("[Reminder Counter] Error:", e);
       }
     };
 
@@ -744,8 +831,11 @@ function setupReminderCountObserver() {
         for (const nodeList of [mutation.addedNodes, mutation.removedNodes]) {
           if (!nodeList) continue;
           for (const node of nodeList) {
-            if (node.nodeType === 1 && (node.hasAttribute?.('timeuntildisplaystring') ||
-                node.querySelector?.('[timeuntildisplaystring]'))) {
+            if (
+              node.nodeType === 1 &&
+              (node.hasAttribute?.("timeuntildisplaystring") ||
+                node.querySelector?.("[timeuntildisplaystring]"))
+            ) {
               relevantMutation = true;
             }
           }
@@ -759,6 +849,6 @@ function setupReminderCountObserver() {
 
     setTimeout(checkReminderCount, 1000);
   } catch (e) {
-    console.error('[Reminder Counter] Setup error:', e);
+    console.error("[Reminder Counter] Setup error:", e);
   }
 }
