@@ -65,7 +65,11 @@ node node_modules/electron/install.js 2>&1 | tail -3
 # workspace node_modules (not /src/node_modules). Symlink app/ since it's
 # larger and doesn't import @playwright/test.
 ln -sf "${SRC_DIR}/app" "$WORK_DIR/app"
-cp -r "${SRC_DIR}/tests" "$WORK_DIR/tests"
+# Only copy tests/e2e (what Playwright needs). Copying all of tests/ would
+# include tests/cross-distro/session/ whose files are owned by whichever
+# distro ran --login, causing permission errors for other distros' tester UIDs.
+mkdir -p "$WORK_DIR/tests"
+cp -r "${SRC_DIR}/tests/e2e" "$WORK_DIR/tests/e2e"
 cp "${SRC_DIR}/playwright.authenticated.config.js" "$WORK_DIR/playwright.authenticated.config.js"
 
 echo "[*] Starting display server..."
