@@ -1,0 +1,1 @@
+Fix: Pin Node.js version in cross-distro Dockerfiles to resolve test failures - by @IsmaelMartinez (#2386)

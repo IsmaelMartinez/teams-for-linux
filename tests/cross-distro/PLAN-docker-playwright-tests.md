@@ -46,11 +46,12 @@ a summary of pass/fail results.
 
 ### Known Issues
 
-1. Fedora's npm installs a different Node.js/Electron version, so the session
-   created on Ubuntu is incompatible. Fix: run `--login` separately per distro,
-   or pin the Electron version across all Dockerfiles.
-2. Fedora's Sway gets "Operation not permitted" --- may need additional Docker
-   security options (`--cap-add`, `--security-opt`).
+1. ~~Fedora's npm installs a different Node.js/Electron version, so the session
+   created on Ubuntu is incompatible.~~ **Fixed:** All Dockerfiles now install
+   Node.js from the official binary tarball (`ARG NODE_VERSION=22.22.2`) instead
+   of distro packages, ensuring identical npm/Electron across all containers.
+2. Fedora's Sway gets "Operation not permitted" --- mitigated with
+   `--cap-add SYS_ADMIN,SYS_NICE` and `seccomp=unconfined` in docker-compose.yml.
 3. Codespace disk fills up after ~6 containers due to npm ci per test run.
    Mitigate with `docker system prune` between runs or pre-caching node_modules.
 
@@ -66,7 +67,7 @@ test is skipped on pure Wayland because it needs an X11 display.
 ## Architecture
 
 ```text
-Phase 1: Manual Login (one-time per session expiry, per distro)
+Phase 1: Manual Login (one-time per session expiry, any distro)
 +--------------------------------------+
 |  ./run.sh ubuntu x11 --login        |
 |                                      |
@@ -122,9 +123,10 @@ When upgrading Electron (e.g., 39 to 40):
 
 ## Open Questions
 
-1. Per-distro sessions: Fedora tests fail because the session was created
-   with Ubuntu's Electron version. Should the workflow require a separate
-   `--login` per distro, or can we pin the Electron version?
+1. ~~Per-distro sessions: Fedora tests fail because the session was created
+   with Ubuntu's Electron version.~~ **Resolved:** Node.js is now pinned via
+   official binary in all Dockerfiles. A single `--login` session works across
+   all distros.
 2. Session expiry handling: How long do Microsoft tokens last? Should the
    test runner detect expired sessions and prompt for re-login?
 3. CI integration: Worth storing encrypted session tokens in GitHub Secrets

@@ -68,7 +68,7 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 configurations, authenticated Playwright, `run-all-tests.sh`) but several gaps need closing before it becomes a reliable validation tool for Electron upgrades and PR testing.
 
-**Fix Fedora session incompatibility.** Fedora's npm installs a different Node.js/Electron version, so sessions created on Ubuntu are incompatible. The fix is to pin the Electron version across all Dockerfiles or run `--login` separately per distro. Pinning is simpler and should be tried first --- add an `ELECTRON_VERSION` build arg to the Dockerfiles so all three distros install the same binary.
+**~~Fix Fedora session incompatibility.~~** Done. All Dockerfiles now install Node.js from the official binary tarball (`ARG NODE_VERSION=22.22.2`) instead of distro packages. This ensures identical npm/Electron binaries across all containers, making sessions created on one distro compatible with all others.
 
 **Validate Debian.** Debian was never tested (Codespace disk ran out). Run the full suite locally and fix any issues. Debian Bookworm is a conservative base and should be the easiest to get working.
 
@@ -82,7 +82,7 @@ The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 config
 
 **Cross-distro CI smoke test (implemented).** A GitHub Actions workflow (`cross-distro-smoke.yml`) runs 9 configurations in parallel on push to main, building Docker images and verifying the app starts and reaches the login page. See the [design spec](../research/cross-distro-ci-smoke-test-design.md) and [implementation plan](cross-distro-ci-smoke-test-plan.md). The test directory was also restructured: `testing/cross-distro/` moved to `tests/cross-distro/` with npm scripts (`npm run cross-distro`, `npm run cross-distro:list`) for project-root access.
 
-**Add `.nvmrc`.** Pin the Node version (currently 22) so contributors and CI use the same version. The Dockerfiles should reference this too.
+**~~Add `.nvmrc`.~~** Done. `.nvmrc` pins Node 22. The cross-distro Dockerfiles use a `NODE_VERSION` build arg (defaulting to 22.22.2) for the same purpose.
 
 ### Phase 3 --- Dev Experience Quick Wins
 
@@ -146,7 +146,7 @@ The issue triage bot has been migrated to a standalone Go service ([github-issue
 
 ### Cross-Distro Testing
 
-Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Current state: Ubuntu passes all tests, Fedora fails due to session incompatibility (different Electron version), Debian untested. See "Phase 1 --- Cross-Distro Testing Hardening" above for the plan to close these gaps.
+Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Node.js is now pinned via official binary tarball across all Dockerfiles, resolving the Fedora session incompatibility. All 9 configurations pass. See "Phase 1 --- Cross-Distro Testing Hardening" above for remaining items.
 
 ### Configuration Modernization
 
