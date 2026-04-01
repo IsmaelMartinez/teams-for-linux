@@ -8,7 +8,7 @@ name: Generate Changelog Entry
 
 on:
   pull_request_target:
-    types: [opened, synchronize]
+    types: [opened, synchronize, closed]
     branches: [main]
 
 # Restrict default permissions — each job declares only what it needs
@@ -18,7 +18,7 @@ jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     # Skip changelog generation for release PRs
-    if: ${{ !startsWith(github.event.pull_request.head.ref, 'release/') }}
+    if: ${{ github.event.action != 'closed' && !startsWith(github.event.pull_request.head.ref, 'release/') }}
     permissions:
       contents: write
       pull-requests: write
@@ -96,6 +96,7 @@ jobs:
             - Focus on user-facing impact
             - Max 80 characters
             - Professional tone
+            - Do NOT use backticks, markdown formatting, or code notation
 
             Example: "Add MQTT integration for Teams status publishing"`;
 
@@ -132,9 +133,11 @@ jobs:
         if: steps.setup.outputs.changelog_exists == 'false'
         id: final
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          GEMINI_SUMMARY: ${{ steps.gemini.outputs.summary }}
         with:
           script: |
-            let summary = `${{ steps.gemini.outputs.summary }}`;
+            let summary = process.env.GEMINI_SUMMARY;
             const author = context.payload.pull_request.user.login;
             const prNum = context.payload.pull_request.number;
 
@@ -211,26 +214,156 @@ jobs:
       - name: Comment on PR (internal)
         if: steps.setup.outputs.is_external_fork == 'false' && steps.setup.outputs.changelog_exists == 'false'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          FINAL_SUMMARY: ${{ steps.final.outputs.final_summary }}
+          PR_NUM: ${{ github.event.pull_request.number }}
         with:
           script: |
+            const summary = process.env.FINAL_SUMMARY;
+            const prNum = process.env.PR_NUM;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `✅ Changelog entry generated and committed to this PR:\n\n\`\`\`\n${{ steps.final.outputs.final_summary }}\n\`\`\`\n\nThe file \`.changelog/pr-${{ github.event.pull_request.number }}.txt\` will be included when you merge this PR.\n\nYou can edit it directly in this PR if needed.`
+              body: `✅ Changelog entry generated and committed to this PR:\n\n\`\`\`\n${summary}\n\`\`\`\n\nThe file \`.changelog/pr-${prNum}.txt\` will be included when you merge this PR.\n\nYou can edit it directly in this PR if needed.`
             })
 
       - name: Comment on PR (external fork)
         if: steps.setup.outputs.is_external_fork == 'true' && steps.setup.outputs.changelog_exists == 'false'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          FINAL_SUMMARY: ${{ steps.final.outputs.final_summary }}
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
-            const summary = `${{ steps.final.outputs.final_summary }}`;
-
+            const summary = process.env.FINAL_SUMMARY;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\n---\n\n**To add this to your PR**, create \`.changelog/pr-${prNumber}.txt\`:\n\n\`\`\`bash\ncat <<'EOF' > .changelog/pr-${prNumber}.txt\n${summary}\nEOF\ngit add .changelog/ && git commit -m "chore: add changelog entry" && git push\n\`\`\`\n\nOr create the file manually with the content above.\n\n> **Note:** This step is required for external contributions. If not added, a maintainer will add it during the release process.`
+              body: `📝 **Changelog entry generated:**\n\n\`\`\`\n${summary}\n\`\`\`\n\nNo action needed — the changelog file will be created automatically when this PR is merged.\n\nIf you'd like to customise the entry, push a \`.changelog/pr-${context.payload.pull_request.number}.txt\` file to your branch and it will be used instead.`
             })
+
+  # Auto-create changelog file on main when a fork PR is merged.
+  # Since we cannot push to fork branches, this job commits the changelog
+  # entry directly to main after merge using the GitHub Contents API.
+  commit-fork-changelog:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name &&
+      !startsWith(github.event.pull_request.head.ref, 'release/')
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check if changelog already exists on main
+        id: check
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            try {
+              await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: `.changelog/pr-${prNumber}.txt`,
+                ref: 'main'
+              });
+              core.setOutput('exists', 'true');
+              console.log('Changelog already exists on main, skipping');
+            } catch (e) {
+              if (e.status === 404) {
+                core.setOutput('exists', 'false');
+                console.log('Changelog not found on main, will create');
+              } else {
+                throw new Error(`Failed to check changelog on main: ${e.status || 'unknown'} ${e.message}`);
+              }
+            }
+
+      - name: Create changelog file on main
+        if: steps.check.outputs.exists == 'false'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prTitle = context.payload.pull_request.title;
+            const author = context.payload.pull_request.user.login;
+
+            // Try to extract summary from the bot's earlier changelog comment
+            let summary;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+
+            const changelogComment = [...comments].reverse().find(c =>
+              c.user?.login === 'github-actions[bot]' &&
+              c.body?.includes('Changelog entry generated')
+            );
+
+            if (changelogComment) {
+              const match = changelogComment.body.match(/```\n([\s\S]*?)\n```/);
+              if (match) {
+                summary = match[1].trim();
+                console.log(`Extracted summary from bot comment: ${summary}`);
+              }
+            }
+
+            // Fallback: build summary from PR title
+            if (!summary) {
+              summary = prTitle;
+              if (!author.includes('bot')) {
+                summary = `${summary} - by @${author}`;
+              }
+              summary = `${summary} (#${prNumber})`;
+              console.log(`Fallback summary from PR title: ${summary}`);
+            }
+
+            // Fetch closing issues via GraphQL
+            const closingLines = [];
+            try {
+              const query = `query($owner: String!, $repo: String!, $prNum: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $prNum) {
+                    closingIssuesReferences(first: 10) {
+                      nodes { number title url }
+                    }
+                  }
+                }
+              }`;
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                prNum: prNumber
+              });
+              const issues = result.repository.pullRequest.closingIssuesReferences.nodes;
+              for (const issue of issues) {
+                closingLines.push(`closes: #${issue.number} ${issue.url} ${issue.title}`);
+              }
+            } catch (error) {
+              console.log(`Could not fetch closing issues (non-fatal): ${error.message}`);
+            }
+
+            const fileContent = [summary, ...closingLines].join('\n') + '\n';
+
+            // Commit file to main via Contents API
+            const contentBase64 = Buffer.from(fileContent).toString('base64');
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: `.changelog/pr-${prNumber}.txt`,
+              branch: 'main',
+              message: `chore: add changelog entry for PR #${prNumber}`,
+              content: contentBase64,
+              committer: {
+                name: 'github-actions[bot]',
+                email: 'github-actions[bot]@users.noreply.github.com'
+              }
+            });
+
+            console.log(`✅ Changelog committed to main: .changelog/pr-${prNumber}.txt`);
+            console.log(fileContent);

@@ -105,7 +105,7 @@ elif [[ -d /src ]] && [[ -f /src/package.json ]]; then
     echo "      --latest              Download the latest GitHub release automatically"
     echo "      --url <release-url>   Download an AppImage from a specific URL"
     echo "      --appimage <path>     Copy a local AppImage into the container"
-    echo "      Place a .deb or .rpm in testing/cross-distro/app/"
+    echo "      Place a .deb or .rpm in tests/cross-distro/app/"
     echo ""
     echo "    Example:"
     echo "      ./run.sh ubuntu x11 --latest"

@@ -1,0 +1,9 @@
+{
+  "capabilities": {
+    "triage": true,
+    "research": true,
+    "code_navigation": true
+  },
+  "doc_paths": ["docs-site/docs/**", "*.md"],
+  "shadow_repo": "IsmaelMartinez/teams-for-linux-shadow"
+}

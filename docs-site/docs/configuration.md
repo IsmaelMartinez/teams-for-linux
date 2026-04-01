@@ -139,6 +139,41 @@ Place your `config.json` file in the appropriate location based on your installa
 | `appIdleTimeoutCheckInterval` | `number` | `10` | Poll interval in seconds to check if idle timeout is reached |
 | `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
 
+#### Force Idle State (Wayland/Hyprland Workaround)
+
+For systems where Electron's `powerMonitor` doesn't work correctly (e.g., Wayland/Hyprland), you can force the idle state using a state file:
+
+```json
+{
+  "idleDetection": {
+    "forceState": false,
+    "stateFile": "/tmp/teams-for-linux-idle-state-$USER"
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `idleDetection.forceState` | `boolean` | `false` | Enable state file-based idle state control |
+| `idleDetection.stateFile` | `string` | `/tmp/teams-for-linux-idle-state-$USER` | Path to state file (supports `$USER` expansion) |
+
+**Usage:**
+
+When `idleDetection.forceState` is `true`, the app reads the state file to determine idle state:
+
+```bash
+# Force idle state
+echo inactive > /tmp/teams-for-linux-idle-state-$USER
+
+# Force active state
+echo active > /tmp/teams-for-linux-idle-state-$USER
+
+# Remove file to use automatic detection
+rm /tmp/teams-for-linux-idle-state-$USER
+```
+
+The state file is automatically cleaned up when the app exits.
+
 ### Authentication & SSO
 
 | Option | Type | Default | Description |
@@ -180,6 +215,10 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `ssoInTuneEnabled` | `auth.intune.enabled` | Renamed + moved |
 | `ssoInTuneAuthUser` | `auth.intune.user` | Renamed + moved |
 
+#### Third-Party SSO and CSP
+
+Report-only Content Security Policy headers are automatically stripped for all non-Teams domains. This is necessary because Electron's `contextIsolation: false` setting (required for Teams DOM access) erroneously enforces report-only CSP as blocking, which breaks third-party SSO providers like Symantec VIP. No configuration is needed.
+
 #### Certificates
 
 | Option | Type | Default | Description |
@@ -192,6 +231,24 @@ InTune SSO uses a nested `auth.intune` configuration:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `network.webRTCIPHandlingPolicy` | `string` | `null` | Controls which network interfaces WebRTC uses for ICE candidate gathering. Choices: `default`, `default_public_and_private_interfaces`, `default_public_interface_only`, `disable_non_proxied_udp` |
+
+*   `default` - Exposes user's public and local IPs. This is the default behavior. When this policy is used, WebRTC has the right to enumerate all interfaces and bind them to discover public interfaces.
+
+*   `default_public_interface_only` - Exposes user's public IP, but does not expose user's local IP. When this policy is used, WebRTC should only use the default route used by http. This doesn't expose any local addresses.
+
+*   `default_public_and_private_interfaces` - Exposes user's public and local IPs. When this policy is used, WebRTC should only use the default route used by http. This also exposes the associated default private address. Default route is the route chosen by the OS on a multi-homed endpoint.
+
+*   `disable_non_proxied_udp` - Does not expose public or local IPs. When this policy is used, WebRTC should only use TCP to contact peers or servers unless the proxy server supports UDP.
+
+[!NOTE]
+**`network.webRTCIPHandlingPolicy`** is useful on systems with multiple network interfaces (e.g. WiFi for internet and a secondary Ethernet adapter with no internet gateway). Without this option, WebRTC advertises all interfaces as ICE candidates, which can cause asymmetric STUN routing and drop calls to **OnHold**. Setting it to `default_public_interface_only` restricts ICE gathering to the interface holding the default route only.
+
+```json
+"network": {
+	"webRTCIPHandlingPolicy": "default_public_interface_only"
+}
+```
 
 ### Screen Sharing
 

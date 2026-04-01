@@ -12,7 +12,7 @@ Containers are `linux/amd64`, working on both Linux and macOS (Apple Silicon via
 ## Quick start
 
 ```bash
-cd testing/cross-distro
+cd tests/cross-distro
 
 # Latest release (easiest -- fetches URL from GitHub API)
 ./run.sh ubuntu x11 --latest
@@ -125,6 +125,21 @@ curl -fSL -o app/teams-for-linux.rpm \
 ```
 
 The entrypoint checks for files in this order: extracted `.deb`/`.rpm` > `.AppImage` > downloaded AppImage > source checkout.
+
+## Node.js version
+
+All Dockerfiles install Node.js from the official binary tarball rather than
+distro packages. This ensures all containers get the same Node.js/npm version,
+which is critical --- `npm ci` must install identical Electron binaries across
+distros for session cookie compatibility between `--login` and `--test` runs.
+
+The version defaults to `22.22.2` (matching CI) and can be overridden at build
+time with `docker build` directly:
+
+```bash
+docker build --build-arg NODE_VERSION=22.14.0 --build-arg NODE_SHA256=<sha256> \
+  -f dockerfiles/ubuntu.Dockerfile .
+```
 
 ## Electron in Docker
 

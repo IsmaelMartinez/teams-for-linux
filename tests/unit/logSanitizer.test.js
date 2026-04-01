@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert');
-const { sanitize, containsPII, detectPIITypes, createSanitizer } = require('../../app/utils/logSanitizer');
+const { sanitize, sanitizeObject, containsPII, detectPIITypes, createSanitizer } = require('../../app/utils/logSanitizer');
 
 let passed = 0;
 let failed = 0;
@@ -203,6 +203,97 @@ describe('Teams for Linux scenarios', () => {
 		['certificate', 'Verified: fingerprint=AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD', ['[FINGERPRINT]']],
 		['config path', 'Loading from /home/realusername/.config/teams-for-linux/config.json', ['/home/[USER]']],
 	]);
+});
+
+describe('sanitizeObject sensitive key handling', () => {
+	test('redacts password key value', () => {
+		const result = sanitizeObject({ username: 'admin', password: 'secret123' });
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.username, 'admin');
+	});
+	test('redacts password key case-insensitively', () => {
+		const result = sanitizeObject({ PASSWORD: 'secret', Password: 'secret2' });
+		assert.strictEqual(result.PASSWORD, '[REDACTED]');
+		assert.strictEqual(result.Password, '[REDACTED]');
+	});
+	test('redacts token key value', () => {
+		const result = sanitizeObject({ access_token: 'fake-access-token-123', refresh_token: 'fake-refresh-token-456' });
+		assert.strictEqual(result.access_token, '[REDACTED]');
+		assert.strictEqual(result.refresh_token, '[REDACTED]');
+	});
+	test('redacts token key case-insensitively', () => {
+		const result = sanitizeObject({ TOKEN: 'fake-token-abc', Token: 'fake-token-def' });
+		assert.strictEqual(result.TOKEN, '[REDACTED]');
+		assert.strictEqual(result.Token, '[REDACTED]');
+	});
+	test('redacts secret key value', () => {
+		const result = sanitizeObject({ client_secret: 'fake-client-secret-xyz', secret: 'fake-secret-123' });
+		assert.strictEqual(result.client_secret, '[REDACTED]');
+		assert.strictEqual(result.secret, '[REDACTED]');
+	});
+	test('redacts secret key case-insensitively', () => {
+		const result = sanitizeObject({ SECRET: 'fake-secret-value', Secret: 'fake-secret-value-2' });
+		assert.strictEqual(result.SECRET, '[REDACTED]');
+		assert.strictEqual(result.Secret, '[REDACTED]');
+	});
+	test('redacts key-containing keys (api_key, secret_key, etc.)', () => {
+		const result = sanitizeObject({ api_key: 'fake-api-key', secret_key: 'fake-secret-key', public_key: 'fake-public-key' });
+		assert.strictEqual(result.api_key, '[REDACTED]');
+		assert.strictEqual(result.secret_key, '[REDACTED]');
+		assert.strictEqual(result.public_key, '[REDACTED]');
+	});
+	test('redacts nested password key', () => {
+		const result = sanitizeObject({ user: { name: 'admin', password: 'fake-password-123' } });
+		assert.strictEqual(result.user.password, '[REDACTED]');
+		assert.strictEqual(result.user.name, 'admin');
+	});
+	test('redacts password in array of objects', () => {
+		const result = sanitizeObject([{ type: 'user', password: 'pass1' }, { type: 'admin', password: 'pass2' }]);
+		assert.strictEqual(result[0].password, '[REDACTED]');
+		assert.strictEqual(result[1].password, '[REDACTED]');
+		assert.strictEqual(result[0].type, 'user');
+	});
+	test('redacts token in array of objects', () => {
+		const result = sanitizeObject([{ name: 'user1', access_token: 'token1' }, { name: 'user2', token: 'token2' }]);
+		assert.strictEqual(result[0].access_token, '[REDACTED]');
+		assert.strictEqual(result[1].token, '[REDACTED]');
+	});
+	test('preserves non-sensitive keys unchanged', () => {
+		const result = sanitizeObject({ email: 'user@example.com', name: 'John', id: 123 });
+		assert.strictEqual(result.email, '[EMAIL]');
+		assert.strictEqual(result.name, 'John');
+		assert.strictEqual(result.id, 123);
+	});
+	test('handles password with empty string value', () => {
+		const result = sanitizeObject({ password: '' });
+		assert.strictEqual(result.password, '[REDACTED]');
+	});
+	test('handles password with special characters', () => {
+		const result = sanitizeObject({ password: 'p@$$w0rd!#%^&*()' });
+		assert.strictEqual(result.password, '[REDACTED]');
+	});
+	test('handles circular reference with password', () => {
+		const obj = { password: 'secret', name: 'test' };
+		obj.self = obj;
+		const result = sanitizeObject(obj);
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.name, 'test');
+		assert.strictEqual(result.self, '[Circular]');
+	});
+	test('handles mixed sensitive keys', () => {
+		const result = sanitizeObject({
+			username: 'admin',
+			password: 'pass123',
+			access_token: 'token_abc',
+			client_secret: 'secret_xyz',
+			api_key: 'key_123'
+		});
+		assert.strictEqual(result.username, 'admin');
+		assert.strictEqual(result.password, '[REDACTED]');
+		assert.strictEqual(result.access_token, '[REDACTED]');
+		assert.strictEqual(result.client_secret, '[REDACTED]');
+		assert.strictEqual(result.api_key, '[REDACTED]');
+	});
 });
 
 console.log('\n' + '='.repeat(50));

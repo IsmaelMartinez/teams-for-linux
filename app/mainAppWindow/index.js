@@ -388,6 +388,15 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   window = await browserWindowManager.createWindow();
   streamSelector = new StreamSelector(window);
 
+  // Restrict WebRTC ICE candidate gathering to the interface with the default
+  // route, preventing secondary interfaces (e.g. an ethernet adapter with no
+  // internet gateway) from being advertised, which causes asymmetric STUN
+  // replies and drops calls to OnHold.
+  if (config.network.webRTCIPHandlingPolicy) {
+    console.info(`[WebRTC] IP handling policy applied`);
+    window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
+  }
+
   window.webContents.session.setDisplayMediaRequestHandler(
     (_request, callback) => {
       streamSelector.show((source) => {
@@ -695,8 +704,59 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
+// Teams domains whose enforcing CSP we never touch
+const TEAMS_DOMAINS = [
+  'teams.cloud.microsoft',
+  'teams.microsoft.com',
+  'teams.live.com',
+  'statics.teams.cdn.office.net',
+];
+
+/**
+ * Checks whether a URL belongs to a Teams domain.
+ * Also handles Microsoft Cloud App Security (MCAS) proxy suffix.
+ */
+function isTeamsDomain(url) {
+  try {
+    let hostname = new URL(url).hostname;
+    if (hostname.endsWith('.mcas.ms')) {
+      hostname = hostname.slice(0, -8);
+    }
+    return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Strips report-only CSP headers for non-Teams domains (#2326).
+ *
+ * With contextIsolation disabled the shared V8 context erroneously
+ * enforces report-only policies as blocking, breaking SSO flows
+ * that rely on dynamic code or nonce-less scripts (e.g. Symantec VIP).
+ * Report-only headers are safe to strip since they should never block.
+ */
+function stripCspForAuthPages(responseHeaders, url) {
+  if (isTeamsDomain(url)) return;
+
+  for (const key of Object.keys(responseHeaders)) {
+    if (key.toLowerCase() === 'content-security-policy-report-only') {
+      let hostname;
+      try {
+        hostname = new URL(url).hostname;
+      } catch {
+        hostname = 'unknown';
+      }
+      console.debug(`[CSP] Stripping report-only header from: ${hostname}`);
+      delete responseHeaders[key];
+    }
+  }
+}
+
 function onHeadersReceivedHandler(details, callback) {
   customBackgroundService.onHeadersReceivedHandler(details);
+
+  stripCspForAuthPages(details.responseHeaders, details.url);
 
   callback({
     responseHeaders: details.responseHeaders,
