@@ -1,7 +1,7 @@
 FROM fedora:41
 
-ARG NODE_VERSION=22.22.2
-ARG NODE_SHA256=978978a635eef872fa68beae09f0aad0bbbae6757e444da80b570964a97e62a3
+ARG NODE_VERSION=24.14.1
+ARG NODE_SHA256=ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea
 
 # Electron/Chromium runtime dependencies + non-root user
 RUN dnf install -y \
