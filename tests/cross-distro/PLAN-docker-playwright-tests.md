@@ -67,7 +67,7 @@ test is skipped on pure Wayland because it needs an X11 display.
 ## Architecture
 
 ```text
-Phase 1: Manual Login (one-time per session expiry, per distro)
+Phase 1: Manual Login (one-time per session expiry, any distro)
 +--------------------------------------+
 |  ./run.sh ubuntu x11 --login        |
 |                                      |

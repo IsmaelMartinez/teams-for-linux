@@ -134,10 +134,11 @@ which is critical --- `npm ci` must install identical Electron binaries across
 distros for session cookie compatibility between `--login` and `--test` runs.
 
 The version defaults to `22.22.2` (matching CI) and can be overridden at build
-time:
+time with `docker build` directly:
 
 ```bash
-docker compose build --build-arg NODE_VERSION=22.14.0
+docker build --build-arg NODE_VERSION=22.14.0 --build-arg NODE_SHA256=<sha256> \
+  -f dockerfiles/ubuntu.Dockerfile .
 ```
 
 ## Electron in Docker

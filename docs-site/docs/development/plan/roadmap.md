@@ -146,7 +146,7 @@ The issue triage bot has been migrated to a standalone Go service ([github-issue
 
 ### Cross-Distro Testing
 
-Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Current state: Ubuntu passes all tests, Fedora fails due to session incompatibility (different Electron version), Debian untested. See "Phase 1 --- Cross-Distro Testing Hardening" above for the plan to close these gaps.
+Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Node.js is now pinned via official binary tarball across all Dockerfiles, resolving the Fedora session incompatibility. All 9 configurations pass. See "Phase 1 --- Cross-Distro Testing Hardening" above for remaining items.
 
 ### Configuration Modernization
 
