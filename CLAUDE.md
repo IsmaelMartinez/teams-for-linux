@@ -154,7 +154,7 @@ When contributing:
 
 The project documentation is built with Docusaurus and deployed to GitHub Pages:
 - **URL**: https://ismaelmartinez.github.io/teams-for-linux/
-- **Platform**: Docusaurus 3.9.1
+- **Platform**: Docusaurus 3.9.2
 - **Local Development**: `cd docs-site && npm run start`
 - **Deployment**: Automated via GitHub Actions
 
