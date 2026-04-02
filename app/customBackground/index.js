@@ -58,7 +58,14 @@ class CustomBackground {
       "custom_bg_remote.json",
     );
     if (fs.existsSync(file)) {
-      return JSON.parse(fs.readFileSync(file));
+      try {
+        return JSON.parse(fs.readFileSync(file));
+      } catch (err) {
+        console.error(
+          `[CUSTOM_BG] Failed to parse custom background config at '${file}': ${err.message}`,
+        );
+        return [];
+      }
     } else {
       return [];
     }
