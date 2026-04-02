@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-03-29
-**Current Version:** v2.7.13 (Electron 39.8.2)
-**Status:** Living Document --- stabilising on Electron 39; next focus is testing infrastructure and dev experience
+**Last Updated:** 2026-04-01
+**Current Version:** v2.7.13 → v2.8.0 in progress (Electron 41.0.2, Chromium 146, Node.js 24)
+**Status:** Living Document --- Electron 41 upgrade in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347); cross-distro tests passing 9/9; next focus is bug fixes and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
@@ -66,15 +66,13 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 ### Phase 1 --- Cross-Distro Testing Hardening
 
-The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 configurations, authenticated Playwright, `run-all-tests.sh`) but several gaps need closing before it becomes a reliable validation tool for Electron upgrades and PR testing.
+~~**Fix Fedora session incompatibility.**~~ Done (PR [#2386](https://github.com/IsmaelMartinez/teams-for-linux/pull/2386)). All Dockerfiles now install Node.js from the official binary tarball with SHA256 verification, ensuring identical Electron binaries across all containers. A separate `cp` fix in `run-tests.sh` resolved cross-distro UID permission errors. All 9 configurations pass.
 
-**~~Fix Fedora session incompatibility.~~** Done. All Dockerfiles now install Node.js from the official binary tarball (`ARG NODE_VERSION=22.22.2`) instead of distro packages. This ensures identical npm/Electron binaries across all containers, making sessions created on one distro compatible with all others.
-
-**Validate Debian.** Debian was never tested (Codespace disk ran out). Run the full suite locally and fix any issues. Debian Bookworm is a conservative base and should be the easiest to get working.
+~~**Validate Debian.**~~ Done. Debian passes all tests after the Node.js pinning fix.
 
 **Expand the authenticated test suite.** The current 6-7 tests cover app launch, screen sharing basics, and window management, but the features that actually break during Electron upgrades (notifications, media permissions, SSO recovery) are untested. Add tests for the notification stub interface, permission check handler responses, and auth recovery after token expiry.
 
-**Clean up the PLAN document.** The `PLAN-docker-playwright-tests.md` has stale open questions and status from February. Either fold the remaining decisions into this roadmap and delete the file, or update it to reflect current state.
+**Clean up the PLAN document.** The `PLAN-docker-playwright-tests.md` has been partially updated (Fedora session issue and per-distro question marked resolved) but the architecture diagram and some status text are stale. Either fold the remaining decisions into this roadmap and delete the file, or finish updating it.
 
 ### Phase 2 --- CI Integration
 
@@ -82,7 +80,7 @@ The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 config
 
 **Cross-distro CI smoke test (implemented).** A GitHub Actions workflow (`cross-distro-smoke.yml`) runs 9 configurations in parallel on push to main, building Docker images and verifying the app starts and reaches the login page. See the [design spec](../research/cross-distro-ci-smoke-test-design.md) and [implementation plan](cross-distro-ci-smoke-test-plan.md). The test directory was also restructured: `testing/cross-distro/` moved to `tests/cross-distro/` with npm scripts (`npm run cross-distro`, `npm run cross-distro:list`) for project-root access.
 
-**~~Add `.nvmrc`.~~** Done. `.nvmrc` pins Node 22. The cross-distro Dockerfiles use a `NODE_VERSION` build arg (defaulting to 22.22.2) for the same purpose.
+**~~Add `.nvmrc`.~~** Done. `.nvmrc` added in PR [#2386](https://github.com/IsmaelMartinez/teams-for-linux/pull/2386). Bumped to Node 24 (matching Electron 41's embedded runtime) along with CI workflows and cross-distro Dockerfiles in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347), pending merge.
 
 ### Phase 3 --- Dev Experience Quick Wins
 
@@ -92,15 +90,29 @@ The `tests/cross-distro/` setup has strong foundations (Docker Compose, 9 config
 
 **Stale bot tuning.** A stale bot workflow exists (`.github/workflows/stale.yml`) but the "awaiting user feedback" issues suggest it may need tuning --- issues where the reporter goes silent should get auto-closed after a reasonable period rather than sitting open indefinitely.
 
+### Phase 4 --- Claude Code Automations
+
+Quick wins to improve the development workflow using Claude Code's extensibility.
+
+**Auto-lint hook.** Add a PostToolUse hook to `.claude/settings.json` that runs `npm run lint` on every Edit/Write. Catches lint issues immediately instead of at commit time. Using the shared settings file ensures all contributors benefit. Ready to implement now.
+
+**Sensitive file guard hook.** Add a PreToolUse hook to `.claude/settings.json` that blocks edits to `.env`, credentials, and other sensitive files. The CLAUDE.md already documents PII protection rules --- a hook enforces them automatically. Ready to implement now.
+
+**context7 MCP server.** Adds live documentation lookup for Electron, Playwright, and MQTT APIs without leaving the session. Especially useful during Electron upgrades. Install: `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest`. Ready to implement now.
+
+**Project-specific code-reviewer subagent.** A custom subagent that checks for project-specific patterns (IPC allowlist in `ipcValidator.js`, PII logging rules, `trayIconRenderer`/`mqttStatusMonitor` preload requirement) that generic bots miss. Medium effort --- requires writing the agent spec.
+
+**Release skill.** A `/release` skill wrapping the release workflow: check roadmap, generate notes, prepare changelog, update version. Replaces the manual multi-step process. Medium effort.
+
 ---
 
-## Next Minor Release (v2.8.0) --- Deferred
+## Next Minor Release (v2.8.0) --- In Progress
 
-Electron 41 is a major dependency upgrade (Chromium 146, Node.js 24). The [Electron 40 research](../research/electron-40-migration-research.md) covers the migration path through Electron 40 (Chromium 144, Node.js 24, V8 14.4) and remains relevant. The priority is stabilising on Electron 39 and hardening the testing infrastructure first. The cross-distro test suite should be fully working across all 9 configurations before attempting this upgrade, as Electron upgrades are the primary use case for that infrastructure.
+Electron 41 is a major dependency upgrade (Chromium 142→146, Node.js 22→24). PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) bumps Electron from 39.8.2 to 41.0.2 and includes Node.js 24 across all CI workflows, Dockerfiles, and `.nvmrc`. CI passes all checks. The cross-distro test suite is now fully working across all 9 configurations, which was the prerequisite for this upgrade.
 
-The Dependabot PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347) (Electron 41.0.2) supersedes the previous #2223 (Electron 40, now closed). It will be merged after the v2.7.x line is confirmed stable and the testing infrastructure is ready.
+Electron 41 includes upstream fixes that may resolve several blocked issues: CSD window sizing on GNOME/Wayland ([#1943](https://github.com/IsmaelMartinez/teams-for-linux/issues/1943)), and broader Ozone/Wayland improvements that may help with the incoming call crash ([#2345](https://github.com/IsmaelMartinez/teams-for-linux/issues/2345)) and Fedora typing issues ([#2335](https://github.com/IsmaelMartinez/teams-for-linux/issues/2335)). Users have been asked to test with the build artifacts.
 
-The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with the Electron upgrade if timing aligns.
+The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with this release if timing aligns.
 
 ---
 
@@ -146,7 +158,7 @@ The issue triage bot has been migrated to a standalone Go service ([github-issue
 
 ### Cross-Distro Testing
 
-Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Node.js is now pinned via official binary tarball across all Dockerfiles, resolving the Fedora session incompatibility. All 9 configurations pass. See "Phase 1 --- Cross-Distro Testing Hardening" above for remaining items.
+Shipped in v2.7.9 ([ADR-016](../adr/016-cross-distro-testing-environment.md)). Docker-based environment supporting 9 configurations (3 distros x 3 display servers) with VNC for interactive testing. Authenticated Playwright tests landed in v2.7.10. Node.js is now pinned via official binary tarball with SHA256 verification across all Dockerfiles (PR [#2386](https://github.com/IsmaelMartinez/teams-for-linux/pull/2386)), resolving the Fedora session incompatibility and validating Debian. All 9 configurations pass. See "Phase 1 --- Cross-Distro Testing Hardening" above for remaining items (expand test suite, clean up PLAN doc).
 
 ### Configuration Modernization
 
