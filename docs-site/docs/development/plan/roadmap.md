@@ -72,7 +72,7 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 **Expand the authenticated test suite.** The current 6-7 tests cover app launch, screen sharing basics, and window management, but the features that actually break during Electron upgrades (notifications, media permissions, SSO recovery) are untested. Add tests for the notification stub interface, permission check handler responses, and auth recovery after token expiry.
 
-**Clean up the PLAN document.** The `PLAN-docker-playwright-tests.md` has been partially updated (known issues and open questions resolved) but still has stale architecture text. Either fold the remaining decisions into this roadmap and delete the file, or finish updating it.
+**Clean up the PLAN document.** The `PLAN-docker-playwright-tests.md` has been partially updated (Fedora session issue and per-distro question marked resolved) but the architecture diagram and some status text are stale. Either fold the remaining decisions into this roadmap and delete the file, or finish updating it.
 
 ### Phase 2 --- CI Integration
 
@@ -80,7 +80,7 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 **Cross-distro CI smoke test (implemented).** A GitHub Actions workflow (`cross-distro-smoke.yml`) runs 9 configurations in parallel on push to main, building Docker images and verifying the app starts and reaches the login page. See the [design spec](../research/cross-distro-ci-smoke-test-design.md) and [implementation plan](cross-distro-ci-smoke-test-plan.md). The test directory was also restructured: `testing/cross-distro/` moved to `tests/cross-distro/` with npm scripts (`npm run cross-distro`, `npm run cross-distro:list`) for project-root access.
 
-**~~Add `.nvmrc`.~~** Done. `.nvmrc` pins Node 24 (matching Electron 41's embedded runtime). CI workflows and cross-distro Dockerfiles updated to Node 24 in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347).
+**~~Add `.nvmrc`.~~** Done. `.nvmrc` added in PR [#2386](https://github.com/IsmaelMartinez/teams-for-linux/pull/2386). Bumped to Node 24 (matching Electron 41's embedded runtime) along with CI workflows and cross-distro Dockerfiles in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347), pending merge.
 
 ### Phase 3 --- Dev Experience Quick Wins
 
@@ -94,9 +94,9 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 Quick wins to improve the development workflow using Claude Code's extensibility.
 
-**Auto-lint hook.** Add a PostToolUse hook to `.claude/settings.local.json` that runs `npm run lint` on every Edit/Write. Catches lint issues immediately instead of at commit time. Ready to implement now.
+**Auto-lint hook.** Add a PostToolUse hook to `.claude/settings.json` that runs `npm run lint` on every Edit/Write. Catches lint issues immediately instead of at commit time. Using the shared settings file ensures all contributors benefit. Ready to implement now.
 
-**Sensitive file guard hook.** Add a PreToolUse hook that blocks edits to `.env`, credentials, and other sensitive files. The CLAUDE.md already documents PII protection rules --- a hook enforces them automatically. Ready to implement now.
+**Sensitive file guard hook.** Add a PreToolUse hook to `.claude/settings.json` that blocks edits to `.env`, credentials, and other sensitive files. The CLAUDE.md already documents PII protection rules --- a hook enforces them automatically. Ready to implement now.
 
 **context7 MCP server.** Adds live documentation lookup for Electron, Playwright, and MQTT APIs without leaving the session. Especially useful during Electron upgrades. Install: `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest`. Ready to implement now.
 
