@@ -133,7 +133,7 @@ distro packages. This ensures all containers get the same Node.js/npm version,
 which is critical --- `npm ci` must install identical Electron binaries across
 distros for session cookie compatibility between `--login` and `--test` runs.
 
-The version defaults to `22.22.2` (matching CI) and can be overridden at build
+The version defaults to `24.14.1` (matching CI and Electron's embedded Node.js) and can be overridden at build
 time with `docker build` directly:
 
 ```bash
