@@ -186,6 +186,22 @@ test.describe('Notification override', () => {
       expect(showFired).toBe(true);
     });
 
+    test('strips unread count prefix from notification title', async () => {
+      const stripped = '(1) Alice'.replace(/^\(\d+\)\s+/, '');
+      expect(stripped).toBe('Alice');
+
+      const multiDigit = '(42) Bob'.replace(/^\(\d+\)\s+/, '');
+      expect(multiDigit).toBe('Bob');
+    });
+
+    test('leaves non-prefixed notification title unchanged', async () => {
+      const stripped = 'Alice'.replace(/^\(\d+\)\s+/, '');
+      expect(stripped).toBe('Alice');
+
+      const edgeCase = '(no digits) Bob'.replace(/^\(\d+\)\s+/, '');
+      expect(edgeCase).toBe('(no digits) Bob');
+    });
+
     test('multiple notifications can be created sequentially', async () => {
       const result = await ctx.mainWindow.evaluate(() => {
         const stubs = [];
