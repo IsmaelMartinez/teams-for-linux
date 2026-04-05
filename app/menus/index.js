@@ -189,10 +189,21 @@ class Menus {
       "teams_settings.json"
     );
     if (fs.existsSync(settingsPath)) {
-      this.window.webContents.send(
-        "set-teams-settings",
-        JSON.parse(fs.readFileSync(settingsPath))
-      );
+      try {
+        this.window.webContents.send(
+          "set-teams-settings",
+          JSON.parse(fs.readFileSync(settingsPath))
+        );
+      } catch (err) {
+        console.error(
+          `[SETTINGS] Failed to parse settings file at '${settingsPath}': ${err.message}`
+        );
+        dialog.showMessageBoxSync(this.window, {
+          message: "Settings file is corrupted. Using default settings.",
+          title: "Restore settings",
+          type: "warning",
+        });
+      }
     } else {
       dialog.showMessageBoxSync(this.window, {
         message: "Settings file not found. Using default settings.",
