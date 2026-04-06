@@ -2,6 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const { encode: cborEncode, decode: cborDecode } = require('cbor-x');
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require('../../app/webauthn/helpers');
 
 // ─── helpers.js ─────────────────────────────────────────────────────────────
@@ -155,7 +156,7 @@ describe('WebAuthn fido2Backend - device path parsing', () => {
 
 describe('WebAuthn fido2Backend - assertion output parsing', () => {
 	// Replicate the parsing logic from getAssertion() to test with captured output
-	function parseAssertionOutput(stdout, rpId, allowCredentials) {
+	function parseAssertionOutput(stdout, rpId, allowCredentials, passedCredentialId) {
 		const lines = stdout.trim().split('\n');
 		const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
 		const dataLines = lines.slice(echoOffset);
@@ -164,15 +165,17 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 			throw new Error(`Expected at least 2 lines, got ${dataLines.length}`);
 		}
 
-		const authData = Buffer.from(dataLines[0], 'base64');
+		const authData = cborDecode(Buffer.from(dataLines[0], 'base64'));
 		const signature = Buffer.from(dataLines[1], 'base64');
-		let credentialId;
-		if (dataLines.length >= 3) {
-			credentialId = base64urlEncode(Buffer.from(dataLines[2], 'base64'));
-		} else if (allowCredentials?.length === 1) {
-			credentialId = allowCredentials[0].id;
-		} else {
-			throw new Error('No credential ID');
+		let credentialId = passedCredentialId || null;
+		if (!credentialId) {
+			if (dataLines.length >= 3) {
+				credentialId = base64urlEncode(Buffer.from(dataLines[2], 'base64'));
+			} else if (allowCredentials?.length === 1) {
+				credentialId = allowCredentials[0].id;
+			} else {
+				throw new Error('No credential ID');
+			}
 		}
 		const userHandle = dataLines.length >= 4
 			? base64urlEncode(Buffer.from(dataLines[3], 'base64'))
@@ -194,7 +197,8 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 		const result = parseAssertionOutput(stdout, 'login.microsoft.com', []);
 
 		// Echo offset should be 2 (first two lines are echoed input)
-		assert.strictEqual(result.authData.length, 39, 'authData should be 39 bytes');
+		// After CBOR decode, the 39-byte CBOR wrapper yields a 37-byte authData payload
+		assert.strictEqual(result.authData.length, 37, 'authData should be 37 bytes after CBOR decode');
 		assert.ok(result.signature.length > 0, 'signature should not be empty');
 		assert.ok(result.credentialId.length > 0, 'credentialId should be present');
 		// credentialId should be base64url-encoded
@@ -213,7 +217,7 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 			{ id: 'test-cred-id', type: 'public-key' },
 		]);
 
-		assert.strictEqual(result.authData.length, 39);
+		assert.strictEqual(result.authData.length, 37);
 		assert.ok(result.signature.length > 0);
 		// With only 2 lines and single allowCredential, falls back to provided ID
 		assert.strictEqual(result.credentialId, 'test-cred-id');
@@ -244,7 +248,7 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 
 	it('throws when no credential ID and multiple allowCredentials', () => {
 		const stdout = [
-			'AAAA', // authData (won't match rpId for echo)
+			cborEncode(Buffer.from([0x00, 0x01, 0x02])).toString('base64'), // valid CBOR authData
 			'BBBB', // signature
 		].join('\n');
 
@@ -255,6 +259,19 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 			]),
 			/No credential ID/,
 		);
+	});
+
+	it('uses passed credentialId when provided', () => {
+		const stdout = [
+			'WCU1bJ7UoJMhuWlfHq+RggPxtV9onaYfvJYYTBV92mgMgQUAAAA/',
+			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=',
+		].join('\n');
+
+		const result = parseAssertionOutput(stdout, 'other.rp', [
+			{ id: 'cred1' },
+			{ id: 'cred2' },
+		], 'passed-cred-id');
+		assert.strictEqual(result.credentialId, 'passed-cred-id');
 	});
 });
 
