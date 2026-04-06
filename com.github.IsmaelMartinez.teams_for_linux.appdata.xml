@@ -14,6 +14,29 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.7.13" date="2026-03-29">
+      <description>
+        <ul>
+          <li>Fix: Ensure all notification methods return a Notification-like stub for Teams. - by @IsmaelMartinez (#2329)</li>
+          <li>Fix: Strip report-only CSP for non-Teams domains and add auth.cspBypassDomains for SSO login - by @IsmaelMartinez (#2330)</li>
+          <li>Update roadmap and FIDO2 research with community validation results. - by @IsmaelMartinez (#2341)</li>
+          <li>Add cross-distro CI smoke test and restructure test directory. - by @IsmaelMartinez (#2344)</li>
+          <li>Add CodeRabbit AI for automated code reviews. - by @IsmaelMartinez (#2348)</li>
+          <li>Fix changelog generation script errors and auto-create changelogs for fork PRs. - by @IsmaelMartinez (#2352)</li>
+          <li>Add option to force idle state via file for Wayland environments. - by @Spritkopf (#2355)</li>
+          <li>Revert FIDO2 hardware security key support for Linux - by @IsmaelMartinez (#2356)</li>
+          <li>Add system performance research and proposed improvements - by @IsmaelMartinez (#2360)</li>
+          <li>Update roadmap with current PRs, releases, and Electron upgrade status. - by @IsmaelMartinez (#2361)</li>
+          <li>Update flatted dependency to 3.4.2, including fix for CWE-1321 (#2362)</li>
+          <li>Update: Bump eslint from 10.0.3 to 10.1.0 (#2363)</li>
+          <li>Add Butler.json to enable code navigation for triage bot - by @IsmaelMartinez (#2368)</li>
+          <li>Update picomatch to 2.3.2 to fix security vulnerabilities. (#2371)</li>
+          <li>Fix: Update picomatch to 4.0.4, addressing security vulnerabilities. (#2372)</li>
+          <li>Update brace-expansion dependency to 5.0.5 in docs-site (#2374)</li>
+          <li>Fix: Bump path-to-regexp to 0.1.13 to address CVE-2026-4867 (#2375)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.12" date="2026-03-15">
       <description>
         <ul>

@@ -1,0 +1,1 @@
+Update minor dependencies: dbus-native, mqtt, and electron/fuses (#2380)

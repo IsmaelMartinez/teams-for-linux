@@ -1,0 +1,1 @@
+Update: Bump lodash to 4.18.1, fixing template/fromPairs ReferenceError (#2393)

@@ -20,7 +20,7 @@ if [[ "${1:-}" == "--cleanup" ]]; then
 fi
 
 # Check session exists
-if [[ ! -d "./session" ]] || [[ ! -d "./session/Partitions" ]]; then
+if [[ ! -d "./session" ]] || [[ ! -f "./session/Cookies" && ! -d "./session/Partitions" ]]; then
     echo "[!] No login session found in ./session/"
     echo "    Create one first with: ./run.sh ubuntu x11 --login"
     exit 1

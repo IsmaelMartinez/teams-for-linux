@@ -251,6 +251,24 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `network.webRTCIPHandlingPolicy` | `string` | `null` | Controls which network interfaces WebRTC uses for ICE candidate gathering. Choices: `default`, `default_public_and_private_interfaces`, `default_public_interface_only`, `disable_non_proxied_udp` |
+
+*   `default` - Exposes user's public and local IPs. This is the default behavior. When this policy is used, WebRTC has the right to enumerate all interfaces and bind them to discover public interfaces.
+
+*   `default_public_interface_only` - Exposes user's public IP, but does not expose user's local IP. When this policy is used, WebRTC should only use the default route used by http. This doesn't expose any local addresses.
+
+*   `default_public_and_private_interfaces` - Exposes user's public and local IPs. When this policy is used, WebRTC should only use the default route used by http. This also exposes the associated default private address. Default route is the route chosen by the OS on a multi-homed endpoint.
+
+*   `disable_non_proxied_udp` - Does not expose public or local IPs. When this policy is used, WebRTC should only use TCP to contact peers or servers unless the proxy server supports UDP.
+
+[!NOTE]
+**`network.webRTCIPHandlingPolicy`** is useful on systems with multiple network interfaces (e.g. WiFi for internet and a secondary Ethernet adapter with no internet gateway). Without this option, WebRTC advertises all interfaces as ICE candidates, which can cause asymmetric STUN routing and drop calls to **OnHold**. Setting it to `default_public_interface_only` restricts ICE gathering to the interface holding the default route only.
+
+```json
+"network": {
+	"webRTCIPHandlingPolicy": "default_public_interface_only"
+}
+```
 
 ### Screen Sharing
 
