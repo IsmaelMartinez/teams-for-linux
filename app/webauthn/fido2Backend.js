@@ -11,7 +11,7 @@
 const { execFile, spawn } = require("node:child_process");
 const { createHash } = require("node:crypto");
 const { promisify } = require("node:util");
-const { encode: cborEncode } = require("cbor-x");
+const { encode: cborEncode, decode: cborDecode } = require("cbor-x");
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require("./helpers");
 
 const execFileAsync = promisify(execFile);
@@ -372,7 +372,7 @@ async function getAssertion(options) {
           "fido2-assert", args, credInputLines, timeoutMs,
           options.preCollectedPin || null,
         );
-        return parseAssertionOutput(stdout, options, clientDataJSON);
+        return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
       } catch (err) {
         console.info("[WEBAUTHN] getAssertion: credential %d failed: %s",
           options.allowCredentials.indexOf(cred) + 1, err.message);
@@ -393,7 +393,7 @@ async function getAssertion(options) {
     "fido2-assert", args, inputLines, timeoutMs,
     options.preCollectedPin || null,
   );
-  return parseAssertionOutput(stdout, options, clientDataJSON);
+  return parseAssertionOutput(stdout, options, clientDataJSON, null);
 }
 
 /**
@@ -401,9 +401,10 @@ async function getAssertion(options) {
  * @param {string} stdout - Raw stdout from fido2-assert
  * @param {object} options - Original assertion options (for rpId, allowCredentials)
  * @param {Buffer} clientDataJSON - The clientDataJSON buffer
+ * @param {string|null} credentialId - The credentialId which was used for the assertion
  * @returns {object} Assertion result
  */
-function parseAssertionOutput(stdout, options, clientDataJSON) {
+function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
   const lines = stdout.trim().split("\n");
   // fido2-assert may echo back input lines like fido2-cred does.
   const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
@@ -412,15 +413,17 @@ function parseAssertionOutput(stdout, options, clientDataJSON) {
     throw new Error(`NotAllowedError: Unexpected fido2-assert output format. Expected at least 2 lines, got ${dataLines.length}.`);
   }
 
-  const authData = Buffer.from(dataLines[0], "base64");
+  const authData = cborDecode(Buffer.from(dataLines[0], "base64"));
   const assertSignature = Buffer.from(dataLines[1], "base64");
-  let credentialId;
-  if (dataLines.length >= 3) {
-    credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
-  } else if (options.allowCredentials?.length === 1) {
-    credentialId = options.allowCredentials[0].id;
-  } else {
-    throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
+
+  if (!credentialId) {
+    if (dataLines.length >= 3) {
+      credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
+    } else if (options.allowCredentials?.length === 1) {
+      credentialId = options.allowCredentials[0].id;
+    } else {
+      throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
+    }
   }
   const userHandle = dataLines.length >= 4
     ? base64urlEncode(Buffer.from(dataLines[3], "base64"))
