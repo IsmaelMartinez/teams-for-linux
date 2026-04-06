@@ -1,2 +1,0 @@
-Fix: Preserve login identity after session expiry and system resume - by @IsmaelMartinez (#2376)
-closes: #2364 https://github.com/IsmaelMartinez/teams-for-linux/issues/2364 [Bug]: Login info does not persist

@@ -1,1 +1,0 @@
-Update actions/deploy-pages to v5.0.0, including Node.js 24.x support. (#2388)

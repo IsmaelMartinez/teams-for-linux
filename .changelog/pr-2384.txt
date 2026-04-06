@@ -1,1 +1,0 @@
-Update @xmldom/xmldom to 0.8.12, fixing whitespace and security issues. (#2384)

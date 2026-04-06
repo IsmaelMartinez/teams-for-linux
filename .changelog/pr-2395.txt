@@ -1,1 +1,0 @@
-Update Electron to 41.1.0, adding nativeTheme and notification urgency features. (#2395)

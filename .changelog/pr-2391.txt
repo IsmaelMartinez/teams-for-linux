@@ -1,1 +1,0 @@
-Update roadmap with v2.8.0 progress, cross-distro testing, and Claude Code automations. - by @IsmaelMartinez (#2391)

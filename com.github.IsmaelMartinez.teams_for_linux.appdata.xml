@@ -14,6 +14,27 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.8.0" date="2026-04-06">
+      <description>
+        <ul>
+          <li>Update: Bump Electron from 39.8.2 to 41.0.2 (#2347)</li>
+          <li>Fix: Preserve login identity after session expiry and system resume - by @IsmaelMartinez (#2376)</li>
+          <li>Remove stale roadmap sections, focus on future content - by @IsmaelMartinez (#2379)</li>
+          <li>Update minor dependencies: dbus-native, mqtt, and electron/fuses (#2380)</li>
+          <li>Update TypeScript to 6.0.2 in docs-site (#2381)</li>
+          <li>Update @xmldom/xmldom to 0.8.12, fixing whitespace and security issues. (#2384)</li>
+          <li>Fix: Pin Node.js version in cross-distro Dockerfiles to resolve test failures - by @IsmaelMartinez (#2386)</li>
+          <li>Add Repo Butler consumer guide for AI agents and health checks (#2387)</li>
+          <li>Update actions/deploy-pages to v5.0.0, including Node.js 24.x support. (#2388)</li>
+          <li>Update setup-node action to support devEngines and fix npm audit issues. (#2389)</li>
+          <li>Update roadmap with v2.8.0 progress, cross-distro testing, and Claude Code automations. - by @IsmaelMartinez (#2391)</li>
+          <li>Update: Bump lodash to 4.18.1, fixing template/fromPairs ReferenceError (#2393)</li>
+          <li>Update lodash to 4.18.1, fixing template and fromPairs ReferenceError (#2394)</li>
+          <li>Update Electron to 41.1.0, adding nativeTheme and notification urgency features. (#2395)</li>
+          <li>Fix: Update brace-expansion to resolve CVE for process hang and memory exhaustion. - by @IsmaelMartinez (#2397)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.13" date="2026-03-29">
       <description>
         <ul>
