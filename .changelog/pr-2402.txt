@@ -1,0 +1,1 @@
+Fix: Resolve high-severity lodash-es and serialize-javascript vulnerabilities in docs-site - by @IsmaelMartinez (#2402)
