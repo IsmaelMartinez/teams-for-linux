@@ -1,1 +1,0 @@
-Fix: Update brace-expansion to resolve CVE for process hang and memory exhaustion. - by @IsmaelMartinez (#2397)

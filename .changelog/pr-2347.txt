@@ -1,1 +1,0 @@
-Update: Bump Electron from 39.8.2 to 41.0.2 (#2347)
