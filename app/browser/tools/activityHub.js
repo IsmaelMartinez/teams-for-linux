@@ -29,7 +29,11 @@ class ActivityHub {
     }
     const handlers = getEventHandlers(event);
     for (const handler of handlers) {
-      handler.handler(data || {});
+      try {
+        handler.handler(data || {});
+      } catch (err) {
+        console.error(`ActivityHub: handler for '${event}' threw:`, err);
+      }
     }
   }
 

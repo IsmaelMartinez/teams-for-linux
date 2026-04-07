@@ -36,7 +36,7 @@ Camera and microphone issues remain the most common user-reported bugs. Recent w
 
 Call drops on multi-interface systems ([#2349](https://github.com/IsmaelMartinez/teams-for-linux/issues/2349)) are addressed via a `webRTCIPHandlingPolicy` config option. Users with VPN + physical NIC setups should test with `"default_public_interface_only"` and report back.
 
-MQTT in-call detection doesn't detect hang-ups from the small popup window ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)). Root cause identified: the popup tear-down doesn't fire through Teams' React `commandChangeReportingService`. The fix requires adding a WebRTC-based polling fallback in `activityHub.js`, following the pattern already proven in `speakingIndicator.js`.
+MQTT in-call detection from the small popup window ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)) is now fixed. The solution uses WebRTC-based call state detection in `speakingIndicator.js` to emit `call-connected`/`call-disconnected` events through `activityHub` when RTCPeerConnection state changes. This works regardless of which hang-up button the user clicks. The RTCPeerConnection patching activates when either `media.microphone.speakingIndicator` or `mqtt.enabled` is true.
 
 Meeting join replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322)) has been investigated --- all three code paths that handle meeting URLs call `window.loadURL()`, destroying the Teams SPA. Fix approach TBD (auto-navigate back vs separate BrowserWindow).
 
