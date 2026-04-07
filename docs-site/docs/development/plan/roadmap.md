@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-07
 **Current Version:** v2.7.13 → v2.8.0 in progress (Electron 41.0.2, Chromium 146, Node.js 24)
 **Status:** Living Document --- Electron 41 upgrade in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347); cross-distro tests passing 9/9; next focus is bug fixes and dev experience
 

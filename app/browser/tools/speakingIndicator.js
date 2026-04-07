@@ -99,12 +99,12 @@ class SpeakingIndicator {
 		// React-based call events are used as hints; WebRTC polling is the
 		// authoritative source for call state (fixes #2358).
 		activityHub.on('call-connected', () => {
-			console.info(`${LOG_PREFIX} call-connected event received (React)`);
+			console.info(`${LOG_PREFIX} call-connected event received`);
 			this.#inCall = true;
 		});
 
 		activityHub.on('call-disconnected', () => {
-			console.info(`${LOG_PREFIX} call-disconnected event received (React), clearing connections`);
+			console.info(`${LOG_PREFIX} call-disconnected event received, clearing connections`);
 			this.#inCall = false;
 			this.#peerConnections = [];
 			this.#hasSeenAudio = false;

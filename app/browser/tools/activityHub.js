@@ -30,7 +30,9 @@ class ActivityHub {
     const handlers = getEventHandlers(event);
     for (const handler of handlers) {
       try {
-        handler.handler(data || {});
+        Promise.resolve(handler.handler(data || {})).catch((err) => {
+          console.error(`ActivityHub: handler for '${event}' threw:`, err);
+        });
       } catch (err) {
         console.error(`ActivityHub: handler for '${event}' threw:`, err);
       }
