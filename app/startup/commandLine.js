@@ -3,23 +3,6 @@ const { app } = require("electron");
 class CommandLineManager {
   // Must be called before app.getPath('userData')
   static addSwitchesBeforeConfigLoad() {
-    // Override PulseAudio/PipeWire audio stream name from "Chromium" to
-    // "Teams for Linux".  Chromium hardcodes its product name for
-    // PulseAudio; the PULSE_PROP_* env-vars are the standard mechanism
-    // for applications to override these properties and must be set
-    // before Chromium opens any audio streams.
-    if (process.platform === "linux") {
-      if (!process.env.PULSE_PROP_application_name) {
-        process.env.PULSE_PROP_application_name = "Teams for Linux";
-      }
-      if (!process.env.PULSE_PROP_application_icon_name) {
-        process.env.PULSE_PROP_application_icon_name = "teams-for-linux";
-      }
-      if (!process.env.PULSE_PROP_media_role) {
-        process.env.PULSE_PROP_media_role = "phone";
-      }
-    }
-
     app.commandLine.appendSwitch("try-supported-channel-layouts");
 
     // Allow audio playback without requiring a prior user gesture.
