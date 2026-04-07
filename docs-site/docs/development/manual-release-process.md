@@ -131,7 +131,7 @@ The GitHub Actions workflow is at `.github/workflows/release-please.yml`.
 
 ### appdata.xml updates
 
-Release-please does not natively support `appdata.xml`. A custom script (`scripts/update-appdata-xml.mjs`) runs as part of the release-please workflow to:
+Release-please does not natively support `appdata.xml`. A custom script (`scripts/update-appdata-xml.js`) runs as part of the release-please workflow to:
 1. Read the new version from `package.json`
 2. Extract changelog entries from `CHANGELOG.md`
 3. Insert a new `<release>` entry into `appdata.xml`

@@ -51,8 +51,8 @@ function extractChangelogEntries(changelogContent, version) {
 
 	const entries = sectionContent
 		.split('\n')
-		.filter(line => /^\s*\*\s/.test(line))
-		.map(line => line.replace(/^\s*\*\s+/, '').trim())
+		.filter(line => /^\s*[*-]\s/.test(line))
+		.map(line => line.replace(/^\s*[*-]\s+/, '').trim())
 		.filter(Boolean);
 
 	return { entries, date };
