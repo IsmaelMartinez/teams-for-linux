@@ -177,6 +177,48 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 ---
 
+#### Issue: Audio streams show as "Chromium" in volume mixer
+
+**Description:** When using Teams for Linux, audio streams appear labeled as "Chromium" (or "chromium") in system volume mixers like `pavucontrol`, instead of "Teams for Linux".
+
+**Cause:** Electron/Chromium hardcodes its product name for PulseAudio audio streams. This cannot be changed from within the application.
+
+**Solution (PipeWire):**
+
+Teams for Linux ships a PipeWire drop-in configuration file that renames the audio streams. Copy it to your PipeWire configuration directory:
+
+```bash
+# System-wide (requires root)
+sudo cp /opt/teams-for-linux/pipewire-pulse.conf.d/50-teams-for-linux.conf \
+     /etc/pipewire/pipewire-pulse.conf.d/
+
+# Or per-user (no root required)
+mkdir -p ~/.config/pipewire/pipewire-pulse.conf.d
+cp /opt/teams-for-linux/pipewire-pulse.conf.d/50-teams-for-linux.conf \
+   ~/.config/pipewire/pipewire-pulse.conf.d/
+```
+
+After copying, restart PipeWire (`systemctl --user restart pipewire-pulse`) or log out and back in for the change to take effect.
+
+If you installed via AppImage or tar.gz, the config file is located inside the extracted application directory under `pipewire-pulse.conf.d/`. You can also create the file manually:
+
+```ini
+# ~/.config/pipewire/pipewire-pulse.conf.d/50-teams-for-linux.conf
+pulse.rules = [
+  {
+    matches = [{ application.process.binary = "teams-for-linux" }]
+    actions = {
+      update-props = {
+        application.name = "Teams for Linux"
+        application.icon_name = "teams-for-linux"
+      }
+    }
+  }
+]
+```
+
+---
+
 ### Login and Authentication
 
 #### Issue: Unable to log in, stuck on a blank screen after entering credentials

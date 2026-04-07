@@ -91,6 +91,12 @@
       }
     ],
     "linux": {
+      "extraFiles": [
+        {
+          "from": "build/pipewire-pulse.conf.d",
+          "to": "pipewire-pulse.conf.d"
+        }
+      ],
       "category": "Chat;Network;Office",
       "packageCategory": "net",
       "executableName": "teams-for-linux",
