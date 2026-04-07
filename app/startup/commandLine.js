@@ -9,19 +9,14 @@ class CommandLineManager {
     // for applications to override these properties and must be set
     // before Chromium opens any audio streams.
     if (process.platform === "linux") {
-      // PulseAudio property names use dots (e.g. "application.name").
-      // The PULSE_PROP_ prefix is stripped and the remainder is used
-      // verbatim as the property key, so dots must be preserved.
-      // Bracket notation is required because JS dot-access can't
-      // handle keys containing literal dots.
-      if (!process.env["PULSE_PROP_application.name"]) {
-        process.env["PULSE_PROP_application.name"] = "Teams for Linux";
+      if (!process.env.PULSE_PROP_application_name) {
+        process.env.PULSE_PROP_application_name = "Teams for Linux";
       }
-      if (!process.env["PULSE_PROP_application.icon_name"]) {
-        process.env["PULSE_PROP_application.icon_name"] = "teams-for-linux";
+      if (!process.env.PULSE_PROP_application_icon_name) {
+        process.env.PULSE_PROP_application_icon_name = "teams-for-linux";
       }
-      if (!process.env["PULSE_PROP_media.role"]) {
-        process.env["PULSE_PROP_media.role"] = "phone";
+      if (!process.env.PULSE_PROP_media_role) {
+        process.env.PULSE_PROP_media_role = "phone";
       }
     }
 
