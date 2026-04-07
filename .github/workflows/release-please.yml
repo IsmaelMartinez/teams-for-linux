@@ -36,7 +36,7 @@ jobs:
 
       - name: Update appdata.xml
         if: steps.release.outputs.pr
-        run: node scripts/update-appdata-xml.mjs
+        run: node scripts/update-appdata-xml.js
 
       - name: Update package-lock.json
         if: steps.release.outputs.pr
