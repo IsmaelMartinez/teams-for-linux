@@ -69,6 +69,14 @@ if (process.env.E2E_USER_DATA_DIR) {
   app.setPath("userData", process.env.E2E_USER_DATA_DIR);
 }
 
+// Set PulseAudio stream properties so volume mixers show "Teams for Linux"
+// instead of "Chromium". Must run before Chromium initialises audio.
+if (os.platform() === "linux") {
+  process.env.PULSE_PROP_application_name ??= "Teams for Linux";
+  process.env.PULSE_PROP_application_icon_name ??= "teams-for-linux";
+  process.env.PULSE_PROP_media_role ??= "phone";
+}
+
 // This must be executed before loading the config file.
 CommandLineManager.addSwitchesBeforeConfigLoad();
 

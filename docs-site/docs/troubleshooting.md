@@ -181,9 +181,11 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 **Description:** When using Teams for Linux, audio streams appear labeled as "Chromium" (or "chromium") in system volume mixers like `pavucontrol`, instead of "Teams for Linux".
 
-**Cause:** Electron/Chromium hardcodes its product name for PulseAudio audio streams. A PipeWire drop-in rule can override this at the system level.
+**Cause:** Electron/Chromium hardcodes its product name for PulseAudio audio streams.
 
-**Solution (PipeWire):**
+**Solution:** Teams for Linux automatically sets `PULSE_PROP_application_name`, `PULSE_PROP_application_icon_name`, and `PULSE_PROP_media_role` environment variables at startup, which should rename the streams on most PulseAudio and PipeWire setups. If the streams still appear as "Chromium" (for example, when using a PipeWire configuration that overrides client properties), you can apply a PipeWire drop-in rule as a supplementary fix.
+
+**PipeWire drop-in (optional):**
 
 Teams for Linux ships a PipeWire drop-in configuration file that renames the audio streams. Copy it to your PipeWire configuration directory:
 
