@@ -1,0 +1,2 @@
+Update audio stream name from "Chromium" to "Teams for Linux" in volume mixer. - by @IsmaelMartinez (#2407)
+closes: #2382 https://github.com/IsmaelMartinez/teams-for-linux/issues/2382 [Feat]: Rename audio devices
