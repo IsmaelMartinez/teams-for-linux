@@ -11,6 +11,16 @@
  * in Teams' internal React event emission. It appears automatically when
  * audio stats are detected and disappears when all connections close.
  *
+ * Additionally, this module provides WebRTC-based call state detection as a
+ * fallback for the React-based detection in activityHub. When all peer
+ * connections close (e.g. hanging up from the popup window), it emits
+ * call-disconnected through activityHub — fixing #2358 where the React
+ * event doesn't fire for popup hang-ups.
+ *
+ * The RTCPeerConnection patching activates when either the visual overlay
+ * is enabled (media.microphone.speakingIndicator) or MQTT is enabled
+ * (mqtt.enabled), ensuring reliable in-call detection for home automation.
+ *
  * Overlay states:
  * - Green (pulsing): speaking — audio is being transmitted
  * - Grey: silent — mic is open but quiet
@@ -34,18 +44,25 @@ class SpeakingIndicator {
 	#pollInterval = null;
 	#polling = false;
 	#overlayVisible = false;
+	#overlayEnabled = false; // whether to show the visual overlay
 	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
+	#inCall = false; // WebRTC-based call state tracking for reliable disconnect detection (#2358)
 
 	init(config) {
-		const enabled = config.media?.microphone?.speakingIndicator;
-		if (!enabled) {
+		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
+		const mqttEnabled = config.mqtt?.enabled === true;
+
+		if (!overlayEnabled && !mqttEnabled) {
 			return;
 		}
+
+		this.#overlayEnabled = overlayEnabled;
 
 		try {
 			this.#patchRTCPeerConnection();
 			this.#registerCallEvents();
-			console.info(`${LOG_PREFIX} Initialized`);
+			const mode = overlayEnabled ? 'overlay + call detection' : 'call detection only';
+			console.info(`${LOG_PREFIX} Initialized (${mode})`);
 		} catch (error) {
 			console.error(`${LOG_PREFIX} Failed to initialize:`, error);
 		}
@@ -79,14 +96,16 @@ class SpeakingIndicator {
 	}
 
 	#registerCallEvents() {
-		// call-disconnected used as a cleanup hint only — the poll loop is the
-		// primary driver of overlay visibility.
+		// React-based call events are used as hints; WebRTC polling is the
+		// authoritative source for call state (fixes #2358).
 		activityHub.on('call-connected', () => {
-			console.info(`${LOG_PREFIX} call-connected event received`);
+			console.info(`${LOG_PREFIX} call-connected event received (React)`);
+			this.#inCall = true;
 		});
 
 		activityHub.on('call-disconnected', () => {
-			console.info(`${LOG_PREFIX} call-disconnected event received, clearing connections`);
+			console.info(`${LOG_PREFIX} call-disconnected event received (React), clearing connections`);
+			this.#inCall = false;
 			this.#peerConnections = [];
 			this.#hasSeenAudio = false;
 			this.#stopPolling();
@@ -125,6 +144,12 @@ class SpeakingIndicator {
 			console.info(`${LOG_PREFIX} No active connections, stopping polling`);
 			this.#stopPolling();
 			this.#hideOverlay();
+			// WebRTC-based call-disconnected: all connections closed (#2358)
+			if (this.#inCall) {
+				this.#inCall = false;
+				console.info(`${LOG_PREFIX} All connections closed, emitting call-disconnected (WebRTC)`);
+				activityHub.emit('call-disconnected');
+			}
 			return;
 		}
 
@@ -182,7 +207,14 @@ class SpeakingIndicator {
 			this.#polling = false;
 		}
 
-		if (foundAudioStats && !this.#overlayVisible) {
+		// WebRTC-based call-connected: audio stats detected for the first time (#2358)
+		if (foundAudioStats && !this.#inCall) {
+			this.#inCall = true;
+			console.info(`${LOG_PREFIX} Audio stats detected, emitting call-connected (WebRTC)`);
+			activityHub.emit('call-connected');
+		}
+
+		if (foundAudioStats && !this.#overlayVisible && this.#overlayEnabled) {
 			console.info(`${LOG_PREFIX} Audio stats detected, showing overlay`);
 			this.#showOverlay();
 		} else if (!foundAudioStats && this.#overlayVisible) {
