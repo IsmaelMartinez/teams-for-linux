@@ -188,11 +188,21 @@ describe('SpeakingIndicator', () => {
 		const connectedEmit = mockActivityHub.emit.mock.calls.find(c => c.arguments[0] === 'call-connected');
 		assert.ok(connectedEmit, 'should have emitted call-connected');
 
+		// Verify no call-disconnected was emitted yet
+		assert.strictEqual(
+			mockActivityHub.emit.mock.calls.some(c => c.arguments[0] === 'call-disconnected'),
+			false,
+			'should not emit call-disconnected before connections close'
+		);
+		const emitCountBeforeClose = mockActivityHub.emit.mock.calls.length;
+
 		// Close all connections
 		closePeerConnections();
 		await new Promise(r => setTimeout(r, 200));
 
-		const disconnectedEmit = mockActivityHub.emit.mock.calls.find(c => c.arguments[0] === 'call-disconnected');
+		const disconnectedEmit = mockActivityHub.emit.mock.calls
+			.slice(emitCountBeforeClose)
+			.find(c => c.arguments[0] === 'call-disconnected');
 		assert.ok(disconnectedEmit, 'should emit call-disconnected when all connections close');
 	});
 
