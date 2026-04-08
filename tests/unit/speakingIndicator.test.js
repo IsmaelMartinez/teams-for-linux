@@ -166,7 +166,7 @@ describe('SpeakingIndicator', () => {
 		const { instance, mockActivityHub } = loadSpeakingIndicator();
 		instance.init({ mqtt: { enabled: true } });
 
-		new globalThis.RTCPeerConnection();
+		const _pc = new globalThis.RTCPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		const emitCalls = mockActivityHub.emit.mock.calls;
@@ -181,7 +181,7 @@ describe('SpeakingIndicator', () => {
 		const { instance, mockActivityHub } = loadSpeakingIndicator();
 		instance.init({ mqtt: { enabled: true } });
 
-		new globalThis.RTCPeerConnection();
+		const _pc = new globalThis.RTCPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		// Verify call-connected was emitted first
@@ -203,7 +203,7 @@ describe('SpeakingIndicator', () => {
 		const { instance } = loadSpeakingIndicator();
 		instance.init({ media: { microphone: { speakingIndicator: false } }, mqtt: { enabled: true } });
 
-		new globalThis.RTCPeerConnection();
+		const _pc = new globalThis.RTCPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		assert.strictEqual(
