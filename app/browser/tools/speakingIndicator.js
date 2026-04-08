@@ -206,8 +206,11 @@ class SpeakingIndicator {
 			this.#polling = false;
 		}
 
-		// WebRTC-based call-connected: audio stats detected for the first time (#2358)
-		if (foundAudioStats && !this.#inCall) {
+		// WebRTC-based call-connected: audio stats detected with an established
+		// connection. The connectionState check prevents premature emission during
+		// pre-join setup when audio stats may appear with zero audioLevel. (#2358)
+		const hasConnectedPeer = this.#peerConnections.some(pc => pc.connectionState === 'connected');
+		if (foundAudioStats && hasConnectedPeer && !this.#inCall) {
 			this.#inCall = true;
 			console.info(`${LOG_PREFIX} Audio stats detected, emitting call-connected (WebRTC)`);
 			activityHub.emit('call-connected');
