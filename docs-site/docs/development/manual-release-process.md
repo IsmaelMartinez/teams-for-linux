@@ -140,7 +140,7 @@ This ensures `appdata.xml` stays in sync with each release, which is required fo
 
 ## Workflow Diagram
 
-```
+```text
 Conventional commits land on main
      ↓
 release-please creates/updates Release PR

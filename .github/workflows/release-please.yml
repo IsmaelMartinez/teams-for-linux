@@ -34,6 +34,10 @@ jobs:
         with:
           node-version: 24
 
+      - name: Install dependencies
+        if: steps.release.outputs.pr
+        run: npm ci
+
       - name: Update appdata.xml
         if: steps.release.outputs.pr
         run: node scripts/update-appdata-xml.js

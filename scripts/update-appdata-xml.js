@@ -67,7 +67,7 @@ async function main() {
 		changelogContent = fs.readFileSync(CHANGELOG_PATH, 'utf8');
 	} catch (err) {
 		if (err.code === 'ENOENT') {
-			console.log('No CHANGELOG.md found, skipping appdata.xml update');
+			console.warn('No CHANGELOG.md found, skipping appdata.xml update');
 			return;
 		}
 		throw err;
@@ -76,7 +76,7 @@ async function main() {
 	const { entries, date } = extractChangelogEntries(changelogContent, version);
 
 	if (entries.length === 0) {
-		console.log(`No changelog entries found for version ${version}, skipping appdata.xml update`);
+		console.info(`No changelog entries found for version ${version}, skipping appdata.xml update`);
 		return;
 	}
 
@@ -96,7 +96,7 @@ async function main() {
 	const releases = appdata.component.releases[0].release;
 
 	// Remove existing entry for this version (idempotent)
-	const existingIndex = releases.findIndex(r => r.$.version === version);
+	const existingIndex = releases.findIndex(r => r?.$?.version === version);
 	if (existingIndex !== -1) {
 		releases.splice(existingIndex, 1);
 	}
@@ -110,7 +110,7 @@ async function main() {
 
 	const builder = new xml2js.Builder();
 	fs.writeFileSync(APPDATA_PATH, builder.buildObject(appdata));
-	console.log(`Updated appdata.xml with ${entries.length} entries for v${version} (${releaseDate})`);
+	console.info(`Updated appdata.xml with ${entries.length} entries for v${version} (${releaseDate})`);
 }
 
 main().catch(err => {
