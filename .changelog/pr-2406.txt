@@ -1,0 +1,1 @@
+Fix call status detection when hanging up from popup window. - by @IsmaelMartinez (#2406)

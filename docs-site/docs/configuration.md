@@ -286,6 +286,7 @@ Media settings are organized under the `media` configuration object with subgrou
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `media.microphone.disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
+| `media.microphone.speakingIndicator` | `boolean` | `false` | Enable visual overlay showing microphone state during calls (speaking/silent/muted). When enabled, also provides WebRTC-based call state detection. Note: when `mqtt.enabled` is true, the WebRTC call detection activates automatically even without this option, ensuring reliable `in-call` topic publishing |
 | `media.camera.resolution.enabled` | `boolean` | `false` | Enable camera resolution control |
 | `media.camera.resolution.mode` | `string` | `"remove"` | Resolution mode: `"remove"` removes Teams' constraints allowing native camera resolution, `"override"` sets specific width/height |
 | `media.camera.resolution.width` | `number` | - | Target width when mode is `"override"` |
@@ -381,7 +382,7 @@ When MQTT is enabled, the following topics are automatically published:
 |-------|---------|-------------|
 | `\{topicPrefix\}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will) |
 | `\{topicPrefix\}/status` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
-| `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected) |
+| `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
 | `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
 | `\{topicPrefix\}/microphone` | `"true"` or `"false"` | Microphone on/off state (Phase 2) |
 | `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |

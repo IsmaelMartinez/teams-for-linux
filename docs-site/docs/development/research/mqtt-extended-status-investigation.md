@@ -7,7 +7,7 @@ Infrastructure, LWT, and call state publishing are shipped. Phase 2 (WebRTC came
 **Date**: 2025-11-12
 **Updated**: 2026-01-18
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT) | Phase 2 DEFERRED
+**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT + WebRTC Call State Fallback) | Phase 2 DEFERRED
 
 ## User Request
 

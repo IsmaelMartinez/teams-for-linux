@@ -41,7 +41,7 @@ function setupGlobals() {
 }
 
 function loadSpeakingIndicator() {
-	const mockActivityHub = { on: mock.fn(), off: mock.fn() };
+	const mockActivityHub = { on: mock.fn(), off: mock.fn(), emit: mock.fn() };
 	require.cache[activityHubPath] = {
 		id: activityHubPath,
 		exports: mockActivityHub,
@@ -76,21 +76,21 @@ describe('SpeakingIndicator', () => {
 		cleanup();
 	});
 
-	it('does not patch RTCPeerConnection when disabled', () => {
+	it('does not patch RTCPeerConnection when both overlay and MQTT are disabled', () => {
 		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
 		const refBefore = globalThis.RTCPeerConnection;
 
-		instance.init({ media: { microphone: { speakingIndicator: false } } });
+		instance.init({ media: { microphone: { speakingIndicator: false } }, mqtt: { enabled: false } });
 
 		assert.strictEqual(
 			globalThis.RTCPeerConnection,
 			refBefore,
-			'RTCPeerConnection should remain unchanged when speakingIndicator is disabled'
+			'RTCPeerConnection should remain unchanged when both features are disabled'
 		);
 	});
 
-	it('patches RTCPeerConnection when enabled', () => {
+	it('patches RTCPeerConnection when overlay is enabled', () => {
 		setupGlobals();
 		const { instance } = loadSpeakingIndicator();
 		const refBefore = globalThis.RTCPeerConnection;
@@ -101,6 +101,20 @@ describe('SpeakingIndicator', () => {
 			globalThis.RTCPeerConnection,
 			refBefore,
 			'RTCPeerConnection should be replaced when speakingIndicator is enabled'
+		);
+	});
+
+	it('patches RTCPeerConnection when only MQTT is enabled (#2358)', () => {
+		setupGlobals();
+		const { instance } = loadSpeakingIndicator();
+		const refBefore = globalThis.RTCPeerConnection;
+
+		instance.init({ media: { microphone: { speakingIndicator: false } }, mqtt: { enabled: true } });
+
+		assert.notStrictEqual(
+			globalThis.RTCPeerConnection,
+			refBefore,
+			'RTCPeerConnection should be patched for call detection when MQTT is enabled'
 		);
 	});
 
@@ -142,6 +156,70 @@ describe('SpeakingIndicator', () => {
 		assert.ok(
 			globalThis.document.body.appendChild.mock.calls.length > 0,
 			'overlay should appear when audio stats with non-zero audioLevel are detected'
+		);
+	});
+
+	it('emits call-connected via activityHub when audio stats first detected (#2358)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance, mockActivityHub } = loadSpeakingIndicator();
+		instance.init({ mqtt: { enabled: true } });
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		const emitCalls = mockActivityHub.emit.mock.calls;
+		const connectedEmit = emitCalls.find(c => c.arguments[0] === 'call-connected');
+		assert.ok(connectedEmit, 'should emit call-connected when audio stats are first detected');
+	});
+
+	it('emits call-disconnected via activityHub when all connections close (#2358)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance, mockActivityHub } = loadSpeakingIndicator();
+		instance.init({ mqtt: { enabled: true } });
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		// Verify call-connected was emitted first
+		const connectedEmit = mockActivityHub.emit.mock.calls.find(c => c.arguments[0] === 'call-connected');
+		assert.ok(connectedEmit, 'should have emitted call-connected');
+
+		// Verify no call-disconnected was emitted yet
+		assert.strictEqual(
+			mockActivityHub.emit.mock.calls.some(c => c.arguments[0] === 'call-disconnected'),
+			false,
+			'should not emit call-disconnected before connections close'
+		);
+		const emitCountBeforeClose = mockActivityHub.emit.mock.calls.length;
+
+		// Close all connections
+		closePeerConnections();
+		await new Promise(r => setTimeout(r, 200));
+
+		const disconnectedEmit = mockActivityHub.emit.mock.calls
+			.slice(emitCountBeforeClose)
+			.find(c => c.arguments[0] === 'call-disconnected');
+		assert.ok(disconnectedEmit, 'should emit call-disconnected when all connections close');
+	});
+
+	it('does not show overlay when only MQTT is enabled (#2358)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		instance.init({ media: { microphone: { speakingIndicator: false } }, mqtt: { enabled: true } });
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		assert.strictEqual(
+			globalThis.document.body.appendChild.mock.calls.length,
+			0,
+			'overlay should not appear when only MQTT is enabled (no visual indicator)'
 		);
 	});
 });
