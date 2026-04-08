@@ -16,7 +16,6 @@
  * connections close (e.g. hanging up from the popup window), it emits
  * call-disconnected through activityHub — fixing #2358 where the React
  * event doesn't fire for popup hang-ups.
- *
  * The RTCPeerConnection patching activates when either the visual overlay
  * is enabled (media.microphone.speakingIndicator) or MQTT is enabled
  * (mqtt.enabled), ensuring reliable in-call detection for home automation.
@@ -44,9 +43,9 @@ class SpeakingIndicator {
 	#pollInterval = null;
 	#polling = false;
 	#overlayVisible = false;
-	#overlayEnabled = false; // whether to show the visual overlay
+	#overlayEnabled = false;
 	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
-	#inCall = false; // WebRTC-based call state tracking for reliable disconnect detection (#2358)
+	#inCall = false;
 
 	init(config) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
