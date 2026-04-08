@@ -23,7 +23,7 @@ const CHANGELOG_PATH = path.join(ROOT, 'CHANGELOG.md');
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 
 function escapeRegex(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -32,7 +32,7 @@ function escapeRegex(str) {
  */
 function extractChangelogEntries(changelogContent, version) {
 	const versionHeaderPattern = new RegExp(
-		`^## \\[?${escapeRegex(version)}\\]?(?:\\([^)]*\\))?\\s*\\(([^)]+)\\)`,
+		String.raw`^## \[?${escapeRegex(version)}\]?(?:\([^)]*\))?\s*\(([^)]+)\)`,
 		'm'
 	);
 
