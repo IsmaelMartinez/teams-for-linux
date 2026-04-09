@@ -1,0 +1,62 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d6f8e03db635a # v4.2.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Check out repository
+        if: steps.release.outputs.pr
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        if: steps.release.outputs.pr
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        if: steps.release.outputs.pr
+        run: npm ci
+
+      - name: Update appdata.xml
+        if: steps.release.outputs.pr
+        run: node scripts/update-appdata-xml.js
+
+      - name: Update package-lock.json
+        if: steps.release.outputs.pr
+        run: npm install --package-lock-only
+
+      - name: Commit appdata.xml and lock file updates
+        if: steps.release.outputs.pr
+        env:
+          PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add com.github.IsmaelMartinez.teams_for_linux.appdata.xml package-lock.json
+          if git diff --cached --quiet; then
+            echo "No appdata.xml or lock file changes to commit"
+          else
+            git commit -m "chore: update appdata.xml and package-lock.json for release"
+            git push origin "HEAD:${PR_BRANCH}"
+          fi

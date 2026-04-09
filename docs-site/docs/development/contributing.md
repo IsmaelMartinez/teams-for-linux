@@ -393,13 +393,12 @@ Examples:
 
 ## Release Process
 
-Releases use AI-generated changelog entries that accumulate in `.changelog/` directory:
+Releases are managed by [release-please](https://github.com/googleapis/release-please), which automatically maintains a Release PR from conventional commits:
 
-1. **PRs automatically get changelog entries** - Gemini AI generates summaries
-2. **When ready to release** - Review `.changelog/*.txt` files
-3. **Prepare release** - Update versions and appdata.xml (manually or via `npm run release:prepare`)
-4. **Create release PR** - Push to `release/vX.Y.Z` branch and merge to main
-5. **Build triggers automatically** - On version change in main
+1. **Merge PRs with conventional commit messages** — `feat:`, `fix:`, `chore:`, etc.
+2. **release-please creates/updates a Release PR** — Includes version bump, `CHANGELOG.md`, and `appdata.xml`
+3. **Merge the Release PR when ready** — This triggers the build
+4. **Build triggers automatically** — On version change in main
 6. **Promote GitHub draft → full release** - Triggers Snap candidate channel and Flatpak
 7. **Promote Snap candidate → stable** - Manual step after testing
 
@@ -437,5 +436,5 @@ By contributing to Teams for Linux, you agree that your contributions will be li
 
 - [Configuration Options](configuration.md) - Application configuration reference
 - [IPC API](ipc-api.md) - Developer integration documentation
-- [Manual Release Process](manual-release-process.md) - Release workflow with AI changelog generation
+- [Manual Release Process](manual-release-process.md) - Release workflow using release-please
 - [Release Info Generation](release-info.md) - Technical details of release info script
