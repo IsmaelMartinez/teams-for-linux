@@ -87,6 +87,11 @@ class NotificationService {
         this.#mainWindow.show();
       });
 
+      notification.on("close", () => {
+        console.debug("[TRAY_DIAG] Notification dismissed by system");
+        this.#mainWindow.webContents.send("notification-closed");
+      });
+
       notification.show();
 
       const totalTime = Date.now() - startTime;
