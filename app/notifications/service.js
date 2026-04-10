@@ -1,4 +1,5 @@
 const { Notification, nativeImage, ipcMain } = require("electron");
+const crypto = require("node:crypto");
 const path = require("node:path");
 
 const USER_STATUS = {
@@ -39,7 +40,8 @@ class NotificationService {
   }
 
   async #handleShowNotification(_event, options) {
-    return this.#showNotification(options);
+    const notificationId = options?.notificationId || crypto.randomUUID();
+    return this.#showNotification({ ...options, notificationId });
   }
 
   async #handlePlayNotificationSound(_event, options) {
@@ -85,6 +87,15 @@ class NotificationService {
       notification.on("click", () => {
         console.debug("[TRAY_DIAG] Notification clicked, showing main window");
         this.#mainWindow.show();
+      });
+
+      notification.on("close", () => {
+        console.debug("[TRAY_DIAG] Notification dismissed by system");
+        const win = this.#mainWindow.getWindow();
+        if (!win || win.isDestroyed()) return;
+        const { webContents } = win;
+        if (!webContents || webContents.isDestroyed()) return;
+        webContents.send("notification-closed", options.notificationId);
       });
 
       notification.show();

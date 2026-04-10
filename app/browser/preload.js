@@ -182,6 +182,12 @@ function createNotificationStub() {
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {
+  // Skip renderer-side sound for "electron" method — the main process
+  // notification service already plays the sound before showing the notification.
+  const method = notificationConfig?.notificationMethod || "web";
+  if (method === "electron") {
+    return;
+  }
   if (globalThis.electronAPI?.playNotificationSound) {
     try {
       console.debug("Requesting application to play sound");
@@ -216,15 +222,26 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
+  const notificationId = crypto.randomUUID();
   // Use Electron notification
   if (globalThis.electronAPI?.showNotification) {
     try {
-      globalThis.electronAPI.showNotification(options);
+      globalThis.electronAPI.showNotification({ ...options, notificationId });
     } catch (e) {
       console.debug("showNotification failed", e);
     }
   }
-  return createNotificationStub();
+  const stub = createNotificationStub();
+  // Bridge the close event from the main process so Teams knows when
+  // the system dismisses the notification (e.g. GNOME timeout).
+  // Use a named listener with ID matching to handle concurrent notifications.
+  const onClosed = (_event, closedId) => {
+    if (closedId !== notificationId) return;
+    ipcRenderer.removeListener("notification-closed", onClosed);
+    if (stub.onclose) stub.onclose();
+  };
+  ipcRenderer.on("notification-closed", onClosed);
+  return stub;
 }
 
 function createCustomNotification(title, options) {
