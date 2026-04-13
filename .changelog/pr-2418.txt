@@ -1,0 +1,1 @@
+Update Electron and globals dependencies (#2418)
