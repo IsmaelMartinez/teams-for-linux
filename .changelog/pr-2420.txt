@@ -1,0 +1,1 @@
+Update dependencies, including Electron, and resolve follow-redirects CVE. - by @IsmaelMartinez (#2420)
