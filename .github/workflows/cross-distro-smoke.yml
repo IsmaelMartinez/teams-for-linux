@@ -27,8 +27,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Use .browser_download_url (direct CDN link) rather than .url (API
+          # URL). The API URL returns JSON metadata unless the request carries
+          # an Accept: application/octet-stream header, and the curl inside the
+          # container has no such header — so we would silently download JSON,
+          # chmod +x it, and "run" it.
           URL=$(gh release view --repo IsmaelMartinez/teams-for-linux --json assets \
-            --jq '.assets[] | select(.name | endswith(".AppImage")) | .url' | head -1)
+            --jq '.assets[] | select(.name | endswith(".AppImage") and (.name | contains("arm") | not)) | .browser_download_url' | head -1)
           if [ -z "$URL" ]; then
             echo "::error::Could not resolve AppImage URL from latest release"
             exit 1
