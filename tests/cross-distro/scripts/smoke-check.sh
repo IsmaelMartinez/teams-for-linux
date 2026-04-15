@@ -3,39 +3,54 @@
 #
 # Usage: smoke-check.sh <container-name> [timeout-seconds]
 #
-# PASS conditions (app launched and Electron main process is alive):
-#   - The container stays running for the duration of the check.
-#   - /tmp/app.log appears (start-{x11,wayland,xwayland}.sh got far enough
-#     to redirect the AppImage's stdout/stderr into it).
-#   - /tmp/app.log grows past MIN_LOG_BYTES, confirming the Electron main
-#     process actually produced output (not just an empty file from an
-#     immediate crash).
-#   - /tmp/app.log contains no hard-failure signatures (exec format error,
-#     cannot execute binary file, Trace/breakpoint trapped, GLIBC error).
-#
-# FAIL conditions:
-#   - Container stops before the checks pass.
-#   - Log file never appears.
-#   - Log never grows above MIN_LOG_BYTES.
-#   - A hard-failure signature is found.
-#
-# This intentionally does NOT assert any navigation URL marker — the CI
-# container is unauthenticated and the main process does not log URLs to
-# stdout, so URL-based assertions were timing out even when the app
-# launched correctly.
+# Passes when the app produced real output (log file > MIN_LOG_BYTES) with
+# no hard-failure signature, meaning the Electron main process actually
+# started. Does NOT assert a navigation URL — the CI container is
+# unauthenticated and the main process does not log URLs to stdout, so
+# URL-based assertions used to time out even on successful launches.
 set -e
 
 CONTAINER="${1:?Usage: smoke-check.sh <container-name> [timeout-seconds]}"
 TIMEOUT="${2:-120}"
 POLL_INTERVAL=5
 LOG_FILE="/tmp/app.log"
+
+# Electron on startup typically emits ~100B of DevTools banner + several
+# hundred bytes of GPU/GL warnings and app-level [STARTUP]/[IPC Security]
+# lines. 500 bytes comfortably clears a crash-with-single-line-error but
+# stays below a minimal successful boot.
 MIN_LOG_BYTES=500
-FAIL_PATTERNS='exec format error|cannot execute binary file|Trace/breakpoint trapped|GLIBC_[0-9]'
+
+# Regexes for log signatures that mean we should stop waiting and fail.
+#   - exec format error / cannot execute binary file: kernel refused the
+#     file (wrong arch, not an ELF, etc.).
+#   - Trace/breakpoint trapped: SIGTRAP from a Chromium crash.
+#   - not found.*GLIBC_: missing libc version, only ever emitted on
+#     real dynamic-linker failure (benign contexts say "GLIBC_2.x" without
+#     "not found").
+FAIL_PATTERNS='exec format error|cannot execute binary file|Trace/breakpoint trapped|not found.*GLIBC_'
 
 echo "[smoke] Checking container: ${CONTAINER} (timeout: ${TIMEOUT}s)"
 
 container_running() {
     docker inspect --format='{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q true
+}
+
+# Single-round-trip check: returns "<status> <size>" where status is
+# "fail" if FAIL_PATTERNS matched, "ok" otherwise, and size is the
+# current byte size of LOG_FILE (0 if unreadable).
+log_status() {
+    docker exec \
+        -e PATTERNS="$FAIL_PATTERNS" \
+        -e LOG="$LOG_FILE" \
+        "$CONTAINER" sh -c '
+            SIZE=$(stat -c%s "$LOG" 2>/dev/null || echo 0)
+            if grep -Eq "$PATTERNS" "$LOG" 2>/dev/null; then
+                echo "fail $SIZE"
+            else
+                echo "ok $SIZE"
+            fi
+        ' 2>/dev/null
 }
 
 dump_diagnostics() {
@@ -56,7 +71,7 @@ dump_diagnostics() {
     fi
 }
 
-# Phase 1: wait for the log file to appear.
+# Phase 1 — log file appears.
 ELAPSED=0
 while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     if ! container_running; then
@@ -80,9 +95,7 @@ if [[ "$ELAPSED" -ge "$TIMEOUT" ]]; then
     exit 1
 fi
 
-# Phase 2: poll until the log is non-trivial and free of hard-failure
-# signatures. The app passing this means Electron started, rendered, and
-# at least logged some GPU/GL/DevTools lines on the way up.
+# Phase 2 — log grows past threshold with no crash signature.
 while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     if ! container_running; then
         echo "[smoke] FAIL: Container ${CONTAINER} stopped unexpectedly"
@@ -90,15 +103,17 @@ while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
         exit 1
     fi
 
-    # Hard-failure signatures — fail fast if any appear; no point waiting.
-    if docker exec "$CONTAINER" grep -Eq "$FAIL_PATTERNS" "$LOG_FILE" 2>/dev/null; then
+    STATUS_AND_SIZE=$(log_status || echo "ok 0")
+    STATUS="${STATUS_AND_SIZE%% *}"
+    LOG_SIZE="${STATUS_AND_SIZE##* }"
+
+    if [[ "$STATUS" == "fail" ]]; then
         echo "[smoke] FAIL: Hard-failure signature in ${LOG_FILE}"
         dump_diagnostics
         exit 1
     fi
 
-    LOG_SIZE=$(docker exec "$CONTAINER" stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
-    if [[ "$LOG_SIZE" -ge "$MIN_LOG_BYTES" ]]; then
+    if [[ "$LOG_SIZE" =~ ^[0-9]+$ ]] && [[ "$LOG_SIZE" -ge "$MIN_LOG_BYTES" ]]; then
         echo "[smoke] PASS: ${LOG_FILE} reached ${LOG_SIZE} bytes after ${ELAPSED}s (app launched)"
         exit 0
     fi
