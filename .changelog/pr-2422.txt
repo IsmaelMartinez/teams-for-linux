@@ -1,0 +1,1 @@
+Fix: Unbreak cross-distro smoke test by correcting AppImage download and checks. - by @IsmaelMartinez (#2422)

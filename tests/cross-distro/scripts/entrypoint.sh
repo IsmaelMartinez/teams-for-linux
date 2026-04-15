@@ -29,13 +29,30 @@ APP_LOCAL_DIR="/home/tester/app-local"
 mkdir -p "$APP_LOCAL_DIR"
 
 if [[ -n "${APP_URL:-}" ]] && [[ ! -f /app/teams-for-linux.AppImage ]] && [[ ! -f "${APP_LOCAL_DIR}/teams-for-linux.AppImage" ]]; then
+    DOWNLOADED="${APP_LOCAL_DIR}/teams-for-linux.AppImage"
     echo "[*] Downloading app from: ${APP_URL}"
-    if curl -fSL --retry 3 --retry-delay 2 -o "${APP_LOCAL_DIR}/teams-for-linux.AppImage" "${APP_URL}"; then
-        chmod +x "${APP_LOCAL_DIR}/teams-for-linux.AppImage"
-        echo "[*] Download complete: ${APP_LOCAL_DIR}/teams-for-linux.AppImage"
+    if curl -fSL --retry 3 --retry-delay 2 -o "${DOWNLOADED}" "${APP_URL}"; then
+        # Verify the download is an ELF binary (AppImages are ELF + appended
+        # squashfs). If it's JSON/HTML (e.g. API metadata served instead of
+        # the asset) we must fail now — chmod +x succeeds on anything, and
+        # "executing" a JSON blob later would time out the smoke check with
+        # no obvious cause.
+        DETECTED=$(file -b "${DOWNLOADED}" 2>/dev/null || echo "unknown")
+        if [[ "${DETECTED}" != ELF* ]]; then
+            echo "[!] Downloaded file is not an ELF binary."
+            echo "    file:   ${DETECTED}"
+            echo "    size:   $(stat -c%s "${DOWNLOADED}" 2>/dev/null || wc -c <"${DOWNLOADED}") bytes"
+            echo "    first 200 bytes:"
+            head -c 200 "${DOWNLOADED}" || true
+            echo
+            rm -f "${DOWNLOADED}"
+            exit 1
+        fi
+        chmod +x "${DOWNLOADED}"
+        echo "[*] Download complete: ${DOWNLOADED} ($(stat -c%s "${DOWNLOADED}" 2>/dev/null || wc -c <"${DOWNLOADED}") bytes)"
     else
         echo "[!] Download failed. You can still launch the app manually later."
-        rm -f "${APP_LOCAL_DIR}/teams-for-linux.AppImage"
+        rm -f "${DOWNLOADED}"
     fi
 fi
 
