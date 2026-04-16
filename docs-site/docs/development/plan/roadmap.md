@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-04-07
-**Current Version:** v2.7.13 → v2.8.0 in progress (Electron 41.0.2, Chromium 146, Node.js 24)
-**Status:** Living Document --- Electron 41 upgrade in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347); cross-distro tests passing 9/9; next focus is bug fixes and dev experience
+**Last Updated:** 2026-04-16
+**Current Version:** v2.8.0 shipped (Electron 41.2.0, Chromium 146, Node.js 24)
+**Status:** Living Document --- v2.8.0 released with Electron 41 upgrade; cross-distro tests passing 9/9; next focus is bug fixes and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
@@ -94,11 +94,11 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 Quick wins to improve the development workflow using Claude Code's extensibility.
 
-**Auto-lint hook.** Add a PostToolUse hook to `.claude/settings.json` that runs `npm run lint` on every Edit/Write. Catches lint issues immediately instead of at commit time. Using the shared settings file ensures all contributors benefit. Ready to implement now.
+~~**Auto-lint hook.**~~ Done. `.claude/settings.json` committed with a PostToolUse hook on `Write|Edit` that runs the project's local `eslint` on the edited JS file, surfacing lint errors to the model immediately instead of at commit time.
 
-**Sensitive file guard hook.** Add a PreToolUse hook to `.claude/settings.json` that blocks edits to `.env`, credentials, and other sensitive files. The CLAUDE.md already documents PII protection rules --- a hook enforces them automatically. Ready to implement now.
+~~**Sensitive file guard hook.**~~ Done. `.claude/settings.json` committed with a PreToolUse hook on `Write|Edit` that denies edits to `.env*`, `credentials*`, `*.pem`, `*.key`, `secrets.*`, and `.auth/` paths, enforcing the PII protection rules from CLAUDE.md automatically.
 
-**context7 MCP server.** Adds live documentation lookup for Electron, Playwright, and MQTT APIs without leaving the session. Especially useful during Electron upgrades. Install: `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest`. Ready to implement now.
+**context7 MCP server.** Per-developer install (project `.mcp.json` is gitignored): run `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest` once. Adds live documentation lookup for Electron, Playwright, and MQTT APIs --- especially useful during Electron upgrades.
 
 **Project-specific code-reviewer subagent.** A custom subagent that checks for project-specific patterns (IPC allowlist in `ipcValidator.js`, PII logging rules, `trayIconRenderer`/`mqttStatusMonitor` preload requirement) that generic bots miss. Medium effort --- requires writing the agent spec.
 
