@@ -1,0 +1,1 @@
+Add Claude automation hooks for linting and PII protection - by @IsmaelMartinez (#2424)
