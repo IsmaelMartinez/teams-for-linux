@@ -32,7 +32,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 **Adopt a single-`BrowserWindow` + one-`WebContentsView`-per-profile architecture.** The application remains a single window with a single tray icon, a single instance lock, and all existing ADR-010 invariants preserved.
 
-- Each profile is bound to `session.fromPartition('persist:teams-profile-{uuid}', { cache: true })`; the partition UUID is generated once at profile creation (`crypto.randomUUID()`) and is immutable for the view's lifetime.
+- Each profile is bound to `session.fromPartition('persist:teams-profile-{uuid}')`; the partition UUID is generated once at profile creation (`crypto.randomUUID()`) and is immutable for the view's lifetime. The `persist:` prefix tells Electron to persist cookies and storage for that partition — no second argument is needed or accepted.
 - All profile views are instantiated up front as children of `mainWindow.contentView`. Switching toggles visibility via `contentView.addChildView` / `removeChildView` and bounds updates — **no `loadURL` on switch**, so sessions stay warm, drafts survive, and the Teams websocket is not reconnected.
 - Profile metadata is stored under `app.profiles` in the existing `settingsStore` (electron-store), not in user-facing `config.json`. Single-profile users are auto-bootstrapped on first launch: the legacy `persist:teams-4-linux` session becomes Profile 0 ("My account") with no login loss.
 
