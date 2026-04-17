@@ -32,7 +32,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 **Adopt a single-`BrowserWindow` + one-`WebContentsView`-per-profile architecture.** The application remains a single window with a single tray icon, a single instance lock, and all existing ADR-010 invariants preserved.
 
-- Each profile is bound to `session.fromPartition('persist:teams-profile-{uuid}')`; the partition UUID is generated once at profile creation (`crypto.randomUUID()`) and is immutable for the view's lifetime. The `persist:` prefix tells Electron to persist cookies and storage for that partition — no second argument is needed or accepted.
+- Each profile is bound to `session.fromPartition('persist:teams-profile-{uuid}')`; the partition UUID is generated once at profile creation (`crypto.randomUUID()`) and is immutable for the view's lifetime. The `persist:` prefix is what tells Electron to persist cookies and storage for that partition — the method's optional `options` second argument is not needed here (the legacy `cache` option was removed in Electron 22).
 - All profile views are instantiated up front as children of `mainWindow.contentView`. Switching toggles visibility via `contentView.addChildView` / `removeChildView` and bounds updates — **no `loadURL` on switch**, so sessions stay warm, drafts survive, and the Teams websocket is not reconnected.
 - Profile metadata is stored under `app.profiles` in the existing `settingsStore` (electron-store), not in user-facing `config.json`. Single-profile users are auto-bootstrapped on first launch: the legacy `persist:teams-4-linux` session becomes Profile 0 ("My account") with no login loss.
 
@@ -160,7 +160,7 @@ Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakM
 
 ## Phased Delivery
 
-- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, the six Phase 1 `profile-*` IPC channels, per-profile migration of the shared-state singletons enumerated below, and an E2E smoke test.
+- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, the six Phase 1 `profile-*` IPC channels, migration of the first two shared-state items from the audit above (the `isFirstLoginTry` → per-`webContents` `WeakMap` conversion in `app/login/index.js`, and swapping the hardcoded screen-preview partition in `app/mainAppWindow/index.js` for the active profile's partition), and an E2E smoke test. The remaining three audit entries (`cleanExpiredAuthCookies`, power-save blocker, incoming-call toast) defer to Phases 2–3 as their corresponding features (aggregated unread, cross-profile call handling) come online.
 - **Phase 2 — Background notifications:** per-partition preload notification shim and unread-count tagging, aggregated tray badge, per-profile unread dots, `disableNotifications` and `muted` plumbing.
 - **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 3, matches Windows), drag-to-reorder.
 
