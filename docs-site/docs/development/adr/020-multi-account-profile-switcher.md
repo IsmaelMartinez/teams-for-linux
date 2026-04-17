@@ -40,7 +40,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 1. **Respects ADR-010's single-window invariant.** Still exactly one `BrowserWindow`, one tray icon, one instance lock. The feature is orthogonal to ADR-010's pop-out-chat rejection.
 
-2. **Modern, supported Electron API.** `WebContentsView` is the current recommendation for in-window embedded web content (Electron 30+, full support in 41) and replaces the deprecated `BrowserView` and `<webview>` tag. Aligns with the ongoing Electron upgrade baseline.
+2. **Modern, supported Electron API.** `WebContentsView` was introduced in Electron 30 and is the current recommendation for in-window embedded web content, replacing the deprecated `BrowserView` and `<webview>` tag. It is stable in the Electron 41 baseline this project runs on.
 
 3. **Proven production pattern.** ElectronIM (`manusa/electronim`, Apache-2.0) and Ferdium both ship this exact model. ElectronIM's `service-manager` is the closest reference implementation for teams-for-linux's architecture.
 
@@ -62,7 +62,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 - ⚠️ Memory footprint scales ~N × single-profile RSS with N warm profiles (mitigated in Phase 3 with optional Ferdium-style hibernation)
 - ⚠️ `WebContentsView` is a newer API than `BrowserView`; community documentation is thinner and examples are fewer
-- ⚠️ Nine new `profile-*` IPC channels to document and maintain in the `ipcValidator.js` allowlist
+- ⚠️ Six new Phase 1 `profile-*` IPC channels (`profile-list`, `profile-get-active`, `profile-switch`, `profile-add`, `profile-update`, `profile-remove`) to document and maintain in the `ipcValidator.js` allowlist, plus additional Phase 2+ channels for notification/mute/pinning as those land
 - ⚠️ Per-profile state audit required for today's module-level singletons (see `CLAUDE.profiles.md` § 6)
 - ⚠️ New per-partition preload shim for cross-profile notification forwarding (Phase 2)
 
@@ -76,7 +76,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 ADR-010 raised seven concrete blockers for multi-window support. Each is resolved by the multi-`WebContentsView`-in-single-window design:
 
-1. **"Single instance lock prevents multiple app instances"** → Preserved. The single instance lock is untouched. The existing `second-instance` handler (`app/index.js`) is extended to parse a `--profile-id=<uuid>` flag (and `msteams://` deep links in Phase 3); if present, switch to that profile instead of just re-focusing.
+1. **"Single instance lock prevents multiple app instances"** → Preserved. The single instance lock is untouched. The existing `second-instance` handler (registered in `app/index.js`, implemented as `exports.onAppSecondInstance` in `app/mainAppWindow/index.js`) is extended to parse a `--profile-id=<uuid>` flag (and `msteams://` deep links in Phase 3); if present, switch to that profile instead of just re-focusing.
 
 2. **"72 IPC channels designed for single-window communication"** → Preserved. There is still exactly one `BrowserWindow` and one top-level `webContents`. Per-profile state is scoped via `event.sender` → `WebContentsView` → partition lookup, not by trusting a renderer-supplied profile id. Most of the 72 channels remain single-window and need no changes.
 
@@ -146,7 +146,7 @@ Embed each tenant in a `<webview>` tag inside the renderer.
 
 ## Phased Delivery
 
-- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, nine `profile-*` IPC channels, per-profile migration of the `CLAUDE.profiles.md` § 6 shared-state singletons, and an E2E smoke test.
+- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, the six Phase 1 `profile-*` IPC channels, per-profile migration of the `CLAUDE.profiles.md` § 6 shared-state singletons, and an E2E smoke test.
 - **Phase 2 — Background notifications:** per-partition preload notification shim and unread-count tagging, aggregated tray badge, per-profile unread dots, `disableNotifications` and `muted` plumbing.
 - **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 3, matches Windows), drag-to-reorder.
 
@@ -157,9 +157,9 @@ Embed each tenant in a `<webview>` tag inside the renderer.
 - Files to be touched:
   - `app/mainAppWindow/browserWindowManager.js` — `WebContentsView` creation and bounds/visibility management
   - `app/partitions/manager.js` — extend (or sibling as `app/profiles/manager.js`) for profile CRUD + partition derivation
-  - `app/security/ipcValidator.js` — allowlist the nine new `profile-*` channels
+  - `app/security/ipcValidator.js` — allowlist the six Phase 1 `profile-*` channels (and later-phase additions as they land)
   - `app/login/index.js:5` — migrate module-level `isFirstLoginTry` to a per-partition `Map`
-  - `app/index.js` — single-instance `second-instance` handler parses `--profile-id`
+  - `app/mainAppWindow/index.js` — extend `exports.onAppSecondInstance` (where `processArgs` already runs) to parse `--profile-id` and switch before loading the URL
   - `app/mainAppWindow/index.js:138,157` — screen-preview partition derived from active profile
   - `docs-site/docs/multiple-instances.md` — user guidance shifted to in-app flow
 
