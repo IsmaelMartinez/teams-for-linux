@@ -2,7 +2,7 @@
 
 This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory.
 
-<!-- toc -->
+{/* toc */}
 
 ## Table of Contents
 
