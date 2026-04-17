@@ -63,7 +63,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 - ⚠️ Memory footprint scales ~N × single-profile RSS with N warm profiles (mitigated in Phase 3 with optional Ferdium-style hibernation)
 - ⚠️ `WebContentsView` is a newer API than `BrowserView`; community documentation is thinner and examples are fewer
 - ⚠️ Six new Phase 1 `profile-*` IPC channels (`profile-list`, `profile-get-active`, `profile-switch`, `profile-add`, `profile-update`, `profile-remove`) to document and maintain in the `ipcValidator.js` allowlist, plus additional Phase 2+ channels for notification/mute/pinning as those land
-- ⚠️ Per-profile state audit required for today's module-level singletons (see `CLAUDE.profiles.md` § 6)
+- ⚠️ Per-profile state audit required for today's module-level singletons (enumerated under "Shared-state audit" below)
 - ⚠️ New per-partition preload shim for cross-profile notification forwarding (Phase 2)
 
 ### Neutral
@@ -86,7 +86,7 @@ ADR-010 raised seven concrete blockers for multi-window support. Each is resolve
 
 5. **"How to handle call state across windows?"** → There is still only one window. Call state and the power save blocker (`app/mainAppWindow/browserWindowManager.js:237-259`) live on the active `WebContentsView`. Microsoft's own Windows client does not support concurrent meetings across tenants, so there is no new semantic to invent.
 
-6. **"How to manage screen sharing state?"** → Active view only, matching today. The screen-preview window migrates from its hardcoded `persist:teams-for-linux-session` (`app/mainAppWindow/index.js:138,157`) to the active profile's partition per `CLAUDE.profiles.md` § 6, so starting a share from profile A cannot bleed into profile B.
+6. **"How to manage screen sharing state?"** → Active view only, matching today. The screen-preview window migrates from its hardcoded `persist:teams-for-linux-session` (`app/mainAppWindow/index.js:138,157`) to the active profile's partition (see "Shared-state audit" in the Migration Plan), so starting a share from profile A cannot bleed into profile B.
 
 7. **"Potential authentication/session conflicts"** → Electron `session.fromPartition` provides hard isolation of cookies, tokens, localStorage, IndexedDB, and service workers. ElectronIM and Ferdium have shipped this partition-per-account pattern in production for years against Microsoft, Google, and Slack web apps.
 
@@ -144,9 +144,23 @@ Embed each tenant in a `<webview>` tag inside the renderer.
 - **User docs:** `docs-site/docs/multiple-instances.md` is updated to lead with the in-app switcher and retain CLI flows as the advanced option.
 - **Single-profile regression check:** every PR description in the phased delivery confirms launching with an empty `app.profiles` produces byte-identical pre-feature behavior.
 
+### Shared-state audit
+
+Several module-level singletons today assume a single account. Each must be scoped per-partition (or per-`WebContentsView`) before Phase 1 ships, otherwise switching profiles mid-flow will leak state between tenants:
+
+| Location | Symptom if not migrated |
+|----------|------------------------|
+| `app/login/index.js` (`isFirstLoginTry`, module-level `let`) | Switching profile mid-login produces a false "already logged in" state; the second profile's first 401 is mistaken for a retry and triggers an app relaunch |
+| `app/mainAppWindow/index.js:138,157` (screen-preview partition hardcoded to `persist:teams-for-linux-session`) | Screen share preview leaks across profiles — preview opened from profile A shows profile A's cookies/session even when profile B started the share |
+| `app/mainAppWindow/index.js` (`cleanExpiredAuthCookies` called once at startup against a single partition) | Other profiles' expired auth cookies are never cleaned; only the startup-active profile benefits |
+| Call state + power-save blocker (`app/mainAppWindow/browserWindowManager.js:237-259`) | Blocker outlives the profile that started the call — switching away from an in-call profile leaves the OS pinned awake under the new profile |
+| Incoming call toast (`app/incomingCallToast/index.js`) | Toast raised from profile A can be dismissed (or answered) by profile B, because the toast has no notion of which partition produced it |
+
+Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakMap`, already landed on the feat branch) and the second (screen-preview partition). Phases 2–3 address the remaining three as their corresponding features (aggregated unread, cross-profile call handling) come online.
+
 ## Phased Delivery
 
-- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, the six Phase 1 `profile-*` IPC channels, per-profile migration of the `CLAUDE.profiles.md` § 6 shared-state singletons, and an E2E smoke test.
+- **Phase 1 — MVP:** per-profile `WebContentsView`s, top-right dropdown switcher, Profiles menu bar entry, first-run migration, the six Phase 1 `profile-*` IPC channels, per-profile migration of the shared-state singletons enumerated below, and an E2E smoke test.
 - **Phase 2 — Background notifications:** per-partition preload notification shim and unread-count tagging, aggregated tray badge, per-profile unread dots, `disableNotifications` and `muted` plumbing.
 - **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 3, matches Windows), drag-to-reorder.
 
