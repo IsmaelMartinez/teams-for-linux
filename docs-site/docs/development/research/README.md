@@ -30,6 +30,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Completes original request from #1938 (@vbartik's RGB LED home automation)
   - **Status:** Research complete, ready for implementation (depends on PR #2299 merged)
 
+- **[Wayland Ozone Platform Revisit](wayland-ozone-platform-revisit-research.md)** - Revisit forced X11 default under Electron 41
+  - Evaluates switching from `--ozone-platform=x11` to `--ozone-platform=auto` (Electron auto-detect)
+  - Compares single-build auto-detect vs. dual `.desktop` vs. parallel packages; recommends auto-detect gated on validation
+  - **Status:** Research complete; validation plan ready at [`plan/wayland-electron41-validation.md`](../plan/wayland-electron41-validation.md)
+
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing

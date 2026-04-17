@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-17
 **Current Version:** v2.7.13 → v2.8.0 in progress (Electron 41.0.2, Chromium 146, Node.js 24)
 **Status:** Living Document --- Electron 41 upgrade in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347); cross-distro tests passing 9/9; next focus is bug fixes and dev experience
 
@@ -45,6 +45,8 @@ Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-f
 ### Wayland Compatibility
 
 Wayland support is improving incrementally. Screen source selection has been simplified for better Wayland compatibility, and short Teams deep links now work across all link types. Idle status on Wayland ([#1827](https://github.com/IsmaelMartinez/teams-for-linux/issues/1827)) remains blocked on Electron's `powerMonitor` API not supporting Wayland idle detection natively. A forced idle override option is now available as a workaround.
+
+**Revisit forced X11 default (Electron 41).** Since v2.7.4, `--ozone-platform=x11` has been baked into `executableArgs` for all Linux package formats to avoid Electron 38+ native Wayland regressions. With Electron 41 (Chromium 146) now in v2.8.0, upstream Ozone/Wayland fixes may allow switching the default to `--ozone-platform=auto`. See [research](../research/wayland-ozone-platform-revisit-research.md) and [validation plan](wayland-electron41-validation.md). Next step: run the three-phase validation (automated smoke tests on `ubuntu/fedora/debian-wayland` containers, manual interactive testing against the open Wayland issues, XWayland regression check) and decide between switching to `auto`, shipping dual `.desktop` launchers as a fallback, or keeping forced X11. Target: v2.9.0.
 
 ### MQTT Integration
 
