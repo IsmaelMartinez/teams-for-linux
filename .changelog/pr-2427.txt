@@ -1,0 +1,1 @@
+Update DOMPurify to 3.4.0 for security and bug fixes. (#2427)
