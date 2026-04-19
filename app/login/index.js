@@ -4,7 +4,25 @@ const path = require("node:path");
 
 let isFirstLoginTry = true;
 
+// Single submitForm listener registered once at module load; dispatches to
+// the currently-open login dialog via this pointer. Avoids per-dialog
+// registration churn and the need for removeListener. See
+// app/joinMeetingDialog/index.js for the same pattern.
+let activeLoginHandler = null;
+let handlersRegistered = false;
+
+function ensureIpcHandlers() {
+  if (handlersRegistered) return;
+  handlersRegistered = true;
+  // Handle form submission for SSO/authentication workflows
+  ipcMain.on("submitForm", (_event, data) => {
+    activeLoginHandler?.(data);
+  });
+}
+
 exports.loginService = function loginService(parentWindow, callback) {
+  ensureIpcHandlers();
+
   let win = new BrowserWindow({
     width: 363,
     height: 124,
@@ -22,10 +40,13 @@ exports.loginService = function loginService(parentWindow, callback) {
     win.show();
   });
 
-  // Handle form submission for SSO/authentication workflows
-  ipcMain.on("submitForm", submitFormHandler(callback, win));
+  activeLoginHandler = (data) => {
+    callback(data.username, data.password);
+    win.close();
+  };
 
   win.on("closed", () => {
+    activeLoginHandler = null;
     win = null;
   });
 
@@ -64,10 +85,3 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(
     }
   });
 };
-
-function submitFormHandler(callback, win) {
-  return (_event, data) => {
-    callback(data.username, data.password);
-    win.close();
-  };
-}

@@ -238,6 +238,42 @@ if (gotTheLock) {
       canGoForward: webContents?.navigationHistory?.canGoForward() || false,
     };
   });
+
+  // Log renderer-side unhandled promise rejections
+  ipcMain.on("unhandled-rejection", (_event, errorData) => {
+    // Payload is constructed and length-capped in app/browser/preload.js;
+    // prior to this handler + the ipcValidator allowlist entry these
+    // messages were silently dropped.
+    try {
+      console.error("[Renderer] Unhandled rejection:", {
+        message: errorData?.message || "unknown",
+        stack: errorData?.stack || null,
+        timestamp: errorData?.timestamp || Date.now(),
+      });
+    } catch (err) {
+      console.error("[Renderer] Failed to log unhandled-rejection:", err);
+    }
+  });
+
+  // Log renderer-side uncaught window errors
+  ipcMain.on("window-error", (_event, errorData) => {
+    try {
+      // Strip any query string — Teams CDN URLs can carry auth tokens
+      const filename = typeof errorData?.filename === "string"
+        ? errorData.filename.split("?")[0]
+        : "";
+      console.error("[Renderer] Window error:", {
+        message: errorData?.message || "unknown",
+        filename,
+        lineno: errorData?.lineno || 0,
+        colno: errorData?.colno || 0,
+        errorStack: errorData?.errorStack || null,
+        timestamp: errorData?.timestamp || Date.now(),
+      });
+    } catch (err) {
+      console.error("[Renderer] Failed to log window-error:", err);
+    }
+  });
 } else {
   console.info("App already running");
   app.quit();
