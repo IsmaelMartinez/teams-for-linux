@@ -297,7 +297,7 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 function sanitizeRendererLogField(value, fallback = null) {
   if (typeof value !== "string") return fallback;
 
-  const redacted = value.replace(
+  const redacted = value.replaceAll(
     /(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#)'"<>]+)[?#][^\s)'"<>]*/gi,
     "$1[redacted]",
   );
