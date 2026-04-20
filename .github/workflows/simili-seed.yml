@@ -14,24 +14,33 @@ jobs:
     permissions:
       contents: read
       issues: read
+    env:
+      SIMILI_VERSION: v0.2.0-rc.1
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - name: Install gh simili extension
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh extension install similigh/simili-bot
+      - name: Download simili CLI binary
+        run: |
+          TARBALL="simili-bot_${SIMILI_VERSION#v}_linux_amd64.tar.gz"
+          curl -sfL -o /tmp/simili.tar.gz \
+            "https://github.com/similigh/simili-bot/releases/download/${SIMILI_VERSION}/${TARBALL}"
+          tar -xzf /tmp/simili.tar.gz -C /tmp
+          ls /tmp | grep -i simili
+          chmod +x /tmp/simili || chmod +x /tmp/simili-bot
+          (test -x /tmp/simili && sudo mv /tmp/simili /usr/local/bin/simili) \
+            || sudo mv /tmp/simili-bot /usr/local/bin/simili
+          simili --help | head -3
 
       - name: Bulk-index closed issues into Qdrant
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           QDRANT_URL: ${{ secrets.QDRANT_URL }}
           QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
           LIMIT: ${{ inputs.limit }}
         run: |
           if [ -n "$LIMIT" ]; then
-            gh simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5 --limit "$LIMIT"
+            simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5 --limit "$LIMIT"
           else
-            gh simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5
+            simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5
           fi
