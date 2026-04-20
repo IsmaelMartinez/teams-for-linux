@@ -249,7 +249,7 @@ if (gotTheLock) {
       console.error("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
-        timestamp: errorData?.timestamp || Date.now(),
+        timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
@@ -262,10 +262,10 @@ if (gotTheLock) {
       console.error("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
-        lineno: errorData?.lineno || 0,
-        colno: errorData?.colno || 0,
+        lineno: toFiniteNumber(errorData?.lineno, 0),
+        colno: toFiniteNumber(errorData?.colno, 0),
         errorStack: sanitizeRendererLogField(errorData?.errorStack),
-        timestamp: errorData?.timestamp || Date.now(),
+        timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
     } catch (err) {
       console.error("[Renderer] Failed to log window-error:", err);
@@ -305,6 +305,20 @@ function sanitizeRendererLogField(value, fallback = null) {
   return redacted.length > MAX_RENDERER_LOG_FIELD_LENGTH
     ? `${redacted.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
     : redacted;
+}
+
+/**
+ * Coerces a renderer-supplied scalar to a finite number, falling back to a
+ * caller-supplied default for anything non-numeric or NaN/Infinity. Prevents
+ * arbitrary objects or strings from leaking into main-process logs via the
+ * error-forwarding IPC channels.
+ *
+ * @param {unknown} value - The field value to coerce.
+ * @param {number} fallback - Value returned when `value` isn't a finite number.
+ * @returns {number}
+ */
+function toFiniteNumber(value, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 /**
