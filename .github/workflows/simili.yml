@@ -1,0 +1,26 @@
+name: Simili Issue Triage (trial)
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: similigh/simili-bot@main
+        with:
+          config_path: .github/simili.yaml
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
