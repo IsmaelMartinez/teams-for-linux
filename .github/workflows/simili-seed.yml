@@ -1,0 +1,37 @@
+name: Seed simili-bot Qdrant index
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Maximum issues to index (blank = all)"
+        required: false
+        default: ""
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install gh simili extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install similigh/simili-bot
+
+      - name: Bulk-index closed issues into Qdrant
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          if [ -n "$LIMIT" ]; then
+            gh simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5 --limit "$LIMIT"
+          else
+            gh simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5
+          fi
