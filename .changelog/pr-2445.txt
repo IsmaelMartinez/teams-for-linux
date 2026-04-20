@@ -1,0 +1,1 @@
+Add MQTT implementation plan for incoming call events - by @IsmaelMartinez (#2445)
