@@ -3,8 +3,8 @@ name: Seed simili-bot Qdrant index
 on:
   workflow_dispatch:
     inputs:
-      limit:
-        description: "Maximum issues to index (blank = all)"
+      since:
+        description: "Start from issue number or ISO timestamp (blank = all)"
         required: false
         default: ""
 
@@ -26,21 +26,20 @@ jobs:
             "https://github.com/similigh/simili-bot/releases/download/${SIMILI_VERSION}/${TARBALL}"
           tar -xzf /tmp/simili.tar.gz -C /tmp
           ls /tmp | grep -i simili
-          chmod +x /tmp/simili || chmod +x /tmp/simili-bot
           (test -x /tmp/simili && sudo mv /tmp/simili /usr/local/bin/simili) \
-            || sudo mv /tmp/simili-bot /usr/local/bin/simili
+            || (test -x /tmp/simili-bot && sudo mv /tmp/simili-bot /usr/local/bin/simili)
           simili --help | head -3
 
-      - name: Bulk-index closed issues into Qdrant
+      - name: Bulk-index issues into Qdrant
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           QDRANT_URL: ${{ secrets.QDRANT_URL }}
           QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
-          LIMIT: ${{ inputs.limit }}
+          SINCE: ${{ inputs.since }}
         run: |
-          if [ -n "$LIMIT" ]; then
-            simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5 --limit "$LIMIT"
-          else
-            simili index --repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5
+          ARGS="--repo IsmaelMartinez/teams-for-linux --config .github/simili.yaml --workers 5 --include-prs=false"
+          if [ -n "$SINCE" ]; then
+            ARGS="$ARGS --since $SINCE"
           fi
+          simili index $ARGS
