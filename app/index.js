@@ -145,16 +145,11 @@ if (gotTheLock) {
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
 
-  // IPC Security: Add validation wrappers for all IPC handlers
+  // IPC Security: wrap handler-registration methods so every renderer-initiated
+  // IPC call is validated against the allowlist in app/security/ipcValidator.js.
   const originalIpcHandle = ipcMain.handle.bind(ipcMain);
   const originalIpcOn = ipcMain.on.bind(ipcMain);
-  const originalIpcRemoveListener = ipcMain.removeListener.bind(ipcMain);
-
-  // Maps each caller-supplied `.on` handler to the per-channel validation
-  // wrapper that is actually registered on EventEmitter. Without this,
-  // `ipcMain.removeListener(channel, originalHandler)` is a no-op because the
-  // emitter's identity check never matches the anonymous wrapper. See #2436.
-  const ipcOnWrappers = new WeakMap();
+  const originalIpcOnce = ipcMain.once.bind(ipcMain);
 
   ipcMain.handle = (channel, handler) => {
     return originalIpcHandle(channel, (event, ...args) => {
@@ -167,35 +162,24 @@ if (gotTheLock) {
   };
 
   ipcMain.on = (channel, handler) => {
-    const wrappedHandler = (event, ...args) => {
+    return originalIpcOn(channel, (event, ...args) => {
       if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected event for channel: ${channel}`);
         return;
       }
       return handler(event, ...args);
-    };
-
-    let channelsToWrappers = ipcOnWrappers.get(handler);
-    if (!channelsToWrappers) {
-      channelsToWrappers = new Map();
-      ipcOnWrappers.set(handler, channelsToWrappers);
-    }
-    channelsToWrappers.set(channel, wrappedHandler);
-
-    return originalIpcOn(channel, wrappedHandler);
+    });
   };
 
-  ipcMain.removeListener = (channel, handler) => {
-    const channelsToWrappers = ipcOnWrappers.get(handler);
-    const wrappedHandler = channelsToWrappers?.get(channel);
-    if (wrappedHandler) {
-      channelsToWrappers.delete(channel);
-      return originalIpcRemoveListener(channel, wrappedHandler);
-    }
-    return originalIpcRemoveListener(channel, handler);
+  ipcMain.once = (channel, handler) => {
+    return originalIpcOnce(channel, (event, ...args) => {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+        console.error(`[IPC Security] Rejected event for channel: ${channel}`);
+        return;
+      }
+      return handler(event, ...args);
+    });
   };
-
-  ipcMain.off = ipcMain.removeListener;
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
