@@ -243,11 +243,12 @@ if (gotTheLock) {
   ipcMain.on("unhandled-rejection", (_event, errorData) => {
     // Payload is constructed and length-capped in app/browser/preload.js;
     // prior to this handler + the ipcValidator allowlist entry these
-    // messages were silently dropped.
+    // messages were silently dropped. Fields are run through
+    // sanitizeRendererLogField to scrub URL query strings before logging.
     try {
       console.error("[Renderer] Unhandled rejection:", {
-        message: errorData?.message || "unknown",
-        stack: errorData?.stack || null,
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
+        stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: errorData?.timestamp || Date.now(),
       });
     } catch (err) {
@@ -258,16 +259,12 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      // Strip any query string — Teams CDN URLs can carry auth tokens
-      const filename = typeof errorData?.filename === "string"
-        ? errorData.filename.split("?")[0]
-        : "";
       console.error("[Renderer] Window error:", {
-        message: errorData?.message || "unknown",
-        filename,
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
+        filename: sanitizeRendererLogField(errorData?.filename, "") || "",
         lineno: errorData?.lineno || 0,
         colno: errorData?.colno || 0,
-        errorStack: errorData?.errorStack || null,
+        errorStack: sanitizeRendererLogField(errorData?.errorStack),
         timestamp: errorData?.timestamp || Date.now(),
       });
     } catch (err) {
@@ -283,6 +280,31 @@ function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
   app.exit();
+}
+
+const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
+
+/**
+ * Sanitizes a renderer-supplied log string before it hits main-process logs.
+ * Strips the query string / fragment from any URL in the value (Teams CDN
+ * URLs can carry cache-busting or auth tokens) and length-caps the result.
+ * Non-strings fall back to the supplied fallback.
+ *
+ * @param {unknown} value - The field value to sanitize.
+ * @param {any} fallback - Value to return when `value` is not a string.
+ * @returns {string|any} - Sanitized string, or `fallback` for non-strings.
+ */
+function sanitizeRendererLogField(value, fallback = null) {
+  if (typeof value !== "string") return fallback;
+
+  const redacted = value.replace(
+    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#)'"<>]+)[?#][^\s)'"<>]*/gi,
+    "$1[redacted]",
+  );
+
+  return redacted.length > MAX_RENDERER_LOG_FIELD_LENGTH
+    ? `${redacted.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
+    : redacted;
 }
 
 /**
