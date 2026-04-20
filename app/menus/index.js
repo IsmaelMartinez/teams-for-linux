@@ -300,12 +300,52 @@ class Menus {
 
   joinMeetingWithUrl(meetingUrl) {
     try {
-      this.window.webContents.loadURL(meetingUrl);
+      // Snapshot the current Teams URL so the user can jump back after the
+      // meeting ends (see #2322). When an org forces anonymous/guest join,
+      // Teams' post-meeting screen is a full-page takeover with no sidebar.
+      this.preJoinUrl = this.window.webContents.getURL();
+
+      // Navigate inside the loaded Teams SPA (same-origin) so the app shell
+      // is preserved when the org allows authenticated join. For enforced
+      // anonymous joins this still gets taken over, which is why we also
+      // expose the "Return to Teams" menu item.
+      const script = `(() => {
+        try {
+          const incoming = new URL(${JSON.stringify(meetingUrl)});
+          const target = window.location.origin + incoming.pathname + incoming.search + incoming.hash;
+          window.location.assign(target);
+        } catch (e) {
+          window.location.assign(${JSON.stringify(meetingUrl)});
+        }
+      })();`;
+      this.window.webContents.executeJavaScript(script, true);
       this.window.show();
       this.window.focus();
     } catch (error) {
       console.error('Error loading meeting URL:', error);
       dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
+    }
+  }
+
+  returnToTeams() {
+    const fallbackUrl = this.configGroup.startupConfig.url;
+    const target = this.#isValidTeamsUrl(this.preJoinUrl)
+      ? this.preJoinUrl
+      : fallbackUrl;
+    this.window.webContents.loadURL(target, {
+      userAgent: this.configGroup.startupConfig.chromeUserAgent,
+    });
+    this.window.show();
+    this.window.focus();
+  }
+
+  #isValidTeamsUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    try {
+      const host = new URL(url).hostname;
+      return /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(host);
+    } catch {
+      return false;
     }
   }
 

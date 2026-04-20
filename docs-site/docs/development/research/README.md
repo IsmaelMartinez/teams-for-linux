@@ -30,6 +30,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Completes original request from #1938 (@vbartik's RGB LED home automation)
   - **Status:** Research complete, ready for implementation (depends on PR #2299 merged)
 
+### First Iteration Shipped — Awaiting Feedback
+
+- **[Join Meeting Window Takeover Research](join-meeting-window-takeover-research.md)** — "Join Meeting" replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322))
+  - First iteration: same-origin deep-link navigation + `Return to Teams` menu item
+  - Caveat: authenticated-org path not verifiable locally; some takeovers are Microsoft-enforced
+  - Follow-ups: navigation-event auto-return, dedicated meeting window, keyboard accelerator
+
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
