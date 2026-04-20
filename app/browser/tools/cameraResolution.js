@@ -156,9 +156,12 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
     "applyConstraints",
     function (original) {
       return function applyConstraints(constraints) {
-        // Only modify if this is a video track
-        if (this.kind === "video") {
-          // Wrap in a constraints-like object for the modifier function
+        // Only modify camera tracks. Screen-share tracks (from getDisplayMedia
+        // or getUserMedia with chromeMediaSource:desktop) expose displaySurface
+        // in their settings; the constraints payload at this point no longer
+        // carries chromeMediaSource, so the skip-check in modifyVideoConstraints
+        // can't tell them apart. Filter on the track itself instead.
+        if (this.kind === "video" && !this.getSettings?.().displaySurface) {
           const wrappedConstraints = { video: constraints };
           modifyVideoConstraints(wrappedConstraints);
           constraints = wrappedConstraints.video;
