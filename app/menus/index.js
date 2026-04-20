@@ -19,6 +19,8 @@ const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
+  #preJoinUrl = null;
+
   constructor(window, configGroup, iconPath, connectionManager) {
     this.window = window;
     this.iconPath = iconPath;
@@ -298,45 +300,69 @@ class Menus {
     });
   }
 
-  joinMeetingWithUrl(meetingUrl) {
+  async joinMeetingWithUrl(meetingUrl) {
     try {
       // Snapshot the current Teams URL so the user can jump back after the
-      // meeting ends (see #2322). When an org forces anonymous/guest join,
-      // Teams' post-meeting screen is a full-page takeover with no sidebar.
-      this.preJoinUrl = this.window.webContents.getURL();
+      // meeting ends (see #2322). Skip the snapshot if we're already on a
+      // meeting URL (e.g. a prior takeover page) so repeat joins don't
+      // overwrite the last known good Teams location.
+      const currentUrl = this.window.webContents.getURL();
+      if (!this.#isMeetingUrl(currentUrl)) {
+        this.#preJoinUrl = currentUrl;
+      }
 
       // Navigate inside the loaded Teams SPA (same-origin) so the app shell
-      // is preserved when the org allows authenticated join. For enforced
-      // anonymous joins this still gets taken over, which is why we also
-      // expose the "Return to Teams" menu item.
+      // is preserved when the org allows authenticated join. Only rewrite
+      // to the current origin if we're actually on a Teams page; otherwise
+      // (login page, error page) fall through to the original URL.
+      const useSameOrigin = this.#isValidTeamsUrl(currentUrl);
       const script = `(() => {
         try {
           const incoming = new URL(${JSON.stringify(meetingUrl)});
-          const target = window.location.origin + incoming.pathname + incoming.search + incoming.hash;
+          const target = ${JSON.stringify(useSameOrigin)}
+            ? window.location.origin + incoming.pathname + incoming.search + incoming.hash
+            : incoming.href;
           window.location.assign(target);
         } catch (e) {
           window.location.assign(${JSON.stringify(meetingUrl)});
         }
       })();`;
-      this.window.webContents.executeJavaScript(script, true);
       this.window.show();
       this.window.focus();
-    } catch (error) {
-      console.error('Error loading meeting URL:', error);
+      await this.window.webContents.executeJavaScript(script, true);
+    } catch {
+      // Avoid logging the error object: URL query parameters may contain tokens.
+      console.error('[JOIN_MEETING] Failed to navigate to meeting URL');
       dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
     }
   }
 
-  returnToTeams() {
+  async returnToTeams() {
     const fallbackUrl = this.configGroup.startupConfig.url;
-    const target = this.#isValidTeamsUrl(this.preJoinUrl)
-      ? this.preJoinUrl
+    const target = this.#isValidTeamsUrl(this.#preJoinUrl)
+      ? this.#preJoinUrl
       : fallbackUrl;
-    this.window.webContents.loadURL(target, {
-      userAgent: this.configGroup.startupConfig.chromeUserAgent,
-    });
-    this.window.show();
-    this.window.focus();
+    try {
+      this.window.show();
+      this.window.focus();
+      await this.window.webContents.loadURL(target, {
+        userAgent: this.configGroup.startupConfig.chromeUserAgent,
+      });
+    } catch {
+      console.error('[RETURN_TO_TEAMS] Navigation failed');
+      dialog.showErrorBox('Error', 'Failed to return to Teams.');
+    }
+  }
+
+  #isMeetingUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    const pattern = this.configGroup.startupConfig.meetupJoinRegEx;
+    if (!pattern) return false;
+    try {
+      return new RegExp(pattern).test(url);
+    } catch {
+      return false;
+    }
   }
 
   #isValidTeamsUrl(url) {
