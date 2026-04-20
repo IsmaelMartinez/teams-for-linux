@@ -317,7 +317,7 @@ Follow the format already used for other topics there.
 
 - [ ] **Step 3: Update roadmap**
 
-In `docs-site/docs/development/plan/roadmap.md` find the sentence that currently reads "A feature request for incoming call MQTT topics ([#2370](...)) has been filed." Replace with a phrased note that Phase 1 (boolean topic, parity with `incomingCallCommand`) has shipped and Phase 2 (calendar-driven meeting-starting) is awaiting user confirmation.
+In `docs-site/docs/development/plan/roadmap.md` find the sentence referencing the incoming-call MQTT topics feature request (#2370) and replace it with a phrased note that Phase 1 (boolean topic, parity with `incomingCallCommand`) has shipped and Phase 2 (calendar-driven meeting-starting) is awaiting user confirmation.
 
 Also bump the `Last Updated` date at the top.
 
