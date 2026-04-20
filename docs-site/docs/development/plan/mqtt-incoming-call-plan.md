@@ -1,6 +1,8 @@
 # MQTT Incoming Call & Meeting-Starting Topics Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+:::important For agentic workers
+REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+:::
 
 **Date:** 2026-04-20
 **Issue:** [#2370 - Add incoming call(s) of any kind into MQTT](https://github.com/IsmaelMartinez/teams-for-linux/issues/2370)
@@ -16,7 +18,7 @@
 
 In scope for Phase 1: MQTT publish parity with `incomingCallCommand` — any event that fires `incoming-call-created` in the renderer fires `{topicPrefix}/incoming-call = "true"`, paired with `"false"` on `incoming-call-ended`. In scope for Phase 2: calendar-driven prediction of scheduled meetings starting.
 
-Out of scope: detecting scheduled-meeting-started via Teams events (known to not fire `isIncomingCall`); distinguishing 1:1 vs group vs channel invite in the payload; caller name or meeting subject in payload (YAGNI, privacy). Retained until a second user requests them.
+Out of scope: detecting scheduled-meeting-started via Teams events (known not to fire `isIncomingCall`); distinguishing 1:1 vs group vs channel invite in the payload; caller name or meeting subject in payload (YAGNI, privacy). Retained until a second user requests them.
 
 Crash recovery: relies on existing LWT (`{topicPrefix}/connected = "false"`). Home Assistant consumers must treat `connected=false` as an implicit reset for all stateful topics. This is already documented and consistent with other topics.
 
@@ -24,7 +26,7 @@ Crash recovery: relies on existing LWT (`{topicPrefix}/connected = "false"`). Ho
 
 ## File Structure
 
-```
+```text
 app/
   mainAppWindow/
     browserWindowManager.js    # MODIFY: emit app-level events from incoming-call handlers
@@ -392,7 +394,7 @@ cat .changelog/pr-2406.txt
 
 - [ ] **Step 2: Create file matching the format, e.g.**
 
-```
+```text
 - Added `{topicPrefix}/incoming-call` MQTT topic for home automation integration. Fires `"true"` on ring and `"false"` when the ring ends, parity with `incomingCallCommand`. (#2370)
 ```
 
@@ -465,6 +467,12 @@ git commit -m "feat(mqtt): add mqtt.meetingStarting config defaults"
 // tests/unit/calendarPollingService.test.js
 const { test } = require('node:test');
 const assert = require('node:assert');
+const { EventEmitter } = require('node:events');
+
+// Minimal mock: stub `electron` module BEFORE requiring the service
+const mockApp = new EventEmitter();
+require.cache[require.resolve('electron')] = { exports: { app: mockApp } };
+
 const CalendarPollingService = require('../../app/mqtt/calendarPollingService');
 
 test('publishes true when a cached event enters the lead-time window', async () => {
@@ -489,7 +497,7 @@ test('publishes true when a cached event enters the lead-time window', async () 
   });
 
   await service.refreshCache();
-  service.tick(now);
+  await service.tick(now);
 
   const hit = published.find((p) => p.t === 'teams/meeting-starting' && p.p === 'true');
   assert.ok(hit, 'expected meeting-starting=true publish');
@@ -510,9 +518,9 @@ test('does not republish the same event while still in its window', async () => 
   });
 
   await service.refreshCache();
-  service.tick(now);
-  service.tick(now + 5_000);
-  service.tick(now + 10_000);
+  await service.tick(now);
+  await service.tick(now + 5_000);
+  await service.tick(now + 10_000);
 
   const trueHits = published.filter((p) => p.t === 'teams/meeting-starting' && p.p === 'true');
   assert.strictEqual(trueHits.length, 1);
@@ -533,8 +541,8 @@ test('publishes false after event start + grace period passes', async () => {
   });
 
   await service.refreshCache();
-  service.tick(now);                    // enters window, publishes true
-  service.tick(now + 60_000 + 61_000);  // 1s past start+grace, should publish false
+  await service.tick(now);                    // enters window, publishes true
+  await service.tick(now + 60_000 + 61_000);  // 1s past start+grace, should publish false
 
   const falseHit = published.find((p) => p.t === 'teams/meeting-starting' && p.p === 'false');
   assert.ok(falseHit, 'expected meeting-starting=false publish after grace period');
@@ -584,7 +592,10 @@ class CalendarPollingService {
       () => this.refreshCache().catch((err) => console.error('[CalendarPolling] refresh failed', { message: err.message })),
       this.#config.pollIntervalSeconds * 1000
     );
-    this.#tickTimer = setInterval(() => this.tick(Date.now()), 15_000);
+    this.#tickTimer = setInterval(
+      () => this.tick(Date.now()).catch((err) => console.error('[CalendarPolling] tick failed', { message: err.message })),
+      15_000
+    );
     app.on('before-quit', () => this.stop());
     console.info('[CalendarPolling] Started');
   }
@@ -607,14 +618,15 @@ class CalendarPollingService {
       .sort((a, b) => a.startMs - b.startMs);
   }
 
-  tick(nowMs) {
+  async tick(nowMs) {
     const leadMs = this.#config.leadTimeSeconds * 1000;
     const graceMs = 60_000;
 
     if (this.#activeEventId) {
       const active = this.#cache.find((e) => e.id === this.#activeEventId);
-      if (!active || nowMs > active.startMs + graceMs) {
-        this.#publish('false');
+      // Clear if meeting deleted, grace period passed, or rescheduled out of the lead window
+      if (!active || nowMs > active.startMs + graceMs || active.startMs - nowMs > leadMs) {
+        await this.#publish('false');
         this.#activeEventId = null;
       }
       return;
@@ -623,7 +635,7 @@ class CalendarPollingService {
     const imminent = this.#cache.find((e) => e.startMs - nowMs <= leadMs && e.startMs - nowMs > -graceMs);
     if (imminent) {
       this.#activeEventId = imminent.id;
-      this.#publish('true');
+      await this.#publish('true');
     }
   }
 
@@ -767,7 +779,7 @@ git commit -m "docs(mqtt): document meeting-starting topic and config"
 
 - [ ] **Step 1: Create changelog entry**
 
-```
+```text
 - Added `{topicPrefix}/meeting-starting` MQTT topic. Fires `"true"` when a scheduled calendar meeting enters the lead-time window and `"false"` after the start time passes. Requires `mqtt.meetingStarting.enabled` and `graphApi.enabled`. (#2370)
 ```
 
