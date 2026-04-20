@@ -15,9 +15,9 @@ jobs:
       id-token: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - uses: similigh/simili-bot@main
+      - uses: similigh/simili-bot@fd948411e6d3949268a04ff96aa804ffcdbae15a  # main 2026-04-20
         with:
           config_path: .github/simili.yaml
         env:
