@@ -84,6 +84,17 @@ config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 CommandLineManager.addSwitchesAfterConfigLoad(config);
 
+// ADR-020: multi-account is mutually exclusive with Intune MAM.
+// The Linux D-Bus Microsoft Identity Broker has undocumented behavior
+// around concurrent enrollments for different UPNs on one machine, so
+// force multi-account off when both flags are true at startup.
+if (config.multiAccount?.enabled && config.auth?.intune?.enabled) {
+  console.warn(
+    "[MultiAccount] auth.intune.enabled is true; multi-account is not supported in this configuration and will be disabled for this session."
+  );
+  config.multiAccount.enabled = false;
+}
+
 let userStatus = -1;
 let mqttClient = null;
 let mqttMediaStatusService = null;
