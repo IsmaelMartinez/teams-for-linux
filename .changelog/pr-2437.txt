@@ -1,0 +1,2 @@
+Fix: Prevent camera resolution override from blurring screen shares - by @IsmaelMartinez (#2437)
+closes: #2432 https://github.com/IsmaelMartinez/teams-for-linux/issues/2432 [Bug]: Camera resolution override applied to screen share stream, causing blurry/low-res screen sharing
