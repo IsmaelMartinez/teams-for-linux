@@ -145,9 +145,11 @@ if (gotTheLock) {
   app.on("browser-window-focus", handleGlobalShortcutDisabled);
   app.on("browser-window-blur", handleGlobalShortcutDisabledRevert);
 
-  // IPC Security: Add validation wrappers for all IPC handlers
+  // IPC Security: wrap handler-registration methods so every renderer-initiated
+  // IPC call is validated against the allowlist in app/security/ipcValidator.js.
   const originalIpcHandle = ipcMain.handle.bind(ipcMain);
   const originalIpcOn = ipcMain.on.bind(ipcMain);
+  const originalIpcOnce = ipcMain.once.bind(ipcMain);
 
   ipcMain.handle = (channel, handler) => {
     return originalIpcHandle(channel, (event, ...args) => {
@@ -161,6 +163,16 @@ if (gotTheLock) {
 
   ipcMain.on = (channel, handler) => {
     return originalIpcOn(channel, (event, ...args) => {
+      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+        console.error(`[IPC Security] Rejected event for channel: ${channel}`);
+        return;
+      }
+      return handler(event, ...args);
+    });
+  };
+
+  ipcMain.once = (channel, handler) => {
+    return originalIpcOnce(channel, (event, ...args) => {
       if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected event for channel: ${channel}`);
         return;
