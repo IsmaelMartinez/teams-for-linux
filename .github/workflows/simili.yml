@@ -2,9 +2,11 @@ name: Simili Issue Triage (trial)
 
 on:
   issues:
-    types: [opened, edited, reopened, labeled]
-  issue_comment:
-    types: [created]
+    types: [opened, reopened]
+
+concurrency:
+  group: simili-${{ github.event.issue.number }}
+  cancel-in-progress: true
 
 jobs:
   process:
