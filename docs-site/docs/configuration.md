@@ -244,7 +244,7 @@ Opt-in configuration for the single-window multi-tenant account switcher:
 |--------|------|---------|-------------|
 | `multiAccount.enabled` | `boolean` | `false` | Opt-in flag for the multi-account profile switcher. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design. |
 
-**Mutual exclusion with Intune SSO:** If both `multiAccount.enabled` and `auth.intune.enabled` are `true` at startup, the app logs a warning and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
+**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and Intune SSO is enabled via either `auth.intune.enabled` or the legacy `ssoInTuneEnabled` flag, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
 
 ### Network & Proxy
 
