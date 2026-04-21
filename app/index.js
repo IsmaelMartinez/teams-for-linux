@@ -238,6 +238,39 @@ if (gotTheLock) {
       canGoForward: webContents?.navigationHistory?.canGoForward() || false,
     };
   });
+
+  // Log renderer-side unhandled promise rejections
+  ipcMain.on("unhandled-rejection", (_event, errorData) => {
+    // Payload is constructed and length-capped in app/browser/preload.js;
+    // prior to this handler + the ipcValidator allowlist entry these
+    // messages were silently dropped. Fields are run through
+    // sanitizeRendererLogField to scrub URL query strings before logging.
+    try {
+      console.error("[Renderer] Unhandled rejection:", {
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
+        stack: sanitizeRendererLogField(errorData?.stack),
+        timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
+      });
+    } catch (err) {
+      console.error("[Renderer] Failed to log unhandled-rejection:", err);
+    }
+  });
+
+  // Log renderer-side uncaught window errors
+  ipcMain.on("window-error", (_event, errorData) => {
+    try {
+      console.error("[Renderer] Window error:", {
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
+        filename: sanitizeRendererLogField(errorData?.filename, "") || "",
+        lineno: toFiniteNumber(errorData?.lineno, 0),
+        colno: toFiniteNumber(errorData?.colno, 0),
+        errorStack: sanitizeRendererLogField(errorData?.errorStack),
+        timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
+      });
+    } catch (err) {
+      console.error("[Renderer] Failed to log window-error:", err);
+    }
+  });
 } else {
   console.info("App already running");
   app.quit();
@@ -247,6 +280,45 @@ function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
   app.exit();
+}
+
+const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
+
+/**
+ * Sanitizes a renderer-supplied log string before it hits main-process logs.
+ * Strips the query string / fragment from any URL in the value (Teams CDN
+ * URLs can carry cache-busting or auth tokens) and length-caps the result.
+ * Non-strings fall back to the supplied fallback.
+ *
+ * @param {unknown} value - The field value to sanitize.
+ * @param {any} fallback - Value to return when `value` is not a string.
+ * @returns {string|any} - Sanitized string, or `fallback` for non-strings.
+ */
+function sanitizeRendererLogField(value, fallback = null) {
+  if (typeof value !== "string") return fallback;
+
+  const redacted = value.replaceAll(
+    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#)'"<>]+)[?#][^\s)'"<>]*/gi,
+    "$1[redacted]",
+  );
+
+  return redacted.length > MAX_RENDERER_LOG_FIELD_LENGTH
+    ? `${redacted.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
+    : redacted;
+}
+
+/**
+ * Coerces a renderer-supplied scalar to a finite number, falling back to a
+ * caller-supplied default for anything non-numeric or NaN/Infinity. Prevents
+ * arbitrary objects or strings from leaking into main-process logs via the
+ * error-forwarding IPC channels.
+ *
+ * @param {unknown} value - The field value to coerce.
+ * @param {number} fallback - Value returned when `value` isn't a finite number.
+ * @returns {number}
+ */
+function toFiniteNumber(value, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 /**

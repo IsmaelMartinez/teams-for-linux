@@ -89,7 +89,11 @@ const allowedChannels = new Set([
 
   // Quick Chat modal
   'quick-chat:show',
-  'quick-chat:hide'
+  'quick-chat:hide',
+
+  // Renderer-side error forwarding (registered in app/browser/preload.js)
+  'unhandled-rejection',
+  'window-error'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
