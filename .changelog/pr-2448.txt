@@ -1,0 +1,1 @@
+Fix: Prevent duplicate simili-bot comments on issues and PRs - by @IsmaelMartinez (#2448)
