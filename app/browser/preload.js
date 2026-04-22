@@ -297,8 +297,10 @@ function createCustomNotification(title, options) {
     options.icon = options.icon || ICON_BASE64;
     options.title = options.title || title;
     options.type = options.type || "new-message";
-    // Explicitly set false for Ubuntu Unity DE auto-close. Others are unaffected.
-    options.requireInteraction = false;
+    // Historically hard-coded to false for Ubuntu Unity auto-close. Now
+    // configurable so users on GNOME and similar can opt into persistent
+    // notifications in the notification center (issue #2411).
+    options.requireInteraction = notificationConfig?.requireInteraction === true;
 
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
