@@ -6,14 +6,18 @@
 
 ## Context
 
-Since v2.7.4, Teams for Linux forces X11 rendering mode via `--ozone-platform=x11` baked into `executableArgs` in `package.json`. This decision was made to sidestep severe Electron 38+ native Wayland regressions (blank/black windows, window sizing bugs, screen-sharing failures).
+Since v2.7.4, Teams for Linux forces X11 rendering mode via `--ozone-platform=x11` baked into `executableArgs` in `package.json`. This was necessary because Electron 38 changed its own upstream default to auto-detect the display server, which routed Wayland users into a native Wayland backend that had severe regressions (blank/black windows, window sizing bugs, screen-sharing failures). The fix was to override Electron's auto-detection and force X11 for all users.
 
-With v2.8.0 bumping to Electron 41.2.0 (Chromium 146, Node.js 24), upstream Ozone/Wayland improvements may have resolved the blockers. This research evaluates whether Teams for Linux should:
+With v2.8.0 bumping to Electron 41.2.0 (Chromium 146, Node.js 24), upstream Ozone/Wayland improvements may have fixed the underlying rendering bugs that made auto-detection dangerous. This research evaluates whether Teams for Linux should:
 
 1. Keep the forced X11 default (status quo)
 2. Ship separate X11 and Wayland builds
 3. Ship a single build with multiple `.desktop` launchers
-4. Switch the default to `--ozone-platform=auto` and let Electron detect
+4. Switch the default to `--ozone-platform=auto` and let Electron auto-detect again
+
+:::warning Breaking Change
+Switching to `auto` restores the same auto-detection behavior that Electron 38 introduced and that broke Wayland users. The bet is that Electron 41 fixed the backend bugs — same detection logic, hopefully fixed rendering. This changes default behavior for every Wayland user (window decorations, scaling, screen-sharing pipeline, GPU compositing path) and warrants a **new minor version (v2.9.0)**.
+:::
 
 ## Current State Analysis
 
@@ -239,6 +243,7 @@ More involved. Changes needed:
 | Version | Change | Rationale |
 |---------|--------|-----------|
 | pre-v2.7.4 | Ozone platform not explicitly set; Electron default | Worked acceptably on Electron 37 and earlier |
-| v2.7.4 | `--ozone-platform=x11` forced via `executableArgs` | Electron 38+ native Wayland regressions |
-| v2.8.0 | Electron 41.2.0 adopted; X11 default retained | Safer to keep during major dependency upgrade |
-| v2.9.0 (proposed) | Validate native Wayland, switch to `auto` if stable | Native Wayland improvements in Electron 41 |
+| v2.7.0 (Electron 38) | Electron changed its upstream default to auto-detect | Wayland users were silently routed into native Wayland rendering — broke with blank windows, resize bugs, screen-share failures |
+| v2.7.4 | `--ozone-platform=x11` forced via `executableArgs` | Reverted the Electron 38 auto-detect by overriding to X11 for all users |
+| v2.8.0 | Electron 41.2.0 adopted; X11 default retained | Safer to keep forced X11 during major dependency upgrade |
+| v2.9.0 (proposed) | Validate native Wayland, switch to `auto` if stable | Restores Electron's auto-detection, betting that Electron 41 fixed the backend bugs. Warrants a new minor version due to the behavioral change for all Wayland users |
