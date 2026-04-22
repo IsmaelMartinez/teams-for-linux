@@ -276,6 +276,12 @@ function createCustomNotification(title, options) {
       return { onclick: null, onclose: null, onerror: null };
     }
 
+    // DEBUG-ONLY: Diagnostic for issue #2367 follow-up. Capture the
+    // pre-sanitise title shape so a later log line can tell us whether
+    // the strip actually fired on this call. Remove once #2367 is closed.
+    const titleBeforeLen = typeof title === 'string' ? title.length : -1;
+    const titleHadPrefix = typeof title === 'string' && /^\(\d+\)\s+/.test(title);
+
     // Strip "(N) " unread-count prefix that Teams sometimes passes as the
     // notification title on the first notification after launch (issue #2367)
     if (typeof title === 'string' && title.startsWith('(')) {
@@ -291,6 +297,21 @@ function createCustomNotification(title, options) {
 
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
+
+    // DEBUG-ONLY: Diagnostic for issue #2367 follow-up. Shape-only view of
+    // title/body plus notification method, so we can disambiguate whether
+    // Teams is passing the unread count as the title (sanitiser fires) or
+    // as the body (different bug needing its own fix). No PII logged.
+    // Remove once #2367 is closed.
+    const bodyStr = options.body != null ? String(options.body) : '';
+    console.debug('[NOTIF_DIAG]', {
+      titleBeforeLen,
+      titleAfterLen: typeof title === 'string' ? title.length : -1,
+      titleHadPrefix,
+      bodyLength: bodyStr.length,
+      bodyIsPureDigits: /^\d+$/.test(bodyStr),
+      method,
+    });
 
     if (method === "custom") {
       return createCustomNotification(title, options);
