@@ -318,7 +318,7 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 **Description:** Calls exhibit audio or video lag on Wayland sessions. Teams for Linux auto-disables GPU composition on Wayland by default, forcing software encoding even on stacks that would otherwise handle hardware acceleration fine.
 
 **Potential Causes:**
-* The `[Wayland] Disabling GPU composition (default)` code path in `app/startup/commandLine.js` applies `--disable-gpu` on Wayland sessions unless explicitly overridden.
+* Teams for Linux automatically disables GPU composition on Wayland sessions by default to ensure stability, which can result in software-based rendering and increased lag during calls.
 
 **Solutions/Workarounds:**
 
