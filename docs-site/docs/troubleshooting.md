@@ -322,7 +322,7 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Solutions/Workarounds:**
 
-1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in `~/.config/teams-for-linux/config.json`:
+1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
     ```json
     {
       "disableGpu": false
