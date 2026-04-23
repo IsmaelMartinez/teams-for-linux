@@ -313,6 +313,25 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
+#### Issue: Audio/video lag during calls on Wayland
+
+**Description:** Calls exhibit audio or video lag on Wayland sessions. Teams for Linux auto-disables GPU composition on Wayland by default, forcing software encoding even on stacks that would otherwise handle hardware acceleration fine.
+
+**Potential Causes:**
+* The `[Wayland] Disabling GPU composition (default)` code path in `app/startup/commandLine.js` applies `--disable-gpu` on Wayland sessions unless explicitly overridden.
+
+**Solutions/Workarounds:**
+
+1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in `~/.config/teams-for-linux/config.json`:
+    ```json
+    {
+      "disableGpu": false
+    }
+    ```
+2. **Verify hardware acceleration** is active by opening `chrome://gpu` inside Teams for Linux (via the dev tools) and confirming the video decode/encode entries are hardware-accelerated.
+
+**Related GitHub Issues:** [#2410](https://github.com/IsmaelMartinez/teams-for-linux/issues/2410)
+
 :::note Important
 The `electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
