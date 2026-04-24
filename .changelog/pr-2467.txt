@@ -1,0 +1,1 @@
+Resume MQTT extended status for camera and microphone topics - by @IsmaelMartinez (#2467)

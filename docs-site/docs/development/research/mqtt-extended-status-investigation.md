@@ -157,9 +157,10 @@ publishToMqtt('teams/camera', String(data.camera));  // "true" as string
 Topics using existing `topicPrefix`:
 
 - `\{topicPrefix\}/connected` → `"true"` or `"false"` (uses MQTT LWT)
-- `\{topicPrefix\}/camera` → `"true"` or `"false"`
-- `\{topicPrefix\}/microphone` → `"true"` or `"false"`
+- `\{topicPrefix\}/camera` → `"true"` or `"false"` (Phase 2, pending)
+- `\{topicPrefix\}/microphone` → `"speaking"`, `"silent"`, `"muted"` or `"off"` (Phase 2, pending, schema from [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md))
 - `\{topicPrefix\}/in-call` → `"true"` or `"false"`
+- `\{topicPrefix\}/screen-sharing` → `"true"` or `"false"`
 
 ### Configuration
 
@@ -324,23 +325,28 @@ async publish(topic, payload, options = {}) {
 - [x] Publish connection state on connect/disconnect
 - [x] Document `{topicPrefix}/connected` topic
 
-### Phase 2: WebRTC Monitoring (Camera/Mic) - ⏸️ DEFERRED
+### Phase 2: WebRTC Monitoring (Camera/Mic) - 🔄 RESUMING
 
-**Status**: Deferred pending user feedback
+**Status**: Resumption triggered 2026-04-24 by issue [#2465](https://github.com/IsmaelMartinez/teams-for-linux/issues/2465). User requested the exact Phase 2 topics (`{topicPrefix}/microphone`, `{topicPrefix}/camera`) for Home Assistant and Stream Deck automation, which is the feedback #1938 was held open waiting for. Scoped but not yet scheduled.
 
-Phase 1 provides call state (`in-call`) and connection state (`connected`) via existing IPC events. Phase 2 would add camera and microphone state monitoring via WebRTC stream interception.
+Phase 1 provides call state (`in-call`), connection state (`connected`) and screen-sharing state via existing IPC events. Phase 2 adds camera and microphone state monitoring.
 
-**Deferral Reason**: Awaiting confirmation from user ([#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)) that the current Phase 1 implementation is insufficient for their RGB LED automation needs. Will implement Phase 2 only if user confirms they need granular camera/mic state in addition to call state.
+**Course correction (2026-03 → 2026-04):** The original plan used `getUserMedia` interception with `track.enabled` polling for both camera and mic. A first attempt on 2026-03-09 sent `microphone-state-changed` via that path but was stripped out the following day because `track.enabled` did not reflect Teams' mute state reliably. The microphone side has since been solved differently by the speaking indicator (PR #2299), which uses `RTCPeerConnection.getStats()` and the `media-source.audioLevel` stat. Teams zeros that stat to exactly 0.0 on mute, giving unambiguous three-state detection (speaking / silent / muted). The follow-up research for wiring that into MQTT lives in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md).
 
-**If/When Resumed:**
-- [ ] Create `app/browser/tools/mediaStatus.js`
-- [ ] Implement getUserMedia interceptor
-- [ ] Add screen sharing detection (reuse `isScreenShare` logic)
-- [ ] Implement hybrid track monitoring:
-  - [ ] Event listeners (mute/unmute/ended)
-  - [ ] Poll track.enabled (500ms interval)
-  - [ ] Cleanup intervals on track end
-- [ ] Update `preload.js` to load module
+The camera side still needs `getUserMedia` + `track.enabled` polling since there is no WebRTC stat equivalent for "camera off", and that approach has not been validated for camera specifically. Needs a short proof-of-concept before wiring to MQTT.
+
+**Scoped work:**
+
+Microphone (high confidence, research complete):
+- [ ] Wire `app/browser/tools/speakingIndicator.js` to emit `microphone-state-changed` on state transitions. Plan in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md). Published values are `speaking`, `silent`, `muted`, `off` (four-state, not boolean).
+- [x] `mqtt.enabled` force-activates the speaking indicator's WebRTC monitoring even when the visual overlay is off (shipped in PR #2406, see `app/browser/tools/speakingIndicator.js:50-56`).
+
+Camera (medium confidence, needs validation):
+- [ ] Proof-of-concept: does `track.enabled` on the camera's video track flip when the user clicks Teams' camera toggle? If not, investigate alternatives (track `mute`/`unmute` events, `getStats()` frame rate dropping to 0, `track.readyState`) before committing to a pattern.
+- [ ] If validated, create `app/browser/tools/mediaStatus.js` with `getUserMedia` interceptor + screen-share filtering (reuse `isScreenShare` from `injectedScreenSharing.js`) + `track.enabled` polling on video tracks only.
+- [ ] Wire `camera-state-changed` IPC from the browser tool.
+
+Note: a separate `{topicPrefix}/speaking` topic is not needed, since the `speaking` value on `{topicPrefix}/microphone` already carries that signal. Consumers who only care about active-speech can filter on that value.
 
 ### Phase 3: Documentation & Testing
 
@@ -367,10 +373,10 @@ Phase 1 provides call state (`in-call`) and connection state (`connected`) via e
    - New service following established pattern (like ScreenSharingService)
    - Uses private fields for encapsulation (#mqttClient, #topicPrefix)
    - Registers IPC listeners for:
-     - `call-connected` - Publishes "true" to `\{topicPrefix\}/in-call`
-     - `call-disconnected` - Publishes "false" to `\{topicPrefix\}/in-call`
-     - `camera-state-changed` - Publishes camera state to `\{topicPrefix\}/camera`
-     - `microphone-state-changed` - Publishes microphone state to `\{topicPrefix\}/microphone`
+     - `teams-call-connected` / `teams-call-disconnected` - Publishes `"true"` / `"false"` to `\{topicPrefix\}/in-call` (reliability fallback added in PR #2406 for popup hang-ups)
+     - `screen-sharing-started` / `screen-sharing-stopped` - Publishes `"true"` / `"false"` to `\{topicPrefix\}/screen-sharing`
+     - `camera-state-changed` - Handler in place, publishes to `\{topicPrefix\}/camera`. **No emitter yet**, pending Phase 2.
+     - `microphone-state-changed` - Handler in place, publishes to `\{topicPrefix\}/microphone`. **No emitter yet**, pending Phase 2.
    - Simple design: if MQTT enabled, publish all events
    - Only publishes actual known state changes (no assumptions about camera/mic on call end)
    - Proper error handling and logging
