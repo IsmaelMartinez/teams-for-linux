@@ -1,0 +1,2 @@
+Fix: Prevent mid-call reloads by narrowing auth recovery trigger. - by @IsmaelMartinez (#2460)
+closes: #2428 https://github.com/IsmaelMartinez/teams-for-linux/issues/2428 [Bug]: App refreshes during active calls.

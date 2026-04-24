@@ -441,7 +441,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // When Teams can't refresh tokens silently (e.g., after overnight idle),
   // it logs InteractionRequired. We detect this, clear stale auth state,
   // and reload to force a clean interactive login.
-  const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'AuthFailed'];
+  const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
   // Only trust auth failure signals from Teams/Microsoft origins
   const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
   let authRecoveryTriggered = false;
@@ -453,6 +453,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     // Verify the message originates from a trusted Microsoft source
     const sourceId = event.sourceId || '';
     if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
+
+    // Worker UPRs are frequently transient; only react to non-worker sources (#2428)
+    if (sourceId.includes('/worker/')) return;
 
     authRecoveryTriggered = true;
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
