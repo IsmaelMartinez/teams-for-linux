@@ -248,6 +248,65 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Related GitHub Issues:** [Issue #2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
 
+#### Issue: Security Key (FIDO2 / WebAuthn) sign-in fails on Linux
+
+**Description:** When signing in to Teams with a hardware security key (YubiKey, SoloKeys, Nitrokey, Feitian, etc.) on Linux, the login page spins indefinitely, shows an error, or no PIN dialog appears. macOS and Windows are unaffected.
+
+**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
+
+**Solutions/Workarounds:**
+
+1. Install `fido2-tools` on your system:
+    - Debian / Ubuntu: `sudo apt install fido2-tools`
+    - Fedora: `sudo dnf install fido2-tools`
+    - Arch: `sudo pacman -S libfido2`
+
+2. Enable the beta feature in `~/.config/teams-for-linux/config.json`:
+
+    ```json
+    {
+      "auth": {
+        "webauthn": {
+          "enabled": true
+        }
+      }
+    }
+    ```
+
+3. Plug your key in **before** triggering sign-in. The v1 implementation uses the first connected FIDO2 device. If you see a "No FIDO2 hardware device found" error, the key was not detected.
+
+4. Verify the key is visible to libfido2 from a terminal: `fido2-token -L`. If this says "permission denied" on `/dev/hidraw*`, your user is not in the correct group. libfido2 typically ships a udev rule; if it did not install or is missing, add your user to the group your distribution uses for HID access (often `plugdev` on Debian/Ubuntu, or install `libfido2-udev` if your package manager has it). Replug the key after fixing group membership.
+
+5. If the PIN dialog appears but sign-in still fails, enable debug logging and capture a fresh attempt:
+
+    ```json
+    {
+      "auth": {
+        "webauthn": {
+          "enabled": true,
+          "debug": true
+        }
+      },
+      "logConfig": {
+        "transports": {
+          "file": { "level": "debug" }
+        }
+      }
+    }
+    ```
+
+    Then tail the log during a sign-in attempt and attach the matching lines to the feedback thread:
+
+    ```sh
+    tail -F ~/.config/teams-for-linux/logs/main.log | grep -i webauthn
+    ```
+
+    Logs are scrubbed of credential IDs, challenges, user handles, PINs, and raw origins before writing. Origins appear as one of `login.microsoftonline.com | login.microsoft.com | login.live.com | other` and errors as coarse buckets (`NO_CREDENTIALS | BAD_PIN | TIMEOUT | CANCELLED | NOT_ALLOWED | SECURITY | INVALID | OTHER`).
+
+**Beta notes:** This feature is opt-in while hardware coverage is still being validated. The single-device restriction, assertion echo-offset heuristic, and PIN-prompt stderr detection are all areas under active validation. Please report hardware combinations (key model, Linux distribution, libfido2 version) that work or fail on the umbrella issue so we can plan the GA rollout.
+
+**Related GitHub Issues:** [Issue #802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802), [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357), [ADR 021](./development/adr/021-webauthn-fido2-linux.md).
+
 ---
 
 ### Notifications
