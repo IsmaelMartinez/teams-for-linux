@@ -313,6 +313,44 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
+#### Issue: Audio/video lag during calls on Wayland
+
+**Description:** Calls exhibit audio or video lag on Wayland sessions. Teams for Linux auto-disables GPU composition on Wayland by default, forcing software encoding even on stacks that would otherwise handle hardware acceleration fine.
+
+**Potential Causes:**
+* Teams for Linux automatically disables GPU composition on Wayland sessions by default to ensure stability, which can result in software-based rendering and increased lag during calls.
+
+**Solutions/Workarounds:**
+
+1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
+    ```json
+    {
+      "disableGpu": false
+    }
+    ```
+2. **Verify hardware acceleration** is active via **Debug → Open GPU Info** from the application menu (or `chrome://gpu` via DevTools), confirming the video decode/encode entries are hardware-accelerated.
+
+**Related GitHub Issues:** [#2410](https://github.com/IsmaelMartinez/teams-for-linux/issues/2410)
+
+#### Issue: Screen share receive fails or video glitches under Electron 41 (X11)
+
+**Description:** On X11 sessions, after upgrading to teams-for-linux 2.8.0 (which bumped Electron to 41), one-on-one incoming screen shares can fail to render or the shared video stays blank. The log typically contains `ERROR:gpu/command_buffer/service/shared_image/shared_image_manager.cc: SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.` emitted by the GPU process during the call. The symptom did not reproduce on teams-for-linux 2.7.13 (Electron 39). Reports on #2459 cover NVIDIA proprietary, AMD Radeon 780M, and Intel integrated graphics, so this is not vendor-specific.
+
+**Potential Causes:**
+* Electron 41 ships a newer Chromium with updated GPU SharedImage handling that regressed across several driver stacks on X11. X11 sessions keep GPU acceleration on by default (unlike Wayland, which auto-disables), so the regression is hit unmodified.
+
+**Solutions/Workarounds:**
+
+1. **Disable GPU acceleration** by setting `disableGpu` to `true` in `~/.config/teams-for-linux/config.json`:
+    ```json
+    {
+      "disableGpu": true
+    }
+    ```
+2. **Alternatively**, launch with `--disable-gpu` on the command line, or add it to the `Exec=` line of a custom copy of the `.desktop` entry under `~/.local/share/applications/teams-for-linux.desktop`.
+
+**Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
+
 :::note Important
 The `electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
