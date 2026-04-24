@@ -68,6 +68,7 @@ class HomeAssistantDiscovery {
             name: 'Teams Status',
             unique_id: `${this.#deviceId}_status`,
             state_topic: `${this.#topicPrefix}/${this.#mqttConfig.statusTopic}`,
+            value_template: '{{ value_json.status }}',
             icon: 'mdi:microsoft-teams',
             availability: this.#getAvailability(),
             device: this.#getDevice(),

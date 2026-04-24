@@ -169,8 +169,15 @@ class MQTTClient extends EventEmitter {
 			return;
 		}
 
+		const payload = JSON.stringify({
+			status: statusString,
+			statusCode: Number(status),
+			timestamp: new Date().toISOString(),
+			clientId: this.config.clientId
+		});
+
 		try {
-			await this.client.publish(topic, statusString, { retain: true });
+			await this.client.publish(topic, payload, { retain: true });
 
 			this.lastPublishedStatus = statusString;
 			console.debug(`[MQTT] Published status: ${statusString} (${status}) on topic: ${topic}`);
