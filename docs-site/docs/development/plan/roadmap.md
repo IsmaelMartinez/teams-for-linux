@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-04-16
-**Current Version:** v2.8.0 shipped (Electron 41.2.0, Chromium 146, Node.js 24)
-**Status:** Living Document --- v2.8.0 released with Electron 41 upgrade; cross-distro tests passing 9/9; next focus is bug fixes and dev experience
+**Last Updated:** 2026-04-24
+**Current Version:** v2.8.0 shipped (Electron 41.2.1, Chromium 146, Node.js 24)
+**Status:** Living Document --- v2.8.0 released with Electron 41 upgrade; cross-distro tests passing 9/9; FIDO2 beta queued for 2.8.2 or 2.9.0; next focus remains bug fixes and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
@@ -57,6 +57,28 @@ The notification lifecycle is now stable ([#2248](https://github.com/IsmaelMarti
 ### Testing Infrastructure
 
 Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 9 configurations (3 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. The infrastructure works well for Ubuntu (7/7 tests pass on X11 and XWayland, 6/6 on Wayland) but Fedora and Debian remain unvalidated. The current focus is closing these gaps and connecting cross-distro testing to the CI pipeline so it gates builds rather than running as a separate manual workflow.
+
+---
+
+## 2026-04-24 Session Outcomes and Next Up
+
+Shipping work delivered today, plus what is next on the queue. Forward items here are themes-level rather than per-issue to keep the roadmap readable as inbound accumulates.
+
+### FIDO2 Hardware Security Keys (beta) --- shipping in 2.8.2 / 2.9.0
+
+[#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) is moving from blocked-on-upstream to an opt-in beta. [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357) is mergeable: rebased on main, SonarCloud duplication gate passed, structured non-PII logging gated on `auth.webauthn.debug`, and ADR 021 plus a troubleshooting entry landed in the same PR. Hardware validated end-to-end on YubiKey + Arch by several community testers (@rafajunio, @machadofelipe, @marcovr, @rlavriv, @Guysuez, @xicopitz). Targeted for 2.8.2 or 2.9.0; not 2.8.1. Beta feedback comment posted on [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) calling for non-YubiKey hardware and Wayland-only sessions.
+
+### Issue triage and backlog hygiene delivered
+
+Reviews and follow-ups posted on [#2454](https://github.com/IsmaelMartinez/teams-for-linux/issues/2454) (Agenda / Collaborative Notes --- lead candidate is the new Teams calendar experience embedded Outlook module, not a wrapper issue), [#2431](https://github.com/IsmaelMartinez/teams-for-linux/issues/2431) (invited the reporter to contribute an `overrideConstraints` browser tool extending `disableAutogain.js`), and [#2367](https://github.com/IsmaelMartinez/teams-for-linux/issues/2367) (`awaiting user feedback` label applied after PR #2377 close-out). [#2417](https://github.com/IsmaelMartinez/teams-for-linux/issues/2417) (LLM-generated bulk bug report) was split: the one real finding became [#2463](https://github.com/IsmaelMartinez/teams-for-linux/issues/2463) (wake-lock restore handler regression from PR #2068, `good first issue`); the umbrella was closed with a per-claim summary.
+
+### Next up --- MQTT incoming-call Phase 1 ([#2370](https://github.com/IsmaelMartinez/teams-for-linux/issues/2370))
+
+Extend the existing MQTT media-status pattern with a retained `{topicPrefix}/incoming-call` boolean topic bridged from the existing `activityHub` events. No new IPC channels or config keys. Plan-only [PR #2445](https://github.com/IsmaelMartinez/teams-for-linux/pull/2445) is in review. Phase 2 (scheduled-meeting prediction via Graph API calendar polling with `isOnlineMeeting` filter, 4-hour task) is parked until Phase 1 lands and andyrozman confirms it.
+
+### Next up --- contributor-onboarding skill
+
+New `teams-for-linux-feature-dev` skill in `~/.claude/skills/`, sibling to the existing `teams-for-linux-issue-review`. Covers per-task implementation recipes (config option, IPC channel, browser tool, notification path, startup switch, logging rules, local checks, changelog, PR opening) that `CLAUDE.md` cannot express cleanly. Aim is to reduce LLM-assisted contribution friction.
 
 ---
 
