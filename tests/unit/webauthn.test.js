@@ -5,6 +5,92 @@ const assert = require('node:assert');
 const { encode: cborEncode, decode: cborDecode } = require('cbor-x');
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require('../../app/webauthn/helpers');
 
+// ─── Test helpers hoisted to module scope (replicas of fido2Backend.js logic) ──
+
+/** Replicates discoverDevices()'s regex-based parsing. */
+function parseDevicePaths(stdout) {
+	return stdout
+		.trim()
+		.split('\n')
+		.filter((line) => line.length > 0)
+		.map((line) => {
+			const match = line.match(/^(\/dev\/\S+?):/);
+			return match ? match[1] : null;
+		})
+		.filter(Boolean);
+}
+
+/** Replicates parseAssertionOutput() for captured-stdout fixtures. */
+function parseAssertionOutput(stdout, rpId, allowCredentials, passedCredentialId) {
+	const lines = stdout.trim().split('\n');
+	const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
+	const dataLines = lines.slice(echoOffset);
+
+	if (dataLines.length < 2) {
+		throw new Error(`Expected at least 2 lines, got ${dataLines.length}`);
+	}
+
+	const authData = cborDecode(Buffer.from(dataLines[0], 'base64'));
+	const signature = Buffer.from(dataLines[1], 'base64');
+	let credentialId = passedCredentialId || null;
+	if (!credentialId) {
+		if (dataLines.length >= 3) {
+			credentialId = base64urlEncode(Buffer.from(dataLines[2], 'base64'));
+		} else if (allowCredentials?.length === 1) {
+			credentialId = allowCredentials[0].id;
+		} else {
+			throw new Error('No credential ID');
+		}
+	}
+	const userHandle = dataLines.length >= 4
+		? base64urlEncode(Buffer.from(dataLines[3], 'base64'))
+		: null;
+
+	return { authData, signature, credentialId, userHandle };
+}
+
+/** Replicates the createCredential() stdout parsing logic. */
+function parseCredOutput(stdout, rpId) {
+	const lines = stdout.trim().split('\n');
+	const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
+	const dataLines = lines.slice(echoOffset);
+	if (dataLines.length < 4) {
+		throw new Error(`Expected at least 4 data lines, got ${dataLines.length}`);
+	}
+
+	return {
+		fmt: dataLines[0].trim(),
+		authData: Buffer.from(dataLines[1], 'base64'),
+		credId: Buffer.from(dataLines[2], 'base64'),
+		signature: Buffer.from(dataLines[3], 'base64'),
+		x5c: dataLines.length >= 5 ? Buffer.from(dataLines[4], 'base64') : null,
+	};
+}
+
+/** Replicates the getAssertion() argument-building logic. */
+function buildAssertArgs(userVerification, hasAllowCredentials) {
+	const args = ['-G'];
+	if (!hasAllowCredentials) {
+		args.push('-r');
+	}
+	if (userVerification === 'required') {
+		args.push('-v');
+	}
+	return args;
+}
+
+/** Replicates buildCredArgs() from fido2Backend.js. */
+function buildCredArgs(authSel) {
+	const args = ['-M', '-h'];
+	if (authSel?.residentKey === 'required') {
+		args.push('-r');
+	}
+	if (authSel?.userVerification === 'required') {
+		args.push('-v');
+	}
+	return args;
+}
+
 // ─── helpers.js ─────────────────────────────────────────────────────────────
 
 describe('WebAuthn helpers - base64url encoding', () => {
@@ -110,19 +196,6 @@ describe('WebAuthn helpers - sanitizeForFido2', () => {
 // ─── fido2Backend.js - device parsing ───────────────────────────────────────
 
 describe('WebAuthn fido2Backend - device path parsing', () => {
-	// Replicate the regex from discoverDevices() to test without mocking execFile
-	function parseDevicePaths(stdout) {
-		return stdout
-			.trim()
-			.split('\n')
-			.filter((line) => line.length > 0)
-			.map((line) => {
-				const match = line.match(/^(\/dev\/\S+?):/);
-				return match ? match[1] : null;
-			})
-			.filter(Boolean);
-	}
-
 	it('parses single YubiKey device (rlavriv output)', () => {
 		const output = '/dev/hidraw5: vendor=0x1050, product=0x0407 (Yubico YubiKey OTP+FIDO+CCID)\n';
 		const devices = parseDevicePaths(output);
@@ -155,35 +228,6 @@ describe('WebAuthn fido2Backend - device path parsing', () => {
 // ─── fido2Backend.js - assertion output parsing ─────────────────────────────
 
 describe('WebAuthn fido2Backend - assertion output parsing', () => {
-	// Replicate the parsing logic from getAssertion() to test with captured output
-	function parseAssertionOutput(stdout, rpId, allowCredentials, passedCredentialId) {
-		const lines = stdout.trim().split('\n');
-		const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
-		const dataLines = lines.slice(echoOffset);
-
-		if (dataLines.length < 2) {
-			throw new Error(`Expected at least 2 lines, got ${dataLines.length}`);
-		}
-
-		const authData = cborDecode(Buffer.from(dataLines[0], 'base64'));
-		const signature = Buffer.from(dataLines[1], 'base64');
-		let credentialId = passedCredentialId || null;
-		if (!credentialId) {
-			if (dataLines.length >= 3) {
-				credentialId = base64urlEncode(Buffer.from(dataLines[2], 'base64'));
-			} else if (allowCredentials?.length === 1) {
-				credentialId = allowCredentials[0].id;
-			} else {
-				throw new Error('No credential ID');
-			}
-		}
-		const userHandle = dataLines.length >= 4
-			? base64urlEncode(Buffer.from(dataLines[3], 'base64'))
-			: null;
-
-		return { authData, signature, credentialId, userHandle };
-	}
-
 	it('parses resident assertion with echo offset (rlavriv fido2-tools 1.16.0)', () => {
 		// Captured from rlavriv's test script output (without -h, with -r)
 		const stdout = [
@@ -278,23 +322,6 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 // ─── fido2Backend.js - credential creation output parsing ───────────────────
 
 describe('WebAuthn fido2Backend - credential creation output parsing', () => {
-	function parseCredOutput(stdout, rpId) {
-		const lines = stdout.trim().split('\n');
-		const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
-		const dataLines = lines.slice(echoOffset);
-		if (dataLines.length < 4) {
-			throw new Error(`Expected at least 4 data lines, got ${dataLines.length}`);
-		}
-
-		return {
-			fmt: dataLines[0].trim(),
-			authData: Buffer.from(dataLines[1], 'base64'),
-			credId: Buffer.from(dataLines[2], 'base64'),
-			signature: Buffer.from(dataLines[3], 'base64'),
-			x5c: dataLines.length >= 5 ? Buffer.from(dataLines[4], 'base64') : null,
-		};
-	}
-
 	it('parses packed attestation with echo offset', () => {
 		const stdout = [
 			'aGFzaA==',              // echoed clientDataHash
@@ -339,18 +366,6 @@ describe('WebAuthn fido2Backend - credential creation output parsing', () => {
 // ─── fido2Backend.js - argument building ────────────────────────────────────
 
 describe('WebAuthn fido2Backend - getAssertion argument construction', () => {
-	// Replicate the arg-building logic from getAssertion()
-	function buildAssertArgs(userVerification, hasAllowCredentials) {
-		const args = ['-G'];
-		if (!hasAllowCredentials) {
-			args.push('-r');
-		}
-		if (userVerification === 'required') {
-			args.push('-v');
-		}
-		return args;
-	}
-
 	it('uses -r for resident assertion (no allowCredentials)', () => {
 		const args = buildAssertArgs('required', false);
 		assert.ok(args.includes('-r'));
@@ -377,18 +392,6 @@ describe('WebAuthn fido2Backend - getAssertion argument construction', () => {
 });
 
 describe('WebAuthn fido2Backend - createCredential argument construction', () => {
-	// Replicate buildCredArgs() logic
-	function buildCredArgs(authSel) {
-		const args = ['-M', '-h'];
-		if (authSel?.residentKey === 'required') {
-			args.push('-r');
-		}
-		if (authSel?.userVerification === 'required') {
-			args.push('-v');
-		}
-		return args;
-	}
-
 	it('builds basic args with no options', () => {
 		assert.deepStrictEqual(buildCredArgs({}), ['-M', '-h']);
 	});

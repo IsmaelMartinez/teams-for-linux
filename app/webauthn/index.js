@@ -53,9 +53,9 @@ async function collectPin(sender) {
   // Strategy A: standalone window, pre-collect
   try {
     return await requestPinPreCollect(parentWindow);
-  } catch (errA) {
-    console.warn("[WEBAUTHN:PIN] Strategy A failed:", errA.message);
-    if (errA.message === "PIN entry cancelled") throw errA;
+  } catch (error_) {
+    console.warn("[WEBAUTHN:PIN] Strategy A failed:", error_.message);
+    if (error_.message === "PIN entry cancelled") throw error_;
   }
 
   // Strategy B (dom-inject) was removed — PIN exposed to page JS context
