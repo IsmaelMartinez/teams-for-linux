@@ -1,1 +1,0 @@
-Add Vylen Linux to distribution packages and fix badge formatting - by @CelestifyX (#2405)

@@ -1,1 +1,0 @@
-Fix: Update @xmldom/xmldom to 0.8.13 for security improvements (#2458)
