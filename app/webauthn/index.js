@@ -41,7 +41,8 @@ function isAllowedOrigin(origin) {
 
 /**
  * Collect PIN using a fallback chain of strategies.
- * Tries A (pre-collect) → B (dom-inject) → C (modal-dialog).
+ * Tries A (pre-collect) → C (modal-dialog). Strategy B (dom-inject) was
+ * removed for security reasons (see pinDialog.js header).
  *
  * @param {Electron.WebContents} sender
  * @returns {Promise<string>}

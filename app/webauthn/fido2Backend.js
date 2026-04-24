@@ -70,7 +70,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
       // Only when the tool is ready for PIN input do we write it.
       if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
         pinWritten = true;
-        console.info("[WEBAUTHN] PIN prompt detected, writing PIN (%d chars)", pin.trim().length);
+        console.info("[WEBAUTHN] PIN prompt detected, writing PIN");
         proc.stdin.write(pin.trim() + "\n");
         proc.stdin.end();
       }
