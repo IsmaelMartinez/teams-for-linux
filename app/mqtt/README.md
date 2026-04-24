@@ -152,8 +152,6 @@ When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT disc
 | Teams Toggle Video | `button` | Toggle camera on/off |
 | Teams Toggle Hand Raise | `button` | Toggle hand raise in meeting |
 
-> **Note**: Button entities are only created when `commandTopic` is configured.
-
 All entities are grouped under a single **Teams for Linux** device in Home Assistant and respect the `availability_topic` (`{topicPrefix}/connected`) — entities show as unavailable when Teams for Linux is not running.
 
 Discovery configurations are published with `retain: true` and re-published on every broker connection, so entities survive broker restarts.
