@@ -89,6 +89,8 @@ class MQTTClient extends EventEmitter {
 				} else {
 					console.debug('[MQTT] Command topic not configured, skipping command subscription');
 				}
+
+				this.emit('connected');
 			});
 
 			this.client.on('error', (error) => {
@@ -150,7 +152,7 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
-	 * Publish Teams status to MQTT topic
+	 * Publish Teams status to MQTT topic as plain text
 	 * @param {number|string} status - Teams status code
 	 */
 	async publishStatus(status) {
@@ -167,15 +169,8 @@ class MQTTClient extends EventEmitter {
 			return;
 		}
 
-		const payload = JSON.stringify({
-			status: statusString,
-			statusCode: Number(status),
-			timestamp: new Date().toISOString(),
-			clientId: this.config.clientId
-		});
-
 		try {
-			await this.client.publish(topic, payload, { retain: true });
+			await this.client.publish(topic, statusString, { retain: true });
 
 			this.lastPublishedStatus = statusString;
 			console.debug(`[MQTT] Published status: ${statusString} (${status}) on topic: ${topic}`);
