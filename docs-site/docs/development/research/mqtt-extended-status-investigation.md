@@ -157,9 +157,10 @@ publishToMqtt('teams/camera', String(data.camera));  // "true" as string
 Topics using existing `topicPrefix`:
 
 - `\{topicPrefix\}/connected` → `"true"` or `"false"` (uses MQTT LWT)
-- `\{topicPrefix\}/camera` → `"true"` or `"false"`
-- `\{topicPrefix\}/microphone` → `"true"` or `"false"`
+- `\{topicPrefix\}/camera` → `"true"` or `"false"` (Phase 2, pending)
+- `\{topicPrefix\}/microphone` → `"speaking"`, `"silent"`, `"muted"` or `"off"` (Phase 2, pending, schema from [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md))
 - `\{topicPrefix\}/in-call` → `"true"` or `"false"`
+- `\{topicPrefix\}/screen-sharing` → `"true"` or `"false"`
 
 ### Configuration
 
@@ -337,16 +338,15 @@ The camera side still needs `getUserMedia` + `track.enabled` polling since there
 **Scoped work:**
 
 Microphone (high confidence, research complete):
-- [ ] Wire `app/browser/tools/speakingIndicator.js` to emit `microphone-state-changed` on state transitions. Plan in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md).
-- [ ] Decide whether `mqtt.enabled` should force-activate the speaking indicator's WebRTC monitoring even when the visual overlay is off, mirroring the pattern PR #2406 used for call detection.
+- [ ] Wire `app/browser/tools/speakingIndicator.js` to emit `microphone-state-changed` on state transitions. Plan in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md). Published values are `speaking`, `silent`, `muted`, `off` (four-state, not boolean).
+- [x] `mqtt.enabled` force-activates the speaking indicator's WebRTC monitoring even when the visual overlay is off (shipped in PR #2406, see `app/browser/tools/speakingIndicator.js:50-56`).
 
 Camera (medium confidence, needs validation):
 - [ ] Proof-of-concept: does `track.enabled` on the camera's video track flip when the user clicks Teams' camera toggle? If not, investigate alternatives (track `mute`/`unmute` events, `getStats()` frame rate dropping to 0, `track.readyState`) before committing to a pattern.
 - [ ] If validated, create `app/browser/tools/mediaStatus.js` with `getUserMedia` interceptor + screen-share filtering (reuse `isScreenShare` from `injectedScreenSharing.js`) + `track.enabled` polling on video tracks only.
 - [ ] Wire `camera-state-changed` IPC from the browser tool.
 
-Speaking (low cost, nice-to-have):
-- [ ] Publish `{topicPrefix}/speaking` boolean from the same speaking-indicator state machine for "not a good moment to ring the doorbell" automations.
+Note: a separate `{topicPrefix}/speaking` topic is not needed, since the `speaking` value on `{topicPrefix}/microphone` already carries that signal. Consumers who only care about active-speech can filter on that value.
 
 ### Phase 3: Documentation & Testing
 
@@ -373,10 +373,10 @@ Speaking (low cost, nice-to-have):
    - New service following established pattern (like ScreenSharingService)
    - Uses private fields for encapsulation (#mqttClient, #topicPrefix)
    - Registers IPC listeners for:
-     - `call-connected` - Publishes "true" to `\{topicPrefix\}/in-call`
-     - `call-disconnected` - Publishes "false" to `\{topicPrefix\}/in-call`
-     - `camera-state-changed` - Publishes camera state to `\{topicPrefix\}/camera`
-     - `microphone-state-changed` - Publishes microphone state to `\{topicPrefix\}/microphone`
+     - `teams-call-connected` / `teams-call-disconnected` - Publishes `"true"` / `"false"` to `\{topicPrefix\}/in-call` (reliability fallback added in PR #2406 for popup hang-ups)
+     - `screen-sharing-started` / `screen-sharing-stopped` - Publishes `"true"` / `"false"` to `\{topicPrefix\}/screen-sharing`
+     - `camera-state-changed` - Handler in place, publishes to `\{topicPrefix\}/camera`. **No emitter yet**, pending Phase 2.
+     - `microphone-state-changed` - Handler in place, publishes to `\{topicPrefix\}/microphone`. **No emitter yet**, pending Phase 2.
    - Simple design: if MQTT enabled, publish all events
    - Only publishes actual known state changes (no assumptions about camera/mic on call end)
    - Proper error handling and logging
