@@ -13,6 +13,10 @@ exports = module.exports = (Menus) => ({
       accelerator: "ctrl+J",
       click: () => Menus.joinMeeting(),
     },
+    {
+      label: "Return to Teams",
+      click: () => Menus.returnToTeams(),
+    },
     ...(Menus.configGroup.startupConfig.quickChat?.enabled
       ? [
           {
