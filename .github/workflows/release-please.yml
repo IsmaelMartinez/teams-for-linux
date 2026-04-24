@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Run release-please
         id: release
-        uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d6f8e03db635a # v4.2.0
+        uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4.2.0
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
