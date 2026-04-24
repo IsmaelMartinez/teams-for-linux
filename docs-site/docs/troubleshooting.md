@@ -328,16 +328,16 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
       "disableGpu": false
     }
     ```
-2. **Verify hardware acceleration** is active by opening `chrome://gpu` inside Teams for Linux (via the dev tools) and confirming the video decode/encode entries are hardware-accelerated.
+2. **Verify hardware acceleration** is active via **Debug → Open GPU Info** from the application menu (or `chrome://gpu` via DevTools), confirming the video decode/encode entries are hardware-accelerated.
 
 **Related GitHub Issues:** [#2410](https://github.com/IsmaelMartinez/teams-for-linux/issues/2410)
 
-#### Issue: Screen share receive fails or video glitches on NVIDIA under Electron 41 (X11)
+#### Issue: Screen share receive fails or video glitches under Electron 41 (X11)
 
-**Description:** On NVIDIA hardware under X11 sessions, after upgrading to teams-for-linux 2.8.0 (which bumped Electron to 41), one-on-one incoming screen shares can fail to render or the shared video stays blank. The log typically contains `ERROR:gpu/command_buffer/service/shared_image/shared_image_manager.cc: SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.` emitted by the GPU process during the call. The symptom did not reproduce on teams-for-linux 2.7.13 (Electron 39).
+**Description:** On X11 sessions, after upgrading to teams-for-linux 2.8.0 (which bumped Electron to 41), one-on-one incoming screen shares can fail to render or the shared video stays blank. The log typically contains `ERROR:gpu/command_buffer/service/shared_image/shared_image_manager.cc: SharedImageManager::ProduceSkia: Trying to Produce a Skia representation from a non-existent mailbox.` emitted by the GPU process during the call. The symptom did not reproduce on teams-for-linux 2.7.13 (Electron 39). Reports on #2459 cover NVIDIA proprietary, AMD Radeon 780M, and Intel integrated graphics, so this is not vendor-specific.
 
 **Potential Causes:**
-* Electron 41 ships a newer Chromium with updated GPU SharedImage handling that regressed on some NVIDIA proprietary driver stacks. X11 sessions keep GPU acceleration on by default (unlike Wayland, which auto-disables), so the regression is hit unmodified.
+* Electron 41 ships a newer Chromium with updated GPU SharedImage handling that regressed across several driver stacks on X11. X11 sessions keep GPU acceleration on by default (unlike Wayland, which auto-disables), so the regression is hit unmodified.
 
 **Solutions/Workarounds:**
 
