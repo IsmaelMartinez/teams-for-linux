@@ -39,190 +39,57 @@ The project aims to balance shipping fixes quickly with respecting users' time. 
 
 ## Overview
 
-PRs automatically get AI-generated changelog entries in `.changelog/pr-XXX.txt` files. When ready to release, bundle these changelogs into a version update.
+This project uses [release-please](https://github.com/googleapis/release-please) for automated release management. Release-please monitors conventional commits on the `main` branch and automatically maintains a Release PR with version bumps and a generated `CHANGELOG.md`.
+
+### How it works
+
+1. Contributors merge PRs with [conventional commit](https://www.conventionalcommits.org/) messages
+2. release-please automatically creates (or updates) a Release PR that includes:
+   - Version bump in `package.json`
+   - Updated `CHANGELOG.md` with categorised entries
+   - Updated `appdata.xml` with a new release entry (via a custom workflow step)
+   - Updated `package-lock.json`
+3. When the maintainer is ready to release, they merge the Release PR
+4. On merge, the build workflow creates a draft GitHub Release with artifacts
+5. The maintainer promotes the draft to a full release
+
+### Conventional commit format
+
+Release-please determines the version bump type from commit prefixes:
+
+| Prefix | Bump | Example |
+|--------|------|---------|
+| `feat:` | minor | `feat: add MQTT integration` |
+| `fix:` | patch | `fix: resolve login redirect loop` |
+| `feat!:` or `BREAKING CHANGE:` | major | `feat!: drop Node 18 support` |
+| `chore:`, `docs:`, `ci:`, etc. | patch (if included) | `chore: update dependencies` |
 
 ## Quick Start
 
-### Option A: Automated GitHub Workflow (Recommended)
+### Releasing (merge the Release PR)
 
-The easiest and most reliable method is to use the automated GitHub Actions workflow:
+1. Go to the [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls) page
+2. Find the auto-generated Release PR (titled like "chore(main): release X.Y.Z")
+3. Review the changelog and version bump
+4. Merge the PR
+5. The build workflow triggers automatically and creates a draft GitHub Release
+6. Promote the draft to a full release when ready
 
-1. Go to [Actions → Prepare Release](https://github.com/IsmaelMartinez/teams-for-linux/actions/workflows/prepare-release.yml)
-2. Click "Run workflow"
-3. Select the version bump type:
-   - `patch` - Bug fixes (2.6.19 → 2.6.20)
-   - `minor` - New features (2.6.19 → 2.7.0)
-   - `major` - Breaking changes (2.6.19 → 3.0.0)
-   - Or enter a specific version like `2.7.0`
-4. Click "Run workflow"
+That's it. No scripts to run, no manual version bumping.
 
-The workflow will automatically:
-- Validate changelog entries exist
-- Run the release preparation script
-- Generate categorized release notes
-- Create a release branch
-- Commit all changes
-- Create a pull request with detailed release notes
+### Customising before release
 
-You'll get a PR ready for review and merging. No local setup required.
+If you need to adjust the release before merging:
 
-### Option B: Using the Script Locally
-
-**Preview what will happen (dry-run mode):**
-```bash
-npm run release:prepare -- patch --dry-run
-```
-
-This shows you exactly what will change without modifying any files.
-
-**Apply the changes:**
-```bash
-npm run release:prepare patch  # or minor, major, or 2.6.15
-```
-
-Or without argument to be prompted:
-```bash
-npm run release:prepare
-```
-
-This will:
-- Review changelog entries
-- Update package.json, package-lock.json, appdata.xml
-- Delete consumed changelog files
-- Show categorized release notes preview
-- Show next steps
-
-Then create release PR:
-```bash
-git checkout -b release/vX.Y.Z
-git add .
-git commit -m "chore: release vX.Y.Z"
-git push -u origin release/vX.Y.Z
-gh pr create --title "Release vX.Y.Z" --body-file <(npm run generate-release-notes X.Y.Z)
-```
-
-### Option C: Manual
-
-1. Review changelog files:
-   ```bash
-   ls .changelog/
-   cat .changelog/*
-   ```
-
-2. Update version:
-   ```bash
-   # Edit package.json: "version": "X.Y.Z"
-   npm install  # Updates package-lock.json
-   ```
-
-3. Update appdata.xml:
-   ```xml
-   <release version="X.Y.Z" date="YYYY-MM-DD">
-     <description>
-       <ul>
-         <li>Entry from pr-123.txt</li>
-         <li>Entry from pr-124.txt</li>
-       </ul>
-     </description>
-   </release>
-   ```
-
-4. Delete changelog files:
-   ```bash
-   rm .changelog/*.txt
-   ```
-
-5. Create release PR:
-   ```bash
-   git checkout -b release/vX.Y.Z
-   git add .
-   git commit -m "chore: release vX.Y.Z"
-   git push -u origin release/vX.Y.Z
-   gh pr create --title "Release vX.Y.Z" --body "Release vX.Y.Z"
-   ```
-
-### Option D: LLM-Assisted
-
-Point an LLM at `.changelog/` and ask it to prepare the release:
-
-```
-"Prepare release vX.Y.Z:
-1. Read .changelog/*.txt files
-2. Update package.json version
-3. Generate appdata.xml entry
-4. Delete changelog files
-Show me the changes."
-```
-
-Then create release PR as above.
-
-## Enhanced Release Notes
-
-The release process automatically generates enhanced release notes that include:
-
-### Categorization
-
-Changes are automatically categorized based on conventional commit prefixes:
-- 🚀 **New Features** - `feat:` prefix or "add", "implement" keywords
-- 🐛 **Bug Fixes** - `fix:` prefix or "fix" keyword
-- 📚 **Documentation** - `docs:` prefix
-- 📦 **Dependencies** - "upgrade", "bump" keywords
-- ♻️ **Code Improvements** - `refactor:` prefix
-- ⚡ **Performance** - `perf:` prefix
-- 🔒 **Security** - `security:` prefix
-- 🔧 **Maintenance** - Other changes
-
-### Auto-Detected Documentation Links
-
-The system automatically detects and links to relevant documentation:
-
-- **Electron updates**: When a changelog entry mentions Electron version changes, links to Electron release notes are included
-- **Configuration changes**: When entries reference configuration options from `docs/configuration.md`, links to the relevant configuration sections are added
-
-### Generate Release Notes Independently
-
-You can generate release notes without running the full release:
-
-```bash
-# Full format with all categories and links
-npm run generate-release-notes
-
-# With specific version
-npm run generate-release-notes -- 2.8.0
-
-# Summary format (shorter)
-npm run generate-release-notes -- --summary
-
-# JSON format (for programmatic use)
-npm run generate-release-notes -- --json
-```
-
-## Dry-Run Mode
-
-Before making any changes, you can preview what will happen:
-
-```bash
-npm run release:prepare -- patch --dry-run
-```
-
-Or with short flag:
-```bash
-npm run release:prepare -- patch -n
-```
-
-Dry-run mode shows:
-- Files that would be updated
-- Version changes (old → new)
-- Changelog files that would be deleted
-- Full release notes preview
-
-No files are modified during dry-run.
+- **Edit the changelog**: Modify `CHANGELOG.md` directly in the Release PR
+- **Override the version**: Edit `package.json` in the Release PR (release-please will respect manual overrides)
+- **Add entries**: Additional conventional commits to `main` will automatically update the Release PR
 
 ## After PR Merge
 
-When the release PR merges to main:
+When the Release PR merges to main:
 - Build workflow detects version change
-- Creates GitHub draft release
+- Creates GitHub draft release with artifacts
 - Snap edge channel publishes with a version suffix (e.g., `2.7.5-edge.g1a2b3c4`) to distinguish it from the release build
 
 Then:
@@ -238,46 +105,49 @@ Then:
 - **stable** — Manual promotion from candidate after testing
 :::
 
-## Manual Changelog Entries
+## Changelog Categories
 
-If you need to add an entry manually:
+Changes in `CHANGELOG.md` are automatically categorised based on conventional commit prefixes:
 
-```bash
-echo "Your description - by @username (#PR)" > .changelog/manual-$(date +%s).txt
-```
+- **Features** — `feat:` prefix
+- **Bug Fixes** — `fix:` prefix
+- **Performance** — `perf:` prefix
+- **Security** — `security:` prefix
+- **Dependencies** — `deps:` prefix
+- **Code Improvements** — `refactor:` prefix
+- **Documentation** — `docs:` prefix
+- **CI/CD** — `ci:` prefix
+- **Testing** — `test:` prefix
+- **Maintenance** — `chore:` prefix
 
-Or just create a `.txt` file in `.changelog/` with any text editor.
+## Configuration
 
-## File Structure
+Release-please is configured via two files in the repository root:
 
-```
-.changelog/              # Staging area
-├── pr-123.txt          # Auto-generated
-├── pr-124.txt          # Auto-generated
-└── manual-*.txt        # Manual entries
+- **`release-please-config.json`** — Release type, changelog sections, and behaviour
+- **`.release-please-manifest.json`** — Tracks the current version
 
-scripts/
-├── release-prepare.mjs       # Main release script
-└── generateReleaseNotes.mjs  # Release notes generator
-```
+The GitHub Actions workflow is at `.github/workflows/release-please.yml`.
 
-Each changelog file contains one line:
-```
-Add MQTT integration - by @username (#123)
-```
+### appdata.xml updates
+
+Release-please does not natively support `appdata.xml`. A custom script (`scripts/update-appdata-xml.js`) runs as part of the release-please workflow to:
+1. Read the new version from `package.json`
+2. Extract changelog entries from `CHANGELOG.md`
+3. Insert a new `<release>` entry into `appdata.xml`
+
+This ensures `appdata.xml` stays in sync with each release, which is required for Flatpak/AppStream compatibility and the electron-builder release info generation.
 
 ## Workflow Diagram
 
-```
-PRs merged → .changelog/*.txt accumulate
+```text
+Conventional commits land on main
      ↓
-Ready to release → Preview with --dry-run
+release-please creates/updates Release PR
+     ↓                (includes version bump, CHANGELOG.md, appdata.xml)
+Maintainer merges Release PR
      ↓
-Prepare release → Update versions & appdata.xml
-     ↓
-Create release PR → Push to release/vX.Y.Z
-     ↓                (PR includes categorized release notes)
-Merge to main → Build triggers automatically
+Build triggers automatically
      ↓
 Publish → Draft release, Snap edge (with commit SHA suffix)
      ↓
@@ -286,44 +156,49 @@ Promote draft → Full release, Snap candidate, Flatpak
 Test candidate → Promote Snap candidate → stable
 ```
 
+## Migration from Previous Process
+
+The project previously used a custom changelog staging approach with `.changelog/pr-XXX.txt` files and AI-generated summaries. This has been replaced by release-please, which derives changelog entries directly from conventional commit messages.
+
+### What was removed
+
+- `.github/workflows/prepare-release.yml` — Manual release preparation workflow
+- `.github/workflows/changelog-generator.yml` — AI-powered per-PR changelog generation
+- `scripts/release-prepare.mjs` — Local release preparation script
+- `scripts/generateReleaseNotes.mjs` — Custom release notes categorisation
+- `npm run release:prepare` — Replaced by merging the Release PR
+- `npm run generate-release-notes` — Replaced by `CHANGELOG.md`
+- `.changelog/*.txt` staging files — No longer needed
+
+### What was kept
+
+- `scripts/generateReleaseInfo.js` — Still used by electron-builder at build time
+- `scripts/generateDebianChangelog.js` — Still used for Debian package metadata
+- `scripts/afterpack.js` — Still used as electron-builder post-build hook
+- `appdata.xml` — Still maintained (now via automated script)
+
 ## Tips
 
-**Preview before releasing:**
-```bash
-npm run release:prepare -- patch --dry-run
-```
+**Check pending changes for the next release:**
+Look at the open Release PR to see what will be included.
 
-**Edit changelog entries:** Just edit the `.txt` files before running `release:prepare`
+**Force a specific version:**
+Edit `package.json` in the Release PR branch to set a specific version.
 
-**Skip entries:** Delete any `.changelog/*.txt` file you don't want in the release
-
-**Check pending changes:**
-```bash
-ls .changelog/ && cat .changelog/*
-```
-
-**Preview release notes:**
-```bash
-npm run generate-release-notes
-```
-
-**See recent commits:**
-```bash
-git log --oneline --since="2 weeks ago"
-```
+**Skip a commit from the changelog:**
+Use a commit message without a conventional commit prefix, or use the `chore:` prefix (included in Maintenance category).
 
 ## Benefits
 
-- **Decouple merge from release** - Merge freely, release when ready
-- **Bundle multiple PRs** - Accumulate changes before releasing
-- **Preview before committing** - Dry-run mode shows all changes
-- **Auto-categorized notes** - Changes grouped by type automatically
-- **Smart documentation links** - Electron and config changes link to docs
-- **LLM-friendly** - Plain text files, easy for AI to read
-- **Always editable** - Can review and modify before releasing
-- **Full control** - You decide when to ship
+- **Zero manual steps** — No scripts to run, no version bumping, no changelog staging
+- **Conventional commits** — Contributors already follow this convention, so no behaviour change
+- **Auto-categorised changelog** — Changes grouped by type in `CHANGELOG.md`
+- **Always up to date** — Release PR updates automatically with each new commit
+- **Full control** — Maintainer decides when to merge and release
+- **Standard tooling** — release-please is widely adopted and well-maintained
 
 ## Related Documentation
 
-- [ADR 005: AI-Powered Changelog Generation](adr/005-ai-powered-changelog-generation.md)
-- [Release Info Generation](release-info.md) - Technical details of release info script
+- [release-please documentation](https://github.com/googleapis/release-please)
+- [Conventional Commits specification](https://www.conventionalcommits.org/)
+- [Release Info Generation](release-info.md) — Technical details of release info script

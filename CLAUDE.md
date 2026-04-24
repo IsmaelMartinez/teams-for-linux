@@ -24,9 +24,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
 
 **Release:**
-- `npm run release:prepare` - Prepare release (bundle changelogs, update versions)
-- `npm run release:prepare -- --dry-run` - Preview release without making changes
-- `npm run generate-release-notes` - Generate categorized release notes with doc links
+- Releases are managed by [release-please](https://github.com/googleapis/release-please) — merge the auto-generated Release PR to trigger a release
+- See `docs-site/docs/development/manual-release-process.md` for full details
 
 ## Project Architecture
 
@@ -215,7 +214,7 @@ if (modulesRequiringIpc.includes(module.name)) {
 
 ### Creating Pull Requests
 
-When opening a PR that resolves a GitHub issue, always include a `closes #NNN` (or `fixes #NNN` / `resolves #NNN`) line in the PR body. This is required for the automated changelog generator to link the issue in release notes — the `closingIssuesReferences` GraphQL field only captures issues referenced this way.
+When opening a PR that resolves a GitHub issue, always include a `closes #NNN` (or `fixes #NNN` / `resolves #NNN`) line in the PR body. GitHub uses these keywords to link the PR to the originating issue and auto-close it on merge, which is how users tracing a bug report find the fix.
 
 Example PR body footer:
 ```
@@ -275,7 +274,7 @@ When a PR has review comments, address them proactively:
 - **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
 - **Research Index**: `docs-site/docs/development/research/README.md` - Feature research and investigations
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
-- **Release Process**: `docs-site/docs/development/manual-release-process.md` - Release workflow with dry-run and categorized notes
+- **Release Process**: `docs-site/docs/development/manual-release-process.md` - Release workflow using release-please
 - **Configuration Reference**: `docs-site/docs/configuration.md`
 - **Troubleshooting Guide**: `docs-site/docs/troubleshooting.md`
 - **IPC API Documentation**: `docs-site/docs/development/ipc-api.md`
