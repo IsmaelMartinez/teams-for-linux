@@ -324,23 +324,29 @@ async publish(topic, payload, options = {}) {
 - [x] Publish connection state on connect/disconnect
 - [x] Document `{topicPrefix}/connected` topic
 
-### Phase 2: WebRTC Monitoring (Camera/Mic) - ⏸️ DEFERRED
+### Phase 2: WebRTC Monitoring (Camera/Mic) - 🔄 RESUMING
 
-**Status**: Deferred pending user feedback
+**Status**: Resumption triggered 2026-04-24 by issue [#2465](https://github.com/IsmaelMartinez/teams-for-linux/issues/2465). User requested the exact Phase 2 topics (`{topicPrefix}/microphone`, `{topicPrefix}/camera`) for Home Assistant and Stream Deck automation, which is the feedback #1938 was held open waiting for. Scoped but not yet scheduled.
 
-Phase 1 provides call state (`in-call`) and connection state (`connected`) via existing IPC events. Phase 2 would add camera and microphone state monitoring via WebRTC stream interception.
+Phase 1 provides call state (`in-call`), connection state (`connected`) and screen-sharing state via existing IPC events. Phase 2 adds camera and microphone state monitoring.
 
-**Deferral Reason**: Awaiting confirmation from user ([#1938](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)) that the current Phase 1 implementation is insufficient for their RGB LED automation needs. Will implement Phase 2 only if user confirms they need granular camera/mic state in addition to call state.
+**Course correction (2026-03 → 2026-04):** The original plan used `getUserMedia` interception with `track.enabled` polling for both camera and mic. A first attempt on 2026-03-09 sent `microphone-state-changed` via that path but was stripped out the following day because `track.enabled` did not reflect Teams' mute state reliably. The microphone side has since been solved differently by the speaking indicator (PR #2299), which uses `RTCPeerConnection.getStats()` and the `media-source.audioLevel` stat. Teams zeros that stat to exactly 0.0 on mute, giving unambiguous three-state detection (speaking / silent / muted). The follow-up research for wiring that into MQTT lives in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md).
 
-**If/When Resumed:**
-- [ ] Create `app/browser/tools/mediaStatus.js`
-- [ ] Implement getUserMedia interceptor
-- [ ] Add screen sharing detection (reuse `isScreenShare` logic)
-- [ ] Implement hybrid track monitoring:
-  - [ ] Event listeners (mute/unmute/ended)
-  - [ ] Poll track.enabled (500ms interval)
-  - [ ] Cleanup intervals on track end
-- [ ] Update `preload.js` to load module
+The camera side still needs `getUserMedia` + `track.enabled` polling since there is no WebRTC stat equivalent for "camera off", and that approach has not been validated for camera specifically. Needs a short proof-of-concept before wiring to MQTT.
+
+**Scoped work:**
+
+Microphone (high confidence, research complete):
+- [ ] Wire `app/browser/tools/speakingIndicator.js` to emit `microphone-state-changed` on state transitions. Plan in [`mqtt-microphone-state-research.md`](./mqtt-microphone-state-research.md).
+- [ ] Decide whether `mqtt.enabled` should force-activate the speaking indicator's WebRTC monitoring even when the visual overlay is off, mirroring the pattern PR #2406 used for call detection.
+
+Camera (medium confidence, needs validation):
+- [ ] Proof-of-concept: does `track.enabled` on the camera's video track flip when the user clicks Teams' camera toggle? If not, investigate alternatives (track `mute`/`unmute` events, `getStats()` frame rate dropping to 0, `track.readyState`) before committing to a pattern.
+- [ ] If validated, create `app/browser/tools/mediaStatus.js` with `getUserMedia` interceptor + screen-share filtering (reuse `isScreenShare` from `injectedScreenSharing.js`) + `track.enabled` polling on video tracks only.
+- [ ] Wire `camera-state-changed` IPC from the browser tool.
+
+Speaking (low cost, nice-to-have):
+- [ ] Publish `{topicPrefix}/speaking` boolean from the same speaking-indicator state machine for "not a good moment to ring the doorbell" automations.
 
 ### Phase 3: Documentation & Testing
 
