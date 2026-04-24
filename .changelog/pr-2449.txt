@@ -1,1 +1,0 @@
-Fix: Resolve AppImage URL for cross-distro smoke tests - by @IsmaelMartinez (#2449)

@@ -1,2 +1,0 @@
-Fix: Preserve Teams shell when joining meetings and add return path - by @IsmaelMartinez (#2439)
-closes: #2322 https://github.com/IsmaelMartinez/teams-for-linux/issues/2322 [Bug]: action "Join meeting" replaces whole window content

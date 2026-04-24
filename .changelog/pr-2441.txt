@@ -1,1 +1,0 @@
-Fix simili-bot seeder workflow to download the release binary directly - by @IsmaelMartinez (#2441)

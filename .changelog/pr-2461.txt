@@ -1,1 +1,0 @@
-Add Wayland GPU auto-disable troubleshooting guide - by @IsmaelMartinez (#2461)
