@@ -19,6 +19,7 @@
 
 const { BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
+const log = require("./log");
 
 /**
  * Build and show a PIN-entry BrowserWindow, wire up submit/cancel IPC, and
@@ -37,7 +38,7 @@ const path = require("node:path");
  */
 function buildPinWindow({ strategyLabel, strategyName, modal, parent, alwaysOnTop, focusAfterShow }) {
   const logPrefix = `[WEBAUTHN:PIN] Strategy ${strategyLabel}`;
-  console.info(`${logPrefix} (${strategyName}): showing ${modal ? "modal" : "standalone"} PIN window`);
+  log.info(`${logPrefix} (${strategyName}): showing ${modal ? "modal" : "standalone"} PIN window`);
 
   return new Promise((resolve, reject) => {
     const win = new BrowserWindow({
@@ -66,7 +67,7 @@ function buildPinWindow({ strategyLabel, strategyName, modal, parent, alwaysOnTo
       settled = true;
       cleanup();
       win.close();
-      console.info(`${logPrefix}: PIN submitted`);
+      log.info(`${logPrefix}: PIN submitted`);
       resolve(pin);
     };
 
@@ -75,7 +76,7 @@ function buildPinWindow({ strategyLabel, strategyName, modal, parent, alwaysOnTo
       settled = true;
       cleanup();
       win.close();
-      console.info(`${logPrefix}: cancelled`);
+      log.info(`${logPrefix}: cancelled`);
       reject(new Error("PIN entry cancelled"));
     };
 
@@ -100,7 +101,7 @@ function buildPinWindow({ strategyLabel, strategyName, modal, parent, alwaysOnTo
     win.once("ready-to-show", () => {
       win.show();
       if (focusAfterShow) win.focus();
-      console.info(`${logPrefix}: ${focusAfterShow ? "window shown and focused" : "modal window shown"}`);
+      log.debug(`${logPrefix}: ${focusAfterShow ? "window shown and focused" : "modal window shown"}`);
     });
     win.loadFile(path.join(__dirname, "pinDialog.html"));
   });

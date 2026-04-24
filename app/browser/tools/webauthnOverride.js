@@ -41,7 +41,7 @@ function init(config, ipcRenderer) {
       return originalCreate(options);
     }
 
-    console.info("[WEBAUTHN] Intercepting credentials.create() from", globalThis.location.origin);
+    console.info("[WEBAUTHN] Intercepting credentials.create()");
 
     try {
       const serialized = serializeCreateOptions(options.publicKey);
@@ -76,7 +76,7 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
-    console.info("[WEBAUTHN] Intercepting credentials.get() from", globalThis.location.origin);
+    console.info("[WEBAUTHN] Intercepting credentials.get()");
 
     try {
       const serialized = serializeGetOptions(options.publicKey);
@@ -108,15 +108,15 @@ function init(config, ipcRenderer) {
   window.addEventListener("message", async (event) => {
     if (event.data?.type !== "webauthn-request") return;
     if (!ALLOWED_RELAY_ORIGINS.has(event.origin)) {
-      console.warn("[WEBAUTHN] Blocked relay from untrusted origin:", event.origin);
+      console.warn("[WEBAUTHN] Blocked relay: origin not allowed");
       return;
     }
     const { id, channel, data } = event.data;
     if (channel !== "webauthn:create" && channel !== "webauthn:get") {
-      console.warn("[WEBAUTHN] Blocked relay for unexpected channel:", channel);
+      console.warn("[WEBAUTHN] Blocked relay: unexpected channel");
       return;
     }
-    console.info("[WEBAUTHN] Relaying subframe request:", channel, "from", event.origin);
+    console.info("[WEBAUTHN] Relaying subframe request", { channel });
     try {
       const result = await ipcRenderer.invoke(channel, data);
       if (result.success) {
@@ -271,8 +271,11 @@ function reconstructGetResponse(data) {
     }),
   };
 
-  console.info("[WEBAUTHN] Reconstructed get response: id=%s, authData=%d bytes, sig=%d bytes",
-    data.credentialId?.substring(0, 10) + "...", authDataBuf.byteLength, sigBuf.byteLength);
+  console.info("[WEBAUTHN] Reconstructed get response", {
+    authDataBytes: authDataBuf.byteLength,
+    sigBytes: sigBuf.byteLength,
+    hasUserHandle: userHandleBuf !== null,
+  });
 
   return credential;
 }

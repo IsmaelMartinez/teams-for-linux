@@ -563,9 +563,10 @@ function extractYargConfig(configObject, appVersion) {
           },
           webauthn: {
             enabled: false,
+            debug: false,
           },
         },
-        describe: "Authentication configuration (Intune SSO, WebAuthn/FIDO2 security keys)",
+        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only.",
         type: "object",
       },
       multiAccount: {

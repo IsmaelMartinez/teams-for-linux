@@ -13,6 +13,7 @@ const { createHash } = require("node:crypto");
 const { promisify } = require("node:util");
 const { encode: cborEncode, decode: cborDecode } = require("cbor-x");
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require("./helpers");
+const log = require("./log");
 
 const execFileAsync = promisify(execFile);
 
@@ -70,7 +71,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
       // Only when the tool is ready for PIN input do we write it.
       if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
         pinWritten = true;
-        console.info("[WEBAUTHN] PIN prompt detected, writing PIN");
+        log.info("[WEBAUTHN] PIN prompt detected, writing PIN");
         proc.stdin.write(pin.trim() + "\n");
         proc.stdin.end();
       }
@@ -148,7 +149,7 @@ async function discoverDevices() {
       })
       .filter(Boolean);
   } catch (err) {
-    console.error("[WEBAUTHN] Failed to discover FIDO2 devices:", err.message);
+    log.error("[WEBAUTHN] Failed to discover FIDO2 devices", { errClass: log.classifyError(err) });
     return [];
   }
 }
@@ -248,8 +249,11 @@ function buildCredArgs(authSel) {
  */
 async function createCredential(options) {
   const device = await resolveDevice();
-  console.info("[WEBAUTHN] createCredential: device=%s, rpId=%s, userVerification=%s",
-    device, options.rpId, options.authenticatorSelection?.userVerification);
+  log.info("[WEBAUTHN] createCredential", {
+    devicePresent: true,
+    uv: options.authenticatorSelection?.userVerification || "preferred",
+    attestation: options.attestation || "none",
+  });
 
   const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
 
@@ -328,8 +332,11 @@ async function createCredential(options) {
  */
 async function getAssertion(options) {
   const device = await resolveDevice();
-  console.info("[WEBAUTHN] getAssertion: device=%s, rpId=%s, userVerification=%s, allowCredentials=%d",
-    device, options.rpId, options.userVerification, options.allowCredentials?.length || 0);
+  log.info("[WEBAUTHN] getAssertion", {
+    devicePresent: true,
+    uv: options.userVerification || "preferred",
+    credCount: options.allowCredentials?.length || 0,
+  });
 
   const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin);
 
@@ -364,9 +371,9 @@ async function getAssertion(options) {
     let lastError;
     for (const cred of options.allowCredentials) {
       const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
-      console.info("[WEBAUTHN] getAssertion: trying credential %d/%d, args: %s",
-        options.allowCredentials.indexOf(cred) + 1, options.allowCredentials.length,
-        args.filter(a => !a.startsWith("/dev")).join(" "));
+      const index = options.allowCredentials.indexOf(cred) + 1;
+      const total = options.allowCredentials.length;
+      log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
       try {
         const { stdout } = await spawnFido2(
           "fido2-assert", args, credInputLines, timeoutMs,
@@ -374,11 +381,11 @@ async function getAssertion(options) {
         );
         return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
       } catch (err) {
-        console.info("[WEBAUTHN] getAssertion: credential %d failed: %s",
-          options.allowCredentials.indexOf(cred) + 1, err.message);
+        const errClass = log.classifyError(err);
+        log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
         lastError = err;
         // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
-        if (!err.message.includes("NO_CREDENTIALS")) {
+        if (errClass !== "NO_CREDENTIALS") {
           throw err; // Other errors (bad PIN, timeout) should not be retried
         }
       }
@@ -387,8 +394,7 @@ async function getAssertion(options) {
   }
 
   // No allowCredentials — use resident key mode
-  console.info("[WEBAUTHN] getAssertion: resident key mode, args: %s",
-    args.filter(a => !a.startsWith("/dev")).join(" "));
+  log.debug("[WEBAUTHN] getAssertion resident-key mode");
   const { stdout } = await spawnFido2(
     "fido2-assert", args, inputLines, timeoutMs,
     options.preCollectedPin || null,

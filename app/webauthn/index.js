@@ -19,6 +19,7 @@
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
+const log = require("./log");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
@@ -54,7 +55,7 @@ async function collectPin(sender) {
   try {
     return await requestPinPreCollect(parentWindow);
   } catch (error_) {
-    console.warn("[WEBAUTHN:PIN] Strategy A failed:", error_.message);
+    log.warn("[WEBAUTHN:PIN] Strategy A failed", { errClass: log.classifyError(error_) });
     if (error_.message === "PIN entry cancelled") throw error_;
   }
 
@@ -81,16 +82,20 @@ async function handleWebauthnRequest(operation, event, options) {
   try {
     origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
   } catch {
-    console.warn(`[WEBAUTHN] Blocked ${operation} request: could not determine origin`);
+    log.warn("[WEBAUTHN] Blocked request", { op: operation, reason: "no-origin" });
     return { success: false, error: "SecurityError: could not determine origin" };
   }
 
   if (!isAllowedOrigin(origin)) {
-    console.warn(`[WEBAUTHN] Blocked ${operation} request from origin: ${origin}`);
+    log.warn("[WEBAUTHN] Blocked request", {
+      op: operation,
+      reason: "origin-not-allowed",
+      originClass: log.classifyOrigin(origin),
+    });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
 
-  console.info(`[WEBAUTHN] Processing ${operation} request from ${origin}`);
+  log.info("[WEBAUTHN] Processing request", { op: operation, originClass: log.classifyOrigin(origin) });
 
   try {
     // Determine if UV is required (PIN will be needed)
@@ -100,18 +105,18 @@ async function handleWebauthnRequest(operation, event, options) {
 
     let preCollectedPin = null;
     if (uvRequired) {
-      console.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
+      log.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
       preCollectedPin = await collectPin(event.sender);
-      console.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
+      log.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
     const result = operation === "create"
       ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
       : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
-    console.info(`[WEBAUTHN] ${operation} succeeded`);
+    log.info("[WEBAUTHN] Succeeded", { op: operation });
     return { success: true, data: result };
   } catch (err) {
-    console.error(`[WEBAUTHN] ${operation} failed:`, err.message);
+    log.error("[WEBAUTHN] Failed", { op: operation, errClass: log.classifyError(err) });
     return { success: false, error: err.message };
   }
 }
@@ -138,7 +143,9 @@ function injectIntoFrame(wf) {
     return;
   }
 
-  console.info(`[WEBAUTHN] Injecting override into login subframe: ${frameOrigin}`);
+  log.info("[WEBAUTHN] Injecting override into login subframe", {
+    originClass: log.classifyOrigin(frameOrigin),
+  });
 
   // The injected script patches navigator.credentials in the frame and uses
   // postMessage to communicate with the parent frame (which has ipcRenderer).
@@ -232,7 +239,7 @@ function injectIntoFrame(wf) {
       console.info("[WEBAUTHN:frame] navigator.credentials patched in subframe");
     })();
   `).catch((err) => {
-    console.error("[WEBAUTHN] Frame injection failed:", err.message);
+    log.error("[WEBAUTHN] Frame injection failed", { errClass: log.classifyError(err) });
   });
 }
 
@@ -241,18 +248,21 @@ function injectIntoFrame(wf) {
  * Should only be called on Linux when auth.webauthn.enabled is true.
  *
  * @param {Electron.BrowserWindow} [mainWindow] - Main window for frame injection
+ * @param {object} [config] - App config; auth.webauthn.debug enables verbose logs
  */
-async function initialize(mainWindow) {
+async function initialize(mainWindow, config) {
   if (initialized) return;
+
+  log.setDebug(config?.auth?.webauthn?.debug);
 
   const available = await fido2Backend.isAvailable();
   if (!available) {
-    console.warn("[WEBAUTHN] fido2-tools not found. Install with: sudo apt install fido2-tools");
-    console.warn("[WEBAUTHN] Hardware key support will not be available");
+    log.warn("[WEBAUTHN] fido2-tools not found. Install with: sudo apt install fido2-tools");
+    log.warn("[WEBAUTHN] Hardware key support will not be available");
     return;
   }
 
-  console.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
+  log.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
 
   // Handle credential creation requests from renderer
   ipcMain.handle("webauthn:create", (event, options) => handleWebauthnRequest("create", event, options));
@@ -272,14 +282,14 @@ async function initialize(mainWindow) {
         const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
         if (wf) injectIntoFrame(wf);
       } catch (err) {
-        console.debug("[WEBAUTHN] Could not inject into frame:", err.message);
+        log.debug("[WEBAUTHN] Could not inject into frame", { errClass: log.classifyError(err) });
       }
     });
-    console.info("[WEBAUTHN] Frame injection listener registered");
+    log.info("[WEBAUTHN] Frame injection listener registered");
   }
 
   initialized = true;
-  console.info("[WEBAUTHN] Hardware security key support initialized");
+  log.info("[WEBAUTHN] Hardware security key support initialized");
 }
 
 module.exports = { initialize };
