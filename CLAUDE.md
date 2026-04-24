@@ -214,7 +214,7 @@ if (modulesRequiringIpc.includes(module.name)) {
 
 ### Creating Pull Requests
 
-When opening a PR that resolves a GitHub issue, always include a `closes #NNN` (or `fixes #NNN` / `resolves #NNN`) line in the PR body. This is required for the automated changelog generator to link the issue in release notes — the `closingIssuesReferences` GraphQL field only captures issues referenced this way.
+When opening a PR that resolves a GitHub issue, always include a `closes #NNN` (or `fixes #NNN` / `resolves #NNN`) line in the PR body. GitHub uses these keywords to link the PR to the originating issue and auto-close it on merge, which is how users tracing a bug report find the fix.
 
 Example PR body footer:
 ```

@@ -399,8 +399,8 @@ Releases are managed by [release-please](https://github.com/googleapis/release-p
 2. **release-please creates/updates a Release PR** — Includes version bump, `CHANGELOG.md`, and `appdata.xml`
 3. **Merge the Release PR when ready** — This triggers the build
 4. **Build triggers automatically** — On version change in main
-6. **Promote GitHub draft → full release** - Triggers Snap candidate channel and Flatpak
-7. **Promote Snap candidate → stable** - Manual step after testing
+5. **Promote GitHub draft → full release** - Triggers Snap candidate channel and Flatpak
+6. **Promote Snap candidate → stable** - Manual step after testing
 
 :::note Snap Channel Strategy
 - Pushes to main publish snaps to **edge** with a commit SHA suffix (e.g., `2.7.5-edge.g1a2b3c4`)
