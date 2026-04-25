@@ -66,7 +66,7 @@ Release-please determines the version bump type from commit prefixes:
 
 ### Versioning convention
 
-From v2.8.x onwards the project follows standard [semantic versioning](https://semver.org/) as enforced by release-please. A `feat:` commit will bump the minor digit, a `fix:` will bump the patch digit, and a breaking change will bump the major digit. The earlier informal convention, where the leading digit was treated as frozen and the middle digit was reserved for Electron major upgrades or broad behavioural shifts (see [the v2.9.0 Wayland rationale](./plan/roadmap.md)), is retired. Pick conventional commit prefixes intentionally now that release-please reads them literally.
+Going forward the project follows standard [semantic versioning](https://semver.org/) as enforced by release-please. A `feat:` commit bumps the minor digit, a `fix:` bumps the patch digit, and a breaking change bumps the major digit. The earlier informal convention, where the leading digit was treated as frozen and the middle digit was reserved for Electron major upgrades or broad behavioural shifts (see [the v2.9.0 Wayland rationale](./plan/roadmap.md)), is retired. Pick conventional commit prefixes intentionally, since they now directly determine the version bump.
 
 ## Quick Start
 
