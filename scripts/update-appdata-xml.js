@@ -27,6 +27,21 @@ function escapeRegex(str) {
 }
 
 /**
+ * Convert a release-please CHANGELOG bullet into plain text suitable for an
+ * AppStream <li>. release-please emits lines like:
+ *   **auth:** narrow X ([#2460](.../issues/2460)) ([93830a6](.../commit/...))
+ * AppStream consumers (Flathub, GNOME Software, KDE Discover) render <li>
+ * content as-is, so markdown bold/link syntax must be flattened first.
+ */
+function stripMarkdown(line) {
+	return line
+		.replaceAll(/\[([^\]]{1,200})\]\([^)]{1,500}\)/g, '$1')
+		.replaceAll(/\*\*([^*]{1,200})\*\*/g, '$1')
+		.trim()
+		.replace(/ \([0-9a-f]{7,40}\)$/, '');
+}
+
+/**
  * Extract changelog entries for a specific version from CHANGELOG.md.
  * release-please formats headers as: ## [X.Y.Z](url) (YYYY-MM-DD)
  */
@@ -53,6 +68,7 @@ function extractChangelogEntries(changelogContent, version) {
 		.split('\n')
 		.filter(line => /^\s*[*-]\s/.test(line))
 		.map(line => line.replace(/^\s*[*-]\s+/, '').trim())
+		.map(stripMarkdown)
 		.filter(Boolean);
 
 	return { entries, date };
