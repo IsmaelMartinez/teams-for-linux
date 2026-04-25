@@ -35,8 +35,8 @@ function escapeRegex(str) {
  */
 function stripMarkdown(line) {
 	return line
-		.replace(/\[([^\]]{1,200})\]\([^)]{1,500}\)/g, '$1')
-		.replace(/\*\*([^*]{1,200})\*\*/g, '$1')
+		.replaceAll(/\[([^\]]{1,200})\]\([^)]{1,500}\)/g, '$1')
+		.replaceAll(/\*\*([^*]{1,200})\*\*/g, '$1')
 		.trim()
 		.replace(/ \([0-9a-f]{7,40}\)$/, '');
 }
