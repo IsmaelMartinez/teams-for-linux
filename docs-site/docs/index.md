@@ -4,86 +4,59 @@ title: Teams for Linux Documentation
 slug: /
 ---
 
-# Teams for Linux Documentation
+# Teams for Linux
 
-**Unofficial Microsoft Teams client for Linux** — a native desktop app that wraps the Teams web version with enhanced Linux integration.
+A native Linux desktop wrapper around the Microsoft Teams web app, with the integration features the web client cannot provide on its own: system tray and notifications, custom backgrounds, screen sharing, multiple account profiles, certificate handling, Intune SSO, secure token storage, and an MQTT bridge for home automation.
 
-✅ **System notifications**
-✅ **System tray integration**
-✅ **Custom backgrounds & themes**
-✅ **Screen sharing support**
-✅ **Multiple account profiles**
-✅ **Certificate management**
-✅ **Proxy server support**
-✅ **Microsoft Intune SSO integration**
-✅ **Secure token storage**
-✅ **Protocol handler support**
-✅ **MQTT integration for home automation**
-✅ **Advanced logging & debugging**
-
-:::info Project Status
-This is an independent project, not affiliated with Microsoft. Some features are limited by the Teams web app capabilities.
+:::info
+Independent project, not affiliated with Microsoft. Some behaviour is constrained by what the Teams web app exposes.
 :::
 
-## Getting Started
+## Quick start
 
-### Installation
-- **[Installation Guide](installation.md)** - Package repositories, distribution packages, and manual installation
-- **[Configuration Guide](configuration.md)** - Complete configuration options and settings
-- **[Multiple Instances](multiple-instances.md)** - Running separate profiles (work/personal)
-- **[Intune SSO Integration](intune-sso.md)** - Microsoft Intune Single Sign-On for enterprise environments
+Install the package for your distribution from the [Installation guide](installation.md), then launch:
 
-### Features
-- **[Screen Sharing Guide](screen-sharing.md)** - Complete screen sharing implementation and usage
-- **[Custom Backgrounds](custom-backgrounds.md)** - Setting up custom video call backgrounds
-- **[Certificate Management](certificate.md)** - Custom CA certificate handling for corporate environments
-- **[MQTT Integration](mqtt-integration.md)** - Home automation and status publishing via MQTT
-
-## Developer Documentation
-- **[Development Guide](development/README.md)** - Architecture patterns, security guidelines, and development practices
-- **[Contributing Guide](development/contributing.md)** - Development setup, code standards, and contribution guidelines
-- **[Architecture Decision Records](development/adr/README.md)** - Significant technical decisions and their rationale
-- **[Research Documentation](development/research/README.md)** - Strategic analysis and research documents
-
-## Architecture Overview
-
-```mermaid
-graph TD
-    subgraph Main["Main Process"]
-        A[Entry Point] --> B[Configuration]
-        A --> C[Window Management]
-        A --> D[System Integration]
-    end
-
-    subgraph Renderer["Renderer Process"]
-        E[Teams PWA] --> F[Browser Tools]
-        E --> G[Notifications]
-    end
-
-    subgraph External["External"]
-        H[Microsoft Teams]
-        I[Operating System]
-    end
-
-    B --> A
-    C <--> E
-    D --> I
-    E --> H
+```bash
+teams-for-linux
 ```
 
-For detailed architecture documentation, see the [Development Guide](development/README.md).
+For a custom configuration, drop a JSON file at `~/.config/teams-for-linux/config.json`. The full schema lives in the [Configuration reference](configuration.md). A minimal example:
 
-## Quick Start
+```json
+{
+  "closeAppOnCross": false,
+  "followSystemTheme": true,
+  "trayIconEnabled": true
+}
+```
 
-1. **Basic Usage**: Launch with `teams-for-linux`
-2. **Configuration**: Create `~/.config/teams-for-linux/config.json` with your settings
-3. **Troubleshooting**: Check the [Troubleshooting Guide](troubleshooting.md) for common issues
-4. **Multiple Profiles**: Use `--user-data-dir` and `--class` flags for separate instances
+If the app misbehaves, the [Troubleshooting guide](troubleshooting.md) covers the common cases (Wayland rendering, screen sharing, notifications, certificates).
 
-## Support & Community
+## Guides
 
-- **[Troubleshooting Guide](troubleshooting.md)** - Common issues and solutions
-- **[Installation Guide](installation.md)** - Setup and installation help
-- **[Contributing Guide](development/contributing.md)** - How to contribute to the project
-- 💬 **Chat**: [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)
-- 🐛 **Issues**: [Report bugs](https://github.com/IsmaelMartinez/teams-for-linux/issues)
+User-facing topics:
+
+- [Installation](installation.md) — package repositories and manual install for every supported distribution
+- [Configuration](configuration.md) — every option, with defaults
+- [Multiple instances](multiple-instances.md) — running separate work and personal profiles side by side
+- [Screen sharing](screen-sharing.md) — Wayland and X11 setup, including portal selection
+- [Custom backgrounds](custom-backgrounds.md) — adding your own video-call backgrounds
+- [Certificate management](certificate.md) — corporate CA bundles and proxy interception
+- [Intune SSO](intune-sso.md) — Microsoft Identity Broker integration
+- [MQTT integration](mqtt-integration.md) — publish presence and call status to a broker
+- [Troubleshooting](troubleshooting.md) — diagnostics for common Linux desktop issues
+
+## Contributing
+
+If you want to fix a bug or add a feature:
+
+- [Contributing guide](development/contributing.md) — local setup, code standards, PR workflow
+- [Architecture overview](development/contributing.md#architecture-overview) — how the main and renderer processes are wired
+- [Architecture Decision Records](development/adr/README.md) — the rationale behind significant choices
+- [Release process](development/manual-release-process.md) — how versions are cut via release-please
+
+## Community
+
+- [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) — bug reports and feature requests
+- [GitHub Discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions) — questions and conversation
+- [Matrix space](https://matrix.to/#/#teams-for-linux-space:matrix.org) — chat with users and contributors

@@ -416,7 +416,7 @@ See [Manual Release Process](manual-release-process.md) for detailed instruction
 
 - **[IPC API Documentation](ipc-api.md)** - Inter-process communication reference
 - **[Configuration Guide](configuration.md)** - Understanding the config system
-- **[Architecture Documentation](index.md#architecture-overview)** - System overview
+- **[Architecture Overview](#architecture-overview)** - Main and renderer process layout, key components
 
 ### Community Support
 
