@@ -449,7 +449,7 @@ function hashWarning(warning) {
 
 async function showConfigurationDialogs() {
   if (config.error) {
-    dialog.showMessageBox({
+    await dialog.showMessageBox({
       title: "Configuration Error",
       icon: nativeImage.createFromPath(
         path.join(config.appPath, "assets/icons/setting-error.256x256.png")
@@ -463,16 +463,22 @@ async function showConfigurationDialogs() {
   const acknowledged = new Set(
     appConfig.settingsStore.get(ACK_WARNINGS_KEY, [])
   );
-  const pending = config.warnings.filter(
-    (w) => !acknowledged.has(hashWarning(w))
-  );
-  if (pending.length === 0) return;
+  // Hash once per warning and dedupe by hash — identical text in
+  // `config.warnings` would otherwise prompt twice.
+  const pending = new Map();
+  for (const warning of config.warnings) {
+    const hash = hashWarning(warning);
+    if (acknowledged.has(hash) || pending.has(hash)) continue;
+    pending.set(hash, warning);
+  }
+  if (pending.size === 0) return;
 
   const icon = nativeImage.createFromPath(
     path.join(config.appPath, "assets/icons/alert-diamond.256x256.png")
   );
 
-  for (const warning of pending) {
+  let dirty = false;
+  for (const [hash, warning] of pending) {
     const { checkboxChecked } = await dialog.showMessageBox({
       title: "Configuration Warning",
       icon,
@@ -480,11 +486,14 @@ async function showConfigurationDialogs() {
       checkboxLabel: "Don't show this again",
     });
     if (checkboxChecked) {
-      acknowledged.add(hashWarning(warning));
+      acknowledged.add(hash);
+      dirty = true;
     }
   }
 
-  appConfig.settingsStore.set(ACK_WARNINGS_KEY, Array.from(acknowledged));
+  if (dirty) {
+    appConfig.settingsStore.set(ACK_WARNINGS_KEY, Array.from(acknowledged));
+  }
 }
 
 function loadMenuToggleSettings() {
