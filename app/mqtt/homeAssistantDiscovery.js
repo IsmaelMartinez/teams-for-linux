@@ -38,7 +38,7 @@ class HomeAssistantDiscovery {
     initialize() {
         this.#mqttClient.on('connected', () => this.publishDiscovery());
 
-// Handle race: if already connected when initialized, publish immediately
+        // Handle race: if already connected when initialized, publish immediately
         if (this.#mqttClient.isConnected) {
             this.publishDiscovery();
         }
