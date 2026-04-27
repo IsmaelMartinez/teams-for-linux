@@ -46,17 +46,25 @@ jobs:
         if: steps.release.outputs.pr
         run: npm install --package-lock-only
 
-      - name: Commit appdata.xml and lock file updates
+      - name: Append contributors to CHANGELOG and PR body
+        if: steps.release.outputs.pr
+        env:
+          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/append-contributors.mjs
+
+      - name: Commit release artifact updates
         if: steps.release.outputs.pr
         env:
           PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add com.github.IsmaelMartinez.teams_for_linux.appdata.xml package-lock.json
+          git add com.github.IsmaelMartinez.teams_for_linux.appdata.xml package-lock.json CHANGELOG.md
           if git diff --cached --quiet; then
-            echo "No appdata.xml or lock file changes to commit"
+            echo "No release artifact changes to commit"
           else
-            git commit -m "chore: update appdata.xml and package-lock.json for release"
+            git commit -m "chore: update release artifacts (appdata, lock file, contributors)"
             git push origin "HEAD:${PR_BRANCH}"
           fi
