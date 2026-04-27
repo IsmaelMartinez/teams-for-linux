@@ -1,21 +1,39 @@
 #!/usr/bin/env node
 
 import { readFile, writeFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { execFileSync as run } from "node:child_process";
+import { existsSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const PR_NUMBER = process.env.PR_NUMBER;
 const REPO = process.env.GITHUB_REPOSITORY || "IsmaelMartinez/teams-for-linux";
 const MAINTAINER = (process.env.MAINTAINER_LOGIN || "IsmaelMartinez").toLowerCase();
 
 const THANKS_HEADING = "### Thanks";
+const FOOTER_MARKER = "\n---\nThis PR was generated with [Release Please]";
+const SAFE_PATH = "/usr/local/bin:/usr/bin:/bin";
+const SAFE_ENV = { ...process.env, PATH: SAFE_PATH };
 
 function gh(args) {
-  return execFileSync("gh", args, { encoding: "utf8" });
+  return run("gh", args, { encoding: "utf8", env: SAFE_ENV });
 }
 
 function isBot(login) {
-  return /\[bot\]$/.test(login) || /^dependabot/i.test(login) || login === "github-actions";
+  const lower = login.toLowerCase();
+  return lower.endsWith("[bot]") || lower.startsWith("dependabot") || lower === "github-actions";
+}
+
+function rtrimNewlines(s) {
+  let i = s.length;
+  while (i > 0 && s.charCodeAt(i - 1) === 10) i--;
+  return s.slice(0, i);
+}
+
+function ltrimNewlines(s) {
+  let i = 0;
+  while (i < s.length && s.charCodeAt(i) === 10) i++;
+  return s.slice(i);
 }
 
 function stripExistingThanks(section) {
@@ -29,9 +47,9 @@ function stripExistingThanks(section) {
     if (idx !== -1 && (stopIdx === -1 || idx < stopIdx)) stopIdx = idx;
   }
   if (stopIdx === -1) {
-    return section.slice(0, headingIdx).replace(/\n+$/, "") + "\n";
+    return rtrimNewlines(section.slice(0, headingIdx)) + "\n";
   }
-  return section.slice(0, headingIdx).replace(/\n+$/, "") + tail.slice(stopIdx);
+  return rtrimNewlines(section.slice(0, headingIdx)) + tail.slice(stopIdx);
 }
 
 function buildThanksBlock(authors) {
@@ -40,6 +58,11 @@ function buildThanksBlock(authors) {
     .map((a) => `@${a}`)
     .join(", ");
   return `\n\n${THANKS_HEADING}\n\nBig thanks to ${list} for contributing to this release.\n`;
+}
+
+function makeTempFile(name) {
+  const dir = mkdtempSync(join(tmpdir(), "release-please-"));
+  return join(dir, name);
 }
 
 async function main() {
@@ -92,7 +115,7 @@ async function main() {
       const nextIdx = rest.indexOf("\n## [", 1);
       const current = nextIdx === -1 ? rest : rest.slice(0, nextIdx);
       const after = nextIdx === -1 ? "" : rest.slice(nextIdx);
-      const cleaned = stripExistingThanks(current).replace(/\n+$/, "");
+      const cleaned = rtrimNewlines(stripExistingThanks(current));
       const updated = `${before}${cleaned}${thanks}${after}`;
       if (updated !== changelog) {
         await writeFile("CHANGELOG.md", updated);
@@ -104,17 +127,17 @@ async function main() {
   }
 
   const cleanedBody = stripExistingThanks(body);
-  const footerMatch = cleanedBody.match(/\n+---\nThis PR was generated with \[Release Please\][\s\S]*$/);
+  const footerIdx = cleanedBody.indexOf(FOOTER_MARKER);
   let newBody;
-  if (footerMatch) {
-    const head = cleanedBody.slice(0, footerMatch.index).replace(/\n+$/, "");
-    const footer = footerMatch[0].replace(/^\n+/, "\n");
-    newBody = `${head}\n${thanks}${footer}`;
+  if (footerIdx !== -1) {
+    const head = rtrimNewlines(cleanedBody.slice(0, footerIdx));
+    const footer = "\n" + ltrimNewlines(cleanedBody.slice(footerIdx));
+    newBody = `${head}${thanks}${footer}`;
   } else {
-    newBody = `${cleanedBody.replace(/\n+$/, "")}\n${thanks}`;
+    newBody = `${rtrimNewlines(cleanedBody)}\n${thanks}`;
   }
   if (newBody !== body) {
-    const tmp = "/tmp/release-please-pr-body.md";
+    const tmp = makeTempFile("pr-body.md");
     await writeFile(tmp, newBody);
     gh(["pr", "edit", PR_NUMBER, "--repo", REPO, "--body-file", tmp]);
     console.log(`Updated PR #${PR_NUMBER} body.`);
