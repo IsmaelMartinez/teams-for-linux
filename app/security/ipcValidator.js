@@ -93,7 +93,18 @@ const allowedChannels = new Set([
 
   // Renderer-side error forwarding (registered in app/browser/preload.js)
   'unhandled-rejection',
-  'window-error'
+  'window-error',
+
+  // Multi-account profile switcher (ADR-020 Phase 1).
+  // Handlers are registered only when `multiAccount.enabled === true`;
+  // listing them here keeps the allowlist authoritative for the channels
+  // the feature uses end-to-end.
+  'profile-list',
+  'profile-get-active',
+  'profile-switch',
+  'profile-add',
+  'profile-update',
+  'profile-remove'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

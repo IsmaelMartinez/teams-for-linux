@@ -21,6 +21,7 @@ const CustomNotificationManager = require("./notificationSystem");
 const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
+const ProfilesManager = require("./profilesManager");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
@@ -132,6 +133,12 @@ const screenSharingService = new ScreenSharingService();
 // Initialize partitions manager with dependencies
 const partitionsManager = new PartitionsManager(appConfig.settingsStore);
 
+// ADR-020: ProfilesManager owns persistence for the multi-account switcher.
+// Constructed unconditionally so its API is available to other main-process
+// modules; IPC handlers register only when `multiAccount.enabled === true`,
+// keeping the renderer surface byte-identical with the flag off.
+const profilesManager = new ProfilesManager(appConfig.settingsStore);
+
 // Initialize idle monitor with dependencies
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
@@ -213,6 +220,11 @@ if (gotTheLock) {
 
   // Initialize partitions manager IPC handlers
   partitionsManager.initialize();
+
+  // Initialize profiles manager IPC handlers (multi-account, ADR-020)
+  if (config.multiAccount?.enabled) {
+    profilesManager.initialize();
+  }
 
   // Initialize idle monitor IPC handlers
   idleMonitor.initialize();
