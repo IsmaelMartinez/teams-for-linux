@@ -17,35 +17,10 @@
  * pin a sample rate their device can't honour).
  */
 
-function setLegacyChromeConstraint(constraint, name, value) {
-  if (constraint.mandatory && name in constraint.mandatory) {
-    constraint.mandatory[name] = value;
-    return;
-  }
-  if (constraint.optional) {
-    const element = constraint.optional.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  // `mandatory` options throw errors for unknown keys, so set under optional.
-  if (!constraint.optional) {
-    constraint.optional = [];
-  }
-  constraint.optional.push({ [name]: value });
-}
-
-function setConstraint(constraint, name, value) {
-  if (constraint.advanced) {
-    const element = constraint.advanced.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  constraint[name] = value;
-}
+const {
+  setLegacyChromeConstraint,
+  setConstraint,
+} = require("./_micConstraintHelpers");
 
 // Maps modern constraint names to their legacy goog*-prefixed equivalents.
 // Only the three boolean APM toggles have legacy aliases; channelCount and
@@ -135,8 +110,8 @@ const applyOverrideMicConstraintsPatch = function (overrides) {
         // applyConstraints is called per-track, so `this.kind` tells us the
         // track type. We only want to touch audio tracks.
         if (this.kind === "audio" && constraints) {
-          // Wrap in an audio-shaped object so overrideConstraints can
-          // reuse the same path. Don't mutate the original reference.
+          // wrapper.audio aliases the same constraint object, so the overrides
+          // applied inside overrideConstraints below are visible to original.call.
           const wrapper = { audio: constraints };
           overrideConstraints(wrapper);
         }
