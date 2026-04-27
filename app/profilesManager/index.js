@@ -107,11 +107,37 @@ class ProfilesManager {
     if (idx === -1) {
       throw new Error(`[ProfilesManager] No profile with id ${id}`);
     }
-    // `id` and `partition` are immutable for the lifetime of the profile.
-    const { id: _id, partition: _partition, ...safePatch } = patch || {};
-    state.list[idx] = { ...state.list[idx], ...safePatch };
+    // Allowlist the mutable fields and validate them per type. `id` and
+    // `partition` stay immutable; arbitrary extra keys from the renderer
+    // never reach the settings file.
+    const next = { ...state.list[idx] };
+    const p = patch || {};
+    if (Object.hasOwn(p, "name")) {
+      const name = typeof p.name === "string" ? p.name.trim() : "";
+      if (!name) {
+        throw new Error("[ProfilesManager] Profile name cannot be empty");
+      }
+      next.name = name;
+    }
+    if (typeof p.avatarColor === "string") next.avatarColor = p.avatarColor;
+    if (typeof p.avatarInitials === "string" && p.avatarInitials) {
+      next.avatarInitials = p.avatarInitials;
+    }
+    if (Object.hasOwn(p, "disableNotifications")) {
+      next.disableNotifications = !!p.disableNotifications;
+    }
+    if (Object.hasOwn(p, "muted")) next.muted = !!p.muted;
+    if (Object.hasOwn(p, "pinned")) next.pinned = !!p.pinned;
+    if (Object.hasOwn(p, "url")) {
+      if (typeof p.url === "string" && p.url) {
+        next.url = p.url;
+      } else if (p.url === null || p.url === "") {
+        delete next.url;
+      }
+    }
+    state.list[idx] = next;
     this.#write(state);
-    return state.list[idx];
+    return next;
   }
 
   remove(id) {
