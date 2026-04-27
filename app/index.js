@@ -10,6 +10,7 @@ const path = require("node:path");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
 const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
+const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
@@ -102,6 +103,7 @@ if (config.multiAccount?.enabled && intuneEnabled) {
 let userStatus = -1;
 let mqttClient = null;
 let mqttMediaStatusService = null;
+let haDiscovery = null;
 let graphApiClient = null;
 let quickChatManager = null;
 
@@ -426,6 +428,11 @@ function initializeMqtt() {
 
   mqttMediaStatusService = new MQTTMediaStatusService(mqttClient, config);
   mqttMediaStatusService.initialize();
+
+  if (config.mqtt.homeAssistant?.enabled) {
+    haDiscovery = new HomeAssistantDiscovery(mqttClient, config);
+    haDiscovery.initialize();
+  }
 }
 
 function showConfigurationDialogs() {

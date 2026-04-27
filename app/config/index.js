@@ -528,6 +528,11 @@ function extractYargConfig(configObject, appVersion) {
           statusTopic: "status",
           commandTopic: "",
           statusCheckInterval: 10000,
+          homeAssistant: {
+            enabled: false,
+            discoveryPrefix: "homeassistant",
+            deviceName: "Teams for Linux",
+          },
         },
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",

@@ -89,6 +89,8 @@ class MQTTClient extends EventEmitter {
 				} else {
 					console.debug('[MQTT] Command topic not configured, skipping command subscription');
 				}
+
+				this.emit('connected');
 			});
 
 			this.client.on('error', (error) => {
