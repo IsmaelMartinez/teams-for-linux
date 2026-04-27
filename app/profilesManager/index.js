@@ -4,6 +4,24 @@ const crypto = require("node:crypto");
 const STORE_KEY = "app.profiles";
 const PARTITION_PREFIX = "persist:teams-profile-";
 
+// Free-text caps so a renderer-supplied string cannot land oversized in CSS
+// (avatarColor) or DOM text (avatarInitials, url) once Phase 1c wires the
+// switcher UI. Picked to be roomy for legitimate values:
+//   - avatarColor: hex (#RRGGBBAA = 9), HSL ("hsl(360, 100%, 100%)" = 19)
+//   - avatarInitials: 2 graphemes — kept at 4 to allow a few combining marks
+//   - url: aligned with common HTTP URL caps
+const MAX_AVATAR_COLOR_LEN = 64;
+const MAX_AVATAR_INITIALS_LEN = 4;
+const MAX_URL_LEN = 2048;
+
+function ensureLength(value, max, field) {
+  if (typeof value === "string" && value.length > max) {
+    throw new Error(
+      `[ProfilesManager] ${field} exceeds ${max} characters`
+    );
+  }
+}
+
 /**
  * ProfilesManager — Phase 1b foundation for the multi-account switcher
  * (ADR-020). Owns CRUD against `settingsStore` under `app.profiles`. UI
@@ -74,6 +92,9 @@ class ProfilesManager {
     if (!name) {
       throw new Error("[ProfilesManager] Profile name is required");
     }
+    ensureLength(record.avatarColor, MAX_AVATAR_COLOR_LEN, "avatarColor");
+    ensureLength(record.avatarInitials, MAX_AVATAR_INITIALS_LEN, "avatarInitials");
+    ensureLength(record.url, MAX_URL_LEN, "url");
 
     const id = crypto.randomUUID();
     const profile = {
@@ -119,8 +140,12 @@ class ProfilesManager {
       }
       next.name = name;
     }
-    if (typeof p.avatarColor === "string") next.avatarColor = p.avatarColor;
+    if (typeof p.avatarColor === "string") {
+      ensureLength(p.avatarColor, MAX_AVATAR_COLOR_LEN, "avatarColor");
+      next.avatarColor = p.avatarColor;
+    }
     if (typeof p.avatarInitials === "string" && p.avatarInitials) {
+      ensureLength(p.avatarInitials, MAX_AVATAR_INITIALS_LEN, "avatarInitials");
       next.avatarInitials = p.avatarInitials;
     }
     if (Object.hasOwn(p, "disableNotifications")) {
@@ -130,6 +155,7 @@ class ProfilesManager {
     if (Object.hasOwn(p, "pinned")) next.pinned = !!p.pinned;
     if (Object.hasOwn(p, "url")) {
       if (typeof p.url === "string" && p.url) {
+        ensureLength(p.url, MAX_URL_LEN, "url");
         next.url = p.url;
       } else if (p.url === null || p.url === "") {
         delete next.url;
@@ -177,10 +203,19 @@ function deriveAvatarColor(seed) {
 }
 
 function deriveInitials(name) {
+  // Step into the string by Unicode code points, not UTF-16 code units, so a
+  // surrogate-pair leading character (emoji, supplementary-plane scripts)
+  // doesn't land us on half a character. `toLocaleUpperCase` keeps Turkish/
+  // Greek casing rules sensible.
   const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  const firstCodePoint = (s) => Array.from(s)[0] || "";
+  if (parts.length === 1) {
+    return Array.from(parts[0]).slice(0, 2).join("").toLocaleUpperCase();
+  }
+  return (
+    firstCodePoint(parts[0]) + firstCodePoint(parts[parts.length - 1])
+  ).toLocaleUpperCase();
 }
 
 module.exports = ProfilesManager;
