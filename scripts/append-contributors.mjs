@@ -2,9 +2,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { execFileSync as run } from "node:child_process";
-import { existsSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 const PR_NUMBER = process.env.PR_NUMBER;
 const REPO = process.env.GITHUB_REPOSITORY || "IsmaelMartinez/teams-for-linux";
@@ -12,11 +10,22 @@ const MAINTAINER = (process.env.MAINTAINER_LOGIN || "IsmaelMartinez").toLowerCas
 
 const THANKS_HEADING = "### Thanks";
 const FOOTER_MARKER = "\n---\nThis PR was generated with [Release Please]";
-const SAFE_PATH = "/usr/local/bin:/usr/bin:/bin";
-const SAFE_ENV = { ...process.env, PATH: SAFE_PATH };
+const REPO_ISSUE_PREFIX = `/${REPO}/issues/`;
 
-function gh(args) {
-  return run("gh", args, { encoding: "utf8", env: SAFE_ENV });
+const GH_CANDIDATES = ["/usr/bin/gh", "/usr/local/bin/gh", "/opt/homebrew/bin/gh"];
+const GH_BIN = (() => {
+  const override = process.env.GH_BIN;
+  if (override && existsSync(override)) return override;
+  for (const candidate of GH_CANDIDATES) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(`gh CLI not found in known locations (${GH_CANDIDATES.join(", ")}); set GH_BIN to override.`);
+})();
+
+function gh(args, input) {
+  const opts = { encoding: "utf8" };
+  if (input !== undefined) opts.input = input;
+  return run(GH_BIN, args, opts);
 }
 
 function isBot(login) {
@@ -34,6 +43,23 @@ function ltrimNewlines(s) {
   let i = 0;
   while (i < s.length && s.charCodeAt(i) === 10) i++;
   return s.slice(i);
+}
+
+function extractRepoIssueRefs(text) {
+  const refs = new Set();
+  let i = 0;
+  while ((i = text.indexOf(REPO_ISSUE_PREFIX, i)) !== -1) {
+    let j = i + REPO_ISSUE_PREFIX.length;
+    const start = j;
+    while (j < text.length) {
+      const c = text.charCodeAt(j);
+      if (c < 48 || c > 57) break;
+      j++;
+    }
+    if (j > start) refs.add(Number(text.slice(start, j)));
+    i = j;
+  }
+  return refs;
 }
 
 function stripExistingThanks(section) {
@@ -60,11 +86,6 @@ function buildThanksBlock(authors) {
   return `\n\n${THANKS_HEADING}\n\nBig thanks to ${list} for contributing to this release.\n`;
 }
 
-function makeTempFile(name) {
-  const dir = mkdtempSync(join(tmpdir(), "release-please-"));
-  return join(dir, name);
-}
-
 async function main() {
   if (!PR_NUMBER) {
     console.error("PR_NUMBER not set; nothing to do.");
@@ -74,8 +95,7 @@ async function main() {
   const prJson = JSON.parse(gh(["pr", "view", PR_NUMBER, "--repo", REPO, "--json", "body"]));
   const body = prJson.body || "";
 
-  const refs = new Set();
-  for (const m of body.matchAll(/\/issues\/(\d+)/g)) refs.add(Number(m[1]));
+  const refs = extractRepoIssueRefs(body);
   refs.delete(Number(PR_NUMBER));
 
   if (refs.size === 0) {
@@ -137,9 +157,7 @@ async function main() {
     newBody = `${rtrimNewlines(cleanedBody)}\n${thanks}`;
   }
   if (newBody !== body) {
-    const tmp = makeTempFile("pr-body.md");
-    await writeFile(tmp, newBody);
-    gh(["pr", "edit", PR_NUMBER, "--repo", REPO, "--body-file", tmp]);
+    gh(["pr", "edit", PR_NUMBER, "--repo", REPO, "--body-file", "-"], newBody);
     console.log(`Updated PR #${PR_NUMBER} body.`);
   }
 }
