@@ -7,6 +7,7 @@ const {
   nativeImage,
 } = require("electron");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const CustomBackground = require("./customBackground");
 const { MQTTClient } = require("./mqtt");
 const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
@@ -435,9 +436,20 @@ function initializeMqtt() {
   }
 }
 
-function showConfigurationDialogs() {
+// Content-based hash so any reworded or new warning re-surfaces — users can
+// only dismiss the exact text they have read.
+const ACK_WARNINGS_KEY = "warnings.acknowledged";
+function hashWarning(warning) {
+  return crypto
+    .createHash("sha256")
+    .update(warning)
+    .digest("hex")
+    .slice(0, 16);
+}
+
+async function showConfigurationDialogs() {
   if (config.error) {
-    dialog.showMessageBox({
+    await dialog.showMessageBox({
       title: "Configuration Error",
       icon: nativeImage.createFromPath(
         path.join(config.appPath, "assets/icons/setting-error.256x256.png")
@@ -445,14 +457,42 @@ function showConfigurationDialogs() {
       message: `Error in config file '${config.error}'.\n Loading default configuration`,
     });
   }
-  if (config.warnings && config.warnings.length > 0) {
-    dialog.showMessageBox({
+
+  if (!config.warnings || config.warnings.length === 0) return;
+
+  const acknowledged = new Set(
+    appConfig.settingsStore.get(ACK_WARNINGS_KEY, [])
+  );
+  // Hash once per warning and dedupe by hash — identical text in
+  // `config.warnings` would otherwise prompt twice.
+  const pending = new Map();
+  for (const warning of config.warnings) {
+    const hash = hashWarning(warning);
+    if (acknowledged.has(hash) || pending.has(hash)) continue;
+    pending.set(hash, warning);
+  }
+  if (pending.size === 0) return;
+
+  const icon = nativeImage.createFromPath(
+    path.join(config.appPath, "assets/icons/alert-diamond.256x256.png")
+  );
+
+  let dirty = false;
+  for (const [hash, warning] of pending) {
+    const { checkboxChecked } = await dialog.showMessageBox({
       title: "Configuration Warning",
-      icon: nativeImage.createFromPath(
-        path.join(config.appPath, "assets/icons/alert-diamond.256x256.png")
-      ),
-      message: config.warnings.join("\n\n"),
+      icon,
+      message: warning,
+      checkboxLabel: "Don't show this again",
     });
+    if (checkboxChecked) {
+      acknowledged.add(hash);
+      dirty = true;
+    }
+  }
+
+  if (dirty) {
+    appConfig.settingsStore.set(ACK_WARNINGS_KEY, Array.from(acknowledged));
   }
 }
 
@@ -532,7 +572,7 @@ function initializeAutoUpdater() {
 
 async function handleAppReady() {
   try {
-    showConfigurationDialogs();
+    await showConfigurationDialogs();
 
     process.on("SIGTRAP", onAppTerminated);
     process.on("SIGINT", onAppTerminated);
