@@ -556,6 +556,14 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Authentication configuration (Intune SSO)",
         type: "object",
       },
+      multiAccount: {
+        default: {
+          enabled: false,
+        },
+        describe:
+          "Multi-account profile switcher configuration (see ADR-020). enabled: opt-in flag for the single-window multi-tenant switcher. Mutually exclusive with auth.intune.enabled; when both are true a startup warning is logged and multi-account is disabled for the session.",
+        type: "object",
+      },
       wayland: {
         default: {
           xwaylandOptimizations: false,
