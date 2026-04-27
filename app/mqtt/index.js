@@ -152,7 +152,7 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
-	 * Publish Teams status to MQTT topic as plain text
+	 * Publish Teams status to MQTT topic
 	 * @param {number|string} status - Teams status code
 	 */
 	async publishStatus(status) {
