@@ -445,6 +445,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // Only trust auth failure signals from Teams/Microsoft origins
   const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
   let authRecoveryTriggered = false;
+  // Worker UPRs are transient during active calls (#2428); suppress them only while
+  // a call is in progress so startup recovery still works for stale-token loops (#2480).
+  let callActive = false;
+  app.on('teams-call-connected', () => { callActive = true; });
+  app.on('teams-call-disconnected', () => { callActive = false; });
   window.webContents.on('console-message', (event) => {
     if (authRecoveryTriggered) return;
     const message = event.message || '';
@@ -454,8 +459,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     const sourceId = event.sourceId || '';
     if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
 
-    // Worker UPRs are frequently transient; only react to non-worker sources (#2428)
-    if (sourceId.includes('/worker/')) return;
+    if (sourceId.includes('/worker/') && callActive) return;
 
     authRecoveryTriggered = true;
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
