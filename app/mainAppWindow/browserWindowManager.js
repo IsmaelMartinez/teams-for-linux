@@ -111,7 +111,7 @@ class BrowserWindowManager {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
     if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
-      this.window.on("restore", this.enableWakeLockOnWindowRestore);
+      this.window.on("restore", this.enableWakeLockOnWindowRestore.bind(this));
     }
     // Handle incoming call notification created
     ipcMain.handle(
