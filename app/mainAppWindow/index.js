@@ -450,6 +450,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   let callActive = false;
   app.on('teams-call-connected', () => { callActive = true; });
   app.on('teams-call-disconnected', () => { callActive = false; });
+  // Page reload (including renderer crash recovery) resets renderer-side call state,
+  // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
+  window.webContents.on('did-navigate', () => { callActive = false; });
   window.webContents.on('console-message', (event) => {
     if (authRecoveryTriggered) return;
     const message = event.message || '';
