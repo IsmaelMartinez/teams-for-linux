@@ -130,16 +130,11 @@ class ProfilesManager {
     }
     // Allowlist the mutable fields and validate them per type. `id` and
     // `partition` stay immutable; arbitrary extra keys from the renderer
-    // never reach the settings file.
+    // never reach the settings file. Per-field helpers keep this method's
+    // cognitive complexity within SonarCloud's threshold.
     const next = { ...state.list[idx] };
     const p = patch || {};
-    if (Object.hasOwn(p, "name")) {
-      const name = typeof p.name === "string" ? p.name.trim() : "";
-      if (!name) {
-        throw new Error("[ProfilesManager] Profile name cannot be empty");
-      }
-      next.name = name;
-    }
+    if (Object.hasOwn(p, "name")) this.#applyName(next, p.name);
     if (typeof p.avatarColor === "string") {
       ensureLength(p.avatarColor, MAX_AVATAR_COLOR_LEN, "avatarColor");
       next.avatarColor = p.avatarColor;
@@ -153,17 +148,27 @@ class ProfilesManager {
     }
     if (Object.hasOwn(p, "muted")) next.muted = !!p.muted;
     if (Object.hasOwn(p, "pinned")) next.pinned = !!p.pinned;
-    if (Object.hasOwn(p, "url")) {
-      if (typeof p.url === "string" && p.url) {
-        ensureLength(p.url, MAX_URL_LEN, "url");
-        next.url = p.url;
-      } else if (p.url === null || p.url === "") {
-        delete next.url;
-      }
-    }
+    if (Object.hasOwn(p, "url")) this.#applyUrl(next, p.url);
     state.list[idx] = next;
     this.#write(state);
     return next;
+  }
+
+  #applyName(next, name) {
+    const trimmed = typeof name === "string" ? name.trim() : "";
+    if (!trimmed) {
+      throw new Error("[ProfilesManager] Profile name cannot be empty");
+    }
+    next.name = trimmed;
+  }
+
+  #applyUrl(next, url) {
+    if (typeof url === "string" && url) {
+      ensureLength(url, MAX_URL_LEN, "url");
+      next.url = url;
+    } else if (url === null || url === "") {
+      delete next.url;
+    }
   }
 
   remove(id) {
