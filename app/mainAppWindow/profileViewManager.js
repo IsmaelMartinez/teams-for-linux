@@ -123,7 +123,7 @@ class ProfileViewManager {
       this.#window.removeListener("resize", this.#resizeHandler);
       this.#resizeHandler = null;
     }
-    for (const profileId of [...this.#views.keys()]) {
+    for (const profileId of this.#views.keys()) {
       this.#destroyView(profileId);
     }
     this.#initialized = false;
