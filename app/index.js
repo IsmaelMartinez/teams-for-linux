@@ -23,6 +23,7 @@ const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
+const ProfileViewManager = require("./mainAppWindow/profileViewManager");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
 const os = require("node:os");
@@ -139,6 +140,11 @@ const partitionsManager = new PartitionsManager(appConfig.settingsStore);
 // modules; IPC handlers register only when `multiAccount.enabled === true`,
 // keeping the renderer surface byte-identical with the flag off.
 const profilesManager = new ProfilesManager(appConfig.settingsStore);
+
+// Phase 1c.1: per-profile WebContentsView lifecycle. Only constructed when
+// the multi-account flag is on; the manager is wired to the main window
+// after `mainAppWindow.onAppReady` resolves.
+let profileViewManager = null;
 
 // Initialize idle monitor with dependencies
 const idleMonitor = new IdleMonitor(config, getUserStatus);
@@ -602,6 +608,26 @@ async function handleAppReady() {
     const customBackground = new CustomBackground(app, config);
     customBackground.initialize();
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
+
+    // Phase 1c.1: wire per-profile WebContentsView lifecycle once the main
+    // window exists. Bootstrap Profile 0 from the legacy partition so a
+    // pre-existing Teams login survives the first flag flip (ADR-020).
+    if (config.multiAccount?.enabled) {
+      const mainWindow = mainAppWindow.getWindow();
+      if (mainWindow) {
+        profileViewManager = new ProfileViewManager(
+          mainWindow,
+          profilesManager,
+          config
+        );
+        profileViewManager.initialize();
+        await profileViewManager.bootstrapProfileZeroIfNeeded();
+      } else {
+        console.warn(
+          "[ProfileViewManager] main window unavailable after onAppReady; multi-account features disabled for this session"
+        );
+      }
+    }
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);

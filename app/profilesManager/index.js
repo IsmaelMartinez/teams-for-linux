@@ -1,8 +1,10 @@
 const { ipcMain } = require("electron");
+const { EventEmitter } = require("node:events");
 const crypto = require("node:crypto");
 
 const STORE_KEY = "app.profiles";
 const PARTITION_PREFIX = "persist:teams-profile-";
+const LEGACY_PARTITION = "persist:teams-4-linux";
 
 // Free-text caps so a renderer-supplied string cannot land oversized in CSS
 // (avatarColor) or DOM text (avatarInitials, url) once Phase 1c wires the
@@ -41,9 +43,21 @@ function ensureLength(value, max, field) {
 class ProfilesManager {
   #settingsStore;
   #initialized = false;
+  #emitter = new EventEmitter();
 
   constructor(settingsStore) {
     this.#settingsStore = settingsStore;
+  }
+
+  // In-process subscription for main-side consumers (ProfileViewManager,
+  // menu builder). Events: "add" (Profile), "update" (Profile),
+  // "switch" (Profile), "remove" ({ removedId, activeId }).
+  on(event, handler) {
+    this.#emitter.on(event, handler);
+  }
+
+  off(event, handler) {
+    this.#emitter.off(event, handler);
   }
 
   initialize() {
@@ -84,6 +98,7 @@ class ProfilesManager {
     }
     state.activeId = id;
     this.#write(state);
+    this.#emitter.emit("switch", profile);
     return profile;
   }
 
@@ -97,10 +112,48 @@ class ProfilesManager {
     ensureLength(record.url, MAX_URL_LEN, "url");
 
     const id = crypto.randomUUID();
-    const profile = {
+    const profile = this.#buildRecord(id, `${PARTITION_PREFIX}${id}`, name, record);
+
+    const state = this.#read();
+    state.list.push(profile);
+    if (!state.activeId) state.activeId = id;
+    this.#write(state);
+    this.#emitter.emit("add", profile);
+    return profile;
+  }
+
+  // Bootstrap Profile 0 against the legacy `persist:teams-4-linux` partition
+  // so the user's existing login survives the first multi-account flag flip
+  // (ADR-020 § "First-run bootstrap"). Main-process only — never exposed via
+  // IPC, since a renderer being able to point a profile at an arbitrary
+  // partition string would let it hijack any session.
+  bootstrapLegacyProfile(name = "My account") {
+    const state = this.#read();
+    if (state.list.length > 0) {
+      throw new Error(
+        "[ProfilesManager] bootstrapLegacyProfile: profiles already exist"
+      );
+    }
+    const trimmed = typeof name === "string" ? name.trim() : "";
+    if (!trimmed) {
+      throw new Error("[ProfilesManager] Profile name is required");
+    }
+    const id = crypto.randomUUID();
+    const profile = this.#buildRecord(id, LEGACY_PARTITION, trimmed, {
+      avatarInitials: "MA",
+    });
+    state.list.push(profile);
+    state.activeId = id;
+    this.#write(state);
+    this.#emitter.emit("add", profile);
+    return profile;
+  }
+
+  #buildRecord(id, partition, name, record) {
+    return {
       id,
       name,
-      partition: `${PARTITION_PREFIX}${id}`,
+      partition,
       avatarColor:
         typeof record.avatarColor === "string"
           ? record.avatarColor
@@ -114,12 +167,6 @@ class ProfilesManager {
       pinned: !!record.pinned,
       ...(typeof record.url === "string" && record.url ? { url: record.url } : {}),
     };
-
-    const state = this.#read();
-    state.list.push(profile);
-    if (!state.activeId) state.activeId = id;
-    this.#write(state);
-    return profile;
   }
 
   update(id, patch) {
@@ -151,6 +198,7 @@ class ProfilesManager {
     if (Object.hasOwn(p, "url")) this.#applyUrl(next, p.url);
     state.list[idx] = next;
     this.#write(state);
+    this.#emitter.emit("update", next);
     return next;
   }
 
@@ -182,7 +230,9 @@ class ProfilesManager {
       state.activeId = state.list[0]?.id || null;
     }
     this.#write(state);
-    return { removedId: id, activeId: state.activeId };
+    const result = { removedId: id, activeId: state.activeId };
+    this.#emitter.emit("remove", result);
+    return result;
   }
 
   #read() {
