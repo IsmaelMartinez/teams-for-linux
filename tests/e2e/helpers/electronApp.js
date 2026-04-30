@@ -25,27 +25,34 @@ export const PROFILE_IPC_CHANNELS = [
 
 /**
  * Launch the app with an isolated userData dir and the supplied config.
- * `E2E_TESTING=true` is set so `electronApp.evaluate` UtilityScript can
- * run (the main window otherwise blocks `globalThis.eval`).
  *
- * @param {{ prefix: string, config?: object }} options
+ * Pass `allowEval: true` only when the test needs `electronApp.evaluate`;
+ * it sets `E2E_TESTING=true`, which disables the main window's
+ * `globalThis.eval` defense (`browserWindowManager.js`). Default is
+ * `false` so a launch from this helper stays environmentally identical to
+ * a real user launch unless the test opts in.
+ *
+ * @param {{ prefix: string, config?: object, allowEval?: boolean }} options
  * @returns {Promise<{ electronApp: import('playwright').ElectronApplication, userDataDir: string }>}
  */
-export async function startApp({ prefix, config }) {
+export async function startApp({ prefix, config, allowEval = false }) {
   const userDataDir = mkdtempSync(join(tmpdir(), prefix));
   if (config) {
     writeFileSync(join(userDataDir, 'config.json'), JSON.stringify(config));
+  }
+  const env = {
+    ...process.env,
+    E2E_USER_DATA_DIR: userDataDir,
+  };
+  if (allowEval) {
+    env.E2E_TESTING = 'true';
   }
   const electronApp = await electron.launch({
     args: [
       './app/index.js',
       ...(process.env.CI ? ['--no-sandbox'] : []),
     ],
-    env: {
-      ...process.env,
-      E2E_USER_DATA_DIR: userDataDir,
-      E2E_TESTING: 'true',
-    },
+    env,
     timeout: 30000,
   });
   await electronApp.firstWindow({ timeout: 30000 });

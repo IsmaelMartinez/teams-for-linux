@@ -16,6 +16,9 @@ test('multi-account enabled, no profiles yet = same redirect to Microsoft login'
   const ctx = await startApp({
     prefix: 'teams-e2e-enabled-',
     config: { multiAccount: { enabled: true } },
+    // Need `electronApp.evaluate` to introspect ipcMain._invokeHandlers
+    // and to call the profile-list handler directly.
+    allowEval: true,
   });
 
   try {

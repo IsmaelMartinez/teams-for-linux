@@ -62,6 +62,11 @@ class ProfileViewManager {
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
 
+    // Tear down on window close so the WebContentsView instances and the
+    // ProfilesManager listeners do not outlive the window. `once` because
+    // the window is destroyed after the event fires.
+    this.#window.once("closed", () => this.dispose());
+
     // Materialize views for any pre-existing non-legacy profiles. Hide
     // them all initially; the active profile is shown below if applicable.
     for (const profile of this.#profilesManager.list()) {
@@ -81,7 +86,10 @@ class ProfileViewManager {
    * while keeping the check to a single async call (ADR-020 § "First-run
    * bootstrap"; design decision logged in plans/feature-phase1c-multi-account.md).
    *
-   * Safe to call multiple times; returns early when profiles already exist.
+   * Idempotent under serial calls — returns early when profiles already
+   * exist. Two concurrent calls would race past the `list().length > 0`
+   * guard and the second `bootstrapLegacyProfile()` would throw; only one
+   * caller exists today (`onAppReady` in `app/index.js`).
    */
   async bootstrapProfileZeroIfNeeded() {
     if (this.#profilesManager.list().length > 0) return null;

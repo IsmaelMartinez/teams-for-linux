@@ -24,6 +24,8 @@ test('multi-account disabled = byte-identical launch (no profile-* IPC handlers)
   const ctx = await startApp({
     prefix: 'teams-e2e-disabled-',
     config: { multiAccount: { enabled: false } },
+    // Need `electronApp.evaluate` to introspect ipcMain._invokeHandlers.
+    allowEval: true,
   });
 
   try {
