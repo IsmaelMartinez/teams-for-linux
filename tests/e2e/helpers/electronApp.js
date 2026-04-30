@@ -7,12 +7,12 @@ import { join } from 'node:path';
 // flag-toggle test). Keeps the launch/discover/cleanup boilerplate in
 // one place so each spec can stay focused on its assertions.
 
-const TEAMS_HOSTNAMES = [
+const TEAMS_HOSTNAMES = new Set([
   'teams.cloud.microsoft',
   'teams.microsoft.com',
   'teams.live.com',
   'login.microsoftonline.com',
-];
+]);
 
 export const PROFILE_IPC_CHANNELS = [
   'profile-list',
@@ -69,7 +69,7 @@ export function findMainTeamsWindow(electronApp) {
   return electronApp.windows().find((w) => {
     const url = w.url();
     try {
-      return TEAMS_HOSTNAMES.includes(new URL(url).hostname);
+      return TEAMS_HOSTNAMES.has(new URL(url).hostname);
     } catch {
       return false;
     }
