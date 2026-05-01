@@ -216,10 +216,9 @@ function createScreenSharePreviewWindow() {
 // proxied flavour is treated the same as the canonical hostname.
 const MCAS_SUFFIX = '.mcas.ms';
 function stripMcasSuffix(hostname) {
-  if (typeof hostname === 'string' && hostname.endsWith(MCAS_SUFFIX)) {
-    return hostname.slice(0, -MCAS_SUFFIX.length);
-  }
-  return hostname;
+  return hostname.endsWith(MCAS_SUFFIX)
+    ? hostname.slice(0, -MCAS_SUFFIX.length)
+    : hostname;
 }
 
 // Microsoft auth domains whose cookies should be checked/cleaned
