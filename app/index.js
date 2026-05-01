@@ -607,7 +607,7 @@ async function handleAppReady() {
 
     const customBackground = new CustomBackground(app, config);
     customBackground.initialize();
-    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService);
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
     // Phase 1c.1: wire per-profile WebContentsView lifecycle once the main
     // window exists. Bootstrap Profile 0 from the legacy partition so a

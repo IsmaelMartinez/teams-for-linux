@@ -20,12 +20,14 @@ const autoUpdaterModule = require("../autoUpdater");
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
   #preJoinUrl = null;
+  #profileChangeHandler = null;
 
-  constructor(window, configGroup, iconPath, connectionManager) {
+  constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.connectionManager = connectionManager;
+    this.profilesManager = profilesManager;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
@@ -143,6 +145,22 @@ class Menus {
 
     this.initializeEventHandlers();
 
+    // Phase 1c.2: rebuild the menu when ProfilesManager state changes
+    // (add/remove/switch/update) so the Profiles submenu and the active-
+    // profile checkmark stay in sync. Listener subscription is gated on
+    // the multi-account flag — with the flag off, ProfilesManager events
+    // would never fire and the Profiles submenu is not in the template.
+    if (
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled
+    ) {
+      this.#profileChangeHandler = () => this.updateMenu();
+      this.profilesManager.on("add", this.#profileChangeHandler);
+      this.profilesManager.on("remove", this.#profileChangeHandler);
+      this.profilesManager.on("switch", this.#profileChangeHandler);
+      this.profilesManager.on("update", this.#profileChangeHandler);
+    }
+
     if (this.configGroup.startupConfig.trayIconEnabled) {
       this.tray = new Tray(
         this.window,
@@ -200,6 +218,36 @@ class Menus {
         message: "Settings file not found. Using default settings.",
         title: "Restore settings",
         type: "warning",
+      });
+    }
+  }
+
+  // Phase 1c.2 placeholder: real Add-profile dialog ships in a follow-up
+  // commit on this same branch. Surfacing a `dialog.showMessageBox` is
+  // the simplest honest signal until the real form lands; otherwise
+  // clicking the menu item would do nothing visible and leave the user
+  // wondering whether the click registered.
+  addProfile() {
+    dialog.showMessageBox(this.window, {
+      type: "info",
+      title: "Add profile",
+      message: "Add-profile dialog is coming next.",
+      detail:
+        "This menu entry is wired up; the form lands in a follow-up commit on this branch. Until then, profiles can only be created via the `profile-add` IPC channel.",
+    });
+  }
+
+  // Switch the active profile via ProfilesManager. The emitter then fires
+  // `switch` and the menu rebuilds via the listener wired in initialize().
+  // ProfileViewManager's own listener (in app/mainAppWindow/profileViewManager.js)
+  // handles the actual WebContentsView visibility swap.
+  switchProfile(id) {
+    try {
+      this.profilesManager.switch(id);
+    } catch (error) {
+      console.error("[Menus] switchProfile failed", {
+        id,
+        message: error.message,
       });
     }
   }
