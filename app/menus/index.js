@@ -159,6 +159,22 @@ class Menus {
       this.profilesManager.on("remove", this.#profileChangeHandler);
       this.profilesManager.on("switch", this.#profileChangeHandler);
       this.profilesManager.on("update", this.#profileChangeHandler);
+
+      // Detach the listeners when the window is destroyed so the
+      // long-lived ProfilesManager (a process-wide singleton) does not
+      // hold references into a stale Menus instance if the window is
+      // ever recreated. `once` because the window is destroyed exactly
+      // once. Mirrors `ProfileViewManager.initialize`'s `mainWindow.once(
+      // 'closed', () => this.dispose())` pattern from PR #2483.
+      this.window.once("closed", () => {
+        if (this.#profileChangeHandler) {
+          this.profilesManager.off("add", this.#profileChangeHandler);
+          this.profilesManager.off("remove", this.#profileChangeHandler);
+          this.profilesManager.off("switch", this.#profileChangeHandler);
+          this.profilesManager.off("update", this.#profileChangeHandler);
+          this.#profileChangeHandler = null;
+        }
+      });
     }
 
     if (this.configGroup.startupConfig.trayIconEnabled) {
