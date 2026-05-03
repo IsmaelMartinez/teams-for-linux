@@ -347,6 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
+      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "speakingIndicator", path: "./tools/speakingIndicator" },
       { name: "cameraResolution", path: "./tools/cameraResolution" },

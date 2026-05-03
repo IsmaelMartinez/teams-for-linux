@@ -9,23 +9,7 @@
  * video constraints, allowing the camera to use higher resolutions.
  */
 
-function setLegacyChromeConstraint(constraint, name, value) {
-  if (constraint.mandatory && name in constraint.mandatory) {
-    constraint.mandatory[name] = value;
-    return;
-  }
-  if (constraint.optional) {
-    const element = constraint.optional.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  if (!constraint.optional) {
-    constraint.optional = [];
-  }
-  constraint.optional.push({ [name]: value });
-}
+const { setLegacyChromeConstraint } = require("./_micConstraintHelpers");
 
 function removeLegacyChromeConstraint(constraint, name) {
   if (constraint.mandatory && name in constraint.mandatory) {
