@@ -1,4 +1,5 @@
 const { shell } = require("electron");
+const buildProfilesMenu = require("./profilesMenu");
 
 exports = module.exports = (Menus) => ({
   label: "Teams for Linux",
@@ -64,6 +65,9 @@ exports = module.exports = (Menus) => ({
     getSettingsMenu(Menus),
     getPreferencesMenu(),
     getNotificationsMenu(Menus),
+    ...(Menus.configGroup.startupConfig.multiAccount?.enabled
+      ? [buildProfilesMenu(Menus)].filter(Boolean)
+      : []),
     {
       type: "separator",
     },

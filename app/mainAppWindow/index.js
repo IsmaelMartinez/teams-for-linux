@@ -30,6 +30,9 @@ const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
 let iconChooser;
 let intune;
 let isControlPressed = false;
+// Phase 1c.2: ProfilesManager handle threaded through onAppReady so the
+// Menus instance can build the Profiles submenu and react to its events.
+let profilesManagerRef = null;
 // Counter for tracking about:blank navigation attempts to handle authentication flows.
 // Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to
 // intercept these and handle them in a hidden window to complete the auth process.
@@ -343,11 +346,12 @@ async function triggerAuthRecovery() {
   window.loadURL(config.url, { userAgent: config.chromeUserAgent });
 }
 
-exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService) {
+exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
   customBackgroundService = customBackground;
   screenSharingService = sharingService;
+  profilesManagerRef = profilesManager;
 
   // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
   const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
@@ -427,7 +431,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef);
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
