@@ -32,6 +32,7 @@ class ProfileViewManager {
   #views = new Map();
   #handlers = null;
   #resizeHandler = null;
+  #navigationHandler = null;
   #initialized = false;
 
   /**
@@ -62,6 +63,29 @@ class ProfileViewManager {
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
 
+    // Bootstrap-on-navigate: a fresh-install user launches with the
+    // legacy partition empty, so the startup bootstrap sees no cookies
+    // and skips. Once they complete the in-window login, the legacy
+    // partition gains cookies but Profile 0 has not been registered, so
+    // the Profiles → Switch to submenu sits empty. Re-running the
+    // bootstrap on every top-level navigation closes that gap: the
+    // moment cookies appear, Profile 0 gets registered, the menu
+    // rebuilds via ProfilesManager's `add` event, and the user sees
+    // their account in Switch-to without restarting.
+    //
+    // Cost is one cookie read per top-level navigation. Once Profile 0
+    // exists, `bootstrapProfileZeroIfNeeded` short-circuits on the
+    // `list().length > 0` guard and the cookie read is skipped.
+    this.#navigationHandler = () => {
+      this.bootstrapProfileZeroIfNeeded().catch((error) => {
+        console.warn(
+          "[ProfileViewManager] Bootstrap-on-navigate failed",
+          { message: error.message }
+        );
+      });
+    };
+    this.#window.webContents.on("did-navigate", this.#navigationHandler);
+
     // Tear down on window close so the WebContentsView instances and the
     // ProfilesManager listeners do not outlive the window. `once` because
     // the window is destroyed after the event fires.
@@ -88,11 +112,23 @@ class ProfileViewManager {
    *
    * Idempotent under serial calls — returns early when profiles already
    * exist. Two concurrent calls would race past the `list().length > 0`
-   * guard and the second `bootstrapLegacyProfile()` would throw; only one
-   * caller exists today (`onAppReady` in `app/index.js`).
+   * guard and the second `bootstrapLegacyProfile()` would throw; the
+   * `did-navigate` listener wired in `initialize()` and the one-shot call
+   * from `onAppReady` are both serial in practice (Electron events fire
+   * on the main process event loop, one at a time).
    */
   async bootstrapProfileZeroIfNeeded() {
-    if (this.#profilesManager.list().length > 0) return null;
+    // Skip if a legacy-partition profile already exists. Checking for the
+    // legacy partition specifically (rather than "any profile exists")
+    // means a user who already added other profiles before Profile 0 was
+    // captured still gets it registered on the next navigation — important
+    // because the old "no profiles" guard could leave the legacy login
+    // permanently orphaned after a fresh-install user added their second
+    // account first.
+    const hasLegacyProfile = this.#profilesManager
+      .list()
+      .some((p) => p.partition === LEGACY_PARTITION);
+    if (hasLegacyProfile) return null;
 
     let cookies;
     try {
@@ -130,6 +166,13 @@ class ProfileViewManager {
     if (this.#resizeHandler) {
       this.#window.removeListener("resize", this.#resizeHandler);
       this.#resizeHandler = null;
+    }
+    if (this.#navigationHandler) {
+      this.#window.webContents.removeListener(
+        "did-navigate",
+        this.#navigationHandler
+      );
+      this.#navigationHandler = null;
     }
     for (const profileId of this.#views.keys()) {
       this.#destroyView(profileId);
