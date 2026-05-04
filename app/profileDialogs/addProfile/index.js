@@ -1,5 +1,6 @@
-const { BrowserWindow, ipcMain } = require("electron");
+const { ipcMain } = require("electron");
 const path = require("node:path");
+const createDialogWindow = require("../_shared/createDialogWindow");
 
 // Single-instance dispatch pointer mirrors `JoinMeetingDialog`: handlers are
 // registered exactly once and route through whichever AddProfileDialog is
@@ -49,12 +50,12 @@ class AddProfileDialog {
     // enough to keep the modal on the same display as its parent — many
     // window managers spawn the child on the primary monitor regardless.
     // Compute the parent's centre and pass explicit `x`/`y` so the dialog
-    // always lands over the main window. Falls back to Electron's default
-    // placement if parent bounds are unavailable for any reason.
+    // always lands over the main window. Falls back to the helper's
+    // default placement if parent bounds are unavailable for any reason.
     const dialogWidth = 460;
     const dialogHeight = 380;
     const parentBounds = this.#parentWindow?.getBounds?.();
-    const positionOpts = parentBounds
+    const position = parentBounds
       ? {
           x: Math.round(
             parentBounds.x + (parentBounds.width - dialogWidth) / 2
@@ -63,26 +64,15 @@ class AddProfileDialog {
             parentBounds.y + (parentBounds.height - dialogHeight) / 2
           ),
         }
-      : {};
+      : undefined;
 
-    this.#window = new BrowserWindow({
+    this.#window = createDialogWindow({
       title: "Add profile",
       width: dialogWidth,
       height: dialogHeight,
-      ...positionOpts,
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      modal: true,
       parent: this.#parentWindow,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        preload: path.join(__dirname, "preload.js"),
-      },
+      preload: path.join(__dirname, "preload.js"),
+      position,
     });
 
     activeHandlers = {
