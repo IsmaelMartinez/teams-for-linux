@@ -222,4 +222,56 @@ describe('SpeakingIndicator', () => {
 			'overlay should not appear when only MQTT is enabled (no visual indicator)'
 		);
 	});
+
+	it('forwards microphone state via ipcRenderer when audio level changes (#1938 / #2465)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		assert.ok(micCalls.length > 0, 'should send microphone-state-changed at least once');
+		assert.strictEqual(micCalls[0].arguments[1], 'speaking', 'first state should be speaking when audioLevel >= threshold');
+	});
+
+	it('emits microphone-state-changed=off when all connections close (#1938 / #2465)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		closePeerConnections();
+		await new Promise(r => setTimeout(r, 200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		assert.strictEqual(
+			micCalls[micCalls.length - 1].arguments[1],
+			'off',
+			'last microphone-state-changed payload should be "off" after connections close'
+		);
+	});
+
+	it('does not emit microphone-state-changed when ipcRenderer is missing', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		// init without ipcRenderer (overlay-only path) should be safe
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		// Implicit assertion: no throws above. Nothing else to check since there is no ipcRenderer to inspect.
+	});
 });

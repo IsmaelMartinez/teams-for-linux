@@ -27,6 +27,11 @@
  *
  * Teams zeroes media-source.audioLevel to exactly 0.0 when muted,
  * making three-state detection (speaking/silent/muted) reliable.
+ *
+ * When ipcRenderer is provided (always true today since the module is in
+ * modulesRequiringIpc), the same state transitions are forwarded to the main
+ * process via the `microphone-state-changed` IPC channel for MQTT publishing.
+ * Values: 'speaking' | 'silent' | 'muted' | 'off' (off when the call ends).
  */
 const activityHub = require('./activityHub');
 
@@ -46,8 +51,10 @@ class SpeakingIndicator {
 	#overlayEnabled = false;
 	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
 	#inCall = false;
+	#ipcRenderer = null;
+	#lastEmittedState = null; // 'speaking' | 'silent' | 'muted' | 'off' | null
 
-	init(config) {
+	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
 		const mqttEnabled = config.mqtt?.enabled === true;
 
@@ -56,6 +63,7 @@ class SpeakingIndicator {
 		}
 
 		this.#overlayEnabled = overlayEnabled;
+		this.#ipcRenderer = ipcRenderer || null;
 
 		try {
 			this.#patchRTCPeerConnection();
@@ -109,7 +117,20 @@ class SpeakingIndicator {
 			this.#hasSeenAudio = false;
 			this.#stopPolling();
 			this.#hideOverlay();
+			this.#emitMicrophoneState('off');
 		});
+	}
+
+	// Notifies main process of microphone state for MQTT publishing.
+	#emitMicrophoneState(state) {
+		if (!this.#ipcRenderer) {
+			return;
+		}
+		if (this.#lastEmittedState === state) {
+			return;
+		}
+		this.#lastEmittedState = state;
+		this.#ipcRenderer.send('microphone-state-changed', state);
 	}
 
 	#startPolling() {
@@ -143,6 +164,7 @@ class SpeakingIndicator {
 			console.info(`${LOG_PREFIX} No active connections, stopping polling`);
 			this.#stopPolling();
 			this.#hideOverlay();
+			this.#emitMicrophoneState('off');
 			// WebRTC-based call-disconnected: all connections closed (#2358)
 			if (this.#inCall) {
 				this.#inCall = false;
@@ -195,6 +217,7 @@ class SpeakingIndicator {
 						if (this.#overlayVisible) {
 							this.#updateOverlay();
 						}
+						this.#emitMicrophoneState(newState);
 					}
 				});
 
