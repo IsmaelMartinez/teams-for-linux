@@ -28,7 +28,9 @@ function createDialogWindow({ title, width, height, parent, preload, position })
     title,
     width,
     height,
-    ...(position ?? {}),
+    // `position` is optional; spreading `undefined` is a no-op so we don't
+    // need a `?? {}` fallback (per `javascript:S7744`).
+    ...position,
     resizable: false,
     minimizable: false,
     maximizable: false,

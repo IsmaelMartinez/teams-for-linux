@@ -14,10 +14,10 @@ let colorWasTouched = false;
 function updateValidation() {
   const hasName = nameInput.value.trim().length > 0;
   addBtn.disabled = !hasName;
-  if (!hasName) {
-    nameInput.classList.add("invalid");
-  } else {
+  if (hasName) {
     nameInput.classList.remove("invalid");
+  } else {
+    nameInput.classList.add("invalid");
   }
 }
 
