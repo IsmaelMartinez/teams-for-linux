@@ -217,8 +217,8 @@ class SpeakingIndicator {
 						if (this.#overlayVisible) {
 							this.#updateOverlay();
 						}
-						this.#emitMicrophoneState(newState);
 					}
+					this.#emitMicrophoneState(newState);
 				});
 
 				if (foundAudioStats) {

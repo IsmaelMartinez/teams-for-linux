@@ -58,7 +58,7 @@ class MQTTMediaStatusService {
 
 	async #handleMicrophoneChanged(event, state) {
 		const topic = `${this.#topicPrefix}/microphone`;
-		await this.#mqttClient.publish(topic, String(state), { retain: true });
+		await this.#mqttClient.publish(topic, state, { retain: true });
 		console.debug('[MQTTMediaStatusService] Microphone state changed to', state, 'published to', topic);
 	}
 
