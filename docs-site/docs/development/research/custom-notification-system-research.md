@@ -268,8 +268,10 @@ Phase 2 highlighted the difficulty of testing notification routing end-to-end. T
 
 If custom notifications beyond meeting toasts are requested again by a different user, the recommended approach would be to first establish a shared understanding of what notifications the user expects, then provide a debug build with diagnostic logging so the user can report exactly what events fire in their environment before writing any routing logic.
 
+The shared notification pipeline (sound + native delivery) continues to receive targeted fixes outside this Phase 2 scope. The most recent in flight is [PR #2414](https://github.com/IsmaelMartinez/teams-for-linux/pull/2414) addressing [#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411) (double notification sound and missing dismiss event). Those fixes touch `app/notifications/service.js`, not the Phase 2 routing logic, and do not change the conclusion above.
+
 ---
 
 **Document Status:** ✅ MVP Complete | ❌ Phase 2 Dropped
-**Current Version:** v2.7.6
-**Last Updated:** 2026-02-18
+**Current Version:** v2.8.1 (preparing v2.9.0)
+**Last Updated:** 2026-05-06

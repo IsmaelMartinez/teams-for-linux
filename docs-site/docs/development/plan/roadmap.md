@@ -100,7 +100,7 @@ These are the next priorities --- work the maintainer can drive without waiting 
 
 **Gate builds on E2E tests.** Currently `linux_x64` packaging depends only on `lint_and_audit`. The `e2e_tests` job runs but failures don't block packaging or merges. Add `e2e_tests` to the `needs` list for packaging jobs.
 
-**Cross-distro CI smoke test (implemented).** A GitHub Actions workflow (`cross-distro-smoke.yml`) runs 9 configurations in parallel on push to main, building Docker images and verifying the app starts and reaches the login page. See the [design spec](../research/cross-distro-ci-smoke-test-design.md) and [implementation plan](cross-distro-ci-smoke-test-plan.md). The test directory was also restructured: `testing/cross-distro/` moved to `tests/cross-distro/` with npm scripts (`npm run cross-distro`, `npm run cross-distro:list`) for project-root access.
+**Cross-distro CI smoke test (implemented).** A GitHub Actions workflow (`cross-distro-smoke.yml`) runs 9 configurations in parallel on push to main, building Docker images and verifying the app starts and reaches the login page. See the [implementation plan](cross-distro-ci-smoke-test-plan.md). The test directory was also restructured: `testing/cross-distro/` moved to `tests/cross-distro/` with npm scripts (`npm run cross-distro`, `npm run cross-distro:list`) for project-root access.
 
 **~~Add `.nvmrc`.~~** Done. `.nvmrc` added in PR [#2386](https://github.com/IsmaelMartinez/teams-for-linux/pull/2386). Bumped to Node 24 (matching Electron 41's embedded runtime) along with CI workflows and cross-distro Dockerfiles in PR [#2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347), pending merge.
 
@@ -134,7 +134,7 @@ Electron 41 is a major dependency upgrade (Chromium 142→146, Node.js 22→24).
 
 Electron 41 includes upstream fixes that may resolve several blocked issues: CSD window sizing on GNOME/Wayland ([#1943](https://github.com/IsmaelMartinez/teams-for-linux/issues/1943)), and broader Ozone/Wayland improvements that may help with the incoming call crash ([#2345](https://github.com/IsmaelMartinez/teams-for-linux/issues/2345)) and Fedora typing issues ([#2335](https://github.com/IsmaelMartinez/teams-for-linux/issues/2335)). Users have been asked to test with the build artifacts.
 
-The notification sound overhaul Phase 2 (custom sound configuration, [research complete](../research/notification-sound-overhaul-research.md)) may bundle with this release if timing aligns.
+Notification sound overhaul Phase 1 (the `node-sound` replacement) shipped in v2.7.10 via PR [#2306](https://github.com/IsmaelMartinez/teams-for-linux/pull/2306). Phase 2 (custom sound configuration) is parked without a driving issue and is no longer on the v2.9.0 / v2.10.0 wishlist.
 
 ---
 
