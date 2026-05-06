@@ -13,8 +13,8 @@ function ensureIpcHandlers() {
   if (handlersRegistered) return;
   handlersRegistered = true;
   // Form submit from the renderer; `record` is a plain object matching the
-  // shape ProfilesManager.add() accepts ({ name, url, avatarInitials,
-  // avatarColor }).
+  // shape ProfilesManager.add() accepts: `name`, optional `url`,
+  // `avatarInitials`, `avatarColor`.
   ipcMain.on("add-profile-submit", (_event, record) => {
     activeHandlers?.onSubmit(record);
   });
