@@ -127,11 +127,22 @@ class ProfilesManager {
   // (ADR-020 § "First-run bootstrap"). Main-process only — never exposed via
   // IPC, since a renderer being able to point a profile at an arbitrary
   // partition string would let it hijack any session.
+  //
+  // Guard: at most one legacy-partition profile may exist. Throws if one
+  // already does. The previous "no profiles at all" guard was too strict
+  // — a user who added a non-legacy profile before Profile 0 was captured
+  // (possible when launching with a fresh dir and the Phase 1c.1
+  // bootstrap-on-startup miss) would otherwise have their legacy login
+  // permanently orphaned.
+  //
+  // Active-profile preservation: only takes the active slot if no profile
+  // is currently active. If the user already switched to a non-legacy
+  // profile, a deferred bootstrap won't yank them back to Profile 0.
   bootstrapLegacyProfile(name = "My account") {
     const state = this.#read();
-    if (state.list.length > 0) {
+    if (state.list.some((p) => p.partition === LEGACY_PARTITION)) {
       throw new Error(
-        "[ProfilesManager] bootstrapLegacyProfile: profiles already exist"
+        "[ProfilesManager] bootstrapLegacyProfile: legacy profile already exists"
       );
     }
     const trimmed = typeof name === "string" ? name.trim() : "";
@@ -143,7 +154,7 @@ class ProfilesManager {
       avatarInitials: "MA",
     });
     state.list.push(profile);
-    state.activeId = id;
+    if (!state.activeId) state.activeId = id;
     this.#write(state);
     this.#emitter.emit("add", profile);
     return profile;

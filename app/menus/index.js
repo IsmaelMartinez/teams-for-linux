@@ -15,6 +15,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const AddProfileDialog = require("../profileDialogs/addProfile");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
@@ -35,6 +36,14 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
+    // Only allocate the Add-profile dialog when multi-account is enabled.
+    // The Profiles menu entry that triggers it is itself gated on the same
+    // flag, so with the flag off this object is never reachable from the UI.
+    this.addProfileDialog =
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled
+        ? new AddProfileDialog(this.window, this.profilesManager)
+        : null;
     this.initialize();
   }
 
@@ -238,19 +247,8 @@ class Menus {
     }
   }
 
-  // Phase 1c.2 placeholder: real Add-profile dialog ships in a follow-up
-  // commit on this same branch. Surfacing a `dialog.showMessageBox` is
-  // the simplest honest signal until the real form lands; otherwise
-  // clicking the menu item would do nothing visible and leave the user
-  // wondering whether the click registered.
   addProfile() {
-    dialog.showMessageBox(this.window, {
-      type: "info",
-      title: "Add profile",
-      message: "Add-profile dialog is coming next.",
-      detail:
-        "This menu entry is wired up; the form lands in a follow-up commit on this branch. Until then, profiles can only be created via the `profile-add` IPC channel.",
-    });
+    this.addProfileDialog?.show();
   }
 
   // Switch the active profile via ProfilesManager. The emitter then fires

@@ -104,7 +104,13 @@ const allowedChannels = new Set([
   'profile-switch',
   'profile-add',
   'profile-update',
-  'profile-remove'
+  'profile-remove',
+
+  // Add-profile dialog (Phase 1c.2). Same `ipcMain.on` shape as
+  // `join-meeting-*`; submit forwards the form record to
+  // `ProfilesManager.add()`, cancel destroys the dialog.
+  'add-profile-submit',
+  'add-profile-cancel'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
