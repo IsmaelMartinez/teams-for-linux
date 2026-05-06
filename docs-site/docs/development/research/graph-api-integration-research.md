@@ -14,11 +14,11 @@ This document tracks the research and implementation of Microsoft Graph API inte
 
 ## Implementation Status
 
-### Phase 1: POC Foundation (Complete)
+### Phase 1: Foundation (Shipped v2.7.4)
 
 - [x] Token acquisition via Teams React authentication provider
 - [x] GraphApiClient module with core functionality
-- [x] IPC handlers for renderer access
+- [x] IPC handlers for renderer access (consumed by Quick Chat — see ADR-014, ADR-015)
 - [x] Configuration option (`graphApi.enabled`)
 - [x] Security allowlist for IPC channels
 - [x] Documentation generation support
@@ -53,7 +53,7 @@ This document tracks the research and implementation of Microsoft Graph API inte
 |------|---------|
 | `app/index.js` | Import and initialization of Graph API client |
 | `app/config/index.js` | Added `graphApi` configuration option |
-| `app/security/ipcValidator.js` | Added 5 Graph API channels to allowlist |
+| `app/security/ipcValidator.js` | Added 7 Graph API channels to allowlist |
 | `app/browser/tools/reactHandler.js` | Added `acquireToken()` method |
 | `scripts/generateIpcDocs.js` | Added Microsoft Graph API category |
 
@@ -66,6 +66,8 @@ This document tracks the research and implementation of Microsoft Graph API inte
 | `graph-api-get-calendar-view` | Get events within date range |
 | `graph-api-create-calendar-event` | Create new calendar event |
 | `graph-api-get-mail-messages` | Get mail messages with OData options |
+| `graph-api-search-people` | People API search (used by Quick Chat) |
+| `graph-api-send-chat-message` | Send chat message (used by Quick Chat) |
 
 ## Technical Details
 

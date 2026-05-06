@@ -1,13 +1,13 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
-:::info Phase 1 Shipped — Phase 2 Awaiting User Feedback
-Infrastructure, LWT, and call state publishing are shipped. Phase 2 (WebRTC camera/mic monitoring) deferred until a user requests it.
+:::info Phase 1 Shipped — Phase 2 Microphone in Flight, Camera Deferred
+Infrastructure, LWT, and call state publishing shipped in Phase 1. Phase 2 microphone topic is implemented in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) (driven by speaking-indicator audioLevel, see `mqtt-microphone-state-research.md`). Phase 2 camera state is still deferred pending validation of the `track.enabled` polling approach.
 :::
 
 **Date**: 2025-11-12
-**Updated**: 2026-01-18
+**Updated**: 2026-05-06
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1 Complete (Infrastructure + Documentation + LWT + WebRTC Call State Fallback) | Phase 2 DEFERRED
+**Status**: Phase 1 Complete | Phase 2 Microphone in PR #2497 | Phase 2 Camera deferred
 
 ## User Request
 
