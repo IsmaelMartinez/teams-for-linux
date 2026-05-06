@@ -2,11 +2,14 @@
 
 ## [2.9.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.8.1...v2.9.0) (2026-05-06)
 
+> **Multi-account is a work-in-progress preview.** The new `multiAccount.enabled` flag (off by default) lets you keep separate Teams sessions in the same window. The Add-profile dialog and the Profiles → Switch-to menu work end-to-end in this release, but the Manage-profiles dialog, the visible top-right switcher pill, and `Ctrl+Shift+1…5` shortcuts are still ahead. Useful to test, but expect rough edges and follow [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495) for ongoing progress.
+
 
 ### Features
 
 * **config:** allow dismissing startup warnings with "Don't show again" ([#2477](https://github.com/IsmaelMartinez/teams-for-linux/issues/2477)) ([abb7522](https://github.com/IsmaelMartinez/teams-for-linux/commit/abb7522012707853500bbd1a09eebfecef161f1b))
 * **media:** allow overriding getUserMedia microphone constraints ([#2462](https://github.com/IsmaelMartinez/teams-for-linux/issues/2462)) ([eaea33f](https://github.com/IsmaelMartinez/teams-for-linux/commit/eaea33f2f1ccd1e9ed2e531379f9bc87080d5f1f))
+* **mqtt:** add Home Assistant autodiscovery ([#2464](https://github.com/IsmaelMartinez/teams-for-linux/issues/2464)) ([7b5d7db](https://github.com/IsmaelMartinez/teams-for-linux/commit/7b5d7db2d5b911a72f5bb815d1916f88487562c0))
 * **multi-account:** add multiAccount.enabled flag and Intune mutex ([#2450](https://github.com/IsmaelMartinez/teams-for-linux/issues/2450)) ([1fe7324](https://github.com/IsmaelMartinez/teams-for-linux/commit/1fe732485dedada6c3fb727a27e1ecf82b81574a))
 * **multi-account:** Add-profile dialog with first-run bootstrap fix ([#2496](https://github.com/IsmaelMartinez/teams-for-linux/issues/2496)) ([bb81514](https://github.com/IsmaelMartinez/teams-for-linux/commit/bb8151432f766fff680c6b7e1e52b5992ad03376))
 * **multi-account:** Profiles menu with Switch-to submenu ([#2489](https://github.com/IsmaelMartinez/teams-for-linux/issues/2489)) ([c86e130](https://github.com/IsmaelMartinez/teams-for-linux/commit/c86e13043a9abf7ade27b034ba62e2e1dcc898e1))
@@ -31,6 +34,7 @@
 ### CI/CD
 
 * **release:** credit external contributors in release-please notes ([#2475](https://github.com/IsmaelMartinez/teams-for-linux/issues/2475)) ([6f05db9](https://github.com/IsmaelMartinez/teams-for-linux/commit/6f05db998c3c847efc1c4eb033b17aaeb772f149))
+* **release:** migrate to release-please for automated release management ([#2408](https://github.com/IsmaelMartinez/teams-for-linux/issues/2408)) ([f4df06a](https://github.com/IsmaelMartinez/teams-for-linux/commit/f4df06aa8f691fcb82cf3c38c7ab593bb64e3ae9))
 
 
 ### Maintenance
@@ -49,4 +53,4 @@
 
 ### Thanks
 
-Big thanks to @app/dependabot, @jpenberthy, @mvanhorn for contributing to this release.
+Big thanks to @dependabot, @jpenberthy, @MiguelAngelLV, @mvanhorn for contributing to this release.
