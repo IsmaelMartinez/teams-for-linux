@@ -46,3 +46,7 @@
 * **deps:** bump the minor-and-patch group with 4 updates ([#2500](https://github.com/IsmaelMartinez/teams-for-linux/issues/2500)) ([b934b50](https://github.com/IsmaelMartinez/teams-for-linux/commit/b934b5093b3762da8f7b0f4f3279ce61b09888e2))
 * **security:** bump postcss and uuid to patch GHSA-qx2v-qp2m-jg93 and GHSA-w5hq-g745-h8pq ([#2487](https://github.com/IsmaelMartinez/teams-for-linux/issues/2487)) ([b29fc60](https://github.com/IsmaelMartinez/teams-for-linux/commit/b29fc602e017ace965e08095c36d7844226137aa))
 * **simili:** use explicit steps list to enforce similarity-only mode ([#2474](https://github.com/IsmaelMartinez/teams-for-linux/issues/2474)) ([40a1391](https://github.com/IsmaelMartinez/teams-for-linux/commit/40a1391d38a175b789fdf0fb53288a31de802ac6))
+
+### Thanks
+
+Big thanks to @app/dependabot, @jpenberthy, @mvanhorn for contributing to this release.

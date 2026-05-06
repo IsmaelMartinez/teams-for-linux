@@ -14,6 +14,37 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.9.0" date="2026-05-06">
+      <description>
+        <ul>
+          <li>config: allow dismissing startup warnings with "Don't show again" (#2477)</li>
+          <li>media: allow overriding getUserMedia microphone constraints (#2462)</li>
+          <li>multi-account: add multiAccount.enabled flag and Intune mutex (#2450)</li>
+          <li>multi-account: Add-profile dialog with first-run bootstrap fix (#2496)</li>
+          <li>multi-account: Profiles menu with Switch-to submenu (#2489)</li>
+          <li>multi-account: scaffold profile view lifecycle and Profile 0 bootstrap (#2483)</li>
+          <li>multi-account: scaffold ProfilesManager and migrate login state (#2478)</li>
+          <li>auth: scope worker-source AUTH_RECOVERY suppression to active calls (#2481)</li>
+          <li>ci: correct SHA pin for release-please-action v4.2.0 (#2470)</li>
+          <li>power: bind enableWakeLockOnWindowRestore on the restore listener (#2482)</li>
+          <li>release: strip markdown from appdata entries, bump manifest to 2.8.1 (#2472)</li>
+          <li>note semver transition and tidy up the homepage (#2473)</li>
+          <li>research: prune stale research and surface orphaned docs in sidebar (#2503)</li>
+          <li>release: credit external contributors in release-please notes (#2475)</li>
+          <li>auto-merge dependabot PRs (non-major) (#2485)</li>
+          <li>deps-dev: bump electron in the minor-and-patch group (#2479)</li>
+          <li>deps: bump actions/github-script from 8.0.0 to 9.0.0 (#2494)</li>
+          <li>deps: bump actions/upload-pages-artifact from 4.0.0 to 5.0.0 (#2492)</li>
+          <li>deps: bump canonical/setup-lxd (#2490)</li>
+          <li>deps: bump dependabot/fetch-metadata from 2 to 3 (#2493)</li>
+          <li>deps: bump googleapis/release-please-action from 4.2.0 to 5.0.0 (#2491)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 3 updates (#2501)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2500)</li>
+          <li>security: bump postcss and uuid to patch GHSA-qx2v-qp2m-jg93 and GHSA-w5hq-g745-h8pq (#2487)</li>
+          <li>simili: use explicit steps list to enforce similarity-only mode (#2474)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.8.1" date="2026-04-24">
       <description>
         <ul>
