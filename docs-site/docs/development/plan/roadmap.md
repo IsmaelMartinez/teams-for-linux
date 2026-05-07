@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-04-24
-**Current Version:** v2.8.0 shipped (Electron 41.2.1, Chromium 146, Node.js 24)
-**Status:** Living Document --- v2.8.0 released with Electron 41 upgrade; cross-distro tests passing 9/9; FIDO2 beta queued for 2.8.2 or 2.9.0; next focus remains bug fixes and dev experience
+**Last Updated:** 2026-05-07
+**Current Version:** v2.8.0 shipped (Electron 41.2.1, Chromium 146, Node.js 24); release-please PR [#2505](https://github.com/IsmaelMartinez/teams-for-linux/pull/2505) accumulating changes for v2.10.0
+**Status:** Living Document --- ozone-platform default reset queued for v2.10.x ([PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506), tracking [#2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508)); FIDO2 beta still queued for 2.8.2 or 2.9.0; next focus remains bug fixes, Wayland validation, and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
@@ -46,6 +46,8 @@ Longer-standing camera issues ([#2169](https://github.com/IsmaelMartinez/teams-f
 
 Wayland support is improving incrementally. Screen source selection has been simplified for better Wayland compatibility, and short Teams deep links now work across all link types. Idle status on Wayland ([#1827](https://github.com/IsmaelMartinez/teams-for-linux/issues/1827)) remains blocked on Electron's `powerMonitor` API not supporting Wayland idle detection natively. A forced idle override option is now available as a workaround.
 
+The X11 default added in 2.7.4 to mask Electron 38 era Wayland regressions is now under review. [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506) switches the deb / rpm / AppImage / snap default from `--ozone-platform=x11` to `--ozone-platform=auto`, letting Chromium pick the appropriate backend per session. [Tracking issue #2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508) is gathering community test results across compositor, GPU, and packaging combinations before the change ships. Open Wayland-related bugs that may flip state with this change are tracked there: [#2486](https://github.com/IsmaelMartinez/teams-for-linux/issues/2486) (screen sharing on Wayland) and [#2345](https://github.com/IsmaelMartinez/teams-for-linux/issues/2345) (SIGILL crash on incoming call) are candidates the change may resolve, while [#2383](https://github.com/IsmaelMartinez/teams-for-linux/issues/2383) (appTitle / appIcon under Wayland) is a regression risk if the upstream Chromium fix has not landed in our Electron yet.
+
 ### MQTT Integration
 
 The MQTT integration is mature for presence status, media state, inbound commands, and screen sharing status ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107)). Phase 2 extended status (granular WebRTC camera/mic monitoring for reliable mute state) is parked until users confirm they need it. A feature request for incoming call MQTT topics ([#2370](https://github.com/IsmaelMartinez/teams-for-linux/issues/2370)) has been filed.
@@ -59,6 +61,16 @@ The notification lifecycle is now stable ([#2248](https://github.com/IsmaelMarti
 Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 9 configurations (3 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. The infrastructure works well for Ubuntu (7/7 tests pass on X11 and XWayland, 6/6 on Wayland) but Fedora and Debian remain unvalidated. The current focus is closing these gaps and connecting cross-distro testing to the CI pipeline so it gates builds rather than running as a separate manual workflow.
 
 ---
+
+## 2026-05-07 Session Outcomes and Next Up
+
+### Ozone-platform default reset queued for v2.10.x
+
+[PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506) opened to switch the deb / rpm / AppImage / snap default from `--ozone-platform=x11` back to `--ozone-platform=auto`, with troubleshooting and configuration docs updated to match. The runtime XWayland detection in `app/startup/commandLine.js` is intentionally unchanged so users who explicitly opt into `--ozone-platform=x11` still hit the `wayland.xwaylandOptimizations` path.
+
+[Tracking issue #2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508) opened to coordinate community testing across compositor, GPU, and packaging combinations. Targeted pings posted to four existing threads pointing at the tracker: [#2486](https://github.com/IsmaelMartinez/teams-for-linux/issues/2486) (Fransiro and azureskytech, both already validated `=auto` / `=wayland` for screen sharing), [#2345](https://github.com/IsmaelMartinez/teams-for-linux/issues/2345) (ariel-rivo, X11 fixed the SIGILL crash but they want Wayland), [#2383](https://github.com/IsmaelMartinez/teams-for-linux/issues/2383) (ssh-sato, SlyOrion, Srylax, regression risk for appTitle / appIcon) and [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094) (dannytrunk, who flagged the upstream Chromium fix landing). The three open issues now carry `awaiting user feedback`.
+
+Decision criteria for shipping the default in 2.10.x: positive confirmation on screen sharing without manual flags from at least the two #2486 reporters, and either a positive or "still reproduces" answer from #2345. Regression risk on #2383 is the main hold; if the upstream Chromium fix is not in our Electron yet, defer the default change to 2.11.x and ship documentation only in 2.10.x.
 
 ## 2026-04-24 Session Outcomes and Next Up
 
