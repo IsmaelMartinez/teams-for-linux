@@ -49,29 +49,12 @@ class JoinMeetingDialog {
       return;
     }
 
-    // X11/Wayland multi-monitor: compute parent center so the modal
-    // doesn't bounce to the primary display. See _shared/createDialogWindow.
-    const dialogWidth = 500;
-    const dialogHeight = 250;
-    const parentBounds = this.#parentWindow?.getBounds?.();
-    const position = parentBounds
-      ? {
-          x: Math.round(
-            parentBounds.x + (parentBounds.width - dialogWidth) / 2
-          ),
-          y: Math.round(
-            parentBounds.y + (parentBounds.height - dialogHeight) / 2
-          ),
-        }
-      : undefined;
-
     this.#window = createDialogWindow({
       title: 'Join Meeting',
-      width: dialogWidth,
-      height: dialogHeight,
+      width: 500,
+      height: 250,
       parent: this.#parentWindow,
       preload: path.join(__dirname, 'preload.js'),
-      position,
     });
 
     activeHandlers = {

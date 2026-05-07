@@ -46,33 +46,12 @@ class AddProfileDialog {
       return;
     }
 
-    // On X11/Wayland with multi-monitor setups, `parent` alone is not
-    // enough to keep the modal on the same display as its parent — many
-    // window managers spawn the child on the primary monitor regardless.
-    // Compute the parent's centre and pass explicit `x`/`y` so the dialog
-    // always lands over the main window. Falls back to the helper's
-    // default placement if parent bounds are unavailable for any reason.
-    const dialogWidth = 460;
-    const dialogHeight = 380;
-    const parentBounds = this.#parentWindow?.getBounds?.();
-    const position = parentBounds
-      ? {
-          x: Math.round(
-            parentBounds.x + (parentBounds.width - dialogWidth) / 2
-          ),
-          y: Math.round(
-            parentBounds.y + (parentBounds.height - dialogHeight) / 2
-          ),
-        }
-      : undefined;
-
     this.#window = createDialogWindow({
       title: "Add profile",
-      width: dialogWidth,
-      height: dialogHeight,
+      width: 460,
+      height: 380,
       parent: this.#parentWindow,
       preload: path.join(__dirname, "preload.js"),
-      position,
     });
 
     activeHandlers = {
