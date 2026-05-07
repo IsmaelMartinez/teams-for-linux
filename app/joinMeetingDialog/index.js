@@ -1,5 +1,6 @@
-const { BrowserWindow, ipcMain } = require('electron');
+const { ipcMain } = require('electron');
 const path = require('node:path');
+const createDialogWindow = require('../_shared/createDialogWindow');
 
 // Only one JoinMeetingDialog instance exists; its handlers dispatch via this
 // pointer so listeners are registered once and survive across dialog opens.
@@ -48,24 +49,29 @@ class JoinMeetingDialog {
       return;
     }
 
-    // Create dialog window
-    this.#window = new BrowserWindow({
+    // X11/Wayland multi-monitor: compute parent center so the modal
+    // doesn't bounce to the primary display. See _shared/createDialogWindow.
+    const dialogWidth = 500;
+    const dialogHeight = 250;
+    const parentBounds = this.#parentWindow?.getBounds?.();
+    const position = parentBounds
+      ? {
+          x: Math.round(
+            parentBounds.x + (parentBounds.width - dialogWidth) / 2
+          ),
+          y: Math.round(
+            parentBounds.y + (parentBounds.height - dialogHeight) / 2
+          ),
+        }
+      : undefined;
+
+    this.#window = createDialogWindow({
       title: 'Join Meeting',
-      width: 500,
-      height: 250,
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      modal: true,
+      width: dialogWidth,
+      height: dialogHeight,
       parent: this.#parentWindow,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        preload: path.join(__dirname, 'preload.js'),
-      },
+      preload: path.join(__dirname, 'preload.js'),
+      position,
     });
 
     activeHandlers = {

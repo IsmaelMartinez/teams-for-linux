@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const path = require("node:path");
-const createDialogWindow = require("../_shared/createDialogWindow");
+const createDialogWindow = require("../../_shared/createDialogWindow");
 
 // Single-instance dispatch pointer mirrors `JoinMeetingDialog`: handlers are
 // registered exactly once and route through whichever AddProfileDialog is

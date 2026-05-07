@@ -1,10 +1,10 @@
 const { BrowserWindow } = require("electron");
 
 /**
- * Build a modal child `BrowserWindow` for a profile-management dialog
- * (Add, Manage, etc.). Centralises the common scaffolding — sandboxed
- * preload, modal+parent, no resize/min/max, hidden until ready —
- * so individual dialog modules only express what's specific to them
+ * Build a modal child `BrowserWindow` for an in-app dialog (Add Profile,
+ * Join Meeting, etc.). Centralises the common scaffolding — sandboxed
+ * preload, modal+parent, no resize/min/max, hidden until ready — so
+ * individual dialog modules only express what's specific to them
  * (title, dimensions, preload path, optional explicit position).
  *
  * Multi-monitor positioning: when `position` is provided (an `{ x, y }`
