@@ -686,7 +686,7 @@ The configuration file can include Electron CLI flags that will be added when th
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
 > [!WARNING]
-> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). To override the default X11 mode, pass `--ozone-platform=wayland` or `--ozone-platform=auto` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The default is `--ozone-platform=auto`, which lets Chromium pick the backend based on the session. To force a specific backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 

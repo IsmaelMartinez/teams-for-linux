@@ -269,20 +269,20 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by default on all Linux packaging formats. This avoids widespread regressions introduced in Electron 38+ when running as a native Wayland client.
+Teams for Linux launches with `--ozone-platform=auto` by default on all Linux packaging formats, letting Chromium pick the best backend for your session (Wayland on a Wayland session, X11 otherwise). If you hit Wayland-specific regressions, you can override this on the command line or in your `.desktop` file with `--ozone-platform=x11`.
 :::
 
 #### Issue: Blank or black window on Wayland
 
-**Description:** The application window appears blank, black, or white when running on a Wayland session. This is caused by Electron 38+ defaulting to native Wayland mode, which has known regressions.
+**Description:** The application window appears blank, black, or white when running on a Wayland session. This is caused by Electron 38+ regressions in native Wayland mode.
 
 **Solutions/Workarounds:**
 
-1. **Upgrade to v2.7.4+** — X11 is now forced by default, which resolves this for most users.
-2. **For older versions:** Launch with `--ozone-platform=x11`:
+1. **Force X11 mode** by launching with `--ozone-platform=x11`:
     ```bash
     teams-for-linux --ozone-platform=x11
     ```
+2. **Edit your `.desktop` file** to make the override permanent — replace `--ozone-platform=auto` with `--ozone-platform=x11` in the `Exec=` line.
 
 **Related GitHub Issues:** [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494), [#519](https://github.com/IsmaelMartinez/teams-for-linux/issues/519), [#504](https://github.com/IsmaelMartinez/teams-for-linux/issues/504)
 
@@ -292,16 +292,16 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
 
 **Solutions/Workarounds:**
 
-1. **Upgrade to v2.7.4+** — Forcing X11 mode resolves Wayland window management regressions.
+1. **Force X11 mode** with `--ozone-platform=x11` to avoid Wayland window management regressions.
 
 **Related GitHub Issues:** [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094)
 
 #### Issue: Blurry UI or fonts with fractional scaling on Wayland
 
-**Description:** Text and UI elements appear blurry when using fractional display scaling (e.g., 125%) on Wayland.
+**Description:** Text and UI elements appear blurry when using fractional display scaling (e.g., 125%) on Wayland while running under XWayland (X11 mode).
 
 **Potential Causes:**
-* X11 mode (the new default) does not handle Wayland fractional scaling natively.
+* X11 mode does not handle Wayland fractional scaling natively.
 
 **Solutions/Workarounds:**
 
@@ -309,7 +309,7 @@ Since v2.7.4, Teams for Linux forces X11 mode (`--ozone-platform=x11`) by defaul
     ```bash
     teams-for-linux --ozone-platform=wayland
     ```
-2. **Edit your `.desktop` file** to make the override permanent — replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.
+2. **Edit your `.desktop` file** to make the override permanent — replace `--ozone-platform=auto` with `--ozone-platform=wayland` in the `Exec=` line.
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
