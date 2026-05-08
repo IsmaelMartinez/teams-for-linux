@@ -5,6 +5,7 @@ const {
   globalShortcut,
   systemPreferences,
   nativeImage,
+  session,
 } = require("electron");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -19,6 +20,7 @@ const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
+const DownloadManager = require("./downloadManager");
 const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
@@ -151,6 +153,12 @@ const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 // Initialize custom notification manager for toast notifications
 const customNotificationManager = new CustomNotificationManager(config, mainAppWindow);
+
+// Issue #2512: Electron silently saves downloads to ~/Downloads with no UI
+// feedback unless `session.on('will-download', …)` is wired up. The manager
+// itself attaches to the Teams session inside handleAppReady once the main
+// window has been created (the partition is provisioned at that point).
+const downloadManager = new DownloadManager(config);
 
 if (isMac) {
   requestMediaAccess();
@@ -634,6 +642,11 @@ async function handleAppReady() {
     initializeQuickChat();
     registerGlobalShortcuts(config, mainAppWindow, app);
     initializeAutoUpdater();
+
+    // Attach the download manager after the partition is provisioned by the
+    // main window. Issue #2512: without this, file downloads from Teams are
+    // silent and the user gets no completion feedback.
+    downloadManager.initialize(session.fromPartition(config.partition));
 
     console.info('[IPC Security] Channel allowlisting enabled');
     console.info(`[IPC Security] ${allowedChannels.size} channels allowlisted`);

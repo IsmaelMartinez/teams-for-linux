@@ -15,6 +15,7 @@ This document details all available configuration options for the Teams for Linu
   - [Tray Icon](#tray-icon)
   - [Notification System](#notification-system)
   - [Incoming Call Handling](#incoming-call-handling)
+  - [Downloads](#downloads)
   - [Idle & Activity Detection](#idle--activity-detection)
   - [Authentication & SSO](#authentication--sso)
   - [Network & Proxy](#network--proxy)
@@ -129,6 +130,12 @@ Place your `config.json` file in the appropriate location based on your installa
 
 > [!NOTE]
 > See [Incoming Call Command](#incoming-call-command) for detailed usage examples.
+
+### Downloads
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
 
 ### Idle & Activity Detection
 

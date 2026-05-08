@@ -273,6 +273,14 @@ function extractYargConfig(configObject, appVersion) {
           "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
         type: "boolean",
       },
+      download: {
+        default: {
+          notifyOnDownloadComplete: true,
+        },
+        describe:
+          "Download manager configuration. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder).",
+        type: "object",
+      },
       disableNotifications: {
         default: false,
         describe: "A flag to disable all notifications",
