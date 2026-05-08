@@ -248,65 +248,6 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Related GitHub Issues:** [Issue #2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
 
-#### Issue: Security Key (FIDO2 / WebAuthn) sign-in fails on Linux
-
-**Description:** When signing in to Teams with a hardware security key (YubiKey, SoloKeys, Nitrokey, Feitian, etc.) on Linux, the login page spins indefinitely, shows an error, or no PIN dialog appears. macOS and Windows are unaffected.
-
-**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
-
-**Solutions/Workarounds:**
-
-1. Install `fido2-tools` on your system:
-    - Debian / Ubuntu: `sudo apt install fido2-tools`
-    - Fedora: `sudo dnf install fido2-tools`
-    - Arch: `sudo pacman -S libfido2`
-
-2. Enable the beta feature in `~/.config/teams-for-linux/config.json`:
-
-    ```json
-    {
-      "auth": {
-        "webauthn": {
-          "enabled": true
-        }
-      }
-    }
-    ```
-
-3. Plug your key in **before** triggering sign-in. The v1 implementation uses the first connected FIDO2 device. If you see a "No FIDO2 hardware device found" error, the key was not detected.
-
-4. Verify the key is visible to libfido2 from a terminal: `fido2-token -L`. If this says "permission denied" on `/dev/hidraw*`, your user is not in the correct group. libfido2 typically ships a udev rule; if it did not install or is missing, add your user to the group your distribution uses for HID access (often `plugdev` on Debian/Ubuntu, or install `libfido2-udev` if your package manager has it). Replug the key after fixing group membership.
-
-5. If the PIN dialog appears but sign-in still fails, enable debug logging and capture a fresh attempt:
-
-    ```json
-    {
-      "auth": {
-        "webauthn": {
-          "enabled": true,
-          "debug": true
-        }
-      },
-      "logConfig": {
-        "transports": {
-          "file": { "level": "debug" }
-        }
-      }
-    }
-    ```
-
-    Then tail the log during a sign-in attempt and attach the matching lines to the feedback thread:
-
-    ```sh
-    tail -F ~/.config/teams-for-linux/logs/main.log | grep -i webauthn
-    ```
-
-    Logs are scrubbed of credential IDs, challenges, user handles, PINs, and raw origins before writing. Origins appear as one of `login.microsoftonline.com | login.microsoft.com | login.live.com | other` and errors as coarse buckets (`NO_CREDENTIALS | BAD_PIN | TIMEOUT | CANCELLED | NOT_ALLOWED | SECURITY | INVALID | OTHER`).
-
-**Beta notes:** This feature is opt-in while hardware coverage is still being validated. The single-device restriction, assertion echo-offset heuristic, and PIN-prompt stderr detection are all areas under active validation. Please report hardware combinations (key model, Linux distribution, libfido2 version) that work or fail on the umbrella issue so we can plan the GA rollout.
-
-**Related GitHub Issues:** [Issue #802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802), [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357), [ADR 021](./development/adr/021-webauthn-fido2-linux.md).
-
 ---
 
 ### Notifications
@@ -325,35 +266,10 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 ---
 
-#### Issue: Notifications disappear from the notification center on GNOME
-
-**Description:** On GNOME (and some other desktops), system notifications vanish from the notification center when Teams's in-page purple toast times out, before the user has had a chance to read them. The tray badge counter can also clear at the same time.
-
-**Potential Causes:**
-
-* On the default `web` notification method, Teams's in-page code calls `notification.close()` when its own toast times out. That call propagates through Chromium's DOM `Notification` API to libnotify, which then dismisses the system notification.
-
-**Solutions/Workarounds:**
-
-1. Switch to the `electron` notification method, which keeps the system notification independent of Teams's in-page lifecycle. Optionally also set `notifications.timeoutType: "never"` so notifications persist until you dismiss them:
-
-    ```json
-    {
-      "notificationMethod": "electron",
-      "notifications": { "timeoutType": "never" }
-    }
-    ```
-
-   Known caveat: on the `electron` path, notifications currently render without the sender avatar. The `web` path gets Chromium to fetch the icon URL automatically; the `electron` path expects a data URL. This is tracked as a follow-up.
-
-**Related GitHub Issues:** [#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411)
-
----
-
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux currently launches with `--ozone-platform=x11` by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your `.desktop` file with `--ozone-platform=wayland`. (A switch to `--ozone-platform=auto` is queued via [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506).)
+Teams for Linux no longer bakes a default `--ozone-platform` value into its `.desktop` entries. Chromium picks the backend itself: on Chromium 140+ (Electron 42+) the `--ozone-platform-hint` switch defaults to `auto` and Wayland sessions get a native Wayland backend, while older Chromium baselines fall back to X11. If you hit a Wayland-specific regression you can pin the backend by launching with `--ozone-platform=x11`, and conversely you can force native Wayland with `--ozone-platform=wayland` (or `--ozone-platform-hint=auto` on older builds).
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -366,7 +282,7 @@ Teams for Linux currently launches with `--ozone-platform=x11` by default on all
     ```bash
     teams-for-linux --ozone-platform=x11
     ```
-2. **Confirm the default sticks:** `--ozone-platform=x11` is the shipped default. If you have previously edited your `.desktop` file, ensure the `Exec=` line still includes `--ozone-platform=x11`.
+2. **Edit your `.desktop` file** to make the override permanent by adding `--ozone-platform=x11` to the `Exec=` line.
 
 **Related GitHub Issues:** [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494), [#519](https://github.com/IsmaelMartinez/teams-for-linux/issues/519), [#504](https://github.com/IsmaelMartinez/teams-for-linux/issues/504)
 
@@ -393,7 +309,7 @@ Teams for Linux currently launches with `--ozone-platform=x11` by default on all
     ```bash
     teams-for-linux --ozone-platform=wayland
     ```
-2. **Edit your `.desktop` file** to make the override permanent. Replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.
+2. **Edit your `.desktop` file** to make the override permanent by adding `--ozone-platform=wayland` to the `Exec=` line.
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
