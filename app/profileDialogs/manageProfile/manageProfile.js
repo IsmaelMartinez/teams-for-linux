@@ -40,9 +40,15 @@ function makeNameElement(profile) {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
+        e.stopPropagation();
         commitRename(profile.id, input.value);
       } else if (e.key === "Escape") {
+        // stopPropagation prevents the event bubbling to the document-level
+        // Esc handler, which would otherwise see editingId === null after
+        // cancelRename() and close the dialog (HIGH-priority gemini finding
+        // on PR #2510).
         e.preventDefault();
+        e.stopPropagation();
         cancelRename();
       }
     });
@@ -92,7 +98,7 @@ function cancelRename() {
   render();
 }
 
-function commitRename(id, raw) {
+async function commitRename(id, raw) {
   const trimmed = raw.trim();
   const profile = currentState.profiles.find((p) => p.id === id);
   if (!profile) {
@@ -108,10 +114,22 @@ function commitRename(id, raw) {
     cancelRename();
     return;
   }
-  // Optimistic close — main process re-pushes state on success, or returns
-  // an error via `manage-profile-error` if validation rejects.
-  editingId = null;
-  globalThis.manageProfileApi.rename(id, trimmed);
+  try {
+    await globalThis.manageProfileApi.rename(id, trimmed);
+    // Success — exit edit mode. The state push from main will refresh the
+    // rendered row shortly; clearing editingId now keeps the UX snappy.
+    editingId = null;
+    clearError();
+    render();
+  } catch (error) {
+    // Backend rejected the rename. Keep the input open so the user can
+    // correct without re-typing; show the message and refocus the input.
+    setError(error?.message || "Failed to rename profile.");
+    const input = profileList.querySelector(
+      `.profile-name-input[data-profile-id="${id}"]`
+    );
+    input?.focus();
+  }
 }
 
 function makeRemoveButton(profile, isActive, isLastRemaining) {

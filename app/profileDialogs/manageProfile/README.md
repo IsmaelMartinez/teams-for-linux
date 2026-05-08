@@ -16,23 +16,26 @@ profiles inline and remove them (with native confirmation).
 
 ## IPC channels
 
-| Channel                  | Direction         | Payload                                          |
-| ------------------------ | ----------------- | ------------------------------------------------ |
-| `manage-profile-rename`  | renderer → main   | `{ id, name }`                                   |
-| `manage-profile-remove`  | renderer → main   | `id` (main shows the destructive confirmation)   |
-| `manage-profile-close`   | renderer → main   | _none_                                           |
-| `manage-profile-state`   | main → renderer   | `{ profiles, activeId }`                         |
-| `manage-profile-error`   | main → renderer   | `string` (validation / operation failure)        |
+| Channel                  | Direction         | Mechanism                  | Payload                                          |
+| ------------------------ | ----------------- | -------------------------- | ------------------------------------------------ |
+| `manage-profile-rename`  | renderer → main   | `invoke` / `handle`        | request: profile id and new name; resolves on success, rejects with the validation message on failure |
+| `manage-profile-remove`  | renderer → main   | `send` / `on`              | profile id (main shows the destructive confirmation) |
+| `manage-profile-close`   | renderer → main   | `send` / `on`              | _none_                                           |
+| `manage-profile-state`   | main → renderer   | push                       | profiles list and the active profile id          |
+| `manage-profile-error`   | main → renderer   | push                       | validation / operation failure message (remove only — rename surfaces errors via the invoke rejection) |
 
 The `manage-profile-state` payload is pushed on first-show and on every
 `add` / `remove` / `switch` / `update` event from `ProfilesManager`, so
 the dialog stays in sync with mutations from other sources (Add-profile
 dialog, Switch-to submenu, etc.).
 
-The renderer-→-main channels follow the same single-instance dispatch
-pattern as `JoinMeetingDialog` and `AddProfileDialog` — `ipcMain.on`
-listeners are registered exactly once and route through whichever dialog
-is currently visible.
+Rename uses `ipcMain.handle` so the renderer can `await` the result and
+keep the input open if the backend rejects — losing typed input on a
+validation error was a UX bug the original `send`/`on` shape produced.
+Remove and close stay on `send`/`on` since neither has user input to
+preserve. All three follow the same single-instance dispatch pattern as
+`JoinMeetingDialog` and `AddProfileDialog` — listeners are registered
+exactly once and route through whichever dialog is currently visible.
 
 ## Lifecycle
 

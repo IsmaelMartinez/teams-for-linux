@@ -11,10 +11,14 @@ let handlersRegistered = false;
 function ensureIpcHandlers() {
   if (handlersRegistered) return;
   handlersRegistered = true;
-  // Inline rename request from the renderer; payload carries the profile
-  // `id` and the new `name`.
-  ipcMain.on("manage-profile-rename", (_event, payload) => {
-    activeHandlers?.onRename(payload);
+  // Inline rename request from the renderer. Uses request/response
+  // (`ipcMain.handle` / `ipcRenderer.invoke`) so the renderer can `await`
+  // the result and keep the input open on validation rejection — losing
+  // the user's typed value on error was a gemini-flagged UX bug on
+  // PR #2510. Payload carries the profile `id` and the new `name`.
+  ipcMain.handle("manage-profile-rename", async (_event, payload) => {
+    if (!activeHandlers) return;
+    return activeHandlers.onRename(payload);
   });
   // Remove request from the renderer; main shows the destructive confirmation
   // before forwarding to ProfilesManager.
@@ -110,18 +114,28 @@ class ManageProfileDialog {
       // record object like `add()`. Easy mistake to make from the IPC shape.
       this.#profilesManager.update(id, { name });
       // Success: ProfilesManager emits "update", #pushState fires via the
-      // listener wired in show().
+      // listener wired in show(). Returning undefined resolves the invoke
+      // promise on the renderer side.
     } catch (error) {
-      this.#sendError(error, "Failed to rename profile.");
+      // Re-throw with the [ProfilesManager] prefix stripped so the renderer
+      // shows a clean sentence. ipcMain.handle propagates the rejection to
+      // the awaiting ipcRenderer.invoke caller.
+      const raw =
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Failed to rename profile.";
+      throw new Error(raw.replace(/^\[ProfilesManager\]\s*/, ""));
     }
   };
 
-  #handleRemove = (id) => {
+  #handleRemove = async (id) => {
     if (!this.#window || this.#window.isDestroyed()) return;
     const profile = this.#profilesManager.list().find((p) => p.id === id);
     if (!profile) return;
 
-    const choice = dialog.showMessageBoxSync(this.#window, {
+    // Async showMessageBox keeps the main process responsive while the
+    // confirmation is up (gemini-flagged on PR #2510).
+    const { response } = await dialog.showMessageBox(this.#window, {
       type: "warning",
       title: "Remove profile",
       message: `Remove "${profile.name}"?`,
@@ -132,7 +146,11 @@ class ManageProfileDialog {
       defaultId: 0,
       cancelId: 0,
     });
-    if (choice !== 1) return;
+    if (response !== 1) return;
+
+    // Re-check window after the async dialog roundtrip — the user may have
+    // closed Manage while the OS confirm was open.
+    if (!this.#window || this.#window.isDestroyed()) return;
 
     try {
       this.#profilesManager.remove(id);
