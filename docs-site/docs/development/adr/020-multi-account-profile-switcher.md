@@ -140,6 +140,14 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 
 **Mechanism:** switching toggles visibility via `mainWindow.contentView.addChildView` / `removeChildView` and bounds updates. **No `loadURL`** — the switched-away view stays in the view hierarchy but hidden. Sessions stay warm, drafts survive, the Teams websocket is not reconnected. Target: under 500 ms switch latency (verified by E2E timing assertion).
 
+### Rename a profile
+
+1. `Profiles → Manage…` opens the Manage dialog; each row shows the profile's avatar, name, an **Active** badge on the current profile, and a per-row remove action.
+2. Click a profile's name to enter inline-edit mode — the static text is replaced by an `<input>` pre-filled with the current name and selected.
+3. **Enter** or blur saves; **Esc** cancels and reverts to the prior name.
+4. Validation matches Add-profile: trimmed name must be non-empty (also enforced server-side in `ProfilesManager.update`'s `#applyName`). Empty input shows an inline error and the input keeps focus until corrected or cancelled.
+5. On save the dialog calls the existing `profile-update` IPC channel; `ProfilesManager` emits `update`; the menu's Switch-to submenu and the title-bar switcher rebuild automatically. Renaming has no session impact — no re-login, no view reload.
+
 ### Remove a profile
 
 1. `Profiles → Manage…` opens a dialog listing all profiles with metadata and a remove action per row.

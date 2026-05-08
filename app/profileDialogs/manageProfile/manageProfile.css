@@ -1,0 +1,223 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #444;
+}
+
+p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.profile-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.profile-row.active {
+  border-color: #6264a7;
+}
+
+.profile-avatar {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  user-select: none;
+}
+
+.profile-name {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: #333;
+  cursor: text;
+  padding: 4px 6px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-name:hover,
+.profile-name:focus {
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+.profile-name-input {
+  flex: 1 1 auto;
+  font-size: 14px;
+  padding: 4px 6px;
+  border: 1px solid #6264a7;
+  border-radius: 3px;
+  outline: none;
+  background-color: #fff;
+  color: #333;
+}
+
+.profile-name-input.invalid {
+  border-color: #c42b1c;
+}
+
+.profile-active-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: #6264a7;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border: 1px solid #6264a7;
+  border-radius: 3px;
+}
+
+.profile-remove-btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 3px;
+  background-color: #e8e8e8;
+  color: #c42b1c;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.profile-remove-btn:hover:not(:disabled) {
+  background-color: #d8d8d8;
+}
+
+.profile-remove-btn:disabled {
+  background-color: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.error {
+  font-size: 12px;
+  color: #c42b1c;
+  min-height: 16px;
+  margin-top: 4px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+button.primary {
+  background-color: #6264a7;
+  color: white;
+}
+
+button.primary:hover {
+  background-color: #525299;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+  }
+
+  h2 {
+    color: #e0e0e0;
+  }
+
+  p {
+    color: #b0b0b0;
+  }
+
+  .profile-row {
+    background-color: #2d2d2d;
+    border-color: #444;
+  }
+
+  .profile-row.active {
+    border-color: #6264a7;
+  }
+
+  .profile-name {
+    color: #e0e0e0;
+  }
+
+  .profile-name:hover,
+  .profile-name:focus {
+    background-color: #3d3d3d;
+  }
+
+  .profile-name-input {
+    background-color: #2d2d2d;
+    border-color: #6264a7;
+    color: #e0e0e0;
+  }
+
+  .profile-remove-btn {
+    background-color: #3d3d3d;
+    color: #ff8a80;
+  }
+
+  .profile-remove-btn:hover:not(:disabled) {
+    background-color: #4d4d4d;
+  }
+
+  .profile-remove-btn:disabled {
+    background-color: #2a2a2a;
+    color: #666;
+  }
+}

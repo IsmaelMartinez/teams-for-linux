@@ -1,12 +1,14 @@
 // Phase 1c.2 of ADR-020. Builds the "Profiles" submenu shown when
-// `multiAccount.enabled === true`. The Add-profile and Manage-profiles
-// dialogs are stubs in this PR; the click handlers in `app/menus/index.js`
-// surface a "coming next" message until the dialog modules land.
+// `multiAccount.enabled === true`. Add-profile and Manage-profiles open
+// their respective dialog modules; Manage handles inline rename and
+// destructive remove with native confirmation.
 //
 // Active profile gets a radio checkmark in the Switch-to list. When the
 // list is empty (flag freshly flipped on, before bootstrap or any add),
 // the submenu shows a disabled placeholder so Electron's platform-
 // specific empty-submenu rendering doesn't surface as a UX glitch.
+// Manage is also disabled in that empty state — there is nothing to
+// manage yet.
 
 function buildProfilesMenu(menus) {
   const pm = menus.profilesManager;
@@ -21,6 +23,11 @@ function buildProfilesMenu(menus) {
       {
         label: "Add profile…",
         click: () => menus.addProfile(),
+      },
+      {
+        label: "Manage profiles…",
+        enabled: list.length > 0,
+        click: () => menus.manageProfiles(),
       },
       { type: "separator" },
       {
