@@ -8,25 +8,31 @@ and no "show in folder" affordance — making downloads invisible to the user
 
 ## DownloadManager Class
 
-Registers a `will-download` listener on the Teams browser session and shows a
-system notification when each download finishes:
+Registers a `will-download` listener on the Teams browser session and surfaces
+each download as both a taskbar progress bar and system notifications:
 
+- **In flight:** drives `BrowserWindow.setProgressBar()` from
+  `DownloadItem.getReceivedBytes() / getTotalBytes()`, aggregated across
+  concurrent downloads. When the server doesn't advertise a content length
+  the progress bar switches to indeterminate mode so the user still sees
+  motion on the taskbar.
 - **Completed:** notification "Download complete" with the filename. Clicking
   the notification opens the containing folder via `shell.showItemInFolder()`.
-- **Cancelled / interrupted:** notification "Download did not finish" with the
-  filename and reason, so users know the file was not saved.
+- **Cancelled / interrupted:** notification "Download did not finish" with
+  the filename and reason, so users know the file was not saved.
 
-Per-item progress UI (in-app downloads list, tray badge while active) is
-intentionally out of scope. The aim is parity with the bare-minimum browser
-behaviour; richer UI can be added later if requested.
+Per-item UI (in-app downloads list, tray badge while active) is intentionally
+out of scope. The aim is parity with the bare-minimum browser behaviour;
+richer UI can be added later if requested.
 
 **Dependencies:**
-- `config` - Application configuration (only `config.download.notifyOnDownloadComplete` is read)
+- `config` - Application configuration (`config.download.*` keys are read)
+- `mainAppWindow` - Main window module exposing `getWindow()` for taskbar progress updates
 
 **Usage:**
 ```javascript
 const DownloadManager = require("./downloadManager");
-const downloadManager = new DownloadManager(config);
+const downloadManager = new DownloadManager(config, mainAppWindow);
 downloadManager.initialize(session.fromPartition(config.partition));
 ```
 
@@ -40,6 +46,7 @@ been created by the main window.
 |--------|------|---------|-------------|
 | `download.enabled` | `boolean` | `false` | Master switch for the entire feature. While download UX is in early development this is opt-in; set `true` to turn the manager on. The sub-flags only take effect once this is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a download finishes |
+| `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar from active download progress |
 
 Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
 
@@ -51,5 +58,7 @@ Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
 }
 ```
 
-Set `download.notifyOnDownloadComplete` to `false` to suppress the notification
-while keeping the feature otherwise active.
+With `enabled: true`, set either sub-flag to `false` to opt out of that piece
+of feedback (notification or progress bar). The global `disableNotifications`
+flag also suppresses the completion / failure toasts (but does not affect the
+progress bar).

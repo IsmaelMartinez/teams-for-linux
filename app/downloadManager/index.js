@@ -6,24 +6,32 @@ const { Notification, shell } = require("electron");
  * to the default download directory with no progress UI, so a Teams download
  * looks like nothing happened (issue #2512).
  *
- * Scope: a system notification on completion, click opens the containing
- * folder via `shell.showItemInFolder()`. A separate notification is shown if
- * the download is cancelled or interrupted so users know it didn't finish.
+ * Scope:
+ *   - Taskbar progress bar via `BrowserWindow.setProgressBar`, aggregated
+ *     across concurrent downloads. Indeterminate mode kicks in when the
+ *     server doesn't advertise a content length so the user still gets
+ *     feedback that *something* is happening.
+ *   - System notification on completion; click opens the containing folder
+ *     via `shell.showItemInFolder()`.
+ *   - System notification on cancellation / interruption.
  *
- * Per-item progress UI (in-app downloads list, tray badge while active) is
- * intentionally out of scope here; it can be layered on later if requested.
+ * Richer UI (in-app downloads list, per-item tray badge) is out of scope.
  */
 class DownloadManager {
   #config;
+  #mainAppWindow;
   #session = null;
   // Hold strong references to live `Notification` instances so the V8 garbage
   // collector doesn't reap them — and their click/close listeners — between
   // `show()` and the user actually interacting with the toast. Entries are
   // removed on `click` or `close`.
   #activeNotifications = new Set();
+  // Active downloads tracked for the taskbar progress bar. Removed in `done`.
+  #activeItems = new Set();
 
-  constructor(config) {
+  constructor(config, mainAppWindow) {
     this.#config = config;
+    this.#mainAppWindow = mainAppWindow;
   }
 
   /**
@@ -55,11 +63,25 @@ class DownloadManager {
   }
 
   #onWillDownload(_event, item) {
-    if (!this.#shouldNotify()) return;
+    const notify = this.#shouldNotify();
+    const showProgress = this.#shouldShowProgress();
+    if (!notify && !showProgress) return;
 
     console.debug(`[DownloadManager] Download started: ${item.getFilename()}`);
 
+    if (showProgress) {
+      this.#activeItems.add(item);
+      item.on("updated", () => this.#updateProgressBar());
+      this.#updateProgressBar();
+    }
+
     item.once("done", (_doneEvent, state) => {
+      if (showProgress) {
+        this.#activeItems.delete(item);
+        this.#updateProgressBar();
+      }
+      if (!notify) return;
+
       // Read filename from the item inside `done` rather than capturing it at
       // start: if the item is renamed mid-flight (e.g. via a `Save As` dialog
       // attached by another handler) the final name is what the user will see
@@ -95,6 +117,55 @@ class DownloadManager {
       return false;
     }
     return true;
+  }
+
+  #shouldShowProgress() {
+    const downloadConfig = this.#config?.download;
+    if (downloadConfig && downloadConfig.showProgressBar === false) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Recompute the taskbar progress bar from the active-downloads set:
+   *
+   * - No active downloads: clear (`setProgressBar(-1)`).
+   * - Any item without a known total size: indeterminate mode, so the user
+   *   still sees motion on the taskbar.
+   * - Otherwise: byte-weighted average across all active items so a single
+   *   bar represents the whole batch.
+   */
+  #updateProgressBar() {
+    const window = this.#mainAppWindow?.getWindow?.();
+    if (!window || window.isDestroyed()) return;
+
+    if (this.#activeItems.size === 0) {
+      window.setProgressBar(-1);
+      return;
+    }
+
+    let knownTotal = 0;
+    let knownReceived = 0;
+    let hasUnknownTotal = false;
+    for (const item of this.#activeItems) {
+      const total = item.getTotalBytes?.() ?? 0;
+      const received = item.getReceivedBytes?.() ?? 0;
+      if (!total || total <= 0) {
+        hasUnknownTotal = true;
+        continue;
+      }
+      knownTotal += total;
+      knownReceived += received;
+    }
+
+    if (hasUnknownTotal || knownTotal <= 0) {
+      window.setProgressBar(2, { mode: "indeterminate" });
+      return;
+    }
+
+    const fraction = Math.max(0, Math.min(1, knownReceived / knownTotal));
+    window.setProgressBar(fraction);
   }
 
   /**

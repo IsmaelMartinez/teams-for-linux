@@ -159,7 +159,8 @@ const customNotificationManager = new CustomNotificationManager(config, mainAppW
 // feedback unless `session.on('will-download', …)` is wired up. The manager
 // itself attaches to the Teams session inside handleAppReady once the main
 // window has been created (the partition is provisioned at that point).
-const downloadManager = new DownloadManager(config);
+// `mainAppWindow` is passed so the manager can drive the taskbar progress bar.
+const downloadManager = new DownloadManager(config, mainAppWindow);
 
 if (isMac) {
   requestMediaAccess();

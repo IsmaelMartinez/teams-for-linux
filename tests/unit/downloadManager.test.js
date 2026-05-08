@@ -56,10 +56,13 @@ function makeFakeSession() {
 	return emitter;
 }
 
-function makeFakeDownloadItem(filename, savePath) {
+function makeFakeDownloadItem(filename, savePath, sizes = {}) {
 	const emitter = new EventEmitter();
 	emitter.getFilename = () => filename;
 	emitter.getSavePath = () => savePath;
+	emitter.getTotalBytes = () => sizes.totalBytes ?? 0;
+	emitter.getReceivedBytes = () => sizes.receivedBytes ?? 0;
+	emitter.setSizes = (next) => Object.assign(sizes, next);
 	return emitter;
 }
 
@@ -72,6 +75,21 @@ function enabledConfig(extra = {}) {
 	return {
 		...rest,
 		download: { enabled: true, ...download },
+	};
+}
+
+function makeFakeMainAppWindow() {
+	const calls = [];
+	let destroyed = false;
+	const window = {
+		isDestroyed: () => destroyed,
+		setProgressBar: (...args) => calls.push(args),
+		_destroy: () => { destroyed = true; },
+	};
+	return {
+		getWindow: () => window,
+		_calls: calls,
+		_window: window,
 	};
 }
 
@@ -246,6 +264,128 @@ describe('DownloadManager', () => {
 		const DownloadManager = require(downloadManagerPath);
 		const manager = new DownloadManager(enabledConfig());
 		assert.doesNotThrow(() => manager.initialize(null));
+	});
+
+	it('drives the taskbar progress bar from receivedBytes / totalBytes', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/home/user/Downloads/big.zip',
+			{ totalBytes: 100, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+
+		item.setSizes({ receivedBytes: 25 });
+		item.emit('updated');
+		item.setSizes({ receivedBytes: 50 });
+		item.emit('updated');
+
+		// Initial call on will-download is 0/100, then 0.25, then 0.50.
+		const fractions = mainAppWindow._calls.map(c => c[0]);
+		assert.deepStrictEqual(fractions, [0, 0.25, 0.5]);
+	});
+
+	it('uses indeterminate mode when total size is unknown', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'unknown.bin',
+			'/home/user/Downloads/unknown.bin',
+			{ totalBytes: 0, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+
+		const [first, options] = mainAppWindow._calls.at(-1);
+		assert.strictEqual(first, 2);
+		assert.deepStrictEqual(options, { mode: 'indeterminate' });
+	});
+
+	it('aggregates progress across concurrent downloads', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const a = makeFakeDownloadItem('a', '/p/a', { totalBytes: 100, receivedBytes: 0 });
+		const b = makeFakeDownloadItem('b', '/p/b', { totalBytes: 300, receivedBytes: 0 });
+		fakeSession.emit('will-download', {}, a);
+		fakeSession.emit('will-download', {}, b);
+
+		// 50/100 + 150/300 = 200/400 = 0.5 (byte-weighted).
+		a.setSizes({ receivedBytes: 50 });
+		b.setSizes({ receivedBytes: 150 });
+		a.emit('updated');
+
+		const lastFraction = mainAppWindow._calls.at(-1)[0];
+		assert.strictEqual(lastFraction, 0.5);
+	});
+
+	it('clears the progress bar when all downloads finish', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/home/user/Downloads/big.zip',
+			{ totalBytes: 100, receivedBytes: 100 },
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'completed');
+
+		assert.strictEqual(mainAppWindow._calls.at(-1)[0], -1);
+	});
+
+	it('does not drive progress when showProgressBar is false', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(
+			enabledConfig({ download: { showProgressBar: false } }),
+			mainAppWindow,
+		);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/home/user/Downloads/big.zip',
+			{ totalBytes: 100, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.setSizes({ receivedBytes: 50 });
+		item.emit('updated');
+
+		assert.strictEqual(mainAppWindow._calls.length, 0);
+	});
+
+	it('survives a destroyed main window during progress updates', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/home/user/Downloads/big.zip',
+			{ totalBytes: 100, receivedBytes: 50 },
+		);
+		fakeSession.emit('will-download', {}, item);
+
+		mainAppWindow._window._destroy();
+		assert.doesNotThrow(() => item.emit('updated'));
 	});
 
 	it('does nothing when download.enabled is not set (opt-in default)', () => {
