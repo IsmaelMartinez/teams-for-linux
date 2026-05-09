@@ -666,4 +666,55 @@ describe('DownloadManager', () => {
 
 		assert.strictEqual(launcherEmitter._calls.at(-1).progressVisible, false);
 	});
+
+	it('shows per-download percentages in the title for concurrent downloads', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const a = makeFakeDownloadItem('a', '/p/a', { totalBytes: 100, receivedBytes: 0 });
+		const b = makeFakeDownloadItem('b', '/p/b', { totalBytes: 100, receivedBytes: 0 });
+		fakeSession.emit('will-download', {}, a);
+		fakeSession.emit('will-download', {}, b);
+		a.setSizes({ receivedBytes: 34 });
+		b.setSizes({ receivedBytes: 78 });
+		a.emit('updated');
+
+		assert.strictEqual(mainAppWindow._title, '[34%, 78%] Microsoft Teams');
+	});
+
+	it('mixes `downloading` and percent in the title when one item lacks a total', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const a = makeFakeDownloadItem('a', '/p/a', { totalBytes: 100, receivedBytes: 50 });
+		const b = makeFakeDownloadItem('b', '/p/b', { totalBytes: 0 });
+		fakeSession.emit('will-download', {}, a);
+		fakeSession.emit('will-download', {}, b);
+
+		assert.strictEqual(mainAppWindow._title, '[50%, downloading] Microsoft Teams');
+	});
+
+	it('strips the multi-part prefix when re-applying so the title does not stack', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const a = makeFakeDownloadItem('a', '/p/a', { totalBytes: 100, receivedBytes: 10 });
+		const b = makeFakeDownloadItem('b', '/p/b', { totalBytes: 100, receivedBytes: 20 });
+		fakeSession.emit('will-download', {}, a);
+		fakeSession.emit('will-download', {}, b);
+		a.setSizes({ receivedBytes: 50 });
+		b.setSizes({ receivedBytes: 90 });
+		a.emit('updated');
+
+		assert.strictEqual(mainAppWindow._title, '[50%, 90%] Microsoft Teams');
+	});
 });

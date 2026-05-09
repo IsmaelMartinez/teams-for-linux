@@ -115,8 +115,8 @@ function update(props = {}) {
  */
 function simpleHash(input) {
   let h = 0;
-  for (let i = 0; i < input.length; i += 1) {
-    h = (h * 31 + input.charCodeAt(i)) >>> 0;
+  for (const codePoint of input) {
+    h = (h * 31 + codePoint.codePointAt(0)) >>> 0;
   }
   return h;
 }

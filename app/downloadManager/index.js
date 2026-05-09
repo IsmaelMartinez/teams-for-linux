@@ -1,10 +1,16 @@
 const { Notification, shell } = require("electron");
 
 // Matches the leading progress prefix this manager applies to window titles
-// (e.g. `[34%] ` or `[downloading] `). Anchored to the start so we only strip
-// our own prefix and never touch a legitimate page title that happens to
-// contain bracketed numbers later in the string.
-const TITLE_PREFIX_RE = /^\[(\d{1,3}%|downloading)\]\s/;
+// (e.g. `[34%] `, `[34%, 78%] `, `[downloading] `, `[50%, downloading] `).
+// Anchored to the start so we only strip our own prefix and never touch a
+// legitimate page title that happens to contain bracketed numbers later in
+// the string. Each part is either `\d{1,3}%` or `downloading`, separated by
+// a comma + optional space, the whole group wrapped in `[…] ` plus a
+// trailing space.
+const TITLE_PREFIX_PART = /(?:\d{1,3}%|downloading)/;
+const TITLE_PREFIX_RE = new RegExp(
+  String.raw`^\[${TITLE_PREFIX_PART.source}(?:,\s*${TITLE_PREFIX_PART.source})*\]\s`,
+);
 
 function stripDownloadPrefix(title) {
   return title.replace(TITLE_PREFIX_RE, "");
@@ -197,6 +203,10 @@ class DownloadManager {
       return;
     }
 
+    // Per-item fractions for the window-title prefix (so users with
+    // multiple concurrent downloads see e.g. `[34%, 78%]` rather than a
+    // single aggregate that hides whether one item is stalled).
+    const itemFractions = [];
     let knownTotal = 0;
     let knownReceived = 0;
     let hasUnknownTotal = false;
@@ -205,26 +215,31 @@ class DownloadManager {
       const received = item.getReceivedBytes?.() ?? 0;
       if (!total || total <= 0) {
         hasUnknownTotal = true;
+        itemFractions.push(null);
         continue;
       }
       knownTotal += total;
       knownReceived += received;
+      itemFractions.push(Math.max(0, Math.min(1, received / total)));
     }
 
-    if (hasUnknownTotal || knownTotal <= 0) {
+    if (hasUnknownTotal && knownTotal <= 0) {
+      // Every active item has unknown total: indeterminate.
       window.setProgressBar(2, { mode: "indeterminate" });
-      // The LauncherEntry protocol has no indeterminate state; the closest
-      // signal is "active but unknown progress". Hide the bar and let the
-      // window-title fallback carry the indeterminate cue.
       this.#launcherEmitter?.update({ progressVisible: false });
-      this.#applyTitlePrefix(window, null);
+      this.#applyTitlePrefix(window, itemFractions);
       return;
     }
 
-    const fraction = Math.max(0, Math.min(1, knownReceived / knownTotal));
-    window.setProgressBar(fraction);
-    this.#launcherEmitter?.update({ progress: fraction, progressVisible: true });
-    this.#applyTitlePrefix(window, fraction);
+    // setProgressBar and LauncherEntry are single-value protocols, so they
+    // get the byte-weighted aggregate. The window title surfaces the
+    // per-item breakdown.
+    const aggregate = knownTotal > 0
+      ? Math.max(0, Math.min(1, knownReceived / knownTotal))
+      : 0;
+    window.setProgressBar(aggregate);
+    this.#launcherEmitter?.update({ progress: aggregate, progressVisible: true });
+    this.#applyTitlePrefix(window, itemFractions);
   }
 
   /**
@@ -299,15 +314,19 @@ class DownloadManager {
    * existing title pipeline.
    *
    * @param {Electron.BrowserWindow} window
-   * @param {number|null} fraction - 0..1, or null for indeterminate.
+   * @param {Array<number|null>} fractions - one entry per active download:
+   *   a 0..1 number for known progress, or null for an item with an
+   *   unknown total size. Examples: `[0.34]` -> `[34%]`, `[0.34, 0.78]`
+   *   -> `[34%, 78%]`, `[0.5, null]` -> `[50%, downloading]`,
+   *   `[null]` -> `[downloading]`.
    */
-  #applyTitlePrefix(window, fraction) {
+  #applyTitlePrefix(window, fractions) {
     const currentTitle = window.getTitle();
     const baseTitle = stripDownloadPrefix(currentTitle);
-    const prefix = fraction === null
-      ? "[downloading] "
-      : `[${Math.round(fraction * 100)}%] `;
-    const next = prefix + baseTitle;
+    const parts = fractions.map((fraction) =>
+      fraction === null ? "downloading" : `${Math.round(fraction * 100)}%`,
+    );
+    const next = `[${parts.join(", ")}] ${baseTitle}`;
     if (next !== currentTitle) {
       window.setTitle(next);
     }
