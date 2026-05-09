@@ -1,9 +1,8 @@
 'use strict';
 
-const { describe, it, beforeEach, afterEach, mock } = require('node:test');
+const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
-const Module = require('node:module');
 
 const electronPath = require.resolve('electron');
 const downloadManagerPath = require.resolve('../../app/downloadManager');
@@ -237,6 +236,3 @@ describe('DownloadManager', () => {
 		assert.doesNotThrow(() => manager.initialize(null));
 	});
 });
-
-void Module; // keep require.cache mutation linter-happy
-void mock;

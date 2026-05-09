@@ -81,8 +81,7 @@ class DownloadManager {
     if (this.#config?.disableNotifications) {
       return false;
     }
-    const downloadConfig = this.#config?.download;
-    if (downloadConfig && downloadConfig.notifyOnDownloadComplete === false) {
+    if (this.#config?.download?.notifyOnDownloadComplete === false) {
       return false;
     }
     return true;
