@@ -69,14 +69,20 @@ class DownloadManager {
 
     console.debug(`[DownloadManager] Download started: ${item.getFilename()}`);
 
+    let onUpdated = null;
     if (showProgress) {
       this.#activeItems.add(item);
-      item.on("updated", () => this.#updateProgressBar());
+      onUpdated = () => this.#updateProgressBar();
+      item.on("updated", onUpdated);
       this.#updateProgressBar();
     }
 
     item.once("done", (_doneEvent, state) => {
       if (showProgress) {
+        // Explicitly drop the `updated` listener so we don't keep references
+        // to the item (or its closures) past completion, even if the
+        // DownloadItem outlives the manager's tracking set.
+        if (onUpdated) item.removeListener("updated", onUpdated);
         this.#activeItems.delete(item);
         this.#updateProgressBar();
       }

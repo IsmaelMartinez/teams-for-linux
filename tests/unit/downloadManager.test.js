@@ -370,6 +370,25 @@ describe('DownloadManager', () => {
 		assert.strictEqual(mainAppWindow._calls.length, 0);
 	});
 
+	it("removes the 'updated' listener from the item once the download finishes", () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const manager = new DownloadManager({}, mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/home/user/Downloads/big.zip',
+			{ totalBytes: 100, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(item.listenerCount('updated'), 1);
+		item.emit('done', {}, 'completed');
+		assert.strictEqual(item.listenerCount('updated'), 0);
+	});
+
 	it('survives a destroyed main window during progress updates', () => {
 		const DownloadManager = require(downloadManagerPath);
 		const mainAppWindow = makeFakeMainAppWindow();
