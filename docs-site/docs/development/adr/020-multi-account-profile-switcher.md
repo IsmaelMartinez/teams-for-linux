@@ -146,7 +146,7 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 2. Click a profile's name to enter inline-edit mode — the static text is replaced by an `<input>` pre-filled with the current name and selected.
 3. **Enter** or blur saves; **Esc** cancels and reverts to the prior name.
 4. Validation matches Add-profile: trimmed name must be non-empty (also enforced server-side in `ProfilesManager.update`'s `#applyName`). Empty input shows an inline error and the input keeps focus until corrected or cancelled.
-5. On save the dialog calls the existing `profile-update` IPC channel; `ProfilesManager` emits `update`; the menu's Switch-to submenu and the title-bar switcher rebuild automatically. Renaming has no session impact — no re-login, no view reload.
+5. On save the renderer sends `manage-profile-rename` (an `ipcMain.handle` channel owned by the dialog), and the dialog forwards to `ProfilesManager.update(id, { name })` server-side; `ProfilesManager` emits `update`; the menu's Switch-to submenu and the title-bar switcher rebuild automatically. Renaming has no session impact — no re-login, no view reload.
 
 ### Remove a profile
 
