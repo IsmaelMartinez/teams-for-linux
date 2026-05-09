@@ -275,10 +275,11 @@ function extractYargConfig(configObject, appVersion) {
       },
       download: {
         default: {
+          enabled: false,
           notifyOnDownloadComplete: true,
         },
         describe:
-          "Download manager configuration. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder).",
+          "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder); only takes effect when enabled is true.",
         type: "object",
       },
       disableNotifications: {

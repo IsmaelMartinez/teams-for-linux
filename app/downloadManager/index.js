@@ -30,9 +30,19 @@ class DownloadManager {
    * Attach a `will-download` listener to the supplied session. Idempotent: if
    * called more than once on the same session the second call is a no-op.
    *
+   * Gated by `config.download.enabled` (default `false`) — the maintainer
+   * wants this feature opt-in while it's still in early development. The
+   * sub-flags (`notifyOnDownloadComplete`, etc.) keep their `true` defaults
+   * but only matter once the master switch is on. Graduating to opt-out
+   * later is a one-line default flip.
+   *
    * @param {Electron.Session} targetSession - The session to observe.
    */
   initialize(targetSession) {
+    if (!this.#config?.download?.enabled) {
+      console.debug("[DownloadManager] Disabled (config.download.enabled is not true)");
+      return;
+    }
     if (!targetSession) {
       console.warn("[DownloadManager] No session provided; download notifications disabled");
       return;

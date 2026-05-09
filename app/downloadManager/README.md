@@ -38,7 +38,18 @@ been created by the main window.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `download.enabled` | `boolean` | `false` | Master switch for the entire feature. While download UX is in early development this is opt-in; set `true` to turn the manager on. The sub-flags only take effect once this is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a download finishes |
 
-Set `download.notifyOnDownloadComplete` to `false` in `~/.config/teams-for-linux/config.json`
-to suppress the notification entirely.
+Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
+
+```json
+{
+  "download": {
+    "enabled": true
+  }
+}
+```
+
+Set `download.notifyOnDownloadComplete` to `false` to suppress the notification
+while keeping the feature otherwise active.

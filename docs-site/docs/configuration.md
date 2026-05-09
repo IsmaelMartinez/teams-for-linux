@@ -135,6 +135,7 @@ Place your `config.json` file in the appropriate location based on your installa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `download.enabled` | `boolean` | `false` | Master switch for the download feedback feature. Opt-in while in early development; set to `true` to enable the manager. The sub-flags only take effect when `enabled` is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
 
 ### Idle & Activity Detection
