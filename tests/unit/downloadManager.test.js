@@ -98,6 +98,30 @@ function makeFakeMainAppWindow(initialTitle = 'Microsoft Teams') {
 	};
 }
 
+function makeFakeJobEmitter() {
+	const calls = { starts: [], updates: [], finishes: [] };
+	return {
+		_calls: calls,
+		start(opts) {
+			const handle = {
+				update(props) { calls.updates.push(props); },
+				finish(props) { calls.finishes.push(props); },
+			};
+			calls.starts.push(opts);
+			return handle;
+		},
+	};
+}
+
+function makeFakeLauncherEmitter() {
+	const calls = [];
+	return {
+		_calls: calls,
+		update(props) { calls.push(props); },
+	};
+}
+
+
 describe('DownloadManager', () => {
 	let originalConsoleDebug;
 	let originalConsoleWarn;
@@ -519,5 +543,127 @@ describe('DownloadManager', () => {
 		manager.initialize(fakeSession);
 
 		assert.strictEqual(fakeSession._onCalls.length, 0);
+	});
+
+	it('starts a JobView per download with filename + totalBytes', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const jobEmitter = makeFakeJobEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, jobEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/p/big.zip',
+			{ totalBytes: 10000, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(jobEmitter._calls.starts.length, 1);
+		assert.deepStrictEqual(jobEmitter._calls.starts[0], {
+			filename: 'big.zip',
+			totalBytes: 10000,
+		});
+	});
+
+	it('updates the JobView on item.updated and finishes on done(completed)', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const jobEmitter = makeFakeJobEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, jobEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/p/big.zip',
+			{ totalBytes: 1000, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.setSizes({ receivedBytes: 250 });
+		item.emit('updated');
+
+		// Promise chain in the manager defers update; let the microtask run.
+		await Promise.resolve();
+		await Promise.resolve();
+
+		assert.deepStrictEqual(jobEmitter._calls.updates.at(-1), {
+			receivedBytes: 250,
+			totalBytes: 1000,
+		});
+
+		item.emit('done', {}, 'completed');
+		await Promise.resolve();
+		await Promise.resolve();
+		assert.deepStrictEqual(jobEmitter._calls.finishes.at(-1), { error: '' });
+	});
+
+	it("reports the JobView with a non-empty error on cancelled / interrupted", async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const jobEmitter = makeFakeJobEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, jobEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'cancelled');
+
+		await Promise.resolve();
+		await Promise.resolve();
+
+		assert.match(jobEmitter._calls.finishes.at(-1).error, /cancelled/);
+	});
+
+	it('emits LauncherEntry progress aggregated across downloads', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const launcherEmitter = makeFakeLauncherEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, null, launcherEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const a = makeFakeDownloadItem('a', '/p/a', { totalBytes: 100, receivedBytes: 0 });
+		const b = makeFakeDownloadItem('b', '/p/b', { totalBytes: 300, receivedBytes: 0 });
+		fakeSession.emit('will-download', {}, a);
+		fakeSession.emit('will-download', {}, b);
+		a.setSizes({ receivedBytes: 50 });
+		b.setSizes({ receivedBytes: 150 });
+		a.emit('updated');
+
+		const last = launcherEmitter._calls.at(-1);
+		assert.strictEqual(last.progressVisible, true);
+		assert.strictEqual(last.progress, 0.5);
+	});
+
+	it('hides the LauncherEntry progress when all downloads finish', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const launcherEmitter = makeFakeLauncherEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, null, launcherEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100, receivedBytes: 0 });
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'completed');
+
+		assert.strictEqual(launcherEmitter._calls.at(-1).progressVisible, false);
+	});
+
+	it('hides LauncherEntry progress in indeterminate state (unknown total)', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow();
+		const launcherEmitter = makeFakeLauncherEmitter();
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow, null, launcherEmitter);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('unknown.bin', '/p/unknown.bin', { totalBytes: 0 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(launcherEmitter._calls.at(-1).progressVisible, false);
 	});
 });

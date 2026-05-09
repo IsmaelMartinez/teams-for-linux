@@ -20,11 +20,15 @@ function stripDownloadPrefix(title) {
  *   - Taskbar progress bar via `BrowserWindow.setProgressBar`, aggregated
  *     across concurrent downloads. Indeterminate mode kicks in when the
  *     server doesn't advertise a content length.
+ *   - KDE / freedesktop JobView (per-item progress in Plasma's notification
+ *     widget — the same place users see Firefox / Dolphin / KIO download
+ *     progress). Driven via `org.kde.JobViewServer` if available; degrades
+ *     to no-op on systems without it.
  *   - Window-title fallback: a `[34%] ` (or `[downloading] `) prefix on the
- *     window title. Linux distros without `libunity` (Debian, Fedora, Arch,
- *     KDE/GNOME by default) get nothing from `setProgressBar` because
- *     Electron loads libunity via `dlopen` at runtime; the title prefix is
- *     a portable fallback that every WM/DE renders in its taskbar tooltip
+ *     window title. Electron's `setProgressBar` is a no-op on most Linux
+ *     setups (Unity launcher protocol gated on `com.canonical.Unity` name
+ *     ownership, which no modern DE provides), so the title prefix is a
+ *     portable fallback that every WM/DE renders in its taskbar tooltip
  *     or window list.
  *   - System notification on completion; click opens the containing folder
  *     via `shell.showItemInFolder()`.
@@ -35,6 +39,8 @@ function stripDownloadPrefix(title) {
 class DownloadManager {
   #config;
   #mainAppWindow;
+  #jobEmitter;
+  #launcherEmitter;
   #session = null;
   // Hold strong references to live `Notification` instances so the V8 garbage
   // collector doesn't reap them — and their click/close listeners — between
@@ -43,10 +49,32 @@ class DownloadManager {
   #activeNotifications = new Set();
   // Active downloads tracked for the taskbar progress bar. Removed in `done`.
   #activeItems = new Set();
+  // Per-item JobView handle promises. The emitter's `start()` is async (one
+  // DBus round-trip to `requestView`); subsequent `update()` / `finish()`
+  // calls `.then()` onto the stored promise so events that arrive before
+  // requestView resolves are applied as soon as the handle exists.
+  #itemJobs = new Map();
 
-  constructor(config, mainAppWindow) {
+  /**
+   * @param {object} config - Application configuration.
+   * @param {object} mainAppWindow - Module exposing `getWindow()` for the main BrowserWindow.
+   * @param {{start: (Object) => Promise<{update: Function, finish: Function}>}} [jobEmitter] -
+   *   Optional desktop job-view emitter (KDE's `org.kde.JobViewServer` —
+   *   the protocol Plasma's notification widget uses to render progress
+   *   for Firefox / Dolphin / KIO downloads). Tests omit this so DBus
+   *   traffic never happens during unit tests.
+   * @param {{update: (props: object) => void}} [launcherEmitter] -
+   *   Optional Unity LauncherEntry emitter (`com.canonical.Unity
+   *   .LauncherEntry.Update` D-Bus broadcast). Ubuntu Dock and Dash-to-Dock
+   *   subscribe to this signal to render progress on the running app's dock
+   *   icon — covers the GNOME/Ubuntu majority of the Linux audience that
+   *   Electron's `setProgressBar` no longer reaches. Tests omit this.
+   */
+  constructor(config, mainAppWindow, jobEmitter = null, launcherEmitter = null) {
     this.#config = config;
     this.#mainAppWindow = mainAppWindow;
+    this.#jobEmitter = jobEmitter;
+    this.#launcherEmitter = launcherEmitter;
   }
 
   /**
@@ -87,7 +115,11 @@ class DownloadManager {
     let onUpdated = null;
     if (showProgress) {
       this.#activeItems.add(item);
-      onUpdated = () => this.#updateProgressBar();
+      this.#startJob(item);
+      onUpdated = () => {
+        this.#updateProgressBar();
+        this.#updateJob(item);
+      };
       item.on("updated", onUpdated);
       this.#updateProgressBar();
     }
@@ -99,6 +131,7 @@ class DownloadManager {
         // DownloadItem outlives the manager's tracking set.
         if (onUpdated) item.removeListener("updated", onUpdated);
         this.#activeItems.delete(item);
+        this.#finishJob(item, state);
         this.#updateProgressBar();
       }
       if (!notify) return;
@@ -159,6 +192,7 @@ class DownloadManager {
 
     if (this.#activeItems.size === 0) {
       window.setProgressBar(-1);
+      this.#launcherEmitter?.update({ progressVisible: false });
       this.#clearTitlePrefix(window);
       return;
     }
@@ -179,13 +213,72 @@ class DownloadManager {
 
     if (hasUnknownTotal || knownTotal <= 0) {
       window.setProgressBar(2, { mode: "indeterminate" });
+      // The LauncherEntry protocol has no indeterminate state; the closest
+      // signal is "active but unknown progress". Hide the bar and let the
+      // window-title fallback carry the indeterminate cue.
+      this.#launcherEmitter?.update({ progressVisible: false });
       this.#applyTitlePrefix(window, null);
       return;
     }
 
     const fraction = Math.max(0, Math.min(1, knownReceived / knownTotal));
     window.setProgressBar(fraction);
+    this.#launcherEmitter?.update({ progress: fraction, progressVisible: true });
     this.#applyTitlePrefix(window, fraction);
+  }
+
+  /**
+   * Open a per-item JobView (KDE notification-widget progress) for the
+   * given DownloadItem. Records the resulting handle promise so subsequent
+   * `update`/`finish` calls can chain onto it even if they fire before the
+   * `requestView` round-trip resolves.
+   *
+   * @param {Electron.DownloadItem} item
+   */
+  #startJob(item) {
+    if (!this.#jobEmitter) return;
+    const filename = item.getFilename?.();
+    const totalBytes = item.getTotalBytes?.();
+    const promise = Promise.resolve(
+      this.#jobEmitter.start({
+        filename,
+        totalBytes: typeof totalBytes === "number" && totalBytes > 0 ? totalBytes : undefined,
+      }),
+    ).catch((error) => {
+      console.warn("[DownloadManager] JobView start failed", { message: error?.message });
+      return null;
+    });
+    this.#itemJobs.set(item, promise);
+  }
+
+  /**
+   * Forward the latest receivedBytes/totalBytes to the per-item JobView.
+   * No-op when the emitter wasn't supplied or the item has no live job.
+   *
+   * @param {Electron.DownloadItem} item
+   */
+  #updateJob(item) {
+    const promise = this.#itemJobs.get(item);
+    if (!promise) return;
+    const receivedBytes = item.getReceivedBytes?.() ?? 0;
+    const totalBytes = item.getTotalBytes?.() ?? 0;
+    promise.then((handle) => handle?.update?.({ receivedBytes, totalBytes }));
+  }
+
+  /**
+   * Terminate the per-item JobView and forget the handle. KDE removes the
+   * row from the notification widget when the view terminates; passing a
+   * non-empty `error` string surfaces it as a job failure.
+   *
+   * @param {Electron.DownloadItem} item
+   * @param {string} state - DownloadItem.state passed by Electron's `done` event.
+   */
+  #finishJob(item, state) {
+    const promise = this.#itemJobs.get(item);
+    if (!promise) return;
+    this.#itemJobs.delete(item);
+    const error = state === "completed" ? "" : `Download ${state}`;
+    promise.then((handle) => handle?.finish?.({ error }));
   }
 
   /**
