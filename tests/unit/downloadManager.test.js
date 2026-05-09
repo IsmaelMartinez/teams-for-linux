@@ -78,18 +78,23 @@ function enabledConfig(extra = {}) {
 	};
 }
 
-function makeFakeMainAppWindow() {
+function makeFakeMainAppWindow(initialTitle = 'Microsoft Teams') {
 	const calls = [];
 	let destroyed = false;
+	let title = initialTitle;
 	const window = {
 		isDestroyed: () => destroyed,
 		setProgressBar: (...args) => calls.push(args),
+		getTitle: () => title,
+		setTitle: (next) => { title = next; },
 		_destroy: () => { destroyed = true; },
 	};
 	return {
 		getWindow: () => window,
 		_calls: calls,
 		_window: window,
+		get _title() { return title; },
+		set _title(v) { title = v; },
 	};
 }
 
@@ -373,7 +378,7 @@ describe('DownloadManager', () => {
 	it("removes the 'updated' listener from the item once the download finishes", () => {
 		const DownloadManager = require(downloadManagerPath);
 		const mainAppWindow = makeFakeMainAppWindow();
-		const manager = new DownloadManager({}, mainAppWindow);
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
 		const fakeSession = makeFakeSession();
 		manager.initialize(fakeSession);
 
@@ -387,6 +392,88 @@ describe('DownloadManager', () => {
 		assert.strictEqual(item.listenerCount('updated'), 1);
 		item.emit('done', {}, 'completed');
 		assert.strictEqual(item.listenerCount('updated'), 0);
+	});
+
+	it('prefixes the window title with progress while a download is in flight', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Chats - Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'big.zip',
+			'/p/big.zip',
+			{ totalBytes: 1000, receivedBytes: 0 },
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.setSizes({ receivedBytes: 340 });
+		item.emit('updated');
+
+		assert.strictEqual(mainAppWindow._title, '[34%] Chats - Microsoft Teams');
+	});
+
+	it('uses an indeterminate marker in the title when total size is unknown', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('unknown.bin', '/p/unknown.bin', { totalBytes: 0 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(mainAppWindow._title, '[downloading] Microsoft Teams');
+	});
+
+	it('strips its own prefix when re-applying so title does not stack', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100, receivedBytes: 10 });
+		fakeSession.emit('will-download', {}, item);
+		item.setSizes({ receivedBytes: 50 });
+		item.emit('updated');
+		item.setSizes({ receivedBytes: 90 });
+		item.emit('updated');
+
+		assert.strictEqual(mainAppWindow._title, '[90%] Microsoft Teams');
+	});
+
+	it('preserves a Teams-set page title when re-applying the prefix', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100, receivedBytes: 10 });
+		fakeSession.emit('will-download', {}, item);
+
+		// Simulate Teams updating the page title mid-download (which would
+		// normally fire `page-title-updated` and overwrite our prefix).
+		mainAppWindow._title = 'New chat - Microsoft Teams';
+		item.setSizes({ receivedBytes: 50 });
+		item.emit('updated');
+
+		assert.strictEqual(mainAppWindow._title, '[50%] New chat - Microsoft Teams');
+	});
+
+	it('clears the title prefix when all downloads finish', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(enabledConfig(), mainAppWindow);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100, receivedBytes: 0 });
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'completed');
+
+		assert.strictEqual(mainAppWindow._title, 'Microsoft Teams');
 	});
 
 	it('survives a destroyed main window during progress updates', () => {

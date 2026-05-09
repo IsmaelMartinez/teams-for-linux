@@ -1,5 +1,15 @@
 const { Notification, shell } = require("electron");
 
+// Matches the leading progress prefix this manager applies to window titles
+// (e.g. `[34%] ` or `[downloading] `). Anchored to the start so we only strip
+// our own prefix and never touch a legitimate page title that happens to
+// contain bracketed numbers later in the string.
+const TITLE_PREFIX_RE = /^\[(\d{1,3}%|downloading)\]\s/;
+
+function stripDownloadPrefix(title) {
+  return title.replace(TITLE_PREFIX_RE, "");
+}
+
 /**
  * DownloadManager surfaces Electron `DownloadItem` lifecycle as user-visible
  * feedback. Without a `will-download` handler, Electron silently saves files
@@ -9,8 +19,13 @@ const { Notification, shell } = require("electron");
  * Scope:
  *   - Taskbar progress bar via `BrowserWindow.setProgressBar`, aggregated
  *     across concurrent downloads. Indeterminate mode kicks in when the
- *     server doesn't advertise a content length so the user still gets
- *     feedback that *something* is happening.
+ *     server doesn't advertise a content length.
+ *   - Window-title fallback: a `[34%] ` (or `[downloading] `) prefix on the
+ *     window title. Linux distros without `libunity` (Debian, Fedora, Arch,
+ *     KDE/GNOME by default) get nothing from `setProgressBar` because
+ *     Electron loads libunity via `dlopen` at runtime; the title prefix is
+ *     a portable fallback that every WM/DE renders in its taskbar tooltip
+ *     or window list.
  *   - System notification on completion; click opens the containing folder
  *     via `shell.showItemInFolder()`.
  *   - System notification on cancellation / interruption.
@@ -148,6 +163,7 @@ class DownloadManager {
 
     if (this.#activeItems.size === 0) {
       window.setProgressBar(-1);
+      this.#clearTitlePrefix(window);
       return;
     }
 
@@ -167,11 +183,58 @@ class DownloadManager {
 
     if (hasUnknownTotal || knownTotal <= 0) {
       window.setProgressBar(2, { mode: "indeterminate" });
+      this.#applyTitlePrefix(window, null);
       return;
     }
 
     const fraction = Math.max(0, Math.min(1, knownReceived / knownTotal));
     window.setProgressBar(fraction);
+    this.#applyTitlePrefix(window, fraction);
+  }
+
+  /**
+   * Update the window title with a progress prefix, keeping a fallback path
+   * for environments where Electron's `setProgressBar` is a no-op (Linux
+   * without `libunity` — Debian, Fedora, Arch, etc. by default).
+   *
+   * The title flow on Linux looks like:
+   *   1. Teams DOM updates `document.title` -> Chromium fires
+   *      `page-title-updated`, which we don't preventDefault on, so the
+   *      window title gets set to the new page title (overwriting our
+   *      prefix).
+   *   2. The next `DownloadItem.on('updated')` fires (~500ms cadence) and
+   *      re-applies the prefix here.
+   *
+   * The brief no-prefix window between (1) and (2) is acceptable; the upside
+   * is no need to listen to `page-title-updated` and risk fighting the
+   * existing title pipeline.
+   *
+   * @param {Electron.BrowserWindow} window
+   * @param {number|null} fraction - 0..1, or null for indeterminate.
+   */
+  #applyTitlePrefix(window, fraction) {
+    const currentTitle = window.getTitle();
+    const baseTitle = stripDownloadPrefix(currentTitle);
+    const prefix = fraction === null
+      ? "[downloading] "
+      : `[${Math.round(fraction * 100)}%] `;
+    const next = prefix + baseTitle;
+    if (next !== currentTitle) {
+      window.setTitle(next);
+    }
+  }
+
+  /**
+   * Reset the window title to its un-prefixed form once no downloads remain.
+   *
+   * @param {Electron.BrowserWindow} window
+   */
+  #clearTitlePrefix(window) {
+    const currentTitle = window.getTitle();
+    const baseTitle = stripDownloadPrefix(currentTitle);
+    if (baseTitle !== currentTitle) {
+      window.setTitle(baseTitle);
+    }
   }
 
   /**

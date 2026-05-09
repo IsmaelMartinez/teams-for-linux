@@ -15,7 +15,11 @@ each download as both a taskbar progress bar and system notifications:
   `DownloadItem.getReceivedBytes() / getTotalBytes()`, aggregated across
   concurrent downloads. When the server doesn't advertise a content length
   the progress bar switches to indeterminate mode so the user still sees
-  motion on the taskbar.
+  motion on the taskbar. As a portable fallback (Electron's
+  `setProgressBar` is a no-op on Linux distros without `libunity`, which is
+  most of them — Debian, Fedora, Arch, KDE/GNOME by default), the window
+  title is also prefixed with `[34%]` (or `[downloading]` for unknown-size
+  downloads) so every WM/DE shows the progress in its taskbar tooltip.
 - **Completed:** notification "Download complete" with the filename. Clicking
   the notification opens the containing folder via `shell.showItemInFolder()`.
 - **Cancelled / interrupted:** notification "Download did not finish" with

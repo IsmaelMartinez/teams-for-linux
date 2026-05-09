@@ -138,7 +138,7 @@ Place your `config.json` file in the appropriate location based on your installa
 |--------|------|---------|-------------|
 | `download.enabled` | `boolean` | `false` | Master switch for the download feedback feature. Opt-in while in early development; set to `true` to enable the manager. The sub-flags only take effect when `enabled` is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
-| `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar (`BrowserWindow.setProgressBar`) while downloads are in flight. Indeterminate mode is used when the server doesn't advertise a content length. |
+| `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar (`BrowserWindow.setProgressBar`) while downloads are in flight, and prefix the window title with `[34%]` as a portable fallback for Linux setups without `libunity` (Debian/Fedora/Arch/KDE-GNOME default). Indeterminate mode is used when the server doesn't advertise a content length. |
 
 ### Idle & Activity Detection
 
