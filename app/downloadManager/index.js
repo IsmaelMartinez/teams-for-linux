@@ -141,11 +141,7 @@ class DownloadManager {
   }
 
   #shouldShowProgress() {
-    const downloadConfig = this.#config?.download;
-    if (downloadConfig && downloadConfig.showProgressBar === false) {
-      return false;
-    }
-    return true;
+    return this.#config?.download?.showProgressBar !== false;
   }
 
   /**
