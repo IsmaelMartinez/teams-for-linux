@@ -283,12 +283,6 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Disable chat/meeting start notification sound",
         type: "boolean",
       },
-      requireInteraction: {
-        default: false,
-        describe:
-          "Keep notifications persistent in the system notification center until the user dismisses them. Useful on GNOME and other desktops that auto-remove notifications from the center on timeout. May not be honoured by every notification daemon.",
-        type: "boolean",
-      },
       disableNotificationSoundIfNotAvailable: {
         default: false,
         describe:

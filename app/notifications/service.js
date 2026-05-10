@@ -50,7 +50,7 @@ class NotificationService {
 
   async #showNotification(options) {
     const startTime = Date.now();
-    console.debug("[TRAY_DIAG] Native notification request received", {
+    console.debug("[NOTIFICATIONS] Native notification request received", {
       title: options.title,
       bodyLength: options.body?.length || 0,
       hasIcon: !!options.icon,
@@ -69,14 +69,11 @@ class NotificationService {
         body: options.body,
       });
 
-      // Create notification config. Electron's native Notification uses
-      // timeoutType rather than requireInteraction to control persistence
-      // on Linux and Windows, so translate the web-shaped flag here.
+      // Create notification config
       const notificationConfig = {
         title: options.title,
         body: options.body,
         urgency: this.#config.defaultNotificationUrgency,
-        timeoutType: options.requireInteraction ? "never" : "default",
       };
 
       // Only add icon if provided to avoid errors with null/undefined
@@ -88,12 +85,12 @@ class NotificationService {
       const notification = new Notification(notificationConfig);
 
       notification.on("click", () => {
-        console.debug("[TRAY_DIAG] Notification clicked, showing main window");
+        console.debug("[NOTIFICATIONS] Notification clicked, showing main window");
         this.#mainWindow.show();
       });
 
       notification.on("close", () => {
-        console.debug("[TRAY_DIAG] Notification dismissed by system");
+        console.debug("[NOTIFICATIONS] Notification dismissed by system");
         const win = this.#mainWindow.getWindow();
         if (!win || win.isDestroyed()) return;
         const { webContents } = win;
@@ -104,7 +101,7 @@ class NotificationService {
       notification.show();
 
       const totalTime = Date.now() - startTime;
-      console.debug("[TRAY_DIAG] Native notification displayed successfully", {
+      console.debug("[NOTIFICATIONS] Native notification displayed successfully", {
         title: options.title,
         totalTimeMs: totalTime,
         urgency: this.#config.defaultNotificationUrgency,
@@ -112,7 +109,7 @@ class NotificationService {
       });
 
     } catch (error) {
-      console.error("[TRAY_DIAG] Failed to show native notification", {
+      console.error("[NOTIFICATIONS] Failed to show native notification", {
         error: error.message,
         title: options.title,
         elapsedMs: Date.now() - startTime,
