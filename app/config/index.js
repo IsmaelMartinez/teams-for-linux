@@ -295,6 +295,14 @@ function extractYargConfig(configObject, appVersion) {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
       },
+      notifications: {
+        default: {
+          requireInteraction: false,
+        },
+        describe:
+          "Notification behaviour. requireInteraction: keep notifications persistent in the system notification center until the user dismisses them. Useful on GNOME and other desktops that auto-remove notifications from the center on timeout. May not be honoured by every notification daemon.",
+        type: "object",
+      },
       disableBadgeCount: {
         default: false,
         describe:
