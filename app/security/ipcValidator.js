@@ -110,7 +110,13 @@ const allowedChannels = new Set([
   // `join-meeting-*`; submit forwards the form record to
   // `ProfilesManager.add()`, cancel destroys the dialog.
   'add-profile-submit',
-  'add-profile-cancel'
+  'add-profile-cancel',
+
+  // WebAuthn / FIDO2 security key support
+  'webauthn:create',
+  'webauthn:get',
+  'webauthn:pin-submit',
+  'webauthn:pin-cancel'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
