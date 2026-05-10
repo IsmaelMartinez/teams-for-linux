@@ -223,24 +223,31 @@ function createWebNotification(classicNotification, title, options) {
 
 function createElectronNotification(options) {
   const notificationId = crypto.randomUUID();
-  // Use Electron notification
-  if (globalThis.electronAPI?.showNotification) {
-    try {
-      globalThis.electronAPI.showNotification({ ...options, notificationId });
-    } catch (e) {
-      console.debug("showNotification failed", e);
-    }
-  }
   const stub = createNotificationStub();
+  let closed = false;
   // Bridge the close event from the main process so Teams knows when
   // the system dismisses the notification (e.g. GNOME timeout).
-  // Use a named listener with ID matching to handle concurrent notifications.
-  const onClosed = (_event, closedId) => {
-    if (closedId !== notificationId) return;
+  // Idempotent so stub.close() and the IPC arrival can each trigger it.
+  const finalizeClose = () => {
+    if (closed) return;
+    closed = true;
     ipcRenderer.removeListener("notification-closed", onClosed);
     if (stub.onclose) stub.onclose();
   };
-  ipcRenderer.on("notification-closed", onClosed);
+  const onClosed = (_event, closedId) => {
+    if (closedId !== notificationId) return;
+    finalizeClose();
+  };
+  stub.close = finalizeClose;
+  if (globalThis.electronAPI?.showNotification) {
+    ipcRenderer.on("notification-closed", onClosed);
+    globalThis.electronAPI
+      .showNotification({ ...options, notificationId })
+      .catch((e) => {
+        ipcRenderer.removeListener("notification-closed", onClosed);
+        console.debug("showNotification failed", e);
+      });
+  }
   return stub;
 }
 
