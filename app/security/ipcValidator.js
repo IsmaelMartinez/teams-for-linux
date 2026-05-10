@@ -37,6 +37,7 @@ const allowedChannels = new Set([
   // Notifications and user interaction
   'play-notification-sound',
   'show-notification',
+  'notification-closed',
   'notification-show-toast',
   'notification-toast-click',
   'user-status-changed',

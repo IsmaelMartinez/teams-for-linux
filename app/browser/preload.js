@@ -182,6 +182,12 @@ function createNotificationStub() {
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {
+  // Skip renderer-side sound for "electron" method — the main process
+  // notification service already plays the sound before showing the notification.
+  const method = notificationConfig?.notificationMethod || "web";
+  if (method === "electron") {
+    return;
+  }
   if (globalThis.electronAPI?.playNotificationSound) {
     try {
       console.debug("Requesting application to play sound");
@@ -216,15 +222,33 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
-  // Use Electron notification
+  const notificationId = crypto.randomUUID();
+  const stub = createNotificationStub();
+  let closed = false;
+  // Bridge the close event from the main process so Teams knows when
+  // the system dismisses the notification (e.g. GNOME timeout).
+  // Idempotent so stub.close() and the IPC arrival can each trigger it.
+  const finalizeClose = () => {
+    if (closed) return;
+    closed = true;
+    ipcRenderer.removeListener("notification-closed", onClosed);
+    if (stub.onclose) stub.onclose();
+  };
+  const onClosed = (_event, closedId) => {
+    if (closedId !== notificationId) return;
+    finalizeClose();
+  };
+  stub.close = finalizeClose;
   if (globalThis.electronAPI?.showNotification) {
-    try {
-      globalThis.electronAPI.showNotification(options);
-    } catch (e) {
-      console.debug("showNotification failed", e);
-    }
+    ipcRenderer.on("notification-closed", onClosed);
+    globalThis.electronAPI
+      .showNotification({ ...options, notificationId })
+      .catch((e) => {
+        ipcRenderer.removeListener("notification-closed", onClosed);
+        console.debug("showNotification failed", e);
+      });
   }
-  return createNotificationStub();
+  return stub;
 }
 
 function createCustomNotification(title, options) {
