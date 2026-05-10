@@ -212,6 +212,18 @@ function createScreenSharePreviewWindow() {
   });
 }
 
+// Microsoft Cloud App Security proxy suffix. Tenants that route Teams
+// through Defender for Cloud Apps (MCAS) load and store cookies at
+// `*.mcas.ms` rather than the underlying Microsoft domain. Strip the
+// suffix before matching against AUTH_DOMAINS / TEAMS_DOMAINS so the
+// proxied flavour is treated the same as the canonical hostname.
+const MCAS_SUFFIX = '.mcas.ms';
+function stripMcasSuffix(hostname) {
+  return hostname.endsWith(MCAS_SUFFIX)
+    ? hostname.slice(0, -MCAS_SUFFIX.length)
+    : hostname;
+}
+
 // Microsoft auth domains whose cookies should be checked/cleaned
 const AUTH_DOMAINS = [
   'login.microsoftonline.com',
@@ -266,7 +278,7 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     const nowSeconds = Date.now() / 1000;
 
     const authCookies = allCookies.filter(cookie => {
-      const domain = (cookie.domain || '').replace(/^\./, '');
+      const domain = stripMcasSuffix((cookie.domain || '').replace(/^\./, ''));
       const isAuthDomain = AUTH_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
       return isAuthDomain && AUTH_COOKIE_NAMES.has(cookie.name);
     });
@@ -739,10 +751,7 @@ const TEAMS_DOMAINS = [
  */
 function isTeamsDomain(url) {
   try {
-    let hostname = new URL(url).hostname;
-    if (hostname.endsWith('.mcas.ms')) {
-      hostname = hostname.slice(0, -8);
-    }
+    const hostname = stripMcasSuffix(new URL(url).hostname);
     return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
   } catch {
     return false;
