@@ -37,6 +37,7 @@ const allowedChannels = new Set([
   // Notifications and user interaction
   'play-notification-sound',
   'show-notification',
+  'notification-closed',
   'notification-show-toast',
   'notification-toast-click',
   'user-status-changed',
@@ -110,7 +111,22 @@ const allowedChannels = new Set([
   // `join-meeting-*`; submit forwards the form record to
   // `ProfilesManager.add()`, cancel destroys the dialog.
   'add-profile-submit',
-  'add-profile-cancel'
+  'add-profile-cancel',
+
+  // WebAuthn / FIDO2 security key support
+  'webauthn:create',
+  'webauthn:get',
+  'webauthn:pin-submit',
+  'webauthn:pin-cancel',
+
+  // Manage-profiles dialog (Phase 1c.2). Inline rename forwards to
+  // `ProfilesManager.update()`; remove triggers a native confirmation
+  // before calling `ProfilesManager.remove()`. Close dismisses the
+  // dialog. State pushes flow main → renderer over `manage-profile-state`
+  // (no allowlist needed for that direction).
+  'manage-profile-rename',
+  'manage-profile-remove',
+  'manage-profile-close'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

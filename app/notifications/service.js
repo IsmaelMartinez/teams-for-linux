@@ -1,4 +1,5 @@
 const { Notification, nativeImage, ipcMain } = require("electron");
+const crypto = require("node:crypto");
 const path = require("node:path");
 
 const USER_STATUS = {
@@ -39,7 +40,8 @@ class NotificationService {
   }
 
   async #handleShowNotification(_event, options) {
-    return this.#showNotification(options);
+    const notificationId = options?.notificationId || crypto.randomUUID();
+    return this.#showNotification({ ...options, notificationId });
   }
 
   async #handlePlayNotificationSound(_event, options) {
@@ -48,7 +50,7 @@ class NotificationService {
 
   async #showNotification(options) {
     const startTime = Date.now();
-    console.debug("[TRAY_DIAG] Native notification request received", {
+    console.debug("[NOTIFICATIONS] Native notification request received", {
       title: options.title,
       bodyLength: options.body?.length || 0,
       hasIcon: !!options.icon,
@@ -83,14 +85,23 @@ class NotificationService {
       const notification = new Notification(notificationConfig);
 
       notification.on("click", () => {
-        console.debug("[TRAY_DIAG] Notification clicked, showing main window");
+        console.debug("[NOTIFICATIONS] Notification clicked, showing main window");
         this.#mainWindow.show();
+      });
+
+      notification.on("close", () => {
+        console.debug("[NOTIFICATIONS] Notification dismissed by system");
+        const win = this.#mainWindow.getWindow();
+        if (!win || win.isDestroyed()) return;
+        const { webContents } = win;
+        if (!webContents || webContents.isDestroyed()) return;
+        webContents.send("notification-closed", options.notificationId);
       });
 
       notification.show();
 
       const totalTime = Date.now() - startTime;
-      console.debug("[TRAY_DIAG] Native notification displayed successfully", {
+      console.debug("[NOTIFICATIONS] Native notification displayed successfully", {
         title: options.title,
         totalTimeMs: totalTime,
         urgency: this.#config.defaultNotificationUrgency,
@@ -98,7 +109,7 @@ class NotificationService {
       });
 
     } catch (error) {
-      console.error("[TRAY_DIAG] Failed to show native notification", {
+      console.error("[NOTIFICATIONS] Failed to show native notification", {
         error: error.message,
         title: options.title,
         elapsedMs: Date.now() - startTime,

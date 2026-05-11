@@ -16,6 +16,7 @@ const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
+const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
@@ -36,14 +37,19 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
-    // Only allocate the Add-profile dialog when multi-account is enabled.
-    // The Profiles menu entry that triggers it is itself gated on the same
-    // flag, so with the flag off this object is never reachable from the UI.
-    this.addProfileDialog =
+    // Only allocate the Add-profile / Manage-profiles dialogs when multi-
+    // account is enabled. The Profiles menu entries that trigger them are
+    // themselves gated on the same flag, so with the flag off these objects
+    // are never reachable from the UI.
+    const multiAccountReady =
       this.profilesManager &&
-      this.configGroup.startupConfig.multiAccount?.enabled
-        ? new AddProfileDialog(this.window, this.profilesManager)
-        : null;
+      this.configGroup.startupConfig.multiAccount?.enabled;
+    this.addProfileDialog = multiAccountReady
+      ? new AddProfileDialog(this.window, this.profilesManager)
+      : null;
+    this.manageProfileDialog = multiAccountReady
+      ? new ManageProfileDialog(this.window, this.profilesManager)
+      : null;
     this.initialize();
   }
 
@@ -249,6 +255,10 @@ class Menus {
 
   addProfile() {
     this.addProfileDialog?.show();
+  }
+
+  manageProfiles() {
+    this.manageProfileDialog?.show();
   }
 
   // Switch the active profile via ProfilesManager. The emitter then fires
