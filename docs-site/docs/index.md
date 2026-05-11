@@ -58,5 +58,4 @@ If you want to fix a bug or add a feature:
 ## Community
 
 - [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) — bug reports and feature requests
-- [GitHub Discussions](https://github.com/IsmaelMartinez/teams-for-linux/discussions) — questions and conversation
 - [Matrix space](https://matrix.to/#/#teams-for-linux-space:matrix.org) — chat with users and contributors
