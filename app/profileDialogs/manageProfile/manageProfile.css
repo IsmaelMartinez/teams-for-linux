@@ -133,7 +133,7 @@ p {
 
 .profile-remove-btn:disabled {
   background-color: #f0f0f0;
-  color: #999;
+  color: #595959;
   cursor: not-allowed;
 }
 
@@ -218,6 +218,6 @@ button.primary:hover {
 
   .profile-remove-btn:disabled {
     background-color: #2a2a2a;
-    color: #666;
+    color: #a0a0a0;
   }
 }
