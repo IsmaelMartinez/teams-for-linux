@@ -117,7 +117,16 @@ const allowedChannels = new Set([
   'webauthn:create',
   'webauthn:get',
   'webauthn:pin-submit',
-  'webauthn:pin-cancel'
+  'webauthn:pin-cancel',
+
+  // Manage-profiles dialog (Phase 1c.2). Inline rename forwards to
+  // `ProfilesManager.update()`; remove triggers a native confirmation
+  // before calling `ProfilesManager.remove()`. Close dismisses the
+  // dialog. State pushes flow main → renderer over `manage-profile-state`
+  // (no allowlist needed for that direction).
+  'manage-profile-rename',
+  'manage-profile-remove',
+  'manage-profile-close'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

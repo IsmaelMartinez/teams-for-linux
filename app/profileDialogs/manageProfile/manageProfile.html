@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+  <title>Manage profiles</title>
+  <link rel="stylesheet" href="manageProfile.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Manage profiles</h2>
+    <p>Click a name to rename it. Removing a profile permanently deletes its login and local data.</p>
+
+    <ul id="profile-list" class="profile-list"></ul>
+
+    <div class="error" id="error-message"></div>
+    <div class="buttons">
+      <button id="close-btn" type="button" class="primary">Close</button>
+    </div>
+  </div>
+  <script src="manageProfile.js"></script>
+</body>
+</html>
