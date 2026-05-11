@@ -274,4 +274,48 @@ describe('SpeakingIndicator', () => {
 
 		// Implicit assertion: no throws above. Nothing else to check since there is no ipcRenderer to inspect.
 	});
+
+	it('does not flip to muted when level oscillates around MUTED_LEVEL (#2465 hysteresis)', async () => {
+		setupGlobals();
+		// Seed: one tick clearly unmuted to set hasSeenAudio, then oscillate
+		// across the 0.0001 threshold the way a quiet-mic noise floor would.
+		let tick = 0;
+		const oscillation = [0.005, 0.00012, 0.00008, 0.00013, 0.00007, 0.00014, 0.00009];
+		getStatsFn = async () => makeStatsReport(oscillation[Math.min(tick++, oscillation.length - 1)]);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 1200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		const states = micCalls.map(c => c.arguments[1]);
+		assert.ok(
+			!states.includes('muted'),
+			`should not emit muted while level oscillates around MUTED_LEVEL, got: ${states.join(',')}`
+		);
+	});
+
+	it('emits muted after sustained below-threshold ticks (#2465 hysteresis)', async () => {
+		setupGlobals();
+		// Seed: one tick unmuted to set hasSeenAudio, then hold level clearly below MUTED_LEVEL.
+		let tick = 0;
+		getStatsFn = async () => makeStatsReport(tick++ === 0 ? 0.005 : 0.00001);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 1200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		const states = micCalls.map(c => c.arguments[1]);
+		assert.ok(
+			states.includes('muted'),
+			`should emit muted after sustained below-threshold ticks, got: ${states.join(',')}`
+		);
+	});
 });

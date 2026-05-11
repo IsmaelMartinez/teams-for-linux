@@ -38,7 +38,12 @@ const activityHub = require('./activityHub');
 const LOG_PREFIX = '[SPEAKING_INDICATOR]';
 const POLL_INTERVAL_MS = 150;
 const SPEAKING_THRESHOLD = 0.01;  // audioLevel above this → speaking
-const MUTED_LEVEL = 0.0001;       // audioLevel below this → muted (Teams zeroes signal exactly)
+const MUTED_LEVEL = 0.0001;       // audioLevel below this → muted candidate
+// On quiet mics the unmuted noise floor can oscillate around MUTED_LEVEL, so
+// require N consecutive below-threshold ticks before transitioning into muted.
+// At 150ms polling, 3 ticks ≈ 450ms entry delay. Exit muted on a single tick
+// above the threshold so unmuting feels immediate.
+const MUTED_TICKS_REQUIRED = 3;
 const OVERLAY_ID = 'speaking-indicator-overlay';
 const STYLES_ID = 'speaking-indicator-styles';
 
@@ -50,6 +55,7 @@ class SpeakingIndicator {
 	#overlayVisible = false;
 	#overlayEnabled = false;
 	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
+	#mutedTicks = 0; // consecutive below-threshold ticks; required for silent → muted transition
 	#inCall = false;
 	#ipcRenderer = null;
 	#lastEmittedState = null; // 'speaking' | 'silent' | 'muted' | 'off' | null
@@ -115,6 +121,7 @@ class SpeakingIndicator {
 			this.#inCall = false;
 			this.#peerConnections = [];
 			this.#hasSeenAudio = false;
+			this.#mutedTicks = 0;
 			this.#stopPolling();
 			this.#hideOverlay();
 			this.#emitMicrophoneState('off');
@@ -200,12 +207,23 @@ class SpeakingIndicator {
 						this.#hasSeenAudio = true;
 					}
 
+					// Hysteresis on the muted threshold: a single below-threshold
+					// tick is not enough, since quiet-mic noise floors can oscillate
+					// across MUTED_LEVEL and produce silent↔muted flicker. Require
+					// MUTED_TICKS_REQUIRED consecutive below-threshold ticks before
+					// entering muted; any above-threshold tick resets the counter.
+					if (level < MUTED_LEVEL && this.#hasSeenAudio) {
+						this.#mutedTicks += 1;
+					} else {
+						this.#mutedTicks = 0;
+					}
+
 					// Only interpret zero as muted once we've seen non-zero audio.
 					// Before that, zero means the connection is still setting up (pre-join).
 					let newState;
 					if (level >= SPEAKING_THRESHOLD) {
 						newState = 'speaking';
-					} else if (level < MUTED_LEVEL && this.#hasSeenAudio) {
+					} else if (this.#mutedTicks >= MUTED_TICKS_REQUIRED) {
 						newState = 'muted';
 					} else {
 						newState = 'silent';
