@@ -238,7 +238,10 @@ class ReactHandler {
   _validateDomain() {
     const isTeamsDomain = this._isAllowedTeamsDomain(globalThis.location.hostname);
     if (!isTeamsDomain) {
-      console.warn('ReactHandler: Not in Teams domain context');
+      // Expected during login redirects, sign-out, and session-expiry
+      // interstitials; pollers (e.g. timestampCopyOverride at 1Hz) are
+      // designed to retry until Teams loads. Not actionable for end users.
+      console.debug('ReactHandler: Not in Teams domain context');
       return false;
     }
     return true;

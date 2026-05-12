@@ -712,7 +712,34 @@ function processArgs(args) {
   }
 }
 
+// Microsoft telemetry / beacon hosts that are not required for Teams to
+// function. Blocking these at webRequest cancels both the network traffic
+// and the downstream sub-frame failure logs they would otherwise produce
+// in restricted-network environments. Kept deliberately narrow: anything
+// Teams needs to function (teams.cloud.microsoft, *.office.net,
+// login.microsoftonline.com, *.trafficmanager.net) is excluded.
+const MS_TELEMETRY_HOSTS = [
+  'events.data.microsoft.com',
+  'browser.events.data.msn.com',
+];
+
+function isMicrosoftTelemetryHost(url) {
+  try {
+    const hostname = new URL(url).hostname;
+    return MS_TELEMETRY_HOSTS.some(
+      (h) => hostname === h || hostname.endsWith('.' + h)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function onBeforeRequestHandler(details, callback) {
+  if (isMicrosoftTelemetryHost(details.url)) {
+    callback({ cancel: true });
+    return;
+  }
+
   const customBackgroundRedirect =
     customBackgroundService.beforeRequestHandlerRedirectUrl(details);
 
