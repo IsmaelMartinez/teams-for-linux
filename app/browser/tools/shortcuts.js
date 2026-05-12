@@ -75,10 +75,25 @@ function addEventListeners() {
 
 function whenIframeReady(callback, attempt = 0) {
   const iframe = globalThis.document.getElementsByTagName("iframe")[0];
+  // `iframe.contentDocument` is null while the embedded document is still
+  // loading, and for cross-origin iframes (Teams uses these for Loop,
+  // meetings, and other embedded surfaces). Wait for a same-origin document
+  // to appear before invoking the callback; cross-origin iframes simply
+  // exhaust the retry budget and bail at debug level. Access is wrapped in
+  // try/catch because older browser versions throw a `SecurityError` on
+  // cross-origin access rather than returning null.
+  let contentDocument = null;
   if (iframe) {
+    try {
+      contentDocument = iframe.contentDocument;
+    } catch {
+      contentDocument = null;
+    }
+  }
+  if (iframe && contentDocument) {
     callback(iframe);
   } else if (attempt >= MAX_READY_RETRIES) {
-    console.warn('[SHORTCUTS] Iframe not available after', MAX_READY_RETRIES, 'attempts, giving up');
+    console.debug('[SHORTCUTS] Iframe not available after', MAX_READY_RETRIES, 'attempts, giving up');
   } else {
     setTimeout(() => whenIframeReady(callback, attempt + 1), 1000);
   }
