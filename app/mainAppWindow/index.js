@@ -717,13 +717,26 @@ function processArgs(args) {
 // and the downstream sub-frame failure logs they would otherwise produce
 // in restricted-network environments. Kept deliberately narrow: anything
 // Teams needs to function (teams.cloud.microsoft, *.office.net,
-// login.microsoftonline.com, *.trafficmanager.net) is excluded.
+// login.microsoftonline.com, *.trafficmanager.net) is excluded. Start
+// with this initial set and expand as new hosts are confirmed safe to
+// drop; any new entry must also satisfy `MS_TELEMETRY_FAST_PATH` below
+// or the fast-path string must be updated.
 const MS_TELEMETRY_HOSTS = [
   'events.data.microsoft.com',
   'browser.events.data.msn.com',
 ];
 
+// Substring guard cheap-checked before the URL parse below. Every entry
+// in `MS_TELEMETRY_HOSTS` must contain this substring so the fast path
+// never produces a false negative.
+const MS_TELEMETRY_FAST_PATH = 'events.data.';
+
 function isMicrosoftTelemetryHost(url) {
+  // Fast path: avoid `new URL(...)` on every HTTPS request. The handler
+  // fires for every request matched by `{ urls: ["https://*/*"] }`, so
+  // skipping the parse for the overwhelmingly common non-telemetry case
+  // is measurable on chat-heavy sessions.
+  if (!url || !url.includes(MS_TELEMETRY_FAST_PATH)) return false;
   try {
     const hostname = new URL(url).hostname;
     return MS_TELEMETRY_HOSTS.some(
