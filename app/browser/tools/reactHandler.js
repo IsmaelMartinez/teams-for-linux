@@ -236,15 +236,12 @@ class ReactHandler {
   }
 
   _validateDomain() {
-    const isTeamsDomain = this._isAllowedTeamsDomain(globalThis.location.hostname);
-    if (!isTeamsDomain) {
-      // Expected during login redirects, sign-out, and session-expiry
-      // interstitials; pollers (e.g. timestampCopyOverride at 1Hz) are
-      // designed to retry until Teams loads. Not actionable for end users.
-      console.debug('ReactHandler: Not in Teams domain context');
-      return false;
-    }
-    return true;
+    // Returns false silently when not on a Teams domain. The state is
+    // expected during login redirects, sign-out, and session-expiry
+    // interstitials, and the caller (typically a 1Hz retry poll) handles
+    // the negative case by re-trying. Logging here would fire once per
+    // second for the entire pre-auth window with no actionable signal.
+    return this._isAllowedTeamsDomain(globalThis.location.hostname);
   }
 
   _validateDocument() {
