@@ -419,6 +419,7 @@ function extractYargConfig(configObject, appVersion) {
       network: {
 	default: {
 		webRTCIPHandlingPolicy: null,
+		disableQuic: true,
 	},
       	describe:
 	  "Network configuration. " +
@@ -426,7 +427,10 @@ function extractYargConfig(configObject, appVersion) {
     	  "Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route " +
     	  "(e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. " +
     	  "Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. " +
-    	  "Disabled by default (opt-in).",
+    	  "Disabled by default (opt-in). " +
+    	  "disableQuic: Append Chromium's --disable-quic switch at startup. Defaults to true to work around issue #2518 " +
+    	  "(concurrent SharePoint downloads abort with ERR_QUIC_PROTOCOL_ERROR on the shared QUIC session). Set to false " +
+    	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
 	type: "object",
       },
       screenLockInhibitionMethod: {

@@ -22,6 +22,12 @@ class CommandLineManager {
     } else {
       app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
     }
+  }
+
+  static addSwitchesAfterConfigLoad(config) {
+    if (process.env.XDG_SESSION_TYPE === "wayland") {
+      this.#configureWayland(config);
+    }
 
     // Issue #2518: starting a second SharePoint download while a first is in
     // flight kills the first stream with `ERR_QUIC_PROTOCOL_ERROR` (-356) on
@@ -34,13 +40,10 @@ class CommandLineManager {
     // HTTPS over TCP/HTTP-2 by disabling QUIC for the whole session is the
     // smallest reliable workaround we control from the app layer; the cost
     // is slightly higher latency on Microsoft endpoints (no UDP fast-open,
-    // no 0-RTT) which is acceptable for a chat client.
-    app.commandLine.appendSwitch("disable-quic");
-  }
-
-  static addSwitchesAfterConfigLoad(config) {
-    if (process.env.XDG_SESSION_TYPE === "wayland") {
-      this.#configureWayland(config);
+    // no 0-RTT) which is acceptable for a chat client. Defaults to true;
+    // set `network.disableQuic` to false in config to opt back into QUIC.
+    if (config.network?.disableQuic) {
+      app.commandLine.appendSwitch("disable-quic");
     }
 
     // Proxy configuration
