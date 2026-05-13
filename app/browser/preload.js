@@ -304,11 +304,14 @@ function createCustomNotification(title, options) {
     options.icon = options.icon || ICON_BASE64;
     options.title = options.title || title;
     options.type = options.type || "new-message";
-    // Default to false for Ubuntu Unity DE auto-close. Users on GNOME and
-    // similar can opt into persistent notifications via
-    // `notifications.requireInteraction` (issue #2411).
-    options.requireInteraction =
-      notificationConfig?.notifications?.requireInteraction === true;
+    // Default Ubuntu Unity DE auto-closes. Users on GNOME and similar can opt
+    // into persistent notifications via `notifications.timeoutType: "never"`
+    // (issue #2411). Mirrors Electron's Notification timeoutType.
+    options.timeoutType =
+      notificationConfig?.notifications?.timeoutType === "never"
+        ? "never"
+        : "default";
+    options.requireInteraction = options.timeoutType === "never";
 
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";

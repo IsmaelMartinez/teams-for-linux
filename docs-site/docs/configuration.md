@@ -118,7 +118,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
-| `notifications.requireInteraction` | `boolean` | `false` | Keep notifications persistent in the system notification center until the user dismisses them. Useful on GNOME and other desktops that auto-remove notifications from the center on timeout. May not be honoured by every notification daemon. |
+| `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
 
 ### Incoming Call Handling
 

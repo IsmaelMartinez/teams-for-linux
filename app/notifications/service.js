@@ -69,14 +69,11 @@ class NotificationService {
         body: options.body,
       });
 
-      // Electron's native Notification uses timeoutType rather than
-      // requireInteraction to control persistence on Linux and Windows, so
-      // translate the web-shaped flag here.
       const notificationConfig = {
         title: options.title,
         body: options.body,
         urgency: this.#config.defaultNotificationUrgency,
-        timeoutType: options.requireInteraction ? "never" : "default",
+        timeoutType: options.timeoutType === "never" ? "never" : "default",
       };
 
       // Only add icon if provided to avoid errors with null/undefined

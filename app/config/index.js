@@ -297,10 +297,10 @@ function extractYargConfig(configObject, appVersion) {
       },
       notifications: {
         default: {
-          requireInteraction: false,
+          timeoutType: "default",
         },
         describe:
-          "Notification behaviour. requireInteraction: keep notifications persistent in the system notification center until the user dismisses them. Useful on GNOME and other desktops that auto-remove notifications from the center on timeout. May not be honoured by every notification daemon.",
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon.",
         type: "object",
       },
       disableBadgeCount: {
