@@ -29,6 +29,23 @@ class CommandLineManager {
       this.#configureWayland(config);
     }
 
+    // Issue #2518: starting a second SharePoint download while a first is in
+    // flight kills the first stream with `ERR_QUIC_PROTOCOL_ERROR` (-356) on
+    // the shared QUIC session. The freeze is reproducible end-to-end via a
+    // chrome://net-export trace; the failing event is on the QUIC transport,
+    // not at the application layer (no Chromium download permission gate is
+    // hit, no HTTP-2-style stream prioritisation issue — independent harness
+    // testing with two parallel 100 MB downloads from `proof.ovh.net` over
+    // HTTP/2 ran in parallel just fine, so the bug is QUIC-only). Forcing
+    // HTTPS over TCP/HTTP-2 by disabling QUIC for the whole session is the
+    // smallest reliable workaround we control from the app layer; the cost
+    // is slightly higher latency on Microsoft endpoints (no UDP fast-open,
+    // no 0-RTT) which is acceptable for a chat client. Defaults to true;
+    // set `network.disableQuic` to false in config to opt back into QUIC.
+    if (config.network?.disableQuic) {
+      app.commandLine.appendSwitch("disable-quic");
+    }
+
     // Proxy configuration
     if (config.proxyServer) {
       app.commandLine.appendSwitch("proxy-server", config.proxyServer);
