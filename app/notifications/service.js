@@ -69,11 +69,11 @@ class NotificationService {
         body: options.body,
       });
 
-      // Create notification config
       const notificationConfig = {
         title: options.title,
         body: options.body,
         urgency: this.#config.defaultNotificationUrgency,
+        timeoutType: options.timeoutType === "never" ? "never" : "default",
       };
 
       // Only add icon if provided to avoid errors with null/undefined

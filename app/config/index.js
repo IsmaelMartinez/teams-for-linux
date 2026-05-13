@@ -304,6 +304,14 @@ function extractYargConfig(configObject, appVersion) {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
       },
+      notifications: {
+        default: {
+          timeoutType: "default",
+        },
+        describe:
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon.",
+        type: "object",
+      },
       disableBadgeCount: {
         default: false,
         describe:
