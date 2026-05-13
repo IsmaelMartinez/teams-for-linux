@@ -7,6 +7,7 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
+  ipcMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -443,6 +444,24 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   }
 
   bindDisplayMediaHandler(window.webContents.session);
+
+  // Spike #2534: alternative entry point to the in-app StreamSelector for the
+  // Wayland case, where setDisplayMediaRequestHandler is bypassed by Chromium's
+  // native getDisplayMedia + WebRTCPipeWireCapturer. The renderer-side
+  // injectedScreenSharing wrapper calls this, gets the chosen source ID, then
+  // synthesises the screen-share stream via getUserMedia with
+  // chromeMediaSource: 'desktop'. Returns the source ID or null on cancel.
+  ipcMain.handle("show-tfl-stream-picker", () =>
+    new Promise((resolve) => {
+      streamSelector.show((source) => {
+        if (!source) {
+          resolve(null);
+          return;
+        }
+        handleScreenSourceSelection(source, () => resolve(source.id));
+      });
+    })
+  );
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();

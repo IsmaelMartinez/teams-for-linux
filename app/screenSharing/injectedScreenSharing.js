@@ -62,28 +62,63 @@
       navigator.mediaDevices
     );
 
-    navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      console.debug("[SCREEN_SHARE_DIAG] getDisplayMedia intercepted, disabling audio");
-      
-      // Force disable all audio in screen sharing to prevent echo issues
-      disableAudioInConstraints(constraints, "getDisplayMedia");
-      
-      return originalGetDisplayMedia(constraints)
-        .then((stream) => {
-          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started via getDisplayMedia (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
-          handleScreenShareStream(stream, "getDisplayMedia");
-          return stream;
-        })
-        .catch((error) => {
-          console.error(`[SCREEN_SHARE_DIAG] getDisplayMedia failed: ${error.name} - ${error.message}`);
-          throw error;
-        });
-    };
-
     // Also hook into getUserMedia for fallback detection
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
       navigator.mediaDevices
     );
+
+    navigator.mediaDevices.getDisplayMedia = function (constraints) {
+      console.debug("[SCREEN_SHARE_DIAG] getDisplayMedia intercepted (spike #2534 path)");
+
+      // Force disable all audio in screen sharing to prevent echo issues
+      disableAudioInConstraints(constraints, "getDisplayMedia");
+
+      const fallback = () => originalGetDisplayMedia(constraints)
+        .then((stream) => {
+          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started via getDisplayMedia native (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
+          handleScreenShareStream(stream, "getDisplayMedia");
+          return stream;
+        })
+        .catch((error) => {
+          console.error(`[SCREEN_SHARE_DIAG] getDisplayMedia native failed: ${error.name} - ${error.message}`);
+          throw error;
+        });
+
+      const electronAPI = globalThis.electronAPI;
+      if (!electronAPI?.showTflStreamPicker) {
+        console.debug("[SCREEN_SHARE_DIAG] showTflStreamPicker unavailable, falling back to native");
+        return fallback();
+      }
+
+      return electronAPI.showTflStreamPicker()
+        .then((sourceId) => {
+          if (!sourceId) {
+            throw new DOMException("User cancelled screen share", "NotAllowedError");
+          }
+          console.debug(`[SCREEN_SHARE_DIAG] TFL picker returned source ${sourceId}, calling getUserMedia`);
+          return originalGetUserMedia({
+            audio: false,
+            video: {
+              mandatory: {
+                chromeMediaSource: "desktop",
+                chromeMediaSourceId: sourceId,
+              },
+            },
+          });
+        })
+        .then((stream) => {
+          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started via TFL picker (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
+          handleScreenShareStream(stream, "getDisplayMedia-via-tfl");
+          return stream;
+        })
+        .catch((error) => {
+          if (error?.name === "NotAllowedError") {
+            throw error;
+          }
+          console.error(`[SCREEN_SHARE_DIAG] TFL picker path failed (${error?.name}/${error?.message}), falling back to native`);
+          return fallback();
+        });
+    };
 
     navigator.mediaDevices.getUserMedia = function (constraints) {
       // Check if this is a screen sharing stream - handle multiple constraint formats

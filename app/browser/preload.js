@@ -24,6 +24,10 @@ globalThis.electronAPI = {
   },
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
+  // Spike #2534: ask main to show the in-app StreamSelector and return the
+  // chosen source ID, so the renderer can synthesise the screen-share stream
+  // via getUserMedia on Wayland where setDisplayMediaRequestHandler is bypassed.
+  showTflStreamPicker: () => ipcRenderer.invoke("show-tfl-stream-picker"),
   sendSelectSource: () => ipcRenderer.send("select-source"),
   onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
   send: (channel, ...args) => {
