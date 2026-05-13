@@ -458,7 +458,13 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
           resolve(null);
           return;
         }
-        handleScreenSourceSelection(source, () => resolve(source.id));
+        // handleScreenSourceSelection looks up the source by ID and calls back
+        // with `{ video: selectedSource }` on success, or `{}` on failure
+        // (source not found in desktopCapturer.getSources()). Resolve null on
+        // failure so the renderer treats it as a cancellation.
+        handleScreenSourceSelection(source, (constraints) => {
+          resolve(constraints?.video ? source.id : null);
+        });
       });
     })
   );

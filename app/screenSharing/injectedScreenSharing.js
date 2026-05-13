@@ -112,11 +112,14 @@
           return stream;
         })
         .catch((error) => {
-          if (error?.name === "NotAllowedError") {
-            throw error;
-          }
-          console.error(`[SCREEN_SHARE_DIAG] TFL picker path failed (${error?.name}/${error?.message}), falling back to native`);
-          return fallback();
+          // Do not fall back to native getDisplayMedia after the in-app picker
+          // has shown. The preview window is already up via setupScreenSharing,
+          // and a native fallback would either reopen the picker or open a
+          // second native one, colliding with the existing preview. Surface the
+          // error to Teams directly. For the spike this is fine; the proper
+          // feature will handle cleanup before any fallback.
+          console.error(`[SCREEN_SHARE_DIAG] TFL picker path failed (${error?.name}/${error?.message}), surfacing error`);
+          throw error;
         });
     };
 
