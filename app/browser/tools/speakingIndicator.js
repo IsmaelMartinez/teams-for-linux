@@ -23,10 +23,13 @@
  * Overlay states:
  * - Green (pulsing): speaking — audio is being transmitted
  * - Grey: silent — mic is open but quiet
- * - Red: muted — Teams has zeroed the audio signal
+ * - Red: muted — the local audio sender's track is disabled
  *
- * Teams zeroes media-source.audioLevel to exactly 0.0 when muted,
- * making three-state detection (speaking/silent/muted) reliable.
+ * Muted is detected via `RTCRtpSender.track.enabled`: Teams sets the local
+ * audio track to `enabled = false` when the user clicks mute, which is
+ * authoritative and unambiguous. audioLevel alone is not — on quiet mics
+ * the unmuted level can read zero and look indistinguishable from a real
+ * mute (issue #2465).
  *
  * When ipcRenderer is provided (always true today since the module is in
  * modulesRequiringIpc), the same state transitions are forwarded to the main
@@ -38,12 +41,6 @@ const activityHub = require('./activityHub');
 const LOG_PREFIX = '[SPEAKING_INDICATOR]';
 const POLL_INTERVAL_MS = 150;
 const SPEAKING_THRESHOLD = 0.01;  // audioLevel above this → speaking
-const MUTED_LEVEL = 0.0001;       // audioLevel below this → muted candidate
-// On quiet mics the unmuted noise floor can oscillate around MUTED_LEVEL, so
-// require N consecutive below-threshold ticks before transitioning into muted.
-// At 150ms polling, 3 ticks ≈ 450ms entry delay. Exit muted on a single tick
-// above the threshold so unmuting feels immediate.
-const MUTED_TICKS_REQUIRED = 3;
 const OVERLAY_ID = 'speaking-indicator-overlay';
 const STYLES_ID = 'speaking-indicator-styles';
 
@@ -54,8 +51,6 @@ class SpeakingIndicator {
 	#polling = false;
 	#overlayVisible = false;
 	#overlayEnabled = false;
-	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
-	#mutedTicks = 0; // consecutive below-threshold ticks; required for silent → muted transition
 	#inCall = false;
 	#ipcRenderer = null;
 	#lastEmittedState = null; // 'speaking' | 'silent' | 'muted' | 'off' | null
@@ -120,8 +115,6 @@ class SpeakingIndicator {
 			console.info(`${LOG_PREFIX} call-disconnected event received, clearing connections`);
 			this.#inCall = false;
 			this.#peerConnections = [];
-			this.#hasSeenAudio = false;
-			this.#mutedTicks = 0;
 			this.#stopPolling();
 			this.#hideOverlay();
 			this.#emitMicrophoneState('off');
@@ -203,28 +196,25 @@ class SpeakingIndicator {
 
 					foundAudioStats = true;
 
-					if (level >= MUTED_LEVEL) {
-						this.#hasSeenAudio = true;
+					// Authoritative mute signal: Teams sets the local audio
+					// sender's track to enabled = false when the user clicks
+					// mute. audioLevel alone is unreliable on quiet mics where
+					// the unmuted level can read zero (issue #2465).
+					let trackEnabled = true;
+					try {
+						const audioSender = pc.getSenders().find(s => s.track?.kind === 'audio');
+						if (audioSender?.track) {
+							trackEnabled = audioSender.track.enabled;
+						}
+					} catch {
+						// Fall through with trackEnabled = true.
 					}
 
-					// Hysteresis on the muted threshold: a single below-threshold
-					// tick is not enough, since quiet-mic noise floors can oscillate
-					// across MUTED_LEVEL and produce silent↔muted flicker. Require
-					// MUTED_TICKS_REQUIRED consecutive below-threshold ticks before
-					// entering muted; any above-threshold tick resets the counter.
-					if (level < MUTED_LEVEL && this.#hasSeenAudio) {
-						this.#mutedTicks += 1;
-					} else {
-						this.#mutedTicks = 0;
-					}
-
-					// Only interpret zero as muted once we've seen non-zero audio.
-					// Before that, zero means the connection is still setting up (pre-join).
 					let newState;
-					if (level >= SPEAKING_THRESHOLD) {
-						newState = 'speaking';
-					} else if (this.#mutedTicks >= MUTED_TICKS_REQUIRED) {
+					if (!trackEnabled) {
 						newState = 'muted';
+					} else if (level >= SPEAKING_THRESHOLD) {
+						newState = 'speaking';
 					} else {
 						newState = 'silent';
 					}
