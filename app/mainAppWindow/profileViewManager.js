@@ -69,6 +69,7 @@ class ProfileViewManager {
   #window;
   #profilesManager;
   #config;
+  #bindDisplayMediaHandler;
   #views = new Map();
   #handlers = null;
   #resizeHandler = null;
@@ -81,11 +82,16 @@ class ProfileViewManager {
    * @param {ProfilesManager} profilesManager
    * @param {object} config  Loaded app config (need `chromeUserAgent`,
    *                         `url`, and config gate `multiAccount.enabled`)
+   * @param {(session: Electron.Session) => void} bindDisplayMediaHandler
+   *   Binds the in-app screen-share picker to a session. Called for each
+   *   profile view's partition session so multi-account screen-share
+   *   matches Profile 0's behaviour (#2529).
    */
-  constructor(window, profilesManager, config) {
+  constructor(window, profilesManager, config, bindDisplayMediaHandler) {
     this.#window = window;
     this.#profilesManager = profilesManager;
     this.#config = config;
+    this.#bindDisplayMediaHandler = bindDisplayMediaHandler;
   }
 
   initialize() {
@@ -294,6 +300,11 @@ class ProfileViewManager {
         sandbox: false,
       },
     });
+
+    // Rebind the in-app screen-share picker on this profile's session.
+    // `setDisplayMediaRequestHandler` is per-session and the root window's
+    // binding does not carry across to profile partitions (#2529).
+    this.#bindDisplayMediaHandler(view.webContents.session);
 
     this.#views.set(profile.id, view);
     this.#applyBounds(view);

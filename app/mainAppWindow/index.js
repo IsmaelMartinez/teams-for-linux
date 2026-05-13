@@ -60,6 +60,28 @@ function setupScreenSharing(selectedSource) {
   createScreenSharePreviewWindow();
 }
 
+// Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
+// fires only for the session it is bound to, so multi-account profile views (running against
+// their own partition session) need their own binding. See #2529.
+function bindDisplayMediaHandler(targetSession) {
+  targetSession.setDisplayMediaRequestHandler((_request, callback) => {
+    streamSelector.show((source) => {
+      if (source) {
+        handleScreenSourceSelection(source, callback);
+      } else {
+        // User canceled - use setImmediate and try-catch to allow retry
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] User canceled screen selection");
+          }
+        });
+      }
+    });
+  });
+}
+
 function handleScreenSourceSelection(source, callback) {
   desktopCapturer
     .getSources({ types: ["window", "screen"] })
@@ -420,24 +442,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
   }
 
-  window.webContents.session.setDisplayMediaRequestHandler(
-    (_request, callback) => {
-      streamSelector.show((source) => {
-        if (source) {
-          handleScreenSourceSelection(source, callback);
-        } else {
-          // User canceled - use setImmediate and try-catch to allow retry
-          setImmediate(() => {
-            try {
-              callback({});
-            } catch {
-              console.debug("[SCREEN_SHARE] User canceled screen selection");
-            }
-          });
-        }
-      });
-    }
-  );
+  bindDisplayMediaHandler(window.webContents.session);
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();
@@ -511,6 +516,8 @@ exports.show = function () {
 exports.getWindow = function () {
   return window;
 };
+
+exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
