@@ -70,10 +70,7 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
         // disposed mid-flight reject here. Both are expected; swallow so
         // the rejection does not trip the main-process unhandledRejection
         // handler in app/index.js and terminate the app.
-        console.debug(
-          "[customCSS] executeJavaScript rejected:",
-          err && err.message ? err.message : err
-        );
+        console.debug("[customCSS] executeJavaScript rejected:", err);
       });
   });
 }
