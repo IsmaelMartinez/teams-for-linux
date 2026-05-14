@@ -1,147 +1,340 @@
+// In-app screen-share picker. Loaded inside a child WebContentsView that
+// covers the main Teams window while the user picks a source. See
+// app/screenSharing/index.js for the host plumbing and
+// app/screenSharing/service.js for the IPC handlers.
+
+const QUALITY_OPTIONS = [
+  { width: 1280, height: 720,  name: "HD (720p)" },
+  { width: 1920, height: 1080, name: "FHD (1080p)", default: true },
+  { width: 2048, height: 1080, name: "2K" },
+  { width: 3840, height: 2160, name: "4K" },
+];
+
+const THUMBNAIL_SIZE = { width: 640, height: 360 };
+
+const state = {
+  displays: [],         // [{ id, label, internal, bounds, scaleFactor }]
+  sources: [],          // raw sources from desktopCapturer
+  screenItems: [],      // joined: source + display info, sorted
+  windowItems: [],      // window sources
+  activeTab: "screens", // "screens" | "windows"
+  searchTerm: "",
+  selectedId: null,
+};
+
 globalThis.addEventListener("DOMContentLoaded", () => {
-  const screens = [
-    { width: 1280, height: 720, name: "HD", alt_name: "720p", default: false },
-    { width: 1920, height: 1080, name: "FHD", alt_name: "1080p", default: true },
-    { width: 2048, height: 1080, name: "2K", alt_name: "QHD", default: false },
-    { width: 3840, height: 2160, name: "4K", alt_name: "UHD", default: false },
-  ];
-  let windowsIndex = 0;
-  const sscontainer = document.getElementById("screen-size");
-  createEventHandlers({ screens, sscontainer });
-
-  globalThis.api
-    .desktopCapturerGetSources({
-      types: ["window", "screen"],
-      thumbnailSize: { width: 320, height: 180 },
-      fetchWindowIcons: true
-    })
-    .then((sources) => {
-      const rowElement = document.querySelector(".container-fluid .row");
-
-      if (!sources || sources.length === 0) {
-        showMessage(rowElement, "No screens or windows available for sharing", [
-          "This may be due to system permissions. On Linux:",
-          "• On Wayland: Ensure xdg-desktop-portal is installed and running",
-          "• On Ubuntu: Install xdg-desktop-portal-gnome package"
-        ]);
-        return;
-      }
-
-      for (const source of sources) {
-        createPreview({
-          source,
-          title: source.id.startsWith("screen:") ? source.name : `Window ${++windowsIndex}`,
-          rowElement,
-          screens,
-          sscontainer,
-        });
-      }
-    })
-    .catch((error) => {
-      const rowElement = document.querySelector(".container-fluid .row");
-      showMessage(rowElement, "Failed to access screen capture", [error.message || "Unknown error"]);
-    });
+  populateQualityDropdown();
+  wireEvents();
+  void loadSources();
 });
 
-function showMessage(container, title, details) {
-  const msgDiv = document.createElement("div");
-  msgDiv.className = "col-12 text-center";
-  msgDiv.style.cssText = "padding: 20px; color: #ff6b6b;";
-
-  const titleEl = document.createElement("p");
-  const strong = document.createElement("strong");
-  strong.textContent = title;
-  titleEl.appendChild(strong);
-  msgDiv.appendChild(titleEl);
-
-  const detailsEl = document.createElement("p");
-  detailsEl.style.cssText = "font-size: 12px; color: #aaa;";
-  detailsEl.textContent = details.join(" ");
-  msgDiv.appendChild(detailsEl);
-
-  container.appendChild(msgDiv);
+function populateQualityDropdown() {
+  const select = document.getElementById("quality-select");
+  for (const [i, q] of QUALITY_OPTIONS.entries()) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = q.name;
+    select.appendChild(opt);
+  }
+  const defaultIndex = QUALITY_OPTIONS.findIndex((q) => q.default);
+  select.selectedIndex = defaultIndex > -1 ? defaultIndex : QUALITY_OPTIONS.length - 1;
 }
 
-/**
- * Creates a preview element using static thumbnail instead of live video stream.
- * This prevents SIGILL crashes caused by too many simultaneous getUserMedia calls.
- * @author bluvulture (PR #2089)
- */
-function createPreview(properties) {
-  const columnElement = document.createElement("div");
-  columnElement.className = `col-5 ${properties.source.id.startsWith("screen:") ? "screen" : "window"}`;
+function wireEvents() {
+  document.getElementById("btn-close").addEventListener("click", cancel);
+  document.getElementById("btn-cancel").addEventListener("click", cancel);
+  document.getElementById("btn-share").addEventListener("click", confirm);
 
-  const imageContainerElement = document.createElement("div");
-  imageContainerElement.className = "video-container";
-  imageContainerElement.style.cssText = "position: relative; min-height: 108px; background: #2d2d2d; border-radius: 4px; display: flex; align-items: center; justify-content: center;";
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    state.searchTerm = e.target.value;
+    renderActivePane();
+  });
 
-  const thumbnailUrl = properties.source.thumbnailDataUrl;
-  if (thumbnailUrl?.startsWith("data:")) {
-    const imgElement = document.createElement("img");
-    imgElement.dataset.id = properties.source.id;
-    imgElement.title = properties.source.name;
-    imgElement.style.cssText = "width: 100%; height: auto; cursor: pointer; border-radius: 4px;";
-    imgElement.src = thumbnailUrl;
-    imgElement.onclick = () => selectSource(properties);
-    imageContainerElement.appendChild(imgElement);
-  } else {
-    const placeholder = document.createElement("div");
-    placeholder.style.cssText = "text-align: center; padding: 20px; cursor: pointer; width: 100%;";
-
-    const icon = document.createElement("div");
-    icon.style.fontSize = "32px";
-    icon.textContent = properties.source.id.startsWith("screen:") ? "🖥️" : "🪟";
-    placeholder.appendChild(icon);
-
-    const label = document.createElement("div");
-    label.style.cssText = "font-size: 11px; color: #888; margin-top: 5px;";
-    label.textContent = properties.source.id.startsWith("screen:")
-      ? (properties.source.name || "Screen")
-      : "Window";
-    placeholder.appendChild(label);
-
-    placeholder.onclick = () => selectSource(properties);
-    imageContainerElement.appendChild(placeholder);
+  for (const tab of document.querySelectorAll(".tab")) {
+    tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        switchTab(tab.dataset.tab);
+      }
+    });
   }
 
-  const labelElement = document.createElement("div");
-  labelElement.className = "label-container";
-  labelElement.textContent = properties.title;
-
-  columnElement.appendChild(imageContainerElement);
-  columnElement.appendChild(labelElement);
-  properties.rowElement.appendChild(columnElement);
-}
-
-function selectSource(properties) {
-  globalThis.api.selectedSource({
-    id: properties.source.id,
-    screen: properties.screens[properties.sscontainer.value]
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { cancel(); return; }
+    if (e.key === "Enter" && state.selectedId) { confirm(); return; }
   });
 }
 
-function createEventHandlers(properties) {
-  createQualitySelector(properties);
-  document.querySelector("#btn-screens").addEventListener("click", toggleSources);
-  document.querySelector("#btn-windows").addEventListener("click", toggleSources);
-  document.querySelector("#btn-close").addEventListener("click", () => globalThis.api.closeView());
+async function loadSources() {
+  let displays = [];
+  try {
+    displays = await globalThis.api.getDisplays();
+  } catch (err) {
+    console.debug("[picker] getDisplays failed", err);
+  }
+  state.displays = Array.isArray(displays) ? displays : [];
+
+  let sources = [];
+  try {
+    sources = await globalThis.api.desktopCapturerGetSources({
+      types: ["window", "screen"],
+      thumbnailSize: THUMBNAIL_SIZE,
+      fetchWindowIcons: true,
+    });
+  } catch (err) {
+    console.debug("[picker] desktopCapturerGetSources failed", err);
+    sources = [];
+  }
+  state.sources = Array.isArray(sources) ? sources : [];
+
+  joinAndSort();
+  renderActivePane();
+
+  if (state.sources.length === 0) {
+    showEmptyState(
+      "No screens or windows available",
+      "This may be a system-permissions or compositor issue. On Wayland, ensure xdg-desktop-portal is installed and running."
+    );
+  }
 }
 
-function toggleSources(e) {
-  for (const b of document.querySelectorAll("button")) {
-    b.classList.toggle("btn-primary");
-    b.classList.toggle("btn-secondary");
-  }
-  document.querySelector(".container-fluid").dataset.view = e.target.dataset.view;
+function joinAndSort() {
+  // Screens: join with display info by display_id; sort by internal-first,
+  // then bounds.y, then bounds.x. Tiles render in a uniform 2-row grid; the
+  // sort keeps the user's primary display in the top-left.
+  const displayById = new Map(state.displays.map((d) => [String(d.id), d]));
+  const screenSources = state.sources.filter((s) => s.id.startsWith("screen:"));
+  state.screenItems = screenSources
+    .map((source, i) => {
+      const display = source.display_id ? displayById.get(String(source.display_id)) : null;
+      return {
+        source,
+        display,
+        index: i,
+        label: display?.label || source.name || `Display ${i + 1}`,
+        internal: !!display?.internal,
+        bounds: display?.bounds || null,
+        scaleFactor: display?.scaleFactor || 1,
+      };
+    })
+    .sort((a, b) => {
+      if (a.internal !== b.internal) return a.internal ? -1 : 1;
+      if (!a.bounds || !b.bounds) return 0;
+      return (a.bounds.y - b.bounds.y) || (a.bounds.x - b.bounds.x);
+    })
+    .map((item, displayNumber) => ({ ...item, displayNumber: displayNumber + 1 }));
+
+  state.windowItems = state.sources.filter((s) => s.id.startsWith("window:"));
 }
 
-function createQualitySelector(properties) {
-  for (const [i, s] of properties.screens.entries()) {
-    const opt = document.createElement("option");
-    opt.textContent = s.name;
-    opt.value = i;
-    properties.sscontainer.appendChild(opt);
+function renderActivePane() {
+  const pane = document.getElementById("pane");
+  pane.dataset.view = state.activeTab;
+  document.getElementById("empty-state").hidden = true;
+
+  if (state.activeTab === "screens") {
+    renderScreens();
+  } else {
+    renderWindows();
   }
-  let defaultSelection = properties.screens.findIndex((s) => s.default);
-  properties.sscontainer.selectedIndex = defaultSelection > -1 ? defaultSelection : properties.screens.length - 1;
+}
+
+function renderScreens() {
+  const grid = document.getElementById("screens-grid");
+  grid.replaceChildren();
+
+  const term = state.searchTerm.toLowerCase().trim();
+  const visible = state.screenItems.filter(
+    (item) => !term || item.label.toLowerCase().includes(term)
+  );
+
+  if (visible.length === 0) {
+    showEmptyState(
+      term ? "No screens match your filter" : "No screens available",
+      term ? "Try a different search term." : "Connect a display or check system permissions."
+    );
+    return;
+  }
+
+  for (const item of visible) {
+    grid.appendChild(buildScreenTile(item));
+  }
+}
+
+function buildScreenTile(item) {
+  const tile = document.createElement("div");
+  tile.className = "screen-tile";
+  tile.tabIndex = 0;
+  tile.dataset.id = item.source.id;
+  tile.setAttribute("role", "option");
+  tile.setAttribute("aria-label", `${item.label}${item.internal ? " (Main)" : ""}`);
+
+  if (item.source.thumbnailDataUrl?.startsWith("data:")) {
+    const img = document.createElement("img");
+    img.className = "thumb";
+    img.src = item.source.thumbnailDataUrl;
+    img.alt = "";
+    tile.appendChild(img);
+  }
+
+  const badge = document.createElement("div");
+  badge.className = "badge-num";
+  badge.textContent = String(item.displayNumber);
+  tile.appendChild(badge);
+
+  if (item.internal) {
+    const main = document.createElement("div");
+    main.className = "badge-main";
+    main.textContent = "Main";
+    tile.appendChild(main);
+  }
+
+  const meta = document.createElement("div");
+  meta.className = "tile-meta";
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = item.label;
+  meta.appendChild(name);
+  if (item.bounds) {
+    const res = document.createElement("div");
+    res.className = "res";
+    res.textContent = `${item.bounds.width}×${item.bounds.height} @ ${item.scaleFactor}x`;
+    meta.appendChild(res);
+  }
+  tile.appendChild(meta);
+
+  tile.addEventListener("click", () => selectItem(item.source.id, tile));
+  tile.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      selectItem(item.source.id, tile);
+    }
+  });
+  if (item.source.id === state.selectedId) tile.classList.add("selected");
+  return tile;
+}
+
+function renderWindows() {
+  const grid = document.getElementById("windows-grid");
+  grid.replaceChildren();
+
+  const term = state.searchTerm.toLowerCase().trim();
+  const visible = state.windowItems.filter(
+    (s) => !term || (s.name || "").toLowerCase().includes(term)
+  );
+
+  if (visible.length === 0) {
+    showEmptyState(
+      term ? "No windows match your filter" : "No windows available",
+      term ? "Try a different search term." : "Open an application window and try again."
+    );
+    return;
+  }
+
+  for (const source of visible) {
+    grid.appendChild(buildWindowTile(source));
+  }
+}
+
+function buildWindowTile(source) {
+  const tile = document.createElement("div");
+  tile.className = "window-tile";
+  tile.tabIndex = 0;
+  tile.dataset.id = source.id;
+  tile.setAttribute("role", "option");
+  tile.setAttribute("aria-label", source.name || "Window");
+
+  const thumb = document.createElement("div");
+  thumb.className = "thumb";
+  if (source.thumbnailDataUrl?.startsWith("data:")) {
+    thumb.style.backgroundImage = `url("${cssEscapeUrl(source.thumbnailDataUrl)}")`;
+  }
+  tile.appendChild(thumb);
+
+  const metaRow = document.createElement("div");
+  metaRow.className = "meta";
+
+  const ico = document.createElement("div");
+  if (source.appIconDataUrl?.startsWith("data:")) {
+    ico.className = "ico";
+    ico.style.backgroundImage = `url("${cssEscapeUrl(source.appIconDataUrl)}")`;
+  } else {
+    ico.className = "ico ico-fallback";
+    ico.textContent = (source.name || "?").trim().slice(0, 1).toUpperCase();
+  }
+  metaRow.appendChild(ico);
+
+  const title = document.createElement("div");
+  title.className = "title";
+  title.textContent = source.name || "Untitled";
+  title.title = source.name || "";
+  metaRow.appendChild(title);
+
+  tile.appendChild(metaRow);
+
+  tile.addEventListener("click", () => selectItem(source.id, tile));
+  tile.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      selectItem(source.id, tile);
+    }
+  });
+  if (source.id === state.selectedId) tile.classList.add("selected");
+  return tile;
+}
+
+// Data URLs already start with a scheme but may contain characters that
+// confuse CSS url(). Wrapping in double quotes and escaping closing quotes
+// is enough for the data: URL shape we get back from desktopCapturer.
+function cssEscapeUrl(url) {
+  return url.replace(/"/g, '\\"');
+}
+
+function selectItem(id, tileEl) {
+  state.selectedId = id;
+  for (const el of document.querySelectorAll(".screen-tile.selected, .window-tile.selected")) {
+    el.classList.remove("selected");
+  }
+  if (tileEl) tileEl.classList.add("selected");
+  document.getElementById("btn-share").disabled = false;
+}
+
+function switchTab(tab) {
+  if (tab !== "screens" && tab !== "windows") return;
+  state.activeTab = tab;
+  for (const t of document.querySelectorAll(".tab")) {
+    const isActive = t.dataset.tab === tab;
+    t.classList.toggle("active", isActive);
+    t.setAttribute("aria-selected", isActive ? "true" : "false");
+  }
+  renderActivePane();
+}
+
+function showEmptyState(title, body) {
+  const el = document.getElementById("empty-state");
+  el.replaceChildren();
+  const t = document.createElement("div");
+  t.className = "title";
+  t.textContent = title;
+  el.appendChild(t);
+  const b = document.createElement("div");
+  b.className = "body";
+  b.textContent = body;
+  el.appendChild(b);
+  el.hidden = false;
+}
+
+function confirm() {
+  if (!state.selectedId) return;
+  const qualityIndex = Number(document.getElementById("quality-select").value);
+  const quality = QUALITY_OPTIONS[qualityIndex] || QUALITY_OPTIONS[1];
+  globalThis.api.selectedSource({
+    id: state.selectedId,
+    screen: { width: quality.width, height: quality.height, name: quality.name },
+  });
+}
+
+function cancel() {
+  globalThis.api.closeView();
 }

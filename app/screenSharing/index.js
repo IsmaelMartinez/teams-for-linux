@@ -72,9 +72,9 @@ class StreamSelector {
       const pbounds = this.#parent.getBounds();
       this.#view.setBounds({
         x: 0,
-        y: pbounds.height - 180,
+        y: 0,
         width: pbounds.width,
-        height: 180,
+        height: pbounds.height,
       });
     }, 0);
   }

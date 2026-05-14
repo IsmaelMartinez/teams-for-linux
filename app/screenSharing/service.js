@@ -9,6 +9,8 @@ class ScreenSharingService {
   initialize() {
     // Get available desktop capturer sources (screens/windows) for sharing
     ipcMain.handle("desktop-capturer-get-sources", this.#handleGetDesktopCapturerSources.bind(this));
+    // Get connected displays (id, label, internal, bounds, scaleFactor) for the share picker
+    ipcMain.handle("get-screen-sharing-displays", this.#handleGetDisplays.bind(this));
     // Select desktop media source for screen sharing
     ipcMain.handle("choose-desktop-media", this.#handleChooseDesktopMedia.bind(this));
     // Cancel desktop media selection dialog
@@ -91,6 +93,16 @@ class ScreenSharingService {
       console.error("[SCREEN_SHARE] Failed to get desktop capturer sources:", error.message);
       return [];
     }
+  }
+
+  #handleGetDisplays() {
+    return screen.getAllDisplays().map((d) => ({
+      id: d.id,
+      label: d.label,
+      internal: d.internal,
+      bounds: d.bounds,
+      scaleFactor: d.scaleFactor,
+    }));
   }
 
   async #handleChooseDesktopMedia(_event, sourceTypes) {

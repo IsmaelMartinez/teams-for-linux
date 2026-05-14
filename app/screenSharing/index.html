@@ -4,30 +4,60 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Select source</title>
-    <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="../assets/css/bootstrap.superhero.min.css" />
-    <link rel="stylesheet" href="../assets/css/bootstrap-icons.css" />
+    <title>Share screen or window</title>
     <link rel="stylesheet" href="./index.css" />
     <script src="./browser.js"></script>
   </head>
-
   <body>
-    <div class="btn-group">
-      <button class="btn btn-secondary" id="btn-screens" data-view="screens">
-        Screens
-      </button>
-      <button class="btn btn-primary" id="btn-windows" data-view="windows">
-        Windows
-      </button>
-      <div class="screen-size-container">
-        <label for="screen-size">Quality</label>
-        <select id="screen-size" class="ml-2 form-control-md"></select>
+    <div class="backdrop"></div>
+    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <div class="modal-head">
+        <h1 id="modal-title">Share a screen or window</h1>
+
+        <div class="tabs" role="tablist">
+          <div class="tab active" role="tab" tabindex="0" data-tab="screens" aria-selected="true">Screens</div>
+          <div class="tab" role="tab" tabindex="0" data-tab="windows" aria-selected="false">Windows</div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <label class="search" aria-label="Filter">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3-3" />
+          </svg>
+          <input id="search-input" type="search" placeholder="Filter…" autocomplete="off" />
+        </label>
+
+        <label class="quality">
+          Quality
+          <select id="quality-select"></select>
+        </label>
+
+        <button class="iconbtn" id="btn-close" type="button" title="Close (Esc)" aria-label="Close">&#x2715;</button>
       </div>
-    </div>
-    <i class="bi bi-x-lg pull-right" id="btn-close"></i>
-    <div class="container-fluid" data-view="screens">
-      <div class="row"></div>
+
+      <div class="modal-body">
+        <div class="pane" id="pane">
+          <div class="screens-grid" id="screens-grid" role="listbox" aria-label="Screens"></div>
+          <div class="windows-grid" id="windows-grid" role="listbox" aria-label="Windows"></div>
+        </div>
+        <div class="empty-state" id="empty-state" hidden></div>
+      </div>
+
+      <div class="modal-foot">
+        <div class="foot-hint">
+          <span class="kbd">Esc</span> close
+          &nbsp;&middot;&nbsp;
+          <span class="kbd">Tab</span> switch tabs
+          &nbsp;&middot;&nbsp;
+          <span class="kbd">Enter</span> share
+        </div>
+        <div class="foot-actions">
+          <button class="btn" id="btn-cancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="btn-share" type="button" disabled>Share</button>
+        </div>
+      </div>
     </div>
   </body>
 </html>
