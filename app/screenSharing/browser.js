@@ -43,7 +43,7 @@ function populateQualityDropdown() {
 function wireEvents() {
   document.getElementById("btn-close").addEventListener("click", cancel);
   document.getElementById("btn-cancel").addEventListener("click", cancel);
-  document.getElementById("btn-share").addEventListener("click", confirm);
+  document.getElementById("btn-share").addEventListener("click", shareSelection);
 
   document.getElementById("search-input").addEventListener("input", (e) => {
     state.searchTerm = e.target.value;
@@ -62,7 +62,12 @@ function wireEvents() {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { cancel(); return; }
-    if (e.key === "Enter" && state.selectedId) { confirm(); return; }
+    // Don't intercept Enter while the user is typing in the search box or
+    // interacting with a form control; otherwise the search Enter would
+    // fire Share whenever a tile is already selected.
+    const tag = (e.target?.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    if (e.key === "Enter" && state.selectedId) { shareSelection(); return; }
   });
 }
 
@@ -110,8 +115,6 @@ function joinAndSort() {
       const display = source.display_id ? displayById.get(String(source.display_id)) : null;
       return {
         source,
-        display,
-        index: i,
         label: display?.label || source.name || `Display ${i + 1}`,
         internal: !!display?.internal,
         bounds: display?.bounds || null,
@@ -131,6 +134,7 @@ function joinAndSort() {
 function renderActivePane() {
   const pane = document.getElementById("pane");
   pane.dataset.view = state.activeTab;
+  pane.hidden = false;
   document.getElementById("empty-state").hidden = true;
 
   if (state.activeTab === "screens") {
@@ -312,6 +316,9 @@ function switchTab(tab) {
 }
 
 function showEmptyState(title, body) {
+  // Hide the grids' pane so the empty state owns the available space
+  // instead of splitting it with an empty (but flex: 1) grid.
+  document.getElementById("pane").hidden = true;
   const el = document.getElementById("empty-state");
   el.replaceChildren();
   const t = document.createElement("div");
@@ -325,7 +332,7 @@ function showEmptyState(title, body) {
   el.hidden = false;
 }
 
-function confirm() {
+function shareSelection() {
   if (!state.selectedId) return;
   const qualityIndex = Number(document.getElementById("quality-select").value);
   const quality = QUALITY_OPTIONS[qualityIndex] || QUALITY_OPTIONS[1];
