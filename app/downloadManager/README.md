@@ -59,7 +59,8 @@ been created by the main window.
 |--------|------|---------|-------------|
 | `download.enabled` | `boolean` | `false` | Master switch for the entire feature. While download UX is in early development this is opt-in; set `true` to turn the manager on. The sub-flags only take effect once this is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a download finishes |
-| `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar from active download progress |
+| `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar, KDE JobView and Unity LauncherEntry while downloads are in flight |
+| `download.showTitlePrefix` | `boolean` | `true` | Also prefix the window title with `[N%]` (or `[downloading]`). Set to `false` on KDE / Ubuntu where the JobView / LauncherEntry already shows progress and the title churn is redundant. |
 
 Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
 
@@ -71,7 +72,7 @@ Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
 }
 ```
 
-With `enabled: true`, set either sub-flag to `false` to opt out of that piece
-of feedback (notification or progress bar). The global `disableNotifications`
-flag also suppresses the completion / failure toasts (but does not affect the
-progress bar).
+With `enabled: true`, set any sub-flag to `false` to opt out of that piece of
+feedback (notification, progress bar, title prefix). The global
+`disableNotifications` flag also suppresses the completion / failure toasts
+(but does not affect the progress bar or title prefix).

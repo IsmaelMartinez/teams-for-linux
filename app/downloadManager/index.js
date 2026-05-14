@@ -183,6 +183,15 @@ class DownloadManager {
     return this.#config?.download?.showProgressBar !== false;
   }
 
+  // The title-prefix path always fires on every Linux setup — `setProgressBar`
+  // and the D-Bus emitters fail closed on unsupported environments, but
+  // `window.setTitle` always succeeds. Users who already see KDE JobView
+  // rows or Ubuntu LauncherEntry badges can opt out of the title churn by
+  // setting this sub-flag to false.
+  #shouldShowTitlePrefix() {
+    return this.#config?.download?.showTitlePrefix !== false;
+  }
+
   /**
    * Recompute the taskbar progress bar from the active-downloads set:
    *
@@ -196,10 +205,12 @@ class DownloadManager {
     const window = this.#mainAppWindow?.getWindow?.();
     if (!window || window.isDestroyed()) return;
 
+    const showTitlePrefix = this.#shouldShowTitlePrefix();
+
     if (this.#activeItems.size === 0) {
       window.setProgressBar(-1);
       this.#launcherEmitter?.update({ progressVisible: false });
-      this.#clearTitlePrefix(window);
+      if (showTitlePrefix) this.#clearTitlePrefix(window);
       return;
     }
 
@@ -227,7 +238,7 @@ class DownloadManager {
       // Every active item has unknown total: indeterminate.
       window.setProgressBar(2, { mode: "indeterminate" });
       this.#launcherEmitter?.update({ progressVisible: false });
-      this.#applyTitlePrefix(window, itemFractions);
+      if (showTitlePrefix) this.#applyTitlePrefix(window, itemFractions);
       return;
     }
 
@@ -239,7 +250,7 @@ class DownloadManager {
       : 0;
     window.setProgressBar(aggregate);
     this.#launcherEmitter?.update({ progress: aggregate, progressVisible: true });
-    this.#applyTitlePrefix(window, itemFractions);
+    if (showTitlePrefix) this.#applyTitlePrefix(window, itemFractions);
   }
 
   /**

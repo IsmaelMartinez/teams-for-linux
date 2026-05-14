@@ -23,6 +23,15 @@
  * provides it, sway, etc.) `requestView` fails and the emitter degrades
  * to no-op. The window-title fallback in `DownloadManager` still gives
  * those users feedback.
+ *
+ * The `appIconName` reported to KDE follows the running packaging:
+ *   - deb / rpm / source: `teams-for-linux` (matches the .desktop ID).
+ *   - Flatpak: the Flatpak app id from `FLATPAK_ID` (e.g.
+ *     `com.github.IsmaelMartinez.teams_for_linux`).
+ *   - Snap: the snap instance name from `SNAP_INSTANCE_NAME` / `SNAP_NAME`.
+ * Plasma resolves the name against the running session's icon theme; an
+ * unmatched name renders the JobView row with no icon, which is cosmetic
+ * but not a failure.
  */
 
 const dbus = require("@homebridge/dbus-native");
@@ -34,6 +43,18 @@ const VIEW_IFACE = "org.kde.JobViewV2";
 
 let bus = null;
 let busDisabled = false;
+
+function detectAppIconName() {
+  // Flatpak: the runtime sets FLATPAK_ID to the app id, which is also the
+  // canonical name of the bundled icon file.
+  if (process.env.FLATPAK_ID) return process.env.FLATPAK_ID;
+  // Snap: SNAP_INSTANCE_NAME is the parallel-install-aware name; SNAP_NAME
+  // is the bare package name. Both have a matching icon in the snap
+  // meta/gui directory.
+  if (process.env.SNAP_INSTANCE_NAME) return process.env.SNAP_INSTANCE_NAME;
+  if (process.env.SNAP_NAME) return process.env.SNAP_NAME;
+  return "teams-for-linux";
+}
 
 function getBus() {
   if (busDisabled) return null;
@@ -67,8 +88,14 @@ async function start(options) {
   if (!sessionBus) return noopHandle();
 
   const appName = options.appName ?? "Teams for Linux";
-  const appIconName = options.appIconName ?? "teams-for-linux";
+  const appIconName = options.appIconName ?? detectAppIconName();
 
+  // `capabilities` is a bitfield: 1 = Cancelable, 2 = Suspendable. We pass
+  // 0 deliberately — DownloadItem.cancel() / .pause() are not currently
+  // wired to IPC, so advertising those buttons in Plasma's notification
+  // widget would mislead the user. If we ever expose them, change this
+  // to 3 and bind the JobView's `cancelRequested` / `suspendRequested`
+  // signals to the matching DownloadItem methods.
   const viewPath = await invoke(sessionBus, {
     destination: SERVICE,
     path: SERVER_PATH,

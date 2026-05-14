@@ -500,6 +500,28 @@ describe('DownloadManager', () => {
 		assert.strictEqual(mainAppWindow._title, 'Microsoft Teams');
 	});
 
+	it('leaves the window title untouched when showTitlePrefix is false', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const mainAppWindow = makeFakeMainAppWindow('Microsoft Teams');
+		const manager = new DownloadManager(
+			enabledConfig({ download: { showTitlePrefix: false } }),
+			mainAppWindow,
+		);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('big.zip', '/p/big.zip', { totalBytes: 100, receivedBytes: 25 });
+		fakeSession.emit('will-download', {}, item);
+		item.setSizes({ receivedBytes: 50 });
+		item.emit('updated');
+		item.emit('done', {}, 'completed');
+
+		// Title is never prefixed, and the progress bar still receives updates
+		// — the title-prefix flag does not gate the other progress channels.
+		assert.strictEqual(mainAppWindow._title, 'Microsoft Teams');
+		assert.ok(mainAppWindow._calls.length > 0);
+	});
+
 	it('survives a destroyed main window during progress updates', () => {
 		const DownloadManager = require(downloadManagerPath);
 		const mainAppWindow = makeFakeMainAppWindow();
