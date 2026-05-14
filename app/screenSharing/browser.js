@@ -123,7 +123,12 @@ function joinAndSort() {
     })
     .sort((a, b) => {
       if (a.internal !== b.internal) return a.internal ? -1 : 1;
-      if (!a.bounds || !b.bounds) return 0;
+      // Items without bounds (some Wayland portal setups expose no
+      // display_id) sort to the end deterministically; source.id is a
+      // stable tiebreaker.
+      if (!a.bounds && !b.bounds) return a.source.id.localeCompare(b.source.id);
+      if (!a.bounds) return 1;
+      if (!b.bounds) return -1;
       return (a.bounds.y - b.bounds.y) || (a.bounds.x - b.bounds.x);
     })
     .map((item, displayNumber) => ({ ...item, displayNumber: displayNumber + 1 }));
@@ -288,11 +293,13 @@ function buildWindowTile(source) {
   return tile;
 }
 
-// Data URLs already start with a scheme but may contain characters that
-// confuse CSS url(). Wrapping in double quotes and escaping closing quotes
-// is enough for the data: URL shape we get back from desktopCapturer.
+// Data URLs from NativeImage are base64-encoded PNGs so they cannot
+// contain backslashes or double quotes in practice. Escape both anyway
+// (backslash first, otherwise the escape introduced by the quote
+// replacement would be double-escaped) as defence-in-depth — CodeQL
+// flags the partial-escape pattern even when it cannot be exploited.
 function cssEscapeUrl(url) {
-  return url.replace(/"/g, '\\"');
+  return url.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function selectItem(id, tileEl) {
@@ -335,7 +342,8 @@ function showEmptyState(title, body) {
 function shareSelection() {
   if (!state.selectedId) return;
   const qualityIndex = Number(document.getElementById("quality-select").value);
-  const quality = QUALITY_OPTIONS[qualityIndex] || QUALITY_OPTIONS[1];
+  const defaultQuality = QUALITY_OPTIONS.find((q) => q.default) || QUALITY_OPTIONS[0];
+  const quality = QUALITY_OPTIONS[qualityIndex] || defaultQuality;
   globalThis.api.selectedSource({
     id: state.selectedId,
     screen: { width: quality.width, height: quality.height, name: quality.name },

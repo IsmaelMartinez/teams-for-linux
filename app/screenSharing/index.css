@@ -154,7 +154,10 @@ body {
 .screen-tile img.thumb {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover; display: block;
+  /* contain (vs cover) keeps the whole screen visible inside the tile,
+     including ultrawide displays. The tile background fills the
+     letterbox area. Helps the user pick the right screen. */
+  object-fit: contain; display: block;
   filter: brightness(0.85);
 }
 
