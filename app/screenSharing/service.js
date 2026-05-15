@@ -102,6 +102,7 @@ class ScreenSharingService {
       internal: d.internal,
       bounds: d.bounds,
       scaleFactor: d.scaleFactor,
+      displayFrequency: d.displayFrequency,
     }));
   }
 

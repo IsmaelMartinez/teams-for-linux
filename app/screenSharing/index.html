@@ -4,60 +4,122 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Share screen or window</title>
+    <title>Choose what to share</title>
     <link rel="stylesheet" href="./index.css" />
     <script src="./browser.js"></script>
   </head>
   <body>
-    <div class="backdrop"></div>
-    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-      <div class="modal-head">
-        <h1 id="modal-title">Share a screen or window</h1>
+    <div class="backdrop" aria-hidden="true"></div>
 
-        <div class="tabs" role="tablist">
-          <div class="tab active" role="tab" tabindex="0" data-tab="screens" aria-selected="true">Screens</div>
-          <div class="tab" role="tab" tabindex="0" data-tab="windows" aria-selected="false">Windows</div>
+    <div class="picker" role="dialog" aria-labelledby="picker-title" aria-modal="true">
+      <header class="head">
+        <h1 id="picker-title">
+          <span class="dot" aria-hidden="true"></span>
+          Choose what to share
+        </h1>
+        <span class="meta" id="head-meta"></span>
+      </header>
+
+      <div class="seg-row">
+        <div class="seg" role="tablist" aria-label="Source type">
+          <button id="tab-screens" type="button" role="tab" aria-pressed="true" data-tab="screens">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+              <rect x="1.5" y="2.5" width="13" height="9" rx="1" />
+              <path d="M5 14h6M8 11.5V14" />
+            </svg>
+            Screens
+            <span class="count" id="count-screens">0</span>
+          </button>
+          <button id="tab-windows" type="button" role="tab" aria-pressed="false" data-tab="windows">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+              <rect x="2.5" y="3.5" width="9" height="9" rx="1" />
+              <rect x="5.5" y="6.5" width="9" height="9" rx="1" fill="var(--bg-shell)" />
+            </svg>
+            Windows
+            <span class="count" id="count-windows">0</span>
+          </button>
         </div>
-
-        <div class="spacer"></div>
-
-        <label class="search" aria-label="Filter">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3-3" />
+        <div class="search disabled" id="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="7" cy="7" r="4.5" />
+            <path d="m10.5 10.5 3 3" />
           </svg>
-          <input id="search-input" type="search" placeholder="Filter…" autocomplete="off" />
-        </label>
-
-        <label class="quality">
-          Quality
-          <select id="quality-select"></select>
-        </label>
-
-        <button class="iconbtn" id="btn-close" type="button" title="Close (Esc)" aria-label="Close">&#x2715;</button>
+          <input id="search-input" type="search" placeholder="Filter windows&hellip;" autocomplete="off" aria-label="Filter windows" />
+        </div>
       </div>
 
-      <div class="modal-body">
-        <div class="pane" id="pane">
-          <div class="screens-grid" id="screens-grid" role="listbox" aria-label="Screens"></div>
-          <div class="windows-grid" id="windows-grid" role="listbox" aria-label="Windows"></div>
+      <div class="body">
+        <div class="pane active" id="pane-screens">
+          <div class="screens">
+            <div class="map-wrap">
+              <div class="map-head">
+                <span class="label">Connected displays</span>
+                <span class="hint">
+                  <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate
+                </span>
+              </div>
+              <div class="map" id="screens-grid" role="listbox" aria-label="Screens"></div>
+            </div>
+
+            <aside class="detail" id="detail">
+              <div class="detail-label">
+                <span id="detail-label">PREVIEW</span>
+                <span class="pulse">LIVE</span>
+              </div>
+              <div class="preview" id="preview">
+                <div class="placeholder" id="preview-placeholder">
+                  Hover or focus a<br />display to preview
+                </div>
+              </div>
+              <div>
+                <div class="detail-name" id="detail-name">No display selected</div>
+              </div>
+              <dl class="specs" id="specs" hidden>
+                <dt>Resolution</dt><dd id="spec-res">&mdash;</dd>
+                <dt>Refresh</dt><dd id="spec-hz">&mdash;</dd>
+                <dt>Scale</dt><dd id="spec-scale">&mdash;</dd>
+                <dt>Position</dt><dd id="spec-pos">&mdash;</dd>
+                <dt>Number</dt><dd id="spec-num">&mdash;</dd>
+              </dl>
+            </aside>
+          </div>
         </div>
+
+        <div class="pane" id="pane-windows">
+          <div class="windows-pane">
+            <div class="windows-grid" id="windows-grid" role="listbox" aria-label="Windows"></div>
+          </div>
+        </div>
+
         <div class="empty-state" id="empty-state" hidden></div>
       </div>
 
-      <div class="modal-foot">
-        <div class="foot-hint">
-          <span class="kbd">Esc</span> close
-          &nbsp;&middot;&nbsp;
-          <span class="kbd">Tab</span> switch tabs
-          &nbsp;&middot;&nbsp;
-          <span class="kbd">Enter</span> share
+      <footer class="foot">
+        <div class="foot-left">
+          <div class="quality" id="quality-chip" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Quality">
+            <span class="lbl">Quality</span>
+            <span class="val" id="quality-val">1080p</span>
+            <svg class="chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 4l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="menu" role="listbox" id="quality-menu"></div>
+          </div>
+          <div class="kbd-row">
+            <span><kbd>&crarr;</kbd>Share</span>
+            <span><kbd>Esc</kbd>Cancel</span>
+            <span><kbd>Tab</kbd>Switch tab</span>
+          </div>
         </div>
-        <div class="foot-actions">
-          <button class="btn" id="btn-cancel" type="button">Cancel</button>
-          <button class="btn btn-primary" id="btn-share" type="button" disabled>Share</button>
+        <div class="foot-right">
+          <button class="btn btn-ghost" id="btn-cancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="btn-share" type="button" disabled>
+            <span class="btn-label" id="btn-share-label">Share screen</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M3 6h6m0 0L6.5 3.5M9 6 6.5 8.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
-      </div>
+      </footer>
     </div>
   </body>
 </html>

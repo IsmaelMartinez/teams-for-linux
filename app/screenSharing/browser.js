@@ -3,54 +3,100 @@
 // app/screenSharing/index.js for the host plumbing and
 // app/screenSharing/service.js for the IPC handlers.
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
 const QUALITY_OPTIONS = [
-  { width: 1280, height: 720,  name: "HD (720p)" },
-  { width: 1920, height: 1080, name: "FHD (1080p)", default: true },
-  { width: 2048, height: 1080, name: "2K" },
-  { width: 3840, height: 2160, name: "4K" },
+  { id: "720p",  width: 1280, height: 720,  label: "720p",  tag: "draft" },
+  { id: "1080p", width: 1920, height: 1080, label: "1080p", tag: "default", default: true },
+  { id: "2k",    width: 2048, height: 1080, label: "2K",    tag: "high" },
+  { id: "4k",    width: 3840, height: 2160, label: "4K",    tag: "max" },
 ];
 
 const THUMBNAIL_SIZE = { width: 640, height: 360 };
 
+const DEFAULT_QUALITY = QUALITY_OPTIONS.find((q) => q.default) || QUALITY_OPTIONS[0];
+
 const state = {
-  displays: [],         // [{ id, label, internal, bounds, scaleFactor }]
-  sources: [],          // raw sources from desktopCapturer
-  screenItems: [],      // joined: source + display info, sorted
-  windowItems: [],      // window sources
-  activeTab: "screens", // "screens" | "windows"
+  displays: [],
+  sources: [],
+  screenItems: [],   // joined: source + display info, sorted
+  windowItems: [],
+  activeTab: "screens",
   searchTerm: "",
   selectedId: null,
+  selectedKind: null,   // "screen" | "window" | null
+  hoveredScreenId: null,
+  quality: DEFAULT_QUALITY.id,
 };
 
 globalThis.addEventListener("DOMContentLoaded", () => {
-  populateQualityDropdown();
+  populateQualityMenu();
   wireEvents();
   void loadSources();
 });
 
-function populateQualityDropdown() {
-  const select = document.getElementById("quality-select");
-  for (const [i, q] of QUALITY_OPTIONS.entries()) {
-    const opt = document.createElement("option");
-    opt.value = String(i);
-    opt.textContent = q.name;
-    select.appendChild(opt);
+function populateQualityMenu() {
+  const menu = document.getElementById("quality-menu");
+  for (const q of QUALITY_OPTIONS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.quality = q.id;
+    btn.setAttribute("aria-pressed", q.id === state.quality ? "true" : "false");
+
+    const label = document.createElement("span");
+    label.textContent = q.label;
+    btn.appendChild(label);
+
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = q.tag;
+    btn.appendChild(tag);
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setQuality(q.id);
+      closeQualityMenu();
+    });
+    menu.appendChild(btn);
   }
-  const defaultIndex = QUALITY_OPTIONS.findIndex((q) => q.default);
-  select.selectedIndex = defaultIndex > -1 ? defaultIndex : QUALITY_OPTIONS.length - 1;
+  updateQualityLabel();
+}
+
+function setQuality(id) {
+  state.quality = id;
+  updateQualityLabel();
+  for (const btn of document.querySelectorAll("#quality-menu button")) {
+    btn.setAttribute("aria-pressed", btn.dataset.quality === id ? "true" : "false");
+  }
+}
+
+function updateQualityLabel() {
+  const q = QUALITY_OPTIONS.find((o) => o.id === state.quality) || DEFAULT_QUALITY;
+  document.getElementById("quality-val").textContent = q.label;
+}
+
+function openQualityMenu() {
+  const chip = document.getElementById("quality-chip");
+  chip.classList.add("open");
+  chip.setAttribute("aria-expanded", "true");
+}
+
+function closeQualityMenu() {
+  const chip = document.getElementById("quality-chip");
+  chip.classList.remove("open");
+  chip.setAttribute("aria-expanded", "false");
 }
 
 function wireEvents() {
-  document.getElementById("btn-close").addEventListener("click", cancel);
   document.getElementById("btn-cancel").addEventListener("click", cancel);
   document.getElementById("btn-share").addEventListener("click", shareSelection);
 
   document.getElementById("search-input").addEventListener("input", (e) => {
     state.searchTerm = e.target.value;
-    renderActivePane();
+    renderWindows();
   });
 
-  for (const tab of document.querySelectorAll(".tab")) {
+  for (const tab of document.querySelectorAll(".seg button")) {
     tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     tab.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
@@ -60,15 +106,45 @@ function wireEvents() {
     });
   }
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { cancel(); return; }
-    // Don't intercept Enter while the user is typing in the search box or
-    // interacting with a form control; otherwise the search Enter would
-    // fire Share whenever a tile is already selected.
-    const tag = (e.target?.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea") return;
-    if (e.key === "Enter" && state.selectedId) { shareSelection(); return; }
+  const qChip = document.getElementById("quality-chip");
+  qChip.addEventListener("click", (e) => {
+    // Clicks inside the menu are handled per-button (with stopPropagation).
+    if (e.target.closest(".menu")) return;
+    qChip.classList.contains("open") ? closeQualityMenu() : openQualityMenu();
   });
+  qChip.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      qChip.classList.contains("open") ? closeQualityMenu() : openQualityMenu();
+    }
+    if (e.key === "Escape" && qChip.classList.contains("open")) {
+      e.stopPropagation();
+      closeQualityMenu();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (!qChip.contains(e.target)) closeQualityMenu();
+  });
+
+  document.addEventListener("keydown", onGlobalKeydown);
+}
+
+function onGlobalKeydown(e) {
+  if (e.key === "Escape") { cancel(); return; }
+
+  const tag = (e.target?.tagName || "").toLowerCase();
+  const inField = tag === "input" || tag === "select" || tag === "textarea";
+
+  if (e.key === "Enter" && state.selectedId && !inField) {
+    shareSelection();
+    return;
+  }
+
+  if (state.activeTab === "screens" && !inField &&
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+    e.preventDefault();
+    navigateScreensSpatial(e.key);
+  }
 }
 
 async function loadSources() {
@@ -94,7 +170,9 @@ async function loadSources() {
   state.sources = Array.isArray(sources) ? sources : [];
 
   joinAndSort();
+  updateHeaderMeta();
   renderActivePane();
+  renderDetail();
 
   if (state.sources.length === 0) {
     showEmptyState(
@@ -119,6 +197,7 @@ function joinAndSort() {
         internal: !!display?.internal,
         bounds: display?.bounds || null,
         scaleFactor: display?.scaleFactor || 1,
+        displayFrequency: display?.displayFrequency || null,
       };
     })
     .sort((a, b) => {
@@ -136,13 +215,24 @@ function joinAndSort() {
   state.windowItems = state.sources.filter((s) => s.id.startsWith("window:"));
 }
 
-function renderActivePane() {
-  const pane = document.getElementById("pane");
-  pane.dataset.view = state.activeTab;
-  pane.hidden = false;
-  document.getElementById("empty-state").hidden = true;
+function updateHeaderMeta() {
+  const s = state.screenItems.length;
+  const w = state.windowItems.length;
+  const screensLbl = s === 1 ? "1 display" : `${s} displays`;
+  const windowsLbl = w === 1 ? "1 window" : `${w} windows`;
+  document.getElementById("head-meta").textContent = `${screensLbl} · ${windowsLbl}`;
+  document.getElementById("count-screens").textContent = String(s);
+  document.getElementById("count-windows").textContent = String(w);
+}
 
-  if (state.activeTab === "screens") {
+function renderActivePane() {
+  document.getElementById("empty-state").hidden = true;
+  const isScreens = state.activeTab === "screens";
+  document.getElementById("pane-screens").classList.toggle("active", isScreens);
+  document.getElementById("pane-windows").classList.toggle("active", !isScreens);
+  document.getElementById("search-wrap").classList.toggle("disabled", isScreens);
+
+  if (isScreens) {
     renderScreens();
   } else {
     renderWindows();
@@ -153,22 +243,33 @@ function renderScreens() {
   const grid = document.getElementById("screens-grid");
   grid.replaceChildren();
 
-  const term = state.searchTerm.toLowerCase().trim();
-  const visible = state.screenItems.filter(
-    (item) => !term || item.label.toLowerCase().includes(term)
-  );
-
-  if (visible.length === 0) {
+  if (state.screenItems.length === 0) {
     showEmptyState(
-      term ? "No screens match your filter" : "No screens available",
-      term ? "Try a different search term." : "Connect a display or check system permissions."
+      "No screens available",
+      "Connect a display or check system permissions."
     );
     return;
   }
 
-  for (const item of visible) {
+  for (const item of state.screenItems) {
     grid.appendChild(buildScreenTile(item));
   }
+}
+
+function buildCheckSvg() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("width", "11");
+  svg.setAttribute("height", "11");
+  svg.setAttribute("viewBox", "0 0 12 12");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", "M2.5 6.5l2.5 2.5 4.5-5");
+  svg.appendChild(path);
+  return svg;
 }
 
 function buildScreenTile(item) {
@@ -177,51 +278,175 @@ function buildScreenTile(item) {
   tile.tabIndex = 0;
   tile.dataset.id = item.source.id;
   tile.setAttribute("role", "option");
-  tile.setAttribute("aria-label", `${item.label}${item.internal ? " (Main)" : ""}`);
+  tile.setAttribute(
+    "aria-label",
+    `${item.label}${item.internal ? " (Main)" : ""}, display ${item.displayNumber}`
+  );
+
+  const face = document.createElement("div");
+  face.className = "face";
+  if (item.source.thumbnailDataUrl?.startsWith("data:")) {
+    const img = document.createElement("img");
+    img.className = "thumb";
+    img.src = item.source.thumbnailDataUrl;
+    img.alt = "";
+    face.appendChild(img);
+  }
+  tile.appendChild(face);
+
+  const num = document.createElement("div");
+  num.className = "num";
+  num.textContent = String(item.displayNumber);
+  tile.appendChild(num);
+
+  if (item.internal) {
+    const mainBadge = document.createElement("div");
+    mainBadge.className = "main-badge";
+    mainBadge.textContent = "MAIN";
+    tile.appendChild(mainBadge);
+  }
+
+  const check = document.createElement("div");
+  check.className = "check";
+  check.setAttribute("aria-hidden", "true");
+  check.appendChild(buildCheckSvg());
+  tile.appendChild(check);
+
+  const name = document.createElement("div");
+  name.className = "name";
+  const lbl = document.createElement("span");
+  lbl.className = "lbl";
+  lbl.textContent = item.label;
+  name.appendChild(lbl);
+  if (item.bounds) {
+    const res = document.createElement("span");
+    res.className = "res";
+    res.textContent = `${item.bounds.width}×${item.bounds.height}`;
+    name.appendChild(res);
+  }
+  tile.appendChild(name);
+
+  const stand = document.createElement("div");
+  stand.className = "stand";
+  tile.appendChild(stand);
+
+  tile.addEventListener("pointerenter", () => setHoveredScreen(item.source.id));
+  tile.addEventListener("pointerleave", () => setHoveredScreen(null));
+  tile.addEventListener("focus", () => setHoveredScreen(item.source.id));
+  tile.addEventListener("blur", () => setHoveredScreen(null));
+  tile.addEventListener("click", () => setSelectedScreen(item.source.id));
+  tile.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setSelectedScreen(item.source.id);
+    }
+  });
+
+  if (state.selectedKind === "screen" && state.selectedId === item.source.id) {
+    tile.classList.add("selected");
+  }
+  return tile;
+}
+
+function setHoveredScreen(id) {
+  state.hoveredScreenId = id;
+  renderDetail();
+}
+
+function setSelectedScreen(id) {
+  state.selectedId = id;
+  state.selectedKind = "screen";
+  for (const t of document.querySelectorAll(".screen-tile")) {
+    t.classList.toggle("selected", t.dataset.id === id);
+  }
+  for (const t of document.querySelectorAll(".window-tile")) {
+    t.classList.remove("selected");
+  }
+  renderDetail();
+  updateShareButton();
+}
+
+function setSelectedWindow(id) {
+  state.selectedId = id;
+  state.selectedKind = "window";
+  for (const t of document.querySelectorAll(".window-tile")) {
+    t.classList.toggle("selected", t.dataset.id === id);
+  }
+  for (const t of document.querySelectorAll(".screen-tile")) {
+    t.classList.remove("selected");
+  }
+  renderDetail();
+  updateShareButton();
+}
+
+function renderDetail() {
+  const preview = document.getElementById("preview");
+  const placeholder = document.getElementById("preview-placeholder");
+  const specs = document.getElementById("specs");
+  const labelEl = document.getElementById("detail-label");
+  const nameEl = document.getElementById("detail-name");
+
+  for (const node of preview.querySelectorAll("img.thumb, .stamp")) node.remove();
+
+  const showHoverId = state.activeTab === "screens" ? state.hoveredScreenId : null;
+  const selectedScreenId =
+    state.selectedKind === "screen" ? state.selectedId : null;
+  const showId = showHoverId || selectedScreenId;
+
+  if (!showId) {
+    placeholder.hidden = false;
+    specs.hidden = true;
+    nameEl.textContent = "No display selected";
+    labelEl.textContent = "PREVIEW";
+    return;
+  }
+
+  const item = state.screenItems.find((s) => s.source.id === showId);
+  if (!item) {
+    placeholder.hidden = false;
+    specs.hidden = true;
+    nameEl.textContent = "No display selected";
+    labelEl.textContent = "PREVIEW";
+    return;
+  }
+
+  placeholder.hidden = true;
+  specs.hidden = false;
 
   if (item.source.thumbnailDataUrl?.startsWith("data:")) {
     const img = document.createElement("img");
     img.className = "thumb";
     img.src = item.source.thumbnailDataUrl;
     img.alt = "";
-    tile.appendChild(img);
+    preview.appendChild(img);
   }
+  const stamp = document.createElement("span");
+  stamp.className = "stamp";
+  stamp.textContent = `${THUMBNAIL_SIZE.width} × ${THUMBNAIL_SIZE.height}`;
+  preview.appendChild(stamp);
 
-  const badge = document.createElement("div");
-  badge.className = "badge-num";
-  badge.textContent = String(item.displayNumber);
-  tile.appendChild(badge);
+  const isSelected = selectedScreenId === showId;
+  const isHover = showHoverId === showId && !isSelected;
+  labelEl.textContent = isSelected ? "PREVIEW · SELECTED" :
+                        isHover ? "PREVIEW · HOVER" : "PREVIEW";
 
+  nameEl.replaceChildren();
+  nameEl.append(item.label);
   if (item.internal) {
-    const main = document.createElement("div");
-    main.className = "badge-main";
-    main.textContent = "Main";
-    tile.appendChild(main);
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = "Primary display";
+    nameEl.appendChild(sub);
   }
 
-  const meta = document.createElement("div");
-  meta.className = "tile-meta";
-  const name = document.createElement("div");
-  name.className = "name";
-  name.textContent = item.label;
-  meta.appendChild(name);
-  if (item.bounds) {
-    const res = document.createElement("div");
-    res.className = "res";
-    res.textContent = `${item.bounds.width}×${item.bounds.height} @ ${item.scaleFactor}x`;
-    meta.appendChild(res);
-  }
-  tile.appendChild(meta);
-
-  tile.addEventListener("click", () => selectItem(item.source.id, tile));
-  tile.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      selectItem(item.source.id, tile);
-    }
-  });
-  if (item.source.id === state.selectedId) tile.classList.add("selected");
-  return tile;
+  document.getElementById("spec-res").textContent =
+    item.bounds ? `${item.bounds.width}×${item.bounds.height}` : "—";
+  document.getElementById("spec-hz").textContent =
+    item.displayFrequency ? `${item.displayFrequency} Hz` : "—";
+  document.getElementById("spec-scale").textContent = `${item.scaleFactor}×`;
+  document.getElementById("spec-pos").textContent =
+    item.bounds ? `(${item.bounds.x}, ${item.bounds.y})` : "—";
+  document.getElementById("spec-num").textContent = String(item.displayNumber);
 }
 
 function renderWindows() {
@@ -240,6 +465,8 @@ function renderWindows() {
     );
     return;
   }
+
+  document.getElementById("empty-state").hidden = true;
 
   for (const source of visible) {
     grid.appendChild(buildWindowTile(source));
@@ -274,22 +501,28 @@ function buildWindowTile(source) {
   }
   metaRow.appendChild(ico);
 
+  const titleWrap = document.createElement("div");
+  titleWrap.className = "title-wrap";
   const title = document.createElement("div");
   title.className = "title";
   title.textContent = source.name || "Untitled";
   title.title = source.name || "";
-  metaRow.appendChild(title);
+  titleWrap.appendChild(title);
+  metaRow.appendChild(titleWrap);
 
   tile.appendChild(metaRow);
 
-  tile.addEventListener("click", () => selectItem(source.id, tile));
+  tile.addEventListener("click", () => setSelectedWindow(source.id));
   tile.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      selectItem(source.id, tile);
+      setSelectedWindow(source.id);
     }
   });
-  if (source.id === state.selectedId) tile.classList.add("selected");
+
+  if (state.selectedKind === "window" && state.selectedId === source.id) {
+    tile.classList.add("selected");
+  }
   return tile;
 }
 
@@ -302,30 +535,27 @@ function cssEscapeUrl(url) {
   return url.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function selectItem(id, tileEl) {
-  state.selectedId = id;
-  for (const el of document.querySelectorAll(".screen-tile.selected, .window-tile.selected")) {
-    el.classList.remove("selected");
-  }
-  if (tileEl) tileEl.classList.add("selected");
-  document.getElementById("btn-share").disabled = false;
-}
-
 function switchTab(tab) {
   if (tab !== "screens" && tab !== "windows") return;
   state.activeTab = tab;
-  for (const t of document.querySelectorAll(".tab")) {
-    const isActive = t.dataset.tab === tab;
-    t.classList.toggle("active", isActive);
-    t.setAttribute("aria-selected", isActive ? "true" : "false");
+  for (const btn of document.querySelectorAll(".seg button")) {
+    btn.setAttribute("aria-pressed", btn.dataset.tab === tab ? "true" : "false");
   }
   renderActivePane();
+  renderDetail();
+}
+
+function updateShareButton() {
+  const btn = document.getElementById("btn-share");
+  const label = document.getElementById("btn-share-label");
+  const has = !!state.selectedId;
+  btn.disabled = !has;
+  label.textContent = has && state.selectedKind === "window" ? "Share window" : "Share screen";
 }
 
 function showEmptyState(title, body) {
-  // Hide the grids' pane so the empty state owns the available space
-  // instead of splitting it with an empty (but flex: 1) grid.
-  document.getElementById("pane").hidden = true;
+  document.getElementById("pane-screens").classList.remove("active");
+  document.getElementById("pane-windows").classList.remove("active");
   const el = document.getElementById("empty-state");
   el.replaceChildren();
   const t = document.createElement("div");
@@ -339,14 +569,47 @@ function showEmptyState(title, body) {
   el.hidden = false;
 }
 
+function navigateScreensSpatial(key) {
+  const items = state.screenItems;
+  if (items.length === 0) return;
+
+  const current =
+    (state.selectedKind === "screen" ? state.selectedId : null) ||
+    state.hoveredScreenId ||
+    items[0].source.id;
+  const cur = items.find((i) => i.source.id === current);
+  if (!cur?.bounds) return;
+
+  const cx = cur.bounds.x + cur.bounds.width / 2;
+  const cy = cur.bounds.y + cur.bounds.height / 2;
+
+  let best = null;
+  let bestScore = Infinity;
+  for (const candidate of items) {
+    if (candidate.source.id === current || !candidate.bounds) continue;
+    const dx = (candidate.bounds.x + candidate.bounds.width / 2) - cx;
+    const dy = (candidate.bounds.y + candidate.bounds.height / 2) - cy;
+    let aligned = false;
+    if (key === "ArrowLeft"  && dx < 0 && Math.abs(dx) > Math.abs(dy)) aligned = true;
+    if (key === "ArrowRight" && dx > 0 && Math.abs(dx) > Math.abs(dy)) aligned = true;
+    if (key === "ArrowUp"    && dy < 0 && Math.abs(dy) > Math.abs(dx)) aligned = true;
+    if (key === "ArrowDown"  && dy > 0 && Math.abs(dy) > Math.abs(dx)) aligned = true;
+    if (!aligned) continue;
+    const score = Math.hypot(dx, dy);
+    if (score < bestScore) { bestScore = score; best = candidate; }
+  }
+  if (best) {
+    const tile = document.querySelector(`.screen-tile[data-id="${CSS.escape(best.source.id)}"]`);
+    tile?.focus();
+  }
+}
+
 function shareSelection() {
   if (!state.selectedId) return;
-  const qualityIndex = Number(document.getElementById("quality-select").value);
-  const defaultQuality = QUALITY_OPTIONS.find((q) => q.default) || QUALITY_OPTIONS[0];
-  const quality = QUALITY_OPTIONS[qualityIndex] || defaultQuality;
+  const quality = QUALITY_OPTIONS.find((q) => q.id === state.quality) || DEFAULT_QUALITY;
   globalThis.api.selectedSource({
     id: state.selectedId,
-    screen: { width: quality.width, height: quality.height, name: quality.name },
+    screen: { width: quality.width, height: quality.height, name: quality.label },
   });
 }
 
