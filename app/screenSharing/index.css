@@ -104,12 +104,12 @@ body {
   cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px;
 }
-.seg button[aria-pressed="true"] {
+.seg button[aria-selected="true"] {
   background: var(--bg-shell);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
-.seg button:hover:not([aria-pressed="true"]) { color: var(--ink); }
+.seg button:hover:not([aria-selected="true"]) { color: var(--ink); }
 .seg button .count {
   font: 10px/1 var(--mono);
   color: var(--ink-dim);
@@ -118,7 +118,7 @@ body {
   border-radius: 3px;
   letter-spacing: 0.04em;
 }
-.seg button[aria-pressed="true"] .count {
+.seg button[aria-selected="true"] .count {
   color: var(--ink-mute);
   background: rgba(138, 140, 208, 0.1);
 }
@@ -480,7 +480,9 @@ body {
   gap: 14px;
 }
 .foot-left { display: flex; align-items: center; gap: 14px; }
-.quality {
+.quality { position: relative; }
+.quality-trigger {
+  appearance: none;
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--bg-tile);
   border: 1px solid var(--line);
@@ -490,17 +492,16 @@ body {
   color: var(--ink-mute);
   cursor: pointer;
   user-select: none;
-  position: relative;
 }
-.quality:hover { border-color: var(--line-strong); color: var(--ink); }
-.quality .lbl {
+.quality-trigger:hover { border-color: var(--line-strong); color: var(--ink); }
+.quality-trigger .lbl {
   color: var(--ink-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 10px;
 }
-.quality .val { color: var(--ink); font-weight: 500; }
-.quality .chev { color: var(--ink-faint); }
+.quality-trigger .val { color: var(--ink); font-weight: 500; }
+.quality-trigger .chev { color: var(--ink-faint); }
 .quality.open .menu { display: block; }
 .quality .menu {
   display: none;
@@ -534,7 +535,7 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.quality .menu button[aria-pressed="true"] { color: var(--accent-strong); }
+.quality .menu button[aria-selected="true"] { color: var(--accent-strong); }
 
 .kbd-row {
   display: flex; align-items: center; gap: 14px;

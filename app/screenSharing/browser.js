@@ -23,9 +23,9 @@ const state = {
   windowItems: [],
   activeTab: "screens",
   searchTerm: "",
-  selectedId: null,
-  selectedKind: null,   // "screen" | "window" | null
-  hoveredScreenId: null,
+  selectedId: "",        // source id of the picked screen or window, "" when none
+  selectedKind: "",      // "screen" | "window" | "" when nothing is selected
+  hoveredScreenId: "",   // source id of the hovered/focused screen tile, "" when none
   quality: DEFAULT_QUALITY.id,
 };
 
@@ -40,8 +40,9 @@ function populateQualityMenu() {
   for (const q of QUALITY_OPTIONS) {
     const btn = document.createElement("button");
     btn.type = "button";
+    btn.setAttribute("role", "option");
     btn.dataset.quality = q.id;
-    btn.setAttribute("aria-pressed", q.id === state.quality ? "true" : "false");
+    btn.setAttribute("aria-selected", q.id === state.quality ? "true" : "false");
 
     const label = document.createElement("span");
     label.textContent = q.label;
@@ -66,7 +67,7 @@ function setQuality(id) {
   state.quality = id;
   updateQualityLabel();
   for (const btn of document.querySelectorAll("#quality-menu button")) {
-    btn.setAttribute("aria-pressed", btn.dataset.quality === id ? "true" : "false");
+    btn.setAttribute("aria-selected", btn.dataset.quality === id ? "true" : "false");
   }
 }
 
@@ -76,15 +77,13 @@ function updateQualityLabel() {
 }
 
 function openQualityMenu() {
-  const chip = document.getElementById("quality-chip");
-  chip.classList.add("open");
-  chip.setAttribute("aria-expanded", "true");
+  document.getElementById("quality-chip").classList.add("open");
+  document.getElementById("quality-trigger").setAttribute("aria-expanded", "true");
 }
 
 function closeQualityMenu() {
-  const chip = document.getElementById("quality-chip");
-  chip.classList.remove("open");
-  chip.setAttribute("aria-expanded", "false");
+  document.getElementById("quality-chip").classList.remove("open");
+  document.getElementById("quality-trigger").setAttribute("aria-expanded", "false");
 }
 
 function wireEvents() {
@@ -107,16 +106,11 @@ function wireEvents() {
   }
 
   const qChip = document.getElementById("quality-chip");
-  qChip.addEventListener("click", (e) => {
-    // Clicks inside the menu are handled per-button (with stopPropagation).
-    if (e.target.closest(".menu")) return;
+  const qTrigger = document.getElementById("quality-trigger");
+  qTrigger.addEventListener("click", () => {
     qChip.classList.contains("open") ? closeQualityMenu() : openQualityMenu();
   });
-  qChip.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      qChip.classList.contains("open") ? closeQualityMenu() : openQualityMenu();
-    }
+  qTrigger.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && qChip.classList.contains("open")) {
       e.stopPropagation();
       closeQualityMenu();
@@ -132,15 +126,20 @@ function wireEvents() {
 function onGlobalKeydown(e) {
   if (e.key === "Escape") { cancel(); return; }
 
-  const tag = (e.target?.tagName || "").toLowerCase();
+  const target = e.target;
+  const tag = (target?.tagName || "").toLowerCase();
   const inField = tag === "input" || tag === "select" || tag === "textarea";
+  // Don't let the global Enter / arrow shortcuts fire while the focus is on
+  // the quality chip — Enter and arrow keys belong to the chip's own
+  // popover-menu interaction.
+  const inQuality = !!target?.closest?.("#quality-chip");
 
-  if (e.key === "Enter" && state.selectedId && !inField) {
+  if (e.key === "Enter" && state.selectedId && !inField && !inQuality) {
     shareSelection();
     return;
   }
 
-  if (state.activeTab === "screens" && !inField &&
+  if (state.activeTab === "screens" && !inField && !inQuality &&
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
     e.preventDefault();
     navigateScreensSpatial(e.key);
@@ -349,19 +348,14 @@ function buildScreenTile(item) {
 }
 
 function setHoveredScreen(id) {
-  state.hoveredScreenId = id;
+  state.hoveredScreenId = id || "";
   renderDetail();
 }
 
 function setSelectedScreen(id) {
   state.selectedId = id;
   state.selectedKind = "screen";
-  for (const t of document.querySelectorAll(".screen-tile")) {
-    t.classList.toggle("selected", t.dataset.id === id);
-  }
-  for (const t of document.querySelectorAll(".window-tile")) {
-    t.classList.remove("selected");
-  }
+  applySelectionClasses();
   renderDetail();
   updateShareButton();
 }
@@ -369,49 +363,48 @@ function setSelectedScreen(id) {
 function setSelectedWindow(id) {
   state.selectedId = id;
   state.selectedKind = "window";
-  for (const t of document.querySelectorAll(".window-tile")) {
-    t.classList.toggle("selected", t.dataset.id === id);
-  }
-  for (const t of document.querySelectorAll(".screen-tile")) {
-    t.classList.remove("selected");
-  }
+  applySelectionClasses();
   renderDetail();
   updateShareButton();
 }
 
+function applySelectionClasses() {
+  for (const t of document.querySelectorAll(".screen-tile.selected, .window-tile.selected")) {
+    t.classList.remove("selected");
+  }
+  if (!state.selectedId) return;
+  const sel = state.selectedKind === "screen" ? ".screen-tile" : ".window-tile";
+  const tile = document.querySelector(`${sel}[data-id="${CSS.escape(state.selectedId)}"]`);
+  if (tile) tile.classList.add("selected");
+}
+
 function renderDetail() {
-  const preview = document.getElementById("preview");
-  const placeholder = document.getElementById("preview-placeholder");
-  const specs = document.getElementById("specs");
-  const labelEl = document.getElementById("detail-label");
-  const nameEl = document.getElementById("detail-name");
-
-  for (const node of preview.querySelectorAll("img.thumb, .stamp")) node.remove();
-
-  const showHoverId = state.activeTab === "screens" ? state.hoveredScreenId : null;
-  const selectedScreenId =
-    state.selectedKind === "screen" ? state.selectedId : null;
-  const showId = showHoverId || selectedScreenId;
-
-  if (!showId) {
-    placeholder.hidden = false;
-    specs.hidden = true;
-    nameEl.textContent = "No display selected";
-    labelEl.textContent = "PREVIEW";
-    return;
-  }
-
+  const showId = currentDetailId();
+  if (!showId) { clearDetail(); return; }
   const item = state.screenItems.find((s) => s.source.id === showId);
-  if (!item) {
-    placeholder.hidden = false;
-    specs.hidden = true;
-    nameEl.textContent = "No display selected";
-    labelEl.textContent = "PREVIEW";
-    return;
-  }
+  if (!item) { clearDetail(); return; }
+  populateDetail(item, showId);
+}
 
-  placeholder.hidden = true;
-  specs.hidden = false;
+function currentDetailId() {
+  const hover = state.activeTab === "screens" ? state.hoveredScreenId : "";
+  const selected = state.selectedKind === "screen" ? state.selectedId : "";
+  return hover || selected;
+}
+
+function clearDetail() {
+  removePreviewChildren();
+  document.getElementById("preview-placeholder").hidden = false;
+  document.getElementById("specs").hidden = true;
+  document.getElementById("detail-name").textContent = "No display selected";
+  document.getElementById("detail-label").textContent = "PREVIEW";
+}
+
+function populateDetail(item, showId) {
+  const preview = document.getElementById("preview");
+  removePreviewChildren();
+  document.getElementById("preview-placeholder").hidden = true;
+  document.getElementById("specs").hidden = false;
 
   if (item.source.thumbnailDataUrl?.startsWith("data:")) {
     const img = document.createElement("img");
@@ -425,11 +418,25 @@ function renderDetail() {
   stamp.textContent = `${THUMBNAIL_SIZE.width} × ${THUMBNAIL_SIZE.height}`;
   preview.appendChild(stamp);
 
-  const isSelected = selectedScreenId === showId;
-  const isHover = showHoverId === showId && !isSelected;
-  labelEl.textContent = isSelected ? "PREVIEW · SELECTED" :
-                        isHover ? "PREVIEW · HOVER" : "PREVIEW";
+  document.getElementById("detail-label").textContent = detailLabel(showId);
+  renderDetailName(item);
+  renderDetailSpecs(item);
+}
 
+function removePreviewChildren() {
+  const preview = document.getElementById("preview");
+  for (const node of preview.querySelectorAll("img.thumb, .stamp")) node.remove();
+}
+
+function detailLabel(showId) {
+  const selectedScreenId = state.selectedKind === "screen" ? state.selectedId : "";
+  if (selectedScreenId === showId) return "PREVIEW · SELECTED";
+  if (state.hoveredScreenId === showId) return "PREVIEW · HOVER";
+  return "PREVIEW";
+}
+
+function renderDetailName(item) {
+  const nameEl = document.getElementById("detail-name");
   nameEl.replaceChildren();
   nameEl.append(item.label);
   if (item.internal) {
@@ -438,7 +445,9 @@ function renderDetail() {
     sub.textContent = "Primary display";
     nameEl.appendChild(sub);
   }
+}
 
+function renderDetailSpecs(item) {
   document.getElementById("spec-res").textContent =
     item.bounds ? `${item.bounds.width}×${item.bounds.height}` : "—";
   document.getElementById("spec-hz").textContent =
@@ -539,7 +548,7 @@ function switchTab(tab) {
   if (tab !== "screens" && tab !== "windows") return;
   state.activeTab = tab;
   for (const btn of document.querySelectorAll(".seg button")) {
-    btn.setAttribute("aria-pressed", btn.dataset.tab === tab ? "true" : "false");
+    btn.setAttribute("aria-selected", btn.dataset.tab === tab ? "true" : "false");
   }
   renderActivePane();
   renderDetail();

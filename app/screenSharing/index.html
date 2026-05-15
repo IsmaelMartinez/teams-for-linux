@@ -22,7 +22,7 @@
 
       <div class="seg-row">
         <div class="seg" role="tablist" aria-label="Source type">
-          <button id="tab-screens" type="button" role="tab" aria-pressed="true" data-tab="screens">
+          <button id="tab-screens" type="button" role="tab" aria-selected="true" data-tab="screens">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
               <rect x="1.5" y="2.5" width="13" height="9" rx="1" />
               <path d="M5 14h6M8 11.5V14" />
@@ -30,10 +30,10 @@
             Screens
             <span class="count" id="count-screens">0</span>
           </button>
-          <button id="tab-windows" type="button" role="tab" aria-pressed="false" data-tab="windows">
+          <button id="tab-windows" type="button" role="tab" aria-selected="false" data-tab="windows">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
               <rect x="2.5" y="3.5" width="9" height="9" rx="1" />
-              <rect x="5.5" y="6.5" width="9" height="9" rx="1" fill="var(--bg-shell)" />
+              <rect x="5.5" y="6.5" width="9" height="9" rx="1" style="fill: var(--bg-shell);" />
             </svg>
             Windows
             <span class="count" id="count-windows">0</span>
@@ -96,13 +96,15 @@
 
       <footer class="foot">
         <div class="foot-left">
-          <div class="quality" id="quality-chip" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Quality">
-            <span class="lbl">Quality</span>
-            <span class="val" id="quality-val">1080p</span>
-            <svg class="chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-              <path d="M2 4l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <div class="menu" role="listbox" id="quality-menu"></div>
+          <div class="quality" id="quality-chip">
+            <button class="quality-trigger" id="quality-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Quality">
+              <span class="lbl">Quality</span>
+              <span class="val" id="quality-val">1080p</span>
+              <svg class="chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                <path d="M2 4l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <div class="menu" role="listbox" aria-label="Quality options" id="quality-menu"></div>
           </div>
           <div class="kbd-row">
             <span><kbd>&crarr;</kbd>Share</span>
