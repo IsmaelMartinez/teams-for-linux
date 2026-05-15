@@ -43,11 +43,12 @@ describe('preload.js modulesRequiringIpc Set', () => {
 		);
 	});
 
+	// Extract each quoted string from the Set's argument list. Regex over
+	// split(',') is robust against inline comments, trailing commas, and
+	// whitespace formatting changes inside the array literal.
 	const declaredNames = match
-		? match[1]
-			.split(',')
-			.map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
-			.filter(Boolean)
+		? (match[1].match(/"[^"]*"|'[^']*'/g) || [])
+			.map((s) => s.slice(1, -1))
 		: [];
 
 	for (const name of REQUIRED_MODULES) {

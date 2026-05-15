@@ -50,9 +50,10 @@ test('preload passes ipcRenderer to trayIconRenderer (regression #1902)', async 
     });
 
     // The renderer dispatches synchronously, but the IPC hop is async.
-    // Poll for up to 5 s rather than guessing a fixed delay.
+    // Poll up to 15 s --- successful runs return on the first iteration;
+    // the generous deadline only matters on slow CI runners.
     const captured = await ctx.electronApp.evaluate(async () => {
-      const deadline = Date.now() + 5000;
+      const deadline = Date.now() + 15000;
       while (Date.now() < deadline) {
         if (globalThis.__capturedTrayUpdates.length > 0) {
           return globalThis.__capturedTrayUpdates;
