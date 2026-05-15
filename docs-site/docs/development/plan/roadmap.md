@@ -1,8 +1,8 @@
 # Development Roadmap
 
-**Last Updated:** 2026-05-07
+**Last Updated:** 2026-05-15
 **Current Version:** v2.8.0 shipped (Electron 41.2.1, Chromium 146, Node.js 24); release-please PR [#2505](https://github.com/IsmaelMartinez/teams-for-linux/pull/2505) accumulating changes for v2.10.0
-**Status:** Living Document --- ozone-platform default reset queued for v2.10.x ([PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506), tracking [#2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508)); FIDO2 beta still queued for 2.8.2 or 2.9.0; next focus remains bug fixes, Wayland validation, and dev experience
+**Status:** Living Document --- ozone-platform default reset queued for v2.10.x ([PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506), tracking [#2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508)); screen-share picker redesign in [PR #2542](https://github.com/IsmaelMartinez/teams-for-linux/pull/2542) (CI green, awaiting maintainer merge); FIDO2 beta still queued for 2.8.2 or 2.9.0; next focus remains bug fixes, Wayland validation, and dev experience
 
 This document outlines the development direction for Teams for Linux. It focuses on themes and priorities rather than individual PRs. For live tracking see [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues), [Pull Requests](https://github.com/IsmaelMartinez/teams-for-linux/pulls), and [Releases](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
@@ -61,6 +61,20 @@ The notification lifecycle is now stable ([#2248](https://github.com/IsmaelMarti
 Cross-distro testing shipped in v2.7.9 with Docker-based environments supporting 9 configurations (3 distros x 3 display servers). Authenticated Playwright tests landed in v2.7.10. The infrastructure works well for Ubuntu (7/7 tests pass on X11 and XWayland, 6/6 on Wayland) but Fedora and Debian remain unvalidated. The current focus is closing these gaps and connecting cross-distro testing to the CI pipeline so it gates builds rather than running as a separate manual workflow.
 
 ---
+
+## 2026-05-15 Session Outcomes and Next Up
+
+### Screen-share picker redesign --- PR #2542 awaiting maintainer review
+
+Issue [#2524](https://github.com/IsmaelMartinez/teams-for-linux/issues/2524) (raised by Nathan Neulinger / @nneul) flagged that the bottom-bar picker made multi-monitor screen sharing painful: small thumbnails, generic `Screen 1` / `Screen 2` / `Screen 3` labels, no way to tell which physical display was which without opening each one. A small design spike explored three container shapes (taller bottom bar, full-window modal overlay, separate resizable `BrowserWindow`) under `spike/2524-picker-redesign/`. The full-window modal overlay was chosen and implemented in [PR #2542](https://github.com/IsmaelMartinez/teams-for-linux/pull/2542).
+
+The implementation replaces the 180px bottom-bar `WebContentsView` with a full-window modal overlay containing a 2-row uniform grid of screen tiles, a search-filterable window grid, tabs (Screens / Windows), a Quality dropdown, and Esc/Tab/Enter keyboard shortcuts. Each screen tile shows a number badge, a `MAIN` pill for internal displays, the platform display label, resolution, and scale factor. Screens sort internal-first then by `bounds.y` / `bounds.x` so the user's primary display lands top-left. A new `get-screen-sharing-displays` IPC channel surfaces `screen.getAllDisplays()` info (id, label, internal, bounds, scaleFactor) for tile enrichment; the picker joins this with each source's `display_id` from `desktopCapturer.getSources`. When `display_id` is empty (some Wayland portal setups), tiles fall back to the source's own `name` and sort to the end deterministically.
+
+State at session close: PR #2542 is open at commit `f08b47d`, all CI checks green (lint, e2e, builds for linux x64/arm64/arm, dmg, exe, all snap variants, CodeQL, SonarCloud, snyk), and all six inline review comments have been addressed individually --- four applied (CodeQL backslash escape in `cssEscapeUrl`, stable sort for missing bounds, defaulted Quality fallback, `object-fit: contain` for ultrawide-friendly screen thumbnails) and two deferred (i18n suggestions, deferred because the wrapper has no i18n framework wired up; cross-cutting change for a future PR). The PR carries `closes #2524` so the auto-link fires on merge, but the issue thread itself has not yet been pinged with the PR link --- a courtesy comment on #2524 telling nneul the implementation is up would close the loop sooner.
+
+A fresh claude.ai session was also opened in the browser with the prompt from `spike/2524-picker-redesign/claude-design-prompt.md` on the clipboard, in case visual refinement beyond the spike mockups is wanted. Any output from that session can drop into `app/screenSharing/index.html` and `index.css` in a follow-up PR; the IPC and `StreamSelector` plumbing in #2542 supports any layout the picker chooses to render.
+
+Deferred follow-ups raised in the thread or surfaced by the spike: a user-renameable display alias overlay persisted to `settingsStore` (raised by nneul as the "alias additive to platform label" idea, not implemented in this PR --- needs separate scoping for storage key shape, alias-vs-rename semantics, and a quiet UI for setting the alias inline on a tile), and the cross-cutting i18n pass. Re-invoking `/address-pr-comments 2542` will pick up the loop if fresh review activity lands.
 
 ## 2026-05-07 Session Outcomes and Next Up
 
