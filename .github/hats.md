@@ -18,13 +18,13 @@ Anchors. #2169, #2138, #2529, #2204.
 
 ## internal-regression-network
 
-When to pick. Auth, network, SSO, certificate, or proxy regressions where the symptom started on a specific TFL release the user had already installed, and the chain points at our code rather than the desktop or upstream.
+When to pick. Auth, network, SSO, certificate, or proxy regressions where the symptom started on a specific TFL release the user had already installed, and the chain points at our code rather than the desktop or upstream. Strong temporal signals for this hat are a second reporter filing the same symptom within hours or days (independent confirmation) and merged PRs in the regression window touching the affected subsystem — both are maintainer-side checks the skill performs before drafting; the asks below stay user-facing.
 
 Retrieval filter. labels: authentication, network. keywords: token, refresh, login, sso, certificate, proxy, mitm.
 
 Reasoning posture. causal-narrative.
 
-Phase 1 asks. Working version, broken version, full purge or userData wipe attempted, second reporter present, regression-window release notes inspected.
+Phase 1 asks. Working version (most recent release that did not show the symptom), broken version (current TFL release), whether a full purge or userData wipe was attempted yes/no.
 
 Anchors. #2293.
 
@@ -54,7 +54,7 @@ Anchors. #2335, #2137.
 
 ## packaging
 
-When to pick. Snap, flatpak, AUR, deb, or rpm-specific failures that would not reproduce on other packaging variants and where the fix lives in the package definition rather than the app.
+When to pick. Failures specific to one packaging variant (snap confinement, flatpak portal permissions, AUR build breaks, deb or rpm install paths) where the same TFL version installed via a different packaging would not exhibit the symptom and the fix lives in the package definition rather than the app code. Overlap with `tray-notifications` is real for snap-confined notification cases; pick `packaging` when the discriminator is the package itself, `tray-notifications` when the discriminator is the notification subsystem regardless of packaging.
 
 Retrieval filter. labels: snap, flatpak, aur, deb, rpm. keywords: snap, flatpak, aur, deb, rpm, sandbox, confinement, interface, plug.
 
@@ -90,13 +90,13 @@ Anchors. #2107.
 
 ## auth-network-edge
 
-When to pick. SSO, FIDO2, federated auth, certificate, or network-edge issues that need an end-to-end diagnostic command paste before any hypothesis is worth posting.
+When to pick. SSO, FIDO2, federated auth, certificate, or network-edge issues that need an end-to-end diagnostic command paste before any hypothesis is worth posting. Note on the browser-repro signal: a "yes, reproduces in browser" answer is non-diagnostic on Linux because Chromium-based browsers share OS plumbing with Electron (portals, GTK settings, D-Bus). Treat "Chrome or Brave reproduces" as weak evidence and "Firefox reproduces" as stronger evidence of a TFL- or Microsoft-side cause; the skill applies this interpretation before drafting.
 
 Retrieval filter. labels: authentication. keywords: sso, fido2, certificate, kerberos, intune, oidc, oauth, ssoInTuneEnabled.
 
 Reasoning posture. ambiguous-workaround-menu.
 
-Phase 1 asks. Identity provider and federation chain, ssoInTuneEnabled value, libfido2 version when FIDO2 is in play, browser-repro answer with caveat that Chromium-shared-plumbing makes "yes" non-diagnostic.
+Phase 1 asks. Identity provider and federation chain, ssoInTuneEnabled value, libfido2 version when FIDO2 is in play, browser-repro answer with the specific browser and version tested.
 
 Anchors. #2326, #2364.
 
