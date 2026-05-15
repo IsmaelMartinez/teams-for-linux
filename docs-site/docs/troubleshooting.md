@@ -325,9 +325,9 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 ---
 
-#### Issue: Notifications disappear from the notification centre on GNOME
+#### Issue: Notifications disappear from the notification center on GNOME
 
-**Description:** On GNOME (and some other desktops), system notifications vanish from the notification centre when Teams's in-page purple toast times out, before the user has had a chance to read them. The tray badge counter can also clear at the same time.
+**Description:** On GNOME (and some other desktops), system notifications vanish from the notification center when Teams's in-page purple toast times out, before the user has had a chance to read them. The tray badge counter can also clear at the same time.
 
 **Potential Causes:**
 
@@ -353,7 +353,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux currently launches with `--ozone-platform=x11` by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your `.desktop` file with `--ozone-platform=wayland`. (A switch to `--ozone-platform=auto` is queued via [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506); until that lands, X11 remains the default.)
+Teams for Linux currently launches with `--ozone-platform=x11` by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your `.desktop` file with `--ozone-platform=wayland`. (A switch to `--ozone-platform=auto` is queued via [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506).)
 :::
 
 #### Issue: Blank or black window on Wayland
