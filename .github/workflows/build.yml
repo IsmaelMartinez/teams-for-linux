@@ -76,7 +76,7 @@ jobs:
           retention-days: 7
 
   linux_x64:
-    needs: [lint_and_audit]
+    needs: [lint_and_audit, e2e_tests]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,7 +118,7 @@ jobs:
           compression-level: 6
 
   linux_arm64:
-    needs: [lint_and_audit]
+    needs: [lint_and_audit, e2e_tests]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -160,7 +160,7 @@ jobs:
           compression-level: 6
 
   linux_arm:
-    needs: [lint_and_audit]
+    needs: [lint_and_audit, e2e_tests]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -202,7 +202,7 @@ jobs:
           compression-level: 6
 
   dmg:
-    needs: [lint_and_audit]
+    needs: [lint_and_audit, e2e_tests]
     runs-on: macos-latest
     permissions:
       contents: write
@@ -240,7 +240,7 @@ jobs:
           compression-level: 6
 
   exe:
-    needs: [lint_and_audit]
+    needs: [lint_and_audit, e2e_tests]
     runs-on: windows-latest
     permissions:
       contents: write
