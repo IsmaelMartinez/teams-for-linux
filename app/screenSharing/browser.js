@@ -578,39 +578,50 @@ function showEmptyState(title, body) {
   el.hidden = false;
 }
 
-function navigateScreensSpatial(key) {
-  const items = state.screenItems;
-  if (items.length === 0) return;
+// Picks the candidate whose center is in the requested direction relative
+// to the current tile's center, biased so the dominant axis matches the
+// arrow key (e.g. ArrowLeft requires |dx| > |dy|).
+const SPATIAL_ALIGNERS = {
+  ArrowLeft:  (dx, dy) => dx < 0 && Math.abs(dx) > Math.abs(dy),
+  ArrowRight: (dx, dy) => dx > 0 && Math.abs(dx) > Math.abs(dy),
+  ArrowUp:    (dx, dy) => dy < 0 && Math.abs(dy) > Math.abs(dx),
+  ArrowDown:  (dx, dy) => dy > 0 && Math.abs(dy) > Math.abs(dx),
+};
 
-  const current =
-    (state.selectedKind === "screen" ? state.selectedId : null) ||
-    state.hoveredScreenId ||
-    items[0].source.id;
-  const cur = items.find((i) => i.source.id === current);
+function navigateScreensSpatial(key) {
+  const aligned = SPATIAL_ALIGNERS[key];
+  const items = state.screenItems;
+  if (!aligned || items.length === 0) return;
+
+  const cur = items.find((i) => i.source.id === currentScreenIdForNav(items));
   if (!cur?.bounds) return;
 
+  const best = pickClosestAligned(items, cur, aligned);
+  if (!best) return;
+  const tile = document.querySelector(`.screen-tile[data-id="${CSS.escape(best.source.id)}"]`);
+  tile?.focus();
+}
+
+function currentScreenIdForNav(items) {
+  if (state.selectedKind === "screen" && state.selectedId) return state.selectedId;
+  if (state.hoveredScreenId) return state.hoveredScreenId;
+  return items[0].source.id;
+}
+
+function pickClosestAligned(items, cur, aligned) {
   const cx = cur.bounds.x + cur.bounds.width / 2;
   const cy = cur.bounds.y + cur.bounds.height / 2;
-
   let best = null;
   let bestScore = Infinity;
   for (const candidate of items) {
-    if (candidate.source.id === current || !candidate.bounds) continue;
+    if (candidate.source.id === cur.source.id || !candidate.bounds) continue;
     const dx = (candidate.bounds.x + candidate.bounds.width / 2) - cx;
     const dy = (candidate.bounds.y + candidate.bounds.height / 2) - cy;
-    let aligned = false;
-    if (key === "ArrowLeft"  && dx < 0 && Math.abs(dx) > Math.abs(dy)) aligned = true;
-    if (key === "ArrowRight" && dx > 0 && Math.abs(dx) > Math.abs(dy)) aligned = true;
-    if (key === "ArrowUp"    && dy < 0 && Math.abs(dy) > Math.abs(dx)) aligned = true;
-    if (key === "ArrowDown"  && dy > 0 && Math.abs(dy) > Math.abs(dx)) aligned = true;
-    if (!aligned) continue;
+    if (!aligned(dx, dy)) continue;
     const score = Math.hypot(dx, dy);
     if (score < bestScore) { bestScore = score; best = candidate; }
   }
-  if (best) {
-    const tile = document.querySelector(`.screen-tile[data-id="${CSS.escape(best.source.id)}"]`);
-    tile?.focus();
-  }
+  return best;
 }
 
 function shareSelection() {
