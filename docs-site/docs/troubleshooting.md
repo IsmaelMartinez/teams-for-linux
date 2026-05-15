@@ -325,10 +325,35 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 ---
 
+#### Issue: Notifications disappear from the notification centre on GNOME
+
+**Description:** On GNOME (and some other desktops), system notifications vanish from the notification centre when Teams's in-page purple toast times out, before the user has had a chance to read them. The tray badge counter can also clear at the same time.
+
+**Potential Causes:**
+
+* On the default `web` notification method, Teams's in-page code calls `notification.close()` when its own toast times out. That call propagates through Chromium's DOM `Notification` API to libnotify, which then dismisses the system notification.
+
+**Solutions/Workarounds:**
+
+1. Switch to the `electron` notification method, which keeps the system notification independent of Teams's in-page lifecycle. Optionally also set `notifications.timeoutType: "never"` so notifications persist until you dismiss them:
+
+    ```json
+    {
+      "notificationMethod": "electron",
+      "notifications": { "timeoutType": "never" }
+    }
+    ```
+
+   Known caveat: on the `electron` path, notifications currently render without the sender avatar. The `web` path gets Chromium to fetch the icon URL automatically; the `electron` path expects a data URL. This is tracked as a follow-up.
+
+**Related GitHub Issues:** [#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411)
+
+---
+
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux launches with `--ozone-platform=auto` by default on all Linux packaging formats, letting Chromium pick the best backend for your session (Wayland on a Wayland session, X11 otherwise). If you hit Wayland-specific regressions, you can override this on the command line or in your `.desktop` file with `--ozone-platform=x11`.
+Teams for Linux currently launches with `--ozone-platform=x11` by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your `.desktop` file with `--ozone-platform=wayland`. (A switch to `--ozone-platform=auto` is queued via [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506); until that lands, X11 remains the default.)
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -341,7 +366,7 @@ Teams for Linux launches with `--ozone-platform=auto` by default on all Linux pa
     ```bash
     teams-for-linux --ozone-platform=x11
     ```
-2. **Edit your `.desktop` file** to make the override permanent — replace `--ozone-platform=auto` with `--ozone-platform=x11` in the `Exec=` line.
+2. **Confirm the default sticks:** `--ozone-platform=x11` is the shipped default. If you have previously edited your `.desktop` file, ensure the `Exec=` line still includes `--ozone-platform=x11`.
 
 **Related GitHub Issues:** [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494), [#519](https://github.com/IsmaelMartinez/teams-for-linux/issues/519), [#504](https://github.com/IsmaelMartinez/teams-for-linux/issues/504)
 
@@ -368,7 +393,7 @@ Teams for Linux launches with `--ozone-platform=auto` by default on all Linux pa
     ```bash
     teams-for-linux --ozone-platform=wayland
     ```
-2. **Edit your `.desktop` file** to make the override permanent — replace `--ozone-platform=auto` with `--ozone-platform=wayland` in the `Exec=` line.
+2. **Edit your `.desktop` file** to make the override permanent. Replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
