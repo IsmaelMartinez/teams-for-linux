@@ -138,6 +138,8 @@ Place your `config.json` file in the appropriate location based on your installa
 |--------|------|---------|-------------|
 | `download.enabled` | `boolean` | `false` | Master switch for the download feedback feature. Opt-in while in early development; set to `true` to enable the manager. The sub-flags only take effect when `enabled` is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
+| `download.showProgressBar` | `boolean` | `true` | Drive in-flight feedback through `BrowserWindow.setProgressBar` (macOS / Windows; effectively no-op on Linux), a `com.canonical.Unity.LauncherEntry` D-Bus broadcast that Ubuntu Dock and Dash-to-Dock subscribe to (GNOME / Ubuntu users), and an `org.kde.JobViewServer` per-download view rendered in KDE Plasma's notification widget. The window-title prefix is a separate sub-flag (`showTitlePrefix`). |
+| `download.showTitlePrefix` | `boolean` | `true` | Also prefix the main window title with `[34%]` (or `[downloading]`) while a download is in flight. Every WM/DE renders the window title in its taskbar tooltip / Alt-Tab, so this is a portable fallback for environments where the other channels are unavailable. Set to `false` on KDE / Ubuntu where the JobView / LauncherEntry already shows progress and the title churn is redundant. |
 
 ### Idle & Activity Detection
 

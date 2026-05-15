@@ -159,7 +159,34 @@ const customNotificationManager = new CustomNotificationManager(config, mainAppW
 // feedback unless `session.on('will-download', …)` is wired up. The manager
 // itself attaches to the Teams session inside handleAppReady once the main
 // window has been created (the partition is provisioned at that point).
-const downloadManager = new DownloadManager(config);
+// `mainAppWindow` is passed so the manager can drive the taskbar progress bar.
+// On Linux, wire in two D-Bus emitters that complement each other:
+//   - `jobViewEmitter`: per-download progress in KDE Plasma's notification
+//     widget (same surface users see for Firefox / Dolphin / KIO).
+//   - `launcherEntryEmitter`: aggregate progress on the dock icon for
+//     GNOME/Ubuntu users running Ubuntu Dock or Dash-to-Dock (the largest
+//     Linux DE audience). Bypasses Electron's `setProgressBar` Linux gate.
+// Both degrade to no-op if their respective service isn't on the bus, so
+// non-KDE / non-GNOME setups fall back to the window-title `[N%]` prefix.
+let jobEmitter = null;
+let launcherEmitter = null;
+if (os.platform() === "linux") {
+  try {
+    jobEmitter = require("./downloadManager/jobViewEmitter");
+  } catch (error) {
+    console.warn("[DownloadManager] JobView emitter unavailable", {
+      message: error.message,
+    });
+  }
+  try {
+    launcherEmitter = require("./downloadManager/launcherEntryEmitter");
+  } catch (error) {
+    console.warn("[DownloadManager] LauncherEntry emitter unavailable", {
+      message: error.message,
+    });
+  }
+}
+const downloadManager = new DownloadManager(config, mainAppWindow, jobEmitter, launcherEmitter);
 
 if (isMac) {
   requestMediaAccess();
