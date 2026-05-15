@@ -18,7 +18,7 @@
 
 ## Active Themes
 
-Live state lives in the linked GitHub label or milestone. This section is the orientation map, not the tracker.
+Current status is tracked via the linked GitHub labels. This section serves as an orientation map, not a real-time tracker.
 
 - **Stability and Reliability**: auth recovery, network error scoping, media permission handling. Live: [bug](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Abug).
 - **Media and Calls**: camera and mic handling, speaking indicator, call drops on multi-interface systems. Live: [media](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Amedia), [screen-sharing](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Ascreen-sharing).
@@ -26,7 +26,7 @@ Live state lives in the linked GitHub label or milestone. This section is the or
 - **MQTT Integration**: presence, media state, screen-share, incoming-call topics. Live: [mqtt](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Amqtt).
 - **Notifications**: lifecycle stable; remaining work in [notifications](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Anotifications).
 - **Testing Infrastructure**: cross-distro Docker tests passing for all 9 configurations ([ADR-016](../adr/016-cross-distro-testing-environment.md)); CI integration in progress.
-- **Dev Experience**: release automation via [release-please](https://github.com/googleapis/release-please) shipped; PR template, stale bot tuning, and a project-specific code-reviewer subagent are the next quick wins.
+- **Dev Experience**: PR template, stale bot tuning, and a project-specific code-reviewer subagent are the next quick wins.
 
 ---
 
