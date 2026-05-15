@@ -1,31 +1,67 @@
 :root {
-  --bg-app:        #0e1014;
-  --bg-shell:      #16181f;
-  --bg-shell-2:    #1a1d25;
-  --bg-tile:       #1f2230;
-  --bg-tile-hi:    #262a3a;
-  --bg-input:      #20232d;
+  color-scheme: light dark;
 
-  --ink:           #e7e9ee;
-  --ink-mute:      #aeb3c0;
-  --ink-dim:       #767c8c;
-  --ink-faint:     #515767;
+  /* Light palette is the default. Dark overrides land under
+     @media (prefers-color-scheme: dark) further below, matching the
+     convention used elsewhere in the app (joinMeetingDialog,
+     profileDialogs, etc). */
+  --bg-app:         #eef0f4;
+  --bg-shell:       #ffffff;
+  --bg-shell-2:     #f5f6f8;
+  --bg-tile:        #eef0f3;
+  --bg-tile-hi:     #e2e5ea;
+  --bg-input:       #ffffff;
+  --bg-slot:        #d9dde3;
 
-  --line:          #2a2e3a;
-  --line-strong:   #353a48;
+  --ink:            #1f2125;
+  --ink-mute:       #444851;
+  --ink-dim:        #6c7382;
+  --ink-faint:      #9aa1b0;
+  --ink-on-accent:  #ffffff;
 
-  --accent:        #8a8cd0;
-  --accent-strong: #a3a5e0;
-  --accent-glow:   rgba(138, 140, 208, 0.18);
-  --accent-edge:   rgba(138, 140, 208, 0.55);
+  --line:           #dbdee5;
+  --line-strong:    #c4c9d2;
 
-  --ok:            #6fcf97;
+  --accent:         #6264a7;
+  --accent-strong:  #525299;
+  --accent-glow:    rgba(98, 100, 167, 0.18);
+  --accent-edge:    rgba(98, 100, 167, 0.55);
 
-  --radius:        10px;
-  --radius-sm:     6px;
+  --ok:             #1b8f4c;
+
+  --radius:         10px;
+  --radius-sm:      6px;
 
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app:         #0e1014;
+    --bg-shell:       #16181f;
+    --bg-shell-2:     #1a1d25;
+    --bg-tile:        #1f2230;
+    --bg-tile-hi:     #262a3a;
+    --bg-input:       #20232d;
+    --bg-slot:        #11131a;
+
+    --ink:            #e7e9ee;
+    --ink-mute:       #aeb3c0;
+    --ink-dim:        #767c8c;
+    --ink-faint:      #515767;
+    --ink-on-accent:  #14161b;
+
+    --line:           #2a2e3a;
+    --line-strong:    #353a48;
+
+    --accent:         #8a8cd0;
+    --accent-strong:  #a3a5e0;
+    --accent-glow:    rgba(138, 140, 208, 0.18);
+    --accent-edge:    rgba(138, 140, 208, 0.55);
+
+    --ok:             #6fcf97;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -215,7 +251,7 @@ body {
   position: absolute; inset: 0;
   border-radius: 5px;
   overflow: hidden;
-  background: #11131a;
+  background: var(--bg-slot);
 }
 .screen-tile .face img.thumb {
   position: absolute; inset: 0;
@@ -248,7 +284,9 @@ body {
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
-  color: var(--ink);
+  /* Sits on top of a dark gradient over a thumbnail — keep the text light
+     in both color schemes. */
+  color: #ffffff;
   font: 600 11px/20px var(--mono);
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -269,7 +307,8 @@ body {
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 6px 8px;
   font: 500 11px/1.2 var(--sans);
-  color: var(--ink);
+  /* Always-light text over the dark bottom gradient. */
+  color: #ffffff;
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7));
   z-index: 2;
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
@@ -280,7 +319,7 @@ body {
 .screen-tile .name .res {
   font-family: var(--mono);
   font-size: 9px;
-  color: var(--ink-mute);
+  color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
@@ -300,7 +339,7 @@ body {
   width: 20px; height: 20px;
   border-radius: 4px;
   background: var(--accent-strong);
-  color: #14161b;
+  color: var(--ink-on-accent);
   display: grid; place-items: center;
   z-index: 4;
 }
@@ -361,9 +400,10 @@ body {
   padding: 5px 7px;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
-  color: var(--ink-mute);
+  /* Sits on a darkened overlay over the preview thumbnail in both schemes. */
+  color: rgba(255, 255, 255, 0.85);
   border-radius: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .detail-name {
@@ -417,7 +457,7 @@ body {
 }
 .window-tile .thumb {
   aspect-ratio: 16 / 10;
-  background-color: #0d0f13;
+  background-color: var(--bg-slot);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -466,8 +506,8 @@ body {
   width: 18px; height: 18px; border-radius: 50%;
   background: var(--accent-strong);
   background-image:
-    linear-gradient(135deg, transparent 45%, #14161b 45%, #14161b 50%, transparent 50%),
-    linear-gradient(45deg, transparent 45%, #14161b 45%, #14161b 50%, transparent 50%);
+    linear-gradient(135deg, transparent 45%, var(--ink-on-accent) 45%, var(--ink-on-accent) 50%, transparent 50%),
+    linear-gradient(45deg, transparent 45%, var(--ink-on-accent) 45%, var(--ink-on-accent) 50%, transparent 50%);
   z-index: 3;
 }
 .window-tile:focus-visible { outline-offset: 4px; }
@@ -573,7 +613,7 @@ body {
 .btn-ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
 .btn-primary {
   background: var(--accent);
-  color: #14161b;
+  color: var(--ink-on-accent);
   font-weight: 600;
   box-shadow: 0 0 0 1px var(--accent-strong) inset;
 }

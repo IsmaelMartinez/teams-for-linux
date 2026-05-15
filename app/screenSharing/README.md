@@ -61,6 +61,7 @@ The picker is a modal overlay over the main Teams window. Issue #2524.
 - **Display enrichment:** the picker joins each screen source's `display_id` with `screen.getAllDisplays()` so tiles show the platform-provided display label, the resolution, the scale factor, and a `MAIN` badge for internal displays. Hovering or focusing a tile updates the detail panel with the live thumbnail and a spec list (resolution, refresh rate, scale, position, display number). When `display_id` is empty (some Wayland portal setups), the picker falls back to the source's own `name` and skips the enrichment, so the picker still works.
 - **Selection feedback:** selected tile gains an accent border, glow, and check badge in the top-left; the share button label flips to "Share window" when a window is selected.
 - **Thumbnails:** requested at 640x360 (vs the legacy 320x180) so tiles and the detail preview are readable without further upscaling. Tile thumbnails render with `object-fit: contain` so ultrawide screens stay fully visible.
+- **Colour scheme:** the picker follows `prefers-color-scheme` (light is the base palette in `:root`, dark overrides land under `@media (prefers-color-scheme: dark)`), matching the convention used by `joinMeetingDialog` and the profile dialogs. Tile overlays (number badge, name gradient, preview stamp) keep light text because they sit on top of a dark scrim over the thumbnail in both schemes.
 
 ## Platform Notes
 
