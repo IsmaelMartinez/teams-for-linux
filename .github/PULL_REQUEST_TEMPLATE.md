@@ -15,18 +15,19 @@ Delete sections that don't apply.
 
 <!-- What does this PR change and why? -->
 
-closes #
+closes #NNN
 
 ## Testing
 
 <!--
-How did you verify the change? Tick what applies and add notes.
+How did you verify the change? Tick what applies and add notes. `npm run
+lint` is required before every commit.
 
-  - [ ] `npm run lint`
+  - [ ] `npm run lint` (required)
   - [ ] `npm run test:unit`
   - [ ] `npm run test:e2e`
   - [ ] Ran the app manually (`npm start`) and exercised the affected path
-  - [ ] Cross-distro / packaging build
+  - [ ] Cross-distro / packaging build (`npm run cross-distro`)
 -->
 
 ## Documentation
@@ -36,7 +37,8 @@ List any docs touched in this PR, or note that none were needed.
 
   - [ ] Updated `docs-site/docs/...`
   - [ ] Updated module `README.md`
-  - [ ] Ran `npm run generate-ipc-docs` (IPC channel added or changed)
+  - [ ] Added the new channel to `app/security/ipcValidator.js` and ran `npm run generate-ipc-docs` (IPC channel added or changed)
+  - [ ] No new PII added to logs (see CLAUDE.md "Logging Guidelines")
   - [ ] N/A
 -->
 
