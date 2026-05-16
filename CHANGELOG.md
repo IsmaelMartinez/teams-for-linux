@@ -59,6 +59,10 @@
 * **github:** add pull request template ([#2544](https://github.com/IsmaelMartinez/teams-for-linux/issues/2544)) ([c7f5bb5](https://github.com/IsmaelMartinez/teams-for-linux/commit/c7f5bb5b5837df41502356995359d33b930d88ef))
 * **logging:** demote noisy warns and block MS telemetry beacons ([#2532](https://github.com/IsmaelMartinez/teams-for-linux/issues/2532)) ([84da8c5](https://github.com/IsmaelMartinez/teams-for-linux/commit/84da8c5bf932925fe531f1c2d87480ada4f3fd82))
 
+### Thanks
+
+Big thanks to @app/dependabot, @jayenashar, @jpenberthy for contributing to this release.
+
 ## [2.9.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.8.1...v2.9.0) (2026-05-06)
 
 > **Multi-account is a work-in-progress preview.** The new `multiAccount.enabled` flag (off by default) lets you keep separate Teams sessions in the same window. The Add-profile dialog and the Profiles → Switch-to menu work end-to-end in this release, but the Manage-profiles dialog, the visible top-right switcher pill, and `Ctrl+Shift+1…5` shortcuts are still ahead. Useful to test, but expect rough edges and follow [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495) for ongoing progress.

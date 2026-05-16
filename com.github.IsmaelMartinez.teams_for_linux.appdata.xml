@@ -14,6 +14,41 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.10.0" date="2026-05-16">
+      <description>
+        <ul>
+          <li>downloads: drive taskbar progress bar during downloads (#2512) (#2514)</li>
+          <li>downloads: notify on download completion (#2512) (#2513)</li>
+          <li>multi-account: Manage-profiles dialog with rename + remove (#2510)</li>
+          <li>notifications: add notifications.timeoutType opt-in (#2521)</li>
+          <li>screenSharing: full-window picker overlay with detail panel (#2524) (#2543)</li>
+          <li>triage-bot: seed .github/hats.md taxonomy (#2548)</li>
+          <li>webauthn: FIDO2 hardware security key support for Linux (#802) (#2357)</li>
+          <li>auth: cover MCAS proxy suffix in cookie-domain matching (#2488)</li>
+          <li>customCSS: swallow expected executeJavaScript rejections (#2540)</li>
+          <li>deps: bump transitive mermaid to 11.15.0 (4 medium CVEs) (#2525)</li>
+          <li>downloads: disable QUIC to fix concurrent SharePoint downloads (#2518) (#2520)</li>
+          <li>multi-account: rebind screen-share handler per profile session (#2533) (f980dfc), closes #2529</li>
+          <li>prevent double notification sound and handle dismiss event (#2411) (#2414)</li>
+          <li>restore --ozone-platform=x11 default in package.json (#2511)</li>
+          <li>dialogs: use shared createDialogWindow in JoinMeetingDialog (#2507)</li>
+          <li>claude: add homepage convention (#2519)</li>
+          <li>notifications,wayland: GNOME workaround for #2411, restore ozone x11 default (#2547)</li>
+          <li>roadmap: capture 2026-05-07 ozone-platform default reset session (#2509)</li>
+          <li>roadmap: trim to themes, principles, and parked work (#2539)</li>
+          <li>gate packaging jobs on e2e_tests (#2545)</li>
+          <li>preload: guard modulesRequiringIpc against regression (#1902) (#2546)</li>
+          <li>deps-dev: bump @playwright/test in the minor-and-patch group (#2526)</li>
+          <li>deps: bump @babel/plugin-transform-modules-systemjs in /docs-site (#2517)</li>
+          <li>deps: bump fast-uri from 3.1.0 to 3.1.2 (#2515)</li>
+          <li>deps: bump fast-uri from 3.1.0 to 3.1.2 in /docs-site (#2516)</li>
+          <li>deps: bump ip-address from 10.1.0 to 10.2.0 (#2504)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#2528)</li>
+          <li>github: add pull request template (#2544)</li>
+          <li>logging: demote noisy warns and block MS telemetry beacons (#2532)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.9.0" date="2026-05-06">
       <description>
         <ul>
