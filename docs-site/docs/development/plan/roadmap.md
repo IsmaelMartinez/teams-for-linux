@@ -26,7 +26,7 @@ Current status is tracked via the linked GitHub labels. This section serves as a
 - **MQTT Integration**: presence, media state, screen-share, incoming-call topics. Live: [mqtt](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Amqtt).
 - **Notifications**: lifecycle stable; remaining work in [notifications](https://github.com/IsmaelMartinez/teams-for-linux/issues?q=is%3Aissue+is%3Aopen+label%3Anotifications).
 - **Testing Infrastructure**: cross-distro Docker tests passing for all 9 configurations ([ADR-016](../adr/016-cross-distro-testing-environment.md)); CI integration in progress.
-- **Dev Experience**: PR template, stale bot tuning, and a project-specific code-reviewer subagent are the next quick wins.
+- **Dev Experience**: stale bot tuning and a project-specific code-reviewer subagent are the next quick wins. ([PR template](https://github.com/IsmaelMartinez/teams-for-linux/pull/2544) landed 2026-05-15.)
 
 ---
 
