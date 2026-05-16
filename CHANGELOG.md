@@ -1,5 +1,68 @@
 # Changelog
 
+## [2.10.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.9.0...v2.10.0) (2026-05-16)
+
+
+### Features
+
+* **downloads:** drive taskbar progress bar during downloads ([#2512](https://github.com/IsmaelMartinez/teams-for-linux/issues/2512)) ([#2514](https://github.com/IsmaelMartinez/teams-for-linux/issues/2514)) ([146a736](https://github.com/IsmaelMartinez/teams-for-linux/commit/146a73623dfbc3ddf6b78644ee754767afa05eb1))
+* **downloads:** notify on download completion ([#2512](https://github.com/IsmaelMartinez/teams-for-linux/issues/2512)) ([#2513](https://github.com/IsmaelMartinez/teams-for-linux/issues/2513)) ([a6c89e8](https://github.com/IsmaelMartinez/teams-for-linux/commit/a6c89e822c5bd1d0534cf6c020eb0a6539ec44ad))
+* **multi-account:** Manage-profiles dialog with rename + remove ([#2510](https://github.com/IsmaelMartinez/teams-for-linux/issues/2510)) ([23e1e13](https://github.com/IsmaelMartinez/teams-for-linux/commit/23e1e137d3296b163832530a52a17ad3a7c21b28))
+* **notifications:** add notifications.timeoutType opt-in ([#2521](https://github.com/IsmaelMartinez/teams-for-linux/issues/2521)) ([503a5b9](https://github.com/IsmaelMartinez/teams-for-linux/commit/503a5b9149931cb8b272b7617bf57c2d98369fad))
+* **screenSharing:** full-window picker overlay with detail panel ([#2524](https://github.com/IsmaelMartinez/teams-for-linux/issues/2524)) ([#2543](https://github.com/IsmaelMartinez/teams-for-linux/issues/2543)) ([b04ed4c](https://github.com/IsmaelMartinez/teams-for-linux/commit/b04ed4c65318d106475101012e6ce6d2d329a7d9))
+* **triage-bot:** seed .github/hats.md taxonomy ([#2548](https://github.com/IsmaelMartinez/teams-for-linux/issues/2548)) ([46d1688](https://github.com/IsmaelMartinez/teams-for-linux/commit/46d1688255d9278d084ba165cbcb8496f3a65bd9))
+* **webauthn:** FIDO2 hardware security key support for Linux ([#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802)) ([#2357](https://github.com/IsmaelMartinez/teams-for-linux/issues/2357)) ([6c7664f](https://github.com/IsmaelMartinez/teams-for-linux/commit/6c7664fa5fc7a952db2d2111e1bccb45126e24be))
+
+
+### Bug Fixes
+
+* **auth:** cover MCAS proxy suffix in cookie-domain matching ([#2488](https://github.com/IsmaelMartinez/teams-for-linux/issues/2488)) ([78a1140](https://github.com/IsmaelMartinez/teams-for-linux/commit/78a114066630c1b7abe9709e0d2d899938153ec3))
+* **customCSS:** swallow expected executeJavaScript rejections ([#2540](https://github.com/IsmaelMartinez/teams-for-linux/issues/2540)) ([86ee1cd](https://github.com/IsmaelMartinez/teams-for-linux/commit/86ee1cd53f4b95aedf28d1ce6d356cf2f3abf956))
+* **deps:** bump transitive mermaid to 11.15.0 (4 medium CVEs) ([#2525](https://github.com/IsmaelMartinez/teams-for-linux/issues/2525)) ([a6e5386](https://github.com/IsmaelMartinez/teams-for-linux/commit/a6e5386204761a31f6274122ca8911527245dd6c))
+* **downloads:** disable QUIC to fix concurrent SharePoint downloads ([#2518](https://github.com/IsmaelMartinez/teams-for-linux/issues/2518)) ([#2520](https://github.com/IsmaelMartinez/teams-for-linux/issues/2520)) ([1e78428](https://github.com/IsmaelMartinez/teams-for-linux/commit/1e78428693be182aaabf5df9bccbcd13e962726d))
+* **multi-account:** rebind screen-share handler per profile session ([#2533](https://github.com/IsmaelMartinez/teams-for-linux/issues/2533)) ([f980dfc](https://github.com/IsmaelMartinez/teams-for-linux/commit/f980dfc27dc744f371c79cb6d78f86845bf09ad9)), closes [#2529](https://github.com/IsmaelMartinez/teams-for-linux/issues/2529)
+* prevent double notification sound and handle dismiss event ([#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411)) ([#2414](https://github.com/IsmaelMartinez/teams-for-linux/issues/2414)) ([50ebefe](https://github.com/IsmaelMartinez/teams-for-linux/commit/50ebefe942cc28e187d953a3c64c183aa77489d1))
+* restore --ozone-platform=x11 default in package.json ([#2511](https://github.com/IsmaelMartinez/teams-for-linux/issues/2511)) ([99111fe](https://github.com/IsmaelMartinez/teams-for-linux/commit/99111fe64b24b8dc8b4f484ac60224cc60fe3839))
+
+
+### Code Improvements
+
+* **dialogs:** use shared createDialogWindow in JoinMeetingDialog ([#2507](https://github.com/IsmaelMartinez/teams-for-linux/issues/2507)) ([065ab86](https://github.com/IsmaelMartinez/teams-for-linux/commit/065ab86aebd015aaf64103019f9a77c971bffbb3))
+
+
+### Documentation
+
+* **claude:** add homepage convention ([#2519](https://github.com/IsmaelMartinez/teams-for-linux/issues/2519)) ([8cb04f7](https://github.com/IsmaelMartinez/teams-for-linux/commit/8cb04f7dd9cf6fe24243331c3284367430de03b7))
+* **notifications,wayland:** GNOME workaround for [#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411), restore ozone x11 default ([#2547](https://github.com/IsmaelMartinez/teams-for-linux/issues/2547)) ([5ea08c8](https://github.com/IsmaelMartinez/teams-for-linux/commit/5ea08c8ca2082ac731e336dc417a1e01e37290bc))
+* **roadmap:** capture 2026-05-07 ozone-platform default reset session ([#2509](https://github.com/IsmaelMartinez/teams-for-linux/issues/2509)) ([e1826ef](https://github.com/IsmaelMartinez/teams-for-linux/commit/e1826ef8b371ac43791e24a5601cab33de42b4fa))
+* **roadmap:** trim to themes, principles, and parked work ([#2539](https://github.com/IsmaelMartinez/teams-for-linux/issues/2539)) ([ca1b894](https://github.com/IsmaelMartinez/teams-for-linux/commit/ca1b894af8e0076a830e733ad7496d5a406b38a0))
+
+
+### CI/CD
+
+* gate packaging jobs on e2e_tests ([#2545](https://github.com/IsmaelMartinez/teams-for-linux/issues/2545)) ([a8e687e](https://github.com/IsmaelMartinez/teams-for-linux/commit/a8e687e969bc7e859303e1d0507213b315761ca5))
+
+
+### Testing
+
+* **preload:** guard modulesRequiringIpc against regression ([#1902](https://github.com/IsmaelMartinez/teams-for-linux/issues/1902)) ([#2546](https://github.com/IsmaelMartinez/teams-for-linux/issues/2546)) ([467e1e4](https://github.com/IsmaelMartinez/teams-for-linux/commit/467e1e45501676826c675b488bf421ce54ea1f41))
+
+
+### Maintenance
+
+* **deps-dev:** bump @playwright/test in the minor-and-patch group ([#2526](https://github.com/IsmaelMartinez/teams-for-linux/issues/2526)) ([475b3f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/475b3f3819715b9b4be672a2be74dbfdd98ead42))
+* **deps:** bump @babel/plugin-transform-modules-systemjs in /docs-site ([#2517](https://github.com/IsmaelMartinez/teams-for-linux/issues/2517)) ([52d49ff](https://github.com/IsmaelMartinez/teams-for-linux/commit/52d49ffc28a07b653f2d3fd751ee984b3789ca7c))
+* **deps:** bump fast-uri from 3.1.0 to 3.1.2 ([#2515](https://github.com/IsmaelMartinez/teams-for-linux/issues/2515)) ([acf4815](https://github.com/IsmaelMartinez/teams-for-linux/commit/acf4815fe4044540f366018f55205555b5d0034f))
+* **deps:** bump fast-uri from 3.1.0 to 3.1.2 in /docs-site ([#2516](https://github.com/IsmaelMartinez/teams-for-linux/issues/2516)) ([69ef30c](https://github.com/IsmaelMartinez/teams-for-linux/commit/69ef30cdae94e53ce1da1d8df61fb22bf84d454f))
+* **deps:** bump ip-address from 10.1.0 to 10.2.0 ([#2504](https://github.com/IsmaelMartinez/teams-for-linux/issues/2504)) ([c036c09](https://github.com/IsmaelMartinez/teams-for-linux/commit/c036c0976190be3e62a5ad44f06de82b2350c59e))
+* **deps:** bump the minor-and-patch group in /docs-site with 2 updates ([#2528](https://github.com/IsmaelMartinez/teams-for-linux/issues/2528)) ([93ae5b7](https://github.com/IsmaelMartinez/teams-for-linux/commit/93ae5b735fbab47dbc053f6d662982ba00c7c463))
+* **github:** add pull request template ([#2544](https://github.com/IsmaelMartinez/teams-for-linux/issues/2544)) ([c7f5bb5](https://github.com/IsmaelMartinez/teams-for-linux/commit/c7f5bb5b5837df41502356995359d33b930d88ef))
+* **logging:** demote noisy warns and block MS telemetry beacons ([#2532](https://github.com/IsmaelMartinez/teams-for-linux/issues/2532)) ([84da8c5](https://github.com/IsmaelMartinez/teams-for-linux/commit/84da8c5bf932925fe531f1c2d87480ada4f3fd82))
+
+### Thanks
+
+Big thanks to @app/dependabot, @jayenashar, @jpenberthy for contributing to this release.
+
 ## [2.9.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.8.1...v2.9.0) (2026-05-06)
 
 > **Multi-account is a work-in-progress preview.** The new `multiAccount.enabled` flag (off by default) lets you keep separate Teams sessions in the same window. The Add-profile dialog and the Profiles → Switch-to menu work end-to-end in this release, but the Manage-profiles dialog, the visible top-right switcher pill, and `Ctrl+Shift+1…5` shortcuts are still ahead. Useful to test, but expect rough edges and follow [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495) for ongoing progress.
