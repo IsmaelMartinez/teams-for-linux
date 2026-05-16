@@ -15,12 +15,15 @@ function makeStatsReport(audioLevel) {
 
 let createdPeerConnections = [];
 let getStatsFn = async () => makeStatsReport(0);
+let audioTrackEnabled = true;
 
 function setupGlobals() {
 	createdPeerConnections = [];
+	audioTrackEnabled = true;
 	const originalRTC = function RTCPeerConnection() {
 		this.connectionState = 'connected';
 		this.getStats = (...args) => getStatsFn.call(this, ...args);
+		this.getSenders = () => [{ track: { kind: 'audio', get enabled() { return audioTrackEnabled; } } }];
 		createdPeerConnections.push(this);
 	};
 	originalRTC.prototype = {};
@@ -65,6 +68,7 @@ function cleanup() {
 	delete globalThis.RTCPeerConnection;
 	delete globalThis.document;
 	getStatsFn = async () => makeStatsReport(0);
+	audioTrackEnabled = true;
 }
 
 describe('SpeakingIndicator', () => {
@@ -220,6 +224,106 @@ describe('SpeakingIndicator', () => {
 			globalThis.document.body.appendChild.mock.calls.length,
 			0,
 			'overlay should not appear when only MQTT is enabled (no visual indicator)'
+		);
+	});
+
+	it('forwards microphone state via ipcRenderer when audio level changes (#1938 / #2465)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		assert.ok(micCalls.length > 0, 'should send microphone-state-changed at least once');
+		assert.strictEqual(micCalls[0].arguments[1], 'speaking', 'first state should be speaking when audioLevel >= threshold');
+	});
+
+	it('emits microphone-state-changed=off when all connections close (#1938 / #2465)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		closePeerConnections();
+		await new Promise(r => setTimeout(r, 200));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		assert.strictEqual(
+			micCalls[micCalls.length - 1].arguments[1],
+			'off',
+			'last microphone-state-changed payload should be "off" after connections close'
+		);
+	});
+
+	it('does not emit microphone-state-changed when ipcRenderer is missing', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const { instance } = loadSpeakingIndicator();
+		// init without ipcRenderer (overlay-only path) should be safe
+		instance.init({ media: { microphone: { speakingIndicator: true } } });
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 200));
+
+		// Implicit assertion: no throws above. Nothing else to check since there is no ipcRenderer to inspect.
+	});
+
+	it('emits muted when audio sender track is disabled, regardless of audioLevel (#2465)', async () => {
+		setupGlobals();
+		// audioLevel reads zero (would have read as muted under the old logic),
+		// but the second signal (track.enabled = false) is the authoritative one.
+		audioTrackEnabled = false;
+		getStatsFn = async () => makeStatsReport(0);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 300));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		const states = micCalls.map(c => c.arguments[1]);
+		assert.ok(
+			states.includes('muted'),
+			`should emit muted when track.enabled is false, got: ${states.join(',')}`
+		);
+	});
+
+	it('does not emit muted when track is enabled and audioLevel reads zero (#2465 false-positive guard)', async () => {
+		setupGlobals();
+		// Quiet mic: audioLevel reads zero but track is still enabled. Must
+		// report silent, not muted (this was the #2465 regression).
+		audioTrackEnabled = true;
+		getStatsFn = async () => makeStatsReport(0);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		await new Promise(r => setTimeout(r, 600));
+
+		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
+		const states = micCalls.map(c => c.arguments[1]);
+		assert.ok(
+			!states.includes('muted'),
+			`should not emit muted while audioLevel is zero but track is enabled, got: ${states.join(',')}`
+		);
+		assert.ok(
+			states.includes('silent'),
+			`should emit silent in this case, got: ${states.join(',')}`
 		);
 	});
 });
