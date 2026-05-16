@@ -55,7 +55,8 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 
     data = data.replaceAll("`", String.raw`\u0060`);
 
-    webFrame.executeJavaScript(`
+    webFrame
+      .executeJavaScript(`
 			if(!document.getElementById("${customCssId}")) {
 				const style = document.createElement('style');
 				style.id = "${customCssId}";
@@ -63,6 +64,13 @@ function applyCustomCSSToFrame(webFrame, cssLocation) {
 				style.textContent = ${JSON.stringify(data)};
 				document.head.appendChild(style);
 			}
-		`);
+		`)
+      .catch((err) => {
+        // Sandboxed about:blank frames (Office Online paste) and frames
+        // disposed mid-flight reject here. Both are expected; swallow so
+        // the rejection does not trip the main-process unhandledRejection
+        // handler in app/index.js and terminate the app.
+        console.debug("[customCSS] executeJavaScript rejected:", err);
+      });
   });
 }
