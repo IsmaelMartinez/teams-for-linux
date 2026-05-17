@@ -69,6 +69,7 @@
     ctx.textBaseline = "middle";
     ctx.fillText("SPIKE", 32, 32);
     const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+    if (!blob) throw new Error("canvas.toBlob returned null — cannot generate test PNG");
     const buf = await blob.arrayBuffer();
     return { blob, buf, dataUrl: canvas.toDataURL("image/png") };
   }
@@ -140,8 +141,18 @@
     });
     console.log("event.isTrusted (will be false):", ev.isTrusted);
 
+    // Snapshot the before-state: child count, innerHTML length, AND the set of
+    // blob/data image srcs under the compose root. The image-count delta is the
+    // actual signal — counting absolute images would false-positive on any pre-
+    // existing attachment or chat-history image the selector happens to catch.
+    const composeRoot = el.closest('[role="region"], [data-tid*="message"]') || el.parentElement;
+    const snapshotImageSrcs = (root) => {
+      if (!root) return new Set();
+      return new Set(Array.from(root.querySelectorAll('img[src^="blob:"], img[src^="data:"]')).map(i => i.src));
+    };
     const beforeChildCount = el.children.length;
     const beforeHtml = el.innerHTML.length;
+    const beforeImgSrcs = snapshotImageSrcs(composeRoot);
     const dispatched = el.dispatchEvent(ev);
     console.log("dispatchEvent returned:", dispatched, "(true means not cancelled)");
     console.log("event.defaultPrevented:", ev.defaultPrevented);
@@ -151,17 +162,17 @@
 
     const afterChildCount = el.children.length;
     const afterHtml = el.innerHTML.length;
+    const afterImgSrcs = snapshotImageSrcs(composeRoot);
     console.log("compose children: before=", beforeChildCount, "after=", afterChildCount);
     console.log("compose innerHTML length: before=", beforeHtml, "after=", afterHtml);
 
-    // Try to locate an inserted image anywhere under the compose ancestor chain.
-    const composeRoot = el.closest('[role="region"], [data-tid*="message"]') || el.parentElement;
-    const insertedImgs = composeRoot ? composeRoot.querySelectorAll('img[src^="blob:"], img[src^="data:"]') : [];
-    console.log("inserted blob/data images under compose root:", insertedImgs.length);
-    insertedImgs.forEach((img, i) => console.log(`  [${i}]`, img.src.slice(0, 80) + "...", img));
+    // New images = post-snapshot srcs that were not in the pre-snapshot.
+    const newImgSrcs = Array.from(afterImgSrcs).filter(s => !beforeImgSrcs.has(s));
+    console.log("blob/data images before:", beforeImgSrcs.size, "after:", afterImgSrcs.size, "newly inserted:", newImgSrcs.length);
+    newImgSrcs.forEach((src, i) => console.log(`  [${i}]`, src.slice(0, 80) + "..."));
 
-    // Verdict heuristic.
-    if (insertedImgs.length > 0 || afterHtml > beforeHtml + 50) {
+    // Verdict heuristic — only the delta matters; never count absolute presence.
+    if (newImgSrcs.length > 0 || afterHtml > beforeHtml + 50) {
       console.log("%c[STICKER-SPIKE] Phase 1 likely SUCCESS — image appears in compose. Verify visually, then try to send the message.", "color: #3fb950; font-weight: bold;");
     } else if (ev.defaultPrevented) {
       console.log("%c[STICKER-SPIKE] Phase 1 PARTIAL — Teams handler called preventDefault(), so it saw the event. But no inserted image detected. The handler may be reading clipboardData.files differently than we provided, or may be filtering on isTrusted. Inspect the handler source via Sources > Event Listeners.", "color: #d29922; font-weight: bold;");
