@@ -55,14 +55,18 @@ Try the cheap path first. The pasteable harness in `devtools-paste-test.js` does
 3. Watch the console for the result. The harness logs whether the listener fired (and what `event.defaultPrevented` reads after), and whether an image element actually landed in the compose surface 250ms later.
 4. If an image lands and is sendable, this is the path. Skip Phase 2.
 
-### Phase 2: clipboard.writeImage + synthetic Ctrl+V (if Phase 1 fails)
+### Phase 2: clipboard.writeImage + synthetic paste-keystroke (if Phase 1 fails)
 
 Falls back to the spec-aligned path. Requires main-process IPC because `clipboard.writeImage` and `sendInputEvent` are main-process APIs.
 
-1. Add an IPC handler `paste-image-as-keystroke` that takes a PNG path (or buffer), saves the current `clipboard.readImage()`, writes the new image, dispatches Ctrl+V at the focused webContents, then restores the saved clipboard after a short delay (so Teams's paste pipeline has time to read it).
+1. Add an IPC handler `paste-image-as-keystroke` that takes a PNG path (or buffer) and:
+   - Snapshots the existing clipboard contents across all relevant formats — not just `clipboard.readImage()`. The minimum format set to preserve is text, HTML, RTF, bookmark, and image (use `clipboard.readText`, `readHTML`, `readRTF`, `readBookmark`, `readImage`, plus `clipboard.readBuffer(format)` for any custom MIME types the user might have). `readImage()`-then-`writeImage()` alone would silently destroy text or file clipboards, which is unacceptable for a feature the user invokes mid-conversation.
+   - Calls `clipboard.writeImage(nativeImage)` with the sticker.
+   - Dispatches a synthetic paste keystroke at the focused webContents via `sendInputEvent`. The modifier is **platform-aware**: `meta` on macOS, `control` on Linux and Windows (`process.platform === 'darwin' ? 'meta' : 'control'`). Hardcoding `control` would no-op on macOS where the wrapper also ships.
+   - Restores the snapshotted clipboard contents after a short delay (~200ms is the rough lower bound for Teams's paste pipeline to have read; tune empirically).
 2. The harness's "Phase 2: keystroke paste" button calls this IPC and waits for confirmation.
 3. Verify the image lands in compose and survives the send.
-4. Verify the system clipboard is restored to its prior contents (test with text and image clipboard states).
+4. Verify the system clipboard is restored to its prior contents — test all four states: text-only, HTML-formatted text, image-only, and file-path (Linux) / file-list (macOS/Windows). Any format that round-trips for a real user copy must round-trip here.
 
 ### Phase 3: decision
 
