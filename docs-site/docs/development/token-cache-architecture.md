@@ -1,6 +1,6 @@
 # Token Cache Architecture
 
-<!-- toc -->
+{/* toc */}
 
 ## Overview
 

@@ -15,15 +15,21 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const AddProfileDialog = require("../profileDialogs/addProfile");
+const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
-  constructor(window, configGroup, iconPath, connectionManager) {
+  #preJoinUrl = null;
+  #profileChangeHandler = null;
+
+  constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.connectionManager = connectionManager;
+    this.profilesManager = profilesManager;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
@@ -31,6 +37,19 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
+    // Only allocate the Add-profile / Manage-profiles dialogs when multi-
+    // account is enabled. The Profiles menu entries that trigger them are
+    // themselves gated on the same flag, so with the flag off these objects
+    // are never reachable from the UI.
+    const multiAccountReady =
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled;
+    this.addProfileDialog = multiAccountReady
+      ? new AddProfileDialog(this.window, this.profilesManager)
+      : null;
+    this.manageProfileDialog = multiAccountReady
+      ? new ManageProfileDialog(this.window, this.profilesManager)
+      : null;
     this.initialize();
   }
 
@@ -141,6 +160,38 @@ class Menus {
 
     this.initializeEventHandlers();
 
+    // Phase 1c.2: rebuild the menu when ProfilesManager state changes
+    // (add/remove/switch/update) so the Profiles submenu and the active-
+    // profile checkmark stay in sync. Listener subscription is gated on
+    // the multi-account flag — with the flag off, ProfilesManager events
+    // would never fire and the Profiles submenu is not in the template.
+    if (
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled
+    ) {
+      this.#profileChangeHandler = () => this.updateMenu();
+      this.profilesManager.on("add", this.#profileChangeHandler);
+      this.profilesManager.on("remove", this.#profileChangeHandler);
+      this.profilesManager.on("switch", this.#profileChangeHandler);
+      this.profilesManager.on("update", this.#profileChangeHandler);
+
+      // Detach the listeners when the window is destroyed so the
+      // long-lived ProfilesManager (a process-wide singleton) does not
+      // hold references into a stale Menus instance if the window is
+      // ever recreated. `once` because the window is destroyed exactly
+      // once. Mirrors `ProfileViewManager.initialize`'s `mainWindow.once(
+      // 'closed', () => this.dispose())` pattern from PR #2483.
+      this.window.once("closed", () => {
+        if (this.#profileChangeHandler) {
+          this.profilesManager.off("add", this.#profileChangeHandler);
+          this.profilesManager.off("remove", this.#profileChangeHandler);
+          this.profilesManager.off("switch", this.#profileChangeHandler);
+          this.profilesManager.off("update", this.#profileChangeHandler);
+          this.#profileChangeHandler = null;
+        }
+      });
+    }
+
     if (this.configGroup.startupConfig.trayIconEnabled) {
       this.tray = new Tray(
         this.window,
@@ -198,6 +249,29 @@ class Menus {
         message: "Settings file not found. Using default settings.",
         title: "Restore settings",
         type: "warning",
+      });
+    }
+  }
+
+  addProfile() {
+    this.addProfileDialog?.show();
+  }
+
+  manageProfiles() {
+    this.manageProfileDialog?.show();
+  }
+
+  // Switch the active profile via ProfilesManager. The emitter then fires
+  // `switch` and the menu rebuilds via the listener wired in initialize().
+  // ProfileViewManager's own listener (in app/mainAppWindow/profileViewManager.js)
+  // handles the actual WebContentsView visibility swap.
+  switchProfile(id) {
+    try {
+      this.profilesManager.switch(id);
+    } catch (error) {
+      console.error("[Menus] switchProfile failed", {
+        id,
+        message: error.message,
       });
     }
   }
@@ -298,14 +372,81 @@ class Menus {
     });
   }
 
-  joinMeetingWithUrl(meetingUrl) {
+  async joinMeetingWithUrl(meetingUrl) {
     try {
-      this.window.webContents.loadURL(meetingUrl);
+      // Validate the incoming URL up front so a parse failure or a
+      // non-matching URL falls through to the outer catch rather than
+      // ending up assigned raw inside the Teams window.
+      const parsed = new URL(meetingUrl);
+      if (!this.#isMeetingUrl(meetingUrl)) {
+        throw new Error('Not a recognised meeting URL');
+      }
+
+      // Snapshot the current Teams URL so the user can jump back after the
+      // meeting ends (see #2322). Skip the snapshot if we're already on a
+      // meeting URL (e.g. a prior takeover page) so repeat joins don't
+      // overwrite the last known good Teams location.
+      const currentUrl = this.window.webContents.getURL();
+      if (!this.#isMeetingUrl(currentUrl)) {
+        this.#preJoinUrl = currentUrl;
+      }
+
+      // Navigate inside the loaded Teams SPA (same-origin) so the app shell
+      // is preserved when the org allows authenticated join. Only rewrite
+      // to the current origin when the current page is actually on a Teams
+      // host; otherwise (login page, error page) navigate to the URL as-is.
+      const target = this.#isValidTeamsUrl(currentUrl)
+        ? new URL(currentUrl).origin + parsed.pathname + parsed.search + parsed.hash
+        : parsed.href;
+      const script = `window.location.assign(${JSON.stringify(target)});`;
       this.window.show();
       this.window.focus();
-    } catch (error) {
-      console.error('Error loading meeting URL:', error);
+      await this.window.webContents.executeJavaScript(script, true);
+    } catch {
+      // Avoid logging the error object: URL query parameters may contain tokens.
+      console.error('[JOIN_MEETING] Failed to navigate to meeting URL');
       dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
+    }
+  }
+
+  async returnToTeams() {
+    const fallbackUrl = this.configGroup.startupConfig.url;
+    const target = this.#isValidTeamsUrl(this.#preJoinUrl)
+      ? this.#preJoinUrl
+      : fallbackUrl;
+    try {
+      this.window.show();
+      this.window.focus();
+      await this.window.webContents.loadURL(target, {
+        userAgent: this.configGroup.startupConfig.chromeUserAgent,
+      });
+    } catch {
+      console.error('[RETURN_TO_TEAMS] Navigation failed');
+      dialog.showErrorBox('Error', 'Failed to return to Teams.');
+    }
+  }
+
+  #isMeetingUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    const pattern = this.configGroup.startupConfig.meetupJoinRegEx;
+    if (!pattern) return false;
+    try {
+      return new RegExp(pattern).test(url);
+    } catch {
+      return false;
+    }
+  }
+
+  #isValidTeamsUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    try {
+      const { protocol, hostname } = new URL(url);
+      return (
+        protocol === 'https:' &&
+        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname)
+      );
+    } catch {
+      return false;
     }
   }
 

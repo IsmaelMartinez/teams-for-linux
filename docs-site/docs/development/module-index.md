@@ -39,10 +39,11 @@ User-facing features and integrations.
 | **Notifications** | `app/notifications/` | Native desktop notifications & sound playback | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/notifications/README.md) |
 | **Notification System** | `app/notificationSystem/` | Custom in-app toast notifications | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/notificationSystem/README.md) |
 | **Incoming Call Toast** | `app/incomingCallToast/` | Call notification toasts | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/incomingCallToast/README.md) |
+| **Download Manager** | `app/downloadManager/` | Surfaces file download lifecycle as system notifications ([#2512](https://github.com/IsmaelMartinez/teams-for-linux/issues/2512)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/downloadManager/README.md) |
 | **InTune SSO** | `app/intune/` | Microsoft InTune single sign-on integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/intune/README.md), [User Guide](../intune-sso.md) |
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
 | **Graph API** | `app/graphApi/` | Microsoft Graph API integration for calendar and mail | [Research](./research/graph-api-integration-research.md) |
-| **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Visual overlay showing microphone state during calls (speaking/silent/muted) via RTCPeerConnection.getStats() | [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |
+| **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Visual overlay showing microphone state during calls (speaking/silent/muted) via RTCPeerConnection.getStats(). Also provides WebRTC-based call state fallback for reliable MQTT in-call detection ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)). | [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |
 
 ## System Integration Modules
 

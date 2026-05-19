@@ -1,8 +1,8 @@
 # System Performance Research
 
 :::info Research Status
-**Status:** Research complete, ready for implementation
-**Date:** 2026-03-18
+**Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically during the v2.7.x / v2.8.x lines per the [roadmap](../plan/roadmap.md).
+**Date:** 2026-03-18 (last reviewed 2026-05-06)
 **Scope:** Renderer process overhead, main process I/O, network resilience, and resource management
 :::
 

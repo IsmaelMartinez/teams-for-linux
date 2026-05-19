@@ -97,6 +97,17 @@ The speaking indicator currently works independently of MQTT — users can enabl
 
 Both features need to be enabled for MQTT microphone state to work: `media.microphone.speakingIndicator=true` AND `mqtt.enabled=true`. This should be documented in the configuration reference.
 
+### WebRTC-Based Call State Fallback (#2358)
+
+As of the #2358 fix, `speakingIndicator.js` also emits `call-connected` and `call-disconnected` events through `activityHub` when RTCPeerConnection state changes. This provides a reliable fallback for in-call detection when Teams' React `commandChangeReportingService` doesn't fire (e.g., hanging up from the popup window).
+
+The RTCPeerConnection patching now activates when **either** feature is enabled:
+
+- `media.microphone.speakingIndicator=true` (visual overlay + call detection)
+- `mqtt.enabled=true` (call detection only, no overlay)
+
+This means MQTT users get reliable in-call detection even without enabling the visual speaking indicator overlay. The coupling is intentional: the same WebRTC monitoring serves both features.
+
 ---
 
 ## Why Not the Original Phase 2 Approach

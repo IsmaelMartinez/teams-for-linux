@@ -182,6 +182,12 @@ function createNotificationStub() {
 
 // Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {
+  // Skip renderer-side sound for "electron" method — the main process
+  // notification service already plays the sound before showing the notification.
+  const method = notificationConfig?.notificationMethod || "web";
+  if (method === "electron") {
+    return;
+  }
   if (globalThis.electronAPI?.playNotificationSound) {
     try {
       console.debug("Requesting application to play sound");
@@ -216,15 +222,33 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
-  // Use Electron notification
+  const notificationId = crypto.randomUUID();
+  const stub = createNotificationStub();
+  let closed = false;
+  // Bridge the close event from the main process so Teams knows when
+  // the system dismisses the notification (e.g. GNOME timeout).
+  // Idempotent so stub.close() and the IPC arrival can each trigger it.
+  const finalizeClose = () => {
+    if (closed) return;
+    closed = true;
+    ipcRenderer.removeListener("notification-closed", onClosed);
+    if (stub.onclose) stub.onclose();
+  };
+  const onClosed = (_event, closedId) => {
+    if (closedId !== notificationId) return;
+    finalizeClose();
+  };
+  stub.close = finalizeClose;
   if (globalThis.electronAPI?.showNotification) {
-    try {
-      globalThis.electronAPI.showNotification(options);
-    } catch (e) {
-      console.debug("showNotification failed", e);
-    }
+    ipcRenderer.on("notification-closed", onClosed);
+    globalThis.electronAPI
+      .showNotification({ ...options, notificationId })
+      .catch((e) => {
+        ipcRenderer.removeListener("notification-closed", onClosed);
+        console.debug("showNotification failed", e);
+      });
   }
-  return createNotificationStub();
+  return stub;
 }
 
 function createCustomNotification(title, options) {
@@ -280,8 +304,14 @@ function createCustomNotification(title, options) {
     options.icon = options.icon || ICON_BASE64;
     options.title = options.title || title;
     options.type = options.type || "new-message";
-    // Explicitly set false for Ubuntu Unity DE auto-close. Others are unaffected.
-    options.requireInteraction = false;
+    // Default Ubuntu Unity DE auto-closes. Users on GNOME and similar can opt
+    // into persistent notifications via `notifications.timeoutType: "never"`
+    // (issue #2411). Mirrors Electron's Notification timeoutType.
+    options.timeoutType =
+      notificationConfig?.notifications?.timeoutType === "never"
+        ? "never"
+        : "default";
+    options.requireInteraction = options.timeoutType === "never";
 
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
@@ -344,9 +374,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "settings", path: "./tools/settings" },
       { name: "theme", path: "./tools/theme" },
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
+      { name: "webauthnOverride", path: "./tools/webauthnOverride" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
+      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "speakingIndicator", path: "./tools/speakingIndicator" },
       { name: "cameraResolution", path: "./tools/cameraResolution" },
@@ -356,7 +388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"]);
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "webauthnOverride"]);
 
     let successCount = 0;
     for (const module of modules) {

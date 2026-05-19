@@ -8,7 +8,7 @@
 
 **Tech Stack:** GitHub Actions, Docker, Bash, existing cross-distro Dockerfiles and start scripts
 
-**Spec:** `docs-site/docs/development/research/cross-distro-ci-smoke-test-design.md`
+**Spec:** Original design spec was archived after the workflow shipped; this plan and the live workflow at `.github/workflows/cross-distro-smoke.yml` are the authoritative references.
 
 ---
 

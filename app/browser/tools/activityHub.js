@@ -18,6 +18,27 @@ class ActivityHub {
     return removeEventHandler(event, handle);
   }
 
+  /**
+   * Emit an event externally (e.g. from WebRTC-based call detection).
+   * This allows modules like speakingIndicator to trigger call-connected /
+   * call-disconnected when the React-based detection misses a state change.
+   */
+  emit(event, data) {
+    if (!isSupportedEvent(event)) {
+      return;
+    }
+    const handlers = getEventHandlers(event);
+    for (const handler of handlers) {
+      try {
+        Promise.resolve(handler.handler(data || {})).catch((err) => {
+          console.error(`ActivityHub: handler for '${event}' threw:`, err);
+        });
+      } catch (err) {
+        console.error(`ActivityHub: handler for '${event}' threw:`, err);
+      }
+    }
+  }
+
   start() {
     let attemptCount = 0;
     const maxAttempts = 12; // Try for up to 2 minutes

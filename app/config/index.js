@@ -273,6 +273,17 @@ function extractYargConfig(configObject, appVersion) {
           "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
         type: "boolean",
       },
+      download: {
+        default: {
+          enabled: false,
+          notifyOnDownloadComplete: true,
+          showProgressBar: true,
+          showTitlePrefix: true,
+        },
+        describe:
+          "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. All sub-flags only take effect when enabled is true.",
+        type: "object",
+      },
       disableNotifications: {
         default: false,
         describe: "A flag to disable all notifications",
@@ -294,6 +305,14 @@ function extractYargConfig(configObject, appVersion) {
         describe:
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
+      },
+      notifications: {
+        default: {
+          timeoutType: "default",
+        },
+        describe:
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon.",
+        type: "object",
       },
       disableBadgeCount: {
         default: false,
@@ -419,6 +438,7 @@ function extractYargConfig(configObject, appVersion) {
       network: {
 	default: {
 		webRTCIPHandlingPolicy: null,
+		disableQuic: true,
 	},
       	describe:
 	  "Network configuration. " +
@@ -426,7 +446,10 @@ function extractYargConfig(configObject, appVersion) {
     	  "Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route " +
     	  "(e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. " +
     	  "Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. " +
-    	  "Disabled by default (opt-in).",
+    	  "Disabled by default (opt-in). " +
+    	  "disableQuic: Append Chromium's --disable-quic switch at startup. Defaults to true to work around issue #2518 " +
+    	  "(concurrent SharePoint downloads abort with ERR_QUIC_PROTOCOL_ERROR on the shared QUIC session). Set to false " +
+    	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
 	type: "object",
       },
       screenLockInhibitionMethod: {
@@ -507,7 +530,11 @@ function extractYargConfig(configObject, appVersion) {
       },
       media: {
         default: {
-          microphone: { disableAutogain: false, speakingIndicator: false },
+          microphone: {
+            disableAutogain: false,
+            speakingIndicator: false,
+            overrideConstraints: { enabled: false },
+          },
           camera: {
             resolution: { enabled: false, mode: "remove" },
             autoAdjustAspectRatio: { enabled: false },
@@ -528,6 +555,11 @@ function extractYargConfig(configObject, appVersion) {
           statusTopic: "status",
           commandTopic: "",
           statusCheckInterval: 10000,
+          homeAssistant: {
+            enabled: false,
+            discoveryPrefix: "homeassistant",
+            deviceName: "Teams for Linux",
+          },
         },
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",
@@ -552,8 +584,20 @@ function extractYargConfig(configObject, appVersion) {
             enabled: false,
             user: "",
           },
+          webauthn: {
+            enabled: false,
+            debug: false,
+          },
         },
-        describe: "Authentication configuration (Intune SSO)",
+        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only.",
+        type: "object",
+      },
+      multiAccount: {
+        default: {
+          enabled: false,
+        },
+        describe:
+          "Multi-account profile switcher configuration (see ADR-020). enabled: opt-in flag for the single-window multi-tenant switcher. Mutually exclusive with auth.intune.enabled; when both are true a startup warning is logged and multi-account is disabled for the session.",
         type: "object",
       },
       wayland: {

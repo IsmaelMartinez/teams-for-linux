@@ -33,7 +33,12 @@ The MQTT module is configured through the main application configuration. Add th
     "clientId": "teams-for-linux",
     "topicPrefix": "teams",
     "statusTopic": "status",
-    "commandTopic": "command"
+    "commandTopic": "command",
+    "homeAssistant": {
+      "enabled": true,
+      "discoveryPrefix": "homeassistant",
+      "deviceName": "Teams for Linux"
+    }
   }
 }
 ```
@@ -48,6 +53,9 @@ The MQTT module is configured through the main application configuration. Add th
 - **topicPrefix**: `string` - Topic prefix for all messages (default: "teams")
 - **statusTopic**: `string` - Topic name for status messages (default: "status")
 - **commandTopic**: `string` - Topic name for receiving commands (default: "" - disabled). Set to "command" to enable bidirectional mode.
+- **homeAssistant.enabled**: `boolean` - Enable Home Assistant MQTT auto-discovery (default: false)
+- **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
+- **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
 
 ## MQTT Topics
 
@@ -124,6 +132,29 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 # Toggle hand raise
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
 ```
+
+## Home Assistant Auto-Discovery
+
+When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT discovery messages that automatically create the following entities in Home Assistant:
+
+### Sensors
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| Teams Status | `sensor` | Current presence status (available, busy, etc.) |
+| Teams In Call | `binary_sensor` | Active call state |
+
+### Controls
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| Teams Toggle Mute | `button` | Toggle microphone mute |
+| Teams Toggle Video | `button` | Toggle camera on/off |
+| Teams Toggle Hand Raise | `button` | Toggle hand raise in meeting |
+
+All entities are grouped under a single **Teams for Linux** device in Home Assistant and respect the `availability_topic` (`{topicPrefix}/connected`) — entities show as unavailable when Teams for Linux is not running.
+
+Discovery configurations are published with `retain: true` and re-published on every broker connection, so entities survive broker restarts.
 
 ## Testing
 

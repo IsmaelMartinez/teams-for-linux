@@ -423,8 +423,10 @@ if [[ "$APP_LATEST" == "true" ]]; then
     fi
     echo "[*] Fetching latest release URL from GitHub..."
     GITHUB_REPO="IsmaelMartinez/teams-for-linux"
+    # Skip arm64/armv7l assets — containers run --platform linux/amd64.
     APP_URL=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
         | grep -o '"browser_download_url": *"[^"]*\.AppImage"' \
+        | grep -Ev '\-(arm64|armv7l)\.AppImage"' \
         | head -1 \
         | cut -d'"' -f4)
     if [[ -z "$APP_URL" ]]; then

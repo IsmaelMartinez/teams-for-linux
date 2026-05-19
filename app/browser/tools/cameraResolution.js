@@ -9,23 +9,7 @@
  * video constraints, allowing the camera to use higher resolutions.
  */
 
-function setLegacyChromeConstraint(constraint, name, value) {
-  if (constraint.mandatory && name in constraint.mandatory) {
-    constraint.mandatory[name] = value;
-    return;
-  }
-  if (constraint.optional) {
-    const element = constraint.optional.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  if (!constraint.optional) {
-    constraint.optional = [];
-  }
-  constraint.optional.push({ [name]: value });
-}
+const { setLegacyChromeConstraint } = require("./_micConstraintHelpers");
 
 function removeLegacyChromeConstraint(constraint, name) {
   if (constraint.mandatory && name in constraint.mandatory) {
@@ -156,9 +140,12 @@ const applyCameraResolutionPatch = function (resolutionConfig) {
     "applyConstraints",
     function (original) {
       return function applyConstraints(constraints) {
-        // Only modify if this is a video track
-        if (this.kind === "video") {
-          // Wrap in a constraints-like object for the modifier function
+        // Only modify camera tracks. Screen-share tracks (from getDisplayMedia
+        // or getUserMedia with chromeMediaSource:desktop) expose displaySurface
+        // in their settings; the constraints payload at this point no longer
+        // carries chromeMediaSource, so the skip-check in modifyVideoConstraints
+        // can't tell them apart. Filter on the track itself instead.
+        if (this.kind === "video" && !this.getSettings?.().displaySurface) {
           const wrappedConstraints = { video: constraints };
           modifyVideoConstraints(wrappedConstraints);
           constraints = wrappedConstraints.video;

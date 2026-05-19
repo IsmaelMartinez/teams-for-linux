@@ -27,8 +27,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # gh CLI's release view returns .url as the browser download URL
+          # (unlike the raw REST API, where .url is the API endpoint).
           URL=$(gh release view --repo IsmaelMartinez/teams-for-linux --json assets \
-            --jq '.assets[] | select(.name | endswith(".AppImage")) | .url' | head -1)
+            --jq '.assets[] | select(.name | test("\\.AppImage$") and (test("-(arm64|armv7l)\\.AppImage$") | not)) | .url' | head -1)
           if [ -z "$URL" ]; then
             echo "::error::Could not resolve AppImage URL from latest release"
             exit 1

@@ -25,6 +25,7 @@ const allowedChannels = new Set([
   'desktop-capturer-get-sources',
   'get-screen-share-screen',
   'get-screen-share-stream',
+  'get-screen-sharing-displays',
   'get-screen-sharing-status',
   'resize-preview-window',
   'screen-sharing-started',
@@ -37,6 +38,7 @@ const allowedChannels = new Set([
   // Notifications and user interaction
   'play-notification-sound',
   'show-notification',
+  'notification-closed',
   'notification-show-toast',
   'notification-toast-click',
   'user-status-changed',
@@ -89,7 +91,43 @@ const allowedChannels = new Set([
 
   // Quick Chat modal
   'quick-chat:show',
-  'quick-chat:hide'
+  'quick-chat:hide',
+
+  // Renderer-side error forwarding (registered in app/browser/preload.js)
+  'unhandled-rejection',
+  'window-error',
+
+  // Multi-account profile switcher (ADR-020 Phase 1).
+  // Handlers are registered only when `multiAccount.enabled === true`;
+  // listing them here keeps the allowlist authoritative for the channels
+  // the feature uses end-to-end.
+  'profile-list',
+  'profile-get-active',
+  'profile-switch',
+  'profile-add',
+  'profile-update',
+  'profile-remove',
+
+  // Add-profile dialog (Phase 1c.2). Same `ipcMain.on` shape as
+  // `join-meeting-*`; submit forwards the form record to
+  // `ProfilesManager.add()`, cancel destroys the dialog.
+  'add-profile-submit',
+  'add-profile-cancel',
+
+  // WebAuthn / FIDO2 security key support
+  'webauthn:create',
+  'webauthn:get',
+  'webauthn:pin-submit',
+  'webauthn:pin-cancel',
+
+  // Manage-profiles dialog (Phase 1c.2). Inline rename forwards to
+  // `ProfilesManager.update()`; remove triggers a native confirmation
+  // before calling `ProfilesManager.remove()`. Close dismisses the
+  // dialog. State pushes flow main → renderer over `manage-profile-state`
+  // (no allowlist needed for that direction).
+  'manage-profile-rename',
+  'manage-profile-remove',
+  'manage-profile-close'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

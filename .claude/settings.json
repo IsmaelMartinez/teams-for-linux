@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path' 2>/dev/null); if [ -z \"$f\" ] || [ \"$f\" = \"null\" ]; then exit 0; fi; if echo \"$f\" | grep -qiE '(^|/)\\.env(\\..*)?$|(^|/)credentials|\\.pem$|\\.key$|(^|/)secrets\\.|(^|/)\\.auth/'; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Blocked: sensitive file. Per CLAUDE.md PII protection rules, edits to .env, credentials, keys, or .auth/ files require explicit user action.\"}}'; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; case \"$f\" in *.js) [ -x ./node_modules/.bin/eslint ] && ./node_modules/.bin/eslint \"$f\" ;; esac; }"
+          }
+        ]
+      }
+    ]
+  }
+}

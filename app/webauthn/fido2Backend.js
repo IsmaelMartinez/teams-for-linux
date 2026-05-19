@@ -1,0 +1,449 @@
+// app/webauthn/fido2Backend.js
+
+/**
+ * Hardware FIDO2 key backend via libfido2 CLI tools.
+ * Requires system package: fido2-tools (fido2-token, fido2-cred, fido2-assert).
+ *
+ * Adapted from electron-webauthn-linux (Apache 2.0, Copyright nicholascross).
+ * Used under GPLv3 per Apache 2.0 compatibility.
+ */
+
+const { execFile, spawn } = require("node:child_process");
+const { createHash } = require("node:crypto");
+const { promisify } = require("node:util");
+const { encode: cborEncode, decode: cborDecode } = require("cbor-x");
+const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require("./helpers");
+const log = require("./log");
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Run a fido2 command with stdin input and optional PIN.
+ * Uses spawn (not exec/shell) to avoid command injection.
+ *
+ * PIN handling: fido2-tools use readpassphrase() which tries /dev/tty first.
+ * To force stdin-based PIN input, the child is spawned detached (setsid on
+ * Linux) so open("/dev/tty") fails and readpassphrase falls back to stdin.
+ *
+ * PIN handling: credential parameters are written to stdin first, then we
+ * monitor stderr for the "Enter PIN for" prompt. Only when that prompt
+ * appears do we write the pre-collected PIN. This avoids the race condition
+ * of writing PIN too early (which caused "invalid PIN length" errors).
+ *
+ * @param {string} cmd - Command to run
+ * @param {string[]} args - Command arguments (device should already be included)
+ * @param {string[]} inputLines - Stdin input lines (credential parameters)
+ * @param {number} timeoutMs - Process timeout in milliseconds
+ * @param {string|null} pin - Pre-collected PIN string, or null if no PIN needed
+ */
+function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
+  return new Promise((resolve, reject) => {
+    // Detach the child process so it has no controlling terminal.
+    // fido2-tools use readpassphrase() which tries /dev/tty first for PIN
+    // input. With detached: true, open("/dev/tty") fails and the tool
+    // falls back to reading PIN from stdin, where we pipe it.
+    const proc = spawn(cmd, args, {
+      detached: true,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    let rejected = false;
+    let pinWritten = false;
+
+    const timeout = setTimeout(() => {
+      if (!rejected) {
+        rejected = true;
+        // Kill the process group (negative PID) since detached: true
+        // creates a new session/group.
+        try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
+        reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
+      }
+    }, timeoutMs);
+
+    proc.stdout.on("data", (data) => { stdout += data.toString(); });
+
+    proc.stderr.on("data", (data) => {
+      const chunk = data.toString();
+      stderr += chunk;
+
+      // Detect the PIN prompt: "Enter PIN for /dev/hidrawN:"
+      // Only when the tool is ready for PIN input do we write it.
+      if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
+        pinWritten = true;
+        log.info("[WEBAUTHN] PIN prompt detected, writing PIN");
+        proc.stdin.write(pin.trim() + "\n");
+        proc.stdin.end();
+      }
+    });
+
+    proc.on("close", (code) => {
+      clearTimeout(timeout);
+      if (rejected) return;
+      if (code === 0) {
+        resolve({ stdout });
+      } else {
+        reject(new Error(`${cmd} exited with code ${code}: ${stderr.trim()}`));
+      }
+    });
+
+    proc.on("error", (err) => {
+      clearTimeout(timeout);
+      if (!rejected) reject(err);
+    });
+
+    // Write credential parameters to stdin. Do NOT close stdin yet —
+    // fido2-tools will prompt for PIN on stderr when ready, and we
+    // write the PIN then (see stderr handler above).
+    const paramBlock = inputLines.join("\n") + "\n";
+    proc.stdin.write(paramBlock);
+
+    // If no PIN is needed, close stdin so the tool doesn't hang waiting.
+    if (!pin) {
+      proc.stdin.end();
+    }
+  });
+}
+
+/**
+ * Check if a command exists on the system PATH.
+ */
+async function commandExists(cmd) {
+  try {
+    await execFileAsync("which", [cmd]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if all three fido2-tools binaries are available.
+ * @returns {Promise<boolean>}
+ */
+async function isAvailable() {
+  const [hasCred, hasAssert, hasToken] = await Promise.all([
+    commandExists("fido2-cred"),
+    commandExists("fido2-assert"),
+    commandExists("fido2-token"),
+  ]);
+  return hasCred && hasAssert && hasToken;
+}
+
+/**
+ * Discover connected FIDO2 USB devices.
+ * @returns {Promise<string[]>} Array of device paths
+ */
+async function discoverDevices() {
+  try {
+    const { stdout } = await execFileAsync("fido2-token", ["-L"]);
+    // fido2-token -L output: "/dev/hidraw11: vendor=0x1050, product=0x0407 (...)"
+    // The device path has a trailing colon that must be stripped (validated by rlavriv).
+    return stdout
+      .trim()
+      .split("\n")
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const match = line.match(/^(\/dev\/\S+?):/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean);
+  } catch (err) {
+    log.error("[WEBAUTHN] Failed to discover FIDO2 devices", { errClass: log.classifyError(err) });
+    return [];
+  }
+}
+
+/**
+ * Resolve the first connected FIDO2 device, or throw.
+ * v1 limitation: only the first device is used. Multi-device selection is a future enhancement.
+ * @returns {Promise<string>} Device path
+ */
+async function resolveDevice() {
+  const devices = await discoverDevices();
+  if (devices.length === 0) {
+    throw new Error("NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.");
+  }
+  return devices[0];
+}
+
+/**
+ * Map a COSE algorithm number to fido2-cred type string.
+ * @param {number} alg - COSE algorithm identifier
+ * @returns {string|null} fido2-tools type string or null if unsupported
+ */
+function coseAlgToFido2Type(alg) {
+  const map = { [-7]: "es256", [-35]: "es384", [-257]: "rs256", [-8]: "eddsa" };
+  return map[alg] || null;
+}
+
+/**
+ * Prepare clientDataJSON and its SHA-256 hash from challenge and origin.
+ * @param {string} type - "webauthn.create" or "webauthn.get"
+ * @param {string} challenge - base64url-encoded challenge
+ * @param {string} origin - Request origin
+ * @returns {{ clientDataJSON: Buffer, clientDataHash: Buffer }}
+ */
+function prepareClientData(type, challenge, origin) {
+  const challengeBytes = base64urlDecode(challenge);
+  const clientDataJSON = generateClientDataJSON(type, challengeBytes, origin);
+  const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
+  return { clientDataJSON, clientDataHash };
+}
+
+/**
+ * Select the best supported algorithm from pubKeyCredParams and add the -t flag.
+ * Returns the chosen COSE algorithm number, or -7 (ES256) if none specified.
+ * Throws NotSupportedError if params are provided but none are supported.
+ *
+ * @param {Array|undefined} pubKeyCredParams
+ * @param {string[]} args - fido2-cred args to push -t into
+ * @returns {number} COSE algorithm identifier
+ */
+function selectAlgorithm(pubKeyCredParams, args) {
+  if (!pubKeyCredParams || pubKeyCredParams.length === 0) {
+    return -7; // default ES256
+  }
+  for (const param of pubKeyCredParams) {
+    const fido2Type = coseAlgToFido2Type(param.alg);
+    if (fido2Type) {
+      args.push("-t", fido2Type);
+      return param.alg;
+    }
+  }
+  throw new Error("NotSupportedError: No supported public-key algorithm in pubKeyCredParams");
+}
+
+/**
+ * Build fido2-cred args from authenticator selection options.
+ * @param {object|undefined} authSel - authenticatorSelection from WebAuthn options
+ * @returns {string[]} args array
+ */
+function buildCredArgs(authSel) {
+  const args = ["-M", "-h"];
+  if (authSel?.residentKey === "required") {
+    args.push("-r");
+  }
+  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
+  if (authSel?.userVerification === "required") {
+    args.push("-v");
+  }
+  return args;
+}
+
+/**
+ * Create a FIDO2 credential using a hardware security key.
+ *
+ * @param {object} options - WebAuthn create options (serialized from renderer)
+ * @param {string} options.challenge - base64url-encoded challenge
+ * @param {string} options.rpId - Relying party ID
+ * @param {string} options.rpName - Relying party name
+ * @param {string} options.userId - base64url-encoded user ID
+ * @param {string} options.userName - User name
+ * @param {string} options.origin - Request origin
+ * @param {number} [options.timeout] - Timeout in seconds
+ * @param {object} [options.authenticatorSelection] - Authenticator requirements
+ * @param {Array} [options.pubKeyCredParams] - Allowed algorithms
+ * @param {Function|null} [options.pinCallback] - Async function that returns PIN string
+ * @returns {Promise<object>} Credential creation result
+ */
+async function createCredential(options) {
+  const device = await resolveDevice();
+  log.info("[WEBAUTHN] createCredential", {
+    devicePresent: true,
+    uv: options.authenticatorSelection?.userVerification || "preferred",
+    attestation: options.attestation || "none",
+  });
+
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
+
+  // fido2-tools expect standard base64, not hex (validated by rlavriv).
+  const inputLines = [
+    clientDataHash.toString("base64"),
+    sanitizeForFido2(options.rpId),
+    sanitizeForFido2(options.userName),
+    base64urlDecode(options.userId).toString("base64"),
+  ];
+
+  const args = buildCredArgs(options.authenticatorSelection);
+  const chosenAlg = selectAlgorithm(options.pubKeyCredParams, args);
+  args.push(device);
+
+  const timeoutMs = (options.timeout || 60) * 1000;
+  const { stdout } = await spawnFido2(
+    "fido2-cred", args, inputLines, timeoutMs,
+    options.preCollectedPin || null,
+  );
+
+  const lines = stdout.trim().split("\n");
+  // fido2-cred v1.16.0+ echoes back the first two input lines (clientDataHash + rpId)
+  // before the credential data (validated by rlavriv on Arch Linux).
+  // Detect echoed input by checking if the second line matches rpId.
+  const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
+  const dataLines = lines.slice(echoOffset);
+  if (dataLines.length < 4) {
+    throw new Error(`NotAllowedError: Unexpected fido2-cred output format. Expected at least 4 data lines, got ${dataLines.length}.`);
+  }
+
+  // Validated field order (fido2-tools v1.16.0): fmt, authData, credId, signature, x509
+  const fmt = dataLines[0].trim();
+  const authData = Buffer.from(dataLines[1], "base64");
+  const credId = Buffer.from(dataLines[2], "base64");
+  const signature = Buffer.from(dataLines[3], "base64");
+  const x5c = dataLines.length >= 5
+    ? Buffer.from(dataLines[4], "base64")
+    : null;
+
+  // Build a proper CBOR-encoded attestation object.
+  // The attestation object is a CBOR map: { fmt, attStmt, authData }.
+  const attStmt = fmt === "none"
+    ? {}
+    : {
+      ...(fmt === "packed" ? { alg: chosenAlg } : {}),
+      ...(x5c ? { x5c: [x5c] } : {}),
+      sig: signature,
+    };
+  const attestationObject = cborEncode({ fmt, attStmt, authData });
+
+  return {
+    credentialId: base64urlEncode(credId),
+    rawId: base64urlEncode(credId),
+    attestationObject: base64urlEncode(attestationObject),
+    clientDataJson: base64urlEncode(clientDataJSON),
+    authenticatorData: base64urlEncode(authData),
+    type: "public-key",
+    transports: ["usb"],
+    publicKeyAlgorithm: chosenAlg,
+  };
+}
+
+/**
+ * Get an assertion from a hardware security key.
+ *
+ * @param {object} options - WebAuthn get options (serialized from renderer)
+ * @param {string} options.challenge - base64url-encoded challenge
+ * @param {string} options.rpId - Relying party ID
+ * @param {string} options.origin - Request origin
+ * @param {Array} [options.allowCredentials] - Allowed credential descriptors
+ * @param {string} [options.userVerification] - User verification requirement
+ * @param {number} [options.timeout] - Timeout in seconds
+ * @param {Function|null} [options.pinCallback] - Async function that returns PIN string
+ * @returns {Promise<object>} Assertion result
+ */
+async function getAssertion(options) {
+  const device = await resolveDevice();
+  log.info("[WEBAUTHN] getAssertion", {
+    devicePresent: true,
+    uv: options.userVerification || "preferred",
+    credCount: options.allowCredentials?.length || 0,
+  });
+
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin);
+
+  // fido2-tools expect standard base64, not hex (same as createCredential).
+  const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];
+
+  const hasAllowCredentials = options.allowCredentials && options.allowCredentials.length > 0;
+
+  const args = ["-G"];
+
+  // -r (resident/discoverable) is only needed when the server doesn't specify
+  // which credentials to use. When allowCredentials is provided, the server
+  // has selected specific credentials — don't use -r or it conflicts.
+  if (!hasAllowCredentials) {
+    args.push("-r");
+  }
+
+  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
+  if (options.userVerification === "required") {
+    args.push("-v");
+  }
+
+  args.push(device);
+
+  const timeoutMs = (options.timeout || 60) * 1000;
+
+  // When multiple allowCredentials are provided, try each one until fido2-assert
+  // succeeds. The server lists all registered credentials, but only one will
+  // match the key that's plugged in (marcovr's bug: first credential may not
+  // be the one on the device).
+  if (hasAllowCredentials) {
+    let lastError;
+    for (const cred of options.allowCredentials) {
+      const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
+      const index = options.allowCredentials.indexOf(cred) + 1;
+      const total = options.allowCredentials.length;
+      log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
+      try {
+        const { stdout } = await spawnFido2(
+          "fido2-assert", args, credInputLines, timeoutMs,
+          options.preCollectedPin || null,
+        );
+        return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
+      } catch (err) {
+        const errClass = log.classifyError(err);
+        log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
+        lastError = err;
+        // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
+        if (errClass !== "NO_CREDENTIALS") {
+          throw err; // Other errors (bad PIN, timeout) should not be retried
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  // No allowCredentials — use resident key mode
+  log.debug("[WEBAUTHN] getAssertion resident-key mode");
+  const { stdout } = await spawnFido2(
+    "fido2-assert", args, inputLines, timeoutMs,
+    options.preCollectedPin || null,
+  );
+  return parseAssertionOutput(stdout, options, clientDataJSON, null);
+}
+
+/**
+ * Parse fido2-assert stdout into a structured assertion result.
+ * @param {string} stdout - Raw stdout from fido2-assert
+ * @param {object} options - Original assertion options (for rpId, allowCredentials)
+ * @param {Buffer} clientDataJSON - The clientDataJSON buffer
+ * @param {string|null} credentialId - The credentialId which was used for the assertion
+ * @returns {object} Assertion result
+ */
+function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
+  const lines = stdout.trim().split("\n");
+  // fido2-assert may echo back input lines like fido2-cred does.
+  const echoOffset = lines.length > 2 && lines[1] === sanitizeForFido2(options.rpId) ? 2 : 0;
+  const dataLines = lines.slice(echoOffset);
+  if (dataLines.length < 2) {
+    throw new Error(`NotAllowedError: Unexpected fido2-assert output format. Expected at least 2 lines, got ${dataLines.length}.`);
+  }
+
+  const authData = cborDecode(Buffer.from(dataLines[0], "base64"));
+  const assertSignature = Buffer.from(dataLines[1], "base64");
+
+  if (!credentialId) {
+    if (dataLines.length >= 3) {
+      credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
+    } else if (options.allowCredentials?.length === 1) {
+      credentialId = options.allowCredentials[0].id;
+    } else {
+      throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
+    }
+  }
+  const userHandle = dataLines.length >= 4
+    ? base64urlEncode(Buffer.from(dataLines[3], "base64"))
+    : null;
+
+  return {
+    credentialId,
+    rawId: credentialId,
+    authenticatorData: base64urlEncode(authData),
+    clientDataJson: base64urlEncode(clientDataJSON),
+    signature: base64urlEncode(assertSignature),
+    userHandle,
+    type: "public-key",
+  };
+}
+
+module.exports = { isAvailable, discoverDevices, createCredential, getAssertion };

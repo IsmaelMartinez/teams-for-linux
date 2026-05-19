@@ -27,8 +27,9 @@ class MQTTMediaStatusService {
 		// Publish MQTT status when microphone state changes
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
 
-		// Publish MQTT status when screen sharing state changes
+		// Publish MQTT status when screen sharing starts
 		ipcMain.on('screen-sharing-started', () => this.#handleScreenSharingChanged(true));
+		// Publish MQTT status when screen sharing stops
 		ipcMain.on('screen-sharing-stopped', () => this.#handleScreenSharingChanged(false));
 
 		app.on('teams-call-connected', this.#handleCallConnected.bind(this));

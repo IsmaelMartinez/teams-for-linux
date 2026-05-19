@@ -1,0 +1,2 @@
+Add FIDO2 hardware security key support for Linux users - by @IsmaelMartinez (#2357)
+closes: #802 https://github.com/IsmaelMartinez/teams-for-linux/issues/802 Cannot sign in with security key

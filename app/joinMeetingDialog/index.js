@@ -1,5 +1,24 @@
-const { BrowserWindow, ipcMain } = require('electron');
+const { ipcMain } = require('electron');
 const path = require('node:path');
+const createDialogWindow = require('../_shared/createDialogWindow');
+
+// Only one JoinMeetingDialog instance exists; its handlers dispatch via this
+// pointer so listeners are registered once and survive across dialog opens.
+let activeHandlers = null;
+let handlersRegistered = false;
+
+function ensureIpcHandlers() {
+  if (handlersRegistered) return;
+  handlersRegistered = true;
+  // Handle join meeting dialog submission
+  ipcMain.on('join-meeting-submit', (_event, url) => {
+    activeHandlers?.onSubmit(url);
+  });
+  // Handle join meeting dialog cancel
+  ipcMain.on('join-meeting-cancel', () => {
+    activeHandlers?.onCancel();
+  });
+}
 
 class JoinMeetingDialog {
   #window = null;
@@ -13,6 +32,7 @@ class JoinMeetingDialog {
   }
 
   show(clipboardText, onJoin) {
+    ensureIpcHandlers();
     this.#onJoin = onJoin;
 
     // If window already exists, update it and show
@@ -29,28 +49,18 @@ class JoinMeetingDialog {
       return;
     }
 
-    // Set up IPC handlers before creating window
-    this.#setupIpcHandlers();
-
-    // Create dialog window
-    this.#window = new BrowserWindow({
+    this.#window = createDialogWindow({
       title: 'Join Meeting',
       width: 500,
       height: 250,
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      modal: true,
       parent: this.#parentWindow,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        preload: path.join(__dirname, 'preload.js'),
-      },
+      preload: path.join(__dirname, 'preload.js'),
     });
+
+    activeHandlers = {
+      onSubmit: this.#handleSubmit,
+      onCancel: this.#handleCancel,
+    };
 
     // Load the dialog HTML file
     this.#window.loadFile(path.join(__dirname, 'joinMeeting.html'));
@@ -65,24 +75,14 @@ class JoinMeetingDialog {
       this.#window.focus();
     });
 
-    // Clean up when window is closed
+    // Release dispatch pointer when window is closed
     this.#window.on('closed', () => {
-      this.#removeIpcHandlers();
+      activeHandlers = null;
       this.#window = null;
     });
   }
 
-  #setupIpcHandlers() {
-    ipcMain.on('join-meeting-submit', this.#handleSubmit);
-    ipcMain.on('join-meeting-cancel', this.#handleCancel);
-  }
-
-  #removeIpcHandlers() {
-    ipcMain.removeListener('join-meeting-submit', this.#handleSubmit);
-    ipcMain.removeListener('join-meeting-cancel', this.#handleCancel);
-  }
-
-  #handleSubmit = (_event, url) => {
+  #handleSubmit = (url) => {
     if (this.#onJoin && url && typeof url === 'string') {
       try {
         const pattern = new RegExp(this.#meetupJoinRegEx);

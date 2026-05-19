@@ -2,9 +2,32 @@ const { app, ipcMain, BrowserWindow } = require("electron");
 const { execSync } = require("node:child_process");
 const path = require("node:path");
 
-let isFirstLoginTry = true;
+// Per-`webContents` first-try tracking (ADR-020 § "Shared-state audit").
+// A module-level boolean would lie once profile switching exists: profile
+// B's first 401 would look like profile A's retry and trigger an app
+// relaunch. Keying by `webContents` keeps each profile's challenge state
+// isolated; the WeakMap drops entries when a view is destroyed.
+const firstLoginTryByWebContents = new WeakMap();
+
+// Single submitForm listener registered once at module load; dispatches to
+// the currently-open login dialog via this pointer. Avoids per-dialog
+// registration churn and the need for removeListener. See
+// app/joinMeetingDialog/index.js for the same pattern.
+let activeLoginHandler = null;
+let handlersRegistered = false;
+
+function ensureIpcHandlers() {
+  if (handlersRegistered) return;
+  handlersRegistered = true;
+  // Handle form submission for SSO/authentication workflows
+  ipcMain.on("submitForm", (_event, data) => {
+    activeLoginHandler?.(data);
+  });
+}
 
 exports.loginService = function loginService(parentWindow, callback) {
+  ensureIpcHandlers();
+
   let win = new BrowserWindow({
     width: 363,
     height: 124,
@@ -22,10 +45,13 @@ exports.loginService = function loginService(parentWindow, callback) {
     win.show();
   });
 
-  // Handle form submission for SSO/authentication workflows
-  ipcMain.on("submitForm", submitFormHandler(callback, win));
+  activeLoginHandler = (data) => {
+    callback(data.username, data.password);
+    win.close();
+  };
 
   win.on("closed", () => {
+    activeLoginHandler = null;
     win = null;
   });
 
@@ -39,8 +65,10 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(
 ) {
   window.webContents.on("login", (event, _request, _authInfo, callback) => {
     event.preventDefault();
+    const wc = window.webContents;
+    const isFirstLoginTry = !firstLoginTryByWebContents.has(wc);
     if (isFirstLoginTry) {
-      isFirstLoginTry = false;
+      firstLoginTryByWebContents.set(wc, true);
       if (ssoBasicAuthUser && ssoBasicAuthPasswordCommand) {
         console.debug('[SSO] Retrieving password using configured command');
         try {
@@ -57,17 +85,9 @@ exports.handleLoginDialogTry = function handleLoginDialogTry(
         this.loginService(window, callback);
       }
     } else {
-      // if fails to authenticate we need to relanch the app as we have close the login browser window.
-      isFirstLoginTry = true;
+      // Auth failed after we already closed the login browser window — relaunch.
       app.relaunch();
       app.exit(0);
     }
   });
 };
-
-function submitFormHandler(callback, win) {
-  return (_event, data) => {
-    callback(data.username, data.password);
-    win.close();
-  };
-}
