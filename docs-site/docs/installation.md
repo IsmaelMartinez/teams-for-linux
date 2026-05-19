@@ -66,6 +66,14 @@ pacstall -I teams-for-linux-deb
 
 [![Pacstall: teams-for-linux-deb](https://img.shields.io/badge/Pacstall-teams--for--linux--deb-00958C)](https://github.com/pacstall/pacstall-programs/tree/master/packages/teams-for-linux-deb)
 
+### Vylen Linux
+
+```bash
+sudo emerald install teams-for-linux
+```
+
+[![Vylen Linux: teams-for-linux](https://img.shields.io/badge/Vylen_Linux-teams--for--linux-green)](https://vylen.gitlab.io/packages/#teams-for-linux)
+
 ### Snap Store
 
 ```bash
