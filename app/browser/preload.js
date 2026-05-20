@@ -429,18 +429,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Forward unhandled promise rejections and window errors to main for diagnostics with secure IPC
+// Plain objects without a `.message` (and `undefined` rejections) previously stringified to
+// the literals "[object Object]" / "undefined", which discarded all diagnostic content.
+function serializeRejectionReason(reason) {
+  if (reason === undefined) return "<undefined>";
+  if (reason === null) return "<null>";
+  if (typeof reason === "string") return reason;
+  if (typeof reason !== "object") return String(reason);
+  if (typeof reason.message === "string" && reason.message.length > 0) return reason.message;
+  try {
+    const seen = new WeakSet();
+    return JSON.stringify(reason, (_key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) return "[Circular]";
+        seen.add(value);
+      }
+      return value;
+    }) ?? "[unserializable rejection]";
+  } catch {
+    return "[unserializable rejection]";
+  }
+}
+
 try {
   globalThis.addEventListener("unhandledrejection", (event) => {
     try {
       const reason = event?.reason;
       const errorData = {
-        message: reason?.message ? String(reason.message).substring(0, 1000) : String(reason).substring(0, 1000),
+        message: serializeRejectionReason(reason).substring(0, 1000),
         stack: reason?.stack ? String(reason.stack).substring(0, 5000) : null,
         timestamp: Date.now(),
-        // Keep the raw reason only when it's a plain object to avoid huge payloads
-        reason: typeof reason === "object" && reason !== null ? reason : null,
       };
-      
+
       ipcRenderer.send("unhandled-rejection", errorData);
     } catch (err) {
       console.debug("Unhandled rejection forwarding failed:", err);
