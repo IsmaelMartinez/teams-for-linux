@@ -1,4 +1,17 @@
 (function () {
+  // Guard against re-injection. mainAppWindow's injectScreenSharingLogic runs
+  // on every `did-finish-load`, which fires multiple times per Teams session
+  // (login redirects, internal navigation, iframe loads). Without this guard,
+  // each re-injection stacks another navigator.mediaDevices.getDisplayMedia
+  // wrapper on top of the prior one, fan-outs a single Teams getDisplayMedia
+  // call into N handleScreenShareStream invocations, and produces N parallel
+  // snapshot relays whose ports race each other on the preview side (#2534).
+  if (globalThis.__tflScreenShareInjected) {
+    console.debug("[SCREEN_SHARE_DIAG] Already injected, skipping duplicate setup");
+    return;
+  }
+  globalThis.__tflScreenShareInjected = true;
+
   let isScreenSharing = false;
   let activeStreams = [];
   let activeMediaTracks = [];
@@ -215,17 +228,25 @@
       return;
     }
 
-    // Tear down any prior relay before starting a new one (in case Teams
-    // started a second share without our 'inactive' fire-and-forget cleanup).
-    stopVideoFrameRelay();
+    // Skip if a relay is already active. Teams calls getDisplayMedia (and
+    // sometimes getUserMedia with chromeMediaSource:'desktop') more than once
+    // per share session - probe + actual share, or selection change. Without
+    // this guard, each call would create another MessageChannel pair on the
+    // main side and the preview window would end up wired to a port whose
+    // sender already got replaced, leaving the canvas blank (#2534).
+    if (activeFrameRelay) {
+      console.debug("[SCREEN_SHARE_DIAG] Snapshot relay already active, skipping duplicate setup");
+      return;
+    }
 
     // Thumbnail-rate is fine for a "what am I sharing" preview; keeps the
     // per-tick canvas draw + ImageBitmap transfer cheap.
     const FPS = 5;
     const FRAME_INTERVAL_MS = Math.round(1000 / FPS);
-    // Cap the longest edge of the snapshot. The preview window is ~320x180
-    // by default, so we lose nothing by scaling down before transferring.
-    const MAX_EDGE = 320;
+    // Cap the longest edge of the snapshot. 640 is comfortable headroom over
+    // the default 320x180 preview window, so the thumbnail stays sharp if
+    // the user resizes the preview larger. Still cheap at 5fps.
+    const MAX_EDGE = 640;
 
     let port = null;
     let stopped = false;
