@@ -9,7 +9,8 @@ function mergeWith(target, source, customizer) {
       target[key] = customResult;
     } else if (
       source[key] && typeof source[key] === "object" && !Array.isArray(source[key]) &&
-      target[key] && typeof target[key] === "object" && !Array.isArray(target[key])
+      target[key] && typeof target[key] === "object" && !Array.isArray(target[key]) &&
+      Object.getPrototypeOf(source[key]) === Object.prototype
     ) {
       mergeWith(target[key], source[key], customizer);
     } else {
