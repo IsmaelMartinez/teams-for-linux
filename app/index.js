@@ -374,7 +374,15 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 function sanitizeRendererLogField(value, fallback = null) {
   if (typeof value !== "string") return fallback;
 
-  const sanitized = sanitizePii(value);
+  // logSanitizer scrubs URL query strings but not fragments. OAuth implicit-flow
+  // tokens land in the fragment (#access_token=…), so strip those first to
+  // preserve the previous behaviour before running the shared sanitizer.
+  const fragmentStripped = value.replaceAll(
+    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s#)'"<>]+)#[^\s)'"<>]*/gi,
+    "$1#[redacted]",
+  );
+
+  const sanitized = sanitizePii(fragmentStripped);
 
   return sanitized.length > MAX_RENDERER_LOG_FIELD_LENGTH
     ? `${sanitized.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
