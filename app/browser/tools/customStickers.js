@@ -192,7 +192,11 @@ class CustomStickers {
     button.setAttribute("aria-label", "Open sticker panel");
     button.title = "Stickers";
     button.textContent = "\u{1F642}"; // slightly smiling face
-    button.addEventListener("click", () => this.#togglePanel());
+    button.addEventListener("click", () => {
+      this.#togglePanel().catch((err) =>
+        console.error(`${LOG_PREFIX} Toggle failed: ${err.message}`),
+      );
+    });
     document.body.appendChild(button);
     this.#button = button;
   }
@@ -274,7 +278,11 @@ class CustomStickers {
       img.src = sticker.dataUrl;
       img.alt = sticker.name;
       cell.appendChild(img);
-      cell.addEventListener("click", () => this.#sendSticker(sticker));
+      cell.addEventListener("click", () => {
+        this.#sendSticker(sticker).catch((err) =>
+          console.error(`${LOG_PREFIX} Send failed: ${err.message}`),
+        );
+      });
       this.#grid.appendChild(cell);
     }
   }
