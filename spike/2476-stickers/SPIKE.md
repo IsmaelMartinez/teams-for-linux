@@ -1,6 +1,6 @@
 # Spike: custom stickers (#2476) — feasibility
 
-**Status:** in progress
+**Status:** concluded — Phase 1 succeeded, proceeding with renderer-only implementation
 **Issue:** [#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476)
 **Pattern:** 4 (floating UI outside Teams DOM + synthetic event into Teams)
 
@@ -76,33 +76,84 @@ Falls back to the spec-aligned path. Requires main-process IPC because `clipboar
 
 ## Phase 0 results
 
-_To be filled in after DevTools inspection._
+Run via the harness's "Phase 0: inspect compose" button (a 1:1 chat with compose focused).
 
 ```
 Compose element:
-- selector:
-- contenteditable:
-- id pattern:
-- aria-label:
+- selector:         div[id^="new-message-"]
+- contenteditable:  true
+- id pattern:       new-message-{uuid}  (e.g. new-message-b2a41cb8-8f7c-472b-b01e-2c9ca1b24f03)
+- role:             textbox
+- aria-label:       Type a message
+- data-* attributes:
+    - data-tid=ckeditor
+    - data-is-focusable=true
+    - data-shortcut-context=compose-field
+    - data-tabster={"focusable":{"isDefault":true}, "observed":{"names":["chat-input"]}}
+
+Editor framework signals:
+- hasProseMirror:  false
+- hasSlate:        false
+- hasLexical:      false
+- hasCkEditor:     true   ← Teams compose is CKEditor 5, not ProseMirror/Slate/Lexical
 
 Paste listeners:
-- count:
-- preventDefault on real paste: yes / no
-- reads clipboardData.files: yes / no / unknown
-- reads clipboardData.items: yes / no / unknown
+- count: unknown (Event Listeners panel not enumerable from JS; would need DevTools
+  Elements > Event Listeners panel for the count)
+- preventDefault on real paste: inferred YES (see Phase 1 — Teams handler called
+  preventDefault on the synthetic event too, and CKEditor's clipboard pipeline is
+  documented to consume paste events itself)
+- reads clipboardData.files: inferred YES (Phase 1 succeeded with files-only DataTransfer)
 
-Drop listeners:
-- count:
-- accepts image/png MIME: yes / no / unknown
+Drop listeners: not inspected this round; the paste path works so drop isn't needed
+for the spike's question. Worth knowing about as an alternative ingestion route if
+the paste path ever regresses.
 ```
+
+The CKEditor finding is significant — the research phase guessed ProseMirror / Slate / Lexical based on the 2023 Microsoft Q&A thread. CKEditor 5 has a documented clipboard plugin that handles paste events on its own root and dispatches into its model, which explains why synthetic paste worked despite the MDN-spec caution.
 
 ## Phase 1 results
 
-_To be filled in after running the harness._
+Run via the harness's "Phase 1: synthetic paste" button (a 1:1 chat with compose focused). Verdict: **SUCCESS — synthetic paste works end-to-end, including upload and send.**
+
+```
+Pre-dispatch DataTransfer state:
+- itemsLength: 1
+- filesLength: 1
+- types:       ["Files"]
+
+Dispatch outcome:
+- event.isTrusted:        false  (expected — synthetic event)
+- dispatchEvent returned: false  (event was cancelled by Teams handler)
+- event.defaultPrevented: true   ← Teams's CKEditor handler actively consumed the event,
+                                   not a no-op
+
+Compose mutation (300ms after dispatch):
+- children:          before=1  after=1
+- innerHTML length:  before=91 after=1068
+- blob/data images:  before=0  after=1   newly inserted=1
+- inserted src:      blob:https://teams.cloud.microsoft/...  (real Teams blob URL)
+```
+
+Console emitted: `Phase 1 likely SUCCESS — image appears in compose. Verify visually, then try to send the message.`
+
+### Send verification (the real test)
+
+Did the inserted blob image actually survive Teams's send pipeline, or just appear visually in compose?
+
+- Visually confirmed: a 64×64 cyan "SPIKE" square appeared in the compose box.
+- Pressed Enter to send.
+- The image appeared in the chat history with timestamp and read-receipt checkmark.
+
+That means the full pipeline accepted the synthetic-paste-inserted image: CKEditor model insertion → upload to Teams blob storage → send → delivered. Not a visual-only artifact.
+
+### Noise
+
+The console logged one `Unhandled error/rejection {"isTrusted": true}` line during the test. That's unrelated to the spike (note `isTrusted: true` — different event entirely, surfaced by Teams's own global handler). Not caused by, and does not affect, the synthetic-paste path.
 
 ## Phase 2 results
 
-_To be filled in if Phase 1 fails._
+Not run. Phase 1 succeeded, so the spike's fallback path (`clipboard.writeImage` + `sendInputEvent` keystroke + clipboard snapshot/restore) is not needed. The Phase 2 design in this document is preserved as a future-proofing reference in case Teams ever changes its editor framework and the synthetic-paste path regresses.
 
 ## Out of scope for this spike
 
