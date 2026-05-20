@@ -318,10 +318,11 @@ if (gotTheLock) {
     // messages were silently dropped. Fields are run through
     // sanitizeRendererLogField to scrub URL query strings before logging.
     try {
-      const message = sanitizeRendererLogField(errorData?.message, "unknown");
-      const log = isPreLoginAuthNoise(message) ? console.debug : console.error;
+      // Run the noise check on the raw message — the sanitizer may strip
+      // query strings / fragments that contain the auth error code.
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
       log("[Renderer] Unhandled rejection:", {
-        message,
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
@@ -333,10 +334,9 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      const message = sanitizeRendererLogField(errorData?.message, "unknown");
-      const log = isPreLoginAuthNoise(message) ? console.debug : console.error;
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
       log("[Renderer] Window error:", {
-        message,
+        message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
         lineno: toFiniteNumber(errorData?.lineno, 0),
         colno: toFiniteNumber(errorData?.colno, 0),
@@ -405,14 +405,15 @@ function toFiniteNumber(value, fallback = 0) {
 // the noise.
 const PRE_LOGIN_AUTH_NOISE_PATTERNS = [
   "login_required",
-  "AADSTS50058",
-  "InteractionRequired",
-  "AuthFailed",
+  "aadsts50058",
+  "interactionrequired",
+  "authfailed",
 ];
 
 function isPreLoginAuthNoise(message) {
   if (typeof message !== "string") return false;
-  return PRE_LOGIN_AUTH_NOISE_PATTERNS.some((p) => message.includes(p));
+  const lower = message.toLowerCase();
+  return PRE_LOGIN_AUTH_NOISE_PATTERNS.some((p) => lower.includes(p));
 }
 
 /**
