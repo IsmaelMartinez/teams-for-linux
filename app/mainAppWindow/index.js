@@ -8,6 +8,7 @@ const {
   nativeImage,
   desktopCapturer,
   ipcMain,
+  MessageChannelMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -445,29 +446,39 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   bindDisplayMediaHandler(window.webContents.session);
 
-  // Spike #2534: alternative entry point to the in-app StreamSelector for the
-  // Wayland case, where setDisplayMediaRequestHandler is bypassed by Chromium's
-  // native getDisplayMedia + WebRTCPipeWireCapturer. The renderer-side
-  // injectedScreenSharing wrapper calls this, gets the chosen source ID, then
-  // synthesises the screen-share stream via getUserMedia with
-  // chromeMediaSource: 'desktop'. Returns the source ID or null on cancel.
-  ipcMain.handle("show-tfl-stream-picker", () =>
-    new Promise((resolve) => {
-      streamSelector.show((source) => {
-        if (!source) {
-          resolve(null);
-          return;
-        }
-        // handleScreenSourceSelection looks up the source by ID and calls back
-        // with `{ video: selectedSource }` on success, or `{}` on failure
-        // (source not found in desktopCapturer.getSources()). Resolve null on
-        // failure so the renderer treats it as a cancellation.
-        handleScreenSourceSelection(source, (constraints) => {
-          resolve(constraints?.video ? source.id : null);
+  // #2534: when the renderer signals that screen sharing has started, make
+  // sure the preview window is open and connect the two renderers with a
+  // direct MessagePort. The Teams-side script pumps VideoFrames from the
+  // active screen-share track through it; the preview window reconstructs the
+  // stream on the other end via MediaStreamTrackGenerator. This avoids a
+  // second getUserMedia/portal call (which on Wayland needs a PipeWire token
+  // we cannot reuse) and means one capture feeds both Teams and the preview.
+  ipcMain.on("screen-sharing-started", () => {
+    if (!window || window.isDestroyed()) return;
+    createScreenSharePreviewWindow();
+    const previewWindow = screenSharingService.getPreviewWindow();
+    if (!previewWindow || previewWindow.isDestroyed()) {
+      console.debug("[SCREEN_SHARE_DIAG] No preview window after creation (thumbnail disabled or already destroyed) - skipping port wiring");
+      return;
+    }
+    const postPorts = () => {
+      try {
+        const { port1, port2 } = new MessageChannelMain();
+        window.webContents.postMessage("screen-share-port", null, [port1]);
+        previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
+        console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
+      } catch (error) {
+        console.error("[SCREEN_SHARE_DIAG] Failed to post MessagePort", {
+          error: error.message,
         });
-      });
-    })
-  );
+      }
+    };
+    if (previewWindow.webContents.isLoading()) {
+      previewWindow.webContents.once("did-finish-load", postPorts);
+    } else {
+      postPorts();
+    }
+  });
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();

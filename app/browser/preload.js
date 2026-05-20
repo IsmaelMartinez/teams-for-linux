@@ -1,5 +1,15 @@
 const { ipcRenderer } = require("electron");
 
+// #2534: forward the MessagePort that main posts on 'screen-share-port' into
+// the main world. Using window.postMessage with transfer is the supported way
+// to hand a MessagePort across to the renderer; the port cannot be returned
+// through a contextBridge-exposed function call.
+ipcRenderer.on("screen-share-port", (event) => {
+  if (event.ports?.length) {
+    window.postMessage("screen-share-port", "*", event.ports);
+  }
+});
+
 // Note: IPC validation handled by main process, no need for duplicate validation here
 globalThis.electronAPI = {
   desktopCapture: {
@@ -24,10 +34,6 @@ globalThis.electronAPI = {
   },
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
-  // Spike #2534: ask main to show the in-app StreamSelector and return the
-  // chosen source ID, so the renderer can synthesise the screen-share stream
-  // via getUserMedia on Wayland where setDisplayMediaRequestHandler is bypassed.
-  showTflStreamPicker: () => ipcRenderer.invoke("show-tfl-stream-picker"),
   sendSelectSource: () => ipcRenderer.send("select-source"),
   onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
   send: (channel, ...args) => {

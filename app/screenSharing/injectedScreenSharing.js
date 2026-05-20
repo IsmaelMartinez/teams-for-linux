@@ -5,6 +5,7 @@
   let uiObserver = null;
   let periodicCheckInterval = null;
   let streamInactiveHandlers = [];
+  let activeFrameRelay = null;
 
   // Known translations of "Stop sharing" / "Stop presenting" button text.
   // Used as fallback when CSS attribute selectors don't match (non-English locales).
@@ -68,57 +69,26 @@
     );
 
     navigator.mediaDevices.getDisplayMedia = function (constraints) {
-      console.debug("[SCREEN_SHARE_DIAG] getDisplayMedia intercepted (spike #2534 path)");
+      console.debug("[SCREEN_SHARE_DIAG] getDisplayMedia intercepted");
 
       // Force disable all audio in screen sharing to prevent echo issues
       disableAudioInConstraints(constraints, "getDisplayMedia");
 
-      const fallback = () => originalGetDisplayMedia(constraints)
+      // Delegate picking to the platform's native flow:
+      //   X11 / Win / macOS: Chromium calls our setDisplayMediaRequestHandler,
+      //     which opens the in-app StreamSelector.
+      //   Wayland with WebRTCPipeWireCapturer: Chromium calls xdg-desktop-portal
+      //     directly (setDisplayMediaRequestHandler is bypassed).
+      // Either way we end up here with a single captured MediaStream and avoid
+      // the double-picker we used to see on Wayland (#2534).
+      return originalGetDisplayMedia(constraints)
         .then((stream) => {
-          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started via getDisplayMedia native (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
+          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
           handleScreenShareStream(stream, "getDisplayMedia");
           return stream;
         })
         .catch((error) => {
-          console.error(`[SCREEN_SHARE_DIAG] getDisplayMedia native failed: ${error.name} - ${error.message}`);
-          throw error;
-        });
-
-      const electronAPI = globalThis.electronAPI;
-      if (!electronAPI?.showTflStreamPicker) {
-        console.debug("[SCREEN_SHARE_DIAG] showTflStreamPicker unavailable, falling back to native");
-        return fallback();
-      }
-
-      return electronAPI.showTflStreamPicker()
-        .then((sourceId) => {
-          if (!sourceId) {
-            throw new DOMException("User cancelled screen share", "NotAllowedError");
-          }
-          console.debug(`[SCREEN_SHARE_DIAG] TFL picker returned source ${sourceId}, calling getUserMedia`);
-          return originalGetUserMedia({
-            audio: false,
-            video: {
-              mandatory: {
-                chromeMediaSource: "desktop",
-                chromeMediaSourceId: sourceId,
-              },
-            },
-          });
-        })
-        .then((stream) => {
-          console.debug(`[SCREEN_SHARE_DIAG] Screen sharing started via TFL picker (${stream.getAudioTracks().length}a/${stream.getVideoTracks().length}v)`);
-          handleScreenShareStream(stream, "getDisplayMedia-via-tfl");
-          return stream;
-        })
-        .catch((error) => {
-          // Do not fall back to native getDisplayMedia after the in-app picker
-          // has shown. The preview window is already up via setupScreenSharing,
-          // and a native fallback would either reopen the picker or open a
-          // second native one, colliding with the existing preview. Surface the
-          // error to Teams directly. For the spike this is fine; the proper
-          // feature will handle cleanup before any fallback.
-          console.error(`[SCREEN_SHARE_DIAG] TFL picker path failed (${error?.name}/${error?.message}), surfacing error`);
+          console.error(`[SCREEN_SHARE_DIAG] getDisplayMedia failed: ${error.name} - ${error.message}`);
           throw error;
         });
     };
@@ -183,16 +153,19 @@
 
     isScreenSharing = true;
     activeStreams.push(stream);
-    
+
     console.debug(`[SCREEN_SHARE_DIAG] Stream registered (${activeStreams.length} total active)`);
 
-    // Send screen sharing started event
+    // Send screen sharing started event. Main opens the preview window if not
+    // already open, then posts a MessagePort to both sides so the preview can
+    // receive VideoFrames from this stream without a second capture (#2534).
     if (electronAPI.sendScreenSharingStarted) {
       console.debug(`[SCREEN_SHARE_DIAG] Sending screen-sharing-started event (preview window will open)`);
-      console.debug(`[SCREEN_SHARE_DIAG] Not sending stream.id to preserve desktopCapturer source ID`);
-
       electronAPI.sendScreenSharingStarted(null);
     }
+
+    // Start relaying VideoFrames to the preview window once the port arrives.
+    startVideoFrameRelay(stream);
 
     // Monitor stream inactive event (fires when all tracks end)
     const inactiveHandler = () => {
@@ -227,6 +200,107 @@
     }
   }
 
+  // Relay VideoFrames from the captured screen-share track to the preview
+  // window over a MessagePort the main process hands us via window.postMessage
+  // (see app/browser/preload.js). Lets the preview render the same source
+  // without a second getUserMedia/portal call.
+  function startVideoFrameRelay(stream) {
+    if (typeof MediaStreamTrackProcessor === "undefined") {
+      console.warn("[SCREEN_SHARE_DIAG] MediaStreamTrackProcessor unavailable - preview relay disabled");
+      return;
+    }
+
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) {
+      console.debug("[SCREEN_SHARE_DIAG] No video track on stream - preview relay disabled");
+      return;
+    }
+
+    // Tear down any prior relay before starting a new one (in case Teams
+    // started a second share without our 'inactive' fire-and-forget cleanup).
+    stopVideoFrameRelay();
+
+    let reader = null;
+    let port = null;
+    let stopped = false;
+    let portListener = null;
+
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      if (portListener) {
+        window.removeEventListener("message", portListener);
+        portListener = null;
+      }
+      if (reader) {
+        try { reader.cancel(); } catch { /* noop */ }
+        reader = null;
+      }
+      if (port) {
+        try { port.close(); } catch { /* noop */ }
+        port = null;
+      }
+    };
+
+    activeFrameRelay = { stop };
+
+    portListener = (event) => {
+      if (event.source !== window) return;
+      if (event.data !== "screen-share-port") return;
+      const receivedPort = event.ports?.[0];
+      if (!receivedPort) return;
+      window.removeEventListener("message", portListener);
+      portListener = null;
+
+      if (stopped || !videoTrack || videoTrack.readyState === "ended") {
+        try { receivedPort.close(); } catch { /* noop */ }
+        return;
+      }
+      port = receivedPort;
+      try {
+        const processor = new MediaStreamTrackProcessor({ track: videoTrack });
+        reader = processor.readable.getReader();
+        console.debug("[SCREEN_SHARE_DIAG] Frame relay started");
+        pump();
+      } catch (error) {
+        console.error(`[SCREEN_SHARE_DIAG] Frame relay setup failed: ${error.name} - ${error.message}`);
+        stop();
+      }
+    };
+
+    window.addEventListener("message", portListener);
+
+    async function pump() {
+      while (!stopped && reader && port) {
+        let frame;
+        try {
+          const result = await reader.read();
+          if (result.done) break;
+          frame = result.value;
+        } catch (error) {
+          console.error(`[SCREEN_SHARE_DIAG] Frame relay read failed: ${error.name} - ${error.message}`);
+          break;
+        }
+        try {
+          port.postMessage(frame, [frame]);
+        } catch (error) {
+          console.error(`[SCREEN_SHARE_DIAG] Frame relay post failed: ${error.name} - ${error.message}`);
+          try { frame.close(); } catch { /* noop */ }
+          break;
+        }
+      }
+      stop();
+      console.debug("[SCREEN_SHARE_DIAG] Frame relay stopped");
+    }
+  }
+
+  function stopVideoFrameRelay() {
+    if (activeFrameRelay) {
+      activeFrameRelay.stop();
+      activeFrameRelay = null;
+    }
+  }
+
   // Function to handle stream ending - used by UI button detection
   function handleStreamEnd(reason) {
     console.debug(`[SCREEN_SHARE_DIAG] Stream ending: ${reason} (${activeStreams.length} streams, ${activeMediaTracks.length} tracks)`);
@@ -238,6 +312,7 @@
       // Clean up monitoring
       stopPeriodicCheck();
       stopUIMonitoring();
+      stopVideoFrameRelay();
 
       const electronAPI = globalThis.electronAPI;
       if (electronAPI?.sendScreenSharingStopped) {

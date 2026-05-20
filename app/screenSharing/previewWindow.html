@@ -16,7 +16,7 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-        
+
         #screen-share-video {
             width: 100%;
             height: 100%;
@@ -43,109 +43,99 @@
     <video id="screen-share-video" autoplay muted></video>
 
     <script>
-        globalThis.addEventListener('DOMContentLoaded', async () => {
+        // #2534: the preview no longer re-captures the screen via getUserMedia.
+        // Instead, the main process posts a MessagePort to this window over
+        // the 'screen-share-port' channel; the Teams renderer pumps VideoFrames
+        // through it from the already-captured screen-share track. We rebuild
+        // the stream on this side with MediaStreamTrackGenerator. Single capture,
+        // no second portal prompt on Wayland.
+        globalThis.addEventListener('DOMContentLoaded', () => {
             const videoElement = document.getElementById('screen-share-video');
             const statusOverlay = document.querySelector('.status-overlay');
 
-            const updateStatusAndStream = async () => {
-                try {
-                    const isActive = await globalThis.electronAPI.getScreenSharingStatus();
+            statusOverlay.textContent = 'Screen Share Active';
+            document.title = 'Teams for Linux - Screen is being shared';
 
-                    if (isActive) {
-                        statusOverlay.textContent = 'Screen Share Active';
-                        document.title = 'Teams for Linux - Screen is being shared';
+            let writer = null;
+            let resizeApplied = false;
 
-                        const sourceId = await globalThis.electronAPI.getScreenShareStream();
-                        const screenSize = await globalThis.electronAPI.getScreenShareScreen();
-                        
-                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
-                        
-                        if (sourceId) {
-                            const stream = await navigator.mediaDevices.getUserMedia({
-                                audio: false,
-                                video: {
-                                    mandatory: {
-                                        chromeMediaSource: 'desktop',
-                                        chromeMediaSourceId: sourceId,
-                                        minWidth: screenSize?.width || 1920,
-                                        maxWidth: screenSize?.width || 1920,
-                                        minHeight: screenSize?.height || 1080,
-                                        maxHeight: screenSize?.height || 1080
-                                    }
-                                }
-                            });
-                            
-                            videoElement.srcObject = stream;
-                            videoElement.style.display = 'block';
-                            
-                            // Wait for video metadata to load to get actual dimensions
-                            videoElement.addEventListener('loadedmetadata', () => {
-                                const videoWidth = videoElement.videoWidth;
-                                const videoHeight = videoElement.videoHeight;
-                                
-                                if (videoWidth && videoHeight) {
-                                    // Calculate thumbnail size while maintaining aspect ratio
-                                    const maxWidth = 400;
-                                    const maxHeight = 300;
-                                    const aspectRatio = videoWidth / videoHeight;
-                                    
-                                    let windowWidth, windowHeight;
-                                    
-                                    // Scale to thumbnail size maintaining aspect ratio
-                                    if (aspectRatio > maxWidth / maxHeight) {
-                                        // Video is wider - fit to max width
-                                        windowWidth = maxWidth;
-                                        windowHeight = maxWidth / aspectRatio;
-                                    } else {
-                                        // Video is taller - fit to max height
-                                        windowHeight = maxHeight;
-                                        windowWidth = maxHeight * aspectRatio;
-                                    }
-                                    
-                                    // Ensure minimum size
-                                    windowWidth = Math.max(windowWidth, 200);
-                                    windowHeight = Math.max(windowHeight, 120);
-                                    
-                                    // Add space for status overlay
-                                    windowHeight += 20;
-                                    
-                                    // Resize window to thumbnail size
-                                    if (globalThis.electronAPI.resizeWindow) {
-                                        globalThis.electronAPI.resizeWindow({
-                                            width: Math.round(windowWidth),
-                                            height: Math.round(windowHeight)
-                                        });
-                                    }
-                                    
-                                    console.debug('Resizing preview to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
-                                }
-                            }, { once: true });
-                        } else {
-                            videoElement.srcObject = null;
-                            videoElement.style.display = 'none';
-                            statusOverlay.textContent = 'No Screen Share Source';
-                        }
-                    } else {
-                        statusOverlay.textContent = 'Screen Share Inactive';
-                        document.title = 'Teams for Linux - Nothing is being shared';
-                        videoElement.srcObject = null;
-                        videoElement.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Error updating screen share preview:', error);
-                    statusOverlay.textContent = 'Error: ' + error.message;
-                    videoElement.srcObject = null;
-                    videoElement.style.display = 'none';
+            videoElement.addEventListener('loadedmetadata', () => {
+                if (resizeApplied) return;
+                const videoWidth = videoElement.videoWidth;
+                const videoHeight = videoElement.videoHeight;
+                if (!videoWidth || !videoHeight) return;
+                resizeApplied = true;
+
+                const maxWidth = 400;
+                const maxHeight = 300;
+                const aspectRatio = videoWidth / videoHeight;
+                let windowWidth, windowHeight;
+                if (aspectRatio > maxWidth / maxHeight) {
+                    windowWidth = maxWidth;
+                    windowHeight = maxWidth / aspectRatio;
+                } else {
+                    windowHeight = maxHeight;
+                    windowWidth = maxHeight * aspectRatio;
                 }
+                windowWidth = Math.max(windowWidth, 200);
+                windowHeight = Math.max(windowHeight, 120) + 20;
+
+                if (globalThis.electronAPI?.resizeWindow) {
+                    globalThis.electronAPI.resizeWindow({
+                        width: Math.round(windowWidth),
+                        height: Math.round(windowHeight),
+                    });
+                }
+            });
+
+            const wirePort = (port) => {
+                if (typeof MediaStreamTrackGenerator === 'undefined') {
+                    statusOverlay.textContent = 'MediaStreamTrackGenerator unavailable';
+                    return;
+                }
+                const generator = new MediaStreamTrackGenerator({ kind: 'video' });
+                writer = generator.writable.getWriter();
+                videoElement.srcObject = new MediaStream([generator]);
+
+                port.onmessage = async (event) => {
+                    const frame = event.data;
+                    if (!frame) return;
+                    try {
+                        await writer.write(frame);
+                    } catch (error) {
+                        console.error('Preview frame write failed', error);
+                        try { frame.close?.(); } catch { /* noop */ }
+                    }
+                };
+
+                port.onmessageerror = (error) => {
+                    console.error('Preview port message error', error);
+                };
+
+                port.start?.();
             };
 
-            // Initial status and stream update
-            updateStatusAndStream();
-            
-            // Listen for screen sharing status changes
-            if (globalThis?.electronAPI?.onScreenSharingStatusChanged) {
-                globalThis.electronAPI.onScreenSharingStatusChanged(() => {
-                    updateStatusAndStream();
+            // The preload forwards the MessagePort from main via window.postMessage
+            // with transfer; pick it up here once. See app/screenSharing/previewWindowPreload.js.
+            window.addEventListener('message', (event) => {
+                if (event.source !== window) return;
+                if (event.data !== 'screen-share-port') return;
+                const port = event.ports?.[0];
+                if (port) wirePort(port);
+            });
+
+            if (globalThis.electronAPI?.onScreenSharingStatusChanged) {
+                globalThis.electronAPI.onScreenSharingStatusChanged(async () => {
+                    const isActive = await globalThis.electronAPI.getScreenSharingStatus();
+                    if (!isActive) {
+                        statusOverlay.textContent = 'Screen Share Inactive';
+                        document.title = 'Teams for Linux - Nothing is being shared';
+                        if (writer) {
+                            try { await writer.close(); } catch { /* noop */ }
+                            writer = null;
+                        }
+                        videoElement.srcObject = null;
+                    }
                 });
             }
         });

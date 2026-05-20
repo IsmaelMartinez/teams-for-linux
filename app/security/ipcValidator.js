@@ -31,7 +31,6 @@ const allowedChannels = new Set([
   'screen-sharing-stopped',
   'select-source',
   'selected-source',
-  'show-tfl-stream-picker',
   'source-selected',
   'stop-screen-sharing-from-thumbnail',
   
