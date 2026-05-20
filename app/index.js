@@ -319,7 +319,10 @@ if (gotTheLock) {
     // messages were silently dropped. Fields are run through
     // sanitizeRendererLogField to scrub PII before logging.
     try {
-      console.error("[Renderer] Unhandled rejection:", {
+      // Run the noise check on the raw message — the sanitizer may strip
+      // query strings / fragments that contain the auth error code.
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      log("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
@@ -332,7 +335,8 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      console.error("[Renderer] Window error:", {
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      log("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
         lineno: toFiniteNumber(errorData?.lineno, 0),
@@ -401,6 +405,25 @@ function sanitizeRendererLogField(value, fallback = null) {
  */
 function toFiniteNumber(value, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+// Teams floods the renderer with these error signatures whenever no user is
+// signed in, until the auth-recovery layer (see app/mainAppWindow/index.js)
+// clears stale state and reloads. The recovery layer is the actionable
+// channel for these; mirroring them as console.error in our logs just buries
+// real issues. Down-leveling to console.debug keeps them available without
+// the noise.
+const PRE_LOGIN_AUTH_NOISE_PATTERNS = [
+  "login_required",
+  "aadsts50058",
+  "interactionrequired",
+  "authfailed",
+];
+
+function isPreLoginAuthNoise(message) {
+  if (typeof message !== "string") return false;
+  const lower = message.toLowerCase();
+  return PRE_LOGIN_AUTH_NOISE_PATTERNS.some((p) => lower.includes(p));
 }
 
 /**
