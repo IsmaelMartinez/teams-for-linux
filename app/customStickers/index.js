@@ -37,12 +37,33 @@ class CustomStickers {
 
     this.stickerFolder = this.resolveStickerFolder();
     try {
+      const created = !fs.existsSync(this.stickerFolder);
       fs.mkdirSync(this.stickerFolder, { recursive: true });
       console.info(`${LOG_PREFIX} Sticker folder ready`);
+      if (created) {
+        this.seedExampleSticker();
+      }
     } catch (err) {
       console.error(
         `${LOG_PREFIX} Failed to create sticker folder: ${err.message}`,
       );
+    }
+  }
+
+  seedExampleSticker() {
+    // Drop a single bundled example into the user's freshly-created folder so
+    // the panel has something to show on first open. User can delete it and
+    // add their own. Only runs when the folder did not exist before init.
+    const exampleSrc = path.join(__dirname, "example", "example-teams-for-linux.png");
+    const exampleDest = path.join(this.stickerFolder, "example-teams-for-linux.png");
+    try {
+      if (!fs.existsSync(exampleSrc)) {
+        return;
+      }
+      fs.copyFileSync(exampleSrc, exampleDest);
+      console.info(`${LOG_PREFIX} Seeded example sticker`);
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} Failed to seed example sticker: ${err.message}`);
     }
   }
 

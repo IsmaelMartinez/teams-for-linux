@@ -24,6 +24,8 @@ When enabled, a small floating button appears on the Teams window. Clicking it o
 
 The main process scans the configured folder when the renderer asks for the sticker list. The folder is re-scanned on every panel open — drop files in and they appear next time you open the panel.
 
+When the feature is enabled and the default folder did not previously exist, a single bundled example sticker (the wrapper's icon) is copied into it on first run so the panel has something to show. Delete it and replace with your own.
+
 Stickers are sent into Teams by dispatching a synthetic `ClipboardEvent('paste')` at the focused compose box. Teams's editor (CKEditor 5) handles the event the same way it handles a real paste. This was validated end-to-end during the feasibility spike — see [`spike/2476-stickers/`](../../spike/2476-stickers/) at the repo root for the research and design notes.
 
 ## What's out of scope

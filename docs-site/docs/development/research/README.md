@@ -38,6 +38,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 Shipped (v2.7.4)**: Token acquisition plus 7 IPC channels (user profile, calendar events/view, calendar create, mail messages, People search, send chat). People search and send chat power Quick Chat (ADR-014, ADR-015)
   - **Phases 2-3**: Calendar widget, mail preview, presence, settings UI — not started
 
+### Idea Stage
+
+- **[Custom Stickers — Online Import](custom-stickers-online-import-research.md)** — follow-up to the MVP ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
+  - Target: Telegram sticker packs (file-based, no auth, huge library)
+  - Two resolution paths: HTML scrape (default) or Telegram Bot API (opt-in)
+  - Out of scope until someone asks; recorded so design is not lost
+
 ### Reference
 
 - **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.
