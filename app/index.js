@@ -16,6 +16,7 @@ const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
+const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
@@ -316,7 +317,7 @@ if (gotTheLock) {
     // Payload is constructed and length-capped in app/browser/preload.js;
     // prior to this handler + the ipcValidator allowlist entry these
     // messages were silently dropped. Fields are run through
-    // sanitizeRendererLogField to scrub URL query strings before logging.
+    // sanitizeRendererLogField to scrub PII before logging.
     try {
       console.error("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
@@ -358,9 +359,13 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 
 /**
  * Sanitizes a renderer-supplied log string before it hits main-process logs.
- * Strips the query string / fragment from any URL in the value (Teams CDN
- * URLs can carry cache-busting or auth tokens) and length-caps the result.
- * Non-strings fall back to the supplied fallback.
+ * Runs it through the shared PII sanitizer (which scrubs emails, UUIDs,
+ * tokens, IPs, URL query strings, user paths, etc.) and length-caps the
+ * result. Non-strings fall back to the supplied fallback.
+ *
+ * Renderer errors from Teams can contain UserId/tenantId/Trace ID/Correlation
+ * ID values that match the shared UUID pattern. CLAUDE.md treats account IDs
+ * and SSO info as must-not-log.
  *
  * @param {unknown} value - The field value to sanitize.
  * @param {any} fallback - Value to return when `value` is not a string.
@@ -369,14 +374,11 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 function sanitizeRendererLogField(value, fallback = null) {
   if (typeof value !== "string") return fallback;
 
-  const redacted = value.replaceAll(
-    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#)'"<>]+)[?#][^\s)'"<>]*/gi,
-    "$1[redacted]",
-  );
+  const sanitized = sanitizePii(value);
 
-  return redacted.length > MAX_RENDERER_LOG_FIELD_LENGTH
-    ? `${redacted.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
-    : redacted;
+  return sanitized.length > MAX_RENDERER_LOG_FIELD_LENGTH
+    ? `${sanitized.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
+    : sanitized;
 }
 
 /**
