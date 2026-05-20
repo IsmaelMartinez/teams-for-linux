@@ -10,6 +10,7 @@ const {
 const path = require("node:path");
 const crypto = require("node:crypto");
 const CustomBackground = require("./customBackground");
+const CustomStickers = require("./customStickers");
 const { MQTTClient } = require("./mqtt");
 const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
 const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
@@ -674,6 +675,10 @@ async function handleAppReady() {
 
     const customBackground = new CustomBackground(app, config);
     customBackground.initialize();
+
+    const customStickers = new CustomStickers(app, config);
+    customStickers.initialize();
+
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
     // Phase 1c.1: wire per-profile WebContentsView lifecycle once the main

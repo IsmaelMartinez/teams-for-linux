@@ -196,6 +196,16 @@ function extractYargConfig(configObject, appVersion) {
         describe: "custom CSS styles file location",
         type: "string",
       },
+      customStickers: {
+        default: {
+          enabled: false,
+          folder: "",
+          formats: ["png", "jpg", "jpeg", "gif"],
+        },
+        describe:
+          "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot).",
+        type: "object",
+      },
       disableTimestampOnCopy: {
         default: false,
         describe:

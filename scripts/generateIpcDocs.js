@@ -27,6 +27,7 @@ const CATEGORIES = {
   'app/partitions/': 'Partitions & Zoom',
   'app/menus/': 'Menus & Tray',
   'app/customBackground/': 'Custom Background',
+  'app/customStickers/': 'Custom Stickers',
   'app/mainAppWindow/': 'Main Window',
   'app/login/': 'Authentication',
   'app/connectionManager/': 'Connection Management',

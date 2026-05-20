@@ -69,6 +69,9 @@ const allowedChannels = new Set([
   
   // Custom backgrounds
   'get-custom-bg-list',
+
+  // Custom stickers
+  'get-sticker-list',
   
   // Connection management
   'offline-retry',
