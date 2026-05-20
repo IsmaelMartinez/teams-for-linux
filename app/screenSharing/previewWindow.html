@@ -17,11 +17,12 @@
             box-sizing: border-box;
         }
 
-        #screen-share-video {
+        #screen-share-canvas {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background-color: #000;
+            display: block;
         }
 
         .status-overlay {
@@ -40,35 +41,42 @@
 </head>
 <body>
     <div class="status-overlay">Screen Share Preview</div>
-    <video id="screen-share-video" autoplay muted></video>
+    <canvas id="screen-share-canvas"></canvas>
 
     <script>
         // #2534: the preview no longer re-captures the screen via getUserMedia.
-        // Instead, the main process posts a MessagePort to this window over
-        // the 'screen-share-port' channel; the Teams renderer pumps VideoFrames
-        // through it from the already-captured screen-share track. We rebuild
-        // the stream on this side with MediaStreamTrackGenerator. Single capture,
+        // Instead, the Teams renderer takes periodic snapshots of the captured
+        // screen-share track, transfers each snapshot as an ImageBitmap over a
+        // MessagePort, and we paint it onto the canvas here. ImageBitmap (unlike
+        // VideoFrame) survives cross-process transfer cleanly. Single capture,
         // no second portal prompt on Wayland.
         globalThis.addEventListener('DOMContentLoaded', () => {
-            const videoElement = document.getElementById('screen-share-video');
+            const canvas = document.getElementById('screen-share-canvas');
             const statusOverlay = document.querySelector('.status-overlay');
 
             statusOverlay.textContent = 'Screen Share Active';
             document.title = 'Teams for Linux - Screen is being shared';
 
-            let writer = null;
+            let bitmapCtx = null;
+            try {
+                bitmapCtx = canvas.getContext('bitmaprenderer');
+            } catch (error) {
+                statusOverlay.textContent = 'ImageBitmap render context unavailable';
+                console.error('Failed to acquire bitmaprenderer context', error);
+            }
+
+            let port = null;
             let resizeApplied = false;
 
-            videoElement.addEventListener('loadedmetadata', () => {
+            const applyResize = (bitmap) => {
                 if (resizeApplied) return;
-                const videoWidth = videoElement.videoWidth;
-                const videoHeight = videoElement.videoHeight;
-                if (!videoWidth || !videoHeight) return;
                 resizeApplied = true;
+                canvas.width = bitmap.width;
+                canvas.height = bitmap.height;
 
                 const maxWidth = 400;
                 const maxHeight = 300;
-                const aspectRatio = videoWidth / videoHeight;
+                const aspectRatio = bitmap.width / bitmap.height;
                 let windowWidth, windowHeight;
                 if (aspectRatio > maxWidth / maxHeight) {
                     windowWidth = maxWidth;
@@ -86,52 +94,45 @@
                         height: Math.round(windowHeight),
                     });
                 }
-            });
+            };
 
-            const wirePort = (port) => {
-                if (typeof MediaStreamTrackGenerator === 'undefined') {
-                    statusOverlay.textContent = 'MediaStreamTrackGenerator unavailable';
-                    return;
-                }
-                // Defensively tear down a prior writer if wirePort fires twice
-                // (e.g. Teams "Change what's shared" mid-session): close the
-                // previous writable to release the old generator and reset the
-                // resize guard so the new track can re-fit the window.
-                if (writer) {
-                    try { writer.close(); } catch { /* noop */ }
-                    writer = null;
+            const wirePort = (received) => {
+                if (!bitmapCtx) return;
+                // Defensively close any prior port; a second wire-up means a
+                // mid-session "Change what's shared" or a second share session.
+                if (port) {
+                    try { port.close(); } catch { /* noop */ }
+                    port = null;
                 }
                 resizeApplied = false;
-
-                const generator = new MediaStreamTrackGenerator({ kind: 'video' });
-                writer = generator.writable.getWriter();
-                videoElement.srcObject = new MediaStream([generator]);
-
-                port.onmessage = async (event) => {
-                    const frame = event.data;
-                    if (!frame) return;
+                port = received;
+                port.onmessage = (event) => {
+                    const bitmap = event.data;
+                    if (!(bitmap instanceof ImageBitmap)) {
+                        console.warn('Preview received non-ImageBitmap payload', bitmap);
+                        return;
+                    }
+                    applyResize(bitmap);
                     try {
-                        await writer.write(frame);
+                        bitmapCtx.transferFromImageBitmap(bitmap);
                     } catch (error) {
-                        console.error('Preview frame write failed', error);
-                        try { frame.close?.(); } catch { /* noop */ }
+                        console.error('Preview bitmap render failed', error);
+                        try { bitmap.close?.(); } catch { /* noop */ }
                     }
                 };
-
-                port.onmessageerror = (error) => {
-                    console.error('Preview port message error', error);
+                port.onmessageerror = (event) => {
+                    console.error('Preview port message error', event);
                 };
-
                 port.start?.();
             };
 
             // The preload forwards the MessagePort from main via window.postMessage
-            // with transfer; pick it up here once. See app/screenSharing/previewWindowPreload.js.
+            // with transfer; pick it up once. See app/screenSharing/previewWindowPreload.js.
             window.addEventListener('message', (event) => {
                 if (event.source !== window) return;
                 if (event.data !== 'screen-share-port') return;
-                const port = event.ports?.[0];
-                if (port) wirePort(port);
+                const received = event.ports?.[0];
+                if (received) wirePort(received);
             });
 
             if (globalThis.electronAPI?.onScreenSharingStatusChanged) {
@@ -140,11 +141,10 @@
                     if (!isActive) {
                         statusOverlay.textContent = 'Screen Share Inactive';
                         document.title = 'Teams for Linux - Nothing is being shared';
-                        if (writer) {
-                            try { await writer.close(); } catch { /* noop */ }
-                            writer = null;
+                        if (port) {
+                            try { port.close(); } catch { /* noop */ }
+                            port = null;
                         }
-                        videoElement.srcObject = null;
                     }
                 });
             }

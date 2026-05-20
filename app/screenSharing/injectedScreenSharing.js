@@ -200,16 +200,15 @@
     }
   }
 
-  // Relay VideoFrames from the captured screen-share track to the preview
+  // Relay periodic snapshots of the captured screen-share track to the preview
   // window over a MessagePort the main process hands us via window.postMessage
   // (see app/browser/preload.js). Lets the preview render the same source
-  // without a second getUserMedia/portal call.
+  // without a second getUserMedia/portal call. We use ImageBitmap transfer
+  // rather than VideoFrame because VideoFrame's underlying GPU buffer cannot
+  // be deserialised across BrowserWindow renderer processes - the first
+  // iteration of this spike hit `messageerror` on every frame for that exact
+  // reason. ImageBitmap transfer is cross-process safe.
   function startVideoFrameRelay(stream) {
-    if (typeof MediaStreamTrackProcessor === "undefined") {
-      console.warn("[SCREEN_SHARE_DIAG] MediaStreamTrackProcessor unavailable - preview relay disabled");
-      return;
-    }
-
     const videoTrack = stream.getVideoTracks()[0];
     if (!videoTrack) {
       console.debug("[SCREEN_SHARE_DIAG] No video track on stream - preview relay disabled");
@@ -220,22 +219,43 @@
     // started a second share without our 'inactive' fire-and-forget cleanup).
     stopVideoFrameRelay();
 
-    let reader = null;
+    // Thumbnail-rate is fine for a "what am I sharing" preview; keeps the
+    // per-tick canvas draw + ImageBitmap transfer cheap.
+    const FPS = 5;
+    const FRAME_INTERVAL_MS = Math.round(1000 / FPS);
+    // Cap the longest edge of the snapshot. The preview window is ~320x180
+    // by default, so we lose nothing by scaling down before transferring.
+    const MAX_EDGE = 320;
+
     let port = null;
     let stopped = false;
     let portListener = null;
+    let videoEl = null;
+    let canvas = null;
+    let canvasCtx = null;
+    let intervalId = null;
+    let frameCount = 0;
 
     const stop = () => {
       if (stopped) return;
       stopped = true;
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
       if (portListener) {
         window.removeEventListener("message", portListener);
         portListener = null;
       }
-      if (reader) {
-        try { reader.cancel(); } catch { /* noop */ }
-        reader = null;
+      if (videoEl) {
+        try {
+          videoEl.srcObject = null;
+          videoEl.remove();
+        } catch { /* noop */ }
+        videoEl = null;
       }
+      canvas = null;
+      canvasCtx = null;
       if (port) {
         try { port.close(); } catch { /* noop */ }
         port = null;
@@ -243,6 +263,40 @@
     };
 
     activeFrameRelay = { stop };
+
+    const startSnapshotTicks = () => {
+      const srcWidth = videoEl.videoWidth || 1280;
+      const srcHeight = videoEl.videoHeight || 720;
+      const scale = Math.min(1, MAX_EDGE / Math.max(srcWidth, srcHeight));
+      const targetWidth = Math.max(1, Math.round(srcWidth * scale));
+      const targetHeight = Math.max(1, Math.round(srcHeight * scale));
+      try {
+        canvas = new OffscreenCanvas(targetWidth, targetHeight);
+        canvasCtx = canvas.getContext("2d");
+      } catch (error) {
+        console.error(`[SCREEN_SHARE_DIAG] OffscreenCanvas setup failed: ${error.name} - ${error.message}`);
+        stop();
+        return;
+      }
+      intervalId = setInterval(() => {
+        if (stopped || !port || !canvas || !canvasCtx || videoTrack.readyState === "ended") {
+          stop();
+          return;
+        }
+        try {
+          canvasCtx.drawImage(videoEl, 0, 0, targetWidth, targetHeight);
+          const bitmap = canvas.transferToImageBitmap();
+          port.postMessage(bitmap, [bitmap]);
+          frameCount++;
+          if (frameCount === 1) {
+            console.debug(`[SCREEN_SHARE_DIAG] First preview snapshot posted (${targetWidth}x${targetHeight} @ ${FPS}fps)`);
+          }
+        } catch (error) {
+          console.error(`[SCREEN_SHARE_DIAG] Snapshot relay tick failed: ${error.name} - ${error.message}`);
+          stop();
+        }
+      }, FRAME_INTERVAL_MS);
+    };
 
     portListener = (event) => {
       if (event.source !== window) return;
@@ -257,41 +311,35 @@
         return;
       }
       port = receivedPort;
+
       try {
-        const processor = new MediaStreamTrackProcessor({ track: videoTrack });
-        reader = processor.readable.getReader();
-        console.debug("[SCREEN_SHARE_DIAG] Frame relay started");
-        pump();
+        // Hidden, muted, off-screen video element so drawImage has something
+        // to sample. The track is already playing on Teams' own video element
+        // separately; this is a second consumer of the same MediaStreamTrack.
+        videoEl = document.createElement("video");
+        videoEl.style.cssText = "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;top:-9999px;left:-9999px;";
+        videoEl.muted = true;
+        videoEl.autoplay = true;
+        videoEl.playsInline = true;
+        videoEl.srcObject = new MediaStream([videoTrack]);
+        document.body.appendChild(videoEl);
+
+        videoEl.addEventListener(
+          "loadedmetadata",
+          () => {
+            if (stopped) return;
+            startSnapshotTicks();
+            console.debug("[SCREEN_SHARE_DIAG] Snapshot relay started");
+          },
+          { once: true }
+        );
       } catch (error) {
-        console.error(`[SCREEN_SHARE_DIAG] Frame relay setup failed: ${error.name} - ${error.message}`);
+        console.error(`[SCREEN_SHARE_DIAG] Snapshot relay setup failed: ${error.name} - ${error.message}`);
         stop();
       }
     };
 
     window.addEventListener("message", portListener);
-
-    async function pump() {
-      while (!stopped && reader && port) {
-        let frame;
-        try {
-          const result = await reader.read();
-          if (result.done) break;
-          frame = result.value;
-        } catch (error) {
-          console.error(`[SCREEN_SHARE_DIAG] Frame relay read failed: ${error.name} - ${error.message}`);
-          break;
-        }
-        try {
-          port.postMessage(frame, [frame]);
-        } catch (error) {
-          console.error(`[SCREEN_SHARE_DIAG] Frame relay post failed: ${error.name} - ${error.message}`);
-          try { frame.close(); } catch { /* noop */ }
-          break;
-        }
-      }
-      stop();
-      console.debug("[SCREEN_SHARE_DIAG] Frame relay stopped");
-    }
   }
 
   function stopVideoFrameRelay() {
