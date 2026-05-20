@@ -68,7 +68,7 @@ Recommendation: start with static-only (filter out `.tgs` at import time, option
 
 ## UX
 
-Minimal first-cut UX: a button in the sticker panel header reading "Import pack...". Clicking opens an inline input for a Telegram pack URL or slug. On submit, the importer runs and the panel refreshes. Status messages display in the panel header: "Importing... N done" → "Imported N stickers from <pack>".
+Minimal first-cut UX: a button in the sticker panel header reading "Import pack...". Clicking opens an inline input for a Telegram pack URL or slug. On submit, the importer runs and the panel refreshes. Status messages display in the panel header: "Importing... N done" → "Imported N stickers from `<pack>`".
 
 No new top-level menu surfaces. No background polling for pack updates. Re-import re-fetches the pack and skips files that already exist.
 
