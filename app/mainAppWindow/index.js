@@ -402,23 +402,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
     if (isMac) {
       console.info("Setting Dock icon for macOS");
-      let dockIconPath;
-      
-      // Use custom icon if specified, otherwise use default 256x256 icon for dock
-      if (config.appIcon && config.appIcon.trim() !== "") {
-        dockIconPath = config.appIcon;
-      } else {
-        dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
-      }
-      
+
+      // macOS requires >=128x128 for the dock; use the 256x256 asset by default.
+      const DEFAULT_MACOS_DOCK_ICON = "assets/icons/icon-256x256.png";
+      const dockIconPath = config.appIcon && config.appIcon.trim() !== ""
+        ? config.appIcon
+        : path.join(config.appPath, DEFAULT_MACOS_DOCK_ICON);
+
       const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
-      
+
       if (iconSize.width < 128) {
         console.warn(
           `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
         );
-        // Resize the icon to meet macOS dock requirements
         const resizedIcon = icon.resize({ width: 128, height: 128 });
         app.dock.setIcon(resizedIcon);
       } else {

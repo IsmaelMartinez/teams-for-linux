@@ -138,6 +138,8 @@ Place your `config.json` file in the appropriate location based on your installa
 |--------|------|---------|-------------|
 | `download.enabled` | `boolean` | `false` | Master switch for the download feedback feature. Opt-in while in early development; set to `true` to enable the manager. The sub-flags only take effect when `enabled` is `true`. |
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
+| `download.showProgressBar` | `boolean` | `true` | Drive in-flight feedback through `BrowserWindow.setProgressBar` (macOS / Windows; effectively no-op on Linux), a `com.canonical.Unity.LauncherEntry` D-Bus broadcast that Ubuntu Dock and Dash-to-Dock subscribe to (GNOME / Ubuntu users), and an `org.kde.JobViewServer` per-download view rendered in KDE Plasma's notification widget. The window-title prefix is a separate sub-flag (`showTitlePrefix`). |
+| `download.showTitlePrefix` | `boolean` | `true` | Also prefix the main window title with `[34%]` (or `[downloading]`) while a download is in flight. Every WM/DE renders the window title in its taskbar tooltip / Alt-Tab, so this is a portable fallback for environments where the other channels are unavailable. Set to `false` on KDE / Ubuntu where the JobView / LauncherEntry already shows progress and the title churn is redundant. |
 
 ### Idle & Activity Detection
 
@@ -716,7 +718,7 @@ The configuration file can include Electron CLI flags that will be added when th
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
 > [!WARNING]
-> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The default is `--ozone-platform=auto`, which lets Chromium pick the backend based on the session. To force a specific backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The current default is `--ozone-platform=x11` on all Linux packaging formats. To force a different backend, pass `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 
