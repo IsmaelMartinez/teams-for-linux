@@ -93,6 +93,16 @@
                     statusOverlay.textContent = 'MediaStreamTrackGenerator unavailable';
                     return;
                 }
+                // Defensively tear down a prior writer if wirePort fires twice
+                // (e.g. Teams "Change what's shared" mid-session): close the
+                // previous writable to release the old generator and reset the
+                // resize guard so the new track can re-fit the window.
+                if (writer) {
+                    try { writer.close(); } catch { /* noop */ }
+                    writer = null;
+                }
+                resizeApplied = false;
+
                 const generator = new MediaStreamTrackGenerator({ kind: 'video' });
                 writer = generator.writable.getWriter();
                 videoElement.srcObject = new MediaStream([generator]);
