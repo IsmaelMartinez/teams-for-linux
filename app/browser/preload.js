@@ -432,12 +432,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Plain objects without a `.message` (and `undefined` rejections) previously stringified to
 // the literals "[object Object]" / "undefined", which discarded all diagnostic content.
 function serializeRejectionReason(reason) {
-  if (reason === undefined) return "<undefined>";
-  if (reason === null) return "<null>";
-  if (typeof reason === "string") return reason;
-  if (typeof reason !== "object") return String(reason);
-  if (typeof reason.message === "string" && reason.message.length > 0) return reason.message;
+  // The whole body is wrapped in try/catch so a throwing `reason.message`
+  // getter (or any other unexpected exception) degrades to a sentinel
+  // string instead of propagating to the outer handler and dropping the
+  // whole rejection payload.
   try {
+    if (reason === undefined) return "<undefined>";
+    if (reason === null) return "<null>";
+    if (typeof reason === "string") return reason;
+    if (typeof reason !== "object") return String(reason);
+    if (typeof reason.message === "string" && reason.message.length > 0) return reason.message;
     const seen = new WeakSet();
     return JSON.stringify(reason, (_key, value) => {
       if (typeof value === "object" && value !== null) {
