@@ -82,9 +82,34 @@ class CustomStickers {
   getAllowedFormats() {
     const formats = this.config.customStickers?.formats;
     if (!Array.isArray(formats) || formats.length === 0) {
-      return ["png", "jpg", "jpeg", "gif"];
+      return ["png", "jpg", "jpeg", "gif", "webp"];
     }
     return formats.map((f) => String(f).toLowerCase().replace(/^\./, ""));
+  }
+
+  #readStickerFile(filePath, name, subfolder, allowed) {
+    const ext = path.extname(name).slice(1).toLowerCase();
+    if (!allowed.has(ext)) {
+      return null;
+    }
+    const mimeType = EXTENSION_MIME[ext];
+    if (!mimeType) {
+      return null;
+    }
+    try {
+      const buf = fs.readFileSync(filePath);
+      return {
+        name,
+        subfolder,
+        mimeType,
+        dataUrl: `data:${mimeType};base64,${buf.toString("base64")}`,
+      };
+    } catch (err) {
+      console.warn(
+        `${LOG_PREFIX} Skipped sticker (read failure): ${err.message}`,
+      );
+      return null;
+    }
   }
 
   handleGetStickerList() {
@@ -106,33 +131,50 @@ class CustomStickers {
     const stickers = [];
 
     for (const entry of entries) {
-      if (!entry.isFile()) {
+      if (entry.isFile()) {
+        const sticker = this.#readStickerFile(
+          path.join(folder, entry.name),
+          entry.name,
+          "",
+          allowed,
+        );
+        if (sticker) stickers.push(sticker);
         continue;
       }
-      const ext = path.extname(entry.name).slice(1).toLowerCase();
-      if (!allowed.has(ext)) {
+      if (!entry.isDirectory()) {
         continue;
       }
-      const mimeType = EXTENSION_MIME[ext];
-      if (!mimeType) {
-        continue;
-      }
-      const filePath = path.join(folder, entry.name);
+      // Recurse exactly one level so packs imported under <folder>/<pack>/
+      // (Telegram, AI, URL-paste subfolders) are visible. Deeper trees are
+      // intentionally not scanned to keep the model simple.
+      const subPath = path.join(folder, entry.name);
+      let subEntries;
       try {
-        const buf = fs.readFileSync(filePath);
-        stickers.push({
-          name: entry.name,
-          mimeType,
-          dataUrl: `data:${mimeType};base64,${buf.toString("base64")}`,
-        });
+        subEntries = fs.readdirSync(subPath, { withFileTypes: true });
       } catch (err) {
         console.warn(
-          `${LOG_PREFIX} Skipped sticker (read failure): ${err.message}`,
+          `${LOG_PREFIX} Skipped subfolder (read failure): ${err.message}`,
         );
+        continue;
+      }
+      for (const subEntry of subEntries) {
+        if (!subEntry.isFile()) continue;
+        const sticker = this.#readStickerFile(
+          path.join(subPath, subEntry.name),
+          subEntry.name,
+          entry.name,
+          allowed,
+        );
+        if (sticker) stickers.push(sticker);
       }
     }
 
-    stickers.sort((a, b) => a.name.localeCompare(b.name));
+    stickers.sort((a, b) => {
+      if (a.subfolder !== b.subfolder) {
+        return a.subfolder.localeCompare(b.subfolder);
+      }
+      return a.name.localeCompare(b.name);
+    });
     return { folder, stickers };
   }
 }

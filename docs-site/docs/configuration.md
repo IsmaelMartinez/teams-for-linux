@@ -393,7 +393,7 @@ A floating sticker panel that lists image files from a local folder and pastes t
 |--------|------|---------|-------------|
 | `customStickers.enabled` | `boolean` | `false` | Master flag for the custom stickers feature |
 | `customStickers.folder` | `string` | `""` | Absolute path to the sticker folder. Empty string uses `<userData>/stickers/`, which is created on first run if missing |
-| `customStickers.formats` | `array` | `["png", "jpg", "jpeg", "gif"]` | File extensions the scanner accepts (lowercase, no leading dot) |
+| `customStickers.formats` | `array` | `["png", "jpg", "jpeg", "gif", "webp"]` | File extensions the scanner accepts (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories, so stickers organised under `<folder>/<group>/` are visible. |
 
 ### URL & Protocol Handling
 

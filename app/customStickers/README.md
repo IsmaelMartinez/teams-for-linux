@@ -1,6 +1,6 @@
 # Custom Stickers
 
-Lets you keep a folder of image files (PNGs / JPEGs / GIFs) on disk and send any of them into the current Teams chat with one click, without going through Teams's attach-file dialog every time.
+Lets you keep a folder of image files (PNGs / JPEGs / GIFs / WebPs) on disk and send any of them into the current Teams chat with one click, without going through Teams's attach-file dialog every time.
 
 When enabled, a small floating button appears on the Teams window. Clicking it opens a panel listing every image in the configured folder. Clicking a sticker focuses the chat compose box and inserts the image as if you had pasted it from the system clipboard — press Enter (or Teams's send button) to send.
 
@@ -11,18 +11,20 @@ When enabled, a small floating button appears on the Teams window. Clicking it o
   "customStickers": {
     "enabled": false,
     "folder": "",
-    "formats": ["png", "jpg", "jpeg", "gif"]
+    "formats": ["png", "jpg", "jpeg", "gif", "webp"]
   }
 }
 ```
 
 - **`enabled`** (boolean, default `false`) — master flag. Off by default.
 - **`folder`** (string, default `""`) — absolute path to the sticker folder. Empty string uses `<userData>/stickers/`, which is created on first run if missing.
-- **`formats`** (array, default `["png", "jpg", "jpeg", "gif"]`) — file extensions the scanner accepts (lowercase, no leading dot).
+- **`formats`** (array, default `["png", "jpg", "jpeg", "gif", "webp"]`) — file extensions the scanner accepts (lowercase, no leading dot).
 
 ## How it works
 
-The main process scans the configured folder when the renderer asks for the sticker list. The folder is re-scanned on every panel open — drop files in and they appear next time you open the panel.
+The main process scans the configured folder when the renderer asks for the sticker list. The folder is re-scanned on every panel open, drop files in and they appear next time you open the panel.
+
+The scanner also recurses one level into subdirectories so stickers organised under `<folder>/<group>/` are visible alongside top-level ones. Deeper trees are intentionally not scanned. Each sticker entry carries its subfolder name (empty string for top-level) so future UI affordances like pack-tab navigation can group stickers without changing the data shape.
 
 When the feature is enabled and the default folder did not previously exist, a single bundled example sticker (the wrapper's icon) is copied into it on first run so the panel has something to show. Delete it and replace with your own.
 

@@ -200,10 +200,10 @@ function extractYargConfig(configObject, appVersion) {
         default: {
           enabled: false,
           folder: "",
-          formats: ["png", "jpg", "jpeg", "gif"],
+          formats: ["png", "jpg", "jpeg", "gif", "webp"],
         },
         describe:
-          "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot).",
+          "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories so packs imported under <folder>/<pack>/ are visible.",
         type: "object",
       },
       disableTimestampOnCopy: {
