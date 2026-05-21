@@ -72,6 +72,7 @@ const allowedChannels = new Set([
 
   // Custom stickers
   'get-sticker-list',
+  'import-sticker-url',
   
   // Connection management
   'offline-retry',

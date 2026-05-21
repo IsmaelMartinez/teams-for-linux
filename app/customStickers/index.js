@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 
 const LOG_PREFIX = "[CUSTOM_STICKERS]";
 
@@ -12,6 +13,22 @@ const EXTENSION_MIME = {
   webp: "image/webp",
   bmp: "image/bmp",
 };
+
+const CONTENT_TYPE_EXT = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/bmp": "bmp",
+};
+
+const DEFAULT_URL_IMPORT_CONTENT_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+];
+const DEFAULT_URL_IMPORT_MAX_BYTES = 5 * 1024 * 1024;
 
 class CustomStickers {
   constructor(app, config) {
@@ -28,6 +45,14 @@ class CustomStickers {
     // and rebuild a File for synthetic-paste insertion without needing direct
     // filesystem access.
     ipcMain.handle("get-sticker-list", () => this.handleGetStickerList());
+
+    // Download an HTTPS URL into the sticker folder. Validates the URL is
+    // HTTPS, the response content-type is on the allowlist, and the byte
+    // length is under the configured cap. Returns { success, filename }
+    // or { success: false, error }.
+    ipcMain.handle("import-sticker-url", (_event, rawUrl) =>
+      this.handleImportStickerUrl(rawUrl),
+    );
   }
 
   initialize() {
@@ -176,6 +201,126 @@ class CustomStickers {
       return a.name.localeCompare(b.name);
     });
     return { folder, stickers };
+  }
+
+  isUrlImportEnabled() {
+    return this.config.customStickers?.urlImport?.enabled !== false;
+  }
+
+  getUrlImportContentTypes() {
+    const configured = this.config.customStickers?.urlImport?.allowedContentTypes;
+    if (Array.isArray(configured) && configured.length > 0) {
+      return configured.map((t) => String(t).toLowerCase());
+    }
+    return DEFAULT_URL_IMPORT_CONTENT_TYPES;
+  }
+
+  getUrlImportMaxBytes() {
+    const configured = this.config.customStickers?.urlImport?.maxBytes;
+    if (typeof configured === "number" && configured > 0) {
+      return configured;
+    }
+    return DEFAULT_URL_IMPORT_MAX_BYTES;
+  }
+
+  static deriveSlug(urlString) {
+    let last = "";
+    try {
+      const u = new URL(urlString);
+      const segments = u.pathname.split("/").filter(Boolean);
+      last = segments[segments.length - 1] || u.hostname;
+    } catch {
+      last = "sticker";
+    }
+    // Strip extension, lowercase, replace non-alphanumeric with dashes,
+    // collapse repeats, trim, cap length.
+    const noExt = last.replace(/\.[^.]+$/, "");
+    const sanitised = noExt
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48);
+    return sanitised || "sticker";
+  }
+
+  async handleImportStickerUrl(rawUrl) {
+    if (!this.isEnabled()) {
+      return { success: false, error: "Custom stickers is disabled" };
+    }
+    if (!this.isUrlImportEnabled()) {
+      return { success: false, error: "URL import is disabled" };
+    }
+
+    let url;
+    try {
+      url = new URL(String(rawUrl));
+    } catch {
+      return { success: false, error: "Invalid URL" };
+    }
+    if (url.protocol !== "https:") {
+      return { success: false, error: "Only HTTPS URLs are accepted" };
+    }
+
+    const allowedTypes = this.getUrlImportContentTypes();
+    const maxBytes = this.getUrlImportMaxBytes();
+
+    let response;
+    try {
+      response = await fetch(url.toString(), { redirect: "follow" });
+    } catch (err) {
+      console.warn(`${LOG_PREFIX} URL fetch failed: ${err.message}`);
+      return { success: false, error: `Fetch failed: ${err.message}` };
+    }
+
+    if (!response.ok) {
+      return { success: false, error: `HTTP ${response.status}` };
+    }
+
+    const rawContentType = response.headers.get("content-type") || "";
+    const contentType = rawContentType.split(";")[0].trim().toLowerCase();
+    if (!allowedTypes.includes(contentType)) {
+      return {
+        success: false,
+        error: `Unsupported content-type: ${contentType || "unknown"}`,
+      };
+    }
+
+    const declaredLength = parseInt(
+      response.headers.get("content-length") || "0",
+      10,
+    );
+    if (declaredLength > maxBytes) {
+      return {
+        success: false,
+        error: `File too large (${declaredLength} bytes)`,
+      };
+    }
+
+    let buf;
+    try {
+      buf = Buffer.from(await response.arrayBuffer());
+    } catch (err) {
+      return { success: false, error: `Read failed: ${err.message}` };
+    }
+    if (buf.length > maxBytes) {
+      return { success: false, error: `File too large (${buf.length} bytes)` };
+    }
+
+    const ext = CONTENT_TYPE_EXT[contentType] || "png";
+    const slug = CustomStickers.deriveSlug(url.toString());
+    const hash = crypto.createHash("sha256").update(buf).digest("hex").slice(0, 8);
+    const filename = `${slug}-${hash}.${ext}`;
+    const folder = this.stickerFolder ?? this.resolveStickerFolder();
+
+    try {
+      fs.mkdirSync(folder, { recursive: true });
+      const destPath = path.join(folder, filename);
+      fs.writeFileSync(destPath, buf);
+      console.info(`${LOG_PREFIX} Imported URL sticker: ${filename}`);
+      return { success: true, filename };
+    } catch (err) {
+      return { success: false, error: `Write failed: ${err.message}` };
+    }
   }
 }
 

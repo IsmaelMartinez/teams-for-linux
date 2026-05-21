@@ -17,6 +17,7 @@ const LOG_PREFIX = "[CUSTOM_STICKERS]";
 const BUTTON_ID = "tfl-sticker-button";
 const PANEL_ID = "tfl-sticker-panel";
 const STYLES_ID = "tfl-sticker-styles";
+const URL_INPUT_ID = "tfl-sticker-url-input";
 
 // Selector cascade mirrors the spike harness — most-specific first.
 const COMPOSE_SELECTORS = [
@@ -125,6 +126,47 @@ class CustomStickers {
         border-bottom: 1px solid #444;
         font-weight: 600;
         flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      #${PANEL_ID} .tfl-sticker-header-title { flex: 0 0 auto; }
+      #${PANEL_ID} .tfl-sticker-url-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex: 1 1 auto;
+      }
+      #${PANEL_ID} .tfl-sticker-url-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 4px 6px;
+        background: #1f1f1f;
+        color: #e6e6e6;
+        border: 1px solid #555;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: normal;
+      }
+      #${PANEL_ID} .tfl-sticker-url-input::placeholder { color: #888; }
+      #${PANEL_ID} .tfl-sticker-url-button {
+        padding: 4px 8px;
+        background: #6264a7;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #${PANEL_ID} .tfl-sticker-url-button:hover { filter: brightness(1.1); }
+      #${PANEL_ID} .tfl-sticker-url-button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      #${PANEL_ID}.tfl-sticker-drop-active {
+        outline: 2px dashed #6264a7;
+        outline-offset: -4px;
       }
       #${PANEL_ID} .tfl-sticker-grid {
         padding: 8px;
@@ -210,16 +252,118 @@ class CustomStickers {
 
     const header = document.createElement("div");
     header.className = "tfl-sticker-header";
-    header.textContent = "Stickers";
+    const title = document.createElement("span");
+    title.className = "tfl-sticker-header-title";
+    title.textContent = "Stickers";
+    header.appendChild(title);
+
+    const urlRow = document.createElement("div");
+    urlRow.className = "tfl-sticker-url-row";
+    const urlInput = document.createElement("input");
+    urlInput.id = URL_INPUT_ID;
+    urlInput.className = "tfl-sticker-url-input";
+    urlInput.type = "url";
+    urlInput.placeholder = "Paste image URL";
+    urlInput.spellcheck = false;
+    const urlButton = document.createElement("button");
+    urlButton.className = "tfl-sticker-url-button";
+    urlButton.type = "button";
+    urlButton.textContent = "Import";
+    const triggerImport = () => {
+      const value = urlInput.value.trim();
+      if (!value) return;
+      this.#importUrl(value, urlInput, urlButton).catch((err) =>
+        console.error(`${LOG_PREFIX} URL import failed: ${err.message}`),
+      );
+    };
+    urlButton.addEventListener("click", triggerImport);
+    urlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        triggerImport();
+      }
+    });
+    urlRow.appendChild(urlInput);
+    urlRow.appendChild(urlButton);
+    header.appendChild(urlRow);
+
     panel.appendChild(header);
 
     const grid = document.createElement("div");
     grid.className = "tfl-sticker-grid";
     panel.appendChild(grid);
 
+    this.#wireDropTarget(panel);
+
     document.body.appendChild(panel);
     this.#panel = panel;
     this.#grid = grid;
+  }
+
+  #wireDropTarget(panel) {
+    panel.addEventListener("dragover", (event) => {
+      const types = event.dataTransfer?.types || [];
+      if (
+        Array.from(types).some(
+          (t) => t === "text/uri-list" || t === "text/plain",
+        )
+      ) {
+        event.preventDefault();
+        panel.classList.add("tfl-sticker-drop-active");
+      }
+    });
+    panel.addEventListener("dragleave", (event) => {
+      if (event.target === panel) {
+        panel.classList.remove("tfl-sticker-drop-active");
+      }
+    });
+    panel.addEventListener("drop", (event) => {
+      panel.classList.remove("tfl-sticker-drop-active");
+      const data =
+        event.dataTransfer?.getData("text/uri-list") ||
+        event.dataTransfer?.getData("text/plain") ||
+        "";
+      // text/uri-list may contain multiple lines; the first non-comment
+      // line is the URL.
+      const url = data
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .find((s) => s && !s.startsWith("#"));
+      if (!url) return;
+      event.preventDefault();
+      const input = document.getElementById(URL_INPUT_ID);
+      const button = panel.querySelector(".tfl-sticker-url-button");
+      if (input) input.value = url;
+      this.#importUrl(url, input, button).catch((err) =>
+        console.error(`${LOG_PREFIX} URL import failed: ${err.message}`),
+      );
+    });
+  }
+
+  async #importUrl(url, input, button) {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Importing...";
+    }
+    let result;
+    try {
+      result = await this.#ipcRenderer.invoke("import-sticker-url", url);
+    } catch (err) {
+      this.#showToast(`Import failed: ${err.message}`);
+      console.error(`${LOG_PREFIX} URL import IPC failed: ${err.message}`);
+      return;
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Import";
+      }
+    }
+    if (!result?.success) {
+      this.#showToast(result?.error || "Import failed");
+      return;
+    }
+    if (input) input.value = "";
+    await this.#refreshStickers();
   }
 
   async #togglePanel() {
@@ -299,7 +443,7 @@ class CustomStickers {
     if (folder) {
       empty.appendChild(
         document.createTextNode(
-          "No stickers found. Drop PNG / JPEG / GIF files into:",
+          "No stickers yet. Paste an image URL above, drop one on this panel, or drop PNG / JPEG / GIF / WebP files into:",
         ),
       );
       const code = document.createElement("code");

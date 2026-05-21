@@ -124,3 +124,138 @@ describe('CustomStickers getAllowedFormats fallback', () => {
     );
   });
 });
+
+describe('CustomStickers.deriveSlug', () => {
+  it('extracts the last path segment without extension', () => {
+    assert.strictEqual(
+      CustomStickers.deriveSlug('https://example.com/path/to/Cat-Smile.PNG'),
+      'cat-smile',
+    );
+  });
+  it('falls back to hostname when path is empty', () => {
+    // The trailing `.com` is stripped as an extension; the remaining
+    // hostname is sanitised. We accept this for the degenerate case.
+    assert.strictEqual(
+      CustomStickers.deriveSlug('https://stickers.example.com/'),
+      'stickers-example',
+    );
+  });
+  it('caps slug length to 48 characters', () => {
+    const long = 'a'.repeat(120);
+    const slug = CustomStickers.deriveSlug(`https://example.com/${long}.png`);
+    assert.ok(slug.length <= 48);
+  });
+  it('returns a safe default for unparseable URLs', () => {
+    assert.strictEqual(CustomStickers.deriveSlug('not a url at all'), 'sticker');
+  });
+  it('strips non-alphanumeric runs', () => {
+    assert.strictEqual(
+      CustomStickers.deriveSlug('https://example.com/hello%20world!!.gif'),
+      'hello-20world',
+    );
+  });
+});
+
+describe('CustomStickers handleImportStickerUrl', () => {
+  let tmpRoot;
+  let stickerFolder;
+  let module;
+  let originalFetch;
+
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tfl-urlimport-'));
+    stickerFolder = path.join(tmpRoot, 'stickers');
+    fs.mkdirSync(stickerFolder);
+
+    const config = {
+      customStickers: {
+        enabled: true,
+        folder: stickerFolder,
+        formats: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+        urlImport: {
+          enabled: true,
+          allowedContentTypes: [
+            'image/png',
+            'image/jpeg',
+            'image/gif',
+            'image/webp',
+          ],
+          maxBytes: 1024,
+        },
+      },
+    };
+    module = new CustomStickers(makeApp(tmpRoot), config);
+    module.initialize();
+    originalFetch = globalThis.fetch;
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  function stubFetch({ ok = true, status = 200, contentType = 'image/png', body = PNG_BYTES, contentLength }) {
+    globalThis.fetch = async () => ({
+      ok,
+      status,
+      headers: {
+        get: (key) => {
+          const k = key.toLowerCase();
+          if (k === 'content-type') return contentType;
+          if (k === 'content-length') return String(contentLength ?? body.length);
+          return null;
+        },
+      },
+      arrayBuffer: async () =>
+        body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
+    });
+  }
+
+  it('rejects non-HTTPS URLs', async () => {
+    const result = await module.handleImportStickerUrl('http://example.com/cat.png');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /HTTPS/);
+  });
+
+  it('rejects unparseable URLs', async () => {
+    const result = await module.handleImportStickerUrl('not a url');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid URL/);
+  });
+
+  it('rejects when the response content-type is not on the allowlist', async () => {
+    stubFetch({ contentType: 'text/html' });
+    const result = await module.handleImportStickerUrl('https://example.com/page.html');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /content-type/);
+  });
+
+  it('rejects when declared content-length exceeds the cap', async () => {
+    stubFetch({ contentLength: 99999 });
+    const result = await module.handleImportStickerUrl('https://example.com/big.png');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /too large/);
+  });
+
+  it('writes the file and returns the filename on a happy-path import', async () => {
+    stubFetch({});
+    const result = await module.handleImportStickerUrl('https://example.com/path/cute.png');
+    assert.strictEqual(result.success, true);
+    assert.match(result.filename, /^cute-[0-9a-f]{8}\.png$/);
+    const written = fs.readFileSync(path.join(stickerFolder, result.filename));
+    assert.deepStrictEqual(Uint8Array.from(written), Uint8Array.from(PNG_BYTES));
+  });
+
+  it('respects the urlImport.enabled flag', async () => {
+    const disabled = new CustomStickers(makeApp(tmpRoot), {
+      customStickers: {
+        enabled: true,
+        folder: stickerFolder,
+        urlImport: { enabled: false },
+      },
+    });
+    const result = await disabled.handleImportStickerUrl('https://example.com/cat.png');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /disabled/);
+  });
+});
