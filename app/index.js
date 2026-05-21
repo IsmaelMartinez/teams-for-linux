@@ -16,6 +16,7 @@ const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
+const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
@@ -316,9 +317,12 @@ if (gotTheLock) {
     // Payload is constructed and length-capped in app/browser/preload.js;
     // prior to this handler + the ipcValidator allowlist entry these
     // messages were silently dropped. Fields are run through
-    // sanitizeRendererLogField to scrub URL query strings before logging.
+    // sanitizeRendererLogField to scrub PII before logging.
     try {
-      console.error("[Renderer] Unhandled rejection:", {
+      // Run the noise check on the raw message — the sanitizer may strip
+      // query strings / fragments that contain the auth error code.
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      log("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
@@ -331,7 +335,8 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      console.error("[Renderer] Window error:", {
+      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      log("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
         lineno: toFiniteNumber(errorData?.lineno, 0),
@@ -358,9 +363,13 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 
 /**
  * Sanitizes a renderer-supplied log string before it hits main-process logs.
- * Strips the query string / fragment from any URL in the value (Teams CDN
- * URLs can carry cache-busting or auth tokens) and length-caps the result.
- * Non-strings fall back to the supplied fallback.
+ * Runs it through the shared PII sanitizer (which scrubs emails, UUIDs,
+ * tokens, IPs, URL query strings, user paths, etc.) and length-caps the
+ * result. Non-strings fall back to the supplied fallback.
+ *
+ * Renderer errors from Teams can contain UserId/tenantId/Trace ID/Correlation
+ * ID values that match the shared UUID pattern. CLAUDE.md treats account IDs
+ * and SSO info as must-not-log.
  *
  * @param {unknown} value - The field value to sanitize.
  * @param {any} fallback - Value to return when `value` is not a string.
@@ -369,14 +378,19 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
 function sanitizeRendererLogField(value, fallback = null) {
   if (typeof value !== "string") return fallback;
 
-  const redacted = value.replaceAll(
-    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#)'"<>]+)[?#][^\s)'"<>]*/gi,
-    "$1[redacted]",
+  // logSanitizer scrubs URL query strings but not fragments. OAuth implicit-flow
+  // tokens land in the fragment (#access_token=…), so strip those first to
+  // preserve the previous behaviour before running the shared sanitizer.
+  const fragmentStripped = value.replaceAll(
+    /(\b[a-z][a-z0-9+.-]*:\/\/[^\s#)'"<>]+)#[^\s)'"<>]*/gi,
+    "$1#[redacted]",
   );
 
-  return redacted.length > MAX_RENDERER_LOG_FIELD_LENGTH
-    ? `${redacted.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
-    : redacted;
+  const sanitized = sanitizePii(fragmentStripped);
+
+  return sanitized.length > MAX_RENDERER_LOG_FIELD_LENGTH
+    ? `${sanitized.slice(0, MAX_RENDERER_LOG_FIELD_LENGTH)}…`
+    : sanitized;
 }
 
 /**
@@ -391,6 +405,25 @@ function sanitizeRendererLogField(value, fallback = null) {
  */
 function toFiniteNumber(value, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+// Teams floods the renderer with these error signatures whenever no user is
+// signed in, until the auth-recovery layer (see app/mainAppWindow/index.js)
+// clears stale state and reloads. The recovery layer is the actionable
+// channel for these; mirroring them as console.error in our logs just buries
+// real issues. Down-leveling to console.debug keeps them available without
+// the noise.
+const PRE_LOGIN_AUTH_NOISE_PATTERNS = [
+  "login_required",
+  "aadsts50058",
+  "interactionrequired",
+  "authfailed",
+];
+
+function isPreLoginAuthNoise(message) {
+  if (typeof message !== "string") return false;
+  const lower = message.toLowerCase();
+  return PRE_LOGIN_AUTH_NOISE_PATTERNS.some((p) => lower.includes(p));
 }
 
 /**
