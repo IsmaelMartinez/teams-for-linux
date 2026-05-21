@@ -58,6 +58,12 @@ sudo pacman -Rs teams-for-linux
 pacstall -R teams-for-linux-deb
 ```
 
+### Vylen Linux
+
+```bash
+sudo emerald purge teams-for-linux
+```
+
 ### Snap
 
 ```bash
