@@ -259,3 +259,91 @@ describe('CustomStickers handleImportStickerUrl', () => {
     assert.match(result.error, /disabled/);
   });
 });
+
+describe('CustomStickers handleDeleteSticker', () => {
+  let tmpRoot;
+  let stickerFolder;
+  let outsideFile;
+  let module;
+
+  before(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tfl-delete-'));
+    stickerFolder = path.join(tmpRoot, 'stickers');
+    fs.mkdirSync(stickerFolder);
+    fs.mkdirSync(path.join(stickerFolder, 'pack'));
+    fs.writeFileSync(path.join(stickerFolder, 'top.png'), PNG_BYTES);
+    fs.writeFileSync(path.join(stickerFolder, 'pack', 'p1.png'), PNG_BYTES);
+
+    // A file outside the sticker folder; path-traversal attempts must not
+    // reach this.
+    outsideFile = path.join(tmpRoot, 'outside-secret.txt');
+    fs.writeFileSync(outsideFile, 'do not delete');
+
+    module = new CustomStickers(makeApp(tmpRoot), {
+      customStickers: { enabled: true, folder: stickerFolder },
+    });
+    module.initialize();
+  });
+
+  after(() => {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  it('deletes a top-level sticker by name', () => {
+    fs.writeFileSync(path.join(stickerFolder, 'doomed.png'), PNG_BYTES);
+    const result = module.handleDeleteSticker({ name: 'doomed.png', subfolder: '' });
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(fs.existsSync(path.join(stickerFolder, 'doomed.png')), false);
+  });
+
+  it('deletes a sticker inside a subfolder', () => {
+    fs.writeFileSync(path.join(stickerFolder, 'pack', 'doomed.png'), PNG_BYTES);
+    const result = module.handleDeleteSticker({ name: 'doomed.png', subfolder: 'pack' });
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(
+      fs.existsSync(path.join(stickerFolder, 'pack', 'doomed.png')),
+      false,
+    );
+  });
+
+  it('rejects a name with a slash', () => {
+    const result = module.handleDeleteSticker({ name: '../outside-secret.txt', subfolder: '' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid sticker name/);
+    assert.strictEqual(fs.existsSync(outsideFile), true);
+  });
+
+  it('rejects a name that is ".."', () => {
+    const result = module.handleDeleteSticker({ name: '..', subfolder: '' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid sticker name/);
+  });
+
+  it('rejects a subfolder with a slash', () => {
+    const result = module.handleDeleteSticker({ name: 'p1.png', subfolder: 'pack/nested' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid subfolder/);
+  });
+
+  it('rejects a subfolder that is ".."', () => {
+    const result = module.handleDeleteSticker({ name: 'p1.png', subfolder: '..' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /Invalid subfolder/);
+    assert.strictEqual(fs.existsSync(outsideFile), true);
+  });
+
+  it('returns "Sticker not found" when the file is missing', () => {
+    const result = module.handleDeleteSticker({ name: 'never-existed.png', subfolder: '' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /not found/);
+  });
+
+  it('rejects when custom stickers is disabled', () => {
+    const disabled = new CustomStickers(makeApp(tmpRoot), {
+      customStickers: { enabled: false, folder: stickerFolder },
+    });
+    const result = disabled.handleDeleteSticker({ name: 'top.png', subfolder: '' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /disabled/);
+  });
+});

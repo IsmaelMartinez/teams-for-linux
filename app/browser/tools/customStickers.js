@@ -77,7 +77,50 @@ class CustomStickers {
     }
     const style = document.createElement("style");
     style.id = STYLES_ID;
+    // Colors are driven by CSS custom properties scoped to the sticker panel
+    // and the floating button. Defaults are the dark theme. A
+    // prefers-color-scheme: light media query flips them to a light theme.
+    // The Teams brand purple (#6264a7) is theme-agnostic and stays put on
+    // the floating button and accents.
     style.textContent = `
+      #${BUTTON_ID} {
+        --tfl-accent: #6264a7;
+        --tfl-button-fg: #fff;
+        --tfl-button-border: rgba(255, 255, 255, 0.15);
+      }
+      #${PANEL_ID} {
+        --tfl-accent: #6264a7;
+        --tfl-bg: #2d2c2c;
+        --tfl-fg: #e6e6e6;
+        --tfl-muted: #aaa;
+        --tfl-border: #444;
+        --tfl-input-bg: #1f1f1f;
+        --tfl-input-border: #555;
+        --tfl-input-placeholder: #888;
+        --tfl-cell-bg: #1f1f1f;
+        --tfl-toast-bg: #c44;
+        --tfl-toast-fg: #fff;
+        --tfl-cell-delete-bg: rgba(196, 68, 68, 0.92);
+      }
+      @media (prefers-color-scheme: light) {
+        #${BUTTON_ID} {
+          --tfl-button-border: rgba(0, 0, 0, 0.15);
+        }
+        #${PANEL_ID} {
+          --tfl-bg: #f5f5f5;
+          --tfl-fg: #1f1f1f;
+          --tfl-muted: #666;
+          --tfl-border: #d4d4d4;
+          --tfl-input-bg: #ffffff;
+          --tfl-input-border: #b8b8b8;
+          --tfl-input-placeholder: #888;
+          --tfl-cell-bg: #ffffff;
+          --tfl-toast-bg: #c44;
+          --tfl-toast-fg: #fff;
+          --tfl-cell-delete-bg: rgba(196, 68, 68, 0.92);
+        }
+      }
+
       #${BUTTON_ID} {
         position: fixed;
         bottom: 20px;
@@ -85,9 +128,9 @@ class CustomStickers {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: #6264a7;
-        color: #fff;
+        border: 1px solid var(--tfl-button-border);
+        background: var(--tfl-accent);
+        color: var(--tfl-button-fg);
         font-size: 20px;
         line-height: 1;
         cursor: pointer;
@@ -100,7 +143,7 @@ class CustomStickers {
         user-select: none;
       }
       #${BUTTON_ID}:hover { filter: brightness(1.1); }
-      #${BUTTON_ID}:focus { outline: 2px solid #fff; outline-offset: 2px; }
+      #${BUTTON_ID}:focus { outline: 2px solid var(--tfl-button-fg); outline-offset: 2px; }
 
       #${PANEL_ID} {
         position: fixed;
@@ -108,9 +151,9 @@ class CustomStickers {
         right: 20px;
         width: 320px;
         max-height: 360px;
-        background: #2d2c2c;
-        color: #e6e6e6;
-        border: 1px solid #444;
+        background: var(--tfl-bg);
+        color: var(--tfl-fg);
+        border: 1px solid var(--tfl-border);
         border-radius: 8px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         z-index: 2147483600;
@@ -123,7 +166,7 @@ class CustomStickers {
       #${PANEL_ID}.tfl-sticker-open { display: flex; }
       #${PANEL_ID} .tfl-sticker-header {
         padding: 8px 12px;
-        border-bottom: 1px solid #444;
+        border-bottom: 1px solid var(--tfl-border);
         font-weight: 600;
         flex: 0 0 auto;
         display: flex;
@@ -142,17 +185,17 @@ class CustomStickers {
         flex: 1 1 auto;
         min-width: 0;
         padding: 4px 6px;
-        background: #1f1f1f;
-        color: #e6e6e6;
-        border: 1px solid #555;
+        background: var(--tfl-input-bg);
+        color: var(--tfl-fg);
+        border: 1px solid var(--tfl-input-border);
         border-radius: 3px;
         font-size: 12px;
         font-weight: normal;
       }
-      #${PANEL_ID} .tfl-sticker-url-input::placeholder { color: #888; }
+      #${PANEL_ID} .tfl-sticker-url-input::placeholder { color: var(--tfl-input-placeholder); }
       #${PANEL_ID} .tfl-sticker-url-button {
         padding: 4px 8px;
-        background: #6264a7;
+        background: var(--tfl-accent);
         color: #fff;
         border: none;
         border-radius: 3px;
@@ -165,7 +208,7 @@ class CustomStickers {
         cursor: wait;
       }
       #${PANEL_ID}.tfl-sticker-drop-active {
-        outline: 2px dashed #6264a7;
+        outline: 2px dashed var(--tfl-accent);
         outline-offset: -4px;
       }
       #${PANEL_ID} .tfl-sticker-grid {
@@ -178,7 +221,8 @@ class CustomStickers {
         align-content: start;
       }
       #${PANEL_ID} .tfl-sticker-cell {
-        background: #1f1f1f;
+        position: relative;
+        background: var(--tfl-cell-bg);
         border: 1px solid transparent;
         border-radius: 4px;
         padding: 4px;
@@ -189,22 +233,42 @@ class CustomStickers {
         justify-content: center;
         overflow: hidden;
       }
-      #${PANEL_ID} .tfl-sticker-cell:hover { border-color: #6264a7; }
+      #${PANEL_ID} .tfl-sticker-cell:hover { border-color: var(--tfl-accent); }
       #${PANEL_ID} .tfl-sticker-cell img {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
         pointer-events: none;
       }
+      #${PANEL_ID} .tfl-sticker-cell-delete {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 50%;
+        background: var(--tfl-cell-delete-bg);
+        color: #fff;
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      #${PANEL_ID} .tfl-sticker-cell:hover .tfl-sticker-cell-delete { display: flex; }
+      #${PANEL_ID} .tfl-sticker-cell-delete:hover { filter: brightness(1.1); }
       #${PANEL_ID} .tfl-sticker-empty {
         padding: 16px 12px;
-        color: #aaa;
+        color: var(--tfl-muted);
         font-size: 12px;
         line-height: 1.4;
         grid-column: 1 / -1;
       }
       #${PANEL_ID} .tfl-sticker-empty code {
-        background: #1f1f1f;
+        background: var(--tfl-input-bg);
         padding: 1px 4px;
         border-radius: 3px;
         font-size: 11px;
@@ -214,8 +278,8 @@ class CustomStickers {
       }
       #${PANEL_ID} .tfl-sticker-toast {
         padding: 8px 12px;
-        background: #c44;
-        color: #fff;
+        background: var(--tfl-toast-bg);
+        color: var(--tfl-toast-fg);
         font-size: 12px;
         text-align: center;
         flex: 0 0 auto;
@@ -427,8 +491,43 @@ class CustomStickers {
           console.error(`${LOG_PREFIX} Send failed: ${err.message}`),
         );
       });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "tfl-sticker-cell-delete";
+      deleteBtn.type = "button";
+      deleteBtn.setAttribute("aria-label", `Delete sticker ${sticker.name}`);
+      deleteBtn.title = "Delete sticker";
+      deleteBtn.textContent = "×"; // ×
+      deleteBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.#deleteSticker(sticker).catch((err) =>
+          console.error(`${LOG_PREFIX} Delete failed: ${err.message}`),
+        );
+      });
+      cell.appendChild(deleteBtn);
+
       this.#grid.appendChild(cell);
     }
+  }
+
+  async #deleteSticker(sticker) {
+    const ok = window.confirm(`Delete sticker "${sticker.name}"?`);
+    if (!ok) return;
+    let result;
+    try {
+      result = await this.#ipcRenderer.invoke("delete-sticker", {
+        name: sticker.name,
+        subfolder: sticker.subfolder || "",
+      });
+    } catch (err) {
+      this.#showToast(`Delete failed: ${err.message}`);
+      return;
+    }
+    if (!result?.success) {
+      this.#showToast(result?.error || "Delete failed");
+      return;
+    }
+    await this.#refreshStickers();
   }
 
   #clearGrid() {

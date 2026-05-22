@@ -36,7 +36,15 @@ The scanner also recurses one level into subdirectories so stickers organised un
 
 ## Importing from a URL
 
-When `urlImport.enabled` is true (the default), the sticker panel header shows a text input. Paste an HTTPS URL pointing at a PNG/JPEG/GIF/WebP and press Enter (or click Import). You can also drag a URL from a browser tab directly onto the panel; the wrapper extracts it from the drop's `text/uri-list` payload. The fetched file is validated against `urlImport.allowedContentTypes` and `urlImport.maxBytes`, then saved at the top level of the sticker folder as `<slug>-<sha8>.<ext>` so re-importing the same URL is idempotent.
+When `urlImport.enabled` is true (the default), the sticker panel header shows a text input. Paste an HTTPS URL pointing at a PNG/JPEG/GIF/WebP and press Enter (or click Import). You can also drag a URL from a browser tab directly onto the panel; the wrapper extracts it from the drop's `text/uri-list` payload. The fetched file is validated against `urlImport.allowedContentTypes` and `urlImport.maxBytes`, then saved at the top level of the sticker folder as `<slug>-<sha8>.<ext>` so re-importing the same URL is idempotent. The fetch is bounded by a 30-second timeout so a slow server cannot hang the IPC.
+
+## Removing stickers
+
+Hover over any sticker in the panel and a small × button appears in the top-right corner. Clicking it asks for confirmation, then deletes the file from disk. Path-traversal is rejected at the IPC boundary: the requested name and subfolder must contain no slashes, no null bytes, and no `..` segments, and the resolved file path must remain strictly inside the sticker folder. Deleted stickers leave no trace; if you want to keep something around, do not click the ×.
+
+## Theme
+
+The panel and the floating button follow the operating-system dark/light preference via `prefers-color-scheme`. The Teams brand purple stays put as the accent in both themes. There is no manual theme override, which keeps the wrapper aligned with the OS preference and avoids reading Teams's own theme state (which can change without notice).
 
 When the feature is enabled and the default folder did not previously exist, a single bundled example sticker (the wrapper's icon) is copied into it on first run so the panel has something to show. Delete it and replace with your own.
 

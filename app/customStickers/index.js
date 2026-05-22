@@ -29,6 +29,7 @@ const DEFAULT_URL_IMPORT_CONTENT_TYPES = [
   "image/webp",
 ];
 const DEFAULT_URL_IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+const URL_IMPORT_FETCH_TIMEOUT_MS = 30000;
 
 class CustomStickers {
   constructor(app, config) {
@@ -52,6 +53,14 @@ class CustomStickers {
     // or { success: false, error }.
     ipcMain.handle("import-sticker-url", (_event, rawUrl) =>
       this.handleImportStickerUrl(rawUrl),
+    );
+
+    // Delete a sticker file from the sticker folder. Validates the requested
+    // name/subfolder do not contain path-traversal components and resolves
+    // strictly inside the sticker folder before unlinking. Returns
+    // { success } or { success: false, error }.
+    ipcMain.handle("delete-sticker", (_event, payload) =>
+      this.handleDeleteSticker(payload),
     );
   }
 
@@ -264,12 +273,23 @@ class CustomStickers {
     const allowedTypes = this.getUrlImportContentTypes();
     const maxBytes = this.getUrlImportMaxBytes();
 
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      URL_IMPORT_FETCH_TIMEOUT_MS,
+    );
     let response;
     try {
-      response = await fetch(url.toString(), { redirect: "follow" });
+      response = await fetch(url.toString(), {
+        redirect: "follow",
+        signal: controller.signal,
+      });
     } catch (err) {
-      console.warn(`${LOG_PREFIX} URL fetch failed: ${err.message}`);
-      return { success: false, error: `Fetch failed: ${err.message}` };
+      const msg = err.name === "AbortError" ? "Fetch timed out" : err.message;
+      console.warn(`${LOG_PREFIX} URL fetch failed: ${msg}`);
+      return { success: false, error: `Fetch failed: ${msg}` };
+    } finally {
+      clearTimeout(timeout);
     }
 
     if (!response.ok) {
@@ -320,6 +340,68 @@ class CustomStickers {
       return { success: true, filename };
     } catch (err) {
       return { success: false, error: `Write failed: ${err.message}` };
+    }
+  }
+
+  handleDeleteSticker(payload) {
+    if (!this.isEnabled()) {
+      return { success: false, error: "Custom stickers is disabled" };
+    }
+    const name = payload?.name;
+    const subfolder = payload?.subfolder ?? "";
+
+    if (typeof name !== "string" || name.length === 0) {
+      return { success: false, error: "Invalid sticker name" };
+    }
+    if (
+      name.includes("/") ||
+      name.includes("\\") ||
+      name.includes("\0") ||
+      name === "." ||
+      name === ".."
+    ) {
+      return { success: false, error: "Invalid sticker name" };
+    }
+    if (typeof subfolder !== "string") {
+      return { success: false, error: "Invalid subfolder" };
+    }
+    if (
+      subfolder.includes("/") ||
+      subfolder.includes("\\") ||
+      subfolder.includes("\0") ||
+      subfolder === "." ||
+      subfolder === ".."
+    ) {
+      return { success: false, error: "Invalid subfolder" };
+    }
+
+    const folder = this.stickerFolder ?? this.resolveStickerFolder();
+    const candidatePath = subfolder
+      ? path.join(folder, subfolder, name)
+      : path.join(folder, name);
+
+    // Defence in depth: resolve both sides and confirm the resulting file
+    // remains strictly inside the sticker folder. Catches anything the
+    // string checks above might miss (case-folded duplicates, etc.).
+    const resolvedFolder = path.resolve(folder);
+    const resolvedFile = path.resolve(candidatePath);
+    const insideFolder =
+      resolvedFile.startsWith(resolvedFolder + path.sep) &&
+      resolvedFile !== resolvedFolder;
+    if (!insideFolder) {
+      return { success: false, error: "Path resolution outside sticker folder" };
+    }
+
+    try {
+      fs.unlinkSync(resolvedFile);
+      const label = subfolder ? `${subfolder}/${name}` : name;
+      console.info(`${LOG_PREFIX} Deleted sticker: ${label}`);
+      return { success: true };
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        return { success: false, error: "Sticker not found" };
+      }
+      return { success: false, error: `Delete failed: ${err.message}` };
     }
   }
 }
