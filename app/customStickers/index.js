@@ -293,12 +293,14 @@ class CustomStickers {
     }
 
     if (!response.ok) {
+      await CustomStickers.#cancelBody(response);
       return { success: false, error: `HTTP ${response.status}` };
     }
 
     const rawContentType = response.headers.get("content-type") || "";
     const contentType = rawContentType.split(";")[0].trim().toLowerCase();
     if (!allowedTypes.includes(contentType)) {
+      await CustomStickers.#cancelBody(response);
       return {
         success: false,
         error: `Unsupported content-type: ${contentType || "unknown"}`,
@@ -310,6 +312,7 @@ class CustomStickers {
       10,
     );
     if (declaredLength > maxBytes) {
+      await CustomStickers.#cancelBody(response);
       return {
         success: false,
         error: `File too large (${declaredLength} bytes)`,
@@ -336,10 +339,20 @@ class CustomStickers {
       fs.mkdirSync(folder, { recursive: true });
       const destPath = path.join(folder, filename);
       fs.writeFileSync(destPath, buf);
-      console.info(`${LOG_PREFIX} Imported URL sticker: ${filename}`);
+      console.info(`${LOG_PREFIX} URL sticker imported`);
       return { success: true, filename };
     } catch (err) {
       return { success: false, error: `Write failed: ${err.message}` };
+    }
+  }
+
+  static async #cancelBody(response) {
+    // Drain or cancel the response body when returning early so the
+    // underlying socket is released back to the pool.
+    try {
+      await response.body?.cancel();
+    } catch {
+      // Cancellation failures are not actionable; ignore.
     }
   }
 
@@ -380,11 +393,24 @@ class CustomStickers {
       ? path.join(folder, subfolder, name)
       : path.join(folder, name);
 
-    // Defence in depth: resolve both sides and confirm the resulting file
-    // remains strictly inside the sticker folder. Catches anything the
-    // string checks above might miss (case-folded duplicates, etc.).
-    const resolvedFolder = path.resolve(folder);
-    const resolvedFile = path.resolve(candidatePath);
+    // Defence in depth: resolve both sides through realpath (which follows
+    // symlinks) and confirm the resulting file remains strictly inside the
+    // sticker folder. path.resolve alone only normalises strings, so a
+    // renderer that managed to plant a symlinked subfolder pointing outside
+    // the sticker folder could otherwise escape. realpathSync throws
+    // ENOENT for missing files, which we translate to a normal "not found"
+    // response.
+    let resolvedFolder;
+    let resolvedFile;
+    try {
+      resolvedFolder = fs.realpathSync(folder);
+      resolvedFile = fs.realpathSync(candidatePath);
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        return { success: false, error: "Sticker not found" };
+      }
+      return { success: false, error: `Resolve failed: ${err.message}` };
+    }
     const insideFolder =
       resolvedFile.startsWith(resolvedFolder + path.sep) &&
       resolvedFile !== resolvedFolder;
@@ -394,8 +420,7 @@ class CustomStickers {
 
     try {
       fs.unlinkSync(resolvedFile);
-      const label = subfolder ? `${subfolder}/${name}` : name;
-      console.info(`${LOG_PREFIX} Deleted sticker: ${label}`);
+      console.info(`${LOG_PREFIX} Sticker deleted`);
       return { success: true };
     } catch (err) {
       if (err.code === "ENOENT") {

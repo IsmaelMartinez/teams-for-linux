@@ -258,6 +258,16 @@ describe('CustomStickers handleImportStickerUrl', () => {
     assert.strictEqual(result.success, false);
     assert.match(result.error, /disabled/);
   });
+
+  it('enforces the size cap on actual body bytes when content-length is spoofed', async () => {
+    // 2 KiB body, with a small declared content-length to bypass the
+    // header-level guard. The handler must still reject after reading.
+    const oversized = Buffer.alloc(2048, 0x77);
+    stubFetch({ body: oversized, contentLength: 100 });
+    const result = await module.handleImportStickerUrl('https://example.com/sneaky.png');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /too large/);
+  });
 });
 
 describe('CustomStickers handleDeleteSticker', () => {
@@ -334,6 +344,15 @@ describe('CustomStickers handleDeleteSticker', () => {
 
   it('returns "Sticker not found" when the file is missing', () => {
     const result = module.handleDeleteSticker({ name: 'never-existed.png', subfolder: '' });
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /not found/);
+  });
+
+  it('returns "Sticker not found" when the subfolder does not exist', () => {
+    const result = module.handleDeleteSticker({
+      name: 'p1.png',
+      subfolder: 'never-existed-pack',
+    });
     assert.strictEqual(result.success, false);
     assert.match(result.error, /not found/);
   });

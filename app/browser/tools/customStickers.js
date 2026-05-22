@@ -377,7 +377,11 @@ class CustomStickers {
       }
     });
     panel.addEventListener("dragleave", (event) => {
-      if (event.target === panel) {
+      // dragleave bubbles from every descendant element. Only clear the
+      // drop indicator when the drag actually leaves the panel subtree
+      // (relatedTarget is outside the panel, or null when leaving the
+      // window entirely).
+      if (!panel.contains(event.relatedTarget)) {
         panel.classList.remove("tfl-sticker-drop-active");
       }
     });
