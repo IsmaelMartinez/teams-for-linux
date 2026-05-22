@@ -55,7 +55,7 @@ The module integrates with the main configuration system to read:
 - `auth.intune.enabled`: Enable/disable Intune SSO integration
 - `auth.intune.user`: Specific user account to use for authentication
 
-Legacy flat options (`ssoInTuneEnabled`, `ssoInTuneAuthUser`) are automatically migrated to the new nested format.
+The legacy flat options `ssoInTuneEnabled` and `ssoInTuneAuthUser` were removed. Use `auth.intune.enabled` and `auth.intune.user` directly.
 
 ## Diagnostic Logging
 

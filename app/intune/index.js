@@ -63,7 +63,7 @@ function extractCookieContent(response) {
   return null;
 }
 
-function processInTuneAccounts(resp, ssoInTuneAuthUser) {
+function processInTuneAccounts(resp, intuneUser) {
   // Enhanced account processing with detailed logging
   try {
     const response = JSON.parse(resp);
@@ -79,7 +79,7 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
 
     console.debug("[INTUNE_DIAG] Retrieved InTune accounts", {
       totalAccounts: response.accounts?.length || 0,
-      hasRequestedUser: !!ssoInTuneAuthUser,
+      hasRequestedUser: !!intuneUser,
     });
 
     if (!response.accounts || response.accounts.length === 0) {
@@ -89,9 +89,9 @@ function processInTuneAccounts(resp, ssoInTuneAuthUser) {
       return;
     }
 
-    if (ssoInTuneAuthUser) {
+    if (intuneUser) {
       // Case-insensitive comparison for email addresses
-      const requestedUserLower = ssoInTuneAuthUser.toLowerCase();
+      const requestedUserLower = intuneUser.toLowerCase();
       for (const account of response.accounts) {
         if (account.username?.toLowerCase() === requestedUserLower) {
           inTuneAccount = account;
@@ -178,18 +178,18 @@ async function getBrokerAccountsAsync() {
   });
 }
 
-exports.initSso = async function initIntuneSso(ssoInTuneAuthUser) {
+exports.initSso = async function initIntuneSso(intuneUser) {
   // Reset global state to prevent credential leakage between sessions
   inTuneAccount = null;
 
   console.debug("[INTUNE_DIAG] Initializing InTune SSO", {
-    hasConfiguredUser: !!ssoInTuneAuthUser,
+    hasConfiguredUser: !!intuneUser,
   });
 
   try {
     await waitForBrokerReady(10, 500);
     const resp = await getBrokerAccountsAsync();
-    processInTuneAccounts(resp, ssoInTuneAuthUser);
+    processInTuneAccounts(resp, intuneUser);
   } catch (err) {
     console.warn("[INTUNE_DIAG] Broker cannot initialize SSO", {
       error: err.message || err,

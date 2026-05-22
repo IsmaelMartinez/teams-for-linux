@@ -219,7 +219,7 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
 | `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -275,7 +275,7 @@ Opt-in configuration for the single-window multi-tenant account switcher:
 |--------|------|---------|-------------|
 | `multiAccount.enabled` | `boolean` | `false` | Opt-in flag for the multi-account profile switcher. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design. |
 
-**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and Intune SSO is enabled via either `auth.intune.enabled` or the legacy `ssoInTuneEnabled` flag, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
+**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and `auth.intune.enabled` is also `true`, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
 
 ### Network & Proxy
 
@@ -324,7 +324,7 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -366,7 +366,7 @@ Media settings are organized under the `media` configuration object with subgrou
 }
 ```
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|

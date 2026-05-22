@@ -76,7 +76,7 @@ exports = module.exports = (Menus) => ({
       click: () => Menus.about(),
     },
     getHelpMenu(Menus),
-    ...((Menus.configGroup.startupConfig.media?.video?.menuEnabled || Menus.configGroup.startupConfig.videoMenu)
+    ...(Menus.configGroup.startupConfig.media?.video?.menuEnabled
       ? [
           {
             type: "separator",
