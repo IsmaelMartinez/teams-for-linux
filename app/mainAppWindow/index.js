@@ -124,11 +124,8 @@ function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
-  // Support both new (screenSharing.thumbnail) and legacy (screenSharingThumbnail) config paths
   let thumbnailConfig =
-    config?.screenSharing?.thumbnail ??
-    config?.screenSharingThumbnail ??
-    DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
+    config?.screenSharing?.thumbnail ?? DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
   const previewWindow = screenSharingService.getPreviewWindow();
   const activeSource = screenSharingService.getSelectedSource();
@@ -387,9 +384,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   screenSharingService = sharingService;
   profilesManagerRef = profilesManager;
 
-  // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
-  const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
+  const intuneEnabled = config.auth?.intune?.enabled;
+  const intuneUser = config.auth?.intune?.user ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);

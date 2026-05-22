@@ -90,8 +90,7 @@ const applyDisableAutogainPatch = function () {
  * @param {Object} config - Application configuration
  */
 function init(config) {
-  // Support both new nested config and deprecated flat config
-  const enabled = config.media?.microphone?.disableAutogain || config.disableAutogain;
+  const enabled = config.media?.microphone?.disableAutogain;
   if (!enabled) {
     return;
   }

@@ -12,17 +12,19 @@ To find your config file [see the “Configuration” section](configuration.md#
 
 ```json
 {
-  "screenSharingThumbnail": {
-    "enabled": true,
-    "alwaysOnTop": true
+  "screenSharing": {
+    "thumbnail": {
+      "enabled": true,
+      "alwaysOnTop": true
+    }
   }
 }
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `enabled` | `boolean` | `true` | Enable/disable the preview thumbnail window |
-| `alwaysOnTop` | `boolean` | `true` | Keep preview window always on top of other windows |
+| `screenSharing.thumbnail.enabled` | `boolean` | `true` | Enable/disable the preview thumbnail window |
+| `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep preview window always on top of other windows |
 
 ### Disabling Screen Sharing Preview
 
@@ -30,18 +32,22 @@ To disable the preview window entirely:
 
 ```json
 {
-  "screenSharingThumbnail": {
-    "enabled": false
+  "screenSharing": {
+    "thumbnail": {
+      "enabled": false
+    }
   }
 }
 ```
+
+> **Migration note:** the legacy flat `screenSharingThumbnail` key and `screenLockInhibitionMethod` key were removed in this release. Move any existing values into `screenSharing.thumbnail` and `screenSharing.lockInhibitionMethod` respectively before upgrading.
 
 ## Troubleshooting
 
 ### Common Issues
 
 #### Preview Window Not Appearing
-- **Check configuration**: Ensure `screenSharingThumbnail.enabled` is `true`
+- **Check configuration**: Ensure `screenSharing.thumbnail.enabled` is `true`
 - **Window manager**: Some Linux window managers may interfere with always-on-top windows
 - **Restart**: Try restarting Teams for Linux
 

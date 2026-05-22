@@ -26,13 +26,10 @@ class BrowserWindowManager {
 
   /**
    * Get screen lock inhibition method from config.
-   * Supports both new (screenSharing.lockInhibitionMethod) and legacy (screenLockInhibitionMethod) paths.
    * @returns {string} "Electron" or "WakeLockSentinel"
    */
   get screenLockInhibitionMethod() {
-    return this.config?.screenSharing?.lockInhibitionMethod ??
-           this.config?.screenLockInhibitionMethod ??
-           "Electron";
+    return this.config?.screenSharing?.lockInhibitionMethod ?? "Electron";
   }
 
   async createWindow() {

@@ -111,16 +111,6 @@ function extractYargConfig(configObject, appVersion) {
           "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel).",
         type: "object",
       },
-      screenSharingThumbnail: {
-        default: {
-          enabled: true,
-          alwaysOnTop: true,
-        },
-        deprecated: "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
-        describe:
-          "[DEPRECATED] Use screenSharing.thumbnail instead. Controls the thumbnail preview window during active screen sharing.",
-        type: "object",
-      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",
@@ -260,12 +250,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "Default application to be used to open the HTTP URLs",
         type: "string",
-      },
-      disableAutogain: {
-        default: false,
-        describe: "DEPRECATED: Use media.microphone.disableAutogain instead",
-        type: "boolean",
-        deprecated: "Use media.microphone.disableAutogain instead",
       },
       disableGpu: {
         default: false,
@@ -452,14 +436,6 @@ function extractYargConfig(configObject, appVersion) {
     	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
 	type: "object",
       },
-      screenLockInhibitionMethod: {
-        default: "Electron",
-        deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
-        describe:
-          "[DEPRECATED] Use screenSharing.lockInhibitionMethod instead. Screen lock inhibition method (Electron/WakeLockSentinel).",
-        type: "string",
-        choices: ["Electron", "WakeLockSentinel"],
-      },
       spellCheckerLanguages: {
         default: [],
         describe:
@@ -475,18 +451,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
-      },
-      ssoInTuneEnabled: {
-        default: false,
-        describe: "Enable Single-Sign-On using Microsoft InTune.",
-        type: "boolean",
-        deprecated: "Use auth.intune.enabled instead",
-      },
-      ssoInTuneAuthUser: {
-        default: "",
-        describe: "User (e-mail) to use for InTune SSO.",
-        type: "string",
-        deprecated: "Use auth.intune.user instead",
       },
       trayIconEnabled: {
         default: true,
@@ -521,12 +485,6 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe: "Enable debug at start",
         type: "boolean",
-      },
-      videoMenu: {
-        default: false,
-        describe: "DEPRECATED: Use media.video.menuEnabled instead",
-        type: "boolean",
-        deprecated: "Use media.video.menuEnabled instead",
       },
       media: {
         default: {
