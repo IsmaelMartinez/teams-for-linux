@@ -13,7 +13,6 @@ class ThemeManager {
     }
 
     if (config.followSystemTheme) {
-      console.debug("followSystemTheme", config.followSystemTheme);
       this.ipcRenderer.on("system-theme-changed", this.applyTheme);
     }
   }
