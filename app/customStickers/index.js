@@ -49,8 +49,8 @@ class CustomStickers {
 
     // Download an HTTPS URL into the sticker folder. Validates the URL is
     // HTTPS, the response content-type is on the allowlist, and the byte
-    // length is under the configured cap. Returns { success, filename }
-    // or { success: false, error }.
+    // length is under the configured cap. Returns `{ success, filename }`
+    // on success or `{ success: false, error }` on failure.
     ipcMain.handle("import-sticker-url", (_event, rawUrl) =>
       this.handleImportStickerUrl(rawUrl),
     );
@@ -58,7 +58,7 @@ class CustomStickers {
     // Delete a sticker file from the sticker folder. Validates the requested
     // name/subfolder do not contain path-traversal components and resolves
     // strictly inside the sticker folder before unlinking. Returns
-    // { success } or { success: false, error }.
+    // `{ success }` on success or `{ success: false, error }` on failure.
     ipcMain.handle("delete-sticker", (_event, payload) =>
       this.handleDeleteSticker(payload),
     );
