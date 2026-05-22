@@ -348,8 +348,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       followSystemTheme: {
-        default: false,
-        describe: "Follow system theme",
+        default: true,
+        describe:
+          "Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes.",
         type: "boolean",
       },
       frame: {
