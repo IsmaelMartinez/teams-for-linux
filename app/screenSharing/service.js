@@ -6,6 +6,7 @@ class ScreenSharingService {
   #selectedScreenShareSource = null;
   #isSharing = false;
   #previewWindow = null;
+  #sharingStartedHook = null;
 
   initialize() {
     // Get available desktop capturer sources (screens/windows) for sharing
@@ -50,6 +51,15 @@ class ScreenSharingService {
 
   isScreenSharingActive() {
     return this.#isSharing;
+  }
+
+  // Set by mainAppWindow after the Teams BrowserWindow exists. Invoked from
+  // #handleScreenSharingStarted so the port-wiring logic (which needs the
+  // Teams webContents and the preview-window factory in that scope) stays
+  // out of this service, but we only register one ipcMain listener for the
+  // 'screen-sharing-started' channel (#2534).
+  setSharingStartedHook(hook) {
+    this.#sharingStartedHook = hook;
   }
 
   /**
@@ -143,6 +153,14 @@ class ScreenSharingService {
         this.#selectedScreenShareSource = sourceId;
       }
     }
+
+    if (this.#sharingStartedHook) {
+      try {
+        this.#sharingStartedHook();
+      } catch (error) {
+        console.error("[SCREEN_SHARE] sharing-started hook failed", { error: error.message });
+      }
+    }
   }
 
   #handleScreenSharingStopped() {
@@ -197,7 +215,7 @@ class ScreenSharingService {
     this.#isSharing = false;
     this.#selectedScreenShareSource = null;
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
-      this.#previewWindow.webContents.send("screen-sharing-status-changed");
+      this.#previewWindow.close();
     }
   }
 
