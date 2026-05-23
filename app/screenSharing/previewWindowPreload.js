@@ -9,7 +9,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 // check.
 ipcRenderer.on("screen-share-port", (event) => {
   if (event.ports?.length) {
-    window.postMessage("screen-share-port", window.location.origin, event.ports);
+    globalThis.postMessage("screen-share-port", globalThis.location.origin, event.ports);
   }
 });
 

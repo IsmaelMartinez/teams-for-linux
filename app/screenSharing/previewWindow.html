@@ -126,10 +126,10 @@
                 port.start?.();
             };
 
-            // The preload forwards the MessagePort from main via window.postMessage
+            // The preload forwards the MessagePort from main via globalThis.postMessage
             // with transfer; pick it up once. See app/screenSharing/previewWindowPreload.js.
-            window.addEventListener('message', (event) => {
-                if (event.source !== window) return;
+            globalThis.addEventListener('message', (event) => {
+                if (event.source !== globalThis) return;
                 if (event.data !== 'screen-share-port') return;
                 const received = event.ports?.[0];
                 if (received) wirePort(received);

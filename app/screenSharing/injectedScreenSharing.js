@@ -265,7 +265,7 @@
         intervalId = null;
       }
       if (portListener) {
-        window.removeEventListener("message", portListener);
+        globalThis.removeEventListener("message", portListener);
         portListener = null;
       }
       if (videoEl) {
@@ -320,11 +320,11 @@
     };
 
     portListener = (event) => {
-      if (event.source !== window) return;
+      if (event.source !== globalThis) return;
       if (event.data !== "screen-share-port") return;
       const receivedPort = event.ports?.[0];
       if (!receivedPort) return;
-      window.removeEventListener("message", portListener);
+      globalThis.removeEventListener("message", portListener);
       portListener = null;
 
       if (stopped || !videoTrack || videoTrack.readyState === "ended") {
@@ -360,7 +360,7 @@
       }
     };
 
-    window.addEventListener("message", portListener);
+    globalThis.addEventListener("message", portListener);
   }
 
   function stopVideoFrameRelay() {
