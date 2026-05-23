@@ -376,6 +376,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
       { name: "webauthnOverride", path: "./tools/webauthnOverride" },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+      // SPIKE-2454: diagnostic probe for Agenda/Loop missing investigation.
+      { name: "spike2454Probe", path: "./tools/spike2454Probe" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },

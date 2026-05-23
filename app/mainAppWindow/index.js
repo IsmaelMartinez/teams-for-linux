@@ -752,9 +752,13 @@ function isMicrosoftTelemetryHost(url) {
 }
 
 function onBeforeRequestHandler(details, callback) {
+  // SPIKE-2454: telemetry cancel disabled to test whether Microsoft's
+  // experiment-bucket / feature-flag assignment depends on telemetry being
+  // delivered. Revert by uncommenting.
   if (isMicrosoftTelemetryHost(details.url)) {
-    callback({ cancel: true });
-    return;
+    console.debug('[SPIKE-2454] telemetry pass-through (not cancelled):', details.url.slice(0, 100));
+    // callback({ cancel: true });
+    // return;
   }
 
   const customBackgroundRedirect =
