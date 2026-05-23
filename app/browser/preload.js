@@ -1,5 +1,17 @@
 const { ipcRenderer } = require("electron");
 
+// #2534: forward the MessagePort that main posts on 'screen-share-port' into
+// the main world. Using window.postMessage with transfer is the supported way
+// to hand a MessagePort across to the renderer; the port cannot be returned
+// through a contextBridge-exposed function call. Posting to
+// `window.location.origin` (rather than `"*"`) restricts the destination to
+// this document and satisfies SonarCloud's S2819 cross-origin check.
+ipcRenderer.on("screen-share-port", (event) => {
+  if (event.ports?.length) {
+    globalThis.postMessage("screen-share-port", globalThis.location.origin, event.ports);
+  }
+});
+
 // Note: IPC validation handled by main process, no need for duplicate validation here
 globalThis.electronAPI = {
   desktopCapture: {

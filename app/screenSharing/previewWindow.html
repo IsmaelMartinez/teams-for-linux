@@ -16,12 +16,13 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-        
-        #screen-share-video {
+
+        #screen-share-canvas {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background-color: #000;
+            display: block;
         }
 
         .status-overlay {
@@ -40,112 +41,111 @@
 </head>
 <body>
     <div class="status-overlay">Screen Share Preview</div>
-    <video id="screen-share-video" autoplay muted></video>
+    <canvas id="screen-share-canvas"></canvas>
 
     <script>
-        globalThis.addEventListener('DOMContentLoaded', async () => {
-            const videoElement = document.getElementById('screen-share-video');
+        // #2534: the preview no longer re-captures the screen via getUserMedia.
+        // Instead, the Teams renderer takes periodic snapshots of the captured
+        // screen-share track, transfers each snapshot as an ImageBitmap over a
+        // MessagePort, and we paint it onto the canvas here. ImageBitmap (unlike
+        // VideoFrame) survives cross-process transfer cleanly. Single capture,
+        // no second portal prompt on Wayland.
+        globalThis.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('screen-share-canvas');
             const statusOverlay = document.querySelector('.status-overlay');
 
-            const updateStatusAndStream = async () => {
-                try {
-                    const isActive = await globalThis.electronAPI.getScreenSharingStatus();
+            statusOverlay.textContent = 'Screen Share Active';
+            document.title = 'Teams for Linux - Screen is being shared';
 
-                    if (isActive) {
-                        statusOverlay.textContent = 'Screen Share Active';
-                        document.title = 'Teams for Linux - Screen is being shared';
+            let bitmapCtx = null;
+            try {
+                bitmapCtx = canvas.getContext('bitmaprenderer');
+            } catch (error) {
+                statusOverlay.textContent = 'ImageBitmap render context unavailable';
+                console.error('Failed to acquire bitmaprenderer context', error);
+            }
 
-                        const sourceId = await globalThis.electronAPI.getScreenShareStream();
-                        const screenSize = await globalThis.electronAPI.getScreenShareScreen();
-                        
-                        console.debug('Screen sharing status:', isActive, 'Source ID:', sourceId, 'Screen size:', screenSize);
-                        
-                        if (sourceId) {
-                            const stream = await navigator.mediaDevices.getUserMedia({
-                                audio: false,
-                                video: {
-                                    mandatory: {
-                                        chromeMediaSource: 'desktop',
-                                        chromeMediaSourceId: sourceId,
-                                        minWidth: screenSize?.width || 1920,
-                                        maxWidth: screenSize?.width || 1920,
-                                        minHeight: screenSize?.height || 1080,
-                                        maxHeight: screenSize?.height || 1080
-                                    }
-                                }
-                            });
-                            
-                            videoElement.srcObject = stream;
-                            videoElement.style.display = 'block';
-                            
-                            // Wait for video metadata to load to get actual dimensions
-                            videoElement.addEventListener('loadedmetadata', () => {
-                                const videoWidth = videoElement.videoWidth;
-                                const videoHeight = videoElement.videoHeight;
-                                
-                                if (videoWidth && videoHeight) {
-                                    // Calculate thumbnail size while maintaining aspect ratio
-                                    const maxWidth = 400;
-                                    const maxHeight = 300;
-                                    const aspectRatio = videoWidth / videoHeight;
-                                    
-                                    let windowWidth, windowHeight;
-                                    
-                                    // Scale to thumbnail size maintaining aspect ratio
-                                    if (aspectRatio > maxWidth / maxHeight) {
-                                        // Video is wider - fit to max width
-                                        windowWidth = maxWidth;
-                                        windowHeight = maxWidth / aspectRatio;
-                                    } else {
-                                        // Video is taller - fit to max height
-                                        windowHeight = maxHeight;
-                                        windowWidth = maxHeight * aspectRatio;
-                                    }
-                                    
-                                    // Ensure minimum size
-                                    windowWidth = Math.max(windowWidth, 200);
-                                    windowHeight = Math.max(windowHeight, 120);
-                                    
-                                    // Add space for status overlay
-                                    windowHeight += 20;
-                                    
-                                    // Resize window to thumbnail size
-                                    if (globalThis.electronAPI.resizeWindow) {
-                                        globalThis.electronAPI.resizeWindow({
-                                            width: Math.round(windowWidth),
-                                            height: Math.round(windowHeight)
-                                        });
-                                    }
-                                    
-                                    console.debug('Resizing preview to:', Math.round(windowWidth), 'x', Math.round(windowHeight), 'for video:', videoWidth, 'x', videoHeight);
-                                }
-                            }, { once: true });
-                        } else {
-                            videoElement.srcObject = null;
-                            videoElement.style.display = 'none';
-                            statusOverlay.textContent = 'No Screen Share Source';
-                        }
-                    } else {
-                        statusOverlay.textContent = 'Screen Share Inactive';
-                        document.title = 'Teams for Linux - Nothing is being shared';
-                        videoElement.srcObject = null;
-                        videoElement.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Error updating screen share preview:', error);
-                    statusOverlay.textContent = 'Error: ' + error.message;
-                    videoElement.srcObject = null;
-                    videoElement.style.display = 'none';
+            let port = null;
+            let resizeApplied = false;
+
+            const applyResize = (bitmap) => {
+                if (resizeApplied) return;
+                resizeApplied = true;
+                canvas.width = bitmap.width;
+                canvas.height = bitmap.height;
+
+                const maxWidth = 400;
+                const maxHeight = 300;
+                const aspectRatio = bitmap.width / bitmap.height;
+                let windowWidth, windowHeight;
+                if (aspectRatio > maxWidth / maxHeight) {
+                    windowWidth = maxWidth;
+                    windowHeight = maxWidth / aspectRatio;
+                } else {
+                    windowHeight = maxHeight;
+                    windowWidth = maxHeight * aspectRatio;
+                }
+                windowWidth = Math.max(windowWidth, 200);
+                windowHeight = Math.max(windowHeight, 120) + 20;
+
+                if (globalThis.electronAPI?.resizeWindow) {
+                    globalThis.electronAPI.resizeWindow({
+                        width: Math.round(windowWidth),
+                        height: Math.round(windowHeight),
+                    });
                 }
             };
 
-            // Initial status and stream update
-            updateStatusAndStream();
-            
-            // Listen for screen sharing status changes
-            if (globalThis?.electronAPI?.onScreenSharingStatusChanged) {
-                globalThis.electronAPI.onScreenSharingStatusChanged(() => {
-                    updateStatusAndStream();
+            const wirePort = (received) => {
+                if (!bitmapCtx) return;
+                // Defensively close any prior port; a second wire-up means a
+                // mid-session "Change what's shared" or a second share session.
+                if (port) {
+                    try { port.close(); } catch { /* noop */ }
+                    port = null;
+                }
+                resizeApplied = false;
+                port = received;
+                port.onmessage = (event) => {
+                    const bitmap = event.data;
+                    if (!(bitmap instanceof ImageBitmap)) {
+                        console.warn('Preview received non-ImageBitmap payload', bitmap);
+                        return;
+                    }
+                    applyResize(bitmap);
+                    try {
+                        bitmapCtx.transferFromImageBitmap(bitmap);
+                    } catch (error) {
+                        console.error('Preview bitmap render failed', error);
+                        try { bitmap.close?.(); } catch { /* noop */ }
+                    }
+                };
+                port.onmessageerror = (event) => {
+                    console.error('Preview port message error', event);
+                };
+                port.start?.();
+            };
+
+            // The preload forwards the MessagePort from main via globalThis.postMessage
+            // with transfer; pick it up once. See app/screenSharing/previewWindowPreload.js.
+            globalThis.addEventListener('message', (event) => {
+                if (event.source !== globalThis) return;
+                if (event.data !== 'screen-share-port') return;
+                const received = event.ports?.[0];
+                if (received) wirePort(received);
+            });
+
+            if (globalThis.electronAPI?.onScreenSharingStatusChanged) {
+                globalThis.electronAPI.onScreenSharingStatusChanged(async () => {
+                    const isActive = await globalThis.electronAPI.getScreenSharingStatus();
+                    if (!isActive) {
+                        statusOverlay.textContent = 'Screen Share Inactive';
+                        document.title = 'Teams for Linux - Nothing is being shared';
+                        if (port) {
+                            try { port.close(); } catch { /* noop */ }
+                            port = null;
+                        }
+                    }
                 });
             }
         });

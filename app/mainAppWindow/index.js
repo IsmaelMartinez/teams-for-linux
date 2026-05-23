@@ -7,6 +7,8 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
+  ipcMain,
+  MessageChannelMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -436,6 +438,44 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   }
 
   bindDisplayMediaHandler(window.webContents.session);
+
+  // #2534: when the renderer signals that screen sharing has started, make
+  // sure the preview window is open and connect the two renderers with a
+  // direct MessagePort. The Teams-side script pumps VideoFrames from the
+  // active screen-share track through it; the preview window reconstructs the
+  // stream on the other end via MediaStreamTrackGenerator. This avoids a
+  // second getUserMedia/portal call (which on Wayland needs a PipeWire token
+  // we cannot reuse) and means one capture feeds both Teams and the preview.
+  // The 'screen-sharing-started' / 'screen-sharing-stopped' channels are a
+  // broadcast: ScreenSharingService updates internal state, MQTTMediaStatusService
+  // publishes to the broker, and this listener wires the MessagePort. Adding
+  // another ipcMain.on here is the established pattern, not a duplication.
+  ipcMain.on("screen-sharing-started", () => {
+    if (!window || window.isDestroyed()) return;
+    createScreenSharePreviewWindow();
+    const previewWindow = screenSharingService.getPreviewWindow();
+    if (!previewWindow || previewWindow.isDestroyed()) {
+      console.debug("[SCREEN_SHARE_DIAG] No preview window after creation (thumbnail disabled or already destroyed) - skipping port wiring");
+      return;
+    }
+    const postPorts = () => {
+      try {
+        const { port1, port2 } = new MessageChannelMain();
+        window.webContents.postMessage("screen-share-port", null, [port1]);
+        previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
+        console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
+      } catch (error) {
+        console.error("[SCREEN_SHARE_DIAG] Failed to post MessagePort", {
+          error: error.message,
+        });
+      }
+    };
+    if (previewWindow.webContents.isLoading()) {
+      previewWindow.webContents.once("did-finish-load", postPorts);
+    } else {
+      postPorts();
+    }
+  });
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();
