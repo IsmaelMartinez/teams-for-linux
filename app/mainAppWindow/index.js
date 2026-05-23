@@ -7,6 +7,7 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
+  ipcMain,
   MessageChannelMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
@@ -449,9 +450,11 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // stream on the other end via MediaStreamTrackGenerator. This avoids a
   // second getUserMedia/portal call (which on Wayland needs a PipeWire token
   // we cannot reuse) and means one capture feeds both Teams and the preview.
-  // Registered as a hook on the service rather than a second ipcMain listener
-  // so only one handler owns the 'screen-sharing-started' channel.
-  screenSharingService.setSharingStartedHook(() => {
+  // The 'screen-sharing-started' / 'screen-sharing-stopped' channels are a
+  // broadcast: ScreenSharingService updates internal state, MQTTMediaStatusService
+  // publishes to the broker, and this listener wires the MessagePort. Adding
+  // another ipcMain.on here is the established pattern, not a duplication.
+  ipcMain.on("screen-sharing-started", () => {
     if (!window || window.isDestroyed()) return;
     createScreenSharePreviewWindow();
     const previewWindow = screenSharingService.getPreviewWindow();
