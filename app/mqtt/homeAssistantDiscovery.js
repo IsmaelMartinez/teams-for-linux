@@ -5,8 +5,8 @@
  * creating entities for Teams status, media states, and controls.
  *
  * Entities created:
- * - sensor:        Teams presence status (plain text)
- * - binary_sensor: In-Call
+ * - sensor:        Teams presence status (plain text), Microphone state
+ * - binary_sensor: In-Call, Screen Sharing, Camera
  * - button:        Toggle Mute, Toggle Video, Toggle Hand Raise (requires commandTopic)
  *
  * Buttons use payload_press with the pre-built JSON command.
@@ -88,6 +88,17 @@ class HomeAssistantDiscovery {
 		};
 	}
 
+	#buildMicrophoneSensorConfig() {
+		return {
+			name: 'Teams Microphone',
+			unique_id: `${this.#deviceId}_microphone`,
+			state_topic: `${this.#topicPrefix}/microphone`,
+			icon: 'mdi:microphone',
+			availability: this.#getAvailability(),
+			device: this.#getDevice(),
+		};
+	}
+
 	#buildButtonConfig(name, objectId, action, icon) {
 		if (!this.#commandTopic) return null;
 		return {
@@ -104,6 +115,7 @@ class HomeAssistantDiscovery {
 	async publishDiscovery() {
 		const entities = [
 			{component: 'sensor', objectId: 'status', config: this.#buildSensorConfig()},
+			{component: 'sensor', objectId: 'microphone', config: this.#buildMicrophoneSensorConfig()},
 			{
 				component: 'binary_sensor',
 				objectId: 'in_call',
@@ -113,6 +125,11 @@ class HomeAssistantDiscovery {
 				component: 'binary_sensor',
 				objectId: 'screen_sharing',
 				config: this.#buildBinarySensorConfig('Teams Screen Sharing', 'screen_sharing', 'screen-sharing', 'mdi:monitor-share')
+			},
+			{
+				component: 'binary_sensor',
+				objectId: 'camera',
+				config: this.#buildBinarySensorConfig('Teams Camera', 'camera', 'camera', 'mdi:camera')
 			},
 			{
 				component: 'button',
