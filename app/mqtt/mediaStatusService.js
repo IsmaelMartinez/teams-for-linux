@@ -42,9 +42,13 @@ class MQTTMediaStatusService {
 	}
 
 	async #publishBoolean(subtopic, value, label) {
-		const topic = `${this.#topicPrefix}/${subtopic}`;
-		await this.#mqttClient.publish(topic, value, { retain: true });
-		console.debug(`[MQTTMediaStatusService] ${label}, published to`, topic);
+		try {
+			const topic = `${this.#topicPrefix}/${subtopic}`;
+			await this.#mqttClient.publish(topic, value, { retain: true });
+			console.debug(`[MQTTMediaStatusService] ${label}, published to`, topic);
+		} catch (error) {
+			console.error(`[MQTTMediaStatusService] Failed to publish ${subtopic}:`, { message: error.message });
+		}
 	}
 
 	async #handleCallConnected() {
