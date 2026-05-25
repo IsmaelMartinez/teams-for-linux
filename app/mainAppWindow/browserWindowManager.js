@@ -216,12 +216,14 @@ class BrowserWindowManager {
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);
       }
+      app.emit('teams-incoming-call-started');
     };
   }
 
   assignOnIncomingCallEndedHandler() {
     return async (e) => {
       this.handleOnIncomingCallEnded();
+      app.emit('teams-incoming-call-ended');
     };
   }
 
