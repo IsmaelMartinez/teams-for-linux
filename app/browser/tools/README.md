@@ -30,6 +30,31 @@ Disables microphone auto-gain control by intercepting `getUserMedia` calls and m
 **Configuration**: `media.microphone.disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
 
+#### [overrideMicConstraints.js](overrideMicConstraints.js)
+Overrides the microphone audio constraints Teams requests via `getUserMedia`, letting users disable WebRTC APM processing (echo cancellation, noise suppression, auto gain control) or pin `channelCount` / `sampleRate` at the Chromium/WebRTC layer. This is the Linux equivalent of the "High fidelity music mode" Microsoft only exposes on Windows Teams.
+
+**Configuration**:
+```json
+{
+  "media": {
+    "microphone": {
+      "overrideConstraints": {
+        "enabled": true,
+        "echoCancellation": false,
+        "noiseSuppression": false,
+        "autoGainControl": false,
+        "channelCount": 2,
+        "sampleRate": 48000
+      }
+    }
+  }
+}
+```
+
+Omitting a key means "do not touch that constraint" — users who only want to disable noise suppression do not need to pin a sample rate their device cannot honour.
+
+**Use Case**: Podcasters, streamers, and anyone routing hardware audio effects (vocoder voice effects, sound-pad effects from a RØDECaster Duo / Stream Deck) into meetings where WebRTC APM would otherwise gate them as non-speech noise.
+
 #### [cameraResolution.js](cameraResolution.js)
 Removes or overrides video resolution constraints that Microsoft Teams sets when accessing the camera. By default, Teams requests 720p which may not be the native or preferred resolution of the camera.
 

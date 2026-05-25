@@ -215,7 +215,10 @@ function assignOnDidFailLoadEventHandler(cm) {
         cm.debouncedRefresh();
       }
     } else {
-      console.warn(`[CONNECTION] Sub-frame failed to load: ${description} (code: ${code})`);
+      // Sub-frame failures are expected in restricted networks (e.g. Teams
+      // telemetry iframes blocked, Loop endpoints unreachable). Not
+      // actionable for end users; keep at debug for diagnosis when needed.
+      console.debug(`[CONNECTION] Sub-frame failed to load: ${description} (code: ${code})`);
     }
   };
 }

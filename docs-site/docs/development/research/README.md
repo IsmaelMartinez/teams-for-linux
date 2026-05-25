@@ -13,22 +13,12 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[System Performance Research](system-performance-research.md)** - Renderer overhead, main process I/O, and metrics infrastructure
   - Identifies 10 performance-sensitive patterns (MutationObserver sprawl, polling, sequential I/O)
   - Proposes lightweight startup/memory instrumentation with zero dependencies
-  - **Status:** Research complete, prioritized implementation plan included
-
-- **[Electron 40 Migration Research](electron-40-migration-research.md)** - Migration from Electron 39.5.1 to 40.6.0
-  - Covers breaking changes, Node.js 22→24 impact, Chromium 142→144 changes
-  - ESLint 10 section already shipped in v2.7.8
-  - **Status:** Research complete, deferred to v2.8.0 (staying on Electron 39 for stability)
-
-- **[Notification Sound Overhaul Research](notification-sound-overhaul-research.md)** - Replace `node-sound`, consolidate notification config
-  - Evaluates Web Audio, data URI, and system command approaches
-  - Proposes phased plan: replace native addon, add custom sounds, Web Audio fallback
-  - **Status:** Research complete, targeted for v2.8.0
+  - **Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically
 
 - **[MQTT Microphone State via Speaking Indicator](mqtt-microphone-state-research.md)** - Publish speaking/silent/muted state to MQTT
   - Wires existing speaking indicator WebRTC detection into MQTT via `microphone-state-changed` IPC
   - Completes original request from #1938 (@vbartik's RGB LED home automation)
-  - **Status:** Research complete, ready for implementation (depends on PR #2299 merged)
+  - **Status:** Implemented in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) (open, awaiting test confirmation); doc to be deleted on merge
 
 ### First Iteration Shipped — Awaiting Feedback
 
@@ -40,14 +30,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
 ### Awaiting User Feedback
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
-  - **Phase 1 Shipped**: Infrastructure, LWT, call state, camera, microphone, and screen sharing topics
-  - **Screen sharing null sourceId fix**: PR [#2193](https://github.com/IsmaelMartinez/teams-for-linux/pull/2193) landing in v2.7.11
-  - **Screen sharing broader feature**: PR [#2144](https://github.com/IsmaelMartinez/teams-for-linux/pull/2144) awaiting user confirmation ([#2107](https://github.com/IsmaelMartinez/teams-for-linux/issues/2107))
-  - **Phase 2 Deferred**: Reliable mute/speaking state via WebRTC `getStats()` is now proven (see speaking indicator [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299)); wiring to MQTT awaits user demand
+  - **Phase 1 Shipped**: Infrastructure, LWT, call state, screen-sharing topics
+  - **Phase 2 Microphone In Flight**: Driven by speaking-indicator audioLevel; implementation in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497)
+  - **Phase 2 Camera Deferred**: `track.enabled` polling approach needs validation before wiring to MQTT
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
-  - **Phase 1 POC Complete**: Token acquisition, calendar/mail endpoints working
-  - **Phases 2-3**: Enhanced features and user-facing UI not started
+  - **Phase 1 Shipped (v2.7.4)**: Token acquisition plus 7 IPC channels (user profile, calendar events/view, calendar create, mail messages, People search, send chat). People search and send chat power Quick Chat (ADR-014, ADR-015)
+  - **Phases 2-3**: Calendar widget, mail preview, presence, settings UI — not started
 
 ### Reference
 
@@ -74,6 +63,9 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Notification Sound Player (inline replacement for `node-sound`) | v2.7.10 | Phase 1 of the notification-sound research shipped — `paplay`/`pw-play`/`aplay`/`afplay` detection in `app/audio/player.js`. See [PR #2306](https://github.com/IsmaelMartinez/teams-for-linux/pull/2306) |
+| Cross-Distro CI Smoke Test | v2.7.x | Workflow `.github/workflows/cross-distro-smoke.yml` ships the design proposed in the original research. Umbrella decision in [ADR-016](../adr/016-cross-distro-testing-environment.md) |
+| Electron 41 Upgrade | v2.8.0 | Repo skipped Electron 40 entirely and jumped 39.8.2 → 41.x via dependabot [PR #2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347), with follow-up bumps to 41.5.0; the Electron 40 migration research is therefore obsolete |
 | Issue-PR Release Linking | v2.7.11 | GraphQL `closingIssuesReferences` query; `closes:` metadata in changelog files. See [PR #2317](https://github.com/IsmaelMartinez/teams-for-linux/pull/2317) |
 | Codebase Review (March 2026) | v2.7.x | Code quality, maintainability, performance, and DX review; findings addressed incrementally |
 | Issue Triage Bot | v2.7.x | All four phases implemented; migrated to standalone Go service. See [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md) and [github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot) |

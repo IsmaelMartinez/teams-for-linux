@@ -15,6 +15,7 @@ This document details all available configuration options for the Teams for Linu
   - [Tray Icon](#tray-icon)
   - [Notification System](#notification-system)
   - [Incoming Call Handling](#incoming-call-handling)
+  - [Downloads](#downloads)
   - [Idle & Activity Detection](#idle--activity-detection)
   - [Authentication & SSO](#authentication--sso)
   - [Network & Proxy](#network--proxy)
@@ -95,7 +96,7 @@ Place your `config.json` file in the appropriate location based on your installa
 |--------|------|---------|-------------|
 | `customCSSName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
 | `customCSSLocation` | `string` | `""` | Custom CSS styles file location |
-| `followSystemTheme` | `boolean` | `false` | Follow system theme |
+| `followSystemTheme` | `boolean` | `true` | Follow the operating-system dark/light theme preference. Set `false` to keep Teams's own theme regardless of OS changes. |
 
 ### Tray Icon
 
@@ -118,6 +119,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
+| `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
 
 ### Incoming Call Handling
 
@@ -129,6 +131,15 @@ Place your `config.json` file in the appropriate location based on your installa
 
 > [!NOTE]
 > See [Incoming Call Command](#incoming-call-command) for detailed usage examples.
+
+### Downloads
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `download.enabled` | `boolean` | `false` | Master switch for the download feedback feature. Opt-in while in early development; set to `true` to enable the manager. The sub-flags only take effect when `enabled` is `true`. |
+| `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). Set to `false` to suppress. |
+| `download.showProgressBar` | `boolean` | `true` | Drive in-flight feedback through `BrowserWindow.setProgressBar` (macOS / Windows; effectively no-op on Linux), a `com.canonical.Unity.LauncherEntry` D-Bus broadcast that Ubuntu Dock and Dash-to-Dock subscribe to (GNOME / Ubuntu users), and an `org.kde.JobViewServer` per-download view rendered in KDE Plasma's notification widget. The window-title prefix is a separate sub-flag (`showTitlePrefix`). |
+| `download.showTitlePrefix` | `boolean` | `true` | Also prefix the main window title with `[34%]` (or `[downloading]`) while a download is in flight. Every WM/DE renders the window title in its taskbar tooltip / Alt-Tab, so this is a portable fallback for environments where the other channels are unavailable. Set to `false` on KDE / Ubuntu where the JobView / LauncherEntry already shows progress and the title churn is redundant. |
 
 ### Idle & Activity Detection
 
@@ -208,7 +219,7 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
 | `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -219,6 +230,26 @@ InTune SSO uses a nested `auth.intune` configuration:
 
 Report-only Content Security Policy headers are automatically stripped for all non-Teams domains. This is necessary because Electron's `contextIsolation: false` setting (required for Teams DOM access) erroneously enforces report-only CSP as blocking, which breaks third-party SSO providers like Symantec VIP. No configuration is needed.
 
+#### WebAuthn / FIDO2 Security Keys
+
+Hardware security key authentication (YubiKey, SoloKeys, etc.) for Microsoft Entra ID login. On Linux, Electron's Chromium lacks native WebAuthn hardware support, so this module intercepts `navigator.credentials` calls and routes them to `fido2-tools`. On macOS and Windows, Electron handles WebAuthn natively and this feature is not needed.
+
+Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debian/Ubuntu) or `sudo dnf install fido2-tools` (Fedora) or `sudo pacman -S libfido2` (Arch).
+
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
+
 #### Certificates
 
 | Option | Type | Default | Description |
@@ -226,12 +257,33 @@ Report-only Content Security Policy headers are automatically stripped for all n
 | `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
 | `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
 
+### Multi-Account Profile Switcher (Experimental)
+
+> **Status:** Phase 1 MVP scaffolding. The flag is wired through config, but the switcher UI, profile CRUD, and session isolation plumbing land in follow-up PRs tracked in [ADR-020](development/adr/020-multi-account-profile-switcher). Enabling the flag today has no user-visible effect beyond the Intune mutex check described below.
+
+Opt-in configuration for the single-window multi-tenant account switcher:
+
+```json
+{
+  "multiAccount": {
+    "enabled": false
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `multiAccount.enabled` | `boolean` | `false` | Opt-in flag for the multi-account profile switcher. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design. |
+
+**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and `auth.intune.enabled` is also `true`, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
+
 ### Network & Proxy
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port |
 | `network.webRTCIPHandlingPolicy` | `string` | `null` | Controls which network interfaces WebRTC uses for ICE candidate gathering. Choices: `default`, `default_public_and_private_interfaces`, `default_public_interface_only`, `disable_non_proxied_udp` |
+| `network.disableQuic` | `boolean` | `true` | Append Chromium's `--disable-quic` switch at startup. Defaults to `true` to work around issue [#2518](https://github.com/IsmaelMartinez/teams-for-linux/issues/2518) (concurrent SharePoint downloads abort with `ERR_QUIC_PROTOCOL_ERROR` on the shared QUIC session). Set to `false` to re-enable QUIC if a future Chromium release fixes the underlying transport bug. |
 
 *   `default` - Exposes user's public and local IPs. This is the default behavior. When this policy is used, WebRTC has the right to enumerate all interfaces and bind them to discover public interfaces.
 
@@ -272,7 +324,7 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -287,6 +339,12 @@ Media settings are organized under the `media` configuration object with subgrou
 |--------|------|---------|-------------|
 | `media.microphone.disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
 | `media.microphone.speakingIndicator` | `boolean` | `false` | Enable visual overlay showing microphone state during calls (speaking/silent/muted). When enabled, also provides WebRTC-based call state detection. Note: when `mqtt.enabled` is true, the WebRTC call detection activates automatically even without this option, ensuring reliable `in-call` topic publishing |
+| `media.microphone.overrideConstraints.enabled` | `boolean` | `false` | Enable overriding the microphone audio constraints Teams requests via `getUserMedia`. Lets users disable WebRTC APM processing (echo cancellation, noise suppression, auto gain control) or pin `channelCount` / `sampleRate` at the Chromium/WebRTC layer — the Linux equivalent of "High fidelity music mode" (Windows-only in the official Teams client). Only the keys you set are overridden; omitted keys are left untouched. |
+| `media.microphone.overrideConstraints.echoCancellation` | `boolean` | - | When set, overrides `getUserMedia`'s `echoCancellation` constraint. Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.noiseSuppression` | `boolean` | - | When set, overrides `getUserMedia`'s `noiseSuppression` constraint. Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.autoGainControl` | `boolean` | - | When set, overrides `getUserMedia`'s `autoGainControl` constraint. (Same surface as `disableAutogain`; this key takes precedence when both are set.) Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.channelCount` | `number` | - | When set, pins the microphone channel count (typically `1` or `2`). Omit to leave it untouched. Browsers may silently downgrade if the device does not support the requested count. |
+| `media.microphone.overrideConstraints.sampleRate` | `number` | - | When set, pins the microphone sample rate in Hz (e.g., `48000`). Omit to leave it untouched. Browsers may silently downgrade if the device does not support the requested rate. |
 | `media.camera.resolution.enabled` | `boolean` | `false` | Enable camera resolution control |
 | `media.camera.resolution.mode` | `string` | `"remove"` | Resolution mode: `"remove"` removes Teams' constraints allowing native camera resolution, `"override"` sets specific width/height |
 | `media.camera.resolution.width` | `number` | - | Target width when mode is `"override"` |
@@ -308,7 +366,7 @@ Media settings are organized under the `media` configuration object with subgrou
 }
 ```
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -660,7 +718,7 @@ The configuration file can include Electron CLI flags that will be added when th
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
 > [!WARNING]
-> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). To override the default X11 mode, pass `--ozone-platform=wayland` or `--ozone-platform=auto` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The current default is `--ozone-platform=x11` on all Linux packaging formats. To force a different backend, pass `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 

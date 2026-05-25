@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.8.0",
+  "version": "2.10.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -30,10 +30,8 @@
     "prestart": "npm ci",
     "start": "electron ./app --trace-warnings",
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
-    "release:prepare": "node scripts/release-prepare.mjs",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "generate-ipc-docs": "node scripts/generateIpcDocs.js",
-    "generate-release-notes": "node scripts/generateReleaseNotes.mjs",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
@@ -54,8 +52,9 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@homebridge/dbus-native": "0.7.4",
-    "electron-log": "^5.4.3",
+    "@homebridge/dbus-native": "0.7.5",
+    "cbor-x": "^1.6.4",
+    "electron-log": "^5.4.4",
     "electron-store": "11.0.2",
     "electron-updater": "^6.8.3",
     "electron-window-state": "5.0.3",
@@ -65,11 +64,11 @@
   "devDependencies": {
     "@electron/fuses": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "electron": "41.2.1",
-    "@playwright/test": "1.59.1",
+    "electron": "41.6.1",
+    "@playwright/test": "1.60.0",
     "electron-builder": "^26.8.1",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },

@@ -4,11 +4,14 @@ const path = require("node:path");
 class ScreenSharingService {
   #picker = null;
   #selectedScreenShareSource = null;
+  #isSharing = false;
   #previewWindow = null;
 
   initialize() {
     // Get available desktop capturer sources (screens/windows) for sharing
     ipcMain.handle("desktop-capturer-get-sources", this.#handleGetDesktopCapturerSources.bind(this));
+    // Get connected displays (id, label, internal, bounds, scaleFactor) for the share picker
+    ipcMain.handle("get-screen-sharing-displays", this.#handleGetDisplays.bind(this));
     // Select desktop media source for screen sharing
     ipcMain.handle("choose-desktop-media", this.#handleChooseDesktopMedia.bind(this));
     // Cancel desktop media selection dialog
@@ -46,7 +49,7 @@ class ScreenSharingService {
   }
 
   isScreenSharingActive() {
-    return this.#selectedScreenShareSource !== null;
+    return this.#isSharing;
   }
 
   /**
@@ -93,6 +96,17 @@ class ScreenSharingService {
     }
   }
 
+  #handleGetDisplays() {
+    return screen.getAllDisplays().map((d) => ({
+      id: d.id,
+      label: d.label,
+      internal: d.internal,
+      bounds: d.bounds,
+      scaleFactor: d.scaleFactor,
+      displayFrequency: d.displayFrequency,
+    }));
+  }
+
   async #handleChooseDesktopMedia(_event, sourceTypes) {
     try {
       const sources = await desktopCapturer.getSources({ types: sourceTypes });
@@ -115,17 +129,24 @@ class ScreenSharingService {
   }
 
   #handleScreenSharingStarted(_event, sourceId) {
-    // Only update if we received a valid source ID format (screen:x:y or window:x:y)
+    // Track "sharing is active" independent of source ID format. The Wayland
+    // path (#2534) sends null because the OS portal handled the picker and no
+    // desktopCapturer source ID was produced, so the prior null-guard left
+    // #selectedScreenShareSource stale and `getScreenSharingStatus()` lied.
+    this.#isSharing = true;
+
+    // Only update the source ID if we received a valid format (screen:x:y or
+    // window:x:y). Ignore UUID format (MediaStream.id) - keep existing value.
     if (sourceId) {
       const isValidFormat = sourceId.startsWith('screen:') || sourceId.startsWith('window:');
       if (isValidFormat) {
         this.#selectedScreenShareSource = sourceId;
       }
-      // Ignore UUID format (MediaStream.id) - keep existing value
     }
   }
 
   #handleScreenSharingStopped() {
+    this.#isSharing = false;
     this.#selectedScreenShareSource = null;
 
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
@@ -134,7 +155,7 @@ class ScreenSharingService {
   }
 
   #handleGetScreenSharingStatus() {
-    return this.#selectedScreenShareSource !== null;
+    return this.#isSharing;
   }
 
   #handleGetScreenShareStream() {
@@ -173,6 +194,7 @@ class ScreenSharingService {
   }
 
   #handleStopScreenSharingFromThumbnail() {
+    this.#isSharing = false;
     this.#selectedScreenShareSource = null;
     if (this.#previewWindow && !this.#previewWindow.isDestroyed()) {
       this.#previewWindow.webContents.send("screen-sharing-status-changed");

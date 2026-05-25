@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+  <title>Add profile</title>
+  <link rel="stylesheet" href="addProfile.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Add a profile</h2>
+    <p>A profile is an isolated Teams session — useful for signing into multiple tenants in the same window.</p>
+
+    <label for="name-input">Name <span class="required">*</span></label>
+    <input type="text" id="name-input" maxlength="64" autofocus required>
+
+    <label for="url-input">Custom Teams URL <span class="hint">(optional)</span></label>
+    <input type="text" id="url-input" maxlength="2048" placeholder="https://teams.microsoft.com">
+
+    <div class="row">
+      <div class="row-item">
+        <label for="initials-input">Initials <span class="hint">(optional)</span></label>
+        <input type="text" id="initials-input" maxlength="4" placeholder="auto">
+      </div>
+      <div class="row-item">
+        <label for="color-input">Avatar color <span class="hint">(optional)</span></label>
+        <input type="color" id="color-input" value="#6264a7">
+      </div>
+    </div>
+
+    <div class="error" id="error-message"></div>
+    <div class="buttons">
+      <button id="cancel-btn" type="button" class="secondary">Cancel</button>
+      <button id="add-btn" type="button" class="primary" disabled>Add</button>
+    </div>
+  </div>
+  <script src="addProfile.js"></script>
+</body>
+</html>

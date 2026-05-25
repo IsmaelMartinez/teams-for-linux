@@ -15,17 +15,21 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const AddProfileDialog = require("../profileDialogs/addProfile");
+const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
   #preJoinUrl = null;
+  #profileChangeHandler = null;
 
-  constructor(window, configGroup, iconPath, connectionManager) {
+  constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.connectionManager = connectionManager;
+    this.profilesManager = profilesManager;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
@@ -33,6 +37,19 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
+    // Only allocate the Add-profile / Manage-profiles dialogs when multi-
+    // account is enabled. The Profiles menu entries that trigger them are
+    // themselves gated on the same flag, so with the flag off these objects
+    // are never reachable from the UI.
+    const multiAccountReady =
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled;
+    this.addProfileDialog = multiAccountReady
+      ? new AddProfileDialog(this.window, this.profilesManager)
+      : null;
+    this.manageProfileDialog = multiAccountReady
+      ? new ManageProfileDialog(this.window, this.profilesManager)
+      : null;
     this.initialize();
   }
 
@@ -143,6 +160,38 @@ class Menus {
 
     this.initializeEventHandlers();
 
+    // Phase 1c.2: rebuild the menu when ProfilesManager state changes
+    // (add/remove/switch/update) so the Profiles submenu and the active-
+    // profile checkmark stay in sync. Listener subscription is gated on
+    // the multi-account flag — with the flag off, ProfilesManager events
+    // would never fire and the Profiles submenu is not in the template.
+    if (
+      this.profilesManager &&
+      this.configGroup.startupConfig.multiAccount?.enabled
+    ) {
+      this.#profileChangeHandler = () => this.updateMenu();
+      this.profilesManager.on("add", this.#profileChangeHandler);
+      this.profilesManager.on("remove", this.#profileChangeHandler);
+      this.profilesManager.on("switch", this.#profileChangeHandler);
+      this.profilesManager.on("update", this.#profileChangeHandler);
+
+      // Detach the listeners when the window is destroyed so the
+      // long-lived ProfilesManager (a process-wide singleton) does not
+      // hold references into a stale Menus instance if the window is
+      // ever recreated. `once` because the window is destroyed exactly
+      // once. Mirrors `ProfileViewManager.initialize`'s `mainWindow.once(
+      // 'closed', () => this.dispose())` pattern from PR #2483.
+      this.window.once("closed", () => {
+        if (this.#profileChangeHandler) {
+          this.profilesManager.off("add", this.#profileChangeHandler);
+          this.profilesManager.off("remove", this.#profileChangeHandler);
+          this.profilesManager.off("switch", this.#profileChangeHandler);
+          this.profilesManager.off("update", this.#profileChangeHandler);
+          this.#profileChangeHandler = null;
+        }
+      });
+    }
+
     if (this.configGroup.startupConfig.trayIconEnabled) {
       this.tray = new Tray(
         this.window,
@@ -200,6 +249,29 @@ class Menus {
         message: "Settings file not found. Using default settings.",
         title: "Restore settings",
         type: "warning",
+      });
+    }
+  }
+
+  addProfile() {
+    this.addProfileDialog?.show();
+  }
+
+  manageProfiles() {
+    this.manageProfileDialog?.show();
+  }
+
+  // Switch the active profile via ProfilesManager. The emitter then fires
+  // `switch` and the menu rebuilds via the listener wired in initialize().
+  // ProfileViewManager's own listener (in app/mainAppWindow/profileViewManager.js)
+  // handles the actual WebContentsView visibility swap.
+  switchProfile(id) {
+    try {
+      this.profilesManager.switch(id);
+    } catch (error) {
+      console.error("[Menus] switchProfile failed", {
+        id,
+        message: error.message,
       });
     }
   }

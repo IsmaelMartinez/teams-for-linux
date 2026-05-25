@@ -166,8 +166,8 @@ const config: Config = {
               href: 'https://github.com/IsmaelMartinez/teams-for-linux/issues',
             },
             {
-              label: 'GitHub Discussions',
-              href: 'https://github.com/IsmaelMartinez/teams-for-linux/discussions',
+              label: 'Matrix space',
+              href: 'https://matrix.to/#/#teams-for-linux-space:matrix.org',
             },
           ],
         },

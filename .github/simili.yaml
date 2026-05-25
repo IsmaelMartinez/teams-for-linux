@@ -8,7 +8,22 @@
 #   QDRANT_URL       Qdrant Cloud instance URL (https://...)
 #   QDRANT_API_KEY   Qdrant Cloud API key
 
-workflow: similarity-only
+# Use an explicit `steps:` list instead of `workflow: similarity-only`.
+# The pinned simili-bot version reads cfg.Workflow from this file but never
+# applies it — the process command's --workflow flag wins and defaults to
+# `issue-triage`, which is why the first trial weeks saw duplicate callouts,
+# quality scores, and 72-hour auto-close countdowns despite the trial plan
+# calling for similarity-only output. cfg.Steps is checked first by
+# ResolveSteps, so listing the steps directly bypasses the broken workflow
+# handling. Kept in sync with the upstream `similarity-only` preset:
+#   https://github.com/similigh/simili-bot/blob/main/internal/core/pipeline/registry.go
+steps:
+  - gatekeeper
+  - vectordb_prep
+  - similarity_search
+  - response_builder
+  - action_executor
+  - indexer
 
 qdrant:
   url: "${QDRANT_URL}"

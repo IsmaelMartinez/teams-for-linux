@@ -26,13 +26,10 @@ class BrowserWindowManager {
 
   /**
    * Get screen lock inhibition method from config.
-   * Supports both new (screenSharing.lockInhibitionMethod) and legacy (screenLockInhibitionMethod) paths.
    * @returns {string} "Electron" or "WakeLockSentinel"
    */
   get screenLockInhibitionMethod() {
-    return this.config?.screenSharing?.lockInhibitionMethod ??
-           this.config?.screenLockInhibitionMethod ??
-           "Electron";
+    return this.config?.screenSharing?.lockInhibitionMethod ?? "Electron";
   }
 
   async createWindow() {
@@ -111,7 +108,11 @@ class BrowserWindowManager {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
     if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
-      this.window.on("restore", this.enableWakeLockOnWindowRestore);
+      // Wake Lock auto-releases when document.visibilityState becomes 'hidden',
+      // which happens on both minimise and tray-hide. Re-acquire on both events.
+      const reAcquireWakeLock = this.enableWakeLockOnWindowRestore.bind(this);
+      this.window.on("restore", reAcquireWakeLock);
+      this.window.on("show", reAcquireWakeLock);
     }
     // Handle incoming call notification created
     ipcMain.handle(

@@ -1,0 +1,2 @@
+Fix: Prevent double notification sound and handle dismiss events - by @IsmaelMartinez (#2414)
+closes: #2411 https://github.com/IsmaelMartinez/teams-for-linux/issues/2411 [Bug]: Notifications disappear and sound is heard twice

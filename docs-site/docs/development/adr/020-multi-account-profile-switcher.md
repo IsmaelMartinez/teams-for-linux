@@ -140,6 +140,14 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 
 **Mechanism:** switching toggles visibility via `mainWindow.contentView.addChildView` / `removeChildView` and bounds updates. **No `loadURL`** — the switched-away view stays in the view hierarchy but hidden. Sessions stay warm, drafts survive, the Teams websocket is not reconnected. Target: under 500 ms switch latency (verified by E2E timing assertion).
 
+### Rename a profile
+
+1. `Profiles → Manage…` opens the Manage dialog; each row shows the profile's avatar, name, an **Active** badge on the current profile, and a per-row remove action.
+2. Click a profile's name to enter inline-edit mode — the static text is replaced by an `<input>` pre-filled with the current name and selected.
+3. **Enter** or blur saves; **Esc** cancels and reverts to the prior name.
+4. Validation matches Add-profile: trimmed name must be non-empty (also enforced server-side in `ProfilesManager.update`'s `#applyName`). Empty input shows an inline error and the input keeps focus until corrected or cancelled.
+5. On save the renderer sends `manage-profile-rename` (an `ipcMain.handle` channel owned by the dialog), and the dialog forwards to `ProfilesManager.update(id, { name })` server-side; `ProfilesManager` emits `update`; the menu's Switch-to submenu and the title-bar switcher rebuild automatically. Renaming has no session impact — no re-login, no view reload.
+
 ### Remove a profile
 
 1. `Profiles → Manage…` opens a dialog listing all profiles with metadata and a remove action per row.
@@ -286,15 +294,16 @@ Several module-level singletons today assume a single account. Each must be scop
 |----------|------------------------|
 | `app/login/index.js` (`isFirstLoginTry`, module-level `let`) | Switching profile mid-login produces a false "already logged in" state; the second profile's first 401 is mistaken for a retry and triggers an app relaunch |
 | `app/mainAppWindow/index.js:138,157` (screen-preview partition hardcoded to `persist:teams-for-linux-session`) | Screen share preview leaks across profiles — preview opened from profile A shows profile A's cookies/session even when profile B started the share |
+| `app/mainAppWindow/index.js` (`setDisplayMediaRequestHandler` registered on the root window's session only) | Profile views running against `persist:teams-profile-{uuid}` get no in-app picker — share-screen requests fall through to a silent no-op on Linux or the OS-native picker on macOS, bypassing preview, lock inhibition, and source-selection wiring (#2529) |
 | `app/mainAppWindow/index.js` (`cleanExpiredAuthCookies` called once at startup against a single partition) | Other profiles' expired auth cookies are never cleaned; only the startup-active profile benefits |
 | Call state + power-save blocker (`app/mainAppWindow/browserWindowManager.js:237-259`) | Blocker outlives the profile that started the call — switching away from an in-call profile leaves the OS pinned awake under the new profile |
 | Incoming call toast (`app/incomingCallToast/index.js`) | Toast raised from profile A can be dismissed (or answered) by profile B, because the toast has no notion of which partition produced it |
 
-Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakMap`, already landed on the feat branch) and the second (screen-preview partition). Phases 2–3 address the remaining three as their corresponding features (aggregated unread, cross-profile call handling) come online.
+Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakMap`, already landed on the feat branch), the second (screen-preview partition), and the third (`setDisplayMediaRequestHandler` rebound per profile session — discovered post-MVP via #2529). Phases 2–3 address the remaining three as their corresponding features (aggregated unread, cross-profile call handling) come online.
 
 ## Phased Delivery
 
-- **Phase 1 — MVP:** new `multiAccount.enabled` config flag (default `false`) with startup-time mutual-exclusion check against `auth.intune.enabled`, per-profile `WebContentsView`s, top-right dropdown switcher, `Profiles` menu bar entry with Add / Switch / Manage flows, `Ctrl+Shift+1…5` keyboard shortcuts for pinned profiles, first-run Profile 0 migration (gated on flag flip), the six Phase 1 `profile-*` IPC channels, migration of the first two shared-state items from the audit above (the `isFirstLoginTry` → per-`webContents` `WeakMap` conversion in `app/login/index.js`, and swapping the hardcoded screen-preview partition in `app/mainAppWindow/index.js` for the active profile's partition), a ~10 LoC refactor of `CustomBackground` so `customBGServiceUrl` lives on the instance rather than at module scope, and an E2E smoke test covering the byte-identical-when-disabled regression case. The remaining three audit entries (`cleanExpiredAuthCookies`, power-save blocker, incoming-call toast) defer to Phases 2–3 as their corresponding features (aggregated unread, cross-profile call handling) come online.
+- **Phase 1 — MVP:** new `multiAccount.enabled` config flag (default `false`) with startup-time mutual-exclusion check against `auth.intune.enabled`, per-profile `WebContentsView`s, top-right dropdown switcher, `Profiles` menu bar entry with Add / Switch / Manage flows, `Ctrl+Shift+1…5` keyboard shortcuts for pinned profiles, first-run Profile 0 migration (gated on flag flip), the six Phase 1 `profile-*` IPC channels, migration of the first three shared-state items from the audit above (the `isFirstLoginTry` → per-`webContents` `WeakMap` conversion in `app/login/index.js`, swapping the hardcoded screen-preview partition in `app/mainAppWindow/index.js` for the active profile's partition, and rebinding `setDisplayMediaRequestHandler` on each profile session — the third was discovered post-MVP via #2529), a ~10 LoC refactor of `CustomBackground` so `customBGServiceUrl` lives on the instance rather than at module scope, and an E2E smoke test covering the byte-identical-when-disabled regression case. The remaining three audit entries (`cleanExpiredAuthCookies`, power-save blocker, incoming-call toast) defer to Phases 2–3 as their corresponding features (aggregated unread, cross-profile call handling) come online.
 - **Phase 2 — Background notifications:** per-partition preload notification shim and unread-count tagging, aggregated tray badge, per-profile unread dots, `disableNotifications` and `muted` plumbing.
 - **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 5, exposing the `Ctrl+Shift+1…5` shortcuts introduced in Phase 1), drag-to-reorder.
 

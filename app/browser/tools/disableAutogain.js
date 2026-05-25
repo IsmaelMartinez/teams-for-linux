@@ -8,36 +8,10 @@
  * Originally created by Joey Watts
  */
 
-function setLegacyChromeConstraint(constraint, name, value) {
-  if (constraint.mandatory && name in constraint.mandatory) {
-    constraint.mandatory[name] = value;
-    return;
-  }
-  if (constraint.optional) {
-    const element = constraint.optional.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  // `mandatory` options throw errors for unknown keys, so avoid that by
-  // setting it under optional.
-  if (!constraint.optional) {
-    constraint.optional = [];
-  }
-  constraint.optional.push({ [name]: value });
-}
-
-function setConstraint(constraint, name, value) {
-  if (constraint.advanced) {
-    const element = constraint.advanced.find((opt) => name in opt);
-    if (element) {
-      element[name] = value;
-      return;
-    }
-  }
-  constraint[name] = value;
-}
+const {
+  setLegacyChromeConstraint,
+  setConstraint,
+} = require("./_micConstraintHelpers");
 
 const applyDisableAutogainPatch = function () {
 
@@ -116,8 +90,7 @@ const applyDisableAutogainPatch = function () {
  * @param {Object} config - Application configuration
  */
 function init(config) {
-  // Support both new nested config and deprecated flat config
-  const enabled = config.media?.microphone?.disableAutogain || config.disableAutogain;
+  const enabled = config.media?.microphone?.disableAutogain;
   if (!enabled) {
     return;
   }

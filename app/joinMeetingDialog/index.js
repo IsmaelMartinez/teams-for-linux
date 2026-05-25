@@ -1,5 +1,6 @@
-const { BrowserWindow, ipcMain } = require('electron');
+const { ipcMain } = require('electron');
 const path = require('node:path');
+const createDialogWindow = require('../_shared/createDialogWindow');
 
 // Only one JoinMeetingDialog instance exists; its handlers dispatch via this
 // pointer so listeners are registered once and survive across dialog opens.
@@ -48,24 +49,12 @@ class JoinMeetingDialog {
       return;
     }
 
-    // Create dialog window
-    this.#window = new BrowserWindow({
+    this.#window = createDialogWindow({
       title: 'Join Meeting',
       width: 500,
       height: 250,
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      modal: true,
       parent: this.#parentWindow,
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        preload: path.join(__dirname, 'preload.js'),
-      },
+      preload: path.join(__dirname, 'preload.js'),
     });
 
     activeHandlers = {

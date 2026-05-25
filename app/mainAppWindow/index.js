@@ -7,6 +7,8 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
+  ipcMain,
+  MessageChannelMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -30,6 +32,9 @@ const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
 let iconChooser;
 let intune;
 let isControlPressed = false;
+// Phase 1c.2: ProfilesManager handle threaded through onAppReady so the
+// Menus instance can build the Profiles submenu and react to its events.
+let profilesManagerRef = null;
 // Counter for tracking about:blank navigation attempts to handle authentication flows.
 // Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to
 // intercept these and handle them in a hidden window to complete the auth process.
@@ -55,6 +60,28 @@ function setupScreenSharing(selectedSource) {
 
   // Create preview window for screen sharing
   createScreenSharePreviewWindow();
+}
+
+// Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
+// fires only for the session it is bound to, so multi-account profile views (running against
+// their own partition session) need their own binding. See #2529.
+function bindDisplayMediaHandler(targetSession) {
+  targetSession.setDisplayMediaRequestHandler((_request, callback) => {
+    streamSelector.show((source) => {
+      if (source) {
+        handleScreenSourceSelection(source, callback);
+      } else {
+        // User canceled - use setImmediate and try-catch to allow retry
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] User canceled screen selection");
+          }
+        });
+      }
+    });
+  });
 }
 
 function handleScreenSourceSelection(source, callback) {
@@ -99,11 +126,8 @@ function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
-  // Support both new (screenSharing.thumbnail) and legacy (screenSharingThumbnail) config paths
   let thumbnailConfig =
-    config?.screenSharing?.thumbnail ??
-    config?.screenSharingThumbnail ??
-    DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
+    config?.screenSharing?.thumbnail ?? DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
   const previewWindow = screenSharingService.getPreviewWindow();
   const activeSource = screenSharingService.getSelectedSource();
@@ -209,6 +233,18 @@ function createScreenSharePreviewWindow() {
   });
 }
 
+// Microsoft Cloud App Security proxy suffix. Tenants that route Teams
+// through Defender for Cloud Apps (MCAS) load and store cookies at
+// `*.mcas.ms` rather than the underlying Microsoft domain. Strip the
+// suffix before matching against AUTH_DOMAINS / TEAMS_DOMAINS so the
+// proxied flavour is treated the same as the canonical hostname.
+const MCAS_SUFFIX = '.mcas.ms';
+function stripMcasSuffix(hostname) {
+  return hostname.endsWith(MCAS_SUFFIX)
+    ? hostname.slice(0, -MCAS_SUFFIX.length)
+    : hostname;
+}
+
 // Microsoft auth domains whose cookies should be checked/cleaned
 const AUTH_DOMAINS = [
   'login.microsoftonline.com',
@@ -263,7 +299,7 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     const nowSeconds = Date.now() / 1000;
 
     const authCookies = allCookies.filter(cookie => {
-      const domain = (cookie.domain || '').replace(/^\./, '');
+      const domain = stripMcasSuffix((cookie.domain || '').replace(/^\./, ''));
       const isAuthDomain = AUTH_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
       return isAuthDomain && AUTH_COOKIE_NAMES.has(cookie.name);
     });
@@ -343,15 +379,15 @@ async function triggerAuthRecovery() {
   window.loadURL(config.url, { userAgent: config.chromeUserAgent });
 }
 
-exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService) {
+exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
   customBackgroundService = customBackground;
   screenSharingService = sharingService;
+  profilesManagerRef = profilesManager;
 
-  // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
-  const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
+  const intuneEnabled = config.auth?.intune?.enabled;
+  const intuneUser = config.auth?.intune?.user ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);
@@ -362,23 +398,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
     if (isMac) {
       console.info("Setting Dock icon for macOS");
-      let dockIconPath;
-      
-      // Use custom icon if specified, otherwise use default 256x256 icon for dock
-      if (config.appIcon && config.appIcon.trim() !== "") {
-        dockIconPath = config.appIcon;
-      } else {
-        dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
-      }
-      
+
+      // macOS requires >=128x128 for the dock; use the 256x256 asset by default.
+      const DEFAULT_MACOS_DOCK_ICON = "assets/icons/icon-256x256.png";
+      const dockIconPath = config.appIcon && config.appIcon.trim() !== ""
+        ? config.appIcon
+        : path.join(config.appPath, DEFAULT_MACOS_DOCK_ICON);
+
       const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
-      
+
       if (iconSize.width < 128) {
         console.warn(
           `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
         );
-        // Resize the icon to meet macOS dock requirements
         const resizedIcon = icon.resize({ width: 128, height: 128 });
         app.dock.setIcon(resizedIcon);
       } else {
@@ -404,30 +437,51 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     window.webContents.setWebRTCIPHandlingPolicy(config.network.webRTCIPHandlingPolicy);
   }
 
-  window.webContents.session.setDisplayMediaRequestHandler(
-    (_request, callback) => {
-      streamSelector.show((source) => {
-        if (source) {
-          handleScreenSourceSelection(source, callback);
-        } else {
-          // User canceled - use setImmediate and try-catch to allow retry
-          setImmediate(() => {
-            try {
-              callback({});
-            } catch {
-              console.debug("[SCREEN_SHARE] User canceled screen selection");
-            }
-          });
-        }
-      });
+  bindDisplayMediaHandler(window.webContents.session);
+
+  // #2534: when the renderer signals that screen sharing has started, make
+  // sure the preview window is open and connect the two renderers with a
+  // direct MessagePort. The Teams-side script pumps VideoFrames from the
+  // active screen-share track through it; the preview window reconstructs the
+  // stream on the other end via MediaStreamTrackGenerator. This avoids a
+  // second getUserMedia/portal call (which on Wayland needs a PipeWire token
+  // we cannot reuse) and means one capture feeds both Teams and the preview.
+  // The 'screen-sharing-started' / 'screen-sharing-stopped' channels are a
+  // broadcast: ScreenSharingService updates internal state, MQTTMediaStatusService
+  // publishes to the broker, and this listener wires the MessagePort. Adding
+  // another ipcMain.on here is the established pattern, not a duplication.
+  ipcMain.on("screen-sharing-started", () => {
+    if (!window || window.isDestroyed()) return;
+    createScreenSharePreviewWindow();
+    const previewWindow = screenSharingService.getPreviewWindow();
+    if (!previewWindow || previewWindow.isDestroyed()) {
+      console.debug("[SCREEN_SHARE_DIAG] No preview window after creation (thumbnail disabled or already destroyed) - skipping port wiring");
+      return;
     }
-  );
+    const postPorts = () => {
+      try {
+        const { port1, port2 } = new MessageChannelMain();
+        window.webContents.postMessage("screen-share-port", null, [port1]);
+        previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
+        console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
+      } catch (error) {
+        console.error("[SCREEN_SHARE_DIAG] Failed to post MessagePort", {
+          error: error.message,
+        });
+      }
+    };
+    if (previewWindow.webContents.isLoading()) {
+      previewWindow.webContents.once("did-finish-load", postPorts);
+    } else {
+      postPorts();
+    }
+  });
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager);
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef);
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
@@ -441,10 +495,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // When Teams can't refresh tokens silently (e.g., after overnight idle),
   // it logs InteractionRequired. We detect this, clear stale auth state,
   // and reload to force a clean interactive login.
-  const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'AuthFailed'];
+  const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
   // Only trust auth failure signals from Teams/Microsoft origins
   const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
   let authRecoveryTriggered = false;
+  // Worker UPRs are transient during active calls (#2428); suppress them only while
+  // a call is in progress so startup recovery still works for stale-token loops (#2480).
+  let callActive = false;
+  app.on('teams-call-connected', () => { callActive = true; });
+  app.on('teams-call-disconnected', () => { callActive = false; });
+  // Page reload (including renderer crash recovery) resets renderer-side call state,
+  // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
+  window.webContents.on('did-navigate', () => { callActive = false; });
   window.webContents.on('console-message', (event) => {
     if (authRecoveryTriggered) return;
     const message = event.message || '';
@@ -453,6 +515,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     // Verify the message originates from a trusted Microsoft source
     const sourceId = event.sourceId || '';
     if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
+
+    if (sourceId.includes('/worker/') && callActive) return;
 
     authRecoveryTriggered = true;
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
@@ -485,6 +549,8 @@ exports.show = function () {
 exports.getWindow = function () {
   return window;
 };
+
+exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -686,7 +752,47 @@ function processArgs(args) {
   }
 }
 
+// Microsoft telemetry / beacon hosts that are not required for Teams to
+// function. Blocking these at webRequest cancels both the network traffic
+// and the downstream sub-frame failure logs they would otherwise produce
+// in restricted-network environments. Kept deliberately narrow: anything
+// Teams needs to function (teams.cloud.microsoft, *.office.net,
+// login.microsoftonline.com, *.trafficmanager.net) is excluded. Start
+// with this initial set and expand as new hosts are confirmed safe to
+// drop; any new entry must also satisfy `MS_TELEMETRY_FAST_PATH` below
+// or the fast-path string must be updated.
+const MS_TELEMETRY_HOSTS = [
+  'events.data.microsoft.com',
+  'browser.events.data.msn.com',
+];
+
+// Substring guard cheap-checked before the URL parse below. Every entry
+// in `MS_TELEMETRY_HOSTS` must contain this substring so the fast path
+// never produces a false negative.
+const MS_TELEMETRY_FAST_PATH = 'events.data.';
+
+function isMicrosoftTelemetryHost(url) {
+  // Fast path: avoid `new URL(...)` on every HTTPS request. The handler
+  // fires for every request matched by `{ urls: ["https://*/*"] }`, so
+  // skipping the parse for the overwhelmingly common non-telemetry case
+  // is measurable on chat-heavy sessions.
+  if (!url || !url.includes(MS_TELEMETRY_FAST_PATH)) return false;
+  try {
+    const hostname = new URL(url).hostname;
+    return MS_TELEMETRY_HOSTS.some(
+      (h) => hostname === h || hostname.endsWith('.' + h)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function onBeforeRequestHandler(details, callback) {
+  if (isMicrosoftTelemetryHost(details.url)) {
+    callback({ cancel: true });
+    return;
+  }
+
   const customBackgroundRedirect =
     customBackgroundService.beforeRequestHandlerRedirectUrl(details);
 
@@ -725,10 +831,7 @@ const TEAMS_DOMAINS = [
  */
 function isTeamsDomain(url) {
   try {
-    let hostname = new URL(url).hostname;
-    if (hostname.endsWith('.mcas.ms')) {
-      hostname = hostname.slice(0, -8);
-    }
+    const hostname = stripMcasSuffix(new URL(url).hostname);
     return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
   } catch {
     return false;
