@@ -28,6 +28,23 @@ function makeApp(userDataPath) {
   return { getPath: () => userDataPath };
 }
 
+function stubFetch({ ok = true, status = 200, contentType = 'image/png', body = PNG_BYTES, contentLength }) {
+  globalThis.fetch = async () => ({
+    ok,
+    status,
+    headers: {
+      get: (key) => {
+        const k = key.toLowerCase();
+        if (k === 'content-type') return contentType;
+        if (k === 'content-length') return String(contentLength ?? body.length);
+        return null;
+      },
+    },
+    arrayBuffer: async () =>
+      body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
+  });
+}
+
 describe('CustomStickers handleGetStickerList', () => {
   let tmpRoot;
   let stickerFolder;
@@ -193,23 +210,6 @@ describe('CustomStickers handleImportStickerUrl', () => {
     globalThis.fetch = originalFetch;
     fs.rmSync(tmpRoot, { recursive: true, force: true });
   });
-
-  function stubFetch({ ok = true, status = 200, contentType = 'image/png', body = PNG_BYTES, contentLength }) {
-    globalThis.fetch = async () => ({
-      ok,
-      status,
-      headers: {
-        get: (key) => {
-          const k = key.toLowerCase();
-          if (k === 'content-type') return contentType;
-          if (k === 'content-length') return String(contentLength ?? body.length);
-          return null;
-        },
-      },
-      arrayBuffer: async () =>
-        body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
-    });
-  }
 
   it('rejects non-HTTPS URLs', async () => {
     const result = await module.handleImportStickerUrl('http://example.com/cat.png');

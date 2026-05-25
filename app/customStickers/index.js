@@ -146,6 +146,30 @@ class CustomStickers {
     }
   }
 
+  #collectSubfolderStickers(subPath, subfolderName, allowed) {
+    let subEntries;
+    try {
+      subEntries = fs.readdirSync(subPath, { withFileTypes: true });
+    } catch (err) {
+      console.warn(
+        `${LOG_PREFIX} Skipped subfolder (read failure): ${err.message}`,
+      );
+      return [];
+    }
+    const stickers = [];
+    for (const subEntry of subEntries) {
+      if (!subEntry.isFile()) continue;
+      const sticker = this.#readStickerFile(
+        path.join(subPath, subEntry.name),
+        subEntry.name,
+        subfolderName,
+        allowed,
+      );
+      if (sticker) stickers.push(sticker);
+    }
+    return stickers;
+  }
+
   handleGetStickerList() {
     const folder = this.stickerFolder ?? this.resolveStickerFolder();
     if (!fs.existsSync(folder)) {
@@ -181,26 +205,13 @@ class CustomStickers {
       // Recurse exactly one level so packs imported under <folder>/<pack>/
       // (Telegram, AI, URL-paste subfolders) are visible. Deeper trees are
       // intentionally not scanned to keep the model simple.
-      const subPath = path.join(folder, entry.name);
-      let subEntries;
-      try {
-        subEntries = fs.readdirSync(subPath, { withFileTypes: true });
-      } catch (err) {
-        console.warn(
-          `${LOG_PREFIX} Skipped subfolder (read failure): ${err.message}`,
-        );
-        continue;
-      }
-      for (const subEntry of subEntries) {
-        if (!subEntry.isFile()) continue;
-        const sticker = this.#readStickerFile(
-          path.join(subPath, subEntry.name),
-          subEntry.name,
+      stickers.push(
+        ...this.#collectSubfolderStickers(
+          path.join(folder, entry.name),
           entry.name,
           allowed,
-        );
-        if (sticker) stickers.push(sticker);
-      }
+        ),
+      );
     }
 
     stickers.sort((a, b) => {
@@ -233,11 +244,11 @@ class CustomStickers {
   }
 
   static deriveSlug(urlString) {
-    let last = "";
+    let last;
     try {
       const u = new URL(urlString);
       const segments = u.pathname.split("/").filter(Boolean);
-      last = segments[segments.length - 1] || u.hostname;
+      last = segments.at(-1) || u.hostname;
     } catch {
       last = "sticker";
     }
@@ -307,7 +318,7 @@ class CustomStickers {
       };
     }
 
-    const declaredLength = parseInt(
+    const declaredLength = Number.parseInt(
       response.headers.get("content-length") || "0",
       10,
     );

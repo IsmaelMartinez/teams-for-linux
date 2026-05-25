@@ -33,7 +33,6 @@ const COMPOSE_SELECTORS = [
 class CustomStickers {
   #enabled = false;
   #ipcRenderer = null;
-  #button = null;
   #panel = null;
   #grid = null;
   #panelOpen = false;
@@ -304,7 +303,6 @@ class CustomStickers {
       );
     });
     document.body.appendChild(button);
-    this.#button = button;
   }
 
   #createPanel() {
@@ -515,7 +513,7 @@ class CustomStickers {
   }
 
   async #deleteSticker(sticker) {
-    const ok = window.confirm(`Delete sticker "${sticker.name}"?`);
+    const ok = globalThis.confirm(`Delete sticker "${sticker.name}"?`);
     if (!ok) return;
     let result;
     try {
@@ -536,7 +534,7 @@ class CustomStickers {
 
   #clearGrid() {
     while (this.#grid.firstChild) {
-      this.#grid.removeChild(this.#grid.firstChild);
+      this.#grid.firstChild.remove();
     }
   }
 
