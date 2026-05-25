@@ -10,6 +10,7 @@ const { app, ipcMain } = require('electron');
  * - {topicPrefix}/camera - Camera on/off state (not yet wired)
  * - {topicPrefix}/microphone - Microphone state: 'speaking' | 'silent' | 'muted' | 'off'
  * - {topicPrefix}/in-call - Active call state
+ * - {topicPrefix}/incoming-call - Ringing/invite state (before accept)
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  */
 class MQTTMediaStatusService {
@@ -34,6 +35,8 @@ class MQTTMediaStatusService {
 
 		app.on('teams-call-connected', this.#handleCallConnected.bind(this));
 		app.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
+		app.on('teams-incoming-call-started', this.#handleIncomingCallStarted.bind(this));
+		app.on('teams-incoming-call-ended', this.#handleIncomingCallEnded.bind(this));
 
 		console.info('[MQTTMediaStatusService] Initialized');
 	}
@@ -67,6 +70,18 @@ class MQTTMediaStatusService {
 		await this.#mqttClient.publish(topic, String(isSharing), { retain: true });
 		const state = isSharing ? 'started' : 'stopped';
 		console.debug(`[MQTTMediaStatusService] Screen sharing ${state}, published to`, topic);
+	}
+
+	async #handleIncomingCallStarted() {
+		const topic = `${this.#topicPrefix}/incoming-call`;
+		await this.#mqttClient.publish(topic, 'true', { retain: true });
+		console.debug('[MQTTMediaStatusService] Incoming call started, published to', topic);
+	}
+
+	async #handleIncomingCallEnded() {
+		const topic = `${this.#topicPrefix}/incoming-call`;
+		await this.#mqttClient.publish(topic, 'false', { retain: true });
+		console.debug('[MQTTMediaStatusService] Incoming call ended, published to', topic);
 	}
 }
 
