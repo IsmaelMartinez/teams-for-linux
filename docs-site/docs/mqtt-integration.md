@@ -715,6 +715,43 @@ Commands are validated with multiple security layers:
 7. Teams executes the action
 
 
+## Home Assistant Automation Examples
+
+### Flash Light on Incoming Call
+
+Use the `incoming-call` topic to trigger a visual alert when Teams rings. The second automation restores the light when the call ends or when the app disconnects (crash recovery via LWT).
+
+```yaml
+automation:
+  - alias: "Teams incoming call — orange LED"
+    trigger:
+      - platform: mqtt
+        topic: "teams/incoming-call"
+        payload: "true"
+    action:
+      service: light.turn_on
+      target:
+        entity_id: light.office
+      data:
+        rgb_color: [255, 140, 0]
+        flash: short
+
+  - alias: "Teams incoming call cleared — restore LED"
+    trigger:
+      - platform: mqtt
+        topic: "teams/incoming-call"
+        payload: "false"
+      - platform: mqtt
+        topic: "teams/connected"
+        payload: "false"
+    action:
+      service: light.turn_off
+      target:
+        entity_id: light.office
+```
+
+The `teams/connected=false` trigger handles the crash case: if the app exits unexpectedly, the MQTT LWT message fires and the automation resets the light rather than leaving it orange indefinitely.
+
 ## Related Documentation
 
 - **[Configuration Guide](configuration.md)** - Complete configuration options
