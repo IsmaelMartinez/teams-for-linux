@@ -7,8 +7,8 @@ const { app, ipcMain } = require('electron');
  * to MQTT broker for home automation integration.
  *
  * Publishes to topics:
- * - {topicPrefix}/camera - Camera on/off state
- * - {topicPrefix}/microphone - Microphone on/off state
+ * - {topicPrefix}/camera - Camera on/off state (not yet wired)
+ * - {topicPrefix}/microphone - Microphone state: 'speaking' | 'silent' | 'muted' | 'off'
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  */
@@ -56,10 +56,10 @@ class MQTTMediaStatusService {
 		console.debug('[MQTTMediaStatusService] Camera state changed to', enabled, 'published to', topic);
 	}
 
-	async #handleMicrophoneChanged(event, enabled) {
+	async #handleMicrophoneChanged(event, state) {
 		const topic = `${this.#topicPrefix}/microphone`;
-		await this.#mqttClient.publish(topic, String(enabled), { retain: true });
-		console.debug('[MQTTMediaStatusService] Microphone state changed to', enabled, 'published to', topic);
+		await this.#mqttClient.publish(topic, state, { retain: true });
+		console.debug('[MQTTMediaStatusService] Microphone state changed to', state, 'published to', topic);
 	}
 
 	async #handleScreenSharingChanged(isSharing) {
