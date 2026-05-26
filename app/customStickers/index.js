@@ -387,6 +387,10 @@ class CustomStickers {
       return { success: false, error: `Telegram API error: ${err.message}` };
     }
 
+    if (!Array.isArray(stickerSet?.stickers)) {
+      return { success: false, error: "Unexpected Telegram API response" };
+    }
+
     const staticStickers = stickerSet.stickers.filter(
       (s) => !s.is_animated && !s.is_video,
     );
@@ -408,13 +412,20 @@ class CustomStickers {
         const buf = await this.#telegramDownloadFile(token, filePath);
         const ext = path.extname(filePath).slice(1) || "webp";
         const dest = path.join(packFolder, `${sticker.file_unique_id}.${ext}`);
-        fs.writeFileSync(dest, buf);
+        await fs.promises.writeFile(dest, buf);
         imported++;
       } catch (err) {
         console.warn(
           `${LOG_PREFIX} Skipped Telegram sticker ${sticker.file_unique_id}: ${err.message}`,
         );
       }
+    }
+
+    if (imported === 0) {
+      return {
+        success: false,
+        error: `All ${staticStickers.length} stickers failed to download`,
+      };
     }
 
     console.info(
@@ -441,12 +452,16 @@ class CustomStickers {
     let response;
     try {
       response = await fetch(url.toString(), { signal: controller.signal });
+    } catch (err) {
+      clearTimeout(timeout);
+      const msg = err.name === "AbortError" ? "Request timed out" : "Network error";
+      throw new Error(`${method}: ${msg}`);
     } finally {
       clearTimeout(timeout);
     }
     if (!response.ok) {
       const text = await response.text().catch(() => "");
-      throw new Error(`HTTP ${response.status}: ${text.slice(0, 200)}`);
+      throw new Error(`${method}: HTTP ${response.status}: ${text.slice(0, 200)}`);
     }
     const json = await response.json();
     if (!json.ok) {
@@ -472,11 +487,15 @@ class CustomStickers {
     let response;
     try {
       response = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      clearTimeout(timeout);
+      const msg = err.name === "AbortError" ? "Download timed out" : "Network error";
+      throw new Error(`File download: ${msg}`);
     } finally {
       clearTimeout(timeout);
     }
     if (!response.ok) {
-      throw new Error(`Download failed: HTTP ${response.status}`);
+      throw new Error(`File download: HTTP ${response.status}`);
     }
     return Buffer.from(await response.arrayBuffer());
   }
