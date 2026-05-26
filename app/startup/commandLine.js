@@ -51,10 +51,17 @@ class CommandLineManager {
       app.commandLine.appendSwitch("proxy-server", config.proxyServer);
     }
 
-    // Custom WM_CLASS for Linux window managers
+    // Custom WM_CLASS for Linux window managers.
+    // Electron 41.6.1 (backport of electron/electron#51424) changed the X11
+    // WM_CLASS path to read from the XDG App ID rather than app.getName(),
+    // and the Wayland app_id path has always read from the XDG App ID. The
+    // XDG App ID is set via app.setDesktopName(), so calling setName() alone
+    // no longer reaches either compositor. Set both so --class propagates to
+    // X11 WM_CLASS and Wayland wayland_app_id consistently (#2383).
     if (config.class) {
       console.info("Setting WM_CLASS property to custom value " + config.class);
       app.setName(config.class);
+      app.setDesktopName(`${config.class}.desktop`);
     }
 
     // Authentication server whitelist for SSO
