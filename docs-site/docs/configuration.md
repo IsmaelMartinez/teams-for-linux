@@ -249,6 +249,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
+| `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 
 #### Certificates
 
@@ -414,6 +415,9 @@ Media settings are organized under the `media` configuration object with subgrou
 | `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (outbound, combined with topicPrefix) |
 | `mqtt.commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty to disable (status-only mode). Set to `"command"` to enable bidirectional mode. |
 | `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
+| `mqtt.homeAssistant.enabled` | `boolean` | `false` | Enable Home Assistant MQTT auto-discovery (publishes discovery configs so HA creates entities automatically) |
+| `mqtt.homeAssistant.discoveryPrefix` | `string` | `"homeassistant"` | MQTT discovery topic prefix used by Home Assistant |
+| `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant |
 
 **Example MQTT Configuration:**
 ```json
@@ -427,7 +431,12 @@ Media settings are organized under the `media` configuration object with subgrou
     "topicPrefix": "home/office",
     "statusTopic": "teams/status",
     "commandTopic": "teams/command",
-    "statusCheckInterval": 10000
+    "statusCheckInterval": 10000,
+    "homeAssistant": {
+      "enabled": true,
+      "discoveryPrefix": "homeassistant",
+      "deviceName": "Teams for Linux"
+    }
   }
 }
 ```

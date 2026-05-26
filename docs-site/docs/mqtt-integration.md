@@ -358,31 +358,107 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 
 - [Graph API Integration](development/research/graph-api-integration-research.md)
 
-## Home Automation Integration
+## Published Topics
 
-The MQTT integration has been tested with various home automation platforms. However, specific automation configurations vary based on your setup and requirements.
+When MQTT is enabled, Teams for Linux automatically publishes to the following retained topics:
 
-### Share Your Automations
+| Topic | Payload | Description |
+|-------|---------|-------------|
+| `{topicPrefix}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will and Testament) |
+| `{topicPrefix}/{statusTopic}` | JSON object | User presence status (see [Message Format](#message-format) above) |
+| `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state via IPC events and WebRTC fallback |
+| `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state |
+| `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
+| `{topicPrefix}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 
-If you've successfully integrated Teams for Linux with your home automation system, **please share your configurations** to help other users:
+All topics use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
 
-- **[GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues)** - Tag as enhancement and share your automation scripts
-- **[Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org)** - Discuss and share configurations with the community
-- **Supported Platforms**: Node-RED, n8n, openHAB, Domoticz, and other MQTT-enabled systems
-- **What to Share**:
-  - Flow exports for Node-RED/n8n
-  - Example use cases (busy lights, notification routing, etc.)
-  - Hardware integrations (ESP32, Raspberry Pi projects, etc.)
+The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means Teams has zeroed the audio signal, and `off` means no active call.
 
-### Integration Ideas
+:::note Camera topic
+The camera topic is wired in the main process (`mediaStatusService.js`) but the renderer does not yet emit `camera-state-changed` events. It will report state once renderer-side camera monitoring is implemented.
+:::
 
-Common automation scenarios include:
-- **Status Lights**: Change LED colors based on availability (red=busy, green=available)
-- **Do Not Disturb Signs**: Physical "On Air" signs for home offices
-- **Smart Home Scenes**: Adjust lighting, mute speakers during calls
-- **Notification Routing**: Silence phone notifications when in meetings
-- **Calendar Integration**: Sync status with other calendar systems
-- **Dashboards**: Display team availability in Grafana, MQTT Explorer, or custom dashboards
+## Home Assistant Auto-Discovery
+
+When `mqtt.homeAssistant.enabled` is set to `true`, Teams for Linux publishes [MQTT Discovery](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery) configurations so Home Assistant automatically creates entities for your Teams state. No manual YAML entity definitions needed.
+
+### Configuration
+
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://192.168.1.100:1883",
+    "clientId": "teams-for-linux",
+    "topicPrefix": "teams",
+    "commandTopic": "command",
+    "homeAssistant": {
+      "enabled": true,
+      "discoveryPrefix": "homeassistant",
+      "deviceName": "Teams for Linux"
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mqtt.homeAssistant.enabled` | `boolean` | `false` | Publish HA discovery configs on connect |
+| `mqtt.homeAssistant.discoveryPrefix` | `string` | `"homeassistant"` | Discovery topic prefix (must match HA's `discovery_prefix` setting) |
+| `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in HA |
+
+### Entities Created
+
+All entities are grouped under a single HA device (identified by `mqtt.clientId`). Availability is tied to the `{topicPrefix}/connected` LWT topic.
+
+| HA Component | Entity | State Topic | Description |
+|-------------|--------|-------------|-------------|
+| `sensor` | Teams Status | `{topicPrefix}/{statusTopic}` | Presence status (available, busy, dnd, away, brb) |
+| `sensor` | Teams Microphone | `{topicPrefix}/microphone` | Microphone state (speaking, silent, muted, off) |
+| `binary_sensor` | Teams In Call | `{topicPrefix}/in-call` | Whether you are in an active call |
+| `binary_sensor` | Teams Screen Sharing | `{topicPrefix}/screen-sharing` | Whether screen sharing is active |
+| `binary_sensor` | Teams Camera | `{topicPrefix}/camera` | Whether the camera is on |
+| `button` | Teams Toggle Mute | via `commandTopic` | Sends `{"action":"toggle-mute"}` |
+| `button` | Teams Toggle Video | via `commandTopic` | Sends `{"action":"toggle-video"}` |
+| `button` | Teams Toggle Hand Raise | via `commandTopic` | Sends `{"action":"toggle-hand-raise"}` |
+
+Button entities are only created when `commandTopic` is set (bidirectional mode). Discovery configs are republished on every broker reconnect so entities survive broker restarts.
+
+### Example Automation
+
+```yaml
+automation:
+  - alias: "Office busy light on call"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.teams_for_linux_in_call
+        to: "on"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.office_status
+        data:
+          color_name: red
+          brightness: 255
+
+  - alias: "Office light available when call ends"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.teams_for_linux_in_call
+        to: "off"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.office_status
+        data:
+          color_name: green
+          brightness: 128
+```
+
+## Other Home Automation Platforms
+
+The MQTT integration works with any MQTT-compatible platform. If you've integrated Teams for Linux with your home automation system, share your configurations on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or the [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org).
 
 ## Testing & Troubleshooting
 

@@ -2,7 +2,7 @@
 
 Teams for Linux provides screen sharing capabilities that integrate with the Microsoft Teams web interface.
 
-When you start screen sharing, a selection dialog appears showing available screens and windows. Once sharing begins, an optional preview window shows what you're sharing.
+When you start screen sharing, a full-window picker overlay appears showing thumbnails of all available screens and windows. Selecting a source shows a detail panel with a larger preview before you confirm. Once sharing begins, an optional floating preview window shows what you're sharing.
 
 ## Configuration
 

@@ -248,6 +248,8 @@ When a PR has review comments, address them proactively:
 - Update status indicators (Ready → Implemented, etc.)
 - Add any new insights or follow-up work discovered during implementation
 
+**Label note:** The GitHub `ready` label means "release ready" (merged/approved for inclusion in the next release), not "ready for development". When triaging, apply `ready` only to issues or PRs that are done and waiting for the release cut.
+
 **Roadmap sections:**
 - **Ready for Implementation** - Features with completed research, ready to build
 - **User Feedback Received** - MVP shipped, user feedback identifies gaps to address

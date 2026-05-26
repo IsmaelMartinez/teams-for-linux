@@ -10,6 +10,8 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Ready for Implementation
 
+- **[WebAuthn / FIDO2 Implementation Plan](webauthn-fido2-implementation-plan.md)** - Hardware security key support on Linux via fido2-tools interception of navigator.credentials. Shipped as opt-in beta behind `auth.webauthn.enabled`. See [ADR-021](../adr/021-webauthn-fido2-linux.md).
+
 - **[System Performance Research](system-performance-research.md)** - Renderer overhead, main process I/O, and metrics infrastructure
   - Identifies 10 performance-sensitive patterns (MutationObserver sprawl, polling, sequential I/O)
   - Proposes lightweight startup/memory instrumentation with zero dependencies
@@ -18,7 +20,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[MQTT Microphone State via Speaking Indicator](mqtt-microphone-state-research.md)** - Publish speaking/silent/muted state to MQTT
   - Wires existing speaking indicator WebRTC detection into MQTT via `microphone-state-changed` IPC
   - Completes original request from #1938 (@vbartik's RGB LED home automation)
-  - **Status:** Implemented in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) (open, awaiting test confirmation); doc to be deleted on merge
+  - **Status:** Shipped in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) (merged). Microphone topic publishes speaking/silent/muted/off states.
 
 ### First Iteration Shipped — Awaiting Feedback
 
@@ -31,8 +33,9 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
   - **Phase 1 Shipped**: Infrastructure, LWT, call state, screen-sharing topics
-  - **Phase 2 Microphone In Flight**: Driven by speaking-indicator audioLevel; implementation in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497)
-  - **Phase 2 Camera Deferred**: `track.enabled` polling approach needs validation before wiring to MQTT
+  - **Phase 2 Microphone Shipped**: [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) merged; publishes speaking/silent/muted/off to `{topicPrefix}/microphone`
+  - **Phase 2 Camera Partially Wired**: `mediaStatusService.js` listens for `camera-state-changed` IPC but the renderer does not emit it yet
+  - **Home Assistant Auto-Discovery Shipped**: [PR #2464](https://github.com/IsmaelMartinez/teams-for-linux/pull/2464) and [PR #2571](https://github.com/IsmaelMartinez/teams-for-linux/pull/2571) merged; sensors, binary_sensors, and buttons auto-created in HA
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
   - **Phase 1 Shipped (v2.7.4)**: Token acquisition plus 7 IPC channels (user profile, calendar events/view, calendar create, mail messages, People search, send chat). People search and send chat power Quick Chat (ADR-014, ADR-015)

@@ -2,7 +2,7 @@
 title: "Module Index"
 sidebar_position: 4
 type: reference
-last_updated: 2025-11-19
+last_updated: 2026-05-26
 tags: [architecture, modules, reference]
 ---
 
@@ -32,7 +32,7 @@ User-facing features and integrations.
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
 | **Auto Updater** | `app/autoUpdater/` | In-app auto-update for AppImage distributions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/autoUpdater/README.md) |
-| **MQTT** | `app/mqtt/` | MQTT broker integration for status publishing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
+| **MQTT** | `app/mqtt/` | MQTT broker integration for status publishing, media state (microphone, camera, in-call, screen-sharing), and Home Assistant auto-discovery | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/mqtt/README.md), [User Guide](../mqtt-integration.md) |
 | **Screen Sharing** | `app/screenSharing/` | Native screen/window selection and preview | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/screenSharing/README.md), [User Guide](../screen-sharing.md) |
 | **Custom Background** | `app/customBackground/` | Virtual background management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customBackground/README.md), [User Guide](../custom-backgrounds.md) |
 | **Custom CSS** | `app/customCSS/` | Custom styling and themes | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customCSS/README.md) |
@@ -44,6 +44,11 @@ User-facing features and integrations.
 | **Global Shortcuts** | `app/globalShortcuts/` | System-wide keyboard shortcuts | No README yet |
 | **Graph API** | `app/graphApi/` | Microsoft Graph API integration for calendar and mail | [Research](./research/graph-api-integration-research.md) |
 | **Speaking Indicator** | `app/browser/tools/speakingIndicator.js` | Visual overlay showing microphone state during calls (speaking/silent/muted) via RTCPeerConnection.getStats(). Also provides WebRTC-based call state fallback for reliable MQTT in-call detection ([#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358)). | [PR #2299](https://github.com/IsmaelMartinez/teams-for-linux/pull/2299) |
+| **Quick Chat** | `app/quickChat/` | Quick Chat modal with People API search and inline messaging via Graph API | [ADR-014](./adr/014-quick-chat-deep-link-approach.md), [ADR-015](./adr/015-quick-chat-inline-messaging.md) |
+| **WebAuthn / FIDO2** | `app/webauthn/` | Hardware security key support for Linux via fido2-tools interception of navigator.credentials | [ADR-021](./adr/021-webauthn-fido2-linux.md) |
+| **Profiles Manager** | `app/profilesManager/` | Multi-account profile storage, switching, and lifecycle management | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Profile Dialogs** | `app/profileDialogs/` | Add-profile, manage-profiles, and switch-profile UI dialogs | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Join Meeting Dialog** | `app/joinMeetingDialog/` | Join Meeting dialog for deep-link navigation handling | — |
 
 ## System Integration Modules
 
@@ -62,6 +67,7 @@ Supporting infrastructure, utilities, and cross-cutting concerns.
 
 | Module | Path | Purpose | Documentation |
 |--------|------|---------|---------------|
+| **Shared** | `app/_shared/` | Cross-module shared utilities and constants | — |
 | **Audio** | `app/audio/` | Sound playback via system audio commands (`paplay`, `aplay`, `afplay`) | — |
 | **Utils** | `app/utils/` | Shared utilities (window positioning, log sanitization) | — |
 | **Helpers** | `app/helpers/` | Shared utility functions and common logic | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/helpers/README.md) |
