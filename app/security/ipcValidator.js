@@ -74,6 +74,7 @@ const allowedChannels = new Set([
   'get-sticker-list',
   'import-sticker-url',
   'delete-sticker',
+  'search-giphy-stickers',
   
   // Connection management
   'offline-retry',

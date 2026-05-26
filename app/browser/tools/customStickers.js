@@ -37,6 +37,8 @@ class CustomStickers {
   #grid = null;
   #panelOpen = false;
   #toastTimer = null;
+  #searchTimer = null;
+  #activeTab = "local";
 
   init(config, ipcRenderer) {
     this.#enabled = config?.customStickers?.enabled === true;
@@ -283,6 +285,50 @@ class CustomStickers {
         text-align: center;
         flex: 0 0 auto;
       }
+      #${PANEL_ID} .tfl-sticker-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--tfl-border);
+        flex: 0 0 auto;
+      }
+      #${PANEL_ID} .tfl-sticker-tab {
+        flex: 1;
+        padding: 6px 8px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--tfl-muted);
+        font-size: 12px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      #${PANEL_ID} .tfl-sticker-tab:hover { color: var(--tfl-fg); }
+      #${PANEL_ID} .tfl-sticker-tab.active {
+        color: var(--tfl-accent);
+        border-bottom-color: var(--tfl-accent);
+      }
+      #${PANEL_ID} .tfl-sticker-search-row {
+        padding: 8px 12px 4px;
+        flex: 0 0 auto;
+      }
+      #${PANEL_ID} .tfl-sticker-search-input {
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--tfl-input-bg);
+        color: var(--tfl-fg);
+        border: 1px solid var(--tfl-input-border);
+        border-radius: 4px;
+        font-size: 12px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      #${PANEL_ID} .tfl-sticker-search-input::placeholder { color: var(--tfl-input-placeholder); }
+      #${PANEL_ID} .tfl-giphy-attr {
+        padding: 2px 8px 4px;
+        text-align: right;
+        font-size: 10px;
+        color: var(--tfl-muted);
+        flex: 0 0 auto;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -351,9 +397,59 @@ class CustomStickers {
 
     panel.appendChild(header);
 
+    const tabs = document.createElement("div");
+    tabs.className = "tfl-sticker-tabs";
+    const localTab = document.createElement("button");
+    localTab.className = "tfl-sticker-tab active";
+    localTab.type = "button";
+    localTab.textContent = "My Stickers";
+    localTab.addEventListener("click", () => this.#switchTab("local"));
+    const searchTab = document.createElement("button");
+    searchTab.className = "tfl-sticker-tab";
+    searchTab.type = "button";
+    searchTab.textContent = "GIPHY Search";
+    searchTab.addEventListener("click", () => this.#switchTab("search"));
+    tabs.appendChild(localTab);
+    tabs.appendChild(searchTab);
+    panel.appendChild(tabs);
+
+    const searchRow = document.createElement("div");
+    searchRow.className = "tfl-sticker-search-row";
+    searchRow.style.display = "none";
+    const searchInput = document.createElement("input");
+    searchInput.className = "tfl-sticker-search-input";
+    searchInput.type = "text";
+    searchInput.placeholder = "Search stickers...";
+    searchInput.spellcheck = false;
+    searchInput.addEventListener("input", () => {
+      if (this.#searchTimer) clearTimeout(this.#searchTimer);
+      this.#searchTimer = setTimeout(() => {
+        this.#searchGiphy(searchInput.value).catch((err) =>
+          console.error(`${LOG_PREFIX} GIPHY search failed: ${err.message}`),
+        );
+      }, 400);
+    });
+    searchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (this.#searchTimer) clearTimeout(this.#searchTimer);
+        this.#searchGiphy(searchInput.value).catch((err) =>
+          console.error(`${LOG_PREFIX} GIPHY search failed: ${err.message}`),
+        );
+      }
+    });
+    searchRow.appendChild(searchInput);
+    panel.appendChild(searchRow);
+
     const grid = document.createElement("div");
     grid.className = "tfl-sticker-grid";
     panel.appendChild(grid);
+
+    const giphyAttr = document.createElement("div");
+    giphyAttr.className = "tfl-giphy-attr";
+    giphyAttr.textContent = "Powered by GIPHY";
+    giphyAttr.style.display = "none";
+    panel.appendChild(giphyAttr);
 
     this.#wireDropTarget(panel);
 
@@ -430,6 +526,118 @@ class CustomStickers {
     }
     if (input) input.value = "";
     await this.#refreshStickers();
+  }
+
+  #switchTab(tab) {
+    this.#activeTab = tab;
+    const tabs = this.#panel.querySelectorAll(".tfl-sticker-tab");
+    tabs.forEach((t, i) => {
+      t.classList.toggle("active", (i === 0 && tab === "local") || (i === 1 && tab === "search"));
+    });
+    const searchRow = this.#panel.querySelector(".tfl-sticker-search-row");
+    const urlRow = this.#panel.querySelector(".tfl-sticker-header .tfl-sticker-url-row");
+    const giphyAttr = this.#panel.querySelector(".tfl-giphy-attr");
+    if (tab === "search") {
+      if (searchRow) searchRow.style.display = "";
+      if (urlRow) urlRow.style.display = "none";
+      if (giphyAttr) giphyAttr.style.display = "";
+      const searchInput = this.#panel.querySelector(".tfl-sticker-search-input");
+      if (searchInput) searchInput.focus();
+      this.#searchGiphy("").catch((err) =>
+        console.error(`${LOG_PREFIX} GIPHY trending failed: ${err.message}`),
+      );
+    } else {
+      if (searchRow) searchRow.style.display = "none";
+      if (urlRow) urlRow.style.display = "";
+      if (giphyAttr) giphyAttr.style.display = "none";
+      this.#refreshStickers().catch((err) =>
+        console.error(`${LOG_PREFIX} Refresh failed: ${err.message}`),
+      );
+    }
+  }
+
+  async #searchGiphy(query) {
+    this.#clearGrid();
+    const loading = document.createElement("div");
+    loading.className = "tfl-sticker-empty";
+    loading.textContent = query ? "Searching..." : "Loading trending...";
+    this.#grid.appendChild(loading);
+
+    let result;
+    try {
+      result = await this.#ipcRenderer.invoke("search-giphy-stickers", query);
+    } catch (err) {
+      this.#clearGrid();
+      this.#showToast(`Search failed: ${err.message}`);
+      return;
+    }
+
+    this.#clearGrid();
+    if (!result?.success) {
+      const msg = document.createElement("div");
+      msg.className = "tfl-sticker-empty";
+      msg.textContent = result?.error || "Search failed";
+      this.#grid.appendChild(msg);
+      return;
+    }
+
+    if (result.stickers.length === 0) {
+      const msg = document.createElement("div");
+      msg.className = "tfl-sticker-empty";
+      msg.textContent = "No stickers found. Try a different search term.";
+      this.#grid.appendChild(msg);
+      return;
+    }
+
+    for (const sticker of result.stickers) {
+      const cell = document.createElement("div");
+      cell.className = "tfl-sticker-cell";
+      cell.title = sticker.title;
+      const img = document.createElement("img");
+      img.src = sticker.preview || sticker.url;
+      img.alt = sticker.title;
+      img.loading = "lazy";
+      cell.appendChild(img);
+      cell.addEventListener("click", () => {
+        this.#sendGiphySticker(sticker).catch((err) =>
+          console.error(`${LOG_PREFIX} GIPHY send failed: ${err.message}`),
+        );
+      });
+      this.#grid.appendChild(cell);
+    }
+  }
+
+  async #sendGiphySticker(sticker) {
+    const compose = this.#findCompose();
+    if (!compose) {
+      this.#showToast("Click into a chat compose box first.");
+      return;
+    }
+
+    let file;
+    try {
+      const response = await fetch(sticker.url);
+      const blob = await response.blob();
+      const ext = sticker.mimeType === "image/webp" ? "webp" : "gif";
+      file = new File([blob], `giphy-${sticker.id}.${ext}`, { type: sticker.mimeType });
+    } catch (err) {
+      console.error(`${LOG_PREFIX} Failed to fetch GIPHY sticker: ${err.message}`);
+      this.#showToast("Could not download sticker.");
+      return;
+    }
+
+    compose.focus();
+    await new Promise((r) => setTimeout(r, 30));
+
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    const event = new ClipboardEvent("paste", {
+      clipboardData: dt,
+      bubbles: true,
+      cancelable: true,
+    });
+    compose.dispatchEvent(event);
+    this.#closePanel();
   }
 
   async #togglePanel() {

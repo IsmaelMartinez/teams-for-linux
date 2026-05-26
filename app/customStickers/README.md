@@ -50,6 +50,25 @@ When the feature is enabled and the default folder did not previously exist, a s
 
 Stickers are sent into Teams by dispatching a synthetic `ClipboardEvent('paste')` at the focused compose box. Teams's editor (CKEditor 5) handles the event the same way it handles a real paste. This was validated end-to-end during the feasibility spike — see [`spike/2476-stickers/`](../../spike/2476-stickers/) at the repo root for the research and design notes.
 
+## GIPHY Sticker Search
+
+When a GIPHY API key is configured, the sticker panel shows a "GIPHY Search" tab alongside "My Stickers". Searching returns stickers from GIPHY's library of millions. Clicking a result fetches the image and pastes it into the compose box the same way local stickers work. An empty search shows trending stickers.
+
+To set up: create a free account at [developers.giphy.com](https://developers.giphy.com), create an API app, and copy the API key into your config:
+
+```jsonc
+{
+  "customStickers": {
+    "enabled": true,
+    "giphy": {
+      "apiKey": "your-api-key-here"
+    }
+  }
+}
+```
+
+The free beta key allows 100 API calls per hour, which is plenty for normal use. Search is debounced (400ms) to avoid burning through the quota while typing. Results are rated G by default.
+
 ## What's out of scope
 
 The MVP keeps the surface small. The following were considered and intentionally deferred:

@@ -4,6 +4,9 @@ const fs = require("node:fs");
 const crypto = require("node:crypto");
 
 const LOG_PREFIX = "[CUSTOM_STICKERS]";
+const GIPHY_SEARCH_URL = "https://api.giphy.com/v1/stickers/search";
+const GIPHY_TRENDING_URL = "https://api.giphy.com/v1/stickers/trending";
+const GIPHY_TIMEOUT_MS = 10000;
 
 const EXTENSION_MIME = {
   png: "image/png",
@@ -61,6 +64,13 @@ class CustomStickers {
     // `{ success }` on success or `{ success: false, error }` on failure.
     ipcMain.handle("delete-sticker", (_event, payload) =>
       this.handleDeleteSticker(payload),
+    );
+
+    // Search GIPHY for stickers. Requires a GIPHY API key configured in
+    // customStickers.giphy.apiKey. Returns { success, stickers[] } where
+    // each sticker has { url, preview, title, width, height }.
+    ipcMain.handle("search-giphy-stickers", (_event, query) =>
+      this.handleSearchGiphy(query),
     );
   }
 
@@ -355,6 +365,77 @@ class CustomStickers {
     } catch (err) {
       return { success: false, error: `Write failed: ${err.message}` };
     }
+  }
+
+  #getGiphyApiKey() {
+    return this.config.customStickers?.giphy?.apiKey || "";
+  }
+
+  async handleSearchGiphy(query) {
+    if (!this.isEnabled()) {
+      return { success: false, error: "Custom stickers is disabled" };
+    }
+    const apiKey = this.#getGiphyApiKey();
+    if (!apiKey) {
+      return {
+        success: false,
+        error: "GIPHY API key not configured. Get a free key at developers.giphy.com and set customStickers.giphy.apiKey in config.json.",
+      };
+    }
+
+    const trimmed = (query || "").trim();
+    const baseUrl = trimmed ? GIPHY_SEARCH_URL : GIPHY_TRENDING_URL;
+    const url = new URL(baseUrl);
+    url.searchParams.set("api_key", apiKey);
+    if (trimmed) {
+      url.searchParams.set("q", trimmed);
+    }
+    url.searchParams.set("limit", "24");
+    url.searchParams.set("rating", "g");
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GIPHY_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(url.toString(), { signal: controller.signal });
+    } catch (err) {
+      clearTimeout(timeout);
+      const msg = err.name === "AbortError" ? "Search timed out" : "Network error";
+      return { success: false, error: msg };
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401 || status === 403) {
+        return { success: false, error: "Invalid GIPHY API key. Check customStickers.giphy.apiKey in config.json." };
+      }
+      return { success: false, error: `GIPHY API error: HTTP ${status}` };
+    }
+
+    let json;
+    try {
+      json = await response.json();
+    } catch {
+      return { success: false, error: "Failed to parse GIPHY response" };
+    }
+
+    if (!Array.isArray(json?.data)) {
+      return { success: false, error: "Unexpected GIPHY API response" };
+    }
+
+    const stickers = json.data.map((item) => ({
+      id: item.id,
+      title: item.title || "",
+      url: item.images?.fixed_width?.webp || item.images?.fixed_width?.url || "",
+      preview: item.images?.fixed_width_small_still?.url || item.images?.fixed_width_still?.url || "",
+      width: Number.parseInt(item.images?.fixed_width?.width || "200", 10),
+      height: Number.parseInt(item.images?.fixed_width?.height || "200", 10),
+      mimeType: item.images?.fixed_width?.webp ? "image/webp" : "image/gif",
+    })).filter((s) => s.url);
+
+    return { success: true, stickers };
   }
 
   static async #cancelBody(response) {
