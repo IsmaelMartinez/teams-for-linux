@@ -41,6 +41,13 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phase 1 Shipped (v2.7.4)**: Token acquisition plus 7 IPC channels (user profile, calendar events/view, calendar create, mail messages, People search, send chat). People search and send chat power Quick Chat (ADR-014, ADR-015)
   - **Phases 2-3**: Calendar widget, mail preview, presence, settings UI — not started
 
+### Idea Stage
+
+- **[Custom Stickers — External Sources](custom-stickers-online-import-research.md)** — follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
+  - Three realistic paths ranked by simplicity: URL paste (shipped in v1), Telegram sticker pack import (next phase), AI generation via a user-configured backend such as a local Ollama image-gen session (more futuristic)
+  - Telegram path: HTML scrape default, Bot API as opt-in fallback, static `.webp` only for v1
+  - AI path: mirrors the `customBackground` pattern; wrapper has no opinion about which backend sits at the other end
+
 ### Reference
 
 - **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.

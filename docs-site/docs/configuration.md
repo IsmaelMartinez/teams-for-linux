@@ -386,6 +386,19 @@ Media settings are organized under the `media` configuration object with subgrou
 | `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
 | `customBGServiceConfigFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
 
+### Custom Stickers
+
+A floating sticker panel that lists image files from a local folder and pastes the selected one into the focused chat compose box. Off by default. See [`app/customStickers/README.md`](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customStickers/README.md) for details.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `customStickers.enabled` | `boolean` | `false` | Master flag for the custom stickers feature |
+| `customStickers.folder` | `string` | `""` | Absolute path to the sticker folder. Empty string uses `<userData>/stickers/`, which is created on first run if missing |
+| `customStickers.formats` | `array` | `["png", "jpg", "jpeg", "gif", "webp"]` | File extensions the scanner accepts (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories, so stickers organised under `<folder>/<group>/` are visible. |
+| `customStickers.urlImport.enabled` | `boolean` | `true` | Allow importing stickers from HTTPS URLs via the panel header input or by dropping a URL on the panel |
+| `customStickers.urlImport.allowedContentTypes` | `array` | `["image/png", "image/jpeg", "image/gif", "image/webp"]` | Response content-types the wrapper will accept and save when importing from a URL |
+| `customStickers.urlImport.maxBytes` | `number` | `5242880` | Per-file size cap (in bytes) for URL imports. Responses larger than this are rejected |
+
 ### URL & Protocol Handling
 
 | Option | Type | Default | Description |
