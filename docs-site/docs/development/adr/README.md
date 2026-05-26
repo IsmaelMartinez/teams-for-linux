@@ -346,7 +346,7 @@ When referencing code in ADRs:
 - **Proposed**: 2
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 10 (Authentication & Security, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security, Community & Metrics)
+- **Topics covered**: 9 (Authentication & Security, Screen Sharing, Testing & Quality, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
 ## Related Documentation
 

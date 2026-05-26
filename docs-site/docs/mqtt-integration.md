@@ -435,7 +435,7 @@ automation:
         entity_id: binary_sensor.teams_for_linux_in_call
         to: "on"
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         target:
           entity_id: light.office_status
         data:
@@ -448,7 +448,7 @@ automation:
         entity_id: binary_sensor.teams_for_linux_in_call
         to: "off"
     action:
-      - service: light.turn_on
+      - action: light.turn_on
         target:
           entity_id: light.office_status
         data:
