@@ -530,6 +530,10 @@ class CustomStickers {
 
   #switchTab(tab) {
     this.#activeTab = tab;
+    if (this.#searchTimer) {
+      clearTimeout(this.#searchTimer);
+      this.#searchTimer = null;
+    }
     const tabs = this.#panel.querySelectorAll(".tfl-sticker-tab");
     tabs.forEach((t, i) => {
       t.classList.toggle("active", (i === 0 && tab === "local") || (i === 1 && tab === "search"));
@@ -572,6 +576,7 @@ class CustomStickers {
       return;
     }
 
+    if (this.#activeTab !== "search") return;
     this.#clearGrid();
     if (!result?.success) {
       const msg = document.createElement("div");
@@ -614,15 +619,31 @@ class CustomStickers {
       return;
     }
 
+    let result;
+    try {
+      result = await this.#ipcRenderer.invoke("fetch-giphy-sticker", {
+        url: sticker.url,
+        mimeType: sticker.mimeType,
+        id: sticker.id,
+      });
+    } catch (err) {
+      console.error(`${LOG_PREFIX} GIPHY fetch IPC failed: ${err.message}`);
+      this.#showToast("Could not download sticker.");
+      return;
+    }
+    if (!result?.success) {
+      this.#showToast(result?.error || "Download failed");
+      return;
+    }
+
     let file;
     try {
-      const response = await fetch(sticker.url);
+      const response = await fetch(result.dataUrl);
       const blob = await response.blob();
-      const ext = sticker.mimeType === "image/webp" ? "webp" : "gif";
-      file = new File([blob], `giphy-${sticker.id}.${ext}`, { type: sticker.mimeType });
+      file = new File([blob], result.name, { type: result.mimeType });
     } catch (err) {
-      console.error(`${LOG_PREFIX} Failed to fetch GIPHY sticker: ${err.message}`);
-      this.#showToast("Could not download sticker.");
+      console.error(`${LOG_PREFIX} Failed to build sticker file: ${err.message}`);
+      this.#showToast("Could not prepare sticker for paste.");
       return;
     }
 

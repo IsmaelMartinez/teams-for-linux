@@ -72,6 +72,14 @@ class CustomStickers {
     ipcMain.handle("search-giphy-stickers", (_event, query) =>
       this.handleSearchGiphy(query),
     );
+
+    // Fetch a GIPHY sticker image from the main process (the renderer
+    // cannot fetch cross-origin URLs due to Teams' CSP). Returns the
+    // image as a base64 data URL so the renderer can build a File for
+    // synthetic paste.
+    ipcMain.handle("fetch-giphy-sticker", (_event, payload) =>
+      this.handleFetchGiphySticker(payload),
+    );
   }
 
   initialize() {
@@ -436,6 +444,43 @@ class CustomStickers {
     })).filter((s) => s.url);
 
     return { success: true, stickers };
+  }
+
+  async handleFetchGiphySticker(payload) {
+    const { url, mimeType, id } = payload || {};
+    if (!url || typeof url !== "string") {
+      return { success: false, error: "Missing sticker URL" };
+    }
+    if (!url.startsWith("https://")) {
+      return { success: false, error: "Only HTTPS URLs are accepted" };
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GIPHY_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      clearTimeout(timeout);
+      const msg = err.name === "AbortError" ? "Download timed out" : "Network error";
+      return { success: false, error: msg };
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      return { success: false, error: `HTTP ${response.status}` };
+    }
+
+    const buf = Buffer.from(await response.arrayBuffer());
+    const mime = mimeType || "image/gif";
+    const ext = mime === "image/webp" ? "webp" : "gif";
+    return {
+      success: true,
+      dataUrl: `data:${mime};base64,${buf.toString("base64")}`,
+      name: `giphy-${id || "sticker"}.${ext}`,
+      mimeType: mime,
+    };
   }
 
   static async #cancelBody(response) {
