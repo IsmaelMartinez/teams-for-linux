@@ -249,6 +249,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
+| `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 
 #### Certificates
 
@@ -414,6 +415,9 @@ Media settings are organized under the `media` configuration object with subgrou
 | `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (outbound, combined with topicPrefix) |
 | `mqtt.commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty to disable (status-only mode). Set to `"command"` to enable bidirectional mode. |
 | `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
+| `mqtt.homeAssistant.enabled` | `boolean` | `false` | Enable Home Assistant MQTT auto-discovery (publishes discovery configs so HA creates entities automatically) |
+| `mqtt.homeAssistant.discoveryPrefix` | `string` | `"homeassistant"` | MQTT discovery topic prefix used by Home Assistant |
+| `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant |
 
 **Example MQTT Configuration:**
 ```json
@@ -424,10 +428,15 @@ Media settings are organized under the `media` configuration object with subgrou
     "username": "teams-user",
     "password": "secret",
     "clientId": "teams-for-linux",
-    "topicPrefix": "home/office",
-    "statusTopic": "teams/status",
-    "commandTopic": "teams/command",
-    "statusCheckInterval": 10000
+    "topicPrefix": "teams",
+    "statusTopic": "status",
+    "commandTopic": "command",
+    "statusCheckInterval": 10000,
+    "homeAssistant": {
+      "enabled": true,
+      "discoveryPrefix": "homeassistant",
+      "deviceName": "Teams for Linux"
+    }
   }
 }
 ```
@@ -439,9 +448,9 @@ When MQTT is enabled, the following topics are automatically published:
 | Topic | Payload | Description |
 |-------|---------|-------------|
 | `\{topicPrefix\}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will) |
-| `\{topicPrefix\}/status` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
+| `\{topicPrefix\}/\{statusTopic\}` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
 | `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
-| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
+| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (renderer wiring pending, topic does not yet update) |
 | `\{topicPrefix\}/microphone` | `"speaking"` \| `"silent"` \| `"muted"` \| `"off"` | Microphone state derived from the WebRTC speaking-indicator. `speaking` = audio is being transmitted, `silent` = mic open but quiet, `muted` = Teams has zeroed the audio signal, `off` = not in a call. Activates when `mqtt.enabled` is true (no separate toggle required). |
 | `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 

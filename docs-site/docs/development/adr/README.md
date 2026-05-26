@@ -42,6 +42,8 @@ Architecture Decision Records capture important architectural decisions along wi
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
+| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | 🚧 Proposed | 2026-04-16 | N/A |
+| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | 🚧 Proposed | 2026-04-21 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -59,6 +61,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | Configurable token refresh mechanism to proactively renew authentication before expiry |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | Direct D-Bus invocation for Microsoft Identity Broker version compatibility |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
+| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys | FIDO2 hardware key support on Linux via fido2-tools interception |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -154,12 +157,14 @@ Architecture Decision Records capture important architectural decisions along wi
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | Rejected multi-window due to Teams architecture constraints |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | Use People API + Deep Links for quick chat access after Chat API was blocked |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
+| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | WebContentsView-based profile switching with feature-flag gating |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)
 - Inline message sending via Graph API ChatMessage.Send scope
 - Chat resolution via Teams entityCommanding + DOM scanning + member verification
 - Keyboard shortcut toggles quick chat modal
+- Multi-account profile switcher proposed for tenant/guest switching
 
 ### Distribution & Packaging
 
@@ -335,13 +340,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 19
+- **Total ADRs**: 21
 - **Implemented**: 12
 - **Accepted**: 3
-- **Proposed**: 0
+- **Proposed**: 2
 - **Rejected**: 4
 - **Average length**: ~500 words
-- **Topics covered**: 10 (Authentication, Screen Sharing, Documentation, Release Process, MQTT & Integration, Testing, UI Features, Distribution & Packaging, Security, Community & Metrics)
+- **Topics covered**: 9 (Authentication & Security, Screen Sharing, Testing & Quality, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
 ## Related Documentation
 
