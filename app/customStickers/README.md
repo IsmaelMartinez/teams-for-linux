@@ -50,6 +50,25 @@ When the feature is enabled and the default folder did not previously exist, a s
 
 Stickers are sent into Teams by dispatching a synthetic `ClipboardEvent('paste')` at the focused compose box. Teams's editor (CKEditor 5) handles the event the same way it handles a real paste. This was validated end-to-end during the feasibility spike — see [`spike/2476-stickers/`](../../spike/2476-stickers/) at the repo root for the research and design notes.
 
+## Importing Telegram Sticker Packs
+
+When a Telegram bot token is configured, you can import entire sticker packs by pasting a `https://t.me/addstickers/<PackName>` URL into the same import field. The wrapper calls the Telegram Bot API to fetch the pack's static `.webp` stickers and saves them into a subfolder named after the pack.
+
+To set up: create a Telegram bot via [@BotFather](https://t.me/BotFather) (it takes 30 seconds, and the bot does not need any special permissions), then add the token to your config:
+
+```jsonc
+{
+  "customStickers": {
+    "enabled": true,
+    "telegram": {
+      "botToken": "123456:ABC-DEF..."
+    }
+  }
+}
+```
+
+Animated (TGS) and video (WebM) stickers are skipped; only static stickers are imported. Re-importing the same pack overwrites existing files (file names are based on Telegram's unique sticker ID, so the set is idempotent).
+
 ## What's out of scope
 
 The MVP keeps the surface small. The following were considered and intentionally deferred:

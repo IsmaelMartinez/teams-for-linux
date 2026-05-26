@@ -325,7 +325,7 @@ class CustomStickers {
     urlInput.id = URL_INPUT_ID;
     urlInput.className = "tfl-sticker-url-input";
     urlInput.type = "url";
-    urlInput.placeholder = "Paste image URL";
+    urlInput.placeholder = "Image URL or t.me/addstickers/...";
     urlInput.spellcheck = false;
     const urlButton = document.createElement("button");
     urlButton.className = "tfl-sticker-url-button";
@@ -429,6 +429,9 @@ class CustomStickers {
       return;
     }
     if (input) input.value = "";
+    if (result.count != null) {
+      this.#showToast(`Imported ${result.count} stickers from "${result.packName}"`);
+    }
     await this.#refreshStickers();
   }
 

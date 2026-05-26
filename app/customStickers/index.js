@@ -4,6 +4,8 @@ const fs = require("node:fs");
 const crypto = require("node:crypto");
 
 const LOG_PREFIX = "[CUSTOM_STICKERS]";
+const TELEGRAM_PACK_RE = /^https?:\/\/t\.me\/addstickers\/([a-zA-Z0-9_]+)$/;
+const TELEGRAM_API_TIMEOUT_MS = 30000;
 
 const EXTENSION_MIME = {
   png: "image/png",
@@ -281,6 +283,11 @@ class CustomStickers {
       return { success: false, error: "Only HTTPS URLs are accepted" };
     }
 
+    const telegramMatch = String(rawUrl).match(TELEGRAM_PACK_RE);
+    if (telegramMatch) {
+      return this.#importTelegramPack(telegramMatch[1]);
+    }
+
     const allowedTypes = this.getUrlImportContentTypes();
     const maxBytes = this.getUrlImportMaxBytes();
 
@@ -355,6 +362,123 @@ class CustomStickers {
     } catch (err) {
       return { success: false, error: `Write failed: ${err.message}` };
     }
+  }
+
+  #getTelegramBotToken() {
+    return this.config.customStickers?.telegram?.botToken || "";
+  }
+
+  async #importTelegramPack(packName) {
+    const token = this.#getTelegramBotToken();
+    if (!token) {
+      return {
+        success: false,
+        error:
+          "Telegram bot token not configured. Set customStickers.telegram.botToken in config.json (create a bot via @BotFather on Telegram to get one).",
+      };
+    }
+
+    let stickerSet;
+    try {
+      stickerSet = await this.#telegramApiCall(token, "getStickerSet", {
+        name: packName,
+      });
+    } catch (err) {
+      return { success: false, error: `Telegram API error: ${err.message}` };
+    }
+
+    const staticStickers = stickerSet.stickers.filter(
+      (s) => !s.is_animated && !s.is_video,
+    );
+    if (staticStickers.length === 0) {
+      return {
+        success: false,
+        error: "Pack contains no static stickers (animated and video stickers are not supported yet).",
+      };
+    }
+
+    const folder = this.stickerFolder ?? this.resolveStickerFolder();
+    const packFolder = path.join(folder, packName);
+    fs.mkdirSync(packFolder, { recursive: true });
+
+    let imported = 0;
+    for (const sticker of staticStickers) {
+      try {
+        const filePath = await this.#telegramGetFilePath(token, sticker.file_id);
+        const buf = await this.#telegramDownloadFile(token, filePath);
+        const ext = path.extname(filePath).slice(1) || "webp";
+        const dest = path.join(packFolder, `${sticker.file_unique_id}.${ext}`);
+        fs.writeFileSync(dest, buf);
+        imported++;
+      } catch (err) {
+        console.warn(
+          `${LOG_PREFIX} Skipped Telegram sticker ${sticker.file_unique_id}: ${err.message}`,
+        );
+      }
+    }
+
+    console.info(
+      `${LOG_PREFIX} Telegram pack "${packName}" imported: ${imported}/${staticStickers.length} stickers`,
+    );
+    return {
+      success: true,
+      count: imported,
+      total: staticStickers.length,
+      packName,
+    };
+  }
+
+  async #telegramApiCall(token, method, params) {
+    const url = new URL(`https://api.telegram.org/bot${token}/${method}`);
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      TELEGRAM_API_TIMEOUT_MS,
+    );
+    let response;
+    try {
+      response = await fetch(url.toString(), { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw new Error(`HTTP ${response.status}: ${text.slice(0, 200)}`);
+    }
+    const json = await response.json();
+    if (!json.ok) {
+      throw new Error(json.description || "Telegram API returned not ok");
+    }
+    return json.result;
+  }
+
+  async #telegramGetFilePath(token, fileId) {
+    const result = await this.#telegramApiCall(token, "getFile", {
+      file_id: fileId,
+    });
+    return result.file_path;
+  }
+
+  async #telegramDownloadFile(token, filePath) {
+    const url = `https://api.telegram.org/file/bot${token}/${filePath}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      TELEGRAM_API_TIMEOUT_MS,
+    );
+    let response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (!response.ok) {
+      throw new Error(`Download failed: HTTP ${response.status}`);
+    }
+    return Buffer.from(await response.arrayBuffer());
   }
 
   static async #cancelBody(response) {
