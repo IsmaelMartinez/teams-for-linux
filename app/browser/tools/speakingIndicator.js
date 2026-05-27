@@ -35,6 +35,10 @@
  * modulesRequiringIpc), the same state transitions are forwarded to the main
  * process via the `microphone-state-changed` IPC channel for MQTT publishing.
  * Values: 'speaking' | 'silent' | 'muted' | 'off' (off when the call ends).
+ *
+ * Camera state is also tracked: the poll loop checks video sender
+ * track.enabled and forwards changes via `camera-state-changed` (boolean).
+ * The main process mediaStatusService publishes this to {topicPrefix}/camera.
  */
 const activityHub = require('./activityHub');
 
@@ -54,6 +58,8 @@ class SpeakingIndicator {
 	#inCall = false;
 	#ipcRenderer = null;
 	#lastEmittedState = null; // 'speaking' | 'silent' | 'muted' | 'off' | null
+	#cameraEnabled = false;
+	#lastEmittedCameraState = null; // true | false | null
 
 	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
@@ -118,6 +124,7 @@ class SpeakingIndicator {
 			this.#stopPolling();
 			this.#hideOverlay();
 			this.#emitMicrophoneState('off');
+			this.#emitCameraState(false);
 		});
 	}
 
@@ -131,6 +138,18 @@ class SpeakingIndicator {
 		}
 		this.#lastEmittedState = state;
 		this.#ipcRenderer.send('microphone-state-changed', state);
+	}
+
+	// Notifies main process of camera state for MQTT publishing.
+	#emitCameraState(enabled) {
+		if (!this.#ipcRenderer) {
+			return;
+		}
+		if (this.#lastEmittedCameraState === enabled) {
+			return;
+		}
+		this.#lastEmittedCameraState = enabled;
+		this.#ipcRenderer.send('camera-state-changed', enabled);
 	}
 
 	#startPolling() {
@@ -165,6 +184,7 @@ class SpeakingIndicator {
 			this.#stopPolling();
 			this.#hideOverlay();
 			this.#emitMicrophoneState('off');
+			this.#emitCameraState(false);
 			// WebRTC-based call-disconnected: all connections closed (#2358)
 			if (this.#inCall) {
 				this.#inCall = false;
@@ -236,6 +256,31 @@ class SpeakingIndicator {
 		} finally {
 			this.#polling = false;
 		}
+
+		// Camera state: check video sender track.enabled across all connections.
+		// Filter out screen-sharing tracks (which have a displaySurface setting)
+		// so only actual camera tracks are considered.
+		let cameraOn = false;
+		for (const pc of this.#peerConnections) {
+			try {
+				const videoSender = pc.getSenders().find(s => {
+					if (s.track?.kind !== 'video') return false;
+					const settings = s.track.getSettings?.() || {};
+					return !settings.displaySurface;
+				});
+				if (videoSender?.track?.enabled) {
+					cameraOn = true;
+					break;
+				}
+			} catch {
+				// Ignore errors from closed connections.
+			}
+		}
+		if (cameraOn !== this.#cameraEnabled) {
+			this.#cameraEnabled = cameraOn;
+			console.info(`${LOG_PREFIX} Camera: ${cameraOn ? 'on' : 'off'}`);
+		}
+		this.#emitCameraState(this.#cameraEnabled);
 
 		// WebRTC-based call-connected: audio stats detected with an established
 		// connection. The connectionState check prevents premature emission during
