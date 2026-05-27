@@ -258,10 +258,16 @@ class SpeakingIndicator {
 		}
 
 		// Camera state: check video sender track.enabled across all connections.
+		// Filter out screen-sharing tracks (which have a displaySurface setting)
+		// so only actual camera tracks are considered.
 		let cameraOn = false;
 		for (const pc of this.#peerConnections) {
 			try {
-				const videoSender = pc.getSenders().find(s => s.track?.kind === 'video');
+				const videoSender = pc.getSenders().find(s => {
+					if (s.track?.kind !== 'video') return false;
+					const settings = s.track.getSettings?.() || {};
+					return !settings.displaySurface;
+				});
 				if (videoSender?.track?.enabled) {
 					cameraOn = true;
 					break;
