@@ -45,6 +45,10 @@
 * remove simili-bot trial files ([#2586](https://github.com/IsmaelMartinez/teams-for-linux/issues/2586)) ([15613cf](https://github.com/IsmaelMartinez/teams-for-linux/commit/15613cf44a97d1e726f9bd6dee31970c4df0aada))
 * update CLAUDE.md for ready → release ready label rename ([#2576](https://github.com/IsmaelMartinez/teams-for-linux/issues/2576)) ([62ff340](https://github.com/IsmaelMartinez/teams-for-linux/commit/62ff340c41695fc3fd1e09a5c33463174667c33e))
 
+### Thanks
+
+Big thanks to @app/dependabot, @CelestifyX for contributing to this release.
+
 ## [2.10.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.9.0...v2.10.0) (2026-05-19)
 
 
