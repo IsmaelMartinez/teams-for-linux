@@ -96,7 +96,6 @@ const sidebars: SidebarsConfig = {
             'development/research/graph-api-integration-research',
             'development/research/join-meeting-window-takeover-research',
             'development/research/mqtt-extended-status-investigation',
-            'development/research/mqtt-microphone-state-research',
             'development/research/project-management-tools-research',
             'development/research/system-performance-research',
             'development/research/webauthn-fido2-implementation-plan',

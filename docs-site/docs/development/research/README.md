@@ -17,11 +17,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Proposes lightweight startup/memory instrumentation with zero dependencies
   - **Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically
 
-- **[MQTT Microphone State via Speaking Indicator](mqtt-microphone-state-research.md)** - Publish speaking/silent/muted state to MQTT
-  - Wires existing speaking indicator WebRTC detection into MQTT via `microphone-state-changed` IPC
-  - Completes original request from #1938 (@vbartik's RGB LED home automation)
-  - **Status:** Shipped in [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) (merged). Microphone topic publishes speaking/silent/muted/off states.
-
 ### First Iteration Shipped — Awaiting Feedback
 
 - **[Join Meeting Window Takeover Research](join-meeting-window-takeover-research.md)** — "Join Meeting" replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322))
@@ -73,6 +68,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| MQTT Microphone State | v2.10.0 | Speaking-indicator driven microphone state (speaking/silent/muted/off) published to MQTT. See [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) |
 | Notification Sound Player (inline replacement for `node-sound`) | v2.7.10 | Phase 1 of the notification-sound research shipped — `paplay`/`pw-play`/`aplay`/`afplay` detection in `app/audio/player.js`. See [PR #2306](https://github.com/IsmaelMartinez/teams-for-linux/pull/2306) |
 | Cross-Distro CI Smoke Test | v2.7.x | Workflow `.github/workflows/cross-distro-smoke.yml` ships the design proposed in the original research. Umbrella decision in [ADR-016](../adr/016-cross-distro-testing-environment.md) |
 | Electron 41 Upgrade | v2.8.0 | Repo skipped Electron 40 entirely and jumped 39.8.2 → 41.x via dependabot [PR #2347](https://github.com/IsmaelMartinez/teams-for-linux/pull/2347), with follow-up bumps to 41.5.0; the Electron 40 migration research is therefore obsolete |

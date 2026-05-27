@@ -819,7 +819,7 @@ These stay YAGNI until a second distinct user requests them:
 
 - Issue: https://github.com/IsmaelMartinez/teams-for-linux/issues/2370
 - Research: `docs-site/docs/development/research/mqtt-extended-status-investigation.md` (Phase 3 "Calendar & Meetings" section described this approach)
-- Research: `docs-site/docs/development/research/mqtt-microphone-state-research.md`
+- Shipped: MQTT microphone state — [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497)
 - Research: `docs-site/docs/development/research/graph-api-integration-research.md`
 - Adjacent fix (same infrastructure): PR [#2406](https://github.com/IsmaelMartinez/teams-for-linux/pull/2406) / issue [#2358](https://github.com/IsmaelMartinez/teams-for-linux/issues/2358) — added `activityHub.emit()` and activated WebRTC patching under `mqtt.enabled`
 - Pattern reference: `app/mqtt/mediaStatusService.js` (existing IPC→MQTT bridge)
