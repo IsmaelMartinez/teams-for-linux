@@ -463,7 +463,7 @@ When MQTT is enabled, the following topics are automatically published:
 | `\{topicPrefix\}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will) |
 | `\{topicPrefix\}/\{statusTopic\}` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
 | `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
-| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (renderer wiring pending, topic does not yet update) |
+| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (monitors video sender track via WebRTC, filters out screen-sharing tracks) |
 | `\{topicPrefix\}/microphone` | `"speaking"` \| `"silent"` \| `"muted"` \| `"off"` | Microphone state derived from the WebRTC speaking-indicator. `speaking` = audio is being transmitted, `silent` = mic open but quiet, `muted` = Teams has zeroed the audio signal, `off` = not in a call. Activates when `mqtt.enabled` is true (no separate toggle required). |
 | `\{topicPrefix\}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state. Fires before user accepts. Parity with `incomingCallCommand`. Covers 1:1 ring-type calls. |
 | `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |

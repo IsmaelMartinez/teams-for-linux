@@ -1,13 +1,13 @@
 # MQTT Extended Status Investigation (Issue #1938)
 
-:::info Phase 1 and Phase 2 Microphone Shipped — Camera Partially Wired — HA Discovery Shipped
-Phase 1 infrastructure (LWT, call state, screen-sharing) and Phase 2 microphone topic ([PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497)) are shipped. Home Assistant auto-discovery is shipped ([PR #2464](https://github.com/IsmaelMartinez/teams-for-linux/pull/2464), [PR #2571](https://github.com/IsmaelMartinez/teams-for-linux/pull/2571)). Camera topic is wired in `mediaStatusService.js` but the renderer does not emit `camera-state-changed` yet.
+:::info All Phases Shipped
+Phase 1 infrastructure (LWT, call state, screen-sharing), Phase 2 microphone ([PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497)), Phase 2 camera ([PR #2582](https://github.com/IsmaelMartinez/teams-for-linux/pull/2582)), and Home Assistant auto-discovery ([PR #2464](https://github.com/IsmaelMartinez/teams-for-linux/pull/2464), [PR #2571](https://github.com/IsmaelMartinez/teams-for-linux/pull/2571)) are all shipped.
 :::
 
 **Date**: 2025-11-12
 **Updated**: 2026-05-26
 **Issue**: [#1938 - Extended MQTT Status Fields](https://github.com/IsmaelMartinez/teams-for-linux/issues/1938)
-**Status**: Phase 1 Complete | Phase 2 Microphone Shipped | Phase 2 Camera partially wired | HA Discovery Shipped
+**Status**: All phases shipped (Phase 1, Phase 2 Microphone, Phase 2 Camera, HA Discovery)
 
 ## User Request
 
