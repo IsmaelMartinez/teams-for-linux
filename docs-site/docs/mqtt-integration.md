@@ -375,9 +375,7 @@ All topics use retained messages so subscribers receive the last known state imm
 
 The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means Teams has zeroed the audio signal, and `off` means no active call.
 
-:::note Camera topic
-The camera topic is wired in the main process (`mediaStatusService.js`) but the renderer does not yet emit `camera-state-changed` events. It will report state once renderer-side camera monitoring is implemented.
-:::
+The camera topic monitors video sender `track.enabled` in the same RTCPeerConnection poll loop used for microphone detection, filtering out screen-sharing tracks via `displaySurface`.
 
 ## Home Assistant Auto-Discovery
 

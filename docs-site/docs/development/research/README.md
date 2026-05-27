@@ -29,7 +29,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
 - **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
   - **Phase 1 Shipped**: Infrastructure, LWT, call state, screen-sharing topics
   - **Phase 2 Microphone Shipped**: [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) merged; publishes speaking/silent/muted/off to `{topicPrefix}/microphone`
-  - **Phase 2 Camera Partially Wired**: `mediaStatusService.js` listens for `camera-state-changed` IPC but the renderer does not emit it yet
+  - **Phase 2 Camera Shipped**: [PR #2582](https://github.com/IsmaelMartinez/teams-for-linux/pull/2582) merged; renderer emits `camera-state-changed` via video track monitoring in speakingIndicator
   - **Home Assistant Auto-Discovery Shipped**: [PR #2464](https://github.com/IsmaelMartinez/teams-for-linux/pull/2464) and [PR #2571](https://github.com/IsmaelMartinez/teams-for-linux/pull/2571) merged; sensors, binary_sensors, and buttons auto-created in HA
 
 - **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
