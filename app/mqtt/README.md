@@ -143,6 +143,7 @@ When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT disc
 |--------|------|-------------|
 | Teams Status | `sensor` | Current presence status (available, busy, etc.) |
 | Teams In Call | `binary_sensor` | Active call state |
+| Teams Incoming Call | `binary_sensor` | Incoming call ringing state (before accept) |
 
 ### Controls
 
