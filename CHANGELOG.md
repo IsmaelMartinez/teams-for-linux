@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.11.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.10.0...v2.11.0) (2026-05-27)
+
+
+### Features
+
+* **#2476:** custom stickers MVP ([#2550](https://github.com/IsmaelMartinez/teams-for-linux/issues/2550)) ([0c31282](https://github.com/IsmaelMartinez/teams-for-linux/commit/0c31282151255d89a1f62e9652a782ac5c80c6c4))
+* **config:** default followSystemTheme to true ([#2566](https://github.com/IsmaelMartinez/teams-for-linux/issues/2566)) ([21e927e](https://github.com/IsmaelMartinez/teams-for-linux/commit/21e927e6464762b70ffe014bb809fa5bbacb7d5e))
+* **mqtt:** emit camera-state-changed from renderer for MQTT publishing ([#2582](https://github.com/IsmaelMartinez/teams-for-linux/issues/2582)) ([182d559](https://github.com/IsmaelMartinez/teams-for-linux/commit/182d559de29104af74cc3a66d8d62a41b187ac97))
+* **mqtt:** publish incoming-call topic for ring/invite events ([#2572](https://github.com/IsmaelMartinez/teams-for-linux/issues/2572)) ([d7cdd06](https://github.com/IsmaelMartinez/teams-for-linux/commit/d7cdd06092dc2fd0345a2e1fdb191eeb5e821eb6))
+* **mqtt:** publish microphone state to {topicPrefix}/microphone ([#2497](https://github.com/IsmaelMartinez/teams-for-linux/issues/2497)) ([e8fe6f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/e8fe6f3104d24a14e46d87bb792cfbeab76cc942))
+
+
+### Bug Fixes
+
+* **#2383:** also setDesktopName so --class reaches X11 + Wayland ([#2569](https://github.com/IsmaelMartinez/teams-for-linux/issues/2569)) ([a048527](https://github.com/IsmaelMartinez/teams-for-linux/commit/a048527bde6f5529ee35ec2f04209e1e0c4f4d75))
+* **#2534:** route getDisplayMedia through in-app picker on Wayland ([f38f28e](https://github.com/IsmaelMartinez/teams-for-linux/commit/f38f28ef81d9c33dd4cbf4d838f9ec940205d311)), closes [#2534](https://github.com/IsmaelMartinez/teams-for-linux/issues/2534)
+* **deps:** bump qs and ws in docs-site to resolve security alerts ([#2573](https://github.com/IsmaelMartinez/teams-for-linux/issues/2573)) ([84aefe8](https://github.com/IsmaelMartinez/teams-for-linux/commit/84aefe84e094bbce8a3124650f23d7f77f7ba5bf))
+* **logging:** down-level pre-login auth-noise from renderer ([#2564](https://github.com/IsmaelMartinez/teams-for-linux/issues/2564)) ([8de3b2d](https://github.com/IsmaelMartinez/teams-for-linux/commit/8de3b2d6a1a4842882dca6c99ec33928ad2309ee)), closes [#2560](https://github.com/IsmaelMartinez/teams-for-linux/issues/2560)
+* **logging:** run renderer log fields through full PII sanitizer ([#2562](https://github.com/IsmaelMartinez/teams-for-linux/issues/2562)) ([bff6d22](https://github.com/IsmaelMartinez/teams-for-linux/commit/bff6d22ace2a37195fb3a98ccf5a88d6f2efb98e)), closes [#2560](https://github.com/IsmaelMartinez/teams-for-linux/issues/2560)
+* **macos:** use 256x256 source for the dock icon ([#2563](https://github.com/IsmaelMartinez/teams-for-linux/issues/2563)) ([8f96c66](https://github.com/IsmaelMartinez/teams-for-linux/commit/8f96c6684445c541241de3ad6dd411736af691f8)), closes [#2560](https://github.com/IsmaelMartinez/teams-for-linux/issues/2560)
+* **preload:** serialize object-shaped unhandled rejections ([#2561](https://github.com/IsmaelMartinez/teams-for-linux/issues/2561)) ([6720768](https://github.com/IsmaelMartinez/teams-for-linux/commit/6720768f1ac57c766eeda8595a177f8b0838259e)), closes [#2560](https://github.com/IsmaelMartinez/teams-for-linux/issues/2560)
+
+
+### Code Improvements
+
+* **config:** remove six deprecated config keys ([#2567](https://github.com/IsmaelMartinez/teams-for-linux/issues/2567)) ([4710fb5](https://github.com/IsmaelMartinez/teams-for-linux/commit/4710fb53436b32b178301e3d2108fc2e66ea0c49))
+
+
+### Documentation
+
+* add vylen linux install/remove instruction ([#2559](https://github.com/IsmaelMartinez/teams-for-linux/issues/2559)) ([2f6c976](https://github.com/IsmaelMartinez/teams-for-linux/commit/2f6c97661d1f0b193de1fc425940c8de5b5656b5))
+* documentation cleanup and HA discovery docs ([#2575](https://github.com/IsmaelMartinez/teams-for-linux/issues/2575)) ([6eca43c](https://github.com/IsmaelMartinez/teams-for-linux/commit/6eca43cfeca0dddf16062340641f6499aab4afdf))
+* update camera topic and MQTT status to shipped ([#2585](https://github.com/IsmaelMartinez/teams-for-linux/issues/2585)) ([b564e87](https://github.com/IsmaelMartinez/teams-for-linux/commit/b564e875a12567934b21b22cd55d2889a6638c55))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron from 41.6.1 to 41.7.1 ([#2583](https://github.com/IsmaelMartinez/teams-for-linux/issues/2583)) ([79e9540](https://github.com/IsmaelMartinez/teams-for-linux/commit/79e9540bf9dd119b37d7412071a88fee072b5f8a))
+* **deps-dev:** bump qs from 6.14.2 to 6.15.2 ([#2568](https://github.com/IsmaelMartinez/teams-for-linux/issues/2568)) ([a5c0e89](https://github.com/IsmaelMartinez/teams-for-linux/commit/a5c0e89fb286cf9d5c4c0a98afadca93ebb8ea19))
+* **deps-dev:** bump tmp from 0.2.5 to 0.2.6 ([#2584](https://github.com/IsmaelMartinez/teams-for-linux/issues/2584)) ([0f3c5ce](https://github.com/IsmaelMartinez/teams-for-linux/commit/0f3c5ce4c1c9293d854f0e66044db493fed59c3a))
+* **deps:** bump @homebridge/dbus-native in the minor-and-patch group ([#2574](https://github.com/IsmaelMartinez/teams-for-linux/issues/2574)) ([345dc5e](https://github.com/IsmaelMartinez/teams-for-linux/commit/345dc5e752447799bc26a20bf7bfaf121149396e))
+* remove shipped mqtt-microphone-state-research doc ([#2581](https://github.com/IsmaelMartinez/teams-for-linux/issues/2581)) ([f4c39ed](https://github.com/IsmaelMartinez/teams-for-linux/commit/f4c39edde3f14433fccdc1dfa7cc6b1e30ce75e7))
+* remove simili-bot trial files ([#2586](https://github.com/IsmaelMartinez/teams-for-linux/issues/2586)) ([15613cf](https://github.com/IsmaelMartinez/teams-for-linux/commit/15613cf44a97d1e726f9bd6dee31970c4df0aada))
+* update CLAUDE.md for ready → release ready label rename ([#2576](https://github.com/IsmaelMartinez/teams-for-linux/issues/2576)) ([62ff340](https://github.com/IsmaelMartinez/teams-for-linux/commit/62ff340c41695fc3fd1e09a5c33463174667c33e))
+
+### Thanks
+
+Big thanks to @app/dependabot, @CelestifyX for contributing to this release.
+
 ## [2.10.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.9.0...v2.10.0) (2026-05-19)
 
 

@@ -14,6 +14,35 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.11.0" date="2026-05-27">
+      <description>
+        <ul>
+          <li>#2476: custom stickers MVP (#2550)</li>
+          <li>config: default followSystemTheme to true (#2566)</li>
+          <li>mqtt: emit camera-state-changed from renderer for MQTT publishing (#2582)</li>
+          <li>mqtt: publish incoming-call topic for ring/invite events (#2572)</li>
+          <li>mqtt: publish microphone state to {topicPrefix}/microphone (#2497)</li>
+          <li>#2383: also setDesktopName so --class reaches X11 + Wayland (#2569)</li>
+          <li>#2534: route getDisplayMedia through in-app picker on Wayland (f38f28e), closes #2534</li>
+          <li>deps: bump qs and ws in docs-site to resolve security alerts (#2573)</li>
+          <li>logging: down-level pre-login auth-noise from renderer (#2564) (8de3b2d), closes #2560</li>
+          <li>logging: run renderer log fields through full PII sanitizer (#2562) (bff6d22), closes #2560</li>
+          <li>macos: use 256x256 source for the dock icon (#2563) (8f96c66), closes #2560</li>
+          <li>preload: serialize object-shaped unhandled rejections (#2561) (6720768), closes #2560</li>
+          <li>config: remove six deprecated config keys (#2567)</li>
+          <li>add vylen linux install/remove instruction (#2559)</li>
+          <li>documentation cleanup and HA discovery docs (#2575)</li>
+          <li>update camera topic and MQTT status to shipped (#2585)</li>
+          <li>deps-dev: bump electron from 41.6.1 to 41.7.1 (#2583)</li>
+          <li>deps-dev: bump qs from 6.14.2 to 6.15.2 (#2568)</li>
+          <li>deps-dev: bump tmp from 0.2.5 to 0.2.6 (#2584)</li>
+          <li>deps: bump @homebridge/dbus-native in the minor-and-patch group (#2574)</li>
+          <li>remove shipped mqtt-microphone-state-research doc (#2581)</li>
+          <li>remove simili-bot trial files (#2586)</li>
+          <li>update CLAUDE.md for ready → release ready label rename (#2576)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.10.0" date="2026-05-19">
       <description>
         <ul>
