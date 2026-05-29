@@ -59,10 +59,18 @@ jobs:
         run: npm ci
 
       - name: Install Electron binary
-        # Electron 42+ no longer downloads its binary during postinstall (lazy
-        # on first run), so Playwright's electron.launch cannot find path.txt.
-        # Force the download for whatever Electron version is installed.
-        run: node node_modules/electron/install.js
+        # Electron's postinstall does not reliably leave a usable binary in CI
+        # (Playwright resolves it via node_modules/electron/path.txt). Force a
+        # clean install and fail loudly if path.txt is still missing.
+        run: |
+          rm -rf node_modules/electron/dist node_modules/electron/path.txt
+          node node_modules/electron/install.js
+          if [ ! -f node_modules/electron/path.txt ]; then
+            echo "::error::Electron binary did not install (no path.txt)"
+            ls -la node_modules/electron/ || true
+            exit 1
+          fi
+          echo "Electron path.txt: $(cat node_modules/electron/path.txt)"
 
       - name: Run unit tests
         run: npm run test:unit
