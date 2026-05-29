@@ -59,18 +59,22 @@ jobs:
         run: npm ci
 
       - name: Install Electron binary
-        # Electron's postinstall does not reliably leave a usable binary in CI
-        # (Playwright resolves it via node_modules/electron/path.txt). Force a
-        # clean install and fail loudly if path.txt is still missing.
+        # Electron's postinstall is being skipped in CI (electron/install.js
+        # exits before writing path.txt, which Playwright needs). Dump the
+        # electron-related env to find the cause, neutralise any skip flag,
+        # force a clean install, and assert path.txt exists.
         run: |
+          echo "=== electron-related env ==="
+          env | grep -iE 'electron' || echo "(none)"
+          unset ELECTRON_SKIP_BINARY_DOWNLOAD
           rm -rf node_modules/electron/dist node_modules/electron/path.txt
           node node_modules/electron/install.js
           if [ ! -f node_modules/electron/path.txt ]; then
-            echo "::error::Electron binary did not install (no path.txt)"
-            ls -la node_modules/electron/ || true
+            echo "::error::Electron binary still not installed (no path.txt)"
+            ls -la node_modules/electron/ node_modules/electron/dist/ || true
             exit 1
           fi
-          echo "Electron path.txt: $(cat node_modules/electron/path.txt)"
+          echo "OK path.txt = $(cat node_modules/electron/path.txt)"
 
       - name: Run unit tests
         run: npm run test:unit
