@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.0...v2.11.1) (2026-05-29)
+
+
+### CI/CD
+
+* bump checkout to Node 24 and make e2e non-blocking for packaging ([#2595](https://github.com/IsmaelMartinez/teams-for-linux/issues/2595)) ([93b560d](https://github.com/IsmaelMartinez/teams-for-linux/commit/93b560d81ae487a1ea7dc138f6ed68a51ee244cd))
+
 ## [2.11.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.10.0...v2.11.0) (2026-05-27)
 
 
