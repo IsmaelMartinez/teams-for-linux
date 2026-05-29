@@ -58,6 +58,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Electron binary
+        # Electron's bundled extract-zip deterministically unpacks only one
+        # file from the (complete, checksum-verified) zip in the current CI
+        # image, leaving dist with no binary and no path.txt, which breaks
+        # electron.launch() in the e2e tests. Download via @electron/get as
+        # usual, then extract the cached zip with the system unzip — an
+        # independent extractor — and write path.txt ourselves.
+        env:
+          DEBUG: "@electron/get:*"
+        run: |
+          set -euo pipefail
+          rm -rf node_modules/electron/dist node_modules/electron/path.txt "$HOME/.cache/electron"
+          # Populate the (checksum-verified) zip in the cache. The bundled
+          # extraction fails here, so ignore its exit status.
+          force_no_cache=true node node_modules/electron/install.js || true
+          zip=$(find "$HOME/.cache/electron" -name 'electron-*.zip' | head -1)
+          if [ -z "$zip" ]; then
+            echo "::error::Electron zip was not downloaded"
+            exit 1
+          fi
+          echo "Extracting $(stat -c%s "$zip") bytes from $zip"
+          rm -rf node_modules/electron/dist
+          mkdir -p node_modules/electron/dist
+          unzip -q -o "$zip" -d node_modules/electron/dist
+          chmod +x node_modules/electron/dist/electron
+          printf electron > node_modules/electron/path.txt
+          if [ ! -x node_modules/electron/dist/electron ]; then
+            echo "::error::Electron binary missing after unzip"
+            ls -laR node_modules/electron/dist | head -40
+            exit 1
+          fi
+          echo "OK: electron binary installed ($(stat -c%s node_modules/electron/dist/electron) bytes)"
+
       - name: Run unit tests
         run: npm run test:unit
 
