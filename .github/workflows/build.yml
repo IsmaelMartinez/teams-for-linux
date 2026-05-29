@@ -60,19 +60,38 @@ jobs:
 
       - name: Install Electron binary
         # In CI the extracted Electron dist ends up with only locales/ (no
-        # binary, no path.txt), which points at a stale/partial cached artifact.
-        # Clear the @electron/get cache and force a fresh, uncached download.
+        # binary, no path.txt). The zip downloads and passes @electron/get's
+        # checksum, yet extract-zip only unpacks part of it. Retry the
+        # force-download + extract a few times and verify the real binary
+        # (not just path.txt) lands before continuing. The diagnostics below
+        # tell us whether the cached zip is complete and how install.js exits.
         env:
           DEBUG: "@electron/get:*"
         run: |
-          rm -rf node_modules/electron/dist node_modules/electron/path.txt "$HOME/.cache/electron"
-          force_no_cache=true node node_modules/electron/install.js
-          if [ ! -f node_modules/electron/path.txt ]; then
-            echo "::error::Electron binary still not installed (no path.txt)"
-            ls -laR node_modules/electron/dist || true
-            exit 1
-          fi
-          echo "OK path.txt = $(cat node_modules/electron/path.txt)"
+          bin=node_modules/electron/dist/electron
+          for attempt in 1 2 3; do
+            echo "::group::Electron install attempt $attempt"
+            rm -rf node_modules/electron/dist node_modules/electron/path.txt "$HOME/.cache/electron"
+            ec=0
+            force_no_cache=true node node_modules/electron/install.js || ec=$?
+            echo "install.js exit=$ec"
+            zip=$(find "$HOME/.cache/electron" -name '*.zip' 2>/dev/null | head -1)
+            if [ -n "$zip" ]; then
+              echo "cached zip: $(ls -l "$zip" | awk '{print $5}') bytes -> $zip"
+              echo "zip entry count: $(unzip -l "$zip" 2>/dev/null | tail -1)"
+            else
+              echo "no cached zip found"
+            fi
+            echo "dist tree:"; ls -laR node_modules/electron/dist 2>/dev/null | head -40
+            echo "::endgroup::"
+            if [ -f node_modules/electron/path.txt ] && [ -x "$bin" ]; then
+              echo "OK path.txt = $(cat node_modules/electron/path.txt); binary present"
+              exit 0
+            fi
+            echo "::warning::Electron binary not fully installed on attempt $attempt"
+          done
+          echo "::error::Electron binary still not installed after 3 attempts"
+          exit 1
 
       - name: Run unit tests
         run: npm run test:unit
