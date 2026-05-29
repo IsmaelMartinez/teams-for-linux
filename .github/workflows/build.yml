@@ -58,6 +58,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Electron binary
+        # Electron 42+ no longer downloads its binary during postinstall (lazy
+        # on first run), so Playwright's electron.launch cannot find path.txt.
+        # Force the download for whatever Electron version is installed.
+        run: node node_modules/electron/install.js
+
       - name: Run unit tests
         run: npm run test:unit
 
