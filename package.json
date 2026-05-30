@@ -98,6 +98,9 @@
       "executableName": "teams-for-linux",
       "synopsis": "Teams for Linux",
       "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
+      "executableArgs": [
+        "--ozone-platform=x11"
+      ],
       "desktop": {
         "entry": {
           "Name": "Teams for Linux",
@@ -139,6 +142,9 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core22",
+      "executableArgs": [
+        "--ozone-platform=x11"
+      ],
       "plugs": [
         "default",
         "audio-record",
