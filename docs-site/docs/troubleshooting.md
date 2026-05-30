@@ -353,7 +353,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux currently launches with `--ozone-platform=x11` by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your `.desktop` file with `--ozone-platform=wayland`. (A switch to `--ozone-platform=auto` is queued via [PR #2506](https://github.com/IsmaelMartinez/teams-for-linux/pull/2506).)
+Teams for Linux currently launches with --ozone-platform=x11 by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your .desktop file with --ozone-platform=wayland.
 :::
 
 #### Issue: Blank or black window on Wayland
