@@ -38,6 +38,10 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Idea Stage
 
+- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — make `app/config/index.js` the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
+  - Found confirmed config drift (stale `msTeamsProtocols` default; undocumented `mqtt.homeAssistant.*` and `auth.webauthn.debug`); 76 options hand-mirrored in a 924-line reference with no codegen link
+  - Phased: fix drift (P0) → generate config reference + `config-schema.json` (P1) → interactive config explorer (P2) → schema `applyMode`/nested metadata (P3a) → in-app settings window (P3b) → schema-driven validation (P4)
+
 - **[Custom Stickers — External Sources](custom-stickers-online-import-research.md)** — follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
   - Three realistic paths ranked by simplicity: URL paste (shipped in v1), Telegram sticker pack import (next phase), AI generation via a user-configured backend such as a local Ollama image-gen session (more futuristic)
   - Telegram path: HTML scrape default, Bot API as opt-in fallback, static `.webp` only for v1
