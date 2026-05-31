@@ -151,7 +151,7 @@ The entrypoint handles these automatically:
 | Shared memory | `--disable-dev-shm-usage`, `shm_size: 2gb` |
 | No namespaces | `--no-sandbox` |
 | Wayland detection | `XDG_SESSION_TYPE` set per display server |
-| Ozone override | AppImage ships `--ozone-platform=x11`; Wayland script overrides to `=wayland` |
+| Ozone override | AppImage ships no `--ozone-platform` default; Wayland script forces `=wayland`, X11/XWayland scripts launch with no flag and let Chromium pick |
 
 **X11** -- high confidence, mirrors CI exactly (`xvfb-run` + Electron).
 **XWayland** -- high confidence, app sees X11 through Sway's XWayland bridge.
