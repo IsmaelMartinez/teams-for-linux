@@ -51,14 +51,18 @@ echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
     APP_LOG="/tmp/app.log"
+    # Force X11 so the app runs through XWayland. Under Electron 42 (Chromium 140+)
+    # the --ozone-platform-hint=auto default picks native Wayland when a Wayland
+    # socket is present, so an explicit --ozone-platform=x11 is required here.
+    XWAYLAND_APP_CMD="${APP_CMD} --ozone-platform=x11"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
         echo "[XWayland] Auto-launching app (X11 client via XWayland, logs: tail -f ${APP_LOG})..."
-        bash -c "$APP_CMD > $APP_LOG 2>&1" &
+        bash -c "$XWAYLAND_APP_CMD > $APP_LOG 2>&1" &
     else
         echo "[XWayland] Launch app (runs as X11 client via XWayland):"
-        echo "      $APP_CMD"
+        echo "      $XWAYLAND_APP_CMD"
         echo ""
-        echo "  Do NOT add --ozone-platform=wayland (app should use XWayland)."
+        echo "  Keep --ozone-platform=x11 so the app uses XWayland rather than native Wayland."
         echo "  Or launch from the terminal inside the VNC session."
     fi
 fi

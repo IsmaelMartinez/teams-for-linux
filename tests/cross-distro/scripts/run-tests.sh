@@ -209,6 +209,12 @@ if [[ "$MODE" == "login" ]]; then
 
     if [[ "${DISPLAY_SERVER}" == "wayland" ]]; then
         ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=wayland"
+    elif [[ "${DISPLAY_SERVER}" == "xwayland" ]]; then
+        # Electron 42 (Chromium 140+) defaults --ozone-platform-hint to auto, which
+        # selects native Wayland whenever a Wayland socket is present. Force X11 so
+        # the XWayland compatibility path is actually exercised instead of silently
+        # running as a native Wayland client.
+        ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=x11"
     fi
 
     echo ""

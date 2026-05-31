@@ -77,9 +77,11 @@ export MESA_GL_VERSION_OVERRIDE=3.3
 
 # Set XDG_SESSION_TYPE so the app's Wayland detection (commandLine.js) triggers.
 # The AppImage no longer bakes in an --ozone-platform default; Chromium picks the
-# backend itself per session. For Wayland testing, start-wayland.sh forces native
-# Wayland with --ozone-platform=wayland. For XWayland testing, the app launches
-# without an explicit ozone flag and Chromium chooses X11/XWayland on its own.
+# backend itself per session. For Wayland testing, the app is forced to native
+# Wayland with --ozone-platform=wayland. For XWayland testing, the app is forced
+# to X11 with --ozone-platform=x11 -- under Electron 42 (Chromium 140+) the
+# --ozone-platform-hint=auto default would otherwise pick native Wayland whenever
+# a Wayland socket is present, bypassing the XWayland path entirely.
 if [[ "$DISPLAY_SERVER" == "wayland" ]] || [[ "$DISPLAY_SERVER" == "xwayland" ]]; then
     export XDG_SESSION_TYPE=wayland
 else
