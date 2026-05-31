@@ -1,6 +1,7 @@
 #!/bin/bash
 # Start Wayland environment: Sway (headless) + wayvnc + noVNC
-# The app runs with native Wayland (--ozone-platform=wayland)
+# The app launches with no --ozone-platform flag (matching the shipped default);
+# on this pure-Wayland session Chromium auto-selects the native Wayland backend.
 set -e
 
 WIDTH=$(echo "$SCREEN_RESOLUTION" | cut -dx -f1)
@@ -47,14 +48,13 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
-    WAYLAND_APP_CMD="${APP_CMD} --enable-features=UseOzonePlatform --ozone-platform=wayland"
     APP_LOG="/tmp/app.log"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
-        echo "[Wayland] Auto-launching app with native Wayland (logs: tail -f ${APP_LOG})..."
-        bash -c "$WAYLAND_APP_CMD > $APP_LOG 2>&1" &
+        echo "[Wayland] Auto-launching app (no ozone flag; Chromium auto-selects Wayland, logs: tail -f ${APP_LOG})..."
+        bash -c "$APP_CMD > $APP_LOG 2>&1" &
     else
-        echo "[Wayland] Launch app with native Wayland:"
-        echo "      $WAYLAND_APP_CMD"
+        echo "[Wayland] Launch app (no ozone flag; Chromium auto-selects native Wayland):"
+        echo "      $APP_CMD"
         echo ""
         echo "  Or launch from the foot terminal inside the VNC session."
     fi

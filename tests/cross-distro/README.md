@@ -92,14 +92,14 @@ APP_FLAGS="--logConfig.transports.console.level=debug" docker compose up --build
 With `--no-launch`, start the app from the terminal inside VNC:
 
 ```bash
-# X11 / XWayland
+# All scenarios: launch with no ozone flag (matches the shipped default).
+# Chromium auto-selects the backend per session.
 /home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
     --no-sandbox --disable-gpu --disable-dev-shm-usage
 
-# Wayland (native)
-/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
-    --no-sandbox --disable-gpu --disable-dev-shm-usage \
-    --enable-features=UseOzonePlatform --ozone-platform=wayland
+# To force a specific backend manually, append one of:
+#   --ozone-platform=x11        (force X11 / XWayland)
+#   --ozone-platform=wayland    (force native Wayland)
 ```
 
 ### Apple Silicon (ARM64 Macs)
@@ -151,7 +151,7 @@ The entrypoint handles these automatically:
 | Shared memory | `--disable-dev-shm-usage`, `shm_size: 2gb` |
 | No namespaces | `--no-sandbox` |
 | Wayland detection | `XDG_SESSION_TYPE` set per display server |
-| Ozone override | AppImage ships no `--ozone-platform` default; the Wayland scenario forces `=wayland` and the XWayland scenario forces `=x11` (otherwise Electron 42's `--ozone-platform-hint=auto` picks native Wayland), while the X11 scenario launches with no flag and lets Chromium pick |
+| Ozone override | No scenario passes an `--ozone-platform` flag; each launches the app exactly as shipped and lets Chromium auto-select per session (X11 on X11, native Wayland on Wayland, and native Wayland on a Wayland session even when XWayland is available) |
 
 **X11** -- high confidence, mirrors CI exactly (`xvfb-run` + Electron).
 **XWayland** -- high confidence, app sees X11 through Sway's XWayland bridge.
