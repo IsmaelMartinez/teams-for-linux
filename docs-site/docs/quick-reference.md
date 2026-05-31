@@ -37,7 +37,7 @@ Common options and what they control. Names link to the full reference for curre
 
 | Option | Purpose |
 |--------|---------|
-| `disableGpu` | Disable GPU acceleration (auto-enabled on Wayland; the main escape hatch for blank-window and rendering issues) |
+| `disableGpu` | Turn GPU/hardware acceleration off. On Wayland the app already disables the GPU by default, so set this to `false` to force it back on; the main lever for blank-window and rendering issues |
 | `notificationMethod` | Choose how notifications are delivered: `web`, `electron`, or `custom` |
 | `closeAppOnCross` | Quit the app on window close instead of minimising to tray |
 | `trayIconEnabled` | Show or hide the system tray icon |
