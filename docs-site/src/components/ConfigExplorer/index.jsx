@@ -159,6 +159,9 @@ export default function ConfigExplorer() {
             <div className={styles.editors}>
               {selectedNames.map((name) => {
                 const opt = OPTIONS.find((o) => o.name === name);
+                if (!opt) {
+                  return null;
+                }
                 const val = selected[name];
                 return (
                   <label key={name} className={styles.editorRow}>
