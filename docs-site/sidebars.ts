@@ -25,6 +25,7 @@ const sidebars: SidebarsConfig = {
         'uninstall',
         'configuration',
         'configuration-generated',
+        'configuration-explorer',
         'multiple-instances',
         'intune-sso',
       ],
