@@ -32,6 +32,7 @@
     "start:dev": "electron ./app --trace-warnings --no-sandbox",
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "generate-ipc-docs": "node scripts/generateIpcDocs.js",
+    "generate-config-docs": "node scripts/generateConfigDocs.js",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",

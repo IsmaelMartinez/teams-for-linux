@@ -38,6 +38,15 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Check config docs are in sync
+        run: |
+          npm run generate-config-docs
+          if ! git diff --quiet -- docs-site/docs/configuration-generated.md docs-site/static/config-schema.json; then
+            echo "::error::Generated config docs are out of sync with app/config/options.js. Run 'npm run generate-config-docs' and commit the result."
+            git diff -- docs-site/docs/configuration-generated.md docs-site/static/config-schema.json
+            exit 1
+          fi
+
       - name: Audit dependencies
         run: npm audit --audit-level=critical
 
