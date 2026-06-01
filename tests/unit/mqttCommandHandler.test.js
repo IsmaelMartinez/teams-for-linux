@@ -23,105 +23,69 @@ function createClient(overrides = {}) {
 	});
 }
 
+/** Create a client, fire a command, and return the emitted command object (or null). */
+function fireAndCapture(payload) {
+	const client = createClient();
+	let emitted = null;
+	client.on('command', (cmd) => { emitted = cmd; });
+	client.handleCommand(JSON.stringify(payload));
+	return emitted;
+}
+
 describe('MQTT handleCommand - valid commands', () => {
 	it('emits command event for toggle-mute', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-mute' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-mute' });
 		assert.ok(emitted, 'Should have emitted a command event');
 		assert.strictEqual(emitted.action, 'toggle-mute');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
 	});
 
 	it('emits command event for toggle-video', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-video' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-video' });
 		assert.strictEqual(emitted.action, 'toggle-video');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+O');
 	});
 
 	it('emits command event for toggle-hand-raise', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-hand-raise' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-hand-raise' });
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+K');
 	});
 
 	it('emits command event for get-calendar (non-shortcut action)', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'get-calendar' }));
-
+		const emitted = fireAndCapture({ action: 'get-calendar' });
 		assert.ok(emitted);
 		assert.strictEqual(emitted.action, 'get-calendar');
 		assert.strictEqual(emitted.shortcut, undefined);
 	});
 
 	it('preserves extra fields from command payload', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-mute', requestId: '123' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-mute', requestId: '123' });
 		assert.strictEqual(emitted.requestId, '123');
 	});
 
 	it('emits command event for mute', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'mute' }));
-
+		const emitted = fireAndCapture({ action: 'mute' });
 		assert.ok(emitted, 'Should have emitted a command event');
 		assert.strictEqual(emitted.action, 'mute');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
 	});
 
 	it('emits command event for unmute', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'unmute' }));
-
+		const emitted = fireAndCapture({ action: 'unmute' });
 		assert.ok(emitted, 'Should have emitted a command event');
 		assert.strictEqual(emitted.action, 'unmute');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
 	});
 
 	it('preserves force flag in mute command', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'mute', force: true }));
-
+		const emitted = fireAndCapture({ action: 'mute', force: true });
 		assert.ok(emitted);
 		assert.strictEqual(emitted.action, 'mute');
 		assert.strictEqual(emitted.force, true);
 	});
 
 	it('preserves force flag in unmute command', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'unmute', force: true }));
-
+		const emitted = fireAndCapture({ action: 'unmute', force: true });
 		assert.ok(emitted);
 		assert.strictEqual(emitted.action, 'unmute');
 		assert.strictEqual(emitted.force, true);

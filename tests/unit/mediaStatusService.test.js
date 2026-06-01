@@ -15,6 +15,28 @@ require.cache[require.resolve('electron')] = {
 
 const MQTTMediaStatusService = require('../../app/mqtt/mediaStatusService');
 
+// ---- Test helpers -----------------------------------------------------------
+
+function createService(mqttClient, mqttOverrides = {}) {
+	const service = new MQTTMediaStatusService(mqttClient, {
+		mqtt: { topicPrefix: 'teams', ...mqttOverrides },
+	});
+	service.initialize();
+	return service;
+}
+
+async function flush() {
+	await new Promise((r) => setImmediate(r));
+}
+
+function assertPublished(published, topic, payload) {
+	const hit = published.find((p) => p.topic === topic);
+	assert.ok(hit, `expected publish to ${topic}`);
+	assert.strictEqual(hit.payload, payload);
+}
+
+// -----------------------------------------------------------------------------
+
 describe('MQTTMediaStatusService', () => {
 	let published;
 	let mqttClient;
@@ -32,209 +54,139 @@ describe('MQTTMediaStatusService', () => {
 
 	describe('Default topic names (backward compatibility)', () => {
 		it('publishes true to in-call topic on teams-call-connected', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockApp.emit('teams-call-connected');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/in-call');
-			assert.ok(hit, 'expected publish to teams/in-call');
-			assert.strictEqual(hit.payload, 'true');
-			assert.deepStrictEqual(hit.opts, { retain: true });
+			await flush();
+			assertPublished(published, 'teams/in-call', 'true');
+			assert.deepStrictEqual(published.find((p) => p.topic === 'teams/in-call').opts, { retain: true });
 		});
 
 		it('publishes false to in-call topic on teams-call-disconnected', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockApp.emit('teams-call-disconnected');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/in-call');
-			assert.ok(hit, 'expected publish to teams/in-call');
-			assert.strictEqual(hit.payload, 'false');
-			assert.deepStrictEqual(hit.opts, { retain: true });
+			await flush();
+			assertPublished(published, 'teams/in-call', 'false');
 		});
 	});
 
 	describe('Configurable topic names', () => {
 		it('uses custom mediaTopics configuration for inCall', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, {
-				mqtt: {
-					topicPrefix: 'teams',
-					mediaTopics: { inCall: 'custom-call' },
-				},
-			});
-			service.initialize();
+			createService(mqttClient, { mediaTopics: { inCall: 'custom-call' } });
 			mockApp.emit('teams-call-connected');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/custom-call');
-			assert.ok(hit, 'expected publish to teams/custom-call with custom topic name');
-			assert.strictEqual(hit.payload, 'true');
+			await flush();
+			assertPublished(published, 'teams/custom-call', 'true');
 		});
 
 		it('uses custom mediaTopics for camera', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, {
-				mqtt: {
-					topicPrefix: 'teams',
-					mediaTopics: { camera: 'webcam-status' },
-				},
-			});
-			service.initialize();
+			createService(mqttClient, { mediaTopics: { camera: 'webcam-status' } });
 			mockIpcMain.emit('camera-state-changed', undefined, true);
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/webcam-status');
-			assert.ok(hit, 'expected publish to teams/webcam-status');
-			assert.strictEqual(hit.payload, 'true');
+			await flush();
+			assertPublished(published, 'teams/webcam-status', 'true');
 		});
 
 		it('uses custom mediaTopics for microphone', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, {
-				mqtt: {
-					topicPrefix: 'teams',
-					mediaTopics: { microphone: 'mic-state' },
-				},
-			});
-			service.initialize();
+			createService(mqttClient, { mediaTopics: { microphone: 'mic-state' } });
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/mic-state');
-			assert.ok(hit, 'expected publish to teams/mic-state');
-			assert.strictEqual(hit.payload, 'muted');
+			await flush();
+			assertPublished(published, 'teams/mic-state', 'muted');
 		});
 
 		it('uses custom mediaTopics for screenSharing', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, {
-				mqtt: {
-					topicPrefix: 'teams',
-					mediaTopics: { screenSharing: 'sharing-screen' },
-				},
-			});
-			service.initialize();
+			createService(mqttClient, { mediaTopics: { screenSharing: 'sharing-screen' } });
 			mockIpcMain.emit('screen-sharing-started');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/sharing-screen');
-			assert.ok(hit, 'expected publish to teams/sharing-screen');
-			assert.strictEqual(hit.payload, 'true');
+			await flush();
+			assertPublished(published, 'teams/sharing-screen', 'true');
 		});
 	});
 
 	describe('Microphone state publishing', () => {
 		it('publishes microphone state changes', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockIpcMain.emit('microphone-state-changed', undefined, 'speaking');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/microphone');
-			assert.ok(hit, 'expected publish to teams/microphone');
-			assert.strictEqual(hit.payload, 'speaking');
+			await flush();
+			assertPublished(published, 'teams/microphone', 'speaking');
 		});
 
 		it('deduplicates identical microphone state messages', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const count1 = published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length;
-			assert.strictEqual(count1, 1, 'first emission should publish');
+			await flush();
+			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length, 1, 'first emission should publish');
 
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const count2 = published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length;
-			assert.strictEqual(count2, 1, 'duplicate state should not publish again');
+			await flush();
+			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length, 1, 'duplicate state should not publish again');
 		});
 	});
 
 	describe('Microphone control-state publishing', () => {
+		async function assertControlState(micState, expectedControlState) {
+			createService(mqttClient);
+			mockIpcMain.emit('microphone-state-changed', undefined, micState);
+			await flush();
+			assertPublished(published, 'teams/microphone/control', expectedControlState);
+		}
+
 		it('publishes control-state "muted" when microphone is muted', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
-			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/microphone/control');
-			assert.ok(hit, 'expected publish to teams/microphone/control');
-			assert.strictEqual(hit.payload, 'muted');
+			await assertControlState('muted', 'muted');
 		});
 
 		it('publishes control-state "unmuted" when microphone is speaking', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
-			mockIpcMain.emit('microphone-state-changed', undefined, 'speaking');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/microphone/control');
-			assert.ok(hit, 'expected publish to teams/microphone/control');
-			assert.strictEqual(hit.payload, 'unmuted');
+			await assertControlState('speaking', 'unmuted');
 		});
 
 		it('publishes control-state "unmuted" when microphone is silent', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
-			mockIpcMain.emit('microphone-state-changed', undefined, 'silent');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/microphone/control');
-			assert.ok(hit, 'expected publish to teams/microphone/control');
-			assert.strictEqual(hit.payload, 'unmuted');
+			await assertControlState('silent', 'unmuted');
 		});
 
 		it('publishes control-state "off" when microphone is off', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
-			mockIpcMain.emit('microphone-state-changed', undefined, 'off');
-			await new Promise((r) => setImmediate(r));
-			const hit = published.find((p) => p.topic === 'teams/microphone/control');
-			assert.ok(hit, 'expected publish to teams/microphone/control');
-			assert.strictEqual(hit.payload, 'off');
+			await assertControlState('off', 'off');
 		});
 
 		it('deduplicates identical control-state messages', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const count1 = published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length;
-			assert.strictEqual(count1, 1, 'first emission should publish');
+			await flush();
+			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length, 1, 'first emission should publish');
 
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
-			const count2 = published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length;
-			assert.strictEqual(count2, 1, 'duplicate control-state should not publish again');
+			await flush();
+			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length, 1, 'duplicate control-state should not publish again');
 		});
 
 		it('emits teams-microphone-control-changed event', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			let emittedControlState = null;
 			mockApp.on('teams-microphone-control-changed', (state) => {
 				emittedControlState = state;
 			});
 			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await new Promise((r) => setImmediate(r));
+			await flush();
 			assert.strictEqual(emittedControlState, 'muted', 'should emit control state event');
 		});
 	});
 
 	describe('Call disconnection publishes off state', () => {
 		it('publishes microphone off when call disconnects', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockIpcMain.emit('microphone-state-changed', undefined, 'speaking');
-			await new Promise((r) => setImmediate(r));
-			published = []; // clear previous publishes
+			await flush();
+			published = [];
 
 			mockApp.emit('teams-call-disconnected');
-			await new Promise((r) => setImmediate(r));
-			const micOff = published.find((p) => p.topic === 'teams/microphone' && p.payload === 'off');
-			assert.ok(micOff, 'should publish microphone off on call disconnect');
+			await flush();
+			assertPublished(published, 'teams/microphone', 'off');
 		});
 
 		it('publishes microphone control-state off when call disconnects', async () => {
-			const service = new MQTTMediaStatusService(mqttClient, { mqtt: { topicPrefix: 'teams' } });
-			service.initialize();
+			createService(mqttClient);
 			mockIpcMain.emit('microphone-state-changed', undefined, 'speaking');
-			await new Promise((r) => setImmediate(r));
-			published = []; // clear previous publishes
+			await flush();
+			published = [];
 
 			mockApp.emit('teams-call-disconnected');
-			await new Promise((r) => setImmediate(r));
-			const controlOff = published.find((p) => p.topic === 'teams/microphone/control' && p.payload === 'off');
-			assert.ok(controlOff, 'should publish microphone control-state off on call disconnect');
+			await flush();
+			assertPublished(published, 'teams/microphone/control', 'off');
 		});
 	});
 });
