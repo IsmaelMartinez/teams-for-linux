@@ -33,6 +33,9 @@ class HomeAssistantDiscovery {
 		this.#deviceName = config.mqtt.homeAssistant?.deviceName || 'Teams for Linux';
 		this.#mediaTopics = {
 			inCall: config.mqtt.mediaTopics?.inCall || 'in-call',
+			camera: config.mqtt.mediaTopics?.camera || 'camera',
+			microphone: config.mqtt.mediaTopics?.microphone || 'microphone',
+			incomingCall: config.mqtt.mediaTopics?.incomingCall || 'incoming-call',
 			screenSharing: config.mqtt.mediaTopics?.screenSharing || 'screen-sharing',
 		};
 		this.#commandTopic = config.mqtt.commandTopic
@@ -97,7 +100,7 @@ class HomeAssistantDiscovery {
 		return {
 			name: 'Teams Microphone',
 			unique_id: `${this.#deviceId}_microphone`,
-			state_topic: `${this.#topicPrefix}/microphone`,
+			state_topic: `${this.#topicPrefix}/${this.#mediaTopics.microphone}`,
 			icon: 'mdi:microphone',
 			availability: this.#getAvailability(),
 			device: this.#getDevice(),
@@ -134,12 +137,12 @@ class HomeAssistantDiscovery {
 			{
 				component: 'binary_sensor',
 				objectId: 'camera',
-				config: this.#buildBinarySensorConfig('Teams Camera', 'camera', 'camera', 'mdi:camera')
+				config: this.#buildBinarySensorConfig('Teams Camera', 'camera', this.#mediaTopics.camera, 'mdi:camera')
 			},
 			{
 				component: 'binary_sensor',
 				objectId: 'incoming_call',
-				config: this.#buildBinarySensorConfig('Teams Incoming Call', 'incoming_call', 'incoming-call', 'mdi:phone-ring')
+				config: this.#buildBinarySensorConfig('Teams Incoming Call', 'incoming_call', this.#mediaTopics.incomingCall, 'mdi:phone-ring')
 			},
 			{
 				component: 'button',

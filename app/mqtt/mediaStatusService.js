@@ -24,6 +24,7 @@ class MQTTMediaStatusService {
 		this.#topicPrefix = config.mqtt.topicPrefix;
 		this.#mediaTopics = {
 			inCall: config.mqtt.mediaTopics?.inCall || 'in-call',
+			incomingCall: config.mqtt.mediaTopics?.incomingCall || 'incoming-call',
 			camera: config.mqtt.mediaTopics?.camera || 'camera',
 			microphone: config.mqtt.mediaTopics?.microphone || 'microphone',
 			microphoneControl: config.mqtt.mediaTopics?.microphoneControl || 'microphone/control',
@@ -45,6 +46,10 @@ class MQTTMediaStatusService {
 		app.on('teams-call-connected', this.#handleCallConnected.bind(this));
 		app.on('teams-call-disconnected', this.#handleCallDisconnected.bind(this));
 
+		// Publish MQTT status when an incoming call starts or ends
+		app.on('teams-incoming-call-started', this.#handleIncomingCallStarted.bind(this));
+		app.on('teams-incoming-call-ended', this.#handleIncomingCallEnded.bind(this));
+
 		console.info('[MQTTMediaStatusService] Initialized');
 	}
 
@@ -52,6 +57,18 @@ class MQTTMediaStatusService {
 		const topic = `${this.#topicPrefix}/${this.#mediaTopics.inCall}`;
 		await this.#mqttClient.publish(topic, 'true', { retain: true });
 		console.debug('[MQTTMediaStatusService] Call connected, published to', topic);
+	}
+
+	async #handleIncomingCallStarted() {
+		const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCall}`;
+		await this.#mqttClient.publish(topic, 'true', { retain: true });
+		console.debug('[MQTTMediaStatusService] Incoming call started, published to', topic);
+	}
+
+	async #handleIncomingCallEnded() {
+		const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCall}`;
+		await this.#mqttClient.publish(topic, 'false', { retain: true });
+		console.debug('[MQTTMediaStatusService] Incoming call ended, published to', topic);
 	}
 
 	async #handleCallDisconnected() {
