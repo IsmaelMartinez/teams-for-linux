@@ -14,6 +14,8 @@
  * Discovery is published on every broker connect/reconnect so entities survive
  * broker restarts. Availability is controlled via {topicPrefix}/connected topic.
  */
+const { getMediaTopics } = require('./mediaTopics');
+
 class HomeAssistantDiscovery {
 	#mqttClient;
 	#mqttConfig;
@@ -31,13 +33,7 @@ class HomeAssistantDiscovery {
 		this.#discoveryPrefix = config.mqtt.homeAssistant?.discoveryPrefix || 'homeassistant';
 		this.#deviceId = config.mqtt.clientId;
 		this.#deviceName = config.mqtt.homeAssistant?.deviceName || 'Teams for Linux';
-		this.#mediaTopics = {
-			inCall: config.mqtt.mediaTopics?.inCall || 'in-call',
-			camera: config.mqtt.mediaTopics?.camera || 'camera',
-			microphone: config.mqtt.mediaTopics?.microphone || 'microphone',
-			incomingCall: config.mqtt.mediaTopics?.incomingCall || 'incoming-call',
-			screenSharing: config.mqtt.mediaTopics?.screenSharing || 'screen-sharing',
-		};
+		this.#mediaTopics = getMediaTopics(config.mqtt);
 		this.#commandTopic = config.mqtt.commandTopic
 			? `${config.mqtt.topicPrefix}/${config.mqtt.commandTopic}`
 			: null;

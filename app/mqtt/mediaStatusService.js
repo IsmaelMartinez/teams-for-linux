@@ -1,4 +1,5 @@
 const { app, ipcMain } = require('electron');
+const { getMediaTopics } = require('./mediaTopics');
 
 /**
  * MQTT Media Status Service
@@ -22,14 +23,7 @@ class MQTTMediaStatusService {
 	constructor(mqttClient, config) {
 		this.#mqttClient = mqttClient;
 		this.#topicPrefix = config.mqtt.topicPrefix;
-		this.#mediaTopics = {
-			inCall: config.mqtt.mediaTopics?.inCall || 'in-call',
-			incomingCall: config.mqtt.mediaTopics?.incomingCall || 'incoming-call',
-			camera: config.mqtt.mediaTopics?.camera || 'camera',
-			microphone: config.mqtt.mediaTopics?.microphone || 'microphone',
-			microphoneControl: config.mqtt.mediaTopics?.microphoneControl || 'microphone/control',
-			screenSharing: config.mqtt.mediaTopics?.screenSharing || 'screen-sharing',
-		};
+		this.#mediaTopics = getMediaTopics(config.mqtt);
 	}
 
 	initialize() {
