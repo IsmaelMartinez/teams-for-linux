@@ -40,6 +40,13 @@ async function assertDeduplicates(mqttClient, published, topic) {
 	assert.strictEqual(published.filter((p) => p.topic === topic && p.payload === 'muted').length, 1, 'duplicate should not publish again');
 }
 
+async function assertControlState(mqttClient, published, micState, expectedControlState) {
+	createService(mqttClient);
+	mockIpcMain.emit('microphone-state-changed', undefined, micState);
+	await flush();
+	assertPublished(published, 'teams/microphone/control', expectedControlState);
+}
+
 function assertPublished(published, topic, payload, opts) {
 	const hit = published.find((p) => p.topic === topic);
 	assert.ok(hit, `expected publish to ${topic}`);
@@ -126,27 +133,20 @@ describe('MQTTMediaStatusService', () => {
 	});
 
 	describe('Microphone control-state publishing', () => {
-		async function assertControlState(micState, expectedControlState) {
-			createService(mqttClient);
-			mockIpcMain.emit('microphone-state-changed', undefined, micState);
-			await flush();
-			assertPublished(published, 'teams/microphone/control', expectedControlState);
-		}
-
 		it('publishes control-state "muted" when microphone is muted', async () => {
-			await assertControlState('muted', 'muted');
+			await assertControlState(mqttClient, published, 'muted', 'muted');
 		});
 
 		it('publishes control-state "unmuted" when microphone is speaking', async () => {
-			await assertControlState('speaking', 'unmuted');
+			await assertControlState(mqttClient, published, 'speaking', 'unmuted');
 		});
 
 		it('publishes control-state "unmuted" when microphone is silent', async () => {
-			await assertControlState('silent', 'unmuted');
+			await assertControlState(mqttClient, published, 'silent', 'unmuted');
 		});
 
 		it('publishes control-state "off" when microphone is off', async () => {
-			await assertControlState('off', 'off');
+			await assertControlState(mqttClient, published, 'off', 'off');
 		});
 
 		it('deduplicates identical control-state messages', async () => {
