@@ -809,8 +809,10 @@ function onBeforeRequestHandler(details, callback) {
     // cancels the navigation (ERR_BLOCKED_BY_CLIENT) and leaves a blank page,
     // e.g. the guest / number-matching MFA sign-in where the main frame
     // navigates to the authorize URL right after an about:blank popup bumped
-    // the counter (#2591). Consume the counter and let the page load.
-    aboutBlankRequestCount -= 1;
+    // the counter (#2591). A new top-level navigation also makes any pending
+    // interceptions stale, so reset the counter to 0 rather than decrementing
+    // it: that way a leftover count cannot divert the new page's sub-resources.
+    aboutBlankRequestCount = 0;
     callback({});
   } else {
     // Open request in hidden child window for authentication
