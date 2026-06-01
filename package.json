@@ -122,6 +122,10 @@
         "releaseNotesFile": "release-info.json"
       }
     },
+    "deb": {
+      "afterInstall": "build/1password-postinstall.sh",
+      "afterRemove": "build/1password-preremove.sh"
+    },
     "rpm": {
       "depends": [
         "gtk3",
@@ -135,7 +139,9 @@
       ],
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
-        "--rpm-digest=sha256"
+        "--rpm-digest=sha256",
+        "--after-install=build/1password-postinstall.sh",
+        "--before-remove=build/1password-preremove.sh"
       ]
     },
     "snap": {
