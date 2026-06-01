@@ -2,6 +2,10 @@
 
 This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory.
 
+:::note
+For a complete, always-up-to-date list of every option generated directly from the code, see the [Configuration Options Reference](configuration-generated.md). This guide adds examples, file locations, and platform notes on top of that reference.
+:::
+
 {/* toc */}
 
 ## Table of Contents
