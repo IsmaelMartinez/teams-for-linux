@@ -803,6 +803,15 @@ function onBeforeRequestHandler(details, callback) {
   else if (aboutBlankRequestCount < 1) {
     // Proceed normally
     callback({});
+  } else if (details.resourceType === "mainFrame") {
+    // A top-level navigation is never the about:blank popup's own request, so
+    // it must not be diverted into the hidden child window below. Diverting it
+    // cancels the navigation (ERR_BLOCKED_BY_CLIENT) and leaves a blank page,
+    // e.g. the guest / number-matching MFA sign-in where the main frame
+    // navigates to the authorize URL right after an about:blank popup bumped
+    // the counter (#2591). Consume the counter and let the page load.
+    aboutBlankRequestCount -= 1;
+    callback({});
   } else {
     // Open request in hidden child window for authentication
     const child = new BrowserWindow({ parent: window, show: false });
