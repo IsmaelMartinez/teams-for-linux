@@ -78,6 +78,54 @@ describe('MQTT handleCommand - valid commands', () => {
 
 		assert.strictEqual(emitted.requestId, '123');
 	});
+
+	it('emits command event for mute', () => {
+		const client = createClient();
+		let emitted = null;
+		client.on('command', (cmd) => { emitted = cmd; });
+
+		client.handleCommand(JSON.stringify({ action: 'mute' }));
+
+		assert.ok(emitted, 'Should have emitted a command event');
+		assert.strictEqual(emitted.action, 'mute');
+		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
+	});
+
+	it('emits command event for unmute', () => {
+		const client = createClient();
+		let emitted = null;
+		client.on('command', (cmd) => { emitted = cmd; });
+
+		client.handleCommand(JSON.stringify({ action: 'unmute' }));
+
+		assert.ok(emitted, 'Should have emitted a command event');
+		assert.strictEqual(emitted.action, 'unmute');
+		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
+	});
+
+	it('preserves force flag in mute command', () => {
+		const client = createClient();
+		let emitted = null;
+		client.on('command', (cmd) => { emitted = cmd; });
+
+		client.handleCommand(JSON.stringify({ action: 'mute', force: true }));
+
+		assert.ok(emitted);
+		assert.strictEqual(emitted.action, 'mute');
+		assert.strictEqual(emitted.force, true);
+	});
+
+	it('preserves force flag in unmute command', () => {
+		const client = createClient();
+		let emitted = null;
+		client.on('command', (cmd) => { emitted = cmd; });
+
+		client.handleCommand(JSON.stringify({ action: 'unmute', force: true }));
+
+		assert.ok(emitted);
+		assert.strictEqual(emitted.action, 'unmute');
+		assert.strictEqual(emitted.force, true);
+	});
 });
 
 describe('MQTT handleCommand - invalid commands', () => {
