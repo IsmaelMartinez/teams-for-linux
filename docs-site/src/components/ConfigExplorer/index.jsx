@@ -5,7 +5,12 @@ import styles from './styles.module.css';
 // Fed by the schema generated in Phase 1 (scripts/generateConfigDocs.js). The
 // explorer never hardcodes the option list, so it stays in sync with the code.
 const OPTIONS = schemaData.options;
-const TYPES = ['all', ...Array.from(new Set(OPTIONS.map((o) => o.type).filter(Boolean))).sort()];
+const TYPES = [
+  'all',
+  ...Array.from(new Set(OPTIONS.map((o) => o.type).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b),
+  ),
+];
 
 export default function ConfigExplorer() {
   const [query, setQuery] = useState('');
