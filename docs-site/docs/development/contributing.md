@@ -161,6 +161,43 @@ class ExampleModule {
 - Provide graceful degradation
 - Use `electron-log` for structured logging
 
+## Adding a Configuration Option
+
+Configuration options are declared in one place, the yargs `.options({})` block in `app/config/index.js`, where each option is an object carrying a `default`, a `describe` string, and a `type`. Adding one is a small, self-contained change that follows the shape of the options already there.
+
+### 1. Declare the option
+
+Add an entry to the `.options({})` block in `app/config/index.js`, following the existing convention:
+
+```javascript
+myFeatureEnabled: {
+  default: false,
+  describe: "Enable the my-feature behaviour.",
+  type: "boolean",
+},
+```
+
+Use the `type` that matches the value (`boolean`, `string`, `number`, or `object` for a nested group of settings). The `describe` text is user-facing, so write it as a one-line explanation of what the option does.
+
+### 2. (Optional) Share the default with other modules
+
+If the default needs to be read outside the config system — for example by a module or a unit test that should not initialise the full config — add it to `app/config/defaults.js` and reference it from `index.js`, the way `meetupJoinRegEx` already does.
+
+### 3. Read the option
+
+The parsed configuration object returned by `app/config/index.js` is passed through `AppConfiguration`. Read your option from that object where you need it, and treat the value as immutable after startup.
+
+### 4. Document the option
+
+The reference table in `docs-site/docs/configuration.md` is maintained by hand today, so a new option must be added to that table in the same change or the docs drift from the code. This manual documentation step is exactly what the planned config-schema generator (issue [#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597), Phase 1) is meant to automate later.
+
+### 5. Lint and test
+
+```bash
+npm run lint
+npm run test:e2e
+```
+
 ## Documentation
 
 ### Contributing to Documentation
