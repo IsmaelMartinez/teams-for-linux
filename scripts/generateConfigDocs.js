@@ -57,15 +57,16 @@ function renderDefaultCell(value) {
 }
 
 function renderDescriptionCell(text) {
-  // The description is rendered as prose (not inside a code span), so angle
-  // brackets in placeholder tokens like <userData> would be parsed as JSX by
-  // MDX and break the build. HTML-escape them, and escape pipes so the text
-  // stays inside one table cell.
+  // The description is rendered as prose (not inside a code span). HTML-encode
+  // the characters that would otherwise be misparsed: angle brackets in
+  // placeholder tokens like <userData> would be read as JSX by MDX, and a raw
+  // pipe would end the table cell. Escape the ampersand first so the entities
+  // below are not double-encoded.
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\|/g, "\\|");
+    .replace(/\|/g, "&#124;");
 }
 
 function generateMarkdown(schema) {

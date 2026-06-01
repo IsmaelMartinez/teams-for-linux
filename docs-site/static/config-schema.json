@@ -273,7 +273,7 @@
     },
     {
       "name": "emulateWinChromiumPlatform",
-      "type": null,
+      "type": "boolean",
       "default": false,
       "description": "Use windows platform information in chromium. This is helpful if MFA app does not support Linux."
     },

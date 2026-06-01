@@ -48,7 +48,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use |
 | `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations |
 | `electronCLIFlags` | `array` | `[]` | Electron CLI flags |
-| `emulateWinChromiumPlatform` |  | `false` | Use windows platform information in chromium. This is helpful if MFA app does not support Linux. |
+| `emulateWinChromiumPlatform` | `boolean` | `false` | Use windows platform information in chromium. This is helpful if MFA app does not support Linux. |
 | `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast |
 | `followSystemTheme` | `boolean` | `true` | Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes. |
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window. Default is true |

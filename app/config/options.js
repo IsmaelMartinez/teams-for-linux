@@ -267,6 +267,7 @@ module.exports = {
         default: false,
         describe:
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
+        type: "boolean",
       },
       enableIncomingCallToast: {
         default: false,
