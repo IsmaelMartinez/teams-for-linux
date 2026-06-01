@@ -1,0 +1,13 @@
+#!/bin/bash
+# Snap remove hook — clean up the 1Password custom browser entry on uninstall.
+#
+# Mirrors the logic in the install hook. Exits silently if the interface
+# is not connected or 1Password is not installed.
+
+ALLOWED_BROWSERS_FILE="/etc/1password/custom_allowed_browsers"
+
+if [ ! -f "$ALLOWED_BROWSERS_FILE" ] || ! [ -w "$ALLOWED_BROWSERS_FILE" ]; then
+  exit 0
+fi
+
+sed -i '/^teams-for-linux$/d' "$ALLOWED_BROWSERS_FILE"

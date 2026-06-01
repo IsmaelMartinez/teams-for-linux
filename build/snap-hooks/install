@@ -1,0 +1,35 @@
+#!/bin/bash
+# Snap install hook — register teams-for-linux with 1Password for Linux.
+#
+# This hook runs when the snap is installed or refreshed.
+# It requires the 'system-files' interface to be connected so that the
+# snap can write to /etc/1password/custom_allowed_browsers.
+#
+# The snap store must approve the interface before it auto-connects on
+# install. Users on locally installed (--dangerous) snaps can connect it
+# manually:
+#
+#   sudo snap connect teams-for-linux:etc-1password :system-files
+#
+# If the interface is not connected, this hook exits silently (snap hooks
+# must not fail on optional integration).
+
+ALLOWED_BROWSERS_FILE="/etc/1password/custom_allowed_browsers"
+
+if [ ! -f "$ALLOWED_BROWSERS_FILE" ]; then
+  # 1Password is not installed — nothing to do.
+  exit 0
+fi
+
+if ! [ -w "$ALLOWED_BROWSERS_FILE" ]; then
+  # system-files interface not connected — skip silently.
+  exit 0
+fi
+
+if ! grep -qx "teams-for-linux" "$ALLOWED_BROWSERS_FILE"; then
+  # Ensure a trailing newline exists before appending.
+  [ -s "$ALLOWED_BROWSERS_FILE" ] && \
+    tail -c1 "$ALLOWED_BROWSERS_FILE" | grep -qv $'\n' && \
+    echo "" >> "$ALLOWED_BROWSERS_FILE"
+  echo "teams-for-linux" >> "$ALLOWED_BROWSERS_FILE"
+fi

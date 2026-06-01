@@ -149,6 +149,7 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core22",
+      "hooks": "build/snap-hooks",
       "executableArgs": [
         "--ozone-platform=x11"
       ],
