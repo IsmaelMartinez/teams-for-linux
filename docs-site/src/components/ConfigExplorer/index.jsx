@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import schemaData from '@site/static/config-schema.json';
 import styles from './styles.module.css';
 
@@ -13,6 +13,16 @@ export default function ConfigExplorer() {
   // name -> chosen value (seeded from the option's default when first included)
   const [selected, setSelected] = useState({});
   const [copied, setCopied] = useState(false);
+
+  // Reset the "Copied!" label after a moment, clearing the timer if the
+  // component unmounts first so we never set state on an unmounted component.
+  useEffect(() => {
+    if (!copied) {
+      return undefined;
+    }
+    const id = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(id);
+  }, [copied]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,16 +57,25 @@ export default function ConfigExplorer() {
   }
 
   const selectedNames = Object.keys(selected);
-  const json = JSON.stringify(selected, null, 2);
+
+  // Coerce empty number inputs (kept as '' for typing UX) back to the option
+  // default, so the emitted JSON never has an invalid `"name": ""` for a number.
+  const configForOutput = useMemo(() => {
+    const out = {};
+    for (const name of Object.keys(selected)) {
+      const opt = OPTIONS.find((o) => o.name === name);
+      const val = selected[name];
+      out[name] = opt && opt.type === 'number' && val === '' ? opt.default : val;
+    }
+    return out;
+  }, [selected]);
+  const json = JSON.stringify(configForOutput, null, 2);
 
   function copy() {
     if (typeof navigator === 'undefined' || !navigator.clipboard) {
       return;
     }
-    navigator.clipboard.writeText(json).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    navigator.clipboard.writeText(json).then(() => setCopied(true));
   }
 
   return (
@@ -155,7 +174,7 @@ export default function ConfigExplorer() {
                     ) : opt.type === 'number' ? (
                       <input
                         type="number"
-                        value={val}
+                        value={val ?? ''}
                         onChange={(e) =>
                           setValue(name, e.target.value === '' ? '' : Number(e.target.value))
                         }
