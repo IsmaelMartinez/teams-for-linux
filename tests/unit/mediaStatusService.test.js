@@ -29,10 +29,24 @@ async function flush() {
 	await new Promise((r) => setImmediate(r));
 }
 
-function assertPublished(published, topic, payload) {
+async function assertDeduplicates(mqttClient, published, topic) {
+	createService(mqttClient);
+	mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
+	await flush();
+	assert.strictEqual(published.filter((p) => p.topic === topic && p.payload === 'muted').length, 1, 'first emission should publish');
+
+	mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
+	await flush();
+	assert.strictEqual(published.filter((p) => p.topic === topic && p.payload === 'muted').length, 1, 'duplicate should not publish again');
+}
+
+function assertPublished(published, topic, payload, opts) {
 	const hit = published.find((p) => p.topic === topic);
 	assert.ok(hit, `expected publish to ${topic}`);
 	assert.strictEqual(hit.payload, payload);
+	if (opts !== undefined) {
+		assert.deepStrictEqual(hit.opts, opts);
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -57,8 +71,7 @@ describe('MQTTMediaStatusService', () => {
 			createService(mqttClient);
 			mockApp.emit('teams-call-connected');
 			await flush();
-			assertPublished(published, 'teams/in-call', 'true');
-			assert.deepStrictEqual(published.find((p) => p.topic === 'teams/in-call').opts, { retain: true });
+			assertPublished(published, 'teams/in-call', 'true', { retain: true });
 		});
 
 		it('publishes false to in-call topic on teams-call-disconnected', async () => {
@@ -108,14 +121,7 @@ describe('MQTTMediaStatusService', () => {
 		});
 
 		it('deduplicates identical microphone state messages', async () => {
-			createService(mqttClient);
-			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await flush();
-			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length, 1, 'first emission should publish');
-
-			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await flush();
-			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone' && p.payload === 'muted').length, 1, 'duplicate state should not publish again');
+			await assertDeduplicates(mqttClient, published, 'teams/microphone');
 		});
 	});
 
@@ -144,14 +150,7 @@ describe('MQTTMediaStatusService', () => {
 		});
 
 		it('deduplicates identical control-state messages', async () => {
-			createService(mqttClient);
-			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await flush();
-			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length, 1, 'first emission should publish');
-
-			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
-			await flush();
-			assert.strictEqual(published.filter((p) => p.topic === 'teams/microphone/control' && p.payload === 'muted').length, 1, 'duplicate control-state should not publish again');
+			await assertDeduplicates(mqttClient, published, 'teams/microphone/control');
 		});
 
 		it('emits teams-microphone-control-changed event', async () => {

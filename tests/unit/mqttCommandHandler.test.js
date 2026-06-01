@@ -28,7 +28,8 @@ function fireAndCapture(payload) {
 	const client = createClient();
 	let emitted = null;
 	client.on('command', (cmd) => { emitted = cmd; });
-	client.handleCommand(JSON.stringify(payload));
+	const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
+	client.handleCommand(raw);
 	return emitted;
 }
 
@@ -94,78 +95,33 @@ describe('MQTT handleCommand - valid commands', () => {
 
 describe('MQTT handleCommand - invalid commands', () => {
 	it('rejects invalid JSON', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('not valid json{');
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture('not valid json{'), null);
 	});
 
 	it('rejects non-object JSON values', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('"just a string"');
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand('42');
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand('null');
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture('"just a string"'), null);
+		assert.strictEqual(fireAndCapture('42'), null);
+		assert.strictEqual(fireAndCapture('null'), null);
 	});
 
 	it('rejects command without action field', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ type: 'toggle-mute' }));
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ type: 'toggle-mute' }), null);
 	});
 
 	it('rejects command with non-string action', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ action: 123 }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: true }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: null }));
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ action: 123 }), null);
+		assert.strictEqual(fireAndCapture({ action: true }), null);
+		assert.strictEqual(fireAndCapture({ action: null }), null);
 	});
 
 	it('rejects actions not in the whitelist', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ action: 'delete-all-messages' }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: 'exec' }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: '' }));
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ action: 'delete-all-messages' }), null);
+		assert.strictEqual(fireAndCapture({ action: 'exec' }), null);
+		assert.strictEqual(fireAndCapture({ action: '' }), null);
 	});
 
 	it('rejects empty message', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('');
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture(''), null);
 	});
 });
 
