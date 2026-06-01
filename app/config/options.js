@@ -769,6 +769,13 @@ module.exports = {
             discoveryPrefix: "homeassistant",
             deviceName: "Teams for Linux",
           },
+          mediaTopics: {
+            inCall: "in-call",
+            camera: "camera",
+            microphone: "microphone",
+            microphoneControl: "microphone/control",
+            screenSharing: "screen-sharing",
+          },
         },
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
         type: "object",

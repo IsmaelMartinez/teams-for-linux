@@ -22,6 +22,7 @@ class HomeAssistantDiscovery {
 	#deviceId;
 	#deviceName;
 	#commandTopic;
+	#mediaTopics;
 
 	constructor(mqttClient, config) {
 		this.#mqttClient = mqttClient;
@@ -30,6 +31,10 @@ class HomeAssistantDiscovery {
 		this.#discoveryPrefix = config.mqtt.homeAssistant?.discoveryPrefix || 'homeassistant';
 		this.#deviceId = config.mqtt.clientId;
 		this.#deviceName = config.mqtt.homeAssistant?.deviceName || 'Teams for Linux';
+		this.#mediaTopics = {
+			inCall: config.mqtt.mediaTopics?.inCall || 'in-call',
+			screenSharing: config.mqtt.mediaTopics?.screenSharing || 'screen-sharing',
+		};
 		this.#commandTopic = config.mqtt.commandTopic
 			? `${config.mqtt.topicPrefix}/${config.mqtt.commandTopic}`
 			: null;
@@ -119,12 +124,12 @@ class HomeAssistantDiscovery {
 			{
 				component: 'binary_sensor',
 				objectId: 'in_call',
-				config: this.#buildBinarySensorConfig('Teams In Call', 'in_call', 'in-call', 'mdi:phone-in-talk')
+				config: this.#buildBinarySensorConfig('Teams In Call', 'in_call', this.#mediaTopics.inCall, 'mdi:phone-in-talk')
 			},
 			{
 				component: 'binary_sensor',
 				objectId: 'screen_sharing',
-				config: this.#buildBinarySensorConfig('Teams Screen Sharing', 'screen_sharing', 'screen-sharing', 'mdi:monitor-share')
+				config: this.#buildBinarySensorConfig('Teams Screen Sharing', 'screen_sharing', this.#mediaTopics.screenSharing, 'mdi:monitor-share')
 			},
 			{
 				component: 'binary_sensor',

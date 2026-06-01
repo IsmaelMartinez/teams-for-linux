@@ -24,6 +24,8 @@ class MQTTClient extends EventEmitter {
 		// Command handling configuration
 		this.actionShortcutMap = {
 			'toggle-mute': 'Ctrl+Shift+M',
+			'mute': 'Ctrl+Shift+M',
+			'unmute': 'Ctrl+Shift+M',
 			'toggle-video': 'Ctrl+Shift+O',
 			'toggle-hand-raise': 'Ctrl+Shift+K'
 		};
