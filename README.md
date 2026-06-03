@@ -30,7 +30,7 @@ _This sponsorship helps support the ongoing development of teams-for-linux._
 
 ### Package Repositories
 
-We have a dedicated Debian/DEB and RHEL/Fedora/RPM repo at https://teamsforlinux.de hosted with :heart: by [Nils Büchner](https://github.com/nbuechner). Please follow the installation instructions there.
+We have dedicated Debian/DEB and RHEL/Fedora/RPM repositories at https://teamsforlinux.de hosted with :heart: by [Nils Büchner](https://github.com/nbuechner). Please follow the installation instructions there.
 
 ### Distribution Packages
 
