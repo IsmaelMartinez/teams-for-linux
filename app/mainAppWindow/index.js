@@ -849,6 +849,32 @@ function isTeamsDomain(url) {
   }
 }
 
+// Microsoft Identity Platform login hostnames. When Teams opens a popup to
+// one of these it is requesting interactive re-authentication (e.g. the
+// "sign in again" banner). Kept separate from AUTH_DOMAINS because that
+// list includes broad domains used for cookie scoping; this narrower set
+// is only the endpoints that initiate an OAuth/OIDC interactive flow.
+const AUTH_LOGIN_DOMAINS = [
+  'login.microsoftonline.com',
+  'login.microsoft.com',
+  'login.live.com',
+];
+
+/**
+ * Returns true when the URL targets a Microsoft Identity Platform login page.
+ * Used to intercept re-auth popups that Teams opens from the "sign in again"
+ * banner so they complete inside the Electron app instead of opening an
+ * external browser window that Electron cannot observe.
+ */
+function isAuthLoginUrl(url) {
+  try {
+    const hostname = stripMcasSuffix(new URL(url).hostname);
+    return AUTH_LOGIN_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Strips report-only CSP headers for non-Teams domains (#2326).
  *
@@ -908,6 +934,16 @@ function onNewWindow(details) {
   ) {
     // Increment the counter for about:blank authentication flow
     aboutBlankRequestCount += 1;
+    return { action: "deny" };
+  } else if (isAuthLoginUrl(details.url)) {
+    // Teams is opening a Microsoft login popup (e.g. from the "sign in again"
+    // banner). Opening login.microsoftonline.com in an external browser
+    // completes auth there but Electron never receives the result, so the
+    // banner stays and clicking the link appears to do nothing.
+    // Trigger in-app recovery instead: clear stale auth state and reload
+    // Teams so the user gets a fresh interactive sign-in within the app.
+    console.info('[AUTH_RECOVERY] Login popup intercepted, triggering in-app recovery');
+    setImmediate(() => triggerAuthRecovery());
     return { action: "deny" };
   }
 
