@@ -90,6 +90,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `minimized` | `boolean` | `false` | Start the application minimized |
+| `minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when `closeAppOnCross` is true) |
 | `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
 | `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
 | `class` | `string` | `null` | Custom value for the WM_CLASS property |
