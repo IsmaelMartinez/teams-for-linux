@@ -342,6 +342,48 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
+// Auth-failure signatures from the renderer. MSAL logs InteractionRequired
+// when silent token refresh fails; the Teams auth worker can also die with an
+// uncaught "UPR: <reason>" error (observed with an empty reason from
+// /v2/worker/precompiled-web-worker-*.js) without ever logging
+// InteractionRequired, so match the uncaught-error form too.
+const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'Uncaught Error: UPR:'];
+// Only trust auth failure signals from Teams/Microsoft origins
+const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
+let authRecoveryTriggered = false;
+// Worker UPRs are transient during active calls (#2428); suppress them only while
+// a call is in progress so startup recovery still works for stale-token loops (#2480).
+let callActive = false;
+
+/**
+ * Checks a renderer-originated message (console output or forwarded window
+ * error) for auth-failure signatures and schedules recovery on a match.
+ * `sourceId` is the script URL the message came from (console-message
+ * sourceId or window-error filename).
+ */
+function maybeScheduleAuthRecovery(message, sourceId) {
+  if (authRecoveryTriggered) return;
+  if (!AUTH_FAILURE_PATTERNS.some(p => (message || '').includes(p))) return;
+
+  // Verify the message originates from a trusted Microsoft source
+  const source = sourceId || '';
+  if (source && !TRUSTED_AUTH_SOURCES.some(s => source.includes(s))) return;
+
+  if (source.includes('/worker/') && callActive) return;
+
+  authRecoveryTriggered = true;
+  console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
+
+  // Delay to let Teams' own retry mechanism attempt recovery first
+  setTimeout(
+    () =>
+      triggerAuthRecovery().catch((err) => {
+        console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+      }),
+    5000
+  );
+}
+
 /**
  * Clears stale auth state (localStorage tokens + cookies) and reloads
  * the page to force a fresh interactive login.
@@ -491,44 +533,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // "We need you to sign in again" stale banner (#2296)
   await cleanExpiredAuthCookies(window.webContents.session);
 
-  // Monitor renderer console for MSAL silent auth failures.
-  // When Teams can't refresh tokens silently (e.g., after overnight idle),
-  // it logs InteractionRequired. We detect this, clear stale auth state,
-  // and reload to force a clean interactive login.
-  const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
-  // Only trust auth failure signals from Teams/Microsoft origins
-  const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
-  let authRecoveryTriggered = false;
-  // Worker UPRs are transient during active calls (#2428); suppress them only while
-  // a call is in progress so startup recovery still works for stale-token loops (#2480).
-  let callActive = false;
+  // Monitor renderer auth-failure signals. When Teams can't refresh tokens
+  // silently (e.g., after overnight idle), it logs InteractionRequired. We
+  // detect this, clear stale auth state, and reload to force a clean
+  // interactive login. Detection itself lives in maybeScheduleAuthRecovery
+  // so the forwarded window-error path can reuse it.
   app.on('teams-call-connected', () => { callActive = true; });
   app.on('teams-call-disconnected', () => { callActive = false; });
   // Page reload (including renderer crash recovery) resets renderer-side call state,
   // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
   window.webContents.on('did-navigate', () => { callActive = false; });
   window.webContents.on('console-message', (event) => {
-    if (authRecoveryTriggered) return;
-    const message = event.message || '';
-    if (!AUTH_FAILURE_PATTERNS.some(p => message.includes(p))) return;
-
-    // Verify the message originates from a trusted Microsoft source
-    const sourceId = event.sourceId || '';
-    if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
-
-    if (sourceId.includes('/worker/') && callActive) return;
-
-    authRecoveryTriggered = true;
-    console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
-
-    // Delay to let Teams' own retry mechanism attempt recovery first
-    setTimeout(
-      () =>
-        triggerAuthRecovery().catch((err) => {
-          console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
-        }),
-      5000
-    );
+    maybeScheduleAuthRecovery(event.message, event.sourceId);
   });
 
   login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
@@ -547,6 +563,14 @@ function onSpellCheckerLanguageChanged(languages) {
 }
 
 let allowFurtherRequests = true;
+
+// Feed forwarded renderer window errors into auth-failure detection. Worker
+// uncaught errors (e.g. "Uncaught Error: UPR:") arrive via the window-error
+// IPC channel rather than console-message, so app/index.js calls this from
+// that handler. `filename` is the originating script URL.
+exports.notifyRendererError = function (message, filename) {
+  maybeScheduleAuthRecovery(message, filename);
+};
 
 exports.show = function () {
   window.show();
