@@ -522,7 +522,13 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
 
     // Delay to let Teams' own retry mechanism attempt recovery first
-    setTimeout(() => triggerAuthRecovery(), 5000);
+    setTimeout(
+      () =>
+        triggerAuthRecovery().catch((err) => {
+          console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+        }),
+      5000
+    );
   });
 
   login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
@@ -943,7 +949,11 @@ function onNewWindow(details) {
     // Trigger in-app recovery instead: clear stale auth state and reload
     // Teams so the user gets a fresh interactive sign-in within the app.
     console.info('[AUTH_RECOVERY] Login popup intercepted, triggering in-app recovery');
-    setImmediate(() => triggerAuthRecovery());
+    setImmediate(() =>
+      triggerAuthRecovery().catch((err) => {
+        console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+      })
+    );
     return { action: "deny" };
   }
 
