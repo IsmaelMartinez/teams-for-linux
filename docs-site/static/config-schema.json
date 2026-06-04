@@ -524,9 +524,12 @@
         "webauthn": {
           "enabled": false,
           "debug": false
+        },
+        "reauthRecovery": {
+          "enabled": false
         }
       },
-      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only."
+      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled intercepts the Microsoft login popup opened by the stale 'sign in again' banner and recovers in-app (clearing stale auth state and reloading) instead of opening the popup externally. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted."
     },
     {
       "name": "multiAccount",

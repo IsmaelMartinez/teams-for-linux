@@ -354,6 +354,14 @@ let authRecoveryTriggered = false;
 // Worker UPRs are transient during active calls (#2428); suppress them only while
 // a call is in progress so startup recovery still works for stale-token loops (#2480).
 let callActive = false;
+// Timestamp of the last trusted auth-failure signal. Used to correlate login
+// popups with an actually-broken session: while the stale "sign in again"
+// banner is up the renderer keeps emitting failure signatures every few
+// minutes (observed gaps up to ~40 min), whereas healthy-session login popups
+// (initial sign-in, consent, step-up MFA, adding an account) appear without
+// any preceding failure signal.
+let lastAuthFailureSignalAt = 0;
+const AUTH_FAILURE_SIGNAL_WINDOW_MS = 60 * 60 * 1000;
 
 /**
  * Checks a renderer-originated message (console output or forwarded window
@@ -362,7 +370,6 @@ let callActive = false;
  * sourceId or window-error filename).
  */
 function maybeScheduleAuthRecovery(message, sourceId) {
-  if (authRecoveryTriggered) return;
   if (!AUTH_FAILURE_PATTERNS.some(p => (message || '').includes(p))) return;
 
   // Verify the message originates from a trusted Microsoft source
@@ -371,6 +378,11 @@ function maybeScheduleAuthRecovery(message, sourceId) {
 
   if (source.includes('/worker/') && callActive) return;
 
+  // Record the signal even after recovery has fired once, so the login-popup
+  // interception below can still correlate against a session that stays broken.
+  lastAuthFailureSignalAt = Date.now();
+
+  if (authRecoveryTriggered) return;
   authRecoveryTriggered = true;
   console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
 
@@ -382,6 +394,19 @@ function maybeScheduleAuthRecovery(message, sourceId) {
       }),
     5000
   );
+}
+
+/**
+ * Decides whether an outgoing Microsoft login popup should be intercepted
+ * for in-app auth recovery. Requires both the auth.reauthRecovery.enabled
+ * opt-in and a trusted auth-failure signal within the correlation window,
+ * so login popups from healthy-session flows (initial sign-in, consent,
+ * step-up MFA, adding an account) are never diverted — they fall through
+ * to the default link handling.
+ */
+function shouldInterceptAuthPopup() {
+  if (!config.auth?.reauthRecovery?.enabled) return false;
+  return Date.now() - lastAuthFailureSignalAt < AUTH_FAILURE_SIGNAL_WINDOW_MS;
 }
 
 /**
@@ -965,13 +990,17 @@ function onNewWindow(details) {
     // Increment the counter for about:blank authentication flow
     aboutBlankRequestCount += 1;
     return { action: "deny" };
-  } else if (isAuthLoginUrl(details.url)) {
-    // Teams is opening a Microsoft login popup (e.g. from the "sign in again"
-    // banner). Opening login.microsoftonline.com in an external browser
-    // completes auth there but Electron never receives the result, so the
-    // banner stays and clicking the link appears to do nothing.
-    // Trigger in-app recovery instead: clear stale auth state and reload
-    // Teams so the user gets a fresh interactive sign-in within the app.
+  } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {
+    // Teams is opening a Microsoft login popup from a session that recently
+    // emitted auth-failure signals (see shouldInterceptAuthPopup) — i.e. the
+    // "sign in again" banner case. Opening login.microsoftonline.com in an
+    // external browser completes auth there but Electron never receives the
+    // result, so the banner stays and clicking the link appears to do
+    // nothing. Trigger in-app recovery instead: clear stale auth state and
+    // reload Teams so the user gets a fresh interactive sign-in within the
+    // app. Login popups without a correlated failure signal (initial
+    // sign-in, consent and step-up prompts, adding an account) keep the
+    // original open-externally behaviour via secureOpenLink below.
     console.info('[AUTH_RECOVERY] Login popup intercepted, triggering in-app recovery');
     setImmediate(() =>
       triggerAuthRecovery().catch((err) => {
