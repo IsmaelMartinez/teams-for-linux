@@ -219,7 +219,11 @@ class Menus {
     console.debug("window close");
     if (!this.allowQuit && !this.configGroup.startupConfig.closeAppOnCross) {
       event.preventDefault();
-      this.hide();
+      if (this.configGroup.startupConfig.minimizeOnClose) {
+        this.window.minimize();
+      } else {
+        this.hide();
+      }
     } else {
       this.tray?.close();
       this.window.webContents.session.flushStorageData();

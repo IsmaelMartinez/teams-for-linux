@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 71,
+  "optionCount": 72,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -345,6 +345,12 @@
       "type": "boolean",
       "default": false,
       "description": "Start the application minimized"
+    },
+    {
+      "name": "minimizeOnClose",
+      "type": "boolean",
+      "default": false,
+      "description": "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)"
     },
     {
       "name": "notificationMethod",

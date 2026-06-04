@@ -332,6 +332,12 @@ module.exports = {
         describe: "Start the application minimized",
         type: "boolean",
       },
+      minimizeOnClose: {
+        default: false,
+        describe:
+          "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
+        type: "boolean",
+      },
       notificationMethod: {
         default: "web",
         describe:
