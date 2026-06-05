@@ -68,6 +68,12 @@ class CustomBackground {
   }
 
   beforeRequestHandlerRedirectUrl(details) {
+    // No custom-background URL is configured when the feature is disabled, so
+    // the redirect branches below would dereference an undefined URL. Bail out
+    // early, matching addCustomBackgroundHeaders / onHeadersReceivedHandler.
+    if (!this.isCustomBackgroundEnabled()) {
+      return;
+    }
     // Custom background for teams v1
     if (
       details.url.startsWith(
