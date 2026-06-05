@@ -438,6 +438,26 @@ function shouldInterceptAuthPopup() {
   return Date.now() - lastAuthFailureSignalAt < AUTH_FAILURE_SIGNAL_WINDOW_MS;
 }
 
+// A single banner click can surface as several requests in quick succession
+// (and a broken session's own silent-refresh retries produce more), so
+// popup-triggered recovery is deduped over a short window. Unlike the
+// automatic path's 30-minute cooldown, a deliberate retry a minute later
+// should still work.
+let lastPopupRecoveryAt = 0;
+const POPUP_RECOVERY_DEDUPE_MS = 10 * 1000;
+
+function triggerPopupRecovery(context) {
+  const now = Date.now();
+  if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
+  lastPopupRecoveryAt = now;
+  console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
+  setImmediate(() =>
+    triggerAuthRecovery().catch((err) => {
+      console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+    })
+  );
+}
+
 /**
  * Clears stale auth state (localStorage tokens + cookies) and reloads
  * the page to force a fresh interactive login.
@@ -902,6 +922,20 @@ function onBeforeRequestHandler(details, callback) {
     // it: that way a leftover count cannot divert the new page's sub-resources.
     aboutBlankRequestCount = 0;
     callback({});
+  } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {
+    // The hidden-window handling below exists for SILENT token refresh. An
+    // interactive login can never complete in a window that is hidden and
+    // destroyed on ready-to-show — which is why clicking the stale "sign in
+    // again" banner appears to do nothing: the click opens an about:blank
+    // popup whose login navigation lands here and dies invisibly (it never
+    // reaches the isAuthLoginUrl check in onNewWindow, because the URL is
+    // still about:blank at window-open time). When the navigation correlates
+    // with a broken session (see shouldInterceptAuthPopup), run in-app
+    // recovery instead. Reset the counter: recovery reloads the page, so any
+    // pending interceptions are stale (#2591 rationale).
+    aboutBlankRequestCount = 0;
+    triggerPopupRecovery('Login navigation from about:blank popup intercepted');
+    callback({ cancel: true });
   } else {
     // Open request in hidden child window for authentication
     const child = new BrowserWindow({ parent: window, show: false });
@@ -1041,22 +1075,18 @@ function onNewWindow(details) {
     aboutBlankRequestCount += 1;
     return { action: "deny" };
   } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {
-    // Teams is opening a Microsoft login popup from a session that recently
-    // emitted auth-failure signals (see shouldInterceptAuthPopup) — i.e. the
-    // "sign in again" banner case. Opening login.microsoftonline.com in an
+    // Teams is opening a direct-URL Microsoft login popup from a session
+    // that recently emitted auth-failure signals (see
+    // shouldInterceptAuthPopup). Opening login.microsoftonline.com in an
     // external browser completes auth there but Electron never receives the
-    // result, so the banner stays and clicking the link appears to do
-    // nothing. Trigger in-app recovery instead: clear stale auth state and
-    // reload Teams so the user gets a fresh interactive sign-in within the
-    // app. Login popups without a correlated failure signal (initial
-    // sign-in, consent and step-up prompts, adding an account) keep the
-    // original open-externally behaviour via secureOpenLink below.
-    console.info('[AUTH_RECOVERY] Login popup intercepted, triggering in-app recovery');
-    setImmediate(() =>
-      triggerAuthRecovery().catch((err) => {
-        console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
-      })
-    );
+    // result, so trigger in-app recovery instead: clear stale auth state and
+    // reload Teams for a fresh interactive sign-in within the app. (The
+    // stale-banner popup is usually about:blank-shaped and is handled in
+    // onBeforeRequestHandler; this branch covers the direct-URL form.)
+    // Login popups without a correlated failure signal (initial sign-in,
+    // consent and step-up prompts, adding an account) keep the original
+    // open-externally behaviour via secureOpenLink below.
+    triggerPopupRecovery('Direct login popup intercepted');
     return { action: "deny" };
   }
 
