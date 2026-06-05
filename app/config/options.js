@@ -771,6 +771,7 @@ module.exports = {
           },
           mediaTopics: {
             inCall: "in-call",
+            incomingCall: "incoming-call",
             camera: "camera",
             microphone: "microphone",
             microphoneControl: "microphone/control",
