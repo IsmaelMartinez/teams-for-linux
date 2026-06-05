@@ -405,13 +405,22 @@ function maybeScheduleAuthRecovery(message, sourceId) {
   const source = sourceId || '';
   if (source && !TRUSTED_AUTH_SOURCES.some(s => source.includes(s))) return;
 
-  if (source.includes('/worker/') && callActive) return;
-
-  // Record the signal even while recovery is cooling down, so the login-popup
-  // interception below can still correlate against a session that stays broken.
+  // Record the signal even while recovery is cooling down or a call is
+  // active, so the login-popup interception can still correlate against a
+  // session that stays broken.
   recordAuthFailureSignal();
 
   if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
+
+  if (callActive) {
+    handleMidCallAuthSignal(source);
+    return;
+  }
+
+  scheduleAuthRecovery();
+}
+
+function scheduleAuthRecovery() {
   lastAuthRecoveryAt = Date.now();
   console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
 
@@ -423,6 +432,91 @@ function maybeScheduleAuthRecovery(message, sourceId) {
       }),
     5000
   );
+}
+
+// ── Mid-call handling ──────────────────────────────────────────────────────
+// Recovery reloads the page, which ends an active call. Auth can genuinely
+// fail mid-call (the call media keeps flowing but chat stops updating), yet
+// worker UPRs during calls are often transient noise (#2428) — reloading on
+// them mid-presentation was the original bug. So mid-call, with the
+// reauthRecovery opt-in, the user gets a choice instead of a silent reload;
+// without the opt-in the pre-existing behaviour is preserved exactly
+// (worker signals suppressed, others recover immediately).
+let firstMidCallWorkerSignalAt = 0;
+let reauthPromptShownForCall = false;
+let reauthPromptOpen = false;
+let recoveryQueuedForCallEnd = false;
+// A single transient worker UPR must not prompt (#2428); require the worker
+// signals to persist this long into the same call before treating them as a
+// genuine mid-call auth failure.
+const MIDCALL_WORKER_SIGNAL_CONFIRM_MS = 3 * 60 * 1000;
+
+function resetMidCallAuthState() {
+  firstMidCallWorkerSignalAt = 0;
+  reauthPromptShownForCall = false;
+}
+
+function handleMidCallAuthSignal(source) {
+  const isWorker = source.includes('/worker/');
+
+  if (!config.auth?.reauthRecovery?.enabled) {
+    // Pre-existing behaviour: transient worker UPRs during calls are
+    // suppressed (#2428); anything else recovers immediately.
+    if (isWorker) return;
+    scheduleAuthRecovery();
+    return;
+  }
+
+  if (recoveryQueuedForCallEnd) return;
+
+  if (isWorker) {
+    const now = Date.now();
+    if (!firstMidCallWorkerSignalAt) {
+      firstMidCallWorkerSignalAt = now;
+      return;
+    }
+    if (now - firstMidCallWorkerSignalAt < MIDCALL_WORKER_SIGNAL_CONFIRM_MS) return;
+  }
+
+  promptMidCallReauth(false);
+}
+
+/**
+ * Asks the user whether to reauthenticate during an active call. Shown at
+ * most once per call for automatic signals; an explicit banner click
+ * (force=true) re-prompts even after a "Not now".
+ */
+async function promptMidCallReauth(force) {
+  if (reauthPromptOpen) return;
+  if (!force && reauthPromptShownForCall) return;
+  reauthPromptOpen = true;
+  reauthPromptShownForCall = true;
+  try {
+    const { response } = await dialog.showMessageBox(window, {
+      type: 'warning',
+      title: 'Sign-in required',
+      message: 'Teams needs you to sign in again.',
+      detail:
+        'Chat and other features may stop updating until you sign in again. ' +
+        'Signing in now reloads the app and ends your current call.',
+      buttons: ['Sign in now', 'After the call', 'Not now'],
+      defaultId: 1,
+      cancelId: 2,
+    });
+    if (response === 0) {
+      console.info('[AUTH_RECOVERY] User chose to reauthenticate during call');
+      await triggerAuthRecovery();
+    } else if (response === 1) {
+      console.info('[AUTH_RECOVERY] Recovery queued until the call ends');
+      recoveryQueuedForCallEnd = true;
+    } else {
+      console.info('[AUTH_RECOVERY] Mid-call reauth declined');
+    }
+  } catch (err) {
+    console.error('[AUTH_RECOVERY] Mid-call reauth prompt failed:', err);
+  } finally {
+    reauthPromptOpen = false;
+  }
 }
 
 /**
@@ -450,6 +544,13 @@ function triggerPopupRecovery(context) {
   const now = Date.now();
   if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
   lastPopupRecoveryAt = now;
+  if (callActive) {
+    // Recovery would end the active call — let the user decide. force=true:
+    // an explicit click re-prompts even after an earlier "Not now".
+    console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
+    promptMidCallReauth(true);
+    return;
+  }
   console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
   setImmediate(() =>
     triggerAuthRecovery().catch((err) => {
@@ -616,11 +717,35 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // detect this, clear stale auth state, and reload to force a clean
   // interactive login. Detection itself lives in maybeScheduleAuthRecovery
   // so the forwarded window-error path can reuse it.
-  app.on('teams-call-connected', () => { callActive = true; });
-  app.on('teams-call-disconnected', () => { callActive = false; });
+  app.on('teams-call-connected', () => {
+    callActive = true;
+    resetMidCallAuthState();
+  });
+  app.on('teams-call-disconnected', () => {
+    callActive = false;
+    resetMidCallAuthState();
+    if (recoveryQueuedForCallEnd) {
+      recoveryQueuedForCallEnd = false;
+      console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
+      // Short delay so the call teardown finishes before the reload
+      setTimeout(
+        () =>
+          triggerAuthRecovery().catch((err) => {
+            console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+          }),
+        5000
+      );
+    }
+  });
   // Page reload (including renderer crash recovery) resets renderer-side call state,
   // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
-  window.webContents.on('did-navigate', () => { callActive = false; });
+  // A reload also moots any queued recovery: if the session is still broken,
+  // fresh signals will re-trigger detection.
+  window.webContents.on('did-navigate', () => {
+    callActive = false;
+    resetMidCallAuthState();
+    recoveryQueuedForCallEnd = false;
+  });
   window.webContents.on('console-message', (event) => {
     maybeScheduleAuthRecovery(event.message, event.sourceId);
   });
