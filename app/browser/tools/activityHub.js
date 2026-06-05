@@ -97,16 +97,24 @@ class ActivityHub {
 
   setMachineState(state) {
     const teams2IdleTracker = ReactHandler.getTeams2IdleTracker();
+    // [IDLE_DIAG] #2383: surface whether the Teams idle tracker is reachable at
+    // the moment we try to drive it. A null tracker here means the away/active
+    // transition is silently dropped, which is the leading suspect for
+    // away-on-idle not firing until the user interacts with Teams.
     if (teams2IdleTracker) {
       try {
         if (state === 1) {
+          console.debug("[IDLE_DIAG] setMachineState -> handleMonitoredWindowEvent (active)");
           teams2IdleTracker.handleMonitoredWindowEvent();
         } else {
+          console.debug("[IDLE_DIAG] setMachineState -> transitionToIdle (idle)");
           teams2IdleTracker.transitionToIdle();
         }
       } catch (e) {
         console.error("Failed to set teams2 Machine State", e);
       }
+    } else {
+      console.debug(`[IDLE_DIAG] setMachineState(${state}) skipped: teams2IdleTracker unavailable`);
     }
   }
 
@@ -115,13 +123,17 @@ class ActivityHub {
     if (teams2IdleTracker) {
       try {
         if (status === 1) {
+          console.debug("[IDLE_DIAG] setUserStatus -> handleMonitoredWindowEvent (active)");
           teams2IdleTracker.handleMonitoredWindowEvent();
         } else {
+          console.debug("[IDLE_DIAG] setUserStatus -> transitionToIdle (idle)");
           teams2IdleTracker.transitionToIdle();
         }
       } catch (e) {
         console.error("Failed to set teams2 User Status", e);
       }
+    } else {
+      console.debug(`[IDLE_DIAG] setUserStatus(${status}) skipped: teams2IdleTracker unavailable`);
     }
   }
 
