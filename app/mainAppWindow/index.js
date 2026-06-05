@@ -350,7 +350,14 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
 const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'Uncaught Error: UPR:'];
 // Only trust auth failure signals from Teams/Microsoft origins
 const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
-let authRecoveryTriggered = false;
+// Loop guard for the automatic clear-and-reload. A cooldown rather than a
+// single-shot flag: a long-running app can hit a second stale session hours
+// after the first recovery (observed in the field: recovery at 10:55, the
+// session went stale again at 12:11 and the old once-per-process flag
+// silently swallowed it), while the cooldown still prevents rapid
+// reload loops if a recovery fails to fix the session.
+let lastAuthRecoveryAt = 0;
+const AUTH_RECOVERY_COOLDOWN_MS = 30 * 60 * 1000;
 // Worker UPRs are transient during active calls (#2428); suppress them only while
 // a call is in progress so startup recovery still works for stale-token loops (#2480).
 let callActive = false;
@@ -362,6 +369,28 @@ let callActive = false;
 // any preceding failure signal.
 let lastAuthFailureSignalAt = 0;
 const AUTH_FAILURE_SIGNAL_WINDOW_MS = 60 * 60 * 1000;
+// The broken session survives an app restart, so the signal timestamp must
+// too (observed in the field: app restarted while stale, the in-memory
+// timestamp reset, and the banner's Sign In click fell through unintercepted).
+// Persisted via the settings store; restored in onAppReady. Writes are
+// throttled because failure signatures can repeat at sub-minute rates.
+// Deliberately only feeds popup correlation — automatic recovery stays
+// driven by live signals so a stale persisted value can never wipe a
+// session that a previous run already fixed.
+const AUTH_SIGNAL_STORE_KEY = 'authRecovery.lastFailureSignalAt';
+const AUTH_SIGNAL_PERSIST_INTERVAL_MS = 5 * 60 * 1000;
+let lastAuthSignalPersistAt = 0;
+
+function recordAuthFailureSignal() {
+  lastAuthFailureSignalAt = Date.now();
+  if (lastAuthFailureSignalAt - lastAuthSignalPersistAt < AUTH_SIGNAL_PERSIST_INTERVAL_MS) return;
+  lastAuthSignalPersistAt = lastAuthFailureSignalAt;
+  try {
+    appConfig?.settingsStore?.set(AUTH_SIGNAL_STORE_KEY, lastAuthFailureSignalAt);
+  } catch (err) {
+    console.warn('[AUTH_RECOVERY] Failed to persist failure signal timestamp:', err.message);
+  }
+}
 
 /**
  * Checks a renderer-originated message (console output or forwarded window
@@ -378,12 +407,12 @@ function maybeScheduleAuthRecovery(message, sourceId) {
 
   if (source.includes('/worker/') && callActive) return;
 
-  // Record the signal even after recovery has fired once, so the login-popup
+  // Record the signal even while recovery is cooling down, so the login-popup
   // interception below can still correlate against a session that stays broken.
-  lastAuthFailureSignalAt = Date.now();
+  recordAuthFailureSignal();
 
-  if (authRecoveryTriggered) return;
-  authRecoveryTriggered = true;
+  if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
+  lastAuthRecoveryAt = Date.now();
   console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
 
   // Delay to let Teams' own retry mechanism attempt recovery first
@@ -557,6 +586,10 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // Clean expired auth cookies before loading Teams to prevent the
   // "We need you to sign in again" stale banner (#2296)
   await cleanExpiredAuthCookies(window.webContents.session);
+
+  // Restore the last persisted auth-failure signal so login-popup
+  // correlation survives app restarts (the broken session does).
+  lastAuthFailureSignalAt = Number(appConfig.settingsStore.get(AUTH_SIGNAL_STORE_KEY)) || 0;
 
   // Monitor renderer auth-failure signals. When Teams can't refresh tokens
   // silently (e.g., after overnight idle), it logs InteractionRequired. We
@@ -978,6 +1011,23 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
+  // Breadcrumb for diagnosing which shape of popup the "sign in again"
+  // banner opens (about:blank-then-navigate vs a direct login URL) — the two
+  // take different paths below and only the direct form can be intercepted
+  // for recovery. Auth-related popups only, origin only: no path, query, or
+  // user-specific data is logged.
+  if (details.url.startsWith("about:blank") || isAuthLoginUrl(details.url)) {
+    let origin = "about:blank";
+    if (!details.url.startsWith("about:blank")) {
+      try {
+        origin = new URL(details.url).origin;
+      } catch {
+        origin = "unparseable";
+      }
+    }
+    console.info('[WINDOW_OPEN] Auth-related popup', { origin });
+  }
+
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
     if (config.onNewWindowOpenMeetupJoinUrlInApp) {
       window.loadURL(details.url, { userAgent: config.chromeUserAgent });
