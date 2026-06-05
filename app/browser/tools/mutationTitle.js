@@ -90,6 +90,8 @@ class MutationObserverTitle {
       
       observer.observe(titleElement, {
         childList: true,
+        characterData: true,
+        subtree: true,
       });
       console.debug("MutationTitle: Observer successfully attached to title element");
     } catch (error) {
