@@ -1,6 +1,43 @@
 # Multiple Instances (Profiles)
 
-Run separate isolated instances of Teams for Linux — perfect for work and personal accounts. Each profile maintains its own icon, session data, and window behavior.
+Teams for Linux supports multiple accounts two ways: an **in-app account switcher** that keeps every account in a single window, or **separate isolated instances** that each run as their own process. Either way, sessions, settings, and data stay fully isolated per account.
+
+## Two Ways to Run Multiple Accounts
+
+- **In-app account switcher** (single window, experimental) — enable `multiAccount.enabled` and switch between accounts inside one Teams for Linux window via the **Profiles** menu. Each account is isolated in its own session partition. This is the newer approach introduced in [ADR-020](development/adr/020-multi-account-profile-switcher); see [In-App Account Switcher](#in-app-account-switcher-experimental) below.
+- **Separate isolated instances** (multiple windows/processes) — launch a separate process per account, each with its own `--user-data-dir`, icon, and window class. This is the established approach and is documented in the rest of this page.
+
+:::tip When to use which
+Use the **in-app switcher** if you want all your accounts in one window with quick switching. Use **separate instances** if you want fully independent windows — distinct taskbar icons, separate window-manager identities, or different per-profile command-line flags.
+:::
+
+## In-App Account Switcher (Experimental)
+
+Enable the switcher in your `config.json`:
+
+```json
+{
+  "multiAccount": {
+    "enabled": true
+  }
+}
+```
+
+With the flag on, a **Profiles** menu appears in the application menu:
+
+- **Add profile…** — create a new account profile (name, optional custom URL, optional avatar initials and color).
+- **Switch to** — jump between profiles; each runs in its own isolated session (`persist:teams-profile-{uuid}`), so cookies, tokens, and storage never cross tenants.
+- **Manage profiles…** — rename or remove existing profiles.
+
+On first launch after enabling the flag, your existing session is migrated into a default **"My account"** profile, so you stay logged in with no re-authentication.
+
+:::note
+This feature is under active development. Switching is currently driven from the **Profiles** menu; a top-right dropdown switcher and `Ctrl+Shift+1…5` shortcuts for pinned profiles are planned. The switcher is mutually exclusive with Intune SSO (`auth.intune.enabled`) — see [Configuration](configuration.md#multi-account-profile-switcher-experimental). For the full design and roadmap, see [ADR-020](development/adr/020-multi-account-profile-switcher).
+:::
+
+## Separate Isolated Instances (Command Line)
+
+The rest of this page covers the separate-instances approach: one process per account, each with its own icon, window class, and data directory — perfect for work and personal accounts you want as fully independent windows.
 
 ## Quick Start Examples
 
