@@ -29,26 +29,19 @@ class ActivityManager {
   }
 
   setStatusAwayWhenScreenLocked(state) {
-    // [IDLE_DIAG] #2383: log the inputs that gate the Away push. The Away branch
-    // below requires userCurrent === 1; if the wrapper never learned the Teams
-    // status, userCurrent stays -1 and this branch never runs.
+    // [IDLE_DIAG] #2383: log the idle inputs so a stuck Away can be localised.
+    // setMachineState drives Teams' idle tracker (handleMonitoredWindowEvent
+    // when active, transitionToIdle when idle), which is what actually flips
+    // presence to/from Away.
     console.debug(
       `[IDLE_DIAG] poll: system=${state.system} userIdle=${state.userIdle} userCurrent=${state.userCurrent}`
     );
     activityHub.setMachineState(state.system === "active" ? 1 : 2);
-    const timeOut =
+    return (
       (state.system === "active"
         ? this.config.appIdleTimeoutCheckInterval
-        : this.config.appActiveCheckInterval) * 1000;
-
-    if (state.system === "active" && state.userIdle === 1) {
-      console.debug("[IDLE_DIAG] branch: active + userIdle===1 -> setUserStatus(1)");
-      activityHub.setUserStatus(1);
-    } else if (state.system !== "active" && state.userCurrent === 1) {
-      console.debug("[IDLE_DIAG] branch: idle + userCurrent===1 -> setUserStatus(3)");
-      activityHub.setUserStatus(3);
-    }
-    return timeOut;
+        : this.config.appActiveCheckInterval) * 1000
+    );
   }
 
   keepStatusAvailableWhenScreenLocked(state) {
