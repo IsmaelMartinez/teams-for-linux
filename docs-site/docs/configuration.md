@@ -265,7 +265,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 
 ### Multi-Account Profile Switcher (Experimental)
 
-> **Status:** Phase 1 MVP scaffolding. The flag is wired through config, but the switcher UI, profile CRUD, and session isolation plumbing land in follow-up PRs tracked in [ADR-020](development/adr/020-multi-account-profile-switcher). Enabling the flag today has no user-visible effect beyond the Intune mutex check described below.
+> **Status:** Phase 1 partially shipped. With the flag enabled you get a **Profiles** menu (Add / Switch / Manage / Remove profiles), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. Still in progress: the top-right dropdown switcher overlay and `Ctrl+Shift+1…5` shortcuts for pinned profiles. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and remaining phases.
 
 Opt-in configuration for the single-window multi-tenant account switcher:
 

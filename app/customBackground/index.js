@@ -3,9 +3,12 @@ const { ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 
-let customBGServiceUrl;
-
 class CustomBackground {
+  // Per-instance custom-background service URL. Lives on the instance (not at
+  // module scope) so a future per-profile CustomBackground does not share one
+  // mutable URL across tenants — ADR-020 shared-state audit.
+  #customBGServiceUrl;
+
   constructor(app, config) {
     this.app = app;
     this.config = config;
@@ -65,6 +68,12 @@ class CustomBackground {
   }
 
   beforeRequestHandlerRedirectUrl(details) {
+    // No custom-background URL is configured when the feature is disabled, so
+    // the redirect branches below would dereference an undefined URL. Bail out
+    // early, matching addCustomBackgroundHeaders / onHeadersReceivedHandler.
+    if (!this.isCustomBackgroundEnabled()) {
+      return;
+    }
     // Custom background for teams v1
     if (
       details.url.startsWith(
@@ -75,7 +84,7 @@ class CustomBackground {
         "https://statics.teams.cdn.office.net/teams-for-linux/custom-bg/",
         "",
       );
-      const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
+      const imgUrl = httpHelper.joinURLs(this.#customBGServiceUrl.href, reqUrl);
       console.debug('[CUSTOM_BG] Forwarding v1 background request');
       return { redirectURL: imgUrl };
     }
@@ -90,7 +99,7 @@ class CustomBackground {
         "https://statics.teams.cdn.office.net/evergreen-assets/backgroundimages/",
         "",
       );
-      const imgUrl = httpHelper.joinURLs(customBGServiceUrl.href, reqUrl);
+      const imgUrl = httpHelper.joinURLs(this.#customBGServiceUrl.href, reqUrl);
       console.debug('[CUSTOM_BG] Forwarding v2 background request');
       return { redirectURL: imgUrl };
     }
@@ -99,7 +108,7 @@ class CustomBackground {
   addCustomBackgroundHeaders(detail) {
     if (!this.isCustomBackgroundEnabled()) {
       return;
-    } else if (detail.url.startsWith(customBGServiceUrl.href)) {
+    } else if (detail.url.startsWith(this.#customBGServiceUrl.href)) {
       detail.requestHeaders["Access-Control-Allow-Origin"] = "*";
     }
   }
@@ -110,8 +119,8 @@ class CustomBackground {
     } else if (details.responseHeaders["content-security-policy"]) {
       const policies =
         details.responseHeaders["content-security-policy"][0].split(";");
-      setImgSrcSecurityPolicy(policies);
-      setConnectSrcSecurityPolicy(policies);
+      setImgSrcSecurityPolicy(policies, this.#customBGServiceUrl);
+      setConnectSrcSecurityPolicy(policies, this.#customBGServiceUrl);
       details.responseHeaders["content-security-policy"][0] =
         policies.join(";");
     }
@@ -122,18 +131,18 @@ class CustomBackground {
       return;
     }
     try {
-      customBGServiceUrl = new URL("", this.config.customBGServiceBaseUrl);
+      this.#customBGServiceUrl = new URL("", this.config.customBGServiceBaseUrl);
       console.debug('[CUSTOM_BG] Custom background service URL configured');
     } catch (err) {
       console.error(
         `[CUSTOM_BG] Invalid custom background service URL, updating to default. Error: ${err.message}`,
       );
-      customBGServiceUrl = new URL("", "http://localhost");
+      this.#customBGServiceUrl = new URL("", "http://localhost");
     }
   }
 
   isCustomBackgroundHttpProtocol() {
-    return customBGServiceUrl?.protocol === "http:";
+    return this.#customBGServiceUrl?.protocol === "http:";
   }
 
   onCustomBGServiceConfigDownloadFailure(err) {
@@ -188,7 +197,7 @@ function setPath(cfg) {
   }
 }
 
-function setConnectSrcSecurityPolicy(policies) {
+function setConnectSrcSecurityPolicy(policies, customBGServiceUrl) {
   const connectsrcIndex = policies.findIndex(
     (f) => f.includes("connect-src"),
   );
@@ -198,7 +207,7 @@ function setConnectSrcSecurityPolicy(policies) {
   }
 }
 
-function setImgSrcSecurityPolicy(policies) {
+function setImgSrcSecurityPolicy(policies, customBGServiceUrl) {
   const imgsrcIndex = policies.findIndex((f) => f.includes("img-src"));
   if (imgsrcIndex >= 0) {
     policies[imgsrcIndex] =
