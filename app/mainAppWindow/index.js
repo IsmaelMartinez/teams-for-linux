@@ -408,7 +408,7 @@ function maybeScheduleAuthRecovery(message, sourceId) {
   const text = message || '';
   const matched =
     AUTH_FAILURE_PATTERNS.some(p => text.includes(p)) ||
-    (config.auth?.reauthRecovery?.enabled &&
+    (config?.auth?.reauthRecovery?.enabled &&
       OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p)));
   if (!matched) return;
 
