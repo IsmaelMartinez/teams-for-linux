@@ -342,12 +342,18 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
-// Auth-failure signatures from the renderer. MSAL logs InteractionRequired
-// when silent token refresh fails; the Teams auth worker can also die with an
-// uncaught "UPR: <reason>" error (observed with an empty reason from
-// /v2/worker/precompiled-web-worker-*.js) without ever logging
-// InteractionRequired, so match the uncaught-error form too.
-const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'Uncaught Error: UPR:'];
+// Always-on auth-failure signature. MSAL logs InteractionRequired only when a
+// silent token refresh genuinely fails, so it is a reliable signal to recover on.
+const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
+// Opt-in auth-failure signature. The Teams worker can also die with an uncaught
+// "UPR: <reason>" error, and a genuinely stale session emits these without ever
+// logging InteractionRequired (#2480). But the worker emits the same "UPR:" shape
+// for routine transient failures (pinned channels, presence, "Invalid id
+// undefined", and an empty reason) in perfectly healthy sessions, so matching
+// every UPR caused ~hourly false-positive clear-and-reloads for all users. Only
+// treat UPRs as auth failures when the user has opted into aggressive reauth
+// recovery (auth.reauthRecovery.enabled).
+const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
 // Only trust auth failure signals from Teams/Microsoft origins
 const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
 // Loop guard for the automatic clear-and-reload. A cooldown rather than a
@@ -399,7 +405,12 @@ function recordAuthFailureSignal() {
  * sourceId or window-error filename).
  */
 function maybeScheduleAuthRecovery(message, sourceId) {
-  if (!AUTH_FAILURE_PATTERNS.some(p => (message || '').includes(p))) return;
+  const text = message || '';
+  const matched =
+    AUTH_FAILURE_PATTERNS.some(p => text.includes(p)) ||
+    (config.auth?.reauthRecovery?.enabled &&
+      OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p)));
+  if (!matched) return;
 
   // Verify the message originates from a trusted Microsoft source
   const source = sourceId || '';
