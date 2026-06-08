@@ -342,9 +342,13 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
-// Always-on auth-failure signature. MSAL logs InteractionRequired only when a
-// silent token refresh genuinely fails, so it is a reliable signal to recover on.
-const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
+// Always-on auth-failure signatures. MSAL reports an interaction-required error
+// only when a silent token refresh genuinely fails, so it is a reliable signal to
+// recover on. It surfaces in two spellings: the MSAL class name
+// `InteractionRequired` (console) and the OAuth error code `interaction_required`
+// (the lowercase form thrown by token warming as an unhandled rejection — wired
+// into detection by the unhandled-rejection handler in app/index.js).
+const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
 // Opt-in, correlation-only auth-failure signature. The Teams worker can die with
 // an uncaught "UPR: <reason>" error, and a genuinely stale session emits these
 // (sometimes without ever logging InteractionRequired, #2480). But the worker
@@ -417,11 +421,15 @@ function maybeScheduleAuthRecovery(message, sourceId) {
   if (!config?.auth?.reauthRecovery?.enabled) return;
 
   const text = message || '';
-  // InteractionRequired is the reliable signal that drives the silent
-  // clear-and-reload; a worker UPR only records a correlation signal for the
-  // banner interception (see the silent-reload guard below).
-  const isReliableSignal = AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
-  const isOptInWorkerSignal = OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  // Classify a worker UPR by its shape first, independent of payload contents: a
+  // UPR can embed "...code:InteractionRequired..." (StartUpJob/CalendarSyncJob),
+  // and matching that as the reliable signal would auto-reload on a UPR despite
+  // the correlation-only intent (#2629). So a UPR is never treated as reliable;
+  // it only records a correlation signal for the banner interception (the flag is
+  // already gated above, so the opt-in worker signal needs no extra flag check).
+  const isWorkerUpr = OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isReliableSignal = !isWorkerUpr && AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isOptInWorkerSignal = isWorkerUpr;
   if (!isReliableSignal && !isOptInWorkerSignal) return;
 
   // Verify the message originates from a trusted Microsoft source
@@ -441,7 +449,7 @@ function maybeScheduleAuthRecovery(message, sourceId) {
     return;
   }
 
-  // Outside a call, only the reliable InteractionRequired signal triggers the
+  // Outside a call, only the reliable interaction-required signal triggers the
   // silent clear-and-reload. A worker UPR is too noisy to auto-recover on
   // (healthy sessions emit them ~hourly, UPR-heavy tenants constantly — #2629);
   // it has already fed popup correlation above, so it can still drive an in-app
