@@ -334,7 +334,8 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
+      const log = preLoginNoise ? console.debug : console.error;
       log("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
@@ -343,6 +344,12 @@ if (gotTheLock) {
         errorStack: sanitizeRendererLogField(errorData?.errorStack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
+      // Some auth failures only surface as uncaught worker errors (e.g.
+      // "Uncaught Error: UPR:") that never hit the console-message path —
+      // feed the raw (unsanitized) message to auth-failure detection.
+      if (!preLoginNoise) {
+        mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename);
+      }
     } catch (err) {
       console.error("[Renderer] Failed to log window-error:", err);
     }
