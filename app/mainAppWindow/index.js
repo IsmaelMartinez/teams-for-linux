@@ -345,14 +345,17 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
 // Always-on auth-failure signature. MSAL logs InteractionRequired only when a
 // silent token refresh genuinely fails, so it is a reliable signal to recover on.
 const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
-// Opt-in auth-failure signature. The Teams worker can also die with an uncaught
-// "UPR: <reason>" error, and a genuinely stale session emits these without ever
-// logging InteractionRequired (#2480). But the worker emits the same "UPR:" shape
-// for routine transient failures (pinned channels, presence, "Invalid id
-// undefined", and an empty reason) in perfectly healthy sessions, so matching
-// every UPR caused ~hourly false-positive clear-and-reloads for all users. Only
-// treat UPRs as auth failures when the user has opted into aggressive reauth
-// recovery (auth.reauthRecovery.enabled).
+// Opt-in, correlation-only auth-failure signature. The Teams worker can die with
+// an uncaught "UPR: <reason>" error, and a genuinely stale session emits these
+// (sometimes without ever logging InteractionRequired, #2480). But the worker
+// emits the same "UPR:" shape for routine transient failures (pinned channels,
+// presence, "Invalid id undefined", and an empty reason) on perfectly healthy
+// sessions, and UPR-heavy tenants fire them constantly (#2629) — far too noisy to
+// drive an automatic reload. So when auth.reauthRecovery.enabled is set, a UPR
+// only records a failure signal for login-popup correlation (so the banner-click
+// in-app recovery can recognise a broken session); it never schedules the silent
+// clear-and-reload on its own. Recovery from a UPR happens only through an
+// explicit user action (the banner click, or the mid-call prompt).
 const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
 // Only trust auth failure signals from Teams/Microsoft origins
 const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
@@ -406,11 +409,11 @@ function recordAuthFailureSignal() {
  */
 function maybeScheduleAuthRecovery(message, sourceId) {
   const text = message || '';
-  const matched =
-    AUTH_FAILURE_PATTERNS.some(p => text.includes(p)) ||
-    (config?.auth?.reauthRecovery?.enabled &&
-      OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p)));
-  if (!matched) return;
+  const isReliableSignal = AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isOptInWorkerSignal =
+    config?.auth?.reauthRecovery?.enabled &&
+    OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  if (!isReliableSignal && !isOptInWorkerSignal) return;
 
   // Verify the message originates from a trusted Microsoft source
   const source = sourceId || '';
@@ -418,7 +421,8 @@ function maybeScheduleAuthRecovery(message, sourceId) {
 
   // Record the signal even while recovery is cooling down or a call is
   // active, so the login-popup interception can still correlate against a
-  // session that stays broken.
+  // session that stays broken. For a worker UPR this is the only thing it
+  // drives automatically — see the silent-reload guard below.
   recordAuthFailureSignal();
 
   if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
@@ -427,6 +431,13 @@ function maybeScheduleAuthRecovery(message, sourceId) {
     handleMidCallAuthSignal(source);
     return;
   }
+
+  // Outside a call, only the reliable InteractionRequired signal triggers the
+  // silent clear-and-reload. A worker UPR is too noisy to auto-recover on
+  // (healthy sessions emit them ~hourly, UPR-heavy tenants constantly — #2629);
+  // it has already fed popup correlation above, so it can still drive an in-app
+  // recovery via the banner-click intercept, just never silently on its own.
+  if (!isReliableSignal) return;
 
   scheduleAuthRecovery();
 }
