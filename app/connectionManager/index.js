@@ -239,10 +239,6 @@ const PROBE_TIMEOUT_MS = 5000;
 
 function isOnlineHttps(testUrl) {
   return new Promise((resolve) => {
-    const req = net.request({
-      url: testUrl,
-      method: "HEAD",
-    });
     let settled = false;
     let timer;
     const finish = (online) => {
@@ -251,17 +247,29 @@ function isOnlineHttps(testUrl) {
       clearTimeout(timer);
       resolve(online);
     };
-    timer = setTimeout(() => {
-      try {
-        req.abort();
-      } catch {
-        /* request already settled or aborted */
-      }
+    try {
+      const req = net.request({
+        url: testUrl,
+        method: "HEAD",
+      });
+      timer = setTimeout(() => {
+        try {
+          req.abort();
+        } catch {
+          /* request already settled or aborted */
+        }
+        finish(false);
+      }, PROBE_TIMEOUT_MS);
+      req.on("response", () => finish(true));
+      req.on("error", () => finish(false));
+      req.end();
+    } catch {
+      // net.request can throw synchronously on a malformed URL or an Electron
+      // net-stack init failure. Treat an unprobeable URL as offline so the
+      // probe always resolves a boolean and isOnline() falls through rather
+      // than rejecting and wedging refresh().
       finish(false);
-    }, PROBE_TIMEOUT_MS);
-    req.on("response", () => finish(true));
-    req.on("error", () => finish(false));
-    req.end();
+    }
   });
 }
 
@@ -276,10 +284,16 @@ function isOnlineDns(testDomain) {
       resolve(online);
     };
     timer = setTimeout(() => finish(false), PROBE_TIMEOUT_MS);
-    net
-      .resolveHost(testDomain)
-      .then(() => finish(true))
-      .catch(() => finish(false));
+    try {
+      net
+        .resolveHost(testDomain)
+        .then(() => finish(true))
+        .catch(() => finish(false));
+    } catch {
+      // resolveHost is promise-based, but guard a synchronous throw so the
+      // probe always resolves a boolean and never rejects.
+      finish(false);
+    }
   });
 }
 
