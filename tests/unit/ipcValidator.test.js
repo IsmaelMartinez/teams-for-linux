@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { validateIpcChannel, allowedChannels } = require('../../app/security/ipcValidator');
+const { validateIpcChannel, validateIpcSender, allowedChannels } = require('../../app/security/ipcValidator');
 
 describe('IPC Validator - Channel validation', () => {
 	it('accepts all channels in the allowlist', () => {
@@ -94,6 +94,33 @@ describe('IPC Validator - Payload sanitisation', () => {
 		// Arrays are objects, so sanitisation should process them
 		validateIpcChannel('get-config', payload);
 		assert.strictEqual(payload[1].name, 'safe');
+	});
+});
+
+describe('IPC Validator - Sender validation', () => {
+	it('accepts messages from top-level frames', () => {
+		assert.strictEqual(validateIpcSender({ senderFrame: { parent: null } }), true);
+	});
+
+	it('rejects messages from sub-frames', () => {
+		const subFrame = { parent: { parent: null } };
+		assert.strictEqual(validateIpcSender({ senderFrame: subFrame }), false);
+	});
+
+	it('accepts events without a senderFrame (destroyed frame or internal emit)', () => {
+		assert.strictEqual(validateIpcSender({ senderFrame: null }), true);
+		assert.strictEqual(validateIpcSender({}), true);
+		assert.strictEqual(validateIpcSender(undefined), true);
+	});
+
+	it('accepts events whose senderFrame was disposed (property access throws)', () => {
+		const disposedFrame = {};
+		Object.defineProperty(disposedFrame, 'parent', {
+			get() {
+				throw new Error('Render frame was disposed before WebFrameMain could be accessed');
+			},
+		});
+		assert.strictEqual(validateIpcSender({ senderFrame: disposedFrame }), true);
 	});
 });
 

@@ -160,7 +160,9 @@ ipcRenderer.invoke("get-config").then((config) => {
     disableNotifications: config?.disableNotifications
   });
 }).catch((err) => {
-  console.error("Preload: Failed to load config for notifications:", err);
+  // Log only the message: renderer console output bypasses the main-process
+  // PII sanitization hook, and a full error object can embed paths/URLs.
+  console.error("Preload: Failed to load config for notifications:", err?.message);
 });
 
 // Create a Notification-like stub so Teams can manage lifecycle without errors.

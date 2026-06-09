@@ -16,7 +16,7 @@ const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
 const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
-const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
+const { validateIpcChannel, validateIpcSender, allowedChannels } = require("./security/ipcValidator");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
@@ -220,7 +220,7 @@ if (gotTheLock) {
 
   ipcMain.handle = (channel, handler) => {
     return originalIpcHandle(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+      if (!validateIpcSender(event) || !validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected handle request for channel: ${channel}`);
         return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
       }
@@ -230,7 +230,7 @@ if (gotTheLock) {
 
   ipcMain.on = (channel, handler) => {
     return originalIpcOn(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+      if (!validateIpcSender(event) || !validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected event for channel: ${channel}`);
         return;
       }
@@ -240,7 +240,7 @@ if (gotTheLock) {
 
   ipcMain.once = (channel, handler) => {
     return originalIpcOnce(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+      if (!validateIpcSender(event) || !validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
         console.error(`[IPC Security] Rejected event for channel: ${channel}`);
         return;
       }

@@ -49,25 +49,55 @@ class IdleMonitor {
     }
   }
 
-  #getStateFileOverride() {
+  // The default state file lives in /tmp (world-writable, sticky bit), so a
+  // file planted by another local user must not control this user's presence.
+  // Open with O_NOFOLLOW and fstat the descriptor: rejects symlinks and files
+  // not owned by the current user without a check-then-read race.
+  #readStateFile() {
+    const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0);
+    let fd;
     try {
-      if (fs.existsSync(this.#stateFilePath)) {
-        const content = fs.readFileSync(this.#stateFilePath, 'utf8').trim();
-        
-        if (content === IdleMonitor.#STATE_FILE_INACTIVE) {
-          return IdleMonitor.#SYSTEM_STATE_IDLE;
-        } else if (content === IdleMonitor.#STATE_FILE_ACTIVE) {
-          return IdleMonitor.#SYSTEM_STATE_ACTIVE;
-        } else {
-          console.warn(`[IDLE] Unknown state file content: '${content}', ignoring`);
-          return null;
-        }
-      }
+      fd = fs.openSync(this.#stateFilePath, flags);
     } catch (err) {
-      console.warn(`[IDLE] Failed to read state file: ${err.message}`);
+      if (err.code !== 'ENOENT') {
+        console.warn(`[IDLE] Failed to open state file: ${err.code}`);
+      }
+      return null;
     }
-    
-    return null; // No override
+    try {
+      const stats = fs.fstatSync(fd);
+      if (!stats.isFile()) {
+        console.warn('[IDLE] State file is not a regular file, ignoring');
+        return null;
+      }
+      if (typeof process.getuid === 'function' && stats.uid !== process.getuid()) {
+        console.warn('[IDLE] State file is not owned by the current user, ignoring');
+        return null;
+      }
+      return fs.readFileSync(fd, 'utf8').trim();
+    } catch (err) {
+      console.warn(`[IDLE] Failed to read state file: ${err.code}`);
+      return null;
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+
+  #getStateFileOverride() {
+    const content = this.#readStateFile();
+    if (content === null) {
+      return null; // No override
+    }
+
+    if (content === IdleMonitor.#STATE_FILE_INACTIVE) {
+      return IdleMonitor.#SYSTEM_STATE_IDLE;
+    } else if (content === IdleMonitor.#STATE_FILE_ACTIVE) {
+      return IdleMonitor.#SYSTEM_STATE_ACTIVE;
+    }
+    // Don't echo the content back: an unexpected value may be arbitrary
+    // (potentially attacker-written) file data.
+    console.warn('[IDLE] Unknown state file content, ignoring');
+    return null;
   }
 
   #handleStateFileOverride() {

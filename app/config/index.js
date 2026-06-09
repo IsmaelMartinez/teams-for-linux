@@ -22,11 +22,13 @@ function checkSystemConfigFileExistence() {
 }
 
 function getConfigFile(configPath) {
-  return require(getConfigFilePath(configPath));
+  // JSON.parse instead of require(): keeps config loading out of the module
+  // system (no require cache, no resolution of non-JSON files).
+  return JSON.parse(fs.readFileSync(getConfigFilePath(configPath), "utf8"));
 }
 
 function getSystemConfigFile() {
-  return require(getSystemConfigFilePath());
+  return JSON.parse(fs.readFileSync(getSystemConfigFilePath(), "utf8"));
 }
 
 function populateConfigObjectFromFile(configObject, configPath) {
@@ -158,7 +160,9 @@ function argv(configPath, appVersion) {
   logger.init(config.logConfig);
 
   console.info("configPath:", configPath);
-  console.debug("configFile:", configObject.configFile);
+  // Log only the option names, never the values: the config file can contain
+  // credentials and custom service URLs (MQTT, SSO, customBackground, ...).
+  console.debug("configFile keys:", Object.keys(configObject.configFile));
 
   return config;
 }

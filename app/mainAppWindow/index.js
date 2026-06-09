@@ -970,6 +970,26 @@ function restoreWindow() {
 }
 
 /**
+ * Validates a deep-link target before it is loaded into the main window.
+ * Args arrive from outside the app (protocol handler, second instance), so
+ * only well-formed https URLs may reach window.loadURL — anything else
+ * (javascript:, file:, mangled protocol rewrites) is dropped.
+ */
+function toValidatedHttpsUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") {
+      console.warn(`[DEEP_LINK] Blocked deep link with scheme '${parsed.protocol}'`);
+      return null;
+    }
+    return url;
+  } catch {
+    console.warn("[DEEP_LINK] Blocked unparseable deep link");
+    return null;
+  }
+}
+
+/**
  * Processes command line arguments to extract Teams URLs and protocol handlers.
  * Handles both msteams:// protocol links and HTTPS URLs that match the Teams domain pattern.
  * This enables deep linking into Teams conversations, meetings, and channels.
@@ -982,27 +1002,24 @@ function processArgs(args) {
   const v1msTeams = new RegExp(config.msTeamsProtocols.v1);
   // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
   const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
-  console.debug("processArgs:", args);
+  // Do not log the args themselves: deep-link URLs carry query parameters
+  // (meeting ids, tenant ids, signed context) that must stay out of logs.
+  console.debug(`processArgs: ${args.length} argument(s)`);
   for (const arg of args) {
-    console.debug(
-      `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
-        arg
-      )}`
-    );
     if (new RegExp(config.meetupJoinRegEx).test(arg)) {
       console.debug("A url argument received with https protocol");
       window.show();
-      return arg;
+      return toValidatedHttpsUrl(arg);
     }
     if (v1msTeams.test(arg)) {
       console.debug("A url argument received with msteams v1 protocol");
       window.show();
-      return config.url + arg.substring(8, arg.length);
+      return toValidatedHttpsUrl(config.url + arg.substring(8, arg.length));
     }
     if (v2msTeams.test(arg)) {
       console.debug("A url argument received with msteams v2 protocol");
       window.show();
-      return arg.replace("msteams", "https");
+      return toValidatedHttpsUrl(arg.replace("msteams", "https"));
     }
   }
 }
@@ -1354,7 +1371,34 @@ function secureOpenLink(details) {
   return returnValue;
 }
 
+// Schemes that may be handed to the OS (shell.openExternal or the configured
+// defaultURLHandler). Blocks renderer-supplied URLs like file://, smb:// or
+// data: from reaching OS-level handlers, where they could read local files
+// or leak NTLM credentials. msteams: links never reach here (handled in
+// onNewWindow / processArgs).
+const ALLOWED_EXTERNAL_PROTOCOLS = new Set([
+  "http:",
+  "https:",
+  "mailto:",
+  "tel:",
+  "callto:",
+  "sip:",
+  "sips:",
+]);
+
 function openInBrowser(details) {
+  let protocol;
+  try {
+    protocol = new URL(details.url).protocol;
+  } catch {
+    console.warn("[LINK] Blocked external open of unparseable URL");
+    return;
+  }
+  if (!ALLOWED_EXTERNAL_PROTOCOLS.has(protocol)) {
+    // Log the scheme only — URLs can carry tokens in query parameters.
+    console.warn(`[LINK] Blocked external open of URL with scheme '${protocol}'`);
+    return;
+  }
   if (config.defaultURLHandler.trim() === "") {
     shell.openExternal(details.url);
   } else {

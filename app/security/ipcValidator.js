@@ -183,4 +183,35 @@ function validateIpcChannel(channel, payload = null) {
   return true;
 }
 
-module.exports = { validateIpcChannel, allowedChannels };
+/**
+ * Validates the sender of an IPC message.
+ *
+ * All legitimate IPC traffic originates from preload scripts, which only run
+ * in top-level frames (nodeIntegrationInSubFrames is never enabled). A call
+ * arriving from a sub-frame therefore means remote page content — e.g. an
+ * embedded iframe inside Teams — is reaching for privileged channels, and is
+ * rejected.
+ *
+ * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event - The IPC event
+ * @returns {boolean} - True if the sender is acceptable, false if blocked
+ */
+function validateIpcSender(event) {
+  // senderFrame is null when the frame was destroyed mid-flight; nothing to
+  // validate against, and the late message is harmless to the handler.
+  const frame = event?.senderFrame;
+  if (!frame) {
+    return true;
+  }
+  try {
+    if (frame.parent !== null) {
+      console.warn('[IPC Security] Blocked IPC message from sub-frame');
+      return false;
+    }
+  } catch {
+    // Accessing properties of a disposed WebFrameMain throws; treat it like
+    // the senderFrame === null case above.
+  }
+  return true;
+}
+
+module.exports = { validateIpcChannel, validateIpcSender, allowedChannels };

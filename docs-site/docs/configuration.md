@@ -190,6 +190,10 @@ rm /tmp/teams-for-linux-idle-state-$USER
 
 The state file is automatically cleaned up when the app exits.
 
+Because the default location is in the world-writable `/tmp`, the app only
+honours a state file that is a regular file (not a symlink) owned by the user
+running Teams for Linux; anything else is ignored with a warning.
+
 ### Authentication & SSO
 
 | Option | Type | Default | Description |

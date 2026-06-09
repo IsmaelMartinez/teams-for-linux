@@ -132,13 +132,37 @@ class CommandLineManager {
     }
   }
 
+  // Flags that disable TLS validation, same-origin policy or sandboxing.
+  // They stay user-configurable (the config file is the user's own trust
+  // domain) but deserve a loud warning, since they silently undo protections
+  // the rest of the app relies on.
+  static #SECURITY_SENSITIVE_FLAGS = new Set([
+    "disable-web-security",
+    "ignore-certificate-errors",
+    "ignore-certificate-errors-spki-list",
+    "allow-insecure-localhost",
+    "allow-running-insecure-content",
+    "no-sandbox",
+  ]);
+
+  static #warnIfSecuritySensitiveFlag(flagName) {
+    const normalized = flagName.replace(/^--/, "").split("=")[0];
+    if (CommandLineManager.#SECURITY_SENSITIVE_FLAGS.has(normalized)) {
+      console.warn(
+        `[SECURITY] electronCLIFlags contains '${normalized}', which weakens TLS/web security protections`
+      );
+    }
+  }
+
   static addElectronCLIFlags(config) {
     if (Array.isArray(config.electronCLIFlags)) {
       for (const flag of config.electronCLIFlags) {
         if (typeof flag === "string") {
+          CommandLineManager.#warnIfSecuritySensitiveFlag(flag);
           console.debug(`Adding electron CLI flag '${flag}'`);
           app.commandLine.appendSwitch(flag);
         } else if (Array.isArray(flag) && typeof flag[0] === "string") {
+          CommandLineManager.#warnIfSecuritySensitiveFlag(flag[0]);
           const hasValidValue = flag[1] !== undefined &&
                                  typeof flag[1] !== "object" &&
                                  typeof flag[1] !== "function";

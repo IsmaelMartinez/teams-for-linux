@@ -72,6 +72,7 @@ const responseHeaders = {
 - **Recursive Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`) from payloads at all nesting depths
 - **Prototype Pollution Protection**: Guards against object prototype manipulation with depth-limited recursion (max 10 levels)
 - **Request Validation**: Validates all IPC requests before processing
+- **Sender Validation**: Rejects IPC messages originating from sub-frames (`validateIpcSender`) — legitimate traffic only ever comes from top-level frame preload scripts, so an embedded iframe reaching for privileged channels is blocked
 
 ```javascript
 function validateIpcChannel(channel, payload = null) {

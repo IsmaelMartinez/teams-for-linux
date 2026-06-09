@@ -40,7 +40,7 @@ class BrowserWindowManager {
     });
 
     if (this.config.clearStorageData) {
-      console.debug("Clearing storage data", this.config.clearStorageData);
+      console.debug("Clearing storage data");
       const defSession = session.fromPartition(this.config.partition);
       await defSession.clearStorageData(this.config.clearStorageData);
     }
