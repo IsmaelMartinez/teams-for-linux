@@ -39,6 +39,7 @@ Feasible and low-risk. The cleanest insertion point is `handleWebauthnRequest` i
 
 - Cancellation: a "Cancel" button would have to replicate the detached-process-group kill already used on timeout (`fido2Backend.js:59`) and reject cleanly, or it risks orphaning the `fido2` child. The simplest first cut is an informational prompt with no cancel, auto-dismissed on completion or timeout.
 - Seamlessness: the PIN dialog closes before the touch wait, so the new prompt should appear without a visible gap.
+- Window lifecycle: the `finally` that dismisses the prompt should check `isDestroyed()` first, since the parent window could be closed during the wait (up to the 60s timeout) and dismissing an already-destroyed window would throw.
 - Scope: Linux-only, behind `auth.webauthn.enabled`, beta.
 
 ## Recommendation
