@@ -129,6 +129,8 @@ The media state topic names (relative to `topicPrefix`) can be customized via `m
 
 All keys are optional; omitted keys fall back to the defaults shown above. [Home Assistant discovery](#home-assistant-auto-discovery) configurations automatically use the customized topic names.
 
+> **Note:** `microphoneControl` tracks `microphone` by default — if you set `microphone` but omit `microphoneControl`, the control topic becomes `<microphone>/control` (e.g. `microphone: "mic"` → `mic/control`), so the two stay in sync. Set `microphoneControl` explicitly to decouple it.
+
 ### Broker URL Formats
 
 - **Plain TCP**: `mqtt://broker.example.com:1883`

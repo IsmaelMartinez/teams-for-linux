@@ -111,6 +111,21 @@ describe('MQTTMediaStatusService', () => {
 			assertPublished(published, 'teams/mic-state', 'muted');
 		});
 
+		it('derives microphoneControl from a customised microphone topic', async () => {
+			createService(mqttClient, { mediaTopics: { microphone: 'mic-state' } });
+			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
+			await flush();
+			// control topic tracks the customised microphone topic, not the static default
+			assertPublished(published, 'teams/mic-state/control', 'muted');
+		});
+
+		it('keeps an explicit microphoneControl override independent of microphone', async () => {
+			createService(mqttClient, { mediaTopics: { microphone: 'mic-state', microphoneControl: 'mic-cmd' } });
+			mockIpcMain.emit('microphone-state-changed', undefined, 'muted');
+			await flush();
+			assertPublished(published, 'teams/mic-cmd', 'muted');
+		});
+
 		it('uses custom mediaTopics for screenSharing', async () => {
 			createService(mqttClient, { mediaTopics: { screenSharing: 'sharing-screen' } });
 			mockIpcMain.emit('screen-sharing-started');
