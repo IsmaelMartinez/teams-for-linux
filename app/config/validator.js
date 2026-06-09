@@ -19,6 +19,14 @@ function typeName(value) {
 }
 
 function matchesType(value, expectedType) {
+  // null conventionally means "unset, use the default" (e.g. the
+  // network.webRTCIPHandlingPolicy default), so it is never a mismatch.
+  if (value === null) return true;
+  // Union types like "string|boolean" (logConfig levels accept false to
+  // disable a transport) match when any component matches.
+  if (expectedType.includes("|")) {
+    return expectedType.split("|").some((t) => matchesType(value, t));
+  }
   switch (expectedType) {
     case "array":
       return Array.isArray(value);
@@ -50,6 +58,10 @@ function typeMismatchWarning(name, expectedType, actualType) {
   return `Config option "${name}" should be type "${expectedType}" but got "${actualType}"`;
 }
 
+function choicesWarning(name, choices) {
+  return `Config option "${name}" must be one of [${choices.join(", ")}]`;
+}
+
 // Opportunistic nested validation using the Phase 3a `fields` metadata
 // (a map of dot-path relative to the option → { type, describe }).
 // Absence or malformed metadata silently skips this check.
@@ -62,11 +74,20 @@ function validateNestedFields(optionName, value, fields, warnings) {
     for (const [childKey, childValue] of Object.entries(node)) {
       const childPath = relativePath ? `${relativePath}.${childKey}` : childKey;
       const fullName = `${optionName}.${childPath}`;
-      const fieldDef = fields[childPath];
+      // Object.hasOwn so a key literally named "__proto__" or "constructor"
+      // is reported as unknown instead of resolving to an inherited property.
+      const fieldDef = Object.hasOwn(fields, childPath) ? fields[childPath] : undefined;
 
       if (isPlainObject(fieldDef)) {
         if (fieldDef.type && !matchesType(childValue, fieldDef.type)) {
           warnings.push(typeMismatchWarning(fullName, fieldDef.type, typeName(childValue)));
+        } else if (
+          Array.isArray(fieldDef.choices) &&
+          childValue !== null &&
+          isPrimitive(childValue) &&
+          !fieldDef.choices.includes(childValue)
+        ) {
+          warnings.push(choicesWarning(fullName, fieldDef.choices));
         }
         continue;
       }
@@ -97,7 +118,9 @@ function validateConfigFile(configFile, optionDefinitions) {
 
   try {
     for (const [key, value] of Object.entries(configFile)) {
-      const def = optionDefinitions[key];
+      const def = Object.hasOwn(optionDefinitions, key)
+        ? optionDefinitions[key]
+        : undefined;
 
       if (!isPlainObject(def)) {
         warnings.push(unknownKeyWarning(key));
@@ -109,8 +132,13 @@ function validateConfigFile(configFile, optionDefinitions) {
         continue;
       }
 
-      if (Array.isArray(def.choices) && isPrimitive(value) && !def.choices.includes(value)) {
-        warnings.push(`Config option "${key}" must be one of [${def.choices.join(", ")}]`);
+      if (
+        Array.isArray(def.choices) &&
+        value !== null &&
+        isPrimitive(value) &&
+        !def.choices.includes(value)
+      ) {
+        warnings.push(choicesWarning(key, def.choices));
         continue;
       }
 

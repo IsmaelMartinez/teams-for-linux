@@ -478,12 +478,12 @@ module.exports = {
         type: "object",
         fields: {
           "transports.console.level": {
-            type: "string",
+            type: "string|boolean",
             describe:
               "electron-log level for the console transport (error/warn/info/verbose/debug/silly); set to false to disable console logging.",
           },
           "transports.file.level": {
-            type: "string",
+            type: "string|boolean",
             describe:
               "electron-log level for the file transport (error/warn/info/verbose/debug/silly); false (the default) disables file logging.",
           },

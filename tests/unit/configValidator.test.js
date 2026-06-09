@@ -86,10 +86,8 @@ describe('Config Validator - top-level keys', () => {
 		assert.match(warnings[4], /"logConfig" should be type "object" but got "array"/);
 	});
 
-	it('treats null as a type mismatch for typed options', () => {
-		const warnings = validateConfigFile({ logConfig: null }, definitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /"logConfig" should be type "object" but got "null"/);
+	it('treats null as "unset" rather than a type mismatch', () => {
+		assert.deepStrictEqual(validateConfigFile({ logConfig: null }, definitions), []);
 	});
 
 	it('skips type checking when the definition has no type', () => {
@@ -168,5 +166,61 @@ describe('Config Validator - safety', () => {
 		assert.strictEqual(warnings.length, 1);
 		assert.match(warnings[0], /could not complete/);
 		assert.ok(!warnings[0].includes('SECRET_VALUE_123'));
+	});
+});
+
+describe('Config Validator - review follow-ups', () => {
+	const unionDefinitions = {
+		logConfig: {
+			default: { transports: { console: { level: 'info' }, file: { level: false } } },
+			describe: 'Log config',
+			type: 'object',
+			fields: {
+				'transports.console.level': { type: 'string|boolean', describe: 'Console level or false' },
+				'transports.file.level': { type: 'string|boolean', describe: 'File level or false' },
+			},
+		},
+		network: {
+			default: { webRTCIPHandlingPolicy: null },
+			describe: 'Network config',
+			type: 'object',
+			fields: {
+				webRTCIPHandlingPolicy: { type: 'string', describe: 'WebRTC policy', choices: ['default', 'disable_non_proxied_udp'] },
+			},
+		},
+	};
+
+	it('accepts union types like string|boolean for nested leaves', () => {
+		const config = { logConfig: { transports: { console: { level: false }, file: { level: 'debug' } } } };
+		assert.deepStrictEqual(validateConfigFile(config, unionDefinitions), []);
+	});
+
+	it('still flags values matching no union component', () => {
+		const config = { logConfig: { transports: { file: { level: 42 } } } };
+		const warnings = validateConfigFile(config, unionDefinitions);
+		assert.strictEqual(warnings.length, 1);
+		assert.match(warnings[0], /logConfig\.transports\.file\.level/);
+		assert.match(warnings[0], /string\|boolean/);
+	});
+
+	it('treats null as "unset" for type and choices checks', () => {
+		const config = { network: { webRTCIPHandlingPolicy: null } };
+		assert.deepStrictEqual(validateConfigFile(config, unionDefinitions), []);
+	});
+
+	it('enforces choices on nested leaves', () => {
+		const config = { network: { webRTCIPHandlingPolicy: 'nonsense' } };
+		const warnings = validateConfigFile(config, unionDefinitions);
+		assert.strictEqual(warnings.length, 1);
+		assert.match(warnings[0], /network\.webRTCIPHandlingPolicy/);
+		assert.match(warnings[0], /must be one of \[default, disable_non_proxied_udp\]/);
+		assert.ok(!warnings[0].includes('nonsense'), 'Warnings must not contain config values');
+	});
+
+	it('reports a literal __proto__ key as unknown instead of resolving it', () => {
+		const config = JSON.parse('{"__proto__": {"polluted": true}}');
+		const warnings = validateConfigFile(config, unionDefinitions);
+		assert.strictEqual(warnings.length, 1);
+		assert.match(warnings[0], /Unknown config option "__proto__"/);
 	});
 });

@@ -140,8 +140,8 @@ Object options group several related settings. The tables below list each nested
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `logConfig.transports.console.level` | `string` | `"info"` | electron-log level for the console transport (error/warn/info/verbose/debug/silly); set to false to disable console logging. |
-| `logConfig.transports.file.level` | `string` | `false` | electron-log level for the file transport (error/warn/info/verbose/debug/silly); false (the default) disables file logging. |
+| `logConfig.transports.console.level` | `string|boolean` | `"info"` | electron-log level for the console transport (error/warn/info/verbose/debug/silly); set to false to disable console logging. |
+| `logConfig.transports.file.level` | `string|boolean` | `false` | electron-log level for the file transport (error/warn/info/verbose/debug/silly); false (the default) disables file logging. |
 
 ### customNotification
 
