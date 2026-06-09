@@ -17,6 +17,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Proposes lightweight startup/memory instrumentation with zero dependencies
   - **Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically
 
+- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — `app/config/options.js` as the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
+  - **Phases 0–2 shipped (v2.12.0)**: drift fixes ([PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602)), generated config reference + `config-schema.json` with CI drift guard ([PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604)), interactive config explorer in the docs site ([PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606))
+  - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint (metadata completeness is a merge gate), plus warn-only startup validation of `config.json` in `app/config/validator.js`
+  - **Remaining**: Phase 3b — in-app settings window, now unblocked by the 3a schema metadata; ships restart-required options first
+
 ### First Iteration Shipped — Awaiting Feedback
 
 - **[Join Meeting Window Takeover Research](join-meeting-window-takeover-research.md)** — "Join Meeting" replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322))
@@ -37,10 +42,6 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - **Phases 2-3**: Calendar widget, mail preview, presence, settings UI — not started
 
 ### Idea Stage
-
-- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — make `app/config/index.js` the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
-  - Found confirmed config drift (stale `msTeamsProtocols` default; undocumented `mqtt.homeAssistant.*` and `auth.webauthn.debug`); 76 options hand-mirrored in a 924-line reference with no codegen link
-  - Phased: fix drift (P0) → generate config reference + `config-schema.json` (P1) → interactive config explorer (P2) → schema `applyMode`/nested metadata (P3a) → in-app settings window (P3b) → schema-driven validation (P4)
 
 - **[Custom Stickers — External Sources](custom-stickers-online-import-research.md)** — follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
   - Three realistic paths ranked by simplicity: URL paste (shipped in v1), Telegram sticker pack import (next phase), AI generation via a user-configured backend such as a local Ollama image-gen session (more futuristic)
