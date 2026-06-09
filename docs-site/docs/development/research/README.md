@@ -38,6 +38,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ### Idea Stage
 
+- **[Smartcard / NSS PIN Dialog](smartcard-nss-pin-dialog-research.md)** — PIN dialog for password-protected PKCS#11 providers (smartcards) via Electron 33's `app.setClientCertRequestPasswordHandler` ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639))
+  - Electron 42.3.3 already ships the required Linux-only API; the WebAuthn PIN window (`app/webauthn/pinDialog.js`) is a directly reusable secure-dialog pattern
+  - Phased: SoftHSM2 spike (cancel/retry semantics, lockout safety) → opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled` → `select-client-certificate` picker for multi-cert tokens
+  - Validation possible without hardware via SoftHSM2; requester confirms on real smartcard
+
 - **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — make `app/config/index.js` the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
   - Found confirmed config drift (stale `msTeamsProtocols` default; undocumented `mqtt.homeAssistant.*` and `auth.webauthn.debug`); 76 options hand-mirrored in a 924-line reference with no codegen link
   - Phased: fix drift (P0) → generate config reference + `config-schema.json` (P1) → interactive config explorer (P2) → schema `applyMode`/nested metadata (P3a) → in-app settings window (P3b) → schema-driven validation (P4)
