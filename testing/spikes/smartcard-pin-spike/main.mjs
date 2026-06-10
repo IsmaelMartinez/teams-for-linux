@@ -90,40 +90,40 @@ function pinPrompt({ hostname, tokenName, isRetry }) {
   });
 }
 
-app.whenReady().then(() => {
-  // Q1/Q2/Q5: does the handler fire, with what payload, and how often?
-  app.setClientCertRequestPasswordHandler((req) => {
-    pinHandlerCalls += 1;
-    console.log(`[SPIKE][PIN] handler call #${pinHandlerCalls}:`, JSON.stringify(req));
-    return pinPrompt(req);
-  });
+await app.whenReady();
 
-  // Q6: does select-client-certificate fire, and with which certificates?
-  app.on("select-client-certificate", (event, _webContents, url, certificateList, callback) => {
-    certSelectCalls += 1;
-    event.preventDefault();
-    console.log(`[SPIKE][CERT] select-client-certificate call #${certSelectCalls} for ${url}`);
-    certificateList.forEach((c, i) =>
-      console.log(`[SPIKE][CERT]   [${i}] subject="${c.subjectName}" issuer="${c.issuerName}" serial=${c.serialNumber}`),
-    );
-    if (certificateList.length === 0) return callback();
-    if (certificateList.length === 1) return callback(certificateList[0]);
-    const choice = dialog.showMessageBoxSync({
-      type: "question",
-      title: "SPIKE certificate picker",
-      message: "Multiple client certificates available — pick one",
-      buttons: certificateList.map((c, i) => `[${i}] ${c.subjectName}`),
-    });
-    callback(certificateList[choice]);
-  });
-
-  const win = new BrowserWindow({ width: 1000, height: 700 });
-  console.log(`[SPIKE] loading ${targetUrl}`);
-  console.log("[SPIKE] checklist: (1) handler fires? (2) tokenName correct? (3) resolve('') → isRetry/counter?");
-  console.log("[SPIKE]            (4) reject → counter? (5) calls per request or per unlock (reload the page)?");
-  console.log("[SPIKE]            (6) cert list contents? (7) page shows your certificate after correct PIN?");
-  win.loadURL(targetUrl);
+// Q1/Q2/Q5: does the handler fire, with what payload, and how often?
+app.setClientCertRequestPasswordHandler((req) => {
+  pinHandlerCalls += 1;
+  console.log(`[SPIKE][PIN] handler call #${pinHandlerCalls}:`, JSON.stringify(req));
+  return pinPrompt(req);
 });
+
+// Q6: does select-client-certificate fire, and with which certificates?
+app.on("select-client-certificate", (event, _webContents, url, certificateList, callback) => {
+  certSelectCalls += 1;
+  event.preventDefault();
+  console.log(`[SPIKE][CERT] select-client-certificate call #${certSelectCalls} for ${url}`);
+  certificateList.forEach((c, i) =>
+    console.log(`[SPIKE][CERT]   [${i}] subject="${c.subjectName}" issuer="${c.issuerName}" serial=${c.serialNumber}`),
+  );
+  if (certificateList.length === 0) return callback();
+  if (certificateList.length === 1) return callback(certificateList[0]);
+  const choice = dialog.showMessageBoxSync({
+    type: "question",
+    title: "SPIKE certificate picker",
+    message: "Multiple client certificates available — pick one",
+    buttons: certificateList.map((c, i) => `[${i}] ${c.subjectName}`),
+  });
+  callback(certificateList[choice]);
+});
+
+const win = new BrowserWindow({ width: 1000, height: 700 });
+console.log(`[SPIKE] loading ${targetUrl}`);
+console.log("[SPIKE] checklist: (1) handler fires? (2) tokenName correct? (3) resolve('') → isRetry/counter?");
+console.log("[SPIKE]            (4) reject → counter? (5) calls per request or per unlock (reload the page)?");
+console.log("[SPIKE]            (6) cert list contents? (7) page shows your certificate after correct PIN?");
+win.loadURL(targetUrl);
 
 app.on("window-all-closed", () => {
   console.log(`[SPIKE] totals: PIN handler calls=${pinHandlerCalls}, cert-select calls=${certSelectCalls}`);
