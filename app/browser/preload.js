@@ -436,6 +436,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // Tray badge fallback source: main-process page-title-updated handler.
+    // Belt-and-suspenders alongside mutationTitle.js so the badge clears
+    // even when the renderer-side DOM MutationObserver misses a title reset.
+    ipcRenderer.on("page-title-unread-count", (_event, number) => {
+      if (typeof number === "number" && number >= 0 && number <= 9999) {
+        globalThis.dispatchEvent(
+          new CustomEvent("unread-count", { detail: { number } })
+        );
+      }
+    });
+
   } catch (error) {
     console.error("Preload: Failed to initialize browser modules:", error);
   }
