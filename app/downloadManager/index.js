@@ -1,4 +1,5 @@
 const { Notification, shell } = require("electron");
+const fs = require("node:fs");
 const path = require("node:path");
 
 // Hosts whose interrupted downloads are most likely blocked by a Microsoft
@@ -44,7 +45,20 @@ function looksLikePolicyBlock(url, receivedBytes) {
   if (receivedBytes > 0) return false;
   const host = getHostname(url);
   if (!host) return false;
-  return POLICY_HOST_HINTS.some((hint) => host.endsWith(hint) || host === hint);
+  return POLICY_HOST_HINTS.some((hint) => host === hint || host.endsWith("." + hint));
+}
+
+// Mirror Chromium's default "name (1).ext" de-duplication, which forcing a
+// save path via setSavePath would otherwise disable — a fixed saveDirectory
+// must not silently overwrite a previously downloaded file.
+function uniqueSavePath(directory, filename) {
+  const ext = path.extname(filename);
+  const stem = path.basename(filename, ext);
+  let candidate = path.join(directory, filename);
+  for (let i = 1; fs.existsSync(candidate); i++) {
+    candidate = path.join(directory, `${stem} (${i})${ext}`);
+  }
+  return candidate;
 }
 
 // Matches the leading progress prefix this manager applies to window titles
@@ -159,11 +173,13 @@ class DownloadManager {
   }
 
   #onWillDownload(_event, item) {
+    // Save-location config must apply regardless of the notification and
+    // progress flags below.
+    this.#applySavePath(item);
+
     const notify = this.#shouldNotify();
     const showProgress = this.#shouldShowProgress();
     if (!notify && !showProgress) return;
-
-    this.#applySavePath(item);
 
     console.debug(`[DownloadManager] Download started: ${item.getFilename()}`);
 
@@ -194,6 +210,10 @@ class DownloadManager {
         this.#finishJob(item, state);
         this.#updateProgressBar();
       }
+      // Items handled end-to-end by another feature (the context-menu
+      // attachment download in app/menus) provide their own save path,
+      // notifications, and clipboard handling — skip ours to avoid doubles.
+      if (item.teamsForLinuxExternallyManaged) return;
       if (!notify) return;
 
       // Read filename from the item inside `done` rather than capturing it at
@@ -210,11 +230,13 @@ class DownloadManager {
           break;
         case "cancelled":
           console.debug(`[DownloadManager] Download cancelled: ${filename}`);
-          this.#notifyFailed(filename, "Download cancelled", sourceUrl, receivedBytes);
+          // A cancel is a user action (e.g. dismissing the Save As dialog),
+          // never a policy block — keep the plain wording.
+          this.#notifyFailed(filename, "Download cancelled", sourceUrl, receivedBytes, false);
           break;
         case "interrupted":
           console.warn(`[DownloadManager] Download interrupted: ${filename}`);
-          this.#notifyFailed(filename, "Download interrupted", sourceUrl, receivedBytes);
+          this.#notifyFailed(filename, "Download interrupted", sourceUrl, receivedBytes, true);
           break;
         default:
           console.warn(`[DownloadManager] Download finished with unknown state: ${state}`);
@@ -267,7 +289,7 @@ class DownloadManager {
     }
     try {
       const filename = item.getFilename?.() ?? "download";
-      item.setSavePath?.(path.join(saveDirectory, filename));
+      item.setSavePath?.(uniqueSavePath(saveDirectory, filename));
     } catch (error) {
       console.warn("[DownloadManager] Could not apply saveDirectory; using default", {
         message: error?.message,
@@ -525,9 +547,11 @@ class DownloadManager {
    * @param {string} [sourceUrl] - Original download URL, used for the host
    *   heuristic and the "open in browser" action.
    * @param {number} [receivedBytes] - Bytes transferred before the failure.
+   * @param {boolean} [allowPolicyHint] - Whether this failure state can be a
+   *   policy block at all (true only for "interrupted"; a user cancel never is).
    */
-  #notifyFailed(filename, reason, sourceUrl = "", receivedBytes = 0) {
-    const policyBlock = looksLikePolicyBlock(sourceUrl, receivedBytes);
+  #notifyFailed(filename, reason, sourceUrl = "", receivedBytes = 0, allowPolicyHint = false) {
+    const policyBlock = allowPolicyHint && looksLikePolicyBlock(sourceUrl, receivedBytes);
     try {
       const notification = new Notification(
         policyBlock

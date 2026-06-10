@@ -805,6 +805,79 @@ describe('DownloadManager', () => {
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
 	});
 
+	it('uses the plain cancelled message for a user-cancelled M365 download with no bytes', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig());
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'restricted.docx',
+			'/p/restricted.docx',
+			{ totalBytes: 0, receivedBytes: 0 },
+			'https://contoso.sharepoint.com/sites/x/restricted.docx',
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'cancelled');
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+		assert.match(notificationInstances[0].options.body, /Download cancelled/);
+	});
+
+	it('does not mark lookalike hosts as policy blocks', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig());
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			'file.docx',
+			'/p/file.docx',
+			{ totalBytes: 0, receivedBytes: 0 },
+			'https://evilmicrosoft.com/file.docx',
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'interrupted');
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+	});
+
+	it('applies saveDirectory even when notifications and progress are disabled', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(
+			enabledConfig({
+				download: {
+					saveDirectory: '/home/user/TeamsFiles',
+					notifyOnDownloadComplete: false,
+					showProgressBar: false,
+				},
+			}),
+		);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.deepStrictEqual(item._setSavePathCalls, ['/home/user/TeamsFiles/report.pdf']);
+	});
+
+	it('skips notifications and openWhenDone for externally managed items', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig({ download: { openWhenDone: true } }));
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('attachment.pdf', '/p/attachment.pdf', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+		item.teamsForLinuxExternallyManaged = true;
+		item.emit('done', {}, 'completed');
+
+		await Promise.resolve();
+		assert.strictEqual(notificationInstances.length, 0);
+		assert.strictEqual(openPathCalls.length, 0);
+	});
+
 	it('does not treat a partially-downloaded M365 file as a policy block', () => {
 		const DownloadManager = require(downloadManagerPath);
 		const manager = new DownloadManager(enabledConfig());

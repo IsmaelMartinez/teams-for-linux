@@ -11,6 +11,7 @@ const {
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
+const { pathToFileURL } = require("node:url");
 const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
@@ -521,9 +522,7 @@ function assignContextMenuHandler(menus) {
       );
     }
 
-    if (menu.items.length > 0) {
-      menu.popup();
-    }
+    menu.popup();
   };
 }
 
@@ -563,61 +562,73 @@ function assignAddToDictionaryHandler(params, menu, menus) {
 function addTextEditMenuItems(params, menu, menus) {
   if (params.isEditable) {
     buildEditContextMenu(menu, menus);
-  } else {
-    // If text is selected, allow user to copy it
-    if (params.selectionText && params.selectionText.trim() !== "") {
-      menu.append(
-        new MenuItem({
-          role: "copy",
-        })
-      );
-    }
-
-    if (params.linkURL !== "") {
-      menu.append(
-        new MenuItem({
-          label: "Copy Link URL",
-          click: () => clipboard.writeText(params.linkURL),
-        })
-      );
-
-      menu.append(
-        new MenuItem({
-          label: "Download Attachment & Copy to Clipboard",
-          click: () => {
-            const activeSession = menus.window.webContents.session;
-            const mainWindowUrl = menus.window.webContents.getURL();
-            copyAttachmentAsFile(params.linkURL, activeSession, mainWindowUrl);
-          },
-        })
-      );
-    }
+    return;
   }
 
-  // Check if clipboard contains a link to download (e.g. copied from Teams menu)
+  // If text is selected, allow user to copy it
+  if (params.selectionText && params.selectionText.trim() !== "") {
+    menu.append(
+      new MenuItem({
+        role: "copy",
+      })
+    );
+  }
+
+  if (params.linkURL !== "") {
+    menu.append(
+      new MenuItem({
+        label: "Copy Link URL",
+        click: () => clipboard.writeText(params.linkURL),
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: "Download Attachment & Copy to Clipboard",
+        click: () => {
+          const activeSession = menus.window.webContents.session;
+          const mainWindowUrl = menus.window.webContents.getURL();
+          copyAttachmentAsFile(params.linkURL, activeSession, mainWindowUrl);
+        },
+      })
+    );
+  }
+
+  addClipboardLinkMenuItem(menu, menus);
+}
+
+// Offer to download a link previously copied to the clipboard (e.g. from a
+// Teams message menu). Non-editable areas only; checks availableFormats()
+// first so the (synchronous) clipboard text read is skipped when the
+// clipboard holds no text at all.
+function addClipboardLinkMenuItem(menu, menus) {
   try {
+    if (!clipboard.availableFormats().includes("text/plain")) {
+      return;
+    }
     const clipboardText = clipboard.readText().trim();
-    if (clipboardText.startsWith("http://") || clipboardText.startsWith("https://")) {
-      if (menu.items.length > 0) {
-        menu.append(
-          new MenuItem({
-            type: "separator",
-          })
-        );
-      }
+    if (!clipboardText.startsWith("http://") && !clipboardText.startsWith("https://")) {
+      return;
+    }
+    if (menu.items.length > 0) {
       menu.append(
         new MenuItem({
-          label: "Download File from Clipboard Link",
-          click: () => {
-            const activeSession = menus.window.webContents.session;
-            const mainWindowUrl = menus.window.webContents.getURL();
-            copyAttachmentAsFile(clipboardText, activeSession, mainWindowUrl);
-          },
+          type: "separator",
         })
       );
     }
-  } catch (e) {
-    // ignore
+    menu.append(
+      new MenuItem({
+        label: "Download File from Clipboard Link",
+        click: () => {
+          const activeSession = menus.window.webContents.session;
+          const mainWindowUrl = menus.window.webContents.getURL();
+          copyAttachmentAsFile(clipboardText, activeSession, mainWindowUrl);
+        },
+      })
+    );
+  } catch (error) {
+    console.debug("[Menus] Could not inspect clipboard for link download", error?.message);
   }
 }
 
@@ -742,25 +753,89 @@ function addToList(list, item) {
   return list;
 }
 
-function getDirectDownloadUrl(urlStr) {
+// Microsoft 365 / SharePoint / OneDrive hosts get the hidden-window download
+// treatment (they need the authenticated session and viewer redirects).
+// Suffix matching only — a substring test would also match lookalike hosts
+// like "mymicrosoft.evil.com". "mcas.ms" covers Defender for Cloud Apps
+// proxied hosts ("contoso.sharepoint.com.<region>.mcas.ms").
+const MS_HOST_SUFFIXES = [
+  "sharepoint.com",
+  "sharepoint-df.com",
+  "officeapps.live.com",
+  "office.com",
+  "office.net",
+  "microsoft.com",
+  "onedrive.com",
+  "1drv.ms",
+  "svc.ms",
+  "mcas.ms",
+];
+
+function isMicrosoftHost(urlStr) {
   try {
     const url = new URL(urlStr);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return false;
+    }
     const host = url.hostname.toLowerCase();
-    
-    // Target Microsoft 365, SharePoint, OneDrive, Office
-    const isMS = host.includes("sharepoint") || 
-                 host.includes("onedrive") || 
-                 host.includes("office") ||
-                 host.includes("microsoft") ||
-                 host.includes("1drv.ms");
-                 
-    if (isMS) {
+    return MS_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith("." + suffix));
+  } catch {
+    return false;
+  }
+}
+
+// Strip any path components from a filename coming from an untrusted source
+// (Content-Disposition header, page title, URL path) so it can never escape
+// the target directory.
+function sanitizeFilename(candidate, fallback = "attachment") {
+  if (typeof candidate !== "string") {
+    return fallback;
+  }
+  const base = path.basename(candidate.replaceAll("\\", "/")).trim();
+  if (!base || base === "." || base === "..") {
+    return fallback;
+  }
+  return base;
+}
+
+// Electron's clipboard.write() has no cross-platform "file" type (an unknown
+// key like `filenames` is silently ignored), so write the platform-native
+// format that file managers actually paste from.
+function copyFilePathToClipboard(filePath) {
+  try {
+    if (process.platform === "darwin") {
+      const escaped = filePath
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+      const plist =
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' +
+        `<plist version="1.0"><array><string>${escaped}</string></array></plist>`;
+      clipboard.writeBuffer("NSFilenamesPboardType", Buffer.from(plist));
+    } else if (process.platform === "linux") {
+      const uri = pathToFileURL(filePath).toString();
+      clipboard.writeBuffer("text/uri-list", Buffer.from(uri + "\n"));
+    } else {
+      clipboard.writeText(filePath);
+    }
+  } catch (error) {
+    console.warn("[CopyAttachment] Could not place file on clipboard", {
+      message: error?.message,
+    });
+  }
+}
+
+function getDirectDownloadUrl(urlStr) {
+  try {
+    if (isMicrosoftHost(urlStr)) {
+      const url = new URL(urlStr);
       if (!url.searchParams.has("download")) {
         url.searchParams.set("download", "1");
         return url.toString();
       }
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
   return urlStr;
@@ -788,18 +863,7 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
       downloadURL = applyMcasProxy(downloadURL, mainWindowUrl);
     }
     
-    let isMS = false;
-    try {
-      const url = new URL(downloadURL);
-      const host = url.hostname.toLowerCase();
-      isMS = host.includes("sharepoint") || 
-             host.includes("onedrive") || 
-             host.includes("office") ||
-             host.includes("microsoft") ||
-             host.includes("1drv.ms");
-    } catch (e) {
-      // ignore
-    }
+    const isMS = isMicrosoftHost(downloadURL);
 
     let result;
     if (isMS) {
@@ -860,15 +924,14 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
         const buffer = Buffer.from(arrayBuffer);
 
         const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-        if (!fs.existsSync(documentsDir)) {
-          fs.mkdirSync(documentsDir, { recursive: true });
-        }
+        fs.mkdirSync(documentsDir, { recursive: true });
+        // The filename came from a server header or URL — never let it carry
+        // path segments out of the target directory.
+        filename = sanitizeFilename(filename);
         const targetFilePath = path.join(documentsDir, filename);
         fs.writeFileSync(targetFilePath, buffer);
 
-        clipboard.write({
-          filenames: [targetFilePath],
-        });
+        copyFilePathToClipboard(targetFilePath);
         result = { filename, targetFilePath };
       }
     }
@@ -880,7 +943,8 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
     });
     successNotification.show();
   } catch (error) {
-    console.error("[CopyAttachment] Error:", error);
+    // Log the message only — the full error can embed the download URL.
+    console.error("[CopyAttachment] Error:", error?.message);
     const errorNotification = new Notification({
       title: "Download Error",
       body: `Failed to save attachment: ${error.message}`,
@@ -916,6 +980,9 @@ function isTextFile(urlStr) {
 
 function extractTextFromBrowserWindow(downloadURL, activeSession) {
   return new Promise((resolve, reject) => {
+    // The window shares the authenticated Teams session, so the renderer must
+    // stay fully locked down: same-origin policy, context isolation, and the
+    // sandbox all enabled. executeJavaScript still works with all of these.
     const tempWin = new BrowserWindow({
       show: false,
       width: 800,
@@ -923,10 +990,10 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
       webPreferences: {
         session: activeSession,
         nodeIntegration: false,
-        contextIsolation: false,
-        sandbox: false,
+        contextIsolation: true,
+        sandbox: true,
         backgroundThrottling: false,
-        webSecurity: false,
+        webSecurity: true,
       },
     });
 
@@ -935,9 +1002,7 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
 
 
     const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-    if (!fs.existsSync(documentsDir)) {
-      fs.mkdirSync(documentsDir, { recursive: true });
-    }
+    fs.mkdirSync(documentsDir, { recursive: true });
 
     let resolved = false;
     let cleanupTimeout;
@@ -1017,13 +1082,14 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
         }
 
         if (pageInfo && pageInfo.success) {
-          resolved = true;
-          
           let filename = pageInfo.title || "attachment.txt";
           filename = filename.replace(/\s+-\s+SharePoint$/i, "")
                              .replace(/\s+-\s+OneDrive$/i, "")
                              .replace(/\s+-\s+Microsoft\s+365$/i, "")
                              .trim();
+          // The title is page-controlled — strip any path segments before
+          // building the save path.
+          filename = sanitizeFilename(filename, "attachment.txt");
           if (!filename.includes(".")) {
             filename += ".txt";
           }
@@ -1031,17 +1097,23 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
           const targetFilePath = path.join(documentsDir, filename);
           fs.writeFileSync(targetFilePath, pageInfo.text, "utf8");
 
-          // Copy text content and file path
+          // Copy the extracted text; a file reference would overwrite it
+          // (the clipboard holds one payload at a time).
           clipboard.writeText(pageInfo.text);
-          clipboard.write({
-            filenames: [targetFilePath],
-          });
 
+          resolved = true;
           cleanup();
           resolve({ filename, targetFilePath });
         }
       } catch (e) {
-        console.error("[TextExtract] Error during extraction:", e);
+        console.error("[TextExtract] Error during extraction:", e?.message);
+        // Settle now instead of leaving the caller to hit the 30s timeout
+        // (or hang forever once `resolved` is set).
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          reject(e);
+        }
       }
     });
 
@@ -1111,6 +1183,9 @@ function applyMcasProxy(urlStr, mainWindowUrl) {
 
 function downloadWithBrowserWindow(downloadURL, activeSession) {
   return new Promise((resolve, reject) => {
+    // The window shares the authenticated Teams session, so the renderer must
+    // stay fully locked down: same-origin policy, context isolation, and the
+    // sandbox all enabled.
     const tempWin = new BrowserWindow({
       show: false,
       width: 800,
@@ -1118,37 +1193,27 @@ function downloadWithBrowserWindow(downloadURL, activeSession) {
       webPreferences: {
         session: activeSession,
         nodeIntegration: false,
-        contextIsolation: false,
-        sandbox: false,
+        contextIsolation: true,
+        sandbox: true,
         backgroundThrottling: false,
-        webSecurity: false,
+        webSecurity: true,
       },
     });
 
     const cleanUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
     tempWin.webContents.setUserAgent(cleanUserAgent);
 
-    tempWin.webContents.on("did-start-navigation", (event, url) => {
-      console.log(`[HiddenWin Navigation Start]: ${url}`);
-    });
-    tempWin.webContents.on("did-navigate", (event, url) => {
-      console.log(`[HiddenWin Navigated]: ${url}`);
-    });
-    tempWin.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
-      console.log(`[HiddenWin Fail Load] Code: ${errorCode}, Desc: ${errorDescription}, URL: ${validatedURL}`);
-    });
-
     const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-    if (!fs.existsSync(documentsDir)) {
-      fs.mkdirSync(documentsDir, { recursive: true });
-    }
+    fs.mkdirSync(documentsDir, { recursive: true });
 
     let downloadInitiated = false;
+    let settled = false;
     let cleanupTimeout;
 
     const cleanup = () => {
       if (cleanupTimeout) {
         clearTimeout(cleanupTimeout);
+        cleanupTimeout = null;
       }
       activeSession.removeListener("will-download", handleWillDownload);
       if (!tempWin.isDestroyed()) {
@@ -1156,37 +1221,47 @@ function downloadWithBrowserWindow(downloadURL, activeSession) {
       }
     };
 
-    cleanupTimeout = setTimeout(() => {
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
       cleanup();
-      reject(new Error("Download timed out (no download started within 30 seconds)"));
+      reject(error);
+    };
+
+    cleanupTimeout = setTimeout(() => {
+      fail(new Error("Download timed out (no download started within 30 seconds)"));
     }, 30000);
 
     const handleWillDownload = (event, item, webContents) => {
       if (webContents && webContents.id === tempWin.webContents.id) {
         downloadInitiated = true;
+        // The navigation did its job; give the transfer itself a longer
+        // backstop so a stalled download can't leak the hidden window and
+        // the session listener forever.
         if (cleanupTimeout) {
           clearTimeout(cleanupTimeout);
-          cleanupTimeout = null;
         }
+        cleanupTimeout = setTimeout(() => {
+          fail(new Error("Download timed out"));
+        }, 10 * 60 * 1000);
 
-        const filename = item.getFilename() || "attachment";
+        // Tell DownloadManager (which listens on the same session) to skip
+        // its own save path, notifications and openWhenDone for this item.
+        item.teamsForLinuxExternallyManaged = true;
+
+        const filename = sanitizeFilename(item.getFilename(), "attachment");
         const targetFilePath = path.join(documentsDir, filename);
 
         item.setSavePath(targetFilePath);
 
-        item.on("updated", (event, state) => {
-          if (state === "interrupted") {
-            cleanup();
-            reject(new Error("Download was interrupted."));
-          }
-        });
-
+        // A transient "interrupted" in `updated` can auto-resume; only the
+        // final state in `done` decides the outcome.
         item.once("done", (event, state) => {
+          if (settled) return;
+          settled = true;
           cleanup();
           if (state === "completed") {
-            clipboard.write({
-              filenames: [targetFilePath],
-            });
+            copyFilePathToClipboard(targetFilePath);
             resolve({ filename, targetFilePath });
           } else {
             reject(new Error(`Download failed with state: ${state}`));
@@ -1200,8 +1275,7 @@ function downloadWithBrowserWindow(downloadURL, activeSession) {
     tempWin.loadURL(downloadURL).catch((err) => {
       setTimeout(() => {
         if (!downloadInitiated) {
-          cleanup();
-          reject(new Error(`Failed to load URL: ${err.message}`));
+          fail(new Error(`Failed to load URL: ${err.message}`));
         }
       }, 500);
     });
