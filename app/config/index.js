@@ -21,13 +21,19 @@ function checkSystemConfigFileExistence() {
   return fs.existsSync(getSystemConfigFilePath());
 }
 
-function getConfigFile(configPath) {
+function readJsonFile(filePath) {
   // JSON.parse, not require(): config files must not enter the module system.
-  return JSON.parse(fs.readFileSync(getConfigFilePath(configPath), "utf8"));
+  // Strip a leading BOM, which require() tolerated but JSON.parse does not.
+  const raw = fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");
+  return JSON.parse(raw);
+}
+
+function getConfigFile(configPath) {
+  return readJsonFile(getConfigFilePath(configPath));
 }
 
 function getSystemConfigFile() {
-  return JSON.parse(fs.readFileSync(getSystemConfigFilePath(), "utf8"));
+  return readJsonFile(getSystemConfigFilePath());
 }
 
 function populateConfigObjectFromFile(configObject, configPath) {
