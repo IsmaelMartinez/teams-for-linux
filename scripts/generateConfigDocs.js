@@ -54,10 +54,8 @@ function normaliseDescription(text) {
   return (text ?? "").replace(/\s+/g, " ").trim();
 }
 
-// Nested field entries deliberately carry no default of their own: the leaf
-// default is derived from the option's `default` object by walking the
-// dot-path (undefined if any segment is absent), so a default can never be
-// declared twice and drift.
+// Leaf defaults are derived (not declared) so they can never drift from the
+// option's `default` object. Returns undefined if any segment is absent.
 function deriveFieldDefault(defaultValue, dotPath) {
   let current = defaultValue;
   for (const segment of dotPath.split(".")) {
@@ -69,8 +67,7 @@ function deriveFieldDefault(defaultValue, dotPath) {
   return current;
 }
 
-// Validate the source schema before generating anything. Returns a list of
-// human-readable violations; an empty list means the schema is complete.
+// Returns a list of schema-completeness violations (empty when complete).
 function lintOptions() {
   const violations = [];
   for (const name of Object.keys(options)) {

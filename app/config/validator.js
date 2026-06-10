@@ -1,10 +1,5 @@
 // Schema-driven, warn-only validation of the user-provided config file
-// (issue #2597, Phase 4 of the documentation-and-config-ux research).
-//
-// This is a pure data module with no Electron imports. It compares the parsed
-// config file content against the option definitions from ./options.js and
-// returns human-readable warning strings. It never throws and never rejects a
-// config: unknown keys and bad types are reported, then ignored by yargs.
+// (issue #2597, Phase 4). Pure data module, no Electron imports.
 //
 // PII safety (see CLAUDE.md): warnings must NEVER contain config VALUES, as
 // they can hold URLs, tokens or email addresses. Only key names, type names
@@ -106,9 +101,8 @@ function validateNestedFields(optionName, value, fields, warnings) {
   walk("", value, 0);
 }
 
-// Validates a parsed config file object against the option definitions.
-// Returns an array of warning strings (empty when clean or when the input is
-// not a usable object). Warn-only: never throws, never exits.
+// Returns warning strings (empty when clean or input is unusable).
+// Warn-only: never throws, never exits.
 function validateConfigFile(configFile, optionDefinitions) {
   const warnings = [];
 

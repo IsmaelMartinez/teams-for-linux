@@ -5,8 +5,8 @@ import styles from './styles.module.css';
 // Fed by the schema generated in Phase 1 (scripts/generateConfigDocs.js). The
 // explorer never hardcodes the option list, so it stays in sync with the code.
 const OPTIONS = schemaData.options;
-// applyMode/fields may be absent from an older committed schema; every use
-// below falls back gracefully so the explorer never crashes on missing keys.
+// applyMode/fields may be absent from an older committed schema, so every use
+// below falls back gracefully.
 const APPLY_MODE_TITLES = {
   live: 'Takes effect immediately',
   restart: 'Requires app restart',
@@ -18,8 +18,6 @@ const TYPES = [
   ),
 ];
 
-// Small badge showing when a change to the option takes effect. Renders
-// nothing for unknown/missing applyMode values.
 function ApplyBadge({mode}) {
   if (mode !== 'live' && mode !== 'restart') {
     return null;
@@ -32,9 +30,6 @@ function ApplyBadge({mode}) {
   );
 }
 
-// Expandable sub-table listing an object option's nested leaf fields. The
-// schema derives each leaf default from the option's default object; a leaf
-// absent from it has no `default` key, shown here as `undefined`.
 function NestedFields({option}) {
   const fields = Array.isArray(option.fields) ? option.fields : [];
   if (fields.length === 0) {
