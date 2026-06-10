@@ -1,11 +1,13 @@
 const {
   app,
+  BrowserWindow,
   Menu,
   MenuItem,
   clipboard,
   dialog,
   session,
   ipcMain,
+  Notification,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
@@ -509,6 +511,16 @@ function assignContextMenuHandler(menus) {
     // Allow users to add the misspelled word to the dictionary
     assignAddToDictionaryHandler(params, menu, menus);
 
+    // Fallback: if context menu is empty, show at least "Reload Page" so a menu is always shown
+    if (menu.items.length === 0) {
+      menu.append(
+        new MenuItem({
+          label: "Reload Page",
+          click: () => menus.window.webContents.reload(),
+        })
+      );
+    }
+
     if (menu.items.length > 0) {
       menu.popup();
     }
@@ -551,13 +563,61 @@ function assignAddToDictionaryHandler(params, menu, menus) {
 function addTextEditMenuItems(params, menu, menus) {
   if (params.isEditable) {
     buildEditContextMenu(menu, menus);
-  } else if (params.linkURL !== "") {
-    menu.append(
-      new MenuItem({
-        label: "Copy",
-        click: () => clipboard.writeText(params.linkURL),
-      })
-    );
+  } else {
+    // If text is selected, allow user to copy it
+    if (params.selectionText && params.selectionText.trim() !== "") {
+      menu.append(
+        new MenuItem({
+          role: "copy",
+        })
+      );
+    }
+
+    if (params.linkURL !== "") {
+      menu.append(
+        new MenuItem({
+          label: "Copy Link URL",
+          click: () => clipboard.writeText(params.linkURL),
+        })
+      );
+
+      menu.append(
+        new MenuItem({
+          label: "Download Attachment & Copy to Clipboard",
+          click: () => {
+            const activeSession = menus.window.webContents.session;
+            const mainWindowUrl = menus.window.webContents.getURL();
+            copyAttachmentAsFile(params.linkURL, activeSession, mainWindowUrl);
+          },
+        })
+      );
+    }
+  }
+
+  // Check if clipboard contains a link to download (e.g. copied from Teams menu)
+  try {
+    const clipboardText = clipboard.readText().trim();
+    if (clipboardText.startsWith("http://") || clipboardText.startsWith("https://")) {
+      if (menu.items.length > 0) {
+        menu.append(
+          new MenuItem({
+            type: "separator",
+          })
+        );
+      }
+      menu.append(
+        new MenuItem({
+          label: "Download File from Clipboard Link",
+          click: () => {
+            const activeSession = menus.window.webContents.session;
+            const mainWindowUrl = menus.window.webContents.getURL();
+            copyAttachmentAsFile(clipboardText, activeSession, mainWindowUrl);
+          },
+        })
+      );
+    }
+  } catch (e) {
+    // ignore
   }
 }
 
@@ -680,6 +740,472 @@ function addToList(list, item) {
   }
 
   return list;
+}
+
+function getDirectDownloadUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const host = url.hostname.toLowerCase();
+    
+    // Target Microsoft 365, SharePoint, OneDrive, Office
+    const isMS = host.includes("sharepoint") || 
+                 host.includes("onedrive") || 
+                 host.includes("office") ||
+                 host.includes("microsoft") ||
+                 host.includes("1drv.ms");
+                 
+    if (isMS) {
+      if (!url.searchParams.has("download")) {
+        url.searchParams.set("download", "1");
+        return url.toString();
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return urlStr;
+}
+
+async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
+  try {
+    const progressNotification = new Notification({
+      title: "Downloading attachment...",
+      body: "Downloading attachment in the background...",
+      silent: true,
+    });
+    progressNotification.show();
+
+    let downloadURL = getDirectDownloadUrl(linkURL);
+    
+    // Convert direct path view URLs to direct layout download URLs if possible
+    const spDownloadURL = getSharePointDownloadUrl(downloadURL);
+    if (spDownloadURL) {
+      downloadURL = spDownloadURL;
+    }
+
+    // Apply corporate MCAS proxy if active
+    if (mainWindowUrl) {
+      downloadURL = applyMcasProxy(downloadURL, mainWindowUrl);
+    }
+    
+    let isMS = false;
+    try {
+      const url = new URL(downloadURL);
+      const host = url.hostname.toLowerCase();
+      isMS = host.includes("sharepoint") || 
+             host.includes("onedrive") || 
+             host.includes("office") ||
+             host.includes("microsoft") ||
+             host.includes("1drv.ms");
+    } catch (e) {
+      // ignore
+    }
+
+    let result;
+    if (isMS) {
+      if (isTextFile(downloadURL)) {
+        // Load the viewer URL instead of direct download, so Monaco editor renders
+        let viewerURL = linkURL;
+        if (mainWindowUrl) {
+          viewerURL = applyMcasProxy(viewerURL, mainWindowUrl);
+        }
+        result = await extractTextFromBrowserWindow(viewerURL, session);
+      } else {
+        result = await downloadWithBrowserWindow(downloadURL, session);
+      }
+    } else {
+      const response = await session.fetch(downloadURL);
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("text/html")) {
+        if (isTextFile(downloadURL)) {
+          let viewerURL = linkURL;
+          if (mainWindowUrl) {
+            viewerURL = applyMcasProxy(viewerURL, mainWindowUrl);
+          }
+          result = await extractTextFromBrowserWindow(viewerURL, session);
+        } else {
+          result = await downloadWithBrowserWindow(downloadURL, session);
+        }
+      } else {
+        let filename = "attachment";
+        const contentDisposition = response.headers.get("content-disposition");
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename\*?=["']?(?:UTF-8'')?([^;"']+)["']?/i);
+          if (match && match[1]) {
+            filename = decodeURIComponent(match[1]);
+          } else {
+            const fallbackMatch = contentDisposition.match(/filename=["']?([^;"']+)["']?/i);
+            if (fallbackMatch && fallbackMatch[1]) {
+              filename = fallbackMatch[1];
+            }
+          }
+        } else {
+          try {
+            const urlObj = new URL(linkURL);
+            const pathname = urlObj.pathname;
+            const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
+            if (lastPart) {
+              filename = decodeURIComponent(lastPart);
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
+        if (!fs.existsSync(documentsDir)) {
+          fs.mkdirSync(documentsDir, { recursive: true });
+        }
+        const targetFilePath = path.join(documentsDir, filename);
+        fs.writeFileSync(targetFilePath, buffer);
+
+        clipboard.write({
+          filenames: [targetFilePath],
+        });
+        result = { filename, targetFilePath };
+      }
+    }
+
+    progressNotification.close();
+    const successNotification = new Notification({
+      title: "Downloaded & Copied!",
+      body: `Saved to Documents/Teams-Downloads/${result.filename} and copied to clipboard.`,
+    });
+    successNotification.show();
+  } catch (error) {
+    console.error("[CopyAttachment] Error:", error);
+    const errorNotification = new Notification({
+      title: "Download Error",
+      body: `Failed to save attachment: ${error.message}`,
+    });
+    errorNotification.show();
+  }
+}
+
+function isTextFile(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const pathname = url.pathname;
+    
+    if (pathname.includes("/:t:/")) {
+      return true;
+    }
+    
+    const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
+    const extMatch = lastPart.match(/\.([a-zA-Z0-9]+)$/);
+    if (extMatch) {
+      const ext = extMatch[1].toLowerCase();
+      const TEXT_EXTENSIONS = [
+        "txt", "json", "csv", "log", "xml", "html", "htm", "css", "js", "ts",
+        "py", "sh", "bat", "ps1", "yml", "yaml", "md", "ini", "conf", "sql"
+      ];
+      return TEXT_EXTENSIONS.includes(ext);
+    }
+  } catch (e) {
+    // ignore
+  }
+  return false;
+}
+
+function extractTextFromBrowserWindow(downloadURL, activeSession) {
+  return new Promise((resolve, reject) => {
+    const tempWin = new BrowserWindow({
+      show: false,
+      width: 800,
+      height: 600,
+      webPreferences: {
+        session: activeSession,
+        nodeIntegration: false,
+        contextIsolation: false,
+        sandbox: false,
+        backgroundThrottling: false,
+        webSecurity: false,
+      },
+    });
+
+    const cleanUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+    tempWin.webContents.setUserAgent(cleanUserAgent);
+
+
+    const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
+    if (!fs.existsSync(documentsDir)) {
+      fs.mkdirSync(documentsDir, { recursive: true });
+    }
+
+    let resolved = false;
+    let cleanupTimeout;
+
+    const cleanup = () => {
+      if (cleanupTimeout) {
+        clearTimeout(cleanupTimeout);
+      }
+      if (!tempWin.isDestroyed()) {
+        tempWin.destroy();
+      }
+    };
+
+    cleanupTimeout = setTimeout(() => {
+      if (!resolved) {
+        cleanup();
+        reject(new Error("Text extraction timed out (30 seconds)"));
+      }
+    }, 30000);
+
+    tempWin.webContents.on("did-finish-load", async () => {
+      try {
+        let pageInfo = { success: false };
+        for (let i = 0; i < 40; i++) {
+          if (tempWin.isDestroyed()) return;
+          
+          pageInfo = await tempWin.webContents.executeJavaScript(`
+            (function() {
+              let textVal = "";
+              let found = false;
+              
+              try {
+                if (typeof monaco !== 'undefined' && monaco.editor) {
+                  const models = monaco.editor.getModels();
+                  if (models && models.length > 0) {
+                    const val = models[0].getValue();
+                    if (val) {
+                      textVal = val;
+                      found = true;
+                    }
+                  }
+                }
+              } catch (e) {}
+              
+              if (!found) {
+                try {
+                  const pre = document.querySelector('pre');
+                  if (pre && pre.innerText && pre.innerText.trim().length > 0) {
+                    textVal = pre.innerText;
+                    found = true;
+                  }
+                } catch (e) {}
+              }
+              
+              if (!found) {
+                try {
+                  const container = document.querySelector('.text-container') || document.querySelector('.file-viewer');
+                  if (container && container.innerText && container.innerText.trim().length > 0) {
+                    textVal = container.innerText;
+                    found = true;
+                  }
+                } catch (e) {}
+              }
+              
+              if (found) {
+                return { success: true, text: textVal, title: document.title };
+              }
+              
+              return { success: false };
+            })()
+          `);
+
+          if (pageInfo && pageInfo.success) {
+            break;
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (pageInfo && pageInfo.success) {
+          resolved = true;
+          
+          let filename = pageInfo.title || "attachment.txt";
+          filename = filename.replace(/\s+-\s+SharePoint$/i, "")
+                             .replace(/\s+-\s+OneDrive$/i, "")
+                             .replace(/\s+-\s+Microsoft\s+365$/i, "")
+                             .trim();
+          if (!filename.includes(".")) {
+            filename += ".txt";
+          }
+
+          const targetFilePath = path.join(documentsDir, filename);
+          fs.writeFileSync(targetFilePath, pageInfo.text, "utf8");
+
+          // Copy text content and file path
+          clipboard.writeText(pageInfo.text);
+          clipboard.write({
+            filenames: [targetFilePath],
+          });
+
+          cleanup();
+          resolve({ filename, targetFilePath });
+        }
+      } catch (e) {
+        console.error("[TextExtract] Error during extraction:", e);
+      }
+    });
+
+    tempWin.loadURL(downloadURL).catch((err) => {
+      setTimeout(() => {
+        if (!resolved) {
+          cleanup();
+          reject(new Error(`Failed to load URL: ${err.message}`));
+        }
+      }, 500);
+    });
+  });
+}
+
+function getSharePointDownloadUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const host = url.hostname.toLowerCase();
+    
+    // Only target SharePoint and OneDrive domains
+    if (host.includes("sharepoint.com") || host.includes("onedrive.com") || host.includes("mcas.ms")) {
+      const pathname = url.pathname;
+      // Match viewer prefix: /:x:/r/ or /:w:/g/ etc. (supporting sites or personal)
+      const viewerRegex = /^\/:[a-z]:\/[rg]\/(personal|sites)\/([^\/]+)\/(.+)$/i;
+      const match = pathname.match(viewerRegex);
+      
+      if (match) {
+        const filePath = match[3];
+        // Only convert if the file path has a standard file extension
+        const hasExtension = /\.[a-zA-Z0-9]{2,5}$/.test(filePath);
+        if (hasExtension) {
+          const type = match[1];
+          const ownerOrSite = match[2];
+          
+          const directPath = `${url.origin}/${type}/${ownerOrSite}/${filePath}`;
+          const siteRoot = `${url.origin}/${type}/${ownerOrSite}`;
+          
+          const downloadUrl = new URL(`${siteRoot}/_layouts/15/download.aspx`);
+          downloadUrl.searchParams.set("SourceUrl", directPath);
+          return downloadUrl.toString();
+        }
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
+function applyMcasProxy(urlStr, mainWindowUrl) {
+  try {
+    const mainUrl = new URL(mainWindowUrl);
+    if (mainUrl.hostname.endsWith(".mcas.ms")) {
+      const targetUrl = new URL(urlStr);
+      const origHost = targetUrl.hostname;
+      if (!origHost.endsWith(".mcas.ms")) {
+        const proxiedHost = origHost + ".mcas.ms";
+        // String replace to rewrite both the main domain and any URL-encoded SourceUrl domains
+        return urlStr.replaceAll(origHost, proxiedHost);
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return urlStr;
+}
+
+function downloadWithBrowserWindow(downloadURL, activeSession) {
+  return new Promise((resolve, reject) => {
+    const tempWin = new BrowserWindow({
+      show: false,
+      width: 800,
+      height: 600,
+      webPreferences: {
+        session: activeSession,
+        nodeIntegration: false,
+        contextIsolation: false,
+        sandbox: false,
+        backgroundThrottling: false,
+        webSecurity: false,
+      },
+    });
+
+    const cleanUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+    tempWin.webContents.setUserAgent(cleanUserAgent);
+
+    tempWin.webContents.on("did-start-navigation", (event, url) => {
+      console.log(`[HiddenWin Navigation Start]: ${url}`);
+    });
+    tempWin.webContents.on("did-navigate", (event, url) => {
+      console.log(`[HiddenWin Navigated]: ${url}`);
+    });
+    tempWin.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+      console.log(`[HiddenWin Fail Load] Code: ${errorCode}, Desc: ${errorDescription}, URL: ${validatedURL}`);
+    });
+
+    const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
+    if (!fs.existsSync(documentsDir)) {
+      fs.mkdirSync(documentsDir, { recursive: true });
+    }
+
+    let downloadInitiated = false;
+    let cleanupTimeout;
+
+    const cleanup = () => {
+      if (cleanupTimeout) {
+        clearTimeout(cleanupTimeout);
+      }
+      activeSession.removeListener("will-download", handleWillDownload);
+      if (!tempWin.isDestroyed()) {
+        tempWin.destroy();
+      }
+    };
+
+    cleanupTimeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Download timed out (no download started within 30 seconds)"));
+    }, 30000);
+
+    const handleWillDownload = (event, item, webContents) => {
+      if (webContents && webContents.id === tempWin.webContents.id) {
+        downloadInitiated = true;
+        if (cleanupTimeout) {
+          clearTimeout(cleanupTimeout);
+          cleanupTimeout = null;
+        }
+
+        const filename = item.getFilename() || "attachment";
+        const targetFilePath = path.join(documentsDir, filename);
+
+        item.setSavePath(targetFilePath);
+
+        item.on("updated", (event, state) => {
+          if (state === "interrupted") {
+            cleanup();
+            reject(new Error("Download was interrupted."));
+          }
+        });
+
+        item.once("done", (event, state) => {
+          cleanup();
+          if (state === "completed") {
+            clipboard.write({
+              filenames: [targetFilePath],
+            });
+            resolve({ filename, targetFilePath });
+          } else {
+            reject(new Error(`Download failed with state: ${state}`));
+          }
+        });
+      }
+    };
+
+    activeSession.on("will-download", handleWillDownload);
+
+    tempWin.loadURL(downloadURL).catch((err) => {
+      setTimeout(() => {
+        if (!downloadInitiated) {
+          cleanup();
+          reject(new Error(`Failed to load URL: ${err.message}`));
+        }
+      }, 500);
+    });
+  });
 }
 
 exports = module.exports = Menus;

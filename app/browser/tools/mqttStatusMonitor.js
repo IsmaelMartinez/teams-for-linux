@@ -40,9 +40,9 @@ class MQTTStatusMonitor {
 			{ keywords: ['available', 'online', 'green', 'presence-available', 'status-available'], code: 1 }
 		];
 
-		// Only start monitoring if MQTT is enabled
-		if (!config.mqtt?.enabled) {
-			console.debug('MQTT status monitoring disabled');
+		// Only start monitoring if MQTT or showStatusOnDockIcon is enabled
+		if (!config.mqtt?.enabled && !config.media?.showStatusOnDockIcon) {
+			console.debug('Status monitoring disabled');
 			return;
 		}
 
@@ -134,6 +134,11 @@ class MQTTStatusMonitor {
 				this.ipcRenderer.invoke('user-status-changed', {
 					data: { status: status }
 				});
+
+				// Dispatch local event for other browser tools
+				globalThis.dispatchEvent(new CustomEvent('user-status-changed-local', {
+					detail: { status: status }
+				}));
 			}
 		} catch (error) {
 			console.debug('Status check error:', error.message);
