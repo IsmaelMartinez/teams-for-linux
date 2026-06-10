@@ -42,6 +42,7 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Electron 42.3.3 already ships the required Linux-only API; the WebAuthn PIN window (`app/webauthn/pinDialog.js`) is a directly reusable secure-dialog pattern
   - Phased: SoftHSM2 spike (cancel/retry semantics, lockout safety) → opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled` → `select-client-certificate` picker for multi-cert tokens
   - Validation possible without hardware via SoftHSM2; requester confirms on real smartcard
+  - UI feasibility analyzed: standalone always-on-top window styled like existing dialogs; in-page injection ruled out (security + handshake timing). Overlaps with the FIDO2 touch prompt ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)) — whichever lands second extracts a shared `app/_shared/` prompt helper
 
 - **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — make `app/config/index.js` the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
   - Found confirmed config drift (stale `msTeamsProtocols` default; undocumented `mqtt.homeAssistant.*` and `auth.webauthn.debug`); 76 options hand-mirrored in a 924-line reference with no codegen link

@@ -53,6 +53,32 @@ A new `app/clientCertificate/` module (or an extension of `app/certificate/` —
 
 **Out of scope.** Configuring the PKCS#11 module itself (modutil/p11-kit setup, OpenSC installation) remains the user's responsibility — the wrapper has no opinion about which middleware sits below NSS, mirroring the `customBackground` philosophy. A documentation page should cover the typical OpenSC + `modutil` setup and link distro guides.
 
+## UI integration feasibility
+
+"Integrating with the Teams for Linux UI" can mean four different things, and the codebase already contains an example of each:
+
+1. **In-page DOM injection** (`app/browser/tools/` scripts rendering UI inside the Teams page). Ruled out for PIN entry on two independent grounds. Security: the Teams page runs with `contextIsolation: false`, so anything injected there is readable by page and third-party scripts — this is exactly why the WebAuthn module's Strategy B (dom-inject) was built and then removed (`app/webauthn/pinDialog.js` header documents the removal). Timing: the client-cert PIN request fires during a TLS handshake, often mid-navigation in the login redirect chain, when the Teams SPA is not loaded and there is no stable document to inject into.
+2. **Modal child window attached to the main window** (`app/_shared/createDialogWindow.js`, used by Add Profile and Join Meeting). Right scaffolding, wrong modality for this trigger: a modal parented to a window that is actively navigating is the WebAuthn "Strategy C" failure mode (dialog flashes and closes during page transitions). The handshake-time trigger makes this likely here.
+3. **Standalone always-on-top window** (WebAuthn pinDialog "Strategy A"). Survives parent navigation, isolated context, proven in the FIDO2 beta. This is the right *mechanism*, but today it looks bare — a framed default window with no app styling.
+4. **Frameless styled toast** (`app/incomingCallToast/`, `app/notificationSystem/` — frameless, `alwaysOnTop`, `skipTaskbar`, positioned via `app/utils/windowPositioner`). These are what make UI "feel" native to the app. Fine for notices; wrong for secret input, because a frameless window with no chrome gives the user nothing to verify the prompt's origin against, and PIN entry deserves a recognizable window.
+
+Recommendation: a standalone window (option 3 semantics) built on a small generalization of `createDialogWindow` (allow `modal: false` + `alwaysOnTop`), sharing the visual language of the existing dialogs (app icon, same CSS as `app/login/login.html` / the profile dialogs) so it reads as a Teams for Linux surface rather than a naked Chromium window. Deeper integration than that — rendering inside the Teams page — is not feasible for secret input and should not be attempted. The phase-2 certificate picker has the same handshake-time trigger, so the same standalone-window reasoning applies to it.
+
+## Overlap with the FIDO2 prompt work (#2631 / #2634)
+
+This feature is the third entry in what is becoming a family of authentication prompts, and they should converge rather than accumulate:
+
+| Prompt | Status | Input | Lifecycle |
+|---|---|---|---|
+| WebAuthn security-key PIN (`app/webauthn/pinDialog.js`) | Shipped (beta) | Secret (password field) | Settled by user (submit/cancel) |
+| FIDO2 touch prompt ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), feasibility note [PR #2634](https://github.com/IsmaelMartinez/teams-for-linux/pull/2634)) | Researched | None (notice only) | Dismissed programmatically when the backend call returns |
+| Smartcard/NSS PIN (this document) | Researched | Secret + retry/lockout warning | Settled by user |
+| Certificate picker (phase 2, this document) | Proposed | List selection | Settled by user |
+
+All four share the same skeleton: hardened window (`contextIsolation`, `sandbox`, no node integration), promise-based resolution, submit/cancel IPC wiring with settled-flag race protection, and the standalone always-on-top behavior required during auth flows. They differ only in body content (password field vs. static notice vs. list), whether the user or the caller settles the promise, and messaging (the smartcard dialog needs `isRetry` lockout warnings; the touch prompt needs auto-dismiss).
+
+The earlier leaning in this document was copy-then-unify to keep the WebAuthn beta untouched. With three prospective consumers now visible, the better sequencing is: whichever of #2631 or #2639 is implemented **second** extracts a shared prompt helper under `app/_shared/` (a sibling or extension of `createDialogWindow` parameterized by mode: `password-entry`, `notice`, `list-select`), and the WebAuthn pinDialog migrates onto it opportunistically afterwards. The first implementation still copies the pattern — no refactor of shipped beta code on the critical path. This also matters for UX coherence: a YubiKey used in PIV mode is *both* a smartcard and a FIDO2 authenticator, so one user can plausibly see all of these prompts in a single sign-in and they should look like the same application asking.
+
 ## Validation without hardware
 
 The maintainer does not need a physical smartcard to develop this. [SoftHSM2](https://github.com/softhsm/SoftHSMv2) provides a software PKCS#11 token: initialize a token with a user PIN, load a test client certificate + key into it via `pkcs11-tool`, register the SoftHSM library in the Chromium NSS database (`modutil -dbdir sql:$HOME/.pki/nssdb -add softhsm -libfile /usr/lib/softhsm/libsofthsm2.so`), and point the app at a client-cert test endpoint such as `https://prod.idrix.eu/secure/` (used by the reporter) or a local nginx with `ssl_verify_client on`. This setup answers every spike question (handler firing, retry semantics, cancel behavior, interaction with `select-client-certificate`) reproducibly in CI-less local testing. Final confirmation on real hardware comes from the requester, who has the smartcard environment and has offered to test.
@@ -62,7 +88,7 @@ The maintainer does not need a physical smartcard to develop this. [SoftHSM2](ht
 1. **Spike (small, SoftHSM2-based):** confirm the handler fires in our window/session setup, determine cancel and retry semantics, and verify whether the handler also services nssdb master-password prompts. Outcome recorded in this document.
 2. **Phase 1 — PIN dialog:** `app/clientCertificate/` module with the handler + secure PIN window (reusing/extracting the WebAuthn dialog pattern), `auth.clientCertificate.pinDialog.enabled` opt-in config, README, configuration docs, and a troubleshooting/setup page for PKCS#11 modules. Requester validates on real hardware.
 3. **Phase 2 — certificate picker:** `select-client-certificate` chooser dialog for multi-certificate tokens. Ship when phase 1 feedback confirms demand (the requester's scenario may already need it — ask during validation).
-4. **Phase 3 — polish:** consider defaulting the PIN dialog on, extracting a shared secure-prompt helper used by both WebAuthn and client-cert dialogs, and an ADR if the feature graduates from beta.
+4. **Phase 3 — polish:** consider defaulting the PIN dialog on, completing the shared-prompt convergence described in the overlap section (including migrating the WebAuthn pinDialog), and an ADR if the feature graduates from beta.
 
 ## Open questions
 
@@ -70,7 +96,7 @@ The maintainer does not need a physical smartcard to develop this. [SoftHSM2](ht
 - Retry cadence: whether NSS re-invokes the handler per TLS request or per token unlock, and how a per-session prompt cap should reset (spike).
 - Does the same handler fire for the NSS internal key store (nssdb master password), and if so should the dialog wording differ? (spike)
 - Module placement: new `app/clientCertificate/` vs. widening `app/certificate/`. Leaning new module — the existing one is about server-cert trust, a different concern, and single-responsibility favors separation.
-- Whether the WebAuthn PIN dialog should be generalized into a shared helper now or copied and unified later. Leaning copy-then-unify to keep the WebAuthn beta untouched.
+- Implementation order relative to the FIDO2 touch prompt (#2631): whichever lands second should extract the shared `app/_shared/` prompt helper (see overlap section). Both are small; the order is a prioritization call.
 
 ## Related
 
@@ -78,5 +104,7 @@ The maintainer does not need a physical smartcard to develop this. [SoftHSM2](ht
 - [Electron `app.setClientCertRequestPasswordHandler` docs](https://www.electronjs.org/docs/latest/api/app#appsetclientcertrequestpasswordhandlerhandler-linux) / [electron/electron#41205](https://github.com/electron/electron/pull/41205)
 - [Reporter's proof-of-concept gist](https://gist.github.com/agemuend/8fd859ee074517188744f8c6fc11c9a4)
 - `app/webauthn/pinDialog.js` and [ADR-021](../adr/021-webauthn-fido2-linux.md) — secure PIN window pattern and opt-in beta precedent
+- Issue [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631) / [PR #2634](https://github.com/IsmaelMartinez/teams-for-linux/pull/2634) — FIDO2 touch prompt, the sibling prompt this should share UI infrastructure with
+- `app/_shared/createDialogWindow.js` — existing shared dialog scaffolding, candidate base for the shared prompt helper
 - [WebAuthn / FIDO2 Implementation Plan](webauthn-fido2-implementation-plan.md) — adjacent hardware-authenticator work
 - [Configuration Organization Research](configuration-organization-research.md) — nested config pattern for new options
