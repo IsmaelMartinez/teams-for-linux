@@ -88,12 +88,18 @@ class MutationObserverTitle {
         }
       });
       
-      observer.observe(titleElement, {
+      // Observe document.head with subtree so the observer survives the
+      // MS Teams web app replacing the <title> element (React unmount/remount)
+      // and catches both childList (text node swap) and characterData
+      // (in-place text mutation) updates within any <title> descendant.
+      // The callback reads document.title directly, so it remains agnostic
+      // of which <title> element currently holds the text.
+      observer.observe(globalThis.document.head, {
         childList: true,
         characterData: true,
         subtree: true,
       });
-      console.debug("MutationTitle: Observer successfully attached to title element");
+      console.debug("MutationTitle: Observer successfully attached to document.head");
     } catch (error) {
       console.error("MutationTitle: Error setting up mutation observer:", error);
     }
