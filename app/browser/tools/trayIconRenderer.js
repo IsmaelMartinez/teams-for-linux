@@ -98,13 +98,21 @@ class TrayIconRenderer {
         resolve(baseIconData); // Fallback to base icon
       };
 
-      image.onload = () =>
-        this._addRedCircleNotification(
-          canvas,
-          image,
-          newActivityCount,
-          resolve,
-        );
+      image.onload = () => {
+        // Drawing can throw (e.g. getContext returning null under memory
+        // pressure); resolve with the base icon so the promise never hangs.
+        try {
+          this._addRedCircleNotification(
+            canvas,
+            image,
+            newActivityCount,
+            resolve,
+          );
+        } catch (error) {
+          console.error("[TRAY_DIAG] Canvas drawing failed, using base icon:", error);
+          resolve(baseIconData);
+        }
+      };
 
       if (!baseIconData || baseIconData === "data:,") {
         console.error("Base icon toDataURL returned invalid data");

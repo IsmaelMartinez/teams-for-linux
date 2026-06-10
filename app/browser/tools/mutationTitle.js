@@ -18,6 +18,20 @@ class MutationObserverTitle {
     }
   }
 
+  _involvesTitleElement(mutations) {
+    return mutations.some((mutation) => {
+      const target = mutation.target;
+      // characterData mutations target the text node inside <title>;
+      // childList mutations on <title> target the element itself.
+      if (target.nodeName === "TITLE" || target.parentNode?.nodeName === "TITLE") {
+        return true;
+      }
+      // <title> element added or removed (e.g. React remount)
+      const changedNodes = [...mutation.addedNodes, ...mutation.removedNodes];
+      return changedNodes.some((node) => node.nodeName === "TITLE");
+    });
+  }
+
   _applyMutationToTitleLogic() {
     console.debug("Appliying MutationObserverTitle logic");
     
@@ -39,8 +53,14 @@ class MutationObserverTitle {
         documentReadyState: document.readyState
       });
       
-      const observer = new globalThis.MutationObserver(() => {
+      const observer = new globalThis.MutationObserver((mutations) => {
         try {
+          // Head-wide observation also reports style/meta/script churn;
+          // only react when the <title> element itself is involved.
+          if (!this._involvesTitleElement(mutations)) {
+            return;
+          }
+
           // Validate and sanitize document title
           const title = globalThis.document.title;
           if (typeof title !== 'string') {
