@@ -9,7 +9,7 @@ class MutationObserverTitle {
         // DOM is still loading, wait for DOMContentLoaded
         globalThis.addEventListener(
           "DOMContentLoaded",
-          this._applyMutationToTitleLogic,
+          () => this._applyMutationToTitleLogic(),
         );
       } else {
         // DOM is already loaded, apply logic immediately
@@ -28,15 +28,14 @@ class MutationObserverTitle {
         return;
       }
       
-      const titleElement = globalThis.document.querySelector("title");
-      if (!titleElement) {
-        console.error("MutationTitle: Title element not found");
+      if (!globalThis.document.head) {
+        console.error("MutationTitle: document.head not found");
         return;
       }
-      
+
       // Enhanced debugging for tray icon timing issue (#1795)
       console.debug("MutationTitle: Initial setup", {
-        titleElementExists: !!titleElement,
+        titleElementExists: !!globalThis.document.querySelector("title"),
         documentReadyState: document.readyState
       });
       
@@ -88,10 +87,19 @@ class MutationObserverTitle {
         }
       });
       
-      observer.observe(titleElement, {
+      // Observe document.head with subtree so the observer survives Teams
+      // replacing the <title> element outright (React remount) and sees both
+      // childList (text node swap) and characterData (in-place text edit)
+      // title updates. Watching only the current <title> with childList
+      // misses in-place edits, leaving the badge stuck at a stale count
+      // (#2620). The callback reads document.title, so it does not depend on
+      // which <title> element currently holds the text.
+      observer.observe(globalThis.document.head, {
         childList: true,
+        characterData: true,
+        subtree: true,
       });
-      console.debug("MutationTitle: Observer successfully attached to title element");
+      console.debug("MutationTitle: Observer successfully attached to document.head");
     } catch (error) {
       console.error("MutationTitle: Error setting up mutation observer:", error);
     }
