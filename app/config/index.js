@@ -22,8 +22,7 @@ function checkSystemConfigFileExistence() {
 }
 
 function getConfigFile(configPath) {
-  // JSON.parse instead of require(): keeps config loading out of the module
-  // system (no require cache, no resolution of non-JSON files).
+  // JSON.parse, not require(): config files must not enter the module system.
   return JSON.parse(fs.readFileSync(getConfigFilePath(configPath), "utf8"));
 }
 
@@ -160,8 +159,7 @@ function argv(configPath, appVersion) {
   logger.init(config.logConfig);
 
   console.info("configPath:", configPath);
-  // Log only the option names, never the values: the config file can contain
-  // credentials and custom service URLs (MQTT, SSO, customBackground, ...).
+  // Keys only: config values can include MQTT/SSO credentials and service URLs.
   console.debug("configFile keys:", Object.keys(configObject.configFile));
 
   return config;

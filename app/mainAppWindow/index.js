@@ -969,12 +969,8 @@ function restoreWindow() {
   window.focus();
 }
 
-/**
- * Validates a deep-link target before it is loaded into the main window.
- * Args arrive from outside the app (protocol handler, second instance), so
- * only well-formed https URLs may reach window.loadURL — anything else
- * (javascript:, file:, mangled protocol rewrites) is dropped.
- */
+// Deep-link args come from outside the app (protocol handler, second
+// instance), so only well-formed https URLs may reach window.loadURL.
 function toValidatedHttpsUrl(url) {
   try {
     const parsed = new URL(url);
@@ -1002,8 +998,7 @@ function processArgs(args) {
   const v1msTeams = new RegExp(config.msTeamsProtocols.v1);
   // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
   const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
-  // Do not log the args themselves: deep-link URLs carry query parameters
-  // (meeting ids, tenant ids, signed context) that must stay out of logs.
+  // Count only: deep-link URLs carry query params that must stay out of logs.
   console.debug(`processArgs: ${args.length} argument(s)`);
   for (const arg of args) {
     if (new RegExp(config.meetupJoinRegEx).test(arg)) {
@@ -1371,11 +1366,9 @@ function secureOpenLink(details) {
   return returnValue;
 }
 
-// Schemes that may be handed to the OS (shell.openExternal or the configured
-// defaultURLHandler). Blocks renderer-supplied URLs like file://, smb:// or
-// data: from reaching OS-level handlers, where they could read local files
-// or leak NTLM credentials. msteams: links never reach here (handled in
-// onNewWindow / processArgs).
+// Schemes safe to hand to the OS. Blocks renderer-supplied file://, smb://,
+// data: etc. from reaching shell.openExternal or the configured URL handler,
+// where they could read local files or leak NTLM credentials.
 const ALLOWED_EXTERNAL_PROTOCOLS = new Set([
   "http:",
   "https:",
@@ -1395,7 +1388,6 @@ function openInBrowser(details) {
     return;
   }
   if (!ALLOWED_EXTERNAL_PROTOCOLS.has(protocol)) {
-    // Log the scheme only — URLs can carry tokens in query parameters.
     console.warn(`[LINK] Blocked external open of URL with scheme '${protocol}'`);
     return;
   }

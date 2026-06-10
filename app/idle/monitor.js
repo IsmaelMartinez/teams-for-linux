@@ -49,10 +49,9 @@ class IdleMonitor {
     }
   }
 
-  // The default state file lives in /tmp (world-writable, sticky bit), so a
-  // file planted by another local user must not control this user's presence.
-  // Open with O_NOFOLLOW and fstat the descriptor: rejects symlinks and files
-  // not owned by the current user without a check-then-read race.
+  // The default state file lives in world-writable /tmp. Open with O_NOFOLLOW
+  // and fstat the descriptor to reject symlinks and files owned by another
+  // user, so a planted file cannot control this user's presence.
   #readStateFile() {
     const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0);
     let fd;
@@ -94,8 +93,7 @@ class IdleMonitor {
     } else if (content === IdleMonitor.#STATE_FILE_ACTIVE) {
       return IdleMonitor.#SYSTEM_STATE_ACTIVE;
     }
-    // Don't echo the content back: an unexpected value may be arbitrary
-    // (potentially attacker-written) file data.
+    // Don't echo unexpected content: it may be arbitrary file data.
     console.warn('[IDLE] Unknown state file content, ignoring');
     return null;
   }

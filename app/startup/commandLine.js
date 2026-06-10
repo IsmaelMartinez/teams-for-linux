@@ -133,9 +133,8 @@ class CommandLineManager {
   }
 
   // Flags that disable TLS validation, same-origin policy or sandboxing.
-  // They stay user-configurable (the config file is the user's own trust
-  // domain) but deserve a loud warning, since they silently undo protections
-  // the rest of the app relies on.
+  // Left configurable, but warned about, since they undo protections the rest
+  // of the app relies on.
   static #SECURITY_SENSITIVE_FLAGS = new Set([
     "disable-web-security",
     "ignore-certificate-errors",

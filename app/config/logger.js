@@ -25,8 +25,7 @@ exports.init = function (config) {
       console.debug("Initialising logger the default console");
       return;
     } else {
-      // Log only the configured keys, not the values: this runs before the
-      // PII sanitization hook is installed, so values would land unsanitized.
+      // Keys only: this runs before the PII sanitization hook is installed.
       console.debug("Initialising logger with config keys:", Object.keys(config));
       mergeWith(log, config, (obj, src) =>
         typeof obj === "function" ? Object.assign(obj, src) : undefined,

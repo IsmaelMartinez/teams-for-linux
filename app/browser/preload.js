@@ -160,8 +160,7 @@ ipcRenderer.invoke("get-config").then((config) => {
     disableNotifications: config?.disableNotifications
   });
 }).catch((err) => {
-  // Log only the message: renderer console output bypasses the main-process
-  // PII sanitization hook, and a full error object can embed paths/URLs.
+  // Message only: renderer logs bypass the main-process PII sanitization hook.
   console.error("Preload: Failed to load config for notifications:", err?.message);
 });
 

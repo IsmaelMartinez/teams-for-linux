@@ -196,8 +196,7 @@ function validateIpcChannel(channel, payload = null) {
  * @returns {boolean} - True if the sender is acceptable, false if blocked
  */
 function validateIpcSender(event) {
-  // senderFrame is null when the frame was destroyed mid-flight; nothing to
-  // validate against, and the late message is harmless to the handler.
+  // No senderFrame: internal emit or a frame destroyed mid-flight. Allow it.
   const frame = event?.senderFrame;
   if (!frame) {
     return true;
@@ -208,8 +207,7 @@ function validateIpcSender(event) {
       return false;
     }
   } catch {
-    // Accessing properties of a disposed WebFrameMain throws; treat it like
-    // the senderFrame === null case above.
+    // Property access on a disposed WebFrameMain throws; treat as no senderFrame.
   }
   return true;
 }
