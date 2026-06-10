@@ -35,6 +35,35 @@ sudo curl -1sLf -o /etc/yum.repos.d/teams-for-linux.repo https://repo.teamsforli
 sudo dnf install teams-for-linux
 ```
 
+#### Beta Channel (Pre-releases)
+
+New versions are published to a `beta` channel first and promoted to `stable` after a few days of testing. Follow the beta channel if you want pre-releases and want to help test them before promotion.
+
+**Debian/Ubuntu** — same source as stable, with `Suites: beta`:
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+sudo wget -qO /etc/apt/keyrings/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
+sh -c 'echo "Types: deb
+URIs: https://repo.teamsforlinux.de/debian/
+Suites: beta
+Components: main
+Signed-By: /etc/apt/keyrings/teams-for-linux.asc
+Architectures: amd64" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.sources'
+sudo apt update && sudo apt install teams-for-linux
+```
+
+**RHEL/Fedora/CentOS** — use the beta repository:
+
+```bash
+curl -1sLf -o /tmp/teams-for-linux.asc https://repo.teamsforlinux.de/teams-for-linux.asc
+sudo rpm --import /tmp/teams-for-linux.asc
+sudo curl -1sLf -o /etc/yum.repos.d/teams-for-linux-beta.repo https://repo.teamsforlinux.de/rpm-beta/teams-for-linux-beta.repo
+sudo dnf install teams-for-linux
+```
+
+To return to stable releases, change `Suites: beta` back to `Suites: stable` (Debian/Ubuntu), or remove `/etc/yum.repos.d/teams-for-linux-beta.repo` and reinstall from the stable repository (RHEL/Fedora/CentOS).
+
 ## Distribution-Specific Packages
 
 ### Arch Linux (AUR)
