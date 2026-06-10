@@ -57,6 +57,27 @@ function choicesWarning(name, choices) {
   return `Config option "${name}" must be one of [${choices.join(", ")}]`;
 }
 
+function violatesChoices(def, value) {
+  return (
+    Array.isArray(def.choices) &&
+    value !== null &&
+    isPrimitive(value) &&
+    !def.choices.includes(value)
+  );
+}
+
+// Shared by top-level options and nested leaves: leaf definitions carry no
+// `fields`, so the recursion into validateNestedFields stops at them.
+function validateOption(name, value, def, warnings) {
+  if (def.type && !matchesType(value, def.type)) {
+    warnings.push(typeMismatchWarning(name, def.type, typeName(value)));
+  } else if (violatesChoices(def, value)) {
+    warnings.push(choicesWarning(name, def.choices));
+  } else if (def.type === "object" && isPlainObject(def.fields) && isPlainObject(value)) {
+    validateNestedFields(name, value, def.fields, warnings);
+  }
+}
+
 // Opportunistic nested validation using the Phase 3a `fields` metadata
 // (a map of dot-path relative to the option → { type, describe }).
 // Absence or malformed metadata silently skips this check.
@@ -74,21 +95,8 @@ function validateNestedFields(optionName, value, fields, warnings) {
       const fieldDef = Object.hasOwn(fields, childPath) ? fields[childPath] : undefined;
 
       if (isPlainObject(fieldDef)) {
-        if (fieldDef.type && !matchesType(childValue, fieldDef.type)) {
-          warnings.push(typeMismatchWarning(fullName, fieldDef.type, typeName(childValue)));
-        } else if (
-          Array.isArray(fieldDef.choices) &&
-          childValue !== null &&
-          isPrimitive(childValue) &&
-          !fieldDef.choices.includes(childValue)
-        ) {
-          warnings.push(choicesWarning(fullName, fieldDef.choices));
-        }
-        continue;
-      }
-
-      const isIntermediatePrefix = fieldPaths.some((p) => p.startsWith(`${childPath}.`));
-      if (!isIntermediatePrefix) {
+        validateOption(fullName, childValue, fieldDef, warnings);
+      } else if (!fieldPaths.some((p) => p.startsWith(`${childPath}.`))) {
         warnings.push(unknownKeyWarning(fullName));
       } else if (isPlainObject(childValue)) {
         walk(childPath, childValue, depth + 1);
@@ -116,28 +124,10 @@ function validateConfigFile(configFile, optionDefinitions) {
         ? optionDefinitions[key]
         : undefined;
 
-      if (!isPlainObject(def)) {
+      if (isPlainObject(def)) {
+        validateOption(key, value, def, warnings);
+      } else {
         warnings.push(unknownKeyWarning(key));
-        continue;
-      }
-
-      if (def.type && !matchesType(value, def.type)) {
-        warnings.push(typeMismatchWarning(key, def.type, typeName(value)));
-        continue;
-      }
-
-      if (
-        Array.isArray(def.choices) &&
-        value !== null &&
-        isPrimitive(value) &&
-        !def.choices.includes(value)
-      ) {
-        warnings.push(choicesWarning(key, def.choices));
-        continue;
-      }
-
-      if (def.type === "object" && isPlainObject(def.fields) && isPlainObject(value)) {
-        validateNestedFields(key, value, def.fields, warnings);
       }
     }
   } catch {

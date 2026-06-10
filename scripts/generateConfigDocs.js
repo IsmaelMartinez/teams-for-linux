@@ -67,38 +67,51 @@ function deriveFieldDefault(defaultValue, dotPath) {
   return current;
 }
 
+function isBlank(text) {
+  return !text || !String(text).trim();
+}
+
+function lintApplyMode(name, def, violations) {
+  if (def.applyMode === undefined) {
+    violations.push(`option "${name}" is missing applyMode`);
+  } else if (!APPLY_MODES.has(def.applyMode)) {
+    violations.push(
+      `option "${name}" has invalid applyMode "${def.applyMode}" (must be "live" or "restart")`,
+    );
+  }
+}
+
+function lintFields(name, fields, violations) {
+  for (const fieldPath of Object.keys(fields)) {
+    const field = fields[fieldPath];
+    if (!field.type) {
+      violations.push(`option "${name}" field "${fieldPath}" is missing a type`);
+    }
+    if (isBlank(field.describe)) {
+      violations.push(`option "${name}" field "${fieldPath}" is missing a describe`);
+    }
+  }
+}
+
+function lintOption(name, def, violations) {
+  if (isBlank(def.describe)) {
+    violations.push(`option "${name}" is missing a describe`);
+  }
+  if (!def.type) {
+    violations.push(`option "${name}" is missing a type`);
+  }
+  lintApplyMode(name, def, violations);
+  if (def.type === "object" && Object.keys(def.fields ?? {}).length === 0) {
+    violations.push(`object option "${name}" is missing a non-empty fields map`);
+  }
+  lintFields(name, def.fields ?? {}, violations);
+}
+
 // Returns a list of schema-completeness violations (empty when complete).
 function lintOptions() {
   const violations = [];
   for (const name of Object.keys(options)) {
-    const def = options[name];
-    if (!def.describe || !String(def.describe).trim()) {
-      violations.push(`option "${name}" is missing a describe`);
-    }
-    if (!def.type) {
-      violations.push(`option "${name}" is missing a type`);
-    }
-    if (def.applyMode === undefined) {
-      violations.push(`option "${name}" is missing applyMode`);
-    } else if (!APPLY_MODES.has(def.applyMode)) {
-      violations.push(
-        `option "${name}" has invalid applyMode "${def.applyMode}" (must be "live" or "restart")`,
-      );
-    }
-    if (def.type === "object") {
-      if (!def.fields || Object.keys(def.fields).length === 0) {
-        violations.push(`object option "${name}" is missing a non-empty fields map`);
-      }
-    }
-    for (const fieldPath of Object.keys(def.fields ?? {})) {
-      const field = def.fields[fieldPath];
-      if (!field.type) {
-        violations.push(`option "${name}" field "${fieldPath}" is missing a type`);
-      }
-      if (!field.describe || !String(field.describe).trim()) {
-        violations.push(`option "${name}" field "${fieldPath}" is missing a describe`);
-      }
-    }
+    lintOption(name, options[name], violations);
   }
   return violations;
 }

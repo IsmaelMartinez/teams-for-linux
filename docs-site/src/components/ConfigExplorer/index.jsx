@@ -1,4 +1,5 @@
 import React, {useState, useMemo, useEffect} from 'react';
+import PropTypes from 'prop-types';
 import schemaData from '@site/static/config-schema.json';
 import styles from './styles.module.css';
 
@@ -29,6 +30,10 @@ function ApplyBadge({mode}) {
     </span>
   );
 }
+
+ApplyBadge.propTypes = {
+  mode: PropTypes.string,
+};
 
 function NestedFields({option}) {
   const fields = Array.isArray(option.fields) ? option.fields : [];
@@ -74,6 +79,20 @@ function NestedFields({option}) {
     </details>
   );
 }
+
+NestedFields.propTypes = {
+  option: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    fields: PropTypes.arrayOf(
+      PropTypes.shape({
+        path: PropTypes.string.isRequired,
+        type: PropTypes.string,
+        description: PropTypes.string,
+        choices: PropTypes.array,
+      }),
+    ),
+  }).isRequired,
+};
 
 export default function ConfigExplorer() {
   const [query, setQuery] = useState('');
