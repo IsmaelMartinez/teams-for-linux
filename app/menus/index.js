@@ -798,6 +798,36 @@ function sanitizeFilename(candidate, fallback = "attachment") {
   return base;
 }
 
+// Mirror Chromium's "name (1).ext" de-duplication for direct writes into
+// Teams-Downloads, so an existing file is never silently overwritten.
+function uniqueFilePath(directory, filename) {
+  const ext = path.extname(filename);
+  const stem = path.basename(filename, ext);
+  let candidate = path.join(directory, filename);
+  for (let i = 1; fs.existsSync(candidate); i++) {
+    candidate = path.join(directory, `${stem} (${i})${ext}`);
+  }
+  return candidate;
+}
+
+// Strip the viewer suffix from a page title ("notes.txt - SharePoint" →
+// "notes.txt"). Plain string operations instead of regexes: the title is
+// page-controlled and the previous /\s+-\s+…$/ patterns were flagged as
+// backtracking-prone (Sonar S5852).
+const VIEWER_TITLE_SUFFIXES = new Set(["sharepoint", "onedrive", "microsoft 365"]);
+
+function stripViewerTitleSuffix(title) {
+  const trimmed = title.trim();
+  const idx = trimmed.lastIndexOf(" - ");
+  if (idx > 0) {
+    const suffix = trimmed.slice(idx + 3).trim().toLowerCase();
+    if (VIEWER_TITLE_SUFFIXES.has(suffix)) {
+      return trimmed.slice(0, idx).trim();
+    }
+  }
+  return trimmed;
+}
+
 // Electron's clipboard.write() has no cross-platform "file" type (an unknown
 // key like `filenames` is silently ignored), so write the platform-native
 // format that file managers actually paste from.
@@ -842,14 +872,14 @@ function getDirectDownloadUrl(urlStr) {
 }
 
 async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
-  try {
-    const progressNotification = new Notification({
-      title: "Downloading attachment...",
-      body: "Downloading attachment in the background...",
-      silent: true,
-    });
-    progressNotification.show();
+  const progressNotification = new Notification({
+    title: "Downloading attachment...",
+    body: "Downloading attachment in the background...",
+    silent: true,
+  });
+  progressNotification.show();
 
+  try {
     let downloadURL = getDirectDownloadUrl(linkURL);
     
     // Convert direct path view URLs to direct layout download URLs if possible
@@ -928,15 +958,14 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
         // The filename came from a server header or URL — never let it carry
         // path segments out of the target directory.
         filename = sanitizeFilename(filename);
-        const targetFilePath = path.join(documentsDir, filename);
+        const targetFilePath = uniqueFilePath(documentsDir, filename);
         fs.writeFileSync(targetFilePath, buffer);
 
         copyFilePathToClipboard(targetFilePath);
-        result = { filename, targetFilePath };
+        result = { filename: path.basename(targetFilePath), targetFilePath };
       }
     }
 
-    progressNotification.close();
     const successNotification = new Notification({
       title: "Downloaded & Copied!",
       body: `Saved to Documents/Teams-Downloads/${result.filename} and copied to clipboard.`,
@@ -950,6 +979,9 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
       body: `Failed to save attachment: ${error.message}`,
     });
     errorNotification.show();
+  } finally {
+    // Always dismiss the progress toast, also when the download failed.
+    progressNotification.close();
   }
 }
 
@@ -1082,11 +1114,7 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
         }
 
         if (pageInfo && pageInfo.success) {
-          let filename = pageInfo.title || "attachment.txt";
-          filename = filename.replace(/\s+-\s+SharePoint$/i, "")
-                             .replace(/\s+-\s+OneDrive$/i, "")
-                             .replace(/\s+-\s+Microsoft\s+365$/i, "")
-                             .trim();
+          let filename = stripViewerTitleSuffix(pageInfo.title || "attachment.txt");
           // The title is page-controlled — strip any path segments before
           // building the save path.
           filename = sanitizeFilename(filename, "attachment.txt");
@@ -1094,7 +1122,7 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
             filename += ".txt";
           }
 
-          const targetFilePath = path.join(documentsDir, filename);
+          const targetFilePath = uniqueFilePath(documentsDir, filename);
           fs.writeFileSync(targetFilePath, pageInfo.text, "utf8");
 
           // Copy the extracted text; a file reference would overwrite it
@@ -1103,7 +1131,7 @@ function extractTextFromBrowserWindow(downloadURL, activeSession) {
 
           resolved = true;
           cleanup();
-          resolve({ filename, targetFilePath });
+          resolve({ filename: path.basename(targetFilePath), targetFilePath });
         }
       } catch (e) {
         console.error("[TextExtract] Error during extraction:", e?.message);
@@ -1250,7 +1278,7 @@ function downloadWithBrowserWindow(downloadURL, activeSession) {
         item.teamsForLinuxExternallyManaged = true;
 
         const filename = sanitizeFilename(item.getFilename(), "attachment");
-        const targetFilePath = path.join(documentsDir, filename);
+        const targetFilePath = uniqueFilePath(documentsDir, filename);
 
         item.setSavePath(targetFilePath);
 
@@ -1262,7 +1290,7 @@ function downloadWithBrowserWindow(downloadURL, activeSession) {
           cleanup();
           if (state === "completed") {
             copyFilePathToClipboard(targetFilePath);
-            resolve({ filename, targetFilePath });
+            resolve({ filename: path.basename(targetFilePath), targetFilePath });
           } else {
             reject(new Error(`Download failed with state: ${state}`));
           }
