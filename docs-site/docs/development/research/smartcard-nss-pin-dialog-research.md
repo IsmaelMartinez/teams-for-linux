@@ -91,6 +91,47 @@ Revised plan: the **first** of these features to be implemented (#2631 or #2639)
 
 The maintainer does not need a physical smartcard to develop this. [SoftHSM2](https://github.com/softhsm/SoftHSMv2) provides a software PKCS#11 token: initialize a token with a user PIN, load a test client certificate + key into it via `pkcs11-tool`, register the SoftHSM library in the Chromium NSS database (`modutil -dbdir sql:$HOME/.pki/nssdb -add softhsm -libfile /usr/lib/softhsm/libsofthsm2.so`), and point the app at a client-cert test endpoint such as `https://prod.idrix.eu/secure/` (used by the reporter) or a local nginx with `ssl_verify_client on`. This setup answers every spike question (handler firing, retry semantics, cancel behavior, interaction with `select-client-certificate`) reproducibly in CI-less local testing. Final confirmation on real hardware comes from the requester, who has the smartcard environment and has offered to test.
 
+## Spike script and reporter validation protocol
+
+The maintainer's environment has no smartcard and no display for an interactive Electron session, so the spike is packaged as a runnable script for anyone with the right setup — primarily the issue reporter, who offered to test: [`testing/spikes/smartcard-pin-spike/main.mjs`](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/testing/spikes/smartcard-pin-spike/main.mjs). It is a standalone Electron main script (no Teams for Linux app code involved) that registers both the PIN handler and a `select-client-certificate` listener with verbose logging, and offers three settle paths in the PIN window — **Submit**, **Cancel → `resolve("")`**, **Cancel → `reject()`** — so each spike question maps to a button press plus a counter check.
+
+Run from a repo checkout:
+
+```bash
+npm install
+npx electron testing/spikes/smartcard-pin-spike/main.mjs            # defaults to https://prod.idrix.eu/secure/
+npx electron testing/spikes/smartcard-pin-spike/main.mjs <other-url>
+```
+
+**Safety rule:** the cancel and wrong-PIN experiments must run against a SoftHSM2 token or a disposable test card, never a production card — the whole point is to find out whether these paths decrement the card's retry counter. Check remaining attempts with the middleware (e.g. `pkcs11-tool --module <lib> --login --test`) before and after *each* experiment so every decrement can be attributed. On a real card, only the happy path (correct PIN first try) and the read-only observations (does the handler fire, is `tokenName` right) are safe to test.
+
+Questions the spike answers, in order:
+
+1. Does the handler fire at all in an Electron 42 session, and is `tokenName` the expected PKCS#11 token?
+2. Does `resolve("")` cause a re-invocation with `isRetry: true`, and does it decrement the attempts counter?
+3. Does `reject()` differ from `resolve("")` in either respect?
+4. After a deliberately wrong PIN: is the next invocation `isRetry: true`, and (on the test token) does the counter decrement exactly once?
+5. Cadence: reload the page — does the handler fire per request or once per token unlock?
+6. Does `select-client-certificate` fire, and what does `certificateList` contain for a multi-cert token?
+7. End-to-end: after a correct PIN, does the test page render the certificate details?
+
+The reporter's answers get recorded in this document and convert the implementation from "designed" to "validated design". SoftHSM2 setup for anyone reproducing locally:
+
+```bash
+sudo apt install softhsm2 opensc                      # or distro equivalent
+softhsm2-util --init-token --free --label spike --so-pin 0102030405060708 --pin 123456
+# generate a throwaway client cert and import key+cert into the token
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 30 -nodes -subj "/CN=spike"
+openssl pkcs8 -topk8 -inform PEM -outform DER -in key.pem -out key.der -nocrypt
+openssl x509 -in cert.pem -outform DER -out cert.der
+pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so -l --pin 123456 --write-object key.der  --type privkey --label spike
+pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so -l --pin 123456 --write-object cert.der --type cert    --label spike
+# make the token visible to Chromium/Electron's NSS database
+modutil -dbdir sql:$HOME/.pki/nssdb -add softhsm -libfile /usr/lib/softhsm/libsofthsm2.so
+```
+
+(Paths vary by distro — `libsofthsm2.so` may live under `/usr/lib/x86_64-linux-gnu/softhsm/`. The test endpoint accepts any certificate, including self-signed, and reflects back what was presented.)
+
 ## Phased plan
 
 1. **Spike (small, SoftHSM2-based):** confirm the handler fires in our window/session setup, determine cancel and retry semantics, and verify whether the handler also services nssdb master-password prompts. Outcome recorded in this document.
