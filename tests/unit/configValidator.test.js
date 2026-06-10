@@ -54,7 +54,7 @@ describe('Config Validator - top-level keys', () => {
 			appTitle: 'My Teams',
 			appActiveCheckInterval: 5,
 			closeAppOnCross: true,
-			customCSSLocation: ['/tmp/a.css'],
+			customCSSLocation: ['./styles/a.css'],
 			logConfig: { transports: {} },
 			followSystemTheme: 'dark',
 			untyped: { anything: 'goes' },
@@ -74,7 +74,7 @@ describe('Config Validator - top-level keys', () => {
 			appTitle: 7,
 			appActiveCheckInterval: 'fast',
 			closeAppOnCross: 'yes',
-			customCSSLocation: { path: '/tmp' },
+			customCSSLocation: { path: './styles' },
 			logConfig: ['not', 'an', 'object'],
 		};
 		const warnings = validateConfigFile(config, definitions);
