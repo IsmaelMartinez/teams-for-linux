@@ -151,7 +151,8 @@ class Menus {
   }
 
   initialize() {
-    this.applyApplicationMenu(appMenu(this));
+    const menu = appMenu(this);
+    this.applyApplicationMenu(menu);
 
     this.initializeEventHandlers();
 
