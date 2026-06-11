@@ -196,10 +196,17 @@ function validateIpcChannel(channel, payload = null) {
  * @returns {boolean} - True if the sender is acceptable, false if blocked
  */
 function validateIpcSender(event) {
-  // No senderFrame: internal emit or a frame destroyed mid-flight. Allow it.
-  const frame = event?.senderFrame;
-  if (!frame) {
+  // Internal ipcMain.emit calls carry no sender; allow them.
+  if (!event?.sender) {
     return true;
+  }
+  // A renderer-initiated message with no senderFrame means the frame was
+  // destroyed mid-flight (e.g. a sub-frame that navigated to about:blank to
+  // dodge this check), so reject it rather than allowing it.
+  const frame = event.senderFrame;
+  if (!frame) {
+    console.warn('[IPC Security] Blocked IPC message with missing senderFrame');
+    return false;
   }
   try {
     if (frame.parent !== null) {
@@ -207,7 +214,9 @@ function validateIpcSender(event) {
       return false;
     }
   } catch {
-    // Property access on a disposed WebFrameMain throws; treat as no senderFrame.
+    // Property access on a disposed WebFrameMain throws; reject rather than allow.
+    console.warn('[IPC Security] Blocked IPC message from disposed frame');
+    return false;
   }
   return true;
 }

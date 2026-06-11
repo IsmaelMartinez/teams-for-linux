@@ -69,6 +69,12 @@ class IdleMonitor {
         console.warn('[IDLE] State file is not a regular file, ignoring');
         return null;
       }
+      // The file only ever holds "active" / "inactive". Cap the read so a
+      // planted huge file in world-writable /tmp cannot OOM the process.
+      if (stats.size > 1024) {
+        console.warn('[IDLE] State file is too large, ignoring');
+        return null;
+      }
       if (typeof process.getuid === 'function' && stats.uid !== process.getuid()) {
         console.warn('[IDLE] State file is not owned by the current user, ignoring');
         return null;

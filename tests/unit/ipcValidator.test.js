@@ -99,28 +99,32 @@ describe('IPC Validator - Payload sanitisation', () => {
 
 describe('IPC Validator - Sender validation', () => {
 	it('accepts messages from top-level frames', () => {
-		assert.strictEqual(validateIpcSender({ senderFrame: { parent: null } }), true);
+		assert.strictEqual(validateIpcSender({ sender: {}, senderFrame: { parent: null } }), true);
 	});
 
 	it('rejects messages from sub-frames', () => {
 		const subFrame = { parent: { parent: null } };
-		assert.strictEqual(validateIpcSender({ senderFrame: subFrame }), false);
+		assert.strictEqual(validateIpcSender({ sender: {}, senderFrame: subFrame }), false);
 	});
 
-	it('accepts events without a senderFrame (destroyed frame or internal emit)', () => {
+	it('rejects renderer messages whose senderFrame is missing (destroyed frame)', () => {
+		assert.strictEqual(validateIpcSender({ sender: {}, senderFrame: null }), false);
+	});
+
+	it('accepts internal emits (no sender)', () => {
 		assert.strictEqual(validateIpcSender({ senderFrame: null }), true);
 		assert.strictEqual(validateIpcSender({}), true);
 		assert.strictEqual(validateIpcSender(undefined), true);
 	});
 
-	it('accepts events whose senderFrame was disposed (property access throws)', () => {
+	it('rejects events whose senderFrame was disposed (property access throws)', () => {
 		const disposedFrame = {};
 		Object.defineProperty(disposedFrame, 'parent', {
 			get() {
 				throw new Error('Render frame was disposed before WebFrameMain could be accessed');
 			},
 		});
-		assert.strictEqual(validateIpcSender({ senderFrame: disposedFrame }), true);
+		assert.strictEqual(validateIpcSender({ sender: {}, senderFrame: disposedFrame }), false);
 	});
 });
 
