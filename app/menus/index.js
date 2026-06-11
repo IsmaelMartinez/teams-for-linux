@@ -895,18 +895,24 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
     
     const isMS = isMicrosoftHost(downloadURL);
 
-    let result;
-    if (isMS) {
+    // Both the M365 path and an HTML response from a generic host go through
+    // a hidden window: viewer text extraction for text files (so the Monaco
+    // editor renders), navigation download otherwise. Only a direct binary
+    // response is saved straight from fetch.
+    const fetchViaHiddenWindow = () => {
       if (isTextFile(downloadURL)) {
-        // Load the viewer URL instead of direct download, so Monaco editor renders
         let viewerURL = linkURL;
         if (mainWindowUrl) {
           viewerURL = applyMcasProxy(viewerURL, mainWindowUrl);
         }
-        result = await extractTextFromBrowserWindow(viewerURL, session);
-      } else {
-        result = await downloadWithBrowserWindow(downloadURL, session);
+        return extractTextFromBrowserWindow(viewerURL, session);
       }
+      return downloadWithBrowserWindow(downloadURL, session);
+    };
+
+    let result;
+    if (isMS) {
+      result = await fetchViaHiddenWindow();
     } else {
       const response = await session.fetch(downloadURL);
       if (!response.ok) {
@@ -915,15 +921,7 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
 
       const contentType = response.headers.get("content-type") || "";
       if (contentType.includes("text/html")) {
-        if (isTextFile(downloadURL)) {
-          let viewerURL = linkURL;
-          if (mainWindowUrl) {
-            viewerURL = applyMcasProxy(viewerURL, mainWindowUrl);
-          }
-          result = await extractTextFromBrowserWindow(viewerURL, session);
-        } else {
-          result = await downloadWithBrowserWindow(downloadURL, session);
-        }
+        result = await fetchViaHiddenWindow();
       } else {
         let filename = "attachment";
         const contentDisposition = response.headers.get("content-disposition");
@@ -1010,31 +1008,40 @@ function isTextFile(urlStr) {
   return false;
 }
 
+// Shared scaffolding for the two hidden-window flows (viewer text extraction
+// and navigation download). The window shares the authenticated Teams
+// session, so the renderer stays fully locked down: same-origin policy,
+// context isolation, and the sandbox all enabled — executeJavaScript still
+// works with all of these. The desktop-browser UA keeps the SharePoint
+// viewer from serving a mobile or unsupported-browser page.
+const HIDDEN_WINDOW_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+function createHiddenDownloadWindow(activeSession) {
+  const tempWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 600,
+    webPreferences: {
+      session: activeSession,
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      backgroundThrottling: false,
+      webSecurity: true,
+    },
+  });
+  tempWin.webContents.setUserAgent(HIDDEN_WINDOW_USER_AGENT);
+
+  const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
+  fs.mkdirSync(documentsDir, { recursive: true });
+
+  return { tempWin, documentsDir };
+}
+
 function extractTextFromBrowserWindow(downloadURL, activeSession) {
   return new Promise((resolve, reject) => {
-    // The window shares the authenticated Teams session, so the renderer must
-    // stay fully locked down: same-origin policy, context isolation, and the
-    // sandbox all enabled. executeJavaScript still works with all of these.
-    const tempWin = new BrowserWindow({
-      show: false,
-      width: 800,
-      height: 600,
-      webPreferences: {
-        session: activeSession,
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        backgroundThrottling: false,
-        webSecurity: true,
-      },
-    });
-
-    const cleanUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-    tempWin.webContents.setUserAgent(cleanUserAgent);
-
-
-    const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-    fs.mkdirSync(documentsDir, { recursive: true });
+    const { tempWin, documentsDir } = createHiddenDownloadWindow(activeSession);
 
     let resolved = false;
     let cleanupTimeout;
@@ -1211,28 +1218,7 @@ function applyMcasProxy(urlStr, mainWindowUrl) {
 
 function downloadWithBrowserWindow(downloadURL, activeSession) {
   return new Promise((resolve, reject) => {
-    // The window shares the authenticated Teams session, so the renderer must
-    // stay fully locked down: same-origin policy, context isolation, and the
-    // sandbox all enabled.
-    const tempWin = new BrowserWindow({
-      show: false,
-      width: 800,
-      height: 600,
-      webPreferences: {
-        session: activeSession,
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        backgroundThrottling: false,
-        webSecurity: true,
-      },
-    });
-
-    const cleanUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-    tempWin.webContents.setUserAgent(cleanUserAgent);
-
-    const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-    fs.mkdirSync(documentsDir, { recursive: true });
+    const { tempWin, documentsDir } = createHiddenDownloadWindow(activeSession);
 
     let downloadInitiated = false;
     let settled = false;

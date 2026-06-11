@@ -752,20 +752,31 @@ describe('DownloadManager', () => {
 		assert.strictEqual(mainAppWindow._title, '[50%, 90%] Microsoft Teams');
 	});
 
-	it('shows a policy-block message when an M365 download interrupts with no bytes', () => {
+	// Boilerplate shared by the failure-notification tests: boot a manager on
+	// a fresh session and run a single download of `url` to terminal `state`.
+	function runFailedDownload({ filename, url, state, sizes, config }) {
 		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
+		const manager = new DownloadManager(config ?? enabledConfig());
 		const fakeSession = makeFakeSession();
 		manager.initialize(fakeSession);
 
 		const item = makeFakeDownloadItem(
-			'restricted.docx',
-			'/home/user/Downloads/restricted.docx',
-			{ totalBytes: 0, receivedBytes: 0 },
-			'https://contoso.sharepoint.com/sites/x/restricted.docx',
+			filename,
+			`/p/${filename}`,
+			sizes ?? { totalBytes: 0, receivedBytes: 0 },
+			url,
 		);
 		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'interrupted');
+		item.emit('done', {}, state);
+		return item;
+	}
+
+	it('shows a policy-block message when an M365 download interrupts with no bytes', () => {
+		runFailedDownload({
+			filename: 'restricted.docx',
+			url: 'https://contoso.sharepoint.com/sites/x/restricted.docx',
+			state: 'interrupted',
+		});
 
 		assert.strictEqual(notificationInstances.length, 1);
 		assert.match(notificationInstances[0].options.title, /blocked by policy/i);
@@ -773,71 +784,40 @@ describe('DownloadManager', () => {
 	});
 
 	it('opens the source link externally when the policy-block toast is clicked', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
-
 		const url = 'https://contoso.sharepoint.com/sites/x/restricted.docx';
-		const item = makeFakeDownloadItem('restricted.docx', '/p/restricted.docx', { totalBytes: 0 }, url);
-		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'interrupted');
+		runFailedDownload({ filename: 'restricted.docx', url, state: 'interrupted' });
 
 		notificationInstances[0].emit('click');
 		assert.deepStrictEqual(openExternalCalls, [[url]]);
 	});
 
 	it('uses the generic failure message for non-M365 interruptions', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
-
-		const item = makeFakeDownloadItem(
-			'huge.iso',
-			'/p/huge.iso',
-			{ totalBytes: 0, receivedBytes: 0 },
-			'https://downloads.example.com/huge.iso',
-		);
-		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'interrupted');
+		runFailedDownload({
+			filename: 'huge.iso',
+			url: 'https://downloads.example.com/huge.iso',
+			state: 'interrupted',
+		});
 
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
 	});
 
 	it('uses the plain cancelled message for a user-cancelled M365 download with no bytes', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
-
-		const item = makeFakeDownloadItem(
-			'restricted.docx',
-			'/p/restricted.docx',
-			{ totalBytes: 0, receivedBytes: 0 },
-			'https://contoso.sharepoint.com/sites/x/restricted.docx',
-		);
-		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'cancelled');
+		runFailedDownload({
+			filename: 'restricted.docx',
+			url: 'https://contoso.sharepoint.com/sites/x/restricted.docx',
+			state: 'cancelled',
+		});
 
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
 		assert.match(notificationInstances[0].options.body, /Download cancelled/);
 	});
 
 	it('does not mark lookalike hosts as policy blocks', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
-
-		const item = makeFakeDownloadItem(
-			'file.docx',
-			'/p/file.docx',
-			{ totalBytes: 0, receivedBytes: 0 },
-			'https://evilmicrosoft.com/file.docx',
-		);
-		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'interrupted');
+		runFailedDownload({
+			filename: 'file.docx',
+			url: 'https://evilmicrosoft.com/file.docx',
+			state: 'interrupted',
+		});
 
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
 	});
@@ -879,19 +859,12 @@ describe('DownloadManager', () => {
 	});
 
 	it('does not treat a partially-downloaded M365 file as a policy block', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(enabledConfig());
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
-
-		const item = makeFakeDownloadItem(
-			'big.pptx',
-			'/p/big.pptx',
-			{ totalBytes: 1000, receivedBytes: 400 },
-			'https://contoso.sharepoint.com/big.pptx',
-		);
-		fakeSession.emit('will-download', {}, item);
-		item.emit('done', {}, 'interrupted');
+		runFailedDownload({
+			filename: 'big.pptx',
+			url: 'https://contoso.sharepoint.com/big.pptx',
+			state: 'interrupted',
+			sizes: { totalBytes: 1000, receivedBytes: 400 },
+		});
 
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
 	});
