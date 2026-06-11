@@ -1,18 +1,16 @@
 const {
   app,
-  BrowserWindow,
   Menu,
   MenuItem,
   clipboard,
   dialog,
   session,
   ipcMain,
-  Notification,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
-const { pathToFileURL } = require("node:url");
 const appMenu = require("./appMenu");
+const { copyAttachmentAsFile } = require("./attachmentDownload");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
@@ -153,13 +151,7 @@ class Menus {
   }
 
   initialize() {
-    const menu = appMenu(this);
-
-    if (this.configGroup.startupConfig.menubar == "hidden") {
-      this.window.removeMenu();
-    } else {
-      this.window.setMenu(Menu.buildFromTemplate([menu]));
-    }
+    this.applyApplicationMenu(appMenu(this));
 
     this.initializeEventHandlers();
 
@@ -283,9 +275,29 @@ class Menus {
     }
   }
 
+  // Apply the built menu to the right place for the platform. macOS ignores
+  // BrowserWindow.setMenu() — the menu bar is global, so it must go through
+  // Menu.setApplicationMenu. The app's single menu becomes the bold app menu
+  // (macOS forces its title to the bundle name); we add the standard
+  // Edit/View/Window menus so Cmd+C/V/A and window shortcuts work. With
+  // `menubar: hidden` only Edit is kept so those shortcuts still fire.
+  applyApplicationMenu(menu) {
+    if (process.platform === "darwin") {
+      const template =
+        this.configGroup.startupConfig.menubar === "hidden"
+          ? [{ role: "editMenu" }]
+          : [menu, { role: "editMenu" }, { role: "viewMenu" }, { role: "windowMenu" }];
+      Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    } else if (this.configGroup.startupConfig.menubar == "hidden") {
+      this.window.removeMenu();
+    } else {
+      this.window.setMenu(Menu.buildFromTemplate([menu]));
+    }
+  }
+
   updateMenu() {
     const menu = appMenu(this);
-    this.window.setMenu(Menu.buildFromTemplate([menu]));
+    this.applyApplicationMenu(menu);
     this.tray?.setContextMenu(menu.submenu);
 
     // Notify renderer process of config changes that affect renderer behavior
@@ -585,16 +597,51 @@ function addTextEditMenuItems(params, menu, menus) {
     menu.append(
       new MenuItem({
         label: "Download Attachment & Copy to Clipboard",
-        click: () => {
-          const activeSession = menus.window.webContents.session;
-          const mainWindowUrl = menus.window.webContents.getURL();
-          copyAttachmentAsFile(params.linkURL, activeSession, mainWindowUrl);
-        },
+        click: () => triggerAttachmentDownload(menus, params.linkURL),
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: "Save Attachment As…",
+        click: () => triggerAttachmentDownload(menus, params.linkURL, { saveAs: true }),
       })
     );
   }
 
   addClipboardLinkMenuItem(menu, menus);
+}
+
+// Derive a sensible default filename from a URL path for the save dialog.
+function suggestedFilename(linkURL) {
+  try {
+    const pathname = new URL(linkURL).pathname;
+    const last = decodeURIComponent(pathname.substring(pathname.lastIndexOf("/") + 1));
+    return last && last !== "/" ? last : "attachment";
+  } catch {
+    return "attachment";
+  }
+}
+
+// Kick off an attachment download. With `saveAs`, prompt for the destination
+// via the native save dialog (the user picks the exact path); otherwise the
+// download module saves into Documents/Teams-Downloads. The dialog lives here
+// in the UI layer so the download module stays UI-free and unit-testable.
+async function triggerAttachmentDownload(menus, linkURL, { saveAs = false } = {}) {
+  const activeSession = menus.window.webContents.session;
+  const mainWindowUrl = menus.window.webContents.getURL();
+  const options = {};
+  if (saveAs) {
+    const { canceled, filePath } = await dialog.showSaveDialog(menus.window, {
+      title: "Save Attachment As",
+      defaultPath: path.join(app.getPath("downloads"), suggestedFilename(linkURL)),
+    });
+    if (canceled || !filePath) {
+      return;
+    }
+    options.destinationPath = filePath;
+  }
+  copyAttachmentAsFile(linkURL, activeSession, mainWindowUrl, options);
 }
 
 // Offer to download a link previously copied to the clipboard (e.g. from a
@@ -620,11 +667,14 @@ function addClipboardLinkMenuItem(menu, menus) {
     menu.append(
       new MenuItem({
         label: "Download File from Clipboard Link",
-        click: () => {
-          const activeSession = menus.window.webContents.session;
-          const mainWindowUrl = menus.window.webContents.getURL();
-          copyAttachmentAsFile(clipboardText, activeSession, mainWindowUrl);
-        },
+        click: () => triggerAttachmentDownload(menus, clipboardText),
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: "Save File from Clipboard Link As…",
+        click: () => triggerAttachmentDownload(menus, clipboardText, { saveAs: true }),
       })
     );
   } catch (error) {
@@ -751,549 +801,6 @@ function addToList(list, item) {
   }
 
   return list;
-}
-
-// Microsoft 365 / SharePoint / OneDrive hosts get the hidden-window download
-// treatment (they need the authenticated session and viewer redirects).
-// Suffix matching only — a substring test would also match lookalike hosts
-// like "mymicrosoft.evil.com". "mcas.ms" covers Defender for Cloud Apps
-// proxied hosts ("contoso.sharepoint.com.<region>.mcas.ms").
-const MS_HOST_SUFFIXES = [
-  "sharepoint.com",
-  "sharepoint-df.com",
-  "officeapps.live.com",
-  "office.com",
-  "office.net",
-  "microsoft.com",
-  "onedrive.com",
-  "1drv.ms",
-  "svc.ms",
-  "mcas.ms",
-];
-
-function isMicrosoftHost(urlStr) {
-  try {
-    const url = new URL(urlStr);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return false;
-    }
-    const host = url.hostname.toLowerCase();
-    return MS_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith("." + suffix));
-  } catch {
-    return false;
-  }
-}
-
-// Strip any path components from a filename coming from an untrusted source
-// (Content-Disposition header, page title, URL path) so it can never escape
-// the target directory.
-function sanitizeFilename(candidate, fallback = "attachment") {
-  if (typeof candidate !== "string") {
-    return fallback;
-  }
-  const base = path.basename(candidate.replaceAll("\\", "/")).trim();
-  if (!base || base === "." || base === "..") {
-    return fallback;
-  }
-  return base;
-}
-
-// Mirror Chromium's "name (1).ext" de-duplication for direct writes into
-// Teams-Downloads, so an existing file is never silently overwritten.
-function uniqueFilePath(directory, filename) {
-  const ext = path.extname(filename);
-  const stem = path.basename(filename, ext);
-  let candidate = path.join(directory, filename);
-  for (let i = 1; fs.existsSync(candidate); i++) {
-    candidate = path.join(directory, `${stem} (${i})${ext}`);
-  }
-  return candidate;
-}
-
-// Strip the viewer suffix from a page title ("notes.txt - SharePoint" →
-// "notes.txt"). Plain string operations instead of regexes: the title is
-// page-controlled and the previous /\s+-\s+…$/ patterns were flagged as
-// backtracking-prone (Sonar S5852).
-const VIEWER_TITLE_SUFFIXES = new Set(["sharepoint", "onedrive", "microsoft 365"]);
-
-function stripViewerTitleSuffix(title) {
-  const trimmed = title.trim();
-  const idx = trimmed.lastIndexOf(" - ");
-  if (idx > 0) {
-    const suffix = trimmed.slice(idx + 3).trim().toLowerCase();
-    if (VIEWER_TITLE_SUFFIXES.has(suffix)) {
-      return trimmed.slice(0, idx).trim();
-    }
-  }
-  return trimmed;
-}
-
-// Electron's clipboard.write() has no cross-platform "file" type (an unknown
-// key like `filenames` is silently ignored), so write the platform-native
-// format that file managers actually paste from.
-function copyFilePathToClipboard(filePath) {
-  try {
-    if (process.platform === "darwin") {
-      const escaped = filePath
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-      const plist =
-        '<?xml version="1.0" encoding="UTF-8"?>' +
-        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' +
-        `<plist version="1.0"><array><string>${escaped}</string></array></plist>`;
-      clipboard.writeBuffer("NSFilenamesPboardType", Buffer.from(plist));
-    } else if (process.platform === "linux") {
-      const uri = pathToFileURL(filePath).toString();
-      clipboard.writeBuffer("text/uri-list", Buffer.from(uri + "\n"));
-    } else {
-      clipboard.writeText(filePath);
-    }
-  } catch (error) {
-    console.warn("[CopyAttachment] Could not place file on clipboard", {
-      message: error?.message,
-    });
-  }
-}
-
-function getDirectDownloadUrl(urlStr) {
-  try {
-    if (isMicrosoftHost(urlStr)) {
-      const url = new URL(urlStr);
-      if (!url.searchParams.has("download")) {
-        url.searchParams.set("download", "1");
-        return url.toString();
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return urlStr;
-}
-
-async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "") {
-  const progressNotification = new Notification({
-    title: "Downloading attachment...",
-    body: "Downloading attachment in the background...",
-    silent: true,
-  });
-  progressNotification.show();
-
-  try {
-    let downloadURL = getDirectDownloadUrl(linkURL);
-    
-    // Convert direct path view URLs to direct layout download URLs if possible
-    const spDownloadURL = getSharePointDownloadUrl(downloadURL);
-    if (spDownloadURL) {
-      downloadURL = spDownloadURL;
-    }
-
-    // Apply corporate MCAS proxy if active
-    if (mainWindowUrl) {
-      downloadURL = applyMcasProxy(downloadURL, mainWindowUrl);
-    }
-    
-    const isMS = isMicrosoftHost(downloadURL);
-
-    // Both the M365 path and an HTML response from a generic host go through
-    // a hidden window: viewer text extraction for text files (so the Monaco
-    // editor renders), navigation download otherwise. Only a direct binary
-    // response is saved straight from fetch.
-    const fetchViaHiddenWindow = () => {
-      if (isTextFile(downloadURL)) {
-        let viewerURL = linkURL;
-        if (mainWindowUrl) {
-          viewerURL = applyMcasProxy(viewerURL, mainWindowUrl);
-        }
-        return extractTextFromBrowserWindow(viewerURL, session);
-      }
-      return downloadWithBrowserWindow(downloadURL, session);
-    };
-
-    let result;
-    if (isMS) {
-      result = await fetchViaHiddenWindow();
-    } else {
-      const response = await session.fetch(downloadURL);
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      if (contentType.includes("text/html")) {
-        result = await fetchViaHiddenWindow();
-      } else {
-        let filename = "attachment";
-        const contentDisposition = response.headers.get("content-disposition");
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename\*?=["']?(?:UTF-8'')?([^;"']+)["']?/i);
-          if (match && match[1]) {
-            filename = decodeURIComponent(match[1]);
-          } else {
-            const fallbackMatch = contentDisposition.match(/filename=["']?([^;"']+)["']?/i);
-            if (fallbackMatch && fallbackMatch[1]) {
-              filename = fallbackMatch[1];
-            }
-          }
-        } else {
-          try {
-            const urlObj = new URL(linkURL);
-            const pathname = urlObj.pathname;
-            const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
-            if (lastPart) {
-              filename = decodeURIComponent(lastPart);
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-        fs.mkdirSync(documentsDir, { recursive: true });
-        // The filename came from a server header or URL — never let it carry
-        // path segments out of the target directory.
-        filename = sanitizeFilename(filename);
-        const targetFilePath = uniqueFilePath(documentsDir, filename);
-        fs.writeFileSync(targetFilePath, buffer);
-
-        copyFilePathToClipboard(targetFilePath);
-        result = { filename: path.basename(targetFilePath), targetFilePath };
-      }
-    }
-
-    const successNotification = new Notification({
-      title: "Downloaded & Copied!",
-      body: `Saved to Documents/Teams-Downloads/${result.filename} and copied to clipboard.`,
-    });
-    successNotification.show();
-  } catch (error) {
-    // Log the message only — the full error can embed the download URL.
-    console.error("[CopyAttachment] Error:", error?.message);
-    const errorNotification = new Notification({
-      title: "Download Error",
-      body: `Failed to save attachment: ${error.message}`,
-    });
-    errorNotification.show();
-  } finally {
-    // Always dismiss the progress toast, also when the download failed.
-    progressNotification.close();
-  }
-}
-
-function isTextFile(urlStr) {
-  try {
-    const url = new URL(urlStr);
-    const pathname = url.pathname;
-    
-    if (pathname.includes("/:t:/")) {
-      return true;
-    }
-    
-    const lastPart = pathname.substring(pathname.lastIndexOf('/') + 1);
-    const extMatch = lastPart.match(/\.([a-zA-Z0-9]+)$/);
-    if (extMatch) {
-      const ext = extMatch[1].toLowerCase();
-      const TEXT_EXTENSIONS = [
-        "txt", "json", "csv", "log", "xml", "html", "htm", "css", "js", "ts",
-        "py", "sh", "bat", "ps1", "yml", "yaml", "md", "ini", "conf", "sql"
-      ];
-      return TEXT_EXTENSIONS.includes(ext);
-    }
-  } catch (e) {
-    // ignore
-  }
-  return false;
-}
-
-// Shared scaffolding for the two hidden-window flows (viewer text extraction
-// and navigation download). The window shares the authenticated Teams
-// session, so the renderer stays fully locked down: same-origin policy,
-// context isolation, and the sandbox all enabled — executeJavaScript still
-// works with all of these. The desktop-browser UA keeps the SharePoint
-// viewer from serving a mobile or unsupported-browser page.
-const HIDDEN_WINDOW_USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-
-function createHiddenDownloadWindow(activeSession) {
-  const tempWin = new BrowserWindow({
-    show: false,
-    width: 800,
-    height: 600,
-    webPreferences: {
-      session: activeSession,
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      backgroundThrottling: false,
-      webSecurity: true,
-    },
-  });
-  tempWin.webContents.setUserAgent(HIDDEN_WINDOW_USER_AGENT);
-
-  const documentsDir = path.join(app.getPath("documents"), "Teams-Downloads");
-  fs.mkdirSync(documentsDir, { recursive: true });
-
-  return { tempWin, documentsDir };
-}
-
-function extractTextFromBrowserWindow(downloadURL, activeSession) {
-  return new Promise((resolve, reject) => {
-    const { tempWin, documentsDir } = createHiddenDownloadWindow(activeSession);
-
-    let resolved = false;
-    let cleanupTimeout;
-
-    const cleanup = () => {
-      if (cleanupTimeout) {
-        clearTimeout(cleanupTimeout);
-      }
-      if (!tempWin.isDestroyed()) {
-        tempWin.destroy();
-      }
-    };
-
-    cleanupTimeout = setTimeout(() => {
-      if (!resolved) {
-        cleanup();
-        reject(new Error("Text extraction timed out (30 seconds)"));
-      }
-    }, 30000);
-
-    tempWin.webContents.on("did-finish-load", async () => {
-      try {
-        let pageInfo = { success: false };
-        for (let i = 0; i < 40; i++) {
-          if (tempWin.isDestroyed()) return;
-          
-          pageInfo = await tempWin.webContents.executeJavaScript(`
-            (function() {
-              let textVal = "";
-              let found = false;
-              
-              try {
-                if (typeof monaco !== 'undefined' && monaco.editor) {
-                  const models = monaco.editor.getModels();
-                  if (models && models.length > 0) {
-                    const val = models[0].getValue();
-                    if (val) {
-                      textVal = val;
-                      found = true;
-                    }
-                  }
-                }
-              } catch (e) {}
-              
-              if (!found) {
-                try {
-                  const pre = document.querySelector('pre');
-                  if (pre && pre.innerText && pre.innerText.trim().length > 0) {
-                    textVal = pre.innerText;
-                    found = true;
-                  }
-                } catch (e) {}
-              }
-              
-              if (!found) {
-                try {
-                  const container = document.querySelector('.text-container') || document.querySelector('.file-viewer');
-                  if (container && container.innerText && container.innerText.trim().length > 0) {
-                    textVal = container.innerText;
-                    found = true;
-                  }
-                } catch (e) {}
-              }
-              
-              if (found) {
-                return { success: true, text: textVal, title: document.title };
-              }
-              
-              return { success: false };
-            })()
-          `);
-
-          if (pageInfo && pageInfo.success) {
-            break;
-          }
-          await new Promise(r => setTimeout(r, 500));
-        }
-
-        if (pageInfo && pageInfo.success) {
-          let filename = stripViewerTitleSuffix(pageInfo.title || "attachment.txt");
-          // The title is page-controlled — strip any path segments before
-          // building the save path.
-          filename = sanitizeFilename(filename, "attachment.txt");
-          if (!filename.includes(".")) {
-            filename += ".txt";
-          }
-
-          const targetFilePath = uniqueFilePath(documentsDir, filename);
-          fs.writeFileSync(targetFilePath, pageInfo.text, "utf8");
-
-          // Copy the extracted text; a file reference would overwrite it
-          // (the clipboard holds one payload at a time).
-          clipboard.writeText(pageInfo.text);
-
-          resolved = true;
-          cleanup();
-          resolve({ filename: path.basename(targetFilePath), targetFilePath });
-        }
-      } catch (e) {
-        console.error("[TextExtract] Error during extraction:", e?.message);
-        // Settle now instead of leaving the caller to hit the 30s timeout
-        // (or hang forever once `resolved` is set).
-        if (!resolved) {
-          resolved = true;
-          cleanup();
-          reject(e);
-        }
-      }
-    });
-
-    tempWin.loadURL(downloadURL).catch((err) => {
-      setTimeout(() => {
-        if (!resolved) {
-          cleanup();
-          reject(new Error(`Failed to load URL: ${err.message}`));
-        }
-      }, 500);
-    });
-  });
-}
-
-function getSharePointDownloadUrl(urlStr) {
-  try {
-    const url = new URL(urlStr);
-    const host = url.hostname.toLowerCase();
-    
-    // Only target SharePoint and OneDrive domains
-    if (host.includes("sharepoint.com") || host.includes("onedrive.com") || host.includes("mcas.ms")) {
-      const pathname = url.pathname;
-      // Match viewer prefix: /:x:/r/ or /:w:/g/ etc. (supporting sites or personal)
-      const viewerRegex = /^\/:[a-z]:\/[rg]\/(personal|sites)\/([^\/]+)\/(.+)$/i;
-      const match = pathname.match(viewerRegex);
-      
-      if (match) {
-        const filePath = match[3];
-        // Only convert if the file path has a standard file extension
-        const hasExtension = /\.[a-zA-Z0-9]{2,5}$/.test(filePath);
-        if (hasExtension) {
-          const type = match[1];
-          const ownerOrSite = match[2];
-          
-          const directPath = `${url.origin}/${type}/${ownerOrSite}/${filePath}`;
-          const siteRoot = `${url.origin}/${type}/${ownerOrSite}`;
-          
-          const downloadUrl = new URL(`${siteRoot}/_layouts/15/download.aspx`);
-          downloadUrl.searchParams.set("SourceUrl", directPath);
-          return downloadUrl.toString();
-        }
-      }
-    }
-  } catch (e) {
-    // ignore
-  }
-  return null;
-}
-
-function applyMcasProxy(urlStr, mainWindowUrl) {
-  try {
-    const mainUrl = new URL(mainWindowUrl);
-    if (mainUrl.hostname.endsWith(".mcas.ms")) {
-      const targetUrl = new URL(urlStr);
-      const origHost = targetUrl.hostname;
-      if (!origHost.endsWith(".mcas.ms")) {
-        const proxiedHost = origHost + ".mcas.ms";
-        // String replace to rewrite both the main domain and any URL-encoded SourceUrl domains
-        return urlStr.replaceAll(origHost, proxiedHost);
-      }
-    }
-  } catch (e) {
-    // ignore
-  }
-  return urlStr;
-}
-
-function downloadWithBrowserWindow(downloadURL, activeSession) {
-  return new Promise((resolve, reject) => {
-    const { tempWin, documentsDir } = createHiddenDownloadWindow(activeSession);
-
-    let downloadInitiated = false;
-    let settled = false;
-    let cleanupTimeout;
-
-    const cleanup = () => {
-      if (cleanupTimeout) {
-        clearTimeout(cleanupTimeout);
-        cleanupTimeout = null;
-      }
-      activeSession.removeListener("will-download", handleWillDownload);
-      if (!tempWin.isDestroyed()) {
-        tempWin.destroy();
-      }
-    };
-
-    const fail = (error) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(error);
-    };
-
-    cleanupTimeout = setTimeout(() => {
-      fail(new Error("Download timed out (no download started within 30 seconds)"));
-    }, 30000);
-
-    const handleWillDownload = (event, item, webContents) => {
-      if (webContents && webContents.id === tempWin.webContents.id) {
-        downloadInitiated = true;
-        // The navigation did its job; give the transfer itself a longer
-        // backstop so a stalled download can't leak the hidden window and
-        // the session listener forever.
-        if (cleanupTimeout) {
-          clearTimeout(cleanupTimeout);
-        }
-        cleanupTimeout = setTimeout(() => {
-          fail(new Error("Download timed out"));
-        }, 10 * 60 * 1000);
-
-        // Tell DownloadManager (which listens on the same session) to skip
-        // its own save path, notifications and openWhenDone for this item.
-        item.teamsForLinuxExternallyManaged = true;
-
-        const filename = sanitizeFilename(item.getFilename(), "attachment");
-        const targetFilePath = uniqueFilePath(documentsDir, filename);
-
-        item.setSavePath(targetFilePath);
-
-        // A transient "interrupted" in `updated` can auto-resume; only the
-        // final state in `done` decides the outcome.
-        item.once("done", (event, state) => {
-          if (settled) return;
-          settled = true;
-          cleanup();
-          if (state === "completed") {
-            copyFilePathToClipboard(targetFilePath);
-            resolve({ filename: path.basename(targetFilePath), targetFilePath });
-          } else {
-            reject(new Error(`Download failed with state: ${state}`));
-          }
-        });
-      }
-    };
-
-    activeSession.on("will-download", handleWillDownload);
-
-    tempWin.loadURL(downloadURL).catch((err) => {
-      setTimeout(() => {
-        if (!downloadInitiated) {
-          fail(new Error(`Failed to load URL: ${err.message}`));
-        }
-      }, 500);
-    });
-  });
 }
 
 exports = module.exports = Menus;
