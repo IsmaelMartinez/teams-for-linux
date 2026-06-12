@@ -73,6 +73,20 @@ Place your `config.json` file in the appropriate location based on your installa
 > [!NOTE]
 > [yargs](https://www.npmjs.com/package/yargs) supports multiple configuration methods—refer to their documentation if you prefer using a configuration file over command-line arguments.
 
+## Startup Validation
+
+At startup the app validates your `config.json` against the option schema and logs any problems as `[CONFIG]` warnings. This is **warn-only**: an invalid entry is reported and then ignored, never blocking startup or changing existing behaviour. It catches the common mistakes:
+
+- **Unknown options** — typos or options from a different app version.
+- **Wrong types** — for example a string where a number is expected.
+- **Invalid `choices`** — a value outside an option's allowed set.
+
+Nested keys of object options (such as `mqtt.homeAssistant.enabled`) are checked the same way. Warnings name only the offending key, the expected type, and any allowed values — never your configured values, which may contain URLs, tokens, or email addresses.
+
+:::note
+Each option's **Apply** mode (whether a change takes effect immediately or after a restart) is listed in the [auto-generated reference](configuration-generated.md) and the [config explorer](configuration-explorer.mdx).
+:::
+
 ## Configuration Options Reference
 
 ### Application Core

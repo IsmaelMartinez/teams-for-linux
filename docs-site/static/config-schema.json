@@ -7,7 +7,8 @@
       "name": "appActiveCheckInterval",
       "type": "number",
       "default": 2,
-      "description": "A numeric value in seconds as poll interval to check if the system is active from being idle"
+      "description": "A numeric value in seconds as poll interval to check if the system is active from being idle",
+      "applyMode": "restart"
     },
     {
       "name": "screenSharing",
@@ -19,55 +20,88 @@
         },
         "lockInhibitionMethod": "Electron"
       },
-      "description": "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel)."
+      "description": "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel).",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "thumbnail.enabled",
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show the preview thumbnail window when screen sharing starts."
+        },
+        {
+          "path": "thumbnail.alwaysOnTop",
+          "type": "boolean",
+          "default": true,
+          "description": "Keep the screen sharing thumbnail window always on top."
+        },
+        {
+          "path": "lockInhibitionMethod",
+          "type": "string",
+          "default": "Electron",
+          "description": "Screen lock inhibition method used while sharing.",
+          "choices": [
+            "Electron",
+            "WakeLockSentinel"
+          ]
+        }
+      ]
     },
     {
       "name": "appIcon",
       "type": "string",
       "default": "",
-      "description": "Teams app icon to show in the tray"
+      "description": "Teams app icon to show in the tray",
+      "applyMode": "restart"
     },
     {
       "name": "appIconType",
       "type": "string",
       "default": "default",
-      "description": "Type of tray icon to be used"
+      "description": "Type of tray icon to be used",
+      "applyMode": "restart"
     },
     {
       "name": "appIdleTimeout",
       "type": "number",
       "default": 300,
-      "description": "A numeric value in seconds as duration before app considers the system as idle"
+      "description": "A numeric value in seconds as duration before app considers the system as idle",
+      "applyMode": "restart"
     },
     {
       "name": "appIdleTimeoutCheckInterval",
       "type": "number",
       "default": 10,
-      "description": "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached"
+      "description": "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
+      "applyMode": "restart"
     },
     {
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
-      "description": "A text to be suffixed with page title"
+      "description": "A text to be suffixed with page title",
+      "applyMode": "restart"
     },
     {
       "name": "alwaysOnTop",
       "type": "boolean",
       "default": true,
-      "description": "Keep the pop-out window always on top of other windows."
+      "description": "Keep the pop-out window always on top of other windows.",
+      "applyMode": "restart"
     },
     {
       "name": "authServerWhitelist",
       "type": "string",
       "default": "*",
-      "description": "Set auth-server-whitelist value"
+      "description": "Set auth-server-whitelist value",
+      "applyMode": "restart"
     },
     {
       "name": "awayOnSystemIdle",
       "type": "boolean",
       "default": false,
-      "description": "Sets the user status as away when system goes idle"
+      "description": "Sets the user status as away when system goes idle",
+      "applyMode": "restart"
     },
     {
       "name": "idleDetection",
@@ -76,43 +110,64 @@
         "forceState": false,
         "stateFile": "/tmp/teams-for-linux-idle-state-$USER"
       },
-      "description": "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support."
+      "description": "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "forceState",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable state file-based idle state control (workaround for Wayland/Hyprland)."
+        },
+        {
+          "path": "stateFile",
+          "type": "string",
+          "default": "/tmp/teams-for-linux-idle-state-$USER",
+          "description": "Path to the idle state file (supports $USER expansion)."
+        }
+      ]
     },
     {
       "name": "chromeUserAgent",
       "type": "string",
       "default": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36",
-      "description": "Google Chrome User Agent"
+      "description": "Google Chrome User Agent",
+      "applyMode": "restart"
     },
     {
       "name": "customBGServiceBaseUrl",
       "type": "string",
       "default": "http://localhost",
-      "description": "Base URL of the server which provides custom background images"
+      "description": "Base URL of the server which provides custom background images",
+      "applyMode": "restart"
     },
     {
       "name": "customBGServiceConfigFetchInterval",
       "type": "number",
       "default": 0,
-      "description": "A numeric value in seconds as poll interval to download background service config download"
+      "description": "A numeric value in seconds as poll interval to download background service config download",
+      "applyMode": "restart"
     },
     {
       "name": "customCACertsFingerprints",
       "type": "array",
       "default": [],
-      "description": "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate"
+      "description": "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
+      "applyMode": "restart"
     },
     {
       "name": "customCSSName",
       "type": "string",
       "default": "",
-      "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\""
+      "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\"",
+      "applyMode": "restart"
     },
     {
       "name": "customCSSLocation",
       "type": "string",
       "default": "",
-      "description": "custom CSS styles file location"
+      "description": "custom CSS styles file location",
+      "applyMode": "restart"
     },
     {
       "name": "customStickers",
@@ -138,19 +193,71 @@
           "maxBytes": 5242880
         }
       },
-      "description": "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories so packs imported under <folder>/<pack>/ are visible. urlImport: HTTPS URL import (drop or paste a URL onto the sticker panel); allowedContentTypes restricts what the wrapper will save; maxBytes caps individual file size."
+      "description": "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories so packs imported under <folder>/<pack>/ are visible. urlImport: HTTPS URL import (drop or paste a URL onto the sticker panel); allowedContentTypes restricts what the wrapper will save; maxBytes caps individual file size.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Master flag for the custom stickers feature."
+        },
+        {
+          "path": "folder",
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the sticker folder; empty string uses <userData>/stickers/, created on first run if missing."
+        },
+        {
+          "path": "formats",
+          "type": "array",
+          "default": [
+            "png",
+            "jpg",
+            "jpeg",
+            "gif",
+            "webp"
+          ],
+          "description": "File extensions the scanner accepts (lowercase, no leading dot); the scanner reads the configured folder plus one level of subdirectories."
+        },
+        {
+          "path": "urlImport.enabled",
+          "type": "boolean",
+          "default": true,
+          "description": "Allow importing stickers from HTTPS URLs via the panel header input or by dropping a URL on the panel."
+        },
+        {
+          "path": "urlImport.allowedContentTypes",
+          "type": "array",
+          "default": [
+            "image/png",
+            "image/jpeg",
+            "image/gif",
+            "image/webp"
+          ],
+          "description": "Response content-types the wrapper will accept and save when importing from a URL."
+        },
+        {
+          "path": "urlImport.maxBytes",
+          "type": "number",
+          "default": 5242880,
+          "description": "Per-file size cap in bytes for URL imports; larger responses are rejected."
+        }
+      ]
     },
     {
       "name": "disableTimestampOnCopy",
       "type": "boolean",
       "default": false,
-      "description": "Controls whether timestamps are included when copying messages in chats"
+      "description": "Controls whether timestamps are included when copying messages in chats",
+      "applyMode": "restart"
     },
     {
       "name": "class",
       "type": "string",
       "default": null,
-      "description": "A custom value for the WM_CLASS property"
+      "description": "A custom value for the WM_CLASS property",
+      "applyMode": "restart"
     },
     {
       "name": "cacheManagement",
@@ -160,49 +267,77 @@
         "maxCacheSizeMB": 600,
         "cacheCheckIntervalMs": 3600000
       },
-      "description": "Cache management configuration to prevent daily logout issues"
+      "description": "Cache management configuration to prevent daily logout issues",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic cache management to prevent daily logout issues."
+        },
+        {
+          "path": "maxCacheSizeMB",
+          "type": "number",
+          "default": 600,
+          "description": "Maximum cache size in MB before cleanup runs."
+        },
+        {
+          "path": "cacheCheckIntervalMs",
+          "type": "number",
+          "default": 3600000,
+          "description": "How often the cache size is checked, in milliseconds."
+        }
+      ]
     },
     {
       "name": "clearStorageData",
       "type": "boolean",
       "default": null,
-      "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions"
+      "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
+      "applyMode": "restart"
     },
     {
       "name": "clientCertPath",
       "type": "string",
       "default": "",
-      "description": "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)"
+      "description": "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
+      "applyMode": "restart"
     },
     {
       "name": "clientCertPassword",
       "type": "string",
       "default": "",
-      "description": "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)"
+      "description": "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
+      "applyMode": "restart"
     },
     {
       "name": "closeAppOnCross",
       "type": "boolean",
       "default": false,
-      "description": "Close the app when clicking the close (X) cross"
+      "description": "Close the app when clicking the close (X) cross",
+      "applyMode": "restart"
     },
     {
       "name": "defaultNotificationUrgency",
       "type": "string",
       "default": "normal",
-      "description": "Default urgency for new notifications (low/normal/critical)"
+      "description": "Default urgency for new notifications (low/normal/critical)",
+      "applyMode": "live"
     },
     {
       "name": "defaultURLHandler",
       "type": "string",
       "default": "",
-      "description": "Default application to be used to open the HTTP URLs"
+      "description": "Default application to be used to open the HTTP URLs",
+      "applyMode": "restart"
     },
     {
       "name": "disableGpu",
       "type": "boolean",
       "default": false,
-      "description": "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)"
+      "description": "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
+      "applyMode": "restart"
     },
     {
       "name": "download",
@@ -213,31 +348,62 @@
         "showProgressBar": true,
         "showTitlePrefix": true
       },
-      "description": "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. All sub-flags only take effect when enabled is true."
+      "description": "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. All sub-flags only take effect when enabled is true.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Master switch for the download feedback feature; sub-flags only take effect when this is true."
+        },
+        {
+          "path": "notifyOnDownloadComplete",
+          "type": "boolean",
+          "default": true,
+          "description": "Show a system notification when a file download finishes (click opens the containing folder)."
+        },
+        {
+          "path": "showProgressBar",
+          "type": "boolean",
+          "default": true,
+          "description": "Drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight."
+        },
+        {
+          "path": "showTitlePrefix",
+          "type": "boolean",
+          "default": true,
+          "description": "Prefix the main window title with download progress as a portable fallback where other progress signals are not rendered."
+        }
+      ]
     },
     {
       "name": "disableNotifications",
       "type": "boolean",
       "default": false,
-      "description": "A flag to disable all notifications"
+      "description": "A flag to disable all notifications",
+      "applyMode": "live"
     },
     {
       "name": "disableNotificationSound",
       "type": "boolean",
       "default": false,
-      "description": "Disable chat/meeting start notification sound"
+      "description": "Disable chat/meeting start notification sound",
+      "applyMode": "live"
     },
     {
       "name": "disableNotificationSoundIfNotAvailable",
       "type": "boolean",
       "default": false,
-      "description": "Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)"
+      "description": "Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)",
+      "applyMode": "live"
     },
     {
       "name": "disableNotificationWindowFlash",
       "type": "boolean",
       "default": false,
-      "description": "A flag indicates whether to disable window flashing when there is a notification"
+      "description": "A flag indicates whether to disable window flashing when there is a notification",
+      "applyMode": "live"
     },
     {
       "name": "notifications",
@@ -245,73 +411,97 @@
       "default": {
         "timeoutType": "default"
       },
-      "description": "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon."
+      "description": "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "timeoutType",
+          "type": "string",
+          "default": "default",
+          "description": "How long notifications stay in the system notification center (Linux/Windows only); may not be honoured by every notification daemon.",
+          "choices": [
+            "default",
+            "never"
+          ]
+        }
+      ]
     },
     {
       "name": "disableBadgeCount",
       "type": "boolean",
       "default": false,
-      "description": "A flag indicates whether to disable the badge counter on the taskbar/dock icon"
+      "description": "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
+      "applyMode": "live"
     },
     {
       "name": "disableGlobalShortcuts",
       "type": "array",
       "default": [],
-      "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use"
+      "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+      "applyMode": "restart"
     },
     {
       "name": "globalShortcuts",
       "type": "array",
       "default": [],
-      "description": "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations"
+      "description": "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
+      "applyMode": "restart"
     },
     {
       "name": "electronCLIFlags",
       "type": "array",
       "default": [],
-      "description": "Electron CLI flags"
+      "description": "Electron CLI flags",
+      "applyMode": "restart"
     },
     {
       "name": "emulateWinChromiumPlatform",
       "type": "boolean",
       "default": false,
-      "description": "Use windows platform information in chromium. This is helpful if MFA app does not support Linux."
+      "description": "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
+      "applyMode": "restart"
     },
     {
       "name": "enableIncomingCallToast",
       "type": "boolean",
       "default": false,
-      "description": "Enable incoming call toast"
+      "description": "Enable incoming call toast",
+      "applyMode": "restart"
     },
     {
       "name": "followSystemTheme",
       "type": "boolean",
       "default": true,
-      "description": "Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes."
+      "description": "Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes.",
+      "applyMode": "restart"
     },
     {
       "name": "frame",
       "type": "boolean",
       "default": true,
-      "description": "Specify false to create a Frameless Window. Default is true"
+      "description": "Specify false to create a Frameless Window. Default is true",
+      "applyMode": "restart"
     },
     {
       "name": "incomingCallCommand",
       "type": "string",
       "default": null,
-      "description": "Command to execute on an incoming call. (caution: \"~\" in path is not supported)"
+      "description": "Command to execute on an incoming call. (caution: \"~\" in path is not supported)",
+      "applyMode": "restart"
     },
     {
       "name": "incomingCallCommandArgs",
       "type": "array",
       "default": [],
-      "description": "Arguments for the incoming call command."
+      "description": "Arguments for the incoming call command.",
+      "applyMode": "restart"
     },
     {
       "name": "isCustomBackgroundEnabled",
       "type": "boolean",
       "default": false,
-      "description": "A flag indicates whether to enable custom background or not"
+      "description": "A flag indicates whether to enable custom background or not",
+      "applyMode": "restart"
     },
     {
       "name": "logConfig",
@@ -326,37 +516,57 @@
           }
         }
       },
-      "description": "Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value."
+      "description": "Electron-log configuration. See logger.js for configurable values. To disable it provide a Falsy value.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "transports.console.level",
+          "type": "string|boolean",
+          "default": "info",
+          "description": "electron-log level for the console transport (error/warn/info/verbose/debug/silly); set to false to disable console logging."
+        },
+        {
+          "path": "transports.file.level",
+          "type": "string|boolean",
+          "default": false,
+          "description": "electron-log level for the file transport (error/warn/info/verbose/debug/silly); false (the default) disables file logging."
+        }
+      ]
     },
     {
       "name": "meetupJoinRegEx",
       "type": "string",
       "default": "^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
-      "description": "Regex for Teams meetup-join and related links"
+      "description": "Regex for Teams meetup-join and related links",
+      "applyMode": "restart"
     },
     {
       "name": "menubar",
       "type": "string",
       "default": "auto",
-      "description": "A value controls the menu bar behaviour"
+      "description": "A value controls the menu bar behaviour",
+      "applyMode": "restart"
     },
     {
       "name": "minimized",
       "type": "boolean",
       "default": false,
-      "description": "Start the application minimized"
+      "description": "Start the application minimized",
+      "applyMode": "restart"
     },
     {
       "name": "minimizeOnClose",
       "type": "boolean",
       "default": false,
-      "description": "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)"
+      "description": "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
+      "applyMode": "restart"
     },
     {
       "name": "notificationMethod",
       "type": "string",
       "default": "web",
-      "description": "Notification method to be used by the application (web/electron/custom)"
+      "description": "Notification method to be used by the application (web/electron/custom)",
+      "applyMode": "restart"
     },
     {
       "name": "customNotification",
@@ -364,25 +574,37 @@
       "default": {
         "toastDuration": 5000
       },
-      "description": "Custom in-app notification system configuration"
+      "description": "Custom in-app notification system configuration",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "toastDuration",
+          "type": "number",
+          "default": 5000,
+          "description": "Time in milliseconds before a custom toast notification auto-dismisses."
+        }
+      ]
     },
     {
       "name": "onNewWindowOpenMeetupJoinUrlInApp",
       "type": "boolean",
       "default": true,
-      "description": "Open meetupJoinRegEx URLs in the app instead of the default browser"
+      "description": "Open meetupJoinRegEx URLs in the app instead of the default browser",
+      "applyMode": "restart"
     },
     {
       "name": "partition",
       "type": "string",
       "default": "persist:teams-4-linux",
-      "description": "BrowserWindow webpreferences partition"
+      "description": "BrowserWindow webpreferences partition",
+      "applyMode": "restart"
     },
     {
       "name": "proxyServer",
       "type": "string",
       "default": null,
-      "description": "Proxy Server with format address:port"
+      "description": "Proxy Server with format address:port",
+      "applyMode": "restart"
     },
     {
       "name": "network",
@@ -391,31 +613,56 @@
         "webRTCIPHandlingPolicy": null,
         "disableQuic": true
       },
-      "description": "Network configuration. webRTCIPHandlingPolicy: WebRTC IP handling policy to control which network interfaces are used for ICE candidates. Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route (e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. Disabled by default (opt-in). disableQuic: Append Chromium's --disable-quic switch at startup. Defaults to true to work around issue #2518 (concurrent SharePoint downloads abort with ERR_QUIC_PROTOCOL_ERROR on the shared QUIC session). Set to false to re-enable QUIC if a future Chromium release fixes the underlying transport bug."
+      "description": "Network configuration. webRTCIPHandlingPolicy: WebRTC IP handling policy to control which network interfaces are used for ICE candidates. Use 'default_public_interface_only' to prevent WebRTC from advertising interfaces that have no internet route (e.g. a secondary ethernet adapter), which can cause calls to drop to OnHold due to asymmetric STUN routing. Valid values: 'default', 'default_public_and_private_interfaces', 'default_public_interface_only', 'disable_non_proxied_udp'. Disabled by default (opt-in). disableQuic: Append Chromium's --disable-quic switch at startup. Defaults to true to work around issue #2518 (concurrent SharePoint downloads abort with ERR_QUIC_PROTOCOL_ERROR on the shared QUIC session). Set to false to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "webRTCIPHandlingPolicy",
+          "type": "string",
+          "default": null,
+          "description": "WebRTC IP handling policy controlling which network interfaces are used for ICE candidate gathering.",
+          "choices": [
+            "default",
+            "default_public_and_private_interfaces",
+            "default_public_interface_only",
+            "disable_non_proxied_udp"
+          ]
+        },
+        {
+          "path": "disableQuic",
+          "type": "boolean",
+          "default": true,
+          "description": "Append Chromium's --disable-quic switch at startup to work around QUIC protocol errors (issue #2518)."
+        }
+      ]
     },
     {
       "name": "spellCheckerLanguages",
       "type": "array",
       "default": [],
-      "description": "Array of languages to use with Electron's spell checker (experimental)"
+      "description": "Array of languages to use with Electron's spell checker (experimental)",
+      "applyMode": "restart"
     },
     {
       "name": "ssoBasicAuthUser",
       "type": "string",
       "default": "",
-      "description": "User to use for SSO basic auth."
+      "description": "User to use for SSO basic auth.",
+      "applyMode": "restart"
     },
     {
       "name": "ssoBasicAuthPasswordCommand",
       "type": "string",
       "default": "",
-      "description": "Command to execute to retrieve password for SSO basic auth."
+      "description": "Command to execute to retrieve password for SSO basic auth.",
+      "applyMode": "restart"
     },
     {
       "name": "trayIconEnabled",
       "type": "boolean",
       "default": true,
-      "description": "Enable tray icon"
+      "description": "Enable tray icon",
+      "applyMode": "restart"
     },
     {
       "name": "msTeamsProtocols",
@@ -424,31 +671,50 @@
         "v1": "^msteams:/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
         "v2": "^msteams://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)"
       },
-      "description": "Regular expressions for Microsoft Teams protocol links (v1 and v2)."
+      "description": "Regular expressions for Microsoft Teams protocol links (v1 and v2).",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "v1",
+          "type": "string",
+          "default": "^msteams:/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
+          "description": "Regular expression matching legacy msteams: scheme protocol links."
+        },
+        {
+          "path": "v2",
+          "type": "string",
+          "default": "^msteams://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(?:meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
+          "description": "Regular expression matching host-based msteams:// scheme protocol links."
+        }
+      ]
     },
     {
       "name": "url",
       "type": "string",
       "default": "https://teams.cloud.microsoft",
-      "description": "Microsoft Teams URL"
+      "description": "Microsoft Teams URL",
+      "applyMode": "restart"
     },
     {
       "name": "useMutationTitleLogic",
       "type": "boolean",
       "default": true,
-      "description": "Use MutationObserver to update counter from title"
+      "description": "Use MutationObserver to update counter from title",
+      "applyMode": "restart"
     },
     {
       "name": "watchConfigFile",
       "type": "boolean",
       "default": false,
-      "description": "Watch for changes in the config file and reload the app"
+      "description": "Watch for changes in the config file and reload the app",
+      "applyMode": "restart"
     },
     {
       "name": "webDebug",
       "type": "boolean",
       "default": false,
-      "description": "Enable debug at start"
+      "description": "Enable debug at start",
+      "applyMode": "restart"
     },
     {
       "name": "media",
@@ -474,7 +740,91 @@
           "menuEnabled": false
         }
       },
-      "description": "Media settings for microphone, camera, and video"
+      "description": "Media settings for microphone, camera, and video",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "microphone.disableAutogain",
+          "type": "boolean",
+          "default": false,
+          "description": "Disable microphone auto gain control so Teams does not automatically adjust microphone volume levels."
+        },
+        {
+          "path": "microphone.speakingIndicator",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable a visual overlay showing microphone state during calls (speaking/silent/muted) with WebRTC-based call state detection."
+        },
+        {
+          "path": "microphone.overrideConstraints.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable overriding the microphone audio constraints Teams requests via getUserMedia; only the keys you set are overridden."
+        },
+        {
+          "path": "microphone.overrideConstraints.echoCancellation",
+          "type": "boolean",
+          "description": "When set, overrides getUserMedia's echoCancellation constraint; omit to leave it untouched."
+        },
+        {
+          "path": "microphone.overrideConstraints.noiseSuppression",
+          "type": "boolean",
+          "description": "When set, overrides getUserMedia's noiseSuppression constraint; omit to leave it untouched."
+        },
+        {
+          "path": "microphone.overrideConstraints.autoGainControl",
+          "type": "boolean",
+          "description": "When set, overrides getUserMedia's autoGainControl constraint (takes precedence over disableAutogain); omit to leave it untouched."
+        },
+        {
+          "path": "microphone.overrideConstraints.channelCount",
+          "type": "number",
+          "description": "When set, pins the microphone channel count (typically 1 or 2); omit to leave it untouched."
+        },
+        {
+          "path": "microphone.overrideConstraints.sampleRate",
+          "type": "number",
+          "description": "When set, pins the microphone sample rate in Hz (e.g. 48000); omit to leave it untouched."
+        },
+        {
+          "path": "camera.resolution.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable camera resolution control."
+        },
+        {
+          "path": "camera.resolution.mode",
+          "type": "string",
+          "default": "remove",
+          "description": "Resolution mode: remove strips Teams' constraints to allow native camera resolution, override sets a specific width/height.",
+          "choices": [
+            "remove",
+            "override"
+          ]
+        },
+        {
+          "path": "camera.resolution.width",
+          "type": "number",
+          "description": "Target camera width when mode is override."
+        },
+        {
+          "path": "camera.resolution.height",
+          "type": "number",
+          "description": "Target camera height when mode is override."
+        },
+        {
+          "path": "camera.autoAdjustAspectRatio.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Reapply proper aspect ratio constraints to fix camera video stretching when moving Teams between monitors with different orientations."
+        },
+        {
+          "path": "video.menuEnabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the menu entry for controlling video elements (PiP mode, video controls)."
+        }
+      ]
     },
     {
       "name": "mqtt",
@@ -495,7 +845,82 @@
           "deviceName": "Teams for Linux"
         }
       },
-      "description": "MQTT configuration for publishing Teams status updates and receiving action commands"
+      "description": "MQTT configuration for publishing Teams status updates and receiving action commands",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the MQTT integration (status publishing and command reception)."
+        },
+        {
+          "path": "brokerUrl",
+          "type": "string",
+          "default": "",
+          "description": "MQTT broker URL, e.g. mqtt://host:1883 or mqtts://host:8883 for TLS."
+        },
+        {
+          "path": "username",
+          "type": "string",
+          "default": "",
+          "description": "MQTT username for authentication (optional)."
+        },
+        {
+          "path": "password",
+          "type": "string",
+          "default": "",
+          "description": "MQTT password for authentication (optional)."
+        },
+        {
+          "path": "clientId",
+          "type": "string",
+          "default": "teams-for-linux",
+          "description": "Unique MQTT client identifier."
+        },
+        {
+          "path": "topicPrefix",
+          "type": "string",
+          "default": "teams",
+          "description": "Topic prefix for all MQTT messages."
+        },
+        {
+          "path": "statusTopic",
+          "type": "string",
+          "default": "status",
+          "description": "Topic name for outbound status messages, combined with topicPrefix."
+        },
+        {
+          "path": "commandTopic",
+          "type": "string",
+          "default": "",
+          "description": "Topic name for receiving inbound commands; leave empty to disable (status-only mode)."
+        },
+        {
+          "path": "statusCheckInterval",
+          "type": "number",
+          "default": 10000,
+          "description": "Polling interval in milliseconds for the status detection fallback."
+        },
+        {
+          "path": "homeAssistant.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Home Assistant MQTT auto-discovery so entities are created automatically."
+        },
+        {
+          "path": "homeAssistant.discoveryPrefix",
+          "type": "string",
+          "default": "homeassistant",
+          "description": "MQTT discovery topic prefix used by Home Assistant."
+        },
+        {
+          "path": "homeAssistant.deviceName",
+          "type": "string",
+          "default": "Teams for Linux",
+          "description": "Device name shown in Home Assistant."
+        }
+      ]
     },
     {
       "name": "quickChat",
@@ -503,7 +928,21 @@
       "default": {
         "enabled": false
       },
-      "description": "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API"
+      "description": "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Quick Chat feature for quick contact search and chat access."
+        },
+        {
+          "path": "shortcut",
+          "type": "string",
+          "description": "Keyboard shortcut to toggle the Quick Chat modal (e.g. CommandOrControl+Alt+Q); unset by default."
+        }
+      ]
     },
     {
       "name": "graphApi",
@@ -511,7 +950,16 @@
       "default": {
         "enabled": false
       },
-      "description": "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)"
+      "description": "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Microsoft Graph API integration for calendar and mail access."
+        }
+      ]
     },
     {
       "name": "auth",
@@ -529,7 +977,40 @@
           "enabled": false
         }
       },
-      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all."
+      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "intune.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Single-Sign-On using Microsoft Intune."
+        },
+        {
+          "path": "intune.user",
+          "type": "string",
+          "default": "",
+          "description": "User (e-mail) to use for Intune SSO."
+        },
+        {
+          "path": "webauthn.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable FIDO2 hardware security key support for WebAuthn authentication on Linux (requires fido2-tools)."
+        },
+        {
+          "path": "webauthn.debug",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable verbose WebAuthn diagnostic logging, intended for beta testers troubleshooting key registration."
+        },
+        {
+          "path": "reauthRecovery.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Opt into in-app recovery from stale sessions by intercepting the stale 'sign in again' login popup and recovering in-app."
+        }
+      ]
     },
     {
       "name": "multiAccount",
@@ -537,7 +1018,16 @@
       "default": {
         "enabled": false
       },
-      "description": "Multi-account profile switcher configuration (see ADR-020). enabled: opt-in flag for the single-window multi-tenant switcher. Mutually exclusive with auth.intune.enabled; when both are true a startup warning is logged and multi-account is disabled for the session."
+      "description": "Multi-account profile switcher configuration (see ADR-020). enabled: opt-in flag for the single-window multi-tenant switcher. Mutually exclusive with auth.intune.enabled; when both are true a startup warning is logged and multi-account is disabled for the session.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Opt-in flag for the single-window multi-account profile switcher; mutually exclusive with auth.intune.enabled."
+        }
+      ]
     },
     {
       "name": "wayland",
@@ -545,7 +1035,16 @@
       "default": {
         "xwaylandOptimizations": false
       },
-      "description": "Wayland display server configuration. xwaylandOptimizations: keeps GPU enabled and skips fake media UI flag under XWayland (may fix camera issues but can break screen sharing)"
+      "description": "Wayland display server configuration. xwaylandOptimizations: keeps GPU enabled and skips fake media UI flag under XWayland (may fix camera issues but can break screen sharing)",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "xwaylandOptimizations",
+          "type": "boolean",
+          "default": false,
+          "description": "Keep GPU enabled and skip the fake media UI flag under XWayland; may fix camera issues but can break screen sharing."
+        }
+      ]
     }
   ]
 }

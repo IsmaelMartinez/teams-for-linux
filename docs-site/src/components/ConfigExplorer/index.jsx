@@ -1,16 +1,98 @@
 import React, {useState, useMemo, useEffect} from 'react';
+import PropTypes from 'prop-types';
 import schemaData from '@site/static/config-schema.json';
 import styles from './styles.module.css';
 
 // Fed by the schema generated in Phase 1 (scripts/generateConfigDocs.js). The
 // explorer never hardcodes the option list, so it stays in sync with the code.
 const OPTIONS = schemaData.options;
+// applyMode/fields may be absent from an older committed schema, so every use
+// below falls back gracefully.
+const APPLY_MODE_TITLES = {
+  live: 'Takes effect immediately',
+  restart: 'Requires app restart',
+};
 const TYPES = [
   'all',
   ...Array.from(new Set(OPTIONS.map((o) => o.type).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b),
   ),
 ];
+
+function ApplyBadge({mode}) {
+  if (mode !== 'live' && mode !== 'restart') {
+    return null;
+  }
+  const modeClass = mode === 'live' ? styles.applyLive : styles.applyRestart;
+  return (
+    <span className={`${styles.applyBadge} ${modeClass}`} title={APPLY_MODE_TITLES[mode]}>
+      {mode}
+    </span>
+  );
+}
+
+ApplyBadge.propTypes = {
+  mode: PropTypes.string,
+};
+
+function NestedFields({option}) {
+  const fields = Array.isArray(option.fields) ? option.fields : [];
+  if (fields.length === 0) {
+    return null;
+  }
+  return (
+    <details className={styles.fields}>
+      <summary>
+        {fields.length} nested field{fields.length === 1 ? '' : 's'}
+      </summary>
+      <table className={styles.fieldsTable}>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fields.map((f) => (
+            <tr key={f.path}>
+              <td>
+                <code>
+                  {option.name}.{f.path}
+                </code>
+              </td>
+              <td>{f.type}</td>
+              <td>
+                <code>{f.default === undefined ? 'undefined' : JSON.stringify(f.default)}</code>
+              </td>
+              <td>
+                {f.description}
+                {Array.isArray(f.choices) && f.choices.length > 0 && (
+                  <span className={styles.choices}> Choices: {f.choices.join(', ')}</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
+NestedFields.propTypes = {
+  option: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    fields: PropTypes.arrayOf(
+      PropTypes.shape({
+        path: PropTypes.string.isRequired,
+        type: PropTypes.string,
+        description: PropTypes.string,
+        choices: PropTypes.array,
+      }),
+    ),
+  }).isRequired,
+};
 
 export default function ConfigExplorer() {
   const [query, setQuery] = useState('');
@@ -134,12 +216,16 @@ export default function ConfigExplorer() {
                   </td>
                   <td>
                     <code>{o.name}</code>
+                    <ApplyBadge mode={o.applyMode} />
                   </td>
                   <td>{o.type}</td>
                   <td>
                     <code>{JSON.stringify(o.default)}</code>
                   </td>
-                  <td>{o.description}</td>
+                  <td>
+                    {o.description}
+                    <NestedFields option={o} />
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (

@@ -4,6 +4,7 @@ const path = require("node:path");
 const { ipcMain } = require("electron");
 const logger = require("./logger");
 const configOptions = require("./options");
+const { validateConfigFile } = require("./validator");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -156,6 +157,19 @@ function argv(configPath, appVersion) {
   config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
 
   logger.init(config.logConfig);
+
+  // Warn-only schema validation of the merged (system + user) config file
+  // contents (issue #2597). Runs after logger.init so warnings reach the log.
+  // Warnings contain key names and type names only — never config values.
+  if (configObject.isConfigFile) {
+    const validationWarnings = validateConfigFile(
+      configObject.configFile,
+      configOptions
+    );
+    for (const warning of validationWarnings) {
+      console.warn(`[CONFIG] ${warning}`);
+    }
+  }
 
   console.info("configPath:", configPath);
   console.debug("configFile:", configObject.configFile);

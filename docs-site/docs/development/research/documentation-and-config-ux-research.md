@@ -4,6 +4,17 @@
 Research and design analysis. This document proposes a direction and a phased plan; it does not change code. It builds on [Configuration Organization Research](configuration-organization-research.md), which owns option naming and the flat-versus-nested convention, and does not re-litigate those.
 :::
 
+## Status
+
+| Phase | Status | Reference |
+| --- | --- | --- |
+| Phase 0 — drift fixes and contributor walkthrough | Shipped (v2.12.0) | [PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602) |
+| Phase 1 — generated config reference + `config-schema.json` with CI drift guard | Shipped (v2.12.0) | [PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604) |
+| Phase 2 — interactive config explorer in the docs site | Shipped (v2.12.0) | [PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606) |
+| Phase 3a — `applyMode` + nested-field metadata, with the hard-failing metadata lint from "Ambitious ideas" | Implemented | This change |
+| Phase 4 — warn-only startup validation of `config.json` | Implemented | This change (`app/config/validator.js`) |
+| Phase 3b — in-app settings window | Not started | Unblocked by Phase 3a; next phase, high risk |
+
 ## Executive Summary
 
 ### Current State

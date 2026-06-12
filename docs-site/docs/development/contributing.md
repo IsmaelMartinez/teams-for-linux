@@ -163,33 +163,57 @@ class ExampleModule {
 
 ## Adding a Configuration Option
 
-Configuration options are declared in one place, the yargs `.options({})` block in `app/config/index.js`, where each option is an object carrying a `default`, a `describe` string, and a `type`. Adding one is a small, self-contained change that follows the shape of the options already there.
+Configuration options are declared in one place, `app/config/options.js`, where each option is an object carrying a `default`, a `describe` string, a `type`, and an `applyMode`. This module is the single source of truth: the generated config reference, the docs-site config explorer, and startup validation are all derived from it. Adding one is a small, self-contained change that follows the shape of the options already there.
 
 ### 1. Declare the option
 
-Add an entry to the `.options({})` block in `app/config/index.js`, following the existing convention:
+Add an entry to `app/config/options.js`, following the existing convention:
 
 ```javascript
 myFeatureEnabled: {
   default: false,
   describe: "Enable the my-feature behaviour.",
   type: "boolean",
+  applyMode: "restart",
 },
 ```
 
 Use the `type` that matches the value (`boolean`, `string`, `number`, or `object` for a nested group of settings). The `describe` text is user-facing, so write it as a one-line explanation of what the option does.
 
+Set `applyMode` to `"restart"` unless the option has a verified runtime re-read path; only then mark it `"live"`. Defaulting to `"restart"` is always safe because the app's relaunch flow applies it.
+
+For an `object`-typed option, also add a `fields` map describing each nested leaf as a dot-path with its own `type` and `describe` (leaf defaults are derived from the option's `default` by the generator):
+
+```javascript
+myFeature: {
+  default: { enabled: false, intervalSeconds: 30 },
+  describe: "My-feature configuration.",
+  type: "object",
+  applyMode: "restart",
+  fields: {
+    "enabled": { type: "boolean", describe: "Enable the my-feature behaviour." },
+    "intervalSeconds": { type: "number", describe: "Poll interval in seconds." },
+  },
+},
+```
+
 ### 2. (Optional) Share the default with other modules
 
-If the default needs to be read outside the config system — for example by a module or a unit test that should not initialise the full config — add it to `app/config/defaults.js` and reference it from `index.js`, the way `meetupJoinRegEx` already does.
+If the default needs to be read outside the config system — for example by a module or a unit test that should not initialise the full config — add it to `app/config/defaults.js` and reference it from `options.js`, the way `meetupJoinRegEx` already does.
 
 ### 3. Read the option
 
 The parsed configuration object returned by `app/config/index.js` is passed through `AppConfiguration`. Read your option from that object where you need it, and treat the value as immutable after startup.
 
-### 4. Document the option
+### 4. Regenerate the docs and schema
 
-The reference table in `docs-site/docs/configuration.md` is maintained by hand today, so a new option must be added to that table in the same change or the docs drift from the code. This manual documentation step is exactly what the planned config-schema generator (issue [#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597), Phase 1) is meant to automate later.
+```bash
+npm run generate-config-docs
+```
+
+This regenerates `docs-site/docs/configuration-generated.md` and `docs-site/static/config-schema.json` from `app/config/options.js`; commit both with your change (CI fails if they drift). The generator **fails** if any option is missing `describe`, `type`, or `applyMode`, or if an `object` option lacks `fields` — schema completeness is a merge gate, not a convention.
+
+The same schema also drives warn-only validation of the user's `config.json` at startup (`app/config/validator.js` logs `[CONFIG]` warnings for unknown keys, type mismatches, and invalid choices, but never blocks boot), so a complete declaration is all the wiring your option needs.
 
 ### 5. Lint and test
 

@@ -69,6 +69,58 @@
   z-index: 1;
 }
 
+.applyBadge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.applyLive {
+  background: var(--ifm-color-success-contrast-background, #e6f6e6);
+  color: var(--ifm-color-success-darkest, #1a7f37);
+}
+
+.applyRestart {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-700);
+}
+
+.fields {
+  margin-top: 0.35rem;
+}
+
+.fields summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.fieldsTable {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.fieldsTable th,
+.fieldsTable td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.25rem 0.45rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.choices {
+  display: block;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.75rem;
+}
+
 .empty {
   text-align: center;
   color: var(--ifm-color-emphasis-600);
