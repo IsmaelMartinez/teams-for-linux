@@ -54,6 +54,11 @@ These documents capture in-depth analysis and strategic insights that inform dev
   - Telegram path: HTML scrape default, Bot API as opt-in fallback, static `.webp` only for v1
   - AI path: mirrors the `customBackground` pattern; wrapper has no opinion about which backend sits at the other end
 
+- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)** — surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631))
+  - Feature, not a bug: the FIDO2 beta only built the PIN-entry UI; the touch wait is silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
+  - Feasible by wrapping the backend call in `app/webauthn/index.js` with a BrowserWindow dismissed in a `finally`, reusing the `pinDialog` pattern
+  - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal (the fido2 tools emit nothing at the user-presence step)
+
 ### Reference
 
 - **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.

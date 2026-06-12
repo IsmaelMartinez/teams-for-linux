@@ -320,12 +320,21 @@ if (gotTheLock) {
     try {
       // Run the noise check on the raw message — the sanitizer may strip
       // query strings / fragments that contain the auth error code.
-      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
+      const log = preLoginNoise ? console.debug : console.error;
       log("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
+      // Some auth failures only surface as unhandled promise rejections from MSAL
+      // token warming (e.g. the lowercase "interaction_required" from
+      // acquireTokenV2) and never hit console-message or window-error — feed the
+      // raw (unsanitized) message to auth-failure detection. Rejections carry no
+      // source URL, so detection's trusted-source check is skipped (empty source).
+      if (!preLoginNoise) {
+        mainAppWindow.notifyRendererError(errorData?.message, undefined);
+      }
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
     }

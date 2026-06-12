@@ -342,9 +342,13 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
-// Always-on auth-failure signature. MSAL logs InteractionRequired only when a
-// silent token refresh genuinely fails, so it is a reliable signal to recover on.
-const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
+// Always-on auth-failure signatures. MSAL reports an interaction-required error
+// only when a silent token refresh genuinely fails, so it is a reliable signal to
+// recover on. It surfaces in two spellings: the MSAL class name
+// `InteractionRequired` (console) and the OAuth error code `interaction_required`
+// (the lowercase form thrown by token warming as an unhandled rejection — wired
+// into detection by the unhandled-rejection handler in app/index.js).
+const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
 // Opt-in, correlation-only auth-failure signature. The Teams worker can die with
 // an uncaught "UPR: <reason>" error, and a genuinely stale session emits these
 // (sometimes without ever logging InteractionRequired, #2480). But the worker
@@ -408,11 +412,24 @@ function recordAuthFailureSignal() {
  * sourceId or window-error filename).
  */
 function maybeScheduleAuthRecovery(message, sourceId) {
+  // The whole in-app auth-recovery feature (#2622) is opt-in while it
+  // stabilises: with auth.reauthRecovery.enabled off, renderer auth-failure
+  // signals are ignored entirely and the app keeps its pre-#2622 behaviour
+  // (Teams' own stale "sign in again" banner stays up; the user relaunches to
+  // re-authenticate). The separate #2296 startup/after-sleep cookie cleaning is
+  // unaffected and stays always-on.
+  if (!config?.auth?.reauthRecovery?.enabled) return;
+
   const text = message || '';
-  const isReliableSignal = AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
-  const isOptInWorkerSignal =
-    config?.auth?.reauthRecovery?.enabled &&
-    OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  // Classify a worker UPR by its shape first, independent of payload contents: a
+  // UPR can embed "...code:InteractionRequired..." (StartUpJob/CalendarSyncJob),
+  // and matching that as the reliable signal would auto-reload on a UPR despite
+  // the correlation-only intent (#2629). So a UPR is never treated as reliable;
+  // it only records a correlation signal for the banner interception (the flag is
+  // already gated above, so the opt-in worker signal needs no extra flag check).
+  const isWorkerUpr = OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isReliableSignal = !isWorkerUpr && AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isOptInWorkerSignal = isWorkerUpr;
   if (!isReliableSignal && !isOptInWorkerSignal) return;
 
   // Verify the message originates from a trusted Microsoft source
@@ -432,7 +449,7 @@ function maybeScheduleAuthRecovery(message, sourceId) {
     return;
   }
 
-  // Outside a call, only the reliable InteractionRequired signal triggers the
+  // Outside a call, only the reliable interaction-required signal triggers the
   // silent clear-and-reload. A worker UPR is too noisy to auto-recover on
   // (healthy sessions emit them ~hourly, UPR-heavy tenants constantly — #2629);
   // it has already fed popup correlation above, so it can still drive an in-app
@@ -460,10 +477,8 @@ function scheduleAuthRecovery() {
 // Recovery reloads the page, which ends an active call. Auth can genuinely
 // fail mid-call (the call media keeps flowing but chat stops updating), yet
 // worker UPRs during calls are often transient noise (#2428) — reloading on
-// them mid-presentation was the original bug. So mid-call, with the
-// reauthRecovery opt-in, the user gets a choice instead of a silent reload;
-// without the opt-in the pre-existing behaviour is preserved exactly
-// (worker signals suppressed, others recover immediately).
+// them mid-presentation was the original bug. So mid-call the user gets a
+// choice (sign in now / after the call / not now) instead of a silent reload.
 let firstMidCallWorkerSignalAt = 0;
 let reauthPromptShownForCall = false;
 let reauthPromptOpen = false;
@@ -479,15 +494,10 @@ function resetMidCallAuthState() {
 }
 
 function handleMidCallAuthSignal(source) {
+  // Only reached with auth.reauthRecovery.enabled on (maybeScheduleAuthRecovery
+  // gates the whole feature), so the user always gets the mid-call prompt rather
+  // than a silent reload that would end the call.
   const isWorker = source.includes('/worker/');
-
-  if (!config.auth?.reauthRecovery?.enabled) {
-    // Pre-existing behaviour: transient worker UPRs during calls are
-    // suppressed (#2428); anything else recovers immediately.
-    if (isWorker) return;
-    scheduleAuthRecovery();
-    return;
-  }
 
   if (recoveryQueuedForCallEnd) return;
 
