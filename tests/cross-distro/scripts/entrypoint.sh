@@ -76,9 +76,10 @@ export LIBGL_ALWAYS_SOFTWARE=1
 export MESA_GL_VERSION_OVERRIDE=3.3
 
 # Set XDG_SESSION_TYPE so the app's Wayland detection (commandLine.js) triggers.
-# The built AppImage ships --ozone-platform=x11 via executableArgs. For Wayland
-# testing, start-wayland.sh overrides that with --ozone-platform=wayland. For
-# XWayland testing, the baked-in x11 value is correct (app runs as X11 client).
+# The AppImage no longer bakes in an --ozone-platform default, and the test scripts
+# do not add one either -- they launch the app exactly as shipped and let Chromium
+# auto-select the backend per session (X11 on X11, native Wayland on Wayland, and
+# native Wayland on a Wayland session even when XWayland is available).
 if [[ "$DISPLAY_SERVER" == "wayland" ]] || [[ "$DISPLAY_SERVER" == "xwayland" ]]; then
     export XDG_SESSION_TYPE=wayland
 else

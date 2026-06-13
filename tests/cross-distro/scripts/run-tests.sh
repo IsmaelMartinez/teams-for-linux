@@ -207,9 +207,8 @@ if [[ "$MODE" == "login" ]]; then
     ELECTRON_FLAGS="${ELECTRON_FLAGS} --renderer-process-limit=1 --js-flags=--max-old-space-size=4096"
     ELECTRON_FLAGS="${ELECTRON_FLAGS} --password-store=basic"
 
-    if [[ "${DISPLAY_SERVER}" == "wayland" ]]; then
-        ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=wayland"
-    fi
+    # No --ozone-platform flag is passed, matching the shipped default: Chromium
+    # auto-selects the backend per session (X11 on X11, native Wayland on Wayland).
 
     echo ""
     echo "$SEPARATOR"

@@ -353,7 +353,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux currently launches with --ozone-platform=x11 by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your .desktop file with --ozone-platform=wayland.
+Teams for Linux no longer bakes a default `--ozone-platform` value into its `.desktop` entries. Chromium picks the backend itself: on Chromium 140+ (Electron 42+) the `--ozone-platform-hint` switch defaults to `auto` and Wayland sessions get a native Wayland backend, while older Chromium baselines fall back to X11. If you hit a Wayland-specific regression you can pin the backend by launching with `--ozone-platform=x11`, and conversely you can force native Wayland with `--ozone-platform=wayland` (or `--ozone-platform-hint=auto` on older builds).
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -366,7 +366,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
     ```bash
     teams-for-linux --ozone-platform=x11
     ```
-2. **Confirm the default sticks:** `--ozone-platform=x11` is the shipped default. If you have previously edited your `.desktop` file, ensure the `Exec=` line still includes `--ozone-platform=x11`.
+2. **Edit your `.desktop` file** to make the override permanent by adding `--ozone-platform=x11` to the `Exec=` line.
 
 **Related GitHub Issues:** [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494), [#519](https://github.com/IsmaelMartinez/teams-for-linux/issues/519), [#504](https://github.com/IsmaelMartinez/teams-for-linux/issues/504)
 
@@ -393,7 +393,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
     ```bash
     teams-for-linux --ozone-platform=wayland
     ```
-2. **Edit your `.desktop` file** to make the override permanent. Replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.
+2. **Edit your `.desktop` file** to make the override permanent by adding `--ozone-platform=wayland` to the `Exec=` line.
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 

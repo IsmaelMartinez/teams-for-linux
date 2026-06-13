@@ -51,14 +51,17 @@ echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
     APP_LOG="/tmp/app.log"
+    # Launch with no ozone flag, matching the shipped default. XWayland is available
+    # in this session, so this validates that Chromium's auto selection still lands on
+    # native Wayland (it does not get pulled onto X11/XWayland just because X11 exists).
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
-        echo "[XWayland] Auto-launching app (X11 client via XWayland, logs: tail -f ${APP_LOG})..."
+        echo "[XWayland] Auto-launching app (no ozone flag; Chromium auto-selects per session, logs: tail -f ${APP_LOG})..."
         bash -c "$APP_CMD > $APP_LOG 2>&1" &
     else
-        echo "[XWayland] Launch app (runs as X11 client via XWayland):"
+        echo "[XWayland] Launch app (no ozone flag; Chromium auto-selects per session):"
         echo "      $APP_CMD"
         echo ""
-        echo "  Do NOT add --ozone-platform=wayland (app should use XWayland)."
+        echo "  To force XWayland manually, append --ozone-platform=x11."
         echo "  Or launch from the terminal inside the VNC session."
     fi
 fi

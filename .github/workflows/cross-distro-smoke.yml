@@ -4,9 +4,19 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to test (downloads the AppImage from that PR's most recent Build & Release run)"
+        required: false
+        default: ''
+      app_url:
+        description: 'Override AppImage URL (takes precedence over pr_number)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   smoke:
@@ -22,21 +32,67 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
-      - name: Resolve latest AppImage URL
+      - name: Resolve AppImage source
         id: appimage
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          APP_URL_OVERRIDE: ${{ inputs.app_url }}
         run: |
-          # gh CLI's release view returns .url as the browser download URL
-          # (unlike the raw REST API, where .url is the API endpoint).
-          URL=$(gh release view --repo IsmaelMartinez/teams-for-linux --json assets \
-            --jq '.assets[] | select(.name | test("\\.AppImage$") and (test("-(arm64|armv7l)\\.AppImage$") | not)) | .url' | head -1)
-          if [ -z "$URL" ]; then
-            echo "::error::Could not resolve AppImage URL from latest release"
-            exit 1
+          set -euo pipefail
+          # PR_NUMBER and APP_URL_OVERRIDE come from workflow_dispatch inputs and
+          # are consumed only via env vars (never interpolated into commands) to
+          # avoid workflow injection. PR_NUMBER is additionally validated as a
+          # positive integer before any gh call.
+          if [ -n "${APP_URL_OVERRIDE:-}" ]; then
+            echo "Using app_url override"
+            echo "url=${APP_URL_OVERRIDE}" >> "$GITHUB_OUTPUT"
+            echo "local=" >> "$GITHUB_OUTPUT"
+          elif [ -n "${PR_NUMBER:-}" ]; then
+            if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
+              echo "::error::pr_number must be a positive integer, got: ${PR_NUMBER}"
+              exit 1
+            fi
+            echo "Resolving build artifact for PR #${PR_NUMBER}"
+            HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo IsmaelMartinez/teams-for-linux --json headRefOid --jq .headRefOid)
+            if [ -z "$HEAD_SHA" ] || [ "$HEAD_SHA" = "null" ]; then
+              echo "::error::Could not resolve head SHA for PR #${PR_NUMBER}"
+              exit 1
+            fi
+            RUN_ID=$(gh run list --repo IsmaelMartinez/teams-for-linux \
+              --workflow "Build & Release" --commit "$HEAD_SHA" \
+              --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+            if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+              echo "::error::No successful 'Build & Release' run found for PR #${PR_NUMBER} (sha ${HEAD_SHA})"
+              exit 1
+            fi
+            DOWNLOAD_DIR="${RUNNER_TEMP}/pr-build"
+            mkdir -p "$DOWNLOAD_DIR"
+            gh run download "$RUN_ID" --repo IsmaelMartinez/teams-for-linux \
+              --name teams-for-linux-linux-x64 --dir "$DOWNLOAD_DIR"
+            APPIMAGE=$(find "$DOWNLOAD_DIR" -name '*.AppImage' \
+              -not -name '*-arm64*' -not -name '*-armv7l*' | head -1)
+            if [ -z "$APPIMAGE" ]; then
+              echo "::error::No x86_64 AppImage found in artifact teams-for-linux-linux-x64"
+              exit 1
+            fi
+            chmod +x "$APPIMAGE"
+            echo "Resolved PR build AppImage: ${APPIMAGE}"
+            echo "url=" >> "$GITHUB_OUTPUT"
+            echo "local=${APPIMAGE}" >> "$GITHUB_OUTPUT"
+          else
+            # gh CLI's release view returns .url as the browser download URL
+            # (unlike the raw REST API, where .url is the API endpoint).
+            URL=$(gh release view --repo IsmaelMartinez/teams-for-linux --json assets \
+              --jq '.assets[] | select(.name | test("\\.AppImage$") and (test("-(arm64|armv7l)\\.AppImage$") | not)) | .url' | head -1)
+            if [ -z "$URL" ]; then
+              echo "::error::Could not resolve AppImage URL from latest release"
+              exit 1
+            fi
+            echo "url=${URL}" >> "$GITHUB_OUTPUT"
+            echo "local=" >> "$GITHUB_OUTPUT"
+            echo "Resolved AppImage URL: ${URL}"
           fi
-          echo "url=${URL}" >> "$GITHUB_OUTPUT"
-          echo "Resolved AppImage URL: ${URL}"
 
       - name: Build Docker image
         env:
@@ -52,7 +108,17 @@ jobs:
           DISTRO: ${{ matrix.distro }}
           DISPLAY_SERVER: ${{ matrix.display }}
           APP_URL: ${{ steps.appimage.outputs.url }}
+          APP_LOCAL: ${{ steps.appimage.outputs.local }}
         run: |
+          set -euo pipefail
+          MOUNT_ARGS=()
+          ENV_URL=""
+          if [ -n "${APP_LOCAL:-}" ]; then
+            MOUNT_ARGS=(-v "${APP_LOCAL}:/app/teams-for-linux.AppImage:ro")
+            echo "Mounting local AppImage: ${APP_LOCAL}"
+          else
+            ENV_URL="${APP_URL}"
+          fi
           docker run -d \
             --name "smoke-${DISTRO}-${DISPLAY_SERVER}" \
             --security-opt seccomp=unconfined \
@@ -61,8 +127,9 @@ jobs:
             --cap-add SYS_NICE \
             --shm-size 4g \
             --platform linux/amd64 \
+            "${MOUNT_ARGS[@]}" \
             -e "DISPLAY_SERVER=${DISPLAY_SERVER}" \
-            -e "APP_URL=${APP_URL}" \
+            -e "APP_URL=${ENV_URL}" \
             -e AUTO_LAUNCH=true \
             -e SCREEN_RESOLUTION=1920x1080x24 \
             "cross-distro-${DISTRO}"
