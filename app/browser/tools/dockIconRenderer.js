@@ -10,10 +10,11 @@ class DockIconRenderer {
     }
     this.ipcRenderer = ipcRenderer;
 
-    const iconPath = path.join(__dirname, "../..", "assets/icons/icon-256x256.png");
-    // Encode the base icon once; render() memoizes the composited result per
-    // status code, so each of the few statuses is drawn at most once.
-    this.baseIconDataUrl = nativeImage.createFromPath(iconPath).toDataURL();
+    // Resolved lazily on first render() so preload init isn't blocked by disk
+    // I/O + image encoding during DOMContentLoaded. render() memoizes the
+    // composited result per status code, so each status is drawn at most once.
+    this.iconPath = path.join(__dirname, "../..", "assets/icons/icon-256x256.png");
+    this.baseIconDataUrl = null;
     this.renderedByStatus = new Map();
 
     // Listen for status changes from the status monitor
@@ -27,18 +28,28 @@ class DockIconRenderer {
 
   async updateDockIcon(status) {
     try {
+      // A null/empty data URL tells the main process to restore the default
+      // Dock icon, so a render failure resets cleanly instead of leaving a
+      // stale overlay.
       const iconDataUrl = await this.render(status);
-      if (iconDataUrl) {
-        this.ipcRenderer.send("dock-icon-update", iconDataUrl);
-      }
+      this.ipcRenderer.send("dock-icon-update", iconDataUrl);
     } catch (err) {
       console.error("[DockIconRenderer] Failed to update dock icon:", err);
+      this.ipcRenderer.send("dock-icon-update", null);
     }
   }
 
   render(status) {
     if (this.renderedByStatus.has(status)) {
       return Promise.resolve(this.renderedByStatus.get(status));
+    }
+    if (!this.baseIconDataUrl) {
+      try {
+        this.baseIconDataUrl = nativeImage.createFromPath(this.iconPath).toDataURL();
+      } catch (err) {
+        console.error("[DockIconRenderer] Failed to load base icon:", err);
+        return Promise.resolve(null);
+      }
     }
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");

@@ -116,11 +116,23 @@ class CommandLineManager {
     // Optimize rasterization threads for multi-core processors
     app.commandLine.appendSwitch("num-raster-threads", "4");
 
-    // Optimize V8 for Apple Silicon memory bandwidth and multi-core performance
-    app.commandLine.appendSwitch(
-      "js-flags",
-      "--max-semi-space-size=16 --max-old-space-size=4096 --concurrent-recompilation --concurrent-marking --concurrent-sweeping"
-    );
+    // Optimize V8 for Apple Silicon memory bandwidth and multi-core
+    // performance. Merge rather than overwrite so a `js-flags` already set via
+    // electronCLIFlags / the command line survives (same as enable-features).
+    const performanceJsFlags = [
+      "--max-semi-space-size=16",
+      "--max-old-space-size=4096",
+      "--concurrent-recompilation",
+      "--concurrent-marking",
+      "--concurrent-sweeping",
+    ];
+    if (app.commandLine.hasSwitch("js-flags")) {
+      const existing = app.commandLine.getSwitchValue("js-flags").split(" ").filter(Boolean);
+      const merged = Array.from(new Set([...existing, ...performanceJsFlags])).join(" ");
+      app.commandLine.appendSwitch("js-flags", merged);
+    } else {
+      app.commandLine.appendSwitch("js-flags", performanceJsFlags.join(" "));
+    }
 
     const performanceFeatures = [
       "CanvasOopRasterization",
