@@ -852,16 +852,11 @@ describe('DownloadManager', () => {
 		assert.deepStrictEqual(item._setSavePathCalls, [path.join(saveDir, 'report.pdf')]);
 	});
 
-	it('does not apply saveDirectory to an already externally-managed item', () => {
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(
-			enabledConfig({ download: { saveDirectory: '/home/user/TeamsFiles' } }),
-		);
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
+	it('does not apply saveDirectory to an already externally-managed item', (t) => {
+		const { fakeSession } = makeSaveDirManager(t);
 
 		// Flag already set (owning feature registered first): the manager must
-		// not touch the save path — and must not even mkdir the saveDirectory.
+		// leave the save path untouched.
 		const item = makeFakeDownloadItem('attachment.pdf', '/p/attachment.pdf', { totalBytes: 100 });
 		item.teamsForLinuxExternallyManaged = true;
 		fakeSession.emit('will-download', {}, item);
@@ -894,15 +889,6 @@ describe('DownloadManager', () => {
 		});
 
 		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
-	});
-
-	it('saves into download.saveDirectory without prompting', (t) => {
-		const { saveDir, fakeSession } = makeSaveDirManager(t);
-
-		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
-		fakeSession.emit('will-download', {}, item);
-
-		assert.deepStrictEqual(item._setSavePathCalls, [path.join(saveDir, 'report.pdf')]);
 	});
 
 	it('does not set a save path when alwaysAskWhereToSave is true', () => {
