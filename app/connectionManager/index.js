@@ -227,28 +227,73 @@ function sleep(timeout) {
   return new Promise((r) => setTimeout(r, timeout));
 }
 
+// Electron's net.request / net.resolveHost have no application-level timeout. A
+// stale socket left over from system suspend can leave a probe pending without
+// ever firing 'response' or 'error', which wedges the whole connectivity check:
+// the awaited refresh() never settles, its `finally` never clears the
+// isRefreshing guard, and every subsequent retry is skipped, so the app sits on
+// "Waiting for network..." until it is killed (#2611). Bound each probe so it
+// always settles; a timed-out probe resolves false and isOnline() falls through
+// to the next method (and the retry loop gives a recovering network time).
+const PROBE_TIMEOUT_MS = 5000;
+
 function isOnlineHttps(testUrl) {
   return new Promise((resolve) => {
-    const req = net.request({
-      url: testUrl,
-      method: "HEAD",
-    });
-    req.on("response", () => {
-      resolve(true);
-    });
-    req.on("error", () => {
-      resolve(false);
-    });
-    req.end();
+    let settled = false;
+    let timer;
+    const finish = (online) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(online);
+    };
+    try {
+      const req = net.request({
+        url: testUrl,
+        method: "HEAD",
+      });
+      timer = setTimeout(() => {
+        try {
+          req.abort();
+        } catch {
+          /* request already settled or aborted */
+        }
+        finish(false);
+      }, PROBE_TIMEOUT_MS);
+      req.on("response", () => finish(true));
+      req.on("error", () => finish(false));
+      req.end();
+    } catch {
+      // net.request can throw synchronously on a malformed URL or an Electron
+      // net-stack init failure. Treat an unprobeable URL as offline so the
+      // probe always resolves a boolean and isOnline() falls through rather
+      // than rejecting and wedging refresh().
+      finish(false);
+    }
   });
 }
 
 function isOnlineDns(testDomain) {
   return new Promise((resolve) => {
-    net
-      .resolveHost(testDomain)
-      .then(() => resolve(true))
-      .catch(() => resolve(false));
+    let settled = false;
+    let timer;
+    const finish = (online) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(online);
+    };
+    timer = setTimeout(() => finish(false), PROBE_TIMEOUT_MS);
+    try {
+      net
+        .resolveHost(testDomain)
+        .then(() => finish(true))
+        .catch(() => finish(false));
+    } catch {
+      // resolveHost is promise-based, but guard a synchronous throw so the
+      // probe always resolves a boolean and never rejects.
+      finish(false);
+    }
   });
 }
 
