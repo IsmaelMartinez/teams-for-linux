@@ -93,6 +93,21 @@ function enabledConfig(extra = {}) {
 	};
 }
 
+// Stand up a manager whose download.saveDirectory points at a throwaway temp
+// dir (auto-removed), plus its fake session. `extraDownload` layers on more
+// download sub-config. Returns the dir and session for the test to drive.
+function makeSaveDirManager(t, extraDownload = {}) {
+	const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-save-'));
+	t.after(() => fs.rmSync(saveDir, { recursive: true, force: true }));
+	const DownloadManager = require(downloadManagerPath);
+	const manager = new DownloadManager(
+		enabledConfig({ download: { saveDirectory: saveDir, ...extraDownload } }),
+	);
+	const fakeSession = makeFakeSession();
+	manager.initialize(fakeSession);
+	return { saveDir, fakeSession };
+}
+
 function makeFakeMainAppWindow(initialTitle = 'Microsoft Teams') {
 	const calls = [];
 	let destroyed = false;
@@ -826,20 +841,10 @@ describe('DownloadManager', () => {
 	});
 
 	it('applies saveDirectory even when notifications and progress are disabled', (t) => {
-		const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-save-'));
-		t.after(() => fs.rmSync(saveDir, { recursive: true, force: true }));
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(
-			enabledConfig({
-				download: {
-					saveDirectory: saveDir,
-					notifyOnDownloadComplete: false,
-					showProgressBar: false,
-				},
-			}),
-		);
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
+		const { saveDir, fakeSession } = makeSaveDirManager(t, {
+			notifyOnDownloadComplete: false,
+			showProgressBar: false,
+		});
 
 		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
 		fakeSession.emit('will-download', {}, item);
@@ -892,14 +897,7 @@ describe('DownloadManager', () => {
 	});
 
 	it('saves into download.saveDirectory without prompting', (t) => {
-		const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-save-'));
-		t.after(() => fs.rmSync(saveDir, { recursive: true, force: true }));
-		const DownloadManager = require(downloadManagerPath);
-		const manager = new DownloadManager(
-			enabledConfig({ download: { saveDirectory: saveDir } }),
-		);
-		const fakeSession = makeFakeSession();
-		manager.initialize(fakeSession);
+		const { saveDir, fakeSession } = makeSaveDirManager(t);
 
 		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
 		fakeSession.emit('will-download', {}, item);
