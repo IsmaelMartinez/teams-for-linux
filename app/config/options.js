@@ -678,8 +678,10 @@ module.exports = {
             autoAdjustAspectRatio: { enabled: false },
           },
           video: { menuEnabled: false },
+          showStatusOnDockIcon: false,
         },
-        describe: "Media settings for microphone, camera, and video",
+        describe:
+          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -749,6 +751,11 @@ module.exports = {
             type: "boolean",
             describe:
               "Enable the menu entry for controlling video elements (PiP mode, video controls).",
+          },
+          "showStatusOnDockIcon": {
+            type: "boolean",
+            describe:
+              "Overlay the user presence status on the Dock icon on macOS.",
           },
         },
         applyMode: "restart",

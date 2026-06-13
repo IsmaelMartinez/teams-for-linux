@@ -25,6 +25,10 @@ class CommandLineManager {
   }
 
   static addSwitchesAfterConfigLoad(config) {
+    if (process.platform === "darwin") {
+      this.#configureMacPerformance(config);
+    }
+
     if (process.env.XDG_SESSION_TYPE === "wayland") {
       this.#configureWayland(config);
     }
@@ -80,6 +84,52 @@ class CommandLineManager {
     }
 
     this.addElectronCLIFlags(config);
+  }
+
+  // macOS performance optimizations for Apple Silicon and Intel Macs.
+  static #configureMacPerformance(config) {
+    if (config.disableGpu) {
+      return;
+    }
+    console.info("[macOS] Enabling native hardware and rendering optimizations");
+
+    // Force Metal for ANGLE rendering layer (super fast on Apple Silicon)
+    app.commandLine.appendSwitch("use-angle", "metal");
+
+    // Enable GPU/OOP rasterization and zero-copy transfers
+    app.commandLine.appendSwitch("enable-gpu-rasterization");
+    app.commandLine.appendSwitch("enable-oop-rasterization");
+    app.commandLine.appendSwitch("enable-zero-copy");
+    app.commandLine.appendSwitch("enable-native-gpu-memory-buffers");
+    app.commandLine.appendSwitch("enable-gpu-memory-buffer-video-frames");
+
+    // Enable hardware-accelerated WebRTC encoding/decoding for video calls
+    app.commandLine.appendSwitch("enable-webrtc-hw-decoding");
+    app.commandLine.appendSwitch("enable-webrtc-hw-encoding");
+
+    // Optimize rasterization threads for multi-core processors
+    app.commandLine.appendSwitch("num-raster-threads", "4");
+
+    // Optimize V8 for Apple Silicon memory bandwidth and multi-core performance
+    app.commandLine.appendSwitch(
+      "js-flags",
+      "--max-semi-space-size=16 --max-old-space-size=4096 --concurrent-recompilation --concurrent-marking --concurrent-sweeping"
+    );
+
+    const performanceFeatures = [
+      "CanvasOopRasterization",
+      "ParallelDownloading",
+      "Metal",
+      "CoreAnimationLayersSharedImages",
+    ];
+
+    if (app.commandLine.hasSwitch("enable-features")) {
+      const existing = app.commandLine.getSwitchValue("enable-features").split(",");
+      const merged = Array.from(new Set([...existing, ...performanceFeatures])).join(",");
+      app.commandLine.appendSwitch("enable-features", merged);
+    } else {
+      app.commandLine.appendSwitch("enable-features", performanceFeatures.join(","));
+    }
   }
 
   // Wayland display server configuration.

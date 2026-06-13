@@ -738,9 +738,10 @@
         },
         "video": {
           "menuEnabled": false
-        }
+        },
+        "showStatusOnDockIcon": false
       },
-      "description": "Media settings for microphone, camera, and video",
+      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS.",
       "applyMode": "restart",
       "fields": [
         {
@@ -823,6 +824,12 @@
           "type": "boolean",
           "default": false,
           "description": "Enable the menu entry for controlling video elements (PiP mode, video controls)."
+        },
+        {
+          "path": "showStatusOnDockIcon",
+          "type": "boolean",
+          "default": false,
+          "description": "Overlay the user presence status on the Dock icon on macOS."
         }
       ]
     },
