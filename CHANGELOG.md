@@ -53,6 +53,10 @@
 * **deps:** bump the minor-and-patch group in /docs-site with 3 updates ([#2616](https://github.com/IsmaelMartinez/teams-for-linux/issues/2616)) ([d188d2b](https://github.com/IsmaelMartinez/teams-for-linux/commit/d188d2baa0781ed5f881c98256a76a55b4c1f76c))
 * **deps:** bump the minor-and-patch group with 4 updates ([#2630](https://github.com/IsmaelMartinez/teams-for-linux/issues/2630)) ([4502a2b](https://github.com/IsmaelMartinez/teams-for-linux/commit/4502a2ba26b909bff644ec5aa46365a433ca991a))
 
+### Thanks
+
+Big thanks to @app/dependabot, @geoffdavis, @jayenashar, @jpenberthy, @nbuechner for contributing to this release.
+
 ## [2.11.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.0...v2.11.1) (2026-05-29)
 
 
