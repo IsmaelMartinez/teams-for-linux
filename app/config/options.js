@@ -679,9 +679,10 @@ module.exports = {
           },
           video: { menuEnabled: false },
           showStatusOnDockIcon: false,
+          macPerformanceMode: true,
         },
         describe:
-          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS.",
+          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -756,6 +757,11 @@ module.exports = {
             type: "boolean",
             describe:
               "Overlay the user presence status on the Dock icon on macOS.",
+          },
+          "macPerformanceMode": {
+            type: "boolean",
+            describe:
+              "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely.",
           },
         },
         applyMode: "restart",

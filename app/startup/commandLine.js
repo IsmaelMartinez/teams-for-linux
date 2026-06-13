@@ -88,6 +88,12 @@ class CommandLineManager {
 
   // macOS performance optimizations for Apple Silicon and Intel Macs.
   static #configureMacPerformance(config) {
+    // Opt-out switch (defaults on). These force a lot of GPU/rendering state
+    // on every Mac, so allow disabling them without also turning off the GPU.
+    if (config.media?.macPerformanceMode === false) {
+      console.info("[macOS] Performance optimizations disabled (media.macPerformanceMode is false)");
+      return;
+    }
     if (config.disableGpu) {
       return;
     }
