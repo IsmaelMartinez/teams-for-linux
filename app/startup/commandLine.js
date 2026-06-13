@@ -116,16 +116,20 @@ class CommandLineManager {
     // Optimize rasterization threads for multi-core processors
     app.commandLine.appendSwitch("num-raster-threads", "4");
 
-    // Optimize V8 for Apple Silicon memory bandwidth and multi-core
-    // performance. Merge rather than overwrite so a `js-flags` already set via
-    // electronCLIFlags / the command line survives (same as enable-features).
+    // Optimize V8 for multi-core performance. Merge rather than overwrite so a
+    // `js-flags` already set via electronCLIFlags / the command line survives
+    // (same as enable-features).
     const performanceJsFlags = [
-      "--max-semi-space-size=16",
-      "--max-old-space-size=4096",
       "--concurrent-recompilation",
       "--concurrent-marking",
       "--concurrent-sweeping",
     ];
+    // The larger V8 heap suits Apple Silicon's unified memory; gate it to
+    // arm64 so a 4 GB old-space ceiling isn't forced on older, lower-RAM Intel
+    // Macs where it can be counter-productive.
+    if (process.arch === "arm64") {
+      performanceJsFlags.unshift("--max-semi-space-size=16", "--max-old-space-size=4096");
+    }
     if (app.commandLine.hasSwitch("js-flags")) {
       const existing = app.commandLine.getSwitchValue("js-flags").split(" ").filter(Boolean);
       const merged = Array.from(new Set([...existing, ...performanceJsFlags])).join(" ");
