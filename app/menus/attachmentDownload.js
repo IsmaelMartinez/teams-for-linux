@@ -2,6 +2,8 @@ const { app, BrowserWindow, Notification, clipboard } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const { Readable } = require("node:stream");
+const { finished } = require("node:stream/promises");
 
 // Attachment download pipeline used by the context menu (app/menus/index.js).
 // Downloads a Teams/SharePoint/OneDrive link or a generic http(s) URL, saves it
@@ -211,9 +213,6 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "", option
           }
         }
 
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
         let targetFilePath;
         if (destinationPath) {
           // The user already chose the exact path in the save dialog (which
@@ -228,7 +227,16 @@ async function copyAttachmentAsFile(linkURL, session, mainWindowUrl = "", option
           filename = sanitizeFilename(filename);
           targetFilePath = uniqueFilePath(documentsDir, filename);
         }
-        fs.writeFileSync(targetFilePath, buffer);
+
+        // Stream the body to disk rather than buffering the whole file in
+        // memory — a large attachment via response.arrayBuffer() could OOM the
+        // main process.
+        if (!response.body) {
+          throw new Error("Response body is empty");
+        }
+        await finished(
+          Readable.fromWeb(response.body).pipe(fs.createWriteStream(targetFilePath))
+        );
 
         copyFilePathToClipboard(targetFilePath);
         result = { filename: path.basename(targetFilePath), targetFilePath };
@@ -416,6 +424,12 @@ function extractTextFromBrowserWindow(downloadURL, activeSession, destinationPat
           resolved = true;
           cleanup();
           resolve({ filename: path.basename(targetFilePath), targetFilePath });
+        } else if (!resolved) {
+          // The poll loop exhausted its attempts without finding text — settle
+          // now instead of letting the caller wait out the 30s timeout.
+          resolved = true;
+          cleanup();
+          reject(new Error("No text content could be extracted from the viewer"));
         }
       } catch (e) {
         console.error("[TextExtract] Error during extraction:", e?.message);
@@ -511,6 +525,7 @@ function downloadWithBrowserWindow(downloadURL, activeSession, destinationPath =
       }
       activeSession.removeListener("will-download", handleWillDownload);
       if (!tempWin.isDestroyed()) {
+        tempWin.webContents.removeListener("did-finish-load", handleDidFinishLoad);
         tempWin.destroy();
       }
     };
@@ -525,6 +540,18 @@ function downloadWithBrowserWindow(downloadURL, activeSession, destinationPath =
     cleanupTimeout = setTimeout(() => {
       fail(new Error("Download timed out (no download started within 30 seconds)"));
     }, 30000);
+
+    // A real file URL fires will-download during navigation; if the page just
+    // finishes loading as a normal document (expired link, login, error page)
+    // no download ever starts. Fail fast after a short grace window instead of
+    // waiting out the 30s timeout.
+    const handleDidFinishLoad = () => {
+      setTimeout(() => {
+        if (!downloadInitiated && !settled) {
+          fail(new Error("The URL loaded as a page without starting a download"));
+        }
+      }, 1000);
+    };
 
     const handleWillDownload = (event, item, webContents) => {
       if (webContents && webContents.id === tempWin.webContents.id) {
@@ -565,6 +592,7 @@ function downloadWithBrowserWindow(downloadURL, activeSession, destinationPath =
     };
 
     activeSession.on("will-download", handleWillDownload);
+    tempWin.webContents.on("did-finish-load", handleDidFinishLoad);
 
     tempWin.loadURL(downloadURL).catch((err) => {
       setTimeout(() => {
@@ -627,20 +655,15 @@ async function saveRenderedDocument(webContents, destinationPath) {
     throw new Error("No rendered document content found in any frame");
   }
 
-  // Select the whole document body and clone the selection so we keep the
-  // rendered HTML (formatting), plus a plain-text fallback.
+  // Read the rendered body directly. Going through window.getSelection() would
+  // capture the same HTML/text but clobber whatever the user had selected in
+  // the viewer (and can fire selectionchange listeners on the page).
   const capture = `(() => {
-    const sel = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(document.body);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    const holder = document.createElement("div");
-    for (let i = 0; i < sel.rangeCount; i++) holder.appendChild(sel.getRangeAt(i).cloneContents());
-    const html = holder.innerHTML;
-    const text = sel.toString();
-    sel.removeAllRanges();
-    return { html, text, title: document.title };
+    return {
+      html: document.body.innerHTML,
+      text: document.body.innerText,
+      title: document.title,
+    };
   })()`;
   const captured = await best.frame.executeJavaScript(capture, true);
 

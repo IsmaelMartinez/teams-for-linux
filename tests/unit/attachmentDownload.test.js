@@ -127,6 +127,8 @@ function makeSession() {
       return {
         ok: r.ok, status: r.status, statusText: r.statusText,
         headers: { get: (h) => r.headers.get(h) },
+        // The generic-host path streams response.body to disk.
+        body: r.body,
         arrayBuffer: () => r.arrayBuffer(),
       };
     },
@@ -187,7 +189,9 @@ function fakeFrame(url, len, capture, opts = {}) {
   return {
     executeJavaScript: async (code) => {
       if (opts.throws) throw new Error('cross-origin frame, not scriptable');
-      if (code.includes('getSelection')) return capture;
+      // The capture script reads document.body.innerHTML/innerText; the probe
+      // script reads location/length.
+      if (code.includes('innerHTML')) return capture;
       return { url, len };
     },
   };
@@ -231,11 +235,13 @@ test('saveRenderedDocument: .txt destination writes plain text only', async (t) 
   assert.strictEqual(fs.readFileSync(out, 'utf8'), 'plain text body');
 });
 
-test('saveRenderedDocument: throws when no frame renders content', async () => {
+test('saveRenderedDocument: throws when no frame renders content', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doc-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const empty = fakeFrame('https://x', 0, null);
   const dead = fakeFrame('https://y', 5, null, { throws: true });
   await assert.rejects(
-    () => dl.saveRenderedDocument({ mainFrame: { framesInSubtree: [empty, dead] } }, '/tmp/never.html'),
+    () => dl.saveRenderedDocument({ mainFrame: { framesInSubtree: [empty, dead] } }, path.join(dir, 'never.html')),
     /No rendered document content/,
   );
 });
