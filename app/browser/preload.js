@@ -397,7 +397,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
       { name: "framelessTweaks", path: "./tools/frameless" },
-      { name: "customStickers", path: "./tools/customStickers" }
+      { name: "customStickers", path: "./tools/customStickers" },
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)

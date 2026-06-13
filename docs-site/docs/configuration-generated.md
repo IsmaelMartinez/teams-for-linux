@@ -38,7 +38,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications (low/normal/critical) | `live` |
 | `defaultURLHandler` | `string` | `""` | Default application to be used to open the HTTP URLs | `restart` |
 | `disableGpu` | `boolean` | `false` | A flag to disable GPU and hardware acceleration (can be useful if the window remains blank) | `restart` |
-| `download` | `object` | `{"enabled":false,"notifyOnDownloadComplete":true,"showProgressBar":true,"showTitlePrefix":true}` | Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. All sub-flags only take effect when enabled is true. | `restart` |
+| `download` | `object` | `{"enabled":false,"notifyOnDownloadComplete":true,"showProgressBar":true,"showTitlePrefix":true,"saveDirectory":"","alwaysAskWhereToSave":false,"openWhenDone":false}` | Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. saveDirectory: absolute path to always save allowed downloads into without prompting (empty string uses the OS default download directory). alwaysAskWhereToSave: show the native Save As dialog for every download (takes precedence over saveDirectory). openWhenDone: open each completed download in the OS default handler. When a download is interrupted by a Microsoft 365 / SharePoint / tenant policy the failure notification explains the likely cause and clicking it opens the file's link in your browser. All sub-flags only take effect when enabled is true. | `restart` |
 | `disableNotifications` | `boolean` | `false` | A flag to disable all notifications | `live` |
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound | `live` |
 | `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | `live` |
@@ -75,7 +75,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title | `restart` |
 | `watchConfigFile` | `boolean` | `false` | Watch for changes in the config file and reload the app | `restart` |
 | `webDebug` | `boolean` | `false` | Enable debug at start | `restart` |
-| `media` | `object` | `{"microphone":{"disableAutogain":false,"speakingIndicator":false,"overrideConstraints":{"enabled":false}},"camera":{"resolution":{"enabled":false,"mode":"remove"},"autoAdjustAspectRatio":{"enabled":false}},"video":{"menuEnabled":false}}` | Media settings for microphone, camera, and video | `restart` |
+| `media` | `object` | `{"microphone":{"disableAutogain":false,"speakingIndicator":false,"overrideConstraints":{"enabled":false}},"camera":{"resolution":{"enabled":false,"mode":"remove"},"autoAdjustAspectRatio":{"enabled":false}},"video":{"menuEnabled":false},"preventDeviceSwitching":false}` | Media settings for microphone, camera, and video. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. | `restart` |
 | `mqtt` | `object` | `{"enabled":false,"brokerUrl":"","username":"","password":"","clientId":"teams-for-linux","topicPrefix":"teams","statusTopic":"status","commandTopic":"","statusCheckInterval":10000,"homeAssistant":{"enabled":false,"discoveryPrefix":"homeassistant","deviceName":"Teams for Linux"}}` | MQTT configuration for publishing Teams status updates and receiving action commands | `restart` |
 | `quickChat` | `object` | `{"enabled":false}` | Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API | `restart` |
 | `graphApi` | `object` | `{"enabled":false}` | Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.) | `restart` |
@@ -129,6 +129,9 @@ Object options group several related settings. The tables below list each nested
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). |
 | `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. |
 | `download.showTitlePrefix` | `boolean` | `true` | Prefix the main window title with download progress as a portable fallback where other progress signals are not rendered. |
+| `download.saveDirectory` | `string` | `""` | Absolute path to always save allowed downloads into without prompting (empty string uses the OS default download directory). |
+| `download.alwaysAskWhereToSave` | `boolean` | `false` | Show the native Save As dialog for every download (takes precedence over saveDirectory). |
+| `download.openWhenDone` | `boolean` | `false` | Open each completed download in the OS default handler. |
 
 ### notifications
 
@@ -181,6 +184,7 @@ Object options group several related settings. The tables below list each nested
 | `media.camera.resolution.height` | `number` | `undefined` | Target camera height when mode is override. |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Reapply proper aspect ratio constraints to fix camera video stretching when moving Teams between monitors with different orientations. |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable the menu entry for controlling video elements (PiP mode, video controls). |
+| `media.preventDeviceSwitching` | `boolean` | `false` | Prevent automatic audio/video device switching by blocking device change notifications. |
 
 ### mqtt
 
