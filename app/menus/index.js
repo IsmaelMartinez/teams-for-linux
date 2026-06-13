@@ -6,10 +6,12 @@ const {
   dialog,
   session,
   ipcMain,
+  Notification,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
 const appMenu = require("./appMenu");
+const { copyAttachmentAsFile, saveRenderedDocument } = require("./attachmentDownload");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
@@ -149,14 +151,38 @@ class Menus {
     this.window.hide();
   }
 
+  // Capture the rendered content of the document currently open in the Teams
+  // viewer (Word/Excel/PowerPoint) and write it to a file the user picks —
+  // the "let the app do the select-all/copy and paste it into a file" flow,
+  // bypassing Teams' native download.
+  async saveOpenDocument() {
+    const { canceled, filePath } = await dialog.showSaveDialog(this.window, {
+      title: "Save Open Document to File",
+      defaultPath: path.join(app.getPath("downloads"), "document.html"),
+      filters: [
+        { name: "HTML (keeps formatting)", extensions: ["html"] },
+        { name: "Plain text", extensions: ["txt"] },
+      ],
+    });
+    if (canceled || !filePath) {
+      return;
+    }
+    try {
+      await saveRenderedDocument(this.window.webContents, filePath);
+    } catch (error) {
+      console.error("[Menus] Could not save open document:", error?.message);
+      new Notification({
+        title: "Could not save document",
+        body:
+          "No rendered document was found to copy. Open the file in Teams " +
+          "so its content is visible, then try again.",
+      }).show();
+    }
+  }
+
   initialize() {
     const menu = appMenu(this);
-
-    if (this.configGroup.startupConfig.menubar == "hidden") {
-      this.window.removeMenu();
-    } else {
-      this.window.setMenu(Menu.buildFromTemplate([menu]));
-    }
+    this.applyApplicationMenu(menu);
 
     this.initializeEventHandlers();
 
@@ -280,9 +306,29 @@ class Menus {
     }
   }
 
+  // Apply the built menu to the right place for the platform. macOS ignores
+  // BrowserWindow.setMenu() — the menu bar is global, so it must go through
+  // Menu.setApplicationMenu. The app's single menu becomes the bold app menu
+  // (macOS forces its title to the bundle name); we add the standard
+  // Edit/View/Window menus so Cmd+C/V/A and window shortcuts work. With
+  // `menubar: hidden` only Edit is kept so those shortcuts still fire.
+  applyApplicationMenu(menu) {
+    if (process.platform === "darwin") {
+      const template =
+        this.configGroup.startupConfig.menubar === "hidden"
+          ? [{ role: "editMenu" }]
+          : [menu, { role: "editMenu" }, { role: "viewMenu" }, { role: "windowMenu" }];
+      Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    } else if (this.configGroup.startupConfig.menubar == "hidden") {
+      this.window.removeMenu();
+    } else {
+      this.window.setMenu(Menu.buildFromTemplate([menu]));
+    }
+  }
+
   updateMenu() {
     const menu = appMenu(this);
-    this.window.setMenu(Menu.buildFromTemplate([menu]));
+    this.applyApplicationMenu(menu);
     this.tray?.setContextMenu(menu.submenu);
 
     // Notify renderer process of config changes that affect renderer behavior
@@ -509,9 +555,17 @@ function assignContextMenuHandler(menus) {
     // Allow users to add the misspelled word to the dictionary
     assignAddToDictionaryHandler(params, menu, menus);
 
-    if (menu.items.length > 0) {
-      menu.popup();
+    // Fallback: if context menu is empty, show at least "Reload Page" so a menu is always shown
+    if (menu.items.length === 0) {
+      menu.append(
+        new MenuItem({
+          label: "Reload Page",
+          click: () => menus.window.webContents.reload(),
+        })
+      );
     }
+
+    menu.popup();
   };
 }
 
@@ -551,13 +605,123 @@ function assignAddToDictionaryHandler(params, menu, menus) {
 function addTextEditMenuItems(params, menu, menus) {
   if (params.isEditable) {
     buildEditContextMenu(menu, menus);
-  } else if (params.linkURL !== "") {
+    return;
+  }
+
+  // If text is selected, allow user to copy it
+  if (params.selectionText && params.selectionText.trim() !== "") {
     menu.append(
       new MenuItem({
-        label: "Copy",
+        role: "copy",
+      })
+    );
+  }
+
+  if (params.linkURL !== "") {
+    menu.append(
+      new MenuItem({
+        label: "Copy Link URL",
         click: () => clipboard.writeText(params.linkURL),
       })
     );
+
+    menu.append(
+      new MenuItem({
+        label: "Download Attachment & Copy to Clipboard",
+        click: () => triggerAttachmentDownload(menus, params.linkURL),
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: "Save Attachment As…",
+        click: () => triggerAttachmentDownload(menus, params.linkURL, { saveAs: true }),
+      })
+    );
+  }
+
+  addClipboardLinkMenuItem(menu, menus);
+
+  // Always offer to capture the currently-rendered document (Word/Excel/etc.)
+  // — it isn't a link, so none of the checks above surface it.
+  if (menu.items.length > 0) {
+    menu.append(new MenuItem({ type: "separator" }));
+  }
+  menu.append(
+    new MenuItem({
+      label: "Save Open Document to File…",
+      click: () => menus.saveOpenDocument(),
+    })
+  );
+}
+
+// Derive a sensible default filename from a URL path for the save dialog.
+function suggestedFilename(linkURL) {
+  try {
+    const pathname = new URL(linkURL).pathname;
+    const last = decodeURIComponent(pathname.substring(pathname.lastIndexOf("/") + 1));
+    return last && last !== "/" ? last : "attachment";
+  } catch {
+    return "attachment";
+  }
+}
+
+// Kick off an attachment download. With `saveAs`, prompt for the destination
+// via the native save dialog (the user picks the exact path); otherwise the
+// download module saves into Documents/Teams-Downloads. The dialog lives here
+// in the UI layer so the download module stays UI-free and unit-testable.
+async function triggerAttachmentDownload(menus, linkURL, { saveAs = false } = {}) {
+  const activeSession = menus.window.webContents.session;
+  const mainWindowUrl = menus.window.webContents.getURL();
+  const options = {};
+  if (saveAs) {
+    const { canceled, filePath } = await dialog.showSaveDialog(menus.window, {
+      title: "Save Attachment As",
+      defaultPath: path.join(app.getPath("downloads"), suggestedFilename(linkURL)),
+    });
+    if (canceled || !filePath) {
+      return;
+    }
+    options.destinationPath = filePath;
+  }
+  copyAttachmentAsFile(linkURL, activeSession, mainWindowUrl, options);
+}
+
+// Offer to download a link previously copied to the clipboard (e.g. from a
+// Teams message menu). Non-editable areas only; checks availableFormats()
+// first so the (synchronous) clipboard text read is skipped when the
+// clipboard holds no text at all.
+function addClipboardLinkMenuItem(menu, menus) {
+  try {
+    if (!clipboard.availableFormats().includes("text/plain")) {
+      return;
+    }
+    const clipboardText = clipboard.readText().trim();
+    if (!clipboardText.startsWith("http://") && !clipboardText.startsWith("https://")) {
+      return;
+    }
+    if (menu.items.length > 0) {
+      menu.append(
+        new MenuItem({
+          type: "separator",
+        })
+      );
+    }
+    menu.append(
+      new MenuItem({
+        label: "Download File from Clipboard Link",
+        click: () => triggerAttachmentDownload(menus, clipboardText),
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: "Save File from Clipboard Link As…",
+        click: () => triggerAttachmentDownload(menus, clipboardText, { saveAs: true }),
+      })
+    );
+  } catch (error) {
+    console.debug("[Menus] Could not inspect clipboard for link download", error?.message);
   }
 }
 
