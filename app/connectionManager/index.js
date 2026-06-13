@@ -229,15 +229,30 @@ function sleep(timeout) {
 
 function isOnlineHttps(testUrl) {
   return new Promise((resolve) => {
+    let resolved = false;
     const req = net.request({
       url: testUrl,
       method: "HEAD",
     });
+    // Timeout to prevent hanging connections
+    req.setTimeout(5000, () => {
+      if (!resolved) {
+        resolved = true;
+        req.abort();
+        resolve(false);
+      }
+    });
     req.on("response", () => {
-      resolve(true);
+      if (!resolved) {
+        resolved = true;
+        resolve(true);
+      }
     });
     req.on("error", () => {
-      resolve(false);
+      if (!resolved) {
+        resolved = true;
+        resolve(false);
+      }
     });
     req.end();
   });
