@@ -96,6 +96,7 @@ class BrowserWindowManager {
         plugins: true,
         spellcheck: true,
         webviewTag: true,
+        backgroundThrottling: false,
         // SECURITY: Disabled for Teams DOM access, compensated by IPC validation
         contextIsolation: false,  // Required for ReactHandler DOM access
         nodeIntegration: false,   // Secure: preload scripts don't need this

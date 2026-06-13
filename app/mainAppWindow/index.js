@@ -1252,6 +1252,18 @@ function onNewWindow(details) {
 
 function onPageTitleUpdated(_event, title) {
   window.webContents.send("page-title", title);
+  // Forward parsed (N) prefix to renderer for the tray badge.
+  // Chromium's page-title-updated is the canonical title-change signal
+  // and fires for every document.title mutation regardless of mechanism,
+  // covering cases the DOM MutationObserver in mutationTitle.js misses
+  // (e.g. <title> element replaced by React unmount/remount, or
+  // whatever-the-current-MS-Teams-web-app is doing under the hood).
+  const safeTitle = typeof title === "string" ? title : "";
+  const match = /^\((\d+)\)/.exec(safeTitle);
+  const number = match ? Number.parseInt(match[1], 10) : 0;
+  if (Number.isFinite(number) && number >= 0 && number <= 9999) {
+    window.webContents.send("page-title-unread-count", number);
+  }
 }
 
 function onNavigationChanged() {
