@@ -55,7 +55,10 @@ function uniqueSavePath(directory, filename) {
   const ext = path.extname(filename);
   const stem = path.basename(filename, ext);
   let candidate = path.join(directory, filename);
-  for (let i = 1; fs.existsSync(candidate); i++) {
+  // Cap the probe so a directory full of collisions can't spin the main
+  // thread; after the limit we accept the last candidate and let the write
+  // overwrite rather than hang.
+  for (let i = 1; fs.existsSync(candidate) && i <= 1000; i++) {
     candidate = path.join(directory, `${stem} (${i})${ext}`);
   }
   return candidate;
@@ -173,6 +176,14 @@ class DownloadManager {
   }
 
   #onWillDownload(_event, item) {
+    // Opt-out hook (first checkpoint): a feature that drives a download
+    // end-to-end (its own save path, notifications, clipboard) sets this flag.
+    // When it's already set by the time we run, skip everything — most
+    // importantly `#applySavePath` below, so a configured `saveDirectory`
+    // can't clobber the externally-set path. (The flag is often set by a
+    // later-registered listener; the `done` handler re-checks for that case.)
+    if (item.teamsForLinuxExternallyManaged) return;
+
     // Save-location config must apply regardless of the notification and
     // progress flags below.
     this.#applySavePath(item);
@@ -210,9 +221,11 @@ class DownloadManager {
         this.#finishJob(item, state);
         this.#updateProgressBar();
       }
-      // Opt-out hook: a feature that drives a download end-to-end (its own
-      // save path, notifications, clipboard) can set this flag on the item so
-      // the shared manager skips its handling and we never double-process.
+      // Second checkpoint for the externally-managed flag: the owning feature
+      // registers its own `will-download` listener, which (being added later)
+      // usually runs *after* this one, so the flag often isn't set yet at the
+      // top of `#onWillDownload`. By `done` it always is — skip our
+      // notification / openWhenDone so the item isn't double-handled.
       if (item.teamsForLinuxExternallyManaged) return;
       if (!notify) return;
 
@@ -289,6 +302,10 @@ class DownloadManager {
     }
     try {
       const filename = item.getFilename?.() ?? "download";
+      // Create the directory if missing — otherwise setSavePath into a
+      // non-existent path interrupts the download. Errors (e.g. permissions)
+      // fall through to the catch and Electron's default location.
+      fs.mkdirSync(saveDirectory, { recursive: true });
       item.setSavePath?.(uniqueSavePath(saveDirectory, filename));
     } catch (error) {
       console.warn("[DownloadManager] Could not apply saveDirectory; using default", {
