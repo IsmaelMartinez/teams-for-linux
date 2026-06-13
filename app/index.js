@@ -107,6 +107,7 @@ if (config.multiAccount?.enabled && intuneEnabled) {
 }
 
 let userStatus = -1;
+let microphoneControlState = 'unknown';
 let mqttClient = null;
 let mqttMediaStatusService = null;
 let haDiscovery = null;
@@ -484,6 +485,10 @@ function handleShortcutCommand({ action, shortcut }) {
 function initializeMqtt() {
   mqttClient = new MQTTClient(config);
 
+  app.on('teams-microphone-control-changed', (state) => {
+    microphoneControlState = state;
+  });
+
   async function handleGetCalendarCommand({ startDate, endDate }) {
     if (!startDate || !endDate) {
       console.error('[MQTT] get-calendar requires startDate and endDate');
@@ -521,6 +526,26 @@ function initializeMqtt() {
 
     if (action === 'get-calendar') {
       await handleGetCalendarCommand(command);
+    } else if (action === 'mute' || action === 'unmute') {
+      const desiredState = action === 'mute' ? 'muted' : 'unmuted';
+
+      if (microphoneControlState === desiredState) {
+        console.info(`[MQTT] Ignoring '${action}' command: microphone is already ${desiredState}`);
+        return;
+      }
+
+      if (microphoneControlState !== 'muted' && microphoneControlState !== 'unmuted') {
+        if (command.force === true) {
+          console.warn(`[MQTT] Executing '${action}' with unknown microphone control state due to force=true`);
+          handleShortcutCommand(command);
+          return;
+        }
+
+        console.warn(`[MQTT] Ignoring '${action}' command: microphone control state is '${microphoneControlState}'. Use force=true to override.`);
+        return;
+      }
+
+      handleShortcutCommand(command);
     } else {
       handleShortcutCommand(command);
     }

@@ -14,6 +14,8 @@
  * Discovery is published on every broker connect/reconnect so entities survive
  * broker restarts. Availability is controlled via {topicPrefix}/connected topic.
  */
+const { getMediaTopics } = require('./mediaTopics');
+
 class HomeAssistantDiscovery {
 	#mqttClient;
 	#mqttConfig;
@@ -22,6 +24,7 @@ class HomeAssistantDiscovery {
 	#deviceId;
 	#deviceName;
 	#commandTopic;
+	#mediaTopics;
 
 	constructor(mqttClient, config) {
 		this.#mqttClient = mqttClient;
@@ -30,6 +33,7 @@ class HomeAssistantDiscovery {
 		this.#discoveryPrefix = config.mqtt.homeAssistant?.discoveryPrefix || 'homeassistant';
 		this.#deviceId = config.mqtt.clientId;
 		this.#deviceName = config.mqtt.homeAssistant?.deviceName || 'Teams for Linux';
+		this.#mediaTopics = getMediaTopics(config.mqtt);
 		this.#commandTopic = config.mqtt.commandTopic
 			? `${config.mqtt.topicPrefix}/${config.mqtt.commandTopic}`
 			: null;
@@ -92,7 +96,7 @@ class HomeAssistantDiscovery {
 		return {
 			name: 'Teams Microphone',
 			unique_id: `${this.#deviceId}_microphone`,
-			state_topic: `${this.#topicPrefix}/microphone`,
+			state_topic: `${this.#topicPrefix}/${this.#mediaTopics.microphone}`,
 			icon: 'mdi:microphone',
 			availability: this.#getAvailability(),
 			device: this.#getDevice(),
@@ -119,22 +123,22 @@ class HomeAssistantDiscovery {
 			{
 				component: 'binary_sensor',
 				objectId: 'in_call',
-				config: this.#buildBinarySensorConfig('Teams In Call', 'in_call', 'in-call', 'mdi:phone-in-talk')
+				config: this.#buildBinarySensorConfig('Teams In Call', 'in_call', this.#mediaTopics.inCall, 'mdi:phone-in-talk')
 			},
 			{
 				component: 'binary_sensor',
 				objectId: 'screen_sharing',
-				config: this.#buildBinarySensorConfig('Teams Screen Sharing', 'screen_sharing', 'screen-sharing', 'mdi:monitor-share')
+				config: this.#buildBinarySensorConfig('Teams Screen Sharing', 'screen_sharing', this.#mediaTopics.screenSharing, 'mdi:monitor-share')
 			},
 			{
 				component: 'binary_sensor',
 				objectId: 'camera',
-				config: this.#buildBinarySensorConfig('Teams Camera', 'camera', 'camera', 'mdi:camera')
+				config: this.#buildBinarySensorConfig('Teams Camera', 'camera', this.#mediaTopics.camera, 'mdi:camera')
 			},
 			{
 				component: 'binary_sensor',
 				objectId: 'incoming_call',
-				config: this.#buildBinarySensorConfig('Teams Incoming Call', 'incoming_call', 'incoming-call', 'mdi:phone-ring')
+				config: this.#buildBinarySensorConfig('Teams Incoming Call', 'incoming_call', this.#mediaTopics.incomingCall, 'mdi:phone-ring')
 			},
 			{
 				component: 'button',
