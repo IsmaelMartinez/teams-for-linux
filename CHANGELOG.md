@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.12.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.1...v2.12.0) (2026-06-13)
+
+
+### Features
+
+* **config:** generate config docs + schema from a single source ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597) Phase 1) ([#2604](https://github.com/IsmaelMartinez/teams-for-linux/issues/2604)) ([f56d1c6](https://github.com/IsmaelMartinez/teams-for-linux/commit/f56d1c67230b7173f0d4f3b0a070ec183bf47748))
+* **docs:** interactive config explorer ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597) Phase 2) ([#2606](https://github.com/IsmaelMartinez/teams-for-linux/issues/2606)) ([a68875a](https://github.com/IsmaelMartinez/teams-for-linux/commit/a68875a3145b038125494b3a0421e364f7084e0d))
+* **window:** add minimizeOnClose option ([#2623](https://github.com/IsmaelMartinez/teams-for-linux/issues/2623)) ([70efed0](https://github.com/IsmaelMartinez/teams-for-linux/commit/70efed0f3d440fedf56d2cb12d887945f46ea7d8))
+
+
+### Bug Fixes
+
+* **auth:** don't divert main-frame navigations through about:blank handler ([#2605](https://github.com/IsmaelMartinez/teams-for-linux/issues/2605)) ([0853c9d](https://github.com/IsmaelMartinez/teams-for-linux/commit/0853c9d80ca875b83ec2582968a9d22b0362583f)), closes [#2591](https://github.com/IsmaelMartinez/teams-for-linux/issues/2591)
+* **auth:** gate in-app reauth recovery behind reauthRecovery.enabled ([#2633](https://github.com/IsmaelMartinez/teams-for-linux/issues/2633)) ([55b185e](https://github.com/IsmaelMartinez/teams-for-linux/commit/55b185e6375d486049592fd63656949773a64789))
+* **auth:** gate worker UPR recovery behind reauthRecovery opt-in ([#2629](https://github.com/IsmaelMartinez/teams-for-linux/issues/2629)) ([9fd1873](https://github.com/IsmaelMartinez/teams-for-linux/commit/9fd187369abccbef8c27b5e171eb3c0454520a7d))
+* **auth:** intercept login popups to trigger in-app recovery ([#2622](https://github.com/IsmaelMartinez/teams-for-linux/issues/2622)) ([598f9a6](https://github.com/IsmaelMartinez/teams-for-linux/commit/598f9a6cb8bd6c40697c5dafd34b174d0a5a4fc0))
+* **ci:** extract Electron binary with system unzip (e2e) ([#2594](https://github.com/IsmaelMartinez/teams-for-linux/issues/2594)) ([a431a2d](https://github.com/IsmaelMartinez/teams-for-linux/commit/a431a2dad6382b61a60cba119988d7d6ec222e18))
+* **ci:** use honest release-please PR header ([#2648](https://github.com/IsmaelMartinez/teams-for-linux/issues/2648)) ([92b6cad](https://github.com/IsmaelMartinez/teams-for-linux/commit/92b6caded34f361d9b67c6e7ab33604c18236aa3))
+
+
+### Code Improvements
+
+* **multi-account:** scope custom-background URL per instance; close out Phase 1 audit docs ([#2626](https://github.com/IsmaelMartinez/teams-for-linux/issues/2626)) ([aa1d07d](https://github.com/IsmaelMartinez/teams-for-linux/commit/aa1d07ddd9a1ba58b2dd6ce554e927531ee159f1))
+* remove explicit ozone-platform default ([#2506](https://github.com/IsmaelMartinez/teams-for-linux/issues/2506)) ([8bbea01](https://github.com/IsmaelMartinez/teams-for-linux/commit/8bbea0161a80c39c3358913648be6b3ba25bf520))
+
+
+### Documentation
+
+* **config:** config-file validation, generated docs and explorer for [#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597) phases 3a/4 ([#2642](https://github.com/IsmaelMartinez/teams-for-linux/issues/2642)) ([576db6b](https://github.com/IsmaelMartinez/teams-for-linux/commit/576db6b20064e0f48eb8a6c47e0ba63e1be9e0a6))
+* **config:** phase 0 of config/docs UX initiative ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597)) ([#2602](https://github.com/IsmaelMartinez/teams-for-linux/issues/2602)) ([549d7d7](https://github.com/IsmaelMartinez/teams-for-linux/commit/549d7d7c9656bc3741bd03dfa894234d2fa6563d))
+* **install:** document the beta apt/rpm channel for pre-releases ([#2638](https://github.com/IsmaelMartinez/teams-for-linux/issues/2638)) ([d53d0f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/d53d0f3f5de0dcc53b2e6ef4ec33e4fbd89f9343)), closes [#2637](https://github.com/IsmaelMartinez/teams-for-linux/issues/2637)
+* move repository install instructions to the dedicated webpage ([#2619](https://github.com/IsmaelMartinez/teams-for-linux/issues/2619)) ([a3543ae](https://github.com/IsmaelMartinez/teams-for-linux/commit/a3543ae810d1abf4d96d055701bf6eaf3def0d70))
+* **research:** documentation, contributing, and config UX ([#2598](https://github.com/IsmaelMartinez/teams-for-linux/issues/2598)) ([648aa2c](https://github.com/IsmaelMartinez/teams-for-linux/commit/648aa2ce68d2f398c27e257e669d1fdd10528c22))
+* **research:** FIDO2 touch-prompt feasibility note ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)) ([#2634](https://github.com/IsmaelMartinez/teams-for-linux/issues/2634)) ([8b6eacb](https://github.com/IsmaelMartinez/teams-for-linux/commit/8b6eacbea71a045eed6b18736de80e640380f5ed))
+* **research:** smartcard/NSS PIN dialog feasibility for client-cert auth ([#2641](https://github.com/IsmaelMartinez/teams-for-linux/issues/2641)) ([0cbd31a](https://github.com/IsmaelMartinez/teams-for-linux/commit/0cbd31a6b788e6897fa122d4c4db233242f7b9da)), closes [#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)
+
+
+### CI/CD
+
+* **snap:** pin arm64 snapcraft below 9.0.0 to fix the snap build ([#2649](https://github.com/IsmaelMartinez/teams-for-linux/issues/2649)) ([df1115b](https://github.com/IsmaelMartinez/teams-for-linux/commit/df1115b836b303024d7237305356889173d91104))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron from 41.7.1 to 42.3.0 ([#2589](https://github.com/IsmaelMartinez/teams-for-linux/issues/2589)) ([e64ffd2](https://github.com/IsmaelMartinez/teams-for-linux/commit/e64ffd2c290e2c0ad56872eb1534824f193faa0d))
+* **deps-dev:** bump the minor-and-patch group with 2 updates ([#2612](https://github.com/IsmaelMartinez/teams-for-linux/issues/2612)) ([9a6ddf2](https://github.com/IsmaelMartinez/teams-for-linux/commit/9a6ddf2bad655fd0ceaa323d3551fb508688af85))
+* **deps:** bump actions/setup-node from 6.3.0 to 6.4.0 ([#2614](https://github.com/IsmaelMartinez/teams-for-linux/issues/2614)) ([b278ef5](https://github.com/IsmaelMartinez/teams-for-linux/commit/b278ef5e686c1aba80d9c77478d188d42ae21a68))
+* **deps:** bump actions/upload-artifact from 7.0.0 to 7.0.1 ([#2613](https://github.com/IsmaelMartinez/teams-for-linux/issues/2613)) ([ad341ef](https://github.com/IsmaelMartinez/teams-for-linux/commit/ad341ef55477eeafc7c92bc8f211147232f512f4))
+* **deps:** bump canonical/setup-lxd action pin ([#2615](https://github.com/IsmaelMartinez/teams-for-linux/issues/2615)) ([cc669d3](https://github.com/IsmaelMartinez/teams-for-linux/commit/cc669d3e0ad02160f1066b4a9580cf944fae0e1a))
+* **deps:** bump shell-quote from 1.8.3 to 1.8.4 in /docs-site ([#2644](https://github.com/IsmaelMartinez/teams-for-linux/issues/2644)) ([921aef0](https://github.com/IsmaelMartinez/teams-for-linux/commit/921aef0c56357b7960ef0c06421abda252225a1d))
+* **deps:** bump the minor-and-patch group in /docs-site with 3 updates ([#2616](https://github.com/IsmaelMartinez/teams-for-linux/issues/2616)) ([d188d2b](https://github.com/IsmaelMartinez/teams-for-linux/commit/d188d2baa0781ed5f881c98256a76a55b4c1f76c))
+* **deps:** bump the minor-and-patch group with 4 updates ([#2630](https://github.com/IsmaelMartinez/teams-for-linux/issues/2630)) ([4502a2b](https://github.com/IsmaelMartinez/teams-for-linux/commit/4502a2ba26b909bff644ec5aa46365a433ca991a))
+
 ## [2.11.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.0...v2.11.1) (2026-05-29)
 
 
