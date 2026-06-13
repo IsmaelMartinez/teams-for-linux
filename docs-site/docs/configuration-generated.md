@@ -129,9 +129,6 @@ Object options group several related settings. The tables below list each nested
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a file download finishes (click opens the containing folder). |
 | `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. |
 | `download.showTitlePrefix` | `boolean` | `true` | Prefix the main window title with download progress as a portable fallback where other progress signals are not rendered. |
-| `download.saveDirectory` | `string` | `""` | Absolute path to always save allowed downloads into without prompting (empty string uses the OS default download directory). |
-| `download.alwaysAskWhereToSave` | `boolean` | `false` | Show the native Save As dialog for every download (takes precedence over saveDirectory). |
-| `download.openWhenDone` | `boolean` | `false` | Open each completed download in the OS default handler. |
 
 ### notifications
 
@@ -184,7 +181,6 @@ Object options group several related settings. The tables below list each nested
 | `media.camera.resolution.height` | `number` | `undefined` | Target camera height when mode is override. |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Reapply proper aspect ratio constraints to fix camera video stretching when moving Teams between monitors with different orientations. |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable the menu entry for controlling video elements (PiP mode, video controls). |
-| `media.preventDeviceSwitching` | `boolean` | `false` | Prevent automatic audio/video device switching by blocking device change notifications. |
 
 ### mqtt
 

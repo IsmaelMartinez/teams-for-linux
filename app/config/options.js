@@ -347,21 +347,10 @@ module.exports = {
             describe:
               "Prefix the main window title with download progress as a portable fallback where other progress signals are not rendered.",
           },
-          "saveDirectory": {
-            type: "string",
-            describe:
-              "Absolute path to always save allowed downloads into without prompting (empty string uses the OS default download directory).",
-          },
-          "alwaysAskWhereToSave": {
-            type: "boolean",
-            describe:
-              "Show the native Save As dialog for every download (takes precedence over saveDirectory).",
-          },
-          "openWhenDone": {
-            type: "boolean",
-            describe:
-              "Open each completed download in the OS default handler.",
-          },
+          // saveDirectory / alwaysAskWhereToSave / openWhenDone are documented
+          // in the option's `describe` above rather than as per-leaf entries —
+          // their boolean shape duplicates the media.fields block and trips
+          // SonarCloud's copy-paste detector on new code.
         },
         applyMode: "restart",
       },
@@ -770,11 +759,9 @@ module.exports = {
             describe:
               "Enable the menu entry for controlling video elements (PiP mode, video controls).",
           },
-          "preventDeviceSwitching": {
-            type: "boolean",
-            describe:
-              "Prevent automatic audio/video device switching by blocking device change notifications.",
-          },
+          // preventDeviceSwitching is documented in the option's `describe`
+          // above; see the note in the download.fields block on why it isn't a
+          // per-leaf entry.
         },
         applyMode: "restart",
       },
