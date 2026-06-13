@@ -142,7 +142,7 @@
       "summary": "Teams for Linux",
       "confinement": "strict",
       "grade": "stable",
-      "base": "core22",
+      "base": "core24",
       "executableArgs": [
         "--ozone-platform=x11"
       ],
