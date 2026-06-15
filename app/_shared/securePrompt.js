@@ -20,10 +20,43 @@
  * as loadFile query parameters so they stay inside the dialog process. Never
  * pass a secret or PII through any channel other than the dialog's own window;
  * the entered secret comes back over IPC and nothing is sent the other way.
+ *
+ * The submit/cancel IPC handlers are registered exactly once and route each
+ * event to the matching prompt by the sender's webContents id. app/index.js
+ * wraps ipcMain.on in a validation closure, so removeListener(originalFn) is a
+ * no-op and per-invocation add/remove would leak a listener every time; the
+ * register-once pattern (shared with joinMeetingDialog, login, etc.) avoids
+ * that while still letting several prompts coexist without cross-talk.
  */
 
 const { BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
+
+// dialog webContents id -> { resolve, reject, win }
+const pending = new Map();
+
+let handlersRegistered = false;
+
+// Settle the prompt owned by a dialog webContents. `kind` is "submit" (resolve
+// with the value) or "cancel" (reject). Idempotent: the first settle wins and
+// later ones (e.g. the window-close that submit itself triggers) no-op.
+function settlePrompt(senderId, kind, value) {
+  const entry = pending.get(senderId);
+  if (!entry) return;
+  pending.delete(senderId);
+  if (!entry.win.isDestroyed()) entry.win.close();
+  if (kind === "submit") entry.resolve(value);
+  else entry.reject(new Error("secure prompt cancelled"));
+}
+
+function ensureHandlers() {
+  if (handlersRegistered) return;
+  handlersRegistered = true;
+  // Secret submitted from a dialog form
+  ipcMain.on("secure-prompt:submit", (event, value) => settlePrompt(event.sender.id, "submit", value));
+  // Dialog cancelled by the user (Cancel button)
+  ipcMain.on("secure-prompt:cancel", (event) => settlePrompt(event.sender.id, "cancel"));
+}
 
 /**
  * Show a secure secret-entry prompt and resolve with the entered value.
@@ -39,6 +72,8 @@ const path = require("node:path");
  * @returns {Promise<string>} resolves with the entered secret, rejects on cancel/close
  */
 function showSecurePrompt({ title, heading, message, warning, submitLabel, cancelLabel, parent = null }) {
+  ensureHandlers();
+
   return new Promise((resolve, reject) => {
     const win = new BrowserWindow({
       width: 420,
@@ -50,7 +85,10 @@ function showSecurePrompt({ title, heading, message, warning, submitLabel, cance
       resizable: false,
       minimizable: false,
       maximizable: false,
-      alwaysOnTop: true,
+      // Standalone prompts stay on top to survive auth-time navigation; a modal
+      // is already constrained by its parent and alwaysOnTop can cause
+      // focus-stealing on some Linux window managers, so only pin standalone.
+      alwaysOnTop: !parent,
       autoHideMenuBar: true,
       title,
       webPreferences: {
@@ -61,42 +99,10 @@ function showSecurePrompt({ title, heading, message, warning, submitLabel, cance
       },
     });
 
-    let settled = false;
+    const senderId = win.webContents.id;
+    pending.set(senderId, { resolve, reject, win });
 
-    const cleanup = () => {
-      ipcMain.removeListener("secure-prompt:submit", onSubmit);
-      ipcMain.removeListener("secure-prompt:cancel", onCancel);
-    };
-
-    // event.sender scoping lets several prompts coexist on the shared channels
-    // without cross-talk: each window only honours its own renderer's messages.
-    const onSubmit = (event, value) => {
-      if (settled || event.sender !== win.webContents) return;
-      settled = true;
-      cleanup();
-      win.close();
-      resolve(value);
-    };
-
-    const onCancel = (event) => {
-      if (settled || event.sender !== win.webContents) return;
-      settled = true;
-      cleanup();
-      win.close();
-      reject(new Error("secure prompt cancelled"));
-    };
-
-    // Secret submitted from the dialog form
-    ipcMain.on("secure-prompt:submit", onSubmit);
-    // Dialog cancelled by the user (Cancel button)
-    ipcMain.on("secure-prompt:cancel", onCancel);
-
-    win.on("closed", () => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(new Error("secure prompt cancelled"));
-    });
+    win.on("closed", () => settlePrompt(senderId, "cancel"));
 
     win.once("ready-to-show", () => {
       win.show();
