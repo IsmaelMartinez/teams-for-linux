@@ -128,6 +128,10 @@ const allowedChannels = new Set([
   'webauthn:pin-submit',
   'webauthn:pin-cancel',
 
+  // Shared secure-prompt dialog (smartcard / PKCS#11 client-certificate PIN)
+  'secure-prompt:submit',
+  'secure-prompt:cancel',
+
   // Manage-profiles dialog (Phase 1c.2). Inline rename forwards to
   // `ProfilesManager.update()`; remove triggers a native confirmation
   // before calling `ProfilesManager.remove()`. Close dismisses the

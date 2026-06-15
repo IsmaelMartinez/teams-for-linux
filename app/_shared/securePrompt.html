@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Enter PIN</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 16px; background: #f5f5f5; color: #333; }
+      h3 { margin: 0 0 8px; font-size: 14px; }
+      p { font-size: 12px; color: #666; margin: 0 0 12px; }
+      p.warning { color: #b3261e; font-weight: 600; }
+      input[type="password"] { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+      .buttons { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; }
+      button { padding: 6px 16px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+      button.primary { background: #1757bd; color: #fff; border-color: #1757bd; }
+      button.primary:disabled { background: #9db8e0; border-color: #9db8e0; cursor: not-allowed; }
+      button.secondary { background: #fff; color: #333; }
+    </style>
+  </head>
+  <body>
+    <h3 id="heading"></h3>
+    <p id="message"></p>
+    <p class="warning" id="warning" hidden></p>
+    <form id="prompt-form">
+      <input type="password" id="secret" placeholder="PIN" autofocus autocomplete="off" required />
+      <div class="buttons">
+        <button type="button" class="secondary" id="cancel-btn"></button>
+        <button type="submit" class="primary" id="submit-btn"></button>
+      </div>
+    </form>
+    <script>
+      // Display strings arrive as query params and are set via textContent only,
+      // so a token name or hostname can never inject markup into the dialog.
+      const params = new URLSearchParams(location.search);
+      const setText = (id, value) => { document.getElementById(id).textContent = value; };
+      setText("heading", params.get("heading") || "");
+      setText("message", params.get("message") || "");
+      const warning = params.get("warning") || "";
+      if (warning) {
+        const el = document.getElementById("warning");
+        el.textContent = warning;
+        el.hidden = false;
+      }
+      const secretInput = document.getElementById("secret");
+      const submitBtn = document.getElementById("submit-btn");
+      submitBtn.textContent = params.get("submitLabel") || "OK";
+      document.getElementById("cancel-btn").textContent = params.get("cancelLabel") || "Cancel";
+
+      // Keep submit disabled while the field is empty: an empty PIN would
+      // resolve("") which re-prompts instead of cancelling. The field is also
+      // `required`, so pressing Enter while empty shows native validation.
+      const syncSubmitState = () => { submitBtn.disabled = secretInput.value.length === 0; };
+      secretInput.addEventListener("input", syncSubmitState);
+      syncSubmitState();
+
+      document.getElementById("prompt-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = secretInput.value;
+        if (value) globalThis.securePrompt.submit(value);
+      });
+      document.getElementById("cancel-btn").addEventListener("click", () => {
+        globalThis.securePrompt.cancel();
+      });
+    </script>
+  </body>
+</html>
