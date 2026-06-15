@@ -17,7 +17,7 @@
     </style>
   </head>
   <body>
-    <h3 id="heading"></h3>
+    <h3 id="heading">Enter PIN</h3>
     <p id="message"></p>
     <p class="warning" id="warning" hidden></p>
     <form id="prompt-form">
@@ -32,7 +32,8 @@
       // so a token name or hostname can never inject markup into the dialog.
       const params = new URLSearchParams(location.search);
       const setText = (id, value) => { document.getElementById(id).textContent = value; };
-      setText("heading", params.get("heading") || "");
+      const heading = params.get("heading");
+      if (heading) setText("heading", heading);
       setText("message", params.get("message") || "");
       const warning = params.get("warning") || "";
       if (warning) {
