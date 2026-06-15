@@ -117,6 +117,7 @@ const { createPlayer } = require("./audio/player");
 const player = createPlayer();
 
 const certificateModule = require("./certificate");
+const clientCertificate = require("./clientCertificate");
 const CacheManager = require("./cacheManager");
 const gotTheLock = app.requestSingleInstanceLock();
 const mainAppWindow = require("./mainAppWindow");
@@ -706,6 +707,13 @@ async function handleAppReady() {
 
     const customStickers = new CustomStickers(app, config);
     customStickers.initialize();
+
+    // Smartcard / NSS client-certificate PIN dialog (Linux only, issue #2639).
+    // Registered before the main window loads so the handler exists before the
+    // first TLS handshake that may need a token PIN.
+    if (process.platform === "linux" && config.auth?.clientCertificate?.pinDialog?.enabled) {
+      clientCertificate.initialize();
+    }
 
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 

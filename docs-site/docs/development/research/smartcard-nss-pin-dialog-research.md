@@ -6,7 +6,7 @@ Issue [#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639) req
 
 Date: 2026-06-09
 Issue: [#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)
-Status: Research complete; small SoftHSM2 spike recommended before implementation
+Status: Validated against real hardware (spike, 2026-06-15); Phase 1 (PIN dialog) implemented
 
 ## Background
 
@@ -131,6 +131,22 @@ modutil -dbdir sql:$HOME/.pki/nssdb -add softhsm -libfile /usr/lib/softhsm/libso
 ```
 
 (Paths vary by distro — `libsofthsm2.so` may live under `/usr/lib/x86_64-linux-gnu/softhsm/`. The test endpoint accepts any certificate, including self-signed, and reflects back what was presented.)
+
+## Spike results (validated 2026-06-15)
+
+The reporter ran the spike against a real smartcard (PIN retry budget of 5) and confirmed the design. Answers in the order the questions were asked:
+
+1. The handler fires and `tokenName` is the expected PKCS#11 token.
+2. `resolve("")` re-prompts but, surprisingly, with `isRetry` still `false`, and it does not decrement the retry counter. An empty-string resolve does not cancel the request, it loops.
+3. `reject()` differs: it stops the prompting. In the spike it surfaced as an `UnhandledPromiseRejectionWarning` because the spike returned the rejected promise uncaught; the production handler catches the cancel and rethrows a scoped error.
+4. After a deliberately wrong PIN the next call has `isRetry: true` and the counter drops by exactly one.
+5. Reload and force-reload did not trigger a new prompt, so the handler fires once per token unlock, not per request.
+6. `select-client-certificate` fired with a single entry: NSS had already filtered the card's certificates by `keyUsage` and offered only the valid authentication certificate. The card also carries signing and encryption certificates, but only the valid authentication one reached the listener.
+7. After the correct PIN the test page rendered the certificate.
+
+Decisions these drove for Phase 1: Cancel rejects (not empty-string resolve, which loops), and the per-session safety cap also rejects, since reject is the only response proven not to touch the retry counter. Because NSS narrows to the single valid certificate, the certificate picker (Phase 2) is not needed for the common case and is deferred. The handler runs once per unlock, so there is no repeated-prompt concern during normal navigation.
+
+The spike's ESM top-level-await harness did not run on the reporter's Node 26 setup and was switched to CommonJS to test; this is a spike-harness quirk and does not affect the app.
 
 ## Phased plan
 
