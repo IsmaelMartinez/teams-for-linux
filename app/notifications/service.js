@@ -85,8 +85,18 @@ class NotificationService {
       const notification = new Notification(notificationConfig);
 
       notification.on("click", () => {
-        console.debug("[NOTIFICATIONS] Notification clicked, showing main window");
-        this.#mainWindow.show();
+        // notifications.electron.clickAction controls window behaviour on click
+        // (issue #2647). Defaults to "show" so existing behaviour is unchanged.
+        const clickAction = this.#config.notifications?.electron?.clickAction ?? "show";
+        console.debug(`[NOTIFICATIONS] Notification clicked, clickAction=${clickAction}`);
+        if (clickAction === "none") return;
+        if (clickAction === "restore") {
+          // restore if minimised, show if in the tray, then focus. Whether the
+          // focus is honoured is window-manager dependent on Linux.
+          this.#mainWindow.restoreWindow();
+        } else {
+          this.#mainWindow.show();
+        }
       });
 
       notification.on("close", () => {

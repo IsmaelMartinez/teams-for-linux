@@ -811,6 +811,11 @@ exports.show = function () {
   window.show();
 };
 
+// Restore if minimised, show if hidden to tray, then focus. Used by the
+// notification click handler when notifications.electron.clickAction is
+// "restore" (issue #2647).
+exports.restoreWindow = restoreWindow;
+
 exports.getWindow = function () {
   return window;
 };

@@ -376,9 +376,12 @@ module.exports = {
       notifications: {
         default: {
           timeoutType: "default",
+          electron: {
+            clickAction: "show",
+          },
         },
         describe:
-          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon.",
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. electron.clickAction: what clicking a notification does to the main window when notificationMethod is `electron`. Choices: `show` (reveal the window, default and current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing).",
         type: "object",
         fields: {
           "timeoutType": {
@@ -386,6 +389,12 @@ module.exports = {
             describe:
               "How long notifications stay in the system notification center (Linux/Windows only); may not be honoured by every notification daemon.",
             choices: ["default", "never"],
+          },
+          "electron.clickAction": {
+            type: "string",
+            describe:
+              "What clicking an Electron notification does to the main window (notificationMethod `electron` only): `show` reveals the window (default), `restore` also un-minimises and focuses it (helps on GNOME), `none` does nothing.",
+            choices: ["show", "restore", "none"],
           },
         },
         applyMode: "restart",
