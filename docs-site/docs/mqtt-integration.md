@@ -98,6 +98,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | `statusTopic` | `string` | `"status"` | Topic name for status messages (outbound) |
 | `commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty or omit to disable command reception (status publishing only). Set to `"command"` to enable. |
 | `statusCheckInterval` | `number` | `10000` | Polling fallback interval in milliseconds |
+| `mediaTopics` | `object` | see [Media Topics](#media-topics) | Custom topic names for media state topics |
 
 ### Topic Structure
 
@@ -106,6 +107,29 @@ Add these options under the `mqtt` key in your `config.json`:
 
 **Command Reception (Inbound)**: `{topicPrefix}/{commandTopic}`
 - Example: `teams/command`
+
+### Media Topics
+
+The media state topic names (relative to `topicPrefix`) can be customized via `mqtt.mediaTopics`. The defaults are:
+
+```json
+{
+  "mqtt": {
+    "mediaTopics": {
+      "inCall": "in-call",
+      "incomingCall": "incoming-call",
+      "camera": "camera",
+      "microphone": "microphone",
+      "microphoneControl": "microphone/control",
+      "screenSharing": "screen-sharing"
+    }
+  }
+}
+```
+
+All keys are optional; omitted keys fall back to the defaults shown above. [Home Assistant discovery](#home-assistant-auto-discovery) configurations automatically use the customized topic names.
+
+> **Note:** `microphoneControl` tracks `microphone` by default — if you set `microphone` but omit `microphoneControl`, the control topic becomes `<microphone>/control` (e.g. `microphone: "mic"` → `mic/control`), so the two stay in sync. Set `microphoneControl` explicitly to decouple it.
 
 ### Broker URL Formats
 
@@ -168,8 +192,24 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 | Action | Teams Shortcut | Description |
 |--------|---------------|-------------|
 | `toggle-mute` | Ctrl+Shift+M | Toggle microphone mute/unmute |
+| `mute` | Ctrl+Shift+M | Mute the microphone (state-aware, see below) |
+| `unmute` | Ctrl+Shift+M | Unmute the microphone (state-aware, see below) |
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
 | `toggle-hand-raise` | Ctrl+Shift+K | Toggle hand raise in meeting |
+
+### State-Aware Mute and Unmute
+
+Teams only exposes a mute *toggle* shortcut, so `mute` and `unmute` work by tracking the current microphone state (published on the `microphone/control` topic, see [Published Topics](#published-topics)) and only sending the toggle when the state would actually change:
+
+- `mute` is ignored if the microphone is already muted; `unmute` is ignored if already unmuted.
+- Until the first microphone event arrives (e.g. before you have joined a call since app start), the tracked state is `unknown` and both commands are ignored as a safety default. Add `"force": true` to send the toggle anyway:
+
+```json
+{
+  "action": "unmute",
+  "force": true
+}
+```
 
 ### Sending Commands
 
@@ -367,9 +407,13 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 | `{topicPrefix}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will and Testament) |
 | `{topicPrefix}/{statusTopic}` | JSON object | User presence status (see [Message Format](#message-format) above) |
 | `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state via IPC events and WebRTC fallback |
+| `{topicPrefix}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state |
 | `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state |
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
+| `{topicPrefix}/microphone/control` | `"muted"`, `"unmuted"`, or `"off"` | Simplified mute state derived from the microphone state; drives the [`mute`/`unmute` command guard](#state-aware-mute-and-unmute) |
 | `{topicPrefix}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
+
+The media topic names after the prefix (`in-call`, `incoming-call`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
 
 All topics use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
 
@@ -415,6 +459,7 @@ All entities are grouped under a single HA device (identified by `mqtt.clientId`
 | `sensor` | Teams Status | `{topicPrefix}/{statusTopic}` | Presence status (available, busy, dnd, away, brb) |
 | `sensor` | Teams Microphone | `{topicPrefix}/microphone` | Microphone state (speaking, silent, muted, off) |
 | `binary_sensor` | Teams In Call | `{topicPrefix}/in-call` | Whether you are in an active call |
+| `binary_sensor` | Teams Incoming Call | `{topicPrefix}/incoming-call` | Whether a call is ringing |
 | `binary_sensor` | Teams Screen Sharing | `{topicPrefix}/screen-sharing` | Whether screen sharing is active |
 | `binary_sensor` | Teams Camera | `{topicPrefix}/camera` | Whether the camera is on |
 | `button` | Teams Toggle Mute | via `commandTopic` | Sends `{"action":"toggle-mute"}` |
