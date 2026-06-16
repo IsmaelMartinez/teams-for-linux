@@ -23,6 +23,21 @@ export const PROFILE_IPC_CHANNELS = [
   'profile-remove',
 ];
 
+// Switcher strip `ipcMain.on` channels (registered when the flag is on).
+// These live on the EventEmitter, not `_invokeHandlers`, so they need
+// `listenerCount` rather than the `getRegisteredHandlers` probe.
+export const SWITCHER_EVENT_CHANNELS = [
+  'profile-switcher-open-add',
+  'profile-switcher-open-manage',
+];
+
+// Switcher strip `ipcMain.handle` channels (registered when the flag is on),
+// probed via `getRegisteredHandlers` like the `profile-*` channels.
+export const SWITCHER_HANDLE_CHANNELS = ['profile-switcher-set-expanded'];
+
+// Mirrors SWITCHER_CHROME_HEIGHT in app/mainAppWindow/profileViewManager.js.
+export const SWITCHER_CHROME_HEIGHT = 40;
+
 /**
  * Launch the app with an isolated userData dir and the supplied config.
  *
@@ -110,6 +125,76 @@ export async function getRegisteredHandlers(electronApp, channels) {
       return Object.fromEntries(channelList.map((c) => [c, map.has(c)]));
     },
     channels
+  );
+}
+
+/**
+ * Probe `ipcMain.listenerCount` for the supplied `ipcMain.on` channels.
+ * Returns `{ [channel]: number }`.
+ */
+export async function getEventHandlerCounts(electronApp, channels) {
+  return await electronApp.evaluate(
+    ({ ipcMain }, channelList) =>
+      Object.fromEntries(
+        channelList.map((c) => [c, ipcMain.listenerCount(c)])
+      ),
+    channels
+  );
+}
+
+/**
+ * Inspect the main window's `contentView` children (the profile views + the
+ * switcher chrome strip). Returns `{ count, bounds }` where `bounds` is the
+ * array of each child's `getBounds()` in z-order (last = topmost), or
+ * `{ error }` if the main window can't be found.
+ */
+export async function getContentViewChildBounds(electronApp) {
+  return await electronApp.evaluate(({ BrowserWindow }) => {
+    const hosts = new Set([
+      'teams.cloud.microsoft',
+      'teams.microsoft.com',
+      'teams.live.com',
+      'login.microsoftonline.com',
+    ]);
+    const isMain = (w) => {
+      try {
+        return hosts.has(new URL(w.webContents.getURL()).hostname);
+      } catch {
+        return false;
+      }
+    };
+    const all = BrowserWindow.getAllWindows();
+    const win = all.find(isMain) || all[0];
+    if (!win) return { error: 'no main window' };
+    const children = win.contentView.children || [];
+    return {
+      count: children.length,
+      bounds: children.map((c) => c.getBounds()),
+      urls: children.map((c) => {
+        try {
+          return c.webContents ? c.webContents.getURL() : null;
+        } catch {
+          return null;
+        }
+      }),
+    };
+  });
+}
+
+/**
+ * Invoke an `ipcMain.handle` channel's handler directly (bypassing a
+ * renderer) for tests. Returns `{ result }` or `{ error }`.
+ */
+export async function invokeHandler(electronApp, channel, args = []) {
+  return await electronApp.evaluate(
+    ({ ipcMain }, { channel, args }) => {
+      const handler = ipcMain._invokeHandlers?.get?.(channel);
+      if (!handler) return { error: `${channel} handler missing` };
+      return Promise.resolve(handler({}, ...args)).then((result) => ({
+        result,
+      }));
+    },
+    { channel, args }
   );
 }
 

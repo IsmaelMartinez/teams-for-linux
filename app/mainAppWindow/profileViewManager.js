@@ -1,7 +1,19 @@
-const { WebContentsView, session } = require("electron");
+const { WebContentsView, session, ipcMain } = require("electron");
 const path = require("node:path");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
+
+// Height (px) of the top switcher chrome strip reserved above profile views.
+// Single source of truth: the inset applied to profile views, the collapsed
+// strip height, the renderer CSS, and the e2e bounds assertion all reference
+// this. Exported on the class below.
+const SWITCHER_CHROME_HEIGHT = 40;
+
+// When the pill's dropdown is open the strip temporarily grows to cover the
+// FULL content area so its scrim dims the whole app (and a click anywhere
+// outside the dropdown dismisses it) — standard modal-menu backdrop. Profile
+// views stay inset at SWITCHER_CHROME_HEIGHT; the expanded strip just paints
+// over the content while open, then collapses back to the bar.
 
 // Hostnames the bootstrap-on-navigate listener treats as "Teams was
 // successfully reached" — i.e. the post-login destinations. We
@@ -76,6 +88,11 @@ class ProfileViewManager {
   #navigationHandler = null;
   #bootstrapInFlight = false;
   #initialized = false;
+  // The top switcher chrome strip (a single persistent WebContentsView held
+  // separately from #views so #hideAllOverlays never detaches it).
+  #chromeView = null;
+  #chromeExpanded = false;
+  #setExpandedHandler = null;
 
   /**
    * @param {Electron.BrowserWindow} window  Main app window
@@ -100,15 +117,32 @@ class ProfileViewManager {
 
     this.#handlers = {
       add: (profile) => this.#onAdd(profile),
+      update: () => this.#pushSwitcherState(),
       switch: (profile) => this.#onSwitch(profile),
       remove: (result) => this.#onRemove(result),
     };
     this.#profilesManager.on("add", this.#handlers.add);
+    this.#profilesManager.on("update", this.#handlers.update);
     this.#profilesManager.on("switch", this.#handlers.switch);
     this.#profilesManager.on("remove", this.#handlers.remove);
 
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
+
+    // Only act on events from our own strip's webContents. Returns once the
+    // bounds are applied so the renderer can await before revealing the
+    // dropdown (avoids a first-open clip while the strip is still collapsed).
+    this.#setExpandedHandler = (event, expanded) => {
+      if (!this.#chromeView || event.sender !== this.#chromeView.webContents) {
+        return;
+      }
+      this.#chromeExpanded = !!expanded;
+      this.#applyChromeBounds();
+      this.#raiseChrome();
+    };
+    // Grow/shrink the switcher strip so its dropdown is not clipped by the
+    // collapsed 40px height; the renderer toggles this on dropdown open/close.
+    ipcMain.handle("profile-switcher-set-expanded", this.#setExpandedHandler);
 
     // Bootstrap-on-navigate: a fresh-install user launches with the
     // legacy partition empty, so the startup bootstrap sees no cookies
@@ -156,6 +190,11 @@ class ProfileViewManager {
 
     const active = this.#profilesManager.getActive();
     if (active) this.#showActive(active);
+
+    // Create the switcher chrome strip LAST so it sits above the active
+    // profile view. From here on, every #showActive re-raises it (adding a
+    // profile view would otherwise paint over it).
+    this.#createChromeView();
   }
 
   /**
@@ -235,9 +274,14 @@ class ProfileViewManager {
     if (!this.#initialized) return;
     if (this.#handlers) {
       this.#profilesManager.off("add", this.#handlers.add);
+      this.#profilesManager.off("update", this.#handlers.update);
       this.#profilesManager.off("switch", this.#handlers.switch);
       this.#profilesManager.off("remove", this.#handlers.remove);
       this.#handlers = null;
+    }
+    if (this.#setExpandedHandler) {
+      ipcMain.removeHandler("profile-switcher-set-expanded");
+      this.#setExpandedHandler = null;
     }
     if (this.#resizeHandler) {
       this.#window.removeListener("resize", this.#resizeHandler);
@@ -253,21 +297,35 @@ class ProfileViewManager {
     for (const profileId of this.#views.keys()) {
       this.#destroyView(profileId);
     }
+    if (this.#chromeView) {
+      try {
+        this.#window.contentView.removeChildView(this.#chromeView);
+      } catch {
+        // Already detached; ignore.
+      }
+      if (!this.#chromeView.webContents.isDestroyed()) {
+        this.#chromeView.webContents.close();
+      }
+      this.#chromeView = null;
+    }
     this.#initialized = false;
   }
 
   // --- Event handlers --------------------------------------------------
 
   #onAdd(profile) {
-    if (profile.partition === LEGACY_PARTITION) {
-      // Profile 0 lives on the root window; no overlay needed.
-      return;
+    // Profile 0 (legacy partition) lives on the root window; no overlay
+    // needed. Other profiles get a WebContentsView. Either way the strip
+    // must re-render to show the new profile.
+    if (profile.partition !== LEGACY_PARTITION) {
+      this.#createView(profile);
     }
-    this.#createView(profile);
+    this.#pushSwitcherState();
   }
 
   #onSwitch(profile) {
     this.#showActive(profile);
+    this.#pushSwitcherState();
   }
 
   #onRemove({ removedId, activeId }) {
@@ -279,7 +337,9 @@ class ProfileViewManager {
       if (next) this.#showActive(next);
     } else {
       this.#hideAllOverlays();
+      this.#raiseChrome();
     }
+    this.#pushSwitcherState();
   }
 
   // --- View lifecycle --------------------------------------------------
@@ -347,8 +407,10 @@ class ProfileViewManager {
 
   #showActive(profile) {
     if (profile.partition === LEGACY_PARTITION) {
-      // Profile 0 is the root window; just hide all overlays.
+      // Profile 0 is the root window; just hide all overlays. The strip
+      // stays put (it's not in #views) and is re-raised below.
       this.#hideAllOverlays();
+      this.#raiseChrome();
       return;
     }
     this.#hideAllOverlays();
@@ -358,10 +420,14 @@ class ProfileViewManager {
         "[ProfileViewManager] No view for active profile; nothing to show",
         { profileId: profile.id }
       );
+      this.#raiseChrome();
       return;
     }
     this.#applyBounds(view);
     this.#window.contentView.addChildView(view);
+    // Adding the profile view puts it on top; re-raise the strip so it stays
+    // above the active content.
+    this.#raiseChrome();
   }
 
   #hideAllOverlays() {
@@ -378,12 +444,88 @@ class ProfileViewManager {
 
   #applyBoundsToAll() {
     for (const view of this.#views.values()) this.#applyBounds(view);
+    this.#applyChromeBounds();
   }
 
   #applyBounds(view) {
+    // Inset profile views below the switcher chrome strip. Clamp the height so
+    // a degenerate tiny window can't produce a negative dimension. Profile 0
+    // (root window webContents) is NOT inset — the strip simply overlaps its
+    // empty top ~40px title-bar region (deliberate tradeoff, see README/ADR).
     const [width, height] = this.#window.getContentSize();
-    view.setBounds({ x: 0, y: 0, width, height });
+    view.setBounds({
+      x: 0,
+      y: SWITCHER_CHROME_HEIGHT,
+      width,
+      height: Math.max(0, height - SWITCHER_CHROME_HEIGHT),
+    });
+  }
+
+  // --- Switcher chrome strip -------------------------------------------
+
+  #createChromeView() {
+    // The strip renders our own vanilla HTML/CSS and never touches Teams'
+    // DOM, so it can be fully hardened (contextIsolation + sandbox), unlike
+    // the profile views which need ReactHandler access.
+    const view = new WebContentsView({
+      webPreferences: {
+        preload: path.join(__dirname, "..", "profileSwitcher", "preload.js"),
+        contextIsolation: true,
+        sandbox: true,
+        nodeIntegration: false,
+      },
+    });
+    this.#chromeView = view;
+    // Transparent so only the opaque 40px bar and the dropdown card paint;
+    // while expanded, the page's scrim dims the Teams content behind it
+    // instead of covering it with a solid block.
+    view.setBackgroundColor("#00000000");
+    this.#applyChromeBounds();
+    this.#window.contentView.addChildView(view);
+    view.webContents.loadFile(
+      path.join(__dirname, "..", "profileSwitcher", "switcher.html")
+    );
+    // Push the initial profile state once the renderer is ready. The renderer
+    // also pulls state itself on load (via profile-list / profile-get-active),
+    // so this is belt-and-suspenders against push/load ordering.
+    view.webContents.once("did-finish-load", () => this.#pushSwitcherState());
+  }
+
+  #applyChromeBounds() {
+    if (!this.#chromeView) return;
+    const [width, height] = this.#window.getContentSize();
+    // Expanded: cover the whole content area (full-app scrim + click-anywhere
+    // dismiss). Collapsed: just the 40px bar.
+    this.#chromeView.setBounds({
+      x: 0,
+      y: 0,
+      width,
+      height: this.#chromeExpanded ? height : SWITCHER_CHROME_HEIGHT,
+    });
+  }
+
+  // Re-assert the strip as the topmost child. addChildView on an already
+  // attached view moves it to the top of the z-order.
+  #raiseChrome() {
+    if (!this.#chromeView) return;
+    try {
+      this.#window.contentView.addChildView(this.#chromeView);
+    } catch {
+      // View may be mid-teardown; ignore.
+    }
+  }
+
+  #pushSwitcherState() {
+    if (!this.#chromeView || this.#chromeView.webContents.isDestroyed()) {
+      return;
+    }
+    const active = this.#profilesManager.getActive();
+    this.#chromeView.webContents.send("profile-switcher-state", {
+      profiles: this.#profilesManager.list(),
+      activeId: active ? active.id : null,
+    });
   }
 }
 
 module.exports = ProfileViewManager;
+module.exports.SWITCHER_CHROME_HEIGHT = SWITCHER_CHROME_HEIGHT;

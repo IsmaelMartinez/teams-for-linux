@@ -1,0 +1,230 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* The WebContentsView itself is set transparent in the main process, so the
+   body must stay transparent: only the opaque strip bar (top 40px) and the
+   dropdown card paint. Everything else lets the Teams content show through
+   (and, while expanded, the scrim dims it). */
+html,
+body {
+  height: 100%;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, sans-serif;
+  color: #333;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* --- Collapsed strip bar (always visible, 40px) --- */
+.strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #d8d8d8;
+  z-index: 2;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  max-width: 220px;
+  padding: 0 8px 0 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pill:hover {
+  background: #e4e4e4;
+}
+
+.pill:focus-visible {
+  outline: 2px solid #6264a7;
+  outline-offset: 1px;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #6264a7;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+
+.pill-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.6;
+  flex: 0 0 auto;
+}
+
+/* --- Scrim (only present while expanded) --- */
+.scrim {
+  position: fixed;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+.scrim[hidden] {
+  display: none;
+}
+
+/* --- Dropdown panel --- */
+.dropdown {
+  position: fixed;
+  top: 44px;
+  right: 8px;
+  width: 280px;
+  /* Cap to the viewport so a long list (or a short window) never runs off
+     the bottom; scrolls within when it would. */
+  max-height: calc(100vh - 52px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  z-index: 3;
+}
+
+.dropdown[hidden] {
+  display: none;
+}
+
+.profile-list {
+  list-style: none;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.profile-row:hover {
+  background: #f0f0f0;
+}
+
+.profile-row.active {
+  background: #e8e8f4;
+  font-weight: 600;
+}
+
+.profile-row .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-footer {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #e4e4e4;
+  padding: 4px;
+}
+
+.link {
+  display: block;
+  width: 100%;
+  padding: 8px 8px;
+  border: none;
+  background: transparent;
+  color: #4a4ba0;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.link:hover {
+  background: #f0f0f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    color: #e0e0e0;
+  }
+
+  .strip {
+    background: #2a2a2a;
+    border-bottom-color: #1c1c1c;
+  }
+
+  .pill:hover {
+    background: #3a3a3a;
+  }
+
+  .scrim {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .dropdown {
+    background: #2d2d2d;
+    border-color: #444;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .profile-row:hover {
+    background: #3a3a3a;
+  }
+
+  .profile-row.active {
+    background: #3a3a4c;
+  }
+
+  .dropdown-footer {
+    border-top-color: #444;
+  }
+
+  .link {
+    color: #a6a7e0;
+  }
+
+  .link:hover {
+    background: #3a3a3a;
+  }
+}

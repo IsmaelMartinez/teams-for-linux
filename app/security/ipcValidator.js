@@ -135,7 +135,20 @@ const allowedChannels = new Set([
   // (no allowlist needed for that direction).
   'manage-profile-rename',
   'manage-profile-remove',
-  'manage-profile-close'
+  'manage-profile-close',
+
+  // Top-right switcher chrome strip (Phase 1c.2). The strip reuses the
+  // `profile-list` / `profile-get-active` / `profile-switch` channels above
+  // for its data; these are the strip-specific additions. open-add/open-manage
+  // open the existing dialogs (handled in `Menus`); set-expanded grows/shrinks
+  // the strip so its dropdown is not clipped (handled in `ProfileViewManager`).
+  // State flows main → renderer over `profile-switcher-state` (send direction,
+  // not gated; listed for an authoritative allowlist per CLAUDE.md). All are
+  // registered only when `multiAccount.enabled === true`.
+  'profile-switcher-open-add',
+  'profile-switcher-open-manage',
+  'profile-switcher-set-expanded',
+  'profile-switcher-state'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

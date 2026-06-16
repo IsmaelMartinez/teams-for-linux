@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+  <title>Profile switcher</title>
+  <link rel="stylesheet" href="switcher.css">
+</head>
+<body>
+  <div class="strip">
+    <button id="pill" class="pill" type="button" aria-haspopup="true" aria-expanded="false" title="Switch profile">
+      <span id="pill-avatar" class="avatar" aria-hidden="true"></span>
+      <span id="pill-name" class="pill-name"></span>
+      <span class="caret" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <div id="scrim" class="scrim" hidden></div>
+
+  <div id="dropdown" class="dropdown" hidden>
+    <ul id="profile-list" class="profile-list"></ul>
+    <div class="dropdown-footer">
+      <button id="add-link" class="link" type="button">Add profile…</button>
+      <button id="manage-link" class="link" type="button">Manage profiles…</button>
+    </div>
+  </div>
+
+  <script src="switcher.js"></script>
+</body>
+</html>
