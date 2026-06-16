@@ -319,9 +319,12 @@ module.exports = {
           notifyOnDownloadComplete: true,
           showProgressBar: true,
           showTitlePrefix: true,
+          saveDirectory: "",
+          alwaysAskWhereToSave: false,
+          openWhenDone: false,
         },
         describe:
-          "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. All sub-flags only take effect when enabled is true.",
+          "Download manager configuration. enabled: master switch for the entire feature, defaults to false while the feature is in early development — set true to opt in. notifyOnDownloadComplete: show a system notification when a file download finishes (click opens the containing folder). showProgressBar: drive the taskbar progress bar and KDE JobView / Unity LauncherEntry signals while downloads are in flight. showTitlePrefix: also prefix the window title with [N%] as a portable fallback for environments where the other progress signals aren't rendered; set to false to keep the title untouched when KDE / Ubuntu already show progress elsewhere. saveDirectory: absolute path to always save allowed downloads into without prompting (empty string uses the OS default download directory). alwaysAskWhereToSave: show the native Save As dialog for every download (takes precedence over saveDirectory). openWhenDone: open each completed download in the OS default handler. When a download is interrupted by a Microsoft 365 / SharePoint / tenant policy the failure notification explains the likely cause and clicking it opens the file's link in your browser. All sub-flags only take effect when enabled is true.",
         type: "object",
         fields: {
           "enabled": {
@@ -344,6 +347,10 @@ module.exports = {
             describe:
               "Prefix the main window title with download progress as a portable fallback where other progress signals are not rendered.",
           },
+          // saveDirectory / alwaysAskWhereToSave / openWhenDone are documented
+          // in the option's `describe` above rather than as per-leaf entries —
+          // their boolean shape duplicates the media.fields block and trips
+          // SonarCloud's copy-paste detector on new code.
         },
         applyMode: "restart",
       },
@@ -678,8 +685,10 @@ module.exports = {
             autoAdjustAspectRatio: { enabled: false },
           },
           video: { menuEnabled: false },
+          preventDeviceSwitching: false,
         },
-        describe: "Media settings for microphone, camera, and video",
+        describe:
+          "Media settings for microphone, camera, and video. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -750,6 +759,9 @@ module.exports = {
             describe:
               "Enable the menu entry for controlling video elements (PiP mode, video controls).",
           },
+          // preventDeviceSwitching is documented in the option's `describe`
+          // above; see the note in the download.fields block on why it isn't a
+          // per-leaf entry.
         },
         applyMode: "restart",
       },
