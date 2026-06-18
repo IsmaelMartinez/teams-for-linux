@@ -311,11 +311,11 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Description:** When signing in with a Google account ("Sign in with Google"), Google's password page rejects the login with "This browser or app may not be secure". Microsoft work, school, and personal accounts are unaffected.
 
-**Cause:** Google's sign-in flow inspects the browser user agent and blocks user agents it does not recognise as a trusted app or browser. Teams for Linux ships a Chrome user agent with the Electron token removed (Microsoft sign-in and calls misbehave when the Electron token is present), but Google's check also wants an application-identifier token in the string, which the default user agent does not carry.
+**Cause:** Google's sign-in flow inspects the browser user agent and blocks user agents it does not recognize as a trusted app or browser. Teams for Linux ships a Chrome user agent with the Electron token removed (Microsoft sign-in and calls misbehave when the Electron token is present), but Google's check also wants an application-identifier token in the string, which the default user agent does not carry.
 
 **Solutions/Workarounds:**
 
-Set a custom `chromeUserAgent` in your `config.json` so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
+Set a custom `chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
 
 ```json
 {
