@@ -1333,8 +1333,42 @@ function getWebRequestFilterFromURL() {
   return filter;
 }
 
-function onBeforeInput(_event, input) {
+function onBeforeInput(event, input) {
   isControlPressed = input.control;
+
+  if (input.type !== "keyDown") {
+    return;
+  }
+  const history = window?.webContents?.navigationHistory;
+  if (!history) {
+    return;
+  }
+
+  // Keyboard history navigation, independent of the Teams DOM. The injected
+  // on-screen back/forward controls (navigationButtons.js) break whenever
+  // Microsoft restructures the top bar (#2671); these accelerators are the
+  // layout-independent fallback. Keys are platform-specific: on macOS,
+  // Option(Alt)+Left/Right is the system word-navigation shortcut inside text
+  // fields, so stealing it would break message editing — macOS uses the
+  // standard Cmd+[ / Cmd+] instead, while other platforms use the
+  // browser-standard Alt+Left / Alt+Right.
+  const isMac = process.platform === "darwin";
+  const modifierActive = isMac
+    ? input.meta && !input.control && !input.alt && !input.shift
+    : input.alt && !input.control && !input.meta && !input.shift;
+  if (!modifierActive) {
+    return;
+  }
+
+  const backKey = isMac ? "[" : "ArrowLeft";
+  const forwardKey = isMac ? "]" : "ArrowRight";
+  if (input.key === backKey && history.canGoBack()) {
+    event.preventDefault();
+    history.goBack();
+  } else if (input.key === forwardKey && history.canGoForward()) {
+    event.preventDefault();
+    history.goForward();
+  }
 }
 
 function secureOpenLink(details) {
