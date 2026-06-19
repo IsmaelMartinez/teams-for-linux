@@ -70,6 +70,10 @@
 * **deps:** bump ws from 7.5.10 to 7.5.11 in /docs-site ([#2667](https://github.com/IsmaelMartinez/teams-for-linux/issues/2667)) ([2e8b307](https://github.com/IsmaelMartinez/teams-for-linux/commit/2e8b3074395b6258a30ec9ee365fd52df809c9e0))
 * **deps:** bump ws from 8.20.1 to 8.21.0 ([#2666](https://github.com/IsmaelMartinez/teams-for-linux/issues/2666)) ([4f292b7](https://github.com/IsmaelMartinez/teams-for-linux/commit/4f292b7baa199172c539ef15395a891d7fa81b9d))
 
+### Thanks
+
+Big thanks to @app/dependabot, @geoffdavis, @jayenashar, @jpenberthy, @kedzierp, @nbuechner for contributing to this release.
+
 ## [2.11.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.0...v2.11.1) (2026-05-29)
 
 
