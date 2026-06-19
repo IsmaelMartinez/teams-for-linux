@@ -1333,8 +1333,33 @@ function getWebRequestFilterFromURL() {
   return filter;
 }
 
-function onBeforeInput(_event, input) {
+function onBeforeInput(event, input) {
   isControlPressed = input.control;
+
+  // Alt+Left / Alt+Right drive history navigation independently of the Teams
+  // DOM. The on-screen back/forward controls are injected into Teams' own top
+  // bar (navigationButtons.js) and break whenever Microsoft restructures it
+  // (#2671); these accelerators keep back/forward working regardless of layout.
+  if (
+    input.type !== "keyDown" ||
+    !input.alt ||
+    input.control ||
+    input.meta ||
+    input.shift
+  ) {
+    return;
+  }
+  const history = window?.webContents?.navigationHistory;
+  if (!history) {
+    return;
+  }
+  if (input.key === "ArrowLeft" && history.canGoBack()) {
+    event.preventDefault();
+    history.goBack();
+  } else if (input.key === "ArrowRight" && history.canGoForward()) {
+    event.preventDefault();
+    history.goForward();
+  }
 }
 
 function secureOpenLink(details) {
