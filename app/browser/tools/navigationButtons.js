@@ -22,26 +22,30 @@ class NavigationButtons {
 
   // Teams renders its top bar after load and Microsoft restructures it without
   // notice, which previously left the buttons missing once a fixed 3-retry
-  // budget ran out (#2671). Inject immediately, then keep a debounced
-  // MutationObserver running so the buttons (re)appear whenever the anchor
-  // mounts or a Teams re-render removes our container.
+  // budget ran out (#2671). Inject immediately, then keep a MutationObserver
+  // running so the buttons (re)appear whenever the anchor mounts or a Teams
+  // re-render removes our container.
   #startInjecting() {
     this.injectNavigationButtons();
 
-    const target =
-      globalThis.document.body || globalThis.document.documentElement;
-    if (!target || typeof globalThis.MutationObserver === "undefined") {
+    const target = document.body || document.documentElement;
+    if (!target || typeof MutationObserver === "undefined") {
       return;
     }
 
-    this.#observer = new globalThis.MutationObserver(() =>
-      this.#scheduleInjectCheck(),
-    );
+    this.#observer = new MutationObserver(() => {
+      // Only react when our container is actually missing, so a present,
+      // healthy injection does not arm a re-check timer on every Teams
+      // mutation for the lifetime of the session.
+      if (!document.getElementById("tfl-nav-buttons-container")) {
+        this.#scheduleInjectCheck();
+      }
+    });
     this.#observer.observe(target, { childList: true, subtree: true });
   }
 
-  // Coalesce Teams' frequent DOM mutations into at most one cheap check per
-  // interval; only re-inject when our container is actually absent.
+  // Coalesce a burst of mutations into a single debounced re-injection; the
+  // observer only calls this while our container is absent.
   #scheduleInjectCheck() {
     if (this.#checkScheduled) {
       return;
@@ -49,7 +53,7 @@ class NavigationButtons {
     this.#checkScheduled = true;
     setTimeout(() => {
       this.#checkScheduled = false;
-      if (!globalThis.document.getElementById("tfl-nav-buttons-container")) {
+      if (!document.getElementById("tfl-nav-buttons-container")) {
         this.injectNavigationButtons();
       }
     }, 250);
@@ -64,7 +68,7 @@ class NavigationButtons {
       '[role="search"]',
     ];
     for (const selector of selectors) {
-      const el = globalThis.document.querySelector(selector);
+      const el = document.querySelector(selector);
       if (el?.parentNode) {
         return el;
       }
