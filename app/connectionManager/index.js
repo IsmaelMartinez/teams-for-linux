@@ -237,63 +237,58 @@ function sleep(timeout) {
 // to the next method (and the retry loop gives a recovering network time).
 const PROBE_TIMEOUT_MS = 5000;
 
-function isOnlineHttps(testUrl) {
+// Bound a connectivity probe so it always settles. run(finish) performs the
+// probe and calls the idempotent finish(true|false) when it resolves; finish
+// also clears the timeout. If the probe has not settled within PROBE_TIMEOUT_MS,
+// the optional cleanup returned by run() runs (e.g. abort an in-flight request)
+// and the probe resolves false. A synchronous throw from run() (net.request on a
+// malformed URL, a net-stack init failure) is treated as offline, so the probe
+// always resolves a boolean and isOnline() falls through rather than rejecting
+// and wedging refresh().
+function probeWithTimeout(run) {
   return new Promise((resolve) => {
     let settled = false;
     let timer;
+    let cleanup;
     const finish = (online) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       resolve(online);
     };
+    timer = setTimeout(() => {
+      try {
+        cleanup?.();
+      } catch {
+        /* nothing to clean up, or request already settled */
+      }
+      finish(false);
+    }, PROBE_TIMEOUT_MS);
     try {
-      const req = net.request({
-        url: testUrl,
-        method: "HEAD",
-      });
-      timer = setTimeout(() => {
-        try {
-          req.abort();
-        } catch {
-          /* request already settled or aborted */
-        }
-        finish(false);
-      }, PROBE_TIMEOUT_MS);
-      req.on("response", () => finish(true));
-      req.on("error", () => finish(false));
-      req.end();
+      cleanup = run(finish);
     } catch {
-      // net.request can throw synchronously on a malformed URL or an Electron
-      // net-stack init failure. Treat an unprobeable URL as offline so the
-      // probe always resolves a boolean and isOnline() falls through rather
-      // than rejecting and wedging refresh().
       finish(false);
     }
   });
 }
 
+function isOnlineHttps(testUrl) {
+  return probeWithTimeout((finish) => {
+    const req = net.request({ url: testUrl, method: "HEAD" });
+    req.on("response", () => finish(true));
+    req.on("error", () => finish(false));
+    req.end();
+    // On timeout, abort the in-flight request before resolving false.
+    return () => req.abort();
+  });
+}
+
 function isOnlineDns(testDomain) {
-  return new Promise((resolve) => {
-    let settled = false;
-    let timer;
-    const finish = (online) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolve(online);
-    };
-    timer = setTimeout(() => finish(false), PROBE_TIMEOUT_MS);
-    try {
-      net
-        .resolveHost(testDomain)
-        .then(() => finish(true))
-        .catch(() => finish(false));
-    } catch {
-      // resolveHost is promise-based, but guard a synchronous throw so the
-      // probe always resolves a boolean and never rejects.
-      finish(false);
-    }
+  return probeWithTimeout((finish) => {
+    net
+      .resolveHost(testDomain)
+      .then(() => finish(true))
+      .catch(() => finish(false));
   });
 }
 
