@@ -30,7 +30,6 @@
 ### Code Improvements
 
 * **multi-account:** scope custom-background URL per instance; close out Phase 1 audit docs ([#2626](https://github.com/IsmaelMartinez/teams-for-linux/issues/2626)) ([aa1d07d](https://github.com/IsmaelMartinez/teams-for-linux/commit/aa1d07ddd9a1ba58b2dd6ce554e927531ee159f1))
-* remove explicit ozone-platform default ([#2506](https://github.com/IsmaelMartinez/teams-for-linux/issues/2506)) ([8bbea01](https://github.com/IsmaelMartinez/teams-for-linux/commit/8bbea0161a80c39c3358913648be6b3ba25bf520))
 
 
 ### Documentation
