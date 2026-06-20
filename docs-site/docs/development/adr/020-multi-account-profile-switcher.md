@@ -134,7 +134,18 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 
 ### Switch between profiles
 
-**Mouse:** top-right dropdown in the title bar showing the active profile's initials/avatar. Clicking opens a compact picker listing all profiles (active one highlighted). Clicking a profile switches to it.
+> **Erratum (Phase 1c.2 implementation):** the "title bar" wording below is
+> superseded. The switcher ships as a full-width `WebContentsView` **chrome
+> strip** at the top of `mainWindow.contentView` (`app/profileSwitcher/`), not
+> as a native title bar — touching `titleBarStyle` / `setTitleBarOverlay` /
+> `frame` is a Linux CSD/SSD minefield and was ruled out. Profile views (1+)
+> are inset below the 40px strip; Profile 0 stays on the root window's
+> `webContents` and the strip overlaps its empty top ~40px (deliberate
+> tradeoff documented in `app/profileSwitcher/README.md` and the Shared-state
+> audit note). The UX described — top-right pill, dropdown picker, active
+> highlighted — is unchanged.
+
+**Mouse:** top-right dropdown showing the active profile's initials/avatar. Clicking opens a compact picker listing all profiles (active one highlighted). Clicking a profile switches to it.
 
 **Keyboard:** `Ctrl+Shift+1…5` jumps directly to pinned profile N (mirrors the Windows native Teams client). Up to 5 pinned profiles supported; pinned state is the per-profile `pinned` boolean.
 
