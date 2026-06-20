@@ -1,5 +1,37 @@
 const { ipcRenderer } = require("electron");
 
+// #2677: Electron removed the non-standard `File.path` from dropped files, so
+// Teams (which uploads by native path) rejects them as "File is missing data".
+// Restore it via webUtils.getPathForFile before Teams's drop handler reads it.
+try {
+  const { webUtils } = require("electron");
+  globalThis.addEventListener(
+    "drop",
+    (event) => {
+      const files = event.dataTransfer?.files;
+      if (!files?.length) {
+        return;
+      }
+      for (const file of files) {
+        if (file.path) {
+          continue;
+        }
+        try {
+          const path = webUtils.getPathForFile(file);
+          if (path) {
+            Object.defineProperty(file, "path", { value: path, configurable: true });
+          }
+        } catch {
+          // leave the file untouched if the path can't be resolved
+        }
+      }
+    },
+    true,
+  );
+} catch {
+  // webUtils unavailable
+}
+
 // #2534: forward the MessagePort that main posts on 'screen-share-port' into
 // the main world. Using window.postMessage with transfer is the supported way
 // to hand a MessagePort across to the renderer; the port cannot be returned
