@@ -2,12 +2,29 @@ const { ipcRenderer } = require("electron");
 
 // #2677: Electron removed the non-standard `File.path` from dropped files, so
 // Teams (which uploads by native path) rejects them as "File is missing data".
-// Restore it via webUtils.getPathForFile before Teams's drop handler reads it.
+// Restore it via webUtils.getPathForFile before Teams's drop handler reads it,
+// scoped to Teams hosts so the SSO/auth pages this window also loads can't read
+// local paths off dropped files.
 try {
   const { webUtils } = require("electron");
+  const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
+  const isTeamsHost = (hostname) => {
+    if (hostname.endsWith(".mcas.ms")) {
+      hostname = hostname.slice(0, -".mcas.ms".length);
+    }
+    return TEAMS_HOSTS.some(
+      (domain) =>
+        hostname === domain ||
+        (hostname.endsWith("." + domain) &&
+          !hostname.slice(0, -(domain.length + 1)).includes(".")),
+    );
+  };
   globalThis.addEventListener(
     "drop",
     (event) => {
+      if (!isTeamsHost(globalThis.location.hostname)) {
+        return;
+      }
       const files = event.dataTransfer?.files;
       if (!files?.length) {
         return;
@@ -19,7 +36,12 @@ try {
         try {
           const path = webUtils.getPathForFile(file);
           if (path) {
-            Object.defineProperty(file, "path", { value: path, configurable: true });
+            Object.defineProperty(file, "path", {
+              value: path,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
           }
         } catch {
           // leave the file untouched if the path can't be resolved
