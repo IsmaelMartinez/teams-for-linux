@@ -280,6 +280,22 @@ if (gotTheLock) {
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   // Set application badge count (dock/taskbar notification)
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+
+  // Update Dock icon with status overlay on macOS
+  ipcMain.on("dock-icon-update", (_event, dataUrl) => {
+    if (process.platform === "darwin" && app.dock) {
+      if (dataUrl) {
+        const img = nativeImage.createFromDataURL(dataUrl);
+        app.dock.setIcon(img);
+      } else {
+        const path = require("node:path");
+        const defaultIcon = nativeImage.createFromPath(
+          path.join(config.appPath, "assets/icons/icon-256x256.png")
+        );
+        app.dock.setIcon(defaultIcon);
+      }
+    }
+  });
   // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;

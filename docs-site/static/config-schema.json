@@ -742,9 +742,11 @@
         "video": {
           "menuEnabled": false
         },
+        "showStatusOnDockIcon": false,
+        "macPerformanceMode": true,
         "preventDeviceSwitching": false
       },
-      "description": "Media settings for microphone, camera, and video. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
+      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
       "applyMode": "restart",
       "fields": [
         {
@@ -827,6 +829,18 @@
           "type": "boolean",
           "default": false,
           "description": "Enable the menu entry for controlling video elements (PiP mode, video controls)."
+        },
+        {
+          "path": "showStatusOnDockIcon",
+          "type": "boolean",
+          "default": false,
+          "description": "Overlay the user presence status on the Dock icon on macOS."
+        },
+        {
+          "path": "macPerformanceMode",
+          "type": "boolean",
+          "default": true,
+          "description": "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely."
         }
       ]
     },

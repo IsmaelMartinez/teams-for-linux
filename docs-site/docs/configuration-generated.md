@@ -75,7 +75,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title | `restart` |
 | `watchConfigFile` | `boolean` | `false` | Watch for changes in the config file and reload the app | `restart` |
 | `webDebug` | `boolean` | `false` | Enable debug at start | `restart` |
-| `media` | `object` | `{"microphone":{"disableAutogain":false,"speakingIndicator":false,"overrideConstraints":{"enabled":false}},"camera":{"resolution":{"enabled":false,"mode":"remove"},"autoAdjustAspectRatio":{"enabled":false}},"video":{"menuEnabled":false},"preventDeviceSwitching":false}` | Media settings for microphone, camera, and video. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. | `restart` |
+| `media` | `object` | `{"microphone":{"disableAutogain":false,"speakingIndicator":false,"overrideConstraints":{"enabled":false}},"camera":{"resolution":{"enabled":false,"mode":"remove"},"autoAdjustAspectRatio":{"enabled":false}},"video":{"menuEnabled":false},"showStatusOnDockIcon":false,"macPerformanceMode":true,"preventDeviceSwitching":false}` | Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. | `restart` |
 | `mqtt` | `object` | `{"enabled":false,"brokerUrl":"","username":"","password":"","clientId":"teams-for-linux","topicPrefix":"teams","statusTopic":"status","commandTopic":"","statusCheckInterval":10000,"homeAssistant":{"enabled":false,"discoveryPrefix":"homeassistant","deviceName":"Teams for Linux"},"mediaTopics":{"inCall":"in-call","incomingCall":"incoming-call","camera":"camera","microphone":"microphone","microphoneControl":"microphone/control","screenSharing":"screen-sharing"}}` | MQTT configuration for publishing Teams status updates and receiving action commands | `restart` |
 | `quickChat` | `object` | `{"enabled":false}` | Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API | `restart` |
 | `graphApi` | `object` | `{"enabled":false}` | Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.) | `restart` |
@@ -181,6 +181,8 @@ Object options group several related settings. The tables below list each nested
 | `media.camera.resolution.height` | `number` | `undefined` | Target camera height when mode is override. |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Reapply proper aspect ratio constraints to fix camera video stretching when moving Teams between monitors with different orientations. |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable the menu entry for controlling video elements (PiP mode, video controls). |
+| `media.showStatusOnDockIcon` | `boolean` | `false` | Overlay the user presence status on the Dock icon on macOS. |
+| `media.macPerformanceMode` | `boolean` | `true` | On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely. |
 
 ### mqtt
 

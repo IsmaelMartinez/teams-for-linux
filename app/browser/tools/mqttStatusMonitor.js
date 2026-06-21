@@ -40,9 +40,12 @@ class MQTTStatusMonitor {
 			{ keywords: ['available', 'online', 'green', 'presence-available', 'status-available'], code: 1 }
 		];
 
-		// Only start monitoring if MQTT is enabled
-		if (!config.mqtt?.enabled) {
-			console.debug('MQTT status monitoring disabled');
+		// Only start monitoring if MQTT is enabled or the macOS dock-icon
+		// status overlay needs the local status events
+		const dockIconWantsStatus =
+			config.media?.showStatusOnDockIcon && process.platform === 'darwin';
+		if (!config.mqtt?.enabled && !dockIconWantsStatus) {
+			console.debug('Status monitoring disabled');
 			return;
 		}
 
@@ -130,10 +133,17 @@ class MQTTStatusMonitor {
 				console.debug(`Teams status changed: ${this.lastStatus} -> ${status}`);
 				this.lastStatus = status;
 
-				// Send status change to main process
-				this.ipcRenderer.invoke('user-status-changed', {
-					data: { status: status }
-				});
+				// Send status change to main process (MQTT publishing only)
+				if (this.config.mqtt?.enabled) {
+					this.ipcRenderer.invoke('user-status-changed', {
+						data: { status: status }
+					});
+				}
+
+				// Dispatch local event for other browser tools
+				globalThis.dispatchEvent(new CustomEvent('user-status-changed-local', {
+					detail: { status: status }
+				}));
 			}
 		} catch (error) {
 			console.debug('Status check error:', error.message);
