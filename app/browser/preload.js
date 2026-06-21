@@ -398,7 +398,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "navigationButtons", path: "./tools/navigationButtons" },
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
-      { name: "dockIconRenderer", path: "./tools/dockIconRenderer" }
+      { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)

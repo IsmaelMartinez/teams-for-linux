@@ -14,6 +14,56 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.12.0" date="2026-06-19">
+      <description>
+        <ul>
+          <li>config: generate config docs + schema from a single source (#2597 Phase 1) (#2604)</li>
+          <li>docs: interactive config explorer (#2597 Phase 2) (#2606)</li>
+          <li>download: save options, policy-block notification, device-switch guard (#2652)</li>
+          <li>mqtt: add configurable media topic names and mute/unmute commands (#2608)</li>
+          <li>window: add minimizeOnClose option (#2623)</li>
+          <li>auth: don't divert main-frame navigations through about:blank handler (#2605) (0853c9d), closes #2591</li>
+          <li>auth: gate in-app reauth recovery behind reauthRecovery.enabled (#2633)</li>
+          <li>auth: gate worker UPR recovery behind reauthRecovery opt-in (#2629)</li>
+          <li>auth: intercept login popups to trigger in-app recovery (#2622)</li>
+          <li>ci: extract Electron binary with system unzip (e2e) (#2594)</li>
+          <li>ci: use honest release-please PR header (#2648)</li>
+          <li>deps: bump docs-site deps to patched versions (Dependabot) (#2674)</li>
+          <li>navigation: keep back/forward working after Teams top-bar restructure (#2672)</li>
+          <li>net: add timeout to connectivity probes to prevent hang after resume (#2635)</li>
+          <li>theme: stop setting followOsTheme to prevent GraphQL rejection (#2673)</li>
+          <li>tray: clear badge reliably by widening title observation and fixing update race (#2643)</li>
+          <li>multi-account: scope custom-background URL per instance; close out Phase 1 audit docs (#2626)</li>
+          <li>remove explicit ozone-platform default (#2506)</li>
+          <li>config: config-file validation, generated docs and explorer for #2597 phases 3a/4 (#2642)</li>
+          <li>config: phase 0 of config/docs UX initiative (#2597) (#2602)</li>
+          <li>config: record #2597 phase 3b plan, migration as optional companion (#2657)</li>
+          <li>install: document the beta apt/rpm channel for pre-releases (#2638) (d53d0f3), closes #2637</li>
+          <li>move repository install instructions to the dedicated webpage (#2619)</li>
+          <li>research: documentation, contributing, and config UX (#2598)</li>
+          <li>research: FIDO2 touch-prompt feasibility note (#2631) (#2634)</li>
+          <li>research: smartcard/NSS PIN dialog feasibility for client-cert auth (#2641) (0cbd31a), closes #2639</li>
+          <li>roadmap: note in-review download, macOS, and device-switch work (#2655)</li>
+          <li>troubleshooting: document Google sign-in user-agent workaround (#2670)</li>
+          <li>snap: pin arm64 snapcraft below 9.0.0 to fix the snap build (#2649)</li>
+          <li>deps-dev: bump electron from 41.7.1 to 42.3.0 (#2589)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2612)</li>
+          <li>deps-dev: bump the minor-and-patch group with 4 updates (#2658)</li>
+          <li>deps: bump actions/setup-node from 6.3.0 to 6.4.0 (#2614)</li>
+          <li>deps: bump actions/upload-artifact from 7.0.0 to 7.0.1 (#2613)</li>
+          <li>deps: bump canonical/setup-lxd action pin (#2615)</li>
+          <li>deps: bump dompurify from 3.4.0 to 3.4.11 in /docs-site (#2664)</li>
+          <li>deps: bump js-yaml from 4.1.1 to 4.2.0 (#2665)</li>
+          <li>deps: bump launch-editor from 2.13.0 to 2.14.1 in /docs-site (#2668)</li>
+          <li>deps: bump shell-quote from 1.8.3 to 1.8.4 in /docs-site (#2644)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 3 updates (#2616)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2630)</li>
+          <li>deps: bump webpack-dev-server from 5.2.4 to 5.2.5 in /docs-site (#2669)</li>
+          <li>deps: bump ws from 7.5.10 to 7.5.11 in /docs-site (#2667)</li>
+          <li>deps: bump ws from 8.20.1 to 8.21.0 (#2666)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.11.1" date="2026-05-29">
       <description>
         <ul>

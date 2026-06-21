@@ -307,6 +307,26 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Related GitHub Issues:** [Issue #802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802), [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357), [ADR 021](./development/adr/021-webauthn-fido2-linux.md).
 
+#### Issue: Google Sign-in shows "This browser or app may not be secure"
+
+**Description:** When signing in with a Google account ("Sign in with Google"), Google's password page rejects the login with "This browser or app may not be secure". Microsoft work, school, and personal accounts are unaffected.
+
+**Cause:** Google's sign-in flow inspects the browser user agent and blocks user agents it does not recognize as a trusted app or browser. Teams for Linux ships a Chrome user agent with the Electron token removed (Microsoft sign-in and calls misbehave when the Electron token is present), but Google's check also wants an application-identifier token in the string, which the default user agent does not carry.
+
+**Solutions/Workarounds:**
+
+Set a custom `chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
+
+```json
+{
+  "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) teams-for-linux/1.0 Chrome/<your-chrome-version> Safari/537.36"
+}
+```
+
+Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports. Any stable application-identifier token works; the requirement is only that one is present. The default user agent is intentionally left without one, because changing it for everyone would risk other Microsoft sign-in methods and calls.
+
+**Related GitHub Issues:** [Issue #2646](https://github.com/IsmaelMartinez/teams-for-linux/issues/2646), [Issue #1414](https://github.com/IsmaelMartinez/teams-for-linux/issues/1414)
+
 ---
 
 ### Notifications

@@ -1,4 +1,68 @@
 const { Notification, shell } = require("electron");
+const fs = require("node:fs");
+const path = require("node:path");
+
+// Hosts whose interrupted downloads are most likely blocked by a Microsoft
+// 365 / SharePoint / tenant DLP or access policy rather than by a network
+// fault. Used only to tailor the wording of the failure notification — it
+// never changes whether or how a download is attempted. Matching is a plain
+// case-insensitive substring test against the download URL's hostname.
+const POLICY_HOST_HINTS = [
+  "sharepoint.com",
+  "sharepoint-df.com",
+  "officeapps.live.com",
+  "office.com",
+  "office.net",
+  "microsoft.com",
+  "onedrive.com",
+  "1drv.ms",
+  "svc.ms",
+];
+
+// Returns the lowercased hostname for an http(s) URL, or "" for anything
+// else (invalid URL, file:, custom schemes). Restricting to http(s) keeps
+// both the policy-block host heuristic and `openExternal` from acting on
+// non-web schemes.
+function getHostname(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+// A download that interrupts having transferred (almost) nothing from a
+// Microsoft 365 / SharePoint host is the signature of a server-side policy
+// block: the request is denied before the file body streams. We use this to
+// surface a clearer "may be blocked by your organization" message and an
+// "open in browser" affordance, instead of a generic "interrupted" toast.
+// This is purely advisory wording — we never attempt to bypass the block.
+function looksLikePolicyBlock(url, receivedBytes) {
+  if (receivedBytes > 0) return false;
+  const host = getHostname(url);
+  if (!host) return false;
+  return POLICY_HOST_HINTS.some((hint) => host === hint || host.endsWith("." + hint));
+}
+
+// Mirror Chromium's default "name (1).ext" de-duplication, which forcing a
+// save path via setSavePath would otherwise disable — a fixed saveDirectory
+// must not silently overwrite a previously downloaded file.
+function uniqueSavePath(directory, filename) {
+  const ext = path.extname(filename);
+  const stem = path.basename(filename, ext);
+  let candidate = path.join(directory, filename);
+  // Cap the probe so a directory full of collisions can't spin the main
+  // thread; after the limit we accept the last candidate and let the write
+  // overwrite rather than hang.
+  for (let i = 1; fs.existsSync(candidate) && i <= 1000; i++) {
+    candidate = path.join(directory, `${stem} (${i})${ext}`);
+  }
+  return candidate;
+}
 
 // Matches the leading progress prefix this manager applies to window titles
 // (e.g. `[34%] `, `[34%, 78%] `, `[downloading] `, `[50%, downloading] `).
@@ -112,11 +176,28 @@ class DownloadManager {
   }
 
   #onWillDownload(_event, item) {
+    // Opt-out hook (first checkpoint): a feature that drives a download
+    // end-to-end (its own save path, notifications, clipboard) sets this flag.
+    // When it's already set by the time we run, skip everything — most
+    // importantly `#applySavePath` below, so a configured `saveDirectory`
+    // can't clobber the externally-set path. (The flag is often set by a
+    // later-registered listener; the `done` handler re-checks for that case.)
+    if (item.teamsForLinuxExternallyManaged) return;
+
+    // Save-location config must apply regardless of the notification and
+    // progress flags below.
+    this.#applySavePath(item);
+
     const notify = this.#shouldNotify();
     const showProgress = this.#shouldShowProgress();
     if (!notify && !showProgress) return;
 
     console.debug(`[DownloadManager] Download started: ${item.getFilename()}`);
+
+    // Capture the source URL now: after `done` Electron may have torn down the
+    // item's request state, and we need the host to tailor a policy-block
+    // message and to offer "open in browser".
+    const sourceUrl = item.getURL?.() ?? "";
 
     let onUpdated = null;
     if (showProgress) {
@@ -140,6 +221,12 @@ class DownloadManager {
         this.#finishJob(item, state);
         this.#updateProgressBar();
       }
+      // Second checkpoint for the externally-managed flag: the owning feature
+      // registers its own `will-download` listener, which (being added later)
+      // usually runs *after* this one, so the flag often isn't set yet at the
+      // top of `#onWillDownload`. By `done` it always is — skip our
+      // notification / openWhenDone so the item isn't double-handled.
+      if (item.teamsForLinuxExternallyManaged) return;
       if (!notify) return;
 
       // Read filename from the item inside `done` rather than capturing it at
@@ -148,17 +235,21 @@ class DownloadManager {
       // on disk, so notify with that.
       const filename = item.getFilename();
       const savePath = item.getSavePath();
+      const receivedBytes = item.getReceivedBytes?.() ?? 0;
       switch (state) {
         case "completed":
           this.#notifyCompleted(filename, savePath);
+          this.#maybeOpenWhenDone(savePath);
           break;
         case "cancelled":
           console.debug(`[DownloadManager] Download cancelled: ${filename}`);
-          this.#notifyFailed(filename, "Download cancelled");
+          // A cancel is a user action (e.g. dismissing the Save As dialog),
+          // never a policy block — keep the plain wording.
+          this.#notifyFailed(filename, "Download cancelled", sourceUrl, receivedBytes, false);
           break;
         case "interrupted":
           console.warn(`[DownloadManager] Download interrupted: ${filename}`);
-          this.#notifyFailed(filename, "Download interrupted");
+          this.#notifyFailed(filename, "Download interrupted", sourceUrl, receivedBytes, true);
           break;
         default:
           console.warn(`[DownloadManager] Download finished with unknown state: ${state}`);
@@ -181,6 +272,70 @@ class DownloadManager {
 
   #shouldShowProgress() {
     return this.#config?.download?.showProgressBar !== false;
+  }
+
+  /**
+   * Decide where a download should be saved, honouring two opt-in config
+   * options. Both default off, so the out-of-the-box behaviour is unchanged
+   * (Electron saves to the OS default download directory without prompting).
+   *
+   * - `download.alwaysAskWhereToSave`: force Electron's native Save As dialog
+   *   for every download by leaving `savePath` unset and clearing any
+   *   pre-seeded dialog options. (Electron shows the dialog automatically
+   *   when no save path is set, but a `saveDirectory` would suppress it, so
+   *   the ask option wins when both are set.)
+   * - `download.saveDirectory`: a fixed directory to drop files into without
+   *   prompting. The filename Electron derived from the response is preserved.
+   *
+   * Any failure here is swallowed: a bad config value must never abort the
+   * download, it just falls back to Electron's default location.
+   */
+  #applySavePath(item) {
+    const download = this.#config?.download ?? {};
+    if (download.alwaysAskWhereToSave) {
+      // Leave savePath unset so Electron prompts. Nothing to do.
+      return;
+    }
+    const saveDirectory = download.saveDirectory;
+    if (typeof saveDirectory !== "string" || saveDirectory.trim() === "") {
+      return;
+    }
+    try {
+      const filename = item.getFilename?.() ?? "download";
+      // Create the directory if missing — otherwise setSavePath into a
+      // non-existent path interrupts the download. Errors (e.g. permissions)
+      // fall through to the catch and Electron's default location.
+      fs.mkdirSync(saveDirectory, { recursive: true });
+      item.setSavePath?.(uniqueSavePath(saveDirectory, filename));
+    } catch (error) {
+      console.warn("[DownloadManager] Could not apply saveDirectory; using default", {
+        message: error?.message,
+      });
+    }
+  }
+
+  /**
+   * Open a completed download in the OS default handler when
+   * `download.openWhenDone` is enabled (default off). Uses
+   * `shell.openPath` — the same mechanism a file manager double-click uses —
+   * and surfaces, but does not throw on, an open failure.
+   */
+  #maybeOpenWhenDone(savePath) {
+    if (!this.#config?.download?.openWhenDone) return;
+    if (!savePath) return;
+    Promise.resolve(shell.openPath(savePath))
+      .then((result) => {
+        if (result) {
+          console.warn("[DownloadManager] Could not open downloaded file", {
+            // `result` is Electron's error string; it can contain the path,
+            // so only log its presence, not its contents (PII / local paths).
+            failed: true,
+          });
+        }
+      })
+      .catch((error) => {
+        console.warn("[DownloadManager] openPath threw", { message: error?.message });
+      });
   }
 
   // The title-prefix path always fires on every Linux setup — `setProgressBar`
@@ -395,18 +550,76 @@ class DownloadManager {
     }
   }
 
-  #notifyFailed(filename, reason) {
+  /**
+   * Notify the user that a download did not complete. When the failure looks
+   * like a Microsoft 365 / SharePoint / tenant policy block (interrupted with
+   * zero bytes from an M365 host), the wording explains the likely cause and
+   * the notification click opens the source link externally (browser /
+   * SharePoint / Office) so the user can retry through the official UI — the
+   * same `shell.openExternal` path Teams links already use. We never bypass
+   * the block; we only point the user at the supported way to access the file.
+   *
+   * @param {string} filename
+   * @param {string} reason - Human-readable state ("Download interrupted", etc.)
+   * @param {string} [sourceUrl] - Original download URL, used for the host
+   *   heuristic and the "open in browser" action.
+   * @param {number} [receivedBytes] - Bytes transferred before the failure.
+   * @param {boolean} [allowPolicyHint] - Whether this failure state can be a
+   *   policy block at all (true only for "interrupted"; a user cancel never is).
+   */
+  #notifyFailed(filename, reason, sourceUrl = "", receivedBytes = 0, allowPolicyHint = false) {
+    const policyBlock = allowPolicyHint && looksLikePolicyBlock(sourceUrl, receivedBytes);
     try {
-      const notification = new Notification({
-        title: "Download did not finish",
-        body: `${filename} — ${reason}`,
-      });
+      const notification = new Notification(
+        policyBlock
+          ? {
+              title: "Download blocked by policy?",
+              body:
+                `${filename} — this file may be blocked by your organization's ` +
+                "Microsoft 365 / SharePoint policy or access restrictions. Click " +
+                "to open it in your browser, or contact your administrator.",
+            }
+          : {
+              title: "Download did not finish",
+              body: `${filename} — ${reason}`,
+            },
+      );
+      if (policyBlock && sourceUrl) {
+        notification.on("click", () => this.openExternal(sourceUrl));
+      }
       this.#trackNotification(notification);
       notification.show();
     } catch (error) {
       console.error("[DownloadManager] Failed to show failure notification", {
         message: error.message,
       });
+    }
+  }
+
+  /**
+   * Open a file/link in the OS default handler (browser, SharePoint, Office)
+   * using Electron's `shell.openExternal`. Only http(s) URLs are forwarded;
+   * anything else is rejected to avoid handing arbitrary schemes (file:,
+   * custom protocol handlers) to the shell. Returns a promise that resolves
+   * to whether the link was opened.
+   *
+   * @param {string} url
+   * @returns {Promise<boolean>}
+   */
+  async openExternal(url) {
+    const host = getHostname(url);
+    if (!host) {
+      console.warn("[DownloadManager] Refusing to open non-http(s) link externally");
+      return false;
+    }
+    try {
+      await shell.openExternal(url);
+      return true;
+    } catch (error) {
+      console.error("[DownloadManager] Failed to open link externally", {
+        message: error?.message,
+      });
+      return false;
     }
   }
 }
