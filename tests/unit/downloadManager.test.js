@@ -3,17 +3,24 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const electronPath = require.resolve('electron');
 const downloadManagerPath = require.resolve('../../app/downloadManager');
 
 let notificationInstances;
 let showItemInFolderCalls;
+let openExternalCalls;
+let openPathCalls;
 let MockNotification;
 
 function installElectronMock() {
 	notificationInstances = [];
 	showItemInFolderCalls = [];
+	openExternalCalls = [];
+	openPathCalls = [];
 
 	MockNotification = class MockNotification extends EventEmitter {
 		constructor(options) {
@@ -35,6 +42,8 @@ function installElectronMock() {
 			Notification: MockNotification,
 			shell: {
 				showItemInFolder: (...args) => showItemInFolderCalls.push(args),
+				openExternal: (...args) => { openExternalCalls.push(args); return Promise.resolve(); },
+				openPath: (...args) => { openPathCalls.push(args); return Promise.resolve(''); },
 			},
 		},
 	};
@@ -47,6 +56,8 @@ function cleanupElectronMock() {
 	delete require.cache[downloadManagerPath];
 	notificationInstances = undefined;
 	showItemInFolderCalls = undefined;
+	openExternalCalls = undefined;
+	openPathCalls = undefined;
 	MockNotification = undefined;
 }
 
@@ -56,10 +67,14 @@ function makeFakeSession() {
 	return emitter;
 }
 
-function makeFakeDownloadItem(filename, savePath, sizes = {}) {
+function makeFakeDownloadItem(filename, savePath, sizes = {}, url = '') {
 	const emitter = new EventEmitter();
+	let currentSavePath = savePath;
 	emitter.getFilename = () => filename;
-	emitter.getSavePath = () => savePath;
+	emitter.getSavePath = () => currentSavePath;
+	emitter.setSavePath = (next) => { currentSavePath = next; emitter._setSavePathCalls.push(next); };
+	emitter._setSavePathCalls = [];
+	emitter.getURL = () => url;
 	emitter.getTotalBytes = () => sizes.totalBytes ?? 0;
 	emitter.getReceivedBytes = () => sizes.receivedBytes ?? 0;
 	emitter.setSizes = (next) => Object.assign(sizes, next);
@@ -76,6 +91,21 @@ function enabledConfig(extra = {}) {
 		...rest,
 		download: { enabled: true, ...download },
 	};
+}
+
+// Stand up a manager whose download.saveDirectory points at a throwaway temp
+// dir (auto-removed), plus its fake session. `extraDownload` layers on more
+// download sub-config. Returns the dir and session for the test to drive.
+function makeSaveDirManager(t, extraDownload = {}) {
+	const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-save-'));
+	t.after(() => fs.rmSync(saveDir, { recursive: true, force: true }));
+	const DownloadManager = require(downloadManagerPath);
+	const manager = new DownloadManager(
+		enabledConfig({ download: { saveDirectory: saveDir, ...extraDownload } }),
+	);
+	const fakeSession = makeFakeSession();
+	manager.initialize(fakeSession);
+	return { saveDir, fakeSession };
 }
 
 function makeFakeMainAppWindow(initialTitle = 'Microsoft Teams') {
@@ -738,5 +768,190 @@ describe('DownloadManager', () => {
 		a.emit('updated');
 
 		assert.strictEqual(mainAppWindow._title, '[50%, 90%] Microsoft Teams');
+	});
+
+	// Boilerplate shared by the failure-notification tests: boot a manager on
+	// a fresh session and run a single download of `url` to terminal `state`.
+	function runFailedDownload({ filename, url, state, sizes, config }) {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(config ?? enabledConfig());
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem(
+			filename,
+			`/p/${filename}`,
+			sizes ?? { totalBytes: 0, receivedBytes: 0 },
+			url,
+		);
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, state);
+		return item;
+	}
+
+	it('shows a policy-block message when an M365 download interrupts with no bytes', () => {
+		runFailedDownload({
+			filename: 'restricted.docx',
+			url: 'https://contoso.sharepoint.com/sites/x/restricted.docx',
+			state: 'interrupted',
+		});
+
+		assert.strictEqual(notificationInstances.length, 1);
+		assert.match(notificationInstances[0].options.title, /blocked by policy/i);
+		assert.match(notificationInstances[0].options.body, /Microsoft 365|SharePoint|administrator/i);
+	});
+
+	it('opens the source link externally when the policy-block toast is clicked', () => {
+		const url = 'https://contoso.sharepoint.com/sites/x/restricted.docx';
+		runFailedDownload({ filename: 'restricted.docx', url, state: 'interrupted' });
+
+		notificationInstances[0].emit('click');
+		assert.deepStrictEqual(openExternalCalls, [[url]]);
+	});
+
+	it('uses the generic failure message for non-M365 interruptions', () => {
+		runFailedDownload({
+			filename: 'huge.iso',
+			url: 'https://downloads.example.com/huge.iso',
+			state: 'interrupted',
+		});
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+	});
+
+	it('uses the plain cancelled message for a user-cancelled M365 download with no bytes', () => {
+		runFailedDownload({
+			filename: 'restricted.docx',
+			url: 'https://contoso.sharepoint.com/sites/x/restricted.docx',
+			state: 'cancelled',
+		});
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+		assert.match(notificationInstances[0].options.body, /Download cancelled/);
+	});
+
+	it('does not mark lookalike hosts as policy blocks', () => {
+		runFailedDownload({
+			filename: 'file.docx',
+			url: 'https://evilmicrosoft.com/file.docx',
+			state: 'interrupted',
+		});
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+	});
+
+	it('applies saveDirectory even when notifications and progress are disabled', (t) => {
+		const { saveDir, fakeSession } = makeSaveDirManager(t, {
+			notifyOnDownloadComplete: false,
+			showProgressBar: false,
+		});
+
+		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.deepStrictEqual(item._setSavePathCalls, [path.join(saveDir, 'report.pdf')]);
+	});
+
+	it('does not apply saveDirectory to an already externally-managed item', (t) => {
+		const { fakeSession } = makeSaveDirManager(t);
+
+		// Flag already set (owning feature registered first): the manager must
+		// leave the save path untouched.
+		const item = makeFakeDownloadItem('attachment.pdf', '/p/attachment.pdf', { totalBytes: 100 });
+		item.teamsForLinuxExternallyManaged = true;
+		fakeSession.emit('will-download', {}, item);
+
+		assert.deepStrictEqual(item._setSavePathCalls, []);
+	});
+
+	it('skips notifications and openWhenDone for externally managed items', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig({ download: { openWhenDone: true } }));
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('attachment.pdf', '/p/attachment.pdf', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+		item.teamsForLinuxExternallyManaged = true;
+		item.emit('done', {}, 'completed');
+
+		await Promise.resolve();
+		assert.strictEqual(notificationInstances.length, 0);
+		assert.strictEqual(openPathCalls.length, 0);
+	});
+
+	it('does not treat a partially-downloaded M365 file as a policy block', () => {
+		runFailedDownload({
+			filename: 'big.pptx',
+			url: 'https://contoso.sharepoint.com/big.pptx',
+			state: 'interrupted',
+			sizes: { totalBytes: 1000, receivedBytes: 400 },
+		});
+
+		assert.strictEqual(notificationInstances[0].options.title, 'Download did not finish');
+	});
+
+	it('does not set a save path when alwaysAskWhereToSave is true', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(
+			enabledConfig({ download: { saveDirectory: '/home/user/TeamsFiles', alwaysAskWhereToSave: true } }),
+		);
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('report.pdf', '', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(item._setSavePathCalls.length, 0);
+	});
+
+	it('does not set a save path when no saveDirectory configured', () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig());
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('report.pdf', '/home/user/Downloads/report.pdf', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+
+		assert.strictEqual(item._setSavePathCalls.length, 0);
+	});
+
+	it('opens the file when openWhenDone is true and the download completes', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig({ download: { openWhenDone: true } }));
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const savePath = '/home/user/Downloads/report.pdf';
+		const item = makeFakeDownloadItem('report.pdf', savePath, { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'completed');
+
+		await Promise.resolve();
+		assert.deepStrictEqual(openPathCalls, [[savePath]]);
+	});
+
+	it('does not open the file when openWhenDone is false (default)', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig());
+		const fakeSession = makeFakeSession();
+		manager.initialize(fakeSession);
+
+		const item = makeFakeDownloadItem('report.pdf', '/home/user/Downloads/report.pdf', { totalBytes: 100 });
+		fakeSession.emit('will-download', {}, item);
+		item.emit('done', {}, 'completed');
+
+		await Promise.resolve();
+		assert.strictEqual(openPathCalls.length, 0);
+	});
+
+	it('openExternal refuses non-http(s) schemes', async () => {
+		const DownloadManager = require(downloadManagerPath);
+		const manager = new DownloadManager(enabledConfig());
+
+		const ok = await manager.openExternal('file:///etc/passwd');
+		assert.strictEqual(ok, false);
+		assert.strictEqual(openExternalCalls.length, 0);
 	});
 });

@@ -23,137 +23,105 @@ function createClient(overrides = {}) {
 	});
 }
 
+/** Create a client, fire a command, and return the emitted command object (or null). */
+function fireAndCapture(payload) {
+	const client = createClient();
+	let emitted = null;
+	client.on('command', (cmd) => { emitted = cmd; });
+	const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
+	client.handleCommand(raw);
+	return emitted;
+}
+
 describe('MQTT handleCommand - valid commands', () => {
 	it('emits command event for toggle-mute', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-mute' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-mute' });
 		assert.ok(emitted, 'Should have emitted a command event');
 		assert.strictEqual(emitted.action, 'toggle-mute');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
 	});
 
 	it('emits command event for toggle-video', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-video' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-video' });
 		assert.strictEqual(emitted.action, 'toggle-video');
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+O');
 	});
 
 	it('emits command event for toggle-hand-raise', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-hand-raise' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-hand-raise' });
 		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+K');
 	});
 
 	it('emits command event for get-calendar (non-shortcut action)', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'get-calendar' }));
-
+		const emitted = fireAndCapture({ action: 'get-calendar' });
 		assert.ok(emitted);
 		assert.strictEqual(emitted.action, 'get-calendar');
 		assert.strictEqual(emitted.shortcut, undefined);
 	});
 
 	it('preserves extra fields from command payload', () => {
-		const client = createClient();
-		let emitted = null;
-		client.on('command', (cmd) => { emitted = cmd; });
-
-		client.handleCommand(JSON.stringify({ action: 'toggle-mute', requestId: '123' }));
-
+		const emitted = fireAndCapture({ action: 'toggle-mute', requestId: '123' });
 		assert.strictEqual(emitted.requestId, '123');
+	});
+
+	it('emits command event for mute', () => {
+		const emitted = fireAndCapture({ action: 'mute' });
+		assert.ok(emitted, 'Should have emitted a command event');
+		assert.strictEqual(emitted.action, 'mute');
+		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
+	});
+
+	it('emits command event for unmute', () => {
+		const emitted = fireAndCapture({ action: 'unmute' });
+		assert.ok(emitted, 'Should have emitted a command event');
+		assert.strictEqual(emitted.action, 'unmute');
+		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+M');
+	});
+
+	it('preserves force flag in mute command', () => {
+		const emitted = fireAndCapture({ action: 'mute', force: true });
+		assert.ok(emitted);
+		assert.strictEqual(emitted.action, 'mute');
+		assert.strictEqual(emitted.force, true);
+	});
+
+	it('preserves force flag in unmute command', () => {
+		const emitted = fireAndCapture({ action: 'unmute', force: true });
+		assert.ok(emitted);
+		assert.strictEqual(emitted.action, 'unmute');
+		assert.strictEqual(emitted.force, true);
 	});
 });
 
 describe('MQTT handleCommand - invalid commands', () => {
 	it('rejects invalid JSON', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('not valid json{');
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture('not valid json{'), null);
 	});
 
 	it('rejects non-object JSON values', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('"just a string"');
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand('42');
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand('null');
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture('"just a string"'), null);
+		assert.strictEqual(fireAndCapture('42'), null);
+		assert.strictEqual(fireAndCapture('null'), null);
 	});
 
 	it('rejects command without action field', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ type: 'toggle-mute' }));
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ type: 'toggle-mute' }), null);
 	});
 
 	it('rejects command with non-string action', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ action: 123 }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: true }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: null }));
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ action: 123 }), null);
+		assert.strictEqual(fireAndCapture({ action: true }), null);
+		assert.strictEqual(fireAndCapture({ action: null }), null);
 	});
 
 	it('rejects actions not in the whitelist', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand(JSON.stringify({ action: 'delete-all-messages' }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: 'exec' }));
-		assert.strictEqual(emitted, false);
-
-		client.handleCommand(JSON.stringify({ action: '' }));
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture({ action: 'delete-all-messages' }), null);
+		assert.strictEqual(fireAndCapture({ action: 'exec' }), null);
+		assert.strictEqual(fireAndCapture({ action: '' }), null);
 	});
 
 	it('rejects empty message', () => {
-		const client = createClient();
-		let emitted = false;
-		client.on('command', () => { emitted = true; });
-
-		client.handleCommand('');
-
-		assert.strictEqual(emitted, false);
+		assert.strictEqual(fireAndCapture(''), null);
 	});
 });
 

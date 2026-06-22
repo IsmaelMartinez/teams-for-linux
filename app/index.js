@@ -107,6 +107,7 @@ if (config.multiAccount?.enabled && intuneEnabled) {
 }
 
 let userStatus = -1;
+let microphoneControlState = 'unknown';
 let mqttClient = null;
 let mqttMediaStatusService = null;
 let haDiscovery = null;
@@ -280,6 +281,22 @@ if (gotTheLock) {
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   // Set application badge count (dock/taskbar notification)
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+
+  // Update Dock icon with status overlay on macOS
+  ipcMain.on("dock-icon-update", (_event, dataUrl) => {
+    if (process.platform === "darwin" && app.dock) {
+      if (dataUrl) {
+        const img = nativeImage.createFromDataURL(dataUrl);
+        app.dock.setIcon(img);
+      } else {
+        const path = require("node:path");
+        const defaultIcon = nativeImage.createFromPath(
+          path.join(config.appPath, "assets/icons/icon-256x256.png")
+        );
+        app.dock.setIcon(defaultIcon);
+      }
+    }
+  });
   // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
@@ -485,6 +502,10 @@ function handleShortcutCommand({ action, shortcut }) {
 function initializeMqtt() {
   mqttClient = new MQTTClient(config);
 
+  app.on('teams-microphone-control-changed', (state) => {
+    microphoneControlState = state;
+  });
+
   async function handleGetCalendarCommand({ startDate, endDate }) {
     if (!startDate || !endDate) {
       console.error('[MQTT] get-calendar requires startDate and endDate');
@@ -522,6 +543,26 @@ function initializeMqtt() {
 
     if (action === 'get-calendar') {
       await handleGetCalendarCommand(command);
+    } else if (action === 'mute' || action === 'unmute') {
+      const desiredState = action === 'mute' ? 'muted' : 'unmuted';
+
+      if (microphoneControlState === desiredState) {
+        console.info(`[MQTT] Ignoring '${action}' command: microphone is already ${desiredState}`);
+        return;
+      }
+
+      if (microphoneControlState !== 'muted' && microphoneControlState !== 'unmuted') {
+        if (command.force === true) {
+          console.warn(`[MQTT] Executing '${action}' with unknown microphone control state due to force=true`);
+          handleShortcutCommand(command);
+          return;
+        }
+
+        console.warn(`[MQTT] Ignoring '${action}' command: microphone control state is '${microphoneControlState}'. Use force=true to override.`);
+        return;
+      }
+
+      handleShortcutCommand(command);
     } else {
       handleShortcutCommand(command);
     }

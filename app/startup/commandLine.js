@@ -25,6 +25,10 @@ class CommandLineManager {
   }
 
   static addSwitchesAfterConfigLoad(config) {
+    if (process.platform === "darwin") {
+      this.#configureMacPerformance(config);
+    }
+
     if (process.env.XDG_SESSION_TYPE === "wayland") {
       this.#configureWayland(config);
     }
@@ -80,6 +84,74 @@ class CommandLineManager {
     }
 
     this.addElectronCLIFlags(config);
+  }
+
+  // macOS performance optimizations for Apple Silicon and Intel Macs.
+  static #configureMacPerformance(config) {
+    // Opt-out switch (defaults on). These force a lot of GPU/rendering state
+    // on every Mac, so allow disabling them without also turning off the GPU.
+    if (config.media?.macPerformanceMode === false) {
+      console.info("[macOS] Performance optimizations disabled (media.macPerformanceMode is false)");
+      return;
+    }
+    if (config.disableGpu) {
+      return;
+    }
+    console.info("[macOS] Enabling native hardware and rendering optimizations");
+
+    // Force Metal for ANGLE rendering layer (super fast on Apple Silicon)
+    app.commandLine.appendSwitch("use-angle", "metal");
+
+    // Enable GPU/OOP rasterization and zero-copy transfers
+    app.commandLine.appendSwitch("enable-gpu-rasterization");
+    app.commandLine.appendSwitch("enable-oop-rasterization");
+    app.commandLine.appendSwitch("enable-zero-copy");
+    app.commandLine.appendSwitch("enable-native-gpu-memory-buffers");
+    app.commandLine.appendSwitch("enable-gpu-memory-buffer-video-frames");
+
+    // Enable hardware-accelerated WebRTC encoding/decoding for video calls
+    app.commandLine.appendSwitch("enable-webrtc-hw-decoding");
+    app.commandLine.appendSwitch("enable-webrtc-hw-encoding");
+
+    // Optimize rasterization threads for multi-core processors
+    app.commandLine.appendSwitch("num-raster-threads", "4");
+
+    // Optimize V8 for multi-core performance. Merge rather than overwrite so a
+    // `js-flags` already set via electronCLIFlags / the command line survives
+    // (same as enable-features).
+    const performanceJsFlags = [
+      "--concurrent-recompilation",
+      "--concurrent-marking",
+      "--concurrent-sweeping",
+    ];
+    // The larger V8 heap suits Apple Silicon's unified memory; gate it to
+    // arm64 so a 4 GB old-space ceiling isn't forced on older, lower-RAM Intel
+    // Macs where it can be counter-productive.
+    if (process.arch === "arm64") {
+      performanceJsFlags.unshift("--max-semi-space-size=16", "--max-old-space-size=4096");
+    }
+    if (app.commandLine.hasSwitch("js-flags")) {
+      const existing = app.commandLine.getSwitchValue("js-flags").split(" ").filter(Boolean);
+      const merged = Array.from(new Set([...existing, ...performanceJsFlags])).join(" ");
+      app.commandLine.appendSwitch("js-flags", merged);
+    } else {
+      app.commandLine.appendSwitch("js-flags", performanceJsFlags.join(" "));
+    }
+
+    const performanceFeatures = [
+      "CanvasOopRasterization",
+      "ParallelDownloading",
+      "Metal",
+      "CoreAnimationLayersSharedImages",
+    ];
+
+    if (app.commandLine.hasSwitch("enable-features")) {
+      const existing = app.commandLine.getSwitchValue("enable-features").split(",");
+      const merged = Array.from(new Set([...existing, ...performanceFeatures])).join(",");
+      app.commandLine.appendSwitch("enable-features", merged);
+    } else {
+      app.commandLine.appendSwitch("enable-features", performanceFeatures.join(","));
+    }
   }
 
   // Wayland display server configuration.
