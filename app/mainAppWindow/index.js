@@ -342,6 +342,255 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
+// Always-on auth-failure signatures. MSAL reports an interaction-required error
+// only when a silent token refresh genuinely fails, so it is a reliable signal to
+// recover on. It surfaces in two spellings: the MSAL class name
+// `InteractionRequired` (console) and the OAuth error code `interaction_required`
+// (the lowercase form thrown by token warming as an unhandled rejection — wired
+// into detection by the unhandled-rejection handler in app/index.js).
+const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
+// Opt-in, correlation-only auth-failure signature. The Teams worker can die with
+// an uncaught "UPR: <reason>" error, and a genuinely stale session emits these
+// (sometimes without ever logging InteractionRequired, #2480). But the worker
+// emits the same "UPR:" shape for routine transient failures (pinned channels,
+// presence, "Invalid id undefined", and an empty reason) on perfectly healthy
+// sessions, and UPR-heavy tenants fire them constantly (#2629) — far too noisy to
+// drive an automatic reload. So when auth.reauthRecovery.enabled is set, a UPR
+// only records a failure signal for login-popup correlation (so the banner-click
+// in-app recovery can recognise a broken session); it never schedules the silent
+// clear-and-reload on its own. Recovery from a UPR happens only through an
+// explicit user action (the banner click, or the mid-call prompt).
+const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
+// Only trust auth failure signals from Teams/Microsoft origins
+const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
+// Loop guard for the automatic clear-and-reload. A cooldown rather than a
+// single-shot flag: a long-running app can hit a second stale session hours
+// after the first recovery (observed in the field: recovery at 10:55, the
+// session went stale again at 12:11 and the old once-per-process flag
+// silently swallowed it), while the cooldown still prevents rapid
+// reload loops if a recovery fails to fix the session.
+let lastAuthRecoveryAt = 0;
+const AUTH_RECOVERY_COOLDOWN_MS = 30 * 60 * 1000;
+// Worker UPRs are transient during active calls (#2428); suppress them only while
+// a call is in progress so startup recovery still works for stale-token loops (#2480).
+let callActive = false;
+// Timestamp of the last trusted auth-failure signal. Used to correlate login
+// popups with an actually-broken session: while the stale "sign in again"
+// banner is up the renderer keeps emitting failure signatures every few
+// minutes (observed gaps up to ~40 min), whereas healthy-session login popups
+// (initial sign-in, consent, step-up MFA, adding an account) appear without
+// any preceding failure signal.
+let lastAuthFailureSignalAt = 0;
+const AUTH_FAILURE_SIGNAL_WINDOW_MS = 60 * 60 * 1000;
+// The broken session survives an app restart, so the signal timestamp must
+// too (observed in the field: app restarted while stale, the in-memory
+// timestamp reset, and the banner's Sign In click fell through unintercepted).
+// Persisted via the settings store; restored in onAppReady. Writes are
+// throttled because failure signatures can repeat at sub-minute rates.
+// Deliberately only feeds popup correlation — automatic recovery stays
+// driven by live signals so a stale persisted value can never wipe a
+// session that a previous run already fixed.
+const AUTH_SIGNAL_STORE_KEY = 'authRecovery.lastFailureSignalAt';
+const AUTH_SIGNAL_PERSIST_INTERVAL_MS = 5 * 60 * 1000;
+let lastAuthSignalPersistAt = 0;
+
+function recordAuthFailureSignal() {
+  lastAuthFailureSignalAt = Date.now();
+  if (lastAuthFailureSignalAt - lastAuthSignalPersistAt < AUTH_SIGNAL_PERSIST_INTERVAL_MS) return;
+  lastAuthSignalPersistAt = lastAuthFailureSignalAt;
+  try {
+    appConfig?.settingsStore?.set(AUTH_SIGNAL_STORE_KEY, lastAuthFailureSignalAt);
+  } catch (err) {
+    console.warn('[AUTH_RECOVERY] Failed to persist failure signal timestamp:', err.message);
+  }
+}
+
+/**
+ * Checks a renderer-originated message (console output or forwarded window
+ * error) for auth-failure signatures and schedules recovery on a match.
+ * `sourceId` is the script URL the message came from (console-message
+ * sourceId or window-error filename).
+ */
+function maybeScheduleAuthRecovery(message, sourceId) {
+  // The whole in-app auth-recovery feature (#2622) is opt-in while it
+  // stabilises: with auth.reauthRecovery.enabled off, renderer auth-failure
+  // signals are ignored entirely and the app keeps its pre-#2622 behaviour
+  // (Teams' own stale "sign in again" banner stays up; the user relaunches to
+  // re-authenticate). The separate #2296 startup/after-sleep cookie cleaning is
+  // unaffected and stays always-on.
+  if (!config?.auth?.reauthRecovery?.enabled) return;
+
+  const text = message || '';
+  // Classify a worker UPR by its shape first, independent of payload contents: a
+  // UPR can embed "...code:InteractionRequired..." (StartUpJob/CalendarSyncJob),
+  // and matching that as the reliable signal would auto-reload on a UPR despite
+  // the correlation-only intent (#2629). So a UPR is never treated as reliable;
+  // it only records a correlation signal for the banner interception (the flag is
+  // already gated above, so the opt-in worker signal needs no extra flag check).
+  const isWorkerUpr = OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isReliableSignal = !isWorkerUpr && AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
+  const isOptInWorkerSignal = isWorkerUpr;
+  if (!isReliableSignal && !isOptInWorkerSignal) return;
+
+  // Verify the message originates from a trusted Microsoft source
+  const source = sourceId || '';
+  if (source && !TRUSTED_AUTH_SOURCES.some(s => source.includes(s))) return;
+
+  // Record the signal even while recovery is cooling down or a call is
+  // active, so the login-popup interception can still correlate against a
+  // session that stays broken. For a worker UPR this is the only thing it
+  // drives automatically — see the silent-reload guard below.
+  recordAuthFailureSignal();
+
+  if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
+
+  if (callActive) {
+    handleMidCallAuthSignal(source);
+    return;
+  }
+
+  // Outside a call, only the reliable interaction-required signal triggers the
+  // silent clear-and-reload. A worker UPR is too noisy to auto-recover on
+  // (healthy sessions emit them ~hourly, UPR-heavy tenants constantly — #2629);
+  // it has already fed popup correlation above, so it can still drive an in-app
+  // recovery via the banner-click intercept, just never silently on its own.
+  if (!isReliableSignal) return;
+
+  scheduleAuthRecovery();
+}
+
+function scheduleAuthRecovery() {
+  lastAuthRecoveryAt = Date.now();
+  console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
+
+  // Delay to let Teams' own retry mechanism attempt recovery first
+  setTimeout(
+    () =>
+      triggerAuthRecovery().catch((err) => {
+        console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+      }),
+    5000
+  );
+}
+
+// ── Mid-call handling ──────────────────────────────────────────────────────
+// Recovery reloads the page, which ends an active call. Auth can genuinely
+// fail mid-call (the call media keeps flowing but chat stops updating), yet
+// worker UPRs during calls are often transient noise (#2428) — reloading on
+// them mid-presentation was the original bug. So mid-call the user gets a
+// choice (sign in now / after the call / not now) instead of a silent reload.
+let firstMidCallWorkerSignalAt = 0;
+let reauthPromptShownForCall = false;
+let reauthPromptOpen = false;
+let recoveryQueuedForCallEnd = false;
+// A single transient worker UPR must not prompt (#2428); require the worker
+// signals to persist this long into the same call before treating them as a
+// genuine mid-call auth failure.
+const MIDCALL_WORKER_SIGNAL_CONFIRM_MS = 3 * 60 * 1000;
+
+function resetMidCallAuthState() {
+  firstMidCallWorkerSignalAt = 0;
+  reauthPromptShownForCall = false;
+}
+
+function handleMidCallAuthSignal(source) {
+  // Only reached with auth.reauthRecovery.enabled on (maybeScheduleAuthRecovery
+  // gates the whole feature), so the user always gets the mid-call prompt rather
+  // than a silent reload that would end the call.
+  const isWorker = source.includes('/worker/');
+
+  if (recoveryQueuedForCallEnd) return;
+
+  if (isWorker) {
+    const now = Date.now();
+    if (!firstMidCallWorkerSignalAt) {
+      firstMidCallWorkerSignalAt = now;
+      return;
+    }
+    if (now - firstMidCallWorkerSignalAt < MIDCALL_WORKER_SIGNAL_CONFIRM_MS) return;
+  }
+
+  promptMidCallReauth(false);
+}
+
+/**
+ * Asks the user whether to reauthenticate during an active call. Shown at
+ * most once per call for automatic signals; an explicit banner click
+ * (force=true) re-prompts even after a "Not now".
+ */
+async function promptMidCallReauth(force) {
+  if (reauthPromptOpen) return;
+  if (!force && reauthPromptShownForCall) return;
+  reauthPromptOpen = true;
+  reauthPromptShownForCall = true;
+  try {
+    const { response } = await dialog.showMessageBox(window, {
+      type: 'warning',
+      title: 'Sign-in required',
+      message: 'Teams needs you to sign in again.',
+      detail:
+        'Chat and other features may stop updating until you sign in again. ' +
+        'Signing in now reloads the app and ends your current call.',
+      buttons: ['Sign in now', 'After the call', 'Not now'],
+      defaultId: 1,
+      cancelId: 2,
+    });
+    if (response === 0) {
+      console.info('[AUTH_RECOVERY] User chose to reauthenticate during call');
+      await triggerAuthRecovery();
+    } else if (response === 1) {
+      console.info('[AUTH_RECOVERY] Recovery queued until the call ends');
+      recoveryQueuedForCallEnd = true;
+    } else {
+      console.info('[AUTH_RECOVERY] Mid-call reauth declined');
+    }
+  } catch (err) {
+    console.error('[AUTH_RECOVERY] Mid-call reauth prompt failed:', err);
+  } finally {
+    reauthPromptOpen = false;
+  }
+}
+
+/**
+ * Decides whether an outgoing Microsoft login popup should be intercepted
+ * for in-app auth recovery. Requires both the auth.reauthRecovery.enabled
+ * opt-in and a trusted auth-failure signal within the correlation window,
+ * so login popups from healthy-session flows (initial sign-in, consent,
+ * step-up MFA, adding an account) are never diverted — they fall through
+ * to the default link handling.
+ */
+function shouldInterceptAuthPopup() {
+  if (!config.auth?.reauthRecovery?.enabled) return false;
+  return Date.now() - lastAuthFailureSignalAt < AUTH_FAILURE_SIGNAL_WINDOW_MS;
+}
+
+// A single banner click can surface as several requests in quick succession
+// (and a broken session's own silent-refresh retries produce more), so
+// popup-triggered recovery is deduped over a short window. Unlike the
+// automatic path's 30-minute cooldown, a deliberate retry a minute later
+// should still work.
+let lastPopupRecoveryAt = 0;
+const POPUP_RECOVERY_DEDUPE_MS = 10 * 1000;
+
+function triggerPopupRecovery(context) {
+  const now = Date.now();
+  if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
+  lastPopupRecoveryAt = now;
+  if (callActive) {
+    // Recovery would end the active call — let the user decide. force=true:
+    // an explicit click re-prompts even after an earlier "Not now".
+    console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
+    promptMidCallReauth(true);
+    return;
+  }
+  console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
+  setImmediate(() =>
+    triggerAuthRecovery().catch((err) => {
+      console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+    })
+  );
+}
+
 /**
  * Clears stale auth state (localStorage tokens + cookies) and reloads
  * the page to force a fresh interactive login.
@@ -491,38 +740,46 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // "We need you to sign in again" stale banner (#2296)
   await cleanExpiredAuthCookies(window.webContents.session);
 
-  // Monitor renderer console for MSAL silent auth failures.
-  // When Teams can't refresh tokens silently (e.g., after overnight idle),
-  // it logs InteractionRequired. We detect this, clear stale auth state,
-  // and reload to force a clean interactive login.
-  const AUTH_FAILURE_PATTERNS = ['InteractionRequired'];
-  // Only trust auth failure signals from Teams/Microsoft origins
-  const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
-  let authRecoveryTriggered = false;
-  // Worker UPRs are transient during active calls (#2428); suppress them only while
-  // a call is in progress so startup recovery still works for stale-token loops (#2480).
-  let callActive = false;
-  app.on('teams-call-connected', () => { callActive = true; });
-  app.on('teams-call-disconnected', () => { callActive = false; });
+  // Restore the last persisted auth-failure signal so login-popup
+  // correlation survives app restarts (the broken session does).
+  lastAuthFailureSignalAt = Number(appConfig.settingsStore.get(AUTH_SIGNAL_STORE_KEY)) || 0;
+
+  // Monitor renderer auth-failure signals. When Teams can't refresh tokens
+  // silently (e.g., after overnight idle), it logs InteractionRequired. We
+  // detect this, clear stale auth state, and reload to force a clean
+  // interactive login. Detection itself lives in maybeScheduleAuthRecovery
+  // so the forwarded window-error path can reuse it.
+  app.on('teams-call-connected', () => {
+    callActive = true;
+    resetMidCallAuthState();
+  });
+  app.on('teams-call-disconnected', () => {
+    callActive = false;
+    resetMidCallAuthState();
+    if (recoveryQueuedForCallEnd) {
+      recoveryQueuedForCallEnd = false;
+      console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
+      // Short delay so the call teardown finishes before the reload
+      setTimeout(
+        () =>
+          triggerAuthRecovery().catch((err) => {
+            console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
+          }),
+        5000
+      );
+    }
+  });
   // Page reload (including renderer crash recovery) resets renderer-side call state,
   // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
-  window.webContents.on('did-navigate', () => { callActive = false; });
+  // A reload also moots any queued recovery: if the session is still broken,
+  // fresh signals will re-trigger detection.
+  window.webContents.on('did-navigate', () => {
+    callActive = false;
+    resetMidCallAuthState();
+    recoveryQueuedForCallEnd = false;
+  });
   window.webContents.on('console-message', (event) => {
-    if (authRecoveryTriggered) return;
-    const message = event.message || '';
-    if (!AUTH_FAILURE_PATTERNS.some(p => message.includes(p))) return;
-
-    // Verify the message originates from a trusted Microsoft source
-    const sourceId = event.sourceId || '';
-    if (sourceId && !TRUSTED_AUTH_SOURCES.some(s => sourceId.includes(s))) return;
-
-    if (sourceId.includes('/worker/') && callActive) return;
-
-    authRecoveryTriggered = true;
-    console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
-
-    // Delay to let Teams' own retry mechanism attempt recovery first
-    setTimeout(() => triggerAuthRecovery(), 5000);
+    maybeScheduleAuthRecovery(event.message, event.sourceId);
   });
 
   login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
@@ -542,9 +799,22 @@ function onSpellCheckerLanguageChanged(languages) {
 
 let allowFurtherRequests = true;
 
+// Feed forwarded renderer window errors into auth-failure detection. Worker
+// uncaught errors (e.g. "Uncaught Error: UPR:") arrive via the window-error
+// IPC channel rather than console-message, so app/index.js calls this from
+// that handler. `filename` is the originating script URL.
+exports.notifyRendererError = function (message, filename) {
+  maybeScheduleAuthRecovery(message, filename);
+};
+
 exports.show = function () {
   window.show();
 };
+
+// Restore if minimised, show if hidden to tray, then focus. Used by the
+// notification click handler when notifications.electron.clickAction is
+// "restore" (issue #2647).
+exports.restoreWindow = restoreWindow;
 
 exports.getWindow = function () {
   return window;
@@ -803,6 +1073,31 @@ function onBeforeRequestHandler(details, callback) {
   else if (aboutBlankRequestCount < 1) {
     // Proceed normally
     callback({});
+  } else if (details.resourceType === "mainFrame") {
+    // A top-level navigation is never the about:blank popup's own request, so
+    // it must not be diverted into the hidden child window below. Diverting it
+    // cancels the navigation (ERR_BLOCKED_BY_CLIENT) and leaves a blank page,
+    // e.g. the guest / number-matching MFA sign-in where the main frame
+    // navigates to the authorize URL right after an about:blank popup bumped
+    // the counter (#2591). A new top-level navigation also makes any pending
+    // interceptions stale, so reset the counter to 0 rather than decrementing
+    // it: that way a leftover count cannot divert the new page's sub-resources.
+    aboutBlankRequestCount = 0;
+    callback({});
+  } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {
+    // The hidden-window handling below exists for SILENT token refresh. An
+    // interactive login can never complete in a window that is hidden and
+    // destroyed on ready-to-show — which is why clicking the stale "sign in
+    // again" banner appears to do nothing: the click opens an about:blank
+    // popup whose login navigation lands here and dies invisibly (it never
+    // reaches the isAuthLoginUrl check in onNewWindow, because the URL is
+    // still about:blank at window-open time). When the navigation correlates
+    // with a broken session (see shouldInterceptAuthPopup), run in-app
+    // recovery instead. Reset the counter: recovery reloads the page, so any
+    // pending interceptions are stale (#2591 rationale).
+    aboutBlankRequestCount = 0;
+    triggerPopupRecovery('Login navigation from about:blank popup intercepted');
+    callback({ cancel: true });
   } else {
     // Open request in hidden child window for authentication
     const child = new BrowserWindow({ parent: window, show: false });
@@ -833,6 +1128,32 @@ function isTeamsDomain(url) {
   try {
     const hostname = stripMcasSuffix(new URL(url).hostname);
     return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
+// Microsoft Identity Platform login hostnames. When Teams opens a popup to
+// one of these it is requesting interactive re-authentication (e.g. the
+// "sign in again" banner). Kept separate from AUTH_DOMAINS because that
+// list includes broad domains used for cookie scoping; this narrower set
+// is only the endpoints that initiate an OAuth/OIDC interactive flow.
+const AUTH_LOGIN_DOMAINS = [
+  'login.microsoftonline.com',
+  'login.microsoft.com',
+  'login.live.com',
+];
+
+/**
+ * Returns true when the URL targets a Microsoft Identity Platform login page.
+ * Used to intercept re-auth popups that Teams opens from the "sign in again"
+ * banner so they complete inside the Electron app instead of opening an
+ * external browser window that Electron cannot observe.
+ */
+function isAuthLoginUrl(url) {
+  try {
+    const hostname = stripMcasSuffix(new URL(url).hostname);
+    return AUTH_LOGIN_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
   } catch {
     return false;
   }
@@ -886,6 +1207,23 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
+  // Breadcrumb for diagnosing which shape of popup the "sign in again"
+  // banner opens (about:blank-then-navigate vs a direct login URL) — the two
+  // take different paths below and only the direct form can be intercepted
+  // for recovery. Auth-related popups only, origin only: no path, query, or
+  // user-specific data is logged.
+  if (details.url.startsWith("about:blank") || isAuthLoginUrl(details.url)) {
+    let origin = "about:blank";
+    if (!details.url.startsWith("about:blank")) {
+      try {
+        origin = new URL(details.url).origin;
+      } catch {
+        origin = "unparseable";
+      }
+    }
+    console.info('[WINDOW_OPEN] Auth-related popup', { origin });
+  }
+
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
     if (config.onNewWindowOpenMeetupJoinUrlInApp) {
       window.loadURL(details.url, { userAgent: config.chromeUserAgent });
@@ -897,6 +1235,20 @@ function onNewWindow(details) {
   ) {
     // Increment the counter for about:blank authentication flow
     aboutBlankRequestCount += 1;
+    return { action: "deny" };
+  } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {
+    // Teams is opening a direct-URL Microsoft login popup from a session
+    // that recently emitted auth-failure signals (see
+    // shouldInterceptAuthPopup). Opening login.microsoftonline.com in an
+    // external browser completes auth there but Electron never receives the
+    // result, so trigger in-app recovery instead: clear stale auth state and
+    // reload Teams for a fresh interactive sign-in within the app. (The
+    // stale-banner popup is usually about:blank-shaped and is handled in
+    // onBeforeRequestHandler; this branch covers the direct-URL form.)
+    // Login popups without a correlated failure signal (initial sign-in,
+    // consent and step-up prompts, adding an account) keep the original
+    // open-externally behaviour via secureOpenLink below.
+    triggerPopupRecovery('Direct login popup intercepted');
     return { action: "deny" };
   }
 
@@ -986,8 +1338,42 @@ function getWebRequestFilterFromURL() {
   return filter;
 }
 
-function onBeforeInput(_event, input) {
+function onBeforeInput(event, input) {
   isControlPressed = input.control;
+
+  if (input.type !== "keyDown") {
+    return;
+  }
+  const history = window?.webContents?.navigationHistory;
+  if (!history) {
+    return;
+  }
+
+  // Keyboard history navigation, independent of the Teams DOM. The injected
+  // on-screen back/forward controls (navigationButtons.js) break whenever
+  // Microsoft restructures the top bar (#2671); these accelerators are the
+  // layout-independent fallback. Keys are platform-specific: on macOS,
+  // Option(Alt)+Left/Right is the system word-navigation shortcut inside text
+  // fields, so stealing it would break message editing — macOS uses the
+  // standard Cmd+[ / Cmd+] instead, while other platforms use the
+  // browser-standard Alt+Left / Alt+Right.
+  const isMac = process.platform === "darwin";
+  const modifierActive = isMac
+    ? input.meta && !input.control && !input.alt && !input.shift
+    : input.alt && !input.control && !input.meta && !input.shift;
+  if (!modifierActive) {
+    return;
+  }
+
+  const backKey = isMac ? "[" : "ArrowLeft";
+  const forwardKey = isMac ? "]" : "ArrowRight";
+  if (input.key === backKey && history.canGoBack()) {
+    event.preventDefault();
+    history.goBack();
+  } else if (input.key === forwardKey && history.canGoForward()) {
+    event.preventDefault();
+    history.goForward();
+  }
 }
 
 function secureOpenLink(details) {

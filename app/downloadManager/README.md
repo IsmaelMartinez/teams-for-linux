@@ -32,6 +32,16 @@ each download through three independent feedback channels:
   the notification opens the containing folder via `shell.showItemInFolder()`.
 - **Cancelled / interrupted:** notification "Download did not finish" with
   the filename and reason, so users know the file was not saved.
+- **Blocked by organization policy:** when a download interrupts having
+  transferred no bytes from a Microsoft 365 / SharePoint / OneDrive host,
+  the notification instead reads "Download blocked by policy?" and explains
+  the file may be blocked by the tenant's Microsoft 365 / SharePoint policy
+  or access restrictions. Clicking it opens the file's link in the default
+  browser via `shell.openExternal` (only `http(s)` links are forwarded) so
+  the user can retry through the supported SharePoint / Office UI or contact
+  their administrator. This is advisory wording over Electron's existing
+  download lifecycle — the manager never bypasses, weakens, or works around
+  a policy block.
 
 Per-item UI beyond the above (in-app downloads list, tray badge while active)
 is intentionally out of scope.
@@ -61,6 +71,9 @@ been created by the main window.
 | `download.notifyOnDownloadComplete` | `boolean` | `true` | Show a system notification when a download finishes |
 | `download.showProgressBar` | `boolean` | `true` | Drive the taskbar progress bar, KDE JobView and Unity LauncherEntry while downloads are in flight |
 | `download.showTitlePrefix` | `boolean` | `true` | Also prefix the window title with `[N%]` (or `[downloading]`). Set to `false` on KDE / Ubuntu where the JobView / LauncherEntry already shows progress and the title churn is redundant. |
+| `download.saveDirectory` | `string` | `""` | Absolute path to always save allowed downloads into, without prompting. Empty string uses the OS default download directory. Ignored when `alwaysAskWhereToSave` is `true`. |
+| `download.alwaysAskWhereToSave` | `boolean` | `false` | Show Electron's native Save As dialog for every download. Takes precedence over `saveDirectory`. |
+| `download.openWhenDone` | `boolean` | `false` | Open each completed download in the OS default handler via `shell.openPath` (the same as double-clicking it in a file manager). |
 
 Add this to `~/.config/teams-for-linux/config.json` to turn the feature on:
 

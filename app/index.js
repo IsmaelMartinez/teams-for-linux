@@ -107,6 +107,7 @@ if (config.multiAccount?.enabled && intuneEnabled) {
 }
 
 let userStatus = -1;
+let microphoneControlState = 'unknown';
 let mqttClient = null;
 let mqttMediaStatusService = null;
 let haDiscovery = null;
@@ -279,6 +280,22 @@ if (gotTheLock) {
   ipcMain.handle("user-status-changed", userStatusChangedHandler);
   // Set application badge count (dock/taskbar notification)
   ipcMain.handle("set-badge-count", setBadgeCountHandler);
+
+  // Update Dock icon with status overlay on macOS
+  ipcMain.on("dock-icon-update", (_event, dataUrl) => {
+    if (process.platform === "darwin" && app.dock) {
+      if (dataUrl) {
+        const img = nativeImage.createFromDataURL(dataUrl);
+        app.dock.setIcon(img);
+      } else {
+        const path = require("node:path");
+        const defaultIcon = nativeImage.createFromPath(
+          path.join(config.appPath, "assets/icons/icon-256x256.png")
+        );
+        app.dock.setIcon(defaultIcon);
+      }
+    }
+  });
   // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
@@ -320,12 +337,21 @@ if (gotTheLock) {
     try {
       // Run the noise check on the raw message — the sanitizer may strip
       // query strings / fragments that contain the auth error code.
-      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
+      const log = preLoginNoise ? console.debug : console.error;
       log("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
+      // Some auth failures only surface as unhandled promise rejections from MSAL
+      // token warming (e.g. the lowercase "interaction_required" from
+      // acquireTokenV2) and never hit console-message or window-error — feed the
+      // raw (unsanitized) message to auth-failure detection. Rejections carry no
+      // source URL, so detection's trusted-source check is skipped (empty source).
+      if (!preLoginNoise) {
+        mainAppWindow.notifyRendererError(errorData?.message, undefined);
+      }
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
     }
@@ -334,7 +360,8 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
-      const log = isPreLoginAuthNoise(errorData?.message) ? console.debug : console.error;
+      const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
+      const log = preLoginNoise ? console.debug : console.error;
       log("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
@@ -343,6 +370,12 @@ if (gotTheLock) {
         errorStack: sanitizeRendererLogField(errorData?.errorStack),
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
+      // Some auth failures only surface as uncaught worker errors (e.g.
+      // "Uncaught Error: UPR:") that never hit the console-message path —
+      // feed the raw (unsanitized) message to auth-failure detection.
+      if (!preLoginNoise) {
+        mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename);
+      }
     } catch (err) {
       console.error("[Renderer] Failed to log window-error:", err);
     }
@@ -468,6 +501,10 @@ function handleShortcutCommand({ action, shortcut }) {
 function initializeMqtt() {
   mqttClient = new MQTTClient(config);
 
+  app.on('teams-microphone-control-changed', (state) => {
+    microphoneControlState = state;
+  });
+
   async function handleGetCalendarCommand({ startDate, endDate }) {
     if (!startDate || !endDate) {
       console.error('[MQTT] get-calendar requires startDate and endDate');
@@ -505,6 +542,26 @@ function initializeMqtt() {
 
     if (action === 'get-calendar') {
       await handleGetCalendarCommand(command);
+    } else if (action === 'mute' || action === 'unmute') {
+      const desiredState = action === 'mute' ? 'muted' : 'unmuted';
+
+      if (microphoneControlState === desiredState) {
+        console.info(`[MQTT] Ignoring '${action}' command: microphone is already ${desiredState}`);
+        return;
+      }
+
+      if (microphoneControlState !== 'muted' && microphoneControlState !== 'unmuted') {
+        if (command.force === true) {
+          console.warn(`[MQTT] Executing '${action}' with unknown microphone control state due to force=true`);
+          handleShortcutCommand(command);
+          return;
+        }
+
+        console.warn(`[MQTT] Ignoring '${action}' command: microphone control state is '${microphoneControlState}'. Use force=true to override.`);
+        return;
+      }
+
+      handleShortcutCommand(command);
     } else {
       handleShortcutCommand(command);
     }

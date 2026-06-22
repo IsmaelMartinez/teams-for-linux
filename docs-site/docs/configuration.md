@@ -2,6 +2,10 @@
 
 This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory.
 
+:::note
+For a complete, always-up-to-date list of every option generated directly from the code, see the [Configuration Options Reference](configuration-generated.md), or use the interactive [Configuration Explorer](configuration-explorer.mdx) to search the options and build a `config.json`. This guide adds examples, file locations, and platform notes on top of those.
+:::
+
 {/* toc */}
 
 ## Table of Contents
@@ -69,6 +73,20 @@ Place your `config.json` file in the appropriate location based on your installa
 > [!NOTE]
 > [yargs](https://www.npmjs.com/package/yargs) supports multiple configuration methods—refer to their documentation if you prefer using a configuration file over command-line arguments.
 
+## Startup Validation
+
+At startup the app validates your `config.json` against the option schema and logs any problems as `[CONFIG]` warnings. This is **warn-only**: an invalid entry is reported and then ignored, never blocking startup or changing existing behaviour. It catches the common mistakes:
+
+- **Unknown options** — typos or options from a different app version.
+- **Wrong types** — for example a string where a number is expected.
+- **Invalid `choices`** — a value outside an option's allowed set.
+
+Nested keys of object options (such as `mqtt.homeAssistant.enabled`) are checked the same way. Warnings name only the offending key, the expected type, and any allowed values — never your configured values, which may contain URLs, tokens, or email addresses.
+
+:::note
+Each option's **Apply** mode (whether a change takes effect immediately or after a restart) is listed in the [auto-generated reference](configuration-generated.md) and the [config explorer](configuration-explorer.mdx).
+:::
+
 ## Configuration Options Reference
 
 ### Application Core
@@ -86,6 +104,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `minimized` | `boolean` | `false` | Start the application minimized |
+| `minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when `closeAppOnCross` is true) |
 | `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
 | `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
 | `class` | `string` | `null` | Custom value for the WM_CLASS property |
@@ -120,6 +139,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
+| `notifications.electron.clickAction` | `string` | `"show"` | What clicking a notification does to the main window (`notificationMethod: "electron"` only). Choices: `show` (reveal the window, current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). On Linux whether focus is honoured depends on the window manager. |
 
 ### Incoming Call Handling
 
@@ -260,7 +280,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 
 ### Multi-Account Profile Switcher (Experimental)
 
-> **Status:** Phase 1 MVP scaffolding. The flag is wired through config, but the switcher UI, profile CRUD, and session isolation plumbing land in follow-up PRs tracked in [ADR-020](development/adr/020-multi-account-profile-switcher). Enabling the flag today has no user-visible effect beyond the Intune mutex check described below.
+> **Status:** Phase 1 partially shipped. With the flag enabled you get a **Profiles** menu (Add / Switch / Manage / Remove profiles), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. Still in progress: the top-right dropdown switcher overlay and `Ctrl+Shift+1…5` shortcuts for pinned profiles. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and remaining phases.
 
 Opt-in configuration for the single-window multi-tenant account switcher:
 
@@ -294,8 +314,9 @@ Opt-in configuration for the single-window multi-tenant account switcher:
 
 *   `disable_non_proxied_udp` - Does not expose public or local IPs. When this policy is used, WebRTC should only use TCP to contact peers or servers unless the proxy server supports UDP.
 
-[!NOTE]
+:::note
 **`network.webRTCIPHandlingPolicy`** is useful on systems with multiple network interfaces (e.g. WiFi for internet and a secondary Ethernet adapter with no internet gateway). Without this option, WebRTC advertises all interfaces as ICE candidates, which can cause asymmetric STUN routing and drop calls to **OnHold**. Setting it to `default_public_interface_only` restricts ICE gathering to the interface holding the default route only.
+:::
 
 ```json
 "network": {
@@ -405,7 +426,7 @@ A floating sticker panel that lists image files from a local folder and pastes t
 |--------|------|---------|-------------|
 | `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
 | `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)` | Regex for Teams meetup-join and related links |
-| `msTeamsProtocols` | `object` | `{ v1: "^msteams:\/l\/(?:meetup-join\|channel\|chat\|message)", v2: "^msteams:\/\/teams\.microsoft\.com\/l\/(?:meetup-join\|channel\|chat\|message)" }` | Regular expressions for Microsoft Teams protocol links |
+| `msTeamsProtocols` | `object` | `{ v1: "^msteams:/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)", v2: "^msteams://teams\\.(?:microsoft\\.com\|live\\.com\|cloud\\.microsoft)/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)" }` | Regular expressions for Microsoft Teams protocol links (v1 = legacy `msteams:` scheme, v2 = host-based `msteams://` scheme) |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
 
 ### Keyboard Shortcuts

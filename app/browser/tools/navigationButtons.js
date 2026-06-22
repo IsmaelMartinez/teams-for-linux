@@ -8,35 +8,72 @@ class NavigationButtons {
   #initialized = false;
   #backButton = null;
   #forwardButton = null;
+  #observer = null;
+  #checkScheduled = false;
 
-  init(config) {
+  init() {
     if (this.#initialized) {
       return;
     }
 
-    // Note: config parameter kept for API consistency with other modules
-    // but not currently used by navigation buttons functionality
     this.#initialized = true;
-
-    // Inject buttons with retry logic for Teams UI elements
-    // Note: DOM is already ready (preload.js waits for DOMContentLoaded)
-    // but Teams-specific elements may not be rendered yet
-    this.#waitForTeamsAndInject();
+    this.#startInjecting();
   }
 
-  #waitForTeamsAndInject() {
-    const maxRetries = 3;
-    let retries = 0;
+  // Teams renders its top bar after load and Microsoft restructures it without
+  // notice, which previously left the buttons missing once a fixed 3-retry
+  // budget ran out (#2671). Inject immediately, then keep a MutationObserver
+  // running so the buttons (re)appear whenever the anchor mounts or a Teams
+  // re-render removes our container.
+  #startInjecting() {
+    this.injectNavigationButtons();
 
-    const tryInject = () => {
-      if (this.injectNavigationButtons() || retries >= maxRetries) {
-        return;
+    const target = document.body || document.documentElement;
+    if (!target || typeof MutationObserver === "undefined") {
+      return;
+    }
+
+    this.#observer = new MutationObserver(() => {
+      // Only react when our container is actually missing, so a present,
+      // healthy injection does not arm a re-check timer on every Teams
+      // mutation for the lifetime of the session.
+      if (!document.getElementById("tfl-nav-buttons-container")) {
+        this.#scheduleInjectCheck();
       }
-      retries++;
-      setTimeout(tryInject, 1000 * retries);
-    };
+    });
+    this.#observer.observe(target, { childList: true, subtree: true });
+  }
 
-    tryInject();
+  // Coalesce a burst of mutations into a single debounced re-injection; the
+  // observer only calls this while our container is absent.
+  #scheduleInjectCheck() {
+    if (this.#checkScheduled) {
+      return;
+    }
+    this.#checkScheduled = true;
+    setTimeout(() => {
+      this.#checkScheduled = false;
+      if (!document.getElementById("tfl-nav-buttons-container")) {
+        this.injectNavigationButtons();
+      }
+    }, 250);
+  }
+
+  // The Teams search region is the injection anchor; buttons go immediately
+  // before it. Try the known data-tid first, then fall back to the search
+  // landmark so a top-bar restructure does not drop the buttons entirely.
+  #findInjectionAnchor() {
+    const selectors = [
+      '[data-tid="search-f6-navigation-region"]',
+      '[role="search"]',
+    ];
+    for (const selector of selectors) {
+      const el = document.querySelector(selector);
+      if (el?.parentNode) {
+        return el;
+      }
+    }
+    return null;
   }
 
   createNavigationButton(id, label, svgPath) {
@@ -76,11 +113,12 @@ class NavigationButtons {
       return false;
     }
 
-    // Find the search navigation region - we'll insert buttons BEFORE it (as a sibling)
-    const searchRegion = document.querySelector('[data-tid="search-f6-navigation-region"]');
+    // Find the injection anchor (the Teams search region); buttons go
+    // immediately before it as a sibling.
+    const searchRegion = this.#findInjectionAnchor();
 
     if (!searchRegion) {
-      console.debug('Search navigation region not found, buttons not injected yet');
+      console.debug('Search region anchor not found, buttons not injected yet');
       return false;
     }
 

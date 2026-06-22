@@ -1,0 +1,199 @@
+.explorer {
+  margin: 1rem 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search {
+  flex: 1 1 18rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+}
+
+.typeFilter {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+}
+
+.count {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.9rem;
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.tableWrap {
+  flex: 1 1 28rem;
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--ifm-global-radius);
+}
+
+.table {
+  width: 100%;
+  margin: 0;
+  font-size: 0.9rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--ifm-background-surface-color);
+  z-index: 1;
+}
+
+.applyBadge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.applyLive {
+  background: var(--ifm-color-success-contrast-background, #e6f6e6);
+  color: var(--ifm-color-success-darkest, #1a7f37);
+}
+
+.applyRestart {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-700);
+}
+
+.fields {
+  margin-top: 0.35rem;
+}
+
+.fields summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.fieldsTable {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.fieldsTable th,
+.fieldsTable td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.25rem 0.45rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.choices {
+  display: block;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.75rem;
+}
+
+.empty {
+  text-align: center;
+  color: var(--ifm-color-emphasis-600);
+  padding: 1.5rem;
+}
+
+.builder {
+  flex: 1 1 20rem;
+  position: sticky;
+  top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-background-surface-color);
+}
+
+.builder h3 {
+  margin-top: 0;
+}
+
+.hint {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.9rem;
+}
+
+.editors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.editorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.editorRow input,
+.editorRow select {
+  flex: 0 1 11rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+}
+
+.readonly {
+  color: var(--ifm-color-emphasis-600);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.85rem;
+}
+
+.json {
+  max-height: 16rem;
+  overflow: auto;
+  margin-bottom: 0.75rem;
+}
+
+.copy {
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-color-primary);
+  color: var(--ifm-button-color, #fff);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

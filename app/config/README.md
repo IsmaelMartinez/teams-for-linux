@@ -1,6 +1,6 @@
 # Config Module
 
-Handles loading configuration from `config.json` and parsing command-line arguments using `yargs`.
+Handles loading configuration from `config.json` and parsing command-line arguments using `yargs`. `validator.js` warns about unknown keys, type mismatches, and invalid values at startup — see [Startup Validation](../../docs-site/docs/configuration.md#startup-validation).
 
 ## Usage
 
