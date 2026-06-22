@@ -65,7 +65,7 @@
   "devDependencies": {
     "@electron/fuses": "^2.1.2",
     "@eslint/js": "^10.0.1",
-    "electron": "42.4.0",
+    "electron": "42.4.1",
     "@playwright/test": "1.61.0",
     "electron-builder": "^26.15.3",
     "eslint": "^10.5.0",
