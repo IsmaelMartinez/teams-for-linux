@@ -43,7 +43,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound | `live` |
 | `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available (e.g. while in a call, busy, etc.) | `live` |
 | `disableNotificationWindowFlash` | `boolean` | `false` | A flag indicates whether to disable window flashing when there is a notification | `live` |
-| `notifications` | `object` | `{"timeoutType":"default"}` | Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. | `restart` |
+| `notifications` | `object` | `{"timeoutType":"default","electron":{"clickAction":"show"}}` | Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. electron.clickAction: what clicking a notification does to the main window when notificationMethod is `electron`. Choices: `show` (reveal the window, default and current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). | `restart` |
 | `disableBadgeCount` | `boolean` | `false` | A flag indicates whether to disable the badge counter on the taskbar/dock icon | `live` |
 | `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use | `restart` |
 | `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations | `restart` |
@@ -135,6 +135,7 @@ Object options group several related settings. The tables below list each nested
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only); may not be honoured by every notification daemon. |
+| `notifications.electron.clickAction` | `string` | `"show"` | What clicking an Electron notification does to the main window (notificationMethod `electron` only): `show` reveals the window (default), `restore` also un-minimises and focuses it (helps on GNOME), `none` does nothing. |
 
 ### logConfig
 
