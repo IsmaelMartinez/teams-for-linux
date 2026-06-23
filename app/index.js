@@ -350,9 +350,10 @@ if (gotTheLock) {
       // raw (unsanitized) message to auth-failure detection. Rejections carry no
       // source URL, so detection's trusted-source check is skipped (empty source).
       // The pre-login-noise check above only down-levels the LOG; it must not
-      // gate detection. "InteractionRequired"/"login_required" are exactly the
-      // signatures auth recovery acts on, so always forward — maybeSchedule-
-      // AuthRecovery does its own pattern, source and cooldown filtering.
+      // gate detection: the reliable "InteractionRequired" signal arrives inside
+      // these noise-matched messages, so always forward. maybeScheduleAuthRecovery
+      // does its own filtering and only acts on InteractionRequired /
+      // interaction_required (login_required and AuthFailed are logged, not acted on).
       mainAppWindow.notifyRendererError(errorData?.message, undefined);
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
