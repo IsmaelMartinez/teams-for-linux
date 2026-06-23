@@ -345,13 +345,15 @@ if (gotTheLock) {
         timestamp: toFiniteNumber(errorData?.timestamp, Date.now()),
       });
       // Some auth failures only surface as unhandled promise rejections from MSAL
-      // token warming (e.g. the lowercase "interaction_required" from
+      // token warming (e.g. "interaction_required"/"InteractionRequired" from
       // acquireTokenV2) and never hit console-message or window-error — feed the
       // raw (unsanitized) message to auth-failure detection. Rejections carry no
       // source URL, so detection's trusted-source check is skipped (empty source).
-      if (!preLoginNoise) {
-        mainAppWindow.notifyRendererError(errorData?.message, undefined);
-      }
+      // The pre-login-noise check above only down-levels the LOG; it must not
+      // gate detection. "InteractionRequired"/"login_required" are exactly the
+      // signatures auth recovery acts on, so always forward — maybeSchedule-
+      // AuthRecovery does its own pattern, source and cooldown filtering.
+      mainAppWindow.notifyRendererError(errorData?.message, undefined);
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
     }
@@ -372,10 +374,10 @@ if (gotTheLock) {
       });
       // Some auth failures only surface as uncaught worker errors (e.g.
       // "Uncaught Error: UPR:") that never hit the console-message path —
-      // feed the raw (unsanitized) message to auth-failure detection.
-      if (!preLoginNoise) {
-        mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename);
-      }
+      // feed the raw (unsanitized) message to auth-failure detection. As with
+      // the unhandled-rejection handler, pre-login-noise down-levelling controls
+      // only the log level, never whether detection sees the signal.
+      mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename);
     } catch (err) {
       console.error("[Renderer] Failed to log window-error:", err);
     }
