@@ -65,11 +65,11 @@
   "devDependencies": {
     "@electron/fuses": "^2.1.2",
     "@eslint/js": "^10.0.1",
-    "electron": "42.4.1",
-    "@playwright/test": "1.61.0",
+    "electron": "42.5.0",
+    "@playwright/test": "1.61.1",
     "electron-builder": "~26.14.0",
     "eslint": "^10.5.0",
-    "globals": "^17.6.0",
+    "globals": "^17.7.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
