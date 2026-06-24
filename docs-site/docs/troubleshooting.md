@@ -158,25 +158,25 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 **Solutions/Workarounds:**
 
-Blanking the `XDG_CURRENT_DESKTOP` environment variable for the app restores the tray on Unity. Rather than editing the packaged `.desktop` file (overwritten on every upgrade), drop an override that shadows it and survives updates.
+Unsetting the `XDG_CURRENT_DESKTOP` environment variable for the app restores the tray on Unity. Rather than editing the packaged `.desktop` file (overwritten on every upgrade), drop an override that shadows it and survives updates.
 
 1. **Per-user override** (recommended for a single machine):
    ```bash
    mkdir -p ~/.local/share/applications
    cp /usr/share/applications/teams-for-linux.desktop ~/.local/share/applications/
-   sed -i 's|^Exec=|Exec=env XDG_CURRENT_DESKTOP="" |' ~/.local/share/applications/teams-for-linux.desktop
+   sed -i 's|^Exec=|Exec=env -u XDG_CURRENT_DESKTOP |' ~/.local/share/applications/teams-for-linux.desktop
    ```
 
 2. **System-wide override** (for an OEM or fleet image, applies to all users):
    ```bash
    sudo mkdir -p /usr/local/share/applications
    sudo cp /usr/share/applications/teams-for-linux.desktop /usr/local/share/applications/
-   sudo sed -i 's|^Exec=|Exec=env XDG_CURRENT_DESKTOP="" |' /usr/local/share/applications/teams-for-linux.desktop
+   sudo sed -i 's|^Exec=|Exec=env -u XDG_CURRENT_DESKTOP |' /usr/local/share/applications/teams-for-linux.desktop
    ```
 
 Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so they shadow the packaged entry and are not touched by `apt upgrade`. The override keeps the default `--ozone-platform=x11` flag intact.
 
-**Note:** `XDG_CURRENT_DESKTOP` also drives the xdg desktop portals (screen sharing, file pickers) and GTK theming, so only blank it where you actually need the tray. The icon may also come up generic rather than the purple Teams logo (see #888).
+**Note:** `XDG_CURRENT_DESKTOP` also drives the xdg desktop portals (screen sharing, file pickers) and GTK theming, so only unset it where you actually need the tray. The icon may also come up generic rather than the purple Teams logo (see #888).
 
 **Status:** Upstream Electron limitation ([electron/electron#38979](https://github.com/electron/electron/issues/38979)); no fix on the Teams for Linux side.
 
