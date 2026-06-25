@@ -67,7 +67,7 @@
     "@eslint/js": "^10.0.1",
     "electron": "42.5.0",
     "@playwright/test": "1.61.1",
-    "electron-builder": "~26.14.0",
+    "electron-builder": "26.8.1",
     "eslint": "^10.5.0",
     "globals": "^17.7.0",
     "http-server": "^14.1.1",
