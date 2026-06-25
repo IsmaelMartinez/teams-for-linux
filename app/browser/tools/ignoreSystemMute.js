@@ -38,7 +38,7 @@ const patchedTracks = new WeakSet();
  * @param {MediaStreamTrack} track - A track from a getUserMedia result.
  */
 function patchTrack(track) {
-  if (!track || track.kind !== "audio" || patchedTracks.has(track)) {
+  if (track?.kind !== "audio" || patchedTracks.has(track)) {
     return;
   }
   patchedTracks.add(track);
@@ -109,6 +109,18 @@ function patchFunction(object, name, createNewFunction) {
   }
 }
 
+// Wraps a legacy callback-based getUserMedia so tracks are patched in the
+// success callback. Module-scoped because it closes over nothing local.
+function patchDeprecatedGetUserMedia(original) {
+  return function getUserMedia(constraints, success, error) {
+    const wrappedSuccess =
+      typeof success === "function"
+        ? (stream) => success(patchStream(stream))
+        : success;
+    return original.call(this, constraints, wrappedSuccess, error);
+  };
+}
+
 const applyIgnoreSystemMutePatch = function () {
   // Modern promise-based getUserMedia: patch tracks before Teams receives them.
   patchFunction(navigator.mediaDevices, "getUserMedia", function (original) {
@@ -121,17 +133,7 @@ const applyIgnoreSystemMutePatch = function () {
     };
   });
 
-  // Legacy callback-based getUserMedia: patch tracks in the success callback.
-  function patchDeprecatedGetUserMedia(original) {
-    return function getUserMedia(constraints, success, error) {
-      const wrappedSuccess =
-        typeof success === "function"
-          ? (stream) => success(patchStream(stream))
-          : success;
-      return original.call(this, constraints, wrappedSuccess, error);
-    };
-  }
-
+  // Legacy callback-based getUserMedia (patchDeprecatedGetUserMedia is hoisted).
   patchFunction(navigator, "getUserMedia", patchDeprecatedGetUserMedia);
   patchFunction(navigator, "mozGetUserMedia", patchDeprecatedGetUserMedia);
   patchFunction(navigator, "webkitGetUserMedia", patchDeprecatedGetUserMedia);
