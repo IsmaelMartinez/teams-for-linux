@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
       { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
+      { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute" },
       { name: "speakingIndicator", path: "./tools/speakingIndicator" },
       { name: "cameraResolution", path: "./tools/cameraResolution" },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },

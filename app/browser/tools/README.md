@@ -30,6 +30,12 @@ Disables microphone auto-gain control by intercepting `getUserMedia` calls and m
 **Configuration**: `media.microphone.disableAutogain: true`
 **Use Case**: Professional audio setups, external mixers, manual gain control preference
 
+#### [ignoreSystemMute.js](ignoreSystemMute.js)
+Stops Teams' in-app mute button from following the operating system microphone mute on Linux. Chromium polls the OS capture source every second and reports its mute state to the page as a `MediaStreamTrack` mute event with `track.muted === true`; Teams mirrors that onto its own button. This tool intercepts `getUserMedia` and neutralises the OS-mute signal on the local capture track only, so remote participants' mute state stays visible and the system mute still cuts the transmitted audio.
+
+**Configuration**: `media.microphone.ignoreSystemMute: true`
+**Use Case**: Users who mute exclusively at the OS or hotkey level and want the Teams button to stay put
+
 #### [overrideMicConstraints.js](overrideMicConstraints.js)
 Overrides the microphone audio constraints Teams requests via `getUserMedia`, letting users disable WebRTC APM processing (echo cancellation, noise suppression, auto gain control) or pin `channelCount` / `sampleRate` at the Chromium/WebRTC layer. This is the Linux equivalent of the "High fidelity music mode" Microsoft only exposes on Windows Teams.
 
