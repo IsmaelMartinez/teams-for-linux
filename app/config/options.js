@@ -687,6 +687,7 @@ module.exports = {
           microphone: {
             disableAutogain: false,
             speakingIndicator: false,
+            ignoreSystemMute: false,
             overrideConstraints: { enabled: false },
           },
           camera: {
@@ -711,6 +712,11 @@ module.exports = {
             type: "boolean",
             describe:
               "Enable a visual overlay showing microphone state during calls (speaking/silent/muted) with WebRTC-based call state detection.",
+          },
+          "microphone.ignoreSystemMute": {
+            type: "boolean",
+            describe:
+              "Stop Teams' mute button from following the operating system microphone mute on Linux. Chromium reports the OS capture-source mute to the page as a track mute event and Teams mirrors it onto its own button; enable this to keep the Teams button where you left it and rely solely on your system/hotkey mute (which still cuts the transmitted audio). Remote participants' mute state is unaffected.",
           },
           "microphone.overrideConstraints.enabled": {
             type: "boolean",
