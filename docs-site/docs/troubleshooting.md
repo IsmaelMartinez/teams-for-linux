@@ -148,6 +148,42 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 ---
 
+#### Issue: System tray icon missing on Ubuntu Unity
+
+**Description:** On Ubuntu Unity the Teams for Linux system tray icon does not appear in the top panel. Recent Chromium and Electron dropped support for the legacy libappindicator library that Unity requires, and now expose the tray only through the newer KStatusNotifierItem protocol, so the icon never registers. This is an upstream Electron limitation rather than a Teams for Linux bug.
+
+**Potential Causes:**
+* Chromium/Electron no longer ship libappindicator support, exposing the tray only via KStatusNotifierItem
+* Unity uses libappindicator and does not implement KStatusNotifierItem, so no icon appears
+
+**Solutions/Workarounds:**
+
+Unsetting the `XDG_CURRENT_DESKTOP` environment variable for the app restores the tray on Unity. Rather than editing the packaged `.desktop` file (overwritten on every upgrade), drop an override that shadows it and survives updates.
+
+1. **Per-user override** (recommended for a single machine):
+   ```bash
+   mkdir -p ~/.local/share/applications
+   cp /usr/share/applications/teams-for-linux.desktop ~/.local/share/applications/
+   sed -i 's|^Exec=|Exec=env -u XDG_CURRENT_DESKTOP |' ~/.local/share/applications/teams-for-linux.desktop
+   ```
+
+2. **System-wide override** (for an OEM or fleet image, applies to all users):
+   ```bash
+   sudo mkdir -p /usr/local/share/applications
+   sudo cp /usr/share/applications/teams-for-linux.desktop /usr/local/share/applications/
+   sudo sed -i 's|^Exec=|Exec=env -u XDG_CURRENT_DESKTOP |' /usr/local/share/applications/teams-for-linux.desktop
+   ```
+
+Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so they shadow the packaged entry and are not touched by `apt upgrade`. The override keeps the default `--ozone-platform=x11` flag intact.
+
+**Note:** `XDG_CURRENT_DESKTOP` also drives the xdg desktop portals (screen sharing, file pickers) and GTK theming, so only unset it where you actually need the tray. The icon may also come up generic rather than the purple Teams logo (see #888).
+
+**Status:** Upstream Electron limitation ([electron/electron#38979](https://github.com/electron/electron/issues/38979)); no fix on the Teams for Linux side.
+
+**Related GitHub Issues:** [Issue #2680](https://github.com/IsmaelMartinez/teams-for-linux/issues/2680), [Issue #888](https://github.com/IsmaelMartinez/teams-for-linux/issues/888)
+
+---
+
 ### Audio and Video Issues
 
 #### Issue: Microphone not working during calls
