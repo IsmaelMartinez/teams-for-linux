@@ -34,6 +34,10 @@
 * **deps-dev:** bump the minor-and-patch group with 3 updates ([#2690](https://github.com/IsmaelMartinez/teams-for-linux/issues/2690)) ([0f37503](https://github.com/IsmaelMartinez/teams-for-linux/commit/0f3750334f5e74d5275418bb903ec69e1e0911b7))
 * **deps:** bump actions/checkout from 4 to 7 ([#2689](https://github.com/IsmaelMartinez/teams-for-linux/issues/2689)) ([1c3d5e9](https://github.com/IsmaelMartinez/teams-for-linux/commit/1c3d5e96a59fee09ba2e0c36172d1fa9d2d31858))
 
+### Thanks
+
+Big thanks to @app/dependabot, @jayenashar, @kedzierp for contributing to this release.
+
 ## [2.12.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.1...v2.12.0) (2026-06-19)
 
 
