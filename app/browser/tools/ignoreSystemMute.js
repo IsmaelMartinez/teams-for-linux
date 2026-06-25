@@ -26,7 +26,10 @@
  */
 
 const LOG_PREFIX = "[IGNORE_SYSTEM_MUTE]";
-const PATCHED_FLAG = "__tflIgnoreSystemMute";
+
+// Tracks already patched, kept in a WeakSet so entries are garbage-collected
+// with the track and no enumerable marker property is added to the track.
+const patchedTracks = new WeakSet();
 
 /**
  * Neutralise the OS-driven mute signal on a single local audio capture track.
@@ -35,10 +38,10 @@ const PATCHED_FLAG = "__tflIgnoreSystemMute";
  * @param {MediaStreamTrack} track - A track from a getUserMedia result.
  */
 function patchTrack(track) {
-  if (!track || track.kind !== "audio" || track[PATCHED_FLAG]) {
+  if (!track || track.kind !== "audio" || patchedTracks.has(track)) {
     return;
   }
-  track[PATCHED_FLAG] = true;
+  patchedTracks.add(track);
 
   try {
     Object.defineProperty(track, "muted", {
@@ -52,15 +55,20 @@ function patchTrack(track) {
     console.debug(`${LOG_PREFIX} Could not redefine muted getter:`, error.message);
   }
 
-  const originalAddEventListener = track.addEventListener?.bind(track);
-  if (originalAddEventListener) {
-    track.addEventListener = function (type, listener, options) {
-      if (type === "mute" || type === "unmute") {
-        console.debug(`${LOG_PREFIX} Suppressed addEventListener for ${type}`);
-        return;
-      }
-      return originalAddEventListener(type, listener, options);
-    };
+  try {
+    const originalAddEventListener = track.addEventListener;
+    if (typeof originalAddEventListener === "function") {
+      // Forward `this` so the override behaves like the native method.
+      track.addEventListener = function (type, listener, options) {
+        if (type === "mute" || type === "unmute") {
+          console.debug(`${LOG_PREFIX} Suppressed addEventListener for ${type}`);
+          return;
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+    }
+  } catch (error) {
+    console.debug(`${LOG_PREFIX} Could not patch addEventListener:`, error.message);
   }
 
   for (const prop of ["onmute", "onunmute"]) {
