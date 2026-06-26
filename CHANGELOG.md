@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.13.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.12.0...v2.13.0) (2026-06-25)
+
+
+### Features
+
+* **macos:** Dock presence overlay and Apple Silicon performance switches ([#2653](https://github.com/IsmaelMartinez/teams-for-linux/issues/2653)) ([9b8b8ab](https://github.com/IsmaelMartinez/teams-for-linux/commit/9b8b8ab78b19fefa86a4e2561162dd8e1f45e1aa))
+* **media:** add media.microphone.ignoreSystemMute to decouple Teams mute from OS mic mute ([#2695](https://github.com/IsmaelMartinez/teams-for-linux/issues/2695)) ([e4e3fad](https://github.com/IsmaelMartinez/teams-for-linux/commit/e4e3fadb592c5f210b5ff004c3c91d9d50ef2a2b))
+* **notifications:** add electron.clickAction config for window restore ([#2660](https://github.com/IsmaelMartinez/teams-for-linux/issues/2660)) ([6a41a09](https://github.com/IsmaelMartinez/teams-for-linux/commit/6a41a09aedbe5f6bdcb4a46dd9474d9227c8a804))
+
+
+### Bug Fixes
+
+* **auth:** forward pre-login-noise auth signals to reauth recovery ([#2688](https://github.com/IsmaelMartinez/teams-for-linux/issues/2688)) ([b62c6d7](https://github.com/IsmaelMartinez/teams-for-linux/commit/b62c6d7cb1dd5116e68c74d1b13ef938d7865a71))
+* **ci:** pin electron-builder to 26.8.1 to restore Windows exe build ([#2697](https://github.com/IsmaelMartinez/teams-for-linux/issues/2697)) ([048b2af](https://github.com/IsmaelMartinez/teams-for-linux/commit/048b2af9587fd0b0f8fcb34385a8535b3e6ad1b1))
+* **drag-drop:** restore File.path on dropped files for Teams uploads ([#2679](https://github.com/IsmaelMartinez/teams-for-linux/issues/2679)) ([2d6c99c](https://github.com/IsmaelMartinez/teams-for-linux/commit/2d6c99c415cac38d5cf0dc9c3eb937a3eca156cf))
+* **snap:** pin electron-builder to 26.14.0 to restore snap launch ([#2686](https://github.com/IsmaelMartinez/teams-for-linux/issues/2686)) ([b87de0b](https://github.com/IsmaelMartinez/teams-for-linux/commit/b87de0b195896e4dc8712b39ac99bef15112f7e0))
+
+
+### Documentation
+
+* **troubleshooting:** add Ubuntu Unity system-tray workaround ([#2680](https://github.com/IsmaelMartinez/teams-for-linux/issues/2680)) ([#2693](https://github.com/IsmaelMartinez/teams-for-linux/issues/2693)) ([bceb5ae](https://github.com/IsmaelMartinez/teams-for-linux/commit/bceb5aecacc051849f5b84d5eba00401a29e0970))
+
+
+### CI/CD
+
+* **snap:** pin snapcraft to 8.x in release workflow ([#2696](https://github.com/IsmaelMartinez/teams-for-linux/issues/2696)) ([f8b577d](https://github.com/IsmaelMartinez/teams-for-linux/commit/f8b577d5ff8bef7c68fce44cbf15c312936e79fc))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron in the minor-and-patch group ([#2685](https://github.com/IsmaelMartinez/teams-for-linux/issues/2685)) ([2ffeb67](https://github.com/IsmaelMartinez/teams-for-linux/commit/2ffeb675602c7c0df308cbf8e4d0bf3801c4ee61))
+* **deps-dev:** bump the minor-and-patch group with 3 updates ([#2690](https://github.com/IsmaelMartinez/teams-for-linux/issues/2690)) ([0f37503](https://github.com/IsmaelMartinez/teams-for-linux/commit/0f3750334f5e74d5275418bb903ec69e1e0911b7))
+* **deps:** bump actions/checkout from 4 to 7 ([#2689](https://github.com/IsmaelMartinez/teams-for-linux/issues/2689)) ([1c3d5e9](https://github.com/IsmaelMartinez/teams-for-linux/commit/1c3d5e96a59fee09ba2e0c36172d1fa9d2d31858))
+
+### Thanks
+
+Big thanks to @app/dependabot, @jayenashar, @kedzierp for contributing to this release.
+
 ## [2.12.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.11.1...v2.12.0) (2026-06-19)
 
 
