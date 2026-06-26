@@ -30,6 +30,11 @@ class FakeTrack {
   addEventListener(type, listener) {
     (this._listeners[type] ||= []).push(listener);
   }
+  // Mirrors MediaStreamTrack.clone(): a fresh, independent track that does not
+  // inherit any per-instance patch applied to the track it was cloned from.
+  clone() {
+    return new FakeTrack(this.kind);
+  }
   // Simulates the OS muting the source: Chromium flips muted and fires 'mute'.
   simulateSystemMute() {
     this._muted = true;
@@ -37,6 +42,10 @@ class FakeTrack {
     if (this._onmute) this._onmute();
   }
 }
+
+// Pristine clone, restored between tests so the tool's prototype wrap does not
+// stack across the shared FakeTrack class.
+const pristineClone = FakeTrack.prototype.clone;
 
 function makeStream(tracks) {
   return { getAudioTracks: () => tracks.filter((t) => t.kind === 'audio') };
@@ -68,6 +77,7 @@ describe('ignoreSystemMute', () => {
   afterEach(() => {
     delete globalThis.navigator;
     delete globalThis.MediaStreamTrack;
+    FakeTrack.prototype.clone = pristineClone;
   });
 
   it('does nothing when the option is disabled', () => {
@@ -115,6 +125,37 @@ describe('ignoreSystemMute', () => {
     });
     for (const fn of audioTrack._listeners.ended || []) fn();
     assert.strictEqual(endedSeen, true, 'unrelated events must still fire');
+  });
+
+  it('keeps the patch on a clone of the local audio track', async () => {
+    // Teams clones the capture track before sending it into the call.
+    const track = new FakeTrack('audio');
+    setupGlobals(makeStream([track]));
+    loadTool().init({ media: { microphone: { ignoreSystemMute: true } } });
+
+    const [audioTrack] = (await globalThis.navigator.mediaDevices.getUserMedia({ audio: true })).getAudioTracks();
+    const sentTrack = audioTrack.clone();
+
+    let teamsSawMute = false;
+    sentTrack.addEventListener('mute', () => {
+      teamsSawMute = true;
+    });
+    sentTrack.simulateSystemMute();
+
+    assert.strictEqual(sentTrack.muted, false, 'cloned track muted must read false');
+    assert.strictEqual(teamsSawMute, false, 'cloned track mute event must be suppressed');
+  });
+
+  it('does not patch clones of unrelated (remote) tracks', () => {
+    setupGlobals(makeStream([new FakeTrack('audio')]));
+    loadTool().init({ media: { microphone: { ignoreSystemMute: true } } });
+
+    // A track that never came through getUserMedia, e.g. a remote participant's.
+    const remote = new FakeTrack('audio');
+    const remoteClone = remote.clone();
+    remoteClone.simulateSystemMute();
+
+    assert.strictEqual(remoteClone.muted, true, 'remote track clones must keep their genuine mute');
   });
 
   it('does not patch video tracks', async () => {

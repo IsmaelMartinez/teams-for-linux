@@ -23,6 +23,14 @@
  * Implementation mirrors the getUserMedia interception used by
  * disableAutogain.js / overrideMicConstraints.js, patching tracks per-instance
  * as each stream resolves rather than mutating the shared prototype.
+ *
+ * Clone coverage: Teams does not feed the raw getUserMedia track into its call
+ * pipeline; it calls `MediaStreamTrack.clone()` and sends the clone. A clone is
+ * a fresh object that does not inherit the per-instance patch, so it would once
+ * again follow the OS mute and reintroduce the exact symptom. We therefore also
+ * wrap `MediaStreamTrack.prototype.clone` and re-apply the patch to clones, but
+ * only when the source track was itself patched, so clones of remote
+ * participants' tracks keep their genuine mute state.
  */
 
 const LOG_PREFIX = "[IGNORE_SYSTEM_MUTE]";
@@ -39,7 +47,7 @@ const patchedTracks = new WeakSet();
  */
 function patchTrack(track) {
   if (track?.kind !== "audio" || patchedTracks.has(track)) {
-    return;
+    return track;
   }
   patchedTracks.add(track);
 
@@ -87,6 +95,8 @@ function patchTrack(track) {
       console.debug(`${LOG_PREFIX} Could not redefine ${prop}:`, error.message);
     }
   }
+
+  return track;
 }
 
 /** Patch every audio track on a resolved MediaStream. */
@@ -137,6 +147,19 @@ const applyIgnoreSystemMutePatch = function () {
   patchFunction(navigator, "getUserMedia", patchDeprecatedGetUserMedia);
   patchFunction(navigator, "mozGetUserMedia", patchDeprecatedGetUserMedia);
   patchFunction(navigator, "webkitGetUserMedia", patchDeprecatedGetUserMedia);
+
+  // Teams clones the capture track before sending it into the call; the clone
+  // does not inherit the per-instance patch, so re-apply it to clones of tracks
+  // we already patched. Clones of remote tracks stay untouched so their genuine
+  // mute remains visible.
+  if (typeof MediaStreamTrack !== "undefined") {
+    patchFunction(MediaStreamTrack.prototype, "clone", function (original) {
+      return function clone() {
+        const cloned = original.call(this);
+        return patchedTracks.has(this) ? patchTrack(cloned) : cloned;
+      };
+    });
+  }
 
   console.debug(
     `${LOG_PREFIX} Successfully initialized - system mute will not toggle Teams`
