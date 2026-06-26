@@ -7,6 +7,10 @@
 
 * **release-please:** flag draft releases in the created-release comment ([#2700](https://github.com/IsmaelMartinez/teams-for-linux/issues/2700)) ([d0bd972](https://github.com/IsmaelMartinez/teams-for-linux/commit/d0bd9723cf3ff2f8cb4ae4d140a1bfba91266129))
 
+### Thanks
+
+Big thanks to @jayenashar for contributing to this release.
+
 ## [2.13.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.12.0...v2.13.0) (2026-06-25)
 
 
