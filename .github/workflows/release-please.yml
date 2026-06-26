@@ -21,6 +21,54 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      # Releases are created as drafts (see "draft": true in release-please-config.json).
+      # release-please then comments "Created releases: <vX.Y.Z>" on the merged PR, but the
+      # linked draft 404s for anyone without write access and has no Git tag until published.
+      # release-please does not let us change that comment, so annotate it here to flag the
+      # draft status, mirroring the find-and-edit-bot-comment pattern in comment-artifacts.yml.
+      - name: Annotate draft-release comment
+        if: steps.release.outputs.release_created
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            const pr = prs.find((p) => p.merged_at) || prs[0];
+            if (!pr) {
+              core.info("No PR associated with this commit; skipping");
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            const comment = comments.find(
+              (c) => c.user.type === "Bot" && c.body.includes("Created releases"),
+            );
+            if (!comment) {
+              core.info("No release-please comment found; skipping");
+              return;
+            }
+            const marker = "Draft release (not public)";
+            if (comment.body.includes(marker)) {
+              core.info("Comment already annotated; skipping");
+              return;
+            }
+            const note =
+              "\n\n> ⚠️ **" +
+              marker +
+              ".** Only maintainers can see it until it is published; the link above 404s for everyone else, and no Git tag exists until then.";
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: comment.id,
+              body: comment.body + note,
+            });
+
       - name: Check out repository
         if: steps.release.outputs.pr
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
