@@ -278,6 +278,35 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
 | `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
 
+#### Smartcard / Client Certificate PIN (Linux)
+
+When a client certificate lives on a smartcard or other PKCS#11 token, NSS needs the token PIN before it can present the certificate. On Linux, Chromium delegates that PIN prompt to the application, so without a handler the certificate is never presented and sign-in fails silently. Enabling this shows a PIN dialog when a token needs unlocking. The feature is Linux only and off by default; macOS and Windows provide native PIN prompts. Changing it requires a restart. See issue #2639.
+
+```json
+{
+  "auth": {
+    "clientCertificate": {
+      "pinDialog": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auth.clientCertificate.pinDialog.enabled` | `boolean` | `false` | Show a PIN dialog for smartcard / PKCS#11 client certificates on Linux. No effect on macOS or Windows. |
+
+Configuring the PKCS#11 module itself is your responsibility. A typical OpenSC setup registers the card with the NSS database Chromium uses (paths vary by distro):
+
+```bash
+sudo apt install opensc                       # or distro equivalent
+modutil -dbdir sql:$HOME/.pki/nssdb -add opensc -libfile /usr/lib/x86_64-linux-gnu/opensc-pkcs11.so
+```
+
+The token name and requesting hostname appear in the dialog but are never logged, and the entered PIN is never logged or written to disk.
+
 ### Multi-Account Profile Switcher (Experimental)
 
 > **Status:** Phase 1 partially shipped. With the flag enabled you get a **Profiles** menu (Add / Switch / Manage / Remove profiles), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. Still in progress: the top-right dropdown switcher overlay and `Ctrl+Shift+1…5` shortcuts for pinned profiles. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and remaining phases.
