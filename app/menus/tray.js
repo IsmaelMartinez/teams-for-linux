@@ -72,6 +72,13 @@ class ApplicationTray {
     }
   }
 
+  setBaseIconPath(iconPath) {
+    this.iconPath = iconPath;
+    if (this.tray && !this.tray.isDestroyed()) {
+      this.tray.setImage(this.getIconImage(iconPath));
+    }
+  }
+
   close() {
     if (!this.tray.isDestroyed()) {
       this.tray.destroy();
