@@ -590,7 +590,8 @@ function loadMenuToggleSettings() {
     'disableNotificationSoundIfNotAvailable',
     'disableNotificationWindowFlash',
     'disableBadgeCount',
-    'defaultNotificationUrgency'
+    'defaultNotificationUrgency',
+    'appIcon'
   ];
 
   for (const setting of menuToggleSettings) {

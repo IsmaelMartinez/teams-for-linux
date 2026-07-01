@@ -4,6 +4,7 @@ const {
   MenuItem,
   clipboard,
   dialog,
+  nativeImage,
   ipcMain,
 } = require("electron");
 const fs = require("node:fs"),
@@ -301,6 +302,37 @@ class Menus {
       this.tray?.close();
       this.window.webContents.session.flushStorageData();
     }
+  }
+
+  chooseAppIcon() {
+    const result = dialog.showOpenDialogSync(this.window, {
+      title: 'Choose App Icon',
+      filters: [{ name: 'Images', extensions: ['png'] }],
+      properties: ['openFile'],
+    });
+    if (result && result.length > 0) {
+      const selectedPath = result[0];
+      this.configGroup.startupConfig.appIcon = selectedPath;
+      this.configGroup.legacyConfigStore.set('appIcon', selectedPath);
+      this.tray?.setBaseIconPath(selectedPath);
+      this.#updateWindowIcon(selectedPath);
+    }
+  }
+
+  resetAppIcon() {
+    this.configGroup.startupConfig.appIcon = '';
+    this.configGroup.legacyConfigStore.set('appIcon', '');
+    const TrayIconChooser = require('../browser/tools/trayIconChooser');
+    const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
+    const iconPath = iconChooser.getFile();
+    this.tray?.setBaseIconPath(iconPath);
+    this.#updateWindowIcon(iconPath);
+  }
+
+  #updateWindowIcon(iconPath) {
+    const icon = nativeImage.createFromPath(iconPath);
+    this.window.setIcon(icon);
+    app.dock?.setIcon(icon);
   }
 
   saveSettings() {
