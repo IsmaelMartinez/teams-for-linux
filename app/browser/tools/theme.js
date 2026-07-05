@@ -35,18 +35,24 @@ class ThemeManager {
   #disableTeamsOsThemeFollow() {
     const startedAt = Date.now();
     const timer = setInterval(() => {
-      const clientPreferences = ReactHandler.getTeams2ClientPreferences();
-      if (clientPreferences?.theme) {
-        if (clientPreferences.theme.followOsTheme) {
-          clientPreferences.theme.followOsTheme = false;
-          console.debug(
-            "Theme: disabled Teams followOsTheme to prevent HostTheme rejection"
-          );
+      try {
+        const clientPreferences = ReactHandler.getTeams2ClientPreferences();
+        if (clientPreferences?.theme) {
+          if (clientPreferences.theme.followOsTheme) {
+            clientPreferences.theme.followOsTheme = false;
+            console.debug(
+              "Theme: disabled Teams followOsTheme to prevent HostTheme rejection"
+            );
+          }
+          clearInterval(timer);
+          return;
         }
-        clearInterval(timer);
-        return;
-      }
-      if (Date.now() - startedAt >= CLIENT_PREFERENCES_POLL_TIMEOUT_MS) {
+        if (Date.now() - startedAt >= CLIENT_PREFERENCES_POLL_TIMEOUT_MS) {
+          clearInterval(timer);
+        }
+      } catch (error) {
+        // Never let the poll spin forever on an unexpected error.
+        console.error("Theme: failed to disable Teams followOsTheme:", error);
         clearInterval(timer);
       }
     }, CLIENT_PREFERENCES_POLL_INTERVAL_MS);
