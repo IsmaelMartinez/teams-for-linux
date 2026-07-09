@@ -23,6 +23,8 @@ let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
   #preJoinUrl = null;
   #profileChangeHandler = null;
+  #switcherOpenAddHandler = null;
+  #switcherOpenManageHandler = null;
 
   constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
@@ -175,6 +177,24 @@ class Menus {
       this.profilesManager.on("switch", this.#profileChangeHandler);
       this.profilesManager.on("update", this.#profileChangeHandler);
 
+      // The top-right switcher strip (owned by ProfileViewManager) opens the
+      // Add / Manage dialogs via IPC rather than holding its own dialog
+      // instances — these reuse the exact same dialogs the Profiles menu uses.
+      // Both handlers verify the sender is the switcher strip itself (the only
+      // legitimate caller) so the untrusted Teams renderer can't pop these
+      // dialogs — matching the sender check ProfileViewManager applies to
+      // profile-switcher-set-expanded.
+      this.#switcherOpenAddHandler = (event) => {
+        if (isSwitcherStripSender(event)) this.addProfile();
+      };
+      this.#switcherOpenManageHandler = (event) => {
+        if (isSwitcherStripSender(event)) this.manageProfiles();
+      };
+      // Switcher strip "Add profile…" link opens the existing Add-profile dialog.
+      ipcMain.on("profile-switcher-open-add", this.#switcherOpenAddHandler);
+      // Switcher strip "Manage profiles…" link opens the existing Manage dialog.
+      ipcMain.on("profile-switcher-open-manage", this.#switcherOpenManageHandler);
+
       // Detach the listeners when the window is destroyed so the
       // long-lived ProfilesManager (a process-wide singleton) does not
       // hold references into a stale Menus instance if the window is
@@ -188,6 +208,18 @@ class Menus {
           this.profilesManager.off("switch", this.#profileChangeHandler);
           this.profilesManager.off("update", this.#profileChangeHandler);
           this.#profileChangeHandler = null;
+        }
+        if (this.#switcherOpenAddHandler) {
+          ipcMain.removeListener(
+            "profile-switcher-open-add",
+            this.#switcherOpenAddHandler
+          );
+          ipcMain.removeListener(
+            "profile-switcher-open-manage",
+            this.#switcherOpenManageHandler
+          );
+          this.#switcherOpenAddHandler = null;
+          this.#switcherOpenManageHandler = null;
         }
       });
     }
@@ -474,6 +506,20 @@ class Menus {
 
   checkForUpdates() {
     autoUpdaterModule.checkForUpdates();
+  }
+}
+
+// The switcher strip is the only legitimate sender of the profile-switcher-*
+// open-dialog channels. Identify it by the file it loaded
+// (app/profileSwitcher/switcher.html) rather than threading a cross-module
+// reference to its WebContentsView through Menus. file:// URLs use forward
+// slashes on every platform, so the suffix check is portable.
+function isSwitcherStripSender(event) {
+  try {
+    const url = event.sender?.getURL?.() || "";
+    return new URL(url).pathname.endsWith("/profileSwitcher/switcher.html");
+  } catch {
+    return false;
   }
 }
 

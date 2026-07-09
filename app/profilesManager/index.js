@@ -150,9 +150,10 @@ class ProfilesManager {
       throw new Error("[ProfilesManager] Profile name is required");
     }
     const id = crypto.randomUUID();
-    const profile = this.#buildRecord(id, LEGACY_PARTITION, trimmed, {
-      avatarInitials: "MA",
-    });
+    // Derive initials from the name (don't hardcode) so a renamed Profile 0
+    // keeps consistent initials — "My account" still yields "MA", but a
+    // bootstrap under any other name gets matching initials.
+    const profile = this.#buildRecord(id, LEGACY_PARTITION, trimmed, {});
     state.list.push(profile);
     if (!state.activeId) state.activeId = id;
     this.#write(state);
@@ -191,7 +192,19 @@ class ProfilesManager {
     // never reach the settings file.
     const next = { ...state.list[idx] };
     const p = patch || {};
-    if (Object.hasOwn(p, "name")) this.#applyName(next, p.name);
+    const explicitInitials =
+      typeof p.avatarInitials === "string" && p.avatarInitials;
+    if (Object.hasOwn(p, "name")) {
+      this.#applyName(next, p.name);
+      // Keep avatar initials in sync with the name on rename unless the caller
+      // explicitly supplies initials. The Manage dialog renames name-only, so
+      // without this a profile created/bootstrapped under one name keeps stale
+      // initials after a rename (e.g. "My account"/MA renamed to "PFM" stayed
+      // "MA"). Explicit initials (Add dialog) still win via the block below.
+      if (!explicitInitials) {
+        next.avatarInitials = deriveInitials(next.name);
+      }
+    }
     if (typeof p.avatarColor === "string") {
       ensureLength(p.avatarColor, MAX_AVATAR_COLOR_LEN, "avatarColor");
       next.avatarColor = p.avatarColor;
