@@ -680,17 +680,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   bindDisplayMediaHandler(window.webContents.session);
 
-  // #2534: when the renderer signals that screen sharing has started, make
-  // sure the preview window is open and connect the two renderers with a
-  // direct MessagePort. The Teams-side script pumps VideoFrames from the
-  // active screen-share track through it; the preview window reconstructs the
-  // stream on the other end via MediaStreamTrackGenerator. This avoids a
+  // #2534: the Teams-side script pumps VideoFrames from the active
+  // screen-share track through a MessagePort; the preview window reconstructs
+  // the stream on the other end via MediaStreamTrackGenerator. This avoids a
   // second getUserMedia/portal call (which on Wayland needs a PipeWire token
   // we cannot reuse) and means one capture feeds both Teams and the preview.
   // The 'screen-sharing-started' / 'screen-sharing-stopped' channels are a
   // broadcast: ScreenSharingService updates internal state, MQTTMediaStatusService
   // publishes to the broker, and this listener wires the MessagePort. Adding
   // another ipcMain.on here is the established pattern, not a duplication.
+
+  // Opens the screen-share preview window (if enabled) and connects the
+  // Teams renderer to it with a direct MessagePort so a single capture
+  // feeds both windows (#2534). One of several listeners on this broadcast
+  // channel; see the rationale above.
   ipcMain.on("screen-sharing-started", () => {
     if (!window || window.isDestroyed()) return;
     createScreenSharePreviewWindow();
