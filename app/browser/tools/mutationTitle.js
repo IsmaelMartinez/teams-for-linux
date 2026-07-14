@@ -30,7 +30,7 @@ class MutationObserverTitle {
   }
 
   _applyMutationToTitleLogic() {
-    console.debug("Appliying MutationObserverTitle logic");
+    console.debug("Applying MutationObserverTitle logic");
     
     try {
       if (!globalThis.document || !globalThis.MutationObserver) {
