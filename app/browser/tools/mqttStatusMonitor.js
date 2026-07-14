@@ -72,13 +72,8 @@ class MQTTStatusMonitor {
 	startMonitoring() {
 		console.debug('Starting Teams status monitoring for MQTT');
 
-		// Set up mutation observer for reactive updates
 		this.setupMutationObserver();
-
-		// Set up polling as fallback
 		this.startPolling();
-
-		// Perform initial status check
 		this.checkStatusChange();
 	}
 
@@ -128,12 +123,10 @@ class MQTTStatusMonitor {
 		try {
 			const status = this.detectCurrentStatus();
 
-			// Only send IPC if status actually changed
 			if (status !== null && status !== this.lastStatus) {
 				console.debug(`Teams status changed: ${this.lastStatus} -> ${status}`);
 				this.lastStatus = status;
 
-				// Send status change to main process (MQTT publishing only)
 				if (this.config.mqtt?.enabled) {
 					this.ipcRenderer.invoke('user-status-changed', {
 						data: { status: status }

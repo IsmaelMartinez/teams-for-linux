@@ -33,7 +33,6 @@ class BrowserWindowManager {
   }
 
   async createWindow() {
-    // Load the previous state with fallback to defaults
     const windowState = windowStateKeeper({
       defaultWidth: 0,
       defaultHeight: 0,
@@ -45,7 +44,6 @@ class BrowserWindowManager {
       await defSession.clearStorageData(this.config.clearStorageData);
     }
 
-    // Create the window
     this.window = this.createNewBrowserWindow(windowState);
     this.assignEventHandlers();
 

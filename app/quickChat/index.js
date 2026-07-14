@@ -23,7 +23,6 @@ class QuickChatManager {
       return;
     }
 
-    // Create the modal
     this.#modal = new QuickChatModal(this.#mainWindow);
 
     // Show the Quick Chat modal

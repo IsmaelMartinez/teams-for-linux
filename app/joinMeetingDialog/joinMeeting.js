@@ -38,7 +38,6 @@ function handleCancel() {
     globalThis.joinMeetingApi.cancel();
 }
 
-// Initialize when data is received from main process
 globalThis.joinMeetingApi.onInit((data) => {
     if (data.regexPattern) {
         try {

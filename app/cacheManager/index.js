@@ -50,10 +50,8 @@ class CacheManager {
       checkInterval: `${this.checkIntervalMs / 1000}s`,
     });
 
-    // Initial check
     this.checkAndCleanCache();
 
-    // Set up periodic checks
     this.intervalId = setInterval(() => {
       this.checkAndCleanCache();
     }, this.checkIntervalMs);

@@ -8,7 +8,6 @@ const BROKER_PATH = "/com/microsoft/identity/broker1";
 const BROKER_INTERFACE = "com.microsoft.identity.Broker1";
 const PROTOCOL_VERSION = "0.0";
 
-// Get session bus instance
 const sessionBus = dbus.sessionBus();
 
 /**

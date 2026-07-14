@@ -52,17 +52,14 @@ function parseAccelerator(accelerator) {
  */
 function sendKeyboardEventToWindow(window, accelerator) {
   try {
-    // Parse the accelerator string
     const parsed = parseAccelerator(accelerator);
 
-    // Send keyDown event
     window.webContents.sendInputEvent({
       type: "keyDown",
       keyCode: parsed.key,
       modifiers: parsed.modifiers
     });
 
-    // Send keyUp event
     window.webContents.sendInputEvent({
       type: "keyUp",
       keyCode: parsed.key,

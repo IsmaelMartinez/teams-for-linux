@@ -57,12 +57,10 @@ class QuickChatModal {
       return;
     }
 
-    // Position near the main window's top-right
     moveWindow(this.#window, 'topRight');
     this.#window.show();
     this.#window.focus();
 
-    // Send focus event to search input
     this.#window.webContents.send('quick-chat-focus');
   }
 

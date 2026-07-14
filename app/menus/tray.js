@@ -64,8 +64,7 @@ class ApplicationTray {
 
       this.tray.setImage(image);
       this.window.flashFrame(flash);
-      
-      // Update tooltip to show unread count
+
       const baseTitle = this.config.appTitle;
       const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
       this.tray.setToolTip(tooltip);

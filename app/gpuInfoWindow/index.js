@@ -18,7 +18,6 @@ class GpuInfoWindow {
       return;
     }
 
-    // Create new window
     this.window = new BrowserWindow({
       title: 'GPU Information',
       width: 1000,

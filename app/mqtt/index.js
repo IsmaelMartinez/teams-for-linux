@@ -226,10 +226,8 @@ class MQTTClient extends EventEmitter {
 	 */
 	handleCommand(messageString) {
 		try {
-			// Parse JSON
 			const command = JSON.parse(messageString);
 
-			// Validate command structure
 			if (!command || typeof command !== 'object') {
 				console.warn('[MQTT] Invalid command: not an object');
 				return;
@@ -240,7 +238,6 @@ class MQTTClient extends EventEmitter {
 				return;
 			}
 
-			// Whitelist validation
 			if (!this.allowedActions.includes(command.action)) {
 				console.warn(`[MQTT] Invalid command: action '${command.action}' not in whitelist`);
 				return;
@@ -248,7 +245,6 @@ class MQTTClient extends EventEmitter {
 
 			console.info(`[MQTT] Received valid command: ${command.action}`);
 
-			// Emit command event for main process to handle
 			const shortcut = this.actionShortcutMap[command.action];
 			this.emit('command', { ...command, shortcut });
 

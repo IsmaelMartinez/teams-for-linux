@@ -52,7 +52,6 @@
     "הפסקת שיתוף",
   ];
 
-  // Helper function to disable audio in screen sharing constraints
   function disableAudioInConstraints(constraints, context) {
     if (constraints) {
       constraints.audio = false;
@@ -63,7 +62,6 @@
     }
   }
 
-  // Monitor for screen sharing streams and detect when they stop
   function monitorScreenSharing() {
     // Guard against missing mediaDevices API (e.g. on Chrome error pages)
     if (!navigator.mediaDevices?.getDisplayMedia) {
@@ -71,12 +69,11 @@
       return;
     }
 
-    // Hook into getDisplayMedia for screen sharing
     const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(
       navigator.mediaDevices
     );
 
-    // Also hook into getUserMedia for fallback detection
+    // getUserMedia is also hooked for fallback detection
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
       navigator.mediaDevices
     );
@@ -148,7 +145,6 @@
     };
   }
 
-  // Centralized handler for screen sharing streams
   function handleScreenShareStream(stream, source) {
     console.debug(`[SCREEN_SHARE_DIAG] Processing stream from ${source} (${activeStreams.length} active)`);
 
@@ -159,7 +155,6 @@
       return;
     }
 
-    // Check if we're creating a duplicate session - this could cause issues
     if (isScreenSharing) {
       console.warn(`[SCREEN_SHARE_DIAG] Multiple screen sharing sessions detected - total: ${activeStreams.length + 1}`);
     }
@@ -190,20 +185,15 @@
     stream.addEventListener("inactive", inactiveHandler);
     streamInactiveHandlers.push({ stream, handler: inactiveHandler });
 
-    // Start UI monitoring for stop sharing buttons
     startUIMonitoring();
-
-    // Start periodic fallback check for track state and button detection
     startPeriodicCheck();
 
-    // Track stream and tracks for cleanup when they end
     const trackingVideoTracks = stream.getVideoTracks();
     for (const [index, track] of trackingVideoTracks.entries()) {
       activeMediaTracks.push(track);
 
       track.addEventListener("ended", () => {
         console.debug(`[SCREEN_SHARE_DIAG] Video track ${index} ended`);
-        // Check if all tracks have ended to trigger cleanup
         const allTracksEnded = activeMediaTracks.every(t => t.readyState === "ended");
         if (allTracksEnded && isScreenSharing) {
           console.debug("[SCREEN_SHARE_DIAG] All video tracks ended, stopping screen sharing");
@@ -370,7 +360,6 @@
     }
   }
 
-  // Function to handle stream ending - used by UI button detection
   function handleStreamEnd(reason) {
     console.debug(`[SCREEN_SHARE_DIAG] Stream ending: ${reason} (${activeStreams.length} streams, ${activeMediaTracks.length} tracks)`);
 
@@ -378,7 +367,6 @@
       isScreenSharing = false;
       console.debug("[SCREEN_SHARE_DIAG] Screen sharing stopped");
 
-      // Clean up monitoring
       stopPeriodicCheck();
       stopUIMonitoring();
       stopVideoFrameRelay();
@@ -389,13 +377,11 @@
         electronAPI.sendScreenSharingStopped();
       }
 
-      // Remove stream inactive listeners to prevent memory leaks
       for (const { stream, handler } of streamInactiveHandlers) {
         stream.removeEventListener("inactive", handler);
       }
       streamInactiveHandlers = [];
 
-      // Clear active streams and tracks
       activeStreams = [];
       activeMediaTracks = [];
       
@@ -403,7 +389,6 @@
     }
   }
 
-  // Handle stop sharing button click
   function handleStopButtonClick(button) {
     console.debug(`[SCREEN_SHARE_DIAG] Stop sharing button clicked: "${button.textContent?.trim()}"`);    
     setTimeout(() => {
@@ -411,7 +396,6 @@
     }, 100);
   }
 
-  // Set up monitoring for a single stop button
   function setupStopButtonMonitoring(button) {
     if (!button.dataset.teamsMonitored) {
       button.dataset.teamsMonitored = "true";
@@ -421,10 +405,8 @@
     }
   }
 
-  // Track whether stop button exists in current UI state
   let stopButtonExists = false;
 
-  // Check if a button matches known stop sharing patterns in any language
   function isStopSharingButton(button) {
     const text = (button.textContent || "").trim().toLowerCase();
     const title = (button.getAttribute("title") || "").toLowerCase();
@@ -438,7 +420,6 @@
     );
   }
 
-  // Process discovered stop sharing buttons
   function processStopSharingButtons() {
     const stopButtons = new Set();
 
@@ -482,7 +463,6 @@
     }
   }
 
-  // Start monitoring UI for "Stop sharing" buttons
   function startUIMonitoring() {
     if (uiObserver) return;
 
@@ -497,11 +477,9 @@
       attributeFilter: ["class", "data-tid", "title", "aria-label"],
     });
 
-    // Initial check to detect current button state
     processStopSharingButtons();
   }
 
-  // Stop monitoring UI
   function stopUIMonitoring() {
     if (uiObserver) {
       uiObserver.disconnect();
@@ -537,7 +515,6 @@
     }, 5000);
   }
 
-  // Stop periodic check
   function stopPeriodicCheck() {
     if (periodicCheckInterval) {
       clearInterval(periodicCheckInterval);
@@ -545,7 +522,6 @@
     }
   }
 
-  // Initialize monitoring when the page is ready
   function initializeScreenSharingMonitoring() {
     console.debug("[SCREEN_SHARE_DIAG] Initializing screen sharing monitoring");
 

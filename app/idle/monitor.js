@@ -28,7 +28,6 @@ class IdleMonitor {
     // Get system idle state to sync with Teams presence
     ipcMain.handle("get-system-idle-state", this.#handleGetSystemIdleState.bind(this));
     
-    // Setup cleanup handler for state file
     process.on('exit', this.#cleanupStateFile.bind(this));
     
     ['SIGINT', 'SIGTERM'].forEach(signal => {
@@ -84,7 +83,6 @@ class IdleMonitor {
     }
     
     if (stateFileOverride === IdleMonitor.#SYSTEM_STATE_IDLE) {
-      // Force idle state
       if (this.#idleTimeUserStatus === -1) {
         this.#idleTimeUserStatus = this.#getUserStatus();
       }
@@ -95,7 +93,6 @@ class IdleMonitor {
         userCurrent: this.#getUserStatus(),
       };
     } else if (stateFileOverride === IdleMonitor.#SYSTEM_STATE_ACTIVE) {
-      // Force active state
       if (this.#idleTimeUserStatus !== -1) {
         console.debug(`[IDLE] State file active: transitioning from idle to active`);
         this.#idleTimeUserStatus = -1;

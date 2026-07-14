@@ -12,7 +12,6 @@ const xml2js = require("xml2js");
 async function generateDebianChangelog(projectRoot = null) {
   const root = projectRoot || path.join(__dirname, "..");
 
-  // Load appdata.xml for release information
   const appdataPath = path.join(
     root,
     "com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
@@ -27,7 +26,6 @@ async function generateDebianChangelog(projectRoot = null) {
   const parser = new xml2js.Parser();
   const result = await parser.parseStringPromise(appdataContent);
 
-  // Extract releases
   const component = result.component;
   if (!component?.releases?.[0]?.release) {
     throw new Error("No releases found in appdata.xml.");
@@ -35,7 +33,6 @@ async function generateDebianChangelog(projectRoot = null) {
 
   const releases = component.releases[0].release;
 
-  // Generate changelog entries
   let changelogContent = "";
 
   for (const release of releases) {
@@ -46,7 +43,6 @@ async function generateDebianChangelog(projectRoot = null) {
     const releaseDate = new Date(date);
     const debianDate = releaseDate.toUTCString().replace(/GMT/, "+0000");
 
-    // Extract release notes
     let releaseNotes = "  * Version update.";
     if (release.description?.[0]) {
       const descObj = release.description[0];

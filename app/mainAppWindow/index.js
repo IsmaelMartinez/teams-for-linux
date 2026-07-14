@@ -23,7 +23,6 @@ const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("node:os");
 const path = require("node:path");
 
-// Default configuration for the screen sharing thumbnail preview (avoid magic values)
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
   enabled: true,
   alwaysOnTop: true,
@@ -32,8 +31,8 @@ const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
 let iconChooser;
 let intune;
 let isControlPressed = false;
-// Phase 1c.2: ProfilesManager handle threaded through onAppReady so the
-// Menus instance can build the Profiles submenu and react to its events.
+// ProfilesManager handle threaded through onAppReady so the Menus
+// instance can build the Profiles submenu and react to its events.
 let profilesManagerRef = null;
 // Counter for tracking about:blank navigation attempts to handle authentication flows.
 // Teams sometimes navigates to about:blank during SSO/auth redirects, and we need to
@@ -55,10 +54,7 @@ function findSelectedSource(sources, source) {
 }
 
 function setupScreenSharing(selectedSource) {
-  // Store the source ID in the screen sharing service
   screenSharingService.setSelectedSource(selectedSource);
-
-  // Create preview window for screen sharing
   createScreenSharePreviewWindow();
 }
 
@@ -125,7 +121,6 @@ function handleScreenSourceSelection(source, callback) {
 function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
-  // Get configuration - use the module-level config variable
   let thumbnailConfig =
     config?.screenSharing?.thumbnail ?? DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
@@ -182,7 +177,6 @@ function createScreenSharePreviewWindow() {
     },
   });
 
-  // Store in service
   screenSharingService.setPreviewWindow(newPreviewWindow);
 
   const windowId = newPreviewWindow.id;
@@ -206,7 +200,6 @@ function createScreenSharePreviewWindow() {
     newPreviewWindow.show();
   });
 
-  // Add focus/blur event handlers to detect when preview window gets focus
   newPreviewWindow.on("focus", () => {
     console.debug("[SCREEN_SHARE_DIAG] Preview window gained focus", {
       windowId: windowId,
@@ -227,7 +220,6 @@ function createScreenSharePreviewWindow() {
       hadActiveSource: !!closedSource,
       closedSource: closedSource
     });
-    // Clear both preview window and selected source when window closes
     screenSharingService.setPreviewWindow(null);
     screenSharingService.setSelectedSource(null);
   });
@@ -726,7 +718,6 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   });
 
-  // Initialize connection manager
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
@@ -912,7 +903,6 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`).catch(() => {});
 
-  // Inject browser functionality
   injectScreenSharingLogic();
 
   customCSS.onDidFinishLoad(window.webContents, config);
@@ -971,13 +961,9 @@ function onDidFrameFinishLoad(
 }
 
 function restoreWindow() {
-  // If minimized, restore.
   if (window.isMinimized()) {
     window.restore();
-  }
-
-  // If closed to tray, show.
-  else if (!window.isVisible()) {
+  } else if (!window.isVisible()) {
     window.show();
   }
 
@@ -1068,10 +1054,7 @@ function onBeforeRequestHandler(details, callback) {
 
   if (customBackgroundRedirect) {
     callback(customBackgroundRedirect);
-  }
-  // Check if the counter was incremented
-  else if (aboutBlankRequestCount < 1) {
-    // Proceed normally
+  } else if (aboutBlankRequestCount < 1) {
     callback({});
   } else if (details.resourceType === "mainFrame") {
     // A top-level navigation is never the about:blank popup's own request, so
@@ -1106,7 +1089,6 @@ function onBeforeRequestHandler(details, callback) {
       child.destroy();
     });
 
-    // decrement the counter
     aboutBlankRequestCount -= 1;
     callback({ cancel: true });
   }
@@ -1233,7 +1215,6 @@ function onNewWindow(details) {
     details.url === "about:blank" ||
     details.url === "about:blank#blocked"
   ) {
-    // Increment the counter for about:blank authentication flow
     aboutBlankRequestCount += 1;
     return { action: "deny" };
   } else if (isAuthLoginUrl(details.url) && shouldInterceptAuthPopup()) {

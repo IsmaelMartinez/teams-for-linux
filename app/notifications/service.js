@@ -81,7 +81,6 @@ class NotificationService {
         notificationConfig.icon = nativeImage.createFromDataURL(options.icon);
       }
 
-      // Create and show native notification
       const notification = new Notification(notificationConfig);
 
       notification.on("click", () => {
@@ -139,7 +138,6 @@ class NotificationService {
       return;
     }
 
-    // Get current user status via injected function
     const userStatus = this.#getUserStatus();
 
     // Notification sound disabled if not available set in config and user status is not "Available" (or is unknown)

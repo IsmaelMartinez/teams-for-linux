@@ -26,7 +26,6 @@ function applyCameraAspectRatioPatch() {
       const settings = track.getSettings();
       console.debug("[CAMERA_ASPECT_RATIO] Current track settings:", settings);
 
-      // Get the native camera resolution
       const width = settings.width;
       const height = settings.height;
 
@@ -92,10 +91,8 @@ function applyCameraAspectRatioPatch() {
           `[CAMERA_ASPECT_RATIO] Monitoring video track: ${track.label}`
         );
 
-        // Apply initial fix
         fixVideoTrackAspectRatio(track);
 
-        // Clean up when track ends
         track.addEventListener("ended", () => {
           activeVideoTracks.delete(track);
           console.debug(
@@ -143,7 +140,6 @@ function applyCameraAspectRatioPatch() {
       height: window.innerHeight,
     };
 
-    // Check if this is a significant size change (not just minor resize)
     const widthChange = Math.abs(currentSize.width - lastWindowSize.width);
     const heightChange = Math.abs(currentSize.height - lastWindowSize.height);
 

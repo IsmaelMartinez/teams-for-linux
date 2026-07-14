@@ -92,7 +92,6 @@ class TrayIconRenderer {
       
       const baseIconData = this.baseIcon.toDataURL(IMAGE_PNG);
       
-      // Add error handling for image loading
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");
         resolve(baseIconData); // Fallback to base icon
