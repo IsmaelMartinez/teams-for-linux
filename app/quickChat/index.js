@@ -34,36 +34,24 @@ class QuickChatManager {
     console.info('[QuickChat] Initialized');
   }
 
-  /**
-   * Show the Quick Chat modal
-   */
   show() {
     if (this.#modal) {
       this.#modal.show();
     }
   }
 
-  /**
-   * Hide the Quick Chat modal
-   */
   hide() {
     if (this.#modal) {
       this.#modal.hide();
     }
   }
 
-  /**
-   * Toggle the Quick Chat modal visibility
-   */
   toggle() {
     if (this.#modal) {
       this.#modal.toggle();
     }
   }
 
-  /**
-   * Check if Quick Chat is enabled
-   */
   isEnabled() {
     return this.#enabled;
   }

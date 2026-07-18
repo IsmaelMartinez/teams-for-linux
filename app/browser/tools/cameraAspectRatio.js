@@ -14,9 +14,6 @@ function applyCameraAspectRatioPatch() {
   let lastWindowSize = { width: window.innerWidth, height: window.innerHeight };
   const SIGNIFICANT_RESIZE_THRESHOLD = 100;
 
-  /**
-   * Fix aspect ratio on a video track by reapplying proper constraints
-   */
   async function fixVideoTrackAspectRatio(track) {
     if (track?.readyState !== "live") {
       return;
@@ -78,9 +75,6 @@ function applyCameraAspectRatioPatch() {
     }
   }
 
-  /**
-   * Monitor all video tracks in a MediaStream
-   */
   function monitorStream(stream) {
     const videoTracks = stream.getVideoTracks();
 
@@ -103,9 +97,6 @@ function applyCameraAspectRatioPatch() {
     }
   }
 
-  /**
-   * Intercept getUserMedia to monitor camera streams
-   */
   function interceptGetUserMedia() {
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
       navigator.mediaDevices
@@ -131,9 +122,6 @@ function applyCameraAspectRatioPatch() {
     console.debug("[CAMERA_ASPECT_RATIO] getUserMedia intercepted");
   }
 
-  /**
-   * Handle window resize/monitor change events
-   */
   async function handleWindowChange() {
     const currentSize = {
       width: window.innerWidth,
@@ -184,10 +172,6 @@ function applyCameraAspectRatioPatch() {
   console.debug("[CAMERA_ASPECT_RATIO] Successfully initialized");
 }
 
-/**
- * Initialize the cameraAspectRatio tool
- * @param {Object} config - Application configuration
- */
 function init(config) {
   const aspectRatioConfig = config.media?.camera?.autoAdjustAspectRatio;
   if (!aspectRatioConfig?.enabled) {

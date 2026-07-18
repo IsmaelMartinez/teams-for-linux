@@ -53,11 +53,7 @@ class MQTTStatusMonitor {
 		this.start();
 	}
 
-	/**
-	 * Start monitoring Teams status
-	 */
 	start() {
-		// Wait for DOM to be ready
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', () => this.startMonitoring());
 		} else {
@@ -66,9 +62,6 @@ class MQTTStatusMonitor {
 		}
 	}
 
-	/**
-	 * Begin active monitoring with both observer and polling
-	 */
 	startMonitoring() {
 		console.debug('Starting Teams status monitoring for MQTT');
 
@@ -103,9 +96,6 @@ class MQTTStatusMonitor {
 		console.debug('Mutation observer set up for status monitoring (with 300ms debounce)');
 	}
 
-	/**
-	 * Start polling for status changes as fallback
-	 */
 	startPolling() {
 		const interval = this.config.mqtt?.statusCheckInterval || 10000;
 
@@ -116,9 +106,6 @@ class MQTTStatusMonitor {
 		console.debug(`Status polling started with ${interval}ms interval`);
 	}
 
-	/**
-	 * Check if status has changed and notify main process
-	 */
 	checkStatusChange() {
 		try {
 			const status = this.detectCurrentStatus();
@@ -205,11 +192,6 @@ class MQTTStatusMonitor {
 		return this._findStatusFromElements(selectors);
 	}
 
-	/**
-	 * Find status by querying DOM selectors in order
-	 * @param {string[]} selectors - CSS selectors to query
-	 * @returns {number|null} Status code or null if not detected
-	 */
 	_findStatusFromElements(selectors) {
 		for (const selector of selectors) {
 			const element = document.querySelector(selector);
@@ -223,10 +205,6 @@ class MQTTStatusMonitor {
 		return null;
 	}
 
-	/**
-	 * Detect status from me-control avatar button
-	 * @returns {number|null} Status code or null if not detected
-	 */
 	detectStatusFromMeControl() {
 		// Try both current and older data-tid values
 		const meControl = document.querySelector('[data-tid="me-control-avatar-trigger"]') ||
@@ -257,10 +235,6 @@ class MQTTStatusMonitor {
 		return null;
 	}
 
-	/**
-	 * Extract status from a DOM element
-	 * Checks class names, aria-label, title, and other attributes for status indicators
-	 */
 	extractStatusFromElement(element) {
 		const classList = element.classList.toString();
 		const ariaLabel = element.getAttribute('aria-label') || '';
@@ -284,9 +258,6 @@ class MQTTStatusMonitor {
 		return this.mapTextToStatusCode(classList, ariaLabel, title, textContent, dataTestId, dataTid, style, fill, childPresenceInfo);
 	}
 
-	/**
-	 * Extract status from page title
-	 */
 	extractStatusFromPageTitle() {
 		return this.mapTextToStatusCode(document.title);
 	}
@@ -298,7 +269,6 @@ class MQTTStatusMonitor {
 	mapTextToStatusCode(...textSources) {
 		const combinedText = textSources.join(' ').toLowerCase();
 
-		// Check each status keyword group in priority order
 		for (const statusGroup of this.statusKeywords) {
 			for (const keyword of statusGroup.keywords) {
 				if (combinedText.includes(keyword)) {
@@ -310,9 +280,6 @@ class MQTTStatusMonitor {
 		return null;
 	}
 
-	/**
-	 * Stop monitoring
-	 */
 	stop() {
 		if (this.observer) {
 			this.observer.disconnect();

@@ -30,10 +30,6 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
-  /**
-   * Get the status of the token cache injection
-   * @returns {object} Status object with injected flag and retry capability
-   */
   getTokenCacheStatus() {
     return {
       injected: this._tokenCacheInjected,

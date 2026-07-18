@@ -44,9 +44,6 @@ function parseAccelerator(accelerator) {
 }
 
 /**
- * Sends a keyboard event to the window's webContents.
- * Parses the accelerator string and simulates the corresponding key press.
- *
  * @param {BrowserWindow} window - The window to send the event to
  * @param {string} accelerator - The accelerator string (e.g., "Control+Shift+M")
  */
@@ -72,13 +69,6 @@ function sendKeyboardEventToWindow(window, accelerator) {
   }
 }
 
-/**
- * Registers global shortcuts that forward keyboard events to Teams.
- *
- * @param {Object} config - Application configuration
- * @param {Object} mainAppWindow - Main application window module
- * @param {Object} app - Electron app instance
- */
 function register(config, mainAppWindow, app) {
   // Guard against multiple registrations
   if (isRegistered) {

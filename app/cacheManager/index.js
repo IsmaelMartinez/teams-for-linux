@@ -38,9 +38,6 @@ class CacheManager {
     return partition.replace(/^persist:/, "");
   }
 
-  /**
-   * Start the cache management monitoring
-   */
   start() {
     if (this.isRunning) return;
 
@@ -57,9 +54,6 @@ class CacheManager {
     }, this.checkIntervalMs);
   }
 
-  /**
-   * Stop the cache management monitoring
-   */
   stop() {
     if (!this.isRunning) return;
 
@@ -71,9 +65,6 @@ class CacheManager {
     console.info("🧹 Cache Manager stopped");
   }
 
-  /**
-   * Get the total size of the Teams for Linux cache directory
-   */
   async getCacheSize() {
     try {
       const size = await this.getDirSize(this.userDataPath);
@@ -84,9 +75,6 @@ class CacheManager {
     }
   }
 
-  /**
-   * Check cache size and clean if necessary
-   */
   async checkAndCleanCache() {
     try {
       const currentSizeMB = await this.getCacheSize();
@@ -173,9 +161,6 @@ class CacheManager {
     }
   }
 
-  /**
-   * Clean a directory recursively
-   */
   async cleanDirectory(dirPath) {
     try {
       const files = await fsp.readdir(dirPath);
@@ -213,9 +198,6 @@ class CacheManager {
     }
   }
 
-  /**
-   * Get directory size recursively
-   */
   async getDirSize(dirPath) {
     let totalSize = 0;
     try {
@@ -254,9 +236,6 @@ class CacheManager {
     return totalSize;
   }
 
-  /**
-   * Get cache statistics for debugging
-   */
   async getCacheStats() {
     const stats = {
       totalSizeMB: await this.getCacheSize(),
