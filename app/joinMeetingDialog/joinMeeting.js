@@ -50,7 +50,6 @@ globalThis.joinMeetingApi.onInit((data) => {
         compiledRegex = null;
     }
 
-    // Pre-populate with clipboard text if it's a valid URL
     if (data.clipboardText && isValidUrl(data.clipboardText)) {
         urlInput.value = data.clipboardText;
     }
@@ -60,7 +59,6 @@ globalThis.joinMeetingApi.onInit((data) => {
     urlInput.select();
 });
 
-// Event listeners
 urlInput.addEventListener('input', updateValidation);
 urlInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !joinBtn.disabled) {

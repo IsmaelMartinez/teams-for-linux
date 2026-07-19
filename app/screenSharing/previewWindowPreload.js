@@ -14,17 +14,13 @@ ipcRenderer.on("screen-share-port", (event) => {
 });
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  // Screen sharing status
   getScreenSharingStatus: () => ipcRenderer.invoke("get-screen-sharing-status"),
 
-  // Window management
   resizeWindow: (dimensions) =>
     ipcRenderer.send("resize-preview-window", dimensions),
 
-  // Screen sharing control
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
 
-  // Event listeners
   onScreenSharingStatusChanged: (callback) => {
     ipcRenderer.on("screen-sharing-status-changed", callback);
     return () =>

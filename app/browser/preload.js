@@ -81,7 +81,6 @@ globalThis.electronAPI = {
     },
     cancelChooseDesktopMedia: () => ipcRenderer.send("cancel-desktop-media"),
   },
-  // Screen sharing events
   sendScreenSharingStarted: (sourceId) => {
     if (sourceId === null || (typeof sourceId === 'string' && sourceId.length < 100)) {
       return ipcRenderer.send("screen-sharing-started", sourceId);
@@ -96,10 +95,8 @@ globalThis.electronAPI = {
     return ipcRenderer.send(channel, ...args);
   },
 
-  // Configuration
   getConfig: () => ipcRenderer.invoke("get-config"),
 
-  // Notifications
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
       return Promise.reject(new Error('Invalid notification options'));
@@ -119,7 +116,6 @@ globalThis.electronAPI = {
     ipcRenderer.send("notification-show-toast", data);
   },
 
-  // Badge count
   setBadgeCount: (count) => {
     if (typeof count !== 'number' || count < 0 || count > 9999) {
       console.error('Invalid badge count:', count);
@@ -128,12 +124,10 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("set-badge-count", count);
   },
 
-  // Tray icon
   updateTray: (icon, flash) => {
     return ipcRenderer.send("tray-update", { icon, flash });
   },
 
-  // Theme events
   onSystemThemeChanged: (callback) => {
     if (typeof callback !== 'function') {
       console.error('Invalid callback for theme changed');
@@ -142,7 +136,6 @@ globalThis.electronAPI = {
     return ipcRenderer.on("system-theme-changed", callback);
   },
 
-  // User status
   setUserStatus: (data) => {
     if (!data || typeof data !== 'object') {
       return Promise.reject(new Error('Invalid user status data'));
@@ -150,7 +143,6 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("user-status-changed", data);
   },
 
-  // Zoom
   getZoomLevel: (partition) => {
     if (typeof partition !== 'string' || partition.length > 100) {
       return Promise.reject(new Error('Invalid partition'));
@@ -164,7 +156,6 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("save-zoom-level", data);
   },
 
-  // Navigation
   navigateBack: () => ipcRenderer.send("navigate-back"),
   navigateForward: () => ipcRenderer.send("navigate-forward"),
   getNavigationState: () => ipcRenderer.invoke("get-navigation-state"),
@@ -176,7 +167,6 @@ globalThis.electronAPI = {
     return ipcRenderer.on("navigation-state-changed", callback);
   },
 
-  // Microsoft Graph API
   graphApi: {
     getUserProfile: () => ipcRenderer.invoke("graph-api-get-user-profile"),
     getCalendarEvents: (options) => ipcRenderer.invoke("graph-api-get-calendar-events", options),
@@ -185,7 +175,6 @@ globalThis.electronAPI = {
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
   },
 
-  // Chat deep link navigation (for quick chat access feature)
   openChatWithUser: (email) => {
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       console.error('Invalid email for chat deep link');
@@ -200,7 +189,6 @@ globalThis.electronAPI = {
     return true;
   },
 
-  // System information
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
 
