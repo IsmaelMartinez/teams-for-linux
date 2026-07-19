@@ -62,10 +62,8 @@ class JoinMeetingDialog {
       onCancel: this.#handleCancel,
     };
 
-    // Load the dialog HTML file
     this.#window.loadFile(path.join(__dirname, 'joinMeeting.html'));
 
-    // Show window when ready and send initial data
     this.#window.once('ready-to-show', () => {
       this.#window.webContents.send('init-dialog', {
         clipboardText: clipboardText || '',

@@ -143,10 +143,6 @@ const applyIgnoreSystemMutePatch = function () {
   );
 };
 
-/**
- * Initialize the ignoreSystemMute tool.
- * @param {Object} config - Application configuration.
- */
 function init(config) {
   if (!config?.media?.microphone?.ignoreSystemMute) {
     return;

@@ -81,7 +81,6 @@ globalThis.electronAPI = {
     },
     cancelChooseDesktopMedia: () => ipcRenderer.send("cancel-desktop-media"),
   },
-  // Screen sharing events
   sendScreenSharingStarted: (sourceId) => {
     if (sourceId === null || (typeof sourceId === 'string' && sourceId.length < 100)) {
       return ipcRenderer.send("screen-sharing-started", sourceId);
@@ -96,10 +95,8 @@ globalThis.electronAPI = {
     return ipcRenderer.send(channel, ...args);
   },
 
-  // Configuration
   getConfig: () => ipcRenderer.invoke("get-config"),
 
-  // Notifications with input validation
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
       return Promise.reject(new Error('Invalid notification options'));
@@ -119,7 +116,6 @@ globalThis.electronAPI = {
     ipcRenderer.send("notification-show-toast", data);
   },
 
-  // Badge count with validation
   setBadgeCount: (count) => {
     if (typeof count !== 'number' || count < 0 || count > 9999) {
       console.error('Invalid badge count:', count);
@@ -128,12 +124,10 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("set-badge-count", count);
   },
 
-  // Tray icon with validation
   updateTray: (icon, flash) => {
     return ipcRenderer.send("tray-update", { icon, flash });
   },
 
-  // Theme events
   onSystemThemeChanged: (callback) => {
     if (typeof callback !== 'function') {
       console.error('Invalid callback for theme changed');
@@ -142,7 +136,6 @@ globalThis.electronAPI = {
     return ipcRenderer.on("system-theme-changed", callback);
   },
 
-  // User status with validation
   setUserStatus: (data) => {
     if (!data || typeof data !== 'object') {
       return Promise.reject(new Error('Invalid user status data'));
@@ -150,7 +143,6 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("user-status-changed", data);
   },
 
-  // Zoom with validation
   getZoomLevel: (partition) => {
     if (typeof partition !== 'string' || partition.length > 100) {
       return Promise.reject(new Error('Invalid partition'));
@@ -164,7 +156,6 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("save-zoom-level", data);
   },
 
-  // Navigation
   navigateBack: () => ipcRenderer.send("navigate-back"),
   navigateForward: () => ipcRenderer.send("navigate-forward"),
   getNavigationState: () => ipcRenderer.invoke("get-navigation-state"),
@@ -176,7 +167,6 @@ globalThis.electronAPI = {
     return ipcRenderer.on("navigation-state-changed", callback);
   },
 
-  // Microsoft Graph API
   graphApi: {
     getUserProfile: () => ipcRenderer.invoke("graph-api-get-user-profile"),
     getCalendarEvents: (options) => ipcRenderer.invoke("graph-api-get-calendar-events", options),
@@ -185,7 +175,6 @@ globalThis.electronAPI = {
     getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
   },
 
-  // Chat deep link navigation (for quick chat access feature)
   openChatWithUser: (email) => {
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       console.error('Invalid email for chat deep link');
@@ -200,12 +189,10 @@ globalThis.electronAPI = {
     return true;
   },
 
-  // System information (safe to expose)
   sessionType: process.env.XDG_SESSION_TYPE || "x11",
 };
 
-// Fetch config and override Notification immediately (matching v2.2.1 pattern)
-// Config is fetched asynchronously but notification function references it via closure
+// Config is fetched asynchronously; the Notification override below reads it via closure
 let notificationConfig = null;
 ipcRenderer.invoke("get-config").then((config) => {
   notificationConfig = config;
@@ -246,7 +233,6 @@ function createNotificationStub() {
   return stub;
 }
 
-// Helper functions for notification handling (extracted to reduce cognitive complexity)
 function playNotificationSound(notifSound) {
   // Skip renderer-side sound for "electron" method — the main process
   // notification service already plays the sound before showing the notification.
@@ -265,7 +251,6 @@ function playNotificationSound(notifSound) {
 }
 
 function createWebNotification(classicNotification, title, options) {
-  // Play notification sound
   const notifSound = {
     type: options.type,
     audio: "default",
@@ -318,7 +303,6 @@ function createElectronNotification(options) {
 }
 
 function createCustomNotification(title, options) {
-  // Send notification data to main process for custom toast notification
   const notificationData = {
     id: crypto.randomUUID(),
     timestamp: Date.now(),
@@ -327,7 +311,6 @@ function createCustomNotification(title, options) {
     icon: options.icon,
   };
 
-  // Play notification sound if enabled
   const notifSound = {
     type: options.type,
     audio: "default",
@@ -336,7 +319,6 @@ function createCustomNotification(title, options) {
   };
   playNotificationSound(notifSound);
 
-  // Send to main process to show toast
   try {
     if (globalThis.electronAPI?.sendNotificationToast) {
       globalThis.electronAPI.sendNotificationToast(notificationData);
@@ -394,7 +376,6 @@ function createCustomNotification(title, options) {
     return createElectronNotification(options);
   }
 
-  // Add static methods to factory function
   CustomNotification.requestPermission = async function() {
     return "granted";
   };
@@ -409,7 +390,6 @@ function createCustomNotification(title, options) {
   console.debug("Preload: CustomNotification factory initialized");
 })();
 
-// Initialize browser modules after DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
   console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
@@ -419,21 +399,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       useMutationTitleLogic: config?.useMutationTitleLogic
     });
     
-    // Initialize title monitoring using existing module
     if (config.useMutationTitleLogic) {
       const mutationTitle = require("./tools/mutationTitle");
       mutationTitle.init(config);
     }
     
-    // Initialize tray icon functionality directly in preload with secure IPC
-    if (config.trayIconEnabled) {
-      // NOTE: unread-count event is handled by trayIconRenderer.js
-      // This redundant listener was causing duplicate IPC traffic and rendering.
-    }
-    
-    console.debug("Preload: Essential tray modules initialized successfully");
-    
-    // Initialize other modules safely
+    // NOTE: the unread-count event is handled by trayIconRenderer.js; a second
+    // listener here previously caused duplicate IPC traffic and rendering.
+
     const modules = [
       { name: "zoom", path: "./tools/zoom" },
       { name: "shortcuts", path: "./tools/shortcuts" },
@@ -477,7 +450,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
 
-    // Initialize ActivityManager
     try {
       const ActivityManager = require("./notifications/activityManager");
       new ActivityManager(ipcRenderer, config).start();
@@ -487,7 +459,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Listen for config changes from the main process (e.g., when menu toggles are clicked)
     ipcRenderer.on("config-changed", (_event, configChanges) => {
-      // Update the local config object with the changes
       for (const [key, value] of Object.entries(configChanges)) {
         config[key] = value;
       }
@@ -498,7 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Forward unhandled promise rejections and window errors to main for diagnostics with secure IPC
+// Forward unhandled promise rejections and window errors to main for diagnostics.
 // Plain objects without a `.message` (and `undefined` rejections) previously stringified to
 // the literals "[object Object]" / "undefined", which discarded all diagnostic content.
 function serializeRejectionReason(reason) {

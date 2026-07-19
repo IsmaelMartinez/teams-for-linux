@@ -14,14 +14,12 @@ const xml2js = require("xml2js");
 async function generateReleaseInfo(projectRoot = null) {
   const root = projectRoot || path.join(__dirname, "..");
 
-  // Load package.json
   const pkgPath = path.join(root, "package.json");
   if (!fs.existsSync(pkgPath)) {
     throw new Error("package.json not found.");
   }
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
-  // Load package-lock.json
   const lockPath = path.join(root, "package-lock.json");
   if (!fs.existsSync(lockPath)) {
     throw new Error(
@@ -34,14 +32,12 @@ async function generateReleaseInfo(projectRoot = null) {
   // The snap edge build appends "-edge.g{SHORT_SHA}" to package.json version
   const baseVersion = pkg.version.replace(/-edge\.g[0-9a-f]+$/, "");
 
-  // Check version consistency between package.json and package-lock.json
   if (pkgLock.version !== baseVersion) {
     throw new Error(
       `Version mismatch: package.json (${pkg.version}) vs package-lock.json (${pkgLock.version}). Please run "npm install" to update package-lock.json.`
     );
   }
 
-  // Load com.github.IsmaelMartinez.teams_for_linux.appdata.xml
   const appdataPath = path.join(
     root,
     "com.github.IsmaelMartinez.teams_for_linux.appdata.xml"
@@ -53,11 +49,9 @@ async function generateReleaseInfo(projectRoot = null) {
   }
   const appdataContent = fs.readFileSync(appdataPath, "utf8");
 
-  // Parse XML
   const parser = new xml2js.Parser();
   const result = await parser.parseStringPromise(appdataContent);
 
-  // Navigate to releases
   const component = result.component;
   if (!component?.releases?.[0]?.release) {
     throw new Error(
@@ -76,7 +70,6 @@ async function generateReleaseInfo(projectRoot = null) {
     );
   }
 
-  // Extract release information
   const releaseDate = matchingRelease.$.date;
   let releaseNotes = "";
 
@@ -84,7 +77,6 @@ async function generateReleaseInfo(projectRoot = null) {
     const descObj = matchingRelease.description[0];
 
     if (descObj.ul?.[0]?.li) {
-      // Extract list items and format as markdown
       const listItems = descObj.ul[0].li.map((li) => {
         // Handle both simple strings and complex objects
         const text = typeof li === "string" ? li : li._ || li;
@@ -141,7 +133,6 @@ if (require.main === module) {
       console.log("");
       console.log(JSON.stringify(releaseInfo, null, 2));
 
-      // Save to file
       const outputPath = path.join(__dirname, "..", "release-info.json");
       fs.writeFileSync(outputPath, JSON.stringify(releaseInfo, null, 2));
       console.log("");

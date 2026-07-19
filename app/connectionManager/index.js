@@ -1,5 +1,8 @@
 const { ipcMain, net, powerMonitor } = require("electron");
 
+// Debounce window for rapid network change events before refreshing
+const REFRESH_DEBOUNCE_MS = 1000;
+
 let _ConnectionManager_window = new WeakMap();
 let _ConnectionManager_config = new WeakMap();
 let _ConnectionManager_currentUrl = new WeakMap();
@@ -68,17 +71,15 @@ class ConnectionManager {
   }
 
   debouncedRefresh() {
-    // Clear any existing timeout
     const existingTimeout = _ConnectionManager_refreshTimeout.get(this);
     if (existingTimeout) {
       clearTimeout(existingTimeout);
     }
 
-    // Set a new timeout to debounce rapid network change events
     const timeout = setTimeout(() => {
       _ConnectionManager_refreshTimeout.set(this, null);
       this.refresh();
-    }, 1000); // Wait 1 second before actually refreshing
+    }, REFRESH_DEBOUNCE_MS);
 
     _ConnectionManager_refreshTimeout.set(this, timeout);
   }

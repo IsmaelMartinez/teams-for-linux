@@ -445,13 +445,11 @@ class GraphApiClient {
         return { success: false, error: 'Graph API is disabled' };
       }
 
-      // Resolve conversation
       const conversationResult = await this.resolveConversation(contactInfo.userId);
       if (!conversationResult.success) {
         return conversationResult;
       }
 
-      // Send message via Graph API
       return await this.sendChatMessage(conversationResult.conversationId, content);
     } catch (error) {
       logger.error('[GRAPH_API] sendChatMessageToUser error:', error);

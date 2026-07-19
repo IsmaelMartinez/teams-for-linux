@@ -33,17 +33,10 @@ class MQTTClient extends EventEmitter {
 		this.nonShortcutActions = ['get-calendar'];
 	}
 
-	/**
-	 * Get list of allowed actions
-	 * @returns {string[]} Array of allowed action names
-	 */
 	get allowedActions() {
 		return [...Object.keys(this.actionShortcutMap), ...this.nonShortcutActions];
 	}
 
-	/**
-	 * Initialize and connect to MQTT broker if enabled
-	 */
 	async initialize() {
 		if (!this.config.enabled || !this.config.brokerUrl) {
 			console.debug('[MQTT] Disabled or no broker URL configured');
@@ -124,7 +117,6 @@ class MQTTClient extends EventEmitter {
 	}
 
 	/**
-	 * Generic publish method for publishing any payload to MQTT
 	 * @param {string} topic - Full MQTT topic path
 	 * @param {string|object} payload - Payload to publish (will be converted to string)
 	 * @param {object} options - MQTT publish options
@@ -153,10 +145,6 @@ class MQTTClient extends EventEmitter {
 		}
 	}
 
-	/**
-	 * Publish Teams status to MQTT topic
-	 * @param {number|string} status - Teams status code
-	 */
 	async publishStatus(status) {
 		if (!this.isConnected || !this.client) {
 			console.debug('[MQTT] Not connected, skipping status publish');
@@ -226,10 +214,8 @@ class MQTTClient extends EventEmitter {
 	 */
 	handleCommand(messageString) {
 		try {
-			// Parse JSON
 			const command = JSON.parse(messageString);
 
-			// Validate command structure
 			if (!command || typeof command !== 'object') {
 				console.warn('[MQTT] Invalid command: not an object');
 				return;
@@ -240,7 +226,6 @@ class MQTTClient extends EventEmitter {
 				return;
 			}
 
-			// Whitelist validation
 			if (!this.allowedActions.includes(command.action)) {
 				console.warn(`[MQTT] Invalid command: action '${command.action}' not in whitelist`);
 				return;
@@ -248,7 +233,6 @@ class MQTTClient extends EventEmitter {
 
 			console.info(`[MQTT] Received valid command: ${command.action}`);
 
-			// Emit command event for main process to handle
 			const shortcut = this.actionShortcutMap[command.action];
 			this.emit('command', { ...command, shortcut });
 
@@ -257,9 +241,6 @@ class MQTTClient extends EventEmitter {
 		}
 	}
 
-	/**
-	 * Close MQTT connection
-	 */
 	async disconnect() {
 		if (this.client) {
 			console.debug('[MQTT] Disconnecting from broker');

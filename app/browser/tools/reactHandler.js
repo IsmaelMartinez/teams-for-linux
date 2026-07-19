@@ -1,4 +1,3 @@
-// Import token cache for authentication provider integration
 const TokenCache = require('./tokenCache');
 
 class ReactHandler {
@@ -31,10 +30,6 @@ class ReactHandler {
     return teams2CoreServices?.clientPreferences?.clientPreferences;
   }
 
-  /**
-   * Get the status of the token cache injection
-   * @returns {object} Status object with injected flag and retry capability
-   */
   getTokenCacheStatus() {
     return {
       injected: this._tokenCacheInjected,
@@ -125,10 +120,8 @@ class ReactHandler {
         return { success: false, error: 'acquireToken method not found' };
       }
 
-      // Get correlation from core services if available
       const correlation = teams2CoreServices?.correlation;
 
-      // Merge default options with provided options
       const tokenOptions = {
         correlation: correlation,
         forceRenew: options.forceRenew || false,
@@ -187,10 +180,8 @@ class ReactHandler {
         return false;
       }
 
-      // Perform the injection
       authProvider._tokenCache = TokenCache;
 
-      // Verify injection success
       if (this._validateTokenCacheInjection(authProvider)) {
         this._tokenCacheInjected = true;
         return true;
@@ -206,7 +197,6 @@ class ReactHandler {
     }
   }
 
-  // Validate token cache injection was successful
   _validateTokenCacheInjection(authProvider) {
     const tokenCache = authProvider._tokenCache;
     if (!tokenCache) return false;

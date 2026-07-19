@@ -173,7 +173,6 @@ class SpeakingIndicator {
 		}
 		this.#polling = true;
 
-		// Remove closed connections
 		this.#peerConnections = this.#peerConnections.filter(
 			pc => pc.connectionState !== 'closed'
 		);

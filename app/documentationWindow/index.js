@@ -15,7 +15,6 @@ class DocumentationWindow {
       return;
     }
 
-    // Create new documentation window
     this.window = new BrowserWindow({
       title: 'Teams for Linux - Documentation',
       width: 1200,
@@ -32,10 +31,8 @@ class DocumentationWindow {
       },
     });
 
-    // Load the documentation HTML file
     this.window.loadFile(path.join(__dirname, 'documentation.html'));
 
-    // Show window when ready
     this.window.once('ready-to-show', () => {
       this.window.show();
       this.window.focus();

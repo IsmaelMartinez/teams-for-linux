@@ -188,8 +188,7 @@ class ProfilesManager {
     }
     // Allowlist the mutable fields and validate them per type. `id` and
     // `partition` stay immutable; arbitrary extra keys from the renderer
-    // never reach the settings file. Per-field helpers keep this method's
-    // cognitive complexity within SonarCloud's threshold.
+    // never reach the settings file.
     const next = { ...state.list[idx] };
     const p = patch || {};
     if (Object.hasOwn(p, "name")) this.#applyName(next, p.name);

@@ -41,11 +41,6 @@ class TeamsTokenCache {
   // Core Storage Interface (localStorage compatible)
   //
 
-  /**
-   * Retrieve item from cache
-   * @param {string} key - The cache key
-   * @returns {string|null} The cached value or null if not found
-   */
   async getItem(key) {
     try {
       if (typeof key !== 'string') {
@@ -73,11 +68,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Store item in cache
-   * @param {string} key - The cache key
-   * @param {string} value - The value to store
-   */
   async setItem(key, value) {
     try {
       if (typeof key !== 'string' || typeof value !== 'string') {
@@ -110,10 +100,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Remove item from cache
-   * @param {string} key - The cache key to remove
-   */
   async removeItem(key) {
     try {
       if (typeof key !== 'string') {
@@ -206,10 +192,6 @@ class TeamsTokenCache {
   // Private Implementation Methods
   //
 
-  /**
-   * Initialize secure storage
-   * @private
-   */
   _initializeSecureStorage() {
     try {
       this._useSecureStorage = safeStorage?.isEncryptionAvailable() ?? false;
@@ -221,11 +203,6 @@ class TeamsTokenCache {
     }
   }
 
-
-  /**
-   * Get item from secure storage
-   * @private
-   */
   async _getSecureItem(key) {
     try {
       const encryptedData = localStorage.getItem(this._securePrefix + key);
@@ -241,10 +218,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Set item in secure storage
-   * @private
-   */
   async _setSecureItem(key, value) {
     try {
       const encrypted = safeStorage.encryptString(value);
@@ -256,10 +229,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Remove item from secure storage
-   * @private
-   */
   async _removeSecureItem(key) {
     try {
       localStorage.removeItem(this._securePrefix + key);
@@ -268,10 +237,6 @@ class TeamsTokenCache {
     }
   }
 
-  /**
-   * Check localStorage availability
-   * @private
-   */
   _checkLocalStorageAvailability() {
     try {
       const testKey = '__token_cache_test__';
@@ -284,24 +249,17 @@ class TeamsTokenCache {
     }
   }
 
-
-  /**
-   * Get authentication-related keys from storage
-   * @private
-   */
   _getAuthRelatedKeys() {
     const authKeys = [];
     
     try {
       if (this._useMemoryFallback) {
-        // Memory fallback: iterate through memory cache
         for (const key of this._memoryFallback.keys()) {
           if (this._isAuthRelatedKey(key)) {
             authKeys.push(key);
           }
         }
       } else {
-        // localStorage: iterate through all keys
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && this._isAuthRelatedKey(key)) {
@@ -316,10 +274,6 @@ class TeamsTokenCache {
     return authKeys;
   }
 
-  /**
-   * Check if a key is authentication-related
-   * @private
-   */
   _isAuthRelatedKey(key) {
     if (typeof key !== 'string') return false;
     

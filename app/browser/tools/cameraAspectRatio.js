@@ -14,9 +14,6 @@ function applyCameraAspectRatioPatch() {
   let lastWindowSize = { width: window.innerWidth, height: window.innerHeight };
   const SIGNIFICANT_RESIZE_THRESHOLD = 100;
 
-  /**
-   * Fix aspect ratio on a video track by reapplying proper constraints
-   */
   async function fixVideoTrackAspectRatio(track) {
     if (track?.readyState !== "live") {
       return;
@@ -26,7 +23,6 @@ function applyCameraAspectRatioPatch() {
       const settings = track.getSettings();
       console.debug("[CAMERA_ASPECT_RATIO] Current track settings:", settings);
 
-      // Get the native camera resolution
       const width = settings.width;
       const height = settings.height;
 
@@ -79,9 +75,6 @@ function applyCameraAspectRatioPatch() {
     }
   }
 
-  /**
-   * Monitor all video tracks in a MediaStream
-   */
   function monitorStream(stream) {
     const videoTracks = stream.getVideoTracks();
 
@@ -92,10 +85,8 @@ function applyCameraAspectRatioPatch() {
           `[CAMERA_ASPECT_RATIO] Monitoring video track: ${track.label}`
         );
 
-        // Apply initial fix
         fixVideoTrackAspectRatio(track);
 
-        // Clean up when track ends
         track.addEventListener("ended", () => {
           activeVideoTracks.delete(track);
           console.debug(
@@ -106,9 +97,6 @@ function applyCameraAspectRatioPatch() {
     }
   }
 
-  /**
-   * Intercept getUserMedia to monitor camera streams
-   */
   function interceptGetUserMedia() {
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
       navigator.mediaDevices
@@ -134,16 +122,12 @@ function applyCameraAspectRatioPatch() {
     console.debug("[CAMERA_ASPECT_RATIO] getUserMedia intercepted");
   }
 
-  /**
-   * Handle window resize/monitor change events
-   */
   async function handleWindowChange() {
     const currentSize = {
       width: window.innerWidth,
       height: window.innerHeight,
     };
 
-    // Check if this is a significant size change (not just minor resize)
     const widthChange = Math.abs(currentSize.width - lastWindowSize.width);
     const heightChange = Math.abs(currentSize.height - lastWindowSize.height);
 
@@ -188,10 +172,6 @@ function applyCameraAspectRatioPatch() {
   console.debug("[CAMERA_ASPECT_RATIO] Successfully initialized");
 }
 
-/**
- * Initialize the cameraAspectRatio tool
- * @param {Object} config - Application configuration
- */
 function init(config) {
   const aspectRatioConfig = config.media?.camera?.autoAdjustAspectRatio;
   if (!aspectRatioConfig?.enabled) {

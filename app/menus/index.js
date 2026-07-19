@@ -503,10 +503,7 @@ function assignContextMenuHandler(menus) {
   return (_event, params) => {
     const menu = new Menu();
 
-    // Add each spelling suggestion
     assignReplaceWordHandler(params, menu, menus);
-
-    // Allow users to add the misspelled word to the dictionary
     assignAddToDictionaryHandler(params, menu, menus);
 
     if (menu.items.length > 0) {
