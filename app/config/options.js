@@ -447,9 +447,9 @@ module.exports = {
         applyMode: "restart",
       },
       followSystemTheme: {
-        default: true,
+        default: false,
         describe:
-          "Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes.",
+          "Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference.",
         type: "boolean",
         applyMode: "restart",
       },

@@ -50,7 +50,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `electronCLIFlags` | `array` | `[]` | Electron CLI flags | `restart` |
 | `emulateWinChromiumPlatform` | `boolean` | `false` | Use windows platform information in chromium. This is helpful if MFA app does not support Linux. | `restart` |
 | `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast | `restart` |
-| `followSystemTheme` | `boolean` | `true` | Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes. | `restart` |
+| `followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference. | `restart` |
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window. Default is true | `restart` |
 | `incomingCallCommand` | `string` | `null` | Command to execute on an incoming call. (caution: "~" in path is not supported) | `restart` |
 | `incomingCallCommandArgs` | `array` | `[]` | Arguments for the incoming call command. | `restart` |
