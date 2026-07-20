@@ -15,7 +15,8 @@ function init(config, ipcRenderer) {
 		const style = document.createElement('style');
 		style.id = 'frameless-tweaks';
 		style.textContent = `
-            #ms-searchux-search-box-2-0,
+            [data-tid="search-f6-navigation-region"],
+            [role="search"],
             button[data-tid="waffle-open-button"],
             .tfl-nav-button {
               -webkit-app-region: no-drag;
