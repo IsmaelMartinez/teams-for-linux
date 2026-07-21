@@ -41,6 +41,7 @@ Current status is tracked via the linked GitHub labels. This section serves as a
 Phase 2 work depending on a user trigger.
 
 - **Quick Chat Access** ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), shipped v2.7.4): notification click-to-chat, recent contacts cache, favorites list if requested.
+- **Smartcard PIN Dialog** ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639), merged in [#2659](https://github.com/IsmaelMartinez/teams-for-linux/pull/2659), opt-in via `auth.clientCertificate.pinDialog.enabled`): migrate the WebAuthn PIN dialog onto the shared secure prompt, FIDO2 touch prompt ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)) if requested.
 - **Graph API Enhanced Features** ([research](../research/graph-api-integration-research.md)): calendar sync, mail preview notifications. Presence endpoint returns 403 because the Teams token lacks `Presence.Read` scope.
 
 ---
