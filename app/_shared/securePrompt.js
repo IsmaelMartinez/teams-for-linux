@@ -38,14 +38,17 @@ const pending = new Map();
 let handlersRegistered = false;
 
 // Settle the prompt owned by a dialog webContents. `kind` is "submit" (resolve
-// with the value) or "cancel" (reject). Idempotent: the first settle wins and
-// later ones (e.g. the window-close that submit itself triggers) no-op.
+// with the value), "cancel" (reject), or "error" (reject with a distinct
+// message so a dialog that failed to load is not reported as a user cancel).
+// Idempotent: the first settle wins and later ones (e.g. the window-close that
+// submit itself triggers) no-op.
 function settlePrompt(senderId, kind, value) {
   const entry = pending.get(senderId);
   if (!entry) return;
   pending.delete(senderId);
   if (!entry.win.isDestroyed()) entry.win.close();
   if (kind === "submit") entry.resolve(value);
+  else if (kind === "error") entry.reject(new Error("secure prompt failed to load"));
   else entry.reject(new Error("secure prompt cancelled"));
 }
 
@@ -109,15 +112,26 @@ function showSecurePrompt({ title, heading, message, warning, submitLabel, cance
       win.focus();
     });
 
-    win.loadFile(path.join(__dirname, "securePrompt.html"), {
-      query: {
-        heading: heading ?? "",
-        message: message ?? "",
-        warning: warning ?? "",
-        submitLabel: submitLabel ?? "OK",
-        cancelLabel: cancelLabel ?? "Cancel",
-      },
-    });
+    // A load failure must be caught here: unhandled it would reach the
+    // process-wide unhandledRejection handler (which exits the app), and
+    // ready-to-show would never fire, leaving the prompt pending forever.
+    win
+      .loadFile(path.join(__dirname, "securePrompt.html"), {
+        query: {
+          heading: heading ?? "",
+          message: message ?? "",
+          warning: warning ?? "",
+          submitLabel: submitLabel ?? "OK",
+          cancelLabel: cancelLabel ?? "Cancel",
+        },
+      })
+      .catch((error) => {
+        // Log only the error code: the message can embed the file path.
+        console.error("[SECURE-PROMPT] Failed to load dialog", {
+          errorCode: error.code ?? "unknown",
+        });
+        settlePrompt(senderId, "error");
+      });
   });
 }
 

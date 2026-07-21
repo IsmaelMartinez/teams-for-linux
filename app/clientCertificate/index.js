@@ -73,7 +73,8 @@ function initialize() {
         cancelLabel: "Cancel",
       });
     } catch {
-      // User cancelled or closed the window. Reject so NSS aborts the
+      // User cancelled, closed the window, or the dialog failed to load (the
+      // load failure is logged by securePrompt). Reject so NSS aborts the
       // certificate request instead of looping (an empty-string resolve would
       // re-prompt). Validated safe: this does not decrement the retry counter,
       // and a cancel does not count toward the attempt cap.
