@@ -45,6 +45,7 @@ User-facing topics:
 - [Intune SSO](intune-sso.md) — Microsoft Identity Broker integration
 - [MQTT integration](mqtt-integration.md) — publish presence and call status to a broker
 - [Troubleshooting](troubleshooting.md) — diagnostics for common Linux desktop issues
+- [Privacy & data protection](privacy.md) — what personal data the app does and does not handle
 
 ## Contributing
 
