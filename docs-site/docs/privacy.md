@@ -25,12 +25,12 @@ Teams for Linux is an independent open-source project and is **not affiliated wi
 
 ## 2. What this software is
 
-Teams for Linux is a desktop client that uses an Electron/WebView component to provide access to the **Microsoft Teams web application**. It acts solely as an access interface to Microsoft Teams and **is not an independent communications service**. The application window is restricted, via a Content Security Policy, to Microsoft Teams domains.
+Teams for Linux is a desktop client that uses an Electron/WebView component to provide access to the **Microsoft Teams web application**. It acts solely as an access interface to Microsoft Teams — and to Microsoft's sign-in pages during authentication — and **is not an independent communications service**.
 
 ## 3. Privacy & data protection
 
 - The application **does not collect, store, or transmit users' personal data on its own account**, and it has **no application-specific user accounts**.
-- The application **does not access the content** of your conversations, files, calls, or meetings **beyond what is necessary to render the Teams web interface** and to reflect your presence/status in the optional integrations you choose to enable (see [Network communications](#5-network-communications)).
+- Beyond displaying the Teams web interface, the application reads limited data from the page **locally on your device** to provide desktop-integration features — for example, passing a notification's title and body to your operating system's native notifications, reading the unread-message count from the page title for the tray badge, and reflecting your presence/status in optional integrations you enable (see [Network communications](#5-network-communications)). This processing stays on your device, and **none of it is sent to the maintainer**.
 - The maintainer **operates no servers and no backend infrastructure**. There is nowhere for the application to send your data to the maintainer, because no such service exists.
 
 ### Responsibility for your Teams data
@@ -40,7 +40,7 @@ Any processing of personal data arising from your use of Microsoft Teams is the 
 - **Microsoft Corporation**, as the provider of the Teams service; and
 - **the organisation that owns the Microsoft 365 environment** you sign in to (your employer or institution, and its IT administration).
 
-Those parties act as the data controller and/or processor for that data. The maintainer of Teams for Linux has **no access to, and no control over, that processing**.
+Responsibility for that data lies with those parties. Teams for Linux and its maintainer have **no access to, and no control over, that processing**.
 
 ## 4. Telemetry & tracking
 
@@ -54,7 +54,7 @@ The application contains **none** of the following:
 
 No usage statistics are sent to the maintainer, because the maintainer operates no server to receive them. In addition, the application **actively blocks a set of Microsoft telemetry/beacon hosts** that are not required for Teams to function.
 
-If a future version were to introduce any such mechanism, this document would be updated **before** that version is released.
+This reflects the application's behaviour as of the review date shown above.
 
 ## 5. Network communications
 
