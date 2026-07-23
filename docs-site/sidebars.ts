@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     'index',
     'quick-reference',
+    'privacy',
     {
       type: 'category',
       label: 'Getting Started',

@@ -65,6 +65,7 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 | **[Multiple Profiles](https://ismaelmartinez.github.io/teams-for-linux/multiple-instances)** | Running work & personal accounts |
 | **[Custom Backgrounds](https://ismaelmartinez.github.io/teams-for-linux/custom-backgrounds)** | Video call backgrounds setup |
 | **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/contributing)** | Development setup and contribution guidelines |
+| **[Privacy & Data Protection](https://ismaelmartinez.github.io/teams-for-linux/privacy)** | What personal data the app does and does not handle |
 
 ## Project Activity
 
