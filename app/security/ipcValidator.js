@@ -17,6 +17,10 @@ const allowedChannels = new Set([
   // Zoom and display controls
   'get-zoom-level',
   'save-zoom-level',
+
+  // localStorage persistence
+  'get-persisted-localstorage',
+  'save-persisted-localstorage',
   
   // Screen sharing and desktop capture (sorted alphabetically)
   'cancel-desktop-media',

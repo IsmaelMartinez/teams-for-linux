@@ -5,20 +5,20 @@ const { ipcRenderer } = require("electron");
 // Restore it via webUtils.getPathForFile before Teams's drop handler reads it,
 // scoped to Teams hosts so the SSO/auth pages this window also loads can't read
 // local paths off dropped files.
+const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
+const isTeamsHost = (hostname) => {
+  if (hostname.endsWith(".mcas.ms")) {
+    hostname = hostname.slice(0, -".mcas.ms".length);
+  }
+  return TEAMS_HOSTS.some(
+    (domain) =>
+      hostname === domain ||
+      (hostname.endsWith("." + domain) &&
+        !hostname.slice(0, -(domain.length + 1)).includes(".")),
+  );
+};
 try {
   const { webUtils } = require("electron");
-  const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
-  const isTeamsHost = (hostname) => {
-    if (hostname.endsWith(".mcas.ms")) {
-      hostname = hostname.slice(0, -".mcas.ms".length);
-    }
-    return TEAMS_HOSTS.some(
-      (domain) =>
-        hostname === domain ||
-        (hostname.endsWith("." + domain) &&
-          !hostname.slice(0, -(domain.length + 1)).includes(".")),
-    );
-  };
   globalThis.addEventListener(
     "drop",
     (event) => {
@@ -52,6 +52,23 @@ try {
   );
 } catch {
   // webUtils unavailable
+}
+
+// Restore the persisted localStorage before page load
+try {
+  if (isTeamsHost(globalThis.location.hostname)) {
+    const seed = ipcRenderer.sendSync("get-persisted-localstorage");
+    const entries = seed.entries;
+    if (entries && typeof entries === "object") {
+      for (const [key, value] of Object.entries(entries)) {
+        if (typeof value === "string" && value.length > 0 && !localStorage.getItem(key)) {
+          localStorage.setItem(key, value);
+        }
+      }
+    }
+  }
+} catch (err) {
+  console.debug("Preload: localStorage seed skipped:", err?.message ?? err);
 }
 
 // #2534: forward the MessagePort that main posts on 'screen-share-port' into
@@ -427,11 +444,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
+      { name: "localStoragePersistence", path: "./tools/localStoragePersistence" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer", "localStoragePersistence"]);
 
     let successCount = 0;
     for (const module of modules) {

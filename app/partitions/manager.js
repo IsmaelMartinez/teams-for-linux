@@ -2,9 +2,11 @@ const { ipcMain } = require("electron");
 
 class PartitionsManager {
   #settingsStore;
+  #config;
 
-  constructor(settingsStore) {
+  constructor(settingsStore, config) {
     this.#settingsStore = settingsStore;
+    this.#config = config || {};
   }
 
   initialize() {
@@ -12,6 +14,10 @@ class PartitionsManager {
     ipcMain.handle("get-zoom-level", this.#handleGetZoomLevel.bind(this));
     // Save zoom level for a partition
     ipcMain.handle("save-zoom-level", this.#handleSaveZoomLevel.bind(this));
+    // Save the persisted localStorage snapshot for a partition
+    ipcMain.on("save-persisted-localstorage", this.#handleSaveLocalStorage.bind(this));
+    // Get the persisted localStorage snapshot for a partition
+    ipcMain.on("get-persisted-localstorage", this.#handleGetLocalStorage.bind(this));
   }
 
   async #handleGetZoomLevel(_event, name) {
@@ -20,11 +26,19 @@ class PartitionsManager {
   }
 
   async #handleSaveZoomLevel(_event, args) {
-    const partition = {
-      name: args.partition,
-      zoomLevel: args.zoomLevel,
-    };
-    this.#savePartition(partition);
+    this.#savePartition({ name: args.partition, zoomLevel: args.zoomLevel });
+  }
+
+  #handleSaveLocalStorage(_event, args) {
+    if (!args || typeof args.entries !== "object" || args.entries === null) {
+      return;
+    }
+    this.#savePartition({ name: args.partition, localStorage: args.entries });
+  }
+
+  #handleGetLocalStorage(event) {
+    const partition = this.#getPartition(this.#config.partition) || {};
+    event.returnValue = { entries: partition.localStorage || {} };
   }
 
   #getPartitions() {
@@ -41,7 +55,8 @@ class PartitionsManager {
     const partitionIndex = partitions.findIndex((p) => p.name === partition.name);
 
     if (partitionIndex >= 0) {
-      partitions[partitionIndex] = partition;
+      // Merge so updating one field preserves the others stored for the same partition.
+      partitions[partitionIndex] = { ...partitions[partitionIndex], ...partition };
     } else {
       partitions.push(partition);
     }
