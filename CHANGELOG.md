@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.14.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.13.0...v2.14.0) (2026-07-23)
+
+
+### Features
+
+* **clientCertificate:** add Linux smartcard PIN dialog and secure prompt ([#2659](https://github.com/IsmaelMartinez/teams-for-linux/issues/2659)) ([509ffbd](https://github.com/IsmaelMartinez/teams-for-linux/commit/509ffbd12a315809981572f3f3c82c425cb7ea8e))
+
+
+### Bug Fixes
+
+* **frameless:** update no-drag selectors for Teams top-bar restructure ([#2704](https://github.com/IsmaelMartinez/teams-for-linux/issues/2704)) ([b00b633](https://github.com/IsmaelMartinez/teams-for-linux/commit/b00b6336b038cc011beb8335d8e1295d58cbf553))
+* **theme:** revert followSystemTheme default to false ([#2732](https://github.com/IsmaelMartinez/teams-for-linux/issues/2732)) ([ea4999e](https://github.com/IsmaelMartinez/teams-for-linux/commit/ea4999e477d0de39f24f030e972d19fce60f18ae))
+
+
+### Documentation
+
+* add privacy and data protection statement ([#2742](https://github.com/IsmaelMartinez/teams-for-linux/issues/2742)) ([189a26d](https://github.com/IsmaelMartinez/teams-for-linux/commit/189a26ddcfa317e150f7069bbb07b21465ff0ba8)), closes [#2741](https://github.com/IsmaelMartinez/teams-for-linux/issues/2741)
+* **roadmap:** record smartcard PIN dialog under awaiting user feedback ([#2739](https://github.com/IsmaelMartinez/teams-for-linux/issues/2739)) ([8fc2223](https://github.com/IsmaelMartinez/teams-for-linux/commit/8fc2223c10e2f970f7118dc1fab2fcdaf75cdec9))
+
+
+### CI/CD
+
+* **release-please:** flag draft releases in the created-release comment ([#2700](https://github.com/IsmaelMartinez/teams-for-linux/issues/2700)) ([d0bd972](https://github.com/IsmaelMartinez/teams-for-linux/commit/d0bd9723cf3ff2f8cb4ae4d140a1bfba91266129))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron from 42.5.1 to 42.7.0 ([#2740](https://github.com/IsmaelMartinez/teams-for-linux/issues/2740)) ([9f4ce43](https://github.com/IsmaelMartinez/teams-for-linux/commit/9f4ce43911223ba05a3a52b496d1245c2d2af6ba))
+* **deps-dev:** bump the minor-and-patch group with 2 updates ([#2709](https://github.com/IsmaelMartinez/teams-for-linux/issues/2709)) ([57f7f21](https://github.com/IsmaelMartinez/teams-for-linux/commit/57f7f21bce50e111d0d43e9ea4a58905b3b86f5e))
+* **deps-dev:** bump typescript from 6.0.3 to 7.0.2 in /docs-site ([#2727](https://github.com/IsmaelMartinez/teams-for-linux/issues/2727)) ([b0a9fc5](https://github.com/IsmaelMartinez/teams-for-linux/commit/b0a9fc5983f6469c2d945d00dc09567f9d7a5c62))
+* **deps:** bump body-parser from 1.20.5 to 1.20.6 in /docs-site ([#2735](https://github.com/IsmaelMartinez/teams-for-linux/issues/2735)) ([3a23323](https://github.com/IsmaelMartinez/teams-for-linux/commit/3a23323bc8c809ab9efbbf856b090a3b25a160b2))
+* **deps:** bump brace-expansion from 5.0.6 to 5.0.7 in /docs-site ([#2733](https://github.com/IsmaelMartinez/teams-for-linux/issues/2733)) ([6ecc9f0](https://github.com/IsmaelMartinez/teams-for-linux/commit/6ecc9f0ae82602319a5fab4a61fa4b90fb113c03))
+* **deps:** bump js-yaml from 3.14.2 to 3.15.0 in /docs-site ([#2725](https://github.com/IsmaelMartinez/teams-for-linux/issues/2725)) ([160569d](https://github.com/IsmaelMartinez/teams-for-linux/commit/160569d0ed1d1ee7e63004462d40e910c80c0346))
+* **deps:** bump shell-quote from 1.8.4 to 1.10.0 in /docs-site ([#2736](https://github.com/IsmaelMartinez/teams-for-linux/issues/2736)) ([cd7babe](https://github.com/IsmaelMartinez/teams-for-linux/commit/cd7babedb4fdb05831c8b2e0cc881704d775b61f))
+* **deps:** bump the minor-and-patch group across 1 directory with 7 updates ([#2726](https://github.com/IsmaelMartinez/teams-for-linux/issues/2726)) ([96e7c10](https://github.com/IsmaelMartinez/teams-for-linux/commit/96e7c10a0235e1d46b42dd3dbcfec73f57b2d382))
+* **deps:** bump the minor-and-patch group with 2 updates ([#2716](https://github.com/IsmaelMartinez/teams-for-linux/issues/2716)) ([f9f2407](https://github.com/IsmaelMartinez/teams-for-linux/commit/f9f240742ee1e7aa231605c2340dacdaad5d2d86))
+* **deps:** bump the minor-and-patch group with 2 updates ([#2723](https://github.com/IsmaelMartinez/teams-for-linux/issues/2723)) ([85fcb9c](https://github.com/IsmaelMartinez/teams-for-linux/commit/85fcb9c423f93b3a98947b93d0c2efa221f3d3da))
+* **deps:** bump webpack-dev-server from 5.2.5 to 5.2.6 in /docs-site ([#2734](https://github.com/IsmaelMartinez/teams-for-linux/issues/2734)) ([f48f49a](https://github.com/IsmaelMartinez/teams-for-linux/commit/f48f49a3ac78c614839e3d2f75fabdf66074da03))
+* **deps:** bump websocket-driver from 0.7.4 to 0.7.5 in /docs-site ([#2729](https://github.com/IsmaelMartinez/teams-for-linux/issues/2729)) ([9ab02f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/9ab02f34d2874444185c51dac6062e0caf02b452))
+* remove redundant code comments that restate the code ([#2728](https://github.com/IsmaelMartinez/teams-for-linux/issues/2728)) ([58b3098](https://github.com/IsmaelMartinez/teams-for-linux/commit/58b30985145de9f27ef62a7f85bd1dc0067195fe))
+
 ## [2.13.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.12.0...v2.13.0) (2026-06-25)
 
 
