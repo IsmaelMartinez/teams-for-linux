@@ -5,8 +5,9 @@
 Teams for Linux is an unofficial, community-maintained desktop **wrapper around
 the Microsoft Teams web application**. In short:
 
-- The application **collects, stores, and transmits no personal data of its
-  own**, and has no application-specific user accounts.
+- The application has **no user accounts of its own** and **transmits no
+  personal data to the maintainer**. What it needs locally — your Teams
+  session, settings, and logs — is stored **only on your device**.
 - The maintainer **runs no servers and no backend** — there is nowhere for your
   data to be sent to the maintainer.
 - **No telemetry, analytics, tracking, profiling, or advertising.** The

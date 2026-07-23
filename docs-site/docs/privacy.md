@@ -77,7 +77,7 @@ The following are stored **locally on your own device** and are not transmitted 
 
 - Application configuration (under `~/.config/teams-for-linux/`). See the [Configuration reference](configuration.md).
 - The Teams web application's own cache, cookies, and session/local storage, managed by the embedded Chromium engine as any browser would.
-- Authentication tokens, **encrypted at rest** using the operating system's secure storage (Keychain, DPAPI, or kwallet/gnome-keyring where available).
+- Authentication tokens, stored via the operating system's secure storage and **encrypted at rest where that storage is available** (Keychain, DPAPI, or kwallet/gnome-keyring). Where it is not available, the application falls back to unencrypted local storage, so this encryption is best-effort and platform-dependent.
 - Application logs, written locally, with personally identifiable information sanitised.
 
 ## 7. Source code & auditing
