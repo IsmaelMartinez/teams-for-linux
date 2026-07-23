@@ -14,6 +14,31 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.14.0" date="2026-07-23">
+      <description>
+        <ul>
+          <li>clientCertificate: add Linux smartcard PIN dialog and secure prompt (#2659)</li>
+          <li>frameless: update no-drag selectors for Teams top-bar restructure (#2704)</li>
+          <li>theme: revert followSystemTheme default to false (#2732)</li>
+          <li>add privacy and data protection statement (#2742) (189a26d), closes #2741</li>
+          <li>roadmap: record smartcard PIN dialog under awaiting user feedback (#2739)</li>
+          <li>release-please: flag draft releases in the created-release comment (#2700)</li>
+          <li>deps-dev: bump electron from 42.5.1 to 42.7.0 (#2740)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2709)</li>
+          <li>deps-dev: bump typescript from 6.0.3 to 7.0.2 in /docs-site (#2727)</li>
+          <li>deps: bump body-parser from 1.20.5 to 1.20.6 in /docs-site (#2735)</li>
+          <li>deps: bump brace-expansion from 5.0.6 to 5.0.7 in /docs-site (#2733)</li>
+          <li>deps: bump js-yaml from 3.14.2 to 3.15.0 in /docs-site (#2725)</li>
+          <li>deps: bump shell-quote from 1.8.4 to 1.10.0 in /docs-site (#2736)</li>
+          <li>deps: bump the minor-and-patch group across 1 directory with 7 updates (#2726)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2716)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2723)</li>
+          <li>deps: bump webpack-dev-server from 5.2.5 to 5.2.6 in /docs-site (#2734)</li>
+          <li>deps: bump websocket-driver from 0.7.4 to 0.7.5 in /docs-site (#2729)</li>
+          <li>remove redundant code comments that restate the code (#2728)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.13.0" date="2026-06-25">
       <description>
         <ul>

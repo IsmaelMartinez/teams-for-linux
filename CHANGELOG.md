@@ -41,6 +41,10 @@
 * **deps:** bump websocket-driver from 0.7.4 to 0.7.5 in /docs-site ([#2729](https://github.com/IsmaelMartinez/teams-for-linux/issues/2729)) ([9ab02f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/9ab02f34d2874444185c51dac6062e0caf02b452))
 * remove redundant code comments that restate the code ([#2728](https://github.com/IsmaelMartinez/teams-for-linux/issues/2728)) ([58b3098](https://github.com/IsmaelMartinez/teams-for-linux/commit/58b30985145de9f27ef62a7f85bd1dc0067195fe))
 
+### Thanks
+
+Big thanks to @app/dependabot, @jayenashar for contributing to this release.
+
 ## [2.13.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.12.0...v2.13.0) (2026-06-25)
 
 
