@@ -32,6 +32,10 @@ exports = module.exports = (Menus) => ({
       accelerator: "ctrl+R",
       click: () => Menus.reload(),
     },
+    {
+      label: "Save Open Document to File…",
+      click: () => Menus.saveOpenDocument(),
+    },
     ...(process.env.APPIMAGE
       ? [
           {
