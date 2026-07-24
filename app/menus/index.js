@@ -9,6 +9,7 @@ const {
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
+const { fileURLToPath } = require("node:url");
 const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
@@ -177,22 +178,20 @@ class Menus {
       this.profilesManager.on("switch", this.#profileChangeHandler);
       this.profilesManager.on("update", this.#profileChangeHandler);
 
-      // The top-right switcher strip (owned by ProfileViewManager) opens the
-      // Add / Manage dialogs via IPC rather than holding its own dialog
-      // instances — these reuse the exact same dialogs the Profiles menu uses.
-      // Both handlers verify the sender is the switcher strip itself (the only
-      // legitimate caller) so the untrusted Teams renderer can't pop these
-      // dialogs — matching the sender check ProfileViewManager applies to
-      // profile-switcher-set-expanded.
+      // The switcher pill (owned by ProfileViewManager) opens the Add / Manage
+      // dialogs via IPC rather than holding its own dialog instances — these
+      // reuse the exact same dialogs the Profiles menu uses. Both handlers
+      // verify the sender is the switcher pill itself (the only legitimate
+      // caller) so the untrusted Teams renderer can't pop these dialogs.
       this.#switcherOpenAddHandler = (event) => {
-        if (isSwitcherStripSender(event)) this.addProfile();
+        if (isSwitcherPillSender(event)) this.addProfile();
       };
       this.#switcherOpenManageHandler = (event) => {
-        if (isSwitcherStripSender(event)) this.manageProfiles();
+        if (isSwitcherPillSender(event)) this.manageProfiles();
       };
-      // Switcher strip "Add profile…" link opens the existing Add-profile dialog.
+      // Switcher pill "Add profile…" link opens the existing Add-profile dialog.
       ipcMain.on("profile-switcher-open-add", this.#switcherOpenAddHandler);
-      // Switcher strip "Manage profiles…" link opens the existing Manage dialog.
+      // Switcher pill "Manage profiles…" link opens the existing Manage dialog.
       ipcMain.on("profile-switcher-open-manage", this.#switcherOpenManageHandler);
 
       // Detach the listeners when the window is destroyed so the
@@ -509,15 +508,23 @@ class Menus {
   }
 }
 
-// The switcher strip is the only legitimate sender of the profile-switcher-*
-// open-dialog channels. Identify it by the file it loaded
-// (app/profileSwitcher/switcher.html) rather than threading a cross-module
-// reference to its WebContentsView through Menus. file:// URLs use forward
-// slashes on every platform, so the suffix check is portable.
-function isSwitcherStripSender(event) {
+// The switcher pill is the only legitimate sender of the profile-switcher-*
+// open-dialog channels. Verify the sender actually loaded our local
+// switcher.html — `file:` protocol AND an exact absolute-path match — rather
+// than trusting a pathname suffix, so a remote page served at
+// `…/profileSwitcher/switcher.html` cannot pop the dialogs (#2661 review).
+const SWITCHER_HTML_PATH = path.join(
+  __dirname,
+  "..",
+  "profileSwitcher",
+  "switcher.html"
+);
+
+function isSwitcherPillSender(event) {
+  const senderUrl = event.sender?.getURL?.() || "";
+  if (!senderUrl.startsWith("file:")) return false;
   try {
-    const url = event.sender?.getURL?.() || "";
-    return new URL(url).pathname.endsWith("/profileSwitcher/switcher.html");
+    return fileURLToPath(senderUrl) === SWITCHER_HTML_PATH;
   } catch {
     return false;
   }

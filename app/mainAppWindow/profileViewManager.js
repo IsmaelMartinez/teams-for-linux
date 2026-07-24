@@ -87,8 +87,8 @@ class ProfileViewManager {
   #navigationHandler = null;
   #bootstrapInFlight = false;
   #initialized = false;
-  // The top switcher chrome strip (a single persistent WebContentsView held
-  // separately from #views so #hideAllOverlays never detaches it).
+  // The switcher pill (a single persistent WebContentsView held separately from
+  // #views so #hideAllOverlays never detaches it).
   #chromeView = null;
   #chromeExpanded = false; // dropdown open (transient)
   #setExpandedHandler = null;
@@ -128,9 +128,9 @@ class ProfileViewManager {
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
 
-    // Only act on events from our own strip's webContents. Returns once the
+    // Only act on events from our own pill's webContents. Returns once the
     // bounds are applied so the renderer can await before revealing the
-    // dropdown (avoids a first-open clip while the strip is still collapsed).
+    // dropdown (avoids a first-open clip while the view is still pill-sized).
     this.#setExpandedHandler = (event, expanded) => {
       if (!this.#chromeView || event.sender !== this.#chromeView.webContents) {
         return;
@@ -191,9 +191,9 @@ class ProfileViewManager {
     const active = this.#profilesManager.getActive();
     if (active) this.#showActive(active);
 
-    // Create the switcher chrome strip LAST so it sits above the active
-    // profile view. From here on, every #showActive re-raises it (adding a
-    // profile view would otherwise paint over it).
+    // Create the switcher pill LAST so it sits above the active profile view.
+    // From here on, every #showActive re-raises it (adding a profile view
+    // would otherwise paint over it).
     this.#createChromeView();
   }
 
@@ -315,7 +315,7 @@ class ProfileViewManager {
 
   #onAdd(profile) {
     // Profile 0 (legacy partition) lives on the root window; no overlay
-    // needed. Other profiles get a WebContentsView. Either way the strip
+    // needed. Other profiles get a WebContentsView. Either way the pill
     // must re-render to show the new profile.
     if (profile.partition !== LEGACY_PARTITION) {
       this.#createView(profile);
@@ -407,7 +407,7 @@ class ProfileViewManager {
 
   #showActive(profile) {
     if (profile.partition === LEGACY_PARTITION) {
-      // Profile 0 is the root window; just hide all overlays. The strip
+      // Profile 0 is the root window; just hide all overlays. The pill
       // stays put (it's not in #views) and is re-raised below.
       this.#hideAllOverlays();
       this.#raiseChrome();
@@ -425,7 +425,7 @@ class ProfileViewManager {
     }
     this.#applyBounds(view);
     this.#window.contentView.addChildView(view);
-    // Adding the profile view puts it on top; re-raise the strip so it stays
+    // Adding the profile view puts it on top; re-raise the pill so it stays
     // above the active content.
     this.#raiseChrome();
   }
@@ -454,10 +454,10 @@ class ProfileViewManager {
     view.setBounds({ x: 0, y: 0, width, height });
   }
 
-  // --- Switcher chrome strip -------------------------------------------
+  // --- Switcher pill ---------------------------------------------------
 
   #createChromeView() {
-    // The strip renders our own vanilla HTML/CSS and never touches Teams'
+    // The pill renders our own vanilla HTML/CSS and never touches Teams'
     // DOM, so it can be fully hardened (contextIsolation + sandbox), unlike
     // the profile views which need ReactHandler access.
     const view = new WebContentsView({
@@ -503,7 +503,7 @@ class ProfileViewManager {
     });
   }
 
-  // Re-assert the strip as the topmost child. addChildView on an already
+  // Re-assert the pill as the topmost child. addChildView on an already
   // attached view moves it to the top of the z-order.
   #raiseChrome() {
     if (!this.#chromeView) return;
