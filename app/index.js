@@ -134,7 +134,7 @@ const notificationService = new NotificationService(
 
 const screenSharingService = new ScreenSharingService();
 
-const partitionsManager = new PartitionsManager(appConfig.settingsStore);
+const partitionsManager = new PartitionsManager(appConfig.settingsStore, config);
 
 // ADR-020: ProfilesManager owns persistence for the multi-account switcher.
 // Constructed unconditionally so its API is available to other main-process
