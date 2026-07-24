@@ -140,7 +140,20 @@ const allowedChannels = new Set([
   // (no allowlist needed for that direction).
   'manage-profile-rename',
   'manage-profile-remove',
-  'manage-profile-close'
+  'manage-profile-close',
+
+  // Bottom-left switcher pill (Phase 1c.2). The pill reuses the
+  // `profile-list` / `profile-get-active` / `profile-switch` channels above
+  // for its data; these are the pill-specific additions. open-add/open-manage
+  // open the existing dialogs (handled in `Menus`); set-expanded grows the view
+  // to full-window while the dropdown is open (handled in `ProfileViewManager`).
+  // State flows main → renderer over `profile-switcher-state` (send direction,
+  // not gated; listed for an authoritative allowlist per CLAUDE.md). All are
+  // registered only when `multiAccount.enabled === true`.
+  'profile-switcher-open-add',
+  'profile-switcher-open-manage',
+  'profile-switcher-set-expanded',
+  'profile-switcher-state'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
