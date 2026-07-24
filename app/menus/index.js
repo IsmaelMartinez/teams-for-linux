@@ -9,6 +9,7 @@ const {
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
+const { fileURLToPath } = require("node:url");
 const appMenu = require("./appMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
@@ -23,6 +24,8 @@ let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
   #preJoinUrl = null;
   #profileChangeHandler = null;
+  #switcherOpenAddHandler = null;
+  #switcherOpenManageHandler = null;
 
   constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
@@ -175,6 +178,22 @@ class Menus {
       this.profilesManager.on("switch", this.#profileChangeHandler);
       this.profilesManager.on("update", this.#profileChangeHandler);
 
+      // The switcher pill (owned by ProfileViewManager) opens the Add / Manage
+      // dialogs via IPC rather than holding its own dialog instances — these
+      // reuse the exact same dialogs the Profiles menu uses. Both handlers
+      // verify the sender is the switcher pill itself (the only legitimate
+      // caller) so the untrusted Teams renderer can't pop these dialogs.
+      this.#switcherOpenAddHandler = (event) => {
+        if (isSwitcherPillSender(event)) this.addProfile();
+      };
+      this.#switcherOpenManageHandler = (event) => {
+        if (isSwitcherPillSender(event)) this.manageProfiles();
+      };
+      // Switcher pill "Add profile…" link opens the existing Add-profile dialog.
+      ipcMain.on("profile-switcher-open-add", this.#switcherOpenAddHandler);
+      // Switcher pill "Manage profiles…" link opens the existing Manage dialog.
+      ipcMain.on("profile-switcher-open-manage", this.#switcherOpenManageHandler);
+
       // Detach the listeners when the window is destroyed so the
       // long-lived ProfilesManager (a process-wide singleton) does not
       // hold references into a stale Menus instance if the window is
@@ -188,6 +207,18 @@ class Menus {
           this.profilesManager.off("switch", this.#profileChangeHandler);
           this.profilesManager.off("update", this.#profileChangeHandler);
           this.#profileChangeHandler = null;
+        }
+        if (this.#switcherOpenAddHandler) {
+          ipcMain.removeListener(
+            "profile-switcher-open-add",
+            this.#switcherOpenAddHandler
+          );
+          ipcMain.removeListener(
+            "profile-switcher-open-manage",
+            this.#switcherOpenManageHandler
+          );
+          this.#switcherOpenAddHandler = null;
+          this.#switcherOpenManageHandler = null;
         }
       });
     }
@@ -474,6 +505,28 @@ class Menus {
 
   checkForUpdates() {
     autoUpdaterModule.checkForUpdates();
+  }
+}
+
+// The switcher pill is the only legitimate sender of the profile-switcher-*
+// open-dialog channels. Verify the sender actually loaded our local
+// switcher.html — `file:` protocol AND an exact absolute-path match — rather
+// than trusting a pathname suffix, so a remote page served at
+// `…/profileSwitcher/switcher.html` cannot pop the dialogs (#2661 review).
+const SWITCHER_HTML_PATH = path.join(
+  __dirname,
+  "..",
+  "profileSwitcher",
+  "switcher.html"
+);
+
+function isSwitcherPillSender(event) {
+  const senderUrl = event.sender?.getURL?.() || "";
+  if (!senderUrl.startsWith("file:")) return false;
+  try {
+    return fileURLToPath(senderUrl) === SWITCHER_HTML_PATH;
+  } catch {
+    return false;
   }
 }
 
