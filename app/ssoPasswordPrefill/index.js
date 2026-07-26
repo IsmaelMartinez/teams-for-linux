@@ -110,6 +110,20 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
     };
+    // Fire a full pointer+click sequence: some AAD tiles ignore a bare
+    // .click() and only respond to the pointer/mouse event chain.
+    const activate = (el) => {
+      try { el.focus(); } catch (e) { void e; }
+      for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+        el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+      }
+    };
+    // Structural signature (no text/attribute VALUES -> no PII) for diagnostics.
+    const describe = (el) => el ? (el.tagName
+      + (el.getAttribute('role') ? '[role=' + el.getAttribute('role') + ']' : '')
+      + (el.hasAttribute('data-test-id') ? '[data-test-id]' : '')
+      + (el.hasAttribute('href') ? '[href]' : '')
+      + (el.hasAttribute('tabindex') ? '[tabindex]' : '')) : null;
     const EMAIL_SEL = 'input[type=email], input[name=loginfmt], input[name=username], input[autocomplete=username], input[type=text][name*="email" i]';
     const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
     const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
@@ -131,15 +145,30 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     // the email as text. Advance action -> gated behind autoSubmit.
     let account = USER ? 'no-tile' : 'skipped';
     let accountAttempts = 0;
+    let accountTiles = [];      // structural signatures seen in the holder
+    let accountClicked = null;  // signature of the element we activated
     const clickAccount = () => {
       if (!AUTO || !USER || account === 'clicked' || accountAttempts >= 10) return;
       const holder = document.querySelector('#tilesHolder');
       if (!holder) return;
       accountAttempts += 1;
       const want = USER.trim().toLowerCase();
-      const tiles = Array.from(holder.querySelectorAll('[role=button], [data-test-id], div.table, .tile'));
-      const target = tiles.find((el) => editable(el) && (el.textContent || '').toLowerCase().includes(want));
-      if (target) { target.click(); account = 'clicked'; }
+      const matches = (el) =>
+        (el.getAttribute('data-test-id') || '').toLowerCase().includes(want) ||
+        (el.getAttribute('aria-label') || '').toLowerCase().includes(want) ||
+        (el.textContent || '').toLowerCase().includes(want);
+      const candidates = Array.from(holder.querySelectorAll('[role=button], [data-test-id], a, [tabindex]'));
+      accountTiles = candidates.map(describe);
+      // Prefer an explicit clickable tile; else find any node with the email
+      // and climb to its nearest clickable ancestor.
+      let target = candidates.find((el) => editable(el) && matches(el));
+      if (!target) {
+        const node = Array.from(holder.querySelectorAll('*')).find((el) => editable(el) && matches(el));
+        target = node ? node.closest('[role=button], a, [data-test-id], [tabindex]') : null;
+      } else {
+        target = target.closest('[role=button], a, [data-test-id], [tabindex]') || target;
+      }
+      if (target) { activate(target); account = 'clicked'; accountClicked = describe(target); }
     };
 
     // Retry-capped: AAD wires button handlers slightly after render, so a
@@ -152,7 +181,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       // Email step only: advance once the email is in and no password field yet.
       if (!AUTO || !emailFilled || pwd() || nextAttempts >= 6) return;
       const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
-      if (btn) { btn.click(); nextAttempts += 1; next = 'clicked'; }
+      if (btn) { activate(btn); nextAttempts += 1; next = 'clicked'; }
     };
 
     let verify = VERIFY ? 'no-match' : 'skipped';
@@ -164,13 +193,14 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       const scope = document.querySelector('#idDiv_SAOTCS_Proofs') || document.body;
       const rows = Array.from(scope.querySelectorAll('[data-value], [role=button], a, button'));
       const target = rows.find((el) => editable(el) && (el.textContent || '').trim().toLowerCase().startsWith(want));
-      if (target) { target.click(); verify = 'clicked'; }
+      if (target) { activate(target); verify = 'clicked'; }
     };
 
     const tick = () => { fillEmail(); clickAccount(); clickNext(); clickVerify(); };
+    const state = (pwdFound) => ({ pwd: pwdFound, email, account, accountTiles, accountClicked, verify, next });
     tick();
-    if (pwd()) return resolve({ pwd: true, email, account, verify, next });
-    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve({ pwd: pwdFound, email, account, verify, next }); };
+    if (pwd()) return resolve(state(true));
+    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound)); };
     const obs = new MutationObserver(() => { tick(); if (pwd()) finish(true); });
     obs.observe(document.documentElement, { childList: true, subtree: true });
     // Timer retries cover the case where AAD enables the button late and fires
@@ -249,6 +279,8 @@ function attach(window, config) {
       console.info("[SSO_PREFILL] Login page handled", {
         email: result.email,
         account: result.account,
+        accountTiles: result.accountTiles,
+        accountClicked: result.accountClicked,
         pwField: result.pwd,
         verify: result.verify,
         next: result.next,
