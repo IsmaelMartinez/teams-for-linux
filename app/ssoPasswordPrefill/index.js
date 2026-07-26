@@ -213,30 +213,52 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
 function buildPasswordFillScript(password, autoSubmit) {
   // JSON.stringify safely encodes the password (quotes, backslashes, unicode,
   // newlines, `</script>`) as a JS string literal for embedding.
-  return `(() => {
+  //
+  // Resilient fill: the AAD password page often mounts a beat after the field
+  // appears and resets the input to empty during hydration, so a one-shot fill
+  // gets wiped and Sign in submits blank ("Please enter your password"). We
+  // re-apply the value whenever it drifts from PWD, and only click Sign in once
+  // the value has held for two consecutive ticks (~0.5s) — i.e. after AAD has
+  // stopped resetting it.
+  return `(() => new Promise((resolve) => {
     const PWD = ${JSON.stringify(password)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
     const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
-    const el = Array.from(document.querySelectorAll('input[type=password]')).find(editable);
-    if (!el) return 'no-field';
-    if (el.value) return 'already-filled';
-    const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-    if (desc && desc.set) desc.set.call(el, PWD); else el.value = PWD;
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    if (AUTO) {
-      // Retry: the Sign in button is often wired a beat after the field, so a
-      // single immediate click can be a no-op.
-      const visible = (b) => b && (b.offsetParent !== null || b.getClientRects().length) && !b.disabled;
-      const clickSignIn = () => {
+    const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
+    const setValue = (el, v) => {
+      try { el.focus(); } catch (e) { void e; }
+      const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+      if (desc && desc.set) desc.set.call(el, v); else el.value = v;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    let filled = false;
+    let signedIn = false;
+    let stable = 0;
+    let ticks = 0;
+    const done = () => { obs.disconnect(); clearInterval(iv); resolve(!filled ? 'no-field' : (signedIn ? 'filled-submitted' : 'filled')); };
+    const tick = () => {
+      ticks += 1;
+      const el = findPwd();
+      if (!el) { if (filled) return done(); return; } // field gone after submit -> done
+      if (el.value !== PWD) { setValue(el, PWD); filled = true; stable = 0; }
+      else { filled = true; stable += 1; }
+      if (AUTO && !signedIn && stable >= 2) {
         const btn = document.querySelector('#idSIButton9, input[type=submit], button[type=submit]')
           || (el.form && el.form.querySelector('button, input[type=submit]'));
-        if (visible(btn)) btn.click();
-      };
-      [50, 300, 800, 1500].forEach((d) => setTimeout(clickSignIn, d));
-    }
-    return 'filled';
-  })()`;
+        if (btn && (btn.offsetParent !== null || btn.getClientRects().length) && !btn.disabled) {
+          btn.click();
+          signedIn = true;
+        }
+      }
+      if (ticks > 40) done(); // ~10s safety cap
+    };
+    tick();
+    const obs = new MutationObserver(tick);
+    obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+    const iv = setInterval(tick, 250);
+    setTimeout(done, 10000);
+  }))()`;
 }
 
 /**
@@ -295,8 +317,13 @@ function attach(window, config) {
           buildObserverScript(user || null, verifyMethod || null, autoSubmit),
           true,
         )
-        .catch(() => ({ pwd: false, email: "error", account: "error", verify: "error", next: "error" }));
+        .catch((e) => ({ __err: e.message }));
       if (gen !== generation) return; // navigated away; abandon this attempt
+      if (result.__err) {
+        // Usually a hidden MSAL auth iframe that can't run our script — noise.
+        console.debug("[SSO_PREFILL] Frame not injectable", { frame: origin });
+        return;
+      }
       console.info("[SSO_PREFILL] Login page handled", {
         frame: origin,
         email: result.email,
