@@ -126,17 +126,24 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       emailFilled = true;
     };
 
+    // Retry-capped: AAD wires button handlers slightly after render, so a
+    // single click at dom-ready is often a no-op. tick() is re-run on
+    // mutations and on a timer, so clicks retry until the page advances or the
+    // cap is hit (avoids runaway clicking).
     let next = 'skipped';
+    let nextAttempts = 0;
     const clickNext = () => {
       // Email step only: advance once the email is in and no password field yet.
-      if (!AUTO || !emailFilled || next === 'clicked' || pwd()) return;
+      if (!AUTO || !emailFilled || pwd() || nextAttempts >= 6) return;
       const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
-      if (btn) { btn.click(); next = 'clicked'; }
+      if (btn) { btn.click(); nextAttempts += 1; next = 'clicked'; }
     };
 
     let verify = VERIFY ? 'no-match' : 'skipped';
+    let verifyAttempts = 0;
     const clickVerify = () => {
-      if (!VERIFY || verify === 'clicked') return;
+      if (!VERIFY || verify === 'clicked' || verifyAttempts >= 10) return;
+      verifyAttempts += 1;
       const want = VERIFY.trim().toLowerCase();
       const scope = document.querySelector('#idDiv_SAOTCS_Proofs') || document.body;
       const rows = Array.from(scope.querySelectorAll('[data-value], [role=button], a, button'));
@@ -147,9 +154,13 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     const tick = () => { fillEmail(); clickNext(); clickVerify(); };
     tick();
     if (pwd()) return resolve({ pwd: true, email, verify, next });
-    const obs = new MutationObserver(() => { tick(); if (pwd()) { obs.disconnect(); clearTimeout(t); resolve({ pwd: true, email, verify, next }); } });
+    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve({ pwd: pwdFound, email, verify, next }); };
+    const obs = new MutationObserver(() => { tick(); if (pwd()) finish(true); });
     obs.observe(document.documentElement, { childList: true, subtree: true });
-    const t = setTimeout(() => { obs.disconnect(); resolve({ pwd: false, email, verify, next }); }, ${OBSERVER_TIMEOUT_MS});
+    // Timer retries cover the case where AAD enables the button late and fires
+    // no further mutations for the observer to react to.
+    const iv = setInterval(() => { tick(); if (pwd()) finish(true); }, 500);
+    const t = setTimeout(() => finish(false), ${OBSERVER_TIMEOUT_MS});
   }))()`;
 }
 
@@ -168,9 +179,15 @@ function buildPasswordFillScript(password, autoSubmit) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
     if (AUTO) {
-      const btn = document.querySelector('#idSIButton9, input[type=submit], button[type=submit]')
-        || (el.form && el.form.querySelector('button, input[type=submit]'));
-      if (btn) setTimeout(() => btn.click(), 50);
+      // Retry: the Sign in button is often wired a beat after the field, so a
+      // single immediate click can be a no-op.
+      const visible = (b) => b && (b.offsetParent !== null || b.getClientRects().length) && !b.disabled;
+      const clickSignIn = () => {
+        const btn = document.querySelector('#idSIButton9, input[type=submit], button[type=submit]')
+          || (el.form && el.form.querySelector('button, input[type=submit]'));
+        if (visible(btn)) btn.click();
+      };
+      [50, 300, 800, 1500].forEach((d) => setTimeout(clickSignIn, d));
     }
     return 'filled';
   })()`;
