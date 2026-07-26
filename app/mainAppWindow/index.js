@@ -19,6 +19,7 @@ const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
 const ConnectionManager = require("../connectionManager");
+const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const os = require("node:os");
 const path = require("node:path");
@@ -1309,6 +1310,10 @@ function addEventHandlers() {
   // Navigation state change handlers
   window.webContents.on("did-navigate", onNavigationChanged);
   window.webContents.on("did-navigate-in-page", onNavigationChanged);
+
+  // Pre-fill the password on the Microsoft/federated web login page from a
+  // user-defined command (no-op unless ssoInAppPasswordCommand is set).
+  ssoPasswordPrefill.attach(window, config);
 }
 
 function getWebRequestFilterFromURL() {

@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 72,
+  "optionCount": 75,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -672,6 +672,27 @@
       "type": "string",
       "default": "",
       "description": "Command to execute to retrieve password for SSO basic auth.",
+      "applyMode": "restart"
+    },
+    {
+      "name": "ssoInAppPasswordCommand",
+      "type": "string",
+      "default": "",
+      "description": "Command whose stdout (first line) is pre-filled into the password field of the Microsoft/federated web login page, so you don't retype it each launch. Runs in a shell; use your own password manager, e.g. 'pass show teams'. Empty disables it. The app stores no secret. Distinct from ssoBasicAuthPasswordCommand, which is for the HTTP Basic/NTLM dialog, not the web form.",
+      "applyMode": "restart"
+    },
+    {
+      "name": "ssoInAppLoginHosts",
+      "type": "array",
+      "default": [],
+      "description": "Extra hostnames (or parent domains) to treat as SSO login pages for ssoInAppPasswordCommand, in addition to the built-in Microsoft login hosts (login.microsoftonline.com, login.microsoft.com, login.live.com). Add your federated IdP host here if sign-in happens off the Microsoft hosts.",
+      "applyMode": "restart"
+    },
+    {
+      "name": "ssoInAppAutoSubmit",
+      "type": "boolean",
+      "default": false,
+      "description": "When ssoInAppPasswordCommand is set, automatically click the sign-in button after pre-filling the password. Off by default so you review and submit yourself.",
       "applyMode": "restart"
     },
     {

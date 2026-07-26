@@ -630,6 +630,27 @@ module.exports = {
         type: "string",
         applyMode: "restart",
       },
+      ssoInAppPasswordCommand: {
+        default: "",
+        describe:
+          "Command whose stdout (first line) is pre-filled into the password field of the Microsoft/federated web login page, so you don't retype it each launch. Runs in a shell; use your own password manager, e.g. 'pass show teams'. Empty disables it. The app stores no secret. Distinct from ssoBasicAuthPasswordCommand, which is for the HTTP Basic/NTLM dialog, not the web form.",
+        type: "string",
+        applyMode: "restart",
+      },
+      ssoInAppLoginHosts: {
+        default: [],
+        describe:
+          "Extra hostnames (or parent domains) to treat as SSO login pages for ssoInAppPasswordCommand, in addition to the built-in Microsoft login hosts (login.microsoftonline.com, login.microsoft.com, login.live.com). Add your federated IdP host here if sign-in happens off the Microsoft hosts.",
+        type: "array",
+        applyMode: "restart",
+      },
+      ssoInAppAutoSubmit: {
+        default: false,
+        describe:
+          "When ssoInAppPasswordCommand is set, automatically click the sign-in button after pre-filling the password. Off by default so you review and submit yourself.",
+        type: "boolean",
+        applyMode: "restart",
+      },
       trayIconEnabled: {
         default: true,
         describe: "Enable tray icon",
