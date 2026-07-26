@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 75,
+  "optionCount": 76,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -672,6 +672,13 @@
       "type": "string",
       "default": "",
       "description": "Command to execute to retrieve password for SSO basic auth.",
+      "applyMode": "restart"
+    },
+    {
+      "name": "ssoInAppUser",
+      "type": "string",
+      "default": "",
+      "description": "Email/username pre-filled into the account field of the Microsoft/federated web login page when it is empty, so you don't retype it each launch. Empty disables it. Pairs with ssoInAppPasswordCommand for the password step.",
       "applyMode": "restart"
     },
     {

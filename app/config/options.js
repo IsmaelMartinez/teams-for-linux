@@ -630,6 +630,13 @@ module.exports = {
         type: "string",
         applyMode: "restart",
       },
+      ssoInAppUser: {
+        default: "",
+        describe:
+          "Email/username pre-filled into the account field of the Microsoft/federated web login page when it is empty, so you don't retype it each launch. Empty disables it. Pairs with ssoInAppPasswordCommand for the password step.",
+        type: "string",
+        applyMode: "restart",
+      },
       ssoInAppPasswordCommand: {
         default: "",
         describe:

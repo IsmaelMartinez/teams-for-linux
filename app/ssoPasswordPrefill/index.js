@@ -1,34 +1,37 @@
 // app/ssoPasswordPrefill/index.js
 
 /**
- * SSO web-login password pre-fill.
+ * SSO web-login pre-fill (email + password).
  *
  * Many organisations (e.g. the UN) expire the Teams session quickly by policy,
- * so users land on the Microsoft / federated "Enter password" *web* page on
- * almost every launch. Microsoft already remembers the account (email), but
- * never the password, so it has to be retyped each time. This module pre-fills
- * the password field on that login page from a user-defined command
- * (`ssoInAppPasswordCommand`), e.g. `pass show teams`, so the app itself stores
- * no secret.
+ * so users land on the Microsoft / federated *web* login page on almost every
+ * launch and have to retype credentials. This module pre-fills that login form:
+ *
+ * - the email/username field from a static value (`ssoInAppUser`), and
+ * - the password field from a user-defined command (`ssoInAppPasswordCommand`),
+ *   e.g. `pass show teams`, so the app itself stores no secret.
  *
  * This is distinct from `app/login/` (the native HTTP Basic/NTLM dialog and its
  * `ssoBasicAuthPasswordCommand`); that never touches the web login form.
  *
  * Design / security:
- * - The command runs in the main process only. Its output (the password) is
- *   handed to the login page's renderer via `executeJavaScript` solely to set
- *   the field value — the same place the user would type it. It is never
- *   logged, persisted, or sent anywhere else, and the local reference is
- *   cleared right after injection.
+ * - The password command runs in the main process only. Its output goes to the
+ *   login page's renderer via `executeJavaScript` solely to set the field
+ *   value — the same place the user would type it — and is never logged,
+ *   persisted, or sent anywhere else; the local reference is cleared right
+ *   after injection.
  * - Injection is gated to recognised login hosts (Microsoft login domains by
- *   default, extendable via `ssoInAppLoginHosts`), so the password can never be
+ *   default, extendable via `ssoInAppLoginHosts`), so credentials can never be
  *   filled into an arbitrary site.
- * - A detector (a Promise resolved by a MutationObserver) means the command
- *   only runs once a visible password field actually exists — it handles the
- *   SPA email->password transition where no new navigation fires, and avoids
- *   running the command on pages that have no password field.
- * - Auto-submit is opt-in (`ssoInAppAutoSubmit`, default false); otherwise the
- *   field is only filled and the user clicks "Sign in".
+ * - A single injected observer fills the email field as soon as it appears and
+ *   resolves once a password field exists; this covers both the single-page
+ *   email->password transition (no new navigation) and federated flows that
+ *   navigate to a separate password host. The password command runs only once
+ *   a password field is actually present.
+ * - A generation counter makes each navigation start a fresh attempt and lets
+ *   stale in-flight attempts bail, so a long-waiting observer never blocks the
+ *   next page.
+ * - Auto-submit is opt-in (`ssoInAppAutoSubmit`, default false).
  */
 
 const { exec } = require("node:child_process");
@@ -41,9 +44,9 @@ const DEFAULT_LOGIN_HOSTS = [
   "login.live.com",
 ];
 
-// How long the renderer detector waits for a password field to appear, and how
+// How long the renderer observer waits for a password field to appear, and how
 // long the password command may run before being killed.
-const DETECTOR_TIMEOUT_MS = 15000;
+const OBSERVER_TIMEOUT_MS = 15000;
 const COMMAND_TIMEOUT_MS = 15000;
 const COMMAND_MAX_BUFFER = 1024 * 1024;
 
@@ -83,28 +86,49 @@ function runPasswordCommand(command) {
   });
 }
 
-// Resolves true once a visible, editable password field exists in the page,
-// or false after DETECTOR_TIMEOUT_MS. Runs in the login page's own context.
-const DETECTOR_SCRIPT = `(() => new Promise((resolve) => {
-  const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
-  const find = () => Array.from(document.querySelectorAll('input[type="password"]')).find(editable);
-  if (find()) return resolve(true);
-  const obs = new MutationObserver(() => { if (find()) { obs.disconnect(); clearTimeout(t); resolve(true); } });
-  obs.observe(document.documentElement, { childList: true, subtree: true });
-  const t = setTimeout(() => { obs.disconnect(); resolve(false); }, ${DETECTOR_TIMEOUT_MS});
-}))()`;
+// Runs in the login page's own context. Fills the email/username field (if a
+// value was provided) as soon as it appears and stays empty, and resolves once
+// a visible, editable password field exists (or after OBSERVER_TIMEOUT_MS).
+// Resolves { pwd: boolean, email: 'skipped'|'no-field'|'filled'|'already-filled' }.
+function buildObserverScript(user) {
+  return `(() => new Promise((resolve) => {
+    const USER = ${JSON.stringify(user)};
+    const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
+    const setValue = (el, v) => {
+      const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+      if (desc && desc.set) desc.set.call(el, v); else el.value = v;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const EMAIL_SEL = 'input[type=email], input[name=loginfmt], input[name=username], input[autocomplete=username], input[type=text][name*="email" i]';
+    let email = USER ? 'no-field' : 'skipped';
+    const fillEmail = () => {
+      if (!USER) return;
+      const el = Array.from(document.querySelectorAll(EMAIL_SEL)).find(editable);
+      if (!el) return;
+      if (el.value) { email = 'already-filled'; return; }
+      setValue(el, USER);
+      email = 'filled';
+    };
+    const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
+    fillEmail();
+    if (pwd()) return resolve({ pwd: true, email });
+    const obs = new MutationObserver(() => { fillEmail(); if (pwd()) { obs.disconnect(); clearTimeout(t); resolve({ pwd: true, email }); } });
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+    const t = setTimeout(() => { obs.disconnect(); resolve({ pwd: false, email }); }, ${OBSERVER_TIMEOUT_MS});
+  }))()`;
+}
 
-function buildFillScript(password, autoSubmit) {
-  // JSON.stringify safely encodes the password (quotes, backslashes, unicode)
-  // as a JS string literal for embedding.
+function buildPasswordFillScript(password, autoSubmit) {
+  // JSON.stringify safely encodes the password (quotes, backslashes, unicode,
+  // newlines, `</script>`) as a JS string literal for embedding.
   return `(() => {
     const PWD = ${JSON.stringify(password)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
     const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
-    const el = Array.from(document.querySelectorAll('input[type="password"]')).find(editable);
+    const el = Array.from(document.querySelectorAll('input[type=password]')).find(editable);
     if (!el) return 'no-field';
     if (el.value) return 'already-filled';
-    // Use the native value setter so React/Angular's change tracking fires.
     const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
     if (desc && desc.set) desc.set.call(el, PWD); else el.value = PWD;
     el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -119,24 +143,24 @@ function buildFillScript(password, autoSubmit) {
 }
 
 /**
- * Attach the pre-fill behaviour to the main window. No-op unless
- * `ssoInAppPasswordCommand` is configured.
+ * Attach the pre-fill behaviour to the main window. No-op unless at least one
+ * of `ssoInAppUser` / `ssoInAppPasswordCommand` is configured.
  * @param {Electron.BrowserWindow} window
  * @param {object} config startup config
  */
 function attach(window, config) {
+  const user = (config.ssoInAppUser || "").trim();
   const command = (config.ssoInAppPasswordCommand || "").trim();
-  if (!command) return;
+  if (!user && !command) return;
 
   const extraHosts = Array.isArray(config.ssoInAppLoginHosts)
     ? config.ssoInAppLoginHosts
     : [];
   const autoSubmit = !!config.ssoInAppAutoSubmit;
   const wc = window.webContents;
-  let inFlight = false;
+  let generation = 0;
 
-  async function maybePrefill() {
-    if (inFlight) return;
+  async function maybePrefill(gen) {
     let url;
     try {
       url = wc.getURL();
@@ -145,25 +169,31 @@ function attach(window, config) {
     }
     if (!isLoginUrl(url, extraHosts)) return;
 
-    inFlight = true;
     let password = null;
     try {
-      const present = await wc
-        .executeJavaScript(DETECTOR_SCRIPT, true)
-        .catch(() => false);
-      if (!present) return;
+      const result = await wc
+        .executeJavaScript(buildObserverScript(user || null), true)
+        .catch(() => ({ pwd: false, email: "error" }));
+      if (gen !== generation) return; // navigated away; abandon this attempt
+      console.info("[SSO_PREFILL] Login page handled", {
+        email: result.email,
+        passwordFieldFound: result.pwd,
+      });
+
+      if (!command || !result.pwd) return;
 
       password = firstLine(await runPasswordCommand(command));
+      if (gen !== generation) return;
       if (!password) {
         console.warn("[SSO_PREFILL] Password command returned empty output");
         return;
       }
 
-      const result = await wc.executeJavaScript(
-        buildFillScript(password, autoSubmit),
+      const fill = await wc.executeJavaScript(
+        buildPasswordFillScript(password, autoSubmit),
         true,
       );
-      console.debug("[SSO_PREFILL] Prefill attempt", { result });
+      console.info("[SSO_PREFILL] Password field", { result: fill });
     } catch (error) {
       console.error("[SSO_PREFILL] Prefill failed", {
         code: error.code,
@@ -171,13 +201,18 @@ function attach(window, config) {
       });
     } finally {
       password = null;
-      inFlight = false;
     }
   }
 
-  wc.on("dom-ready", maybePrefill);
-  wc.on("did-navigate", maybePrefill);
-  console.debug("[SSO_PREFILL] Enabled", {
+  const onNav = () => {
+    generation += 1;
+    maybePrefill(generation);
+  };
+  wc.on("dom-ready", onNav);
+  wc.on("did-navigate", onNav);
+  console.info("[SSO_PREFILL] Enabled", {
+    prefillEmail: !!user,
+    prefillPassword: !!command,
     autoSubmit,
     extraHosts: extraHosts.length,
   });

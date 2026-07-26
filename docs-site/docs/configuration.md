@@ -223,16 +223,18 @@ The state file is automatically cleaned up when the app exits.
 
 If your organisation expires the Teams session frequently (short-lived tokens, sign-in-frequency policies), you land on the Microsoft/federated **web** login page most launches. Microsoft remembers your account (email) but never the password, so you retype it every time.
 
-Set `ssoInAppPasswordCommand` to a command that prints your password (first line of stdout); the app pre-fills it into the password field on the login page. It runs in a shell, so use your own password manager — the app itself stores no secret.
+Set `ssoInAppPasswordCommand` to a command that prints your password (first line of stdout); the app pre-fills it into the password field on the login page. It runs in a shell, so use your own password manager — the app itself stores no secret. Set `ssoInAppUser` to also pre-fill the email/username field when it is blank (useful when the account isn't remembered and you land on the "Enter your email" step).
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `ssoInAppUser` | `string` | `""` | Email/username pre-filled into the account field when it is empty. Empty disables it. |
 | `ssoInAppPasswordCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the web login password field. Empty disables the feature. |
 | `ssoInAppLoginHosts` | `array` | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`). Add your federated IdP host if sign-in happens off the Microsoft hosts. |
 | `ssoInAppAutoSubmit` | `boolean` | `false` | Automatically click sign-in after pre-filling. Off by default so you review and submit yourself. |
 
 ```json
 {
+  "ssoInAppUser": "you@example.org",
   "ssoInAppPasswordCommand": "pass show work/teams"
 }
 ```

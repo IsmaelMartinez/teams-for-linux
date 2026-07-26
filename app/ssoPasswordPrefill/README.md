@@ -1,8 +1,9 @@
 # SSO Password Pre-fill Module
 
-Pre-fills the password field on the Microsoft / federated **web** login page
-from a user-defined command, so you don't retype it every launch when your
-organisation expires the Teams session frequently.
+Pre-fills the email and password fields on the Microsoft / federated **web**
+login page (email from a static value, password from a user-defined command),
+so you don't retype credentials every launch when your organisation expires the
+Teams session frequently.
 
 This is different from [`app/login/`](../login/README.md), which handles the
 native HTTP Basic/NTLM dialog (`ssoBasicAuthPasswordCommand`). This module never
@@ -10,15 +11,19 @@ touches that dialog; it only fills the browser login form.
 
 ## How it works
 
-- Attached to the main window in `app/mainAppWindow/index.js`. No-op unless
-  `ssoInAppPasswordCommand` is configured.
+- Attached to the main window in `app/mainAppWindow/index.js`. No-op unless at
+  least one of `ssoInAppUser` / `ssoInAppPasswordCommand` is configured.
 - On `dom-ready` / `did-navigate`, if the current URL is a recognised login host
-  it injects a small detector (a `MutationObserver`-backed Promise) that waits
-  for a visible, editable `input[type="password"]` to appear — this covers the
-  single-page email → password transition.
+  it injects one `MutationObserver`-backed script that (a) fills the email field
+  with `ssoInAppUser` as soon as it appears empty, and (b) resolves once a
+  visible, editable `input[type="password"]` exists. This covers both the
+  single-page email → password transition and federated flows that navigate to
+  a separate password host.
 - Only once a password field exists does it run `ssoInAppPasswordCommand`, take
   the **first line** of stdout, and set it as the field value (via the native
   value setter so React/Angular register the change).
+- A generation counter starts a fresh attempt per navigation and lets a stale,
+  still-waiting observer bail, so it never blocks the next page.
 - With `ssoInAppAutoSubmit` it then clicks the sign-in button; otherwise it
   leaves submission to you.
 
@@ -26,7 +31,8 @@ touches that dialog; it only fills the browser login form.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `ssoInAppPasswordCommand` | string | `""` | Shell command whose first stdout line is the password. Empty disables the feature. |
+| `ssoInAppUser` | string | `""` | Email/username pre-filled into the account field when empty. Empty disables it. |
+| `ssoInAppPasswordCommand` | string | `""` | Shell command whose first stdout line is the password. Empty disables it. |
 | `ssoInAppLoginHosts` | array | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts. |
 | `ssoInAppAutoSubmit` | boolean | `false` | Auto-click sign-in after filling. |
 
@@ -37,6 +43,7 @@ Example `config.json`:
 
 ```json
 {
+  "ssoInAppUser": "you@example.org",
   "ssoInAppPasswordCommand": "pass show work/teams"
 }
 ```
