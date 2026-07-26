@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 76,
+  "optionCount": 77,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -699,7 +699,14 @@
       "name": "ssoInAppAutoSubmit",
       "type": "boolean",
       "default": false,
-      "description": "When ssoInAppPasswordCommand is set, automatically click the sign-in button after pre-filling the password. Off by default so you review and submit yourself.",
+      "description": "Automatically advance the web login: click Next after pre-filling the email and Sign in after pre-filling the password. Off by default so you review and submit yourself.",
+      "applyMode": "restart"
+    },
+    {
+      "name": "ssoInAppVerifyMethod",
+      "type": "string",
+      "default": "",
+      "description": "On the 'Verify your identity' (MFA) page, automatically click the option whose label starts with this text, e.g. 'Text' for SMS or 'Call'. Empty disables it. Best-effort text match against the Microsoft method list.",
       "applyMode": "restart"
     },
     {

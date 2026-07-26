@@ -1,15 +1,20 @@
 // app/ssoPasswordPrefill/index.js
 
 /**
- * SSO web-login pre-fill (email + password).
+ * SSO web-login pre-fill (email + password + MFA method).
  *
  * Many organisations (e.g. the UN) expire the Teams session quickly by policy,
  * so users land on the Microsoft / federated *web* login page on almost every
- * launch and have to retype credentials. This module pre-fills that login form:
+ * launch and have to retype credentials. This module drives that login form:
  *
- * - the email/username field from a static value (`ssoInAppUser`), and
- * - the password field from a user-defined command (`ssoInAppPasswordCommand`),
- *   e.g. `pass show teams`, so the app itself stores no secret.
+ * - fills the email/username field from a static value (`ssoInAppUser`),
+ * - fills the password field from a user-defined command
+ *   (`ssoInAppPasswordCommand`), e.g. `pass show teams`, so the app itself
+ *   stores no secret,
+ * - with `ssoInAppAutoSubmit`, advances each step (clicks Next after the email,
+ *   Sign in after the password), and
+ * - with `ssoInAppVerifyMethod`, clicks the matching option on the "Verify your
+ *   identity" MFA method-selection page (e.g. "Text").
  *
  * This is distinct from `app/login/` (the native HTTP Basic/NTLM dialog and its
  * `ssoBasicAuthPasswordCommand`); that never touches the web login form.
@@ -21,17 +26,18 @@
  *   persisted, or sent anywhere else; the local reference is cleared right
  *   after injection.
  * - Injection is gated to recognised login hosts (Microsoft login domains by
- *   default, extendable via `ssoInAppLoginHosts`), so credentials can never be
- *   filled into an arbitrary site.
- * - A single injected observer fills the email field as soon as it appears and
- *   resolves once a password field exists; this covers both the single-page
- *   email->password transition (no new navigation) and federated flows that
- *   navigate to a separate password host. The password command runs only once
- *   a password field is actually present.
+ *   default, extendable via `ssoInAppLoginHosts`), so credentials/clicks can
+ *   never target an arbitrary site.
+ * - A per-page observer handles the email fill, the optional Next click, and
+ *   the optional verify-method click, and resolves once a password field
+ *   exists. Each navigation gets a fresh observer, so the multi-page AAD flow
+ *   (email → password → verify → code) is handled step by step. The password
+ *   command runs only once a password field is actually present.
  * - A generation counter makes each navigation start a fresh attempt and lets
  *   stale in-flight attempts bail, so a long-waiting observer never blocks the
  *   next page.
- * - Auto-submit is opt-in (`ssoInAppAutoSubmit`, default false).
+ * - MFA method matching is a best-effort text match against the AAD proof list;
+ *   see README for its fragility.
  */
 
 const { exec } = require("node:child_process");
@@ -44,9 +50,9 @@ const DEFAULT_LOGIN_HOSTS = [
   "login.live.com",
 ];
 
-// How long the renderer observer waits for a password field to appear, and how
-// long the password command may run before being killed.
-const OBSERVER_TIMEOUT_MS = 15000;
+// How long the renderer observer watches for the password field / MFA options,
+// and how long the password command may run before being killed.
+const OBSERVER_TIMEOUT_MS = 20000;
 const COMMAND_TIMEOUT_MS = 15000;
 const COMMAND_MAX_BUFFER = 1024 * 1024;
 
@@ -55,7 +61,7 @@ function hostMatches(hostname, suffixes) {
 }
 
 /**
- * Whether a URL is a login page we may pre-fill. Pure; exported for testing.
+ * Whether a URL is a login page we may act on. Pure; exported for testing.
  * @param {string} url
  * @param {string[]} [extraHosts] additional host suffixes from config
  */
@@ -86,13 +92,17 @@ function runPasswordCommand(command) {
   });
 }
 
-// Runs in the login page's own context. Fills the email/username field (if a
-// value was provided) as soon as it appears and stays empty, and resolves once
-// a visible, editable password field exists (or after OBSERVER_TIMEOUT_MS).
-// Resolves { pwd: boolean, email: 'skipped'|'no-field'|'filled'|'already-filled' }.
-function buildObserverScript(user) {
+// Runs in the login page's own context. Handles the current page: fills the
+// email field (if a value was provided and it is empty), optionally clicks the
+// Next button (autoSubmit, email step only), optionally clicks the MFA option
+// whose label matches `verifyMethod`, and resolves once a visible, editable
+// password field exists (or after OBSERVER_TIMEOUT_MS).
+// Resolves { pwd, email, verify, next }.
+function buildObserverScript(user, verifyMethod, autoSubmit) {
   return `(() => new Promise((resolve) => {
     const USER = ${JSON.stringify(user)};
+    const VERIFY = ${JSON.stringify(verifyMethod)};
+    const AUTO = ${JSON.stringify(!!autoSubmit)};
     const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
     const setValue = (el, v) => {
       const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
@@ -101,21 +111,45 @@ function buildObserverScript(user) {
       el.dispatchEvent(new Event('change', { bubbles: true }));
     };
     const EMAIL_SEL = 'input[type=email], input[name=loginfmt], input[name=username], input[autocomplete=username], input[type=text][name*="email" i]';
+    const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
+    const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
+
     let email = USER ? 'no-field' : 'skipped';
+    let emailFilled = false;
     const fillEmail = () => {
       if (!USER) return;
       const el = Array.from(document.querySelectorAll(EMAIL_SEL)).find(editable);
       if (!el) return;
-      if (el.value) { email = 'already-filled'; return; }
+      if (el.value) { email = 'already-filled'; emailFilled = true; return; }
       setValue(el, USER);
       email = 'filled';
+      emailFilled = true;
     };
-    const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
-    fillEmail();
-    if (pwd()) return resolve({ pwd: true, email });
-    const obs = new MutationObserver(() => { fillEmail(); if (pwd()) { obs.disconnect(); clearTimeout(t); resolve({ pwd: true, email }); } });
+
+    let next = 'skipped';
+    const clickNext = () => {
+      // Email step only: advance once the email is in and no password field yet.
+      if (!AUTO || !emailFilled || next === 'clicked' || pwd()) return;
+      const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
+      if (btn) { btn.click(); next = 'clicked'; }
+    };
+
+    let verify = VERIFY ? 'no-match' : 'skipped';
+    const clickVerify = () => {
+      if (!VERIFY || verify === 'clicked') return;
+      const want = VERIFY.trim().toLowerCase();
+      const scope = document.querySelector('#idDiv_SAOTCS_Proofs') || document.body;
+      const rows = Array.from(scope.querySelectorAll('[data-value], [role=button], a, button'));
+      const target = rows.find((el) => editable(el) && (el.textContent || '').trim().toLowerCase().startsWith(want));
+      if (target) { target.click(); verify = 'clicked'; }
+    };
+
+    const tick = () => { fillEmail(); clickNext(); clickVerify(); };
+    tick();
+    if (pwd()) return resolve({ pwd: true, email, verify, next });
+    const obs = new MutationObserver(() => { tick(); if (pwd()) { obs.disconnect(); clearTimeout(t); resolve({ pwd: true, email, verify, next }); } });
     obs.observe(document.documentElement, { childList: true, subtree: true });
-    const t = setTimeout(() => { obs.disconnect(); resolve({ pwd: false, email }); }, ${OBSERVER_TIMEOUT_MS});
+    const t = setTimeout(() => { obs.disconnect(); resolve({ pwd: false, email, verify, next }); }, ${OBSERVER_TIMEOUT_MS});
   }))()`;
 }
 
@@ -144,14 +178,15 @@ function buildPasswordFillScript(password, autoSubmit) {
 
 /**
  * Attach the pre-fill behaviour to the main window. No-op unless at least one
- * of `ssoInAppUser` / `ssoInAppPasswordCommand` is configured.
+ * of `ssoInAppUser` / `ssoInAppPasswordCommand` / `ssoInAppVerifyMethod` is set.
  * @param {Electron.BrowserWindow} window
  * @param {object} config startup config
  */
 function attach(window, config) {
   const user = (config.ssoInAppUser || "").trim();
   const command = (config.ssoInAppPasswordCommand || "").trim();
-  if (!user && !command) return;
+  const verifyMethod = (config.ssoInAppVerifyMethod || "").trim();
+  if (!user && !command && !verifyMethod) return;
 
   const extraHosts = Array.isArray(config.ssoInAppLoginHosts)
     ? config.ssoInAppLoginHosts
@@ -160,7 +195,7 @@ function attach(window, config) {
   const wc = window.webContents;
   let generation = 0;
 
-  async function maybePrefill(gen) {
+  async function handleLoginPage(gen) {
     let url;
     try {
       url = wc.getURL();
@@ -172,12 +207,17 @@ function attach(window, config) {
     let password = null;
     try {
       const result = await wc
-        .executeJavaScript(buildObserverScript(user || null), true)
-        .catch(() => ({ pwd: false, email: "error" }));
+        .executeJavaScript(
+          buildObserverScript(user || null, verifyMethod || null, autoSubmit),
+          true,
+        )
+        .catch(() => ({ pwd: false, email: "error", verify: "error", next: "error" }));
       if (gen !== generation) return; // navigated away; abandon this attempt
       console.info("[SSO_PREFILL] Login page handled", {
         email: result.email,
-        passwordFieldFound: result.pwd,
+        pwField: result.pwd,
+        verify: result.verify,
+        next: result.next,
       });
 
       if (!command || !result.pwd) return;
@@ -193,7 +233,7 @@ function attach(window, config) {
         buildPasswordFillScript(password, autoSubmit),
         true,
       );
-      console.info("[SSO_PREFILL] Password field", { result: fill });
+      console.info("[SSO_PREFILL] Credential filled", { result: fill });
     } catch (error) {
       console.error("[SSO_PREFILL] Prefill failed", {
         code: error.code,
@@ -206,13 +246,14 @@ function attach(window, config) {
 
   const onNav = () => {
     generation += 1;
-    maybePrefill(generation);
+    handleLoginPage(generation);
   };
   wc.on("dom-ready", onNav);
   wc.on("did-navigate", onNav);
   console.info("[SSO_PREFILL] Enabled", {
-    prefillEmail: !!user,
-    prefillPassword: !!command,
+    emailPrefill: !!user,
+    pwPrefill: !!command,
+    verifyMethod: verifyMethod || null,
     autoSubmit,
     extraHosts: extraHosts.length,
   });

@@ -654,8 +654,15 @@ module.exports = {
       ssoInAppAutoSubmit: {
         default: false,
         describe:
-          "When ssoInAppPasswordCommand is set, automatically click the sign-in button after pre-filling the password. Off by default so you review and submit yourself.",
+          "Automatically advance the web login: click Next after pre-filling the email and Sign in after pre-filling the password. Off by default so you review and submit yourself.",
         type: "boolean",
+        applyMode: "restart",
+      },
+      ssoInAppVerifyMethod: {
+        default: "",
+        describe:
+          "On the 'Verify your identity' (MFA) page, automatically click the option whose label starts with this text, e.g. 'Text' for SMS or 'Call'. Empty disables it. Best-effort text match against the Microsoft method list.",
+        type: "string",
         applyMode: "restart",
       },
       trayIconEnabled: {
