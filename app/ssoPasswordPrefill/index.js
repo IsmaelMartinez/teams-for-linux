@@ -258,25 +258,47 @@ function attach(window, config) {
   const wc = window.webContents;
   let generation = 0;
 
-  async function handleLoginPage(gen) {
-    let url;
+  const originOf = (url) => {
     try {
-      url = wc.getURL();
+      return new URL(url).origin;
     } catch {
-      return;
+      return null;
     }
-    if (!isLoginUrl(url, extraHosts)) return;
+  };
 
+  // All frames in the webContents (main + iframes). Teams renders the login in
+  // an iframe in some flows, and our injected script only sees its own frame,
+  // so we must find the right frame rather than assuming the main one.
+  const allFrames = () => {
+    try {
+      return wc.mainFrame.framesInSubtree;
+    } catch {
+      return [];
+    }
+  };
+
+  const loginFrames = () =>
+    allFrames().filter((f) => {
+      try {
+        return f && isLoginUrl(f.url, extraHosts);
+      } catch {
+        return false;
+      }
+    });
+
+  async function handleFrame(frame, gen) {
+    const origin = originOf(frame.url);
     let password = null;
     try {
-      const result = await wc
+      const result = await frame
         .executeJavaScript(
           buildObserverScript(user || null, verifyMethod || null, autoSubmit),
           true,
         )
-        .catch(() => ({ pwd: false, email: "error", verify: "error", next: "error" }));
+        .catch(() => ({ pwd: false, email: "error", account: "error", verify: "error", next: "error" }));
       if (gen !== generation) return; // navigated away; abandon this attempt
       console.info("[SSO_PREFILL] Login page handled", {
+        frame: origin,
         email: result.email,
         account: result.account,
         accountTiles: result.accountTiles,
@@ -295,7 +317,7 @@ function attach(window, config) {
         return;
       }
 
-      const fill = await wc.executeJavaScript(
+      const fill = await frame.executeJavaScript(
         buildPasswordFillScript(password, autoSubmit),
         true,
       );
@@ -312,10 +334,30 @@ function attach(window, config) {
 
   const onNav = () => {
     generation += 1;
-    handleLoginPage(generation);
+    const gen = generation;
+    const frames = loginFrames();
+    if (!frames.length) {
+      // Surface likely-but-unmatched login frames (origins only — public
+      // hostnames, no PII) so an unrecognised IdP host can be added to
+      // ssoInAppLoginHosts.
+      const origins = [...new Set(allFrames().map((f) => originOf(f.url)).filter(Boolean))];
+      const suspects = origins.filter((o) => /login|auth|sso|adfs|sts|sign|account/i.test(o));
+      if (suspects.length) {
+        console.info("[SSO_PREFILL] Login-like frames not matched (add to ssoInAppLoginHosts?)", {
+          suspects,
+        });
+      }
+      return;
+    }
+    for (const frame of frames) handleFrame(frame, gen);
   };
+
   wc.on("dom-ready", onNav);
   wc.on("did-navigate", onNav);
+  // Subframe navigations don't fire did-navigate; catch login iframes too.
+  wc.on("did-frame-navigate", (_e, url) => {
+    if (isLoginUrl(url, extraHosts)) onNav();
+  });
   console.info("[SSO_PREFILL] Enabled", {
     emailPrefill: !!user,
     pwPrefill: !!command,
