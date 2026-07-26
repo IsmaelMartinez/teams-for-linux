@@ -19,10 +19,12 @@ touches that dialog; it only fills the browser login form.
   visible, editable `input[type="password"]` exists. This covers both the
   single-page email → password transition and federated flows that navigate to
   a separate password host.
-- The same observer optionally clicks **Next** after the email (`ssoInAppAutoSubmit`,
-  email step only — the password step's Sign in is clicked by the password-fill
+- With `ssoInAppAutoSubmit`, the same observer also advances the flow: clicks
+  the **"Pick an account"** tile matching `ssoInAppUser`, clicks **Next** after
+  the email step (the password step's Sign in is clicked by the password-fill
   script), and clicks the **MFA option** whose label starts with
-  `ssoInAppVerifyMethod` on the "Verify your identity" page.
+  `ssoInAppVerifyMethod` on the "Verify your identity" page. All clicks retry
+  briefly (Microsoft wires handlers after render) and are retry-capped.
 - Only once a password field exists does it run `ssoInAppPasswordCommand`, take
   the **first line** of stdout, and set it as the field value (via the native
   value setter so React/Angular register the change).

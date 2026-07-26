@@ -126,6 +126,22 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       emailFilled = true;
     };
 
+    // "Pick an account" tile screen: click the tile matching USER. Scoped to
+    // the account-tile holder so it can't misfire on pages that merely show
+    // the email as text. Advance action -> gated behind autoSubmit.
+    let account = USER ? 'no-tile' : 'skipped';
+    let accountAttempts = 0;
+    const clickAccount = () => {
+      if (!AUTO || !USER || account === 'clicked' || accountAttempts >= 10) return;
+      const holder = document.querySelector('#tilesHolder');
+      if (!holder) return;
+      accountAttempts += 1;
+      const want = USER.trim().toLowerCase();
+      const tiles = Array.from(holder.querySelectorAll('[role=button], [data-test-id], div.table, .tile'));
+      const target = tiles.find((el) => editable(el) && (el.textContent || '').toLowerCase().includes(want));
+      if (target) { target.click(); account = 'clicked'; }
+    };
+
     // Retry-capped: AAD wires button handlers slightly after render, so a
     // single click at dom-ready is often a no-op. tick() is re-run on
     // mutations and on a timer, so clicks retry until the page advances or the
@@ -151,10 +167,10 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       if (target) { target.click(); verify = 'clicked'; }
     };
 
-    const tick = () => { fillEmail(); clickNext(); clickVerify(); };
+    const tick = () => { fillEmail(); clickAccount(); clickNext(); clickVerify(); };
     tick();
-    if (pwd()) return resolve({ pwd: true, email, verify, next });
-    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve({ pwd: pwdFound, email, verify, next }); };
+    if (pwd()) return resolve({ pwd: true, email, account, verify, next });
+    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve({ pwd: pwdFound, email, account, verify, next }); };
     const obs = new MutationObserver(() => { tick(); if (pwd()) finish(true); });
     obs.observe(document.documentElement, { childList: true, subtree: true });
     // Timer retries cover the case where AAD enables the button late and fires
@@ -232,6 +248,7 @@ function attach(window, config) {
       if (gen !== generation) return; // navigated away; abandon this attempt
       console.info("[SSO_PREFILL] Login page handled", {
         email: result.email,
+        account: result.account,
         pwField: result.pwd,
         verify: result.verify,
         next: result.next,
