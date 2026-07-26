@@ -118,6 +118,7 @@ The media state topic names (relative to `topicPrefix`) can be customized via `m
     "mediaTopics": {
       "inCall": "in-call",
       "incomingCall": "incoming-call",
+      "meetingStarted": "meeting-started",
       "camera": "camera",
       "microphone": "microphone",
       "microphoneControl": "microphone/control",
@@ -408,18 +409,52 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 | `{topicPrefix}/{statusTopic}` | JSON object | User presence status (see [Message Format](#message-format) above) |
 | `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state via IPC events and WebRTC fallback |
 | `{topicPrefix}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state |
+| `{topicPrefix}/meeting-started` | `"true"` or `"false"` | Scheduled-meeting-start pulse (experimental, requires [`mqtt.meetingStartDetection.enabled`](#meeting-start-detection-experimental)) |
 | `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state |
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
 | `{topicPrefix}/microphone/control` | `"muted"`, `"unmuted"`, or `"off"` | Simplified mute state derived from the microphone state; drives the [`mute`/`unmute` command guard](#state-aware-mute-and-unmute) |
 | `{topicPrefix}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 
-The media topic names after the prefix (`in-call`, `incoming-call`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
+The media topic names after the prefix (`in-call`, `incoming-call`, `meeting-started`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
 
 All topics use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
 
 The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means Teams has zeroed the audio signal, and `off` means no active call.
 
 The camera topic monitors video sender `track.enabled` in the same RTCPeerConnection poll loop used for microphone detection, filtering out screen-sharing tracks via `displaySurface`.
+
+## Meeting Start Detection (Experimental)
+
+When someone explicitly starts a scheduled meeting, Teams shows a "&lt;name&gt; started the meeting" toast. Teams exposes no reliable internal event for this, so Teams for Linux can optionally watch for that toast in the UI and publish a pulse to `{topicPrefix}/meeting-started`: `"true"` on detection, automatically reset to `"false"` after `resetSeconds`. This lets Home Assistant automations fire when a scheduled meeting actually becomes active, not just when it was scheduled (issue [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)).
+
+The feature is off by default. Enable it alongside MQTT:
+
+```json
+{
+  "mqtt": {
+    "enabled": true,
+    "brokerUrl": "mqtt://192.168.1.100:1883",
+    "meetingStartDetection": {
+      "enabled": true,
+      "patterns": ["started the meeting"],
+      "resetSeconds": 10
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `meetingStartDetection.enabled` | `boolean` | `false` | Enable toast detection and the `meeting-started` topic |
+| `meetingStartDetection.patterns` | `string[]` | `["started the meeting"]` | Case-insensitive regular expressions matched against toast text |
+| `meetingStartDetection.resetSeconds` | `number` | `10` | Seconds before the topic auto-resets to `"false"` |
+
+**Known limitations:**
+
+- **Best-effort and fragile.** Detection relies on matching the toast text in the Teams UI. Microsoft can reword the toast or restructure the DOM at any time, which silently breaks detection until patterns are updated.
+- **English-only default.** The default pattern only matches the English toast. If your Teams UI runs in another language, set `patterns` to the wording your locale uses, for example `"hat die Besprechung gestartet"` for German. Patterns are compiled as case-insensitive regular expressions.
+- **No end signal.** Teams provides nothing when the meeting ends, so the topic is a momentary pulse rather than a persistent state.
+- **Privacy.** The toast text contains the name of the person who started the meeting. It is never logged and never published; only the detection event itself reaches MQTT.
 
 ## Home Assistant Auto-Discovery
 
@@ -460,6 +495,7 @@ All entities are grouped under a single HA device (identified by `mqtt.clientId`
 | `sensor` | Teams Microphone | `{topicPrefix}/microphone` | Microphone state (speaking, silent, muted, off) |
 | `binary_sensor` | Teams In Call | `{topicPrefix}/in-call` | Whether you are in an active call |
 | `binary_sensor` | Teams Incoming Call | `{topicPrefix}/incoming-call` | Whether a call is ringing |
+| `binary_sensor` | Teams Meeting Started | `{topicPrefix}/meeting-started` | Pulses on when a scheduled-meeting-start toast is detected (see [Meeting Start Detection](#meeting-start-detection-experimental)) |
 | `binary_sensor` | Teams Screen Sharing | `{topicPrefix}/screen-sharing` | Whether screen sharing is active |
 | `binary_sensor` | Teams Camera | `{topicPrefix}/camera` | Whether the camera is on |
 | `button` | Teams Toggle Mute | via `commandTopic` | Sends `{"action":"toggle-mute"}` |

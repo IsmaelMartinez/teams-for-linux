@@ -886,10 +886,18 @@
         "mediaTopics": {
           "inCall": "in-call",
           "incomingCall": "incoming-call",
+          "meetingStarted": "meeting-started",
           "camera": "camera",
           "microphone": "microphone",
           "microphoneControl": "microphone/control",
           "screenSharing": "screen-sharing"
+        },
+        "meetingStartDetection": {
+          "enabled": false,
+          "patterns": [
+            "started the meeting"
+          ],
+          "resetSeconds": 10
         }
       },
       "description": "MQTT configuration for publishing Teams status updates and receiving action commands",
@@ -966,6 +974,26 @@
           "type": "string",
           "default": "Teams for Linux",
           "description": "Device name shown in Home Assistant."
+        },
+        {
+          "path": "meetingStartDetection.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable best-effort detection of the 'started the meeting' toast, published as a pulse to the meeting-started topic (experimental, see issue #2587)."
+        },
+        {
+          "path": "meetingStartDetection.patterns",
+          "type": "array",
+          "default": [
+            "started the meeting"
+          ],
+          "description": "Case-insensitive regular expressions matched against toast text. The default only covers English Teams; override for other UI languages or if Microsoft rewords the toast."
+        },
+        {
+          "path": "meetingStartDetection.resetSeconds",
+          "type": "number",
+          "default": 10,
+          "description": "Seconds after which the meeting-started topic auto-resets to false."
         }
       ]
     },

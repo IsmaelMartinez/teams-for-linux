@@ -205,6 +205,13 @@ function assignEventHandlers(commandChangeReportingService) {
 }
 
 function handleCallEventEntityCommand(entityCommand) {
+  // #2587 spike diagnostic: record which toast scenarios flow through the
+  // command-reporting stream, to evaluate whether meeting-start toasts can be
+  // detected here (React store) instead of via DOM text matching. Scenario
+  // names are internal Teams enums, not PII.
+  console.debug('[MeetingStart] toast entityCommand scenario:',
+    entityCommand.entityOptions?.crossClientScenarioName,
+    { isIncomingCall: !!entityCommand.entityOptions?.isIncomingCall });
   if (entityCommand.entityOptions?.isIncomingCall) {
     if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
       // Gets triggered by incoming call.

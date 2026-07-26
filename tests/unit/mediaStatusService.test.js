@@ -180,6 +180,45 @@ describe('MQTTMediaStatusService', () => {
 		});
 	});
 
+	describe('Meeting-started pulse (#2587)', () => {
+		// All tests use a tiny resetSeconds (and wait the pulse out before
+		// finishing) so no pending reset timer leaks a publish into a later
+		// test or keeps the node:test process alive.
+		const waitForPulseReset = () => new Promise((r) => setTimeout(r, 120));
+
+		it('publishes true to meeting-started topic on meeting-started IPC', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 0.05 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true', { retain: true });
+			await waitForPulseReset();
+		});
+
+		it('auto-resets to false after resetSeconds', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 0.05 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true');
+
+			await waitForPulseReset();
+			const resets = published.filter(
+				(p) => p.topic === 'teams/meeting-started' && p.payload === 'false'
+			);
+			assert.strictEqual(resets.length, 1, 'pulse should reset to false once');
+		});
+
+		it('uses custom mediaTopics for meetingStarted', async () => {
+			createService(mqttClient, {
+				mediaTopics: { meetingStarted: 'meeting-live' },
+				meetingStartDetection: { resetSeconds: 0.05 },
+			});
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-live', 'true');
+			await waitForPulseReset();
+		});
+	});
+
 	describe('Call disconnection publishes off state', () => {
 		it('publishes microphone off when call disconnects', async () => {
 			createService(mqttClient);

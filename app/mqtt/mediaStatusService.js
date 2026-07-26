@@ -12,6 +12,9 @@ const { getMediaTopics } = require('./mediaTopics');
  * - {topicPrefix}/microphone - Microphone state: 'speaking' | 'silent' | 'muted' | 'off'
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/screen-sharing - Screen sharing active state
+ * - {topicPrefix}/meeting-started - Scheduled-meeting-start pulse (#2587):
+ *   'true' on detection, auto-reset to 'false' after
+ *   mqtt.meetingStartDetection.resetSeconds
  */
 class MQTTMediaStatusService {
 	#mqttClient;
@@ -19,11 +22,15 @@ class MQTTMediaStatusService {
 	#mediaTopics;
 	#lastMicrophoneState = null;
 	#lastMicrophoneControlState = null;
+	#meetingStartedResetMs;
+	#meetingStartedResetTimer = null;
 
 	constructor(mqttClient, config) {
 		this.#mqttClient = mqttClient;
 		this.#topicPrefix = config.mqtt.topicPrefix;
 		this.#mediaTopics = getMediaTopics(config.mqtt);
+		this.#meetingStartedResetMs =
+			(config.mqtt.meetingStartDetection?.resetSeconds ?? 10) * 1000;
 	}
 
 	initialize() {
@@ -31,6 +38,9 @@ class MQTTMediaStatusService {
 		ipcMain.on('camera-state-changed', this.#handleCameraChanged.bind(this));
 		// Publish MQTT status when microphone state changes
 		ipcMain.on('microphone-state-changed', this.#handleMicrophoneChanged.bind(this));
+
+		// Publish an MQTT pulse when the renderer detects a scheduled-meeting-start toast (#2587)
+		ipcMain.on('meeting-started', this.#handleMeetingStarted.bind(this));
 
 		// Publish MQTT status when screen sharing starts
 		ipcMain.on('screen-sharing-started', () => this.#handleScreenSharingChanged(true));
@@ -67,6 +77,25 @@ class MQTTMediaStatusService {
 
 	async #handleIncomingCallEnded() {
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'false', 'Incoming call ended');
+	}
+
+	/**
+	 * Meeting start has no "ended" counterpart signal, so the topic is a
+	 * pulse: 'true' on detection, then 'false' after the configured reset
+	 * delay. A new detection during the pulse restarts the timer.
+	 */
+	async #handleMeetingStarted() {
+		if (this.#meetingStartedResetTimer) {
+			clearTimeout(this.#meetingStartedResetTimer);
+		}
+
+		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'true', 'Meeting start detected');
+
+		this.#meetingStartedResetTimer = setTimeout(() => {
+			this.#meetingStartedResetTimer = null;
+			// #publishBoolean handles its own errors
+			this.#publishBoolean(this.#mediaTopics.meetingStarted, 'false', 'Meeting-started pulse reset');
+		}, this.#meetingStartedResetMs);
 	}
 
 	async #handleCallDisconnected() {

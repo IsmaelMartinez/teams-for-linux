@@ -811,10 +811,16 @@ module.exports = {
           mediaTopics: {
             inCall: "in-call",
             incomingCall: "incoming-call",
+            meetingStarted: "meeting-started",
             camera: "camera",
             microphone: "microphone",
             microphoneControl: "microphone/control",
             screenSharing: "screen-sharing",
+          },
+          meetingStartDetection: {
+            enabled: false,
+            patterns: ["started the meeting"],
+            resetSeconds: 10,
           },
         },
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
@@ -873,6 +879,21 @@ module.exports = {
           "homeAssistant.deviceName": {
             type: "string",
             describe: "Device name shown in Home Assistant.",
+          },
+          "meetingStartDetection.enabled": {
+            type: "boolean",
+            describe:
+              "Enable best-effort detection of the 'started the meeting' toast, published as a pulse to the meeting-started topic (experimental, see issue #2587).",
+          },
+          "meetingStartDetection.patterns": {
+            type: "array",
+            describe:
+              "Case-insensitive regular expressions matched against toast text. The default only covers English Teams; override for other UI languages or if Microsoft rewords the toast.",
+          },
+          "meetingStartDetection.resetSeconds": {
+            type: "number",
+            describe:
+              "Seconds after which the meeting-started topic auto-resets to false.",
           },
         },
         applyMode: "restart",

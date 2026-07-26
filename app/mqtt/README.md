@@ -56,6 +56,9 @@ The MQTT module is configured through the main application configuration. Add th
 - **homeAssistant.enabled**: `boolean` - Enable Home Assistant MQTT auto-discovery (default: false)
 - **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
 - **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
+- **meetingStartDetection.enabled**: `boolean` - Enable best-effort detection of the "started the meeting" toast, published as a pulse to `{topicPrefix}/meeting-started` (default: false, experimental — see issue #2587)
+- **meetingStartDetection.patterns**: `string[]` - Case-insensitive regular expressions matched against toast text (default: `["started the meeting"]`; English-only — override for other Teams UI languages)
+- **meetingStartDetection.resetSeconds**: `number` - Seconds before the meeting-started topic auto-resets to `false` (default: 10)
 
 ## MQTT Topics
 
@@ -144,6 +147,7 @@ When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT disc
 | Teams Status | `sensor` | Current presence status (available, busy, etc.) |
 | Teams In Call | `binary_sensor` | Active call state |
 | Teams Incoming Call | `binary_sensor` | Incoming call ringing state (before accept) |
+| Teams Meeting Started | `binary_sensor` | Scheduled-meeting-start pulse (experimental, requires `meetingStartDetection.enabled`) |
 
 ### Controls
 
