@@ -627,8 +627,10 @@ function pickClosestAligned(items, cur, aligned) {
 function shareSelection() {
   if (!state.selectedId) return;
   const quality = QUALITY_OPTIONS.find((q) => q.id === state.quality) || DEFAULT_QUALITY;
+  const selected = state.sources.find((s) => s.id === state.selectedId);
   globalThis.api.selectedSource({
     id: state.selectedId,
+    name: selected?.name || "",
     screen: { width: quality.width, height: quality.height, name: quality.label },
   });
 }

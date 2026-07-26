@@ -6,7 +6,6 @@ const {
   dialog,
   webFrameMain,
   nativeImage,
-  desktopCapturer,
   ipcMain,
   MessageChannelMain,
 } = require("electron");
@@ -49,10 +48,6 @@ let menus = null;
 
 const isMac = os.platform() === "darwin";
 
-function findSelectedSource(sources, source) {
-  return sources.find((s) => s.id === source.id);
-}
-
 function setupScreenSharing(selectedSource) {
   screenSharingService.setSelectedSource(selectedSource);
   createScreenSharePreviewWindow();
@@ -81,41 +76,27 @@ function bindDisplayMediaHandler(targetSession) {
 }
 
 function handleScreenSourceSelection(source, callback) {
-  desktopCapturer
-    .getSources({ types: ["window", "screen"] })
-    .then((sources) => {
-      const selectedSource = findSelectedSource(sources, source);
-      if (selectedSource) {
-        setupScreenSharing(selectedSource);
-        callback({ video: selectedSource });
-      } else {
-        // Source not found - use setImmediate and try-catch to allow retry
-        setImmediate(() => {
-          try {
-            callback({});
-          } catch {
-            console.debug("[SCREEN_SHARE] Selected source not found");
-          }
-        });
-      }
-    })
-    .catch((error) => {
-      // Handle desktopCapturer failures gracefully - can crash on certain hardware
-      // configurations (USB-C docking stations, DisplayLink drivers, etc.)
-      // See issues #2058, #2041
-      console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
-        error: error.message,
-        stack: error.stack,
-        sourceId: source?.id
-      });
-      setImmediate(() => {
-        try {
-          callback({});
-        } catch {
-          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
-        }
-      });
+  try {
+    // Use the picker's source directly instead of re-querying
+    // desktopCapturer.getSources(). On Wayland/PipeWire every getSources()
+    // call opens a fresh portal session with new source IDs, so an ID from
+    // the picker's enumeration never matched a second enumeration and
+    // sharing always failed. See #2713 (and #2207 for the original attempt).
+    setupScreenSharing(source);
+    callback({ video: { id: source.id, name: source.name || "" } });
+  } catch (error) {
+    console.error("[SCREEN_SHARE] Failed to setup screen sharing:", {
+      error: error.message,
+      sourceId: source?.id,
     });
+    setImmediate(() => {
+      try {
+        callback({});
+      } catch {
+        console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
+      }
+    });
+  }
 }
 
 function createScreenSharePreviewWindow() {
