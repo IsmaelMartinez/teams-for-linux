@@ -28,11 +28,11 @@ class IdleMonitor {
     // Get system idle state to sync with Teams presence
     ipcMain.handle("get-system-idle-state", this.#handleGetSystemIdleState.bind(this));
     
+    // State-file cleanup rides on the normal 'exit' event. Do not register
+    // SIGINT/SIGTERM handlers calling process.exit() here: app/index.js maps
+    // those signals to app.quit(), and a hard exit skips Chromium's storage
+    // flush, losing recently written settings and cookies (#2722).
     process.on('exit', this.#cleanupStateFile.bind(this));
-    
-    ['SIGINT', 'SIGTERM'].forEach(signal => {
-      process.on(signal, () => process.exit(0));
-    });
   }
 
   #cleanupStateFile() {
