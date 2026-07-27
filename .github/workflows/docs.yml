@@ -46,7 +46,7 @@ jobs:
           cache-dependency-path: docs-site/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build website
         run: npm run build
@@ -99,7 +99,7 @@ jobs:
           cache-dependency-path: docs-site/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test build
         run: npm run build
