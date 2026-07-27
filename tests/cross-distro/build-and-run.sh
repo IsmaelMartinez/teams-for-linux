@@ -21,8 +21,11 @@ DISPLAY_SERVER="${2:-x11}"
 
 echo "[*] Building x64 AppImage from source..."
 cd "$REPO_ROOT"
-npm ci
-npx electron-builder --x64 -l AppImage
+# --ignore-scripts blocks arbitrary dependency lifecycle scripts; the explicit
+# postinstall keeps electron-builder install-app-deps that packaging needs.
+npm ci --ignore-scripts
+npm run postinstall
+./node_modules/.bin/electron-builder --x64 -l AppImage
 
 # Find the built AppImage
 APPIMAGE=$(find "$REPO_ROOT/dist" -maxdepth 1 -name '*.AppImage' -type f | head -1)

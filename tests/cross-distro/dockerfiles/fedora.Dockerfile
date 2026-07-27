@@ -26,7 +26,7 @@ RUN dnf install -y \
 # All cross-distro containers must use the same Node.js/npm to ensure npm ci
 # installs identical Electron binaries, which is critical for session cookie
 # compatibility between --login and --test runs across distros.
-RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" -o node.tar.gz \
+RUN curl --proto '=https' -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" -o node.tar.gz \
     && echo "${NODE_SHA256}  node.tar.gz" | sha256sum -c - \
     && tar -xz -C /usr/local --strip-components=1 -f node.tar.gz \
     && rm node.tar.gz

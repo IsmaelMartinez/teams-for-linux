@@ -188,8 +188,12 @@ class BrowserWindowManager {
    */
   sanitizeCommandArg(value) {
     if (typeof value !== 'string') return '';
-    // Limit argument length and strip all control characters (C0, C1, DEL)
-    return value.substring(0, 500).replaceAll(/\p{Cc}/gu, '');
+    // Limit argument length, then keep only letters, numbers, marks, spaces and
+    // punctuation. This drops control characters and shell metacharacters
+    // (backticks, $, |, ~, ^, =, +, <, >) in case the configured command is a
+    // shell script that mishandles its arguments.
+    const trimmed = value.substring(0, 500);
+    return trimmed.replaceAll(/[^\p{L}\p{N}\p{M}\p{Zs}\p{P}]/gu, '');
   }
 
   assignOnIncomingCallCreatedHandler() {
