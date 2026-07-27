@@ -74,7 +74,7 @@ class IdleMonitor {
     
     // Log only on state transitions
     if (stateFileOverride !== this.#lastStateFileOverride) {
-      if (stateFileOverride === null) {
+      if (!stateFileOverride) {
         console.info('[IDLE] State file override: none (file absent or invalid)');
       } else {
         console.info(`[IDLE] State file override: ${stateFileOverride}`);
