@@ -1311,8 +1311,8 @@ function addEventHandlers() {
   window.webContents.on("did-navigate", onNavigationChanged);
   window.webContents.on("did-navigate-in-page", onNavigationChanged);
 
-  // Pre-fill the password on the Microsoft/federated web login page from a
-  // user-defined command (no-op unless ssoInAppPasswordCommand is set).
+  // Pre-fill/advance the Microsoft/federated web login page (no-op unless one
+  // of ssoInAppUser / ssoInAppPasswordCommand / ssoInAppVerifyMethod is set).
   ssoPasswordPrefill.attach(window, config);
 }
 

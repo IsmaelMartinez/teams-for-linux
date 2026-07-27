@@ -95,9 +95,10 @@ function runPasswordCommand(command) {
 // Runs in the login page's own context. Handles the current page: fills the
 // email field (if a value was provided and it is empty), optionally clicks the
 // Next button (autoSubmit, email step only), optionally clicks the MFA option
-// whose label matches `verifyMethod`, and resolves once a visible, editable
-// password field exists (or after OBSERVER_TIMEOUT_MS).
-// Resolves { pwd, email, verify, next }.
+// whose label matches `verifyMethod`, clicks the matching "Pick an account"
+// tile, and resolves once a visible, editable password field exists (or after
+// OBSERVER_TIMEOUT_MS).
+// Resolves { pwd, email, account, verify, next }.
 function buildObserverScript(user, verifyMethod, autoSubmit) {
   return `(() => new Promise((resolve) => {
     const USER = ${JSON.stringify(user)};
@@ -118,12 +119,6 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
         el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
       }
     };
-    // Structural signature (no text/attribute VALUES -> no PII) for diagnostics.
-    const describe = (el) => el ? (el.tagName
-      + (el.getAttribute('role') ? '[role=' + el.getAttribute('role') + ']' : '')
-      + (el.hasAttribute('data-test-id') ? '[data-test-id]' : '')
-      + (el.hasAttribute('href') ? '[href]' : '')
-      + (el.hasAttribute('tabindex') ? '[tabindex]' : '')) : null;
     const EMAIL_SEL = 'input[type=email], input[name=loginfmt], input[name=username], input[autocomplete=username], input[type=text][name*="email" i]';
     const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
     const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
@@ -145,8 +140,6 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     // the email as text. Advance action -> gated behind autoSubmit.
     let account = USER ? 'no-tile' : 'skipped';
     let accountAttempts = 0;
-    let accountTiles = [];      // structural signatures seen in the holder
-    let accountClicked = null;  // signature of the element we activated
     const clickAccount = () => {
       if (!AUTO || !USER || account === 'clicked' || accountAttempts >= 10) return;
       const holder = document.querySelector('#tilesHolder');
@@ -158,7 +151,6 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
         (el.getAttribute('aria-label') || '').toLowerCase().includes(want) ||
         (el.textContent || '').toLowerCase().includes(want);
       const candidates = Array.from(holder.querySelectorAll('[role=button], [data-test-id], a, [tabindex]'));
-      accountTiles = candidates.map(describe);
       // Prefer an explicit clickable tile; else find any node with the email
       // and climb to its nearest clickable ancestor.
       let target = candidates.find((el) => editable(el) && matches(el));
@@ -168,7 +160,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       } else {
         target = target.closest('[role=button], a, [data-test-id], [tabindex]') || target;
       }
-      if (target) { activate(target); account = 'clicked'; accountClicked = describe(target); }
+      if (target) { activate(target); account = 'clicked'; }
     };
 
     // Retry-capped: AAD wires button handlers slightly after render, so a
@@ -197,7 +189,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     };
 
     const tick = () => { fillEmail(); clickAccount(); clickNext(); clickVerify(); };
-    const state = (pwdFound) => ({ pwd: pwdFound, email, account, accountTiles, accountClicked, verify, next });
+    const state = (pwdFound) => ({ pwd: pwdFound, email, account, verify, next });
     tick();
     if (pwd()) return resolve(state(true));
     const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound)); };
@@ -310,7 +302,6 @@ function attach(window, config) {
 
   async function handleFrame(frame, gen) {
     const origin = originOf(frame.url);
-    let password = null;
     try {
       const result = await frame
         .executeJavaScript(
@@ -319,17 +310,16 @@ function attach(window, config) {
         )
         .catch((e) => ({ __err: e.message }));
       if (gen !== generation) return; // navigated away; abandon this attempt
-      if (result.__err) {
-        // Usually a hidden MSAL auth iframe that can't run our script — noise.
-        console.debug("[SSO_PREFILL] Frame not injectable", { frame: origin });
+      // Skip hidden MSAL auth iframes (script failed) and frames mid-navigation
+      // (no structured result) — neither is an actionable login page.
+      if (!result || result.__err || typeof result.pwd !== "boolean") {
+        console.debug("[SSO_PREFILL] Frame not actionable", { frame: origin });
         return;
       }
       console.info("[SSO_PREFILL] Login page handled", {
         frame: origin,
         email: result.email,
         account: result.account,
-        accountTiles: result.accountTiles,
-        accountClicked: result.accountClicked,
         pwField: result.pwd,
         verify: result.verify,
         next: result.next,
@@ -337,7 +327,7 @@ function attach(window, config) {
 
       if (!command || !result.pwd) return;
 
-      password = firstLine(await runPasswordCommand(command));
+      const password = firstLine(await runPasswordCommand(command));
       if (gen !== generation) return;
       if (!password) {
         console.warn("[SSO_PREFILL] Password command returned empty output");
@@ -354,8 +344,6 @@ function attach(window, config) {
         code: error.code,
         message: error.message,
       });
-    } finally {
-      password = null;
     }
   }
 
