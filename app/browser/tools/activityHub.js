@@ -40,6 +40,14 @@ class ActivityHub {
     }
   }
 
+  /**
+   * Exposed for unit tests: classify a command-stream entityOptions payload
+   * as a meeting start (returns its stable id) or not (null).
+   */
+  getMeetingStartId(entityOptions) {
+    return getMeetingStartId(entityOptions);
+  }
+
   start() {
     let attemptCount = 0;
     const maxAttempts = 12; // Try for up to 2 minutes
