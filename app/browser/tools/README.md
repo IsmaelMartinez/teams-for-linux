@@ -194,7 +194,7 @@ Monitors Teams user status and sends updates to the main process via IPC for MQT
 **Requires**: `ipcRenderer` passed during initialization
 
 #### [meetingStartDetector.js](meetingStartDetector.js)
-Best-effort detection of the "started the meeting" toast shown when someone starts a scheduled meeting (issue #2587). Uses a MutationObserver scoped to toast/alert surfaces and configurable case-insensitive regex patterns (`mqtt.meetingStartDetection.patterns`), then notifies the main process via IPC so the `meeting-started` MQTT topic pulses. The matched toast text (which contains a person's name) is never logged or published.
+Detection of a scheduled meeting starting (issue #2587). Primary path: Teams' command-reporting stream (via activityHub) carries the meeting-start banner/toast as structured, locale-independent data (intentLevel `LiveMeetingStatus`, toastType `MeetingStart`), deduplicated per callId/toastId. Fallback path: a MutationObserver scoped to toast/alert surfaces with configurable case-insensitive regex patterns (`mqtt.meetingStartDetection.patterns`). Either path notifies the main process via IPC so the `meeting-started` MQTT topic pulses. Matched toast text (which can contain a person's name) is never logged or published.
 
 **Configuration**: Requires `mqtt.enabled: true` and `mqtt.meetingStartDetection.enabled: true` in config
 **Requires**: `ipcRenderer` passed during initialization

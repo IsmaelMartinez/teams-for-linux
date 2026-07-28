@@ -819,7 +819,7 @@ module.exports = {
           },
           meetingStartDetection: {
             enabled: false,
-            patterns: ["started the meeting"],
+            patterns: ["meeting started", "started the meeting"],
             resetSeconds: 10,
           },
         },
@@ -883,12 +883,12 @@ module.exports = {
           "meetingStartDetection.enabled": {
             type: "boolean",
             describe:
-              "Enable best-effort detection of the 'started the meeting' toast, published as a pulse to the meeting-started topic (experimental, see issue #2587).",
+              "Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic (experimental, see issue #2587).",
           },
           "meetingStartDetection.patterns": {
             type: "array",
             describe:
-              "Case-insensitive regular expressions matched against toast text. The default only covers English Teams; override for other UI languages or if Microsoft rewords the toast.",
+              "Case-insensitive regular expressions for the DOM fallback, matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages.",
           },
           "meetingStartDetection.resetSeconds": {
             type: "number",

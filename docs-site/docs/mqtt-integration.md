@@ -425,7 +425,7 @@ The camera topic monitors video sender `track.enabled` in the same RTCPeerConnec
 
 ## Meeting Start Detection (Experimental)
 
-When someone explicitly starts a scheduled meeting, Teams shows a "&lt;name&gt; started the meeting" toast. Teams exposes no reliable internal event for this, so Teams for Linux can optionally watch for that toast in the UI and publish a pulse to `{topicPrefix}/meeting-started`: `"true"` on detection, automatically reset to `"false"` after `resetSeconds`. This lets Home Assistant automations fire when a scheduled meeting actually becomes active, not just when it was scheduled (issue [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)).
+When a scheduled meeting starts, Teams shows a "Meeting Started" banner (and a toast when someone explicitly starts it). Teams for Linux detects this primarily through Teams' internal command stream, which carries the banner as structured, locale-independent data, with a DOM text-match fallback, and publishes a pulse to `{topicPrefix}/meeting-started`: `"true"` on detection, automatically reset to `"false"` after `resetSeconds`. This lets Home Assistant automations fire when a scheduled meeting actually becomes active, not just when it was scheduled (issue [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)).
 
 The feature is off by default. Enable it alongside MQTT:
 
@@ -436,7 +436,7 @@ The feature is off by default. Enable it alongside MQTT:
     "brokerUrl": "mqtt://192.168.1.100:1883",
     "meetingStartDetection": {
       "enabled": true,
-      "patterns": ["started the meeting"],
+      "patterns": ["meeting started", "started the meeting"],
       "resetSeconds": 10
     }
   }
@@ -446,7 +446,7 @@ The feature is off by default. Enable it alongside MQTT:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `meetingStartDetection.enabled` | `boolean` | `false` | Enable toast detection and the `meeting-started` topic |
-| `meetingStartDetection.patterns` | `string[]` | `["started the meeting"]` | Case-insensitive regular expressions matched against toast text |
+| `meetingStartDetection.patterns` | `string[]` | `["meeting started", "started the meeting"]` | Case-insensitive regular expressions for the DOM fallback path |
 | `meetingStartDetection.resetSeconds` | `number` | `10` | Seconds before the topic auto-resets to `"false"` |
 
 **Known limitations:**
