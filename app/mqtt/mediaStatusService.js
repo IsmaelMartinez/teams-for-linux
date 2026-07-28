@@ -85,6 +85,9 @@ class MQTTMediaStatusService {
 	 * delay. A new detection during the pulse restarts the timer.
 	 */
 	async #handleMeetingStarted() {
+		// DEBUG-ONLY: Remove before merge (#2587): confirms the renderer's IPC
+		// crossed into the main process.
+		console.info('[MeetingStart][DEBUG] meeting-started IPC received in main process');
 		if (this.#meetingStartedResetTimer) {
 			clearTimeout(this.#meetingStartedResetTimer);
 		}
