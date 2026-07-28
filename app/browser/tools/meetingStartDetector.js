@@ -25,7 +25,10 @@
 
 // Default match patterns (case-insensitive). English-only; non-English Teams
 // users must configure `mqtt.meetingStartDetection.patterns` for their locale.
-const DEFAULT_PATTERNS = ["started the meeting"];
+// 'meeting started' verified live 2026-07-28: the status-bar banner reads
+// "Meeting Started: <subject>". 'started the meeting' kept for the
+// person-initiated toast phrasing.
+const DEFAULT_PATTERNS = ["meeting started", "started the meeting"];
 
 // Best-guess selectors for the Teams toast/notification region. These are
 // unverified against the live Teams DOM (it changes without notice); when
@@ -50,6 +53,8 @@ const TOAST_MARKER_SELECTOR = [
 // Bound regex work per toast and cap how long a text signature is remembered.
 const MAX_TEXT_LENGTH = 1000;
 const DEDUP_WINDOW_MS = 60000;
+
+const activityHub = require('./activityHub');
 
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
@@ -124,12 +129,37 @@ class MeetingStartDetector {
 			return;
 		}
 
+		// Primary detection path: Teams' own command-reporting stream, which
+		// carries the meeting-start banner/toast as structured, locale
+		// independent data (see getMeetingStartId in activityHub.js). The DOM
+		// observer below stays as a fallback for sessions where the React
+		// internals are unavailable.
+		activityHub.on('meeting-started', (data) => this.#onReactMeetingStart(data));
+
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', () => this.#start());
 		} else {
 			// Give Teams time to fully load (same grace period as mqttStatusMonitor)
 			setTimeout(() => this.#start(), 3000);
 		}
+	}
+
+	/**
+	 * Teams re-emits the same banner command several times per meeting start,
+	 * so dedup on the meeting's callId/toastId (falling back to a fixed key
+	 * within the dedup window when no id is present).
+	 */
+	#onReactMeetingStart(data) {
+		const signature = `react:${data?.id ?? 'meeting-start'}`;
+		if (this.#isDuplicateSignature(signature)) {
+			console.debug('[MeetingStartDetector] Duplicate meeting-start command, skipping');
+			return;
+		}
+		// PII: the id is a call/toast GUID, not a person; still not logged.
+		console.info('[MeetingStartDetector] Meeting start detected via command stream');
+		// DEBUG-ONLY: Remove before merge (#2587).
+		console.info('[MeetingStart][DEBUG] sending meeting-started IPC (react path)');
+		this.#ipcRenderer.send('meeting-started');
 	}
 
 	/**

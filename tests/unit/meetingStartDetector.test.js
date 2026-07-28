@@ -9,11 +9,14 @@ const assert = require('node:assert');
 const detector = require('../../app/browser/tools/meetingStartDetector');
 
 describe('MeetingStartDetector pattern compilation', () => {
-	it('falls back to the built-in default when no patterns are configured', () => {
+	it('falls back to the built-in defaults when no patterns are configured', () => {
 		for (const input of [undefined, null, []]) {
 			const compiled = detector.compilePatterns(input);
-			assert.strictEqual(compiled.length, 1);
-			assert.ok(compiled[0].test('Jane Doe started the meeting'));
+			assert.strictEqual(compiled.length, 2);
+			// Status-bar banner wording, verified live (#2587).
+			assert.ok(compiled.some((p) => p.test('Meeting Started: AI Team - Sprint Planning')));
+			// Person-initiated toast wording.
+			assert.ok(compiled.some((p) => p.test('Jane Doe started the meeting')));
 		}
 	});
 
