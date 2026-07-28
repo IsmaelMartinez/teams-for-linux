@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.14.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.0...v2.14.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **ci:** bump electron-builder 26.15.3 -&gt; 26.15.7 to fix DOA snap builds ([#2756](https://github.com/IsmaelMartinez/teams-for-linux/issues/2756)) ([cc5bce1](https://github.com/IsmaelMartinez/teams-for-linux/commit/cc5bce1260d6e6ac96da2072ba01d385b8c9d227))
+* **idle:** stop hard-exiting on SIGINT/SIGTERM so shutdown flushes storage ([#2743](https://github.com/IsmaelMartinez/teams-for-linux/issues/2743)) ([ab7f46c](https://github.com/IsmaelMartinez/teams-for-linux/commit/ab7f46c7eef36477364ea8362cf813ea094812f6))
+
 ## [2.14.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.13.0...v2.14.0) (2026-07-25)
 
 

@@ -40,7 +40,12 @@ jobs:
           node-version: 24
 
       - name: Build
-        run: npm ci
+        # --ignore-scripts blocks arbitrary dependency lifecycle scripts; the
+        # explicit postinstall keeps electron-builder install-app-deps (native
+        # dep rebuild) that packaging needs.
+        run: |
+          npm ci --ignore-scripts
+          npm run postinstall
 
       - name: Set edge version with commit SHA
         if: github.ref == 'refs/heads/main'
@@ -93,7 +98,12 @@ jobs:
           node-version: 24
 
       - name: Build
-        run: npm ci
+        # --ignore-scripts blocks arbitrary dependency lifecycle scripts; the
+        # explicit postinstall keeps electron-builder install-app-deps (native
+        # dep rebuild) that packaging needs.
+        run: |
+          npm ci --ignore-scripts
+          npm run postinstall
 
       - name: Set edge version with commit SHA
         if: github.ref == 'refs/heads/main'
@@ -157,7 +167,12 @@ jobs:
           node-version: 24
 
       - name: Build
-        run: npm ci
+        # --ignore-scripts blocks arbitrary dependency lifecycle scripts; the
+        # explicit postinstall keeps electron-builder install-app-deps (native
+        # dep rebuild) that packaging needs.
+        run: |
+          npm ci --ignore-scripts
+          npm run postinstall
 
       - name: Set edge version with commit SHA
         if: github.ref == 'refs/heads/main'

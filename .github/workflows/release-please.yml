@@ -84,7 +84,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.release.outputs.pr
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Update appdata.xml
         if: steps.release.outputs.pr
@@ -92,7 +92,7 @@ jobs:
 
       - name: Update package-lock.json
         if: steps.release.outputs.pr
-        run: npm install --package-lock-only
+        run: npm install --package-lock-only --ignore-scripts
 
       - name: Append contributors to CHANGELOG and PR body
         if: steps.release.outputs.pr
