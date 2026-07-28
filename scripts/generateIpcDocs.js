@@ -219,7 +219,7 @@ function main() {
     return acc;
   }, {});
 
-  Object.entries(summary).sort().forEach(([category, count]) => {
+  Object.entries(summary).sort(([a], [b]) => a.localeCompare(b)).forEach(([category, count]) => {
     console.log(`  ${category}: ${count} channels`);
   });
 }
