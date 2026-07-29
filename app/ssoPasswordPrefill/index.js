@@ -358,8 +358,6 @@ function attach(window, config) {
       );
       console.info("[SSO_PREFILL] Credential filled", { result: fill });
     } catch (error) {
-      // Only the error code — error.message from the password command can embed
-      // the command line and the tool's stderr.
       console.error("[SSO_PREFILL] Prefill failed", { code: error.code });
     }
   }
