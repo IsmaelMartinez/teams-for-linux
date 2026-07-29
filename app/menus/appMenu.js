@@ -63,9 +63,7 @@ exports = module.exports = (Menus) => ({
       type: "separator",
     },
     getSettingsMenu(Menus),
-    ...(Menus.configGroup.startupConfig.trayIconEnabled
-      ? [getAppIconMenu(Menus)]
-      : []),
+    getAppIconMenu(Menus),
     getPreferencesMenu(),
     getNotificationsMenu(Menus),
     ...(Menus.configGroup.startupConfig.multiAccount?.enabled
