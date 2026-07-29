@@ -54,6 +54,14 @@ const TOAST_MARKER_SELECTOR = [
 const MAX_TEXT_LENGTH = 1000;
 const DEDUP_WINDOW_MS = 60000;
 
+// A meeting is long-lived: while it stays active and nobody joins (exactly the
+// away-from-screen case this feature targets) Teams keeps the live-meeting
+// status bar mounted and can re-emit its command on re-render or view change.
+// Publishing a fresh "meeting started" pulse each time would re-trigger the
+// user's automations throughout the meeting, so a given meeting id is only
+// allowed to fire once per plausible meeting lifetime.
+const MEETING_DEDUP_WINDOW_MS = 4 * 60 * 60 * 1000;
+
 const activityHub = require('./activityHub');
 
 const ELEMENT_NODE = 1;
@@ -147,11 +155,11 @@ class MeetingStartDetector {
 	/**
 	 * Teams re-emits the same banner command several times per meeting start,
 	 * so dedup on the meeting's callId/toastId (falling back to a fixed key
-	 * within the dedup window when no id is present).
+	 * when no id is present) for the meeting-length window.
 	 */
 	#onReactMeetingStart(data) {
 		const signature = `react:${data?.id ?? 'meeting-start'}`;
-		if (this.#isDuplicateSignature(signature)) {
+		if (this.#isDuplicateSignature(signature, MEETING_DEDUP_WINDOW_MS)) {
 			console.debug('[MeetingStartDetector] Duplicate meeting-start command, skipping');
 			return;
 		}
@@ -342,24 +350,28 @@ class MeetingStartDetector {
 	}
 
 	/**
-	 * Per-toast-text deduplication: Teams can re-render the same toast as a
-	 * new DOM element, so element identity alone is not enough. Signatures
-	 * are hashes (no verbatim text retained) and expire after DEDUP_WINDOW_MS,
-	 * so distinct meetings starting close together each still fire.
+	 * Deduplication for both detection paths: Teams can re-render the same
+	 * toast as a new DOM element and can re-emit the same status-bar command,
+	 * so element identity alone is not enough. Signatures are hashes (no
+	 * verbatim text retained) and each carries its own expiry, so distinct
+	 * meetings still fire while one meeting cannot fire twice.
+	 *
+	 * @param {string} key text or identifier to deduplicate on
+	 * @param {number} windowMs how long this key stays suppressed
 	 */
-	#isDuplicateSignature(text) {
+	#isDuplicateSignature(key, windowMs = DEDUP_WINDOW_MS) {
 		const now = Date.now();
-		for (const [signature, timestamp] of this.#recentSignatures) {
-			if (now - timestamp > DEDUP_WINDOW_MS) {
+		for (const [signature, entry] of this.#recentSignatures) {
+			if (now - entry.at > entry.ttl) {
 				this.#recentSignatures.delete(signature);
 			}
 		}
 
-		const signature = hashText(text);
+		const signature = hashText(key);
 		if (this.#recentSignatures.has(signature)) {
 			return true;
 		}
-		this.#recentSignatures.set(signature, now);
+		this.#recentSignatures.set(signature, { at: now, ttl: windowMs });
 		return false;
 	}
 
