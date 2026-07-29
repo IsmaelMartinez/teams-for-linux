@@ -316,6 +316,7 @@ class Menus {
       this.configGroup.legacyConfigStore.set('appIcon', selectedPath);
       this.tray?.setBaseIconPath(selectedPath);
       this.#updateWindowIcon(selectedPath);
+      this.updateMenu();
     }
   }
 
@@ -327,6 +328,7 @@ class Menus {
     const iconPath = iconChooser.getFile();
     this.tray?.setBaseIconPath(iconPath);
     this.#updateWindowIcon(iconPath);
+    this.updateMenu();
   }
 
   #updateWindowIcon(iconPath) {
