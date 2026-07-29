@@ -223,28 +223,32 @@ The state file is automatically cleaned up when the app exits.
 
 If your organisation expires the Teams session frequently (short-lived tokens, sign-in-frequency policies), you land on the Microsoft/federated **web** login page most launches. Microsoft remembers your account (email) but never the password, so you retype it every time.
 
-Set `ssoInAppPasswordCommand` to a command that prints your password (first line of stdout); the app pre-fills it into the password field on the login page. It runs in a shell, so use your own password manager — the app itself stores no secret. Set `ssoInAppUser` to also pre-fill the email/username field when it is blank (useful when the account isn't remembered and you land on the "Enter your email" step).
+Set `auth.webLogin.passwordCommand` to a command that prints your password (first line of stdout); the app pre-fills it into the password field on the login page. It runs in a shell, so use your own password manager — the app itself stores no secret. Set `auth.webLogin.user` to also pre-fill the email/username field when it is blank (useful when the account isn't remembered and you land on the "Enter your email" step).
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ssoInAppUser` | `string` | `""` | Email/username pre-filled into the account field when it is empty. Empty disables it. |
-| `ssoInAppPasswordCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the web login password field. Empty disables the feature. |
-| `ssoInAppLoginHosts` | `array` | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`). Add your federated IdP host if sign-in happens off the Microsoft hosts. |
-| `ssoInAppAutoSubmit` | `boolean` | `false` | Automatically advance each step: click Next after the email and Sign in after the password. Off by default so you review and submit yourself. |
-| `ssoInAppVerifyMethod` | `string` | `""` | On the "Verify your identity" (MFA) page, click the option whose label starts with this text, e.g. `Text` for SMS. Empty disables it. Best-effort text match. |
+| `auth.webLogin.user` | `string` | `""` | Email/username pre-filled into the account field when it is empty. Empty disables it. |
+| `auth.webLogin.passwordCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the web login password field. Empty disables the feature. |
+| `auth.webLogin.extraHosts` | `array` | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`). Add your federated IdP host if sign-in happens off the Microsoft hosts. |
+| `auth.webLogin.autoSubmit` | `boolean` | `false` | Automatically advance each step: click Next after the email and Sign in after the password. Off by default so you review and submit yourself. |
+| `auth.webLogin.verifyMethod` | `string` | `""` | On the "Verify your identity" (MFA) page, click the option whose label starts with this text, e.g. `Text` for SMS. Empty disables it. Best-effort text match. |
 
 ```json
 {
-  "ssoInAppUser": "you@example.org",
-  "ssoInAppPasswordCommand": "pass show work/teams",
-  "ssoInAppAutoSubmit": true,
-  "ssoInAppVerifyMethod": "Text"
+  "auth": {
+    "webLogin": {
+      "user": "you@example.org",
+      "passwordCommand": "pass show work/teams",
+      "autoSubmit": true,
+      "verifyMethod": "Text"
+    }
+  }
 }
 ```
 
-With the example above, the app fills the email and clicks Next, fills the password and clicks Sign in, then on the MFA "Verify your identity" page clicks the **Text** (SMS) option — leaving you only to enter the texted code. Drop `ssoInAppAutoSubmit`/`ssoInAppVerifyMethod` if you prefer to click through the steps yourself.
+With the example above, the app fills the email and clicks Next, fills the password and clicks Sign in, then on the MFA "Verify your identity" page clicks the **Text** (SMS) option — leaving you only to enter the texted code. Drop `auth.webLogin.autoSubmit`/`auth.webLogin.verifyMethod` if you prefer to click through the steps yourself.
 
-This is separate from **Basic Authentication** above: `ssoBasicAuthPasswordCommand` feeds the native HTTP Basic/NTLM dialog, whereas `ssoInAppPasswordCommand` fills the browser login form. The password is passed only to the login page (never logged or persisted) and only on the configured login hosts. If your sign-in page is a company-branded `login.microsoftonline.com` page (a logo/background on the standard Microsoft page), the defaults already cover it; only add `ssoInAppLoginHosts` if the password page is served from a different hostname.
+This is separate from **Basic Authentication** above: `ssoBasicAuthPasswordCommand` feeds the native HTTP Basic/NTLM dialog, whereas `auth.webLogin.passwordCommand` fills the browser login form. The password is passed only to the login page (never logged or persisted) and only on the configured login hosts. If your sign-in page is a company-branded `login.microsoftonline.com` page (a logo/background on the standard Microsoft page), the defaults already cover it; only add `auth.webLogin.extraHosts` if the password page is served from a different hostname.
 
 #### InTune SSO
 

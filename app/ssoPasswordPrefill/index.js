@@ -7,13 +7,13 @@
  * so users land on the Microsoft / federated *web* login page on almost every
  * launch and have to retype credentials. This module drives that login form:
  *
- * - fills the email/username field from a static value (`ssoInAppUser`),
+ * - fills the email/username field from a static value (`auth.webLogin.user`),
  * - fills the password field from a user-defined command
- *   (`ssoInAppPasswordCommand`), e.g. `pass show teams`, so the app itself
+ *   (`auth.webLogin.passwordCommand`), e.g. `pass show teams`, so the app itself
  *   stores no secret,
- * - with `ssoInAppAutoSubmit`, advances each step (clicks Next after the email,
+ * - with `auth.webLogin.autoSubmit`, advances each step (clicks Next after the email,
  *   Sign in after the password), and
- * - with `ssoInAppVerifyMethod`, clicks the matching option on the "Verify your
+ * - with `auth.webLogin.verifyMethod`, clicks the matching option on the "Verify your
  *   identity" MFA method-selection page (e.g. "Text").
  *
  * This is distinct from `app/login/` (the native HTTP Basic/NTLM dialog and its
@@ -23,10 +23,10 @@
  * - The password command runs in the main process only. Its output goes to the
  *   login page's renderer via `executeJavaScript` solely to set the field
  *   value — the same place the user would type it — and is never logged,
- *   persisted, or sent anywhere else; the local reference is cleared right
- *   after injection.
+ *   persisted, or sent anywhere else. It lives only in a local `const` for the
+ *   duration of the injection call and is unreachable once it returns.
  * - Injection is gated to recognised login hosts (Microsoft login domains by
- *   default, extendable via `ssoInAppLoginHosts`), so credentials/clicks can
+ *   default, extendable via `auth.webLogin.extraHosts`), so credentials/clicks can
  *   never target an arbitrary site.
  * - A per-page observer handles the email fill, the optional Next click, and
  *   the optional verify-method click, and resolves once a password field
@@ -255,20 +255,22 @@ function buildPasswordFillScript(password, autoSubmit) {
 
 /**
  * Attach the pre-fill behaviour to the main window. No-op unless at least one
- * of `ssoInAppUser` / `ssoInAppPasswordCommand` / `ssoInAppVerifyMethod` is set.
+ * of `auth.webLogin.user` / `auth.webLogin.passwordCommand` /
+ * `auth.webLogin.verifyMethod` is set.
  * @param {Electron.BrowserWindow} window
  * @param {object} config startup config
  */
 function attach(window, config) {
-  const user = (config.ssoInAppUser || "").trim();
-  const command = (config.ssoInAppPasswordCommand || "").trim();
-  const verifyMethod = (config.ssoInAppVerifyMethod || "").trim();
+  const webLogin = config.auth?.webLogin || {};
+  const user = (webLogin.user || "").trim();
+  const command = (webLogin.passwordCommand || "").trim();
+  const verifyMethod = (webLogin.verifyMethod || "").trim();
   if (!user && !command && !verifyMethod) return;
 
-  const extraHosts = Array.isArray(config.ssoInAppLoginHosts)
-    ? config.ssoInAppLoginHosts
+  const extraHosts = Array.isArray(webLogin.extraHosts)
+    ? webLogin.extraHosts
     : [];
-  const autoSubmit = !!config.ssoInAppAutoSubmit;
+  const autoSubmit = !!webLogin.autoSubmit;
   const wc = window.webContents;
   let generation = 0;
 
@@ -334,16 +336,31 @@ function attach(window, config) {
         return;
       }
 
+      // The password command can block for seconds (e.g. a pinentry prompt),
+      // during which this frame may have navigated away — and a navigation to a
+      // non-login URL does not bump `generation`. Re-check the frame's current
+      // URL right before injecting so the password is never typed into a
+      // different document.
+      let currentUrl = null;
+      try {
+        currentUrl = frame.url;
+      } catch {
+        return; // frame gone
+      }
+      if (!isLoginUrl(currentUrl, extraHosts)) {
+        console.debug("[SSO_PREFILL] Frame left the login page before fill; skipping");
+        return;
+      }
+
       const fill = await frame.executeJavaScript(
         buildPasswordFillScript(password, autoSubmit),
         true,
       );
       console.info("[SSO_PREFILL] Credential filled", { result: fill });
     } catch (error) {
-      console.error("[SSO_PREFILL] Prefill failed", {
-        code: error.code,
-        message: error.message,
-      });
+      // Only the error code — error.message from the password command can embed
+      // the command line and the tool's stderr.
+      console.error("[SSO_PREFILL] Prefill failed", { code: error.code });
     }
   }
 
@@ -354,11 +371,11 @@ function attach(window, config) {
     if (!frames.length) {
       // Surface likely-but-unmatched login frames (origins only — public
       // hostnames, no PII) so an unrecognised IdP host can be added to
-      // ssoInAppLoginHosts.
+      // auth.webLogin.extraHosts.
       const origins = [...new Set(allFrames().map((f) => originOf(f.url)).filter(Boolean))];
       const suspects = origins.filter((o) => /login|auth|sso|adfs|sts|sign|account/i.test(o));
       if (suspects.length) {
-        console.info("[SSO_PREFILL] Login-like frames not matched (add to ssoInAppLoginHosts?)", {
+        console.info("[SSO_PREFILL] Login-like frames not matched (add to auth.webLogin.extraHosts?)", {
           suspects,
         });
       }
