@@ -1,8 +1,8 @@
 # System Performance Research
 
 :::info Research Status
-**Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically during the v2.7.x / v2.8.x lines per the [roadmap](../plan/roadmap.md).
-**Date:** 2026-03-18 (last reviewed 2026-05-06)
+**Status:** Item 5 (`shortcuts.js` polling) shipped. Items 1, 2, 3, 4 and 8 remain open and are not tracked anywhere: the roadmap carries no performance theme, so treat this as a standing catalogue to pull work from rather than an active workstream. The paths cited below were re-verified against the code on 2026-07-29 and all still exist.
+**Date:** 2026-03-18 (last reviewed 2026-07-29)
 **Scope:** Renderer process overhead, main process I/O, network resilience, and resource management
 :::
 

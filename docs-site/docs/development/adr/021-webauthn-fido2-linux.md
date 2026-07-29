@@ -87,5 +87,5 @@ The v1 implementation uses only the first connected FIDO2 device. Users with mul
 - [libfido2 / fido2-tools upstream](https://github.com/Yubico/libfido2)
 - [Ferdium electron-webauthn-linux precedent](https://github.com/ferdium/ferdium-app/pull/2337)
 - [WebAuthn Level 3 W3C spec](https://www.w3.org/TR/webauthn-3/)
-- Local design notes: `docs-site/docs/development/research/webauthn-fido2-implementation-plan.md`
+- Local design notes: removed once the implementation shipped; see git history for `docs-site/docs/development/research/webauthn-fido2-implementation-plan.md`
 - Related ADR: [ADR 013: PII Log Sanitisation](./013-pii-log-sanitization.md) — governs the `[WEBAUTHN]` structured logging introduced in PR #2357

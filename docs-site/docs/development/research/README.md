@@ -8,75 +8,34 @@ These documents capture in-depth analysis and strategic insights that inform dev
 
 ## Contents
 
-### Ready for Implementation
+Everything listed here describes work that has **not** fully shipped. Once a piece of research is fully implemented or rejected, its decision moves to an [ADR](../adr/README.md) and the research document is deleted, with git history preserving the investigation.
 
-- **[WebAuthn / FIDO2 Implementation Plan](webauthn-fido2-implementation-plan.md)** - Hardware security key support on Linux via fido2-tools interception of navigator.credentials. Shipped as opt-in beta behind `auth.webauthn.enabled`. See [ADR-021](../adr/021-webauthn-fido2-linux.md).
+### Open Work
 
-- **[System Performance Research](system-performance-research.md)** - Renderer overhead, main process I/O, and metrics infrastructure
-  - Identifies 10 performance-sensitive patterns (MutationObserver sprawl, polling, sequential I/O)
-  - Proposes lightweight startup/memory instrumentation with zero dependencies
-  - **Status:** Item 5 (`shortcuts.js` polling) shipped; items 1, 2, 3, 4, 8 remaining and being addressed opportunistically
+- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)**, `app/config/options.js` as the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
+  - **Phases 0 to 2 shipped (v2.12.0)**: drift fixes ([PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602)), generated config reference plus `config-schema.json` with CI drift guard ([PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604)), interactive config explorer in the docs site ([PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606))
+  - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint, plus warn-only startup validation in `app/config/validator.js`
+  - **Remaining**: Phase 3b, the in-app settings window, now unblocked by the 3a schema metadata
 
-- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)** — `app/config/options.js` as the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
-  - **Phases 0–2 shipped (v2.12.0)**: drift fixes ([PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602)), generated config reference + `config-schema.json` with CI drift guard ([PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604)), interactive config explorer in the docs site ([PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606))
-  - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint (metadata completeness is a merge gate), plus warn-only startup validation of `config.json` in `app/config/validator.js`
-  - **Remaining**: Phase 3b — in-app settings window, now unblocked by the 3a schema metadata; ships restart-required options first
+- **[Graph API Integration Research](graph-api-integration-research.md)**, Microsoft Graph API for enhanced features
+  - **Phase 1 shipped (v2.7.4)**: token acquisition plus 7 IPC channels. People search and send chat power Quick Chat (ADR-014, ADR-015)
+  - **Phases 2 and 3 not started**: calendar widget, mail preview, presence, settings UI
 
-### First Iteration Shipped — Awaiting Feedback
+- **[Custom Stickers, External Sources](custom-stickers-online-import-research.md)**, follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
+  - URL paste shipped in v1. Telegram sticker pack import is the proposed next phase, AI generation via a user-configured backend is the speculative one
+  - AI path mirrors the `customBackground` pattern, so the wrapper holds no opinion about which backend sits at the other end
 
-- **[Join Meeting Window Takeover Research](join-meeting-window-takeover-research.md)** — "Join Meeting" replacing the whole window ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322))
-  - First iteration: same-origin deep-link navigation + `Return to Teams` menu item
-  - Caveat: authenticated-org path not verifiable locally; some takeovers are Microsoft-enforced
-  - Follow-ups: navigation-event auto-return, dedicated meeting window, keyboard accelerator
+- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)**, surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631))
+  - The FIDO2 beta only built the PIN-entry UI, so the touch wait is silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
+  - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal
 
-### Awaiting User Feedback
+- **[System Performance Research](system-performance-research.md)**, renderer overhead, main process I/O, and metrics infrastructure
+  - Ten performance-sensitive patterns, of which item 5 (`shortcuts.js` polling) shipped
+  - Not tracked on the roadmap, so treat it as a standing catalogue to pull work from rather than an active workstream
 
-- **[MQTT Extended Status Investigation](mqtt-extended-status-investigation.md)** - Extended MQTT status publishing
-  - **Phase 1 Shipped**: Infrastructure, LWT, call state, screen-sharing topics
-  - **Phase 2 Microphone Shipped**: [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) merged; publishes speaking/silent/muted/off to `{topicPrefix}/microphone`
-  - **Phase 2 Camera Shipped**: [PR #2582](https://github.com/IsmaelMartinez/teams-for-linux/pull/2582) merged; renderer emits `camera-state-changed` via video track monitoring in speakingIndicator
-  - **Home Assistant Auto-Discovery Shipped**: [PR #2464](https://github.com/IsmaelMartinez/teams-for-linux/pull/2464) and [PR #2571](https://github.com/IsmaelMartinez/teams-for-linux/pull/2571) merged; sensors, binary_sensors, and buttons auto-created in HA
+### Standing Reference
 
-- **[Graph API Integration Research](graph-api-integration-research.md)** - Microsoft Graph API for enhanced features
-  - **Phase 1 Shipped (v2.7.4)**: Token acquisition plus 7 IPC channels (user profile, calendar events/view, calendar create, mail messages, People search, send chat). People search and send chat power Quick Chat (ADR-014, ADR-015)
-  - **Phases 2-3**: Calendar widget, mail preview, presence, settings UI — not started
-
-### Idea Stage
-
-- **[Smartcard / NSS PIN Dialog](smartcard-nss-pin-dialog-research.md)** — PIN dialog for password-protected PKCS#11 providers (smartcards) via Electron 33's `app.setClientCertRequestPasswordHandler` ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639))
-  - Electron 42.3.3 already ships the required Linux-only API; the WebAuthn PIN window (`app/webauthn/pinDialog.js`) is a directly reusable secure-dialog pattern
-  - Phased: SoftHSM2 spike (cancel/retry semantics, lockout safety) → opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled` → `select-client-certificate` picker for multi-cert tokens
-  - Validation possible without hardware via SoftHSM2; requester confirms on real smartcard
-  - UI feasibility analyzed: standalone always-on-top window styled like existing dialogs; in-page injection ruled out (security + handshake timing). Overlaps with the FIDO2 touch prompt ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)) — whichever lands first builds a shared `app/_shared/` secure-prompt helper (no duplicated secret-input dialog)
-
-- **[Custom Stickers — External Sources](custom-stickers-online-import-research.md)** — follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
-  - Three realistic paths ranked by simplicity: URL paste (shipped in v1), Telegram sticker pack import (next phase), AI generation via a user-configured backend such as a local Ollama image-gen session (more futuristic)
-  - Telegram path: HTML scrape default, Bot API as opt-in fallback, static `.webp` only for v1
-  - AI path: mirrors the `customBackground` pattern; wrapper has no opinion about which backend sits at the other end
-
-- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)** — surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631))
-  - Feature, not a bug: the FIDO2 beta only built the PIN-entry UI; the touch wait is silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
-  - Feasible by wrapping the backend call in `app/webauthn/index.js` with a BrowserWindow dismissed in a `finally`, reusing the `pinDialog` pattern
-  - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal (the fido2 tools emit nothing at the user-presence step)
-
-### Reference
-
-- **[Project Management Tools Research](project-management-tools-research.md)** - Evaluation of Beads, release-please, release-it, and other tooling for solo OSS maintainer workflows. Status: Research complete, no implementation decision.
-
-
-
-### Historical (Migrated)
-
-- **[Configuration Organization Research](configuration-organization-research.md)** - Configuration system improvements
-  - **Phase 1 Complete**: Documentation reorganization
-  - **Phases 2-3**: Nested structure migration happening incrementally
-
-### Shipped (Retained for Reference)
-
-- **[Custom Notification System Research](custom-notification-system-research.md)** - Alternative notification modal system
-  - **MVP shipped** in v2.6.16: toast notifications with auto-dismiss and click-to-focus
-  - **Phase 2 dropped**: notifications worked on maintainer's machine but not for the requesting user
-  - Retained because future requests for custom notifications should reference the lessons learned here
+- **[Configuration Organization Research](configuration-organization-research.md)**, owner of the configuration naming convention, which is why the [roadmap](../plan/roadmap.md) still points here. New features use nested keys from day one; remaining flat options migrate opportunistically. Its option counts are a 2026-02 snapshot, not a live inventory (`docs-site/static/config-schema.json` is the generated source of truth).
 
 ### Implemented Features (Research Removed)
 
@@ -84,6 +43,12 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Smartcard / NSS PIN Dialog | v2.14.0 | Opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled`, built on `app/_shared/securePrompt.js`. Decision in [ADR-024](../adr/024-smartcard-pkcs11-pin-dialog.md) ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) |
+| Custom Notification System | v2.6.16 | Phase 1 toast shipped, Phase 2 notification centre dropped as unverifiable. Decision in [ADR-022](../adr/022-custom-notification-toast-scope.md) |
+| Release Automation Tooling | --- | release-please adopted, release-it and Beads rejected. Decision in [ADR-023](../adr/023-release-automation-tooling.md) |
+| WebAuthn / FIDO2 Hardware Keys | --- | Opt-in beta behind `auth.webauthn.enabled`; the implementation plan is superseded by [ADR-021](../adr/021-webauthn-fido2-linux.md) |
+| MQTT Extended Status | v2.10.0 onwards | Microphone, camera, screen-sharing and incoming-call topics plus Home Assistant auto-discovery all shipped; the roadmap carries the per-PR status |
+| Join Meeting Window Takeover | --- | Same-origin navigation plus the `Return to Teams` menu item (`app/menus/index.js`) ([#2322](https://github.com/IsmaelMartinez/teams-for-linux/issues/2322)) |
 | MQTT Microphone State | v2.10.0 | Speaking-indicator driven microphone state (speaking/silent/muted/off) published to MQTT. See [PR #2497](https://github.com/IsmaelMartinez/teams-for-linux/pull/2497) |
 | Notification Sound Player (inline replacement for `node-sound`) | v2.7.10 | Phase 1 of the notification-sound research shipped — `paplay`/`pw-play`/`aplay`/`afplay` detection in `app/audio/player.js`. See [PR #2306](https://github.com/IsmaelMartinez/teams-for-linux/pull/2306) |
 | Cross-Distro CI Smoke Test | v2.7.x | Workflow `.github/workflows/cross-distro-smoke.yml` ships the design proposed in the original research. Umbrella decision in [ADR-016](../adr/016-cross-distro-testing-environment.md) |
