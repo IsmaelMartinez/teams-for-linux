@@ -14,6 +14,14 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.14.1" date="2026-07-27">
+      <description>
+        <ul>
+          <li>ci: bump electron-builder 26.15.3 -&amp;gt; 26.15.7 to fix DOA snap builds (#2756)</li>
+          <li>idle: stop hard-exiting on SIGINT/SIGTERM so shutdown flushes storage (#2743)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.14.0" date="2026-07-25">
       <description>
         <ul>
