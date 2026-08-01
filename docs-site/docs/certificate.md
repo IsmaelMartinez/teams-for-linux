@@ -65,8 +65,8 @@ interception.
 Install the NSS tools first: `libnss3-tools` on Debian/Ubuntu, `nss-tools` on Fedora,
 `mozilla-nss-tools` on openSUSE.
 
-If you already have the CA certificate as a file, skip to step 4. Otherwise capture the
-chain the proxy presents:
+If you already have the CA certificate as a file, skip to the import in step 4 and point
+`-i` at your own file. Otherwise capture the chain the proxy presents:
 
 ```bash
 # 1. Capture the chain (any HTTPS host works)
@@ -79,10 +79,15 @@ awk 'BEGIN{n=-1} /-----BEGIN CERTIFICATE-----/{n++} n>=0{print > sprintf("chain-
 # 3. Identify them (the self-signed one, where subject equals issuer, is the root)
 for f in chain-*.pem; do printf "%s : " "$f"; openssl x509 -in "$f" -noout -subject -issuer; done
 
-# 4. Import the root, and any intermediate, into the NSS database
-certutil -d sql:$HOME/.pki/nssdb -A -n "CorpRootCA"  -t "CT,C,C" -a -i chain-02.pem
-certutil -d sql:$HOME/.pki/nssdb -A -n "CorpProxyCA" -t "CT,C,C" -a -i chain-01.pem
+# 4. Import the root as a trusted SSL CA, and any intermediate untrusted
+certutil -d sql:$HOME/.pki/nssdb -A -n "CorpRootCA"  -t "C,,"  -a -i chain-02.pem
+certutil -d sql:$HOME/.pki/nssdb -A -n "CorpProxyCA" -t ",,"   -a -i chain-01.pem
 ```
+
+The trust flags matter. `C,,` marks the root as trusted for issuing SSL server certificates,
+which is the minimum this needs. An intermediate is imported with `,,` so it can be used to
+build the chain without itself becoming a trust anchor. Avoid broader flags such as `CT,C,C`,
+which would additionally trust the certificate for email and object signing.
 
 Restart Teams for Linux afterwards. You can confirm what is trusted with
 `certutil -d sql:$HOME/.pki/nssdb -L`.
@@ -102,10 +107,17 @@ adjust the `-d sql:` path if you want to import there instead.
 
 #### Confined packages
 
-Snap and Flatpak remap `HOME`, so both the config file and the NSS database live elsewhere:
+Snap and Flatpak remap `HOME`, so the database lives inside the app's own directory. Both
+candidate paths above still apply, just relative to the remapped home:
 
-*   **Snap:** `~/snap/teams-for-linux/current/.pki/nssdb`
-*   **Flatpak:** `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/.pki/nssdb`
+*   **Snap:** `~/snap/teams-for-linux/current/.pki/nssdb`, or
+    `~/snap/teams-for-linux/current/.local/share/pki/nssdb`
+*   **Flatpak:** `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/.pki/nssdb`, or
+    `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/data/pki/nssdb`
+
+The config file is remapped the same way, which is a common reason
+`customCACertsFingerprints` looks like it is being ignored on these packages. See
+[Configuration](configuration.md) for the config locations.
 
 ## Corporate Certificate Scenarios
 
