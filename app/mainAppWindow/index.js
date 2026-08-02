@@ -83,7 +83,6 @@ function handleScreenSourceSelection(source, callback) {
     // the picker's enumeration never matched a second enumeration and
     // sharing always failed. See #2713 (and #2207 for the original attempt).
     setupScreenSharing(source);
-    callback({ video: { id: source.id, name: source.name || "" } });
   } catch (error) {
     console.error("[SCREEN_SHARE] Failed to setup screen sharing:", {
       error: error.message,
@@ -96,6 +95,15 @@ function handleScreenSourceSelection(source, callback) {
         console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
       }
     });
+    return;
+  }
+
+  // Kept out of the try above so a throwing callback is not mistaken for a
+  // setup failure and answered with a second callback.
+  try {
+    callback({ video: { id: source.id, name: source.name || "" } });
+  } catch {
+    console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
   }
 }
 
