@@ -71,6 +71,13 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     let stderr = "";
     let rejected = false;
     let pinWritten = false;
+    // 'exit' fires before 'close', so a cancel or timeout landing in between
+    // would otherwise discard a result the child has already produced — and
+    // signal a PID the OS is free to have reused.
+    let exited = false;
+    proc.on("exit", () => {
+      exited = true;
+    });
 
     // The child sits in the user-presence check until the key is touched, so
     // both the timeout and an explicit cancel have to take the whole process
@@ -81,7 +88,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     };
 
     const timeout = setTimeout(() => {
-      if (!rejected) {
+      if (!rejected && !exited) {
         rejected = true;
         killProcessGroup();
         reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
@@ -89,7 +96,8 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     }, timeoutMs);
 
     const onAbort = () => {
-      if (rejected) return;
+      // Let an already-finished call report its real result.
+      if (rejected || exited) return;
       rejected = true;
       clearTimeout(timeout);
       killProcessGroup();

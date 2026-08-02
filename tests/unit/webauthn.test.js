@@ -584,9 +584,17 @@ describe('Security key cancellation', () => {
 
 	it('kills the detached child process group when cancelled mid-call', async () => {
 		const controller = new AbortController();
-		// `sleep` stands in for fido2-assert blocking on the user-presence check:
-		// it is spawned detached exactly the same way and never exits on its own.
-		const pending = fido2Backend._spawnFido2('sleep', ['30'], [], 30_000, null, controller.signal);
+		// Stands in for fido2-assert blocking on the user-presence check: spawned
+		// detached exactly the same way, and never exits on its own. Uses this
+		// Node binary rather than `sleep`, which does not exist on Windows.
+		const pending = fido2Backend._spawnFido2(
+			process.execPath,
+			['-e', 'setTimeout(() => {}, 30_000)'],
+			[],
+			30_000,
+			null,
+			controller.signal,
+		);
 
 		// Give the child a moment to actually exist before cancelling it.
 		await new Promise((resolve) => setTimeout(resolve, 100));
@@ -597,7 +605,14 @@ describe('Security key cancellation', () => {
 
 	it('leaves an uncancelled call alone', async () => {
 		const controller = new AbortController();
-		const { stdout } = await fido2Backend._spawnFido2('echo', ['ok'], [], 5000, null, controller.signal);
+		const { stdout } = await fido2Backend._spawnFido2(
+			process.execPath,
+			['-e', 'process.stdout.write("ok")'],
+			[],
+			5000,
+			null,
+			controller.signal,
+		);
 
 		assert.strictEqual(stdout.trim(), 'ok');
 	});
