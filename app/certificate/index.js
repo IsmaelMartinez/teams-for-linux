@@ -78,6 +78,12 @@ exports.installCertificateVerifyProc = function installCertificateVerifyProc(
     return;
   }
 
+  // This proc runs per handshake, and behind an intercepting proxy a misconfigured
+  // fingerprint fails every one of them. Report each outcome once so a persistent
+  // misconfiguration is still visible without flooding the log.
+  let warnedOutOfDate = false;
+  let warnedNotInAllowlist = false;
+
   const verifyProc = (request, callback) => {
     if (request.verificationResult === "OK") {
       callback(VERIFY_USE_CHROMIUM_RESULT);
@@ -97,7 +103,10 @@ exports.installCertificateVerifyProc = function installCertificateVerifyProc(
       // so an untrusted *and* expired certificate arrives here as -202. Check the
       // validity window ourselves rather than letting the expiry pass unnoticed.
       if (!chain.every(isCurrentlyValid)) {
-        console.error("[CERT] Allowlisted authority presented an out-of-date certificate");
+        if (!warnedOutOfDate) {
+          warnedOutOfDate = true;
+          console.error("[CERT] Allowlisted authority presented an out-of-date certificate");
+        }
         callback(VERIFY_USE_CHROMIUM_RESULT);
         return;
       }
@@ -106,7 +115,10 @@ exports.installCertificateVerifyProc = function installCertificateVerifyProc(
       return;
     }
 
-    console.error("[CERT] Certificate authority not in allowlist for request");
+    if (!warnedNotInAllowlist) {
+      warnedNotInAllowlist = true;
+      console.warn("[CERT] Certificate authority not in allowlist for request");
+    }
     callback(VERIFY_USE_CHROMIUM_RESULT);
   };
 
