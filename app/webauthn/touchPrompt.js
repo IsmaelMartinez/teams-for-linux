@@ -70,7 +70,7 @@ function showTouchPrompt(onCancel) {
     if (!win.isDestroyed()) win.close();
   };
 
-  function handleCancel() {
+  function cancel() {
     if (settled) return;
     settled = true;
     cleanup();
@@ -79,11 +79,18 @@ function showTouchPrompt(onCancel) {
     onCancel();
   }
 
+  // `ipcMain` listeners are global, so a Cancel from one prompt would otherwise
+  // abort every security-key call in flight. Only this prompt's window counts.
+  function handleCancel(event) {
+    if (win.isDestroyed() || event.sender !== win.webContents) return;
+    cancel();
+  }
+
   // Receive cancellation from the touch prompt when user clicks Cancel or closes the window
   ipcMain.on("webauthn:touch-cancel", handleCancel);
 
   // Closing the window with its titlebar means the same thing as Cancel.
-  win.on("closed", handleCancel);
+  win.on("closed", cancel);
 
   win.once("ready-to-show", () => {
     if (win.isDestroyed()) return;
@@ -97,7 +104,7 @@ function showTouchPrompt(onCancel) {
       if (settled) return;
       settled = true;
       cleanup();
-      win.removeListener("closed", handleCancel);
+      win.removeListener("closed", cancel);
       closeWindow();
       log.debug("[WEBAUTHN:TOUCH] Prompt dismissed");
     },
