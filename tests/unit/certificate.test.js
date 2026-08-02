@@ -4,9 +4,22 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const { onAppCertificateError, installCertificateVerifyProc } = require('../../app/certificate/index');
 
+const NOW_IN_SECONDS = Date.now() / 1000;
+const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
+
 function createCert(fingerprint, issuerCert = null) {
-	const cert = { fingerprint };
+	const cert = {
+		fingerprint,
+		validStart: NOW_IN_SECONDS - ONE_YEAR_IN_SECONDS,
+		validExpiry: NOW_IN_SECONDS + ONE_YEAR_IN_SECONDS,
+	};
 	cert.issuerCert = issuerCert ?? cert; // self-referencing = root
+	return cert;
+}
+
+function createExpiredCert(fingerprint) {
+	const cert = createCert(fingerprint);
+	cert.validExpiry = NOW_IN_SECONDS - 1;
 	return cert;
 }
 
@@ -174,7 +187,27 @@ describe('Certificate verify proc - verification', () => {
 
 	it('accepts on a match against an incomplete chain with no reachable root', () => {
 		const { verify } = createHarness({ customCACertsFingerprints: ['LEAF:FP'] });
-		assert.strictEqual(verify(createRequest({ certificate: { fingerprint: 'LEAF:FP' } })), 0);
+		const leafOnly = createCert('LEAF:FP');
+		delete leafOnly.issuerCert;
+		assert.strictEqual(verify(createRequest({ certificate: leafOnly })), 0);
+	});
+
+	it('rejects an expired certificate reported as an authority error', () => {
+		// Chromium ranks CERT_STATUS_AUTHORITY_INVALID above CERT_STATUS_DATE_INVALID,
+		// so an untrusted and expired certificate arrives with errorCode -202.
+		const { verify } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		assert.strictEqual(verify(createRequest({ certificate: createExpiredCert('AA:BB:CC') })), -3);
+	});
+
+	it('rejects when an issuer in the chain has expired', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['ROOT:FP'] });
+		const expiredRoot = createExpiredCert('ROOT:FP');
+		assert.strictEqual(verify(createRequest({ certificate: createCert('LEAF:FP', expiredRoot) })), -3);
+	});
+
+	it('rejects when validity dates are missing and cannot be checked', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['BARE:FP'] });
+		assert.strictEqual(verify(createRequest({ certificate: { fingerprint: 'BARE:FP' } })), -3);
 	});
 
 	it('defers to Chromium when no fingerprint matches', () => {

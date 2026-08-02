@@ -35,9 +35,9 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
   }
 };
 
-// net::ERR_CERT_AUTHORITY_INVALID. The only failure we are willing to override,
-// so an expired or revoked certificate is still rejected even when its issuer is
-// on the allowlist.
+// net::ERR_CERT_AUTHORITY_INVALID, the only failure we are willing to override.
+// A revoked certificate reports ERR_CERT_REVOKED instead, which ranks higher in
+// Chromium's MapCertStatusToNetError, so it never reaches the accept path.
 const ERR_CERT_AUTHORITY_INVALID = -202;
 
 // Special values accepted by the setCertificateVerifyProc callback.
@@ -57,6 +57,12 @@ const VERIFY_USE_CHROMIUM_RESULT = -3;
  * behaviour is untouched. When a fingerprint is configured we still defer to
  * Chromium for anything that is not an untrusted-authority failure, so this can
  * only ever accept a certificate the user explicitly allowlisted.
+ *
+ * Known limitation: accepting overrides Chromium's whole verification for that
+ * connection, including hostname matching, and a name mismatch is masked by the
+ * authority error because it ranks lower in MapCertStatusToNetError. Trusting the
+ * CA through the NSS database keeps hostname checking intact and remains the
+ * stricter option; see docs-site/docs/certificate.md.
  *
  * @param {Object} config - App configuration containing customCACertsFingerprints
  * @param {Electron.App} app - Electron app, used to catch sessions as they are created
@@ -83,7 +89,18 @@ exports.installCertificateVerifyProc = function installCertificateVerifyProc(
       return;
     }
 
-    if (getChainFingerprints(request.certificate).some((fp) => fingerprints.includes(fp))) {
+    const chain = getChain(request.certificate);
+
+    if (chain.some((cert) => fingerprints.includes(cert.fingerprint))) {
+      // Chromium reports only the most serious error, and CERT_STATUS_DATE_INVALID
+      // ranks below CERT_STATUS_AUTHORITY_INVALID (net/cert/cert_status_flags.cc),
+      // so an untrusted *and* expired certificate arrives here as -202. Check the
+      // validity window ourselves rather than letting the expiry pass unnoticed.
+      if (!chain.every(isCurrentlyValid)) {
+        console.error("[CERT] Allowlisted authority presented an out-of-date certificate");
+        callback(VERIFY_USE_CHROMIUM_RESULT);
+        return;
+      }
       console.debug("[CERT] Accepting allowlisted certificate authority");
       callback(VERIFY_ACCEPT);
       return;
@@ -126,7 +143,7 @@ function isUntrustedAuthority(request) {
 }
 
 /**
- * Collects the fingerprint of every certificate in a presented chain.
+ * Collects every certificate in a presented chain.
  *
  * An intercepting proxy often serves an incomplete chain, in which case the root
  * is not reachable via issuerCert and matching only the root would never succeed.
@@ -134,18 +151,32 @@ function isUntrustedAuthority(request) {
  * of them is as deliberate as matching the root.
  *
  * @param {Electron.Certificate} cert - Leaf certificate
- * @returns {string[]} Fingerprints, leaf first
+ * @returns {Electron.Certificate[]} Certificates, leaf first
  */
-function getChainFingerprints(cert) {
-  const fingerprints = [];
+function getChain(cert) {
+  const chain = [];
   let current = cert;
   while (current) {
-    if (current.fingerprint) {
-      fingerprints.push(current.fingerprint);
-    }
+    chain.push(current);
     current = current.issuerCert === current ? null : current.issuerCert;
   }
-  return fingerprints;
+  return chain;
+}
+
+/**
+ * Whether a certificate's validity window covers the current time. Returns false
+ * when the dates are missing, so an unverifiable certificate is never accepted.
+ * @param {Electron.Certificate} cert
+ * @returns {boolean}
+ */
+function isCurrentlyValid(cert) {
+  const nowInSeconds = Date.now() / 1000;
+  return (
+    typeof cert.validStart === "number" &&
+    typeof cert.validExpiry === "number" &&
+    nowInSeconds >= cert.validStart &&
+    nowInSeconds <= cert.validExpiry
+  );
 }
 
 /**

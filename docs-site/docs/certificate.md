@@ -53,11 +53,12 @@ The practical consequence differs by distribution:
     automatically for every user and no extra step is needed.
 
 :::note
-`customCACertsFingerprints` only applies to certificate errors that surface during a page
-load. Behind a proxy that intercepts every TLS connection, the failure can appear as a
-transport error before that hook runs, in which case the fingerprint allowlist never gets a
-chance to act. Importing the CA into NSS, as below, is the reliable fix for full TLS
-interception.
+`customCACertsFingerprints` is checked on every TLS verification, so it also covers a proxy
+that intercepts every connection. Importing the CA into NSS, as below, is still the stricter
+option: the allowlist accepts the connection outright, which also bypasses Chromium's
+hostname check for it, whereas a CA trusted through NSS keeps every other check in place.
+Prefer the NSS import where you can, and use the allowlist when you cannot modify the trust
+store.
 :::
 
 ### Importing a corporate CA into the NSS database
