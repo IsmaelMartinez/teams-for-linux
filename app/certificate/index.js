@@ -35,6 +35,119 @@ exports.onAppCertificateError = function onAppCertificateError(arg) {
   }
 };
 
+// net::ERR_CERT_AUTHORITY_INVALID. The only failure we are willing to override,
+// so an expired or revoked certificate is still rejected even when its issuer is
+// on the allowlist.
+const ERR_CERT_AUTHORITY_INVALID = -202;
+
+// Special values accepted by the setCertificateVerifyProc callback.
+const VERIFY_ACCEPT = 0;
+const VERIFY_USE_CHROMIUM_RESULT = -3;
+
+/**
+ * Installs a session-level certificate verify proc so `customCACertsFingerprints`
+ * also applies to connections that never surface a certificate error to a window.
+ *
+ * The `certificate-error` event only fires when a page load reports the error, so
+ * behind a proxy that intercepts every TLS connection the allowlist never got a
+ * chance to act (issue #2762). This proc runs on every server certificate
+ * verification instead.
+ *
+ * Nothing is installed when no fingerprints are configured, so the default
+ * behaviour is untouched. When a fingerprint is configured we still defer to
+ * Chromium for anything that is not an untrusted-authority failure, so this can
+ * only ever accept a certificate the user explicitly allowlisted.
+ *
+ * @param {Object} config - App configuration containing customCACertsFingerprints
+ * @param {Electron.App} app - Electron app, used to catch sessions as they are created
+ * @param {Electron.Session} defaultSession - Session that may already exist
+ */
+exports.installCertificateVerifyProc = function installCertificateVerifyProc(
+  config,
+  app,
+  defaultSession,
+) {
+  const fingerprints = config.customCACertsFingerprints || [];
+  if (fingerprints.length === 0) {
+    return;
+  }
+
+  const verifyProc = (request, callback) => {
+    if (request.verificationResult === "OK") {
+      callback(VERIFY_USE_CHROMIUM_RESULT);
+      return;
+    }
+
+    if (!isUntrustedAuthority(request)) {
+      callback(VERIFY_USE_CHROMIUM_RESULT);
+      return;
+    }
+
+    if (getChainFingerprints(request.certificate).some((fp) => fingerprints.includes(fp))) {
+      console.debug("[CERT] Accepting allowlisted certificate authority");
+      callback(VERIFY_ACCEPT);
+      return;
+    }
+
+    console.error("[CERT] Certificate authority not in allowlist for request");
+    callback(VERIFY_USE_CHROMIUM_RESULT);
+  };
+
+  const applyTo = (targetSession) => {
+    try {
+      targetSession.setCertificateVerifyProc(verifyProc);
+    } catch (error) {
+      console.error("[CERT] Could not install certificate verify proc", {
+        message: error.message,
+      });
+    }
+  };
+
+  if (defaultSession) {
+    applyTo(defaultSession);
+  }
+  // Profile partitions get their own session, so catch them as they appear.
+  app.on("session-created", applyTo);
+
+  console.info("[CERT] Custom CA allowlist active", { count: fingerprints.length });
+};
+
+/**
+ * Whether a failed verification was caused by an untrusted issuing authority.
+ * @param {Object} request - setCertificateVerifyProc request
+ * @returns {boolean}
+ */
+function isUntrustedAuthority(request) {
+  return (
+    request.errorCode === ERR_CERT_AUTHORITY_INVALID ||
+    (typeof request.verificationResult === "string" &&
+      request.verificationResult.includes("CERT_AUTHORITY_INVALID"))
+  );
+}
+
+/**
+ * Collects the fingerprint of every certificate in a presented chain.
+ *
+ * An intercepting proxy often serves an incomplete chain, in which case the root
+ * is not reachable via issuerCert and matching only the root would never succeed.
+ * Every entry is compared against the user's explicit allowlist, so matching any
+ * of them is as deliberate as matching the root.
+ *
+ * @param {Electron.Certificate} cert - Leaf certificate
+ * @returns {string[]} Fingerprints, leaf first
+ */
+function getChainFingerprints(cert) {
+  const fingerprints = [];
+  let current = cert;
+  while (current) {
+    if (current.fingerprint) {
+      fingerprints.push(current.fingerprint);
+    }
+    current = current.issuerCert === current ? null : current.issuerCert;
+  }
+  return fingerprints;
+}
+
 /**
  * Recursively traverses the certificate chain to find the root issuer.
  * This is necessary because certificates can have intermediate CAs,

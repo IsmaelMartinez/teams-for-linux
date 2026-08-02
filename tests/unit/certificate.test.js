@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { onAppCertificateError } = require('../../app/certificate/index');
+const { onAppCertificateError, installCertificateVerifyProc } = require('../../app/certificate/index');
 
 function createCert(fingerprint, issuerCert = null) {
 	const cert = { fingerprint };
@@ -118,6 +118,85 @@ describe('Certificate validation - chain traversal', () => {
 		});
 		onAppCertificateError(arg);
 		assert.strictEqual(getCallbackValue(), true);
+	});
+});
+
+function createHarness(config) {
+	const sessions = [];
+	const listeners = {};
+	const fakeApp = { on: (event, fn) => { listeners[event] = fn; } };
+	const fakeSession = { setCertificateVerifyProc: (fn) => sessions.push(fn) };
+	installCertificateVerifyProc(config, fakeApp, fakeSession);
+	return {
+		sessions,
+		emitSessionCreated: (ses) => listeners['session-created']?.(ses),
+		verify: (request) => {
+			let result = null;
+			sessions[0](request, (value) => { result = value; });
+			return result;
+		},
+	};
+}
+
+function createRequest(overrides = {}) {
+	return {
+		verificationResult: 'CERT_AUTHORITY_INVALID',
+		errorCode: -202,
+		certificate: createCert('AA:BB:CC'),
+		...overrides,
+	};
+}
+
+describe('Certificate verify proc - installation', () => {
+	it('does not install anything when no fingerprints are configured', () => {
+		const { sessions } = createHarness({ customCACertsFingerprints: [] });
+		assert.strictEqual(sessions.length, 0);
+	});
+
+	it('installs on the default session when fingerprints are configured', () => {
+		const { sessions } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		assert.strictEqual(sessions.length, 1);
+	});
+
+	it('installs on sessions created later, such as profile partitions', () => {
+		const harness = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		harness.emitSessionCreated({ setCertificateVerifyProc: (fn) => harness.sessions.push(fn) });
+		assert.strictEqual(harness.sessions.length, 2);
+	});
+});
+
+describe('Certificate verify proc - verification', () => {
+	it('accepts when an allowlisted fingerprint is in the chain', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['ROOT:FP'] });
+		const root = createCert('ROOT:FP');
+		assert.strictEqual(verify(createRequest({ certificate: createCert('LEAF:FP', root) })), 0);
+	});
+
+	it('accepts on a match against an incomplete chain with no reachable root', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['LEAF:FP'] });
+		assert.strictEqual(verify(createRequest({ certificate: { fingerprint: 'LEAF:FP' } })), 0);
+	});
+
+	it('defers to Chromium when no fingerprint matches', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['XX:YY:ZZ'] });
+		assert.strictEqual(verify(createRequest()), -3);
+	});
+
+	it('defers to Chromium when verification already succeeded', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		assert.strictEqual(verify(createRequest({ verificationResult: 'OK', errorCode: 0 })), -3);
+	});
+
+	it('does not accept an expired certificate even when the issuer is allowlisted', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		const request = createRequest({ verificationResult: 'CERT_DATE_INVALID', errorCode: -201 });
+		assert.strictEqual(verify(request), -3);
+	});
+
+	it('does not accept a revoked certificate even when the issuer is allowlisted', () => {
+		const { verify } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
+		const request = createRequest({ verificationResult: 'CERT_REVOKED', errorCode: -206 });
+		assert.strictEqual(verify(request), -3);
 	});
 });
 
