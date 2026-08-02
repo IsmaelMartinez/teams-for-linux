@@ -75,6 +75,7 @@ The v1 implementation uses only the first connected FIDO2 device. Users with mul
 - First-device-only: `fido2-token -L` returns all connected devices; we use `devices[0]`. Multi-device selection is a future enhancement.
 - Assertion echo-offset heuristic: libfido2 1.16.0+ echoes two lines of input back on stdout before the actual assertion data; older versions do not. We detect by checking whether line 1 matches the `rpId` we passed. This heuristic has been validated against 1.16.0 on Arch; behaviour on older libfido2 builds or future divergent builds is untested.
 - PIN-prompt stderr pattern matching: we detect readiness for PIN input by scanning stderr for the literal string `Enter PIN for`. Localised libfido2 builds could emit a translated prompt and break detection.
+- Touch prompt spans the whole call: `fido2-assert` / `fido2-cred` print the PIN prompt to stderr but emit nothing at the user-presence step, so the "touch your security key" window (#2631) covers the entire security-key call rather than firing at the instant the key's LED starts blinking.
 - No resident-key / passkey enrollment UI: we pass through whatever the caller asks for, but no in-app affordance exists for managing discoverable credentials.
 
 ## References

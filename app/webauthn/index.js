@@ -19,6 +19,7 @@
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
+const { showTouchPrompt } = require("./touchPrompt");
 const log = require("./log");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
@@ -110,13 +111,29 @@ async function handleWebauthnRequest(operation, event, options) {
       log.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
-    const result = operation === "create"
-      ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
-      : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
+    // From here the fido2 tool blocks on the user-presence check with no
+    // output of its own, so the prompt spans the whole call and is dismissed
+    // in `finally` on success, failure, cancel, or the backend's 60s timeout.
+    const abortController = new AbortController();
+    const prompt = showTouchPrompt(() => abortController.abort());
+    const backendOptions = { ...options, origin, preCollectedPin, abortSignal: abortController.signal };
+
+    let result;
+    try {
+      result = operation === "create"
+        ? await fido2Backend.createCredential(backendOptions)
+        : await fido2Backend.getAssertion(backendOptions);
+    } finally {
+      prompt.dismiss();
+    }
     log.info("[WEBAUTHN] Succeeded", { op: operation });
     return { success: true, data: result };
   } catch (err) {
-    log.error("[WEBAUTHN] Failed", { op: operation, errClass: log.classifyError(err) });
+    if (err.message === fido2Backend.CANCELLED_MESSAGE) {
+      log.info("[WEBAUTHN] Cancelled by user", { op: operation });
+    } else {
+      log.error("[WEBAUTHN] Failed", { op: operation, errClass: log.classifyError(err) });
+    }
     return { success: false, error: err.message };
   }
 }
