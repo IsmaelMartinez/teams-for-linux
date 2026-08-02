@@ -18,6 +18,21 @@ const log = require("./log");
 const execFileAsync = promisify(execFile);
 
 /**
+ * Rejection message used when the user cancels a security-key operation.
+ * Callers compare against this to tell a deliberate cancel apart from a real
+ * failure, so that a cancel is not reported to the page as a broken key.
+ */
+const CANCELLED_MESSAGE = "NotAllowedError: security key operation cancelled";
+
+/**
+ * Reject a cancelled request before it does any further work.
+ * @param {AbortSignal} [signal]
+ */
+function throwIfCancelled(signal) {
+  if (signal?.aborted) throw new Error(CANCELLED_MESSAGE);
+}
+
+/**
  * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
  *
@@ -35,9 +50,15 @@ const execFileAsync = promisify(execFile);
  * @param {string[]} inputLines - Stdin input lines (credential parameters)
  * @param {number} timeoutMs - Process timeout in milliseconds
  * @param {string|null} pin - Pre-collected PIN string, or null if no PIN needed
+ * @param {AbortSignal} [signal] - Aborting kills the child and rejects with CANCELLED_MESSAGE
  */
-function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
+function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error(CANCELLED_MESSAGE));
+      return;
+    }
+
     // Detach the child process so it has no controlling terminal.
     // fido2-tools use readpassphrase() which tries /dev/tty first for PIN
     // input. With detached: true, open("/dev/tty") fails and the tool
@@ -51,15 +72,32 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
     let rejected = false;
     let pinWritten = false;
 
+    // The child sits in the user-presence check until the key is touched, so
+    // both the timeout and an explicit cancel have to take the whole process
+    // group down (negative PID) — detached: true put it in its own session,
+    // and killing only the leader would orphan it holding the device open.
+    const killProcessGroup = () => {
+      try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
+    };
+
     const timeout = setTimeout(() => {
       if (!rejected) {
         rejected = true;
-        // Kill the process group (negative PID) since detached: true
-        // creates a new session/group.
-        try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
+        killProcessGroup();
         reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
       }
     }, timeoutMs);
+
+    const onAbort = () => {
+      if (rejected) return;
+      rejected = true;
+      clearTimeout(timeout);
+      killProcessGroup();
+      log.info("[WEBAUTHN] Security key operation cancelled by user");
+      reject(new Error(CANCELLED_MESSAGE));
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    const stopListeningForAbort = () => signal?.removeEventListener("abort", onAbort);
 
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
 
@@ -79,6 +117,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
 
     proc.on("close", (code) => {
       clearTimeout(timeout);
+      stopListeningForAbort();
       if (rejected) return;
       if (code === 0) {
         resolve({ stdout });
@@ -89,6 +128,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
 
     proc.on("error", (err) => {
       clearTimeout(timeout);
+      stopListeningForAbort();
       if (!rejected) reject(err);
     });
 
@@ -249,6 +289,10 @@ function buildCredArgs(authSel) {
  * @returns {Promise<object>} Credential creation result
  */
 async function createCredential(options) {
+  // Bail out before touching the device: the prompt's Cancel can land while
+  // the previous step is still settling, and enumerating USB hardware for a
+  // request the user already gave up on is pure latency.
+  throwIfCancelled(options.abortSignal);
   const device = await resolveDevice();
   log.info("[WEBAUTHN] createCredential", {
     devicePresent: true,
@@ -273,7 +317,7 @@ async function createCredential(options) {
   const timeoutMs = (options.timeout || 60) * 1000;
   const { stdout } = await spawnFido2(
     "fido2-cred", args, inputLines, timeoutMs,
-    options.preCollectedPin || null,
+    options.preCollectedPin || null, options.abortSignal,
   );
 
   const lines = stdout.trim().split("\n");
@@ -332,6 +376,10 @@ async function createCredential(options) {
  * @returns {Promise<object>} Assertion result
  */
 async function getAssertion(options) {
+  // Bail out before touching the device: the prompt's Cancel can land while
+  // the previous step is still settling, and enumerating USB hardware for a
+  // request the user already gave up on is pure latency.
+  throwIfCancelled(options.abortSignal);
   const device = await resolveDevice();
   log.info("[WEBAUTHN] getAssertion", {
     devicePresent: true,
@@ -378,13 +426,15 @@ async function getAssertion(options) {
       try {
         const { stdout } = await spawnFido2(
           "fido2-assert", args, credInputLines, timeoutMs,
-          options.preCollectedPin || null,
+          options.preCollectedPin || null, options.abortSignal,
         );
         return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
       } catch (err) {
         const errClass = log.classifyError(err);
         log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
         lastError = err;
+        // A cancel is not a "wrong credential" — stop trying the rest.
+        if (err.message === CANCELLED_MESSAGE) throw err;
         // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
         if (errClass !== "NO_CREDENTIALS") {
           throw err; // Other errors (bad PIN, timeout) should not be retried
@@ -398,7 +448,7 @@ async function getAssertion(options) {
   log.debug("[WEBAUTHN] getAssertion resident-key mode");
   const { stdout } = await spawnFido2(
     "fido2-assert", args, inputLines, timeoutMs,
-    options.preCollectedPin || null,
+    options.preCollectedPin || null, options.abortSignal,
   );
   return parseAssertionOutput(stdout, options, clientDataJSON, null);
 }
@@ -447,4 +497,8 @@ function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
   };
 }
 
-module.exports = { isAvailable, discoverDevices, createCredential, getAssertion };
+module.exports = { isAvailable, discoverDevices, createCredential, getAssertion, CANCELLED_MESSAGE };
+
+// Exposed so the cancellation path can be unit-tested against a real detached
+// child process. Not part of the module's contract — do not use from app code.
+module.exports._spawnFido2 = spawnFido2;

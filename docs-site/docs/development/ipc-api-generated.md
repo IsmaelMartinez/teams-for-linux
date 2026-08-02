@@ -12,7 +12,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 - **Event** channels use `ipcMain.on()` for fire-and-forget notifications
 - **One-Time Event** channels use `ipcMain.once()` for single-use listeners
 
-**Total Channels**: 84
+**Total Channels**: 85
 
 ---
 
@@ -148,6 +148,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 | `webauthn:get` | Request/Response | Handle assertion requests from renderer | [`app/webauthn/index.js:302`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/index.js#L302) |
 | `webauthn:pin-cancel` | Event | Receive cancellation from the PIN dialog when user clicks Cancel or closes the window | [`app/webauthn/pinDialog.js:91`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/pinDialog.js#L91) |
 | `webauthn:pin-submit` | Event | Receive PIN from the PIN dialog when user submits the form | [`app/webauthn/pinDialog.js:89`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/pinDialog.js#L89) |
+| `webauthn:touch-cancel` | Event | Receive cancellation from the touch prompt when user clicks Cancel or closes the window | [`app/webauthn/touchPrompt.js:83`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/touchPrompt.js#L83) |
 
 ## Partitions & Zoom
 

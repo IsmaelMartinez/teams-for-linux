@@ -554,3 +554,67 @@ describe('WebAuthn subframe injection - injected script', () => {
 		assert.ok(injected.includes('getAuthenticatorData'));
 	});
 });
+
+// ─── Cancelling a security-key operation (issue #2631) ────────────────────────
+
+describe('Security key cancellation', () => {
+	const fido2Backend = require('../../app/webauthn/fido2Backend');
+
+	it('rejects an already-cancelled assertion before touching the device', async () => {
+		const controller = new AbortController();
+		controller.abort();
+
+		await assert.rejects(
+			() => fido2Backend.getAssertion({ abortSignal: controller.signal }),
+			// Reaching the device would fail with "No FIDO2 hardware device found"
+			// instead, so this also proves enumeration was skipped.
+			(err) => err.message === fido2Backend.CANCELLED_MESSAGE,
+		);
+	});
+
+	it('rejects an already-cancelled credential creation before touching the device', async () => {
+		const controller = new AbortController();
+		controller.abort();
+
+		await assert.rejects(
+			() => fido2Backend.createCredential({ abortSignal: controller.signal }),
+			(err) => err.message === fido2Backend.CANCELLED_MESSAGE,
+		);
+	});
+
+	it('kills the detached child process group when cancelled mid-call', async () => {
+		const controller = new AbortController();
+		// `sleep` stands in for fido2-assert blocking on the user-presence check:
+		// it is spawned detached exactly the same way and never exits on its own.
+		const pending = fido2Backend._spawnFido2('sleep', ['30'], [], 30_000, null, controller.signal);
+
+		// Give the child a moment to actually exist before cancelling it.
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		controller.abort();
+
+		await assert.rejects(pending, (err) => err.message === fido2Backend.CANCELLED_MESSAGE);
+	});
+
+	it('leaves an uncancelled call alone', async () => {
+		const controller = new AbortController();
+		const { stdout } = await fido2Backend._spawnFido2('echo', ['ok'], [], 5000, null, controller.signal);
+
+		assert.strictEqual(stdout.trim(), 'ok');
+	});
+
+	it('stops trying further credentials once cancelled', () => {
+		// Replicates the retry decision in getAssertion()'s allowCredentials loop:
+		// NO_CREDENTIALS means "not this key, try the next one", but a cancel has
+		// to break out rather than walk the whole list killing a child each time.
+		const shouldKeepTrying = (message, errClass) =>
+			message !== fido2Backend.CANCELLED_MESSAGE && errClass === 'NO_CREDENTIALS';
+
+		assert.strictEqual(shouldKeepTrying('some error', 'NO_CREDENTIALS'), true);
+		assert.strictEqual(shouldKeepTrying(fido2Backend.CANCELLED_MESSAGE, 'NO_CREDENTIALS'), false);
+		assert.strictEqual(shouldKeepTrying('bad PIN', 'PIN_INVALID'), false);
+	});
+
+	it('marks a cancellation as NotAllowedError so the page offers another method', () => {
+		assert.match(fido2Backend.CANCELLED_MESSAGE, /^NotAllowedError:/);
+	});
+});

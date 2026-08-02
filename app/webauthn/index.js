@@ -19,6 +19,7 @@
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
+const { showTouchPrompt } = require("./touchPrompt");
 const log = require("./log");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
@@ -138,26 +139,41 @@ async function handleWebauthnRequest(operation, event, options) {
       log.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
+    // From here the fido2 tool blocks on the user-presence check with no
+    // output of its own, so the prompt spans the whole call and is dismissed
+    // in `finally` on success, failure, cancel, or the backend's 60s timeout.
+    const abortController = new AbortController();
+    const prompt = showTouchPrompt(() => abortController.abort());
+    const backendOptions = {
+      ...options,
+      origin,
+      topOrigin: senderOrigin,
+      preCollectedPin,
+      abortSignal: abortController.signal,
+    };
+
     const touchStartedAt = Date.now();
     try {
       const result = operation === "create"
-        ? await fido2Backend.createCredential({ ...options, origin, topOrigin: senderOrigin, preCollectedPin })
-        : await fido2Backend.getAssertion({ ...options, origin, topOrigin: senderOrigin, preCollectedPin });
+        ? await fido2Backend.createCredential(backendOptions)
+        : await fido2Backend.getAssertion(backendOptions);
       touchMs = Date.now() - touchStartedAt;
       log.info("[WEBAUTHN] Succeeded", { op: operation, totalMs: Date.now() - startedAt, pinMs, touchMs });
       return { success: true, data: result };
     } catch (err) {
       touchMs = Date.now() - touchStartedAt;
       throw err;
+    } finally {
+      prompt.dismiss();
     }
   } catch (err) {
-    log.error("[WEBAUTHN] Failed", {
-      op: operation,
-      errClass: log.classifyError(err),
-      totalMs: Date.now() - startedAt,
-      pinMs,
-      touchMs,
-    });
+    const timings = { totalMs: Date.now() - startedAt, pinMs, touchMs };
+    // A cancel is the user's own choice, not a failure of the key.
+    if (err.message === fido2Backend.CANCELLED_MESSAGE) {
+      log.info("[WEBAUTHN] Cancelled by user", { op: operation, ...timings });
+    } else {
+      log.error("[WEBAUTHN] Failed", { op: operation, errClass: log.classifyError(err), ...timings });
+    }
     return { success: false, error: err.message };
   }
 }
