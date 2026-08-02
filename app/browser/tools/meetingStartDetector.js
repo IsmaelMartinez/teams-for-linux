@@ -10,6 +10,8 @@
  * toast text in the UI language and can reword it without notice, so the
  * match patterns are configurable via `mqtt.meetingStartDetection.patterns`
  * (case-insensitive regular expressions). The default only covers English.
+ * Making the patterns user-configurable rather than hard-coded came from
+ * Hoàng Anh Vũ's detector in #2745, folded in here.
  *
  * Scoping strategy:
  * 1. Try to observe a known toast container region (narrowest scope).
