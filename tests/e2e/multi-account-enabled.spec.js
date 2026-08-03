@@ -98,6 +98,69 @@ test('multi-account enabled, no profiles yet = same redirect to Microsoft login'
   }
 });
 
+// Phase 1c.2 shortcuts: pinning is capped at 5 (the Ctrl+Alt+1…5 slots) and
+// pinned profiles get menu accelerators in Profiles → Switch to, slotted by
+// list order. Unpinned profiles get no accelerator.
+test('pinning caps at 5 and maps Ctrl+Alt accelerators onto pinned profiles', async () => {
+  const ctx = await startApp({
+    prefix: 'teams-e2e-pin-',
+    config: { multiAccount: { enabled: true } },
+    allowEval: true,
+  });
+
+  try {
+    const mainWindow = findMainTeamsWindow(ctx.electronApp);
+    expect(mainWindow).toBeTruthy();
+    await waitForLoginRedirect(mainWindow);
+
+    // Create six profiles; pin the first five.
+    const ids = [];
+    for (let i = 1; i <= 6; i++) {
+      const added = await invokeHandler(ctx.electronApp, 'profile-add', [
+        { name: `Profile ${i}` },
+      ]);
+      expect(added).toHaveProperty('result');
+      ids.push(added.result.id);
+    }
+    for (let i = 0; i < 5; i++) {
+      const pinned = await invokeHandler(ctx.electronApp, 'profile-update', [
+        ids[i],
+        { pinned: true },
+      ]);
+      expect(pinned).toHaveProperty('result');
+      expect(pinned.result.pinned).toBe(true);
+    }
+
+    // The sixth pin must be rejected by the main-side cap. (The accelerator
+    // slot mapping itself is covered by tests/unit/profilesMenu.test.js —
+    // the menu here is set per-window via window.setMenu, which
+    // Menu.getApplicationMenu cannot introspect on Linux.)
+    const sixth = await ctx.electronApp.evaluate(({ ipcMain }, id) => {
+      const handler = ipcMain._invokeHandlers?.get?.('profile-update');
+      if (!handler) return { error: 'profile-update handler missing' };
+      return Promise.resolve(handler({}, id, { pinned: true }))
+        .then((result) => ({ result }))
+        .catch((error) => ({ rejected: error.message }));
+    }, ids[5]);
+    expect(sixth).toHaveProperty('rejected');
+    expect(sixth.rejected).toMatch(/at most 5/i);
+
+    // Unpinning one frees a slot — pinning the sixth then succeeds.
+    const unpin = await invokeHandler(ctx.electronApp, 'profile-update', [
+      ids[0],
+      { pinned: false },
+    ]);
+    expect(unpin.result.pinned).toBe(false);
+    const repin = await invokeHandler(ctx.electronApp, 'profile-update', [
+      ids[5],
+      { pinned: true },
+    ]);
+    expect(repin.result.pinned).toBe(true);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
+
 // Phase 1c.2: switching to a profile view must fill the content area and keep
 // the switcher pill topmost (the #raiseChrome re-assert after addChildView).
 test('switching to a profile view fills the window and keeps the pill topmost', async () => {

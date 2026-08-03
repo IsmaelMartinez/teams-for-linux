@@ -5,7 +5,7 @@ Phase 1b foundation for the multi-account profile switcher described in
 
 This module owns persistence and CRUD for profile records. UI wiring
 (`WebContentsView` creation, switcher dropdown, `Profiles` menu entry,
-`Ctrl+Shift+1…5` shortcuts, first-run Profile 0 bootstrap) lands in later
+`Ctrl+Alt+1…5` shortcuts, first-run Profile 0 bootstrap) lands in later
 phases — this module exposes the data surface those phases call.
 
 ## Activation
@@ -86,7 +86,7 @@ surface and do not require allowlisting.
 
 ## What 1c.1 does **not** do
 
-- No switcher UI, no Profiles menu entry, no `Ctrl+Shift+1…5` shortcuts —
+- No switcher UI, no Profiles menu entry, no `Ctrl+Alt+1…5` shortcuts —
   those land in Phase 1c.2 alongside the renderer dialogs.
 - No screen-preview-partition swap, no `CustomBackground` instance
   refactor, no `cleanExpiredAuthCookies` rework — those are Phase 1c.3

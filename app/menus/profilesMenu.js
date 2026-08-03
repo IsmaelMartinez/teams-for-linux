@@ -17,6 +17,19 @@ function buildProfilesMenu(menus) {
   const list = pm.list();
   const activeId = pm.getActive()?.id ?? null;
 
+  // Pinned profiles get Ctrl+Alt+1…5 accelerators, slotted by their order
+  // in the profile list (ADR-020 Phase 1). Ctrl+Alt rather than Ctrl+Shift:
+  // the Teams web client binds Ctrl+Shift+<digit> for its own app-bar
+  // navigation, so that namespace would steal Teams chords for pinned slots
+  // and fall through inconsistently for unpinned ones (also flagged by a
+  // community tester on #2495). Menu accelerators only fire while the app is
+  // focused — exactly the scope we want for a switch chord — and the menu
+  // already rebuilds on every ProfilesManager event, so pin changes re-slot
+  // automatically. `pinnedSlots` maps profile id → 1-based slot.
+  const pinnedSlots = new Map(
+    list.filter((p) => p.pinned).map((p, i) => [p.id, i + 1])
+  );
+
   return {
     label: "Profiles",
     submenu: [
@@ -35,12 +48,18 @@ function buildProfilesMenu(menus) {
         submenu:
           list.length === 0
             ? [{ label: "(no profiles configured)", enabled: false }]
-            : list.map((p) => ({
-                label: p.name,
-                type: "radio",
-                checked: p.id === activeId,
-                click: () => menus.switchProfile(p.id),
-              })),
+            : list.map((p) => {
+                const slot = pinnedSlots.get(p.id);
+                return {
+                  label: p.name,
+                  type: "radio",
+                  checked: p.id === activeId,
+                  ...(slot
+                    ? { accelerator: `CommandOrControl+Alt+${slot}` }
+                    : {}),
+                  click: () => menus.switchProfile(p.id),
+                };
+              }),
       },
     ],
   };
