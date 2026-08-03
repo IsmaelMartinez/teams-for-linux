@@ -335,6 +335,43 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
+// Some localStorage tokens get encrypted by a Session cookie 'msal.cache.encryption'.
+// Electron drops this cookie on process exits, so the encrypted tokens cant be decrypted anymore
+// This forces a fresh login on every start (#2681)
+// Set a expiration Date for the cookie to promote it from a session cookie, so it survives restarts
+const MSAL_ENCRYPTION_COOKIE = 'msal.cache.encryption';
+function keepMsalEncryptionCookiePersistent(windowSession) {
+  windowSession.cookies.on('changed', (_event, cookie, _cause, removed) => {
+    if (removed || cookie.name !== MSAL_ENCRYPTION_COOKIE || !cookie.session) {
+      return;
+    }
+
+    const bareDomain = (cookie.domain || '').replace(/^\./, '');
+    if (!bareDomain) return;
+    const url = `${cookie.secure ? 'https' : 'http'}://${bareDomain}${cookie.path || '/'}`;
+
+    // Preserve the original attributes exactly, only add an expiry.
+    const details = {
+      url,
+      name: cookie.name,
+      value: cookie.value,
+      path: cookie.path,
+      secure: cookie.secure,
+      httpOnly: cookie.httpOnly,
+      sameSite: cookie.sameSite,
+      // Keep the Cookie for 400 days
+      expirationDate: Math.floor(Date.now() / 1000) + (400 * 24 * 60 * 60),
+    };
+    if ((cookie.domain || '').startsWith('.')) {
+      details.domain = cookie.domain;
+    }
+
+    windowSession.cookies.set(details)
+      .then(() => console.info('[AUTH_RECOVERY] Promoted msal.cache.encryption cookie to persistent (survives restart)'))
+      .catch((err) => console.warn('[AUTH_RECOVERY] Failed to persist msal.cache.encryption cookie:', err.message));
+  });
+}
+
 // Always-on auth-failure signatures. MSAL reports an interaction-required error
 // only when a silent token refresh genuinely fails, so it is a reliable signal to
 // recover on. It surfaces in two spellings: the MSAL class name
@@ -730,6 +767,10 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   }
 
   addEventHandlers();
+
+  // Keey the msal.cache.encryption cookie
+  // Run before loading Teams so the cookie gets caught right at the start
+  keepMsalEncryptionCookiePersistent(window.webContents.session);
 
   // Clean expired auth cookies before loading Teams to prevent the
   // "We need you to sign in again" stale banner (#2296)
