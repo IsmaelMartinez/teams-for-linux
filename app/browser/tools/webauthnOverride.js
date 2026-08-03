@@ -78,19 +78,40 @@ function init(config, ipcRenderer) {
 
     console.info("[WEBAUTHN] Intercepting credentials.get()");
 
+    // Observe only, never act on it. Knowing whether the page gives up on a
+    // ceremony (and after how long) is what separates "the user was slow to
+    // touch the key" from "the sign-in failed for an unrelated reason". See
+    // #2719. Wiring the signal through to cancel the call is a behaviour change
+    // and belongs with the touch-prompt work, not here.
+    const startedAt = Date.now();
+    if (!options.signal) {
+      console.info("[WEBAUTHN] credentials.get() called without an AbortSignal");
+    } else if (options.signal.aborted) {
+      console.info("[WEBAUTHN] credentials.get() called with an already-aborted signal");
+    } else {
+      options.signal.addEventListener(
+        "abort",
+        () => console.info("[WEBAUTHN] Page aborted credentials.get()", { elapsedMs: Date.now() - startedAt }),
+        { once: true },
+      );
+    }
+
     try {
       const serialized = serializeGetOptions(options.publicKey);
       const result = await ipcRenderer.invoke("webauthn:get", serialized);
 
       if (!result.success) {
-        console.error("[WEBAUTHN] credentials.get() failed:", result.error);
+        console.error("[WEBAUTHN] credentials.get() failed:", result.error, { elapsedMs: Date.now() - startedAt });
         throw mapError(result.error);
       }
 
-      console.info("[WEBAUTHN] credentials.get() succeeded");
+      console.info("[WEBAUTHN] credentials.get() succeeded", {
+        elapsedMs: Date.now() - startedAt,
+        aborted: options.signal?.aborted ?? false,
+      });
       return reconstructGetResponse(result.data);
     } catch (err) {
-      console.error("[WEBAUTHN] credentials.get() error:", err.message);
+      console.error("[WEBAUTHN] credentials.get() error:", err.message, { elapsedMs: Date.now() - startedAt });
       if (err instanceof DOMException) throw err;
       throw new DOMException(err.message, "NotAllowedError");
     }
