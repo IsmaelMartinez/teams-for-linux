@@ -97,7 +97,7 @@ In Phase 1, only four fields live on each `Profile` record in `settingsStore`; e
 |-------|------|---------|
 | `disableNotifications` | boolean | Silence this profile's notification badges and OS toasts (Phase 2 plumbing) |
 | `muted` | boolean | Suppress audio cues from this profile (notification sounds, incoming-call ring) |
-| `pinned` | boolean | Assigns a `Ctrl+Shift+N` keyboard shortcut; up to 5 pinned profiles |
+| `pinned` | boolean | Assigns a `Ctrl+Alt+N` keyboard shortcut; up to 5 pinned profiles |
 | `url` | string, optional | Per-profile URL override for GovCloud (`https://gov.teams.microsoft.us/`) or dev endpoints; falls back to the global `url` config |
 
 **Shared across all profiles (from `config.json` / CLI switches):**
@@ -150,7 +150,7 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 
 **Mouse:** a bottom-left avatar pill; clicking opens a compact picker (opening upward) listing all profiles (active one highlighted). Clicking a profile switches to it.
 
-**Keyboard:** `Ctrl+Shift+1…5` jumps directly to pinned profile N (mirrors the Windows native Teams client). Up to 5 pinned profiles supported; pinned state is the per-profile `pinned` boolean.
+**Keyboard:** `Ctrl+Alt+1…5` jumps directly to pinned profile N. Up to 5 pinned profiles supported; pinned state is the per-profile `pinned` boolean. (Originally specced as `Ctrl+Shift+1…5` to mirror the native Windows client, but the Teams *web* client this app wraps binds `Ctrl+Shift+<digit>` for its own app-bar navigation — the switch chord moved to the unbound `Ctrl+Alt` namespace, as community testing on #2495 also suggested. Implemented as window-menu accelerators, so they fire only while the app is focused and are unavailable on macOS, which has no per-window menu.)
 
 **Mechanism:** switching toggles visibility via `mainWindow.contentView.addChildView` / `removeChildView` and bounds updates. **No `loadURL`** — the switched-away view stays in the view hierarchy but hidden. Sessions stay warm, drafts survive, the Teams websocket is not reconnected. Target: under 500 ms switch latency (verified by E2E timing assertion).
 
@@ -317,9 +317,9 @@ Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakM
 
 ## Phased Delivery
 
-- **Phase 1 — MVP:** new `multiAccount.enabled` config flag (default `false`) with startup-time mutual-exclusion check against `auth.intune.enabled`, per-profile `WebContentsView`s, bottom-left switcher pill, `Profiles` menu bar entry with Add / Switch / Manage flows, `Ctrl+Shift+1…5` keyboard shortcuts for pinned profiles, first-run Profile 0 migration (gated on flag flip), the six Phase 1 `profile-*` IPC channels, migration of the relevant shared-state items from the audit above (the `isFirstLoginTry` → per-`webContents` `WeakMap` conversion in `app/login/index.js`, and rebinding `setDisplayMediaRequestHandler` on each profile session — discovered post-MVP and shipped via #2529/#2533; the screen-preview partition entry needed no change after the #2534 preview rework), a small refactor of `CustomBackground` so `customBGServiceUrl` lives on a private instance field rather than at module scope, and an E2E smoke test covering the byte-identical-when-disabled regression case. The remaining three audit entries (`cleanExpiredAuthCookies`, power-save blocker, incoming-call toast) defer to Phases 2–3 as their corresponding features (aggregated unread, cross-profile call handling) come online.
+- **Phase 1 — MVP:** new `multiAccount.enabled` config flag (default `false`) with startup-time mutual-exclusion check against `auth.intune.enabled`, per-profile `WebContentsView`s, bottom-left switcher pill, `Profiles` menu bar entry with Add / Switch / Manage flows, `Ctrl+Alt+1…5` keyboard shortcuts for pinned profiles, first-run Profile 0 migration (gated on flag flip), the six Phase 1 `profile-*` IPC channels, migration of the relevant shared-state items from the audit above (the `isFirstLoginTry` → per-`webContents` `WeakMap` conversion in `app/login/index.js`, and rebinding `setDisplayMediaRequestHandler` on each profile session — discovered post-MVP and shipped via #2529/#2533; the screen-preview partition entry needed no change after the #2534 preview rework), a small refactor of `CustomBackground` so `customBGServiceUrl` lives on a private instance field rather than at module scope, and an E2E smoke test covering the byte-identical-when-disabled regression case. The remaining three audit entries (`cleanExpiredAuthCookies`, power-save blocker, incoming-call toast) defer to Phases 2–3 as their corresponding features (aggregated unread, cross-profile call handling) come online.
 - **Phase 2 — Background notifications:** per-partition preload notification shim and unread-count tagging, aggregated tray badge, per-profile unread dots, `disableNotifications` and `muted` plumbing.
-- **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 5, exposing the `Ctrl+Shift+1…5` shortcuts introduced in Phase 1), drag-to-reorder.
+- **Phase 3 — Power features:** `--profile-id` CLI flag end-to-end, keyboard shortcut to cycle profiles, pinned-profile sidebar (max 5, exposing the `Ctrl+Alt+1…5` shortcuts introduced in Phase 1), drag-to-reorder.
 
 ## Related
 
