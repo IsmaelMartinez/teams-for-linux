@@ -67,8 +67,12 @@ function hostMatches(hostname, suffixes) {
  */
 function isLoginUrl(url, extraHosts = []) {
   try {
-    const hostname = new URL(url).hostname;
-    return hostMatches(hostname, [...DEFAULT_LOGIN_HOSTS, ...extraHosts]);
+    const parsed = new URL(url);
+    // Only ever act over HTTPS: this gate decides where the password gets
+    // injected, so a cleartext (http:) page must never qualify even on an
+    // otherwise-recognised login host.
+    if (parsed.protocol !== "https:") return false;
+    return hostMatches(parsed.hostname, [...DEFAULT_LOGIN_HOSTS, ...extraHosts]);
   } catch {
     return false;
   }
@@ -92,6 +96,22 @@ function runPasswordCommand(command) {
   });
 }
 
+// Renderer-side helpers shared by both injected scripts (embedded verbatim in
+// each script string). Kept in one place so the two scripts don't duplicate
+// them. Runs in the login page's own context.
+const RENDERER_PRELUDE = `
+    const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
+    const setValue = (el, v) => {
+      try { el.focus(); } catch (e) { void e; }
+      const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+      if (desc && desc.set) desc.set.call(el, v); else el.value = v;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
+    const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
+`;
+
 // Runs in the login page's own context. Handles the current page: fills the
 // email field (if a value was provided and it is empty), optionally clicks the
 // Next button (autoSubmit, email step only), optionally clicks the MFA option
@@ -101,16 +121,10 @@ function runPasswordCommand(command) {
 // Resolves { pwd, email, account, verify, next }.
 function buildObserverScript(user, verifyMethod, autoSubmit) {
   return `(() => new Promise((resolve) => {
+    ${RENDERER_PRELUDE}
     const USER = ${JSON.stringify(user)};
     const VERIFY = ${JSON.stringify(verifyMethod)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
-    const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
-    const setValue = (el, v) => {
-      const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-      if (desc && desc.set) desc.set.call(el, v); else el.value = v;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    };
     // Fire a full pointer+click sequence: some AAD tiles ignore a bare
     // .click() and only respond to the pointer/mouse event chain.
     const activate = (el) => {
@@ -120,8 +134,6 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       }
     };
     const EMAIL_SEL = 'input[type=email], input[name=loginfmt], input[name=username], input[autocomplete=username], input[type=text][name*="email" i]';
-    const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
-    const pwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
 
     let email = USER ? 'no-field' : 'skipped';
     let emailFilled = false;
@@ -171,7 +183,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     let nextAttempts = 0;
     const clickNext = () => {
       // Email step only: advance once the email is in and no password field yet.
-      if (!AUTO || !emailFilled || pwd() || nextAttempts >= 6) return;
+      if (!AUTO || !emailFilled || findPwd() || nextAttempts >= 6) return;
       const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
       if (btn) { activate(btn); nextAttempts += 1; next = 'clicked'; }
     };
@@ -191,13 +203,13 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     const tick = () => { fillEmail(); clickAccount(); clickNext(); clickVerify(); };
     const state = (pwdFound) => ({ pwd: pwdFound, email, account, verify, next });
     tick();
-    if (pwd()) return resolve(state(true));
+    if (findPwd()) return resolve(state(true));
     const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound)); };
-    const obs = new MutationObserver(() => { tick(); if (pwd()) finish(true); });
+    const obs = new MutationObserver(() => { tick(); if (findPwd()) finish(true); });
     obs.observe(document.documentElement, { childList: true, subtree: true });
     // Timer retries cover the case where AAD enables the button late and fires
     // no further mutations for the observer to react to.
-    const iv = setInterval(() => { tick(); if (pwd()) finish(true); }, 500);
+    const iv = setInterval(() => { tick(); if (findPwd()) finish(true); }, 500);
     const t = setTimeout(() => finish(false), ${OBSERVER_TIMEOUT_MS});
   }))()`;
 }
@@ -213,17 +225,9 @@ function buildPasswordFillScript(password, autoSubmit) {
   // the value has held for two consecutive ticks (~0.5s) — i.e. after AAD has
   // stopped resetting it.
   return `(() => new Promise((resolve) => {
+    ${RENDERER_PRELUDE}
     const PWD = ${JSON.stringify(password)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
-    const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
-    const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
-    const setValue = (el, v) => {
-      try { el.focus(); } catch (e) { void e; }
-      const desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
-      if (desc && desc.set) desc.set.call(el, v); else el.value = v;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    };
     let filled = false;
     let signedIn = false;
     let stable = 0;
@@ -236,9 +240,9 @@ function buildPasswordFillScript(password, autoSubmit) {
       if (el.value !== PWD) { setValue(el, PWD); filled = true; stable = 0; }
       else { filled = true; stable += 1; }
       if (AUTO && !signedIn && stable >= 2) {
-        const btn = document.querySelector('#idSIButton9, input[type=submit], button[type=submit]')
+        const btn = document.querySelector(SUBMIT_SEL)
           || (el.form && el.form.querySelector('button, input[type=submit]'));
-        if (btn && (btn.offsetParent !== null || btn.getClientRects().length) && !btn.disabled) {
+        if (btn && editable(btn)) {
           btn.click();
           signedIn = true;
         }
@@ -373,7 +377,9 @@ function attach(window, config) {
       const origins = [...new Set(allFrames().map((f) => originOf(f.url)).filter(Boolean))];
       const suspects = origins.filter((o) => /login|auth|sso|adfs|sts|sign|account/i.test(o));
       if (suspects.length) {
-        console.info("[SSO_PREFILL] Login-like frames not matched (add to auth.webLogin.extraHosts?)", {
+        // debug, not info: a federated tenant's IdP origin (e.g. an ADFS host)
+        // identifies the user's employer, which is on the never-log-at-info list.
+        console.debug("[SSO_PREFILL] Login-like frames not matched (add to auth.webLogin.extraHosts?)", {
           suspects,
         });
       }

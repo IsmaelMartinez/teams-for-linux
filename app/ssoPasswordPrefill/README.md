@@ -79,7 +79,8 @@ Example `config.json`:
   and is never logged, persisted, or sent anywhere else. It lives only in a
   local `const` for the duration of the injection call and is unreachable once
   it returns (error logs carry `error.code` only, never the command's message).
-- Injection is gated to the configured login hosts, so the password can never be
-  filled into an arbitrary site.
+- Injection is gated to the configured login hosts **over HTTPS only**
+  (`isLoginUrl` rejects `http:` and other schemes), so the password can never be
+  filled into an arbitrary or cleartext site. Covered by `tests/unit/ssoPasswordPrefill.test.js`.
 - The app stores no secret itself; sourcing it from your password manager keeps
   the credential under the manager's control (and its own unlock/prompt policy).
