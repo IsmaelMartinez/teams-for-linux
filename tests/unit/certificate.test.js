@@ -152,12 +152,16 @@ function createHarness(config) {
 }
 
 function createRequest(overrides = {}) {
-	return {
+	const request = {
 		verificationResult: 'CERT_AUTHORITY_INVALID',
 		errorCode: -202,
-		certificate: createCert('AA:BB:CC'),
+		validatedCertificate: createCert('AA:BB:CC'),
 		...overrides,
 	};
+	// The presented chain matches the validated one unless a test sets it apart,
+	// which is what an interception attempt does.
+	request.certificate = request.certificate ?? request.validatedCertificate;
+	return request;
 }
 
 describe('Certificate verify proc - installation', () => {
@@ -182,32 +186,47 @@ describe('Certificate verify proc - verification', () => {
 	it('accepts when an allowlisted fingerprint is in the chain', () => {
 		const { verify } = createHarness({ customCACertsFingerprints: ['ROOT:FP'] });
 		const root = createCert('ROOT:FP');
-		assert.strictEqual(verify(createRequest({ certificate: createCert('LEAF:FP', root) })), 0);
+		assert.strictEqual(verify(createRequest({ validatedCertificate: createCert('LEAF:FP', root) })), 0);
 	});
 
 	it('accepts on a match against an incomplete chain with no reachable root', () => {
 		const { verify } = createHarness({ customCACertsFingerprints: ['LEAF:FP'] });
 		const leafOnly = createCert('LEAF:FP');
 		delete leafOnly.issuerCert;
-		assert.strictEqual(verify(createRequest({ certificate: leafOnly })), 0);
+		assert.strictEqual(verify(createRequest({ validatedCertificate: leafOnly })), 0);
 	});
 
 	it('rejects an expired certificate reported as an authority error', () => {
 		// Chromium ranks CERT_STATUS_AUTHORITY_INVALID above CERT_STATUS_DATE_INVALID,
 		// so an untrusted and expired certificate arrives with errorCode -202.
 		const { verify } = createHarness({ customCACertsFingerprints: ['AA:BB:CC'] });
-		assert.strictEqual(verify(createRequest({ certificate: createExpiredCert('AA:BB:CC') })), -3);
+		assert.strictEqual(verify(createRequest({ validatedCertificate: createExpiredCert('AA:BB:CC') })), -3);
 	});
 
 	it('rejects when an issuer in the chain has expired', () => {
 		const { verify } = createHarness({ customCACertsFingerprints: ['ROOT:FP'] });
 		const expiredRoot = createExpiredCert('ROOT:FP');
-		assert.strictEqual(verify(createRequest({ certificate: createCert('LEAF:FP', expiredRoot) })), -3);
+		assert.strictEqual(verify(createRequest({ validatedCertificate: createCert('LEAF:FP', expiredRoot) })), -3);
 	});
 
 	it('rejects when validity dates are missing and cannot be checked', () => {
 		const { verify } = createHarness({ customCACertsFingerprints: ['BARE:FP'] });
-		assert.strictEqual(verify(createRequest({ certificate: { fingerprint: 'BARE:FP' } })), -3);
+		assert.strictEqual(verify(createRequest({ validatedCertificate: { fingerprint: 'BARE:FP' } })), -3);
+	});
+
+	it('ignores an allowlisted authority appended to the presented chain only', () => {
+		// Electron links request.certificate positionally from the certificates the
+		// server sent, without checking that each one signed the one below. Anyone
+		// able to intercept the connection can append an allowlisted CA's public
+		// certificate to a chain it never issued, so only the chain Chromium built
+		// and signature-checked is trusted here.
+		const { verify } = createHarness({ customCACertsFingerprints: ['ROOT:FP'] });
+		const appendedRoot = createCert('ROOT:FP');
+		const request = createRequest({
+			certificate: createCert('ATTACKER:FP', appendedRoot),
+			validatedCertificate: createCert('ATTACKER:FP'),
+		});
+		assert.strictEqual(verify(request), -3);
 	});
 
 	it('defers to Chromium when no fingerprint matches', () => {

@@ -95,7 +95,11 @@ exports.installCertificateVerifyProc = function installCertificateVerifyProc(
       return;
     }
 
-    const chain = getChain(request.certificate);
+    // validatedCertificate, not certificate. The latter is the chain the server
+    // sent, and Electron links it positionally without checking that each entry
+    // signed the one below, so anyone able to intercept the connection can append
+    // an allowlisted CA's public certificate to a chain it never issued.
+    const chain = getChain(request.validatedCertificate);
 
     if (chain.some((cert) => fingerprints.includes(cert.fingerprint))) {
       // Chromium reports only the most serious error, and CERT_STATUS_DATE_INVALID
@@ -155,12 +159,13 @@ function isUntrustedAuthority(request) {
 }
 
 /**
- * Collects every certificate in a presented chain.
+ * Collects every certificate in a chain.
  *
- * An intercepting proxy often serves an incomplete chain, in which case the root
- * is not reachable via issuerCert and matching only the root would never succeed.
- * Every entry is compared against the user's explicit allowlist, so matching any
- * of them is as deliberate as matching the root.
+ * Call this with request.validatedCertificate, which is the path Chromium built
+ * and signature-checked. Every entry in it genuinely issued the one below, so
+ * matching any of them is as deliberate as matching the root. That matters
+ * because an intercepting proxy often serves an incomplete chain, in which case
+ * the root is absent and matching only the root would never succeed.
  *
  * @param {Electron.Certificate} cert - Leaf certificate
  * @returns {Electron.Certificate[]} Certificates, leaf first
