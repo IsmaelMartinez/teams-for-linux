@@ -5,6 +5,13 @@ const { ipcRenderer } = require("electron");
 // Restore it via webUtils.getPathForFile before Teams's drop handler reads it,
 // scoped to Teams hosts so the SSO/auth pages this window also loads can't read
 // local paths off dropped files.
+//
+// The same stripping hits pasted files: when a user copies an image file
+// in their file manager and pastes into the compose box, Chromium surfaces it
+// as a File on the paste event's clipboardData, and Teams uploads by path — so
+// the paste fails the same way drag-drop used to. Restore the path on a
+// capture-phase paste listener too. Raw image-bit paste (screenshots) arrives
+// as a Blob with no path and is unaffected.
 try {
   const { webUtils } = require("electron");
   const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
@@ -19,34 +26,49 @@ try {
           !hostname.slice(0, -(domain.length + 1)).includes(".")),
     );
   };
+  // Restore the non-standard `File.path` on every File in a FileList, in place.
+  // No-op for blob-backed files (screenshots) since webUtils only resolves a
+  // path for files that originated from the OS file list; those are left as-is.
+  const restoreFilePaths = (files) => {
+    if (!files?.length) {
+      return;
+    }
+    for (const file of files) {
+      if (file.path) {
+        continue;
+      }
+      try {
+        const path = webUtils.getPathForFile(file);
+        if (path) {
+          Object.defineProperty(file, "path", {
+            value: path,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        }
+      } catch {
+        // leave the file untouched if the path can't be resolved
+      }
+    }
+  };
   globalThis.addEventListener(
     "drop",
     (event) => {
       if (!isTeamsHost(globalThis.location.hostname)) {
         return;
       }
-      const files = event.dataTransfer?.files;
-      if (!files?.length) {
+      restoreFilePaths(event.dataTransfer?.files);
+    },
+    true,
+  );
+  globalThis.addEventListener(
+    "paste",
+    (event) => {
+      if (!isTeamsHost(globalThis.location.hostname)) {
         return;
       }
-      for (const file of files) {
-        if (file.path) {
-          continue;
-        }
-        try {
-          const path = webUtils.getPathForFile(file);
-          if (path) {
-            Object.defineProperty(file, "path", {
-              value: path,
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
-          }
-        } catch {
-          // leave the file untouched if the path can't be resolved
-        }
-      }
+      restoreFilePaths(event.clipboardData?.files);
     },
     true,
   );
