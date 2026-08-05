@@ -5,7 +5,7 @@
  *
  * Generalized from app/webauthn/pinDialog.js so secret-input dialogs share a
  * single audited implementation instead of diverging copies (see
- * docs-site/docs/development/research/smartcard-nss-pin-dialog-research.md).
+ * docs-site/docs/development/adr/024-smartcard-pkcs11-pin-dialog.md).
  * The WebAuthn PIN dialog is left on its own copy for now and migrates onto
  * this helper opportunistically; no new duplicate is introduced.
  *
