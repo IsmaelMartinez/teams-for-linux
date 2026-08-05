@@ -336,9 +336,9 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
 }
 
 // Some localStorage tokens get encrypted by a Session cookie 'msal.cache.encryption'.
-// Electron drops this cookie on process exits, so the encrypted tokens cant be decrypted anymore
+// Electron drops this cookie on process exits, so the encrypted tokens can't be decrypted anymore
 // This forces a fresh login on every start (#2681)
-// Set a expiration Date for the cookie to promote it from a session cookie, so it survives restarts
+// Set an expiration date for the cookie to promote it from a session cookie, so it survives restarts
 const MSAL_ENCRYPTION_COOKIE = 'msal.cache.encryption';
 function keepMsalEncryptionCookiePersistent(windowSession) {
   windowSession.cookies.on('changed', (_event, cookie, _cause, removed) => {
@@ -367,7 +367,7 @@ function keepMsalEncryptionCookiePersistent(windowSession) {
     }
 
     windowSession.cookies.set(details)
-      .then(() => console.info('[AUTH_RECOVERY] Promoted msal.cache.encryption cookie to persistent (survives restart)'))
+      .then(() => console.debug('[AUTH_RECOVERY] Promoted msal.cache.encryption cookie to persistent (survives restart)'))
       .catch((err) => console.warn('[AUTH_RECOVERY] Failed to persist msal.cache.encryption cookie:', err.message));
   });
 }
@@ -768,7 +768,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   addEventHandlers();
 
-  // Keey the msal.cache.encryption cookie
+  // Keep the msal.cache.encryption cookie
   // Run before loading Teams so the cookie gets caught right at the start
   keepMsalEncryptionCookiePersistent(window.webContents.session);
 
