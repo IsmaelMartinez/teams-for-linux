@@ -715,6 +715,11 @@ async function handleAppReady() {
       clientCertificate.initialize();
     }
 
+    // Custom CA allowlist (issue #2762). Installed before the main window loads
+    // so it covers the very first TLS handshake, and before profile partitions
+    // exist so their sessions are caught by the session-created listener.
+    certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
+
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
     // Wire per-profile WebContentsView lifecycle once the main window
