@@ -119,12 +119,25 @@ const RENDERER_PRELUDE = `
 // tile, and resolves once a visible, editable password field exists (or after
 // OBSERVER_TIMEOUT_MS).
 // Resolves { pwd, email, account, verify, next }.
-function buildObserverScript(user, verifyMethod, autoSubmit) {
+function buildObserverScript(gen, user, verifyMethod, autoSubmit) {
   return `(() => new Promise((resolve) => {
     ${RENDERER_PRELUDE}
+    const GEN = ${JSON.stringify(gen)};
     const USER = ${JSON.stringify(user)};
     const VERIFY = ${JSON.stringify(verifyMethod)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
+    // A single login navigation fires dom-ready + did-navigate (+
+    // did-frame-navigate), so several observer scripts can be live in the same
+    // document at once. Coordinate through one window-scoped object:
+    //  - NS.gen lets a superseded (older-generation) script stop ticking, so it
+    //    doesn't keep running click loops for the full OBSERVER_TIMEOUT_MS.
+    //  - NS.account/next/verify are shared one-shot flags so each click happens
+    //    at most once across ALL live scripts — the earliest script acts on its
+    //    first synchronous tick before a newer one can bump NS.gen, so the gen
+    //    marker alone can't stop that first click (e.g. a duplicate MFA text).
+    const NS = (window.__ssoPrefill = window.__ssoPrefill || {});
+    NS.gen = GEN;
+    const superseded = () => NS.gen !== GEN;
     // Fire a full pointer+click sequence: some AAD tiles ignore a bare
     // .click() and only respond to the pointer/mouse event chain.
     const activate = (el) => {
@@ -153,7 +166,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     let account = USER ? 'no-tile' : 'skipped';
     let accountAttempts = 0;
     const clickAccount = () => {
-      if (!AUTO || !USER || account === 'clicked' || accountAttempts >= 10) return;
+      if (!AUTO || !USER || NS.account || accountAttempts >= 10) return;
       const holder = document.querySelector('#tilesHolder');
       if (!holder) return;
       accountAttempts += 1;
@@ -172,7 +185,7 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
       } else {
         target = target.closest('[role=button], a, [data-test-id], [tabindex]') || target;
       }
-      if (target) { activate(target); account = 'clicked'; }
+      if (target) { activate(target); NS.account = true; account = 'clicked'; }
     };
 
     // Retry-capped: AAD wires button handlers slightly after render, so a
@@ -183,33 +196,36 @@ function buildObserverScript(user, verifyMethod, autoSubmit) {
     let nextAttempts = 0;
     const clickNext = () => {
       // Email step only: advance once the email is in and no password field yet.
-      if (!AUTO || !emailFilled || findPwd() || nextAttempts >= 6) return;
+      if (!AUTO || !emailFilled || findPwd() || NS.next || nextAttempts >= 6) return;
       const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
-      if (btn) { activate(btn); nextAttempts += 1; next = 'clicked'; }
+      if (btn) { activate(btn); NS.next = true; nextAttempts += 1; next = 'clicked'; }
     };
 
     let verify = VERIFY ? 'no-match' : 'skipped';
     let verifyAttempts = 0;
     const clickVerify = () => {
-      if (!VERIFY || verify === 'clicked' || verifyAttempts >= 10) return;
+      if (!VERIFY || NS.verify || verifyAttempts >= 10) return;
       verifyAttempts += 1;
       const want = VERIFY.trim().toLowerCase();
       const scope = document.querySelector('#idDiv_SAOTCS_Proofs') || document.body;
       const rows = Array.from(scope.querySelectorAll('[data-value], [role=button], a, button'));
       const target = rows.find((el) => editable(el) && (el.textContent || '').trim().toLowerCase().startsWith(want));
-      if (target) { activate(target); verify = 'clicked'; }
+      if (target) { activate(target); NS.verify = true; verify = 'clicked'; }
     };
 
-    const tick = () => { fillEmail(); clickAccount(); clickNext(); clickVerify(); };
+    const tick = () => { if (superseded()) return; fillEmail(); clickAccount(); clickNext(); clickVerify(); };
     const state = (pwdFound) => ({ pwd: pwdFound, email, account, verify, next });
     tick();
     if (findPwd()) return resolve(state(true));
     const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound)); };
-    const obs = new MutationObserver(() => { tick(); if (findPwd()) finish(true); });
+    // Bail as soon as a newer-generation script has taken over, so this one
+    // stops looping instead of running until OBSERVER_TIMEOUT_MS.
+    const step = () => { if (superseded()) return finish(false); tick(); if (findPwd()) finish(true); };
+    const obs = new MutationObserver(step);
     obs.observe(document.documentElement, { childList: true, subtree: true });
     // Timer retries cover the case where AAD enables the button late and fires
     // no further mutations for the observer to react to.
-    const iv = setInterval(() => { tick(); if (findPwd()) finish(true); }, 500);
+    const iv = setInterval(step, 500);
     const t = setTimeout(() => finish(false), ${OBSERVER_TIMEOUT_MS});
   }))()`;
 }
@@ -228,22 +244,26 @@ function buildPasswordFillScript(password, autoSubmit) {
     ${RENDERER_PRELUDE}
     const PWD = ${JSON.stringify(password)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
+    // Shared with any concurrent script in this document so Sign in is clicked
+    // at most once even if more than one fill script is injected.
+    const NS = (window.__ssoPrefill = window.__ssoPrefill || {});
     let filled = false;
     let signedIn = false;
     let stable = 0;
     let ticks = 0;
-    const done = () => { obs.disconnect(); clearInterval(iv); resolve(!filled ? 'no-field' : (signedIn ? 'filled-submitted' : 'filled')); };
+    const done = () => { obs.disconnect(); clearInterval(iv); clearTimeout(t); resolve(!filled ? 'no-field' : (signedIn ? 'filled-submitted' : 'filled')); };
     const tick = () => {
       ticks += 1;
       const el = findPwd();
       if (!el) { if (filled) return done(); return; } // field gone after submit -> done
       if (el.value !== PWD) { setValue(el, PWD); filled = true; stable = 0; }
       else { filled = true; stable += 1; }
-      if (AUTO && !signedIn && stable >= 2) {
+      if (AUTO && !signedIn && !NS.signIn && stable >= 2) {
         const btn = document.querySelector(SUBMIT_SEL)
           || (el.form && el.form.querySelector('button, input[type=submit]'));
         if (btn && editable(btn)) {
           btn.click();
+          NS.signIn = true;
           signedIn = true;
         }
       }
@@ -253,7 +273,7 @@ function buildPasswordFillScript(password, autoSubmit) {
     const obs = new MutationObserver(tick);
     obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
     const iv = setInterval(tick, 250);
-    setTimeout(done, 10000);
+    const t = setTimeout(done, 10000);
   }))()`;
 }
 
@@ -311,7 +331,7 @@ function attach(window, config) {
     try {
       const result = await frame
         .executeJavaScript(
-          buildObserverScript(user || null, verifyMethod || null, autoSubmit),
+          buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit),
           true,
         )
         .catch((e) => ({ __err: e.message }));
