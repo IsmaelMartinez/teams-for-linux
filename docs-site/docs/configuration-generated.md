@@ -204,7 +204,7 @@ Object options group several related settings. The tables below list each nested
 | `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant. |
 | `mqtt.meetingStartDetection.enabled` | `boolean` | `false` | Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic (experimental, see issue #2587). |
 | `mqtt.meetingStartDetection.patterns` | `array` | `["meeting started","started the meeting"]` | Case-insensitive regular expressions for the DOM fallback, matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages. |
-| `mqtt.meetingStartDetection.resetSeconds` | `number` | `10` | Seconds after which the meeting-started topic auto-resets to false. |
+| `mqtt.meetingStartDetection.resetSeconds` | `number` | `10` | Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first. |
 
 ### quickChat
 

@@ -425,7 +425,7 @@ The camera topic monitors video sender `track.enabled` in the same RTCPeerConnec
 
 ## Meeting Start Detection (Experimental)
 
-When a scheduled meeting starts, Teams shows a "Meeting Started" banner (and a toast when someone explicitly starts it). Teams for Linux detects this primarily through Teams' internal command stream, which carries the banner as structured, locale-independent data, with a DOM text-match fallback, and publishes a pulse to `{topicPrefix}/meeting-started`: `"true"` on detection, automatically reset to `"false"` after `resetSeconds`. This lets Home Assistant automations fire when a scheduled meeting actually becomes active, not just when it was scheduled (issue [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)).
+When a scheduled meeting starts, Teams shows a "Meeting Started" banner (and a toast when someone explicitly starts it). Teams for Linux detects this primarily through Teams' internal command stream, which carries the banner as structured, locale-independent data, with a DOM text-match fallback, and publishes a pulse to `{topicPrefix}/meeting-started`: `"true"` on detection, back to `"false"` on whichever comes first, joining the call or `resetSeconds` elapsing. This lets Home Assistant automations fire when a scheduled meeting actually becomes active, not just when it was scheduled (issue [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)).
 
 The feature is off by default. Enable it alongside MQTT:
 
@@ -447,7 +447,7 @@ The feature is off by default. Enable it alongside MQTT:
 |--------|------|---------|-------------|
 | `meetingStartDetection.enabled` | `boolean` | `false` | Enable toast detection and the `meeting-started` topic |
 | `meetingStartDetection.patterns` | `string[]` | `["meeting started", "started the meeting"]` | Case-insensitive regular expressions for the DOM fallback path |
-| `meetingStartDetection.resetSeconds` | `number` | `10` | Seconds before the topic auto-resets to `"false"` |
+| `meetingStartDetection.resetSeconds` | `number` | `10` | Seconds before the topic resets to `"false"` if you never join. Joining resets it immediately |
 
 **Known limitations:**
 

@@ -893,7 +893,7 @@ module.exports = {
           "meetingStartDetection.resetSeconds": {
             type: "number",
             describe:
-              "Seconds after which the meeting-started topic auto-resets to false.",
+              "Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first.",
           },
         },
         applyMode: "restart",

@@ -207,6 +207,29 @@ describe('MQTTMediaStatusService', () => {
 			assert.strictEqual(resets.length, 1, 'pulse should reset to false once');
 		});
 
+		it('resets to false as soon as the call is joined, before resetSeconds', async () => {
+			// Long reset so a pass cannot come from the timer firing (#2587).
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 60 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true');
+
+			mockApp.emit('teams-call-connected');
+			await flush();
+			const resets = published.filter(
+				(p) => p.topic === 'teams/meeting-started' && p.payload === 'false'
+			);
+			assert.strictEqual(resets.length, 1, 'joining should drop the flag once');
+		});
+
+		it('does not publish a spurious false when joining without a meeting start', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 60 } });
+			mockApp.emit('teams-call-connected');
+			await flush();
+			const any = published.filter((p) => p.topic === 'teams/meeting-started');
+			assert.strictEqual(any.length, 0, 'no meeting-started traffic without a start');
+		});
+
 		it('uses custom mediaTopics for meetingStarted', async () => {
 			createService(mqttClient, {
 				mediaTopics: { meetingStarted: 'meeting-live' },

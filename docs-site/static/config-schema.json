@@ -995,7 +995,7 @@
           "path": "meetingStartDetection.resetSeconds",
           "type": "number",
           "default": 10,
-          "description": "Seconds after which the meeting-started topic auto-resets to false."
+          "description": "Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first."
         }
       ]
     },

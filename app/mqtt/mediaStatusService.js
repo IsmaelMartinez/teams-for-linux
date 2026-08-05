@@ -13,8 +13,8 @@ const { getMediaTopics } = require('./mediaTopics');
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  * - {topicPrefix}/meeting-started - Scheduled-meeting-start pulse (#2587):
- *   'true' on detection, auto-reset to 'false' after
- *   mqtt.meetingStartDetection.resetSeconds
+ *   'true' on detection, back to 'false' on whichever comes first: joining
+ *   the call, or mqtt.meetingStartDetection.resetSeconds elapsing
  */
 class MQTTMediaStatusService {
 	#mqttClient;
@@ -69,6 +69,9 @@ class MQTTMediaStatusService {
 
 	async #handleCallConnected() {
 		await this.#publishBoolean(this.#mediaTopics.inCall, 'true', 'Call connected');
+		// Joining the meeting is the answer to "has it started?", so close the
+		// pulse early rather than leaving it true alongside in-call (#2587).
+		await this.#clearMeetingStarted('Meeting joined');
 	}
 
 	async #handleIncomingCallStarted() {
@@ -80,14 +83,23 @@ class MQTTMediaStatusService {
 	}
 
 	/**
-	 * Meeting start has no "ended" counterpart signal, so the topic is a
-	 * pulse: 'true' on detection, then 'false' after the configured reset
-	 * delay. A new detection during the pulse restarts the timer.
+	 * Drop the meeting-started flag and cancel any pending reset. Safe to call
+	 * when the flag is already down: the timer is only armed while it is up.
+	 */
+	async #clearMeetingStarted(label) {
+		if (!this.#meetingStartedResetTimer) return;
+		clearTimeout(this.#meetingStartedResetTimer);
+		this.#meetingStartedResetTimer = null;
+		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'false', label);
+	}
+
+	/**
+	 * Teams gives us no "meeting ended" signal, so the topic cannot latch
+	 * indefinitely. It goes 'true' on detection and back to 'false' on
+	 * whichever comes first: joining the call, or the configured reset delay.
+	 * A new detection during the pulse restarts the timer.
 	 */
 	async #handleMeetingStarted() {
-		// DEBUG-ONLY: Remove before merge (#2587): confirms the renderer's IPC
-		// crossed into the main process.
-		console.info('[MeetingStart][DEBUG] meeting-started IPC received in main process');
 		if (this.#meetingStartedResetTimer) {
 			clearTimeout(this.#meetingStartedResetTimer);
 		}
