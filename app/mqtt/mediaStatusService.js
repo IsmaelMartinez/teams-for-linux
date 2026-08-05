@@ -104,13 +104,16 @@ class MQTTMediaStatusService {
 			clearTimeout(this.#meetingStartedResetTimer);
 		}
 
-		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'true', 'Meeting start detected');
-
+		// Arm the reset before awaiting the publish, not after: a join landing
+		// during that await would otherwise find no timer to cancel and leave
+		// the retained topic stuck at 'true' with nothing to bring it down.
 		this.#meetingStartedResetTimer = setTimeout(() => {
 			this.#meetingStartedResetTimer = null;
 			// #publishBoolean handles its own errors
 			this.#publishBoolean(this.#mediaTopics.meetingStarted, 'false', 'Meeting-started pulse reset');
 		}, this.#meetingStartedResetMs);
+
+		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'true', 'Meeting start detected');
 	}
 
 	async #handleCallDisconnected() {
