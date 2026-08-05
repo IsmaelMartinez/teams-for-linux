@@ -1,7 +1,7 @@
 // Smartcard / NSS PIN handler spike — issue #2639
 //
-// Standalone Electron main script that answers the spike questions in
-// docs-site/docs/development/research/smartcard-nss-pin-dialog-research.md
+// Standalone Electron main script that answers the spike questions recorded in
+// docs-site/docs/development/adr/024-smartcard-pkcs11-pin-dialog.md
 // WITHOUT touching the Teams for Linux app code.
 //
 // Run from the repo root (after `npm install`):
