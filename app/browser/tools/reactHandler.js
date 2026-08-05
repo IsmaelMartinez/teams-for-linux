@@ -346,7 +346,7 @@ class ReactHandler {
 const reactHandlerInstance = new ReactHandler();
 
 // Make available for browser injection
-if (globalThis.window !== undefined) {
+if (globalThis.window) {
   globalThis.window.teamsForLinuxReactHandler = reactHandlerInstance;
 }
 

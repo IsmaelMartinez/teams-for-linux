@@ -44,6 +44,9 @@ Architecture Decision Records capture important architectural decisions along wi
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
 | [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | 🚧 Proposed | 2026-04-16 | N/A |
 | [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | 🚧 Proposed | 2026-04-21 | N/A |
+| [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Accepted | 2025-11-16 | v2.6.16 |
+| [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |
+| [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -62,6 +65,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | Direct D-Bus invocation for Microsoft Identity Broker version compatibility |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
 | [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys | FIDO2 hardware key support on Linux via fido2-tools interception |
+| [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | PIN collected in a hardened main-process window, never injected into the Teams page |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -117,6 +121,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | Use Gemini 2.0 Flash for automated changelog generation with release-pr workflow |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | Move PR artifact commenting to a workflow_run-triggered workflow to support fork PRs |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | Migrate triage bot from in-repo GitHub Actions to standalone Go service as a GitHub App |
+| [023](023-release-automation-tooling.md) | Release Automation Tooling | Adopt release-please for conventional-commit driven versioning, rejecting release-it and Beads |
 
 **Key Outcomes:**
 - Decoupled merging from releasing
@@ -158,6 +163,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | Use People API + Deep Links for quick chat access after Chat API was blocked |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
 | [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | WebContentsView-based profile switching with feature-flag gating |
+| [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | Keep the opt-in custom toast, drop the Phase 2 notification centre as unverifiable |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)

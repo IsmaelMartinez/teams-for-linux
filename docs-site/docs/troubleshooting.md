@@ -272,6 +272,33 @@ Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so the
 
 ---
 
+#### Issue: Blank "Waiting for network" screen behind a TLS-inspecting proxy
+
+**Description:** On a corporate network that intercepts TLS (a proxy re-signs every HTTPS
+connection with an internal CA), the window stays on a blank screen titled "Waiting for
+network" and never loads. Debug logs show repeated `net_error -202`
+(`ERR_CERT_AUTHORITY_INVALID`) handshake failures, often alongside AIA fetch errors, ending
+in `ERR_CONNECTION_CLOSED` for the main frame.
+
+**Potential Causes:**
+*   The corporate root CA is installed in the system store only. On Linux, Chromium and
+    Electron read a per-user NSS database, not the system OpenSSL store, so
+    `update-ca-certificates` does not reach the app on Debian and Ubuntu.
+*   The proxy serves an incomplete chain and the intermediate is not trusted locally either.
+
+**Solutions/Workarounds:**
+
+1.  **Import the CA into the NSS database:** see
+    [Certificate Management](certificate.md#linux-the-system-ca-store-is-not-enough) for the
+    `certutil` steps, the correct database path, and the Snap and Flatpak locations.
+
+2.  **On Fedora, RHEL and openSUSE:** `update-ca-trust` is sufficient, because those
+    distributions route NSS trust through `p11-kit-trust`.
+
+**Related GitHub Issues:** [Issue #2762](https://github.com/IsmaelMartinez/teams-for-linux/issues/2762)
+
+---
+
 #### Issue: Third-Party SSO Login Fails (e.g. Symantec VIP)
 
 **Description:** Users with third-party SSO providers like Symantec VIP see a broken or blank login page. Console logs may show `EvalError` or Content Security Policy violations referencing `strict-dynamic` or `nonce-` directives.

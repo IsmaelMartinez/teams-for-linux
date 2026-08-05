@@ -1,7 +1,9 @@
 # Configuration Organization Research
 
-:::info Ongoing — Incremental Migration
-Phase 1 (documentation) complete. New features use nested patterns from day one. Six flat options already deprecated with nested replacements active (`screenSharingThumbnail`, `screenLockInhibitionMethod`, `disableAutogain`, `videoMenu`, `ssoInTuneEnabled`, `ssoInTuneAuthUser`). Remaining flat options migrate opportunistically as modules are refactored — no dedicated migration effort planned.
+:::info Ongoing, incremental migration
+Phase 1 (documentation) is complete, and new features use nested patterns from day one. The six flat options this note used to track are no longer deprecated-but-present: `screenSharingThumbnail`, `screenLockInhibitionMethod`, `videoMenu`, `ssoInTuneEnabled` and `ssoInTuneAuthUser` have been removed from `app/config/options.js` outright, and `disableAutogain` survives only in its nested form (`media.microphone.disableAutogain`). Remaining flat options migrate opportunistically as modules are refactored, with no dedicated migration effort planned.
+
+This document remains the owner of the naming convention, which is why the roadmap still points here. Treat the option counts and category breakdowns below as a snapshot from 2026-02, not a live inventory: `docs-site/static/config-schema.json` is the generated source of truth for what exists today.
 :::
 
 **Issue**: Configuration improvements and cleanup investigation
@@ -12,7 +14,7 @@ Phase 1 (documentation) complete. New features use nested patterns from day one.
 ## Executive Summary
 
 ### Current State
-Teams for Linux has **66 active configuration options** managed through a flat yargs-based configuration system. While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
+Teams for Linux had 66 active configuration options when this audit was written, managed through a flat yargs-based configuration system (see `docs-site/static/config-schema.json` for the current generated inventory). While functional, the current organization has several issues: related options are scattered across documentation categories, naming conventions are inconsistent, and conditional options add complexity.
 
 ### Key Findings
 
