@@ -355,7 +355,7 @@ function keepMsalEncryptionCookiePersistent(windowSession) {
     // Get the days to keep the cookie from the config.
     // If no value is set or the value is outside of 1 and 400 or not a number set it to 400
     let keepMsalEncryptionDays = config?.auth?.keepMsalCacheEncryptionCookie?.days ?? 400;
-    if(keepMsalEncryptionDays > 400 || keepMsalEncryptionDays < 1 || isNaN(keepMsalEncryptionDays)) keepMsalEncryptionDays = 400;
+    if(keepMsalEncryptionDays > 400 || keepMsalEncryptionDays < 1 || Number.isNaN(keepMsalEncryptionDays)) keepMsalEncryptionDays = 400;
 
     // Preserve the original attributes exactly, only add an expiry.
     const details = {
