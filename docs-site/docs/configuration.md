@@ -338,6 +338,26 @@ modutil -dbdir sql:$HOME/.pki/nssdb -add opensc -libfile /usr/lib/x86_64-linux-g
 
 The token name and requesting hostname appear in the dialog but are never logged, and the entered PIN is never logged or written to disk.
 
+#### Cookies
+
+Some localStorage tokens get encrypted by a Session cookie 'msal.cache.encryption'. Electron drops this cookie on process exits, so the encrypted tokens can't be decrypted anymore. This forces a fresh login on every start and clears all local settings, like selected camera, microphone, meeting backgrounds or "Keep my current status when I'm active outside of Teams on the web". This sets an expiration date for the cookie to promote it from a session cookie, so it survives restarts.
+
+```json
+{
+  "auth": {
+    "keepMsalCacheEncryptionCookie": {
+        "enabled": true,
+        "days": 400
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auth.keepMsalCacheEncryptionCookie.enabled` | `boolean` | `false` | Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts. |
+| `auth.keepMsalCacheEncryptionCookie.days` | `number` | `400` | Sets the amount of days the 'msal.cache.encryption' cookie should be kept for. Between 1 and 400. |
+
 ### Multi-Account Profile Switcher (Experimental)
 
 > **Status:** Phase 1 partially shipped. With the flag enabled you get a **Profiles** menu (Add / Switch / Manage / Remove profiles), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. Still in progress: the top-right dropdown switcher overlay and `Ctrl+Shift+1…5` shortcuts for pinned profiles. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and remaining phases.
