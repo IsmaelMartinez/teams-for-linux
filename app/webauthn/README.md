@@ -38,6 +38,17 @@ Enable in `config.json`:
 }
 ```
 
+## Reading a sign-in log
+
+Every ceremony logs a `[WEBAUTHN]` line at each step, so `grep WEBAUTHN` over a session log shows the whole flow. Four fields matter when a sign-in fails but the ceremony itself reports success:
+
+- `timeoutSec` on `Processing request` is how long the login page is prepared to wait. It is in seconds while every other timing here is in milliseconds, so compare it against `totalMs / 1000`: a ceremony that outlasts it was abandoned by the page, whatever our side reports.
+- `pinMs` and `touchMs` on `Succeeded` split the wall-clock between the user typing a PIN and the key waiting to be touched. A large `touchMs` is someone not realising the key wants a touch, not a slow device, since each call is a fresh process paying the same fixed costs. The field is `touchMs` rather than `keyMs` because the log sanitizer redacts any field name containing "key".
+- `elapsedMs` on the renderer's `credentials.get() succeeded` is the same window measured from the page's side, so a gap against `totalMs` is IPC or PIN-window overhead.
+- `aborted` on that line, plus a `Page aborted credentials.get()` line, say whether the page gave up before we answered. `called without an AbortSignal` means the page never offered a way to cancel, so its own timeout is the only limit.
+
+None of these carry credential material: no credential IDs, user handles, challenges, PINs or raw origins.
+
 ## Related
 
 - Browser override: `app/browser/tools/webauthnOverride.js`

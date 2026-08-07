@@ -95,7 +95,23 @@ async function handleWebauthnRequest(operation, event, options) {
     return { success: false, error: "SecurityError: origin not allowed" };
   }
 
-  log.info("[WEBAUTHN] Processing request", { op: operation, originClass: log.classifyOrigin(origin) });
+  // timeoutSec is the timeout the relying party asked for. It is the number that
+  // tells us whether a slow ceremony (PIN entry plus waiting for the touch) can
+  // realistically outlast what the page is prepared to wait for. See #2719.
+  log.info("[WEBAUTHN] Processing request", {
+    op: operation,
+    originClass: log.classifyOrigin(origin),
+    timeoutSec: options?.timeout ?? null,
+  });
+
+  // Phase timings, so a log shows how the wall-clock split between the user
+  // typing a PIN and the key waiting to be touched, rather than leaving it to be
+  // inferred from timestamps.
+  const startedAt = Date.now();
+  // Named touchMs, not keyMs: the log sanitizer redacts any field whose name
+  // contains "key", which would blank the one number this logging exists for.
+  let pinMs = null;
+  let touchMs = null;
 
   try {
     // Determine if UV is required (PIN will be needed)
@@ -106,17 +122,32 @@ async function handleWebauthnRequest(operation, event, options) {
     let preCollectedPin = null;
     if (uvRequired) {
       log.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
+      const pinStartedAt = Date.now();
       preCollectedPin = await collectPin(event.sender);
+      pinMs = Date.now() - pinStartedAt;
       log.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
-    const result = operation === "create"
-      ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
-      : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
-    log.info("[WEBAUTHN] Succeeded", { op: operation });
-    return { success: true, data: result };
+    const touchStartedAt = Date.now();
+    try {
+      const result = operation === "create"
+        ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
+        : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
+      touchMs = Date.now() - touchStartedAt;
+      log.info("[WEBAUTHN] Succeeded", { op: operation, totalMs: Date.now() - startedAt, pinMs, touchMs });
+      return { success: true, data: result };
+    } catch (err) {
+      touchMs = Date.now() - touchStartedAt;
+      throw err;
+    }
   } catch (err) {
-    log.error("[WEBAUTHN] Failed", { op: operation, errClass: log.classifyError(err) });
+    log.error("[WEBAUTHN] Failed", {
+      op: operation,
+      errClass: log.classifyError(err),
+      totalMs: Date.now() - startedAt,
+      pinMs,
+      touchMs,
+    });
     return { success: false, error: err.message };
   }
 }
