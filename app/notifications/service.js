@@ -132,7 +132,8 @@ class NotificationService {
     if (typeof icon !== "string" || !icon) return null;
 
     if (icon.startsWith("data:")) {
-      return nativeImage.createFromDataURL(icon);
+      const image = nativeImage.createFromDataURL(icon);
+      return image.isEmpty() ? null : image;
     }
 
     let url;
@@ -156,6 +157,14 @@ class NotificationService {
       });
       if (!response.ok) return null;
 
+      let responseUrl;
+      try {
+        responseUrl = new URL(response.url);
+      } catch {
+        return null;
+      }
+      if (responseUrl.protocol !== "https:") return null;
+
       const declaredSize = Number(response.headers.get("content-length"));
       if (declaredSize > MAX_ICON_BYTES) return null;
 
@@ -175,7 +184,8 @@ class NotificationService {
         chunks.push(Buffer.from(value));
       }
 
-      return nativeImage.createFromBuffer(Buffer.concat(chunks, size));
+      const image = nativeImage.createFromBuffer(Buffer.concat(chunks, size));
+      return image.isEmpty() ? null : image;
     } catch {
       console.warn("[NOTIFICATIONS] Could not load remote notification icon");
       return null;
