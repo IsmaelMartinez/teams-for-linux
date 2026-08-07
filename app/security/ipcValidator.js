@@ -48,6 +48,10 @@ const allowedChannels = new Set([
   'set-badge-count',
   'tray-update',
   'dock-icon-update',
+  // main → renderer only (webContents.send); not gated by this validator,
+  // listed here so the allowlist stays authoritative per CLAUDE.md. Sent when the
+  // main window regains focus (config.clearBadgeOnFocus) to reset the badge.
+  'clear-badge-on-focus',
 
   // Call management (sorted alphabetically)
   'call-connected',
