@@ -108,8 +108,10 @@ async function handleWebauthnRequest(operation, event, options) {
   // typing a PIN and the key waiting to be touched, rather than leaving it to be
   // inferred from timestamps.
   const startedAt = Date.now();
+  // Named touchMs, not keyMs: the log sanitizer redacts any field whose name
+  // contains "key", which would blank the one number this logging exists for.
   let pinMs = null;
-  let keyMs = null;
+  let touchMs = null;
 
   try {
     // Determine if UV is required (PIN will be needed)
@@ -126,16 +128,16 @@ async function handleWebauthnRequest(operation, event, options) {
       log.info("[WEBAUTHN] PIN collected, proceeding with fido2-tools");
     }
 
-    const keyStartedAt = Date.now();
+    const touchStartedAt = Date.now();
     try {
       const result = operation === "create"
         ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
         : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
-      keyMs = Date.now() - keyStartedAt;
-      log.info("[WEBAUTHN] Succeeded", { op: operation, totalMs: Date.now() - startedAt, pinMs, keyMs });
+      touchMs = Date.now() - touchStartedAt;
+      log.info("[WEBAUTHN] Succeeded", { op: operation, totalMs: Date.now() - startedAt, pinMs, touchMs });
       return { success: true, data: result };
     } catch (err) {
-      keyMs = Date.now() - keyStartedAt;
+      touchMs = Date.now() - touchStartedAt;
       throw err;
     }
   } catch (err) {
@@ -144,7 +146,7 @@ async function handleWebauthnRequest(operation, event, options) {
       errClass: log.classifyError(err),
       totalMs: Date.now() - startedAt,
       pinMs,
-      keyMs,
+      touchMs,
     });
     return { success: false, error: err.message };
   }

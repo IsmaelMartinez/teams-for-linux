@@ -84,16 +84,14 @@ function init(config, ipcRenderer) {
     // #2719. Wiring the signal through to cancel the call is a behaviour change
     // and belongs with the touch-prompt work, not here.
     const startedAt = Date.now();
+    let onAbort = null;
     if (!options.signal) {
       console.info("[WEBAUTHN] credentials.get() called without an AbortSignal");
     } else if (options.signal.aborted) {
       console.info("[WEBAUTHN] credentials.get() called with an already-aborted signal");
     } else {
-      options.signal.addEventListener(
-        "abort",
-        () => console.info("[WEBAUTHN] Page aborted credentials.get()", { elapsedMs: Date.now() - startedAt }),
-        { once: true },
-      );
+      onAbort = () => console.info("[WEBAUTHN] Page aborted credentials.get()", { elapsedMs: Date.now() - startedAt });
+      options.signal.addEventListener("abort", onAbort, { once: true });
     }
 
     try {
@@ -114,6 +112,11 @@ function init(config, ipcRenderer) {
       console.error("[WEBAUTHN] credentials.get() error:", err.message, { elapsedMs: Date.now() - startedAt });
       if (err instanceof DOMException) throw err;
       throw new DOMException(err.message, "NotAllowedError");
+    } finally {
+      // Scope the listener to the call. Left attached it outlives the ceremony
+      // and would log a stale "Page aborted" if the page aborts the signal
+      // afterwards for unrelated reasons.
+      if (onAbort) options.signal.removeEventListener("abort", onAbort);
     }
   };
 
