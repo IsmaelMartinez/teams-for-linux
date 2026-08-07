@@ -155,10 +155,13 @@ class Menus {
   initialize() {
     const menu = appMenu(this);
 
+    // With `menubar: "hidden"` the menu stays ATTACHED and only the bar is
+    // hidden — the menu is the registration site for the pinned-profile
+    // switch accelerators (Ctrl+Alt+1…5, see profilesMenu.js), and
+    // `removeMenu()` would kill them along with the bar.
+    this.window.setMenu(Menu.buildFromTemplate([menu]));
     if (this.configGroup.startupConfig.menubar == "hidden") {
-      this.window.removeMenu();
-    } else {
-      this.window.setMenu(Menu.buildFromTemplate([menu]));
+      this.window.setMenuBarVisibility(false);
     }
 
     this.initializeEventHandlers();
@@ -314,6 +317,13 @@ class Menus {
   updateMenu() {
     const menu = appMenu(this);
     this.window.setMenu(Menu.buildFromTemplate([menu]));
+    // Re-assert the hidden bar: profile events rebuild the menu constantly
+    // (add/update/switch/remove), and without this the rebuild would silently
+    // restore a bar the user configured away (pre-existing bug made
+    // user-visible once profile events started driving updateMenu).
+    if (this.configGroup.startupConfig.menubar == "hidden") {
+      this.window.setMenuBarVisibility(false);
+    }
     this.tray?.setContextMenu(menu.submenu);
 
     // Notify renderer process of config changes that affect renderer behavior

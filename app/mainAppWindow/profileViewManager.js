@@ -522,6 +522,10 @@ class ProfileViewManager {
     this.#chromeView.webContents.send("profile-switcher-state", {
       profiles: this.#profilesManager.list(),
       activeId: active ? active.id : null,
+      // The Ctrl+Alt+1…5 pinned-profile chords live on the per-window menu
+      // (win.setMenu), which does not exist on macOS — don't advertise a
+      // shortcut that can never fire there.
+      shortcutsAvailable: process.platform !== "darwin",
     });
   }
 }
