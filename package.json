@@ -138,29 +138,30 @@
         "--rpm-digest=sha256"
       ]
     },
-    "snap": {
-      "summary": "Teams for Linux",
-      "confinement": "strict",
-      "grade": "stable",
-      "base": "core22",
-      "executableArgs": [
-        "--ozone-platform=x11"
-      ],
-      "plugs": [
-        "default",
-        "audio-record",
-        "camera",
-        "hardware-observe",
-        "network-bind",
-        "network-manager-observe",
-        "removable-media",
-        "screen-inhibit-control",
-        "system-observe",
-        "upower-observe"
-      ],
+    "snapcraft": {
+      "base": "core24",
       "publish": [
         "snapStore"
-      ]
+      ],
+      "core24": {
+        "summary": "Teams for Linux",
+        "confinement": "strict",
+        "grade": "stable",
+        "useLXD": true,
+        "plugs": [
+          "default",
+          "browser-support",
+          "audio-record",
+          "camera",
+          "hardware-observe",
+          "network-bind",
+          "network-manager-observe",
+          "removable-media",
+          "screen-inhibit-control",
+          "system-observe",
+          "upower-observe"
+        ]
+      }
     },
     "mac": {
       "category": "public.app-category.productivity",
