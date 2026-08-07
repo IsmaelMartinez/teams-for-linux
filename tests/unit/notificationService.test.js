@@ -11,12 +11,14 @@ let handlers;
 let notifications;
 let dataUrls;
 let imageBuffers;
+let bufferImageEmpty;
 
 function installElectronMock() {
 	handlers = new Map();
 	notifications = [];
 	dataUrls = [];
 	imageBuffers = [];
+	bufferImageEmpty = false;
 
 	class MockNotification extends EventEmitter {
 		constructor(options) {
@@ -43,11 +45,11 @@ function installElectronMock() {
 			nativeImage: {
 				createFromDataURL: (url) => {
 					dataUrls.push(url);
-					return { source: 'data-url' };
+					return { source: 'data-url', isEmpty: () => false };
 				},
 				createFromBuffer: (buffer) => {
 					imageBuffers.push(buffer);
-					return { source: 'buffer' };
+					return { source: 'buffer', isEmpty: () => bufferImageEmpty };
 				},
 			},
 		},
@@ -61,11 +63,16 @@ function cleanupElectronMock() {
 	delete require.cache[servicePath];
 }
 
-function responseWith(bytes) {
+function responseWith(bytes, options = {}) {
+	const {
+		url = 'https://teams.microsoft.com/avatar.png',
+		contentLength = bytes.length,
+	} = options;
 	let sent = false;
 	return {
 		ok: true,
-		headers: { get: () => String(bytes.length) },
+		url,
+		headers: { get: () => String(contentLength) },
 		body: {
 			getReader: () => ({
 				read: async () => {
@@ -139,7 +146,7 @@ describe('NotificationService icons', () => {
 
 		assert.deepStrictEqual(dataUrls, ['data:image/png;base64,aWNvbg==']);
 		assert.strictEqual(fetchCalls, 0);
-		assert.deepStrictEqual(notifications[0].options.icon, { source: 'data-url' });
+		assert.strictEqual(notifications[0].options.icon.source, 'data-url');
 		assert.strictEqual(notifications[0].shown, true);
 	});
 
@@ -157,7 +164,7 @@ describe('NotificationService icons', () => {
 		assert.strictEqual(calls[0][0], 'https://teams.microsoft.com/avatar.png');
 		assert.strictEqual(calls[0][1].credentials, 'include');
 		assert.deepStrictEqual([...imageBuffers[0]], [...bytes]);
-		assert.deepStrictEqual(notifications[0].options.icon, { source: 'buffer' });
+		assert.strictEqual(notifications[0].options.icon.source, 'buffer');
 		assert.strictEqual(notifications[0].shown, true);
 	});
 
@@ -177,6 +184,43 @@ describe('NotificationService icons', () => {
 		await show({ icon: 'http://localhost/avatar.png' });
 
 		assert.strictEqual(fetchCalls, 0);
+		assert.strictEqual('icon' in notifications[0].options, false);
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
+	it('rejects redirects from HTTPS to a non-HTTPS URL', async () => {
+		const bytes = Uint8Array.from([1, 2, 3, 4]);
+		makeService(async () => responseWith(bytes, {
+			url: 'http://teams.microsoft.com/avatar.png',
+		}));
+
+		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
+
+		assert.strictEqual(imageBuffers.length, 0);
+		assert.strictEqual('icon' in notifications[0].options, false);
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
+	it('omits remote icons larger than the size limit', async () => {
+		const bytes = Uint8Array.from([1, 2, 3, 4]);
+		makeService(async () => responseWith(bytes, {
+			contentLength: 5 * 1024 * 1024 + 1,
+		}));
+
+		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
+
+		assert.strictEqual(imageBuffers.length, 0);
+		assert.strictEqual('icon' in notifications[0].options, false);
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
+	it('omits remote icons that Electron cannot decode', async () => {
+		bufferImageEmpty = true;
+		makeService(async () => responseWith(Uint8Array.from([1, 2, 3, 4])));
+
+		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
+
+		assert.strictEqual(imageBuffers.length, 1);
 		assert.strictEqual('icon' in notifications[0].options, false);
 		assert.strictEqual(notifications[0].shown, true);
 	});
