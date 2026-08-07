@@ -38,6 +38,10 @@
 * **deps:** bump the minor-and-patch group with 3 updates ([#2783](https://github.com/IsmaelMartinez/teams-for-linux/issues/2783)) ([2f619d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/2f619d4b464df67b1fc01a583eea5e74906a56d6))
 * **deps:** bump the minor-and-patch group with 6 updates ([#2764](https://github.com/IsmaelMartinez/teams-for-linux/issues/2764)) ([72f2196](https://github.com/IsmaelMartinez/teams-for-linux/commit/72f2196c7907acb5d8c8e38b3ef112b47455ae37))
 
+### Thanks
+
+Big thanks to @13pass, @app/dependabot, @FriedrichVoelker, @gj241 for contributing to this release.
+
 ## [2.14.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.0...v2.14.1) (2026-07-27)
 
 

@@ -14,6 +14,32 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.15.0" date="2026-08-07">
+      <description>
+        <ul>
+          <li>auth: pre-fill Microsoft web sign-in credentials (#2761) (#2798)</li>
+          <li>mqtt: meeting-started detection first pass (#2587) (#2757)</li>
+          <li>webauthn: log timeout, phase timings and page aborts (#2785)</li>
+          <li>auth: Keep msal.cache.encryption cookie on restart (#2780)</li>
+          <li>certificate: apply customCACertsFingerprints to every TLS verification (#2778)</li>
+          <li>paste: restore File.path on pasted files so Teams uploads accept them (#2790)</li>
+          <li>resolve SonarCloud bug and vulnerability findings (#2766)</li>
+          <li>sonar: exclude declarative config schema from duplication checks (#2793)</li>
+          <li>ui: point dialog placeholders at teams.cloud.microsoft (#2797)</li>
+          <li>certificate: document NSS trust store for TLS-inspecting proxies (#2776)</li>
+          <li>research documentation cleanup (#2769)</li>
+          <li>deps: bump @easyops-cn/docusaurus-search-local (#2784)</li>
+          <li>deps: bump actions/checkout from 7.0.0 to 7.0.1 (#2773)</li>
+          <li>deps: bump actions/setup-node from 6.4.0 to 7.0.0 (#2772)</li>
+          <li>deps: bump actions/stale from 9 to 11 (#2771)</li>
+          <li>deps: bump github/codeql-action from 3 to 4.37.3 (#2774)</li>
+          <li>deps: bump ip-address from 10.2.0 to 10.4.0 (#2788)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#2765)</li>
+          <li>deps: bump the minor-and-patch group with 3 updates (#2783)</li>
+          <li>deps: bump the minor-and-patch group with 6 updates (#2764)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.14.1" date="2026-07-27">
       <description>
         <ul>
