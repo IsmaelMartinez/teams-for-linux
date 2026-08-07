@@ -14,6 +14,428 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.16.0" date="2026-08-07">
+      <description>
+        <ul>
+          <li>#2476: custom stickers MVP (#2550)</li>
+          <li>add 'Check for Updates' menu item for AppImage</li>
+          <li>add automated release preparation workflow (#2056)</li>
+          <li>add butler.json with code navigation enabled (#2368)</li>
+          <li>add camera resolution and aspect ratio browser tools (#2060)</li>
+          <li>add electron-updater dependency for AppImage auto-update</li>
+          <li>Add PII log sanitizer utility (Phase 1) (#2116)</li>
+          <li>add webRTCIPHandlingPolicy config option (#2350)</li>
+          <li>auth: pre-fill Microsoft web sign-in credentials (#2761) (#2798)</li>
+          <li>automate snap release to candidate channel (#2162)</li>
+          <li>clientCertificate: add Linux smartcard PIN dialog and secure prompt (#2659)</li>
+          <li>config: allow dismissing startup warnings with "Don't show again" (#2477)</li>
+          <li>config: default followSystemTheme to true (#2566)</li>
+          <li>config: generate config docs + schema from a single source (#2597 Phase 1) (#2604)</li>
+          <li>create autoUpdater module for AppImage auto-update</li>
+          <li>cross-distro CI smoke test and test directory restructuring (#2344)</li>
+          <li>docs: interactive config explorer (#2597 Phase 2) (#2606)</li>
+          <li>download: save options, policy-block notification, device-switch guard (#2652)</li>
+          <li>downloads: drive taskbar progress bar during downloads (#2512) (#2514)</li>
+          <li>downloads: notify on download completion (#2512) (#2513)</li>
+          <li>handle Microsoft Cloud App Security (MCAS) domain suffix in hostname validation (#2101)</li>
+          <li>idle: introduce forced idle override option (#2355)</li>
+          <li>in-app auto-update for AppImage via electron-updater</li>
+          <li>Integrate PII sanitizer with electron-log (Phase 2) (#2118)</li>
+          <li>macos: Dock presence overlay and Apple Silicon performance switches (#2653)</li>
+          <li>media: add media.microphone.ignoreSystemMute to decouple Teams mute from OS mic mute (#2695)</li>
+          <li>media: allow overriding getUserMedia microphone constraints (#2462)</li>
+          <li>mqtt: add configurable media topic names and mute/unmute commands (#2608)</li>
+          <li>mqtt: emit camera-state-changed from renderer for MQTT publishing (#2582)</li>
+          <li>mqtt: meeting-started detection first pass (#2587) (#2757)</li>
+          <li>mqtt: publish incoming-call topic for ring/invite events (#2572)</li>
+          <li>mqtt: publish microphone state to {topicPrefix}/microphone (#2497)</li>
+          <li>multi-account: add multiAccount.enabled flag and Intune mutex (#2450)</li>
+          <li>multi-account: Add-profile dialog with first-run bootstrap fix (#2496)</li>
+          <li>multi-account: bottom-left profile switcher pill (ADR-020 Phase 1c.2) (#2661)</li>
+          <li>multi-account: Manage-profiles dialog with rename + remove (#2510)</li>
+          <li>multi-account: Profiles menu with Switch-to submenu (#2489)</li>
+          <li>multi-account: scaffold profile view lifecycle and Profile 0 bootstrap (#2483)</li>
+          <li>multi-account: scaffold ProfilesManager and migrate login state (#2478)</li>
+          <li>notifications: add electron.clickAction config for window restore (#2660)</li>
+          <li>notifications: add notifications.timeoutType opt-in (#2521)</li>
+          <li>properly sanitize object values having sensitive keys (#2359)</li>
+          <li>publish screen sharing status to MQTT (#2107) (#2144)</li>
+          <li>Quick Chat with inline messaging via Graph API (#2109) (#2119)</li>
+          <li>screenSharing: full-window picker overlay with detail panel (#2524) (#2543)</li>
+          <li>speaking indicator with mute detection via WebRTC getStats() (#2299)</li>
+          <li>triage-bot: seed .github/hats.md taxonomy (#2548)</li>
+          <li>webauthn: FIDO2 hardware security key support for Linux (#802)</li>
+          <li>webauthn: FIDO2 hardware security key support for Linux (#802) (#2357)</li>
+          <li>webauthn: log timeout, phase timings and page aborts (#2785)</li>
+          <li>window: add minimizeOnClose option (#2623)</li>
+          <li>wire autoUpdater into app startup</li>
+          <li>#2383: also setDesktopName so --class reaches X11 + Wayland (#2569)</li>
+          <li>#2534: route getDisplayMedia through in-app picker on Wayland (f38f28e), closes #2534</li>
+          <li>add error details to triage bot Gemini API catch blocks (#2270)</li>
+          <li>add error handler to incoming call command spawn (#2194)</li>
+          <li>add JSON extraction and increase maxOutputTokens for triage bot (#2275)</li>
+          <li>address Gemini review comments on security hardening</li>
+          <li>address review feedback on autoUpdater</li>
+          <li>address review findings for security hardening phase 1</li>
+          <li>auth: cover MCAS proxy suffix in cookie-domain matching (#2488)</li>
+          <li>auth: don't divert main-frame navigations through about:blank handler (#2605) (0853c9d), closes #2591</li>
+          <li>auth: forward pre-login-noise auth signals to reauth recovery (#2688)</li>
+          <li>auth: gate in-app reauth recovery behind reauthRecovery.enabled (#2633)</li>
+          <li>auth: gate worker UPR recovery behind reauthRecovery opt-in (#2629)</li>
+          <li>auth: intercept login popups to trigger in-app recovery (#2622)</li>
+          <li>auth: Keep msal.cache.encryption cookie on restart (#2780)</li>
+          <li>auth: narrow AUTH_RECOVERY trigger to avoid mid-call reloads (#2460)</li>
+          <li>auth: preserve login identity across session expiry (#2376)</li>
+          <li>auth: scope worker-source AUTH_RECOVERY suppression to active calls (#2481)</li>
+          <li>camera crash on XWayland by skipping fake media UI flag (#2169) (#2190)</li>
+          <li>certificate: apply customCACertsFingerprints to every TLS verification (#2778)</li>
+          <li>ci: bump electron-builder 26.15.3 -&amp;gt; 26.15.7 to fix DOA snap builds (#2756)</li>
+          <li>ci: correct SHA pin for release-please-action v4.2.0 (#2470)</li>
+          <li>ci: extract Electron binary with system unzip (e2e) (#2594)</li>
+          <li>ci: pin electron-builder to 26.8.1 to restore Windows exe build (#2697)</li>
+          <li>ci: use honest release-please PR header (#2648)</li>
+          <li>ci: use unsquashfs for cross-architecture ARM AppImage extraction (#2080)</li>
+          <li>consolidate CSP handler and add unsafe-eval for Teams compatibility (#2152)</li>
+          <li>correct MacCatalyst feature flag typo in research doc</li>
+          <li>correct misleading comment in Dependabot config</li>
+          <li>customCSS: swallow expected executeJavaScript rejections (#2540)</li>
+          <li>deps: bump docs-site deps to patched versions (Dependabot) (#2674)</li>
+          <li>deps: bump electron 39.7.0 → 39.8.2 (CVE-2026-3909) (#2342)</li>
+          <li>deps: bump qs and ws in docs-site to resolve security alerts (#2573)</li>
+          <li>deps: bump transitive mermaid to 11.15.0 (4 medium CVEs) (#2525)</li>
+          <li>deps: resolve lodash-es and serialize-javascript vulns in docs-site (#2402)</li>
+          <li>deps: update brace-expansion to resolve CVE (#2397)</li>
+          <li>docs: pin v4 future flags so docs-site builds on Docusaurus 3.10 (#2429)</li>
+          <li>don't apply camera resolution override to screen-share tracks (#2437)</li>
+          <li>downloads: disable QUIC to fix concurrent SharePoint downloads (#2518) (#2520)</li>
+          <li>drag-drop: restore File.path on dropped files for Teams uploads (#2679)</li>
+          <li>ensure complete app menu when tray icon is disabled (#2195)</li>
+          <li>frameless: update no-drag selectors for Teams top-bar restructure (#2704)</li>
+          <li>handle snap edge version hash in release info generation</li>
+          <li>idle: stop hard-exiting on SIGINT/SIGTERM so shutdown flushes storage (#2743)</li>
+          <li>ipc: wire up renderer error forwarding and remove login handler leak (#2435)</li>
+          <li>ipc: wrap ipcMain.once and eliminate per-dialog listener churn (#2446)</li>
+          <li>logging: down-level pre-login auth-noise from renderer (#2564) (8de3b2d), closes #2560</li>
+          <li>logging: run renderer log fields through full PII sanitizer (#2562) (bff6d22), closes #2560</li>
+          <li>macos: use 256x256 source for the dock icon (#2563) (8f96c66), closes #2560</li>
+          <li>make debug logs mandatory in bug report template (#2305)</li>
+          <li>MQTT status stuck on do_not_disturb (#2032)</li>
+          <li>multi-account: rebind screen-share handler per profile session (#2533) (f980dfc), closes #2529</li>
+          <li>navigation: keep back/forward working after Teams top-bar restructure (#2672)</li>
+          <li>net: add timeout to connectivity probes to prevent hang after resume (#2635)</li>
+          <li>notifications: implement removeEventListener on notification stub</li>
+          <li>notifications: return Notification-like stub so Teams can manage lifecycle</li>
+          <li>notifications: return Notification-like stub so Teams can manage lifecycle (62afa7c), closes #2248</li>
+          <li>notifications: scope lifecycle stub to electron and custom paths only</li>
+          <li>only apply CSP to core Teams domains, not login pages</li>
+          <li>only register quick chat shortcut when enabled and explicitly configured (#2161)</li>
+          <li>only reload on main frame network errors, not sub-frames (#2310)</li>
+          <li>paste: restore File.path on pasted files so Teams uploads accept them (#2790)</li>
+          <li>power: bind enableWakeLockOnWindowRestore on the restore listener (#2482)</li>
+          <li>preload: serialize object-shaped unhandled rejections (#2561) (6720768), closes #2560</li>
+          <li>preserve Teams shell when joining meeting and add return path (#2439)</li>
+          <li>prevent double notification sound and handle dismiss event (#2411) (#2414)</li>
+          <li>recover from stale auth state on startup and after sleep (#2296)</li>
+          <li>relax CSP for non-Teams SSO pages to unblock eval-dependent login (#2330)</li>
+          <li>release: strip markdown from appdata entries, bump manifest to 2.8.1 (#2472)</li>
+          <li>remove custom CSP that was never active and risks breaking Teams</li>
+          <li>replace regex closes: parser with split to avoid backtracking (#2338)</li>
+          <li>resolve cross-distro test failures from SingletonLock permissions (#2314)</li>
+          <li>resolve script injection in changelog generator and auto-create changelog for fork PRs (#2352)</li>
+          <li>resolve SonarCloud bug and vulnerability findings (#2766)</li>
+          <li>resolve SonarCloud issues in run.sh (#2262)</li>
+          <li>resolve SonarCloud issues in sanitizeCommandArg regex</li>
+          <li>resolve SonarQube code smells across codebase (#2247)</li>
+          <li>restore --ozone-platform=x11 default in package.json (#2511)</li>
+          <li>restore CSS selectors and add diagnostic logging for MQTT status (#2197)</li>
+          <li>screen sharing regression on Wayland/XWayland (#2219)</li>
+          <li>security hardening phase 1 - PII logging, resilience, input handling</li>
+          <li>security hardening phase 1 - PII logging, resilience, input handling</li>
+          <li>snap: pin electron-builder to 26.14.0 to restore snap launch (#2686)</li>
+          <li>sonar: exclude declarative config schema from duplication checks (#2793)</li>
+          <li>testing: add --flags option and fix UID conflict in Dockerfiles (#2321)</li>
+          <li>tests: address SonarCloud code smells in notification tests</li>
+          <li>tests: pin Node.js across cross-distro Dockerfiles (#2386)</li>
+          <li>tests: replace fixed sleep with polling loop in getMainWindow</li>
+          <li>tests: unbreak cross-distro smoke test on main (#2422)</li>
+          <li>theme: revert followSystemTheme default to false (#2732)</li>
+          <li>theme: stop setting followOsTheme to prevent GraphQL rejection (#2673)</li>
+          <li>tray: clear badge reliably by widening title observation and fixing update race (#2643)</li>
+          <li>ui: point dialog placeholders at teams.cloud.microsoft (#2797)</li>
+          <li>update MQTT status selectors and remove dead React detection (#2333)</li>
+          <li>update reference to core services due to upstream change (#2077) (#2085)</li>
+          <li>use create-pull-request for index updates, increase Phase 4b tokens (#2282)</li>
+          <li>use full body for solutions field in doc index</li>
+          <li>use Unicode property escape to avoid SonarCloud control char flags</li>
+          <li>use WebRTC-based call detection as fallback for MQTT in-call status (#2358) (#2406)</li>
+          <li>use world-writable session dir for cross-distro tests (#2315)</li>
+          <li>config: remove six deprecated config keys (#2567)</li>
+          <li>dialogs: use shared createDialogWindow in JoinMeetingDialog (#2507)</li>
+          <li>multi-account: scope custom-background URL per instance; close out Phase 1 audit docs (#2626)</li>
+          <li>remove explicit ozone-platform default (#2506)</li>
+          <li>tests: deduplicate notification test setup with beforeEach/afterEach</li>
+          <li>tests: extract describeMethod factory to eliminate remaining duplication</li>
+          <li>Add AI automation review and enhancement proposals (#2259)</li>
+          <li>add autoUpdater README and module index entry</li>
+          <li>add code quality and hardening research</li>
+          <li>add code quality and hardening research document</li>
+          <li>add Electron 40 migration research document</li>
+          <li>add Electron 40 migration research document</li>
+          <li>Add electron-store upgrade research and implementation plan (#2124)</li>
+          <li>Add GNOME Shell search provider investigation research (#2081)</li>
+          <li>add MQTT incoming-call implementation plan (#2445)</li>
+          <li>Add PII log removal research and implementation plan (#2114)</li>
+          <li>add privacy and data protection statement (#2742) (189a26d), closes #2741</li>
+          <li>add repository health analysis for Feb-Mar 2026 (#2324)</li>
+          <li>Add system performance research and findings (#2360)</li>
+          <li>add uninstall guide with instructions for all installation methods (#2048) (#2142)</li>
+          <li>add vylen linux install/remove instruction (#2559)</li>
+          <li>add Wayland GPU auto-disable troubleshooting entry (#2410) (#2461)</li>
+          <li>adr: propose ADR-020 multi-account profile switcher (#2426)</li>
+          <li>certificate: document NSS trust store for TLS-inspecting proxies (#2776)</li>
+          <li>claude: add homepage convention (#2519)</li>
+          <li>Clean up roadmap, research docs, and ADR statuses (#2265)</li>
+          <li>close screen lock media privacy — no user interest (#2189)</li>
+          <li>config: config-file validation, generated docs and explorer for #2597 phases 3a/4 (#2642)</li>
+          <li>config: phase 0 of config/docs UX initiative (#2597) (#2602)</li>
+          <li>config: record #2597 phase 3b plan, migration as optional companion (#2657)</li>
+          <li>document release cadence and update frequency (#2286)</li>
+          <li>documentation cleanup and HA discovery docs (#2575)</li>
+          <li>fix broken links and remove template placeholders (#2336)</li>
+          <li>fix documentation inconsistencies across repository (#2030)</li>
+          <li>install: document the beta apt/rpm channel for pre-releases (#2638) (d53d0f3), closes #2637</li>
+          <li>Migrate community chat links from Gitter to Matrix space (#2113) (#2141)</li>
+          <li>move repository install instructions to the dedicated webpage (#2619)</li>
+          <li>mqtt: resume Phase 2 extended-status plan (#2467)</li>
+          <li>note semver transition and tidy up the homepage (#2473)</li>
+          <li>notifications,wayland: GNOME workaround for #2411, restore ozone x11 default (#2547)</li>
+          <li>refresh roadmap with current PR and release state (#2361)</li>
+          <li>remove completed code-quality-hardening research document</li>
+          <li>research documentation cleanup (#2769)</li>
+          <li>research: documentation, contributing, and config UX (#2598)</li>
+          <li>research: FIDO2 touch-prompt feasibility note (#2631) (#2634)</li>
+          <li>research: prune stale research and surface orphaned docs in sidebar (#2503)</li>
+          <li>research: smartcard/NSS PIN dialog feasibility for client-cert auth (#2641) (0cbd31a), closes #2639</li>
+          <li>restructure roadmap to thematic sections and enhance changelog pipeline (#2317)</li>
+          <li>roadmap: capture 2026-05-07 ozone-platform default reset session (#2509)</li>
+          <li>roadmap: note in-review download, macOS, and device-switch work (#2655)</li>
+          <li>roadmap: record smartcard PIN dialog under awaiting user feedback (#2739)</li>
+          <li>roadmap: summarise 2026-04-24 session outcomes and next up (#2466)</li>
+          <li>roadmap: trim to themes, principles, and parked work (#2539)</li>
+          <li>streamline roadmap by removing fast-changing sections (#2379)</li>
+          <li>troubleshooting: add Ubuntu Unity system-tray workaround (#2680) (#2693)</li>
+          <li>troubleshooting: document Google sign-in user-agent workaround (#2670)</li>
+          <li>update camera topic and MQTT status to shipped (#2585)</li>
+          <li>Update documentation for deprecated config options (#2120) (#2122)</li>
+          <li>update plan docs with code quality hardening research and fix sidebar gaps</li>
+          <li>update plan docs with code quality hardening research and fix sidebar gaps</li>
+          <li>update research documentation status and remove outdated files (#2053)</li>
+          <li>update research status and roadmap for auto-update Phase 1</li>
+          <li>update roadmap after v2.7.7 release (#2201)</li>
+          <li>update roadmap and FIDO2 research with validation results (#2341)</li>
+          <li>Update roadmap for v2.7.4 release plan, archive logout indicator (#2133)</li>
+          <li>update roadmap for v2.7.7 planning (#2187)</li>
+          <li>update roadmap for v2.7.9 planning (#2227)</li>
+          <li>update roadmap for v2.8.0 and Claude Code automations (#2391)</li>
+          <li>update roadmap with triage bot GitHub App migration (#2288)</li>
+          <li>update roadmap, research, and security architecture after Phase 1</li>
+          <li>update roadmap, sidebar, and research index for Electron 40</li>
+          <li>WebAuthn/FIDO2 implementation plan (#802) (#2327)</li>
+          <li>add lint, audit, and Dependabot to CI/CD pipeline</li>
+          <li>add lint, audit, and Dependabot to CI/CD pipeline</li>
+          <li>auto-remove 'awaiting user feedback' label on issue comment (#2208)</li>
+          <li>bump checkout to Node 24 and make e2e non-blocking for packaging (#2595)</li>
+          <li>drop --limit (unsupported by v0.2.0-rc.1), add --include-prs=false (#2442)</li>
+          <li>expand CODEOWNERS to cover itself and dependency files</li>
+          <li>fix cross-distro smoke URL resolution (#2449)</li>
+          <li>gate packaging jobs on e2e_tests (#2545)</li>
+          <li>move snap-release permissions from workflow to job level</li>
+          <li>narrow simili-bot triggers to stop duplicate comments (#2448)</li>
+          <li>one-shot simili-bot index seeder (#2440)</li>
+          <li>raise audit level to critical for minimatch advisory (#2196)</li>
+          <li>release-please: flag draft releases in the created-release comment (#2700)</li>
+          <li>release: credit external contributors in release-please notes (#2475)</li>
+          <li>restore armv7l snap build (#2050)</li>
+          <li>security hardening phase 3 — workflow permissions and supply chain</li>
+          <li>seed workflow downloads simili binary from releases (gh-extension path doesn't exist) (#2441)</li>
+          <li>snap: pin arm64 snapcraft below 9.0.0 to fix the snap build (#2649)</li>
+          <li>snap: pin snapcraft to 8.x in release workflow (#2696)</li>
+          <li>trial simili-bot for duplicate detection (similarity-only) (#2438)</li>
+          <li>notifications: add e2e tests for notification lifecycle stub</li>
+          <li>preload: guard modulesRequiringIpc against regression (#1902) (#2546)</li>
+          <li>add changelog entry for PR #2159</li>
+          <li>add changelog entry for PR #2160</li>
+          <li>add changelog entry for PR #2163</li>
+          <li>add changelog entry for PR #2164</li>
+          <li>add changelog entry for PR #2165</li>
+          <li>add changelog entry for PR #2166</li>
+          <li>add changelog entry for PR #2167</li>
+          <li>add changelog entry for PR #2171</li>
+          <li>add changelog entry for PR #2172</li>
+          <li>add changelog entry for PR #2183</li>
+          <li>add changelog entry for PR #2329</li>
+          <li>add codebase review research and unit tests for key modules (#2312)</li>
+          <li>add CodeRabbit configuration (#2348)</li>
+          <li>add Repo Butler consumer guide (#2387)</li>
+          <li>auto-merge dependabot PRs (non-major) (#2485)</li>
+          <li>changelog: backfill entries for PRs merged without one (#2468)</li>
+          <li>deps-dev: bump @playwright/test in the minor-and-patch group (#2526)</li>
+          <li>deps-dev: bump @xmldom/xmldom from 0.8.11 to 0.8.12 (#2384)</li>
+          <li>deps-dev: bump @xmldom/xmldom from 0.8.12 to 0.8.13 (#2458)</li>
+          <li>deps-dev: bump electron from 39.8.2 to 41.0.2 (#2347)</li>
+          <li>deps-dev: bump electron from 41.0.2 to 41.1.0 (#2395)</li>
+          <li>deps-dev: bump electron from 41.6.1 to 41.7.1 (#2583)</li>
+          <li>deps-dev: bump electron from 41.7.1 to 42.3.0 (#2589)</li>
+          <li>deps-dev: bump electron from 42.5.1 to 42.7.0 (#2740)</li>
+          <li>deps-dev: bump electron in the minor-and-patch group (#2479)</li>
+          <li>deps-dev: bump electron in the minor-and-patch group (#2685)</li>
+          <li>deps-dev: bump eslint from 10.0.2 to 10.0.3 in the minor-and-patch group (#2316)</li>
+          <li>deps-dev: bump eslint from 10.0.3 to 10.1.0 in the minor-and-patch group (#2363)</li>
+          <li>deps-dev: bump flatted from 3.3.3 to 3.4.2 (#2362)</li>
+          <li>deps-dev: bump lodash from 4.17.23 to 4.18.1 (#2393)</li>
+          <li>deps-dev: bump minimatch from 3.1.2 to 3.1.5 (#2240)</li>
+          <li>deps-dev: bump picomatch from 4.0.3 to 4.0.4 (#2372)</li>
+          <li>deps-dev: bump qs from 6.14.2 to 6.15.2 (#2568)</li>
+          <li>deps-dev: bump tar from 7.5.10 to 7.5.11 (#2325)</li>
+          <li>deps-dev: bump tar from 7.5.9 to 7.5.10 (#2308)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2418)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2443)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2612)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2709)</li>
+          <li>deps-dev: bump the minor-and-patch group with 3 updates (#2400)</li>
+          <li>deps-dev: bump the minor-and-patch group with 3 updates (#2690)</li>
+          <li>deps-dev: bump the minor-and-patch group with 4 updates (#2658)</li>
+          <li>deps-dev: bump tmp from 0.2.5 to 0.2.6 (#2584)</li>
+          <li>deps-dev: bump typescript from 5.9.3 to 6.0.2 in /docs-site (#2381)</li>
+          <li>deps-dev: bump typescript from 6.0.2 to 6.0.3 in /docs-site in the minor-and-patch group (#2444)</li>
+          <li>deps-dev: bump typescript from 6.0.3 to 7.0.2 in /docs-site (#2727)</li>
+          <li>deps-dev: bump undici from 6.26.0 to 6.27.0 (#2675)</li>
+          <li>deps: bump @babel/plugin-transform-modules-systemjs in /docs-site (#2517)</li>
+          <li>deps: bump @easyops-cn/docusaurus-search-local (#2784)</li>
+          <li>deps: bump @easyops-cn/docusaurus-search-local from 0.24.1 to 0.55.0 in /docs-site in the minor-and-patch group (#2224)</li>
+          <li>deps: bump @easyops-cn/docusaurus-search-local from 0.55.0 to 0.55.1 in /docs-site in the minor-and-patch group (#2278)</li>
+          <li>deps: bump @homebridge/dbus-native in the minor-and-patch group (#2574)</li>
+          <li>deps: bump actions/checkout from 4 to 7 (#2689)</li>
+          <li>deps: bump actions/checkout from 7.0.0 to 7.0.1 (#2773)</li>
+          <li>deps: bump actions/deploy-pages from 4.0.5 to 5.0.0 (#2388)</li>
+          <li>deps: bump actions/github-script from 7.0.1 to 8.0.0 (#2254)</li>
+          <li>deps: bump actions/github-script from 8.0.0 to 9.0.0 (#2494)</li>
+          <li>deps: bump actions/setup-node from 4.4.0 to 6.2.0 (#2256)</li>
+          <li>deps: bump actions/setup-node from 6.2.0 to 6.3.0 (#2389)</li>
+          <li>deps: bump actions/setup-node from 6.3.0 to 6.4.0 (#2614)</li>
+          <li>deps: bump actions/setup-node from 6.4.0 to 7.0.0 (#2772)</li>
+          <li>deps: bump actions/stale from 9 to 11 (#2771)</li>
+          <li>deps: bump actions/upload-artifact from 4.6.2 to 7.0.0 (#2257)</li>
+          <li>deps: bump actions/upload-artifact from 7.0.0 to 7.0.1 (#2613)</li>
+          <li>deps: bump actions/upload-pages-artifact from 3.0.1 to 4.0.0 (#2258)</li>
+          <li>deps: bump actions/upload-pages-artifact from 4.0.0 to 5.0.0 (#2492)</li>
+          <li>deps: bump app-builder-lib and electron-builder (#2750)</li>
+          <li>deps: bump body-parser from 1.20.5 to 1.20.6 in /docs-site (#2735)</li>
+          <li>deps: bump brace-expansion from 5.0.2 to 5.0.5 in /docs-site (#2374)</li>
+          <li>deps: bump brace-expansion from 5.0.5 to 5.0.6 in /docs-site (#2553)</li>
+          <li>deps: bump brace-expansion from 5.0.6 to 5.0.7 in /docs-site (#2733)</li>
+          <li>deps: bump brace-expansion from 5.0.7 to 5.0.8 in /docs-site (#2749)</li>
+          <li>deps: bump builder-util-runtime and electron-builder (#2752)</li>
+          <li>deps: bump canonical/setup-lxd (#2490)</li>
+          <li>deps: bump canonical/setup-lxd action pin (#2615)</li>
+          <li>deps: bump canonical/setup-lxd from 62cd335190e2b612b427db9319ea6b59ab1691f8 to d492474f6c8ceed1b716bb34c8f575a428871c70 (#2255)</li>
+          <li>deps: bump dependabot/fetch-metadata from 2 to 3 (#2493)</li>
+          <li>deps: bump dompurify from 3.3.1 to 3.3.2 in /docs-site (#2309)</li>
+          <li>deps: bump dompurify from 3.4.0 to 3.4.11 in /docs-site (#2664)</li>
+          <li>deps: bump dompurify from 3.4.11 to 3.4.12 in /docs-site (#2751)</li>
+          <li>deps: bump electron from 41.5.0 to 41.6.1 (#2549)</li>
+          <li>deps: bump fast-uri and svgo in root and docs-site lockfiles (#2748)</li>
+          <li>deps: bump fast-uri from 3.1.0 to 3.1.2 (#2515)</li>
+          <li>deps: bump fast-uri from 3.1.0 to 3.1.2 in /docs-site (#2516)</li>
+          <li>deps: bump github/codeql-action from 3 to 4.37.3 (#2774)</li>
+          <li>deps: bump googleapis/release-please-action from 4.2.0 to 5.0.0 (#2491)</li>
+          <li>deps: bump ip-address from 10.1.0 to 10.2.0 (#2504)</li>
+          <li>deps: bump ip-address from 10.2.0 to 10.4.0 (#2788)</li>
+          <li>deps: bump js-yaml from 3.14.2 to 3.15.0 in /docs-site (#2725)</li>
+          <li>deps: bump js-yaml from 4.1.1 to 4.2.0 (#2665)</li>
+          <li>deps: bump launch-editor from 2.13.0 to 2.14.1 in /docs-site (#2668)</li>
+          <li>deps: bump lodash from 4.17.23 to 4.18.1 in /docs-site (#2394)</li>
+          <li>deps: bump minimatch from 10.2.2 to 10.2.4 in /docs-site (#2241)</li>
+          <li>deps: bump path-to-regexp from 0.1.12 to 0.1.13 in /docs-site (#2375)</li>
+          <li>deps: bump picomatch from 2.3.1 to 2.3.2 in /docs-site (#2371)</li>
+          <li>deps: bump postcss from 8.5.13 to 8.5.23 in /docs-site (#2753)</li>
+          <li>deps: bump qs from 6.13.0 to 6.14.1 in /docs-site in the npm_and_yarn group across 1 directory (#2035)</li>
+          <li>deps: bump shell-quote from 1.8.3 to 1.8.4 in /docs-site (#2644)</li>
+          <li>deps: bump shell-quote from 1.8.4 to 1.10.0 in /docs-site (#2736)</li>
+          <li>deps: bump svgo from 3.3.2 to 3.3.3 in /docs-site (#2303)</li>
+          <li>deps: bump tar from 6.2.1 to 7.5.7 in the npm_and_yarn group across 1 directory (#2084)</li>
+          <li>deps: bump the minor-and-patch group across 1 directory with 7 updates (#2726)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#2528)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#2765)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 3 updates (#2501)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 3 updates (#2616)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 8 updates (#2419)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2555)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2716)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2723)</li>
+          <li>deps: bump the minor-and-patch group with 3 updates (#2380)</li>
+          <li>deps: bump the minor-and-patch group with 3 updates (#2783)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2500)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2630)</li>
+          <li>deps: bump the minor-and-patch group with 6 updates (#2764)</li>
+          <li>deps: bump the npm_and_yarn group across 2 directories with 1 update (#2034)</li>
+          <li>deps: bump the npm_and_yarn group across 2 directories with 1 update (#2061)</li>
+          <li>deps: bump the npm_and_yarn group across 2 directories with 1 update (#2149)</li>
+          <li>deps: bump undici from 7.22.0 to 7.24.1 in /docs-site (#2337)</li>
+          <li>deps: bump undici from 7.24.1 to 7.28.0 in /docs-site (#2676)</li>
+          <li>deps: bump webpack from 5.101.3 to 5.105.0 in /docs-site in the npm_and_yarn group across 1 directory (#2134)</li>
+          <li>deps: bump webpack-dev-server from 5.2.3 to 5.2.4 in /docs-site (#2554)</li>
+          <li>deps: bump webpack-dev-server from 5.2.4 to 5.2.5 in /docs-site (#2669)</li>
+          <li>deps: bump webpack-dev-server from 5.2.5 to 5.2.6 in /docs-site (#2734)</li>
+          <li>deps: bump websocket-driver from 0.7.4 to 0.7.5 in /docs-site (#2729)</li>
+          <li>deps: bump ws from 7.5.10 to 7.5.11 in /docs-site (#2667)</li>
+          <li>deps: bump ws from 8.19.0 to 8.20.1 (#2557)</li>
+          <li>deps: bump ws from 8.20.1 to 8.21.0 (#2666)</li>
+          <li>deps: update electron, globals, and resolve follow-redirects CVE (#2420)</li>
+          <li>disable old triage bot workflows, migrated to GitHub App (#2302)</li>
+          <li>generate initial issue index for duplicate detection (#2202)</li>
+          <li>github: add pull request template (#2544)</li>
+          <li>logging: demote noisy warns and block MS telemetry beacons (#2532)</li>
+          <li>main: release 2.10.0 (#2505)</li>
+          <li>main: release 2.11.0 (#2558)</li>
+          <li>main: release 2.11.1 (#2588)</li>
+          <li>main: release 2.12.0 (#2596)</li>
+          <li>main: release 2.13.0 (#2678)</li>
+          <li>main: release 2.14.0 (#2698)</li>
+          <li>main: release 2.14.1 (#2754)</li>
+          <li>main: release 2.15.0 (#2763)</li>
+          <li>main: release 2.9.0 (#2471)</li>
+          <li>release v2.7.0 (#2064)</li>
+          <li>release v2.7.1 (#2086)</li>
+          <li>release v2.7.10 (#2313)</li>
+          <li>release v2.7.11 (#2339)</li>
+          <li>release v2.7.12 (#2343)</li>
+          <li>release v2.7.13 (#2378)</li>
+          <li>release v2.7.2 (#2100)</li>
+          <li>release v2.7.5 (#2156)</li>
+          <li>release v2.7.6</li>
+          <li>release v2.7.7 (#2198)</li>
+          <li>release v2.7.8 (#2211)</li>
+          <li>release v2.7.9 (#2244)</li>
+          <li>release v2.8.0 (#2398)</li>
+          <li>release v2.8.1 (#2469)</li>
+          <li>remove old triage bot infrastructure, add ADR-018 (#2307)</li>
+          <li>remove redundant code comments that restate the code (#2728)</li>
+          <li>remove shipped mqtt-microphone-state-research doc (#2581)</li>
+          <li>remove simili-bot trial files (#2586)</li>
+          <li>remove unused agentic files and audit research docs (#2191)</li>
+          <li>security: bump postcss and uuid to patch GHSA-qx2v-qp2m-jg93 and GHSA-w5hq-g745-h8pq (#2487)</li>
+          <li>simili: use explicit steps list to enforce similarity-only mode (#2474)</li>
+          <li>update CLAUDE.md for ready → release ready label rename (#2576)</li>
+          <li>update dependencies, electron to 39.7.0 (#2266)</li>
+          <li>update issue index for duplicate detection (#2285)</li>
+          <li>update issue index for duplicate detection (#2287)</li>
+          <li>update issue index for duplicate detection (#2291)</li>
+          <li>update issue index for duplicate detection (#2294)</li>
+          <li>upgrade Electron from 37.9.0 to 39.2.6 (#2020)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.15.0" date="2026-08-07">
       <description>
         <ul>
