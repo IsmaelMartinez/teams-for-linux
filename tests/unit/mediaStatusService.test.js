@@ -180,6 +180,105 @@ describe('MQTTMediaStatusService', () => {
 		});
 	});
 
+	describe('Meeting-started pulse (#2587)', () => {
+		// All tests use a tiny resetSeconds (and wait the pulse out before
+		// finishing) so no pending reset timer leaks a publish into a later
+		// test or keeps the node:test process alive.
+		const waitForPulseReset = () => new Promise((r) => setTimeout(r, 120));
+
+		it('publishes true to meeting-started topic on meeting-started IPC', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 0.05 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true', { retain: true });
+			await waitForPulseReset();
+		});
+
+		it('auto-resets to false after resetSeconds', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 0.05 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true');
+
+			await waitForPulseReset();
+			const resets = published.filter(
+				(p) => p.topic === 'teams/meeting-started' && p.payload === 'false'
+			);
+			assert.strictEqual(resets.length, 1, 'pulse should reset to false once');
+		});
+
+		it('resets to false as soon as the call is joined, before resetSeconds', async () => {
+			// Long reset so a pass cannot come from the timer firing (#2587).
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 60 } });
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-started', 'true');
+
+			mockApp.emit('teams-call-connected');
+			await flush();
+			const resets = published.filter(
+				(p) => p.topic === 'teams/meeting-started' && p.payload === 'false'
+			);
+			assert.strictEqual(resets.length, 1, 'joining should drop the flag once');
+		});
+
+		it('still drops the flag when the join lands mid-publish', async () => {
+			// The 'true' publish is awaited. If the reset were armed only after
+			// that await, a join arriving inside it would find no timer to
+			// cancel and leave the retained topic stuck at 'true' for good.
+			let releaseFirstPublish;
+			const gate = new Promise((r) => { releaseFirstPublish = r; });
+			let first = true;
+			const slowClient = {
+				publish: async (topic, payload, opts) => {
+					if (first && topic === 'teams/meeting-started') {
+						first = false;
+						await gate;
+					}
+					published.push({ topic, payload, opts });
+				},
+			};
+			createService(slowClient, { meetingStartDetection: { resetSeconds: 60 } });
+
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			mockApp.emit('teams-call-connected'); // arrives while 'true' is in flight
+			await flush();
+			releaseFirstPublish();
+			await flush();
+			await flush();
+
+			// Assert a reset was published at all. Arming the timer late means
+			// the join finds nothing to cancel and no 'false' is ever sent.
+			// (Order is not asserted: this mock records on completion, whereas
+			// mqtt.js writes in call order, so the gated 'true' lands last here
+			// but first on the wire.)
+			const resets = published.filter(
+				(p) => p.topic === 'teams/meeting-started' && p.payload === 'false'
+			);
+			assert.strictEqual(resets.length, 1, 'join must still drop the flag');
+		});
+
+		it('does not publish a spurious false when joining without a meeting start', async () => {
+			createService(mqttClient, { meetingStartDetection: { resetSeconds: 60 } });
+			mockApp.emit('teams-call-connected');
+			await flush();
+			const any = published.filter((p) => p.topic === 'teams/meeting-started');
+			assert.strictEqual(any.length, 0, 'no meeting-started traffic without a start');
+		});
+
+		it('uses custom mediaTopics for meetingStarted', async () => {
+			createService(mqttClient, {
+				mediaTopics: { meetingStarted: 'meeting-live' },
+				meetingStartDetection: { resetSeconds: 0.05 },
+			});
+			mockIpcMain.emit('meeting-started');
+			await flush();
+			assertPublished(published, 'teams/meeting-live', 'true');
+			await waitForPulseReset();
+		});
+	});
+
 	describe('Call disconnection publishes off state', () => {
 		it('publishes microphone off when call disconnects', async () => {
 			createService(mqttClient);

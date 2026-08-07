@@ -273,6 +273,10 @@ function playNotificationSound(notifSound) {
 }
 
 function createWebNotification(classicNotification, title, options) {
+  // DEBUG-ONLY: Remove before merge (#2587): log notification content to learn
+  // whether meeting-start arrives via the notification path instead of a DOM
+  // toast. Title/body can contain names; branch build only.
+  console.info('[MeetingStart][DEBUG] web notification:', String(title ?? '').slice(0, 200), '|', String(options?.body ?? '').slice(0, 200));
   const notifSound = {
     type: options.type,
     audio: "default",
@@ -295,6 +299,8 @@ function createWebNotification(classicNotification, title, options) {
 }
 
 function createElectronNotification(options) {
+  // DEBUG-ONLY: Remove before merge (#2587): see createWebNotification note.
+  console.info('[MeetingStart][DEBUG] electron notification:', String(options?.title ?? '').slice(0, 200), '|', String(options?.body ?? '').slice(0, 200));
   const notificationId = crypto.randomUUID();
   const stub = createNotificationStub();
   let closed = false;
@@ -439,6 +445,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
+      { name: "meetingStartDetector", path: "./tools/meetingStartDetector" },
       { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute" },
@@ -453,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
 
     let successCount = 0;
     for (const module of modules) {

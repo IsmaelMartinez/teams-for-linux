@@ -60,6 +60,9 @@ const allowedChannels = new Set([
   // Media status (camera/microphone)
   'camera-state-changed',
   'microphone-state-changed',
+
+  // Scheduled-meeting-start toast detection for MQTT (#2587)
+  'meeting-started',
   
   // Authentication and forms
   'submitForm',
