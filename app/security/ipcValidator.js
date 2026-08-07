@@ -128,6 +128,7 @@ const allowedChannels = new Set([
   'webauthn:get',
   'webauthn:pin-submit',
   'webauthn:pin-cancel',
+  'webauthn:touch-cancel',
 
   // Shared secure-prompt dialog (smartcard / PKCS#11 client-certificate PIN)
   'secure-prompt:submit',
