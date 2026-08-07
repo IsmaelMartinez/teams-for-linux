@@ -427,7 +427,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
     }
     ```
 
-   Known caveat: on the `electron` path, notifications currently render without the sender avatar. The `web` path gets Chromium to fetch the icon URL automatically; the `electron` path expects a data URL. This is tracked as a follow-up.
+   The `electron` path fetches sender avatars through the authenticated Teams session. If an avatar cannot be loaded, the notification still appears without it.
 
 **Related GitHub Issues:** [#2411](https://github.com/IsmaelMartinez/teams-for-linux/issues/2411)
 

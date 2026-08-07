@@ -2,6 +2,9 @@ const { Notification, nativeImage, ipcMain } = require("electron");
 const crypto = require("node:crypto");
 const path = require("node:path");
 
+const ICON_FETCH_TIMEOUT_MS = 3000;
+const MAX_ICON_BYTES = 5 * 1024 * 1024;
+
 const USER_STATUS = {
   UNKNOWN: -1,
   AVAILABLE: 1,
@@ -76,10 +79,8 @@ class NotificationService {
         timeoutType: options.timeoutType === "never" ? "never" : "default",
       };
 
-      // Only add icon if provided to avoid errors with null/undefined
-      if (options.icon) {
-        notificationConfig.icon = nativeImage.createFromDataURL(options.icon);
-      }
+      const icon = await this.#loadIcon(options.icon);
+      if (icon) notificationConfig.icon = icon;
 
       const notification = new Notification(notificationConfig);
 
@@ -124,6 +125,62 @@ class NotificationService {
         elapsedMs: Date.now() - startTime,
         suggestion: "Check if notification permissions are granted or icon data is valid"
       });
+    }
+  }
+
+  async #loadIcon(icon) {
+    if (typeof icon !== "string" || !icon) return null;
+
+    if (icon.startsWith("data:")) {
+      return nativeImage.createFromDataURL(icon);
+    }
+
+    let url;
+    try {
+      url = new URL(icon);
+    } catch {
+      return null;
+    }
+    if (url.protocol !== "https:") return null;
+
+    const win = this.#mainWindow.getWindow();
+    const session = win?.webContents?.session;
+    if (!session?.fetch) return null;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), ICON_FETCH_TIMEOUT_MS);
+    try {
+      const response = await session.fetch(url.href, {
+        credentials: "include",
+        signal: controller.signal,
+      });
+      if (!response.ok) return null;
+
+      const declaredSize = Number(response.headers.get("content-length"));
+      if (declaredSize > MAX_ICON_BYTES) return null;
+
+      const reader = response.body?.getReader();
+      if (!reader) return null;
+
+      const chunks = [];
+      let size = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > MAX_ICON_BYTES) {
+          await reader.cancel();
+          return null;
+        }
+        chunks.push(Buffer.from(value));
+      }
+
+      return nativeImage.createFromBuffer(Buffer.concat(chunks, size));
+    } catch {
+      console.warn("[NOTIFICATIONS] Could not load remote notification icon");
+      return null;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
