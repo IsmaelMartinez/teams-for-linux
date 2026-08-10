@@ -23,8 +23,6 @@
  * manager's emitters.
  */
 
-const dbus = require("@homebridge/dbus-native");
-
 const PORTAL_SERVICE = "org.freedesktop.portal.Desktop";
 const PORTAL_PATH = "/org/freedesktop/portal/desktop";
 const BACKGROUND_INTERFACE = "org.freedesktop.portal.Background";
@@ -48,6 +46,18 @@ const RESPONSE_TIMEOUT_MS = 30000;
  */
 function init() {
   if (process.platform !== "linux" || !process.env.FLATPAK_ID) {
+    return false;
+  }
+
+  // Lazy require after the gate, same as the download-manager emitters, so
+  // non-Linux startups never load the D-Bus stack.
+  let dbus;
+  try {
+    dbus = require("@homebridge/dbus-native");
+  } catch (error) {
+    console.warn("[BackgroundPortal] dbus module unavailable", {
+      message: error.message,
+    });
     return false;
   }
 
@@ -113,6 +123,7 @@ function getPortalVersion(sessionBus, callback) {
  */
 function requestBackground(sessionBus, callback) {
   const token = `tfl${Date.now().toString(36)}`;
+  const matchRule = `type='signal',interface='${REQUEST_INTERFACE}',member='Response'`;
   let done = false;
 
   const finish = (responseCode) => {
@@ -120,6 +131,7 @@ function requestBackground(sessionBus, callback) {
     done = true;
     clearTimeout(timer);
     sessionBus.connection.removeListener("message", onMessage);
+    sessionBus.removeMatch?.(matchRule, () => {});
     if (responseCode !== null) {
       callback(responseCode);
     }
@@ -146,7 +158,7 @@ function requestBackground(sessionBus, callback) {
 
   sessionBus.connection.on("message", onMessage);
   sessionBus.addMatch(
-    `type='signal',interface='${REQUEST_INTERFACE}',member='Response'`,
+    matchRule,
     (matchError) => {
       if (matchError) {
         console.warn("[BackgroundPortal] addMatch failed", {
