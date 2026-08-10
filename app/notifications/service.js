@@ -45,7 +45,11 @@ class NotificationService {
   }
 
   async #handlePlayNotificationSound(_event, options) {
-    return this.#playNotificationSound(options);
+    // preload's playNotificationSound only rejects non-object values, so a
+    // renderer calling it with no argument reaches us as undefined. Every use
+    // below dereferences options, so normalise at the IPC boundary. A default
+    // parameter would not cover the null case, which preload also lets through.
+    return this.#playNotificationSound(options || {});
   }
 
   async #showNotification(options) {
