@@ -68,12 +68,15 @@ class NotificationService {
     });
 
     try {
+      const iconPromise = this.#loadIcon(options.icon);
+
       // Play notification sound if configured (await to catch any errors)
       await this.#playNotificationSound({
         type: options.type,
         audio: "default",
       });
 
+      const icon = await iconPromise;
       const notificationConfig = {
         title: options.title,
         body: options.body,
@@ -81,7 +84,6 @@ class NotificationService {
         timeoutType: options.timeoutType === "never" ? "never" : "default",
       };
 
-      const icon = await this.#loadIcon(options.icon);
       if (icon) notificationConfig.icon = icon;
 
       const notification = new Notification(notificationConfig);
