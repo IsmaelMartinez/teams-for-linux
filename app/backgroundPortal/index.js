@@ -146,7 +146,7 @@ function requestBackground(sessionBus, callback) {
     }
     // Response signature is (ua{sv}); body[0] is 0 granted, 1 dismissed,
     // 2 error.
-    const code = Array.isArray(msg.body) ? Number(msg.body[0]) : NaN;
+    const code = Array.isArray(msg.body) ? Number(msg.body[0]) : Number.NaN;
     finish(Number.isFinite(code) ? code : 2);
   };
 
