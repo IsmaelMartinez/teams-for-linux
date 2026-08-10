@@ -188,10 +188,17 @@ class ConnectionManager {
       },
     ];
 
+    const deadline = Date.now() + ONLINE_CHECK_BUDGET_MS;
     for (const onlineCheckMethod of onlineCheckMethods) {
       for (let i = 1; i <= onlineCheckMethod.tries; i++) {
         const online = await onlineCheckMethod.networkTest();
         if (online) {
+          return true;
+        }
+        if (Date.now() >= deadline) {
+          console.warn(
+            `[CONNECTION] Connectivity check exceeded ${ONLINE_CHECK_BUDGET_MS}ms, assuming online`,
+          );
           return true;
         }
         await sleep(500);
@@ -237,6 +244,17 @@ function sleep(timeout) {
 // always settles; a timed-out probe resolves false and isOnline() falls through
 // to the next method (and the retry loop gives a recovering network time).
 const PROBE_TIMEOUT_MS = 5000;
+
+// PROBE_TIMEOUT_MS bounds one probe; this bounds the whole sweep. The tries in
+// the isOnline() table add up to 20 probes, so when every probe hangs to its
+// timeout the user watches "Waiting for network..." for about 85 seconds before
+// the escape gate gives up and assumes online. Probes that fail fast (no route,
+// connection refused) only cost the 500ms retry sleep, totalling ~10s, so a
+// 20 second budget leaves the ordinary offline path untouched and only clips the
+// hung-socket case from #2611. Nothing is lost by stopping early: the escape
+// gate at the end of the table assumes online regardless, so the sweep loads the
+// page and did-fail-load schedules a retry if the network really is still down.
+const ONLINE_CHECK_BUDGET_MS = 20000;
 
 // Bound a connectivity probe so it always settles. run(finish) performs the
 // probe and calls the idempotent finish(true|false) when it resolves; finish
