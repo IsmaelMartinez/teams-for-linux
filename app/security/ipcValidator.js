@@ -142,6 +142,10 @@ const allowedChannels = new Set([
   // dialog. State pushes flow main → renderer over `manage-profile-state`
   // (no allowlist needed for that direction).
   'manage-profile-rename',
+  // Pin/unpin toggle (Phase 1c.2 shortcuts). Forwards to
+  // `ProfilesManager.update(id, { pinned })`; main enforces the max-5 cap
+  // (the Ctrl+Alt+1…5 shortcut slots) and rejects past it.
+  'manage-profile-pin',
   'manage-profile-remove',
   'manage-profile-close',
 

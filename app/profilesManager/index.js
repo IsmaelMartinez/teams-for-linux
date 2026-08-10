@@ -233,28 +233,31 @@ class ProfilesManager {
       next.disableNotifications = !!p.disableNotifications;
     }
     if (Object.hasOwn(p, "muted")) next.muted = !!p.muted;
-    if (Object.hasOwn(p, "pinned")) {
-      const pinning = !!p.pinned;
-      // Cap pins at the number of Ctrl+Alt+1…5 shortcut slots. Count the
-      // OTHER pinned profiles so re-pinning an already-pinned profile (a
-      // no-op) can never trip the limit.
-      if (pinning && !next.pinned) {
-        const pinnedOthers = state.list.filter(
-          (prof) => prof.pinned && prof.id !== id
-        ).length;
-        if (pinnedOthers >= MAX_PINNED) {
-          throw new Error(
-            `[ProfilesManager] At most ${MAX_PINNED} profiles can be pinned`
-          );
-        }
-      }
-      next.pinned = pinning;
-    }
+    if (Object.hasOwn(p, "pinned")) this.#applyPinned(state, id, next, p.pinned);
     if (Object.hasOwn(p, "url")) this.#applyUrl(next, p.url);
     state.list[idx] = next;
     this.#write(state);
     this.#emitter.emit("update", next);
     return next;
+  }
+
+  // Cap pins at the number of Ctrl+Alt+1…5 shortcut slots. Count the OTHER
+  // pinned profiles so re-pinning an already-pinned profile (a no-op) can
+  // never trip the limit. Lifted out of update() to keep its cognitive
+  // complexity within the SonarCloud threshold, mirroring #applyName/#applyUrl.
+  #applyPinned(state, id, next, pinned) {
+    const pinning = !!pinned;
+    if (pinning && !next.pinned) {
+      const pinnedOthers = state.list.filter(
+        (prof) => prof.pinned && prof.id !== id
+      ).length;
+      if (pinnedOthers >= MAX_PINNED) {
+        throw new Error(
+          `[ProfilesManager] At most ${MAX_PINNED} profiles can be pinned`
+        );
+      }
+    }
+    next.pinned = pinning;
   }
 
   #applyName(next, name) {

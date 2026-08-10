@@ -184,10 +184,15 @@ function makePinButton(profile, pinnedCount, slot) {
           profile.id,
           !profile.pinned
         );
-        if (result && result.ok === false) {
+        if (result?.ok === false) {
+          // Rejected (e.g. the max-5 cap): no state push follows, so render()
+          // won't run — clear the pending focus target or the next unrelated
+          // render would yank focus onto this button.
+          focusAfterRender = null;
           setError(result.error || "Failed to update pin.");
         }
       } catch (error) {
+        focusAfterRender = null;
         setError(error?.message || "Failed to update pin.");
       }
     });
