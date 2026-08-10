@@ -89,6 +89,7 @@ function responseWith(bytes, options = {}) {
 function makeService(fetch) {
 	const window = {
 		webContents: {
+			getURL: () => 'https://teams.microsoft.com/',
 			session: { fetch },
 			isDestroyed: () => false,
 			send: () => {},
@@ -188,10 +189,34 @@ describe('NotificationService icons', () => {
 		assert.strictEqual(notifications[0].shown, true);
 	});
 
+	it('does not fetch icons from a different HTTPS origin', async () => {
+		let fetchCalls = 0;
+		makeService(async () => { fetchCalls += 1; });
+
+		await show({ icon: 'https://example.com/avatar.png' });
+
+		assert.strictEqual(fetchCalls, 0);
+		assert.strictEqual('icon' in notifications[0].options, false);
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
 	it('rejects redirects from HTTPS to a non-HTTPS URL', async () => {
 		const bytes = Uint8Array.from([1, 2, 3, 4]);
 		makeService(async () => responseWith(bytes, {
 			url: 'http://teams.microsoft.com/avatar.png',
+		}));
+
+		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
+
+		assert.strictEqual(imageBuffers.length, 0);
+		assert.strictEqual('icon' in notifications[0].options, false);
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
+	it('rejects redirects to a different HTTPS origin', async () => {
+		const bytes = Uint8Array.from([1, 2, 3, 4]);
+		makeService(async () => responseWith(bytes, {
+			url: 'https://example.com/avatar.png',
 		}));
 
 		await show({ icon: 'https://teams.microsoft.com/avatar.png' });

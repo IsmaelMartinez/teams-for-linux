@@ -2,7 +2,7 @@ const { Notification, nativeImage, ipcMain } = require("electron");
 const crypto = require("node:crypto");
 const path = require("node:path");
 
-const ICON_FETCH_TIMEOUT_MS = 3000;
+const ICON_FETCH_TIMEOUT_MS = 1000;
 const MAX_ICON_BYTES = 5 * 1024 * 1024;
 
 const USER_STATUS = {
@@ -68,7 +68,7 @@ class NotificationService {
     });
 
     try {
-      const iconPromise = this.#loadIcon(options.icon);
+      const iconPromise = this.#loadIcon(options.icon).catch(() => null);
 
       // Play notification sound if configured (await to catch any errors)
       await this.#playNotificationSound({
@@ -137,17 +137,18 @@ class NotificationService {
       return this.#nonEmptyImage(nativeImage.createFromDataURL(icon));
     }
 
-    const url = this.#parseHttpsUrl(icon);
-    if (!url) return null;
-
     const win = this.#mainWindow.getWindow();
+    const url = this.#parseHttpsUrl(icon);
+    const pageUrl = this.#parseHttpsUrl(win?.webContents?.getURL?.());
+    if (!url || !pageUrl || url.origin !== pageUrl.origin) return null;
+
     const session = win?.webContents?.session;
     if (!session?.fetch) return null;
 
-    return this.#loadRemoteIcon(session, url);
+    return this.#loadRemoteIcon(session, url, pageUrl.origin);
   }
 
-  async #loadRemoteIcon(session, url) {
+  async #loadRemoteIcon(session, url, origin) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), ICON_FETCH_TIMEOUT_MS);
     try {
@@ -156,7 +157,8 @@ class NotificationService {
         signal: controller.signal,
       });
       if (!response.ok) return null;
-      if (!this.#parseHttpsUrl(response.url)) return null;
+      const responseUrl = this.#parseHttpsUrl(response.url);
+      if (!responseUrl || responseUrl.origin !== origin) return null;
 
       const declaredSize = Number(response.headers.get("content-length"));
       if (declaredSize > MAX_ICON_BYTES) return null;
