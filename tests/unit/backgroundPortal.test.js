@@ -113,7 +113,9 @@ describe('backgroundPortal', () => {
 
 		const request = bus.calls.find((c) => c.member === 'RequestBackground');
 		assert.strictEqual(request.signature, 'sa{sv}');
-		assert.ok(request.body[1].some(([key]) => key === 'reason'));
+		const options = request.body[1];
+		assert.ok(Array.isArray(options));
+		assert.ok(options.some(([key]) => key === 'reason'));
 		assert.ok(bus.calls.some((c) => c.member === 'removeMatch'));
 	});
 
