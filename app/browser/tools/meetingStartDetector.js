@@ -99,9 +99,11 @@ function debugDescribe(el) {
  */
 function hashText(text) {
 	let hash = 5381;
-	for (let i = 0; i < text.length; i++) {
+	// Iterate code points, not code units: stepping by one unit while reading a
+	// full code point would hash a surrogate pair's lead twice.
+	for (const ch of text) {
 		// "| 0" is the 32-bit wrap djb2 relies on, not a truncation.
-		hash = ((hash << 5) + hash + text.codePointAt(i)) | 0;
+		hash = ((hash << 5) + hash + ch.codePointAt(0)) | 0;
 	}
 	return hash;
 }
