@@ -26,10 +26,9 @@ RUN dnf install -y \
 # All cross-distro containers must use the same Node.js/npm to ensure npm ci
 # installs identical Electron binaries, which is critical for session cookie
 # compatibility between --login and --test runs across distros.
-RUN curl --proto '=https' -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" -o node.tar.gz \
-    && echo "${NODE_SHA256}  node.tar.gz" | sha256sum -c - \
-    && tar -xz -C /usr/local --strip-components=1 -f node.tar.gz \
-    && rm node.tar.gz
+ADD --checksum=sha256:${NODE_SHA256} https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /tmp/node.tar.gz
+RUN tar -xz -C /usr/local --strip-components=1 -f /tmp/node.tar.gz \
+    && rm /tmp/node.tar.gz
 
 # Copy scripts and config
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh

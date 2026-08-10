@@ -41,6 +41,8 @@ jobs:
       - name: Build Docker image
         env:
           DISTRO: ${{ matrix.distro }}
+          # The Dockerfiles use ADD --checksum, which requires BuildKit
+          DOCKER_BUILDKIT: 1
         run: |
           docker build \
             -t "cross-distro-${DISTRO}" \
