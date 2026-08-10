@@ -1,10 +1,12 @@
 'use strict';
 
 const PII_PATTERNS = {
-	// Domain is matched as explicit dot-separated labels rather than a class
-	// containing "." followed by "\.", which backtracks super-linearly (S8786).
-	// This runs over every log line, on input we do not control.
-	email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/g,
+	// This runs over every log line, on input we do not control, so it is written
+	// to avoid backtracking (S8786). The domain is explicit dot-separated labels
+	// rather than a class containing "." followed by "\.", and every quantifier is
+	// bounded by the RFC 5321 limits (64-octet local part, 63-octet DNS labels),
+	// which caps the retry cost on a long non-matching run.
+	email: /[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9-]{1,63}(?:\.[a-zA-Z0-9-]{1,63}){1,8}/g,
 	uuid: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
 	password: /password["']?\s*[=:]\s*["']?[^"',}\s]+["']?/gi,
 	bearerToken: /bearer\s+[a-z0-9._-]+/gi,

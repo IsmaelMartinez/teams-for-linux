@@ -282,7 +282,12 @@ describe('SpeakingIndicator', () => {
 		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
-		// Implicit assertion: no throws above. Nothing else to check since there is no ipcRenderer to inspect.
+		// There is no ipcRenderer to inspect, so the observable proof that polling
+		// ran to completion without throwing is that the overlay still appeared.
+		assert.ok(
+			globalThis.document.body.appendChild.mock.calls.length > 0,
+			'overlay-only path should still show the overlay when ipcRenderer is absent'
+		);
 	});
 
 	it('emits muted when audio sender track is disabled, regardless of audioLevel (#2465)', async () => {
