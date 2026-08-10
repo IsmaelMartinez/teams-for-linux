@@ -26,6 +26,14 @@ function collectSourceFiles(dir) {
 	return found;
 }
 
+// Logging a serialised DOM subtree is the highest-yield way to leak PII by
+// accident: one line dumps every name, message preview and meeting title on the
+// page. activityManager logged document.body.innerHTML on every incoming call
+// until this guard was added. Single-line check only, so a console call split
+// across lines still slips through; it catches the shape the mistake takes.
+const CONSOLE_CALL = /console\.(debug|info|warn|error|log)\(/;
+const SERIALISED_DOM = /(inner|outer)HTML/;
+
 describe('debug-only instrumentation', () => {
 	it('is not present anywhere under app/', () => {
 		const offenders = [];
@@ -41,6 +49,23 @@ describe('debug-only instrumentation', () => {
 			offenders,
 			[],
 			`Debug-only instrumentation must be removed before merge. Found at:\n  ${offenders.join('\n  ')}`
+		);
+	});
+
+	it('does not log serialised DOM anywhere under app/', () => {
+		const offenders = [];
+		for (const file of collectSourceFiles(APP_DIR)) {
+			const lines = readFileSync(file, 'utf8').split('\n');
+			lines.forEach((line, index) => {
+				if (CONSOLE_CALL.test(line) && SERIALISED_DOM.test(line)) {
+					offenders.push(`${path.relative(APP_DIR, file)}:${index + 1}`);
+				}
+			});
+		}
+		assert.deepStrictEqual(
+			offenders,
+			[],
+			`Serialised DOM must not be logged, it carries message text and names. Found at:\n  ${offenders.join('\n  ')}`
 		);
 	});
 });

@@ -45,13 +45,17 @@ class NotificationService {
   }
 
   async #handlePlayNotificationSound(_event, options) {
-    return this.#playNotificationSound(options);
+    // preload's playNotificationSound only rejects non-object values, so a
+    // renderer calling it with no argument reaches us as undefined. Every use
+    // below dereferences options, so normalise at the IPC boundary. A default
+    // parameter would not cover the null case, which preload also lets through.
+    return this.#playNotificationSound(options || {});
   }
 
   async #showNotification(options) {
     const startTime = Date.now();
     console.debug("[NOTIFICATIONS] Native notification request received", {
-      title: options.title,
+      titleLength: options.title?.length || 0,
       bodyLength: options.body?.length || 0,
       hasIcon: !!options.icon,
       type: options.type,
@@ -65,8 +69,6 @@ class NotificationService {
       await this.#playNotificationSound({
         type: options.type,
         audio: "default",
-        title: options.title,
-        body: options.body,
       });
 
       const notificationConfig = {
@@ -111,7 +113,6 @@ class NotificationService {
 
       const totalTime = Date.now() - startTime;
       console.debug("[NOTIFICATIONS] Native notification displayed successfully", {
-        title: options.title,
         totalTimeMs: totalTime,
         urgency: this.#config.defaultNotificationUrgency,
         performanceNote: totalTime > 500 ? "Slow notification display detected" : "Normal notification speed"
@@ -120,7 +121,6 @@ class NotificationService {
     } catch (error) {
       console.error("[NOTIFICATIONS] Failed to show native notification", {
         error: error.message,
-        title: options.title,
         elapsedMs: Date.now() - startTime,
         suggestion: "Check if notification permissions are granted or icon data is valid"
       });
@@ -128,8 +128,10 @@ class NotificationService {
   }
 
   async #playNotificationSound(options) {
+    // options can carry the notification title and body (the web path forwards
+    // them over play-notification-sound), so log only the sound-relevant fields.
     console.debug(
-      `Notification => Type: ${options.type}, Audio: ${options.audio}, Title: ${options.title}, Body: ${options.body}`
+      `[NOTIFICATIONS] Sound requested => type: ${options.type}, audio: ${options.audio}`
     );
 
     // Player failed to load or notification sound disabled in config
@@ -160,7 +162,7 @@ class NotificationService {
       return;
     }
 
-    console.debug("No notification sound played", this.#soundPlayer, options);
+    console.debug(`[NOTIFICATIONS] No sound configured for type: ${options.type}`);
   }
 }
 
