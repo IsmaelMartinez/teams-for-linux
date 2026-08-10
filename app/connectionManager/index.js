@@ -270,7 +270,8 @@ const RETRY_SLEEP_MS = 500;
 
 // Bound a connectivity probe so it always settles. run(finish) performs the
 // probe and calls the idempotent finish(true|false) when it resolves; finish
-// also clears the timeout. If the probe has not settled within PROBE_TIMEOUT_MS,
+// also clears the timeout. If the probe has not settled within timeoutMs
+// (PROBE_TIMEOUT_MS unless isOnline() has less budget than that left),
 // the optional cleanup returned by run() runs (e.g. abort an in-flight request)
 // and the probe resolves false. A synchronous throw from run() (net.request on a
 // malformed URL, a net-stack init failure) is treated as offline, so the probe
