@@ -710,7 +710,7 @@ function chooseLanguage(item, menus) {
   );
 
   if (menus.onSpellCheckerLanguageChanged) {
-    menus.onSpellCheckerLanguageChanged.apply(menus, [changes]);
+    menus.onSpellCheckerLanguageChanged(changes);
   }
 }
 

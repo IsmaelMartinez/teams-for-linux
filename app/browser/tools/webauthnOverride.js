@@ -174,7 +174,8 @@ function bufferToBase64url(buffer) {
   return btoa(binary)
     .replaceAll("+", "-")
     .replaceAll("/", "_")
-    .replace(/=+$/, "");
+    // Bounded: base64 padding is never more than two "=" (S8786).
+    .replace(/={1,2}$/, "");
 }
 
 /**

@@ -1,10 +1,13 @@
 'use strict';
 
 const PII_PATTERNS = {
-	email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+	// Domain is matched as explicit dot-separated labels rather than a class
+	// containing "." followed by "\.", which backtracks super-linearly (S8786).
+	// This runs over every log line, on input we do not control.
+	email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/g,
 	uuid: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
 	password: /password["']?\s*[=:]\s*["']?[^"',}\s]+["']?/gi,
-	bearerToken: /bearer\s+[a-zA-Z0-9._-]+/gi,
+	bearerToken: /bearer\s+[a-z0-9._-]+/gi,
 	ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
 	mqttUrl: /(mqtts?:\/\/)[^:]+:[^@]+@/gi,
 	urlQueryParams: /\?[^"'\s]+/g,
@@ -52,7 +55,8 @@ function sanitize(message) {
 	sanitized = sanitized.replaceAll(PII_PATTERNS.userPath, (match) => {
 		if (match.startsWith('/home/')) return '/home/[USER]';
 		if (match.startsWith('/Users/')) return '/Users/[USER]';
-		if (match.toLowerCase().startsWith('c:\\users\\')) return 'C:\\Users\\[USER]';
+		// String.raw cannot be used for the prefix: a raw literal may not end in a backslash.
+		if (match.toLowerCase().startsWith('c:\\users\\')) return String.raw`C:\Users\[USER]`;
 		return '[PATH]';
 	});
 

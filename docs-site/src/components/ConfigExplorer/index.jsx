@@ -35,6 +35,36 @@ ApplyBadge.propTypes = {
   mode: PropTypes.string,
 };
 
+function OptionEditor({type, value, onChange}) {
+  if (type === 'boolean') {
+    return (
+      <select value={String(value)} onChange={(e) => onChange(e.target.value === 'true')}>
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>
+    );
+  }
+  if (type === 'number') {
+    return (
+      <input
+        type="number"
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+      />
+    );
+  }
+  if (type === 'string') {
+    return <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
+  }
+  return <span className={styles.readonly}>{JSON.stringify(value)}</span>;
+}
+
+OptionEditor.propTypes = {
+  type: PropTypes.string,
+  value: PropTypes.any,
+  onChange: PropTypes.func.isRequired,
+};
+
 function NestedFields({option}) {
   const fields = Array.isArray(option.fields) ? option.fields : [];
   if (fields.length === 0) {
@@ -152,7 +182,7 @@ export default function ConfigExplorer() {
     for (const name of Object.keys(selected)) {
       const opt = OPTIONS.find((o) => o.name === name);
       const val = selected[name];
-      out[name] = opt && opt.type === 'number' && val === '' ? opt.default : val;
+      out[name] = opt?.type === 'number' && val === '' ? opt.default : val;
     }
     return out;
   }, [selected]);
@@ -257,31 +287,11 @@ export default function ConfigExplorer() {
                 return (
                   <label key={name} className={styles.editorRow}>
                     <code>{name}</code>
-                    {opt.type === 'boolean' ? (
-                      <select
-                        value={String(val)}
-                        onChange={(e) => setValue(name, e.target.value === 'true')}
-                      >
-                        <option value="true">true</option>
-                        <option value="false">false</option>
-                      </select>
-                    ) : opt.type === 'number' ? (
-                      <input
-                        type="number"
-                        value={val ?? ''}
-                        onChange={(e) =>
-                          setValue(name, e.target.value === '' ? '' : Number(e.target.value))
-                        }
-                      />
-                    ) : opt.type === 'string' ? (
-                      <input
-                        type="text"
-                        value={val ?? ''}
-                        onChange={(e) => setValue(name, e.target.value)}
-                      />
-                    ) : (
-                      <span className={styles.readonly}>{JSON.stringify(val)}</span>
-                    )}
+                    <OptionEditor
+                      type={opt.type}
+                      value={val}
+                      onChange={(next) => setValue(name, next)}
+                    />
                   </label>
                 );
               })}
