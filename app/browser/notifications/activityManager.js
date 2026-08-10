@@ -57,7 +57,6 @@ function setEventHandlers(self) {
   self.ipcRenderer.on("disable-wakelock", () => wakeLock.disable());
 
   self.ipcRenderer.on('incoming-call-action', (event, action) => {
-    console.debug("ActionHTML", document.body.innerHTML);
     const actionWrapper = document.querySelector('[data-testid="calling-actions"],[data-testid="msn-actions"]');
     if (actionWrapper) {
       const buttons = actionWrapper.querySelectorAll("button");
