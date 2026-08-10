@@ -152,8 +152,8 @@ class ConnectionManager {
         // Perform an actual HTTPS request, similar to loading the Teams app.
         method: "https",
         tries: 10,
-        networkTest: async () => {
-          return await isOnlineHttps(this.config.url);
+        networkTest: async (timeoutMs) => {
+          return await isOnlineHttps(this.config.url, timeoutMs);
         },
       },
       {
@@ -161,9 +161,9 @@ class ConnectionManager {
         // mandatory but not reachable yet.
         method: "dns",
         tries: 5,
-        networkTest: async () => {
+        networkTest: async (timeoutMs) => {
           const testDomain = new URL(this.config.url).hostname;
-          return await isOnlineDns(testDomain);
+          return await isOnlineDns(testDomain, timeoutMs);
         },
       },
       {
@@ -191,17 +191,24 @@ class ConnectionManager {
     const deadline = Date.now() + ONLINE_CHECK_BUDGET_MS;
     for (const onlineCheckMethod of onlineCheckMethods) {
       for (let i = 1; i <= onlineCheckMethod.tries; i++) {
-        const online = await onlineCheckMethod.networkTest();
-        if (online) {
-          return true;
-        }
-        if (Date.now() >= deadline) {
+        // Checking the budget before each probe rather than after it also
+        // catches a deadline that passed during the retry sleep, and clamping
+        // the probe to what is left stops a single hung probe from running past
+        // the budget by up to PROBE_TIMEOUT_MS.
+        const remainingMs = deadline - Date.now();
+        if (remainingMs <= 0) {
           console.warn(
             `[CONNECTION] Connectivity check exceeded ${ONLINE_CHECK_BUDGET_MS}ms, assuming online`,
           );
           return true;
         }
-        await sleep(500);
+        const online = await onlineCheckMethod.networkTest(
+          Math.min(PROBE_TIMEOUT_MS, remainingMs),
+        );
+        if (online) {
+          return true;
+        }
+        await sleep(RETRY_SLEEP_MS);
       }
     }
     return false;
@@ -254,7 +261,12 @@ const PROBE_TIMEOUT_MS = 5000;
 // hung-socket case from #2611. Nothing is lost by stopping early: the escape
 // gate at the end of the table assumes online regardless, so the sweep loads the
 // page and did-fail-load schedules a retry if the network really is still down.
+// isOnline() checks this before each probe and clamps the probe to whatever is
+// left, so the sweep settles within the budget plus at most one retry sleep.
 const ONLINE_CHECK_BUDGET_MS = 20000;
+
+// Pause between tries, giving a recovering network time to come back.
+const RETRY_SLEEP_MS = 500;
 
 // Bound a connectivity probe so it always settles. run(finish) performs the
 // probe and calls the idempotent finish(true|false) when it resolves; finish
@@ -264,7 +276,7 @@ const ONLINE_CHECK_BUDGET_MS = 20000;
 // malformed URL, a net-stack init failure) is treated as offline, so the probe
 // always resolves a boolean and isOnline() falls through rather than rejecting
 // and wedging refresh().
-function probeWithTimeout(run) {
+function probeWithTimeout(run, timeoutMs = PROBE_TIMEOUT_MS) {
   return new Promise((resolve) => {
     let settled = false;
     let timer;
@@ -282,7 +294,7 @@ function probeWithTimeout(run) {
         /* nothing to clean up, or request already settled */
       }
       finish(false);
-    }, PROBE_TIMEOUT_MS);
+    }, timeoutMs);
     try {
       cleanup = run(finish);
     } catch {
@@ -291,7 +303,7 @@ function probeWithTimeout(run) {
   });
 }
 
-function isOnlineHttps(testUrl) {
+function isOnlineHttps(testUrl, timeoutMs) {
   return probeWithTimeout((finish) => {
     const req = net.request({ url: testUrl, method: "HEAD" });
     req.on("response", () => finish(true));
@@ -299,16 +311,16 @@ function isOnlineHttps(testUrl) {
     req.end();
     // On timeout, abort the in-flight request before resolving false.
     return () => req.abort();
-  });
+  }, timeoutMs);
 }
 
-function isOnlineDns(testDomain) {
+function isOnlineDns(testDomain, timeoutMs) {
   return probeWithTimeout((finish) => {
     net
       .resolveHost(testDomain)
       .then(() => finish(true))
       .catch(() => finish(false));
-  });
+  }, timeoutMs);
 }
 
 module.exports = ConnectionManager;

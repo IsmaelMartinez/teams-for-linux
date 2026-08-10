@@ -110,8 +110,10 @@ describe('ConnectionManager connectivity sweep', () => {
 			const elapsed = settledAt - startedAt;
 
 			assert.strictEqual(online, true, 'escape gate still assumes online');
+			// The 20s budget plus the trailing retry sleep. Probes are clamped to
+			// the remaining budget, so a hung one cannot push past this.
 			assert.ok(
-				elapsed < 30000,
+				elapsed <= 20500,
 				`sweep should settle inside the budget, took ${elapsed}ms`,
 			);
 		} finally {
