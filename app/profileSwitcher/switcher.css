@@ -128,8 +128,17 @@ body {
 }
 
 .profile-row .name {
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-row .shortcut-hint {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 11px;
+  color: #888;
   white-space: nowrap;
 }
 
@@ -183,6 +192,10 @@ body {
 
   .profile-row.active {
     background: #3a3a4c;
+  }
+
+  .profile-row .shortcut-hint {
+    color: #9a9a9a;
   }
 
   .dropdown-footer {

@@ -120,4 +120,32 @@ describe('IPC Validator - Allowlist completeness', () => {
 			assert.ok(allowedChannels.has(channel), `Expected core channel '${channel}' in allowlist`);
 		}
 	});
+
+	// ADR-020 multi-account channels. Every renderer-reachable channel the
+	// feature registers must be allowlisted or app/index.js's ipcMain wrap
+	// rejects it at runtime — a missing entry here shipped once (the Manage
+	// dialog's pin channel was allowlisted only in a working tree, so a clean
+	// build rejected every pin; caught in review on PR #2787).
+	it('contains every multi-account profile channel', () => {
+		const expectedChannels = [
+			'profile-list',
+			'profile-get-active',
+			'profile-switch',
+			'profile-add',
+			'profile-update',
+			'profile-remove',
+			'add-profile-submit',
+			'add-profile-cancel',
+			'manage-profile-rename',
+			'manage-profile-pin',
+			'manage-profile-remove',
+			'manage-profile-close',
+			'profile-switcher-open-add',
+			'profile-switcher-open-manage',
+			'profile-switcher-set-expanded',
+		];
+		for (const channel of expectedChannels) {
+			assert.ok(allowedChannels.has(channel), `Expected multi-account channel '${channel}' in allowlist`);
+		}
+	});
 });

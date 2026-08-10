@@ -11,6 +11,10 @@ const api = globalThis.profileSwitcherApi;
 let profiles = [];
 let activeId = null;
 let open = false; // dropdown open
+// Whether the pinned-profile menu accelerators can fire on this platform;
+// pushed by main in profile-switcher-state. Default false so we never
+// advertise a chord before main confirms it works.
+let shortcutsAvailable = false;
 
 function activeProfile() {
   return profiles.find((p) => p.id === activeId) || null;
@@ -38,6 +42,7 @@ function renderPill() {
 
 function renderList() {
   listEl.textContent = "";
+  let nextSlot = 0;
   for (const profile of profiles) {
     const li = document.createElement("li");
     const row = document.createElement("button");
@@ -54,6 +59,19 @@ function renderList() {
     name.textContent = profile.name;
 
     row.append(avatar, name);
+    // Matches the accelerator scheme in app/menus/profilesMenu.js: pinned
+    // profiles get Ctrl+Alt+<slot>, slotted by list order. Only advertised
+    // when the chord can actually fire (per-window menus don't exist on
+    // macOS — main tells us via shortcutsAvailable).
+    if (profile.pinned) {
+      const slot = ++nextSlot;
+      if (shortcutsAvailable) {
+        const hint = document.createElement("span");
+        hint.className = "shortcut-hint";
+        hint.textContent = `Ctrl+Alt+${slot}`;
+        row.append(hint);
+      }
+    }
     row.addEventListener("click", () => selectProfile(profile.id));
     li.append(row);
     listEl.append(li);
@@ -128,6 +146,9 @@ globalThis.addEventListener("blur", () => setOpen(false));
 api.onState((state) => {
   profiles = Array.isArray(state?.profiles) ? state.profiles : [];
   activeId = state?.activeId ?? null;
+  if (typeof state?.shortcutsAvailable === "boolean") {
+    shortcutsAvailable = state.shortcutsAvailable;
+  }
   renderPill();
   if (open) renderList();
 });
