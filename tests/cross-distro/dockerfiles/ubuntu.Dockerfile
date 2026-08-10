@@ -4,22 +4,17 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG NODE_VERSION=24.14.1
 ARG NODE_SHA256=ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea
 
-# Electron/Chromium runtime dependencies + non-root user
+# Electron/Chromium runtime dependencies, X11 (xvfb/openbox/x11vnc) and
+# Wayland (sway/wayvnc) display stacks, noVNC + non-root user
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgtk-3-0 libnss3 libxss1 libxtst6 xdg-utils at-spi2-core \
-    libasound2t64 libdrm2 libgbm1 mesa-utils libgl1-mesa-dri \
-    libpango-1.0-0 libcairo2 libcups2 libdbus-1-3 libexpat1 \
-    libfontconfig1 libgcc-s1 libglib2.0-0 libnspr4 \
-    libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 \
-    libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
-    libxshmfence1 libxkbcommon0 fonts-liberation \
-    # X11 display server and window manager
-    xvfb openbox x11vnc xterm dbus-x11 \
-    # Wayland compositor and tools
-    sway foot wayvnc xwayland \
-    # noVNC and utilities
-    novnc websockify \
-    python3 wget curl procps file fuse3 \
+    at-spi2-core curl dbus-x11 file fonts-liberation foot fuse3 \
+    libasound2t64 libcairo2 libcups2 libdbus-1-3 libdrm2 libexpat1 \
+    libfontconfig1 libgbm1 libgcc-s1 libgl1-mesa-dri libglib2.0-0 \
+    libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libx11-6 libx11-xcb1 \
+    libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 \
+    libxi6 libxkbcommon0 libxrandr2 libxrender1 libxshmfence1 libxss1 \
+    libxtst6 mesa-utils novnc openbox procps python3 sway wayvnc \
+    websockify wget x11vnc xdg-utils xterm xvfb xwayland \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -s /bin/bash -G audio,video tester \
     && mkdir -p /home/tester/.config /app && chown -R tester:tester /home/tester /app
@@ -28,10 +23,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # All cross-distro containers must use the same Node.js/npm to ensure npm ci
 # installs identical Electron binaries, which is critical for session cookie
 # compatibility between --login and --test runs across distros.
-RUN curl --proto '=https' -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" -o node.tar.gz \
-    && echo "${NODE_SHA256}  node.tar.gz" | sha256sum -c - \
-    && tar -xz -C /usr/local --strip-components=1 -f node.tar.gz \
-    && rm node.tar.gz
+ADD --checksum=sha256:${NODE_SHA256} https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /tmp/node.tar.gz
+RUN tar -xz -C /usr/local --strip-components=1 -f /tmp/node.tar.gz \
+    && rm /tmp/node.tar.gz
 
 # Copy scripts and config
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh

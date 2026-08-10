@@ -541,7 +541,7 @@ function buildWindowTile(source) {
 // replacement would be double-escaped) as defence-in-depth — CodeQL
 // flags the partial-escape pattern even when it cannot be exploited.
 function cssEscapeUrl(url) {
-  return url.replaceAll("\\", String.raw`\\`).replaceAll('"', '\\"');
+  return url.replaceAll("\\", String.raw`\\`).replaceAll('"', String.raw`\"`);
 }
 
 function switchTab(tab) {
