@@ -1,10 +1,15 @@
 'use strict';
 
 const PII_PATTERNS = {
-	email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+	// This runs over every log line, on input we do not control, so it is written
+	// to avoid backtracking (S8786). The domain is explicit dot-separated labels
+	// rather than a class containing "." followed by "\.", and every quantifier is
+	// bounded by the RFC 5321 limits (64-octet local part, 63-octet DNS labels),
+	// which caps the retry cost on a long non-matching run.
+	email: /[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9-]{1,63}(?:\.[a-zA-Z0-9-]{1,63}){1,8}/g,
 	uuid: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
 	password: /password["']?\s*[=:]\s*["']?[^"',}\s]+["']?/gi,
-	bearerToken: /bearer\s+[a-zA-Z0-9._-]+/gi,
+	bearerToken: /bearer\s+[a-z0-9._-]+/gi,
 	ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
 	mqttUrl: /(mqtts?:\/\/)[^:]+:[^@]+@/gi,
 	urlQueryParams: /\?[^"'\s]+/g,
@@ -52,7 +57,8 @@ function sanitize(message) {
 	sanitized = sanitized.replaceAll(PII_PATTERNS.userPath, (match) => {
 		if (match.startsWith('/home/')) return '/home/[USER]';
 		if (match.startsWith('/Users/')) return '/Users/[USER]';
-		if (match.toLowerCase().startsWith('c:\\users\\')) return 'C:\\Users\\[USER]';
+		// String.raw cannot be used for the prefix: a raw literal may not end in a backslash.
+		if (match.toLowerCase().startsWith('c:\\users\\')) return String.raw`C:\Users\[USER]`;
 		return '[PATH]';
 	});
 

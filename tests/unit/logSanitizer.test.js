@@ -164,7 +164,8 @@ describe('detectPIITypes function', () => {
 	test('detects email', () => assert.ok(detectPIITypes('Email: test@example.com').includes('email')));
 	test('detects multiple types', () => {
 		const types = detectPIITypes('User test@example.com from 192.168.1.1');
-		assert.ok(types.includes('email') && types.includes('ipAddress'));
+		assert.ok(types.includes('email'));
+		assert.ok(types.includes('ipAddress'));
 	});
 	test('empty for clean message', () => assert.strictEqual(detectPIITypes('Clean log message').length, 0));
 });
@@ -177,18 +178,23 @@ describe('createSanitizer function', () => {
 	test('default and custom patterns', () => {
 		const custom = createSanitizer({ customCode: /CODE-[A-Z]+/g }, { customCode: '[CODE]' });
 		const result = custom('User test@example.com has CODE-ABC');
-		assert.ok(result.includes('[EMAIL]') && result.includes('[CODE]'));
+		assert.ok(result.includes('[EMAIL]'));
+		assert.ok(result.includes('[CODE]'));
 	});
 });
 
 describe('Edge cases', () => {
 	test('multiple PII types', () => {
 		const result = sanitize('User john@example.com (ID: 12345678-1234-1234-1234-123456789abc) from 10.0.0.1');
-		assert.ok(result.includes('[EMAIL]') && result.includes('12345678...') && result.includes('[IP]'));
+		assert.ok(result.includes('[EMAIL]'));
+		assert.ok(result.includes('12345678...'));
+		assert.ok(result.includes('[IP]'));
 	});
 	test('JSON-like messages', () => {
 		const result = sanitize('{"user":"admin@company.com","password":"secret123","ip":"192.168.1.50"}');
-		assert.ok(result.includes('[EMAIL]') && result.includes('[REDACTED]') && result.includes('[IP]'));
+		assert.ok(result.includes('[EMAIL]'));
+		assert.ok(result.includes('[REDACTED]'));
+		assert.ok(result.includes('[IP]'));
 	});
 	test('preserves non-PII', () => assert.strictEqual(sanitize('App version 2.7.2 started'), 'App version 2.7.2 started'));
 	test('empty string', () => assert.strictEqual(sanitize(''), ''));

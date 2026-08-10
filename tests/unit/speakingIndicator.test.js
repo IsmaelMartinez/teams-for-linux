@@ -55,6 +55,12 @@ function loadSpeakingIndicator() {
 	return { instance, mockActivityHub };
 }
 
+// The construction itself is the point: speakingIndicator patches the global
+// constructor, so opening a connection is what starts its polling.
+function openPeerConnection() {
+	return new globalThis.RTCPeerConnection();
+}
+
 function closePeerConnections() {
 	for (const pc of createdPeerConnections) {
 		pc.connectionState = 'closed';
@@ -170,7 +176,7 @@ describe('SpeakingIndicator', () => {
 		const { instance, mockActivityHub } = loadSpeakingIndicator();
 		instance.init({ mqtt: { enabled: true } });
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		const emitCalls = mockActivityHub.emit.mock.calls;
@@ -185,7 +191,7 @@ describe('SpeakingIndicator', () => {
 		const { instance, mockActivityHub } = loadSpeakingIndicator();
 		instance.init({ mqtt: { enabled: true } });
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		// Verify call-connected was emitted first
@@ -217,7 +223,7 @@ describe('SpeakingIndicator', () => {
 		const { instance } = loadSpeakingIndicator();
 		instance.init({ media: { microphone: { speakingIndicator: false } }, mqtt: { enabled: true } });
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		assert.strictEqual(
@@ -235,7 +241,7 @@ describe('SpeakingIndicator', () => {
 		const ipcRenderer = { send: mock.fn() };
 		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
@@ -251,7 +257,7 @@ describe('SpeakingIndicator', () => {
 		const ipcRenderer = { send: mock.fn() };
 		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
 		closePeerConnections();
@@ -273,10 +279,15 @@ describe('SpeakingIndicator', () => {
 		// init without ipcRenderer (overlay-only path) should be safe
 		instance.init({ media: { microphone: { speakingIndicator: true } } });
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 200));
 
-		// Implicit assertion: no throws above. Nothing else to check since there is no ipcRenderer to inspect.
+		// There is no ipcRenderer to inspect, so the observable proof that polling
+		// ran to completion without throwing is that the overlay still appeared.
+		assert.ok(
+			globalThis.document.body.appendChild.mock.calls.length > 0,
+			'overlay-only path should still show the overlay when ipcRenderer is absent'
+		);
 	});
 
 	it('emits muted when audio sender track is disabled, regardless of audioLevel (#2465)', async () => {
@@ -290,7 +301,7 @@ describe('SpeakingIndicator', () => {
 		const ipcRenderer = { send: mock.fn() };
 		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 300));
 
 		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
@@ -312,7 +323,7 @@ describe('SpeakingIndicator', () => {
 		const ipcRenderer = { send: mock.fn() };
 		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
 
-		assert.ok(new globalThis.RTCPeerConnection(), 'RTCPeerConnection should be constructable');
+		openPeerConnection();
 		await new Promise(r => setTimeout(r, 600));
 
 		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');

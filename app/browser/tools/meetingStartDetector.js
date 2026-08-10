@@ -87,7 +87,10 @@ function debugDescribe(el) {
 		}
 	}
 	const cls = typeof el.className === 'string' ? el.className.slice(0, 80) : '';
-	return `<${el.tagName?.toLowerCase() || '?'}${attrs.length ? ' ' + attrs.join(' ') : ''}${cls ? ` class="${cls}"` : ''}>`;
+	const tag = el.tagName?.toLowerCase() || '?';
+	const attrPart = attrs.length ? ' ' + attrs.join(' ') : '';
+	const clsPart = cls ? ` class="${cls}"` : '';
+	return `<${tag}${attrPart}${clsPart}>`;
 }
 
 /**
@@ -96,8 +99,11 @@ function debugDescribe(el) {
  */
 function hashText(text) {
 	let hash = 5381;
-	for (let i = 0; i < text.length; i++) {
-		hash = ((hash << 5) + hash + text.charCodeAt(i)) | 0;
+	// Iterate code points, not code units: stepping by one unit while reading a
+	// full code point would hash a surrogate pair's lead twice.
+	for (const ch of text) {
+		// "| 0" is the 32-bit wrap djb2 relies on, not a truncation.
+		hash = ((hash << 5) + hash + ch.codePointAt(0)) | 0;
 	}
 	return hash;
 }

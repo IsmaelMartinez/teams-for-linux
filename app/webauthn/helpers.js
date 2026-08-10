@@ -17,7 +17,8 @@ function base64urlEncode(buffer) {
     .toString("base64")
     .replaceAll("+", "-")
     .replaceAll("/", "_")
-    .replace(/=+$/, "");
+    // Bounded: base64 padding is never more than two "=" (S8786).
+    .replace(/={1,2}$/, "");
 }
 
 /**

@@ -1084,7 +1084,7 @@ function isMicrosoftTelemetryHost(url) {
   // fires for every request matched by `{ urls: ["https://*/*"] }`, so
   // skipping the parse for the overwhelmingly common non-telemetry case
   // is measurable on chat-heavy sessions.
-  if (!url || !url.includes(MS_TELEMETRY_FAST_PATH)) return false;
+  if (!url?.includes(MS_TELEMETRY_FAST_PATH)) return false;
   try {
     const hostname = new URL(url).hostname;
     return MS_TELEMETRY_HOSTS.some(
