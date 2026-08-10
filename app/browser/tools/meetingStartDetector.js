@@ -69,30 +69,6 @@ const activityHub = require('./activityHub');
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
 
-// DEBUG-ONLY: Remove before merge (#2587 live-validation instrumentation).
-// Broad sampler regex: logs any added element whose text looks meeting
-// adjacent, regardless of toast markers, so a live scheduled-meeting start
-// tells us what the real toast DOM (or lack of one) looks like. Sampled text
-// can contain names; acceptable on this branch build only.
-const DEBUG_SAMPLER_REGEX = /meeting|meet now|started|webinar/i;
-const DEBUG_SAMPLER_MAX_PER_MIN = 30;
-
-// DEBUG-ONLY: Remove before merge (#2587): compact element descriptor for logs.
-function debugDescribe(el) {
-	const attrs = [];
-	for (const name of ['role', 'aria-live', 'data-tid', 'data-tester-id', 'id']) {
-		const value = el.getAttribute?.(name);
-		if (value) {
-			attrs.push(`${name}=${value}`);
-		}
-	}
-	const cls = typeof el.className === 'string' ? el.className.slice(0, 80) : '';
-	const tag = el.tagName?.toLowerCase() || '?';
-	const attrPart = attrs.length ? ' ' + attrs.join(' ') : '';
-	const clsPart = cls ? ` class="${cls}"` : '';
-	return `<${tag}${attrPart}${clsPart}>`;
-}
-
 /**
  * Non-cryptographic string hash (djb2). Used so matched toast text (which
  * contains a person's name) is not retained verbatim for deduplication.
@@ -114,32 +90,17 @@ class MeetingStartDetector {
 	#observer = null;
 	#matchedElements = new WeakSet();
 	#recentSignatures = new Map();
-	// DEBUG-ONLY: Remove before merge (#2587): instrumentation state.
-	#debugStats = { mutations: 0, addedNodes: 0, markersScanned: 0, sampled: 0, droppedSamples: 0 };
-	#debugSampleWindowStart = 0;
-	#debugSampleCount = 0;
-	#debugHeartbeat = null;
 
 	init(config, ipcRenderer) {
 		this.#ipcRenderer = ipcRenderer;
 
 		const detectionConfig = config.mqtt?.meetingStartDetection;
-		// DEBUG-ONLY: Remove before merge (#2587): surface the exact config the
-		// detector resolved, so "nothing happened" reports show whether it even armed.
-		console.info('[MeetingStart][DEBUG] init', {
-			mqttEnabled: !!config.mqtt?.enabled,
-			detectionEnabled: !!detectionConfig?.enabled,
-			configuredPatternCount: Array.isArray(detectionConfig?.patterns) ? detectionConfig.patterns.length : 0,
-			readyState: document.readyState,
-		});
 		if (!config.mqtt?.enabled || !detectionConfig?.enabled) {
 			console.debug('[MeetingStartDetector] Disabled');
 			return;
 		}
 
 		this.#patterns = this.compilePatterns(detectionConfig.patterns);
-		// DEBUG-ONLY: Remove before merge (#2587): pattern sources are config, not PII.
-		console.info('[MeetingStart][DEBUG] compiled patterns:', this.#patterns.map((p) => p.source));
 		if (this.#patterns.length === 0) {
 			console.warn('[MeetingStartDetector] No valid patterns configured, detection disabled');
 			return;
@@ -173,8 +134,6 @@ class MeetingStartDetector {
 		}
 		// PII: the id is a call/toast GUID, not a person; still not logged.
 		console.info('[MeetingStartDetector] Meeting start detected via command stream');
-		// DEBUG-ONLY: Remove before merge (#2587).
-		console.info('[MeetingStart][DEBUG] sending meeting-started IPC (react path)');
 		this.#ipcRenderer.send('meeting-started');
 	}
 
@@ -237,13 +196,6 @@ class MeetingStartDetector {
 			scopedToContainer: !!container,
 			patternCount: this.#patterns.length,
 		});
-
-		// DEBUG-ONLY: Remove before merge (#2587): heartbeat proves the observer
-		// is alive and shows how much DOM traffic it sees while we wait for a
-		// live meeting start.
-		this.#debugHeartbeat = setInterval(() => {
-			console.info('[MeetingStart][DEBUG] heartbeat', { ...this.#debugStats });
-		}, 30000);
 	}
 
 	#findToastContainer() {
@@ -251,70 +203,30 @@ class MeetingStartDetector {
 			try {
 				const element = document.querySelector(selector);
 				if (element) {
-					// DEBUG-ONLY: Remove before merge (#2587).
-					console.info('[MeetingStart][DEBUG] toast container matched selector:', selector);
 					return element;
 				}
 			} catch {
 				// invalid/unsupported selector — try the next one
 			}
 		}
-		// DEBUG-ONLY: Remove before merge (#2587).
-		console.info('[MeetingStart][DEBUG] no toast container selector matched, observing document.body');
 		return null;
 	}
 
 	#onMutations(mutations) {
-		// DEBUG-ONLY: Remove before merge (#2587).
-		this.#debugStats.mutations += mutations.length;
 		for (const mutation of mutations) {
 			for (const node of mutation.addedNodes) {
-				// DEBUG-ONLY: Remove before merge (#2587).
-				this.#debugStats.addedNodes++;
 				if (node.nodeType === ELEMENT_NODE) {
-					// DEBUG-ONLY: Remove before merge (#2587).
-					this.#debugSample(node);
 					this.#checkMarkers(this.#collectMarkerElements(node));
 				} else if (node.nodeType === TEXT_NODE && mutation.target?.closest) {
 					// Toast text can be filled in after the element is inserted;
 					// re-check the enclosing marker when its text arrives.
 					const host = mutation.target.closest(TOAST_MARKER_SELECTOR);
 					if (host) {
-						// DEBUG-ONLY: Remove before merge (#2587).
-						console.info('[MeetingStart][DEBUG] text-node mutation re-check on', debugDescribe(host));
 						this.#checkMarkers([host]);
 					}
 				}
 			}
 		}
-	}
-
-	/**
-	 * DEBUG-ONLY: Remove before merge (#2587). Logs any added element whose
-	 * text looks meeting-adjacent, whether or not it carries toast markers, so
-	 * we learn what the real meeting-start surface looks like. Rate-limited.
-	 */
-	#debugSample(node) {
-		const text = (node.textContent || '').slice(0, MAX_TEXT_LENGTH);
-		if (text.length === 0 || !DEBUG_SAMPLER_REGEX.test(text)) {
-			return;
-		}
-		const now = Date.now();
-		if (now - this.#debugSampleWindowStart > 60000) {
-			if (this.#debugStats.droppedSamples > 0) {
-				console.info('[MeetingStart][DEBUG] sampler dropped', this.#debugStats.droppedSamples, 'elements in the last window');
-			}
-			this.#debugSampleWindowStart = now;
-			this.#debugSampleCount = 0;
-			this.#debugStats.droppedSamples = 0;
-		}
-		if (this.#debugSampleCount >= DEBUG_SAMPLER_MAX_PER_MIN) {
-			this.#debugStats.droppedSamples++;
-			return;
-		}
-		this.#debugSampleCount++;
-		this.#debugStats.sampled++;
-		console.info('[MeetingStart][DEBUG] sampled', debugDescribe(node), 'text:', text.slice(0, 200));
 	}
 
 	#collectMarkerElements(node) {
@@ -335,10 +247,6 @@ class MeetingStartDetector {
 			}
 
 			const text = element.textContent || '';
-			// DEBUG-ONLY: Remove before merge (#2587): marker surfaces are rare,
-			// log each scan so we can see toast text against the patterns.
-			this.#debugStats.markersScanned++;
-			console.info('[MeetingStart][DEBUG] marker scanned', debugDescribe(element), 'matched:', this.matchesPatterns(text), 'text:', text.slice(0, 200));
 			if (!this.matchesPatterns(text)) {
 				continue;
 			}
@@ -351,8 +259,6 @@ class MeetingStartDetector {
 
 			// PII: never include the matched text — it carries a person's name.
 			console.info('[MeetingStartDetector] Meeting-start toast detected');
-			// DEBUG-ONLY: Remove before merge (#2587).
-			console.info('[MeetingStart][DEBUG] sending meeting-started IPC to main process');
 			this.#ipcRenderer.send('meeting-started');
 		}
 	}
@@ -387,11 +293,6 @@ class MeetingStartDetector {
 		if (this.#observer) {
 			this.#observer.disconnect();
 			this.#observer = null;
-		}
-		// DEBUG-ONLY: Remove before merge (#2587).
-		if (this.#debugHeartbeat) {
-			clearInterval(this.#debugHeartbeat);
-			this.#debugHeartbeat = null;
 		}
 		this.#recentSignatures.clear();
 		console.debug('[MeetingStartDetector] Stopped');

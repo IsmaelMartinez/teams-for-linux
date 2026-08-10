@@ -221,16 +221,6 @@ function handleCallEventEntityCommand(entityCommand) {
   console.debug('[MeetingStart] toast entityCommand scenario:',
     entityCommand.entityOptions?.crossClientScenarioName,
     { isIncomingCall: !!entityCommand.entityOptions?.isIncomingCall });
-  // DEBUG-ONLY: Remove before merge (#2587): full entityOptions dump for live
-  // validation of the React-store detection path. May contain names; branch
-  // build only.
-  try {
-    console.info('[MeetingStart][DEBUG] entityOptions:',
-      JSON.stringify(entityCommand.entityOptions ?? {}).slice(0, 600));
-  } catch {
-    console.info('[MeetingStart][DEBUG] entityOptions not serializable, keys:',
-      Object.keys(entityCommand.entityOptions ?? {}).join(','));
-  }
   const meetingStartId = getMeetingStartId(entityCommand.entityOptions);
   if (meetingStartId) {
     onMeetingStarted(meetingStartId);
