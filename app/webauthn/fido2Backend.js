@@ -182,11 +182,12 @@ function coseAlgToFido2Type(alg) {
  * @param {string} type - "webauthn.create" or "webauthn.get"
  * @param {string} challenge - base64url-encoded challenge
  * @param {string} origin - Request origin
+ * @param {string|null} [topOrigin] - Top-level origin for an iframe ceremony
  * @returns {{ clientDataJSON: Buffer, clientDataHash: Buffer }}
  */
-function prepareClientData(type, challenge, origin) {
+function prepareClientData(type, challenge, origin, topOrigin = null) {
   const challengeBytes = base64urlDecode(challenge);
-  const clientDataJSON = generateClientDataJSON(type, challengeBytes, origin);
+  const clientDataJSON = generateClientDataJSON(type, challengeBytes, origin, topOrigin);
   const clientDataHash = createHash("sha256").update(clientDataJSON).digest();
   return { clientDataJSON, clientDataHash };
 }
@@ -255,7 +256,7 @@ async function createCredential(options) {
     attestation: options.attestation || "none",
   });
 
-  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin);
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.create", options.challenge, options.origin, options.topOrigin);
 
   // fido2-tools expect standard base64, not hex (validated by rlavriv).
   const inputLines = [
@@ -338,7 +339,7 @@ async function getAssertion(options) {
     credCount: options.allowCredentials?.length || 0,
   });
 
-  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin);
+  const { clientDataJSON, clientDataHash } = prepareClientData("webauthn.get", options.challenge, options.origin, options.topOrigin);
 
   // fido2-tools expect standard base64, not hex (same as createCredential).
   const inputLines = [clientDataHash.toString("base64"), sanitizeForFido2(options.rpId)];

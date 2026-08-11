@@ -78,15 +78,24 @@ async function collectPin(sender) {
  * @param {object} options
  */
 async function handleWebauthnRequest(operation, event, options) {
-  let origin;
+  let senderOrigin;
   try {
-    origin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
+    senderOrigin = event.senderFrame?.origin || new URL(event.sender.getURL()).origin;
   } catch {
     log.warn("[WEBAUTHN] Blocked request", { op: operation, reason: "no-origin" });
     return { success: false, error: "SecurityError: could not determine origin" };
   }
 
-  if (!isAllowedOrigin(origin)) {
+  // A ceremony started inside a login iframe is relayed through the main frame's
+  // preload, so the IPC sender is the outer frame. The key has to sign the origin
+  // of the frame that actually called navigator.credentials, or the relying party
+  // discards an assertion we consider successful (#2828). `frameOrigin` is the
+  // browser's own MessageEvent.origin for that frame, and is held to the same
+  // allowlist as the sender before anything signs it.
+  const origin = options?.frameOrigin || senderOrigin;
+  const relayed = origin !== senderOrigin;
+
+  if (!isAllowedOrigin(senderOrigin) || !isAllowedOrigin(origin)) {
     log.warn("[WEBAUTHN] Blocked request", {
       op: operation,
       reason: "origin-not-allowed",
@@ -101,6 +110,7 @@ async function handleWebauthnRequest(operation, event, options) {
   log.info("[WEBAUTHN] Processing request", {
     op: operation,
     originClass: log.classifyOrigin(origin),
+    relayed,
     timeoutSec: options?.timeout ?? null,
   });
 
@@ -131,8 +141,8 @@ async function handleWebauthnRequest(operation, event, options) {
     const touchStartedAt = Date.now();
     try {
       const result = operation === "create"
-        ? await fido2Backend.createCredential({ ...options, origin, preCollectedPin })
-        : await fido2Backend.getAssertion({ ...options, origin, preCollectedPin });
+        ? await fido2Backend.createCredential({ ...options, origin, topOrigin: senderOrigin, preCollectedPin })
+        : await fido2Backend.getAssertion({ ...options, origin, topOrigin: senderOrigin, preCollectedPin });
       touchMs = Date.now() - touchStartedAt;
       log.info("[WEBAUTHN] Succeeded", { op: operation, totalMs: Date.now() - startedAt, pinMs, touchMs });
       return { success: true, data: result };
@@ -252,7 +262,9 @@ function injectIntoFrame(wf) {
           response: { attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
             getAuthenticatorData: () => b64urlToBuf(r.authenticatorData), getTransports: () => r.transports || ["usb"],
             getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 },
-          getClientExtensionResults: () => ({}) };
+          getClientExtensionResults: () => ({}),
+          toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
+            response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) };
       };
 
       navigator.credentials.get = async function(opts) {
@@ -261,10 +273,16 @@ function injectIntoFrame(wf) {
         console.info("[WEBAUTHN:frame] Intercepting credentials.get()");
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
+        const authData = b64urlToBuf(r.authenticatorData);
         return { id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
-          response: { authenticatorData: b64urlToBuf(r.authenticatorData), clientDataJSON: b64urlToBuf(r.clientDataJson),
-            signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null },
-          getClientExtensionResults: () => ({}) };
+          response: { authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
+            signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null,
+            getAuthenticatorData: () => authData },
+          getClientExtensionResults: () => ({}),
+          toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
+            authenticatorAttachment: "cross-platform", clientExtensionResults: {},
+            response: { authenticatorData: r.authenticatorData, clientDataJSON: r.clientDataJson,
+              signature: r.signature, userHandle: r.userHandle || null } }) };
       };
 
       console.info("[WEBAUTHN:frame] navigator.credentials patched in subframe");
