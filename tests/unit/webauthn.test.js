@@ -167,6 +167,42 @@ describe('WebAuthn helpers - generateClientDataJSON', () => {
 		const json = generateClientDataJSON('webauthn.get', Buffer.from('x'), 'https://example.com');
 		assert.ok(Buffer.isBuffer(json));
 	});
+
+	// A ceremony relayed out of a login iframe signs the iframe's origin, with
+	// the top-level document recorded separately (#2719).
+	it('marks a ceremony cross-origin and records topOrigin when the frame differs', () => {
+		const json = generateClientDataJSON(
+			'webauthn.get',
+			Buffer.from('c'),
+			'https://login.live.com',
+			'https://login.microsoft.com'
+		);
+		const parsed = JSON.parse(json.toString('utf-8'));
+
+		assert.strictEqual(parsed.origin, 'https://login.live.com');
+		assert.strictEqual(parsed.crossOrigin, true);
+		assert.strictEqual(parsed.topOrigin, 'https://login.microsoft.com');
+	});
+
+	it('omits topOrigin and stays same-origin for a main-frame ceremony', () => {
+		const sameOrigin = generateClientDataJSON(
+			'webauthn.get',
+			Buffer.from('c'),
+			'https://login.microsoft.com',
+			'https://login.microsoft.com'
+		);
+		const parsed = JSON.parse(sameOrigin.toString('utf-8'));
+
+		assert.strictEqual(parsed.crossOrigin, false);
+		assert.ok(!('topOrigin' in parsed));
+		// Byte-identical to the pre-change call, so main-frame logins are untouched.
+		const withoutTopOrigin = generateClientDataJSON(
+			'webauthn.get',
+			Buffer.from('c'),
+			'https://login.microsoft.com'
+		);
+		assert.deepStrictEqual(sameOrigin, withoutTopOrigin);
+	});
 });
 
 describe('WebAuthn helpers - sanitizeForFido2', () => {
