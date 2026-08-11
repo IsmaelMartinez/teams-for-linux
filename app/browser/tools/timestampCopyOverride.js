@@ -35,7 +35,7 @@ class TimestampCopyOverride {
             // A throwing settings API (e.g. get('compose') returning
             // undefined) is charged against the same attempt budget so it
             // cannot keep throwing out of the interval callback forever.
-            console.debug('[TIMESTAMP_COPY] Apply attempt failed:', error.message);
+            console.debug('[TIMESTAMP_COPY] Apply attempt failed:', error?.message ?? String(error));
         }
 
         this.#applyAttempts += 1;

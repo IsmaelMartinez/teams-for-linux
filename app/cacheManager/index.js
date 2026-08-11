@@ -219,8 +219,9 @@ class CacheManager {
       await fsp.rmdir(filePath);
     } catch (error) {
       // A directory left non-empty (entries failed to delete or reappeared)
-      // is routine; anything else counts toward the aggregate failure log.
-      if (error.code !== 'ENOTEMPTY') {
+      // and rmdir refusing a symlinked directory path (ENOTDIR) are routine;
+      // anything else counts toward the aggregate failure log.
+      if (error.code !== 'ENOTEMPTY' && error.code !== 'ENOTDIR') {
         throw error;
       }
     }
