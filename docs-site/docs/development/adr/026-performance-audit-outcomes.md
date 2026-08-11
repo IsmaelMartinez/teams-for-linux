@@ -20,7 +20,7 @@ Each finding is closed as fixed, fixed differently than proposed, or not planned
 |---|---------|---------|-------|
 | 1 | `timestampCopyOverride` polled every second, indefinitely | Fixed in `perf/renderer-io-cheap-wins` (in review) | Bounded to 120 consecutive one-second attempts, with errors charged to the same budget |
 | 2 | Two full-subtree MutationObservers on `document.body` | Not planned | See rationale below |
-| 3 | Full button scan on every mutation in `injectedScreenSharing` | Fixed differently | A fast path of CSS, `data-tid` and aria selectors runs first; the full sweep fires only when the fast path finds nothing. Residual cost: one `document.querySelectorAll("button")` sweep per mutation on non-English locales |
+| 3 | Full button scan on every mutation in `injectedScreenSharing` | Fixed differently | A fast path of CSS, `data-tid` and aria selectors runs first; the full sweep fires only when the fast path finds nothing. Residual cost: one full `document.querySelectorAll("button")` sweep per mutation whenever the fast-path selectors match nothing, which is persistently the case on non-English locales |
 | 4 | Tray icon canvas and dataURL re-creation per update | Fixed in `perf/renderer-io-cheap-wins` (in review) | The base-icon `toDataURL()` result is cached. The resize path deliberately remains, costing two canvas creations plus `getContext("2d")` plus a `toDataURL()` per tray update |
 | 5 | `shortcuts.js` ready-polling had no retry limit | Fixed | `MAX_READY_RETRIES = 30` caps both ready loops |
 | 6 | Sequential recursive directory walk in `cacheManager` | Fixed in `perf/renderer-io-cheap-wins` (in review) | `readdir` with `withFileTypes` dirents, processed in sequential chunks of 32 with `allSettled` isolation per entry |
