@@ -198,7 +198,12 @@ describe('WebAuthn helpers - generateClientDataJSON', () => {
 
 		assert.strictEqual(parsed.crossOrigin, false);
 		assert.ok(!('topOrigin' in parsed));
-		// Byte-identical to the pre-change call, so main-frame logins are untouched.
+		// Pinned to the exact pre-#2829 byte layout, so main-frame logins are
+		// untouched by construction, not by both calls drifting together.
+		assert.strictEqual(
+			sameOrigin.toString('utf-8'),
+			'{"type":"webauthn.get","challenge":"Yw","origin":"https://login.microsoft.com","crossOrigin":false}'
+		);
 		const withoutTopOrigin = generateClientDataJSON(
 			'webauthn.get',
 			Buffer.from('c'),
