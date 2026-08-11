@@ -2,6 +2,9 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const { readFileSync } = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 const { encode: cborEncode, decode: cborDecode } = require('cbor-x');
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require('../../app/webauthn/helpers');
 
@@ -518,5 +521,31 @@ describe('WebAuthn fido2Backend - stdin line construction', () => {
 		}
 
 		assert.strictEqual(allLines[2], '1234');
+	});
+});
+
+// The subframe override is a template string run through executeJavaScript, so
+// a syntax error in it fails silently at runtime and surfaces only as logins
+// not working inside the login iframe. Nothing else parses it.
+describe('WebAuthn subframe injection - injected script', () => {
+	const injected = (() => {
+		const src = readFileSync(path.join(__dirname, '..', '..', 'app', 'webauthn', 'index.js'), 'utf8');
+		const start = src.indexOf('wf.executeJavaScript(String.raw`');
+		assert.notStrictEqual(start, -1, 'injected block not found');
+		const open = src.indexOf('`', start);
+		const close = src.indexOf('`)', open + 1);
+		assert.notStrictEqual(close, -1, 'closing backtick not found');
+		return src.slice(open + 1, close);
+	})();
+
+	it('parses as valid JavaScript', () => {
+		assert.doesNotThrow(() => new vm.Script(injected, { filename: 'injected-subframe.js' }));
+	});
+
+	// The relayed credential has to carry the same members as the main-frame
+	// reconstruction or the page serialises a different body (#2828).
+	it('gives the relayed credential toJSON and getAuthenticatorData', () => {
+		assert.ok(injected.includes('toJSON'));
+		assert.ok(injected.includes('getAuthenticatorData'));
 	});
 });
