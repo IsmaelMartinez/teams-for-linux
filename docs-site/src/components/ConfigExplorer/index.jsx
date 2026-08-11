@@ -35,6 +35,31 @@ ApplyBadge.propTypes = {
   mode: PropTypes.string,
 };
 
+// Planned nested name per ADR-025 (`renamedTo` schema metadata). Informational
+// only: the flat name is the working name today; nothing is implemented yet.
+function RenameNote({renamedTo, inverts}) {
+  if (typeof renamedTo !== 'string' || renamedTo === '') {
+    return null;
+  }
+  const explanation =
+    'Planned nested name (ADR-025); not implemented yet — keep using the current flat name';
+  const invertedSuffix = inverts === true ? ' (meaning inverted)' : '';
+  return (
+    <span
+      className={styles.renameNote}
+      title={explanation}
+      aria-label={`${explanation}: ${renamedTo}${invertedSuffix}`}>
+      planned: <code>{renamedTo}</code>
+      {invertedSuffix}
+    </span>
+  );
+}
+
+RenameNote.propTypes = {
+  renamedTo: PropTypes.string,
+  inverts: PropTypes.bool,
+};
+
 function OptionEditor({type, value, onChange}) {
   if (type === 'boolean') {
     return (
@@ -152,7 +177,8 @@ export default function ConfigExplorer() {
       }
       return (
         o.name.toLowerCase().includes(q) ||
-        (o.description || '').toLowerCase().includes(q)
+        (o.description || '').toLowerCase().includes(q) ||
+        (o.renamedTo || '').toLowerCase().includes(q)
       );
     });
   }, [query, typeFilter]);
@@ -247,6 +273,7 @@ export default function ConfigExplorer() {
                   <td>
                     <code>{o.name}</code>
                     <ApplyBadge mode={o.applyMode} />
+                    <RenameNote renamedTo={o.renamedTo} inverts={o.renameInverts} />
                   </td>
                   <td>{o.type}</td>
                   <td>

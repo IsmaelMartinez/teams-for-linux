@@ -81,6 +81,67 @@ function lintApplyMode(name, def, violations) {
   }
 }
 
+// `renamedTo` is optional metadata (ADR-025): flat options may carry the
+// planned nested dot-path they will migrate to. The lint never requires it,
+// but when present it must be well-formed. The anchored pattern is linear
+// (no nested quantifiers) and rejects whitespace, Markdown metacharacters
+// and other junk that could leak into the generated table unescaped.
+const DOTTED_PATH_PATTERN = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$/;
+
+function lintRename(name, def, violations) {
+  if (def.renameInverts !== undefined) {
+    if (def.renamedTo === undefined) {
+      violations.push(`option "${name}" has renameInverts without renamedTo`);
+    }
+    if (def.renameInverts !== true) {
+      violations.push(
+        `option "${name}" has renameInverts ${JSON.stringify(def.renameInverts)} (must be exactly true when present)`,
+      );
+    }
+  }
+  if (def.renamedTo !== undefined) {
+    if (def.type === "object") {
+      violations.push(`object option "${name}" must not carry renamedTo`);
+    }
+    if (typeof def.renamedTo !== "string" || !DOTTED_PATH_PATTERN.test(def.renamedTo)) {
+      violations.push(
+        `option "${name}" has invalid renamedTo "${def.renamedTo}" (must be a dotted path of alphanumeric segments)`,
+      );
+    }
+  }
+}
+
+// Cross-option rename checks: targets must be unique, and must not collide
+// with a top-level option name or a shipped field path of an object option —
+// the drift guard for the day a target legitimately ships.
+function lintRenameCollisions(violations) {
+  const shipped = new Set(Object.keys(options));
+  for (const [name, def] of Object.entries(options)) {
+    for (const fieldPath of Object.keys(def.fields ?? {})) {
+      shipped.add(`${name}.${fieldPath}`);
+    }
+  }
+  const seen = new Map();
+  for (const [name, def] of Object.entries(options)) {
+    const target = def.renamedTo;
+    if (typeof target !== "string" || target === "") {
+      continue;
+    }
+    if (seen.has(target)) {
+      violations.push(
+        `options "${seen.get(target)}" and "${name}" declare the same renamedTo target "${target}"`,
+      );
+    } else {
+      seen.set(target, name);
+    }
+    if (shipped.has(target)) {
+      violations.push(
+        `option "${name}" renamedTo target "${target}" already exists as a shipped option or field path`,
+      );
+    }
+  }
+}
+
 function lintFields(name, fields, violations) {
   for (const fieldPath of Object.keys(fields)) {
     const field = fields[fieldPath];
@@ -101,6 +162,7 @@ function lintOption(name, def, violations) {
     violations.push(`option "${name}" is missing a type`);
   }
   lintApplyMode(name, def, violations);
+  lintRename(name, def, violations);
   if (def.type === "object" && Object.keys(def.fields ?? {}).length === 0) {
     violations.push(`object option "${name}" is missing a non-empty fields map`);
   }
@@ -113,6 +175,7 @@ function lintOptions() {
   for (const name of Object.keys(options)) {
     lintOption(name, options[name], violations);
   }
+  lintRenameCollisions(violations);
   return violations;
 }
 
@@ -127,6 +190,12 @@ function buildSchema() {
       description: normaliseDescription(def.describe),
       applyMode: def.applyMode ?? null,
     };
+    if (def.renamedTo) {
+      entry.renamedTo = def.renamedTo;
+      if (def.renameInverts) {
+        entry.renameInverts = true;
+      }
+    }
     if (def.fields) {
       // Keep fields in source order so the output stays deterministic.
       entry.fields = Object.keys(def.fields).map((fieldPath) => {
@@ -173,6 +242,21 @@ function renderApplyCell(applyMode) {
   return applyMode ? "`" + applyMode + "`" : "";
 }
 
+// Renders the Description cell, appending the ADR-025 planned-rename note
+// when present (the flat name remains the working name; informational only).
+// A full stop is ensured before the note so the cell never runs on.
+function renderDescriptionWithRenameNote(opt) {
+  let description = renderDescriptionCell(opt.description);
+  if (!opt.renamedTo) {
+    return description;
+  }
+  if (description && !description.endsWith(".")) {
+    description += ".";
+  }
+  const inverted = opt.renameInverts ? ", meaning inverted" : "";
+  return `${description} *Planned name: \`${opt.renamedTo}\`${inverted} (ADR-025; not yet implemented).*`;
+}
+
 function generateMarkdown(schema) {
   let md = `# Configuration Options Reference (Auto-Generated)
 
@@ -189,7 +273,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 `;
   for (const opt of schema) {
     const type = opt.type ? "`" + opt.type + "`" : "";
-    md += `| \`${opt.name}\` | ${type} | ${renderDefaultCell(opt.default)} | ${renderDescriptionCell(opt.description)} | ${renderApplyCell(opt.applyMode)} |\n`;
+    md += `| \`${opt.name}\` | ${type} | ${renderDefaultCell(opt.default)} | ${renderDescriptionWithRenameNote(opt)} | ${renderApplyCell(opt.applyMode)} |\n`;
   }
 
   const objectOptions = schema.filter((opt) => opt.fields && opt.fields.length > 0);

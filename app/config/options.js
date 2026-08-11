@@ -18,6 +18,12 @@
 //   to `{ type, describe }` (plus `choices` where the leaf has a fixed value
 //   set). Leaf defaults are not duplicated here — the generator derives them
 //   by resolving each dot-path against the option's `default` object.
+// - `renamedTo` (flat options only, optional): the nested dot-path the option
+//   is planned to migrate to per ADR-025. Purely informational — the flat name
+//   is the only working name today; there is no aliasing or migration.
+//   `renameInverts: true` marks the renames whose boolean meaning flips
+//   (e.g. disableNotifications → notifications.enabled), so any future
+//   migration tooling must negate the value rather than copy it.
 //
 // After changing an option here, run `npm run generate-config-docs` and commit
 // the regenerated docs-site/docs/configuration-generated.md and
@@ -34,6 +40,7 @@ module.exports = {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
         applyMode: "restart",
+        renamedTo: "idleDetection.checkInterval.detectActive",
       },
       screenSharing: {
         default: {
@@ -69,6 +76,7 @@ module.exports = {
         describe: "Teams app icon to show in the tray",
         type: "string",
         applyMode: "restart",
+        renamedTo: "tray.icon",
       },
       appIconType: {
         default: "default",
@@ -76,6 +84,7 @@ module.exports = {
         type: "string",
         choices: ["default", "light", "dark"],
         applyMode: "restart",
+        renamedTo: "tray.iconType",
       },
       appIdleTimeout: {
         default: 300,
@@ -83,6 +92,7 @@ module.exports = {
           "A numeric value in seconds as duration before app considers the system as idle",
         type: "number",
         applyMode: "restart",
+        renamedTo: "idleDetection.timeout",
       },
       appIdleTimeoutCheckInterval: {
         default: 10,
@@ -90,30 +100,35 @@ module.exports = {
           "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
         type: "number",
         applyMode: "restart",
+        renamedTo: "idleDetection.checkInterval.detectIdle",
       },
       appTitle: {
         default: "Microsoft Teams",
         describe: "A text to be suffixed with page title",
         type: "string",
         applyMode: "restart",
+        renamedTo: "app.title",
       },
       alwaysOnTop: {
         default: true,
         describe: "Keep the pop-out window always on top of other windows.",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "window.alwaysOnTop",
       },
       authServerWhitelist: {
         default: "*",
         describe: "Set auth-server-whitelist value",
         type: "string",
         applyMode: "restart",
+        renamedTo: "auth.serverWhitelist",
       },
       awayOnSystemIdle: {
         default: false,
         describe: "Sets the user status as away when system goes idle",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "idleDetection.setAwayOnIdle",
       },
       idleDetection: {
         default: {
@@ -140,6 +155,7 @@ module.exports = {
         describe: "Google Chrome User Agent",
         type: "string",
         applyMode: "restart",
+        renamedTo: "platform.chromeUserAgent",
       },
       customBGServiceBaseUrl: {
         default: "http://localhost",
@@ -147,6 +163,7 @@ module.exports = {
           "Base URL of the server which provides custom background images",
         type: "string",
         applyMode: "restart",
+        renamedTo: "customBackground.serviceBaseUrl",
       },
       customBGServiceConfigFetchInterval: {
         default: 0,
@@ -154,6 +171,7 @@ module.exports = {
           "A numeric value in seconds as poll interval to download background service config download",
         type: "number",
         applyMode: "restart",
+        renamedTo: "customBackground.configFetchInterval",
       },
       customCACertsFingerprints: {
         default: [],
@@ -161,6 +179,7 @@ module.exports = {
           "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
         type: "array",
         applyMode: "restart",
+        renamedTo: "auth.customCACertificateFingerprints",
       },
       customCSSName: {
         default: "",
@@ -168,12 +187,14 @@ module.exports = {
           'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
         type: "string",
         applyMode: "restart",
+        renamedTo: "appearance.cssName",
       },
       customCSSLocation: {
         default: "",
         describe: "custom CSS styles file location",
         type: "string",
         applyMode: "restart",
+        renamedTo: "appearance.cssLocation",
       },
       customStickers: {
         default: {
@@ -233,12 +254,14 @@ module.exports = {
           "Controls whether timestamps are included when copying messages in chats",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "platform.disableTimestampOnCopy",
       },
       class: {
         default: null,
         describe: "A custom value for the WM_CLASS property",
         type: "string",
         applyMode: "restart",
+        renamedTo: "window.class",
       },
       cacheManagement: {
         default: {
@@ -272,6 +295,7 @@ module.exports = {
           "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "storage.clearData",
       },
       clientCertPath: {
         default: "",
@@ -279,6 +303,7 @@ module.exports = {
           "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
         applyMode: "restart",
+        renamedTo: "auth.clientCertificate.path",
       },
       clientCertPassword: {
         default: "",
@@ -286,12 +311,14 @@ module.exports = {
           "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
         applyMode: "restart",
+        renamedTo: "auth.clientCertificate.password",
       },
       closeAppOnCross: {
         default: false,
         describe: "Close the app when clicking the close (X) cross",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "window.closeOnCross",
       },
       defaultNotificationUrgency: {
         default: "normal",
@@ -299,12 +326,14 @@ module.exports = {
         type: "string",
         choices: ["low", "normal", "critical"],
         applyMode: "live",
+        renamedTo: "notifications.urgency",
       },
       defaultURLHandler: {
         default: "",
         describe: "Default application to be used to open the HTTP URLs",
         type: "string",
         applyMode: "restart",
+        renamedTo: "urlHandling.defaultHandler",
       },
       disableGpu: {
         default: false,
@@ -312,6 +341,7 @@ module.exports = {
           "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "performance.disableGpu",
       },
       download: {
         default: {
@@ -359,12 +389,16 @@ module.exports = {
         describe: "A flag to disable all notifications",
         type: "boolean",
         applyMode: "live",
+        renamedTo: "notifications.enabled",
+        renameInverts: true,
       },
       disableNotificationSound: {
         default: false,
         describe: "Disable chat/meeting start notification sound",
         type: "boolean",
         applyMode: "live",
+        renamedTo: "notifications.sound.enabled",
+        renameInverts: true,
       },
       disableNotificationSoundIfNotAvailable: {
         default: false,
@@ -372,6 +406,7 @@ module.exports = {
           "Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)",
         type: "boolean",
         applyMode: "live",
+        renamedTo: "notifications.sound.onlyWhenAvailable",
       },
       disableNotificationWindowFlash: {
         default: false,
@@ -379,6 +414,8 @@ module.exports = {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
         applyMode: "live",
+        renamedTo: "notifications.windowFlash",
+        renameInverts: true,
       },
       notifications: {
         default: {
@@ -412,6 +449,8 @@ module.exports = {
           "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
         type: "boolean",
         applyMode: "live",
+        renamedTo: "notifications.badgeCountEnabled",
+        renameInverts: true,
       },
       disableGlobalShortcuts: {
         default: [],
@@ -419,6 +458,7 @@ module.exports = {
           "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
         type: "array",
         applyMode: "restart",
+        renamedTo: "shortcuts.disableWhileFocused",
       },
       globalShortcuts: {
         default: [],
@@ -426,12 +466,14 @@ module.exports = {
           "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
         type: "array",
         applyMode: "restart",
+        renamedTo: "shortcuts.global",
       },
       electronCLIFlags: {
         default: [],
         describe: "Electron CLI flags",
         type: "array",
         applyMode: "restart",
+        renamedTo: "performance.electronCLIFlags",
       },
       emulateWinChromiumPlatform: {
         default: false,
@@ -439,12 +481,14 @@ module.exports = {
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "platform.emulateWindowsChromium",
       },
       enableIncomingCallToast: {
         default: false,
         describe: "Enable incoming call toast",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "incomingCalls.toast",
       },
       followSystemTheme: {
         default: false,
@@ -452,12 +496,14 @@ module.exports = {
           "Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference.",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "appearance.followSystemTheme",
       },
       frame: {
         default: true,
         describe: "Specify false to create a Frameless Window. Default is true",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "window.frame",
       },
       incomingCallCommand: {
         default: null,
@@ -465,18 +511,21 @@ module.exports = {
           'Command to execute on an incoming call. (caution: "~" in path is not supported)',
         type: "string",
         applyMode: "restart",
+        renamedTo: "incomingCalls.command",
       },
       incomingCallCommandArgs: {
         default: [],
         describe: "Arguments for the incoming call command.",
         type: "array",
         applyMode: "restart",
+        renamedTo: "incomingCalls.commandArgs",
       },
       isCustomBackgroundEnabled: {
         default: false,
         describe: "A flag indicates whether to enable custom background or not",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "customBackground.enabled",
       },
       logConfig: {
         default: {
@@ -511,6 +560,7 @@ module.exports = {
         describe: "Regex for Teams meetup-join and related links",
         type: "string",
         applyMode: "restart",
+        renamedTo: "urlHandling.meetupJoinRegEx",
       },
       menubar: {
         default: "auto",
@@ -518,12 +568,14 @@ module.exports = {
         type: "string",
         choices: ["auto", "visible", "hidden"],
         applyMode: "restart",
+        renamedTo: "window.menubar",
       },
       minimized: {
         default: false,
         describe: "Start the application minimized",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "window.minimized",
       },
       minimizeOnClose: {
         default: false,
@@ -531,6 +583,7 @@ module.exports = {
           "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "window.minimizeOnClose",
       },
       notificationMethod: {
         default: "web",
@@ -539,6 +592,7 @@ module.exports = {
         type: "string",
         choices: ["web", "electron", "custom"],
         applyMode: "restart",
+        renamedTo: "notifications.method",
       },
       customNotification: {
         default: {
@@ -562,18 +616,21 @@ module.exports = {
           "Open meetupJoinRegEx URLs in the app instead of the default browser",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "urlHandling.openMeetupJoinInApp",
       },
       partition: {
         default: "persist:teams-4-linux",
         describe: "BrowserWindow webpreferences partition",
         type: "string",
         applyMode: "restart",
+        renamedTo: "app.partition",
       },
       proxyServer: {
         default: null,
         describe: "Proxy Server with format address:port",
         type: "string",
         applyMode: "restart",
+        renamedTo: "network.proxyServer",
       },
       network: {
 	default: {
@@ -617,24 +674,28 @@ module.exports = {
           "Array of languages to use with Electron's spell checker (experimental)",
         type: "array",
         applyMode: "restart",
+        renamedTo: "platform.spellCheckerLanguages",
       },
       ssoBasicAuthUser: {
         default: "",
         describe: "User to use for SSO basic auth.",
         type: "string",
         applyMode: "restart",
+        renamedTo: "auth.basic.user",
       },
       ssoBasicAuthPasswordCommand: {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
         applyMode: "restart",
+        renamedTo: "auth.basic.passwordCommand",
       },
       trayIconEnabled: {
         default: true,
         describe: "Enable tray icon",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "tray.enabled",
       },
       msTeamsProtocols: {
         default: {
@@ -663,24 +724,28 @@ module.exports = {
         describe: "Microsoft Teams URL",
         type: "string",
         applyMode: "restart",
+        renamedTo: "app.url",
       },
       useMutationTitleLogic: {
         default: true,
         describe: "Use MutationObserver to update counter from title",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "tray.useMutationTitleLogic",
       },
       watchConfigFile: {
         default: false,
         describe: "Watch for changes in the config file and reload the app",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "development.watchConfigFile",
       },
       webDebug: {
         default: false,
         describe: "Enable debug at start",
         type: "boolean",
         applyMode: "restart",
+        renamedTo: "development.webDebug",
       },
       media: {
         default: {

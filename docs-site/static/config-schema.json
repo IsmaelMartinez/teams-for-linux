@@ -8,7 +8,8 @@
       "type": "number",
       "default": 2,
       "description": "A numeric value in seconds as poll interval to check if the system is active from being idle",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "idleDetection.checkInterval.detectActive"
     },
     {
       "name": "screenSharing",
@@ -52,56 +53,64 @@
       "type": "string",
       "default": "",
       "description": "Teams app icon to show in the tray",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "tray.icon"
     },
     {
       "name": "appIconType",
       "type": "string",
       "default": "default",
       "description": "Type of tray icon to be used",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "tray.iconType"
     },
     {
       "name": "appIdleTimeout",
       "type": "number",
       "default": 300,
       "description": "A numeric value in seconds as duration before app considers the system as idle",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "idleDetection.timeout"
     },
     {
       "name": "appIdleTimeoutCheckInterval",
       "type": "number",
       "default": 10,
       "description": "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "idleDetection.checkInterval.detectIdle"
     },
     {
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
       "description": "A text to be suffixed with page title",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "app.title"
     },
     {
       "name": "alwaysOnTop",
       "type": "boolean",
       "default": true,
       "description": "Keep the pop-out window always on top of other windows.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.alwaysOnTop"
     },
     {
       "name": "authServerWhitelist",
       "type": "string",
       "default": "*",
       "description": "Set auth-server-whitelist value",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.serverWhitelist"
     },
     {
       "name": "awayOnSystemIdle",
       "type": "boolean",
       "default": false,
       "description": "Sets the user status as away when system goes idle",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "idleDetection.setAwayOnIdle"
     },
     {
       "name": "idleDetection",
@@ -132,42 +141,48 @@
       "type": "string",
       "default": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36",
       "description": "Google Chrome User Agent",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "platform.chromeUserAgent"
     },
     {
       "name": "customBGServiceBaseUrl",
       "type": "string",
       "default": "http://localhost",
       "description": "Base URL of the server which provides custom background images",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "customBackground.serviceBaseUrl"
     },
     {
       "name": "customBGServiceConfigFetchInterval",
       "type": "number",
       "default": 0,
       "description": "A numeric value in seconds as poll interval to download background service config download",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "customBackground.configFetchInterval"
     },
     {
       "name": "customCACertsFingerprints",
       "type": "array",
       "default": [],
       "description": "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.customCACertificateFingerprints"
     },
     {
       "name": "customCSSName",
       "type": "string",
       "default": "",
       "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\"",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "appearance.cssName"
     },
     {
       "name": "customCSSLocation",
       "type": "string",
       "default": "",
       "description": "custom CSS styles file location",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "appearance.cssLocation"
     },
     {
       "name": "customStickers",
@@ -250,14 +265,16 @@
       "type": "boolean",
       "default": false,
       "description": "Controls whether timestamps are included when copying messages in chats",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "platform.disableTimestampOnCopy"
     },
     {
       "name": "class",
       "type": "string",
       "default": null,
       "description": "A custom value for the WM_CLASS property",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.class"
     },
     {
       "name": "cacheManagement",
@@ -295,49 +312,56 @@
       "type": "boolean",
       "default": null,
       "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "storage.clearData"
     },
     {
       "name": "clientCertPath",
       "type": "string",
       "default": "",
       "description": "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.clientCertificate.path"
     },
     {
       "name": "clientCertPassword",
       "type": "string",
       "default": "",
       "description": "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.clientCertificate.password"
     },
     {
       "name": "closeAppOnCross",
       "type": "boolean",
       "default": false,
       "description": "Close the app when clicking the close (X) cross",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.closeOnCross"
     },
     {
       "name": "defaultNotificationUrgency",
       "type": "string",
       "default": "normal",
       "description": "Default urgency for new notifications (low/normal/critical)",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.urgency"
     },
     {
       "name": "defaultURLHandler",
       "type": "string",
       "default": "",
       "description": "Default application to be used to open the HTTP URLs",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "urlHandling.defaultHandler"
     },
     {
       "name": "disableGpu",
       "type": "boolean",
       "default": false,
       "description": "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "performance.disableGpu"
     },
     {
       "name": "download",
@@ -385,28 +409,35 @@
       "type": "boolean",
       "default": false,
       "description": "A flag to disable all notifications",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.enabled",
+      "renameInverts": true
     },
     {
       "name": "disableNotificationSound",
       "type": "boolean",
       "default": false,
       "description": "Disable chat/meeting start notification sound",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.sound.enabled",
+      "renameInverts": true
     },
     {
       "name": "disableNotificationSoundIfNotAvailable",
       "type": "boolean",
       "default": false,
       "description": "Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.sound.onlyWhenAvailable"
     },
     {
       "name": "disableNotificationWindowFlash",
       "type": "boolean",
       "default": false,
       "description": "A flag indicates whether to disable window flashing when there is a notification",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.windowFlash",
+      "renameInverts": true
     },
     {
       "name": "notifications",
@@ -448,77 +479,89 @@
       "type": "boolean",
       "default": false,
       "description": "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
-      "applyMode": "live"
+      "applyMode": "live",
+      "renamedTo": "notifications.badgeCountEnabled",
+      "renameInverts": true
     },
     {
       "name": "disableGlobalShortcuts",
       "type": "array",
       "default": [],
       "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "shortcuts.disableWhileFocused"
     },
     {
       "name": "globalShortcuts",
       "type": "array",
       "default": [],
       "description": "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "shortcuts.global"
     },
     {
       "name": "electronCLIFlags",
       "type": "array",
       "default": [],
       "description": "Electron CLI flags",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "performance.electronCLIFlags"
     },
     {
       "name": "emulateWinChromiumPlatform",
       "type": "boolean",
       "default": false,
       "description": "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "platform.emulateWindowsChromium"
     },
     {
       "name": "enableIncomingCallToast",
       "type": "boolean",
       "default": false,
       "description": "Enable incoming call toast",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "incomingCalls.toast"
     },
     {
       "name": "followSystemTheme",
       "type": "boolean",
       "default": false,
       "description": "Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "appearance.followSystemTheme"
     },
     {
       "name": "frame",
       "type": "boolean",
       "default": true,
       "description": "Specify false to create a Frameless Window. Default is true",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.frame"
     },
     {
       "name": "incomingCallCommand",
       "type": "string",
       "default": null,
       "description": "Command to execute on an incoming call. (caution: \"~\" in path is not supported)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "incomingCalls.command"
     },
     {
       "name": "incomingCallCommandArgs",
       "type": "array",
       "default": [],
       "description": "Arguments for the incoming call command.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "incomingCalls.commandArgs"
     },
     {
       "name": "isCustomBackgroundEnabled",
       "type": "boolean",
       "default": false,
       "description": "A flag indicates whether to enable custom background or not",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "customBackground.enabled"
     },
     {
       "name": "logConfig",
@@ -555,35 +598,40 @@
       "type": "string",
       "default": "^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
       "description": "Regex for Teams meetup-join and related links",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "urlHandling.meetupJoinRegEx"
     },
     {
       "name": "menubar",
       "type": "string",
       "default": "auto",
       "description": "A value controls the menu bar behaviour",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.menubar"
     },
     {
       "name": "minimized",
       "type": "boolean",
       "default": false,
       "description": "Start the application minimized",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.minimized"
     },
     {
       "name": "minimizeOnClose",
       "type": "boolean",
       "default": false,
       "description": "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "window.minimizeOnClose"
     },
     {
       "name": "notificationMethod",
       "type": "string",
       "default": "web",
       "description": "Notification method to be used by the application (web/electron/custom)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "notifications.method"
     },
     {
       "name": "customNotification",
@@ -607,21 +655,24 @@
       "type": "boolean",
       "default": true,
       "description": "Open meetupJoinRegEx URLs in the app instead of the default browser",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "urlHandling.openMeetupJoinInApp"
     },
     {
       "name": "partition",
       "type": "string",
       "default": "persist:teams-4-linux",
       "description": "BrowserWindow webpreferences partition",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "app.partition"
     },
     {
       "name": "proxyServer",
       "type": "string",
       "default": null,
       "description": "Proxy Server with format address:port",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "network.proxyServer"
     },
     {
       "name": "network",
@@ -658,28 +709,32 @@
       "type": "array",
       "default": [],
       "description": "Array of languages to use with Electron's spell checker (experimental)",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "platform.spellCheckerLanguages"
     },
     {
       "name": "ssoBasicAuthUser",
       "type": "string",
       "default": "",
       "description": "User to use for SSO basic auth.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.basic.user"
     },
     {
       "name": "ssoBasicAuthPasswordCommand",
       "type": "string",
       "default": "",
       "description": "Command to execute to retrieve password for SSO basic auth.",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "auth.basic.passwordCommand"
     },
     {
       "name": "trayIconEnabled",
       "type": "boolean",
       "default": true,
       "description": "Enable tray icon",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "tray.enabled"
     },
     {
       "name": "msTeamsProtocols",
@@ -710,28 +765,32 @@
       "type": "string",
       "default": "https://teams.cloud.microsoft",
       "description": "Microsoft Teams URL",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "app.url"
     },
     {
       "name": "useMutationTitleLogic",
       "type": "boolean",
       "default": true,
       "description": "Use MutationObserver to update counter from title",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "tray.useMutationTitleLogic"
     },
     {
       "name": "watchConfigFile",
       "type": "boolean",
       "default": false,
       "description": "Watch for changes in the config file and reload the app",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "development.watchConfigFile"
     },
     {
       "name": "webDebug",
       "type": "boolean",
       "default": false,
       "description": "Enable debug at start",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "renamedTo": "development.webDebug"
     },
     {
       "name": "media",

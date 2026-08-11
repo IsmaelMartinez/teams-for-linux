@@ -90,6 +90,14 @@
   color: var(--ifm-color-emphasis-700);
 }
 
+.renameNote {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.75rem;
+  cursor: help;
+}
+
 .fields {
   margin-top: 0.35rem;
 }

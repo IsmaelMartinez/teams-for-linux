@@ -49,6 +49,62 @@ function unknownKeyWarning(name) {
   return `Unknown config option "${name}" — it will be ignored (it may belong to a different app version; see the configuration reference)`;
 }
 
+// ADR-025 rename hints: when the unknown key is the planned future name of a
+// flat option (`renamedTo` metadata), point the user back at today's name.
+function futureNameWarning(name, target) {
+  const invertNote = target.inverts
+    ? " (note: the meaning is inverted, use the opposite boolean value)"
+    : "";
+  return `Unknown config option "${name}" — this is the planned future name of "${target.name}" and is not implemented yet; use "${target.name}" instead${invertNote}`;
+}
+
+// Hint for an unknown top-level key that is the root namespace of one or more
+// planned rename targets (e.g. a `tray` object written before it exists).
+const MAX_NAMESPACE_HINT_NAMES = 4;
+
+function futureNamespaceWarning(name, flatNames) {
+  const shown = flatNames
+    .slice(0, MAX_NAMESPACE_HINT_NAMES)
+    .map((flatName) => `"${flatName}"`)
+    .join(", ");
+  const remaining = flatNames.length - MAX_NAMESPACE_HINT_NAMES;
+  const more = remaining > 0 ? ` and ${remaining} more` : "";
+  return `Unknown config option "${name}" — it is a planned future namespace that is not implemented yet; the "${name}.*" names map to the current options ${shown}${more}`;
+}
+
+// Builds the ADR-025 rename lookups in one linear pass over the definitions:
+// - targets: full renamedTo dot-path → { name, inverts } of the flat option
+// - roots: the target's first segment → flat option names under that root
+// Maps (not plain objects) so a literal "__proto__" key can't cause trouble,
+// and Object.hasOwn so a polluted Object.prototype.renamedTo is ignored.
+function buildRenameTargets(optionDefinitions) {
+  const targets = new Map();
+  const roots = new Map();
+  for (const [optionName, def] of Object.entries(optionDefinitions)) {
+    if (
+      !isPlainObject(def) ||
+      !Object.hasOwn(def, "renamedTo") ||
+      typeof def.renamedTo !== "string" ||
+      def.renamedTo === ""
+    ) {
+      continue;
+    }
+    targets.set(def.renamedTo, {
+      name: optionName,
+      inverts: Object.hasOwn(def, "renameInverts") && def.renameInverts === true,
+    });
+    const dotIndex = def.renamedTo.indexOf(".");
+    if (dotIndex > 0) {
+      const root = def.renamedTo.slice(0, dotIndex);
+      if (!roots.has(root)) {
+        roots.set(root, []);
+      }
+      roots.get(root).push(optionName);
+    }
+  }
+  return { targets, roots };
+}
+
 function typeMismatchWarning(name, expectedType, actualType) {
   return `Config option "${name}" should be type "${expectedType}" but got "${actualType}"`;
 }
@@ -68,20 +124,20 @@ function violatesChoices(def, value) {
 
 // Shared by top-level options and nested leaves: leaf definitions carry no
 // `fields`, so the recursion into validateNestedFields stops at them.
-function validateOption(name, value, def, warnings) {
+function validateOption(name, value, def, warnings, getRenameLookup) {
   if (def.type && !matchesType(value, def.type)) {
     warnings.push(typeMismatchWarning(name, def.type, typeName(value)));
   } else if (violatesChoices(def, value)) {
     warnings.push(choicesWarning(name, def.choices));
   } else if (def.type === "object" && isPlainObject(def.fields) && isPlainObject(value)) {
-    validateNestedFields(name, value, def.fields, warnings);
+    validateNestedFields(name, value, def.fields, warnings, getRenameLookup);
   }
 }
 
 // Opportunistic nested validation using the Phase 3a `fields` metadata
 // (a map of dot-path relative to the option → { type, describe }).
 // Absence or malformed metadata silently skips this check.
-function validateNestedFields(optionName, value, fields, warnings) {
+function validateNestedFields(optionName, value, fields, warnings, getRenameLookup) {
   const fieldPaths = Object.keys(fields);
 
   const walk = (relativePath, node, depth) => {
@@ -95,9 +151,10 @@ function validateNestedFields(optionName, value, fields, warnings) {
       const fieldDef = Object.hasOwn(fields, childPath) ? fields[childPath] : undefined;
 
       if (isPlainObject(fieldDef)) {
-        validateOption(fullName, childValue, fieldDef, warnings);
+        validateOption(fullName, childValue, fieldDef, warnings, getRenameLookup);
       } else if (!fieldPaths.some((p) => p.startsWith(`${childPath}.`))) {
-        warnings.push(unknownKeyWarning(fullName));
+        const target = getRenameLookup().targets.get(fullName);
+        warnings.push(target ? futureNameWarning(fullName, target) : unknownKeyWarning(fullName));
       } else if (isPlainObject(childValue)) {
         walk(childPath, childValue, depth + 1);
       } else {
@@ -118,6 +175,14 @@ function validateConfigFile(configFile, optionDefinitions) {
     return warnings;
   }
 
+  // Rename lookups are only needed on the unknown-key path, so they are
+  // built lazily (at most once per call) by buildRenameTargets above.
+  let renameLookup = null;
+  const getRenameLookup = () => {
+    renameLookup ??= buildRenameTargets(optionDefinitions);
+    return renameLookup;
+  };
+
   try {
     for (const [key, value] of Object.entries(configFile)) {
       const def = Object.hasOwn(optionDefinitions, key)
@@ -125,9 +190,17 @@ function validateConfigFile(configFile, optionDefinitions) {
         : undefined;
 
       if (isPlainObject(def)) {
-        validateOption(key, value, def, warnings);
+        validateOption(key, value, def, warnings, getRenameLookup);
       } else {
-        warnings.push(unknownKeyWarning(key));
+        const { targets, roots } = getRenameLookup();
+        const target = targets.get(key);
+        if (target) {
+          warnings.push(futureNameWarning(key, target));
+        } else if (roots.has(key)) {
+          warnings.push(futureNamespaceWarning(key, roots.get(key)));
+        } else {
+          warnings.push(unknownKeyWarning(key));
+        }
       }
     }
   } catch {
