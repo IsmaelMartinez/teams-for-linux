@@ -165,6 +165,10 @@ class ExampleModule {
 
 Configuration options are declared in one place, `app/config/options.js`, where each option is an object carrying a `default`, a `describe` string, a `type`, and an `applyMode`. This module is the single source of truth: the generated config reference, the docs-site config explorer, and startup validation are all derived from it. Adding one is a small, self-contained change that follows the shape of the options already there.
 
+### Naming a new option
+
+Option names follow [ADR-025](adr/025-config-option-naming-convention.md). The core rules: nest under an object when three or more options relate to one feature, share a common prefix, or only matter when a sibling gate is enabled (dependents always nest under their gate); use positive naming for boolean feature gates (`enabled`, never `disable*`); and spell words out rather than abbreviating, letting the nesting keep names short (`tray.enabled`, not `trayIconEnabled`). If you are touching an existing flat option, ADR-025 also carries the resolved rename table for where it should eventually land.
+
 ### 1. Declare the option
 
 Add an entry to `app/config/options.js`, following the existing convention:
