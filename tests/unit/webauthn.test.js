@@ -172,7 +172,7 @@ describe('WebAuthn helpers - generateClientDataJSON', () => {
 	});
 
 	// A ceremony relayed out of a login iframe signs the iframe's origin, with
-	// the top-level document recorded separately (#2719).
+	// the top-level document recorded separately (#2828).
 	it('marks a ceremony cross-origin and records topOrigin when the frame differs', () => {
 		const json = generateClientDataJSON(
 			'webauthn.get',

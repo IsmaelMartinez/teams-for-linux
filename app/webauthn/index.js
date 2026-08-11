@@ -89,7 +89,7 @@ async function handleWebauthnRequest(operation, event, options) {
   // A ceremony started inside a login iframe is relayed through the main frame's
   // preload, so the IPC sender is the outer frame. The key has to sign the origin
   // of the frame that actually called navigator.credentials, or the relying party
-  // discards an assertion we consider successful (#2719). `frameOrigin` is the
+  // discards an assertion we consider successful (#2828). `frameOrigin` is the
   // browser's own MessageEvent.origin for that frame, and is held to the same
   // allowlist as the sender before anything signs it.
   const origin = options?.frameOrigin || senderOrigin;

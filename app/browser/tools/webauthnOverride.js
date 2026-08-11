@@ -145,7 +145,7 @@ function init(config, ipcRenderer) {
       // event.origin is set by the browser, not by the frame, so it is the one
       // trustworthy record of which origin the ceremony belongs to. The main
       // process signs it instead of our own (outer) origin, and re-checks it
-      // against the allowlist. See #2719.
+      // against the allowlist. See #2828.
       const result = await ipcRenderer.invoke(channel, { ...data, frameOrigin: event.origin });
       if (result.success) {
         event.source.postMessage({ type: "webauthn-response", id, result: result.data }, event.origin);
