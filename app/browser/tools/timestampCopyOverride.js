@@ -29,19 +29,15 @@ class TimestampCopyOverride {
             if (this.#tryApplyOverride()) {
                 // The cap counts consecutive failures, not lifetime ones
                 this.#applyAttempts = 0;
-            } else {
-                this.#chargeAttempt();
+                return;
             }
         } catch (error) {
             // A throwing settings API (e.g. get('compose') returning
             // undefined) is charged against the same attempt budget so it
             // cannot keep throwing out of the interval callback forever.
             console.debug('[TIMESTAMP_COPY] Apply attempt failed:', error.message);
-            this.#chargeAttempt();
         }
-    }
 
-    #chargeAttempt() {
         this.#applyAttempts += 1;
         if (this.#applyAttempts >= MAX_APPLY_ATTEMPTS) {
             console.warn(`[TIMESTAMP_COPY] Teams core settings never appeared after ${MAX_APPLY_ATTEMPTS} attempts; disableTimestampOnCopy will not apply this session, reload the window to retry.`);

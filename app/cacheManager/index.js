@@ -262,12 +262,11 @@ class CacheManager {
     } catch (error) {
       if (error.code === 'ENOENT') {
         return 0; // Path does not exist, size is 0
-      } else {
-        console.debug("Error accessing path:", {
-          path: dirPath,
-          error: error.message,
-        });
       }
+      console.debug("Error accessing path:", {
+        path: dirPath,
+        error: error.message,
+      });
     }
 
     return totalSize;

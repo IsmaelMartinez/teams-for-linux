@@ -86,13 +86,6 @@ class TrayIconRenderer {
     }
   }
 
-  // The data URL never changes for a given base icon, so compute it once
-  // instead of re-encoding the icon on every render.
-  #getBaseIconDataUrl() {
-    this.#baseIconDataUrl ??= this.baseIcon.toDataURL("image/png");
-    return this.#baseIconDataUrl;
-  }
-
   render(newActivityCount) {
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
@@ -100,7 +93,10 @@ class TrayIconRenderer {
       canvas.width = 140;
       const image = new Image();
       
-      const baseIconData = this.#getBaseIconDataUrl();
+      // The data URL never changes for a given base icon, so encode it once
+      // instead of re-encoding on every render.
+      this.#baseIconDataUrl ??= this.baseIcon.toDataURL("image/png");
+      const baseIconData = this.#baseIconDataUrl;
       
       image.onerror = () => {
         console.error("Failed to load base icon for tray rendering");
