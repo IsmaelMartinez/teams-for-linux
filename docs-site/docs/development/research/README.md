@@ -39,7 +39,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
-| Configuration Organization | --- | Naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
+| Configuration Organization | --- | Decision-only closeout (no feature shipped): naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
 | Smartcard / NSS PIN Dialog | v2.14.0 | Opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled`, built on `app/_shared/securePrompt.js`. Decision in [ADR-024](../adr/024-smartcard-pkcs11-pin-dialog.md) ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) |
 | Custom Notification System | v2.6.16 | Phase 1 toast shipped, Phase 2 notification centre dropped as unverifiable. Decision in [ADR-022](../adr/022-custom-notification-toast-scope.md) |
 | Release Automation Tooling | --- | release-please adopted, release-it and Beads rejected. Decision in [ADR-023](../adr/023-release-automation-tooling.md) |

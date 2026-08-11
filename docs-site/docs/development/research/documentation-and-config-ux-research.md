@@ -83,7 +83,7 @@ The plan front-loads correctness and the generator, then treats every later surf
 
 ### Phase 0 — Zero-breaking-change correctness and hygiene (effort S, risk near-zero)
 
-Fix the three confirmed drift items in `configuration.md` (the `msTeamsProtocols` default, the `mqtt.homeAssistant.*` rows, the `auth.webauthn.debug` row); fix the two broken `[!NOTE]` admonitions to `:::note`; resolve the dangling `quick-reference.md` reference (create it or remove the pointers); add a "Status / scope" banner to the configuration organization research document (since closed into [ADR-025](../adr/025-config-option-naming-convention.md)) clarifying that its Phases 2-3 auto-migration is deferred, and collapse the large deferred code blocks behind `<details>`; and add an "Adding a Configuration Option" walkthrough to `contributing.md` mirroring the IPC guide. Unlocks immediate correctness and the contributor on-ramp that Phase 1 later automates.
+Fix the three confirmed drift items in `configuration.md` (the `msTeamsProtocols` default, the `mqtt.homeAssistant.*` rows, the `auth.webauthn.debug` row); fix the two broken `[!NOTE]` admonitions to `:::note`; resolve the dangling `quick-reference.md` reference (create it or remove the pointers); and add an "Adding a Configuration Option" walkthrough to `contributing.md` mirroring the IPC guide. Unlocks immediate correctness and the contributor on-ramp that Phase 1 later automates.
 
 ### Phase 1 — Schema as source of truth + generated config reference (effort M, risk medium)
 

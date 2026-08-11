@@ -165,9 +165,9 @@ class ExampleModule {
 
 Configuration options are declared in one place, `app/config/options.js`, where each option is an object carrying a `default`, a `describe` string, a `type`, and an `applyMode`. This module is the single source of truth: the generated config reference, the docs-site config explorer, and startup validation are all derived from it. Adding one is a small, self-contained change that follows the shape of the options already there.
 
-### Naming a new option
+### 0. Name the option
 
-Option names follow [ADR-025](adr/025-config-option-naming-convention.md). The core rules: nest under an object when three or more options relate to one feature, share a common prefix, or only matter when a sibling gate is enabled (dependents always nest under their gate); use positive naming for boolean feature gates (`enabled`, never `disable*`); and spell words out rather than abbreviating, letting the nesting keep names short (`tray.enabled`, not `trayIconEnabled`). If you are touching an existing flat option, ADR-025 also carries the resolved rename table for where it should eventually land.
+New options are always nested; the flat top-level namespace is closed to new additions. Start from an existing namespace: check `docs-site/static/config-schema.json` (or `app/config/options.js`) for an object that already owns your feature area and add your leaf there, creating a new parent only when none fits. Boolean feature gates use positive naming (`enabled`, never `disable*`; narrow platform escape hatches excepted, see ADR-025). [ADR-025](adr/025-config-option-naming-convention.md) is authoritative for the full nesting and naming criteria, and carries the resolved rename table for existing flat options; if your change touches an existing flat option, you are not required to perform its rename in your PR.
 
 ### 1. Declare the option
 

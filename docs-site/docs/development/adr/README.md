@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-03-02
+last_updated: 2026-08-11
 tags: [adr, architecture, decisions]
 ---
 
@@ -115,6 +115,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Consolidated instruction files (removed 28% duplication)
 - Centralized markdown standards in contributing.md
 - Maintained tool-specific official standards
+- Configuration option naming convention and rename mapping owned by ADR-025
 
 ### Release Process & Automation
 

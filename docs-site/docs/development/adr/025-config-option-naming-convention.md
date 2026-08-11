@@ -18,15 +18,21 @@ That decision has been operating for months. Several options the research tracke
 
 ### Naming convention
 
+Rule zero: new options are always nested. The flat top-level namespace is closed to new additions. Before naming anything, check `docs-site/static/config-schema.json` (or `app/config/options.js`) for an existing namespace that already owns your feature area and add your leaf there; create a new parent object only when no existing namespace fits.
+
 Nest an option under an object when any of these hold: three or more options relate to one feature, options share a common prefix, an option only matters when a sibling gate is enabled, or the options describe a single conceptual feature. Dependent options always nest under their gate (for example `mqtt.brokerUrl` under `mqtt.enabled`).
 
-Boolean feature gates use positive naming: the leaf is `enabled`, never a `disable*` name. Escape-hatch switches whose entire purpose is to turn a platform behaviour off (`disableGpu`, `disableTimestampOnCopy`, the shipped `network.disableQuic`) keep their negative names, because inverting them would make the workaround semantics less obvious; the positive rule targets feature gates.
+Master feature gates use positive naming: the gate leaf is `enabled`, never a `disable*` name. A boolean gate earns its own object with an `enabled` leaf only when it has dependent sibling options; a standalone boolean inside a namespace uses a positive `<feature>Enabled`-style leaf instead. Both forms have shipped: `media.camera.resolution.enabled` gates its dependent `mode`, `width`, and `height` siblings, while `media.video.menuEnabled` stands alone. Escape-hatch switches whose entire purpose is to turn a platform behaviour off (`disableGpu`, `disableTimestampOnCopy`, the shipped `network.disableQuic`) keep their negative names, because inverting them would make the workaround semantics less obvious; the positive rule targets feature gates. A few shipped nested leaves (`media.microphone.disableAutogain`, `media.preventDeviceSwitching`) carry negative names that predate this ADR and are not precedent.
 
 Spell words out rather than abbreviating (`customBackground`, not `customBG`), and rely on the nesting to keep full names short (`tray.enabled` rather than `trayIconEnabled`).
 
 ### Resolved rename mapping
 
-The table maps every currently flat option to its nested target. Four renames invert a boolean's meaning, marked in the Inverted column; any future migration tooling must negate the value for these, not copy it. The `notifications`, `idleDetection`, and `network` targets are shipped nested objects with unrelated existing leaves (`notifications` holds `timeoutType` and `electron.clickAction`, `idleDetection` holds `forceState` and `stateFile`, `network` holds `webRTCIPHandlingPolicy` and `disableQuic`); merging the renamed options into those occupied namespaces is intentional, and the leaf keys below were checked against the shipped fields with no collisions.
+The table maps every currently flat option to its nested target. Four renames invert a boolean's meaning, marked in the Inverted column; any future migration tooling must negate the value for these, not copy it. A blank Inverted cell means the value is copied unchanged. As a worked example of an inversion, `disableNotifications: true` becomes `notifications.enabled: false`; the defaults are behaviour-preserving under inversion (`disableNotifications` defaults to `false`, so `notifications.enabled` will default to `true`).
+
+None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will cause those keys to be ignored with a startup warning. When a rename does ship, the flat name remains supported until `renamedTo` metadata and migration tooling ship alongside it, and removal happens only after a deprecation window announced in the release notes.
+
+The `notifications`, `idleDetection`, `network`, and `auth` targets are shipped nested objects with unrelated existing leaves (`notifications` holds `timeoutType` and `electron.clickAction`, `idleDetection` holds `forceState` and `stateFile`, `network` holds `webRTCIPHandlingPolicy` and `disableQuic`, `auth` holds the `intune`, `webauthn`, `reauthRecovery`, `clientCertificate`, `webLogin`, and `keepMsalCacheEncryptionCookie` groups); merging the renamed options into those occupied namespaces is intentional, and the leaf keys below were checked against the shipped fields with no collisions.
 
 | Flat option | Nested target | Inverted |
 |-------------|---------------|----------|
@@ -59,14 +65,14 @@ The table maps every currently flat option to its nested target. Four renames in
 | `incomingCallCommandArgs` | `incomingCalls.commandArgs` | |
 | `awayOnSystemIdle` | `idleDetection.setAwayOnIdle` | |
 | `appIdleTimeout` | `idleDetection.timeout` | |
-| `appIdleTimeoutCheckInterval` | `idleDetection.checkInterval.idle` | |
-| `appActiveCheckInterval` | `idleDetection.checkInterval.active` | |
+| `appIdleTimeoutCheckInterval` | `idleDetection.checkInterval.detectIdle` | |
+| `appActiveCheckInterval` | `idleDetection.checkInterval.detectActive` | |
 | `authServerWhitelist` | `auth.serverWhitelist` | |
 | `ssoBasicAuthUser` | `auth.basic.user` | |
 | `ssoBasicAuthPasswordCommand` | `auth.basic.passwordCommand` | |
 | `clientCertPath` | `auth.clientCertificate.path` | |
 | `clientCertPassword` | `auth.clientCertificate.password` | |
-| `customCACertsFingerprints` | `auth.customCACertsFingerprints` | |
+| `customCACertsFingerprints` | `auth.customCACertificateFingerprints` | |
 | `proxyServer` | `network.proxyServer` | |
 | `isCustomBackgroundEnabled` | `customBackground.enabled` | |
 | `customBGServiceBaseUrl` | `customBackground.serviceBaseUrl` | |
@@ -78,21 +84,21 @@ The table maps every currently flat option to its nested target. Four renames in
 | `disableGlobalShortcuts` | `shortcuts.disableWhileFocused` | |
 | `disableGpu` | `performance.disableGpu` | |
 | `electronCLIFlags` | `performance.electronCLIFlags` | |
-| `clearStorageData` | `storage.clearStorageData` | |
+| `clearStorageData` | `storage.clearData` | |
 | `webDebug` | `development.webDebug` | |
 | `watchConfigFile` | `development.watchConfigFile` | |
 | `chromeUserAgent` | `platform.chromeUserAgent` | |
-| `emulateWinChromiumPlatform` | `platform.emulateWinChromiumPlatform` | |
+| `emulateWinChromiumPlatform` | `platform.emulateWindowsChromium` | |
 | `spellCheckerLanguages` | `platform.spellCheckerLanguages` | |
 | `disableTimestampOnCopy` | `platform.disableTimestampOnCopy` | |
 
-Notes on specific rows. `disableGlobalShortcuts` is an array of accelerators to disable while the app is focused, not a boolean, so the rename clarifies rather than inverts. `disableBadgeCount` and `minimizeOnClose` had no target in the research mapping and are decided here: `notifications.badgeCount` (inverted, following the other notification booleans) and `window.minimizeOnClose`. There is a semantic overlap between `minimizeOnClose` and `closeAppOnCross`, both of which change what the close cross does and the former of which is ignored when the latter is true; that overlap is recorded here as an observation, and collapsing the two into one option is out of scope for this ADR. `clientCertPath` and `clientCertPassword` target `auth.clientCertificate.*` rather than the research doc's `auth.certificate.*`, because `auth.clientCertificate.pinDialog.enabled` has since shipped (ADR-024) and two adjacent certificate namespaces would be worse than either. Finally, `auth.basic.*` is distinct from the shipped `auth.webLogin.user` and `auth.webLogin.passwordCommand` despite the similar leaf names: `auth.basic.*` feeds Electron's HTTP Basic/NTLM `login` dialog for proxy and intranet challenges, while `auth.webLogin.*` pre-fills the Microsoft web sign-in form. They are different flows and both remain.
+Notes on specific rows. `disableGlobalShortcuts` is an array of accelerators to disable while the app is focused, not a boolean, so the rename clarifies rather than inverts. `disableNotificationSoundIfNotAvailable` is not inverted either: `true` already means the sound plays only while the user's status is Available, which is exactly what `onlyWhenAvailable: true` means. The `idleDetection.checkInterval` leaves are named for what the poll detects, because the live code (`app/browser/notifications/activityManager.js`) uses `appIdleTimeoutCheckInterval` as the poll interval while the user is active (watching for idle onset) and `appActiveCheckInterval` while idle (watching for the return to activity); plain `.idle`/`.active` leaves would plausibly be wired backwards, and `app/idle/README.md` documented these two backwards until it was corrected alongside this ADR. `awayOnSystemIdle` targets `idleDetection.setAwayOnIdle` rather than an `enabled` gate because `idleDetection` ships as an always-on object with no master switch. `authServerWhitelist` lands at `auth.serverWhitelist`, outside `auth.basic`, because it is the Negotiate/NTLM server allowlist rather than a credential. `disableBadgeCount` and `minimizeOnClose` had no target in the research mapping and are decided here: `notifications.badgeCount` (inverted, following the other notification booleans) and `window.minimizeOnClose`. There is a semantic overlap between `minimizeOnClose` and `closeAppOnCross`, both of which change what the close cross does and the former of which is ignored when the latter is true; that overlap is recorded here as an observation, and collapsing the two into one option is out of scope for this ADR. `clientCertPath` and `clientCertPassword` target `auth.clientCertificate.*` rather than the research doc's `auth.certificate.*`, because `auth.clientCertificate.pinDialog.enabled` has since shipped (ADR-024) and two adjacent certificate namespaces would be worse than either. Finally, `auth.basic.*` is distinct from the shipped `auth.webLogin.user` and `auth.webLogin.passwordCommand` despite the similar leaf names: `auth.basic.*` feeds Electron's HTTP Basic/NTLM `login` dialog for proxy and intranet challenges, while `auth.webLogin.*` pre-fills the Microsoft web sign-in form. They are different flows and both remain.
 
 ## Alternatives Considered
 
 ### Re-parenting shipped nested objects
 
-The research mapping also moved three already-nested objects to new parents: `cacheManagement` to `storage.cacheManagement`, `logConfig` to `development.logConfig`, and `msTeamsProtocols` to `urlHandling.msTeamsProtocols`. Rejected: these options are already discoverable, correctly grouped objects, and renaming a working nested namespace to another nested namespace breaks every existing user config for zero discoverability gain, which is pure churn. A consequence is that the `storage` and `development` namespaces start smaller than the research envisioned (`storage` initially holds only `clearStorageData`), which is acceptable.
+The research mapping also moved three already-nested objects to new parents: `cacheManagement` to `storage.cacheManagement`, `logConfig` to `development.logConfig`, and `msTeamsProtocols` to `urlHandling.msTeamsProtocols`. Rejected: these options are already discoverable, correctly grouped objects, and renaming a working nested namespace to another nested namespace breaks every existing user config for zero discoverability gain, which is pure churn. A consequence is that the `storage` and `development` namespaces start smaller than the research envisioned (`storage` initially holds only `clearData`), which is acceptable.
 
 ### Runtime aliasing of old names
 
@@ -102,7 +108,7 @@ Keeping flat names working forever via an alias layer was rejected by the origin
 
 ### Positive
 
-Contributors have one canonical answer for what a new option must be called and where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume: the delivery vehicle is additive `renamedTo` metadata on the flat entries in `app/config/options.js`, surfaced in the generated docs and as `app/config/validator.js` startup warnings, landing in a separate follow-up PR.
+Contributors have one canonical answer for what a new option must be called and where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume: the delivery vehicle is additive `renamedTo` metadata on the flat entries in `app/config/options.js` (a field on a flat option's declaration pointing at its nested successor; new options never need it), surfaced in the generated docs and as `app/config/validator.js` startup warnings, tracked on the roadmap.
 
 ### Negative
 
@@ -110,7 +116,7 @@ The four inverted renames mean a naive key-copy migration would silently flip us
 
 ### Neutral
 
-Runtime aliasing and an automated `--migrate-config` codemod remain explicitly deferred; renames continue to happen opportunistically, module by module, with `renamedTo` metadata as the only committed mechanism. The merges into `notifications`, `idleDetection`, and `network` mean those objects will mix long-shipped and newly-arrived leaves, which is intentional.
+Runtime aliasing and an automated `--migrate-config` codemod remain explicitly deferred; renames continue to happen opportunistically, module by module, with `renamedTo` metadata as the only committed mechanism. The merges into `notifications`, `idleDetection`, `network`, and `auth` mean those objects will mix long-shipped and newly-arrived leaves, which is intentional.
 
 ## Related
 
