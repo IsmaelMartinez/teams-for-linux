@@ -225,6 +225,14 @@ describe('Config Validator - review follow-ups', () => {
 	});
 });
 
+// Asserts validation produced exactly one warning and returns it. The failure
+// message is count-only so it can never echo config values.
+function onlyWarning(config, definitions) {
+	const warnings = validateConfigFile(config, definitions);
+	assert.strictEqual(warnings.length, 1, `expected exactly 1 warning, got ${warnings.length}`);
+	return warnings[0];
+}
+
 describe('Config Validator - renamedTo future-name hints', () => {
 	const renameDefinitions = {
 		trayIconEnabled: {
@@ -251,41 +259,36 @@ describe('Config Validator - renamedTo future-name hints', () => {
 	};
 
 	it('points a top-level future name at the current flat option', () => {
-		const warnings = validateConfigFile({ 'tray.enabled': true }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /Unknown config option "tray\.enabled"/);
-		assert.match(warnings[0], /not implemented yet/);
-		assert.match(warnings[0], /"trayIconEnabled"/);
+		const warning = onlyWarning({ 'tray.enabled': true }, renameDefinitions);
+		assert.match(warning, /Unknown config option "tray\.enabled"/);
+		assert.match(warning, /not implemented yet/);
+		assert.match(warning, /"trayIconEnabled"/);
 	});
 
 	it('points a nested future name inside a shipped object option at the current flat option', () => {
-		const warnings = validateConfigFile({ notifications: { enabled: false } }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /Unknown config option "notifications\.enabled"/);
-		assert.match(warnings[0], /not implemented yet/);
-		assert.match(warnings[0], /"disableNotifications"/);
+		const warning = onlyWarning({ notifications: { enabled: false } }, renameDefinitions);
+		assert.match(warning, /Unknown config option "notifications\.enabled"/);
+		assert.match(warning, /not implemented yet/);
+		assert.match(warning, /"disableNotifications"/);
 	});
 
 	it('appends the inversion note for polarity-inverting renames', () => {
-		const warnings = validateConfigFile({ notifications: { enabled: false } }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /meaning is inverted/);
-		assert.match(warnings[0], /opposite boolean value/);
+		const warning = onlyWarning({ notifications: { enabled: false } }, renameDefinitions);
+		assert.match(warning, /meaning is inverted/);
+		assert.match(warning, /opposite boolean value/);
 	});
 
 	it('omits the inversion note for renames that keep their meaning', () => {
-		const warnings = validateConfigFile({ 'tray.enabled': true }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.doesNotMatch(warnings[0], /inverted/);
+		const warning = onlyWarning({ 'tray.enabled': true }, renameDefinitions);
+		assert.doesNotMatch(warning, /inverted/);
 	});
 
 	it('hints at the flat options behind an unknown future namespace key', () => {
-		const warnings = validateConfigFile({ tray: { enabled: true } }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /Unknown config option "tray"/);
-		assert.match(warnings[0], /planned future namespace/);
-		assert.match(warnings[0], /"tray\.\*"/);
-		assert.match(warnings[0], /"trayIconEnabled"/);
+		const warning = onlyWarning({ tray: { enabled: true } }, renameDefinitions);
+		assert.match(warning, /Unknown config option "tray"/);
+		assert.match(warning, /planned future namespace/);
+		assert.match(warning, /"tray\.\*"/);
+		assert.match(warning, /"trayIconEnabled"/);
 	});
 
 	it('caps the namespace hint list and leaks no values', () => {
@@ -299,11 +302,10 @@ describe('Config Validator - renamedTo future-name hints', () => {
 				renamedTo: `win.${flatName}`,
 			};
 		}
-		const warnings = validateConfigFile({ win: 'SECRET_VALUE_123' }, capDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /"winOne", "winTwo", "winThree", "winFour" and 2 more/);
-		assert.ok(!warnings[0].includes('winFive'), 'Names beyond the cap must be elided');
-		assert.ok(!warnings[0].includes('SECRET_VALUE_123'), 'Warnings must not contain config values');
+		const warning = onlyWarning({ win: 'SECRET_VALUE_123' }, capDefinitions);
+		assert.match(warning, /"winOne", "winTwo", "winThree", "winFour" and 2 more/);
+		assert.ok(!warning.includes('winFive'), 'Names beyond the cap must be elided');
+		assert.ok(!warning.includes('SECRET_VALUE_123'), 'Warnings must not contain config values');
 	});
 
 	it('does not warn on normal use of the current flat names', () => {
@@ -312,15 +314,13 @@ describe('Config Validator - renamedTo future-name hints', () => {
 	});
 
 	it('keeps the generic message for unknown keys matching no rename target', () => {
-		const warnings = validateConfigFile({ 'tray.iconType': 'dark' }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.match(warnings[0], /Unknown config option "tray\.iconType"/);
-		assert.match(warnings[0], /will be ignored/);
+		const warning = onlyWarning({ 'tray.iconType': 'dark' }, renameDefinitions);
+		assert.match(warning, /Unknown config option "tray\.iconType"/);
+		assert.match(warning, /will be ignored/);
 	});
 
 	it('never includes config values in the future-name warning', () => {
-		const warnings = validateConfigFile({ 'tray.enabled': 'SECRET_VALUE_123' }, renameDefinitions);
-		assert.strictEqual(warnings.length, 1);
-		assert.ok(!warnings[0].includes('SECRET_VALUE_123'), 'Warnings must not contain config values');
+		const warning = onlyWarning({ 'tray.enabled': 'SECRET_VALUE_123' }, renameDefinitions);
+		assert.ok(!warning.includes('SECRET_VALUE_123'), 'Warnings must not contain config values');
 	});
 });

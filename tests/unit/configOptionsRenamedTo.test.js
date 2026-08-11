@@ -91,6 +91,7 @@ describe('Config options renamedTo metadata (ADR-025)', () => {
 
 	it('marks all 55 flat options and no object options', () => {
 		const flat = entries.filter(([, def]) => def.type !== 'object');
+		const objects = entries.filter(([, def]) => def.type === 'object');
 		assert.strictEqual(
 			flat.length,
 			55,
@@ -102,7 +103,7 @@ describe('Config options renamedTo metadata (ADR-025)', () => {
 		for (const [name, def] of flat) {
 			assert.notStrictEqual(def.renamedTo, undefined, `flat option "${name}" is missing renamedTo`);
 		}
-		for (const [name, def] of entries.filter(([, d]) => d.type === 'object')) {
+		for (const [name, def] of objects) {
 			assert.strictEqual(def.renamedTo, undefined, `object option "${name}" must not carry renamedTo`);
 		}
 	});

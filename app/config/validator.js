@@ -6,6 +6,7 @@
 // and the public `choices` lists are safe to include.
 
 const MAX_NESTED_DEPTH = 8;
+const MAX_NAMESPACE_HINT_NAMES = 4;
 
 function typeName(value) {
   if (Array.isArray(value)) return "array";
@@ -60,8 +61,6 @@ function futureNameWarning(name, target) {
 
 // Hint for an unknown top-level key that is the root namespace of one or more
 // planned rename targets (e.g. a `tray` object written before it exists).
-const MAX_NAMESPACE_HINT_NAMES = 4;
-
 function futureNamespaceWarning(name, flatNames) {
   const shown = flatNames
     .slice(0, MAX_NAMESPACE_HINT_NAMES)
@@ -70,6 +69,21 @@ function futureNamespaceWarning(name, flatNames) {
   const remaining = flatNames.length - MAX_NAMESPACE_HINT_NAMES;
   const more = remaining > 0 ? ` and ${remaining} more` : "";
   return `Unknown config option "${name}" — it is a planned future namespace that is not implemented yet; the "${name}.*" names map to the current options ${shown}${more}`;
+}
+
+// Selects the message for an unknown key: exact rename target, rename
+// namespace root, or the generic warning. Nested dot-paths can never hit the
+// roots branch (roots are single segments), so both unknown-key call sites
+// share this selector safely.
+function unknownKeyHint(name, { targets, roots }) {
+  const target = targets.get(name);
+  if (target) {
+    return futureNameWarning(name, target);
+  }
+  if (roots.has(name)) {
+    return futureNamespaceWarning(name, roots.get(name));
+  }
+  return unknownKeyWarning(name);
 }
 
 // Builds the ADR-025 rename lookups in one linear pass over the definitions:
@@ -153,8 +167,7 @@ function validateNestedFields(optionName, value, fields, warnings, getRenameLook
       if (isPlainObject(fieldDef)) {
         validateOption(fullName, childValue, fieldDef, warnings, getRenameLookup);
       } else if (!fieldPaths.some((p) => p.startsWith(`${childPath}.`))) {
-        const target = getRenameLookup().targets.get(fullName);
-        warnings.push(target ? futureNameWarning(fullName, target) : unknownKeyWarning(fullName));
+        warnings.push(unknownKeyHint(fullName, getRenameLookup()));
       } else if (isPlainObject(childValue)) {
         walk(childPath, childValue, depth + 1);
       } else {
@@ -192,15 +205,7 @@ function validateConfigFile(configFile, optionDefinitions) {
       if (isPlainObject(def)) {
         validateOption(key, value, def, warnings, getRenameLookup);
       } else {
-        const { targets, roots } = getRenameLookup();
-        const target = targets.get(key);
-        if (target) {
-          warnings.push(futureNameWarning(key, target));
-        } else if (roots.has(key)) {
-          warnings.push(futureNamespaceWarning(key, roots.get(key)));
-        } else {
-          warnings.push(unknownKeyWarning(key));
-        }
+        warnings.push(unknownKeyHint(key, getRenameLookup()));
       }
     }
   } catch {

@@ -246,15 +246,13 @@ function renderApplyCell(applyMode) {
 // when present (the flat name remains the working name; informational only).
 // A full stop is ensured before the note so the cell never runs on.
 function renderDescriptionWithRenameNote(opt) {
-  let description = renderDescriptionCell(opt.description);
+  const description = renderDescriptionCell(opt.description);
   if (!opt.renamedTo) {
     return description;
   }
-  if (description && !description.endsWith(".")) {
-    description += ".";
-  }
+  const sentence = description && !description.endsWith(".") ? `${description}.` : description;
   const inverted = opt.renameInverts ? ", meaning inverted" : "";
-  return `${description} *Planned name: \`${opt.renamedTo}\`${inverted} (ADR-025; not yet implemented).*`;
+  return `${sentence} *Planned name: \`${opt.renamedTo}\`${inverted} (ADR-025; not yet implemented).*`;
 }
 
 function generateMarkdown(schema) {
