@@ -774,6 +774,32 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // "We need you to sign in again" stale banner (#2296)
   await cleanExpiredAuthCookies(window.webContents.session);
 
+  // Pre-authentication hook for Azure App Registration flow
+  if (config.auth?.appRegistration?.enabled) {
+    try {
+      const authModule = require('../auth');
+      console.info('[AUTH] Running App Registration pre-authentication flow');
+      const authResult = await authModule.authenticate(config, {
+        settingsStore: appConfig?.settingsStore,
+        ipcMain: require('electron').ipcMain,
+        webContents: window.webContents,
+      });
+      if (authResult?.success) {
+        console.info('[AUTH] App Registration pre-authentication completed successfully');
+      } else {
+        console.warn(
+          '[AUTH] App Registration pre-authentication failed (proceeding with normal load):',
+          authResult?.error
+        );
+      }
+    } catch (authErr) {
+      console.warn(
+        '[AUTH] Exception during App Registration pre-auth (proceeding with normal load):',
+        authErr.message
+      );
+    }
+  }
+
   // Restore the last persisted auth-failure signal so login-popup
   // correlation survives app restarts (the broken session does).
   lastAuthFailureSignalAt = Number(appConfig.settingsStore.get(AUTH_SIGNAL_STORE_KEY)) || 0;
