@@ -28,7 +28,7 @@ Spell words out rather than abbreviating (`customBackground`, not `customBG`), a
 
 The table maps every flat option to its nested target. Four renames invert a boolean, marked in the Inverted column, so tooling must negate those values rather than copy them; a blank cell means copy unchanged. For example `disableNotifications: true` becomes `notifications.enabled: false`, and defaults stay behaviour-preserving under inversion (`disableNotifications` defaults to `false`, so `notifications.enabled` defaults to `true`).
 
-None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will get those keys ignored with a startup warning. When a rename does ship, the old name goes through a deprecation window carrying a startup warning before it is removed, and the change is announced in the release notes. How the old key behaves during that window, whether it keeps applying or only warns, is still being decided in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) and must be settled before the first rename lands.
+None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will get those keys ignored with a startup warning. When a rename does ship, the old name will not disappear silently: it produces a startup warning and the change is announced in the release notes. Whether it also keeps applying for a deprecation window, or stops taking effect the day the rename lands, is still being decided in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), where immediate removal is one of the live outcomes. That decision must be settled before the first rename.
 
 The `notifications`, `idleDetection`, `network` and `auth` targets are shipped objects that already hold unrelated leaves; merging renamed options into them is intentional, and every leaf key below was checked against the shipped fields with no collisions.
 
@@ -104,13 +104,13 @@ The research mapping also re-parented three already-nested objects: `cacheManage
 
 ### Runtime aliasing of old names
 
-An alias layer keeping flat names working forever was rejected by the original research and stays rejected; the precedent is hard removal after a deprecation window, as with `ssoInTuneEnabled` and its siblings (`app/intune/README.md`).
+An alias layer keeping flat names working forever was rejected by the original research and stays rejected; the precedent is hard removal after a deprecation window, as with `ssoInTuneEnabled` and its siblings (`app/intune/README.md`). That rejection is about a permanent layer. Whether a time-boxed fallback reads the old key for one deprecation window is a separate question and is open in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841).
 
 ## Consequences
 
 ### Positive
 
-Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume once a migration mechanism is chosen, and that choice is deliberately left open here and tracked in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841). The leading candidate is yargs' own `deprecated` field, since `checkUsedDeprecatedValues` in `app/config/index.js` already reads `getDeprecatedOptions()` and warns on every startup for any deprecated key found in a user's config file, and no option declares it yet.
+Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume once a migration mechanism is chosen, and that choice is deliberately left open here and tracked in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841). One candidate already exists in the codebase and is worth evaluating first: yargs' own `deprecated` field, which `checkUsedDeprecatedValues` in `app/config/index.js` reads on every startup, warning for any deprecated key present in the config file, system-wide or user, and which no option declares yet. On its own it only warns, since it neither maps an old name to its successor nor handles the four inversions, so it covers part of the problem rather than all of it.
 
 ### Negative
 
@@ -118,7 +118,7 @@ The four inversions mean a naive key-copy migration would silently flip user int
 
 ### Neutral
 
-Runtime aliasing and a `--migrate-config` codemod stay deferred, so renames continue module by module, and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
+A permanent alias layer and a `--migrate-config` codemod stay deferred, renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
 
 ## Related
 
