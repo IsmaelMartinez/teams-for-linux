@@ -32,7 +32,7 @@ With the flag on, a **Profiles** menu appears in the application menu:
 On first launch after enabling the flag, your existing session is migrated into a default **"My account"** profile, so you stay logged in with no re-authentication.
 
 :::note
-This feature is under active development. Switching is currently driven from the **Profiles** menu; a top-right dropdown switcher and `Ctrl+Shift+1…5` shortcuts for pinned profiles are planned. The switcher is mutually exclusive with Intune SSO (`auth.intune.enabled`) — see [Configuration](configuration.md#multi-account-profile-switcher-experimental). For the full design and roadmap, see [ADR-020](development/adr/020-multi-account-profile-switcher).
+This feature is under active development. Switch via the **bottom-left avatar pill**, the **Profiles** menu, or — after pinning a profile in **Manage profiles…** — the `Ctrl+Alt+1…5` keyboard shortcuts (up to 5 pinned profiles, slotted in list order; active while the app is focused; Linux/Windows). The switcher is mutually exclusive with Intune SSO (`auth.intune.enabled`) — see [Configuration](configuration.md#multi-account-profile-switcher-experimental). For the full design and roadmap, see [ADR-020](development/adr/020-multi-account-profile-switcher).
 :::
 
 ## Separate Isolated Instances (Command Line)

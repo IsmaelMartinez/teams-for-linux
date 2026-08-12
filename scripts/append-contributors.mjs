@@ -35,13 +35,13 @@ function isBot(login) {
 
 function rtrimNewlines(s) {
   let i = s.length;
-  while (i > 0 && s.charCodeAt(i - 1) === 10) i--;
+  while (i > 0 && s.codePointAt(i - 1) === 10) i--;
   return s.slice(0, i);
 }
 
 function ltrimNewlines(s) {
   let i = 0;
-  while (i < s.length && s.charCodeAt(i) === 10) i++;
+  while (i < s.length && s.codePointAt(i) === 10) i++;
   return s.slice(i);
 }
 
@@ -52,7 +52,7 @@ function extractRepoIssueRefs(text) {
     let j = i + REPO_ISSUE_PREFIX.length;
     const start = j;
     while (j < text.length) {
-      const c = text.charCodeAt(j);
+      const c = text.codePointAt(j);
       if (c < 48 || c > 57) break;
       j++;
     }
@@ -103,6 +103,21 @@ async function main() {
     return;
   }
 
+  const authors = collectAuthors(refs);
+
+  if (authors.size === 0) {
+    console.log("No external contributors in this release.");
+    return;
+  }
+
+  const thanks = buildThanksBlock(authors);
+  console.log(`Contributors: ${[...authors].join(", ")}`);
+
+  await updateChangelog(thanks);
+  updatePrBody(body, thanks);
+}
+
+function collectAuthors(refs) {
   const authors = new Set();
   for (const num of refs) {
     try {
@@ -115,46 +130,45 @@ async function main() {
       console.error(`Skipping #${num}: ${e.message}`);
     }
   }
+  return authors;
+}
 
-  if (authors.size === 0) {
-    console.log("No external contributors in this release.");
+async function updateChangelog(thanks) {
+  if (!existsSync("CHANGELOG.md")) {
+    console.error("CHANGELOG.md not found; skipping changelog update.");
     return;
   }
 
-  const thanks = buildThanksBlock(authors);
-  console.log(`Contributors: ${[...authors].join(", ")}`);
-
-  if (existsSync("CHANGELOG.md")) {
-    const changelog = await readFile("CHANGELOG.md", "utf8");
-    const idx = changelog.indexOf("## [");
-    if (idx === -1) {
-      console.error("CHANGELOG.md has no version heading; skipping changelog update.");
-    } else {
-      const before = changelog.slice(0, idx);
-      const rest = changelog.slice(idx);
-      const nextIdx = rest.indexOf("\n## [", 1);
-      const current = nextIdx === -1 ? rest : rest.slice(0, nextIdx);
-      const after = nextIdx === -1 ? "" : rest.slice(nextIdx);
-      const cleaned = rtrimNewlines(stripExistingThanks(current));
-      const updated = `${before}${cleaned}${thanks}${after}`;
-      if (updated !== changelog) {
-        await writeFile("CHANGELOG.md", updated);
-        console.log("Updated CHANGELOG.md.");
-      }
-    }
-  } else {
-    console.error("CHANGELOG.md not found; skipping changelog update.");
+  const changelog = await readFile("CHANGELOG.md", "utf8");
+  const idx = changelog.indexOf("## [");
+  if (idx === -1) {
+    console.error("CHANGELOG.md has no version heading; skipping changelog update.");
+    return;
   }
 
+  const before = changelog.slice(0, idx);
+  const rest = changelog.slice(idx);
+  const nextIdx = rest.indexOf("\n## [", 1);
+  const current = nextIdx === -1 ? rest : rest.slice(0, nextIdx);
+  const after = nextIdx === -1 ? "" : rest.slice(nextIdx);
+  const cleaned = rtrimNewlines(stripExistingThanks(current));
+  const updated = `${before}${cleaned}${thanks}${after}`;
+  if (updated !== changelog) {
+    await writeFile("CHANGELOG.md", updated);
+    console.log("Updated CHANGELOG.md.");
+  }
+}
+
+function updatePrBody(body, thanks) {
   const cleanedBody = stripExistingThanks(body);
   const footerIdx = cleanedBody.indexOf(FOOTER_MARKER);
   let newBody;
-  if (footerIdx !== -1) {
+  if (footerIdx === -1) {
+    newBody = `${rtrimNewlines(cleanedBody)}\n${thanks}`;
+  } else {
     const head = rtrimNewlines(cleanedBody.slice(0, footerIdx));
     const footer = "\n" + ltrimNewlines(cleanedBody.slice(footerIdx));
     newBody = `${head}${thanks}${footer}`;
-  } else {
-    newBody = `${rtrimNewlines(cleanedBody)}\n${thanks}`;
   }
   if (newBody !== body) {
     gh(["pr", "edit", PR_NUMBER, "--repo", REPO, "--body-file", "-"], newBody);
@@ -162,7 +176,9 @@ async function main() {
   }
 }
 
-main().catch((e) => {
+try {
+  await main();
+} catch (e) {
   console.error(e);
   process.exit(1);
-});
+}

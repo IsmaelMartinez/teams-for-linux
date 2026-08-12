@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.15.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.1...v2.15.0) (2026-08-07)
+
+
+### Features
+
+* **auth:** pre-fill Microsoft web sign-in credentials ([#2761](https://github.com/IsmaelMartinez/teams-for-linux/issues/2761)) ([#2798](https://github.com/IsmaelMartinez/teams-for-linux/issues/2798)) ([c7c0b0a](https://github.com/IsmaelMartinez/teams-for-linux/commit/c7c0b0a5076053a8390c17d8ff213566995427d2))
+* **mqtt:** meeting-started detection first pass ([#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587)) ([#2757](https://github.com/IsmaelMartinez/teams-for-linux/issues/2757)) ([a0b9d72](https://github.com/IsmaelMartinez/teams-for-linux/commit/a0b9d72090b2c4b18165c17108adc77b4c2c1c2b))
+* **webauthn:** log timeout, phase timings and page aborts ([#2785](https://github.com/IsmaelMartinez/teams-for-linux/issues/2785)) ([c82cd33](https://github.com/IsmaelMartinez/teams-for-linux/commit/c82cd33df6d8f8cb94e21a309a515735f045a60e))
+
+
+### Bug Fixes
+
+* **auth:** Keep msal.cache.encryption cookie on restart ([#2780](https://github.com/IsmaelMartinez/teams-for-linux/issues/2780)) ([12ea841](https://github.com/IsmaelMartinez/teams-for-linux/commit/12ea841fdb13c7b51431ffc953d6f02f2056f451))
+* **certificate:** apply customCACertsFingerprints to every TLS verification ([#2778](https://github.com/IsmaelMartinez/teams-for-linux/issues/2778)) ([0248b63](https://github.com/IsmaelMartinez/teams-for-linux/commit/0248b63c6c8f3e4a39b2ef444992482030a4a559))
+* **paste:** restore File.path on pasted files so Teams uploads accept them ([#2790](https://github.com/IsmaelMartinez/teams-for-linux/issues/2790)) ([fcc3191](https://github.com/IsmaelMartinez/teams-for-linux/commit/fcc31915cbf13b8f2d626819859ac8f4f2ed9cc8))
+* resolve SonarCloud bug and vulnerability findings ([#2766](https://github.com/IsmaelMartinez/teams-for-linux/issues/2766)) ([25009f6](https://github.com/IsmaelMartinez/teams-for-linux/commit/25009f6445b515964eb78434cfcfdabf777ea1cd))
+* **sonar:** exclude declarative config schema from duplication checks ([#2793](https://github.com/IsmaelMartinez/teams-for-linux/issues/2793)) ([e54c9d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/e54c9d474504e60799f720fd4c5cd517df527c65))
+* **ui:** point dialog placeholders at teams.cloud.microsoft ([#2797](https://github.com/IsmaelMartinez/teams-for-linux/issues/2797)) ([a6843d3](https://github.com/IsmaelMartinez/teams-for-linux/commit/a6843d3e0324a38afd5dcc0bee7036bbace62f3a))
+
+
+### Documentation
+
+* **certificate:** document NSS trust store for TLS-inspecting proxies ([#2776](https://github.com/IsmaelMartinez/teams-for-linux/issues/2776)) ([b1e7e67](https://github.com/IsmaelMartinez/teams-for-linux/commit/b1e7e67ef73d55b77cedab11b55945fa5f353b31))
+* research documentation cleanup ([#2769](https://github.com/IsmaelMartinez/teams-for-linux/issues/2769)) ([688695c](https://github.com/IsmaelMartinez/teams-for-linux/commit/688695c0d4ebffa93c5f5b045bb7ddb35d1d7d88))
+
+
+### Maintenance
+
+* **deps:** bump @easyops-cn/docusaurus-search-local ([#2784](https://github.com/IsmaelMartinez/teams-for-linux/issues/2784)) ([58eafc2](https://github.com/IsmaelMartinez/teams-for-linux/commit/58eafc20f400bab84125b025037aa1955f9c20f2))
+* **deps:** bump actions/checkout from 7.0.0 to 7.0.1 ([#2773](https://github.com/IsmaelMartinez/teams-for-linux/issues/2773)) ([3c9133c](https://github.com/IsmaelMartinez/teams-for-linux/commit/3c9133cf07e75298d40eb327194609150a3c4a1c))
+* **deps:** bump actions/setup-node from 6.4.0 to 7.0.0 ([#2772](https://github.com/IsmaelMartinez/teams-for-linux/issues/2772)) ([df25ab1](https://github.com/IsmaelMartinez/teams-for-linux/commit/df25ab12fe57f277c9ead94989cf8b9e7f1f397b))
+* **deps:** bump actions/stale from 9 to 11 ([#2771](https://github.com/IsmaelMartinez/teams-for-linux/issues/2771)) ([be1eb71](https://github.com/IsmaelMartinez/teams-for-linux/commit/be1eb71a5d07c1c711c6306e9b26f7465c037beb))
+* **deps:** bump github/codeql-action from 3 to 4.37.3 ([#2774](https://github.com/IsmaelMartinez/teams-for-linux/issues/2774)) ([c8644f3](https://github.com/IsmaelMartinez/teams-for-linux/commit/c8644f394833f44d1dc2b675f79289279a0f34a8))
+* **deps:** bump ip-address from 10.2.0 to 10.4.0 ([#2788](https://github.com/IsmaelMartinez/teams-for-linux/issues/2788)) ([457b198](https://github.com/IsmaelMartinez/teams-for-linux/commit/457b198362b2d7f5b57d01b2571efab47299acef))
+* **deps:** bump the minor-and-patch group in /docs-site with 2 updates ([#2765](https://github.com/IsmaelMartinez/teams-for-linux/issues/2765)) ([f748ecd](https://github.com/IsmaelMartinez/teams-for-linux/commit/f748ecda96c00b1a0d948ffeafd928ef237ae0fb))
+* **deps:** bump the minor-and-patch group with 3 updates ([#2783](https://github.com/IsmaelMartinez/teams-for-linux/issues/2783)) ([2f619d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/2f619d4b464df67b1fc01a583eea5e74906a56d6))
+* **deps:** bump the minor-and-patch group with 6 updates ([#2764](https://github.com/IsmaelMartinez/teams-for-linux/issues/2764)) ([72f2196](https://github.com/IsmaelMartinez/teams-for-linux/commit/72f2196c7907acb5d8c8e38b3ef112b47455ae37))
+
+### Thanks
+
+Big thanks to @13pass, @app/dependabot, @FriedrichVoelker, @gj241 for contributing to this release.
+
 ## [2.14.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.0...v2.14.1) (2026-07-27)
 
 

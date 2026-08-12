@@ -811,10 +811,16 @@ module.exports = {
           mediaTopics: {
             inCall: "in-call",
             incomingCall: "incoming-call",
+            meetingStarted: "meeting-started",
             camera: "camera",
             microphone: "microphone",
             microphoneControl: "microphone/control",
             screenSharing: "screen-sharing",
+          },
+          meetingStartDetection: {
+            enabled: false,
+            patterns: ["meeting started", "started the meeting"],
+            resetSeconds: 10,
           },
         },
         describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
@@ -873,6 +879,21 @@ module.exports = {
           "homeAssistant.deviceName": {
             type: "string",
             describe: "Device name shown in Home Assistant.",
+          },
+          "meetingStartDetection.enabled": {
+            type: "boolean",
+            describe:
+              "Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic (experimental, see issue #2587).",
+          },
+          "meetingStartDetection.patterns": {
+            type: "array",
+            describe:
+              "Case-insensitive regular expressions for the DOM fallback, matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages.",
+          },
+          "meetingStartDetection.resetSeconds": {
+            type: "number",
+            describe:
+              "Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first.",
           },
         },
         applyMode: "restart",

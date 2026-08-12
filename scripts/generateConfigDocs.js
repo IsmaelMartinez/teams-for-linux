@@ -153,7 +153,7 @@ function renderDefaultCell(value) {
   // and bare numbers/booleans, which matches the existing docs convention.
   const rendered = value === undefined ? "undefined" : JSON.stringify(value);
   // Escape pipes so the value stays inside one Markdown table cell.
-  return "`" + rendered.replace(/\|/g, "\\|") + "`";
+  return "`" + rendered.replaceAll("|", String.raw`\|`) + "`";
 }
 
 function renderDescriptionCell(text) {
@@ -163,10 +163,10 @@ function renderDescriptionCell(text) {
   // pipe would end the table cell. Escape the ampersand first so the entities
   // below are not double-encoded.
   return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\|/g, "&#124;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("|", "&#124;");
 }
 
 function renderApplyCell(applyMode) {

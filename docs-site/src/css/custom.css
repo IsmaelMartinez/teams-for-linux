@@ -554,7 +554,7 @@
   padding: 0.75rem 1rem;
   text-align: left;
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .markdown table th {

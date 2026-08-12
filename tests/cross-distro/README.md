@@ -141,6 +141,10 @@ docker build --build-arg NODE_VERSION=22.14.0 --build-arg NODE_SHA256=<sha256> \
   -f dockerfiles/ubuntu.Dockerfile .
 ```
 
+The Dockerfiles fetch the tarball with `ADD --checksum`, which requires
+BuildKit (the default builder since Docker 23; on older setups, set
+`DOCKER_BUILDKIT=1`).
+
 ## Electron in Docker
 
 The entrypoint handles these automatically:

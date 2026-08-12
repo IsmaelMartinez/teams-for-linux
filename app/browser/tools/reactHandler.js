@@ -134,7 +134,7 @@ class ReactHandler {
       console.debug(`[GRAPH_API] Acquiring token for resource: ${resource}`);
       const result = await authProvider.acquireToken(resource, tokenOptions);
 
-      if (result && result.token) {
+      if (result?.token) {
         console.debug('[GRAPH_API] Token acquired successfully', {
           hasToken: true,
           fromCache: result.fromCache,

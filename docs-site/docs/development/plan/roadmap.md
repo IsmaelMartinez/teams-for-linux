@@ -12,7 +12,7 @@
 - **Linux-first:** Embrace Unix philosophy --- composable tools over monolithic features
 - **Measured releases:** Accumulate meaningful changes rather than rapid incremental releases ([#2235](https://github.com/IsmaelMartinez/teams-for-linux/issues/2235))
 - **Automate triage, not decisions:** Bots surface information; maintainers decide
-- **Incremental configuration:** New features use nested config patterns from day one; existing flat options migrate opportunistically ([configuration organization research](../research/configuration-organization-research.md))
+- **Incremental configuration:** New features use nested config patterns from day one; existing flat options migrate opportunistically ([ADR-025](../adr/025-config-option-naming-convention.md))
 
 ---
 
@@ -30,7 +30,7 @@ Current status is tracked via the linked GitHub labels. This section serves as a
 - **Config Schema as Single Source of Truth** ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597)): phases 0-2 shipped in v2.12.0 (drift fixes, generated reference + `config-schema.json` with CI drift guard, docs config explorer); 3a (`applyMode` + nested-field metadata, hard-failing generator lint) and 4 (warn-only startup validation) landed; 3b (in-app settings window) is the remaining phase ([research](../research/documentation-and-config-ux-research.md)). The settings window is the deliverable, and its restart-only MVP can ship on its own:
   - Build the restart-only settings MVP, reusing the `legacyConfigStore` override-on-boot layering and allowlisting writes to schema keys with type/choice plus deep prototype-pollution validation; defer the live-apply subset and the object-typed forms.
 
-  The flat-to-nested config migration is an optional, independent companion rather than a prerequisite, and can land before, alongside, or after the window. Done before (add structured `renamedTo` metadata to the remaining flat options, naming owned by [configuration organization research](../research/configuration-organization-research.md), then ship the opt-in `--migrate-config` codemod and deprecated badges) it de-risks the writer by collapsing config to one canonical nested shape. It can also ride on the window itself: since every save writes canonical nested keys, the UI passively migrates each user with no separate phase.
+  The flat-to-nested config migration is an optional, independent companion rather than a prerequisite, and can land before, alongside, or after the window. Done before (migrate the remaining flat options to the nested names owned by [ADR-025](../adr/025-config-option-naming-convention.md), using whichever deprecation mechanism [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) settles on, tracked namespace by namespace in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842)) it de-risks the writer by collapsing config to one canonical nested shape. It can also ride on the window itself: since every save writes canonical nested keys, the UI passively migrates each user with no separate phase.
 - **Testing Infrastructure**: cross-distro Docker tests passing for all 9 configurations ([ADR-016](../adr/016-cross-distro-testing-environment.md)); CI integration in progress.
 - **Dev Experience**: stale bot tuning and a project-specific code-reviewer subagent are the next quick wins. ([PR template](https://github.com/IsmaelMartinez/teams-for-linux/pull/2544) landed 2026-05-15.)
 
@@ -42,6 +42,7 @@ Phase 2 work depending on a user trigger.
 
 - **Quick Chat Access** ([#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109), shipped v2.7.4): notification click-to-chat, recent contacts cache, favorites list if requested.
 - **Smartcard PIN Dialog** ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639), merged in [#2659](https://github.com/IsmaelMartinez/teams-for-linux/pull/2659), opt-in via `auth.clientCertificate.pinDialog.enabled`): WebAuthn PIN dialog migration onto the shared secure prompt, FIDO2 touch prompt ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)) if requested.
+- **SSO Web Sign-in Pre-fill** ([#2794](https://github.com/IsmaelMartinez/teams-for-linux/issues/2794), merged in [#2761](https://github.com/IsmaelMartinez/teams-for-linux/pull/2761), opt-in via `auth.webLogin.*`): account and password pre-fill on the Microsoft/federated web login form, with optional auto-advance and MFA method selection. Broader host coverage and passkey-aware flows only if requested.
 - **Graph API Enhanced Features** ([research](../research/graph-api-integration-research.md)): calendar sync, mail preview notifications. Presence endpoint returns 403 because the Teams token lacks `Presence.Read` scope.
 
 ---

@@ -78,21 +78,45 @@ function init(config, ipcRenderer) {
 
     console.info("[WEBAUTHN] Intercepting credentials.get()");
 
+    // Observe only, never act on it. Knowing whether the page gives up on a
+    // ceremony (and after how long) is what separates "the user was slow to
+    // touch the key" from "the sign-in failed for an unrelated reason". See
+    // #2719. Wiring the signal through to cancel the call is a behaviour change
+    // and belongs with the touch-prompt work, not here.
+    const startedAt = Date.now();
+    let onAbort = null;
+    if (!options.signal) {
+      console.info("[WEBAUTHN] credentials.get() called without an AbortSignal");
+    } else if (options.signal.aborted) {
+      console.info("[WEBAUTHN] credentials.get() called with an already-aborted signal");
+    } else {
+      onAbort = () => console.info("[WEBAUTHN] Page aborted credentials.get()", { elapsedMs: Date.now() - startedAt });
+      options.signal.addEventListener("abort", onAbort, { once: true });
+    }
+
     try {
       const serialized = serializeGetOptions(options.publicKey);
       const result = await ipcRenderer.invoke("webauthn:get", serialized);
 
       if (!result.success) {
-        console.error("[WEBAUTHN] credentials.get() failed:", result.error);
+        console.error("[WEBAUTHN] credentials.get() failed:", result.error, { elapsedMs: Date.now() - startedAt });
         throw mapError(result.error);
       }
 
-      console.info("[WEBAUTHN] credentials.get() succeeded");
+      console.info("[WEBAUTHN] credentials.get() succeeded", {
+        elapsedMs: Date.now() - startedAt,
+        aborted: options.signal?.aborted ?? false,
+      });
       return reconstructGetResponse(result.data);
     } catch (err) {
-      console.error("[WEBAUTHN] credentials.get() error:", err.message);
+      console.error("[WEBAUTHN] credentials.get() error:", err.message, { elapsedMs: Date.now() - startedAt });
       if (err instanceof DOMException) throw err;
       throw new DOMException(err.message, "NotAllowedError");
+    } finally {
+      // Scope the listener to the call. Left attached it outlives the ceremony
+      // and would log a stale "Page aborted" if the page aborts the signal
+      // afterwards for unrelated reasons.
+      if (onAbort) options.signal.removeEventListener("abort", onAbort);
     }
   };
 
@@ -118,7 +142,11 @@ function init(config, ipcRenderer) {
     }
     console.info("[WEBAUTHN] Relaying subframe request", { channel });
     try {
-      const result = await ipcRenderer.invoke(channel, data);
+      // event.origin is set by the browser, not by the frame, so it is the one
+      // trustworthy record of which origin the ceremony belongs to. The main
+      // process signs it instead of our own (outer) origin, and re-checks it
+      // against the allowlist. See #2828.
+      const result = await ipcRenderer.invoke(channel, { ...data, frameOrigin: event.origin });
       if (result.success) {
         event.source.postMessage({ type: "webauthn-response", id, result: result.data }, event.origin);
       } else {
@@ -150,7 +178,8 @@ function bufferToBase64url(buffer) {
   return btoa(binary)
     .replaceAll("+", "-")
     .replaceAll("/", "_")
-    .replace(/=+$/, "");
+    // Bounded: base64 padding is never more than two "=" (S8786).
+    .replace(/={1,2}$/, "");
 }
 
 /**

@@ -20,6 +20,13 @@ function ensureIpcHandlers() {
     if (!activeHandlers) return;
     return activeHandlers.onRename(payload);
   });
+  // Pin/unpin toggle from the renderer. Request/response so the renderer can
+  // await and surface a rejection (e.g. the max-5 pinned cap) without losing
+  // dialog state. Payload carries the profile `id` and the desired `pinned`.
+  ipcMain.handle("manage-profile-pin", async (_event, payload) => {
+    if (!activeHandlers) return;
+    return activeHandlers.onPin(payload);
+  });
   // Remove request from the renderer; main shows the destructive confirmation
   // before forwarding to ProfilesManager.
   ipcMain.on("manage-profile-remove", (_event, id) => {
@@ -65,6 +72,7 @@ class ManageProfileDialog {
 
     activeHandlers = {
       onRename: this.#handleRename,
+      onPin: this.#handlePin,
       onRemove: this.#handleRemove,
       onClose: this.#handleClose,
     };
@@ -105,6 +113,9 @@ class ManageProfileDialog {
     this.#window.webContents.send("manage-profile-state", {
       profiles,
       activeId,
+      // Ctrl+Alt+1…5 lives on the per-window menu, which macOS doesn't have —
+      // the pin buttons drop the chord labels when it can't fire.
+      shortcutsAvailable: process.platform !== "darwin",
     });
   }
 
@@ -125,6 +136,24 @@ class ManageProfileDialog {
           ? error.message
           : "Failed to rename profile.";
       throw new Error(raw.replace(/^\[ProfilesManager\]\s*/, ""));
+    }
+  };
+
+  #handlePin = ({ id, pinned }) => {
+    try {
+      this.#profilesManager.update(id, { pinned: !!pinned });
+      // Success: "update" fires, the menu re-slots accelerators and the
+      // dialog re-renders via #pushState.
+      return { ok: true };
+    } catch (error) {
+      // Return the failure rather than throwing: a rejection crossing
+      // ipcMain.handle gets wrapped in Electron's "Error invoking remote
+      // method…" prefix, which would leak into the dialog's error line.
+      const raw =
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Failed to update pin.";
+      return { ok: false, error: raw.replace(/^\[ProfilesManager\]\s*/, "") };
     }
   };
 

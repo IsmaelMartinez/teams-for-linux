@@ -11,6 +11,7 @@ const fs = require("node:fs"),
   path = require("node:path");
 const { fileURLToPath } = require("node:url");
 const appMenu = require("./appMenu");
+const buildProfilesMenu = require("./profilesMenu");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
@@ -26,6 +27,13 @@ class Menus {
   #profileChangeHandler = null;
   #switcherOpenAddHandler = null;
   #switcherOpenManageHandler = null;
+
+  #multiAccountOn() {
+    return Boolean(
+      this.profilesManager &&
+        this.configGroup.startupConfig.multiAccount?.enabled
+    );
+  }
 
   constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
     this.window = window;
@@ -152,13 +160,46 @@ class Menus {
     this.window.hide();
   }
 
+  // Attach the menu appropriate for the menubar/multi-account configuration.
+  // With `menubar: "hidden"` AND multi-account on, a menu stays ATTACHED with
+  // only the bar hidden — the menu is the registration site for the pinned-
+  // profile switch accelerators (Ctrl+Alt+1…5, see profilesMenu.js), and
+  // `removeMenu()` would kill them along with the bar. It holds ONLY the
+  // Profiles submenu though: attaching the full menu would also arm the rest
+  // of its accelerators (Ctrl+Q, Ctrl+R, …) where a hidden menubar previously
+  // had none (#2821). Falls back to `removeMenu()` if the Profiles menu
+  // cannot be built (no profilesManager).
+  #attachMenu(menu) {
+    if (
+      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.#multiAccountOn()
+    ) {
+      const template = [buildProfilesMenu(this)].filter(Boolean);
+      if (template.length === 0) {
+        this.window.removeMenu();
+        return;
+      }
+      this.window.setMenu(Menu.buildFromTemplate(template));
+      return;
+    }
+    this.window.setMenu(Menu.buildFromTemplate([menu]));
+  }
+
   initialize() {
     const menu = appMenu(this);
 
-    if (this.configGroup.startupConfig.menubar == "hidden") {
+    // With multi-account OFF the pre-feature `removeMenu()` behaviour is
+    // untouched; otherwise #attachMenu picks the full or profiles-only menu.
+    if (
+      this.configGroup.startupConfig.menubar == "hidden" &&
+      !this.#multiAccountOn()
+    ) {
       this.window.removeMenu();
     } else {
-      this.window.setMenu(Menu.buildFromTemplate([menu]));
+      this.#attachMenu(menu);
+      if (this.configGroup.startupConfig.menubar == "hidden") {
+        this.window.setMenuBarVisibility(false);
+      }
     }
 
     this.initializeEventHandlers();
@@ -313,7 +354,18 @@ class Menus {
 
   updateMenu() {
     const menu = appMenu(this);
-    this.window.setMenu(Menu.buildFromTemplate([menu]));
+    this.#attachMenu(menu);
+    // Re-assert the hidden bar: profile events rebuild the menu constantly
+    // (add/update/switch/remove), and without this the rebuild would silently
+    // restore a bar the user configured away. Gated on the flag so flag-off
+    // behaviour stays byte-identical to pre-feature (where updateMenu also
+    // re-attached the menu unconditionally).
+    if (
+      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.#multiAccountOn()
+    ) {
+      this.window.setMenuBarVisibility(false);
+    }
     this.tray?.setContextMenu(menu.submenu);
 
     // Notify renderer process of config changes that affect renderer behavior
@@ -710,7 +762,7 @@ function chooseLanguage(item, menus) {
   );
 
   if (menus.onSpellCheckerLanguageChanged) {
-    menus.onSpellCheckerLanguageChanged.apply(menus, [changes]);
+    menus.onSpellCheckerLanguageChanged(changes);
   }
 }
 

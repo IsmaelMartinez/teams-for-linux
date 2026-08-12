@@ -258,7 +258,9 @@ class CustomStickers {
     const sanitised = noExt
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
+      // The line above collapses every run to a single dash, so a bare "-"
+      // is enough here and avoids the backtracking of "-+" (S8786).
+      .replace(/^-|-$/g, "")
       .slice(0, 48);
     return sanitised || "sticker";
   }

@@ -2,7 +2,30 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const { readdirSync, readFileSync, statSync } = require('node:fs');
+const path = require('node:path');
 const { validateIpcChannel, allowedChannels } = require('../../app/security/ipcValidator');
+
+const APP_DIR = path.join(__dirname, '..', '..', 'app');
+
+function collectSourceFiles(dir) {
+	const found = [];
+	for (const entry of readdirSync(dir)) {
+		const full = path.join(dir, entry);
+		if (statSync(full).isDirectory()) {
+			found.push(...collectSourceFiles(full));
+		} else if (/\.js$/.test(entry)) {
+			found.push(full);
+		}
+	}
+	return found;
+}
+
+// Both regexes are linear-time: no nested quantifiers. Matching runs on
+// whole-file content, not per line — browserWindowManager.js registers
+// channels with the literal on the line after `ipcMain.handle(`.
+const IPC_REGISTRATION = /ipcMain\.(handle|on|once)\(/g;
+const IPC_CHANNEL_LITERAL = /ipcMain\.(handle|on|once)\(\s*["']([^"']+)["']/g;
 
 describe('IPC Validator - Channel validation', () => {
 	it('accepts all channels in the allowlist', () => {
@@ -102,22 +125,36 @@ describe('IPC Validator - Allowlist completeness', () => {
 		assert.ok(allowedChannels.size > 0, 'Allowlist should not be empty');
 	});
 
-	it('contains expected core channels', () => {
-		const expectedChannels = [
-			'get-config',
-			'get-app-version',
-			'user-status-changed',
-			'set-badge-count',
-			'navigate-back',
-			'navigate-forward',
-			'play-notification-sound',
-			'show-notification',
-			'select-source',
-			'submitForm',
-			'offline-retry',
-		];
-		for (const channel of expectedChannels) {
-			assert.ok(allowedChannels.has(channel), `Expected core channel '${channel}' in allowlist`);
+	// Every channel registered under app/ must be allowlisted or app/index.js's
+	// ipcMain wrap rejects it at runtime as `Unauthorized IPC channel`. A
+	// hardcoded expected list would only pin today's channels — a channel
+	// registered later and forgotten in both the allowlist and the list passes
+	// silently (the shape of the `manage-profile-pin` miss caught in review on
+	// PR #2787). Scanning the source instead makes a new channel fail CI by
+	// default (#2821).
+	it('allowlists every channel registered under app/', () => {
+		const offenders = [];
+		let registrationCount = 0;
+		let literalCount = 0;
+		for (const file of collectSourceFiles(APP_DIR)) {
+			const source = readFileSync(file, 'utf8');
+			registrationCount += (source.match(IPC_REGISTRATION) || []).length;
+			for (const match of source.matchAll(IPC_CHANNEL_LITERAL)) {
+				literalCount++;
+				if (!allowedChannels.has(match[2])) {
+					offenders.push(`${path.relative(APP_DIR, file)}:${match[2]}`);
+				}
+			}
 		}
+		assert.deepStrictEqual(
+			offenders,
+			[],
+			`Every registered IPC channel must be in app/security/ipcValidator.js's allowlist. Missing:\n  ${offenders.join('\n  ')}`
+		);
+		assert.strictEqual(
+			registrationCount,
+			literalCount,
+			'An ipcMain.handle/on/once registration does not pass its channel as a string literal, so this scanner cannot verify it against the allowlist. A human must check the channel is allowlisted consciously (or make it a literal).'
+		);
 	});
 });

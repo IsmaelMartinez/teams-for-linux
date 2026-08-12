@@ -95,6 +95,8 @@ const sidebars: SidebarsConfig = {
             'development/adr/022-custom-notification-toast-scope',
             'development/adr/023-release-automation-tooling',
             'development/adr/024-smartcard-pkcs11-pin-dialog',
+            'development/adr/025-config-option-naming-convention',
+            'development/adr/026-performance-audit-outcomes',
           ],
         },
         {
@@ -102,12 +104,10 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            'development/research/configuration-organization-research',
             'development/research/custom-stickers-online-import-research',
             'development/research/documentation-and-config-ux-research',
             'development/research/fido2-touch-prompt-research',
             'development/research/graph-api-integration-research',
-            'development/research/system-performance-research',
           ],
         },
       ],

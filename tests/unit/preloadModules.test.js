@@ -21,7 +21,7 @@ const { join } = require('node:path');
 // Set declaration is a stable invariant the rule depends on.
 
 const PRELOAD_PATH = join(__dirname, '..', '..', 'app', 'browser', 'preload.js');
-const REQUIRED_MODULES = ['settings', 'theme', 'trayIconRenderer', 'mqttStatusMonitor', 'webauthnOverride'];
+const REQUIRED_MODULES = ['settings', 'theme', 'trayIconRenderer', 'mqttStatusMonitor', 'meetingStartDetector', 'webauthnOverride'];
 
 describe('preload.js modulesRequiringIpc Set', () => {
 	const source = readFileSync(PRELOAD_PATH, 'utf8');

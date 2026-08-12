@@ -886,10 +886,19 @@
         "mediaTopics": {
           "inCall": "in-call",
           "incomingCall": "incoming-call",
+          "meetingStarted": "meeting-started",
           "camera": "camera",
           "microphone": "microphone",
           "microphoneControl": "microphone/control",
           "screenSharing": "screen-sharing"
+        },
+        "meetingStartDetection": {
+          "enabled": false,
+          "patterns": [
+            "meeting started",
+            "started the meeting"
+          ],
+          "resetSeconds": 10
         }
       },
       "description": "MQTT configuration for publishing Teams status updates and receiving action commands",
@@ -966,6 +975,27 @@
           "type": "string",
           "default": "Teams for Linux",
           "description": "Device name shown in Home Assistant."
+        },
+        {
+          "path": "meetingStartDetection.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic (experimental, see issue #2587)."
+        },
+        {
+          "path": "meetingStartDetection.patterns",
+          "type": "array",
+          "default": [
+            "meeting started",
+            "started the meeting"
+          ],
+          "description": "Case-insensitive regular expressions for the DOM fallback, matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages."
+        },
+        {
+          "path": "meetingStartDetection.resetSeconds",
+          "type": "number",
+          "default": 10,
+          "description": "Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first."
         }
       ]
     },

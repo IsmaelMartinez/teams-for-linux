@@ -6,7 +6,7 @@
  *
  * Entities created:
  * - sensor:        Teams presence status (plain text), Microphone state
- * - binary_sensor: In-Call, Incoming Call, Screen Sharing, Camera
+ * - binary_sensor: In-Call, Incoming Call, Meeting Started, Screen Sharing, Camera
  * - button:        Toggle Mute, Toggle Video, Toggle Hand Raise (requires commandTopic)
  *
  * Buttons use payload_press with the pre-built JSON command.
@@ -139,6 +139,11 @@ class HomeAssistantDiscovery {
 				component: 'binary_sensor',
 				objectId: 'incoming_call',
 				config: this.#buildBinarySensorConfig('Teams Incoming Call', 'incoming_call', this.#mediaTopics.incomingCall, 'mdi:phone-ring')
+			},
+			{
+				component: 'binary_sensor',
+				objectId: 'meeting_started',
+				config: this.#buildBinarySensorConfig('Teams Meeting Started', 'meeting_started', this.#mediaTopics.meetingStarted, 'mdi:calendar-clock')
 			},
 			{
 				component: 'button',

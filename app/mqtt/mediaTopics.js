@@ -2,7 +2,7 @@
  * Build the resolved media topic map from mqtt config, applying defaults.
  *
  * @param {object} mqttConfig - The config.mqtt object
- * @returns {{ inCall: string, incomingCall: string, camera: string, microphone: string, microphoneControl: string, screenSharing: string }}
+ * @returns {{ inCall: string, incomingCall: string, meetingStarted: string, camera: string, microphone: string, microphoneControl: string, screenSharing: string }}
  */
 function getMediaTopics(mqttConfig) {
 	// microphoneControl defaults to "<microphone>/control" so that customising
@@ -12,6 +12,7 @@ function getMediaTopics(mqttConfig) {
 	return {
 		inCall: mqttConfig.mediaTopics?.inCall || 'in-call',
 		incomingCall: mqttConfig.mediaTopics?.incomingCall || 'incoming-call',
+		meetingStarted: mqttConfig.mediaTopics?.meetingStarted || 'meeting-started',
 		camera: mqttConfig.mediaTopics?.camera || 'camera',
 		microphone,
 		microphoneControl: mqttConfig.mediaTopics?.microphoneControl || `${microphone}/control`,

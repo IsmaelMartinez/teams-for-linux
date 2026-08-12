@@ -304,7 +304,7 @@ class TeamsTokenCache {
     
     // Hide UUIDs
     return key.replaceAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 
-      (match) => `${match.substr(0, 8)}...`);
+      (match) => `${match.slice(0, 8)}...`);
   }
 }
 

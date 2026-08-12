@@ -92,9 +92,9 @@ function sortLanguages(languages) {
 }
 
 function stringCompare(str1, str2) {
-  const le = str1 < str2;
-  const gr = str1 > str2;
-  return le ? -1 : gr ? 1 : 0;
+  if (str1 < str2) return -1;
+  if (str1 > str2) return 1;
+  return 0;
 }
 
 module.exports = { SpellCheckProvider };

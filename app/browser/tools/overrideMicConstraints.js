@@ -153,7 +153,7 @@ function buildOverrides(micOverride) {
  */
 function init(config) {
   const micOverride = config.media?.microphone?.overrideConstraints;
-  if (!micOverride || !micOverride.enabled) {
+  if (!micOverride?.enabled) {
     return;
   }
 

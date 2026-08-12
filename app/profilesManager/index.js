@@ -16,6 +16,11 @@ const MAX_AVATAR_COLOR_LEN = 64;
 const MAX_AVATAR_INITIALS_LEN = 4;
 const MAX_URL_LEN = 2048;
 
+// Pinned profiles map to the Ctrl+Alt+1…5 switch shortcuts (ADR-020
+// Phase 1), so the cap is the number of shortcut slots. Enforced here in
+// main so every caller (Manage dialog, IPC, future UI) respects it.
+const MAX_PINNED = 5;
+
 function ensureLength(value, max, field) {
   if (typeof value === "string" && value.length > max) {
     throw new Error(
@@ -115,6 +120,17 @@ class ProfilesManager {
     const profile = this.#buildRecord(id, `${PARTITION_PREFIX}${id}`, name, record);
 
     const state = this.#read();
+    // The pin cap must hold on ADD too — `record.pinned` arrives over IPC, so
+    // without this a 6th pinned profile could be created past the
+    // Ctrl+Alt+1…5 slots even though update() enforces the cap.
+    if (
+      profile.pinned &&
+      state.list.filter((p) => p.pinned).length >= MAX_PINNED
+    ) {
+      throw new Error(
+        `[ProfilesManager] At most ${MAX_PINNED} profiles can be pinned`
+      );
+    }
     state.list.push(profile);
     if (!state.activeId) state.activeId = id;
     this.#write(state);
@@ -217,12 +233,31 @@ class ProfilesManager {
       next.disableNotifications = !!p.disableNotifications;
     }
     if (Object.hasOwn(p, "muted")) next.muted = !!p.muted;
-    if (Object.hasOwn(p, "pinned")) next.pinned = !!p.pinned;
+    if (Object.hasOwn(p, "pinned")) this.#applyPinned(state, id, next, p.pinned);
     if (Object.hasOwn(p, "url")) this.#applyUrl(next, p.url);
     state.list[idx] = next;
     this.#write(state);
     this.#emitter.emit("update", next);
     return next;
+  }
+
+  // Cap pins at the number of Ctrl+Alt+1…5 shortcut slots. Count the OTHER
+  // pinned profiles so re-pinning an already-pinned profile (a no-op) can
+  // never trip the limit. Lifted out of update() to keep its cognitive
+  // complexity within the SonarCloud threshold, mirroring #applyName/#applyUrl.
+  #applyPinned(state, id, next, pinned) {
+    const pinning = !!pinned;
+    if (pinning && !next.pinned) {
+      const pinnedOthers = state.list.filter(
+        (prof) => prof.pinned && prof.id !== id
+      ).length;
+      if (pinnedOthers >= MAX_PINNED) {
+        throw new Error(
+          `[ProfilesManager] At most ${MAX_PINNED} profiles can be pinned`
+        );
+      }
+    }
+    next.pinned = pinning;
   }
 
   #applyName(next, name) {

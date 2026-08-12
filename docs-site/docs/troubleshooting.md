@@ -14,6 +14,10 @@ For configuration options, see [Configuration](configuration.md). For developmen
 - **Audio/Video**: Verify device selection in Teams settings
 - **Installation**: Use clean install and clear previous data
 
+## Performance Tuning
+
+When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
+
 ---
 
 ## Common Issues and Solutions

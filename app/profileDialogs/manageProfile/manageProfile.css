@@ -90,6 +90,9 @@ p {
 
 .profile-name-input {
   flex: 1 1 auto;
+  /* Override the input's intrinsic minimum so the row (now also holding the
+     pin button) can shrink instead of overflowing in rename mode. */
+  min-width: 0;
   font-size: 14px;
   padding: 4px 6px;
   border: 1px solid #6264a7;
@@ -113,6 +116,34 @@ p {
   padding: 2px 6px;
   border: 1px solid #6264a7;
   border-radius: 3px;
+}
+
+.profile-pin-btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 3px;
+  background-color: #e8e8e8;
+  color: #444;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.profile-pin-btn.pinned {
+  color: #6264a7;
+  font-weight: 600;
+}
+
+.profile-pin-btn:hover:not(:disabled) {
+  background-color: #d8d8d8;
+}
+
+.profile-pin-btn:disabled {
+  background-color: #f0f0f0;
+  color: #595959;
+  cursor: not-allowed;
 }
 
 .profile-remove-btn {
@@ -205,6 +236,24 @@ button.primary:hover {
     background-color: #2d2d2d;
     border-color: #6264a7;
     color: #e0e0e0;
+  }
+
+  .profile-pin-btn {
+    background-color: #3d3d3d;
+    color: #e0e0e0;
+  }
+
+  .profile-pin-btn.pinned {
+    color: #a6a7e0;
+  }
+
+  .profile-pin-btn:hover:not(:disabled) {
+    background-color: #4d4d4d;
+  }
+
+  .profile-pin-btn:disabled {
+    background-color: #2a2a2a;
+    color: #a0a0a0;
   }
 
   .profile-remove-btn {
