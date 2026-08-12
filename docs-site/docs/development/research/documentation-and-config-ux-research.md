@@ -1,7 +1,7 @@
 # Documentation, Contributing, and Config UX Research
 
 :::note
-Research and design analysis. This document proposes a direction and a phased plan; it does not change code. It builds on [Configuration Organization Research](configuration-organization-research.md), which owns option naming and the flat-versus-nested convention, and does not re-litigate those.
+Research and design analysis. This document proposes a direction and a phased plan; it does not change code. It builds on [ADR-025](../adr/025-config-option-naming-convention.md), which owns option naming and the flat-versus-nested convention, and does not re-litigate those.
 :::
 
 ## Status
@@ -83,7 +83,7 @@ The plan front-loads correctness and the generator, then treats every later surf
 
 ### Phase 0 — Zero-breaking-change correctness and hygiene (effort S, risk near-zero)
 
-Fix the three confirmed drift items in `configuration.md` (the `msTeamsProtocols` default, the `mqtt.homeAssistant.*` rows, the `auth.webauthn.debug` row); fix the two broken `[!NOTE]` admonitions to `:::note`; resolve the dangling `quick-reference.md` reference (create it or remove the pointers); add a "Status / scope" banner to `configuration-organization-research.md` clarifying that its Phases 2-3 auto-migration is deferred, and collapse the large deferred code blocks behind `<details>`; and add an "Adding a Configuration Option" walkthrough to `contributing.md` mirroring the IPC guide. Unlocks immediate correctness and the contributor on-ramp that Phase 1 later automates.
+Fix the three confirmed drift items in `configuration.md` (the `msTeamsProtocols` default, the `mqtt.homeAssistant.*` rows, the `auth.webauthn.debug` row); fix the two broken `[!NOTE]` admonitions to `:::note`; resolve the dangling `quick-reference.md` reference (create it or remove the pointers); and add an "Adding a Configuration Option" walkthrough to `contributing.md` mirroring the IPC guide. Unlocks immediate correctness and the contributor on-ramp that Phase 1 later automates.
 
 ### Phase 1 — Schema as source of truth + generated config reference (effort M, risk medium)
 
@@ -131,7 +131,7 @@ Versioned docs are not worth it while release-please ships frequently and the ap
 
 ## References
 
-- [Configuration Organization Research](configuration-organization-research.md) — option naming, flat-versus-nested, conditional dependencies (Phase 1 done, Phases 2-3 deferred).
+- [ADR-025](../adr/025-config-option-naming-convention.md) — option naming, flat-versus-nested, and the resolved rename mapping (formerly the configuration organization research document).
 - [Graph API Integration Research](graph-api-integration-research.md) — references a deferred settings UI.
 - `app/config/index.js`, `app/config/defaults.js` — the 76 option definitions.
 - `app/appConfiguration/index.js` — the three stores.
