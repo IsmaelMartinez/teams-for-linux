@@ -145,20 +145,19 @@ class NotificationService {
     const session = win?.webContents?.session;
     if (!session?.fetch) return null;
 
-    return this.#loadRemoteIcon(session, url, pageUrl.origin);
+    return this.#loadRemoteIcon(session, url);
   }
 
-  async #loadRemoteIcon(session, url, origin) {
+  async #loadRemoteIcon(session, url) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), ICON_FETCH_TIMEOUT_MS);
     try {
       const response = await session.fetch(url.href, {
         credentials: "include",
+        redirect: "error",
         signal: controller.signal,
       });
       if (!response.ok) return null;
-      const responseUrl = this.#parseHttpsUrl(response.url);
-      if (!responseUrl || responseUrl.origin !== origin) return null;
 
       const declaredSize = Number(response.headers.get("content-length"));
       if (declaredSize > MAX_ICON_BYTES) return null;

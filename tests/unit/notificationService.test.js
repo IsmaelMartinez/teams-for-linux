@@ -164,6 +164,18 @@ describe('NotificationService icons', () => {
 		assert.strictEqual(calls.length, 1);
 		assert.strictEqual(calls[0][0], 'https://teams.microsoft.com/avatar.png');
 		assert.strictEqual(calls[0][1].credentials, 'include');
+		assert.strictEqual(calls[0][1].redirect, 'error');
+		assert.deepStrictEqual([...imageBuffers[0]], [...bytes]);
+		assert.strictEqual(notifications[0].options.icon.source, 'buffer');
+		assert.strictEqual(notifications[0].shown, true);
+	});
+
+	it('accepts direct responses without a response URL', async () => {
+		const bytes = Uint8Array.from([1, 2, 3, 4]);
+		makeService(async () => responseWith(bytes, { url: '' }));
+
+		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
+
 		assert.deepStrictEqual([...imageBuffers[0]], [...bytes]);
 		assert.strictEqual(notifications[0].options.icon.source, 'buffer');
 		assert.strictEqual(notifications[0].shown, true);
@@ -200,24 +212,11 @@ describe('NotificationService icons', () => {
 		assert.strictEqual(notifications[0].shown, true);
 	});
 
-	it('rejects redirects from HTTPS to a non-HTTPS URL', async () => {
-		const bytes = Uint8Array.from([1, 2, 3, 4]);
-		makeService(async () => responseWith(bytes, {
-			url: 'http://teams.microsoft.com/avatar.png',
-		}));
-
-		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
-
-		assert.strictEqual(imageBuffers.length, 0);
-		assert.strictEqual('icon' in notifications[0].options, false);
-		assert.strictEqual(notifications[0].shown, true);
-	});
-
-	it('rejects redirects to a different HTTPS origin', async () => {
-		const bytes = Uint8Array.from([1, 2, 3, 4]);
-		makeService(async () => responseWith(bytes, {
-			url: 'https://example.com/avatar.png',
-		}));
+	it('still shows the notification when fetch rejects a redirect', async () => {
+		makeService(async (_url, options) => {
+			assert.strictEqual(options.redirect, 'error');
+			throw new TypeError('redirect rejected');
+		});
 
 		await show({ icon: 'https://teams.microsoft.com/avatar.png' });
 
