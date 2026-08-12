@@ -22,8 +22,8 @@ idleMonitor.initialize();
 
 **Configuration:**
 - `config.appIdleTimeout` - Seconds before system considered idle
-- `config.appIdleTimeoutCheckInterval` - Poll interval when idle (seconds)
-- `config.appActiveCheckInterval` - Poll interval when active (seconds)
+- `config.appIdleTimeoutCheckInterval` - Poll interval while active, watching for idle onset (seconds)
+- `config.appActiveCheckInterval` - Poll interval while idle, watching for the return to activity (seconds)
 
 **Response Format:**
 ```javascript

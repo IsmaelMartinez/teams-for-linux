@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-03-02
+last_updated: 2026-08-11
 tags: [adr, architecture, decisions]
 ---
 
@@ -47,6 +47,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Accepted | 2025-11-16 | v2.6.16 |
 | [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
+| [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -108,11 +109,13 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Summary |
 |-----|-------|---------|
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | Investigated and rejected agents.md standard in favor of tool-specific standards (CLAUDE.md, copilot-instructions.md) |
+| [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | Nesting criteria, positive naming, and the resolved flat-to-nested rename mapping for configuration options |
 
 **Key Outcomes:**
 - Consolidated instruction files (removed 28% duplication)
 - Centralized markdown standards in contributing.md
 - Maintained tool-specific official standards
+- Configuration option naming convention and rename mapping owned by ADR-025
 
 ### Release Process & Automation
 

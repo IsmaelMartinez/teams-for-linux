@@ -33,16 +33,13 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
   - Ten performance-sensitive patterns, of which item 5 (`shortcuts.js` polling) shipped
   - Not tracked on the roadmap, so treat it as a standing catalogue to pull work from rather than an active workstream
 
-### Standing Reference
-
-- **[Configuration Organization Research](configuration-organization-research.md)**, owner of the configuration naming convention, which is why the [roadmap](../plan/roadmap.md) still points here. New features use nested keys from day one; remaining flat options migrate opportunistically. Its option counts are a 2026-02 snapshot, not a live inventory (`docs-site/static/config-schema.json` is the generated source of truth).
-
 ### Implemented Features (Research Removed)
 
 Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Configuration Organization | --- | Decision-only closeout (no feature shipped): naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
 | Smartcard / NSS PIN Dialog | v2.14.0 | Opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled`, built on `app/_shared/securePrompt.js`. Decision in [ADR-024](../adr/024-smartcard-pkcs11-pin-dialog.md) ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) |
 | Custom Notification System | v2.6.16 | Phase 1 toast shipped, Phase 2 notification centre dropped as unverifiable. Decision in [ADR-022](../adr/022-custom-notification-toast-scope.md) |
 | Release Automation Tooling | --- | release-please adopted, release-it and Beads rejected. Decision in [ADR-023](../adr/023-release-automation-tooling.md) |
