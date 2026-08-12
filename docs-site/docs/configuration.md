@@ -212,6 +212,32 @@ The state file is automatically cleaned up when the app exits.
 | `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
 | `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
 
+#### App Registration Authentication
+
+Opt into persistent authentication via a dedicated Azure App Registration with MSAL Node. This module supports device-code and interactive authentication flows, persists token caches securely via Electron `safeStorage`, and seeds browser session cookies so Teams loads already signed in.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `auth.appRegistration.enabled` | `boolean` | `false` | Enable persistent authentication via a custom Azure App Registration. |
+| `auth.appRegistration.clientId` | `string` | `""` | Azure App Registration Application (client) ID. |
+| `auth.appRegistration.tenantId` | `string` | `"common"` | Azure Directory (tenant) ID or `'common'`/`'organizations'`/`'consumers'`. |
+| `auth.appRegistration.authMethod` | `string` | `"auto"` | Authentication flow method: `'auto'` (interactive if display available, else deviceCode), `'deviceCode'`, or `'interactive'`. |
+| `auth.appRegistration.scopes` | `array` | `["openid", "profile", "offline_access"]` | OAuth 2.0 scopes requested during authentication. |
+| `auth.appRegistration.redirectUri` | `string` | `"https://login.microsoftonline.com/common/oauth2/nativeclient"` | Redirect URI registered in the Azure App Registration. |
+
+```json
+{
+  "auth": {
+    "appRegistration": {
+      "enabled": true,
+      "clientId": "your-azure-app-client-id",
+      "tenantId": "common",
+      "authMethod": "auto"
+    }
+  }
+}
+```
+
 #### Basic Authentication
 
 | Option | Type | Default | Description |
