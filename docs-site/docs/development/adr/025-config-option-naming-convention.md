@@ -28,7 +28,7 @@ Spell words out rather than abbreviating (`customBackground`, not `customBG`), a
 
 The table maps every flat option to its nested target. Four renames invert a boolean, marked in the Inverted column, so tooling must negate those values rather than copy them; a blank cell means copy unchanged. For example `disableNotifications: true` becomes `notifications.enabled: false`, and defaults stay behaviour-preserving under inversion (`disableNotifications` defaults to `false`, so `notifications.enabled` defaults to `true`).
 
-None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will get those keys ignored with a startup warning. When a rename ships, the flat name remains supported until `renamedTo` metadata and migration tooling ship with it, and removal follows only after a deprecation window announced in the release notes.
+None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will get those keys ignored with a startup warning. When a rename does ship, the old name goes through a deprecation window carrying a startup warning before it is removed, and the change is announced in the release notes. How the old key behaves during that window, whether it keeps applying or only warns, is still being decided in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) and must be settled before the first rename lands.
 
 The `notifications`, `idleDetection`, `network` and `auth` targets are shipped objects that already hold unrelated leaves; merging renamed options into them is intentional, and every leaf key below was checked against the shipped fields with no collisions.
 
@@ -110,20 +110,21 @@ An alias layer keeping flat names working forever was rejected by the original r
 
 ### Positive
 
-Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling: the delivery vehicle is additive `renamedTo` metadata on the flat entries in `app/config/options.js` (a field pointing at the nested successor, which new options never need), surfaced in generated docs and `app/config/validator.js` startup warnings, tracked on the roadmap.
+Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume once a migration mechanism is chosen, and that choice is deliberately left open here and tracked in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841). The leading candidate is yargs' own `deprecated` field, since `checkUsedDeprecatedValues` in `app/config/index.js` already reads `getDeprecatedOptions()` and warns on every startup for any deprecated key found in a user's config file, and no option declares it yet.
 
 ### Negative
 
-The four inversions mean a naive key-copy migration would silently flip user intent, so tooling must consult the Inverted column. Until `renamedTo` metadata ships, this table is hand-maintained and can drift from `app/config/options.js`.
+The four inversions mean a naive key-copy migration would silently flip user intent, so tooling must consult the Inverted column. This table is hand-maintained and can drift from `app/config/options.js` until something pins the two together in code.
 
 ### Neutral
 
-Runtime aliasing and a `--migrate-config` codemod stay deferred, so renames continue module by module with `renamedTo` metadata as the only committed mechanism, and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
+Runtime aliasing and a `--migrate-config` codemod stay deferred, so renames continue module by module, and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
 
 ## Related
 
 - [ADR-024](024-smartcard-pkcs11-pin-dialog.md): shipped the `auth.clientCertificate` namespace this ADR aligns with
-- Roadmap: [Config Schema as Single Source of Truth](../plan/roadmap.md) (#2597), where `renamedTo` metadata and the settings window are tracked
+- Roadmap: [Config Schema as Single Source of Truth](../plan/roadmap.md) (#2597), where the in-app settings window is tracked
+- [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), the deprecation window decision that must precede the first rename, and [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), which tracks the migration itself
 - [Documentation, Contributing, and Config UX research](../research/documentation-and-config-ux-research.md), which builds on this convention
 - `app/config/options.js` and `docs-site/static/config-schema.json`, the live inventory
 - Research history: see git history for `docs-site/docs/development/research/configuration-organization-research.md`
