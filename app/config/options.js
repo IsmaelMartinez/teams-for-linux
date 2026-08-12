@@ -961,6 +961,15 @@ module.exports = {
           keepMsalCacheEncryptionCookie: {
             enabled: false,
             days: 400
+          },
+          appRegistration: {
+            enabled: false,
+            clientId: "",
+            tenantId: "common",
+            authMethod: "auto",
+            scopes: ["openid", "profile", "offline_access"],
+            redirectUri:
+              "https://login.microsoftonline.com/common/oauth2/nativeclient"
           }
         },
         describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all. auth.clientCertificate.pinDialog.enabled (Linux only) shows a PIN dialog for smartcard / PKCS#11 client certificates and is off by default. auth.webLogin.* pre-fills the Microsoft/federated web sign-in page so you don't retype credentials each launch: auth.webLogin.user pre-fills the email/account field, auth.webLogin.passwordCommand runs a shell command (e.g. 'pass show teams') and pre-fills its first stdout line into the password field (the app stores no secret), auth.webLogin.autoSubmit clicks through the steps, auth.webLogin.verifyMethod clicks the matching option on the MFA 'Verify your identity' page (e.g. 'Text'), and auth.webLogin.extraHosts adds login hosts beyond the Microsoft defaults. All off/empty by default. Distinct from ssoBasicAuth*, which drive the native HTTP Basic/NTLM dialog, not the web form.",
@@ -973,6 +982,34 @@ module.exports = {
           "intune.user": {
             type: "string",
             describe: "User (e-mail) to use for Intune SSO.",
+          },
+          "appRegistration.enabled": {
+            type: "boolean",
+            describe:
+              "Enable persistent authentication via a custom Azure App Registration.",
+          },
+          "appRegistration.clientId": {
+            type: "string",
+            describe: "Azure App Registration Application (client) ID.",
+          },
+          "appRegistration.tenantId": {
+            type: "string",
+            describe:
+              "Azure Directory (tenant) ID or 'common'/'organizations'/'consumers'.",
+          },
+          "appRegistration.authMethod": {
+            type: "string",
+            describe:
+              "Authentication flow method: 'auto' (interactive if display available, else deviceCode), 'deviceCode', or 'interactive'.",
+            choices: ["auto", "deviceCode", "interactive"],
+          },
+          "appRegistration.scopes": {
+            type: "array",
+            describe: "OAuth 2.0 scopes requested during authentication.",
+          },
+          "appRegistration.redirectUri": {
+            type: "string",
+            describe: "Redirect URI registered in the Azure App Registration.",
           },
           "webauthn.enabled": {
             type: "boolean",
