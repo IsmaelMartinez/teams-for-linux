@@ -1,0 +1,20 @@
+# OSV-Scanner suppressions for the docs-site lockfile.
+#
+# image-size 2.0.2 carries two High advisories with NO fixed version published
+# upstream, so there is nothing to bump to. Without this entry the weekly
+# scheduled scan (fail-on-vuln: true) would be permanently red on an advisory
+# nobody can act on, which trains the reader to ignore a red scan — the failure
+# mode the scan exists to prevent.
+#
+# ignoreUntil is deliberately set rather than omitted: an unexpiring suppression
+# is indistinguishable from a forgotten one. When it lapses the finding returns
+# and gets re-judged against whatever upstream has published by then.
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-11-12
+reason = "image-size 2.0.2: no fixed version published upstream; docs-site build-time only."
+
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-11-12
+reason = "image-size 2.0.2: no fixed version published upstream; docs-site build-time only."
