@@ -48,6 +48,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
+| [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -103,6 +104,18 @@ Architecture Decision Records capture important architectural decisions along wi
 - Low maintenance approach suitable for volunteer-maintained project
 - 9 cross-distro configurations testable from a browser via Codespaces
 - Apple Silicon limitation documented (V8 4GB heap cap under Rosetta 2)
+
+### Performance
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | Closes the system performance research: outcomes for all ten findings, timeout-budget offline detection, no instrumentation module |
+
+**Key Outcomes:**
+- All ten audit findings closed with explicit outcomes and reopen triggers
+- Offline detection bounded by a 20 s budget that assumes online on exhaustion
+- MutationObserver consolidation rejected; scope-narrowing and polling reduction reserved as first levers
+- No performance instrumentation, deliberately
 
 ### Documentation & Standards
 

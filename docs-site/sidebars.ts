@@ -96,6 +96,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/023-release-automation-tooling',
             'development/adr/024-smartcard-pkcs11-pin-dialog',
             'development/adr/025-config-option-naming-convention',
+            'development/adr/026-performance-audit-outcomes',
           ],
         },
         {
@@ -107,7 +108,6 @@ const sidebars: SidebarsConfig = {
             'development/research/documentation-and-config-ux-research',
             'development/research/fido2-touch-prompt-research',
             'development/research/graph-api-integration-research',
-            'development/research/system-performance-research',
           ],
         },
       ],
