@@ -720,6 +720,9 @@ async function handleAppReady() {
     // exist so their sessions are caught by the session-created listener.
     certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
 
+    require("./auth").initialize(config, { settingsStore: appConfig?.settingsStore });
+    require("./auth").registerIpcHandlers(ipcMain);
+
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
     // Wire per-profile WebContentsView lifecycle once the main window

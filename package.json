@@ -53,6 +53,7 @@
     "release": "electron-builder"
   },
   "dependencies": {
+    "@azure/msal-node": "^5.5.0",
     "@homebridge/dbus-native": "0.7.8",
     "cbor-x": "^1.6.5",
     "electron-log": "^5.4.4",

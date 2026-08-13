@@ -49,6 +49,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
+| [027](027-app-registration-auth.md) | Custom Azure App Registration Authentication | ✅ Implemented | 2026-08-12 | v2.15.0+ |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
