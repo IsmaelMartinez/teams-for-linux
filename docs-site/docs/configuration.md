@@ -342,11 +342,13 @@ The token name and requesting hostname appear in the dialog but are never logged
 
 Some localStorage tokens get encrypted by a Session cookie 'msal.cache.encryption'. Electron drops this cookie on process exits, so the encrypted tokens can't be decrypted anymore. This forces a fresh login on every start and clears all local settings, like selected camera, microphone, meeting backgrounds or "Keep my current status when I'm active outside of Teams on the web". This sets an expiration date for the cookie to promote it from a session cookie, so it survives restarts.
 
+This is on by default. Microsoft mints the cookie as session-scoped deliberately, so keeping it means the token-decryption key stays on disk for longer than Microsoft intended. If you prefer that tradeoff the other way around, set `enabled` to `false` and sign in again after each restart.
+
 ```json
 {
   "auth": {
     "keepMsalCacheEncryptionCookie": {
-        "enabled": true,
+        "enabled": false,
         "days": 400
     }
   }
@@ -355,7 +357,7 @@ Some localStorage tokens get encrypted by a Session cookie 'msal.cache.encryptio
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `auth.keepMsalCacheEncryptionCookie.enabled` | `boolean` | `false` | Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts. |
+| `auth.keepMsalCacheEncryptionCookie.enabled` | `boolean` | `true` | Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts. |
 | `auth.keepMsalCacheEncryptionCookie.days` | `number` | `400` | Sets the amount of days the 'msal.cache.encryption' cookie should be kept for. Between 1 and 400. |
 
 ### Multi-Account Profile Switcher (Experimental)
