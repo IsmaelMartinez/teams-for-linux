@@ -348,8 +348,8 @@ This is on by default. Microsoft mints the cookie as session-scoped deliberately
 {
   "auth": {
     "keepMsalCacheEncryptionCookie": {
-        "enabled": false,
-        "days": 400
+      "enabled": false,
+      "days": 400
     }
   }
 }
