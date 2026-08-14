@@ -49,14 +49,31 @@ jobs:
           set -euo pipefail
           TAG="${INPUT_TAG:-${EVENT_TAG:-}}"
           if [ -z "$TAG" ]; then
-            TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+            # `gh release view` with no tag resolves via releases/latest, which
+            # skips pre-releases. Pre-releases are exactly what a manual run
+            # wants to smoke, so take the newest release of any kind instead.
+            TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 \
+              --json tagName --jq '.[0].tagName')
           fi
           if [ -z "$TAG" ]; then
             echo "::error::Could not resolve a release tag to build"
             exit 1
           fi
+
+          # Flathub builds pre-releases from the packaging repo's `beta` branch
+          # and stable from `master`, so smoke the branch that will actually be
+          # used for this release.
+          PRERELEASE=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isPrerelease --jq .isPrerelease)
+          if [ "$PRERELEASE" = "true" ]; then
+            BRANCH=beta
+          else
+            BRANCH=master
+          fi
+
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "Building manifest against ${TAG}"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "Building the ${BRANCH} manifest against ${TAG}"
 
       - name: Install flatpak tooling
         run: |
@@ -70,10 +87,19 @@ jobs:
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Fetch the manifest from the packaging repo
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
         run: |
           set -euo pipefail
-          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
-            "https://raw.githubusercontent.com/${PACKAGING_REPO}/master/${APP_ID}.yml"
+          # The beta branch may not exist yet on the packaging repo, in which
+          # case Flathub builds that release from master anyway, so fall back
+          # rather than failing the smoke run.
+          if ! curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
+            "https://raw.githubusercontent.com/${PACKAGING_REPO}/${BRANCH}/${APP_ID}.yml"; then
+            echo "::warning::No ${BRANCH} manifest on ${PACKAGING_REPO}, falling back to master"
+            curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
+              "https://raw.githubusercontent.com/${PACKAGING_REPO}/master/${APP_ID}.yml"
+          fi
           echo "::group::manifest as published"
           cat manifest.yml
           echo "::endgroup::"
@@ -148,5 +174,8 @@ jobs:
           echo "::endgroup::"
           test -x build-dir/files/bin/teams-for-linux
           test -f "build-dir/files/share/metainfo/${APP_ID}.metainfo.xml"
-          test -f build-dir/files/share/applications/teams-for-linux.desktop
+          # rename-desktop-file is a toplevel manifest property, so the cleanup
+          # phase renames teams-for-linux.desktop to one based on the app id.
+          # Asserting the pre-rename name here would fail on every good build.
+          test -f "build-dir/files/share/applications/${APP_ID}.desktop"
           echo "Smoke build produced the wrapper, metainfo and desktop entry."
