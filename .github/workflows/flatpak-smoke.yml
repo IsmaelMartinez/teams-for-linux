@@ -72,7 +72,7 @@ jobs:
       - name: Fetch the manifest from the packaging repo
         run: |
           set -euo pipefail
-          curl -fsSL -o manifest.yml \
+          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
             "https://raw.githubusercontent.com/${PACKAGING_REPO}/master/${APP_ID}.yml"
           echo "::group::manifest as published"
           cat manifest.yml
@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
             --pattern '*_amd64.deb' --output teams-for-linux.deb --clobber
-          curl -fsSL -o metainfo.xml \
+          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o metainfo.xml \
             "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${TAG}/${APP_ID}.appdata.xml"
           ls -l teams-for-linux.deb metainfo.xml
 
