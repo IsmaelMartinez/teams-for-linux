@@ -360,6 +360,24 @@ This is on by default. Microsoft mints the cookie as session-scoped deliberately
 | `auth.keepMsalCacheEncryptionCookie.enabled` | `boolean` | `true` | Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts. |
 | `auth.keepMsalCacheEncryptionCookie.days` | `number` | `400` | Sets the amount of days the 'msal.cache.encryption' cookie should be kept for. Between 1 and 400. |
 
+### Concurrent Account Instances
+
+Separate processes so 2–3 accounts can stay connected at the same time. Distinct from the `multiAccount` in-window switcher. See [ADR-027](development/adr/027-concurrent-account-instances) and [Multiple Instances](multiple-instances.md).
+
+```json
+{
+  "instances": {
+    "enabled": true,
+    "autoLaunch": true
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `instances.enabled` | `boolean` | `true` | Show the Accounts menu and allow opening extra isolated instances (hard cap of 3). |
+| `instances.autoLaunch` | `boolean` | `true` | When this process starts, also launch the other configured account instances. |
+
 ### Multi-Account Profile Switcher (Experimental)
 
 > **Status:** Phase 1 shipped. With the flag enabled you get a bottom-left **account switcher pill** (dropdown with every profile + Add/Manage), a **Profiles** menu (Add / Switch / Manage / Remove profiles), `Ctrl+Alt+1…5` shortcuts for pinned profiles (pin via **Manage profiles…**, up to 5; Linux/Windows), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and later phases (background notifications, power features).

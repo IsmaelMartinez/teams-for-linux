@@ -1046,6 +1046,28 @@ module.exports = {
         },
         applyMode: "restart",
       },
+      instances: {
+        default: {
+          enabled: true,
+          autoLaunch: true,
+        },
+        describe:
+          "Concurrent account instances (see ADR-027). Separate processes with isolated user-data directories so 2–3 accounts can stay connected at the same time. Distinct from the multiAccount in-window switcher. enabled: show the Accounts menu and allow opening extra instances. autoLaunch: start the other configured accounts when this process launches.",
+        type: "object",
+        fields: {
+          "enabled": {
+            type: "boolean",
+            describe:
+              "Show the Accounts menu and allow opening extra isolated instances (hard cap of 3).",
+          },
+          "autoLaunch": {
+            type: "boolean",
+            describe:
+              "When this process starts, also launch the other configured account instances.",
+          },
+        },
+        applyMode: "restart",
+      },
       wayland: {
         default: {
           xwaylandOptimizations: false,

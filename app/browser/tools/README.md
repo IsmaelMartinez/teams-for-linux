@@ -22,6 +22,12 @@ Handles React application detection, version detection, and provides safe access
 #### [settings.js](settings.js)
 Manages application settings and configuration synchronization between main and renderer processes.
 
+#### [accountIdentity.js](accountIdentity.js)
+Discovers the signed-in Microsoft account email after Teams loads and reports it to the main process so the Accounts UI can replace the **This account** placeholder. The email is never logged.
+
+**Configuration**: Requires `instances.enabled` not set to `false`
+**Requires**: `ipcRenderer` passed during initialization
+
 ### Media & Communication
 
 #### [disableAutogain.js](disableAutogain.js)

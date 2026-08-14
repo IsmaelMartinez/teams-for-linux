@@ -48,6 +48,7 @@ User-facing features and integrations.
 | **WebAuthn / FIDO2** | `app/webauthn/` | Hardware security key support for Linux via fido2-tools interception of navigator.credentials | [ADR-021](./adr/021-webauthn-fido2-linux.md) |
 | **Client Certificate PIN** | `app/clientCertificate/` | Linux smartcard/NSS client-certificate PIN dialog built on the shared secure prompt ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/clientCertificate/README.md) |
 | **Profiles Manager** | `app/profilesManager/` | Multi-account profile storage, switching, and lifecycle management | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Concurrent Accounts** | `app/concurrentAccounts/` | Separate-process account instances (hard cap of 3) so 2–3 tenants stay connected at once | [ADR-027](./adr/027-concurrent-account-instances.md) |
 | **Profile Dialogs** | `app/profileDialogs/` | Add-profile, manage-profiles, and switch-profile UI dialogs | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
 | **Join Meeting Dialog** | `app/joinMeetingDialog/` | Join Meeting dialog for deep-link navigation handling | — |
 

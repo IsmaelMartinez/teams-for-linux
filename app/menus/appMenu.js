@@ -1,5 +1,6 @@
 const { shell } = require("electron");
 const buildProfilesMenu = require("./profilesMenu");
+const buildAccountsMenu = require("./accountsMenu");
 
 exports = module.exports = (Menus) => ({
   label: "Teams for Linux",
@@ -68,6 +69,7 @@ exports = module.exports = (Menus) => ({
     ...(Menus.configGroup.startupConfig.multiAccount?.enabled
       ? [buildProfilesMenu(Menus)].filter(Boolean)
       : []),
+    ...[buildAccountsMenu(Menus)].filter(Boolean),
     {
       type: "separator",
     },

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+  <title>Open another account</title>
+  <link rel="stylesheet" href="addAccount.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Open another account</h2>
+    <p>Starts a separate Teams window with its own login. Up to three accounts can stay connected at the same time.</p>
+
+    <label for="name-input">Name <span class="required">*</span></label>
+    <input type="text" id="name-input" maxlength="64" autofocus required placeholder="Work, Personal, …">
+
+    <div class="error" id="error-message"></div>
+    <div class="buttons">
+      <button id="cancel-btn" type="button" class="secondary">Cancel</button>
+      <button id="add-btn" type="button" class="primary" disabled>Open</button>
+    </div>
+  </div>
+  <script src="addAccount.js"></script>
+</body>
+</html>

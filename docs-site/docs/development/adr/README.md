@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-08-11
+last_updated: 2026-08-14
 tags: [adr, architecture, decisions]
 ---
 
@@ -49,6 +49,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
+| [027](027-concurrent-account-instances.md) | Concurrent Account Instances | ✅ Accepted | 2026-08-14 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -180,6 +181,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | Hybrid Teams commanding + Graph API approach for inline message sending |
 | [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | WebContentsView-based profile switching with feature-flag gating |
 | [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | Keep the opt-in custom toast, drop the Phase 2 notification centre as unverifiable |
+| [027](027-concurrent-account-instances.md) | Concurrent Account Instances | Separate processes, hard cap of 3, for accounts connected at the same time |
 
 **Key Outcomes:**
 - Quick chat access via People API (works) instead of Chat API (blocked 403)
@@ -187,6 +189,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Chat resolution via Teams entityCommanding + DOM scanning + member verification
 - Keyboard shortcut toggles quick chat modal
 - Multi-account profile switcher proposed for tenant/guest switching
+- Concurrent account instances (separate processes, max 3) for live side-by-side accounts
 
 ### Distribution & Packaging
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self';">
+  <title>Manage accounts</title>
+  <link rel="stylesheet" href="manageAccounts.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Manage accounts</h2>
+    <p>Each account is a separate Teams window. Click a name to rename it. Removing an extra account deletes its login data.</p>
+
+    <ul id="account-list" class="account-list"></ul>
+
+    <div class="error" id="error-message"></div>
+    <div class="buttons">
+      <button id="close-btn" type="button" class="primary">Close</button>
+    </div>
+  </div>
+  <script src="manageAccounts.js"></script>
+</body>
+</html>

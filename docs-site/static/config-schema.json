@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 72,
+  "optionCount": 73,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -1167,6 +1167,30 @@
           "type": "boolean",
           "default": false,
           "description": "Opt-in flag for the single-window multi-account profile switcher; mutually exclusive with auth.intune.enabled."
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "type": "object",
+      "default": {
+        "enabled": true,
+        "autoLaunch": true
+      },
+      "description": "Concurrent account instances (see ADR-027). Separate processes with isolated user-data directories so 2–3 accounts can stay connected at the same time. Distinct from the multiAccount in-window switcher. enabled: show the Accounts menu and allow opening extra instances. autoLaunch: start the other configured accounts when this process launches.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Accounts menu and allow opening extra isolated instances (hard cap of 3)."
+        },
+        {
+          "path": "autoLaunch",
+          "type": "boolean",
+          "default": true,
+          "description": "When this process starts, also launch the other configured account instances."
         }
       ]
     },

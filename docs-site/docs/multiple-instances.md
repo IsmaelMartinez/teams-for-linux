@@ -1,14 +1,52 @@
 # Multiple Instances (Profiles)
 
-Teams for Linux supports multiple accounts two ways: an **in-app account switcher** that keeps every account in a single window, or **separate isolated instances** that each run as their own process. Either way, sessions, settings, and data stay fully isolated per account.
+Teams for Linux supports multiple accounts two ways: **separate isolated instances** that each run as their own process (recommended when you want 2–3 accounts connected at the same time), or an **in-app account switcher** that keeps every account in a single window. Either way, sessions, settings, and data stay fully isolated per account.
 
 ## Two Ways to Run Multiple Accounts
 
+- **Separate isolated instances** (multiple windows/processes, hard cap of 3 in-app) — each account is its own process with its own `--user-data-dir`, icon, and window class. Use this when you want two or three Teams windows live at once. This is the approach in [ADR-027](development/adr/027-concurrent-account-instances). See [In-App Accounts Menu](#in-app-accounts-menu) below, or the CLI section for the power-user path.
 - **In-app account switcher** (single window, experimental) — enable `multiAccount.enabled` and switch between accounts inside one Teams for Linux window via the **Profiles** menu. Each account is isolated in its own session partition. This is the newer approach introduced in [ADR-020](development/adr/020-multi-account-profile-switcher); see [In-App Account Switcher](#in-app-account-switcher-experimental) below.
-- **Separate isolated instances** (multiple windows/processes) — launch a separate process per account, each with its own `--user-data-dir`, icon, and window class. This is the established approach and is documented in the rest of this page.
 
 :::tip When to use which
-Use the **in-app switcher** if you want all your accounts in one window with quick switching. Use **separate instances** if you want fully independent windows — distinct taskbar icons, separate window-manager identities, or different per-profile command-line flags.
+Use **separate instances** if you want fully independent windows — distinct taskbar icons, separate window-manager identities, and more than one account connected at the same time. Use the **in-app switcher** if you want all your accounts in one window with quick switching.
+:::
+
+## In-App Accounts Menu
+
+The **Accounts** menu (on by default) is the in-app form of the separate-instances workflow. Untitled rows (the original **This account**) show the signed-in email once Teams has loaded.
+
+- **Open another account…** — name the extra account; Teams for Linux starts a new process with its own data directory. Hard cap of **3** accounts (this window plus two extras).
+- **Manage accounts…** — rename extras, open an account that is not running, or remove an extra (the original account cannot be removed). Removing an extra deletes its login data. After Teams has signed in, untitled accounts (the original **This account** row) show the signed-in email.
+- The radio list focuses an account if it is already running, or launches it if it is not.
+
+On startup, if `instances.autoLaunch` is `true` (the default), this process also starts the other configured accounts. Child processes skip that step so they do not spawn each other.
+
+Opt out in `config.json`:
+
+```json
+{
+  "instances": {
+    "enabled": true,
+    "autoLaunch": true
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `instances.enabled` | `boolean` | `true` | Show the Accounts menu and allow opening extra isolated instances. |
+| `instances.autoLaunch` | `boolean` | `true` | When this process starts, also launch the other configured account instances. |
+
+Extra instance data lives next to the original user-data directory:
+
+```
+~/.config/teams-for-linux/                         # original account
+~/.config/teams-for-linux/concurrent-accounts.json # registry
+~/.config/teams-for-linux-instances/<uuid>/        # extra accounts
+```
+
+:::note
+This is **not** the experimental Profiles switcher. Accounts = separate processes. Profiles = one window, hide/show sessions. See [ADR-027](development/adr/027-concurrent-account-instances).
 :::
 
 ## In-App Account Switcher (Experimental)
@@ -37,7 +75,7 @@ This feature is under active development. Switch via the **bottom-left avatar pi
 
 ## Separate Isolated Instances (Command Line)
 
-The rest of this page covers the separate-instances approach: one process per account, each with its own icon, window class, and data directory — perfect for work and personal accounts you want as fully independent windows.
+The rest of this page covers launching extra instances by hand: one process per account, each with its own icon, window class, and data directory. Prefer the [Accounts menu](#in-app-accounts-menu) unless you need flags the in-app path does not set (custom icon path, a data directory outside `{userData}-instances/`, more than three instances).
 
 ## Quick Start Examples
 

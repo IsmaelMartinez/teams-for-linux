@@ -160,7 +160,22 @@ const allowedChannels = new Set([
   'profile-switcher-open-add',
   'profile-switcher-open-manage',
   'profile-switcher-set-expanded',
-  'profile-switcher-state'
+  'profile-switcher-state',
+
+  // Concurrent account instances (ADR-027). Separate processes, hard cap of 3.
+  // Distinct from the ADR-020 in-window profile switcher channels above.
+  'account-list',
+  'account-get-current',
+  'account-add-submit',
+  'account-add-cancel',
+  'account-manage-rename',
+  'account-manage-open',
+  'account-manage-remove',
+  'account-manage-close',
+  'account-add-error',
+  'account-manage-state',
+  'account-manage-error',
+  'account-report-identity'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);

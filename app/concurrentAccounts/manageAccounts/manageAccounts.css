@@ -1,0 +1,240 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #444;
+}
+
+p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.account-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.account-row.current {
+  border-color: #6264a7;
+}
+
+.account-name {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: #333;
+  cursor: text;
+  padding: 4px 6px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-name:hover,
+.account-name:focus {
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+.account-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  padding: 4px 6px;
+  border: 1px solid #6264a7;
+  border-radius: 3px;
+  outline: none;
+  background-color: #fff;
+  color: #333;
+}
+
+.account-current-badge,
+.account-running-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.account-current-badge {
+  color: #6264a7;
+  border: 1px solid #6264a7;
+}
+
+.account-running-badge {
+  color: #3d7a3d;
+  border: 1px solid #3d7a3d;
+}
+
+.account-open-btn,
+.account-remove-btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 3px;
+  background-color: #e8e8e8;
+  cursor: pointer;
+}
+
+.account-open-btn {
+  color: #333;
+}
+
+.account-remove-btn {
+  color: #c42b1c;
+}
+
+.account-open-btn:hover:not(:disabled),
+.account-remove-btn:hover:not(:disabled) {
+  background-color: #d8d8d8;
+}
+
+.account-open-btn:disabled,
+.account-remove-btn:disabled {
+  background-color: #f0f0f0;
+  color: #595959;
+  cursor: not-allowed;
+}
+
+.error {
+  font-size: 12px;
+  color: #c42b1c;
+  min-height: 16px;
+  margin-top: 4px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+button.primary {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  background-color: #6264a7;
+  color: white;
+}
+
+button.primary:hover {
+  background-color: #525299;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+  }
+
+  h2 {
+    color: #e0e0e0;
+  }
+
+  p {
+    color: #b0b0b0;
+  }
+
+  .account-row {
+    background-color: #2d2d2d;
+    border-color: #444;
+  }
+
+  .account-row.current {
+    border-color: #6264a7;
+  }
+
+  .account-name {
+    color: #e0e0e0;
+  }
+
+  .account-name:hover,
+  .account-name:focus {
+    background-color: #3d3d3d;
+  }
+
+  .account-name-input {
+    background-color: #2d2d2d;
+    border-color: #6264a7;
+    color: #e0e0e0;
+  }
+
+  .account-current-badge {
+    color: #a6a7e0;
+    border-color: #a6a7e0;
+  }
+
+  .account-running-badge {
+    color: #8fd18f;
+    border-color: #8fd18f;
+  }
+
+  .account-open-btn,
+  .account-remove-btn {
+    background-color: #3d3d3d;
+  }
+
+  .account-open-btn {
+    color: #e0e0e0;
+  }
+
+  .account-remove-btn {
+    color: #ff8a80;
+  }
+
+  .account-open-btn:hover:not(:disabled),
+  .account-remove-btn:hover:not(:disabled) {
+    background-color: #4d4d4d;
+  }
+
+  .account-open-btn:disabled,
+  .account-remove-btn:disabled {
+    background-color: #2a2a2a;
+    color: #a0a0a0;
+  }
+}

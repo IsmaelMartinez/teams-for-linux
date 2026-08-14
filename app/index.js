@@ -27,6 +27,7 @@ const QuickChatManager = require("./quickChat");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
+const ConcurrentAccountsManager = require("./concurrentAccounts");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
@@ -142,6 +143,14 @@ const partitionsManager = new PartitionsManager(appConfig.settingsStore);
 // keeping the renderer surface byte-identical with the flag off.
 const profilesManager = new ProfilesManager(appConfig.settingsStore);
 
+const concurrentAccounts =
+  config.instances?.enabled === false
+    ? null
+    : new ConcurrentAccountsManager({
+        userDataDir: app.getPath("userData"),
+        config,
+      });
+
 // Per-profile WebContentsView lifecycle. Only constructed when the
 // multi-account flag is on; the manager is wired to the main window
 // after `mainAppWindow.onAppReady` resolves.
@@ -200,6 +209,7 @@ if (gotTheLock) {
   app.on("render-process-gone", onRenderProcessGone);
   app.on("will-quit", async () => {
     console.debug("will-quit");
+    concurrentAccounts?.dispose();
     if (mqttClient) {
       await mqttClient.disconnect();
     }
@@ -720,7 +730,15 @@ async function handleAppReady() {
     // exist so their sessions are caught by the session-created listener.
     certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
 
-    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
+    await mainAppWindow.onAppReady(
+      appConfig,
+      customBackground,
+      screenSharingService,
+      profilesManager,
+      concurrentAccounts
+    );
+
+    concurrentAccounts?.initialize();
 
     // Wire per-profile WebContentsView lifecycle once the main window
     // exists. Bootstrap Profile 0 from the legacy partition so a

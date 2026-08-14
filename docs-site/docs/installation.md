@@ -230,6 +230,9 @@ teams-for-linux --user-data-dir=/path/to/custom/profile
 ### Multiple Instances
 
 ```bash
+# In-app: Accounts → Open another account… (hard cap of 3)
+
+# Or by hand:
 # Work profile
 teams-for-linux --user-data-dir=~/.config/teams-work --class=teams-work
 

@@ -19,12 +19,16 @@ const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
+const AddAccountDialog = require("../concurrentAccounts/addAccount");
+const ManageAccountsDialog = require("../concurrentAccounts/manageAccounts");
+const buildAccountsMenu = require("./accountsMenu");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
   #preJoinUrl = null;
   #profileChangeHandler = null;
+  #accountChangeHandler = null;
   #switcherOpenAddHandler = null;
   #switcherOpenManageHandler = null;
 
@@ -35,12 +39,20 @@ class Menus {
     );
   }
 
-  constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
+  constructor(
+    window,
+    configGroup,
+    iconPath,
+    connectionManager,
+    profilesManager = null,
+    concurrentAccounts = null
+  ) {
     this.window = window;
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.connectionManager = connectionManager;
     this.profilesManager = profilesManager;
+    this.concurrentAccounts = concurrentAccounts;
     this.allowQuit = false;
     this.documentationWindow = new DocumentationWindow();
     this.gpuInfoWindow = new GpuInfoWindow();
@@ -60,6 +72,13 @@ class Menus {
       : null;
     this.manageProfileDialog = multiAccountReady
       ? new ManageProfileDialog(this.window, this.profilesManager)
+      : null;
+    const accountsReady = this.concurrentAccounts?.isEnabled();
+    this.addAccountDialog = accountsReady
+      ? new AddAccountDialog(this.window, this.concurrentAccounts)
+      : null;
+    this.manageAccountsDialog = accountsReady
+      ? new ManageAccountsDialog(this.window, this.concurrentAccounts)
       : null;
     this.initialize();
   }
@@ -174,7 +193,10 @@ class Menus {
       this.configGroup.startupConfig.menubar == "hidden" &&
       this.#multiAccountOn()
     ) {
-      const template = [buildProfilesMenu(this)].filter(Boolean);
+      const template = [
+        buildProfilesMenu(this),
+        buildAccountsMenu(this),
+      ].filter(Boolean);
       if (template.length === 0) {
         this.window.removeMenu();
         return;
@@ -262,6 +284,14 @@ class Menus {
           this.#switcherOpenManageHandler = null;
         }
       });
+    }
+
+    if (this.concurrentAccounts?.isEnabled()) {
+      this.#accountChangeHandler = () => this.updateMenu();
+      this.concurrentAccounts.on("add", this.#accountChangeHandler);
+      this.concurrentAccounts.on("remove", this.#accountChangeHandler);
+      this.concurrentAccounts.on("update", this.#accountChangeHandler);
+      this.window.once("closed", () => this.#detachAccountListeners());
     }
 
     if (this.configGroup.startupConfig.trayIconEnabled) {
@@ -352,19 +382,45 @@ class Menus {
     }
   }
 
+  addAccount() {
+    if (this.concurrentAccounts?.isAtCap()) return;
+    this.addAccountDialog?.show();
+  }
+
+  manageAccounts() {
+    this.manageAccountsDialog?.show();
+  }
+
+  openAccount(id) {
+    try {
+      this.concurrentAccounts.launch(id);
+    } catch (error) {
+      console.error("[Menus] openAccount failed", {
+        message: error.message,
+      });
+    }
+  }
+
+  #detachAccountListeners() {
+    if (!this.#accountChangeHandler || !this.concurrentAccounts) return;
+    this.concurrentAccounts.off("add", this.#accountChangeHandler);
+    this.concurrentAccounts.off("remove", this.#accountChangeHandler);
+    this.concurrentAccounts.off("update", this.#accountChangeHandler);
+    this.#accountChangeHandler = null;
+  }
+
   updateMenu() {
     const menu = appMenu(this);
-    this.#attachMenu(menu);
-    // Re-assert the hidden bar: profile events rebuild the menu constantly
-    // (add/update/switch/remove), and without this the rebuild would silently
-    // restore a bar the user configured away. Gated on the flag so flag-off
-    // behaviour stays byte-identical to pre-feature (where updateMenu also
-    // re-attached the menu unconditionally).
     if (
       this.configGroup.startupConfig.menubar == "hidden" &&
-      this.#multiAccountOn()
+      !this.#multiAccountOn()
     ) {
-      this.window.setMenuBarVisibility(false);
+      this.window.removeMenu();
+    } else {
+      this.#attachMenu(menu);
+      if (this.configGroup.startupConfig.menubar == "hidden") {
+        this.window.setMenuBarVisibility(false);
+      }
     }
     this.tray?.setContextMenu(menu.submenu);
 
