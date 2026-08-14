@@ -123,6 +123,33 @@ flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
 
 <a href='https://flathub.org/apps/details/com.github.IsmaelMartinez.teams_for_linux'><img width='170' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
+#### Flathub Beta Channel (Pre-releases)
+
+Pre-releases are published to the Flathub beta remote before they reach the stable Flathub build. Following the beta remote is the most useful thing a Flatpak user can do for this project, because sandbox and permission changes can be built by the Flathub buildbot but cannot be tested by the maintainer, who has no Linux desktop available.
+
+```bash
+flatpak remote-add --if-not-exists flathub-beta https://flathub.org/beta-repo/flathub-beta.flatpakrepo
+flatpak install flathub-beta com.github.IsmaelMartinez.teams_for_linux//beta
+```
+
+The beta build is a separate branch of the same application ID, so it installs alongside the stable one rather than replacing it. That matters when you launch it: the desktop launcher and a bare `flatpak run com.github.IsmaelMartinez.teams_for_linux` both keep starting the stable build, so run the beta explicitly, otherwise you will think you are testing the pre-release when you are not.
+
+```bash
+flatpak run com.github.IsmaelMartinez.teams_for_linux//beta
+```
+
+To go back to stable, remove the beta branch:
+
+```bash
+flatpak uninstall com.github.IsmaelMartinez.teams_for_linux//beta
+```
+
+If the install fails with the app not being found on `flathub-beta`, there is no beta build published at the moment. The beta remote only carries a build while a pre-release is being tested, so use the stable Flathub install above and try again after the next release.
+
+:::note
+The beta remote carries pre-release builds and packaging changes that are still being validated, so expect the occasional rough edge. If you hit one, please [open an issue](https://github.com/IsmaelMartinez/teams-for-linux/issues) and mention that you are on the beta remote.
+:::
+
 ## Manual Installation
 
 ### Download from GitHub Releases

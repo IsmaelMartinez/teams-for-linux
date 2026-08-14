@@ -1,0 +1,184 @@
+name: Flatpak Smoke Build
+
+# Builds the Flathub manifest against a freshly released .deb so packaging
+# breakage surfaces here rather than in flathubbot's version-bump PR against
+# the packaging repo. x86_64 only: this is a smoke signal, not a release build.
+#
+# The manifest is fetched from the packaging repo rather than vendored, so this
+# always tests what Flathub will actually build. The remote sources are swapped
+# for the downloaded files, which both pins the build to this exact release and
+# avoids having to recompute sha256 values here.
+#
+# All release-controlled values reach the shell through env: and are quoted at
+# use, never interpolated into a run: body.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (defaults to the latest release)"
+        required: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PACKAGING_REPO: flathub/com.github.IsmaelMartinez.teams_for_linux
+  APP_ID: com.github.IsmaelMartinez.teams_for_linux
+
+jobs:
+  flatpak_smoke:
+    name: flatpak-builder (x86_64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Resolve the release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-${EVENT_TAG:-}}"
+          if [ -z "$TAG" ]; then
+            # `gh release view` with no tag resolves via releases/latest, which
+            # skips pre-releases. Pre-releases are exactly what a manual run
+            # wants to smoke, so take the newest published release instead.
+            # --exclude-drafts matters: merging the release PR leaves a draft
+            # sitting there until it is published by hand, and a draft has no
+            # git tag, so picking one would 404 on the metainfo fetch.
+            TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 \
+              --exclude-drafts --json tagName --jq '.[0].tagName')
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::Could not resolve a release tag to build"
+            exit 1
+          fi
+
+          # Flathub builds pre-releases from the packaging repo's `beta` branch
+          # and stable from `master`, so smoke the branch that will actually be
+          # used for this release.
+          PRERELEASE=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isPrerelease --jq .isPrerelease)
+          if [ "$PRERELEASE" = "true" ]; then
+            BRANCH=beta
+          else
+            BRANCH=master
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "Building the ${BRANCH} manifest against ${TAG}"
+
+      - name: Install flatpak tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          # python3-yaml is not guaranteed on the runner image and the manifest
+          # rewrite below depends on it, so install it here rather than assume.
+          sudo apt-get install -y --no-install-recommends \
+            flatpak flatpak-builder python3-yaml
+          flatpak remote-add --if-not-exists --user \
+            flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Fetch the manifest from the packaging repo
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+        run: |
+          set -euo pipefail
+          # The beta branch may not exist yet on the packaging repo, in which
+          # case Flathub builds that release from master anyway, so fall back
+          # rather than failing the smoke run.
+          if ! curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
+            "https://raw.githubusercontent.com/${PACKAGING_REPO}/${BRANCH}/${APP_ID}.yml"; then
+            echo "::warning::No ${BRANCH} manifest on ${PACKAGING_REPO}, falling back to master"
+            curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
+              "https://raw.githubusercontent.com/${PACKAGING_REPO}/master/${APP_ID}.yml"
+          fi
+          echo "::group::manifest as published"
+          cat manifest.yml
+          echo "::endgroup::"
+
+      - name: Download the released deb and metainfo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern '*_amd64.deb' --output teams-for-linux.deb --clobber
+          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o metainfo.xml \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${TAG}/${APP_ID}.appdata.xml"
+          ls -l teams-for-linux.deb metainfo.xml
+
+      - name: Point the manifest at the downloaded files
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import yaml
+
+          # Read from the workflow env rather than restating the id, so this
+          # cannot drift from the value the rest of the workflow uses.
+          APP_ID = os.environ["APP_ID"]
+
+          with open("manifest.yml") as fh:
+              manifest = yaml.safe_load(fh)
+
+          module = manifest["modules"][0]
+
+          # Keep the inline wrapper script verbatim; it is part of what we are
+          # smoke testing. Everything else is a remote download we replace with
+          # the local copies fetched from this release.
+          scripts = [s for s in module["sources"] if s.get("type") == "script"]
+
+          module["sources"] = [
+              {
+                  "type": "file",
+                  "path": "teams-for-linux.deb",
+                  "dest-filename": "teams-for-linux.deb",
+              },
+              {
+                  "type": "file",
+                  "path": "metainfo.xml",
+                  "dest-filename": f"{APP_ID}.metainfo.xml",
+              },
+              *scripts,
+          ]
+
+          with open("manifest.yml", "w") as fh:
+              yaml.safe_dump(manifest, fh, sort_keys=False)
+          PY
+          echo "::group::manifest as built"
+          cat manifest.yml
+          echo "::endgroup::"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --install-deps-from=flathub \
+            --arch=x86_64 \
+            build-dir manifest.yml
+
+      - name: Report what was built
+        run: |
+          set -euo pipefail
+          echo "::group::installed tree"
+          find build-dir/files -maxdepth 2 -mindepth 1 | sort
+          echo "::endgroup::"
+          test -x build-dir/files/bin/teams-for-linux
+          test -f "build-dir/files/share/metainfo/${APP_ID}.metainfo.xml"
+          # rename-desktop-file is a toplevel manifest property, so the cleanup
+          # phase renames teams-for-linux.desktop to one based on the app id.
+          # Asserting the pre-rename name here would fail on every good build.
+          test -f "build-dir/files/share/applications/${APP_ID}.desktop"
+          echo "Smoke build produced the wrapper, metainfo and desktop entry."

@@ -98,16 +98,42 @@ When the Release PR merges to main:
 
 Then:
 1. Promote GitHub draft → full release
-   - This triggers Flatpak
    - This triggers the **Snap Release** workflow, which builds and publishes the release version to the **candidate** channel
-2. Test the Snap candidate version
-3. Manually promote Snap candidate → stable: `snapcraft release teams-for-linux <revision> stable`
+   - This triggers the **Flatpak Smoke Build**, which builds the Flathub manifest against the released deb
+2. Bump the [Flathub beta branch](#flathub-beta-branch) so Flatpak users can test the pre-release
+3. Test the Snap candidate version
+4. Manually promote Snap candidate → stable: `snapcraft release teams-for-linux <revision> stable`
+5. Clear the pre-release flag once the release has soaked: `gh release edit vX.Y.Z --prerelease=false`
+
+:::warning Flathub does not move until the pre-release flag is cleared
+The Flathub manifest tracks `releases/latest`, and that endpoint skips pre-releases. So a release left flagged as a pre-release never reaches Flatpak users, no matter how long it sits. Step 5 is what moves both the `latest` pointer and Flathub stable, and it is easy to forget because nothing fails or warns when it is skipped.
+:::
 
 :::info Snap Channels
 - **edge** — Every push to main. Versioned with commit SHA suffix (e.g., `2.7.5-edge.g1a2b3c4`)
 - **candidate** — Automatically published when a GitHub Release is published. Uses the clean release version (e.g., `2.7.5`)
 - **stable** — Manual promotion from candidate after testing
 :::
+
+### Flathub beta branch
+
+The Flathub packaging repo has a `beta` branch that Flathub builds into the `flathub-beta` remote, which is how Flatpak users test a pre-release before it reaches stable. Bumping it is manual: Flathub's hosted update checker only runs against a repo's default branch (`master`), so flathubbot never touches `beta`. The `x-checker-data` queries on that branch describe what it should track, but nothing executes them.
+
+Collect the three checksums, two of which the release already publishes:
+
+```bash
+TAG=v2.16.0
+gh release view "$TAG" --repo IsmaelMartinez/teams-for-linux --json assets \
+  --jq '.assets[] | select(.name | test("_(amd64|arm64)\\.deb$")) | "\(.name) \(.digest)"'
+curl -sL "https://raw.githubusercontent.com/IsmaelMartinez/teams-for-linux/$TAG/com.github.IsmaelMartinez.teams_for_linux.appdata.xml" \
+  | sha256sum
+```
+
+The deb digests come back prefixed with `sha256:`, which the manifest does not want, so paste only the hex part.
+
+Then on the packaging repo's `beta` branch, point the two deb sources and the metainfo source at `$TAG` and paste the matching `sha256` values. Push that branch to the Flathub repo itself, not to a fork, since the buildbot only watches `flathub/com.github.IsmaelMartinez.teams_for_linux`. In the maintainer's checkout that remote is named `upstream` (`origin` being the fork), so the push is `git push upstream beta`; check `git remote -v` if you are unsure which name points where. That push is what triggers the buildbot, so it publishes to `flathub-beta` on its own from there.
+
+Keep `beta` otherwise in sync with `master`, since the only intended difference is the version it points at plus any packaging change deliberately under test.
 
 ## Changelog Categories
 
