@@ -131,7 +131,7 @@ curl -sL "https://raw.githubusercontent.com/IsmaelMartinez/teams-for-linux/$TAG/
 
 The deb digests come back prefixed with `sha256:`, which the manifest does not want, so paste only the hex part.
 
-Then on the packaging repo's `beta` branch, point the two deb sources and the metainfo source at `$TAG`, paste the matching `sha256` values, and push with `git push upstream beta`. That push is what triggers the Flathub buildbot, so it publishes to `flathub-beta` on its own from there.
+Then on the packaging repo's `beta` branch, point the two deb sources and the metainfo source at `$TAG` and paste the matching `sha256` values. Push that branch to the Flathub repo itself, not to a fork, since the buildbot only watches `flathub/com.github.IsmaelMartinez.teams_for_linux`. In the maintainer's checkout that remote is named `upstream` (`origin` being the fork), so the push is `git push upstream beta`; check `git remote -v` if you are unsure which name points where. That push is what triggers the buildbot, so it publishes to `flathub-beta` on its own from there.
 
 Keep `beta` otherwise in sync with `master`, since the only intended difference is the version it points at plus any packaging change deliberately under test.
 

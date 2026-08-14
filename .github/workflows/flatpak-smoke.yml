@@ -51,9 +51,12 @@ jobs:
           if [ -z "$TAG" ]; then
             # `gh release view` with no tag resolves via releases/latest, which
             # skips pre-releases. Pre-releases are exactly what a manual run
-            # wants to smoke, so take the newest release of any kind instead.
+            # wants to smoke, so take the newest published release instead.
+            # --exclude-drafts matters: merging the release PR leaves a draft
+            # sitting there until it is published by hand, and a draft has no
+            # git tag, so picking one would 404 on the metainfo fetch.
             TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 \
-              --json tagName --jq '.[0].tagName')
+              --exclude-drafts --json tagName --jq '.[0].tagName')
           fi
           if [ -z "$TAG" ]; then
             echo "::error::Could not resolve a release tag to build"
