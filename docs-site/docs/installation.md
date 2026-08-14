@@ -139,6 +139,8 @@ flatpak uninstall com.github.IsmaelMartinez.teams_for_linux
 flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
 ```
 
+If the install fails with the app not being found on `flathub-beta`, there is no beta build published at the moment. The beta remote only carries a build while a pre-release is being tested, so fall back to the stable Flathub install above and try again after the next release.
+
 :::note
 The beta remote carries pre-release builds and packaging changes that are still being validated, so expect the occasional rough edge. If you hit one, please [open an issue](https://github.com/IsmaelMartinez/teams-for-linux/issues) and mention that you are on the beta remote.
 :::

@@ -94,9 +94,12 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
+          import os
           import yaml
 
-          APP_ID = "com.github.IsmaelMartinez.teams_for_linux"
+          # Read from the workflow env rather than restating the id, so this
+          # cannot drift from the value the rest of the workflow uses.
+          APP_ID = os.environ["APP_ID"]
 
           with open("manifest.yml") as fh:
               manifest = yaml.safe_load(fh)
