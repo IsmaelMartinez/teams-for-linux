@@ -1066,7 +1066,7 @@
           "verifyMethod": ""
         },
         "keepMsalCacheEncryptionCookie": {
-          "enabled": false,
+          "enabled": true,
           "days": 400
         }
       },
@@ -1142,8 +1142,8 @@
         {
           "path": "keepMsalCacheEncryptionCookie.enabled",
           "type": "boolean",
-          "default": false,
-          "description": "Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts (issue #2681); off by default"
+          "default": true,
+          "description": "Sets an expiration date for the 'msal.cache.encryption' cookie to keep it after restarts (issue #2681); on by default. Set to false to keep the cookie session-scoped, at the cost of signing in again after every restart"
         },
         {
           "path": "keepMsalCacheEncryptionCookie.days",
