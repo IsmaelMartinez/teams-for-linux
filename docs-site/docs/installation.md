@@ -123,6 +123,26 @@ flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
 
 <a href='https://flathub.org/apps/details/com.github.IsmaelMartinez.teams_for_linux'><img width='170' alt='Download on Flathub' src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
 
+#### Flathub Beta Channel (Pre-releases)
+
+Pre-releases are published to the Flathub beta remote before they reach the stable Flathub build. Following the beta remote is the most useful thing a Flatpak user can do for this project, because sandbox and permission changes can be built by the Flathub buildbot but cannot be tested by the maintainer, who has no Linux desktop available.
+
+```bash
+flatpak remote-add --if-not-exists flathub-beta https://flathub.org/beta-repo/flathub-beta.flatpakrepo
+flatpak install flathub-beta com.github.IsmaelMartinez.teams_for_linux
+```
+
+The beta and stable builds share an application ID, so install one or the other rather than both. To go back to stable:
+
+```bash
+flatpak uninstall com.github.IsmaelMartinez.teams_for_linux
+flatpak install flathub com.github.IsmaelMartinez.teams_for_linux
+```
+
+:::note
+The beta remote carries pre-release builds and packaging changes that are still being validated, so expect the occasional rough edge. If you hit one, please [open an issue](https://github.com/IsmaelMartinez/teams-for-linux/issues) and mention that you are on the beta remote.
+:::
+
 ## Manual Installation
 
 ### Download from GitHub Releases
