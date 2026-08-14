@@ -14,6 +14,41 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.16.0" date="2026-08-14">
+      <description>
+        <ul>
+          <li>multi-account: pin profiles + Ctrl+Alt+1…5 switch shortcuts (ADR-020 Phase 1c.2) (#2787)</li>
+          <li>auth: default keepMsalCacheEncryptionCookie to on (#2850)</li>
+          <li>deps: bump nanoid in docs-site lockfile to clear advisory #211 (#2827)</li>
+          <li>deps: refresh docs-site lockfile to clear http-proxy-middleware advisory (#2823)</li>
+          <li>logging: remove #2587 debug instrumentation that shipped in 2.15.0 (#2814)</li>
+          <li>logging: stop logging notification text and page DOM (#2819)</li>
+          <li>menus: limit hidden-menubar accelerators to profile switching (#2821) (#2824)</li>
+          <li>network: bound the connectivity sweep so a hung probe cannot stall startup (#2816)</li>
+          <li>notifications: load sender avatars for electron notifications (#2809)</li>
+          <li>webauthn: sign the iframe's own origin for relayed ceremonies (#2828) (#2829)</li>
+          <li>adr: ADR-025 config option naming convention (#2836)</li>
+          <li>adr: ADR-026 performance audit outcomes (#2838)</li>
+          <li>adr: leave the rename mechanism undecided in ADR-025 (#2843)</li>
+          <li>docs: bound the docs build with timeout-minutes (#2852)</li>
+          <li>flatpak: smoke build on release tags, document the beta remote (#2853)</li>
+          <li>add osv-scanner configuration (#2846)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2820)</li>
+          <li>deps: bump brace-expansion from 5.0.8 to 5.0.9 in /docs-site (#2802)</li>
+          <li>deps: bump dompurify from 3.4.12 to 3.4.13 in /docs-site (#2805)</li>
+          <li>deps: bump fast-uri from 3.1.4 to 3.1.5 (#2800)</li>
+          <li>deps: bump fast-uri from 3.1.4 to 3.1.5 in /docs-site (#2804)</li>
+          <li>deps: bump js-yaml from 4.3.0 to 4.3.1 (#2808)</li>
+          <li>deps: bump js-yaml from 4.3.0 to 4.3.1 in /docs-site (#2807)</li>
+          <li>deps: bump mermaid from 11.15.0 to 11.16.1 in /docs-site (#2806)</li>
+          <li>deps: bump undici from 7.28.0 to 7.29.0 (#2799)</li>
+          <li>deps: bump undici from 7.28.0 to 7.29.0 in /docs-site (#2801)</li>
+          <li>deps: refresh brace-expansion in the lockfile (#2847)</li>
+          <li>sonar: clear docker and String.raw findings (#2818) (#2825)</li>
+          <li>sonar: clear the code-smell tail (#2813)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.15.0" date="2026-08-07">
       <description>
         <ul>

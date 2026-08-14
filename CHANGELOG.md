@@ -51,6 +51,10 @@
 * **sonar:** clear docker and String.raw findings ([#2818](https://github.com/IsmaelMartinez/teams-for-linux/issues/2818)) ([#2825](https://github.com/IsmaelMartinez/teams-for-linux/issues/2825)) ([b82434b](https://github.com/IsmaelMartinez/teams-for-linux/commit/b82434b01a0118fae2bf901d44495ef11b85151d))
 * **sonar:** clear the code-smell tail ([#2813](https://github.com/IsmaelMartinez/teams-for-linux/issues/2813)) ([894dc4e](https://github.com/IsmaelMartinez/teams-for-linux/commit/894dc4e4c556698bae8d3321f1b9b8e885227197))
 
+### Thanks
+
+Big thanks to @app/dependabot, @app/repo-butler-app, @jochimvd, @jpenberthy for contributing to this release.
+
 ## [2.15.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.1...v2.15.0) (2026-08-07)
 
 
