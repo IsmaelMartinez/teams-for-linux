@@ -1101,11 +1101,12 @@ module.exports = {
         type: "object",
         fields: {
           "clearData": {
-            // Union because the value is either a flag or a
-            // clearStorageDataOptions object. The deprecated flat
-            // clearStorageData keeps its plain "boolean" because that type is
-            // handed to yargs, which has no union support and would change how
-            // the value is coerced.
+            // Union because the value is either a flag (clear everything) or a
+            // clearStorageDataOptions object; both work, only the warn-only
+            // validator reads this. The deprecated flat clearStorageData keeps
+            // its plain "boolean" because that one IS handed to yargs, and an
+            // unrecognised type string silently disables boolean CLI parsing:
+            // --clearStorageData would yield null instead of true.
             type: "boolean|object",
             describe:
               "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",

@@ -648,7 +648,7 @@ Wayland display server settings are organized under the `wayland` configuration 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
-| `storage.clearData` | `boolean` | `null` | Flag to clear storage data |
+| `storage.clearData` | `boolean` \| `object` | `null` | Clear storage data on start. `true` clears everything; an object is passed through as Electron [`ClearStorageDataOptions`](https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions), for example `{"storages": ["cookies"]}` |
 | `clearStorageData` | `boolean` | `null` | Deprecated, use `storage.clearData` |
 
 > [!NOTE]
