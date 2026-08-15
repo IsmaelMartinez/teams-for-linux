@@ -1,6 +1,6 @@
 # Config Module
 
-Handles loading configuration from `config.json` and parsing command-line arguments using `yargs`. `validator.js` warns about unknown keys, type mismatches, and invalid values at startup — see [Startup Validation](../../docs-site/docs/configuration.md#startup-validation).
+Handles loading configuration from `config.json` and parsing command-line arguments using `yargs`. `validator.js` warns about unknown keys, type mismatches, and invalid values at startup — see [Startup Validation](../../docs-site/docs/configuration.md#startup-validation). `deprecation.js` builds the startup warning for deprecated options as a single aggregated message, because `app/index.js` opens a blocking modal for every entry in `config.warnings`.
 
 ## Usage
 
