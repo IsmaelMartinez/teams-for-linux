@@ -14,6 +14,16 @@ const electron = require("electron");
  * tokens and prevent 24-hour forced re-authentication cycles.
  */
 
+// Directory scans and cleans process entries in fixed-size chunks rather than
+// fanning out over a whole directory at once (libuv threadpool starvation).
+// The chunk bounds concurrency per directory, not across the recursion: each
+// subdirectory worker opens its own chunk, so the worst case is exponential in
+// tree depth. Chromium cache trees are wide and shallow (the volume is files at
+// the leaves, which is exactly what chunking parallelises), so in practice
+// in-flight operations stay near the chunk size. Revisit with a shared
+// semaphore if this ever runs over a deep tree.
+const SCAN_CHUNK_SIZE = 32;
+
 class CacheManager {
   constructor(config) {
     this.config = config;
@@ -163,30 +173,25 @@ class CacheManager {
 
   async cleanDirectory(dirPath) {
     try {
-      const files = await fsp.readdir(dirPath);
+      const entries = await fsp.readdir(dirPath, { withFileTypes: true });
 
-      for (const file of files) {
-        const filePath = path.join(dirPath, file);
-        const stat = await fsp.stat(filePath);
-
-        if (stat.isDirectory()) {
-          await this.cleanDirectory(filePath);
-          // Try to remove empty directory
-          try {
-            await fsp.rmdir(filePath);
-          } catch (error) {
-            if (error.code === 'ENOTEMPTY') {
-              console.debug("Directory not empty, skipping rmdir:", filePath);
-            } else {
-              console.warn("Failed to remove directory:", {
-                path: filePath,
-                error: error.message,
-              });
-            }
+      const failureCodes = [];
+      await this.#mapInChunks(entries, async (entry) => {
+        try {
+          await this.#cleanEntry(path.join(dirPath, entry.name), entry);
+        } catch (error) {
+          // ENOENT means the entry vanished mid-clean; routine cache churn
+          if (error.code !== 'ENOENT') {
+            failureCodes.push(error.code || 'UNKNOWN');
           }
-        } else {
-          await fsp.unlink(filePath);
         }
+      });
+
+      if (failureCodes.length > 0) {
+        console.warn(`Failed to clean ${failureCodes.length} of ${entries.length} entries:`, {
+          path: dirPath,
+          errorCodes: [...new Set(failureCodes)],
+        });
       }
 
       console.debug("Cleaned directory:", dirPath);
@@ -198,6 +203,49 @@ class CacheManager {
     }
   }
 
+  /**
+   * Delete a single directory entry. Dirents report symlinks as
+   * isSymbolicLink() without following them; fsp.stat (which follows links)
+   * preserves the previous behaviour of traversing symlinked directories.
+   */
+  async #cleanEntry(filePath, entry) {
+    let isDirectory = entry.isDirectory();
+    if (entry.isSymbolicLink()) {
+      isDirectory = (await fsp.stat(filePath)).isDirectory();
+    }
+
+    if (!isDirectory) {
+      await fsp.unlink(filePath);
+      return;
+    }
+
+    await this.cleanDirectory(filePath);
+    try {
+      await fsp.rmdir(filePath);
+    } catch (error) {
+      // A directory left non-empty (entries failed to delete or reappeared)
+      // and rmdir refusing a symlinked directory path (ENOTDIR) are routine;
+      // anything else counts toward the aggregate failure log.
+      if (error.code !== 'ENOTEMPTY' && error.code !== 'ENOTDIR') {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Run worker over items in fixed-size chunks: chunks run sequentially and
+   * items within a chunk run concurrently via Promise.allSettled, so the
+   * returned promise settles only after every worker has finished.
+   */
+  async #mapInChunks(items, worker) {
+    const results = [];
+    for (let index = 0; index < items.length; index += SCAN_CHUNK_SIZE) {
+      const chunk = items.slice(index, index + SCAN_CHUNK_SIZE);
+      results.push(...(await Promise.allSettled(chunk.map(worker))));
+    }
+    return results;
+  }
+
   async getDirSize(dirPath) {
     let totalSize = 0;
     try {
@@ -207,33 +255,55 @@ class CacheManager {
       }
 
       if (stat.isDirectory()) {
-        const files = await fsp.readdir(dirPath);
-
-        for (const file of files) {
-          const filePath = path.join(dirPath, file);
-          try {
-            totalSize += await this.getDirSize(filePath);
-          } catch (error) {
-            // Skip files that can't be accessed (e.g., permission errors, broken symlinks)
-            console.debug("Skipping inaccessible file:", {
-              path: filePath,
-              error: error.message,
-            });
+        const entries = await fsp.readdir(dirPath, { withFileTypes: true });
+        const results = await this.#mapInChunks(entries, (entry) =>
+          this.#entrySize(path.join(dirPath, entry.name), entry)
+        );
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            totalSize += result.value;
           }
         }
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
         return 0; // Path does not exist, size is 0
-      } else {
-        console.debug("Error accessing path:", {
-          path: dirPath,
-          error: error.message,
-        });
       }
+      console.debug("Error accessing path:", {
+        path: dirPath,
+        error: error.message,
+      });
     }
 
     return totalSize;
+  }
+
+  /**
+   * Size contribution of one directory entry. Directories and symlinks
+   * recurse through getDirSize, whose top-level fsp.stat follows links,
+   * matching the previous stat-per-entry behaviour (broken links resolve
+   * to 0). ENOENT is silent: entries evicted mid-scan are routine churn.
+   */
+  async #entrySize(entryPath, entry) {
+    if (entry.isDirectory() || entry.isSymbolicLink()) {
+      return this.getDirSize(entryPath);
+    }
+
+    if (!entry.isFile()) {
+      return 0; // sockets, FIFOs, etc. contributed no size before either
+    }
+
+    try {
+      return (await fsp.stat(entryPath)).size;
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        console.debug("Skipping inaccessible file:", {
+          path: entryPath,
+          error: error.message,
+        });
+      }
+      return 0;
+    }
   }
 
   async getCacheStats() {
