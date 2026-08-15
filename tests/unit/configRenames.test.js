@@ -26,7 +26,10 @@ describe('config renames - table integrity', () => {
 
 	it('every deprecation message names its nested replacement', () => {
 		for (const { flat, nested } of RENAMES) {
-			assert.match(String(options[flat].deprecated), new RegExp(nested.replace('.', '\\.')));
+			// replaceAll, not replace: a target such as
+			// idleDetection.checkInterval.detectIdle has more than one dot, and an
+			// unescaped one would match any character.
+			assert.match(String(options[flat].deprecated), new RegExp(nested.replaceAll('.', '\\.')));
 		}
 	});
 
